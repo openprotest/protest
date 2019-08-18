@@ -1,0 +1,299 @@
+﻿namespace ProtestRA {
+    partial class Main {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing) {
+            if (disposing && (components != null)) {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
+            this.tmrAutoHide = new System.Windows.Forms.Timer(this.components);
+            this.TrayMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.pnlMain = new System.Windows.Forms.Panel();
+            this.lblKey = new System.Windows.Forms.Label();
+            this.txtKey = new System.Windows.Forms.TextBox();
+            this.txtListennerPort = new System.Windows.Forms.NumericUpDown();
+            this.lblPort = new System.Windows.Forms.Label();
+            this.cmbListennerIp = new System.Windows.Forms.ComboBox();
+            this.lblListennerIp = new System.Windows.Forms.Label();
+            this.btnApply = new System.Windows.Forms.Button();
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.btnClose = new System.Windows.Forms.Button();
+            this.TrayMenu.SuspendLayout();
+            this.pnlMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.txtListennerPort)).BeginInit();
+            this.contextMenuStrip1.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // tmrAutoHide
+            // 
+            this.tmrAutoHide.Enabled = true;
+            this.tmrAutoHide.Interval = 10;
+            // 
+            // TrayMenu
+            // 
+            this.TrayMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.TrayMenu.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.TrayMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.optionsToolStripMenuItem,
+            this.exitToolStripMenuItem});
+            this.TrayMenu.Name = "TrayMenu";
+            this.TrayMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.TrayMenu.Size = new System.Drawing.Size(133, 56);
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.optionsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.optionsToolStripMenuItem.Image = global::ProtestRA.Properties.Resources.icon24;
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.exitToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.exitToolStripMenuItem.Image = global::ProtestRA.Properties.Resources.close24;
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
+            this.exitToolStripMenuItem.Text = "Exit";
+            // 
+            // TrayIcon
+            // 
+            this.TrayIcon.ContextMenuStrip = this.TrayMenu;
+            this.TrayIcon.Visible = true;
+            // 
+            // pnlMain
+            // 
+            this.pnlMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pnlMain.AutoScroll = true;
+            this.pnlMain.Controls.Add(this.lblKey);
+            this.pnlMain.Controls.Add(this.txtKey);
+            this.pnlMain.Controls.Add(this.txtListennerPort);
+            this.pnlMain.Controls.Add(this.lblPort);
+            this.pnlMain.Controls.Add(this.cmbListennerIp);
+            this.pnlMain.Controls.Add(this.lblListennerIp);
+            this.pnlMain.Location = new System.Drawing.Point(12, 13);
+            this.pnlMain.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pnlMain.Name = "pnlMain";
+            this.pnlMain.Size = new System.Drawing.Size(723, 407);
+            this.pnlMain.TabIndex = 3;
+            // 
+            // lblKey
+            // 
+            this.lblKey.AutoSize = true;
+            this.lblKey.Location = new System.Drawing.Point(3, 44);
+            this.lblKey.Name = "lblKey";
+            this.lblKey.Size = new System.Drawing.Size(32, 17);
+            this.lblKey.TabIndex = 4;
+            this.lblKey.Text = "Key:";
+            // 
+            // txtKey
+            // 
+            this.txtKey.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.txtKey.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.txtKey.Location = new System.Drawing.Point(102, 41);
+            this.txtKey.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.txtKey.Name = "txtKey";
+            this.txtKey.Size = new System.Drawing.Size(286, 25);
+            this.txtKey.TabIndex = 5;
+            this.txtKey.UseSystemPasswordChar = true;
+            // 
+            // txtListennerPort
+            // 
+            this.txtListennerPort.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.txtListennerPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.txtListennerPort.Location = new System.Drawing.Point(309, 4);
+            this.txtListennerPort.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.txtListennerPort.Maximum = new decimal(new int[] {
+            65534,
+            0,
+            0,
+            0});
+            this.txtListennerPort.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.txtListennerPort.Name = "txtListennerPort";
+            this.txtListennerPort.Size = new System.Drawing.Size(79, 25);
+            this.txtListennerPort.TabIndex = 3;
+            this.txtListennerPort.Value = new decimal(new int[] {
+            5810,
+            0,
+            0,
+            0});
+            // 
+            // lblPort
+            // 
+            this.lblPort.AutoSize = true;
+            this.lblPort.Location = new System.Drawing.Point(268, 7);
+            this.lblPort.Name = "lblPort";
+            this.lblPort.Size = new System.Drawing.Size(35, 17);
+            this.lblPort.TabIndex = 2;
+            this.lblPort.Text = "Port:";
+            // 
+            // cmbListennerIp
+            // 
+            this.cmbListennerIp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cmbListennerIp.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbListennerIp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.cmbListennerIp.FormattingEnabled = true;
+            this.cmbListennerIp.Location = new System.Drawing.Point(102, 4);
+            this.cmbListennerIp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.cmbListennerIp.Name = "cmbListennerIp";
+            this.cmbListennerIp.Size = new System.Drawing.Size(152, 25);
+            this.cmbListennerIp.TabIndex = 1;
+            // 
+            // lblListennerIp
+            // 
+            this.lblListennerIp.AutoSize = true;
+            this.lblListennerIp.Location = new System.Drawing.Point(3, 7);
+            this.lblListennerIp.Name = "lblListennerIp";
+            this.lblListennerIp.Size = new System.Drawing.Size(77, 17);
+            this.lblListennerIp.TabIndex = 0;
+            this.lblListennerIp.Text = "Listenner IP:";
+            // 
+            // btnApply
+            // 
+            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnApply.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnApply.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.btnApply.Location = new System.Drawing.Point(576, 428);
+            this.btnApply.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnApply.Name = "btnApply";
+            this.btnApply.Size = new System.Drawing.Size(75, 30);
+            this.btnApply.TabIndex = 4;
+            this.btnApply.Text = "Apply";
+            this.btnApply.UseVisualStyleBackColor = false;
+            // 
+            // notifyIcon1
+            // 
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
+            this.notifyIcon1.Visible = true;
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1,
+            this.toolStripMenuItem2});
+            this.contextMenuStrip1.Name = "TrayMenu";
+            this.contextMenuStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.contextMenuStrip1.Size = new System.Drawing.Size(129, 52);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripMenuItem1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(128, 24);
+            this.toolStripMenuItem1.Text = "Options";
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.toolStripMenuItem2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(128, 24);
+            this.toolStripMenuItem2.Text = "Exit";
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 10;
+            // 
+            // btnClose
+            // 
+            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.btnClose.Location = new System.Drawing.Point(657, 428);
+            this.btnClose.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnClose.Name = "btnClose";
+            this.btnClose.Size = new System.Drawing.Size(78, 30);
+            this.btnClose.TabIndex = 5;
+            this.btnClose.Text = "Close";
+            this.btnClose.UseVisualStyleBackColor = false;
+            // 
+            // Main
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            this.ClientSize = new System.Drawing.Size(747, 471);
+            this.Controls.Add(this.pnlMain);
+            this.Controls.Add(this.btnApply);
+            this.Controls.Add(this.btnClose);
+            this.Font = new System.Drawing.Font("Segoe UI", 9.75F);
+            this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.Name = "Main";
+            this.Text = "Pro-test Remote Agent";
+            this.TrayMenu.ResumeLayout(false);
+            this.pnlMain.ResumeLayout(false);
+            this.pnlMain.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.txtListennerPort)).EndInit();
+            this.contextMenuStrip1.ResumeLayout(false);
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Timer tmrAutoHide;
+        private System.Windows.Forms.ContextMenuStrip TrayMenu;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        public System.Windows.Forms.NotifyIcon TrayIcon;
+        private System.Windows.Forms.Panel pnlMain;
+        private System.Windows.Forms.Label lblKey;
+        private System.Windows.Forms.TextBox txtKey;
+        private System.Windows.Forms.NumericUpDown txtListennerPort;
+        private System.Windows.Forms.Label lblPort;
+        private System.Windows.Forms.ComboBox cmbListennerIp;
+        private System.Windows.Forms.Label lblListennerIp;
+        private System.Windows.Forms.Button btnApply;
+        public System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button btnClose;
+    }
+}
+
