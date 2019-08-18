@@ -1,0 +1,86 @@
+.eql-element {
+    position: relative;
+    height: 44px;
+    border-bottom: rgb(192,192,192) 1px solid;
+}
+
+.eql-element:hover {
+    background-color: var(--select-color);
+    /*background-color: rgb(160,160,160);*/
+}
+
+.eql-element:active > .eql-icon {
+    transition: transform .2s;
+    transition-delay: .25s;
+    transform: scale(.9);
+}
+
+.eql-element:active > .eql-label0,
+.eql-element:active > .eql-label1 {
+    transition: transform .2s;
+    transition-delay: .25s;
+    transform: translateX(-4px);
+}
+
+.eql-element > * {
+    position: absolute;
+}
+
+.eql-element > .eql-icon {
+    left: 2px;
+    top: 2px;
+    width: 40px;
+    height: 40px;
+    background-size: contain;
+}
+
+.eql-label0, .eql-label1, .eql-label2, .eql-label3, .eql-label4, .eql-label5, .eql-label6, .eql-label7 {
+    width: 25%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.eql-element > .eql-label0 {
+    font-weight: 500;
+    width: calc(25% - 44px);
+    left: 48px;
+    top: 2px;
+}
+
+.eql-element > .eql-label1 {
+    font-weight: 500;
+    width: calc(25% - 44px);
+    left: 48px;
+    top: 20px;
+}
+
+.eql-element > .eql-label2 {
+    left: 25%;
+    top: 2px;
+}
+
+.eql-element > .eql-label3 {
+    left: 25%;
+    top: 20px;
+}
+
+.eql-element > .eql-label4 {
+    left: 50%;
+    top: 2px;
+}
+
+.eql-element > .eql-label5 {
+    left: 50%;
+    top: 20px;
+}
+
+.eql-element > .eql-label6 {
+    left: 75%;
+    top: 2px;
+}
+
+.eql-element > .eql-label7 {
+    left: 75%;
+    top: 20px;
+}

@@ -1,0 +1,186 @@
+#deskmenu {
+    z-index: -1;
+
+    width: 80%;
+    height: 60%;
+    min-height: 200px;
+    margin: 10vh auto;
+
+    transition: .2s;
+}
+
+@media screen and (max-height: 300px) {
+    #deskmenu { margin: 0 auto; }
+}
+
+#deskmenu > div {
+    float: left;
+    margin: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+    text-shadow: rgba(255,255,255,.5) -1px 1px 2px, rgba(255,255,255,.5) 1px -1px 2px;
+
+    transition: background .2s;
+}
+
+#deskmenu > div:active {
+    transition-delay: .2s;
+    background: rgba(192,192,192,.4);
+}
+
+.mnuEntry > div {
+    transition: .2s;
+}
+.mnuEntry:hover > div {
+    transform: scale(1.1);
+}
+
+.mnuEntry > div,
+#mnuEquip > div,
+#mnuUsers > div, 
+#mnuTools > div {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    background-size: cover;
+}
+
+#mnuEquip > div > .back {
+    -webkit-mask-image: url(res/db_gear_mask.svgz);
+    mask-image: url(res/db_gear_mask.svgz);
+}
+#mnuUsers > div > .back {
+    -webkit-mask-image: url(res/db_user_mask.svgz);
+    mask-image: url(res/db_user_mask.svgz);
+}
+#mnuTools > div > .front {
+    -webkit-mask-image: url(res/toolbox_mask.svgz);
+    mask-image: url(res/toolbox_mask.svgz);
+
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+
+    -webkit-mask-size: 96px 96px;
+    mask-size: 96px 96px;
+}
+
+#mnuEquip > div > .back,
+#mnuUsers > div > .back {
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+
+    -webkit-mask-size: 128px 96px;
+    mask-size: 128px 96px;
+
+    -webkit-mask-position-x: -24px;
+    mask-position-x: -24px;
+
+    transition: .4s;
+}
+
+#mnuEquip > div > .front {
+    position: absolute;
+    left: 33px;
+    top: 29px;
+    transition: .4s;
+}
+
+#mnuUsers > div > .front {
+    position: absolute;
+    left: 41px;
+    top: 29px;
+    transition: .4s;
+}
+
+#mnuTools > div > .front {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#mnuEquip:hover > div > .back,
+#mnuUsers:hover > div > .back {
+    -webkit-mask-position-x: -4px;
+    mask-position-x: -4px;
+}
+
+#mnuEquip:hover > div > .front { left: 53px; }
+#mnuUsers:hover > div > .front { left: 61px; }
+
+
+#mnuTools > div > svg > image {
+    transition: .4s;
+}
+
+#mnuTools > div > svg > image:nth-child(1) { transform: translate(-10px, 38px) rotate(-50deg) }
+#mnuTools > div > svg > image:nth-child(2) { transform: translate(36px, 28px) rotate(-15deg) }
+#mnuTools > div > svg > image:nth-child(3) { transform: translate(22px, 30px) rotate(-15deg) }
+
+#mnuTools:hover > div > svg > image:nth-child(1) { transform: translate(-10px, 32px) rotate(-56deg) }
+#mnuTools:hover > div > svg > image:nth-child(2) { transform: translate(38px, 18px) rotate(-20deg) }
+#mnuTools:hover > div > svg > image:nth-child(3) { transform: translate(20px, 20px) rotate(-25deg) }
+
+.floating-elements {
+    position: absolute;
+    right: -1px;
+    width: 52px;
+    height: 52px;
+    border-radius: 8px 0 0 8px;
+    transition: .2s;
+    transform-origin: 100% 50%;
+    background: var(--toolbar-bg-rev);
+}
+
+.floating-elements:hover { width: 56px; }
+.floating-elements:active {
+    width: 52px;
+    transition-delay: .2s;
+}
+
+.floating-elements > div {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 44px;
+    height: 44px;
+    background-size: cover;
+}
+
+#mainSession { top: 96px; }
+#mainSession > div { background-image: url(res/logoff.svgz); }
+
+#mainSettings { top: 152px; }
+#mainSettings > div { background-image: url(res/tool02.svgz); }
+
+#analog_clock {
+    filter: drop-shadow(rgba(255,255,255,.4) 0 0 1px);
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+}
+
+#analog_clock_h,
+#analog_clock_m {
+    stroke: #202020;
+    transition: .8s;
+    transform-origin: 50% 50%;
+}
+
+#date_calendar {
+    filter: drop-shadow(rgba(255,255,255,.4) 0 0 1px);
+    position: absolute;
+    right: 128px;
+    bottom: 16px;
+}
+
+@media only screen and (max-height: 400px) {
+    #analog_clock,
+    #date_calendar {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(96px);
+        transition: .4s;
+    }
+}

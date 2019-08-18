@@ -1,0 +1,100 @@
+.cal-header {
+    width: 250px;
+    height: 28px;
+    position: relative;
+    background-color: rgba(255,255,255,.2);
+    text-align: center;
+    color: white;
+}
+
+.cal-header > div {
+    position: absolute;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    font-weight: bolder;
+    font-size: 16px;
+    transition: .4s;
+}
+
+.cal-header:hover > div {
+    opacity: 1;
+}
+
+.cal-header > :nth-child(1) {
+    left: 2px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.cal-header > :nth-child(2) {
+    right: 2px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.cal-header > :nth-child(3) {
+    left: 28px;
+    right: 28px;
+    width: 192px;
+    text-align: center;
+}
+
+.cal-days {
+    width: 250px;
+    background-color: rgba(255,255,255,.2);
+    height: 18px;
+    text-align: left;
+}
+
+.cal-days > div {
+    display: inline-block;
+    width: 32px;
+    font-size: 10px;
+    padding-left: 3.5px;
+    text-align: center;
+    vertical-align: text-top;
+}
+
+.calendar {
+    background-color: rgba(255,255,255,.1);
+    width: 250px;
+    height: 192px;
+    position: relative;
+    overflow: hidden;
+    transition: .4s;
+}
+
+.calendar > div {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    font-size: 17px;
+    line-height: 25px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 50%;
+    animation: day-in .4s 1 ease-out;
+    transition: .2s;
+}
+
+.calendar > div:hover {
+    background-color: rgba(255,255,255,.1);
+}
+
+.calendar > div:active {
+    background-color: rgba(32,32,32,.1);
+}
+
+@keyframes day-in {
+    0% {
+        transform: scale(1.2) translateY(-16px);
+        filter: opacity(0);
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        filter: opacity(1);
+    }
+}

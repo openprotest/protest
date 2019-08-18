@@ -1,0 +1,56 @@
+input[type="checkbox"] {
+    display: none;
+}
+
+input[type="checkbox"]:checked + label:after {
+    margin: 4px;
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+}
+
+label {
+    position: relative;
+    padding-left: 24px;
+    border: 0; outline: 0;
+}
+
+label:before {
+    position:absolute;
+    top: 2px;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    content: " ";
+    border: rgb(64,64,64) 1px solid;
+    border-radius: 2px;
+    background-color: var(--control-color);
+    transition: .2s;
+}
+
+label:after {
+    position:absolute;
+    top: 3px;
+    left: 1px;
+
+    margin: 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+    content: " ";
+    background-color: rgb(16,16,16);
+    opacity: 0;
+    transition: .2s;
+}
+
+label:hover:before {
+    background-color: rgb(192,192,192);
+}
+
+label:active:before {
+    background-color: rgb(128,128,128);
+}
+
+label:focus::before {
+    animation: inner-glow 2s infinite;
+}
