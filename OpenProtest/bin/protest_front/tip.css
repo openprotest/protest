@@ -1,0 +1,50 @@
+*[tip]::before, *[tip]::after {
+    position: absolute;
+    filter: opacity(0);
+    visibility: hidden;
+    transform: translateY(8px);
+    z-index: 5;
+    transition: .1s;
+}
+
+*[tip]::after {
+    border: solid;
+    border-color: rgb(32,32,32) transparent;
+    border-width: 6px 6px 0 6px;
+    top: -12px;
+    content: "";
+    left: calc(50% - 6px);
+    transform-origin: 50% 0%;
+}
+
+*[tip]::before {
+    content: attr(tip);
+    white-space: nowrap;
+    background-color: rgb(32,32,32);
+    color: white;
+    text-align: center;
+    border-radius: 4px;
+    min-width: 44px;
+    max-width: 192px;
+    max-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    top: -35px;
+    padding: 2px 8px;
+    box-shadow: rgba(127,127,127,.6) 0 0 2px;
+    transform-origin: 50% 100%;
+}
+
+*[tip]:hover::before, *[tip]:hover::after {
+    transition-delay: .1s;
+    visibility: visible;
+    filter: opacity(1);
+    transform: translateY(0);
+}
+
+*[tip=""]:hover::before, *[tip=""]:hover::after { visibility: hidden; }
+
+*[tip]:active::before, *[tip]:active::after {
+    transition-delay: .25s;
+    transform: translateY(-8px);
+}

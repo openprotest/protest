@@ -1,0 +1,169 @@
+#btnSidemenu {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 48px;
+    height: 48px;
+    z-index: 4;
+    
+    overflow: hidden;
+    border-radius: 0px 8px 48px 8px;
+    background: var(--toolbar-bg-rev);
+    box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
+    
+    transition: all .2s,
+                left 0s;
+}
+
+#btnSidemenu > #imgSearch {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 32px;
+    height: 32px;
+    transform-origin: 0 0;
+
+    background-image: url(res/search.svgz);
+    background-size: cover;
+
+    transition: .2s;
+}
+
+#sidemenu {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: var(--sidemenu-width);
+    height: 100%;
+    z-index: 3;
+    transform: translateX(calc(-100% - 8px));
+    background-color: rgb(48,48,48);
+    box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
+    overflow: hidden;
+    transition: .2s;
+}
+
+@media only screen and (max-width: 480px) {
+    #sidemenu {
+        width: 100%;
+    }
+}
+
+#sidemenu > #searchbox {
+    width: 100%;
+    height: 48px;
+    overflow: hidden;
+    background: var(--toolbar-bg-rev);
+}
+
+#sidemenu > #searchbox > #txtSearch {
+    position: absolute;
+    left: 52px;
+    top: 6px;
+    width: calc(100% - 88px);
+    background-color: transparent; 
+    outline: none; border: none;
+    padding: 2px 0;
+    margin: 2px 0;
+    font-size: 22px;
+    text-shadow: rgba(255,255,255,.5) 0 0 4px;
+}
+
+#sidemenu > #searchbox > #txtSearch::selection {
+    background: rgb(64,64,64);
+    color: #fff;
+    text-shadow: black 0 0 8px;
+}
+
+#btnCloseSidemenu {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    right: 2px;
+    top: 10px;
+    background-image: url(res/close.svgz);
+    background-size: cover;
+    border-radius: 50%;
+    visibility: hidden;
+
+    transition: .2s;
+}
+
+#btnCloseSidemenu:hover { background-color: rgba(64,64,64,.2); }
+#btnCloseSidemenu:active { background-color: rgba(96,96,96,.2); }
+
+#lstSideMenu {
+    position: absolute;
+    width: 100%;
+    top: 48px;
+    bottom: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    color: rgb(224,224,224);
+}
+
+.sidemenu-item {
+    position: relative;
+    height: 44px;
+    color: rgb(32,32,32);
+    background-color: rgb(208,208,208);
+    background-repeat: no-repeat;
+    background-size: 40px 40px;
+    background-position: 4px 2px;
+    border-top: rgb(192,192,192) 1px solid;
+    border-right: rgb(48,48,48) 1px solid;
+
+    transition: .1s;
+}
+
+.sidemenu-square-item {
+    display: inline-grid;
+    width: 33.33%;
+    height: 96px;
+    color: rgb(32,32,32);
+    background-color: rgb(208,208,208);
+    background-repeat: no-repeat;
+    background-size: 64px 64px;
+    background-position: center 4px;
+    border: rgb(48,48,48) 2px solid;
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: .1s;
+}
+
+
+.sidemenu-item:hover,
+.sidemenu-square-item:hover {
+    transition: .4s;
+    background-color: var(--select-color) !important;
+}
+
+.sidemenu-item > div {
+    margin-left: 52px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidemenu-square-item > div {
+    position: relative;
+    height: 22px;
+    top: 68px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.sidemenu-item > div:first-child,
+.sidemenu-square-item > div:first-child{
+    font-weight: 500;
+}
+
+.sidemenu-item > div:nth-child(3) {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+}
+

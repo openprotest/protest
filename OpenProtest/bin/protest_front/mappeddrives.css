@@ -1,0 +1,98 @@
+.mapped-search-box {
+    grid-area: 1 / 1;
+    text-align: center;
+    background-color: rgb(64,64,64);
+}
+
+.mapped-search-box > input[type="text"] {
+    width: 80%;
+    margin-top: 12px;
+}
+
+.mapped-user-list {
+    grid-area: 2 / 1;
+    background-color: var(--control-color);
+    color: rgb(32,32,32);
+    overflow-y: scroll;
+    margin: 0 0 4px 0;
+    transform-origin: 50% 100%;
+}
+
+.mapped-user-list > div {
+    font-weight: 500;
+    height: 24px;
+    padding: 2px 4px;
+}
+
+.mapped-user-list > div:hover {
+    background-color: var(--select-color) !important;    
+}
+
+.mapped-user-list > div > div {
+    display: inline-block;
+}
+
+.mapped-user-list > div > div:nth-child(1) {
+    width: 24px;
+    height: 24px;
+    background-image: url(res/user.svgz);
+    background-repeat:no-repeat;
+    background-size: 24px 24px;
+}
+
+.mapped-user-list > div > div:nth-child(2) {
+    width: calc(100% - 32px);
+    height: 24px;
+    margin-left: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapped-user-list > div:hover > div:nth-child(1) {
+    filter: none;
+}
+
+.mapped-user-record {
+    grid-area: 2 / 2;
+    overflow-y: scroll;
+    background-color: var(--control-color);
+    margin: 0px 4px 4px 8px;
+}
+
+.mapped-pc-record {
+    grid-area: 2 / 3;
+    overflow-y: scroll;
+    background-color: var(--control-color);
+    margin: 0 4px 4px 4px;
+}
+
+.mapped-target {
+    display: inline-block;
+    width: 200px;
+    height: 100%;
+    text-align: left;
+    margin: 0 8px;
+}
+
+.mapped-target::after {
+    content: attr(label);
+    font-weight: 500;
+    position: absolute;
+    top: 16px;
+    height: 24px;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapped-target > div {
+    display: inline-block;
+    filter: invert(1);
+    width: 48px;
+    height: 48px;
+    margin: 4px;
+
+    background-repeat: no-repeat;
+    background-size: cover;
+}
