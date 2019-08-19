@@ -14,22 +14,22 @@
 *We recommend [nginx](http://nginx.org/en/download.html).*
 
 
-###Pro-test provide tools to organize your network environment. It can create a database of users and equipment by fetching from your domain controller or by scanning your network.
+**Pro-test provide tools to organize your network environment. It can create a database of users and equipment by fetching from your domain controller or by scanning your network.**
 
-####It collects information such:
+**It collects information such:**
   * Hardware specification
   * Model and serial number
   * Network information
   * User information
   * Logged in user and start time
 
-####Additionally you can:
+**Additionally you can:**
   * Send a wake on lan packet
   * Turn off, restart, or log off computers
   * Remotly connect to computers using RDP, SMB, uVNC or PSExec
   * Manage processes and services
 
-####Additional tools can help you manage and troubleshoot:
+**Additional tools can help you manage and troubleshoot:**
   * Ping
   * DNS lookup
   * Trace route
