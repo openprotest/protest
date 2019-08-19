@@ -103,7 +103,9 @@ class Cache {
             name = name.Replace($"{path}\\", "");
             name = name.Replace("\\", "/");
             name = name.Replace(".html", "").Replace(".htm", "");
-            
+
+            if (name == "index") name = "";
+
             CacheEntry entry = new CacheEntry();
 
 #if MINIFY //minify

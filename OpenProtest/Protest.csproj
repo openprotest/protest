@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{12FED691-8C9F-4844-B06E-9365568E32CB}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OpenProtest</RootNamespace>
-    <AssemblyName>OpenProtest</AssemblyName>
+    <RootNamespace>Protest</RootNamespace>
+    <AssemblyName>Protest</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -311,13 +311,13 @@
     <None Include="bin\protest_front\wmi_classes.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\addressbook_front\.html" />
     <Content Include="bin\addressbook_front\addressbook.css" />
     <Content Include="bin\addressbook_front\addressbook.js" />
     <Content Include="bin\addressbook_front\department.svg" />
     <Content Include="bin\addressbook_front\download.svg" />
     <Content Include="bin\addressbook_front\email.svg" />
     <Content Include="bin\addressbook_front\icon.png" />
+    <Content Include="bin\addressbook_front\index.html" />
     <Content Include="bin\addressbook_front\l_department.svg" />
     <Content Include="bin\addressbook_front\l_email.svg" />
     <Content Include="bin\addressbook_front\l_mobile.svg" />
@@ -330,7 +330,6 @@
     <Content Include="bin\config.txt" />
     <Content Include="bin\knowlage\content_type.txt" />
     <Content Include="bin\knowlage\wmi_classes.txt" />
-    <Content Include="bin\protest_front\.html" />
     <Content Include="bin\protest_front\button.css" />
     <Content Include="bin\protest_front\calendar.css" />
     <Content Include="bin\protest_front\checkbox.css" />
@@ -588,6 +587,7 @@
     <Content Include="bin\protest_front\flags\za.svg" />
     <Content Include="bin\protest_front\flags\zm.svg" />
     <Content Include="bin\protest_front\flags\zw.svg" />
+    <Content Include="bin\protest_front\index.html" />
     <Content Include="bin\protest_front\loader.js" />
     <Content Include="bin\protest_front\locateip.js" />
     <Content Include="bin\protest_front\login.html" />

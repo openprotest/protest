@@ -38,6 +38,23 @@ static class NoSQL {
     public static Hashtable equip = new Hashtable();
     public static Hashtable users = new Hashtable();
 
+    public static void InitDirs() {
+        try {
+            DirectoryInfo dirLastSeen = new DirectoryInfo($"{Directory.GetCurrentDirectory()}\\lastseen\\");
+            DirectoryInfo dirData = new DirectoryInfo($"{Directory.GetCurrentDirectory()}\\protest_data\\");
+            DirectoryInfo dirEquip = new DirectoryInfo(DIR_EQUIP);
+            DirectoryInfo dirUsers = new DirectoryInfo(DIR_USERS);
+            
+            if (!dirLastSeen.Exists) dirLastSeen.Create();
+            if (!dirData.Exists) dirData.Create();
+            if (!dirEquip.Exists) dirEquip.Create();
+            if (!dirUsers.Exists) dirUsers.Create();
+
+        }  catch (Exception ex) {
+            ErrorLog.Err(ex);
+        } 
+    }
+
     public static void LoadEquip() {
         equip_version = DateTime.Now.Ticks;
 

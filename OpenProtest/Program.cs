@@ -192,6 +192,7 @@ class Program {
 
         Console.ForegroundColor = ConsoleColor.DarkGray;
         LoadConfig();
+        NoSQL.InitDirs();
         LoadDB();
 
         if (http_enable) {

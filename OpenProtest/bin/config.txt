@@ -4,7 +4,7 @@ key = TEST_EMX2fpbDyMQ8T1P0WV22WwHJ9V9jrLkq3Y8EJUsQsNLN6xUdE6Ie1F54YX5
 force_registry_keys = true
 
 ip_access = *
-user_access = *
+user_access = admin
 
 http_enable = true
 http_ip     = *

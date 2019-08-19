@@ -453,7 +453,7 @@ class Equip extends Window {
             }
 
             if (ports_split.includes(445) && equip.hasOwnProperty("OPERATING SYSTEM")) {
-                let btnPSE = this.SquareButton("res/psremote.svgz", "PS Remoting", this.more); //PSExec
+                let btnPSE = this.SideBar("res/psremote.svgz", "PS Remoting"); //PSExec
                 btnPSE.onclick = () => {
                     let xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
