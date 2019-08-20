@@ -28,6 +28,7 @@ Pro-test provide tools to organize your network environment. It can create a dat
   * Turn off, restart, or log off computers
   * Remotly connect to computers using RDP, SMB, uVNC or PSExec
   * Manage processes and services
+  * Enable, disable or unlock users
 
 **Additional tools can help you manage and troubleshoot:**
   * Ping
