@@ -4,7 +4,7 @@ using System.Threading;
 using System.Collections.Generic;
 
 class ProTasks {
-    static readonly List<ProTasks> ongoingTasks = new List<ProTasks>();
+    static readonly List<ProTasks> onGoingTasks = new List<ProTasks>();
 
     public readonly string name;
     public string status;
@@ -24,7 +24,7 @@ class ProTasks {
         lockTokken = new object();
         this.thread = thread;
 
-        ongoingTasks.Add(this);
+        onGoingTasks.Add(this);
 
         started = DateTime.Now;
 
@@ -41,7 +41,7 @@ class ProTasks {
             }
 
         lock (lockTokken) {
-            if (ongoingTasks.Contains(this)) ongoingTasks.Remove(this);
+            if (onGoingTasks.Contains(this)) onGoingTasks.Remove(this);
             status = "Aborted by user"; //TODO: push users name
         }
 
@@ -50,7 +50,7 @@ class ProTasks {
 
     public void Complete() {
         lock (lockTokken) {
-            if (ongoingTasks.Contains(this)) ongoingTasks.Remove(this);
+            if (onGoingTasks.Contains(this)) onGoingTasks.Remove(this);
             status = "Completed";
         }
 

@@ -35,10 +35,10 @@ Pro-test provide tools to organize your network environment. It can create a dat
   * DNS lookup
   * Trace route
   * Port scan
-  * Lacate IP
-  * MAC lookup
+  * Locate IP *[demo](https://veniware.github.io/#locateip)*
+  * MAC lookup *[demo](https://veniware.github.io/#maclookup)*
   * Website check
-  * Sub-net calculator
+  * Sub-net calculator *[demo](https://veniware.github.io/#netcalc)*
   * WMI console
-  * Password generator
+  * Password generator *[demo](https://veniware.github.io/#passgen)*
   * Debit notes

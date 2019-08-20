@@ -9,7 +9,7 @@ function initPublicTransportation() {
     let server = window.location.href.toLowerCase();
     server = server.replace("https://", "");
     server = server.replace("http://", "");
-    if (server.endsWith("/")) server = server.substring(0, server.length-1);
+    if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
     pt_socket = new WebSocket((isSecure? "wss://" : "ws://") + server + "/ws/publictransportation");
 

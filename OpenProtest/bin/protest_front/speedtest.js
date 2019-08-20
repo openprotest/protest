@@ -73,7 +73,7 @@ class SpeedTest extends Window {
         let server = window.location.href;
         server = server.replace("https://", "");
         server = server.replace("http://", "");
-        if (server.endsWith("/")) server = server.substring(0, server.length - 1);
+        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
         this.ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/speedtest");
         let count = 0;

@@ -420,7 +420,7 @@ class Ping extends Console {
         let server = window.location.href;
         server = server.replace("https://", "");
         server = server.replace("http://", "");
-        if (server.endsWith("/")) server = server.substring(0, server.length-1);
+        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
         if (this.ws != null) {
             try {

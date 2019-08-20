@@ -17,4 +17,3 @@ addressbook_port   = 911
 protest_app_enable = false
 protest_ip         = *
 protest_port       = 3210
-
