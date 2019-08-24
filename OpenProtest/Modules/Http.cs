@@ -178,7 +178,6 @@ class Http {
                     case "getcurrentnetworkinfo": buffer = Tools.GetCurrentNetworkInfo(); break;
 
                     case "getuserprop": buffer = NoSQL.GetValue(NoSQL.users, para); break;
-
                     case "getentropy": buffer = PasswordStrength.GetEntropy(); break;
 
                     case "getclients": buffer = Session.GetClients(); break;
@@ -193,6 +192,10 @@ class Http {
                     case "wmiquery": buffer = Wmi.WmiQuery(para); break;
                     case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
 
+                    case "gettasksobj" : buffer = ProTasks.GetTasks(); break;
+                    case "gettasksongoing" : buffer = ProTasks.GetOnGoing(); break;
+                    case "gettasksresults" : buffer = ProTasks.GetResults(); break;
+                        
                     case "getnetdrives": buffer = NetworkDrive.GetNetDrive(para); break;
 
                     case "ramsg": buffer = RaClient.RaResponse(para, ctx.Request.RemoteEndPoint.Address.ToString()); break;

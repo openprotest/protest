@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 using System.Net;
-using Protest_RA;
 using Protest_RA.Properties;
 
-namespace ProtestRA {
+namespace Protest_RA {
     public partial class Main : Form {
 
         public static Service srv_uvnc;
@@ -14,10 +15,27 @@ namespace ProtestRA {
 
         public static string key = "";
 
+        public static Main self;
+        
+        private static Stamp frmStamp = new Stamp();
+
+        private delegate void delShowStamp(string value);
+        public static void ShowStamp(string value) {
+            if (self.InvokeRequired) {
+                self.Invoke(new delShowStamp(ShowStamp), value);
+            } else {
+                self.Text = value;
+                frmStamp.setKeystroke(value);
+            }
+        }
+
+
         public Main() {
             InitializeComponent();
             this.TrayIcon.Text = this.Text;
             this.TrayIcon.Icon = this.Icon;
+
+            self = this;
 
             System.Threading.Thread.Sleep(1000);
 
@@ -33,7 +51,7 @@ namespace ProtestRA {
             IPAddress listennerIp;
             bool parseIp = IPAddress.TryParse(cmbListennerIp.Items[cmbListennerIp.SelectedIndex].ToString(), out listennerIp);
             if (!parseIp) listennerIp = IPAddress.Parse("127.0.0.1");
-            int listennerPort = (int)txtListennerPort.Value;
+            int listennerPort = (int) txtListennerPort.Value;
 
             Listener.StartListener(new IPEndPoint(listennerIp, listennerPort));
         }
@@ -158,5 +176,8 @@ namespace ProtestRA {
             Toogle();
         }
 
+        private void Button1_Click(object sender, EventArgs e) {
+            Main.frmStamp.setKeystroke("123123");
+        }
     }
 }

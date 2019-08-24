@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
-using System.Threading;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 
 class ProTasks {
     static readonly List<ProTasks> onGoingTasks = new List<ProTasks>();
@@ -9,7 +9,7 @@ class ProTasks {
     public readonly string name;
     public string status;
     public string report;
-    public int steps;
+    public int stepsTotal;
     public int stepsCompleted;
     public readonly object lockTokken;
     public readonly DateTime started;
@@ -19,7 +19,7 @@ class ProTasks {
     public ProTasks(Thread thread, in string name, in string performer) {
         this.name = name;
         status = "Initializing";
-        steps = 0;
+        stepsTotal = 0;
         stepsCompleted = 0;
         lockTokken = new object();
         this.thread = thread;
@@ -56,5 +56,30 @@ class ProTasks {
 
         Console.WriteLine($"Finish task: \t{name}\t" + DateTime.Now.ToString());
     }
+
+    public static byte[] GetTasks() {
+        return null;
+    }
+
+    public static byte[] GetOnGoing() {
+        StringBuilder sb = new StringBuilder();
+
+        foreach (ProTasks o in onGoingTasks) {
+            sb.Append($"{o.name}{(char)127}");
+            sb.Append($"{o.status}{(char)127}");
+            sb.Append($"{o.report}{(char)127}");
+            sb.Append($"{o.stepsTotal}{(char)127}");
+            sb.Append($"{o.stepsCompleted}{(char)127}");
+            sb.Append($"{o.started}{(char)127}");
+        }
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    public static byte[] GetResults() {
+        return null;
+    }
+
+
 
 }

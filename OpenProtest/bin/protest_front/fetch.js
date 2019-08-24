@@ -45,15 +45,17 @@ class Fetch extends Window {
         let div2 = document.createElement("div");
         div2.style.textAlign = "center";
         div2.style.paddingTop = "16px";
+        div2.style.backgroundColor = "rgb(96,96,96)";
         this.content.appendChild(div2);
 
         let div3_0 = document.createElement("div");
         div3_0.style.paddingTop = "16px";
+        div3_0.style.backgroundColor = "rgb(96,96,96)";
+        div3_0.style.paddingBottom = "8px";
         this.content.appendChild(div3_0);
 
         let div3 = document.createElement("div");
         div3.style.paddingTop = "16px";
-        div3.style.backgroundColor = "rgb(72,72,72)";
         div3.style.maxWidth = "480px";
         div3.style.height = "220px";
         div3.style.margin = "auto";
@@ -71,16 +73,21 @@ class Fetch extends Window {
 
         let btnEquipIP = document.createElement("button");
         btnEquipIP.innerHTML = "Fetch equipment";
-        btnEquipIP.style.width = "200px";
+        btnEquipIP.style.whiteSpace = "nowrap";
+        btnEquipIP.style.minWidth = "0";
+        btnEquipIP.style.maxWidth = "200px";
+        btnEquipIP.style.width = "calc(33% - 24px)";
         btnEquipIP.style.height = "64px";
-        btnEquipIP.style.color = "#000";
-        btnEquipIP.style.backgroundColor = "rgb(192,192,192)";
-        btnEquipIP.style.backgroundImage = "url(res/netscan.svgz)";
+        btnEquipIP.style.color = "#C0C0C0";
+        btnEquipIP.style.backgroundColor = "rgb(72,72,72)";
+        btnEquipIP.style.backgroundImage = "url(res/l_gear.svgz)";
         btnEquipIP.style.backgroundRepeat = "no-repeat";
         btnEquipIP.style.backgroundSize = "40px 40px";
         btnEquipIP.style.backgroundPosition = "4px center";
-        btnEquipIP.style.paddingLeft = "24px";
         btnEquipIP.style.boxSizing = "content-box";
+        btnEquipIP.style.borderRadius = "8px 8px 0 0";
+        btnEquipIP.style.marginBottom = "0";
+        btnEquipIP.style.overflow = "hidden";
         div1.appendChild(btnEquipIP);
 
         let subEquipIP = document.createElement("div");
@@ -90,17 +97,22 @@ class Fetch extends Window {
         btnEquipIP.appendChild(subEquipIP);
 
         let btnEquipAD = document.createElement("button");
+        btnEquipAD.style.whiteSpace = "nowrap";
         btnEquipAD.innerHTML = "Fetch equipment";
-        btnEquipAD.style.width = "200px";
+        btnEquipAD.style.minWidth = "0";
+        btnEquipAD.style.maxWidth = "200px";
+        btnEquipAD.style.width = "calc(33% - 24px)";
         btnEquipAD.style.height = "64px";
-        btnEquipAD.style.color = "#000";
-        btnEquipAD.style.backgroundColor = "rgb(192,192,192)";
-        btnEquipAD.style.backgroundImage = "url(res/gear.svgz)";
+        btnEquipAD.style.color = "#C0C0C0";
+        btnEquipAD.style.backgroundColor = "rgb(72,72,72)";
+        btnEquipAD.style.backgroundImage = "url(res/l_gear.svgz)";
         btnEquipAD.style.backgroundRepeat = "no-repeat";
         btnEquipAD.style.backgroundSize = "40px 40px";
         btnEquipAD.style.backgroundPosition = "4px center";
-        btnEquipAD.style.paddingLeft = "24px";
         btnEquipAD.style.boxSizing = "content-box";
+        btnEquipAD.style.borderRadius = "8px 8px 0 0";
+        btnEquipAD.style.marginBottom = "0";
+        btnEquipAD.style.overflow = "hidden";
         div1.appendChild(btnEquipAD);
 
         let subEquipAD = document.createElement("div");
@@ -110,17 +122,22 @@ class Fetch extends Window {
         btnEquipAD.appendChild(subEquipAD);
 
         let btnUsersAD = document.createElement("button");
+        btnUsersAD.style.whiteSpace = "nowrap";
         btnUsersAD.innerHTML = "Fetch users";
-        btnUsersAD.style.width = "200px";
+        btnUsersAD.style.minWidth = "0";
+        btnUsersAD.style.maxWidth = "200px";
+        btnUsersAD.style.width = "calc(33% - 24px)";
         btnUsersAD.style.height = "64px";
-        btnUsersAD.style.color = "#000";
-        btnUsersAD.style.backgroundColor = "rgb(192,192,192)";
-        btnUsersAD.style.backgroundImage = "url(res/user.svgz)";
+        btnUsersAD.style.color = "#C0C0C0";
+        btnUsersAD.style.backgroundColor = "rgb(72,72,72)";
+        btnUsersAD.style.backgroundImage = "url(res/l_user.svgz)";
         btnUsersAD.style.backgroundRepeat = "no-repeat";
         btnUsersAD.style.backgroundSize = "40px 40px";
         btnUsersAD.style.backgroundPosition = "4px center";
-        btnUsersAD.style.paddingLeft = "24px";
         btnUsersAD.style.boxSizing = "content-box";
+        btnUsersAD.style.borderRadius = "8px 8px 0 0";
+        btnUsersAD.style.marginBottom = "0";
+        btnUsersAD.style.overflow = "hidden";
         div1.appendChild(btnUsersAD);
 
         let subUsersAD = document.createElement("div");
@@ -243,9 +260,10 @@ class Fetch extends Window {
         btnEquipIP.onclick = () => { //eq-ip
             div2.innerHTML = "";
 
-            btnEquipIP.style.borderBottom = "var(--theme-color) 4px solid";
-            btnEquipAD.style.border = "none";
-            btnUsersAD.style.border = "none";
+            btnEquipIP.style.backgroundColor = "rgb(96,96,96)";
+            btnEquipAD.style.backgroundColor = "rgb(72,72,72)";
+            btnUsersAD.style.backgroundColor = "rgb(72,72,72)";
+
             option = 1;
 
             let lblFrom = document.createElement("div");
@@ -281,9 +299,10 @@ class Fetch extends Window {
         btnEquipAD.onclick = () => {
             div2.innerHTML = "";
 
-            btnEquipIP.style.border = "none";
-            btnEquipAD.style.borderBottom = "var(--theme-color) 4px solid";
-            btnUsersAD.style.border = "none";
+            btnEquipIP.style.backgroundColor = "rgb(72,72,72)";
+            btnEquipAD.style.backgroundColor = "rgb(96,96,96)";
+            btnUsersAD.style.backgroundColor = "rgb(72,72,72)";
+
             option = 2;
 
             let lblDomain = document.createElement("div");
@@ -306,9 +325,10 @@ class Fetch extends Window {
         btnUsersAD.onclick = () => {
             div2.innerHTML = "";
 
-            btnEquipIP.style.border = "none";
-            btnEquipAD.style.border = "none";
-            btnUsersAD.style.borderBottom = "var(--theme-color) 4px solid";
+            btnEquipIP.style.backgroundColor = "rgb(72,72,72)";
+            btnEquipAD.style.backgroundColor = "rgb(72,72,72)";
+            btnUsersAD.style.backgroundColor = "rgb(96,96,96)";
+
             option = 3;
 
             let lblDomain = document.createElement("div");

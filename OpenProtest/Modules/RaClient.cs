@@ -13,6 +13,12 @@ static class RaClient {
         string method = para[1];
         string filename = para[2];
         string arg = (para.Length > 3) ? para[3] : "";
+        string property = "";
+
+        if (filename.Contains(":")) {
+            property = filename.Split(':')[1];
+            filename = filename.Split(':')[0];
+        }
 
         if (filename.Length == 0) return Tools.INF.Array;
         if (!NoSQL.equip.ContainsKey(filename)) return Tools.FLE.Array;
@@ -75,12 +81,37 @@ static class RaClient {
                         }
                     } catch {}
                     break;
+
+                /*case "ssh":
+                    try {
+                        using (Process p = new Process()) {
+                            p.StartInfo.FileName = "ssh";
+                            p.StartInfo.Arguments = $"{hostname}";
+                            p.StartInfo.UseShellExecute = true;
+                            p.Start();
+                        }
+                    } catch { }
+                    break;*/
+
+                case "stp":
+                    return Tools.TCP.Array;
             }
 
         } else {
+            byte[] payload;
 
-            try {
-                byte[] payload = Encoding.UTF8.GetBytes($"{method}{(char)127}{hostname}{(char)127}{arg}");
+            if (method == "stp")
+                payload = Encoding.UTF8.GetBytes(
+                    $"{method}{(char)127}{hostname}{(char)127}" + 
+                    Encoding.UTF8.GetString(
+                        NoSQL.GetValue(NoSQL.equip, filename, property)
+                    )
+                );
+            else
+                payload = Encoding.UTF8.GetBytes($"{method}{(char)127}{hostname}{(char)127}{arg}");            
+
+            try { 
+                //Console.WriteLine(performer + ": " + Encoding.UTF8.GetString(payload));
                 payload = Crypto.Encrypt(payload, Program.TCP_KEY);
 
                 TcpClient client = new TcpClient(performer, 5810);

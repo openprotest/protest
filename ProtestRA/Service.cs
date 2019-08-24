@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ProtestRA {
-    public partial class Service : UserControl {
+namespace Protest_RA {
+    public partial class Service: UserControl {
 
         public string name = "Name";
 
@@ -22,9 +28,9 @@ namespace ProtestRA {
             txtParam.Enabled = chkEnable.Checked;
             txtUsername.Enabled = chkEnable.Checked;
             txtPassword.Enabled = chkEnable.Checked;
-            this.BackColor = (chkEnable.Checked) ? Color.FromArgb(255, 64, 64, 64) : Color.FromArgb(255, 48, 48, 48);
+            this.BackColor = (chkEnable.Checked) ? Color.FromArgb(255, 64,64,64) : Color.FromArgb(255, 48,48,48);
         }
-
+        
         public void UpdateUi(string name, bool enable, string exe, string args, string username, string password) {
             chkEnable.Text = name;
             chkEnable.Checked = enable;

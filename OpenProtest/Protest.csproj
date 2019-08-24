@@ -689,6 +689,7 @@
     <Content Include="bin\protest_front\res\pos.svg" />
     <Content Include="bin\protest_front\res\posprinter.svg" />
     <Content Include="bin\protest_front\res\printer.svg" />
+    <Content Include="bin\protest_front\res\proxy.svg" />
     <Content Include="bin\protest_front\res\psremote.svg" />
     <Content Include="bin\protest_front\res\ptclients.svg" />
     <Content Include="bin\protest_front\res\ram.svg" />
@@ -705,6 +706,7 @@
     <Content Include="bin\protest_front\res\sim.svg" />
     <Content Include="bin\protest_front\res\speedtest.svg" />
     <Content Include="bin\protest_front\res\ssh.svg" />
+    <Content Include="bin\protest_front\res\l_stamp.svg" />
     <Content Include="bin\protest_front\res\strength.svg" />
     <Content Include="bin\protest_front\res\switch.svg" />
     <Content Include="bin\protest_front\res\tablet.svg" />

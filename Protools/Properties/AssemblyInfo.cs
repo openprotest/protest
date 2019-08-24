@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Pro-test Remote Agent")]
+[assembly: AssemblyTitle("Protools")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Pro-test RA")]
-[assembly: AssemblyCopyright("© 2019 veniware. All rights reserved.")]
+[assembly: AssemblyProduct("Protools")]
+[assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3c12dc79-5ba4-48c2-89f3-c751f7763145")]
+[assembly: Guid("dc141409-7c59-4126-8287-d3a759c2db67")]
 
 // Version information for an assembly consists of the following four values:
 //

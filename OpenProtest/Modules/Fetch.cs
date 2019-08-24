@@ -127,7 +127,7 @@ static class Fetch {
         });
 
         task = new ProTasks(thread, "Fetch equipment", performer);
-        task.steps = hosts.Length;
+        task.stepsTotal = hosts.Length;
         
         return Tools.OK.Array;
     }
@@ -298,7 +298,7 @@ static class Fetch {
         });
 
         task = new ProTasks(thread, "Fetch users", performer);
-        task.steps = result.Count;
+        task.stepsTotal = result.Count;
 
         return Tools.OK.Array;
     }

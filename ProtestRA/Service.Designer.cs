@@ -1,4 +1,4 @@
-﻿namespace ProtestRA {
+﻿namespace Protest_RA {
     partial class Service {
         /// <summary> 
         /// Required designer variable.
@@ -60,7 +60,7 @@
             // 
             // txtExe
             // 
-            this.txtExe.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.txtExe.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtExe.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.txtExe.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;

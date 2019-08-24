@@ -309,7 +309,7 @@ static class NoSQL {
 
         property = UrlDecode(property);
 
-        if (! table.ContainsKey(filename)) return null;
+        if (!table.ContainsKey(filename)) return null;
         DbEntry entry = (DbEntry)table[filename];
 
         return GetValue(entry, property);
