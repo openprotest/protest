@@ -50,10 +50,11 @@ namespace Protest_RA {
             while (isRunning)
                 try {
                     TcpClient client = listener.AcceptTcpClient();
+                    Serve(client);
 
-                    listenerThread = new Thread(() => { Serve(client); });
+                    /*listenerThread = new Thread(() => { Serve(client); });
                     listenerThread.Priority = threadPriority;
-                    listenerThread.Start();
+                    listenerThread.Start();*/
                 } catch {}
         }
 
@@ -93,55 +94,63 @@ namespace Protest_RA {
             switch (method) {
                 case "vnc":
                     if (!Main.srv_uvnc.chkEnable.Checked) break;
-                    try {
-                        Process.Start(
-                        Main.srv_uvnc.txtExe.Text,
-                        Main.srv_uvnc.txtParam.Text + " -password " + Main.srv_uvnc.txtPassword.Text + " " + targer);
-                    } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    new Thread(() => {
+                        try {
+                            Process.Start(
+                            Main.srv_uvnc.txtExe.Text,
+                            Main.srv_uvnc.txtParam.Text + " -password " + Main.srv_uvnc.txtPassword.Text + " " + targer);
+                        } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    }).Start();
                     break;
 
                 case "rdp":
                     if (!Main.srv_rdp.chkEnable.Checked) break;
-                    try {
-                        Process.Start(
-                        Main.srv_rdp.txtExe.Text,
-                        Main.srv_rdp.txtParam.Text + " /v " + targer);
-                    } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    new Thread(() => {
+                        try {
+                            Process.Start(
+                            Main.srv_rdp.txtExe.Text,
+                            Main.srv_rdp.txtParam.Text + " /v " + targer);
+                        } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    }).Start();
                     break;
 
                 case "pse":
                     if (!Main.srv_pse.chkEnable.Checked) break;
-                    try {
-                        string filename = Path.GetTempPath() + DateTime.Now.Ticks + ".bat";
-                        File.WriteAllText(
-                            filename,
-                            "@ECHO OFF\n" +
-                            Main.srv_pse.txtExe.Text + @" \\" + targer + " -u " + Main.srv_pse.txtUsername.Text + " -p " + Main.srv_pse.txtPassword.Text + " cmd.exe"
-                        );
+                    new Thread(() => {
+                        try {
+                            string filename = Path.GetTempPath() + DateTime.Now.Ticks + ".bat";
+                            File.WriteAllText(
+                                filename,
+                                "@ECHO OFF\n" +
+                                Main.srv_pse.txtExe.Text + @" \\" + targer + " -u " + Main.srv_pse.txtUsername.Text + " -p " + Main.srv_pse.txtPassword.Text + " cmd.exe"
+                            );
 
-                        using (Process p = new Process()) {
-                            p.StartInfo.FileName = "explorer.exe";
-                            p.StartInfo.Arguments = filename;
-                            p.Start();
-                        }
+                            using (Process p = new Process()) {
+                                p.StartInfo.FileName = "explorer.exe";
+                                p.StartInfo.Arguments = filename;
+                                p.Start();
+                            }
 
-                        new Thread(() => {
-                            Thread.Sleep(3000);
-                            File.Delete(filename);
-                        }).Start();
+                            new Thread(() => {
+                                Thread.Sleep(3000);
+                                File.Delete(filename);
+                            }).Start();
 
-                    } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                        } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    }).Start();
                     break;
 
                 case "smb":
-                    try {
-                        using (Process p = new Process()) {
-                            p.StartInfo.FileName = "explorer.exe";
-                            p.StartInfo.Arguments = $"\\\\{targer}\\{arg}";
-                            p.StartInfo.UseShellExecute = true;
-                            p.Start();
-                        }
-                    } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    new Thread(() => {
+                        try {
+                            using (Process p = new Process()) {
+                                p.StartInfo.FileName = "explorer.exe";
+                                p.StartInfo.Arguments = $"\\\\{targer}\\{arg}";
+                                p.StartInfo.UseShellExecute = true;
+                                p.Start();
+                            }
+                        } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    }).Start();
                     break;
 
                 case "stp":

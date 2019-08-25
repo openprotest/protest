@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -15,10 +14,8 @@ namespace Protest_RA {
 
         public static string key = "";
 
-        public static Main self;
-        
+        private static Main self;
         private static Stamp frmStamp = new Stamp();
-
         private delegate void delShowStamp(string value);
         public static void ShowStamp(string value) {
             if (self.InvokeRequired) {
@@ -174,10 +171,6 @@ namespace Protest_RA {
         }
         private void TrayIcon_MouseDoubleClick(object sender, MouseEventArgs e) {
             Toogle();
-        }
-
-        private void Button1_Click(object sender, EventArgs e) {
-            Main.frmStamp.setKeystroke("123123");
         }
     }
 }

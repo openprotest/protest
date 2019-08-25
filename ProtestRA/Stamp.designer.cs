@@ -52,10 +52,11 @@
             this.Text = "Stamp";
             this.TopMost = true;
             this.TransparencyKey = System.Drawing.Color.Fuchsia;
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Stamp_MouseUp);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Stamp_KeyDown);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.Stamp_Paint);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Stamp_KeyDown);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Stamp_MouseUp);
             this.ResumeLayout(false);
+
     }
 
     #endregion

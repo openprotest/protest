@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 public partial class Stamp : Form {
-    static Pen outline = new Pen(Color.FromArgb(232, 118, 0), 8);
+    static Pen outline = new Pen(Color.FromArgb(232, 118, 0), 4);
     static Pen cross = new Pen(Color.Black, 4);
 
     private protected string strokes = "";
@@ -55,11 +50,10 @@ public partial class Stamp : Form {
             strokes = "";
         }
     }
-
-
+    
     private void Stamp_Paint(object sender, PaintEventArgs e) {
-        e.Graphics.DrawRectangle(outline, 0, 0, 192, 40);
-
+        e.Graphics.DrawRectangle(outline, 4, 6, 184, 28);
+               
         e.Graphics.DrawLine(cross, 96, 6, 96, 34);
         e.Graphics.DrawLine(cross, 82, 20, 110, 20);
         e.Graphics.FillRectangle(Brushes.Black, 91, 15, 10, 10);
