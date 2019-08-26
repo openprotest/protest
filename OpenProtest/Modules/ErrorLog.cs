@@ -23,7 +23,7 @@ static class ErrorLog {
                         writer.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         writer.WriteLine($"\t{ex}");
                 }
-            } catch { }        
+            } catch { }
 
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine(ex);

@@ -155,7 +155,7 @@ namespace Protest_RA {
 
                 case "stp":
                     //frmStamp.setKeystroke(arg);
-                    Main.ShowStamp(arg);
+                    Main.ShowStamp(arg); //invoke
                     break;
             }
 

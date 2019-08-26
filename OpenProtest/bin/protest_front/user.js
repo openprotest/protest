@@ -385,6 +385,19 @@ class User extends Window {
             let btnShow = document.createElement("input");
             btnShow.type = "button";
             btnShow.value = "Show";
+            value.appendChild(btnShow);
+
+            let btnStamp = document.createElement("input");
+            btnStamp.type = "button";
+            btnStamp.value = " ";
+            btnStamp.style.minWidth = "40px";
+            btnStamp.style.height = "32px";
+            btnStamp.style.backgroundImage = "url(res/l_stamp.svg)";
+            btnStamp.style.backgroundSize = "28px 28px";
+            btnStamp.style.backgroundPosition = "center";
+            btnStamp.style.backgroundRepeat = "no-repeat";
+            value.appendChild(btnStamp);
+
             btnShow.onclick = ()=> {
                 value.removeChild(btnShow);
 
@@ -408,9 +421,11 @@ class User extends Window {
 
                         setTimeout(() => {
                             if (!this.isClosed) {
-                                btnShow.style.animation = "fade-in .4s";
+                                //btnShow.style.animation = "fade-in .4s";
+                                //btnStamp.style.animation = "fade-in .4s";
                                 value.innerHTML = "";
                                 value.appendChild(btnShow);
+                                value.appendChild(btnStamp);
                             }
                         }, 20000);
 
@@ -425,7 +440,19 @@ class User extends Window {
                 xhr.send();
             };
 
-            value.appendChild(btnShow);
+            btnStamp.onclick = () => {
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4 && xhr.status == 200) { //OK                       
+                        if (xhr.responseText != "ok")
+                            this.ConfirmBox(xhr.responseText, true);
+                    } else if (xhr.readyState == 4 && xhr.status == 0)  //disconnected
+                        this.ConfirmBox("Server is unavailable.", true);
+                };
+
+                xhr.open("GET", "ramsg&stpu&" + this.filename + ":" + n, true);
+                xhr.send();
+            };            
             
         } else if (v.includes(";")) {
             let value = document.createElement("div");

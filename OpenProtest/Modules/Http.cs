@@ -35,11 +35,13 @@ class Http {
                 Thread thread = new Thread(() => Serve(ctx));
                 thread.Start();
             }
-            catch (Exception ex) { ErrorLog.Err(ex); }
+        catch (Exception ex) { ErrorLog.Err(ex); }
     }
 
     public virtual void Serve(in HttpListenerContext ctx) {
-        if (!(Session.ip_access.ContainsKey(ctx.Request.RemoteEndPoint.Address.ToString()) || Session.ip_access.ContainsKey("*"))) { //check ip_access
+        string remoteEndPoint = ctx.Request.RemoteEndPoint.Address.ToString();
+
+        if (!(Session.ip_access.ContainsKey(remoteEndPoint) || Session.ip_access.ContainsKey("*"))) { //check ip_access
             //ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             ctx.Response.Close();
             return;
@@ -61,22 +63,37 @@ class Http {
         //ctx.Response.SendChunked = false;
         //ctx.Response.ContentEncoding = Encoding.UTF8;
 
-        if (!(Session.CheckAccess(ctx) || para[0]=="a" || para[0]=="res/icon24.png")) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+        string performer = remoteEndPoint;
 
-            if (cache.hash.ContainsKey("login")) {
-                buffer = ((Cache.CacheEntry)cache.hash["login"]).bytes;
-                ctx.Response.ContentType = "text/html";
-                try {
-                    if (buffer!=null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-                } catch {}
+        if (!(Session.CheckAccess(ctx) || para[0]=="a" || para[0]=="res/icon24.png")) 
+            if (ctx.Request.IsLocal) { //if request is from localhost don't ask for a pass
+                string token = Session.GrantAccess(remoteEndPoint, "localhost");
+                ctx.Response.AppendCookie(new Cookie() {
+                    Name     = "sessionid",
+                    Value    = token,
+                    HttpOnly = true,
+                    Domain   = ctx.Request.UserHostName,
+                    Expires  = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
+                });
+
+                ActionLog.Action($"localhost@{remoteEndPoint}", "Auto-login");
+                performer = "localhost";
+
+            } else {
+                ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+
+                if (cache.hash.ContainsKey("login")) {
+                    buffer = ((Cache.CacheEntry)cache.hash["login"]).bytes;
+                    ctx.Response.ContentType = "text/html";
+                    try {
+                        if (buffer != null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                    } catch { }
+                }
+
+                ctx.Response.Close();
+                return;
             }
 
-            ctx.Response.Close();
-            return;
-        }
-
-        string performer = ctx.Request.RemoteEndPoint.Address.ToString(); //TODO: username/performer
 
         if (ctx.Request.IsWebSocketRequest) {
             ServeWebSocket(ctx, para);
@@ -87,7 +104,6 @@ class Http {
         bool acceptGzip = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower().Contains("gzip") ?? false;
 
         try {
-
             if (!isModified) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.NotModified;
                 ctx.Response.OutputStream.Write(new byte[0], 0, 0);
@@ -104,6 +120,7 @@ class Http {
                     }
 
             if (cache.hash.ContainsKey(para[0])) { //get from cache
+
                 ctx.Response.AddHeader("Last-Modified", cache.birthdate);
                 ctx.Response.StatusCode = (int)HttpStatusCode.OK;
 
@@ -128,6 +145,8 @@ class Http {
                 ctx.Response.StatusCode = (int)HttpStatusCode.OK;
                 ctx.Response.ContentType = "text/plain";
                 ctx.Response.AddHeader("Cache-Control", "no-store");
+
+                performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value ?? "");
 
                 switch (para[0]) {
                     case "a":
@@ -195,7 +214,7 @@ class Http {
                     case "gettasksobj" : buffer = ProTasks.GetTasks(); break;
                     case "gettasksongoing" : buffer = ProTasks.GetOnGoing(); break;
                     case "gettasksresults" : buffer = ProTasks.GetResults(); break;
-                        
+                    
                     case "getnetdrives": buffer = NetworkDrive.GetNetDrive(para); break;
 
                     case "ramsg": buffer = RaClient.RaResponse(para, ctx.Request.RemoteEndPoint.Address.ToString()); break;

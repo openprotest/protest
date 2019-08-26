@@ -636,8 +636,8 @@ class Equip extends Window {
 
                         setTimeout(() => {
                             if (!this.isClosed) {
-                                btnShow.style.animation = "fade-in .4s";
-                                btnStamp.style.animation = "fade-in .4s";
+                                //btnShow.style.animation = "fade-in .4s";
+                                //btnStamp.style.animation = "fade-in .4s";
                                 value.innerHTML = "";
                                 value.appendChild(btnShow);
                                 value.appendChild(btnStamp);
@@ -659,15 +659,15 @@ class Equip extends Window {
                 let xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK                       
-
+                        if (xhr.responseText != "ok")
+                            this.ConfirmBox(xhr.responseText, true);
                     } else if (xhr.readyState == 4 && xhr.status == 0)  //disconnected
                         this.ConfirmBox("Server is unavailable.", true);
                 };
 
-                xhr.open("GET", "ramsg&stp&" + this.filename + ":" + n, true);
+                xhr.open("GET", "ramsg&stpe&" + this.filename + ":" + n, true);
                 xhr.send();
             };
-
 
         } else if (v.includes(";")) {
             let value = document.createElement("div");

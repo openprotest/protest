@@ -18,15 +18,12 @@ namespace Protest_RA {
         private static Stamp frmStamp = new Stamp();
         private delegate void delShowStamp(string value);
         public static void ShowStamp(string value) {
-            if (self.InvokeRequired) {
+            if (self.InvokeRequired) 
                 self.Invoke(new delShowStamp(ShowStamp), value);
-            } else {
-                self.Text = value;
+            else 
                 frmStamp.setKeystroke(value);
-            }
         }
-
-
+        
         public Main() {
             InitializeComponent();
             this.TrayIcon.Text = this.Text;

@@ -20,25 +20,24 @@ static class RaClient {
             filename = filename.Split(':')[0];
         }
 
-        if (filename.Length == 0) return Tools.INF.Array;
-        if (!NoSQL.equip.ContainsKey(filename)) return Tools.FLE.Array;
-        
-        NoSQL.DbEntry entry = (NoSQL.DbEntry)NoSQL.equip[filename];
-
-        string hostname = "";
-        if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
-        else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
-        if (hostname.Length == 0) return Tools.INF.Array;
-
         if (performer == "127.0.0.1") {
+            if (filename.Length == 0) return Tools.INF.Array;
+            if (!NoSQL.equip.ContainsKey(filename)) return Tools.FLE.Array;
+
+            NoSQL.DbEntry entry = (NoSQL.DbEntry)NoSQL.equip[filename];
+
+            string hostname = "";
+            if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
+            else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
+            if (hostname.Length == 0) return Tools.INF.Array;
 
             switch (method) {
                 case "vnc":
-                    /*try {*/
+                    try {
                         Process.Start(
                         "C:\\Program Files\\uvnc bvba\\UltraVNC\\vncviewer.exe",
                         "-autoscaling " + hostname);
-                    /*} catch  {}*/
+                    } catch  {}
                     break;
 
                 case "rdp":
@@ -93,6 +92,12 @@ static class RaClient {
                     } catch { }
                     break;*/
 
+                case "stpe":
+                    return Tools.TCP.Array;
+
+                case "stpu":
+                    return Tools.TCP.Array;
+
                 case "stp":
                     return Tools.TCP.Array;
             }
@@ -100,27 +105,40 @@ static class RaClient {
         } else {
             byte[] payload;
 
-            if (method == "stp")
+            if (method == "stpe")
                 payload = Encoding.UTF8.GetBytes(
-                    $"{method}{(char)127}{hostname}{(char)127}" + 
-                    Encoding.UTF8.GetString(
-                        NoSQL.GetValue(NoSQL.equip, filename, property)
-                    )
+                    $"stp{(char)127}none{(char)127}" +
+                    Encoding.UTF8.GetString(NoSQL.GetValue(NoSQL.equip, filename, property))
                 );
-            else
-                payload = Encoding.UTF8.GetBytes($"{method}{(char)127}{hostname}{(char)127}{arg}");            
 
-            try { 
-                //Console.WriteLine(performer + ": " + Encoding.UTF8.GetString(payload));
+            else if (method == "stpu")
+                payload = Encoding.UTF8.GetBytes(
+                    $"stp{(char)127}none{(char)127}" +
+                    Encoding.UTF8.GetString(NoSQL.GetValue(NoSQL.users, filename, property))
+                );
+
+            else {
+                if (filename.Length == 0) return Tools.INF.Array;
+                if (!NoSQL.equip.ContainsKey(filename)) return Tools.FLE.Array;
+
+                NoSQL.DbEntry entry = (NoSQL.DbEntry)NoSQL.equip[filename];
+
+                string hostname = "";
+                if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
+                else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
+                if (hostname.Length == 0) return Tools.INF.Array;
+
+                payload = Encoding.UTF8.GetBytes($"{method}{(char)127}{hostname}{(char)127}{arg}");
+            }
+
+            try {
                 payload = Crypto.Encrypt(payload, Program.TCP_KEY);
-
                 TcpClient client = new TcpClient(performer, 5810);
                 client.GetStream().Write(payload, 0, payload.Length);
                 client.Close();
             } catch {
                 return Tools.TCP.Array;
             }
-
         }
 
         return Tools.OK.Array;

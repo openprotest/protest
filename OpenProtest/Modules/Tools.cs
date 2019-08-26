@@ -94,12 +94,11 @@ static class Tools {
 
         string sessionId = Session.GetSessionId(ctx);
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
-#if !DEBUG
+
         if (sessionId is null) {
             ctx.Response.Close();
             return;
         }
-#endif
 
         Hashtable hostnames = new Hashtable();
         object send_lock = new object();
@@ -237,12 +236,11 @@ static class Tools {
 
         string sessionId = Session.GetSessionId(ctx);
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
-#if !DEBUG
+
         if (sessionId is null) {
             ctx.Response.Close();
             return;
         }
-#endif
 
         object send_lock = new object();
 
@@ -350,12 +348,11 @@ static class Tools {
 
         string sessionId = Session.GetSessionId(ctx);
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
-#if !DEBUG
+
         if (sessionId is null) {
             ctx.Response.Close();
             return;
         }
-#endif
 
         object send_lock = new object();
 
@@ -780,12 +777,11 @@ static class Tools {
 
         string sessionId = Session.GetSessionId(ctx);
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
-#if !DEBUG
+
         if (sessionId is null) {
             ctx.Response.Close();
             return;
         }
-#endif
 
         if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
             ctx.Response.Close();
@@ -856,12 +852,10 @@ static class Tools {
 
         string sessionId = Session.GetSessionId(ctx);
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
-#if !DEBUG
         if (sessionId is null) {
             ctx.Response.Close();
             return;
         }
-#endif
 
         if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
             ctx.Response.Close();
@@ -1119,10 +1113,8 @@ static class Tools {
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
 
         if (sessionId is null) {
-#if !DEBUG
             ctx.Response.Close();
             return;
-#endif
         } else {
             lock (pt_lock) {
                 PublicTransportationSessionSearchAndDestroy(sessionId);
@@ -1139,12 +1131,10 @@ static class Tools {
                 byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-#if !DEBUG
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
                     ctx.Response.Close();
                     return;
                 }
-#endif
 
                 string[] queue = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
 

@@ -16,8 +16,8 @@ static class Session {
 
     private static readonly object session_lock = new object();
 
-    private static long HOUR = 36000000000;
-    private static long SESSION_TIMEOUT = 8; //8 hours
+    public static long HOUR = 36000000000;
+    public static long SESSION_TIMEOUT = 12; //12 hours
 
     struct SessionEntry {
         public string ip;
@@ -31,13 +31,6 @@ static class Session {
         string ip = ctx.Request.RemoteEndPoint.Address.ToString().Replace("%", "_");
 
         try {
-            /*
-            byte[] buffer = new byte[256];
-            ctx.Request.InputStream.Read(buffer, 0, buffer.Length);
-            string payload = Encoding.UTF8.GetString(buffer);
-            payload = payload.Substring(0, payload.IndexOf('\0'));
-            */
-
             string payload = new StreamReader(ctx.Request.InputStream).ReadToEnd();
             string[] split = payload.Split((char)127);
             if (split.Length < 2) return null;
@@ -72,6 +65,15 @@ static class Session {
 
         } catch (Exception ex){
             ErrorLog.Err(ex);
+        }
+
+        return null;
+    }
+
+    public static string GetUsername(string sessionId) {
+        lock (session_lock) {
+            if (sessions.ContainsKey(sessionId))
+                return ((SessionEntry)sessions[sessionId]).username;
         }
 
         return null;
@@ -129,20 +131,12 @@ static class Session {
     public static bool CheckAccess(in HttpListenerContext ctx) {
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString().Replace("%", "_");
 
-#if DEBUG
-        if (remoteIp == "127.0.0.1") return true;
-#endif
-
         string sessionId = GetSessionId(ctx);
         if (sessionId is null) return false;
 
         return CheckAccess(in sessionId, in remoteIp);
     }
     public static bool CheckAccess(in string sessionId, in string remoteIp) {
-#if DEBUG
-        if (remoteIp == "127.0.0.1") return true;
-#endif
-
         if (!sessions.ContainsKey(sessionId)) return false;
 
         SessionEntry entry = (SessionEntry)sessions[sessionId];
