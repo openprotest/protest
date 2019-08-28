@@ -3,12 +3,13 @@
 key = TEST_EMX2fpbDyMQ8T1P0WV22WwHJ9V9jrLkq3Y8EJUsQsNLN6xUdE6Ie1F54YX5
 force_registry_keys = true
 
-ip_access = *
 user_access = dev
-user_access = admin
+user_access = administrator
+
+ip_access = *
 
 http_enable = true
-http_ip     = *
+http_ip     = 127.0.0.1
 http_port   = 80
 
 addressbook_enable = false

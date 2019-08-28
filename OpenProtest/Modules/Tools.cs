@@ -79,7 +79,7 @@ static class Tools {
         Task<string> t = PingAsync(ip, "", 1001);
         return Encoding.UTF8.GetBytes(t.Result.Replace(((char)127).ToString(), ""));
     }
-    public static async void WsPing(HttpListenerContext ctx) {
+    public static async void WsPing(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc = null;
         WebSocket ws = null;
 
@@ -93,7 +93,6 @@ static class Tools {
         }
 
         string sessionId = Session.GetSessionId(ctx);
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
 
         if (sessionId is null) {
             ctx.Response.Close();
@@ -221,7 +220,7 @@ static class Tools {
         }
     }
 
-    public static async void WsTraceRoute(HttpListenerContext ctx) {
+    public static async void WsTraceRoute(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc = null;
         WebSocket ws = null;
 
@@ -235,7 +234,6 @@ static class Tools {
         }
 
         string sessionId = Session.GetSessionId(ctx);
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
 
         if (sessionId is null) {
             ctx.Response.Close();
@@ -333,7 +331,7 @@ static class Tools {
         }
     }
     
-    public static async void WsPortScan(HttpListenerContext ctx) {
+    public static async void WsPortScan(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -347,7 +345,6 @@ static class Tools {
         }
 
         string sessionId = Session.GetSessionId(ctx);
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
 
         if (sessionId is null) {
             ctx.Response.Close();
@@ -763,7 +760,7 @@ static class Tools {
         }
     }
 
-    public static async void WsSpeedTest(HttpListenerContext ctx) {
+    public static async void WsSpeedTest(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc; WebSocket ws;
 
         try {
@@ -776,7 +773,6 @@ static class Tools {
         }
 
         string sessionId = Session.GetSessionId(ctx);
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
 
         if (sessionId is null) {
             ctx.Response.Close();
@@ -838,7 +834,7 @@ static class Tools {
         }
     }
 
-    public static async void WsWebCheck(HttpListenerContext ctx) {
+    public static async void WsWebCheck(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc; WebSocket ws;
 
         try {
@@ -851,7 +847,7 @@ static class Tools {
         }
 
         string sessionId = Session.GetSessionId(ctx);
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
+
         if (sessionId is null) {
             ctx.Response.Close();
             return;
@@ -1096,7 +1092,7 @@ static class Tools {
         return true;
     }
 
-    public static async void WsPublicTransportationAsync(HttpListenerContext ctx) {
+    public static async void WsPublicTransportationAsync(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -1110,7 +1106,6 @@ static class Tools {
         }
 
         string sessionId = Session.GetSessionId(ctx);
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
 
         if (sessionId is null) {
             ctx.Response.Close();

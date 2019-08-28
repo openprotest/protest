@@ -27,8 +27,7 @@ static class Session {
         public string sessionId;
     }
 
-    public static string TryLogin(in HttpListenerContext ctx) {
-        string ip = ctx.Request.RemoteEndPoint.Address.ToString().Replace("%", "_");
+    public static string TryLogin(in HttpListenerContext ctx, string remoteIp) {
 
         try {
             string payload = new StreamReader(ctx.Request.InputStream).ReadToEnd();
@@ -44,23 +43,23 @@ static class Session {
             bool auth = ActiveDir.AuthenticateDomainUser(username, password);
         
             if (auth) {
-                string token = GrantAccess(in ip, in username);
+                string token = GrantAccess(in remoteIp, in username);
 
                 Cookie cookie = new Cookie() {
                     Name = "sessionid",
                     Value = token,
                     HttpOnly = true,
-                    Domain = ctx.Request.UserHostName,
+                    //Domain = ctx.Request.UserHostName, //TODO: brakes reverce proxy
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };
                     
-                ActionLog.Action($"{username}@{ip}", "Login successfuly");
+                ActionLog.Action($"{username}@{remoteIp}", "Login successfuly");
 
                 ctx.Response.AppendCookie(cookie);
                 return token;
             }
 
-            ActionLog.Action($"{username}@{ip}", "Unsuccessful login attempt");
+            ActionLog.Action($"{username}@{remoteIp}", "Unsuccessful login attempt");
             return null;
 
         } catch (Exception ex){
@@ -112,9 +111,9 @@ static class Session {
         return Tools.OK.Array;
     }
 
-    public static string GrantAccess(in string ip, in string username) {
+    public static string GrantAccess(in string remoteIp, in string username) {
         SessionEntry newEntry = new SessionEntry() {
-            ip = ip,
+            ip = remoteIp,
             username = username,
             loginTime = DateTime.Now,
             //lastAction = DateTime.Now,
@@ -128,9 +127,7 @@ static class Session {
         return newEntry.sessionId;
     }
 
-    public static bool CheckAccess(in HttpListenerContext ctx) {
-        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString().Replace("%", "_");
-
+    public static bool CheckAccess(in HttpListenerContext ctx, in string remoteIp) {
         string sessionId = GetSessionId(ctx);
         if (sessionId is null) return false;
 

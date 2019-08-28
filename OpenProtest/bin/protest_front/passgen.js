@@ -190,12 +190,12 @@ class Passgen extends Window {
         let flag = [];
 
         if (this.chkLowercase.checked) {
-            pool.push("abcdefghijklmnopqrstuvwxyz");
+            pool.push("abcdefghijkmnopqrstuvwxyz");
             flag.push(false);
         }
 
         if (this.chkUppercase.checked) {
-            pool.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+            pool.push("ABCDEFGHJKLMNOPQRSTUVWXYZ");
             flag.push(false);
         }
 
