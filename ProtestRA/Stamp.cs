@@ -40,7 +40,16 @@ public partial class Stamp : Form {
             mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
 
             System.Threading.Thread.Sleep(1);
-            SendKeys.SendWait(strokes);
+
+            string escaped = "";
+            for (int i = 0; i < strokes.Length; i++)
+                if (strokes[i] > 47 && strokes[i] < 58 || strokes[i] > 64 && strokes[i] < 91 || strokes[i] > 96 && strokes[i] < 123)
+                    escaped += strokes[i];
+                else
+                    escaped += "{" + strokes[i] + "}";
+
+            SendKeys.SendWait(escaped);
+            escaped = "";
             strokes = "";
         }
     }
