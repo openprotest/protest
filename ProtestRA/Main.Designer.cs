@@ -35,10 +35,12 @@
             this.btnApply = new System.Windows.Forms.Button();
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.TrayMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tmrAutoHide = new System.Windows.Forms.Timer(this.components);
             this.btnClose = new System.Windows.Forms.Button();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.recentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.pnlMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtListennerPort)).BeginInit();
             this.TrayMenu.SuspendLayout();
@@ -67,15 +69,15 @@
             this.lblKey.AutoSize = true;
             this.lblKey.Location = new System.Drawing.Point(3, 44);
             this.lblKey.Name = "lblKey";
-            this.lblKey.Size = new System.Drawing.Size(32, 17);
+            this.lblKey.Size = new System.Drawing.Size(98, 17);
             this.lblKey.TabIndex = 4;
-            this.lblKey.Text = "Key:";
+            this.lblKey.Text = "Pre-shared key:";
             // 
             // txtKey
             // 
             this.txtKey.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.txtKey.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.txtKey.Location = new System.Drawing.Point(102, 41);
+            this.txtKey.Location = new System.Drawing.Point(107, 41);
             this.txtKey.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtKey.Name = "txtKey";
             this.txtKey.Size = new System.Drawing.Size(286, 25);
@@ -86,7 +88,7 @@
             // 
             this.txtListennerPort.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.txtListennerPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.txtListennerPort.Location = new System.Drawing.Point(309, 4);
+            this.txtListennerPort.Location = new System.Drawing.Point(314, 4);
             this.txtListennerPort.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtListennerPort.Maximum = new decimal(new int[] {
             65534,
@@ -110,7 +112,7 @@
             // lblPort
             // 
             this.lblPort.AutoSize = true;
-            this.lblPort.Location = new System.Drawing.Point(268, 7);
+            this.lblPort.Location = new System.Drawing.Point(273, 7);
             this.lblPort.Name = "lblPort";
             this.lblPort.Size = new System.Drawing.Size(35, 17);
             this.lblPort.TabIndex = 2;
@@ -122,7 +124,7 @@
             this.cmbListennerIp.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbListennerIp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.cmbListennerIp.FormattingEnabled = true;
-            this.cmbListennerIp.Location = new System.Drawing.Point(102, 4);
+            this.cmbListennerIp.Location = new System.Drawing.Point(107, 4);
             this.cmbListennerIp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.cmbListennerIp.Name = "cmbListennerIp";
             this.cmbListennerIp.Size = new System.Drawing.Size(152, 25);
@@ -164,31 +166,13 @@
             this.TrayMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.TrayMenu.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.TrayMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.recentsToolStripMenuItem,
+            this.toolStripMenuItem1,
             this.optionsToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.TrayMenu.Name = "TrayMenu";
             this.TrayMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.TrayMenu.Size = new System.Drawing.Size(133, 56);
-            // 
-            // optionsToolStripMenuItem
-            // 
-            this.optionsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.optionsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.optionsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.icon24;
-            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
-            this.optionsToolStripMenuItem.Text = "Options";
-            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
-            // 
-            // exitToolStripMenuItem
-            // 
-            this.exitToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.exitToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.exitToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.close24;
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            this.TrayMenu.Size = new System.Drawing.Size(133, 88);
             // 
             // tmrAutoHide
             // 
@@ -211,6 +195,41 @@
             this.btnClose.Text = "Close";
             this.btnClose.UseVisualStyleBackColor = false;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.optionsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.optionsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.icon24;
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
+            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.exitToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.exitToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.close24;
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // recentsToolStripMenuItem
+            // 
+            this.recentsToolStripMenuItem.Enabled = false;
+            this.recentsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F);
+            this.recentsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.recentsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.recent24;
+            this.recentsToolStripMenuItem.Name = "recentsToolStripMenuItem";
+            this.recentsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
+            this.recentsToolStripMenuItem.Text = "Recents";
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(129, 6);
             // 
             // Main
             // 
@@ -256,6 +275,8 @@
         private System.Windows.Forms.NumericUpDown txtListennerPort;
         private System.Windows.Forms.Label lblKey;
         private System.Windows.Forms.TextBox txtKey;
+        public System.Windows.Forms.ToolStripMenuItem recentsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
     }
 }
 

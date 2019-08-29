@@ -7,7 +7,7 @@ using System.IO;
 using System.Threading;
 
 static class RaClient {
-    public static byte[] RaResponse(string[] para, string performer) {
+    public static byte[] RaResponse(string[] para, string remoteIp) {
         if (para.Length < 3) return Tools.INF.Array;
 
         string method = para[1];
@@ -20,7 +20,7 @@ static class RaClient {
             filename = filename.Split(':')[0];
         }
 
-        if (performer == "127.0.0.1") {
+        if (remoteIp == "127.0.0.1") {
             if (filename.Length == 0) return Tools.INF.Array;
             if (!NoSQL.equip.ContainsKey(filename)) return Tools.FLE.Array;
 
@@ -132,10 +132,11 @@ static class RaClient {
             }
 
             try {
-                payload = Crypto.Encrypt(payload, Program.TCP_KEY);
-                TcpClient client = new TcpClient(performer, 5810);
+                payload = Crypto.Encrypt(payload, Program.PRESHARED_KEY);
+                TcpClient client = new TcpClient(remoteIp, 5810);
                 client.GetStream().Write(payload, 0, payload.Length);
                 client.Close();
+
             } catch {
                 return Tools.TCP.Array;
             }

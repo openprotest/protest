@@ -9,7 +9,7 @@ user_access = administrator
 ip_access = *
 
 http_enable = true
-http_ip     = 127.0.0.1
+http_ip     = *
 http_port   = 80
 
 addressbook_enable = false

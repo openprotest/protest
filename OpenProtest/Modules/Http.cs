@@ -40,15 +40,15 @@ class Http {
 
     public virtual void Serve(in HttpListenerContext ctx) {
         string forwarded = ctx.Request.Headers["X-Forwarded-For"];
-        string remoteIp = forwarded?.ToString() ?? ctx.Request.RemoteEndPoint.Address.ToString();
-
+        string remoteIp = forwarded is null ? ctx.Request.RemoteEndPoint.Address.ToString() : forwarded;
+        
         if (!(Session.ip_access.ContainsKey(remoteIp) || Session.ip_access.ContainsKey("*"))) { //check ip_access
             //ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             ctx.Response.Close();
             return;
         }
 
-        //TODO: check again with reverce proxy
+        //TODO: check again with reverse proxy
         /*if (ctx.Request.UrlReferrer != null && !ctx.Request.UrlReferrer.IsLoopback)  //CSRF protection
             if (ctx.Request.UrlReferrer.Host != ctx.Request.UserHostName.Split(':')[0]) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
@@ -61,9 +61,6 @@ class Http {
         string url = ctx.Request.Url.AbsolutePath;
         string[] para = url.Split('&');
         if (para[0].StartsWith("/")) para[0] = para[0].Substring(1);
-
-        //ctx.Response.SendChunked = false;
-        //ctx.Response.ContentEncoding = Encoding.UTF8;
 
         string performer = remoteIp;
 
@@ -84,7 +81,6 @@ class Http {
         }
 
         if (!(validCookie || para[0]=="a" || para[0]=="res/icon24.png") && remoteIp != "127.0.0.1") {
-
             if (cache.hash.ContainsKey("login")) {
                 buffer = ((Cache.CacheEntry)cache.hash["login"]).bytes;
                 ctx.Response.ContentType = "text/html";
@@ -97,11 +93,13 @@ class Http {
             return;
         }
 
-
         if (ctx.Request.IsWebSocketRequest) {
             ServeWebSocket(ctx, para, remoteIp);
             return;
         }
+
+        //ctx.Response.SendChunked = false;
+        //ctx.Response.ContentEncoding = Encoding.UTF8;
 
         bool isModified = (ctx.Request.Headers.Get("If-Modified-Since") != cache.birthdate);
         bool acceptGzip = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower().Contains("gzip") ?? false;
@@ -219,7 +217,7 @@ class Http {
                     
                     case "getnetdrives": buffer = NetworkDrive.GetNetDrive(para); break;
 
-                    case "ramsg": buffer = RaClient.RaResponse(para, performer); break;
+                    case "ramsg": buffer = RaClient.RaResponse(para, remoteIp); break;
 
                     default: //not found
                         ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;

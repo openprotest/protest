@@ -44,7 +44,9 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Crypto.cs" />
+    <Compile Include="..\OpenProtest\Modules\Crypto.cs">
+      <Link>Crypto.cs</Link>
+    </Compile>
     <Compile Include="Listener.cs" />
     <Compile Include="Main.cs">
       <SubType>Form</SubType>
@@ -100,6 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="protest_remote_agent.ico" />
+    <None Include="Resources\recent24.png" />
     <None Include="Resources\icon24.png" />
     <None Include="Resources\close24.png" />
   </ItemGroup>

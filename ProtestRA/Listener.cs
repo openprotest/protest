@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Net;
@@ -76,24 +75,25 @@ namespace Protest_RA {
                 return;
             }
 
-            string[] split = System.Text.Encoding.UTF8.GetString(decrypt).Split((char)127);
+            Action(System.Text.Encoding.UTF8.GetString(decrypt));
+
+            client.Close();
+        }
+
+        private static bool Action(string cmd) {
+            string[] split = cmd.Split((char)127);
             if (split.Length < 2) {
-                client.Close();
-                return;
+                return false;
             }
 
             string method = split[0];
             string targer = split[1];
             string arg = split[2];
 
-            if (split.Length < 2) {
-                client.Close();
-                return;
-            }
-
             switch (method) {
                 case "vnc":
                     if (!Main.srv_uvnc.chkEnable.Checked) break;
+                    PushToRecents($"VNC: {targer}", cmd);
                     new Thread(() => {
                         try {
                             Process.Start(
@@ -105,6 +105,7 @@ namespace Protest_RA {
 
                 case "rdp":
                     if (!Main.srv_rdp.chkEnable.Checked) break;
+                    PushToRecents($"RDP: {targer}", cmd);
                     new Thread(() => {
                         try {
                             Process.Start(
@@ -116,6 +117,8 @@ namespace Protest_RA {
 
                 case "pse":
                     if (!Main.srv_pse.chkEnable.Checked) break;
+                    PushToRecents($"PSE: {targer}", cmd);
+
                     new Thread(() => {
                         try {
                             string filename = Path.GetTempPath() + DateTime.Now.Ticks + ".bat";
@@ -141,6 +144,7 @@ namespace Protest_RA {
                     break;
 
                 case "smb":
+                    PushToRecents($"SMB: {targer}", cmd);
                     new Thread(() => {
                         try {
                             using (Process p = new Process()) {
@@ -159,8 +163,17 @@ namespace Protest_RA {
                     break;
             }
 
-            client.Close();
+            return false;
+        }
+
+        private static void PushToRecents(string name, string cmd) {
+            Main.self.recentsToolStripMenuItem.Enabled = true;
+
+            ToolStripMenuItem recent = new ToolStripMenuItem(name);
+
+            Main.self.recentsToolStripMenuItem.DropDownItems.Add(recent);
         }
 
     }
+
 }

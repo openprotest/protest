@@ -58,14 +58,12 @@ class DebitNotes {
                         if (data.Length == 0) break;
 
                         bool found = true;
-                        if (filter.Length > 0) {
-                            for (int i = 0; i < words.Length; i++) {
+                        if (filter.Length > 0) 
+                            for (int i = 0; i < words.Length; i++) 
                                 if (data.IndexOf(words[i], StringComparison.InvariantCultureIgnoreCase) == -1) {
                                     found = false;
                                     break;
-                                }
-                            }
-                        }
+                                }                           
 
                         if (!found) continue;
 

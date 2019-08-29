@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Net;
 using System.Text;
-using System.Web;
 
 class AddressBook : Http {
     public AddressBook(string ip, ushort port, string path) : base(ip, port, path) { }
@@ -38,8 +37,6 @@ class AddressBook : Http {
         if (cache.hash.ContainsKey(para[0])) { //get from cache
             ctx.Response.AddHeader("Last-Modified", cache.birthdate);
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-
-            //ctx.Response.AddHeader("Referrer-Policy", "no-referrer");
 
             Cache.CacheEntry entity = (Cache.CacheEntry)cache.hash[para[0]];
 

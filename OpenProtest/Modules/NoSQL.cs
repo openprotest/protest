@@ -295,8 +295,7 @@ static class NoSQL {
     }
 
     public static byte[] GetValue(Hashtable table, string[] para) {
-        string filename = "";
-        string property = "";
+        string filename = "", property = "";
         for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
             if (para[i].StartsWith("property=")) property = para[i].Substring(9);

@@ -15,7 +15,6 @@ static class ActiveDir {
         DirectoryEntry dir = new DirectoryEntry($"LDAP://{domain}");
         //dir.Username = ".\administrator";
         //dir.Password = "";
-
         return dir;
     }
 
@@ -189,8 +188,7 @@ static class ActiveDir {
     }
 
     public static string ActiveDirVerify(in string[] para) {
-        string filename = "";
-        string username = "";
+        string filename = "", username = "";
 
         for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
@@ -259,8 +257,7 @@ static class ActiveDir {
     }
     
     public static byte[] UnlockUser(in string[] para) {
-        string filename = "";
-        string username = "";
+        string filename = "", username = "";
         for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
             if (para[i].StartsWith("username=")) username = para[i].Substring(9);
@@ -285,8 +282,7 @@ static class ActiveDir {
     }
 
     public static byte[] DisableUser(in string[] para) {
-        string filename = "";
-        string username = "";
+        string filename = "", username = "";
         for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
             if (para[i].StartsWith("username=")) username = para[i].Substring(9);

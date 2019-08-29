@@ -207,8 +207,7 @@ class Cache {
         //Console.WriteLine((char)bytes[0] + " " + (char)bytes[1] + " "  + (char)bytes[2] + " " + (char)bytes[3] + " " + (char)bytes[4] + "    " + name);
 
         files.Add(name, bytes);
-    }
-    
+    }    
 
     public byte[] Bundling(byte[] bytes, Hashtable files, ref int _bundling) { //bundling
         string str = Encoding.UTF8.GetString(bytes);

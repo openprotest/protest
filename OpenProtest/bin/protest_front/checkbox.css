@@ -3,10 +3,8 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked + label:after {
-    margin: 4px;
-    width: 10px;
-    height: 10px;
     opacity: 1;
+    transform: rotate(-50deg);
 }
 
 label {
@@ -16,7 +14,7 @@ label {
 }
 
 label:before {
-    position:absolute;
+    position: absolute;
     top: 2px;
     left: 0;
     width: 18px;
@@ -30,16 +28,20 @@ label:before {
 
 label:after {
     position:absolute;
-    top: 3px;
-    left: 1px;
+    top: 1px;
+    left: 0;
+    width: 15px;
+    height: 8px;
+    margin: 2px 2px;
 
-    margin: 6px;
-    width: 6px;
-    height: 6px;
-    border-radius: 1px;
+    border-radius: 2px;
     content: " ";
-    background-color: rgb(16,16,16);
     opacity: 0;
+    
+    border-bottom: var(--theme-color) 4px solid;
+    border-left: var(--theme-color) 4px solid;
+
+    transform: rotate(-20deg);
     transition: .2s;
 }
 
@@ -52,5 +54,5 @@ label:active:before {
 }
 
 label:focus::before {
-    animation: inner-glow 2s infinite;
+    animation: inner-glow-ligth 2s infinite;
 }

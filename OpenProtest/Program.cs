@@ -6,7 +6,7 @@ class Program {
     static readonly string CONFIG_FILENAME = "config.txt";
 
     public static string DB_KEY;
-    public static string TCP_KEY;
+    public static string PRESHARED_KEY;
 
     public static bool force_registry_keys = false;
 
@@ -47,7 +47,7 @@ class Program {
             switch (split[0]) {
                 case "key":
                     DB_KEY = split[1];
-                    TCP_KEY = split[1];
+                    PRESHARED_KEY = split[1];
                     break;
 
                 case "force_registry_keys":
