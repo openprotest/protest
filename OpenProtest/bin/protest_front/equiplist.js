@@ -192,7 +192,7 @@ class EquipList extends Window {
                 for (let j=0; j<keywords.length; j++) {
                     let flag = false;
                     for (let k in db_equip[i]) {
-                        if (k.startsWith(".")) continue;
+                        //if (k.startsWith(".") && k != ".FILENAME") continue;
                         if (db_equip[i][k][0].toLowerCase().indexOf(keywords[j]) > -1) 
                             flag = true;
                     }
@@ -213,7 +213,7 @@ class EquipList extends Window {
             this.AddTypeFilter(EQUIP_TYPES[i]);
         
         //sort
-        if (this.strSort.length != 0) {
+        if (this.strSort.length != 0) 
             this.list.sort((a,b)=> {
                 if (a[this.strSort]==undefined && b[this.strSort]==undefined) return 0;
                 if (a[this.strSort]==undefined) return 1;
@@ -222,7 +222,7 @@ class EquipList extends Window {
                 if (a[this.strSort][0] > b[this.strSort][0]) return 1;
                 return 0;
             });
-        }
+        
 
         this.content.style.display = "none";
 

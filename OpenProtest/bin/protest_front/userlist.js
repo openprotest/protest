@@ -124,7 +124,7 @@ class UserList extends Window {
                 for (let j=0; j<keywords.length; j++) {
                     let flag = false;
                     for (let k in db_users[i]) {
-                        if (k.startsWith(".")) continue;
+                        //if (k.startsWith(".") && k != ".FILENAME") continue;
                         if (db_users[i][k][0].toLowerCase().indexOf(keywords[j]) > -1) 
                             flag = true;
                     }
@@ -141,7 +141,7 @@ class UserList extends Window {
         }
     
         //sort
-        if (this.strSort.length != 0) {
+        if (this.strSort.length != 0)
             this.list.sort((a,b)=> {
                 if (a[this.strSort]==undefined && b[this.strSort]==undefined) return 0;
                 if (a[this.strSort]==undefined) return 1;
@@ -150,7 +150,7 @@ class UserList extends Window {
                 if (a[this.strSort][0] > b[this.strSort][0]) return 1;
                 return 0;
             });
-        }
+        
 
         this.content.style.display = "none";
 

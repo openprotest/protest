@@ -188,7 +188,7 @@ function SideMenu_Update(filter) {
         for (let j = 0; j < keywords.length; j++) {
             let flag = false;
             for (let k in db_equip[i]) {
-                if (k.startsWith(".")) continue;
+                //if (k.startsWith(".") && k != ".FILENAME") continue;
                 if (db_equip[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
                     flag = true;
             }
@@ -225,7 +225,7 @@ function SideMenu_Update(filter) {
         for (let j = 0; j < keywords.length; j++) {
             let flag = false;
             for (let k in db_users[i]) {
-                if (k.startsWith(".")) continue;
+                //if (k.startsWith(".") && k != ".FILENAME") continue;
                 if (db_users[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
                     flag = true;
             }
@@ -378,6 +378,7 @@ function SideMenu_Close() {
         sidemenu_session[i].win.style.transition = "none";
 
     sidemenu_session = [];
+    lastSearchValue = "";
 
     //container.style.transform = "none";
     cap.style.visibility = "hidden";

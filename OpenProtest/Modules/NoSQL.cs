@@ -147,7 +147,7 @@ static class NoSQL {
         return true;
     }
 
-    public static byte[] GetTable(Hashtable table, long version) { //serialize and send (hash of DbEntry)
+    public static byte[] GetTable(Hashtable table, in long version) { //serialize and send (hash of DbEntry)
         StringBuilder sb = new StringBuilder($"{version}{(char)127}");
 
         foreach (DictionaryEntry o in table) {
@@ -203,7 +203,7 @@ static class NoSQL {
 
     public static bool SaveEntry(string[] array, string filename, SaveMethod method, in string performer, bool isUser) {
         Hashtable hash = new Hashtable();
-        for (int i = 0; i < array.Length - 1; i += 2) { //copy from array to hashtable
+        for (int i = 0; i < array.Length - 1; i += 2) { //copy from array to hash
             array[i] = array[i].ToUpper();
             if (hash.ContainsKey(array[i])) continue;
             if (filename.Length == 0 && array[i] == ".FILENAME") filename = array[i + 1];
@@ -224,7 +224,7 @@ static class NoSQL {
                 write_lock = new object()
             };
 
-        if (!exists) { //if not exists, add to db
+        if (!exists) { //if don't exists, add to db
             if (isUser) {
                 users.Add(filename, entry);
                 users_version = DateTime.Now.Ticks;
@@ -240,6 +240,7 @@ static class NoSQL {
             return true;
         }
 
+        //exists
         switch (method) {
             case SaveMethod.Ignore: //Ignore            
             return true;
@@ -626,7 +627,6 @@ static class NoSQL {
                 if (((string[])e2.hash[uniqueKey])[0] == uid && uid != "(DHCP)")
                     Console.WriteLine($"Duplicate record : {uniqueKey} : {uid.PadRight(20)} {keys[i]} {keys[j]}");
             }
-
         }
         
         Console.ResetColor();

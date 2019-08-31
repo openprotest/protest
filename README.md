@@ -41,8 +41,8 @@ Pro-test provide tools to organize your network environment. It can create a dat
 Pro-test is intended to be used as a portable tool. In that case, the web interface can be accessed via the loopback address without authentication.
 By default, it listens only on localhost:80. (check *[config file](https://github.com/veniware/OpenProtest/blob/master/OpenProtest/bin/config.txt)*).
 
-:exclamation: *If you want to use pro-test as a centralized service, we highly recommend to use a secure reverse proxy, such as [nginx](http://nginx.org/en/download.html).*
+:exclamation: **If you want to use pro-test as a centralized service, we highly recommend to use a secure reverse proxy, such as [nginx](http://nginx.org/en/download.html).**
 
-Requests from IP other than loopback are blocked and require a username and a password.
+Requests from IP other than loopback are rejected and require a username and a password.
 The username must be whitelisted in the [config file](https://github.com/veniware/OpenProtest/blob/master/OpenProtest/bin/config.txt) and the password will be verified by your domain controller.
-If you use a reverse proxy, in order for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end. *([see example](https://github.com/veniware/OpenProtest/blob/master/Tools%20and%20Docs/nginx.conf))*
+If you use a reverse proxy, in order for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end *([see example](https://github.com/veniware/OpenProtest/blob/master/Tools%20and%20Docs/nginx.conf)).*
