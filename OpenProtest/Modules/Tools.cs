@@ -648,13 +648,13 @@ static class Tools {
         if (split.Length != 4) return null;
 
         try {
-            byte mvb = byte.Parse(split[0]);
+            byte msb = byte.Parse(split[0]); //most significant bit
 
             uint target = BitConverter.ToUInt32(new byte[] {
                 byte.Parse(split[3]),
                 byte.Parse(split[2]),
                 byte.Parse(split[1]),
-                mvb
+                msb
             }, 0);
 
             FileInfo file = new FileInfo($"{IP_BIN_DIR}{split[0]}.bin");
@@ -662,12 +662,13 @@ static class Tools {
 
             FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
 
-            uint dictionaryStart = BitConverter.ToUInt32(new byte[]{
+            uint dictionaryStart = BitConverter.ToUInt32(new byte[] {
                 (byte)stream.ReadByte(),
                 (byte)stream.ReadByte(),
                 (byte)stream.ReadByte(),
                 (byte)stream.ReadByte()
             }, 0);
+
 
             uint from, to;
             uint pivot;
@@ -683,16 +684,16 @@ static class Tools {
                     0,
                     (byte)stream.ReadByte(),
                     (byte)stream.ReadByte(),
-                    mvb,
+                    msb,
                 }, 0);
 
                 to = BitConverter.ToUInt32(new byte[] {
                     255,
                     (byte)stream.ReadByte(),
                     (byte)stream.ReadByte(),
-                    mvb,
+                    msb,
                 }, 0);
-
+                
                 if (target >= from && target <= to) break; //found
 
                 if (target < from && target < to) high = pivot;

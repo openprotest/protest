@@ -1,5 +1,8 @@
 rem feel free top modify this file
 
+rem !! This script requires OpenSSL !!
+rem https://www.openssl.org
+
 ECHO off
 
 ECHO %RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM% > .rnd

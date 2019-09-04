@@ -379,10 +379,11 @@ static class NoSQL {
                     string key = (string)o.Key;
                     string[] current = (string[])entry.hash[key];
                     if (key.Contains("PASSWORD")) {
-                        if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" };
-                    } else
+                        if (o.Value.ToString().Length > 0)
+                            entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" };
+                    } else {
                         entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" };
-
+                    }
                 } else //new property
                     entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" });
             }
@@ -454,7 +455,7 @@ static class NoSQL {
                 payloadHash.Add(split[i], split[i+1]);
         }
 
-        if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
+        if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString(); //give new filename if doesn't have one
 
         DbEntry entry;
         if (users.ContainsKey(filename)) //existing entry
@@ -485,8 +486,9 @@ static class NoSQL {
                     string[] current = (string[])entry.hash[key];
                     if (key.Contains("PASSWORD")) {
                         if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" };
-                    } else
+                    } else {
                         entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" };
+                    }
                 } else //new property
                     entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" });
             }
