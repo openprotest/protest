@@ -57,6 +57,7 @@ static class Tools {
 
     public static readonly string MAC_BIN_FILE = $"{Directory.GetCurrentDirectory()}\\knowlage\\mac.bin";
     public static readonly string IP_BIN_DIR = $"{Directory.GetCurrentDirectory()}\\knowlage\\ip\\";
+    public static readonly string PROXY_BIN_DIR = $"{Directory.GetCurrentDirectory()}\\knowlage\\proxy\\";
 
     public static readonly ArraySegment<byte> OK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("ok"));
     public static readonly ArraySegment<byte> ACK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("acknowledge"));
@@ -649,7 +650,6 @@ static class Tools {
 
         try {
             byte msb = byte.Parse(split[0]); //most significant bit
-
             uint target = BitConverter.ToUInt32(new byte[] {
                 byte.Parse(split[3]),
                 byte.Parse(split[2]),
@@ -750,7 +750,8 @@ static class Tools {
                     s1 + ";" +
                     s2 + ";" +
                     s3 + ";" +
-                    lon + "," + lat
+                    lon + "," + lat + ";" +
+                    IsProxy(String.Join(".", split)).ToString().ToLower()
                 );
             } //### end found ###
 
@@ -759,6 +760,76 @@ static class Tools {
         } catch {
             return null;
         }
+    }
+
+    public static bool IsProxy(IPAddress ip) {
+        return IsProxy(ip.ToString());
+    }
+    public static bool IsProxy(string ip) {
+        string[] split = ip.Split('.');
+        if (split.Length != 4) { //if not an ip, do a dns resolve
+
+            byte[] dnsresponse = DnsLookup(ip);
+            if (dnsresponse is null) return false;
+            split = Encoding.UTF8.GetString(dnsresponse).Split((char)127)[0].Split('.');
+        }
+
+        if (split.Length != 4) return false;
+
+        try {
+            byte msb = byte.Parse(split[0]); //most significant bit
+            uint target = BitConverter.ToUInt32(new byte[] {
+                    byte.Parse(split[3]),
+                    byte.Parse(split[2]),
+                    byte.Parse(split[1]),
+                    msb
+                }, 0);
+
+            FileInfo file = new FileInfo($"{PROXY_BIN_DIR}{split[0]}.bin");
+            if (!file.Exists) return false;
+
+            FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+
+            uint from, to;
+            uint pivot;
+            uint low = 4;
+            uint high = (uint)file.Length-1;
+
+            do { //binary search
+                pivot = (low + high) / 2;
+                pivot = pivot - pivot % 6;
+                stream.Position = pivot;
+
+                from = BitConverter.ToUInt32(new byte[] {
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte(),
+                    msb,
+                }, 0);
+
+                to = BitConverter.ToUInt32(new byte[] {
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte(),
+                    msb,
+                }, 0);
+
+                if (target >= from && target <= to) break; //found
+
+                if (target < from && target < to) high = pivot;
+                if (target > from && target > to) low = pivot;
+            } while (high - low > 6);
+
+            if (target >= from && target <= to) { //### found ###
+                stream.Close();
+                return true;
+            }
+
+        } catch {
+            return false;
+        }
+
+        return false;
     }
 
     public static async void WsSpeedTest(HttpListenerContext ctx, string remoteIp) {

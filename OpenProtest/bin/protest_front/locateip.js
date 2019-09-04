@@ -136,12 +136,25 @@ class LocateIp extends Console {
                     divLocation.style.right = "32px";
                     divLocation.style.top = "4px";
                     divLocation.style.backgroundSize = "contain";
-                    divLocation.style.backgroundImage = "url(res/locate.svgz)";
-                    divLocation.style.filter = "invert(1)";
+                    divLocation.style.backgroundImage = "url(res/l_locate.svgz)";
                     divLocation.style.cursor = "pointer";
                     element.appendChild(divLocation);
-
                     divLocation.onclick = () => window.open("http://www.google.com/maps/place/" + split[4]);
+                }
+
+                if (split[5] == "true") {
+                    let divProxy = document.createElement("div");
+                    divProxy.style.position = "absolute";
+                    divProxy.style.width = "24px";
+                    divProxy.style.height = "24px";
+                    divProxy.style.right = "64px";
+                    divProxy.style.top = "4px";
+                    divProxy.style.backgroundSize = "contain";
+                    divProxy.style.backgroundImage = "url(res/l_proxy.svgz)";
+                    divProxy.setAttribute("tip", "Proxy");
+                    divProxy.style.transform = "Rotate(90deg)";
+                    divProxy.style.zIndex = "5";
+                    element.appendChild(divProxy);
                 }
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected

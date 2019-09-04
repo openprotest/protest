@@ -48,5 +48,5 @@ If you use a reverse proxy, in order for the authentication to work properly, yo
 
 
 
-**This product includes IP2Location LITE data available from http://www.ip2location.com.**
-
+* *This product includes IP2Location LITE data available from http://www.ip2location.com.*
+* *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
