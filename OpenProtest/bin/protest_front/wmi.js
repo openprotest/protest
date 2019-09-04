@@ -17,6 +17,7 @@ class Wmi extends Window {
 
         this.btnDownload = document.createElement("div");
         this.btnDownload.style.backgroundImage = "url(res/l_download.svgz)";
+        this.btnDownload.setAttribute("tip-below", "Download");
         this.toolbox.appendChild(this.btnDownload);
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";

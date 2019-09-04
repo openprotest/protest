@@ -107,6 +107,7 @@
     <None Include="bin\knowlage\ip\124.bin" />
     <None Include="bin\knowlage\ip\125.bin" />
     <None Include="bin\knowlage\ip\126.bin" />
+    <None Include="bin\knowlage\ip\127.bin" />
     <None Include="bin\knowlage\ip\128.bin" />
     <None Include="bin\knowlage\ip\129.bin" />
     <None Include="bin\knowlage\ip\13.bin" />

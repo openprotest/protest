@@ -151,8 +151,7 @@ class LocateIp extends Console {
                     divProxy.style.top = "4px";
                     divProxy.style.backgroundSize = "contain";
                     divProxy.style.backgroundImage = "url(res/l_proxy.svgz)";
-                    divProxy.setAttribute("tip", "Proxy");
-                    divProxy.style.transform = "Rotate(90deg)";
+                    divProxy.setAttribute("tip-below", "Proxy");
                     divProxy.style.zIndex = "5";
                     element.appendChild(divProxy);
                 }

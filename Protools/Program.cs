@@ -19,8 +19,8 @@ class Program {
         public string country;
         public string region;
         public string city;
-        public float lat;
-        public float lon;
+        public Single lat;
+        public Single lon;
     }
 
     struct ProxyEntry {
@@ -29,8 +29,8 @@ class Program {
     }
 
     static void Main(string[] args) {
-        //GenIpLocationBin();
-        GenProxyBin();
+        GenIpLocationBin();
+        //GenProxyBin();
         //GenMacLookupBin();
     }
 
@@ -39,11 +39,10 @@ class Program {
         for (int i=0; i<256; i++) 
             list.Add(new List<IpEntry>());
         
-        string line;
-
         Console.WriteLine("Reading...");
 
         StreamReader temp = new StreamReader(IPFILE);
+        string line;
         while ((line = temp.ReadLine()) != null) { //total
 
             string[] split = line.Split(new string[] { "\",\"" }, StringSplitOptions.None);
@@ -67,8 +66,8 @@ class Program {
                 entry.country = split[3];
                 entry.region = split[4];
                 entry.city = split[5];
-                entry.lat = float.Parse(split[6]);
-                entry.lon = float.Parse(split[7]);
+                entry.lon = (Single) Double.Parse(split[6]);
+                entry.lat = (Single) Double.Parse(split[7]);
                 list[aBytes[0]].Add(entry);
             } else {
 
@@ -96,8 +95,8 @@ class Program {
                         country = split[3],
                         region = split[4],
                         city = split[5],
-                        lat = float.Parse(split[6]),
-                        lon = float.Parse(split[7])
+                        lon = (Single) Double.Parse(split[6]),
+                        lat = (Single) Double.Parse(split[7])
                     };
 
                     list[i].Add(entry);
@@ -274,6 +273,13 @@ class Program {
     }
 
     static void GenMacLookupBin() {
+        Console.WriteLine("Reading...");
+
+        StreamReader temp = new StreamReader(MACFILE);
+        string line;
+        while ((line = temp.ReadLine()) != null) { //total
+            //TODO:
+        }
 
     }
 
