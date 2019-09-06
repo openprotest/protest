@@ -25,7 +25,7 @@ const TOOLS = [
 //{ lbl: "Mapped drives",      ico: "res/mappeddrive.svgz",    f: arg=>new MappedDrives() },
 { lbl: "Debit notes",        ico: "res/charges.svgz",        f: arg=>new DebitNotes() },
 //{ lbl: "Backup",             ico: "res/backup.svgz",         f: arg=>new Window() },
-//{ lbl: "Settings",           ico: "res/tool02.svgz",         f: arg=>new Window() },
+{ lbl: "Settings",           ico: "res/tool02.svgz",         f: arg=>new Settings() },
 //{ lbl: "Log",                ico: "res/log.svgz",            f: arg=>new Window() },
 { lbl: "Pro-test clients",   ico: "res/ptclients.svgz",      f: arg=>new Clients() }
 ];
@@ -202,10 +202,10 @@ function SideMenu_Update(filter) {
 
         let current = db_equip[i];
         const f = () => {
-            for (let j = 0; j < w_array.length; j++)
-                if (w_array[j] instanceof Equip && w_array[j].filename == current[".FILENAME"][0]) {
-                    w_array[j].Pop();
-                    return w_array[j];
+            for (let j = 0; j < $w.array.length; j++)
+                if ($w.array[j] instanceof Equip && $w.array[j].filename == current[".FILENAME"][0]) {
+                    $w.array[j].Pop();
+                    return $w.array[j];
                 }
             return new Equip(current);
         };
@@ -239,10 +239,10 @@ function SideMenu_Update(filter) {
 
         let current = db_users[i];
         const f = () => {
-            for (let j = 0; j < w_array.length; j++)
-                if (w_array[j] instanceof User && w_array[j].filename == current[".FILENAME"][0]) {
-                    w_array[j].Pop();
-                    return w_array[j];
+            for (let j = 0; j < $w.array.length; j++)
+                if ($w.array[j] instanceof User && $w.array[j].filename == current[".FILENAME"][0]) {
+                    $w.array[j].Pop();
+                    return $w.array[j];
                 }
             return new User(current);
         };
@@ -317,8 +317,8 @@ function CreateItemEvents(item, func) {
 
         //minimize other windows
         if (sidemenu_session.length == 0)
-            for (let i = 0; i < w_array.length; i++)
-                if (!w_array[i].isMinimized) w_array[i].Minimize(true);
+            for (let i = 0; i < $w.array.length; i++)
+                if (!$w.array[i].isMinimized) $w.array[i].Minimize(true);
             
         //check if listed already
         let listed = false;

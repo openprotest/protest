@@ -94,15 +94,15 @@ class Equip extends Window {
                             
                             db_equip.push(obj); //update db_equip
                             
-                            for (let i=0; i<w_array.length; i++) //update equiplist
-                                if (w_array[i] instanceof EquipList) {
+                            for (let i=0; i<$w.array.length; i++) //update equiplist
+                                if ($w.array[i] instanceof EquipList) {
                                     let element = document.createElement("div");
                                     element.className = "eql-element";
                                     element.id = "e" + filename;
-                                    w_array[i].list.push(obj);
-                                    w_array[i].content.appendChild(element);
-                                    w_array[i].FillElement(element, obj, type);
-                                    w_array[i].AfterResize();
+                                    $w.array[i].list.push(obj);
+                                    $w.array[i].content.appendChild(element);
+                                    $w.array[i].FillElement(element, obj, type);
+                                    $w.array[i].AfterResize();
                                 }
 
                             this.Close();
@@ -271,9 +271,9 @@ class Equip extends Window {
         btnPing.onclick = ()=> {
             if (!equip.hasOwnProperty("IP")) return;
             let winPing = null;
-            for (let i=w_array.length-1; i>-1; i--)
-                if (w_array[i] instanceof Ping) {
-                    winPing = w_array[i];
+            for (let i=$w.array.length-1; i>-1; i--)
+                if ($w.array[i] instanceof Ping) {
+                    winPing = $w.array[i];
                     break;
                 }
             if (winPing === null)
@@ -421,6 +421,19 @@ class Equip extends Window {
                 };
             }
 
+            if (ports_split.includes(445) && equip.hasOwnProperty("OPERATING SYSTEM")) {
+                let btnPSE = this.SideBar("res/psremote.svgz", "PS Remoting"); //PSExec
+                btnPSE.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ramsg&pse&" + this.filename, true);
+                    xhr.send();
+                };
+            }
+
             if (ports_split.includes(3389)) { //RDP
                 let btnRDP = this.SideBar("res/rdp.svgz", "Remote desktop");
                 btnRDP.onclick = () => {
@@ -465,18 +478,7 @@ class Equip extends Window {
                 };
             }
 
-            if (ports_split.includes(445) && equip.hasOwnProperty("OPERATING SYSTEM")) {
-                let btnPSE = this.SideBar("res/psremote.svgz", "PS Remoting"); //PSExec
-                btnPSE.onclick = () => {
-                    let xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
-                    };
-                    xhr.open("GET", "ramsg&pse&" + this.filename, true);
-                    xhr.send();
-                };
-            
+            if (ports_split.includes(445) && equip.hasOwnProperty("OPERATING SYSTEM")) {            
                 if (equip.hasOwnProperty("IP")) {
                     this.SquareButton("res/console.svgz", "Processes", this.more).onclick = () => {
                         let win = new Wmi(equip["IP"][0].split(";")[0].trim(), "SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process");
@@ -511,9 +513,9 @@ class Equip extends Window {
                         if (db_users[j].hasOwnProperty("USERNAME") && db_users[j]["USERNAME"][0] == owner) {
                             let filename = db_users[j][".FILENAME"][0];
                             this.SquareButton("res/user.svgz", owner, this.more).onclick = () => {                                                               
-                                for (let k = 0; k < w_array.length; k++)
-                                    if (w_array[k] instanceof User && w_array[k].filename == filename) {
-                                        w_array[k].Minimize(); //minimize/restore
+                                for (let k = 0; k < $w.array.length; k++)
+                                    if ($w.array[k] instanceof User && $w.array[k].filename == filename) {
+                                        $w.array[k].Minimize(); //minimize/restore
                                         return;
                                     }
                                 if (db_users[j][".FILENAME"][0] == filename) new User(db_users[j]);
@@ -811,14 +813,14 @@ class Equip extends Window {
                                 break;
                             }
 
-                        for (let i=0; i<w_array.length; i++) //update equiplist
-                            if (w_array[i] instanceof EquipList) {
-                                let elements = w_array[i].content.querySelectorAll("[id=e"+this.filename+"]");
+                        for (let i=0; i<$w.array.length; i++) //update equiplist
+                            if ($w.array[i] instanceof EquipList) {
+                                let elements = $w.array[i].content.querySelectorAll("[id=e"+this.filename+"]");
                                 for (let j=0; j<elements.length; j++) {
                                     elements[j].innerHTML = "";
-                                    w_array[i].FillElement(elements[j], obj, type);
+                                    $w.array[i].FillElement(elements[j], obj, type);
                                 }
-                                w_array[i].AfterResize();
+                                $w.array[i].AfterResize();
                             }
 
                         this.equip = obj;
@@ -969,18 +971,18 @@ class Equip extends Window {
                                 break;
                             }
 
-                        for (let i=0; i<w_array.length; i++)
-                            if (w_array[i] instanceof EquipList) {
+                        for (let i=0; i<$w.array.length; i++)
+                            if ($w.array[i] instanceof EquipList) {
 
-                                for (let j = 0; j < w_array[i].list.length; j++)
-                                    if (w_array[i].list[j][".FILENAME"][0] == this.filename)
-                                        w_array[i].list.splice(j, 1);
+                                for (let j = 0; j < $w.array[i].list.length; j++)
+                                    if ($w.array[i].list[j][".FILENAME"][0] == this.filename)
+                                        $w.array[i].list.splice(j, 1);
 
-                                let elements = w_array[i].content.querySelectorAll("[id=e" + this.filename + "]");
+                                let elements = $w.array[i].content.querySelectorAll("[id=e" + this.filename + "]");
                                 for (let j = 0; j < elements.length; j++)
-                                    w_array[i].content.removeChild(elements[j]);
+                                    $w.array[i].content.removeChild(elements[j]);
 
-                                w_array[i].AfterResize();
+                                $w.array[i].AfterResize();
                             }
 
                     } else

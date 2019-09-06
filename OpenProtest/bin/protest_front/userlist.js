@@ -206,9 +206,9 @@ class UserList extends Window {
                 if (!USER_PARAM.includes(k.toLowerCase()) && !k.startsWith(".")) USER_PARAM.push(k.toLowerCase());*/
 
         element.ondblclick = (event)=> {
-            for (let i=0; i<w_array.length; i++)
-                if (w_array[i] instanceof User && w_array[i].filename == entry[".FILENAME"][0]) {
-                    w_array[i].Minimize(); //minimize/restore
+            for (let i=0; i<$w.array.length; i++)
+                if (W.array[i] instanceof User && W.array[i].filename == entry[".FILENAME"][0]) {
+                    W.array[i].Minimize(); //minimize/restore
                     return;
                 }
 

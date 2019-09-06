@@ -3,28 +3,27 @@
  * Released into the public domain.
  */
 
-/* The DOM needs to have a div with id="container" for the Windows
- * and another div with id="bottombar" for the taskbar icons.
- */
- 
 const ANIM_DURATION = 200;
 const TOOLBAR_GAP   = 48;
 
-var w_always_maxxed = false;
-
-var w_array   = [];
-var w_active  = null;
-var w_focused = null;
-
-var w_iconSize        = 64;
-var w_isMoving        = false;
-var w_isResizing      = false;
-var w_isIcoMoving     = false;
-var w_control_pressed = false;
-var w_x0 = 0, w_y0 = 0;
-var w_offsetX = 0, w_offsetY = 0;
-var w_startX = 10, w_startY = 10;
-var w_wincount = 0;
+const $w = {
+    array: [],
+    active:  null,
+    focused: null,
+    iconSize: 64,
+    isMoving:         false,
+    isResizing:       false,
+    isIcoMoving:      false,
+    isControlPressed: false,
+    x0:      0,
+    y0:      0,
+    offsetX: 0,
+    offsetY: 0,
+    startX:  10,
+    startY:  10,
+    count:   0,
+    always_maxxed: false
+};
 
 bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 
@@ -45,29 +44,29 @@ class Window {
         this.defaultElement = null;
         this.escAction = null;
 
-        w_startX += 2;
-        w_startY += 6;
-        if (w_startY >= 40) {
-            w_startY = 4;
-            w_startX -= 10;
+        $w.startX += 2;
+        $w.startY += 6;
+        if ($w.startY >= 40) {
+            $w.startY = 4;
+            $w.startX -= 10;
         }
-        if (w_startX >= 40) {
-            w_startY = 10;
-            w_startX = 10;
+        if ($w.startX >= 40) {
+            $w.startY = 10;
+            $w.startX = 10;
         }
 
         this.win = document.createElement("div");
-        this.win.style.left   = w_startX + "%";
-        this.win.style.top    = w_startY + "%";
+        this.win.style.left   = $w.startX + "%";
+        this.win.style.top    = $w.startY + "%";
         this.win.style.width  = "50%";
         this.win.style.height = "60%";
-        this.win.style.zIndex = ++w_wincount;
+        this.win.style.zIndex = ++$w.count;
         this.win.className    = "window";
         container.appendChild(this.win);
 
         this.task = document.createElement("div");
         this.task.className = "bar-icon";
-        this.task.style.left = 2 + w_array.length * 64 + "px";
+        this.task.style.left = 2 + $w.array.length * 64 + "px";
         bottombar.appendChild(this.task);
 
         this.icon = document.createElement("div");
@@ -117,26 +116,26 @@ class Window {
 
         this.toolbox.onmousedown = (event) => { event.stopPropagation(); this.BringToFront(); };
 
-        let w_dblclickCheck = false;
+        let dblclickCheck = false;
         this.win.onmousedown = (event)=> {
             this.BringToFront();
             if (event.button == 0 && event.offsetY < 32) { //left click on title bar
-                w_offsetX  = this.win.offsetLeft;
-                w_offsetY  = this.win.offsetTop;
-                w_x0       = event.clientX;
-                w_y0       = event.clientY;
-                w_isMoving = true;
+                $w.offsetX  = this.win.offsetLeft;
+                $w.offsetY  = this.win.offsetTop;
+                $w.x0       = event.clientX;
+                $w.y0       = event.clientY;
+                $w.isMoving = true;
 
-                if (w_dblclickCheck && !onMobile) {
+                if (dblclickCheck && !onMobile) {
                     this.Toogle();
-                    w_dblclickCheck = false;
+                    dblclickCheck = false;
                     return;
                 }
-                w_dblclickCheck = true;
-                setTimeout(()=> { w_dblclickCheck = false; }, 333);
+                dblclickCheck = true;
+                setTimeout(()=> { dblclickCheck = false; }, 333);
             }
-            w_active = this;
-            w_focused = this;
+            $w.active = this;
+            $w.focused = this;
         };
 
         //this.win.onmouseup = (event)=> { if (this.defaultElement != null) this.defaultElement.focus(); };
@@ -144,12 +143,12 @@ class Window {
         this.resize.onmousedown = (event)=> {
             this.BringToFront();
             if (event.button == 0) { //left click
-                w_offsetX  = this.win.clientWidth;
-                w_offsetY  = this.win.clientHeight;
-                w_x0 = event.clientX;
-                w_y0 = event.clientY;
-                w_isResizing = true;
-                w_active = this;
+                $w.offsetX  = this.win.clientWidth;
+                $w.offsetY  = this.win.clientHeight;
+                $w.x0 = event.clientX;
+                $w.y0 = event.clientY;
+                $w.isResizing = true;
+                $w.active = this;
             }
             event.stopPropagation();
         };
@@ -160,10 +159,10 @@ class Window {
                 icoPosition = this.task.offsetLeft;
 
                 this.task.style.zIndex = "5";
-                w_offsetX  = this.task.offsetLeft;
-                w_x0 = event.clientX;
-                w_isIcoMoving = true;
-                w_active = this;
+                $w.offsetX  = this.task.offsetLeft;
+                $w.x0 = event.clientX;
+                $w.isIcoMoving = true;
+                $w.active = this;
             }
         };
 
@@ -185,17 +184,17 @@ class Window {
         btnMaximize.onmousedown =
         btnMinimize.onmousedown =
         (event)=> {
-            w_control_pressed = this;
+            $w.control_pressed = this;
             this.BringToFront();
             event.stopPropagation();
         };
         
-        btnClose.onmouseup    = (event)=> { if (event.button==0 && w_control_pressed==this) {w_control_pressed=null; this.Close();} };
-        btnMaximize.onmouseup = (event)=> { if (event.button==0 && w_control_pressed==this) {w_control_pressed=null; this.Toogle();} };
-        btnMinimize.onmouseup = (event)=> { if (event.button==0 && w_control_pressed==this) {w_control_pressed=null; this.Minimize();} };
+        btnClose.onmouseup    = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Close();} };
+        btnMaximize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Toogle();} };
+        btnMinimize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Minimize();} };
     
         this.setTitle("Title");
-        w_array.push(this);
+        $w.array.push(this);
         //alignIcon(false);
 
         this.setThemeColor(this.themeColor);
@@ -203,7 +202,7 @@ class Window {
 
         alignIcon(false);
 
-        if (onMobile || w_always_maxxed) this.Toogle();
+        if (onMobile || $w.always_maxxed) this.Toogle();
     }
 
     Close() {
@@ -221,11 +220,11 @@ class Window {
         setTimeout(()=> {
             container.removeChild(this.win);
             bottombar.removeChild(this.task);
-            w_array.splice(w_array.indexOf(this), 1);
+            $w.array.splice($w.array.indexOf(this), 1);
             alignIcon(false);
         }, ANIM_DURATION/2);
 
-        w_focused = null;
+        $w.focused = null;
     }
 
     Toogle() {
@@ -280,7 +279,7 @@ class Window {
     }
 
     Minimize(force) {
-        let isFocused = (w_wincount == this.win.style.zIndex);
+        let isFocused = ($w.count == this.win.style.zIndex);
         this.win.style.transition = ".3s";
 
         if (this.isMinimized && !force) { //restore
@@ -290,7 +289,7 @@ class Window {
             this.isMinimized = false;
             setTimeout(()=> { this.BringToFront(); }, ANIM_DURATION/2);
 
-            w_focused = this;
+            $w.focused = this;
 
         } else if (!isFocused && !force) { //pop
             this.Pop();
@@ -308,7 +307,7 @@ class Window {
             this.task.style.backgroundColor = "rgba(0,0,0,0)";
             this.icon.style.filter = "none";
 
-            w_focused = null;
+            $w.focused = null;
         }
 
         setTimeout(()=> { this.win.style.transition = "0s"; }, ANIM_DURATION);
@@ -325,11 +324,11 @@ class Window {
     }
 
     BringToFront() {
-        for (let i=0; i<w_array.length; i++) {
-            w_array[i].task.style.top = "2px";
-            w_array[i].task.style.borderRadius = "12.5%";
-            w_array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
-            w_array[i].icon.style.filter = "none";
+        for (let i=0; i<$w.array.length; i++) {
+            $w.array[i].task.style.top = "2px";
+            $w.array[i].task.style.borderRadius = "12.5%";
+            $w.array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
+            $w.array[i].icon.style.filter = "none";
         }
 
         if (this.isMaximized) {
@@ -340,9 +339,9 @@ class Window {
         this.task.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
         if ((this.themeColor[0]+this.themeColor[1]+this.themeColor[2]) / 3 < 128) this.icon.style.filter = "brightness(6)";
 
-        if (this.win.style.zIndex < w_wincount) this.win.style.zIndex = ++w_wincount;
+        if (this.win.style.zIndex < $w.count) this.win.style.zIndex = ++$w.count;
 
-        w_focused = this;
+        $w.focused = this;
     }
 
     ConfirmBox(message, okOnly=false) {
@@ -500,106 +499,106 @@ class Window {
 function body_resize(event) {
     alignIcon(false);
 
-    for (let i=0; i<w_array.length; i++) {
-        w_array[i].AfterResize();
-        if (w_array[i].InvalidateRecyclerList) 
-            w_array[i].InvalidateRecyclerList();
+    for (let i=0; i<$w.array.length; i++) {
+        $w.array[i].AfterResize();
+        if ($w.array[i].InvalidateRecyclerList) 
+            $w.array[i].InvalidateRecyclerList();
     }
 }
 
 function win_mousemove(event) {
-    if (w_active === null) return;
+    if ($w.active === null) return;
 
     if (event.buttons != 1 && !isIE) win_mouseup(event);
 
     document.getSelection().removeAllRanges(); //remove all selections
 
-    if (w_isMoving) {
-        if (w_active.isMaximized && event.clientY < 64) return;
+    if ($w.isMoving) {
+        if ($w.active.isMaximized && event.clientY < 64) return;
 
-        if (w_active.isMaximized) {
-            w_active.Toogle();
-            if (w_active.position != null) {
-                let w = parseFloat(w_active.position[2].replace("%", ""));
-                w_x0 = (w * container.clientWidth / 100) / 2;
-                if (sidemenu_isopen) w_x0 += SUBMENU_WIDTH;
+        if ($w.active.isMaximized) {
+            $w.active.Toogle();
+            if ($w.active.position != null) {
+                let w = parseFloat($w.active.position[2].replace("%", ""));
+                $w.x0 = (w * container.clientWidth / 100) / 2;
+                if (sidemenu_isopen) $w.x0 += SUBMENU_WIDTH;
             }
         }
 
-        let x = (w_offsetX - (w_x0 - event.clientX)) * 100 / container.clientWidth;
-        w_active.win.style.left = Math.min(100 - w_active.win.clientWidth * 100 / container.clientWidth, Math.max(0, x)) + "%";
+        let x = ($w.offsetX - ($w.x0 - event.clientX)) * 100 / container.clientWidth;
+        $w.active.win.style.left = Math.min(100 - $w.active.win.clientWidth * 100 / container.clientWidth, Math.max(0, x)) + "%";
 
-        let y = (w_offsetY - (w_y0 - event.clientY)) * 100 / container.clientHeight;
-        y = Math.min(100 - w_active.win.clientHeight * 100 / container.clientHeight, Math.max(0, y));
-        w_active.win.style.top = ((y < 0) ? 0 : y) + "%";
+        let y = ($w.offsetY - ($w.y0 - event.clientY)) * 100 / container.clientHeight;
+        y = Math.min(100 - $w.active.win.clientHeight * 100 / container.clientHeight, Math.max(0, y));
+        $w.active.win.style.top = ((y < 0) ? 0 : y) + "%";
 
-    } else if (w_isResizing) {
-        let w = (w_offsetX - (w_x0 - event.clientX)) * 100 / container.clientWidth;
-        let h = (w_offsetY - (w_y0 - event.clientY)) * 100 / container.clientHeight;
-        w_active.win.style.width = Math.min(100 - w_active.win.offsetLeft * 100 / container.clientWidth, w) + "%";
-        w_active.win.style.height = Math.min(100 - w_active.win.offsetTop * 100 / container.clientHeight, h) + "%";
+    } else if ($w.isResizing) {
+        let w = ($w.offsetX - ($w.x0 - event.clientX)) * 100 / container.clientWidth;
+        let h = ($w.offsetY - ($w.y0 - event.clientY)) * 100 / container.clientHeight;
+        $w.active.win.style.width = Math.min(100 - $w.active.win.offsetLeft * 100 / container.clientWidth, w) + "%";
+        $w.active.win.style.height = Math.min(100 - $w.active.win.offsetTop * 100 / container.clientHeight, h) + "%";
 
-        w_active.AfterResize();
+        $w.active.AfterResize();
 
-    } else if (w_isIcoMoving) {
-        let x = w_offsetX - (w_x0 - event.clientX);
+    } else if ($w.isIcoMoving) {
+        let x = $w.offsetX - ($w.x0 - event.clientX);
         x = Math.max(0, x);
-        x = Math.min(bottombar.clientWidth - w_active.task.clientWidth, x);
-        w_active.task.style.left = x + "px";
+        x = Math.min(bottombar.clientWidth - $w.active.task.clientWidth, x);
+        $w.active.task.style.left = x + "px";
         alignIcon(true);
     }
 }
 
 function win_mouseup(event) {
-    //if (!w_isMoving && !w_isResizing) return;
+    //if (!$w.isMoving && !$w.isResizing) return;
 
-    if (w_active != null) {
-        w_active.task.style.transition = ANIM_DURATION/1000 + "s";
-        w_active.task.style.zIndex = "3";
+    if ($w.active != null) {
+        $w.active.task.style.transition = ANIM_DURATION/1000 + "s";
+        $w.active.task.style.zIndex = "3";
         alignIcon(false);
     }
 
-    w_isMoving = false;
-    w_isResizing = false;
-    w_isIcoMoving = false;
-    w_active = null;
+    $w.isMoving = false;
+    $w.isResizing = false;
+    $w.isIcoMoving = false;
+    $w.active = null;
     //event.stopPropagation();
 }
 
 function win_keydown(event) {
     if (event.keyCode == 27) { //esc
-        if (w_focused === null) return;
-        if (w_focused.escAction === null) return;
-        w_focused.escAction();
+        if ($w.focused === null) return;
+        if ($w.focused.escAction === null) return;
+        $w.focused.escAction();
     }
 }
 
 function alignIcon(ignoreActive) {
-    w_iconSize = (container.clientWidth / (w_array.length) > 64) ? 64 : container.clientWidth / w_array.length;
+    $w.iconSize = (container.clientWidth / ($w.array.length) > 64) ? 64 : container.clientWidth / $w.array.length;
 
-    for (let i=0; i<w_array.length; i++) {
-        w_array[i].task.style.width = (w_iconSize-4) + "px";
-        w_array[i].task.style.height = (w_iconSize-4) + "px";
+    for (let i = 0; i < $w.array.length; i++) {
+        $w.array[i].task.style.width = ($w.iconSize-4) + "px";
+        $w.array[i].task.style.height = ($w.iconSize-4) + "px";
     }
 
-    bottombar.style.height = (w_iconSize) + "px";
-    main.style.bottom = (w_iconSize) + "px";
+    bottombar.style.height = ($w.iconSize) + "px";
+    main.style.bottom = ($w.iconSize) + "px";
 
     let temp = [];
-    for (let i=0; i<w_array.length; i++) temp.push(w_array[i].task);
+    for (let i=0; i<$w.array.length; i++) temp.push($w.array[i].task);
     temp.sort((a, b)=> {return a.offsetLeft - b.offsetLeft} );   
 
     if (ignoreActive) {
         for (let i=0; i<temp.length; i++) 
         for (let i=0; i<temp.length; i++)
-            if (temp[i] != w_active.task) {
+            if (temp[i] != $w.active.task) {
                 temp[i].style.transition = ANIM_DURATION/1000 + "s";
-                temp[i].style.left = 2 + i * w_iconSize + "px";
+                temp[i].style.left = 2 + i * $w.iconSize + "px";
             }
     } else {
         for (let i=0; i<temp.length; i++) {
             temp[i].style.transition = ANIM_DURATION/1000 + "s";
-            temp[i].style.left = 2 + i * w_iconSize + "px";
+            temp[i].style.left = 2 + i * $w.iconSize + "px";
         }
 
         setTimeout(()=> {

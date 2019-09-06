@@ -968,6 +968,7 @@
     <Content Include="bin\protest_front\ui.js" />
     <Content Include="bin\protest_front\user.js" />
     <Content Include="bin\protest_front\userlist.js" />
+    <Content Include="bin\protest_front\settings.js" />
     <Content Include="bin\protest_front\webcheck.js" />
     <Content Include="bin\protest_front\window.css" />
     <Content Include="bin\protest_front\window.js" />

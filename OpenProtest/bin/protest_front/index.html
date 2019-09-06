@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <title>Protest</title>
@@ -146,6 +146,7 @@
     <script async defer src="tasks.js"></script>
     <!--<script async defer src="speedtest.js"></script>-->
     <script async defer src="clients.js"></script>
+    <script async defer src="settings.js"></script>
 
     <script>
         let divWakeup = document.getElementById("cap");
@@ -155,8 +156,11 @@
         }, .150);
 
         document.addEventListener("DOMContentLoaded", () => {
-            if (localStorage.getItem("wallpaper") != null) SetWallpaper(localStorage.getItem("wallpaper"));
-            w_always_maxxed = (localStorage.getItem("w_always_maxed") == "true");
+            //load personal settings:
+            $w.always_maxxed = (localStorage.getItem("w_always_maxed") == "true");
+            document.body.className = localStorage.getItem("disable_anime") === "true" ? "disable-animation" : "";
+            document.body.style.zoom = 75 + (localStorage.getItem("zoom") == null ? 5 : parseInt(localStorage.getItem("zoom"))) * 5 + "%";
+            if (localStorage.getItem("wallpaper") != null && localStorage.getItem("wallpaper").length > 0) SetWallpaper(localStorage.getItem("wallpaper"));
 
             Promise.all([CheckEquipmentVersion(), CheckUsersVersion()]).then(() => {
                 //TODO: display previously opened windows
@@ -164,6 +168,16 @@
 
             initPublicTransportation();
         });
+
+        window.addEventListener("beforeunload", ()=>{
+            if (localStorage.getItem("alive_after_close") != "true") {
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = ()=> {};
+                xhr.open("GET", "logout", true);
+                xhr.send();
+            }
+        });
+
     </script>
 
 </body>

@@ -52,7 +52,7 @@ class LocateIp extends Console {
             
             if (istart > iend) iend = istart;
             if (iend - istart > 255) iend = istart + 255;
-        
+            
             function intToBytes(int) {
                 var b = [0, 0, 0, 0];
                 var i = 4;

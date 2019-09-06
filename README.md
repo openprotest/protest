@@ -1,5 +1,4 @@
 # Pro-test
-## Join the revolution!
 
 #### This repository contains the source code for:
   * **Pro-test back-end application** (HTTP server, database, fetching and managing tools)

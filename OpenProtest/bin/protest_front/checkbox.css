@@ -38,8 +38,8 @@ label:after {
     content: " ";
     opacity: 0;
     
-    border-bottom: var(--theme-color) 4px solid;
-    border-left: var(--theme-color) 4px solid;
+    border-bottom: var(--theme-color) 5px solid;
+    border-left: var(--theme-color) 5px solid;
 
     transform: rotate(-20deg);
     transition: .2s;

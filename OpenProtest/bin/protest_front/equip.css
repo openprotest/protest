@@ -373,11 +373,11 @@
 }
 .password-countdown > div:nth-child(1) > div {
     transform: rotate(-45deg);
-    animation: password-countdown_a 20s linear 1;
+    animation: password-countdown_a 20s linear 1 !important;
 }
 .password-countdown > div:nth-child(2) > div {
     transform: rotate(-45deg);
-    animation: password-countdown_b 20s linear 1;
+    animation: password-countdown_b 20s linear 1 !important;
 }
 
 @keyframes password-countdown_a {

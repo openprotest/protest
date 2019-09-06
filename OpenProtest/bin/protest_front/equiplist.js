@@ -285,9 +285,9 @@ class EquipList extends Window {
                 if (!EQUIP_PARAM.includes(k.toLowerCase()) && !k.startsWith(".")) EQUIP_PARAM.push(k.toLowerCase());*/
 
         element.ondblclick = (event)=> {
-            for (let i=0; i<w_array.length; i++)
-                if (w_array[i] instanceof Equip && w_array[i].filename == entry[".FILENAME"][0]) {
-                    w_array[i].Minimize(); //minimize/restore
+            for (let i=0; i<$w.array.length; i++)
+                if ($w.array[i] instanceof Equip && $w.array[i].filename == entry[".FILENAME"][0]) {
+                    $w.array[i].Minimize(); //minimize/restore
                     return;
                 }
 

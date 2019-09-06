@@ -205,9 +205,9 @@ class PasswordStrength extends Window {
                     if (list[i].type == "e") { //equip
                         for (let j = 0; j < db_equip.length; j++)
                             if (db_equip[j][".FILENAME"][0] == list[i].file) {
-                                for (let k = 0; k < w_array.length; k++)
-                                    if (w_array[k] instanceof Equip && w_array[k].filename == db_equip[j][".FILENAME"][0]) {
-                                        w_array[k].Minimize(); //minimize/restore
+                                for (let k = 0; k < $w.array.length; k++)
+                                    if ($w.array[k] instanceof Equip && $w.array[k].filename == db_equip[j][".FILENAME"][0]) {
+                                        $w.array[k].Minimize(); //minimize/restore
                                         return;
                                     }
                                 new Equip(db_equip[j]);
@@ -217,9 +217,9 @@ class PasswordStrength extends Window {
                     } else if (list[i].type == "u") { //user
                         for (let j = 0; j < db_users.length; j++)
                             if (db_users[j][".FILENAME"][0] == list[i].file) {
-                                for (let k = 0; k < w_array.length; k++)
-                                    if (w_array[k] instanceof User && w_array[k].filename == db_users[j][".FILENAME"][0]) {
-                                        w_array[k].Minimize(); //minimize/restore
+                                for (let k = 0; k < $w.array.length; k++)
+                                    if ($w.array[k] instanceof User && $w.array[k].filename == db_users[j][".FILENAME"][0]) {
+                                        $w.array[k].Minimize(); //minimize/restore
                                         return;
                                     }
                                 new User(db_users[j]);

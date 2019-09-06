@@ -13,8 +13,9 @@ var txtSearch    = document.getElementById("txtSearch");
 var mainSession  = document.getElementById("mainSession");
 var mainSettings = document.getElementById("mainSettings");
 
-
 var mainFloadingElements = [mainSession, mainSettings];
+
+var last_activity = new Date().getTime();
 
 function SetWallpaper(url) {
     let loader = document.createElement("img");
@@ -71,3 +72,28 @@ function RemoveWallpaper() {
     }
 
 }
+
+
+window.addEventListener("mousedown", ()=> {
+    last_activity = new Date().getTime();
+});
+
+window.addEventListener("keydown", () => {
+    last_activity = new Date().getTime();
+});
+
+(function checkSession() {
+    setTimeout(() => {
+        let timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity};
+        let index = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"))
+
+        if ((new Date().getTime() - last_activity) > 60 * 1000 * timeMapping[index]) {
+            let xhr = new XMLHttpRequest(); //logout
+            xhr.onreadystatechange = () => { location.reload(); };
+            xhr.open("GET", "logout", true);
+            xhr.send();
+        }
+
+        checkSession();
+    }, 60000);
+})();

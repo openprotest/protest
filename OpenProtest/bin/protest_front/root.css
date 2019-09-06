@@ -28,6 +28,11 @@
         radial-gradient(ellipse at center, rgb(242,245,246) 0%,rgb(227,234,237) 50%,rgb(200,215,220) 100%);
 }
 
+.disable-animation * {
+    transition: 0s !important;
+    animation: none !important;
+}
+
 body {
     font-size: var(--global-font-size);
     font-family: var(--global-font-family);

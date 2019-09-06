@@ -74,16 +74,15 @@ class User extends Window {
 
                             db_users.push(obj); //update db_users
 
-                            for (let i=0; i<w_array.length; i++) //update userslist
-                                if (w_array[i] instanceof UserList) {
+                            for (let i = 0; i < $w.array.length; i++) //update userslist
+                                if ($w.array[i] instanceof UserList) {
                                     let element = document.createElement("div");
                                     element.className = "eql-element";
                                     element.id = "u" + filename;
-                                    w_array[i].list.push(obj);
-                                    w_array[i].content.appendChild(element);
-                                    w_array[i].FillElement(element, obj);
-
-                                    w_array[i].AfterResize();
+                                    $w.array[i].list.push(obj);
+                                    $w.array[i].content.appendChild(element);
+                                    $w.array[i].FillElement(element, obj);
+                                    $w.array[i].AfterResize();
                                 }
 
                             this.Close();
@@ -555,14 +554,14 @@ class User extends Window {
                                 break;
                             }
 
-                        for (let i=0; i<w_array.length; i++) //update userlist
-                            if (w_array[i] instanceof UserList) {
-                                let elements = w_array[i].content.querySelectorAll("[id=u"+this.filename+"]");
+                        for (let i=0; i<$w.array.length; i++) //update userlist
+                            if ($w.array[i] instanceof UserList) {
+                                let elements = $w.array[i].content.querySelectorAll("[id=u"+this.filename+"]");
                                 for (let j=0; j<elements.length; j++) {
                                     elements[j].innerHTML = "";
-                                    w_array[i].FillElement(elements[j], obj);
+                                    $w.array[i].FillElement(elements[j], obj);
                                 }
-                                w_array[i].AfterResize();
+                                $w.array[i].AfterResize();
                             }
 
                         this.user = obj;
@@ -703,18 +702,18 @@ class User extends Window {
                                 break;
                             }
 
-                        for (let i=0; i<w_array.length; i++)
-                            if (w_array[i] instanceof UserList) {
+                        for (let i=0; i<$w.array.length; i++)
+                            if ($w.array[i] instanceof UserList) {
 
-                                for (let j = 0; j < w_array[i].list.length; j++)
-                                    if (w_array[i].list[j][".FILENAME"][0] == this.filename)
-                                        w_array[i].list.splice(j, 1);
+                                for (let j = 0; j < $w.array[i].list.length; j++)
+                                    if ($w.array[i].list[j][".FILENAME"][0] == this.filename)
+                                        $w.array[i].list.splice(j, 1);
 
-                                let elements = w_array[i].content.querySelectorAll("[id=u" + this.filename + "]");
+                                let elements = $w.array[i].content.querySelectorAll("[id=u" + this.filename + "]");
                                 for (let j=0; j<elements.length; j++)
-                                    w_array[i].content.removeChild(elements[j]);
+                                    $w.array[i].content.removeChild(elements[j]);
 
-                                w_array[i].AfterResize();
+                                $w.array[i].AfterResize();
                             }
 
                     } else

@@ -53,7 +53,7 @@ function initPublicTransportation() {
             pt_deathdate = new Date().getTime() + life * 1000;
 
         } else if (split[0] == "update_equip" || split[0] == "update_users") {
-            if (w_array.length == 0) { //if no open windows, refresh
+            if ($w.array.length == 0) { //if no open windows, refresh
                 location.reload();
                 return;
             } else {
@@ -102,16 +102,16 @@ function initPublicTransportation() {
         } else if (split[0] == "dele") { //delete equip
             if (db_equip_ver == split[1]) return;
 
-            for (let i = 0; i< w_array.length; i++) {
-                if (w_array[i] instanceof Equip && w_array[i].filename == split[2]) { //equip matched
-                    w_array[i].ConfirmBox("The equipment has been deleted.", true);
+            for (let i=0; i<$w.array.length; i++) {
+                if ($w.array[i] instanceof Equip && $w.array[i].filename == split[2]) { //equip matched
+                    $w.array[i].ConfirmBox("The equipment has been deleted.", true);
 
-                } else if (w_array[i] instanceof EquipList) { //equiplist
-                    let elements = w_array[i].content.querySelectorAll("[id=e" + split[2] + "]");
+                } else if ($w.array[i] instanceof EquipList) { //equiplist
+                    let elements = $w.array[i].content.querySelectorAll("[id=e" + split[2] + "]");
                     for (let j = 0; j < elements.length; j++)
-                        w_array[i].content.removeChild(elements[j]);
+                        $w.array[i].content.removeChild(elements[j]);
 
-                    w_array[i].AfterResize();
+                    $w.array[i].AfterResize();
                 }
             }
 
@@ -125,16 +125,16 @@ function initPublicTransportation() {
         } else if (split[0] == "delu") { //delete user
             if (db_users_ver == split[1]) return;
 
-            for (let i = 0; i < w_array.length; i++) {
-                if (w_array[i] instanceof User && w_array[i].filename == split[2]) { //user matched
-                    w_array[i].ConfirmBox("The user has been deleted.", true);
+            for (let i = 0; i < $w.array.length; i++) {
+                if ($w.array[i] instanceof User && $w.array[i].filename == split[2]) { //user matched
+                    $w.array[i].ConfirmBox("The user has been deleted.", true);
 
-                } else if (w_array[i] instanceof UserList) { //userslist
-                    let elements = w_array[i].content.querySelectorAll("[id=u" + split[2] + "]");
+                } else if ($w.array[i] instanceof UserList) { //userslist
+                    let elements = $w.array[i].content.querySelectorAll("[id=u" + split[2] + "]");
                     for (let j = 0; j < elements.length; j++)
-                        w_array[i].content.removeChild(elements[j]);
+                        $w.array[i].content.removeChild(elements[j]);
 
-                    w_array[i].AfterResize();
+                    $w.array[i].AfterResize();
                 }
             }
 
@@ -160,9 +160,9 @@ function initPublicTransportation() {
         for (let i=0; i<split.length; i++) {
             let s = split[i].split(";");
 
-            for (let j=0; j<w_array.length; j++) {
-                if (w_array[j] instanceof Equip && w_array[j].filename == s[0]) { //equip
-                    let current = w_array[j];
+            for (let j = 0; j < $w.array.length; j++) {
+                if ($w.array[j] instanceof Equip && $w.array[j].filename == s[0]) { //equip
+                    let current = $w.array[j];
 
                     while (current.instant.childNodes.length > 0) //remove previous info
                         current.instant.removeChild(current.instant.childNodes[0]);
@@ -189,8 +189,8 @@ function initPublicTransportation() {
                     break;
                 }
 
-                if (w_array[j] instanceof User && w_array[j].filename == s[0]) { //users
-                    let current = w_array[j];
+                if ($w.array[j] instanceof User && $w.array[j].filename == s[0]) { //users
+                    let current = $w.array[j];
 
                     while (current.instant.childNodes.length > 0) //remove previous info
                         current.instant.removeChild(current.instant.childNodes[0]);
@@ -203,9 +203,9 @@ function initPublicTransportation() {
                         }
 
                         if (s[k] == "Lockout time" && s[k+1].length > 0) { //user is locked
-                            w_array[j].btnUnlock.childNodes[0].style.transition = ".4s";
-                            w_array[j].btnUnlock.childNodes[0].style.backgroundImage = "url(res/lock.svgz)";
-                            w_array[j].btnUnlock.childNodes[0].style.filter = "invert(.5) sepia(1) hue-rotate(-40deg) saturate(12)";
+                            $w.array[j].btnUnlock.childNodes[0].style.transition = ".4s";
+                            $w.array[j].btnUnlock.childNodes[0].style.backgroundImage = "url(res/lock.svgz)";
+                            $w.array[j].btnUnlock.childNodes[0].style.filter = "invert(.5) sepia(1) hue-rotate(-40deg) saturate(12)";
                         }
                     }
                     break;
@@ -242,15 +242,15 @@ function updateTargetEquip(target) {
 
             let c_type = (db_entry.hasOwnProperty("TYPE")) ? db_entry["TYPE"][0].toLowerCase() : "";
             
-            for (let i = 0; i < w_array.length; i++) {
-                if (w_array[i] instanceof Equip && w_array[i].filename == target) //equip matched
-                    w_array[i].ConfirmBox("The equipment has been modified.", true);
+            for (let i = 0; i < $w.array.length; i++) {
+                if ($w.array[i] instanceof Equip && $w.array[i].filename == target) //equip matched
+                    $w.array[i].ConfirmBox("The equipment has been modified.", true);
 
-                if (w_array[i] instanceof EquipList) {
-                    let elements = w_array[i].content.querySelectorAll("[id=e" + target + "]");
+                if ($w.array[i] instanceof EquipList) {
+                    let elements = $w.array[i].content.querySelectorAll("[id=e" + target + "]");
                     for (let j = 0; j < elements.length; j++) {
                         elements[j].innerHTML = "";
-                        w_array[i].FillElement(elements[j], db_entry, c_type);
+                        $w.array[i].FillElement(elements[j], db_entry, c_type);
                     }
                 }
             }
@@ -277,15 +277,15 @@ function updateTargetUser(target) {
                     break;
                 }
 
-            for (let i = 0; i < w_array.length; i++) {
-                if (w_array[i] instanceof User && w_array[i].filename == target) //user matched
-                    w_array[i].ConfirmBox("The user has been modified.", true);
+            for (let i = 0; i < $w.array.length; i++) {
+                if ($w.array[i] instanceof User && $w.array[i].filename == target) //user matched
+                    $w.array[i].ConfirmBox("The user has been modified.", true);
 
-                if (w_array[i] instanceof UserList) {
-                    let elements = w_array[i].content.querySelectorAll("[id=u" + target + "]");
+                if ($w.array[i] instanceof UserList) {
+                    let elements = $w.array[i].content.querySelectorAll("[id=u" + target + "]");
                     for (let j = 0; j < elements.length; j++) {
                         elements[j].innerHTML = "";
-                        w_array[i].FillElement(elements[j], db_entry);
+                        $w.array[i].FillElement(elements[j], db_entry);
                     }
                 }
             }
@@ -299,11 +299,11 @@ function updateTargetUser(target) {
 
 publicTransportationLoop();
 function publicTransportationLoop() {
-    for (let i = 0; i < w_array.length; i++) 
-        if (w_array[i] instanceof Equip) {
-            pt_equip(w_array[i]);
-        } else if (w_array[i] instanceof User) {
-            pt_user(w_array[i]);
+    for (let i = 0; i < $w.array.length; i++) 
+        if ($w.array[i] instanceof Equip) {
+            pt_equip($w.array[i]);
+        } else if ($w.array[i] instanceof User) {
+            pt_user($w.array[i]);
         }
 
     setTimeout(()=>{ publicTransportationLoop(); }, 180000); //3 min
