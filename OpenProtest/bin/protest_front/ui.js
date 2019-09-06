@@ -13,6 +13,7 @@ var txtSearch    = document.getElementById("txtSearch");
 var mainSession  = document.getElementById("mainSession");
 var mainSettings = document.getElementById("mainSettings");
 
+
 var mainFloadingElements = [mainSession, mainSettings];
 
 function SetWallpaper(url) {
