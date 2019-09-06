@@ -1,5 +1,5 @@
 /* Windows.js is a vanilla javascript library, designed for Pro-test 3.1
- * Created by Andreas Venizelou, June 2018.
+ * Created by Andreas Venizelou, 2019.
  * Released into the public domain.
  */
 

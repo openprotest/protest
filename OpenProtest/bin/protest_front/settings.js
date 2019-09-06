@@ -177,5 +177,3 @@ class Settings extends Window {
         this.zoom.oninput();
     }
 }
-
-new Settings();

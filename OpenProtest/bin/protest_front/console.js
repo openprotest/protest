@@ -64,9 +64,9 @@ class Console extends Window {
 
     Push(command) { //overridable 
         if (command === "") return;
-        if (command === "!" && this.history.length === 0) return false;
+        if (command === "!!" && this.history.length === 0) return false;
         
-        if (command === "!") {
+        if (command === "!!") {
             this.Push(this.history[this.history.length - 1]);
             return false;
         }
