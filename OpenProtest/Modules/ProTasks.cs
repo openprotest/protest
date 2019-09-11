@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 
 class ProTasks {
-    static readonly List<ProTasks> onGoingTasks = new List<ProTasks>();
+    private static readonly List<ProTasks> onGoingTasks = new List<ProTasks>();
 
     public readonly string name;
     public string status;
@@ -34,7 +34,7 @@ class ProTasks {
         thread.Start();
     }
 
-    public void Abort() {
+    public void Abort(in string performer) {
         if (thread != null && thread.IsAlive)
             lock (lockTokken) {
                 thread.Abort();
@@ -42,10 +42,10 @@ class ProTasks {
 
         lock (lockTokken) {
             if (onGoingTasks.Contains(this)) onGoingTasks.Remove(this);
-            status = "Aborted by user"; //TODO: push users name
+            status = $"Aborted by user: {performer}";
         }
 
-        Console.WriteLine("Abort!");
+        //Console.WriteLine("Abort!");
     }
 
     public void Complete() {
@@ -64,22 +64,14 @@ class ProTasks {
     public static byte[] GetOnGoing() {
         StringBuilder sb = new StringBuilder();
 
-        foreach (ProTasks o in onGoingTasks) {
-            sb.Append($"{o.name}{(char)127}");
-            sb.Append($"{o.status}{(char)127}");
-            sb.Append($"{o.report}{(char)127}");
-            sb.Append($"{o.stepsTotal}{(char)127}");
-            sb.Append($"{o.stepsCompleted}{(char)127}");
-            sb.Append($"{o.started}{(char)127}");
-        }
-
+        foreach (ProTasks o in onGoingTasks) 
+            sb.Append($"{o.name}{(char)127}{o.status}{(char)127}{o.report}{(char)127}{o.stepsTotal}{(char)127}{o.stepsCompleted}{(char)127}{o.started}{(char)127}");
+        
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
     public static byte[] GetResults() {
         return null;
     }
-
-
 
 }

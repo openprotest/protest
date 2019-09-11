@@ -1,4 +1,4 @@
-/* Windows.js is a vanilla javascript library, designed for Pro-test 3.1
+/* Windows.js is a vanilla javascript UI library, designed for Pro-test 3.1
  * Created by Andreas Venizelou, 2019.
  * Released into the public domain.
  */
@@ -25,13 +25,13 @@ const $w = {
     always_maxxed: false
 };
 
-bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
-
 document.body.onresize    = body_resize;
 document.body.onmousemove = win_mousemove;
 document.body.onmouseup   = win_mouseup;
 document.body.onkeydown   = win_keydown;
 //document.body.oncontextmenu = (event) => { return false; };
+
+bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 
 class Window {
     
@@ -42,7 +42,7 @@ class Window {
         this.position    = null;
         this.themeColor  = themeColor;
         this.defaultElement = null;
-        this.escAction = null;
+        this.escAction   = null;
 
         $w.startX += 2;
         $w.startY += 6;
@@ -195,7 +195,6 @@ class Window {
     
         this.setTitle("Title");
         $w.array.push(this);
-        //alignIcon(false);
 
         this.setThemeColor(this.themeColor);
         this.BringToFront();
@@ -253,7 +252,6 @@ class Window {
 
             this.task.style.top = "2px";
             this.task.style.borderRadius = "12.5%";
-
         } else {
             this.position = [this.win.style.left, this.win.style.top, this.win.style.width, this.win.style.height];
             this.win.style.left          = "0%";
@@ -383,9 +381,7 @@ class Window {
         };
 
         btnOK.onclick = event=> btnCancel.onclick(event);
-
         btnOK.focus();
-
         return btnOK;
     }
 
@@ -444,15 +440,11 @@ class Window {
         };
 
         btnOK.onclick = event=> btnCancel.onclick(event);
-
         btnOK.focus();
-
         return [btnOK, innerBox];
     }
 
-    AfterResize() {
-        //override me...
-    }
+    AfterResize() { } //overridable
 
     setTitle(title="") {
         this.lblTitle.innerHTML = title;
@@ -589,7 +581,6 @@ function alignIcon(ignoreActive) {
     temp.sort((a, b)=> {return a.offsetLeft - b.offsetLeft} );   
 
     if (ignoreActive) {
-        for (let i=0; i<temp.length; i++) 
         for (let i=0; i<temp.length; i++)
             if (temp[i] != $w.active.task) {
                 temp[i].style.transition = ANIM_DURATION/1000 + "s";

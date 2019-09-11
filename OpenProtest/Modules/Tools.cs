@@ -481,7 +481,7 @@ static class Tools {
         try {
             ProcessStartInfo info = new ProcessStartInfo {
                 FileName = "psexec",
-                Arguments = $"\\\\{hostname} netstat -nq", //-u ...\\administrator -p [pass]
+                Arguments = $"\\\\{hostname} netstat -nq -p TCP",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
@@ -504,7 +504,7 @@ static class Tools {
 
                 if (split.Length < 4) continue;
                 if (split[3] == "CLOSED" || split[3] == "CLOSE_WAIT" || split[3] == "BOUND") continue;
-                if (split[0] != "TCP") continue; //only tcp
+                //if (split[0] != "TCP") continue; //only tcp
                 ok_count++;
 
                 if (!int.TryParse(split[1].Split(':').Last(), out int port)) continue;

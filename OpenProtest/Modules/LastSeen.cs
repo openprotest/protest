@@ -4,13 +4,13 @@ using System.Net.NetworkInformation;
 using System.Text;
 
 static class LastSeen {
-    static readonly string dirLastSeen = $"{Directory.GetCurrentDirectory()}\\lastseen";
+    static readonly string DIR_LASTSEEN = $"{Directory.GetCurrentDirectory()}\\lastseen";
 
     public static void Seen(string ip) {
         try {
-            string filename = $"{dirLastSeen}\\{ip}.txt";
+            string filename = $"{DIR_LASTSEEN}\\{ip}.txt";
             File.WriteAllText(filename, DateTime.Now.ToString(NoSQL.DATETIME_FORMAT_LONG));
-        } catch (Exception ex) { 
+        } catch (Exception ex) {
             ErrorLog.Err(ex);
         }
     }
@@ -26,7 +26,7 @@ static class LastSeen {
     public static byte[] HasBeenSeen(string ip) {
         if (ip is null) return Tools.INV.Array;
 
-        string filename = $"{dirLastSeen}\\{ip}.txt";
+        string filename = $"{DIR_LASTSEEN}\\{ip}.txt";
 
         try {
             Ping p = new Ping();

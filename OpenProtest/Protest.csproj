@@ -7,7 +7,7 @@
     <ProjectGuid>{12FED691-8C9F-4844-B06E-9365568E32CB}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Protest</RootNamespace>
-    <AssemblyName>Protest</AssemblyName>
+    <AssemblyName>protest</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -52,6 +52,7 @@
     <Compile Include="Modules\ActionLog.cs" />
     <Compile Include="Modules\ActiveDir.cs" />
     <Compile Include="Modules\AddressBook.cs" />
+    <Compile Include="Modules\BandwidthMonitor.cs" />
     <Compile Include="Modules\Cache.cs" />
     <Compile Include="Modules\Crypto.cs" />
     <Compile Include="Modules\DebitNotes.cs" />

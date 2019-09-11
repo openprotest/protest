@@ -41,11 +41,13 @@ static class NoSQL {
     public static void InitDirs() {
         try {
             DirectoryInfo dirLastSeen = new DirectoryInfo($"{Directory.GetCurrentDirectory()}\\lastseen\\");
+            DirectoryInfo dirMetrics = new DirectoryInfo(BandwidthMonitor.DIR_METRICS);
             DirectoryInfo dirData = new DirectoryInfo($"{Directory.GetCurrentDirectory()}\\protest_data\\");
             DirectoryInfo dirEquip = new DirectoryInfo(DIR_EQUIP);
             DirectoryInfo dirUsers = new DirectoryInfo(DIR_USERS);
             
             if (!dirLastSeen.Exists) dirLastSeen.Create();
+            if (!dirMetrics.Exists) dirMetrics.Create();
             if (!dirData.Exists) dirData.Create();
             if (!dirEquip.Exists) dirEquip.Create();
             if (!dirUsers.Exists) dirUsers.Create();

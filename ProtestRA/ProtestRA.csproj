@@ -7,7 +7,7 @@
     <ProjectGuid>{3C12DC79-5BA4-48C2-89F3-C751F7763145}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Protest_RA</RootNamespace>
-    <AssemblyName>Protest RA</AssemblyName>
+    <AssemblyName>protest-ra</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

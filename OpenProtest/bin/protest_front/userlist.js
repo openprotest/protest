@@ -207,8 +207,8 @@ class UserList extends Window {
 
         element.ondblclick = (event)=> {
             for (let i=0; i<$w.array.length; i++)
-                if (W.array[i] instanceof User && W.array[i].filename == entry[".FILENAME"][0]) {
-                    W.array[i].Minimize(); //minimize/restore
+                if ($w.array[i] instanceof User && $w.array[i].filename == entry[".FILENAME"][0]) {
+                    $w.array[i].Minimize(); //minimize/restore
                     return;
                 }
 

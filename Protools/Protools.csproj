@@ -7,7 +7,7 @@
     <ProjectGuid>{DC141409-7C59-4126-8287-D3A759C2DB67}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Protools</RootNamespace>
-    <AssemblyName>Protools</AssemblyName>
+    <AssemblyName>protools</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

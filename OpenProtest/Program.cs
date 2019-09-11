@@ -218,7 +218,6 @@ class Program {
 
         Console.ResetColor();
         Console.WriteLine();
-
         new Thread(() => {
             Thread.Sleep(2000);
             NoSQL.FindDuplicates(NoSQL.equip, "IP");
@@ -226,6 +225,7 @@ class Program {
         }).Start();
 
 #if DEBUG
+        BandwidthMonitor.StartGatheringMetrics();
         //while (true) { Console.ReadLine(); }
 #endif
     }

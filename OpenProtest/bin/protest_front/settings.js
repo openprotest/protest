@@ -98,9 +98,16 @@ class Settings extends Window {
         this.content.appendChild(document.createElement("hr"));
         this.content.appendChild(document.createElement("br"));
 
+        let btnSession = document.createElement("input");
+        btnSession.type = "button";
+        btnSession.value = "Manage connected users";
+        btnSession.style.height = "40px";
+        btnSession.style.padding = "8px";
+        this.content.appendChild(btnSession);
+
         let btnClearCache = document.createElement("input");
         btnClearCache.type = "button";
-        btnClearCache.value = "Delete local cache";
+        btnClearCache.value = "Rebuild local cache";
         btnClearCache.style.height = "40px";
         btnClearCache.style.padding = "8px";
         this.content.appendChild(btnClearCache);
@@ -121,15 +128,8 @@ class Settings extends Window {
         btnClose.type = "button";
         btnClose.value = "Close";
         divButtons.appendChild(btnClose);
-        
 
-        this.chkWinMaxxed.checked    = localStorage.getItem("w_always_maxed") === "true";
-        this.chkDisableAnime.checked = localStorage.getItem("disable_anime") === "true";
-        this.zoom.value              = localStorage.getItem("zoom") == null ? 5 : parseInt(localStorage.getItem("zoom"));
-        this.txtBackground.value     = localStorage.getItem("wallpaper") != null ? localStorage.getItem("wallpaper") : "";
-        this.chkAliveOnClose.checked = localStorage.getItem("alive_after_close") === "true";
-        this.sessionTimeout.value    = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
-
+        this.LoadSettings();
 
         this.zoom.oninput = () => {
             divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%";  
@@ -145,35 +145,49 @@ class Settings extends Window {
             }
         };
 
-        btnClearCache.onclick = ()=> {
+        btnSession.onclick = ()=> { new Clients(); };
+        btnClearCache.onclick = ()=> { this.ClearCache(); };
+        btnOK.onclick = ()=> { this.Apply(); };
+        btnClose.onclick = ()=> { this.Close(); };
+
+        this.sessionTimeout.oninput();
+        this.zoom.oninput();
+    }
+
+    ClearCache() {
+        this.ConfirmBox("Are you sure you want rebuild local cache? This will refresh this page.", false).addEventListener("click", () => {
             localStorage.removeItem("equip_ver");
             localStorage.removeItem("equip");
             localStorage.removeItem("users_ver");
             localStorage.removeItem("users");
             location.reload();
-        };
+        });
+    }
 
-        btnOK.onclick = () => {
-            $w.always_maxxed = this.chkWinMaxxed.checked;
-            document.body.className = this.chkDisableAnime.checked ? "disable-animation" : "";
-            document.body.style.zoom = 75 + this.zoom.value * 5 + "%";
+    LoadSettings() {
+        this.chkWinMaxxed.checked = localStorage.getItem("w_always_maxed") === "true";
+        this.chkDisableAnime.checked = localStorage.getItem("disable_anime") === "true";
+        this.zoom.value = localStorage.getItem("zoom") == null ? 5 : parseInt(localStorage.getItem("zoom"));
+        this.txtBackground.value = localStorage.getItem("wallpaper") != null ? localStorage.getItem("wallpaper") : "";
+        this.chkAliveOnClose.checked = localStorage.getItem("alive_after_close") === "true";
+        this.sessionTimeout.value = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
+    }
 
-            if (this.txtBackground.value.length == 0) 
-                RemoveWallpaper();
-            else 
-                SetWallpaper(this.txtBackground.value);
+    Apply() {
+        $w.always_maxxed = this.chkWinMaxxed.checked;
+        document.body.className = this.chkDisableAnime.checked ? "disable-animation" : "";
+        document.body.style.zoom = 75 + this.zoom.value * 5 + "%";
 
-            localStorage.setItem("w_always_maxed"   , this.chkWinMaxxed.checked);
-            localStorage.setItem("disable_anime"    , this.chkDisableAnime.checked);
-            localStorage.setItem("zoom"             , this.zoom.value);
-            localStorage.setItem("wallpaper"        , this.txtBackground.value);
-            localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
-            localStorage.setItem("session_timeout"  , this.sessionTimeout.value);
-        };
+        if (this.txtBackground.value.length == 0)
+            RemoveWallpaper();
+        else
+            SetWallpaper(this.txtBackground.value);
 
-        btnClose.onclick = ()=> { this.Close(); };
-
-        this.sessionTimeout.oninput();
-        this.zoom.oninput();
+        localStorage.setItem("w_always_maxed", this.chkWinMaxxed.checked);
+        localStorage.setItem("disable_anime", this.chkDisableAnime.checked);
+        localStorage.setItem("zoom", this.zoom.value);
+        localStorage.setItem("wallpaper", this.txtBackground.value);
+        localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
+        localStorage.setItem("session_timeout", this.sessionTimeout.value);
     }
 }

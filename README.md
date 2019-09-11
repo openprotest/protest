@@ -46,6 +46,5 @@ The username must be whitelisted in the [config file](https://github.com/veniwar
 If you use a reverse proxy, in order for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end *([example](https://github.com/veniware/OpenProtest/blob/master/Tools%20and%20Docs/nginx.conf)).*
 
 
-
 * *This product includes IP2Location LITE data available from http://www.ip2location.com.*
 * *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
