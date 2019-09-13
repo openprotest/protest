@@ -126,18 +126,20 @@ class Http {
                 ctx.Response.AddHeader("Last-Modified", cache.birthdate);
                 ctx.Response.AddHeader("Referrer-Policy", "no-referrer");
 
-                Cache.CacheEntry entity = (Cache.CacheEntry)cache.hash[para[0]];
+                Cache.CacheEntry entry = (Cache.CacheEntry)cache.hash[para[0]];
 
-                if (acceptWebP && entity.webp != null) { //webp
-                    buffer = entity.webp;
+                if (acceptWebP && entry.webp != null) { //webp
+                    buffer = entry.webp;
                     ctx.Response.ContentType = "image/webp";
-                } else if (acceptGzip && entity.gzip != null) { //GZip
-                    buffer = entity.gzip;
-                    ctx.Response.ContentType = entity.contentType;
+
+                } else if (acceptGzip && entry.gzip != null) { //GZip
+                    buffer = entry.gzip;
+                    ctx.Response.ContentType = entry.contentType;
                     ctx.Response.AddHeader("Content-Encoding", "gzip");
+
                 } else { //raw
-                    buffer = entity.bytes;
-                    ctx.Response.ContentType = entity.contentType;
+                    buffer = entry.bytes;
+                    ctx.Response.ContentType = entry.contentType;
                     if (para[0].EndsWith("svgz")) ctx.Response.AddHeader("Content-Encoding", "gzip");
                 }
 
@@ -214,7 +216,9 @@ class Http {
                     case "gettasksobj"     : buffer = ProTasks.GetTasks(); break;
                     case "gettasksongoing" : buffer = ProTasks.GetOnGoing(); break;
                     case "gettasksresults" : buffer = ProTasks.GetResults(); break;
-                    
+
+                    case "getmetrics": buffer = BandwidthMonitor.GetMetrics(para); break;
+
                     case "getnetdrives": buffer = NetworkDrive.GetNetDrive(para); break;
 
                     case "ramsg": buffer = RaClient.RaResponse(para, remoteIp); break;

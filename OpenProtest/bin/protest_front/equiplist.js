@@ -99,6 +99,15 @@ class EquipList extends Window {
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
 
+        this.lblTotal = document.createElement("div");
+        this.lblTotal.className = "floating-total";
+        this.lblTotal.innerHTML = "0 / 0";
+        this.win.appendChild(this.lblTotal);
+        this.lblTotal.onmousedown = event => {
+            this.BringToFront();
+            event.stopPropagation();
+        };
+
         this.WaitLoader();
 
         this.btnFind.ondblclick = ()=> {
@@ -255,6 +264,8 @@ class EquipList extends Window {
                     this.btnSort.style.borderBottom = "#FF7900 solid 2px";
                 };
             }
+
+        this.lblTotal.innerHTML = this.list.length + " / " + db_equip.length;
 
         this.InvalidateRecyclerList();
     }

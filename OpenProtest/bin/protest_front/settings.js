@@ -101,14 +101,14 @@ class Settings extends Window {
         let btnSession = document.createElement("input");
         btnSession.type = "button";
         btnSession.value = "Manage connected users";
-        btnSession.style.height = "40px";
+        btnSession.style.height = "36px";
         btnSession.style.padding = "8px";
         this.content.appendChild(btnSession);
 
         let btnClearCache = document.createElement("input");
         btnClearCache.type = "button";
         btnClearCache.value = "Rebuild local cache";
-        btnClearCache.style.height = "40px";
+        btnClearCache.style.height = "36px";
         btnClearCache.style.padding = "8px";
         this.content.appendChild(btnClearCache);
 

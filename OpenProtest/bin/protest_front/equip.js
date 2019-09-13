@@ -246,6 +246,9 @@ class Equip extends Window {
         this.more.innerHTML = "";
         this.more.appendChild(this.instant);
 
+        let divSquareButtons = document.createElement("div");
+        this.more.appendChild(divSquareButtons);
+
         let btnPing = this.SideBar("res/ping.svgz", "Ping");
 
         if (equip.hasOwnProperty("IP")) {
@@ -371,7 +374,7 @@ class Equip extends Window {
                 if (this.equip.hasOwnProperty("LOGICAL DISK")) { //for each logical disk
                     let split = this.equip["LOGICAL DISK"][0].split(":");
                     for (let i = 1; i < split.length - 3; i += 4) {
-                        let btnDrive = this.SquareButton("res/diskdrive.svgz", "Drive " + split[i], this.more);
+                        let btnDrive = this.SquareButton("res/diskdrive.svgz", "Drive " + split[i], divSquareButtons);
                         btnDrive.onclick = ()=> {
                             if (smb_once) return;
                             let xhr = new XMLHttpRequest();
@@ -389,22 +392,22 @@ class Equip extends Window {
             } //end of power control 445
             
             if (ports_split.includes(80) && equip.hasOwnProperty("IP"))
-                this.SquareButton("res/earth.svgz", "HTTP", this.more).onclick = () => {
+                this.SquareButton("res/earth.svgz", "HTTP", divSquareButtons).onclick = () => {
                     window.open("http://" + equip["IP"][0].split(";")[0].trim());
                 };
 
             if (ports_split.includes(443) && equip.hasOwnProperty("IP"))
-                this.SquareButton("res/earth.svgz", "HTTPs", this.more).onclick = () => {
+                this.SquareButton("res/earth.svgz", "HTTPs", divSquareButtons).onclick = () => {
                     window.open("https://" + equip["IP"][0].split(";")[0].trim());
                 };
 
             if (ports_split.includes(21) && equip.hasOwnProperty("IP"))
-                this.SquareButton("res/shared.svgz", "FTP", this.more).onclick = () => {
+                this.SquareButton("res/shared.svgz", "FTP", divSquareButtons).onclick = () => {
                     window.open("ftp://" + equip["IP"][0].split(";")[0].trim());
                 };
 
             if (ports_split.includes(989) && equip.hasOwnProperty("IP"))
-                this.SquareButton("res/shared.svgz", "FTPs", this.more).onclick = () => {
+                this.SquareButton("res/shared.svgz", "FTPs", divSquareButtons).onclick = () => {
                     window.open("ftps://" + equip["IP"][0].split(";")[0].trim());
                 };
 
@@ -480,7 +483,7 @@ class Equip extends Window {
 
             if (ports_split.includes(445) && equip.hasOwnProperty("OPERATING SYSTEM")) {            
                 if (equip.hasOwnProperty("IP")) {
-                    this.SquareButton("res/console.svgz", "Processes", this.more).onclick = () => {
+                    this.SquareButton("res/console.svgz", "Processes", divSquareButtons).onclick = () => {
                         let win = new Wmi(equip["IP"][0].split(";")[0].trim(), "SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process");
                         win.setIcon("res/console.svgz");
                         if (!this.equip.hasOwnProperty("NAME") || this.equip["NAME"][0].length == 0)
@@ -489,7 +492,7 @@ class Equip extends Window {
                             win.setTitle(this.equip["NAME"][0] + " - Processes");
                     };
 
-                    this.SquareButton("res/service.svgz", "Services", this.more).onclick = () => {
+                    this.SquareButton("res/service.svgz", "Services", divSquareButtons).onclick = () => {
                         let win = new Wmi(equip["IP"][0].split(";")[0].trim(), "SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service");
                         win.setIcon("res/service.svgz");
                         if (!this.equip.hasOwnProperty("NAME") || this.equip["NAME"][0].length == 0)
@@ -512,7 +515,7 @@ class Equip extends Window {
                         
                         if (db_users[j].hasOwnProperty("USERNAME") && db_users[j]["USERNAME"][0] == owner) {
                             let filename = db_users[j][".FILENAME"][0];
-                            this.SquareButton("res/user.svgz", owner, this.more).onclick = () => {                                                               
+                            this.SquareButton("res/user.svgz", owner, divSquareButtons).onclick = () => {                                                               
                                 for (let k = 0; k < $w.array.length; k++)
                                     if ($w.array[k] instanceof User && $w.array[k].filename == filename) {
                                         $w.array[k].Minimize(); //minimize/restore
@@ -526,6 +529,25 @@ class Equip extends Window {
             }, 1);
         }
 
+
+        let divMetrics = document.createElement("div");
+        divMetrics.className = "metrics-graph";
+        divMetrics.style.padding = "8px 0";
+        divMetrics.style.margin = "16px 4px";
+        divMetrics.style.textAlign = "center";
+        divMetrics.style.overflow = "hidden";
+        this.more.appendChild(divMetrics);
+
+        let btnShowMetrics = document.createElement("input");
+        btnShowMetrics.type = "button";
+        btnShowMetrics.value = "Show bandwidth metrics";
+        btnShowMetrics.style.height = "36px";
+        divMetrics.appendChild(btnShowMetrics);
+
+        btnShowMetrics.onclick =()=> {
+            divMetrics.removeChild(btnShowMetrics);
+            this.ShowMetrics(divMetrics);
+        };
     }
 
     SideBar(icon, label) {
@@ -996,6 +1018,34 @@ class Equip extends Window {
             xhr.open("POST", "delequip&" + this.filename, true);
             xhr.send();
         });
+    }
+
+    ShowMetrics(container) {
+        if (!this.equip.hasOwnProperty("IP")) return;
+
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let lines = xhr.responseText.split("\n");
+                let array = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    let column = lines[i].split("\t");
+                    if (column.length < 3) continue;
+                    array.push(column.map(o => parseInt(o)));
+                }
+
+                let graph = new Graph();
+                graph.Attach(container);
+                graph.Push(array);
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+        
+        let ip = this.equip["IP"][0];
+        xhr.open("GET", "getmetrics&ip=" + ip, true);
+        xhr.send();
     }
 
 }

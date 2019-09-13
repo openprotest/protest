@@ -380,6 +380,16 @@
     animation: password-countdown_b 20s linear 1 !important;
 }
 
+.metrics-graph > svg > circle {
+    position: absolute;
+    transform-origin: center;
+    transition: .4s;
+}
+
+.metrics-graph > svg > circle:hover {
+    
+}
+
 @keyframes password-countdown_a {
     0%  { transform: rotate(-45deg); }
     50% { transform: rotate(-226deg); }

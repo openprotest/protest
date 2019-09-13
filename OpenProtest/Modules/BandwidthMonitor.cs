@@ -11,13 +11,30 @@ using System.Threading.Tasks;
 static class BandwidthMonitor {
     public static readonly string DIR_METRICS = $"{Directory.GetCurrentDirectory()}\\metrics";
 
-    public static async void StartGatheringMetrics() {
+    public static void StartTask() {
+        Thread.Sleep(5000);
+
+        ProTasks task = null;
+
+        Thread thread = new Thread(()=> {
+            if (task is null) Thread.Sleep(5000);
+            AsyncStartMetricsGathering(task);
+        });
+
+        task = new ProTasks(thread, "Metrics gatherer", "null");
+        task.stepsTotal = 0;
+    }
+
+    public static async void AsyncStartMetricsGathering(ProTasks task) {
         List<string> hosts = new List<string>();
         Hashtable pass = new Hashtable();
         Hashtable ignore = new Hashtable(); //TODO: sdfsdf
         long equip_version = 0;
 
         while (true) {
+            task.status = "Sleeping";
+            Thread.Sleep(3600000 * 2); //2 hours
+            task.status = "Gathering";
 
             if (equip_version != NoSQL.equip_version) { //build ip list
                 hosts.Clear();
@@ -76,7 +93,6 @@ static class BandwidthMonitor {
                        ignore.Add(hosts[i], null); //if host respones to ping but not to wmic then ignore on next loop.
                 }
 
-            //Thread.Sleep(3600000 * 2); //2 hours
         }
     }
 
@@ -120,6 +136,38 @@ static class BandwidthMonitor {
         }
 
         return new UInt64[] { 0 };
+    }
+
+    public static byte[] GetMetrics(string[] para) {
+        string ip = "", date = "";
+        for (int i = 1; i < para.Length; i++) {
+            if (para[i].StartsWith("ip=")) ip = para[i].Substring(5);
+            if (para[i].StartsWith("date=")) date = para[i].Substring(9);
+        }
+
+        if (ip.Length == 0) return null;
+        if (date.Length == 0) date = DateTime.Now.ToString("yyyyMM");
+
+        DirectoryInfo dirMetrics = new DirectoryInfo(DIR_METRICS);
+        if (!dirMetrics.Exists) return null;
+
+        FileInfo[] files = dirMetrics.GetFiles($"*{ip}.*", SearchOption.TopDirectoryOnly);
+
+        if (files.Length == 0) return null;
+
+        if (files.Length > 1)
+            Array.Sort(files, delegate (FileInfo a, FileInfo b) { //reverse sort by name
+                return String.Compare(b.Name, a.Name);
+            });        
+
+        string target = files[0].FullName;
+
+        try {
+            return File.ReadAllBytes(target);
+        } catch {
+            return null;
+        }
+
     }
 
 }

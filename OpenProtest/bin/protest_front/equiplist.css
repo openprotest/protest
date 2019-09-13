@@ -84,3 +84,19 @@
     left: 75%;
     top: 20px;
 }
+
+.floating-total {
+    position: absolute;
+    right: 20px;
+    bottom: 4px;
+    background-color: rgb(64,64,64);
+    color: rgb(224,224,224);
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+.floating-total:hover {
+    transition: .4s;
+    transition-delay: .4s;
+    opacity: .25;
+}

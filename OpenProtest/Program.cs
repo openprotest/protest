@@ -140,11 +140,6 @@ class Program {
     static void Main(string[] args) {
         Console.Title = "Pro-test";
 
-        /*using (X509Certificate2 certificate = new X509Certificate2("ssl\\veniware.cer", ""))
-          Console.WriteLine("SSL Hash: " + certificate.GetCertHashString());
-          Console.WriteLine("App GUID: " + Guid.NewGuid().ToString());
-          Console.WriteLine();*/
-
         string PRO_TEST =
             "###############  ###################\n" +
             "#    #    #   #  #    #   #   #    #\n" +
@@ -219,13 +214,14 @@ class Program {
         Console.ResetColor();
         Console.WriteLine();
         new Thread(() => {
-            Thread.Sleep(2000);
+            Thread.Sleep(3000);
             NoSQL.FindDuplicates(NoSQL.equip, "IP");
             NoSQL.FindDuplicates(NoSQL.users, "USERNAME");
         }).Start();
+        
+        BandwidthMonitor.StartTask();
 
 #if DEBUG
-        BandwidthMonitor.StartGatheringMetrics();
         //while (true) { Console.ReadLine(); }
 #endif
     }
