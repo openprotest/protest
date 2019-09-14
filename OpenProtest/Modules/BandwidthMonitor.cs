@@ -28,15 +28,13 @@ static class BandwidthMonitor {
     public static async void AsyncStartMetricsGathering(ProTasks task) {
         List<string> hosts = new List<string>();
         Hashtable pass = new Hashtable();
-        Hashtable ignore = new Hashtable(); //TODO: sdfsdf
-        long equip_version = 0;
+        Hashtable ignore = new Hashtable();
+        long equip_version = 0, ignoreCount = 0;
 
         while (true) {
-            task.status = "Sleeping";
-            Thread.Sleep(3600000 * 2); //2 hours
             task.status = "Gathering";
 
-            if (equip_version != NoSQL.equip_version) { //build ip list
+            if (equip_version != NoSQL.equip_version || ignoreCount != ignore.Count) { //build hosts list
                 hosts.Clear();
                 foreach (DictionaryEntry o in NoSQL.equip) {
                     NoSQL.DbEntry entry = (NoSQL.DbEntry) o.Value;
@@ -45,6 +43,7 @@ static class BandwidthMonitor {
                         for (int i = 0; i < value.Length; i++) {
                             value[i] = value[i].Trim();
                             if (value[i].Length == 0) continue;
+                            if (ignore.ContainsKey(value[i])) continue;
                             if (!hosts.Contains(value[i])) hosts.Add(value[i]);
                         }
                     }
@@ -53,10 +52,7 @@ static class BandwidthMonitor {
             }
 
             List<Task<UInt64[]>> tasks = new List<Task<UInt64[]>>();
-            for (int i = 0; i < hosts.Count; i++)
-                if (! ignore.ContainsKey(hosts[i]))
-                    tasks.Add(AsyncGather(hosts[i]));
-
+            for (int i = 0; i < hosts.Count; i++) tasks.Add(AsyncGather(hosts[i]));
             UInt64[][] result = await Task.WhenAll(tasks);
 
             for (int i = 0; i < result.Length; i++)
@@ -93,6 +89,8 @@ static class BandwidthMonitor {
                        ignore.Add(hosts[i], null); //if host respones to ping but not to wmic then ignore on next loop.
                 }
 
+            task.status = "Sleeping";
+            Thread.Sleep(3600000 * 2); //2 hours
         }
     }
 
@@ -132,7 +130,6 @@ static class BandwidthMonitor {
                 return new UInt64[] { 2 };
             else 
                 return new UInt64[] { bytesReceived, bytesSent, (UInt64)DateTime.Now.Ticks };
-
         }
 
         return new UInt64[] { 0 };
