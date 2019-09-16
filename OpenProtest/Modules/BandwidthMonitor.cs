@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 static class BandwidthMonitor {
     public static readonly string DIR_METRICS = $"{Directory.GetCurrentDirectory()}\\metrics";
 
+    private static readonly object metrics_lock = new object();
+
     public static void StartTask() {
         Thread.Sleep(5000);
 
@@ -55,39 +57,40 @@ static class BandwidthMonitor {
             for (int i = 0; i < hosts.Count; i++) tasks.Add(AsyncGather(hosts[i]));
             UInt64[][] result = await Task.WhenAll(tasks);
 
-            for (int i = 0; i < result.Length; i++)
-                if (result[i].Length == 3) {
-                    if (pass.ContainsKey(hosts[i])) {
-                        UInt64[] last = (UInt64[])pass[hosts[i]];
-                        UInt64 lastReceived = last[0];
-                        UInt64 lastSent = last[1];
-                        UInt64 received = result[i][0];
-                        UInt64 sent = result[i][1];
+            lock (metrics_lock)
+                for (int i = 0; i < result.Length; i++)
+                    if (result[i].Length == 3) {
+                        if (pass.ContainsKey(hosts[i])) {
+                            UInt64[] last = (UInt64[])pass[hosts[i]];
+                            UInt64 lastReceived = last[0];
+                            UInt64 lastSent = last[1];
+                            UInt64 received = result[i][0];
+                            UInt64 sent = result[i][1];
 
-                        if (received < lastReceived || sent < lastSent) continue;
+                            if (received < lastReceived || sent < lastSent) continue;
 
-                        DateTime date = new DateTime((long)last[2]);
+                            DateTime date = new DateTime((long)last[2]);
 
-                        string filename = $"{DIR_METRICS}\\{date.Year}{date.Month.ToString().PadLeft(2, '0')}_{hosts[i]}.txt";
-                        string contents = $"{date.ToString("ddHHmm")}\t{received - lastReceived}\t{sent - lastSent}\n";
+                            string filename = $"{DIR_METRICS}\\{date.Year}{date.Month.ToString().PadLeft(2, '0')}_{hosts[i]}.txt";
+                            string contents = $"{date.ToString("ddHHmm")}\t{received - lastReceived}\t{sent - lastSent}\n";
 
-                        try {
-                            File.AppendAllText(filename, contents);
-                        } catch (Exception ex) {
-                            Console.WriteLine(ex.Message);
+                            try {
+                                File.AppendAllText(filename, contents);
+                            } catch (Exception ex) {
+                                Console.WriteLine(ex.Message);
+                            }
+
+                            pass.Remove(hosts[i]);
+                            pass.Add(hosts[i], result[i]); //UInt64[3]
+
+                        } else {
+                            pass.Add(hosts[i], result[i]); //UInt64[3]
                         }
 
-                        pass.Remove(hosts[i]);
-                        pass.Add(hosts[i], result[i]); //UInt64[3]
-
                     } else {
-                        pass.Add(hosts[i], result[i]); //UInt64[3]
+                        if (result[i][0] == 1 && !ignore.ContainsKey(hosts[i]))
+                           ignore.Add(hosts[i], null); //if host respones to ping but not to wmic then ignore on next loop.
                     }
-
-                } else {
-                    if (result[i][0] == 1 && !ignore.ContainsKey(hosts[i]))
-                       ignore.Add(hosts[i], null); //if host respones to ping but not to wmic then ignore on next loop.
-                }
 
             task.status = "Sleeping";
             Thread.Sleep(3600000 * 2); //2 hours
@@ -159,12 +162,12 @@ static class BandwidthMonitor {
 
         string target = files[0].FullName;
 
-        try {
-            return File.ReadAllBytes(target);
-        } catch {
-            return null;
-        }
-
+        lock (metrics_lock)
+            try {
+                return File.ReadAllBytes(target);
+            } catch {
+                return null;
+            }
     }
 
 }

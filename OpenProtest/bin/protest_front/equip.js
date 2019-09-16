@@ -1026,18 +1026,23 @@ class Equip extends Window {
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
+                if (xhr.responseText.length == 0) {
+                    container.innerHTML = "No data available.";
+                    return;
+                }
+
                 let lines = xhr.responseText.split("\n");
                 let array = [];
 
                 for (let i = 0; i < lines.length; i++) {
                     let column = lines[i].split("\t");
                     if (column.length < 3) continue;
-                    array.push(column.map(o => parseInt(o)));
+                    array.push([ column[0], parseInt(column[1]), parseInt(column[2])]);
                 }
 
-                let graph = new Graph();
+                let graph = new Graph(array);
                 graph.Attach(container);
-                graph.Push(array);
+
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);

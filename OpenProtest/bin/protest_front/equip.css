@@ -324,10 +324,11 @@
 .eq-progress-bar  > div:nth-child(2) {
     display: inline-block;
     width: 100px;
-    height: 8px;
+    height: 12px;
     border: black 1px solid;
     border-radius: 2px;
     margin: 1px;
+    margin-bottom: -2px;
 
     transition: 1s;
 }
@@ -380,10 +381,10 @@
     animation: password-countdown_b 20s linear 1 !important;
 }
 
-.metrics-graph > svg > circle {
+.metrics-graph > svg > * {
     position: absolute;
-    transform-origin: center;
-    transition: .4s;
+    /*transform-origin: center;*/
+    transition: .2s;
 }
 
 .metrics-graph > svg > circle:hover {
