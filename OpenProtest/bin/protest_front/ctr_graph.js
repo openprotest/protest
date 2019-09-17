@@ -143,28 +143,16 @@ class Graph {
                 const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 dot.setAttribute("cx", x);
                 dot.setAttribute("cy", y);
+                dot.setAttribute("cy", y);
                 dot.setAttribute("r", r);
                 dot.setAttribute("fill", j==1 ? "rgb(95,177,39)" : "rgb(232,118,0)");
                 this.svg.appendChild(dot);
                 this.rollingElements.push(dot);
 
-                if (i > 0) {
-                    let xp = GRAPH_WIDTH - 60 - map[i - 1].t;
-                    let x1 = x - 5;
-                    let y1 = Math.round(100 + (j == 1 ? -80 * (map[i].rx * .2 + map[i - 1].rx * .75) / maxRx : 80 * (map[i].tx * .25 + map[i - 1].tx * .8) / maxTx));
-                    let x2 = xp + 5;
-                    let y2 = Math.round(100 + (j == 1 ? -80 * (map[i].rx * .8 + map[i - 1].rx * .25) / maxRx : 80 * (map[i].tx * .75 + map[i - 1].tx * .2) / maxTx));
-
-                    if (j == 1)
-                        stringPathRx += " C " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + x + " " + y;
-                    else
-                        stringPathTx += " C " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + x + " " + y;
-                } else {
-                    if (j == 1)
-                        stringPathRx += " L " + x + " " + y;
-                    else
-                        stringPathTx += " L " + x + " " + y;
-                }
+                if (j==1)
+                    stringPathRx += " L " + x + " " + y;
+                else
+                    stringPathTx += " L " + x + " " + y;
             }
 
         stringPathRx += " L " + (GRAPH_WIDTH - 60) + " 100 Z";
@@ -183,6 +171,72 @@ class Graph {
         pathTx.setAttribute("d", stringPathTx);
         this.svg.appendChild(pathTx);
         this.rollingElements.push(pathTx);
+
+
+        let from = (map[0].date[0] * 24 * 60 + map[0].date[1] * 60);
+        from -= from % 120;
+
+        let to = (map[map.length - 1].date[0] * 24 * 60 + map[map.length - 1].date[1] * 60);
+        to -= to % 120;
+
+        for (let i = from; i < to; i += 120) {
+            let date = Math.round((i - (i % (60 * 24))) / (60 * 24));
+            let time = ((i % (60 * 24)) / 60).toString().padStart(2, "0") + ":00";
+
+            let x = GRAPH_WIDTH - 60 - (this.lastPixel - (i - this.xMin) * GRAPH_SCALE_FACTOR);
+
+            if (time == "00:00") {
+                const dateOutline = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                dateOutline.setAttribute("x", x - 10);
+                dateOutline.setAttribute("y", 220);
+                dateOutline.setAttribute("width", 20);
+                dateOutline.setAttribute("height", 20);
+                dateOutline.style = "stroke:rgb(32,32,32);stroke-width:2;fill:rgba(0,0,0,0)";
+                this.svg.appendChild(dateOutline);
+                this.rollingElements.push(dateOutline);
+
+                const dateTitle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                dateTitle.setAttribute("x", x - 10);
+                dateTitle.setAttribute("y", 220);
+                dateTitle.setAttribute("width", 20);
+                dateTitle.setAttribute("height", 4);
+                dateTitle.fill = "rgb(32,32,32)";
+                this.svg.appendChild(dateTitle);
+                this.rollingElements.push(dateTitle);
+
+                const dateLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                dateLabel.innerHTML = date;
+                dateLabel.setAttribute("x", x);
+                dateLabel.setAttribute("y", 236);
+                dateLabel.setAttribute("width", 20);
+                dateLabel.setAttribute("height", 4);
+                dateLabel.setAttribute("font-size", "12px");
+                dateLabel.setAttribute("font-weight", "bold");
+                dateLabel.setAttribute("text-anchor", "middle");
+                dateLabel.fill = "rgb(32,32,32)";
+                this.svg.appendChild(dateLabel);
+                this.rollingElements.push(dateLabel);
+
+            } else {
+                const lblDate = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                lblDate.innerHTML = time;
+                lblDate.setAttribute("x", x);
+                lblDate.setAttribute("y", 230);
+                lblDate.setAttribute("fill", "rgb(32,32,32)");
+                lblDate.setAttribute("font-size", "9px");
+                lblDate.setAttribute("text-anchor", "middle");
+                this.svg.appendChild(lblDate);
+                this.rollingElements.push(lblDate);
+            }
+
+            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dot.setAttribute("cx", x);
+            dot.setAttribute("cy", 212);
+            dot.setAttribute("r", 2);
+            dot.setAttribute("fill", "rgb(32,32,32)");
+            this.svg.appendChild(dot);
+            this.rollingElements.push(dot);
+        }
 
         this.svg.appendChild(this.opaque);
 
@@ -253,71 +307,6 @@ class Graph {
         lineXAaxis.setAttribute("y2", "100");
         lineXAaxis.setAttribute("style", "stroke:rgb(0,0,0);stroke-width:2");
         this.svg.appendChild(lineXAaxis);
-
-
-        let from = (map[0].date[0] * 24 * 60 + map[0].date[1] * 60);
-        from -= from % 120;
-
-        let to = (map[map.length-1].date[0] * 24 * 60 + map[map.length-1].date[1] * 60);
-        to -= to % 120; 
-
-        for (let i = from; i <= to; i += 120) {
-            let date = Math.round((i - (i % (60 * 24))) / (60 * 24));
-            let time = ((i % (60 * 24)) / 60).toString().padStart(2,"0") + ":00";
-
-            let x = GRAPH_WIDTH - 60 - (this.lastPixel - (i-this.xMin) * GRAPH_SCALE_FACTOR);
-
-            if (time == "00:00") {
-                const dateOutline = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                dateOutline.setAttribute("x", x - 10);
-                dateOutline.setAttribute("y", 220);
-                dateOutline.setAttribute("width", 20);
-                dateOutline.setAttribute("height", 20);
-                dateOutline.style = "stroke:rgb(32,32,32);stroke-width:2;fill:rgba(0,0,0,0)";
-                this.svg.appendChild(dateOutline);
-                this.rollingElements.push(dateOutline);
-
-                const dateTitle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                dateTitle.setAttribute("x", x - 10);
-                dateTitle.setAttribute("y", 220);
-                dateTitle.setAttribute("width", 20);
-                dateTitle.setAttribute("height", 4);
-                dateTitle.fill = "rgb(32,32,32)";
-                this.svg.appendChild(dateTitle);
-                this.rollingElements.push(dateTitle);
-
-                const dateLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                dateLabel.innerHTML = date;
-                dateLabel.setAttribute("x", x);
-                dateLabel.setAttribute("y", 236);
-                dateLabel.setAttribute("width", 20);
-                dateLabel.setAttribute("height", 4);
-                dateLabel.setAttribute("font-size", "12px");
-                dateLabel.setAttribute("font-weight", "bold");
-                dateLabel.setAttribute("text-anchor", "middle");
-                dateLabel.fill = "rgb(32,32,32)";
-                this.svg.appendChild(dateLabel);
-                this.rollingElements.push(dateLabel);
-
-            } else {
-                const lblDate = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                lblDate.innerHTML = time;
-                lblDate.setAttribute("x", x-12);
-                lblDate.setAttribute("y", 235);
-                lblDate.setAttribute("fill", "rgb(32,32,32)");
-                lblDate.setAttribute("font-size", "9px");
-                this.svg.appendChild(lblDate);
-                this.rollingElements.push(lblDate);
-            }
-
-            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            dot.setAttribute("cx", x);
-            dot.setAttribute("cy", 212);
-            dot.setAttribute("r", 2);
-            dot.setAttribute("fill", "rgb(32,32,32)");
-            this.svg.appendChild(dot);
-            this.rollingElements.push(dot);
-        }
 
     }
 
