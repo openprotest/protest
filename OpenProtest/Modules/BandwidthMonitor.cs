@@ -29,7 +29,7 @@ static class BandwidthMonitor {
 
     public static async void AsyncStartMetricsGathering(ProTasks task) {
         List<string> hosts = new List<string>();
-        Hashtable pass = new Hashtable();
+        Hashtable previews = new Hashtable();
         Hashtable ignore = new Hashtable();
         long equip_version = 0, ignoreCount = 0;
 
@@ -53,51 +53,60 @@ static class BandwidthMonitor {
                 equip_version = NoSQL.equip_version;
             }
 
-            List<Task<UInt64[]>> tasks = new List<Task<UInt64[]>>();
+            List<Task<Int64[]>> tasks = new List<Task<Int64[]>>();
             for (int i = 0; i < hosts.Count; i++) tasks.Add(AsyncGather(hosts[i]));
-            UInt64[][] result = await Task.WhenAll(tasks);
+            Int64[][] result = await Task.WhenAll(tasks);
 
             lock (metrics_lock)
                 for (int i = 0; i < result.Length; i++)
                     if (result[i].Length == 3) {
-                        if (pass.ContainsKey(hosts[i])) {
-                            UInt64[] last = (UInt64[])pass[hosts[i]];
-                            UInt64 lastReceived = last[0];
-                            UInt64 lastSent = last[1];
-                            UInt64 received = result[i][0];
-                            UInt64 sent = result[i][1];
+                        if (previews.ContainsKey(hosts[i])) {
+                            Int64[] lastValue = (Int64[])previews[hosts[i]];
+                            Int64 lastReceived = lastValue[0];
+                            Int64 lastSent = lastValue[1];
+                            Int64 received = result[i][0];
+                            Int64 sent = result[i][1];
 
                             if (received < lastReceived || sent < lastSent) continue;
 
-                            DateTime date = new DateTime((long)last[2]);
+                            DateTime date = new DateTime(result[i][2]);
 
                             string filename = $"{DIR_METRICS}\\{date.Year}{date.Month.ToString().PadLeft(2, '0')}_{hosts[i]}.txt";
                             string contents = $"{date.ToString("ddHHmm")}\t{received - lastReceived}\t{sent - lastSent}\n";
 
                             try {
                                 File.AppendAllText(filename, contents);
-                            } catch (Exception ex) {
-                                Console.WriteLine(ex.Message);
-                            }
-
-                            pass.Remove(hosts[i]);
-                            pass.Add(hosts[i], result[i]); //UInt64[3]
-
-                        } else {
-                            pass.Add(hosts[i], result[i]); //UInt64[3]
+                            } catch {}
                         }
 
-                    } else {
-                        if (result[i][0] == 1 && !ignore.ContainsKey(hosts[i]))
+                    } else { //no info
+                        if (result[i][0] == -2 && !ignore.ContainsKey(hosts[i]))
                            ignore.Add(hosts[i], null); //if host respones to ping but not to wmic then ignore on next loop.
+
+                        if (previews.ContainsKey(hosts[i])) { //if has previews value but no current
+                            DateTime date = DateTime.Now;
+                            string filename = $"{DIR_METRICS}\\{date.Year}{date.Month.ToString().PadLeft(2, '0')}_{hosts[i]}.txt";
+                            string contents = $"{date.ToString("ddHHmm")}\t0\t0\n";
+
+                            try {
+                                File.AppendAllText(filename, contents);
+                            } catch {}
+                        }
                     }
+
+
+            previews.Clear();
+            for (int i = 0; i < result.Length; i++)
+                if (result[i].Length == 3) 
+                    previews.Add(hosts[i], result[i]); //UInt64[3]
+            
 
             task.status = "Sleeping";
             Thread.Sleep(3600000 * 2); //2 hours
         }
     }
 
-    public static async Task<UInt64[]> AsyncGather(string hostname) {
+    public static async Task<Int64[]> AsyncGather(string hostname) {
         Ping p = new Ping();
         bool pingResult = false;
 
@@ -109,7 +118,7 @@ static class BandwidthMonitor {
                 pingResult = reply.Status == IPStatus.Success;
             }
         } catch {
-            return new UInt64[] { 0 };
+            return new Int64[] { -1 }; //unreachable
         } finally {
             p.Dispose();
         }
@@ -119,7 +128,7 @@ static class BandwidthMonitor {
             UInt64 bytesReceived = 0, bytesSent = 0;
 
             ManagementScope scope = Wmi.WmiScope(hostname);
-            if (scope is null) return new UInt64[] { 1 };
+            if (scope is null) return new Int64[] { -2 }; //no wmi
 
             try {
                 using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfRawData_Tcpip_NetworkInterface")).Get())
@@ -130,12 +139,12 @@ static class BandwidthMonitor {
             } catch { }
 
             if (bytesReceived == 0 && bytesSent == 0)
-                return new UInt64[] { 2 };
-            else 
-                return new UInt64[] { bytesReceived, bytesSent, (UInt64)DateTime.Now.Ticks };
+                return new Int64[] { 0 }; //no info
+            else
+                return new Int64[] { (Int64)bytesReceived, (Int64)bytesSent, (Int64)DateTime.Now.Ticks };
         }
 
-        return new UInt64[] { 0 };
+        return new Int64[] { -1 }; //unreachable
     }
 
     public static byte[] GetMetrics(string[] para) {

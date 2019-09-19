@@ -1032,8 +1032,12 @@ class Equip extends Window {
                 }
 
                 let lines = xhr.responseText.split("\n");
-                let array = [];
+                if (lines.length < 2) {
+                    container.innerHTML = "No data available.";
+                    return;
+                }
 
+                let array = [];
                 for (let i = 0; i < lines.length; i++) {
                     let column = lines[i].split("\t");
                     if (column.length < 3) continue;
@@ -1043,6 +1047,7 @@ class Equip extends Window {
                 let graph = new Graph(array);
                 graph.Attach(container);
 
+                this.more.scrollTo(0, this.more.scrollHeight);
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);

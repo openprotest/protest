@@ -97,13 +97,12 @@ class Graph {
                          parseInt(array[array.length-1][0].substring(2, 4)) * 60 +
                          parseInt(array[array.length-1][0].substring(4, 6)) - this.xMin) * GRAPH_SCALE_FACTOR ;
 
-        let map = array.map(o => {
+        this.map = array.map(o => {
             let time = parseInt(o[0].substring(0,2)) * 24 * 60 +
                        parseInt(o[0].substring(2,4)) * 60 +
                        parseInt(o[0].substring(4,6));
 
             let obj = {};
-            //obj.timestamp = time;
             obj.t = this.lastPixel - (time-this.xMin) * GRAPH_SCALE_FACTOR;
             obj.date = [o[0].substring(0,2), o[0].substring(2,4), o[0].substring(4,6)];
             obj.rx = o[1];
@@ -112,12 +111,39 @@ class Graph {
             return obj;
         });
 
-        this.Draw(map);
-
+        this.Draw(this.map);
+        
         this.svg.onmousewheel = event => {
             this.Roll(event.deltaY);
             event.preventDefault();
+            this.Graph_onmousemove(event);
         };
+
+        this.svg.scrollIntoView();
+
+        this.svg.onmousemove = event => { this.Graph_onmousemove(event); };
+        this.svg.onmouseenter = event => { this.Graph_onmouseenter(event); };
+        this.svg.onmouseleave = event => { this.Graph_onmouseleave(event); };
+
+        this.hoverElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        this.hoverElement.setAttribute("r", 4);
+        this.hoverElement.setAttribute("cx", 0);
+        this.hoverElement.setAttribute("cy", 0);
+        this.hoverElement.setAttribute("fill", "transparent");
+        this.hoverElement.style.opacity = "0";
+        this.hoverElement.style.stroke = "rgb(32,32,32)";
+        this.hoverElement.style.strokeWidth = "2";
+        this.svg.appendChild(this.hoverElement);
+
+        this.hoverLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        this.hoverLabel.innerHTML = "0";
+        this.hoverLabel.setAttribute("x", 0);
+        this.hoverLabel.setAttribute("y", 0);
+        this.hoverLabel.setAttribute("font-size", "12px");
+        this.hoverLabel.setAttribute("font-weight", "bold");
+        this.hoverLabel.setAttribute("fill", "rgb(32,32,32)");
+        this.hoverLabel.style.opacity = "0";
+        this.svg.appendChild(this.hoverLabel);
     }
 
     Attach(container) {
@@ -142,7 +168,6 @@ class Graph {
 
                 const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 dot.setAttribute("cx", x);
-                dot.setAttribute("cy", y);
                 dot.setAttribute("cy", y);
                 dot.setAttribute("r", r);
                 dot.setAttribute("fill", j==1 ? "rgb(95,177,39)" : "rgb(232,118,0)");
@@ -180,8 +205,8 @@ class Graph {
         to -= to % 120;
 
         for (let i = from; i < to; i += 120) {
-            let date = Math.round((i - (i % (60 * 24))) / (60 * 24));
-            let time = ((i % (60 * 24)) / 60).toString().padStart(2, "0") + ":00";
+            let date = Math.trunc(i / (60*24));
+            let time = ((i % (60*24)) / 60).toString().padStart(2, "0") + ":00";
 
             let x = GRAPH_WIDTH - 60 - (this.lastPixel - (i - this.xMin) * GRAPH_SCALE_FACTOR);
 
@@ -216,7 +241,7 @@ class Graph {
                 dateLabel.fill = "rgb(32,32,32)";
                 this.svg.appendChild(dateLabel);
                 this.rollingElements.push(dateLabel);
-
+                
             } else {
                 const lblDate = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 lblDate.innerHTML = time;
@@ -307,11 +332,10 @@ class Graph {
         lineXAaxis.setAttribute("y2", "100");
         lineXAaxis.setAttribute("style", "stroke:rgb(0,0,0);stroke-width:2");
         this.svg.appendChild(lineXAaxis);
-
     }
 
     Roll(value) {
-        if ((this.offset + value) > this.lastPixel + 100) return; 
+        if (this.offset + value > this.lastPixel - 200) return; 
 
         this.offset = Math.max(this.offset + value, 0);
         this.opaque.style = this.offset == 0 ? "opacity:0" : "opacity:1";
@@ -327,6 +351,41 @@ class Graph {
         if (value < Math.pow(1024,4)) return Math.round(value/Math.pow(1024,3)) + " GB";
         if (value < Math.pow(1024,5)) return Math.round(value/Math.pow(1024,4)) + " TB";
         return Math.round(value / Math.pow(1024,5)) + " PB";
+    }
+
+    Graph_onmousemove(event) {
+        if (this.map.length == 0) return;
+
+        let cur = (GRAPH_WIDTH - 60 - event.offsetX + this.offset);
+        let t = Infinity;
+        let index = -1;
+        for (let i = 0; i < this.map.length; i++) {
+            if (Math.abs(cur - this.map[i].t) < t) {
+                t = Math.abs(cur - this.map[i].t);
+                index = i;
+            }
+        }
+
+        let maxRx = 0, maxTx = 0;
+        for (let i = 0; i < this.map.length; i++) { //find max value
+            if (this.map[i].rx > maxRx) maxRx = this.map[i].rx;
+            if (this.map[i].tx > maxTx) maxTx = this.map[i].tx;
+        }
+
+        let y = 100 + (event.offsetY > 100 ? 80 * this.map[index].tx / maxTx : -80 * this.map[index].rx / maxRx);
+        this.hoverElement.style.transform = "translate(" + (GRAPH_WIDTH - 60 - this.map[index].t + this.offset) + "px," + y + "px)";
+        this.hoverLabel.style.transform = "translate(" + (GRAPH_WIDTH - 60 - this.map[index].t + this.offset + 4) + "px," + (y + (event.offsetY > 100 ? 12 : -12) + 4) + "px)";
+        this.hoverLabel.innerHTML = event.offsetY > 100 ? this.BytesToString(this.map[index].tx) : this.BytesToString(this.map[index].rx);
+    }
+
+    Graph_onmouseenter(event) {
+        this.hoverElement.style.opacity = "1";
+        this.hoverLabel.style.opacity = "1";
+    }
+
+    Graph_onmouseleave(event) {
+        this.hoverElement.style.opacity = "0";
+        this.hoverLabel.style.opacity = "0";
     }
 
 }
