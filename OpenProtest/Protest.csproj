@@ -42,6 +42,9 @@
     <ApplicationIcon>pro-test.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="Microsoft.CSharp" />
@@ -533,6 +536,7 @@
     <None Include="bin\protest_front\res\icon96.png.webp" />
     <None Include="bin\protest_front\segoeui.ttf" />
     <None Include="bin\protest_front\wmi_classes.json" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="bin\addressbook_front\addressbook.css" />

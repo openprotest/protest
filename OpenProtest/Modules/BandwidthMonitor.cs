@@ -7,6 +7,7 @@ using System.Management;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
+using Renci.SshNet;
 
 static class BandwidthMonitor {
     public static readonly string DIR_METRICS = $"{Directory.GetCurrentDirectory()}\\metrics";
@@ -17,7 +18,6 @@ static class BandwidthMonitor {
         Thread.Sleep(5000);
 
         ProTasks task = null;
-
         Thread thread = new Thread(()=> {
             if (task is null) Thread.Sleep(5000);
             AsyncStartMetricsGathering(task);
@@ -29,7 +29,7 @@ static class BandwidthMonitor {
 
     public static async void AsyncStartMetricsGathering(ProTasks task) {
         List<string> hosts = new List<string>();
-        Hashtable previews = new Hashtable();
+        Hashtable previous = new Hashtable();
         Hashtable ignore = new Hashtable();
         long equip_version = 0, ignoreCount = 0;
 
@@ -60,8 +60,8 @@ static class BandwidthMonitor {
             lock (metrics_lock)
                 for (int i = 0; i < result.Length; i++)
                     if (result[i].Length == 3) {
-                        if (previews.ContainsKey(hosts[i])) {
-                            Int64[] lastValue = (Int64[])previews[hosts[i]];
+                        if (previous.ContainsKey(hosts[i])) {
+                            Int64[] lastValue = (Int64[])previous[hosts[i]];
                             Int64 lastReceived = lastValue[0];
                             Int64 lastSent = lastValue[1];
                             Int64 received = result[i][0];
@@ -83,7 +83,7 @@ static class BandwidthMonitor {
                         if (result[i][0] == -2 && !ignore.ContainsKey(hosts[i]))
                            ignore.Add(hosts[i], null); //if host respones to ping but not to wmic then ignore on next loop.
 
-                        if (previews.ContainsKey(hosts[i])) { //if has previews value but no current
+                        if (previous.ContainsKey(hosts[i])) { //if has previous value but no current
                             DateTime date = DateTime.Now;
                             string filename = $"{DIR_METRICS}\\{date.Year}{date.Month.ToString().PadLeft(2, '0')}_{hosts[i]}.txt";
                             string contents = $"{date.ToString("ddHHmm")}\t0\t0\n";
@@ -95,10 +95,10 @@ static class BandwidthMonitor {
                     }
 
 
-            previews.Clear();
+            previous.Clear();
             for (int i = 0; i < result.Length; i++)
                 if (result[i].Length == 3) 
-                    previews.Add(hosts[i], result[i]); //UInt64[3]
+                    previous.Add(hosts[i], result[i]); //UInt64[3]
             
 
             task.status = "Sleeping";
@@ -106,15 +106,15 @@ static class BandwidthMonitor {
         }
     }
 
-    public static async Task<Int64[]> AsyncGather(string hostname) {
+    public static async Task<Int64[]> AsyncGather(string host) {
         Ping p = new Ping();
         bool pingResult = false;
 
         try {
-            PingReply reply = await p.SendPingAsync(hostname, 1000);
+            PingReply reply = await p.SendPingAsync(host, 1000);
             pingResult = reply.Status == IPStatus.Success;
             if (!pingResult) { //2nd try
-                reply = await p.SendPingAsync(hostname, 1000);
+                reply = await p.SendPingAsync(host, 1000);
                 pingResult = reply.Status == IPStatus.Success;
             }
         } catch {
@@ -124,11 +124,11 @@ static class BandwidthMonitor {
         }
 
         if (pingResult) {
-            LastSeen.Seen(hostname);
+            LastSeen.Seen(host);
             UInt64 bytesReceived = 0, bytesSent = 0;
 
-            ManagementScope scope = Wmi.WmiScope(hostname);
-            if (scope is null) return new Int64[] { -2 }; //no wmi
+            ManagementScope scope = Wmi.WmiScope(host);
+            if (scope is null) return GatherSecureShell(host); //try ssh
 
             try {
                 using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfRawData_Tcpip_NetworkInterface")).Get())
@@ -139,13 +139,84 @@ static class BandwidthMonitor {
             } catch { }
 
             if (bytesReceived == 0 && bytesSent == 0)
-                return new Int64[] { 0 }; //no info
+                return new Int64[] { 0 }; //no traffic
             else
-                return new Int64[] { (Int64)bytesReceived, (Int64)bytesSent, (Int64)DateTime.Now.Ticks };
+                return new Int64[] { (Int64)bytesReceived, (Int64)bytesSent, (Int64)DateTime.Now.Ticks }; // <-
         }
 
         return new Int64[] { -1 }; //unreachable
     }
+
+    public static Int64[] GatherSecureShell(string host) {
+        string username = "", password = ""; ;
+
+        foreach (DictionaryEntry o in NoSQL.equip) {
+            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+            if (entry.hash.ContainsKey("IP")) {
+                string[] value = ((string[])entry.hash["IP"])[0].Split(';');
+                for (int i = 0; i < value.Length; i++) value[i] = value[i].Trim();
+                
+                if (value.Contains(host)) {
+
+                    if (entry.hash.ContainsKey("SSH USERNAME") && entry.hash.ContainsKey("SSH PASSWORD")) {
+                        username = ((string[])entry.hash["SSH USERNAME"])[0];
+                        password = ((string[])entry.hash["SSH PASSWORD"])[0];
+                        break;
+                    } else {
+                        return new Int64[] { -2 }; //no service
+                    }
+
+                } else {
+                    continue;
+                }
+
+            }
+        }
+
+        if (username.Length == 0 && password.Length == 0) return new Int64[] { -2 }; //no service
+
+        try {
+            ConnectionInfo conInfo = new ConnectionInfo(host, username, new PasswordAuthenticationMethod(username, password));
+
+            UInt64 bytesReceived = 0, bytesSent = 0;
+            using (SshClient sshclient = new SshClient(conInfo)) {
+                sshclient.Connect();
+                string[] result = sshclient.RunCommand("ifconfig").Result.Split('\n');
+
+                bool flag = false;
+                for (int i = 0; i < result.Length; i++) {
+
+                    if (result[i].StartsWith("lo")) {
+                        flag = true;
+                        continue;
+                    }
+
+                    if (result[i].Contains("RX bytes:") && result[i].Contains("TX bytes:")) {
+                        if (flag) { //if interface is lo skip
+                            flag = false;
+                            continue;
+                        }
+
+                        string rx = result[i].Split(':')[1];
+                        rx = rx.Substring(0, rx.IndexOf(" "));
+                        bytesReceived += UInt64.Parse(rx);
+
+                        string tx = result[i].Split(':')[2];
+                        tx = tx.Substring(0, tx.IndexOf(" "));
+                        bytesSent += UInt64.Parse(tx);
+                    }
+                }
+
+            };
+
+            if (bytesReceived == 0 && bytesSent == 0)
+                return new Int64[] { 0 }; //no traffic
+            else
+                return new Int64[] { (Int64)bytesReceived, (Int64)bytesSent, (Int64)DateTime.Now.Ticks }; // <-
+        } catch {
+            return new Int64[] { -2 }; //no service
+        }
+    } 
 
     public static byte[] GetMetrics(string[] para) {
         string ip = "", date = "";

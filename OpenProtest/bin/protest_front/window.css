@@ -40,6 +40,7 @@
     height: 64px;
     background-color: #E87600;
     background: var(--toolbar-bg);
+    /*backdrop-filter: blur(4px);*/
 
     transition: .4s;
 }

@@ -514,9 +514,9 @@ class Ping extends Console {
                 for (let j=0; j<PING_HISTORY_LEN; j++) {
                     this.hashtable[index].ping_e[j].style.backgroundColor = PingColor(this.hashtable[index].ping[j]);
                     if (isNaN(this.hashtable[index].ping[j]))
-                        this.hashtable[index].ping_e[j].setAttribute("ms", this.hashtable[index].ping[j]);
+                        this.hashtable[index].ping_e[j].setAttribute("tip-below", this.hashtable[index].ping[j]);
                     else
-                        this.hashtable[index].ping_e[j].setAttribute("ms", this.hashtable[index].ping[j] < 0 ? "" : this.hashtable[index].ping[j]+"ms");
+                        this.hashtable[index].ping_e[j].setAttribute("tip-below", this.hashtable[index].ping[j] < 0 ? "" : this.hashtable[index].ping[j]+"ms");
                 }
 
                 if (this.moveToBottom) { //move elements to bottom (if changed)

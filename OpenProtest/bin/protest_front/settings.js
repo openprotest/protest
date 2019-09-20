@@ -4,6 +4,10 @@ class Settings extends Window {
         this.setTitle("Settings");
         this.setIcon("res/tool02.svgz");
 
+        //this.win.style.backdropFilter = "blur(6px)";
+        //this.win.style.backgroundColor = "rgba(32,32,32,.8)";
+        //this.content.style.backgroundColor = "rgba(0,0,0,0)";
+
         this.content.style.padding = "24px";
         this.content.style.overflowY = "auto";
 

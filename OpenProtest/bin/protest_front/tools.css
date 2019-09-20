@@ -172,27 +172,6 @@
     border-radius: 2px;
 }
 
-.list-element > .list-graph > div:hover::after { visibility: visible; }
-
-.list-element > .list-graph > div[ms=""]::after { visibility: hidden; }
-
-.list-element > .list-graph > div::after {
-    visibility: hidden;
-    position: absolute;
-    content: attr(ms);
-    white-space: nowrap;
-    background-color: rgb(32,32,32);
-    color: white;
-    text-align: center;
-    border-radius: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    top: -4px;
-    right: 18px;
-    padding: 1px 2px;
-    z-index: 3;
-}
-
 .list-small-graph > div:nth-child(2n) {
     visibility: hidden;
 }

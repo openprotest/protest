@@ -74,20 +74,6 @@ class Graph {
         stopUS2.setAttribute("offset", "100%");
         stopUS2.setAttribute("style", "stop-color:rgb(232,118,0);stop-opacity:.6");
         gradientUpstream.appendChild(stopUS2);
-
-        const lblRx = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        lblRx.innerHTML = "Rx";
-        lblRx.setAttribute("x", "4");
-        lblRx.setAttribute("y", "96");
-        lblRx.setAttribute("fill", "black");
-        this.svg.appendChild(lblRx);
-
-        const lblTx = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        lblTx.innerHTML = "Tx";
-        lblTx.setAttribute("x", "4");
-        lblTx.setAttribute("y", "116");
-        lblTx.setAttribute("fill", "black");
-        this.svg.appendChild(lblTx);
         
         this.xMin = parseInt(array[0][0].substring(0,2)) * 24 * 60 +
                    parseInt(array[0][0].substring(2,4)) * 60 +
@@ -112,7 +98,31 @@ class Graph {
         });
 
         this.Draw(this.map);
-        
+
+
+        const lineXAaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        lineXAaxis.setAttribute("x1", "0");
+        lineXAaxis.setAttribute("y1", "100");
+        lineXAaxis.setAttribute("x2", GRAPH_WIDTH);
+        lineXAaxis.setAttribute("y2", "100");
+        lineXAaxis.setAttribute("style", "stroke:rgb(32,32,32);stroke-width:2");
+        this.svg.appendChild(lineXAaxis);
+
+        const lblRx = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lblRx.innerHTML = "Rx";
+        lblRx.setAttribute("x", "4");
+        lblRx.setAttribute("y", "96");
+        lblRx.setAttribute("fill", "black");
+        this.svg.appendChild(lblRx);
+
+        const lblTx = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lblTx.innerHTML = "Tx";
+        lblTx.setAttribute("x", "4");
+        lblTx.setAttribute("y", "116");
+        lblTx.setAttribute("fill", "black");
+        this.svg.appendChild(lblTx);
+
+
         this.svg.onmousewheel = event => {
             this.Roll(event.deltaY);
             event.preventDefault();
@@ -151,8 +161,21 @@ class Graph {
     }
 
     Draw(map) {
-        let stringPathRx = "M " + (GRAPH_WIDTH-60 - this.lastPixel) + " 100";
-        let stringPathTx = "M " + (GRAPH_WIDTH-60 - this.lastPixel) + " 100";
+        const pathRx = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathRx.setAttribute("fill", "url(#downstream-gradient)");
+        pathRx.setAttribute("style", "stroke:rgb(95,177,39);stroke-width:2");
+        this.svg.appendChild(pathRx);
+        this.rollingElements.push(pathRx);
+
+        const pathTx = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathTx.setAttribute("fill", "url(#upstream-gradient)");
+        pathTx.setAttribute("style", "stroke:rgb(232,118,0);stroke-width:2");
+
+        this.svg.appendChild(pathTx);
+        this.rollingElements.push(pathTx);
+
+        let stringPathRx = "M " + (GRAPH_WIDTH - 60 - this.lastPixel) + " 100";
+        let stringPathTx = "M " + (GRAPH_WIDTH - 60 - this.lastPixel) + " 100";
 
         let maxRx = 0, maxTx = 0;
         for (let i = 0; i < map.length; i++) { //find max value
@@ -163,40 +186,39 @@ class Graph {
         for (let i = 0; i < map.length; i++) //path and dots
             for (let j = 1; j < 3; j++) {
                 let x = GRAPH_WIDTH - 60 - map[i].t;
-                let y = 100 + Math.round(j==1 ? -80 * map[i].rx / maxRx : 80 * map[i].tx / maxTx);
+                let y = 100 + Math.round(j==1 ? -80*map[i].rx/maxRx : 80*map[i].tx/maxTx);
                 let r = Math.min(4, Math.abs(100 - y) / 2);
 
-                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                dot.setAttribute("cx", x);
-                dot.setAttribute("cy", y);
-                dot.setAttribute("r", r);
-                dot.setAttribute("fill", j==1 ? "rgb(95,177,39)" : "rgb(232,118,0)");
-                this.svg.appendChild(dot);
-                this.rollingElements.push(dot);
+                if (r > 1) {
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", x);
+                    dot.setAttribute("cy", y);
+                    dot.setAttribute("r", r);
+                    dot.setAttribute("fill", j == 1 ? "rgb(95,177,39)" : "rgb(232,118,0)");
+                    this.svg.appendChild(dot);
+                    this.rollingElements.push(dot);
+                }
 
                 if (j==1)
                     stringPathRx += " L " + x + " " + y;
                 else
                     stringPathTx += " L " + x + " " + y;
+
+                //add an extra 0 value point, if device was off for a while
+                if (map[i].rx==0 && map[i].tx==0 && i<map.length-1 && Math.abs(map[i].t+map[i+1].t) > 60) {
+                    x = GRAPH_WIDTH - 60 - map[i+1].t
+                    if (j==1)
+                        stringPathRx += " L " + x + " 100";
+                    else
+                        stringPathTx += " L " + x + " 100";
+                }
             }
 
         stringPathRx += " L " + (GRAPH_WIDTH - 60) + " 100 Z";
         stringPathTx += " L " + (GRAPH_WIDTH - 60) + " 100 Z";
 
-        const pathRx = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathRx.setAttribute("fill", "url(#downstream-gradient)");
-        pathRx.setAttribute("style", "stroke:rgb(95,177,39);stroke-width:2");
         pathRx.setAttribute("d", stringPathRx);
-        this.svg.appendChild(pathRx);
-        this.rollingElements.push(pathRx);
-
-        const pathTx = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathTx.setAttribute("fill", "url(#upstream-gradient)");
-        pathTx.setAttribute("style", "stroke:rgb(232,118,0);stroke-width:2");
         pathTx.setAttribute("d", stringPathTx);
-        this.svg.appendChild(pathTx);
-        this.rollingElements.push(pathTx);
-
 
         let from = (map[0].date[0] * 24 * 60 + map[0].date[1] * 60);
         from -= from % 120;
@@ -325,13 +347,6 @@ class Graph {
             this.svg.appendChild(lblLine);
         }
 
-        const lineXAaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        lineXAaxis.setAttribute("x1", "0");
-        lineXAaxis.setAttribute("y1", "100");
-        lineXAaxis.setAttribute("x2", GRAPH_WIDTH);
-        lineXAaxis.setAttribute("y2", "100");
-        lineXAaxis.setAttribute("style", "stroke:rgb(0,0,0);stroke-width:2");
-        this.svg.appendChild(lineXAaxis);
     }
 
     Roll(value) {
@@ -345,6 +360,7 @@ class Graph {
     }
 
     BytesToString(value) {
+        if (value == 0) return 0;
         if (value < 1024) return value + " B";
         if (value < Math.pow(1024,2)) return Math.round(value/1024) + " KB";
         if (value < Math.pow(1024,3)) return Math.round(value/Math.pow(1024,2)) + " MB";

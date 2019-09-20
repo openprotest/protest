@@ -29,7 +29,7 @@ const EQUIP_ORDER = [
     "OWNER", "OWNER FULLNAME", "LOCATION",
 
     ["res/credencial.svgz", "Credential"],
-    "DOMAIN", "USERNAME", "PASSWORD", "LA PASSWORD"
+    "DOMAIN", "USERNAME", "PASSWORD", "LA PASSWORD", "SSH USERNAME", "SSH PASSWORD"
 ];
 
 class Equip extends Window {
