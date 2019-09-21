@@ -224,7 +224,7 @@ class Graph {
         from -= from % 120;
 
         let to = (map[map.length - 1].date[0] * 24 * 60 + map[map.length - 1].date[1] * 60);
-        to -= to % 120;
+        to -= to % 120 - 120;
 
         for (let i = from; i < to; i += 120) {
             let date = Math.trunc(i / (60*24));
@@ -362,11 +362,11 @@ class Graph {
     BytesToString(value) {
         if (value == 0) return 0;
         if (value < 1024) return value + " B";
-        if (value < Math.pow(1024,2)) return Math.round(value/1024) + " KB";
-        if (value < Math.pow(1024,3)) return Math.round(value/Math.pow(1024,2)) + " MB";
-        if (value < Math.pow(1024,4)) return Math.round(value/Math.pow(1024,3)) + " GB";
-        if (value < Math.pow(1024,5)) return Math.round(value/Math.pow(1024,4)) + " TB";
-        return Math.round(value / Math.pow(1024,5)) + " PB";
+        if (value < Math.pow(1024,2)) return Math.round(value/1024*10)/10 + " KB";
+        if (value < Math.pow(1024,3)) return Math.round(value/Math.pow(1024,2)*10)/10 + " MB";
+        if (value < Math.pow(1024,4)) return Math.round(value/Math.pow(1024,3)*10)/10 + " GB";
+        if (value < Math.pow(1024,5)) return Math.round(value/Math.pow(1024,4)*10)/10 + " TB";
+        return Math.round(value / Math.pow(1024,5)*10)/10 + " PB";
     }
 
     Graph_onmousemove(event) {
@@ -375,12 +375,11 @@ class Graph {
         let cur = (GRAPH_WIDTH - 60 - event.offsetX + this.offset);
         let t = Infinity;
         let index = -1;
-        for (let i = 0; i < this.map.length; i++) {
+        for (let i = 0; i < this.map.length; i++) 
             if (Math.abs(cur - this.map[i].t) < t) {
                 t = Math.abs(cur - this.map[i].t);
                 index = i;
-            }
-        }
+            }        
 
         let maxRx = 0, maxTx = 0;
         for (let i = 0; i < this.map.length; i++) { //find max value
