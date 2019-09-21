@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 using Renci.SshNet;
 
 static class BandwidthMonitor {
-    public static readonly string DIR_METRICS = $"{Directory.GetCurrentDirectory()}\\metrics";
-
+    private const int LOOP_SLEEP = 3600000 * 2;
     private static readonly object metrics_lock = new object();
-
+    public static readonly string DIR_METRICS = $"{Directory.GetCurrentDirectory()}\\metrics";
+    
     public static void StartTask() {
         Thread.Sleep(5000);
 
@@ -36,7 +36,7 @@ static class BandwidthMonitor {
         while (true) {
             task.status = "Gathering";
 
-            if (equip_version != NoSQL.equip_version || ignoreCount != ignore.Count) { //build hosts list
+            if (equip_version != NoSQL.equip_version || ignoreCount != ignore.Count) { //hosts list
                 hosts.Clear();
                 foreach (DictionaryEntry o in NoSQL.equip) {
                     NoSQL.DbEntry entry = (NoSQL.DbEntry) o.Value;
@@ -94,15 +94,13 @@ static class BandwidthMonitor {
                         }
                     }
 
-
             previous.Clear();
             for (int i = 0; i < result.Length; i++)
                 if (result[i].Length == 3) 
-                    previous.Add(hosts[i], result[i]); //UInt64[3]
-            
+                    previous.Add(hosts[i], result[i]); //UInt64[3]            
 
             task.status = "Sleeping";
-            Thread.Sleep(3600000 * 2); //2 hours
+            Thread.Sleep(LOOP_SLEEP); //2 hours
         }
     }
 
@@ -148,28 +146,27 @@ static class BandwidthMonitor {
     }
 
     public static Int64[] GatherSecureShell(string host) {
-        string username = "", password = ""; ;
+        string username = "", password = "";
 
         foreach (DictionaryEntry o in NoSQL.equip) {
             NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
-            if (entry.hash.ContainsKey("IP")) {
-                string[] value = ((string[])entry.hash["IP"])[0].Split(';');
-                for (int i = 0; i < value.Length; i++) value[i] = value[i].Trim();
+            lock(entry.write_lock) {
+                if (entry.hash.ContainsKey("IP")) {
+                    string[] value = ((string[])entry.hash["IP"])[0].Split(';');
+                    for (int i = 0; i < value.Length; i++) value[i] = value[i].Trim();
                 
-                if (value.Contains(host)) {
+                    if (value.Contains(host)) {
 
-                    if (entry.hash.ContainsKey("SSH USERNAME") && entry.hash.ContainsKey("SSH PASSWORD")) {
-                        username = ((string[])entry.hash["SSH USERNAME"])[0];
-                        password = ((string[])entry.hash["SSH PASSWORD"])[0];
-                        break;
-                    } else {
-                        return new Int64[] { -2 }; //no service
-                    }
+                        if (entry.hash.ContainsKey("SSH USERNAME") && entry.hash.ContainsKey("SSH PASSWORD")) {
+                            username = ((string[])entry.hash["SSH USERNAME"])[0];
+                            password = ((string[])entry.hash["SSH PASSWORD"])[0];
+                            break;
+                        } else 
+                            return new Int64[] { -2 }; //no service
 
-                } else {
-                    continue;
+                    } else 
+                        continue;
                 }
-
             }
         }
 
@@ -213,7 +210,8 @@ static class BandwidthMonitor {
                 return new Int64[] { 0 }; //no traffic
             else
                 return new Int64[] { (Int64)bytesReceived, (Int64)bytesSent, (Int64)DateTime.Now.Ticks }; // <-
-        } catch {
+
+        } catch  {
             return new Int64[] { -2 }; //no service
         }
     } 
@@ -238,7 +236,7 @@ static class BandwidthMonitor {
         if (files.Length > 1)
             Array.Sort(files, delegate (FileInfo a, FileInfo b) { //reverse sort by name
                 return String.Compare(b.Name, a.Name);
-            });        
+            });
 
         string target = files[0].FullName;
 
