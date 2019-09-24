@@ -929,6 +929,7 @@
     <Content Include="bin\protest_front\res\retured.svg" />
     <Content Include="bin\protest_front\res\router.svg" />
     <Content Include="bin\protest_front\res\scannner.svg" />
+    <Content Include="bin\protest_front\res\scripts.svg" />
     <Content Include="bin\protest_front\res\search.svg" />
     <Content Include="bin\protest_front\res\serialconverter.svg" />
     <Content Include="bin\protest_front\res\server.svg" />
@@ -966,6 +967,7 @@
     <Content Include="bin\protest_front\sidemenu.css" />
     <Content Include="bin\protest_front\sidemenu.js" />
     <Content Include="bin\protest_front\speedtest.js" />
+    <Content Include="bin\protest_front\scripts.js" />
     <Content Include="bin\protest_front\tasks.js" />
     <Content Include="bin\protest_front\textbox.css" />
     <Content Include="bin\protest_front\tip.css" />

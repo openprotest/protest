@@ -223,7 +223,7 @@
     transition: .2s;
 }
 
-.window > .dialog > div {
+.window > .dialog > div:first-child {
     position: relative;
     min-width: 236px;
     max-width: 960px;

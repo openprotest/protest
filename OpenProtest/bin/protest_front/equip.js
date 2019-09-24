@@ -802,7 +802,81 @@ class Equip extends Window {
                 if (equip[k] == undefined && k!="") continue;
                 this.EditProp(k, equip[k][0], (k==".FILENAME"), container, hashEdit);
             }
-                
+
+        
+        let divFetch = document.createElement("div");
+        divFetch.style.position = "absolute";
+        divFetch.style.visibility = "hidden";
+        divFetch.style.left = "30%";
+        divFetch.style.top = "28px";
+        divFetch.style.width = "40%";
+        divFetch.style.minWidth = "220px";
+        divFetch.style.borderRadius = "8px";
+        divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        divFetch.style.backgroundColor = "rgb(208,208,208)";
+        divFetch.style.padding = "16px 8px";
+        divFetch.style.overflow = "hidden";
+        divFetch.style.textAlign = "center";
+        container.parentElement.parentElement.appendChild(divFetch);
+
+        let txtFetchHost = document.createElement("input");
+        txtFetchHost.type = "text";
+        txtFetchHost.placeholder = "Host";
+        divFetch.appendChild(txtFetchHost);
+
+        divFetch.appendChild(document.createElement("br"));
+
+        /*let chkWmi = document.createElement("input");
+        chkWmi.type = "checkbox";
+        chkWmi.checked = true;
+        divFetch.appendChild(chkWmi);
+        this.AddCheckBoxLabel(divFetch, chkWmi, "WMI").style = "min-width:128px;margin:4px 0;";
+        divFetch.appendChild(document.createElement("br"));
+
+        let chkSnmp = document.createElement("input");
+        chkSnmp.type = "checkbox";
+        chkSnmp.checked = false;
+        divFetch.appendChild(chkSnmp);
+        this.AddCheckBoxLabel(divFetch, chkSnmp, "SNMP").style = "min-width:128px;margin:4px 0;";
+        divFetch.appendChild(document.createElement("br"));
+
+        let chkDNS_ARP = document.createElement("input");
+        chkDNS_ARP.type = "checkbox";
+        chkDNS_ARP.checked = true;
+        divFetch.appendChild(chkDNS_ARP);
+        this.AddCheckBoxLabel(divFetch, chkDNS_ARP, "DNS and ARP").style = "min-width:128px;margin:4px 0;";
+        divFetch.appendChild(document.createElement("br"));*/
+
+
+        divFetch.appendChild(document.createElement("br"));
+
+        let btnFetchOk = document.createElement("input");
+        btnFetchOk.type = "button";
+        btnFetchOk.value = "Fetch";
+        divFetch.appendChild(btnFetchOk);
+
+        let btnFetchCancel = document.createElement("input");
+        btnFetchCancel.type = "button";
+        btnFetchCancel.value = "Cancel";
+        divFetch.appendChild(btnFetchCancel);
+
+        let btnFetch = document.createElement("div");
+        btnFetch.setAttribute("tip-below", "Fetch");
+        btnFetch.style.position = "absolute";
+        btnFetch.style.left = "0px";
+        btnFetch.style.top = "32px";
+        btnFetch.style.width = "56px";
+        btnFetch.style.height = "56px";
+        btnFetch.style.borderRadius = "0 8px 8px 0";
+        btnFetch.style.backgroundColor = "rgb(208,208,208)";
+        btnFetch.style.backgroundImage = "url(res/fetch.svgz)";
+        btnFetch.style.backgroundPosition = "center";
+        btnFetch.style.backgroundSize = "48px 48px";
+        btnFetch.style.backgroundRepeat = "no-repeat";
+        btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        btnFetch.style.transition = ".2s";
+        container.parentElement.parentElement.appendChild(btnFetch);
+
         const ok_click = btnOK.onclick;
 
         btnOK.value = "Save";
@@ -860,6 +934,32 @@ class Equip extends Window {
 
             xhr.open("POST", "saveequip", true);
             xhr.send(payload);
+        };
+
+        btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+
+        let fetchToogle = false;
+
+        btnFetch.onclick = ()=> {
+            container.parentElement.style.transition = ".2s";
+            container.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+            container.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+            container.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+            divFetch.style.transition = ".2s";
+            divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
+            divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
+            divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
+            btnFetch.style.backgroundImage = fetchToogle ? "url(res/fetch.svgz)" : "url(res/close.svgz)";
+            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+            //btnFetch.style.width = fetchToogle ? "56px" : "72px";
+
+            fetchToogle = !fetchToogle;
+
+            if (fetchToogle) txtFetchHost.focus();
+        };
+
+        btnFetchOk.onclick = () => {
+            ok_click();
         };
 
         return [hashEdit, btnAdd, container];

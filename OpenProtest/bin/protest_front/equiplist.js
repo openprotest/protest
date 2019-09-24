@@ -265,8 +265,6 @@ class EquipList extends Window {
                 };
             }
 
-        this.lblTotal.innerHTML = this.list.length + " / " + db_equip.length;
-
         this.InvalidateRecyclerList();
     }
 
@@ -342,6 +340,8 @@ class EquipList extends Window {
                 let c_type = (this.list[i].hasOwnProperty("TYPE")) ? this.list[i]["TYPE"][0].toLowerCase() : "";
                 this.FillElement(this.content.childNodes[i], this.list[i], c_type);
             }
+
+        this.lblTotal.innerHTML = this.list.length + " / " + db_equip.length;
     }
 }
 

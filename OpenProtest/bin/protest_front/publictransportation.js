@@ -310,6 +310,7 @@ function publicTransportationLoop() {
 }
 
 function pt_equip(o) {
+    if (!o.equip) return; //on new equip
     if (!o.equip.hasOwnProperty(".FILENAME")) return;
     let filename = o.equip[".FILENAME"][0];
 
@@ -318,6 +319,7 @@ function pt_equip(o) {
 }
 
 function pt_user(o) {
+    if (!o.user) return; //on new user
     if (!o.user.hasOwnProperty(".FILENAME")) return;
     let filename = o.user[".FILENAME"][0];
 

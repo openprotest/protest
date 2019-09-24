@@ -22,6 +22,7 @@ const TOOLS = [
 //{ lbl: "Secure shell",       ico: "res/ssh.svgz",            f: arg=>new Window() },
 //{ lbl: "Telnet",             ico: "res/telnet.svgz",         f: arg=>new Window() },
 { lbl: "Tasks",              ico: "res/task.svgz",           f: arg=>new Tasks() },
+{ lbl: "Scripts",              ico: "res/scripts.svgz",      f: arg=>new Scripts() },
 //{ lbl: "Mapped drives",      ico: "res/mappeddrive.svgz",    f: arg=>new MappedDrives() },
 { lbl: "Debit notes",        ico: "res/charges.svgz",        f: arg=>new DebitNotes() },
 //{ lbl: "Backup",             ico: "res/backup.svgz",         f: arg=>new Window() },
@@ -29,10 +30,6 @@ const TOOLS = [
 //{ lbl: "Log",                ico: "res/log.svgz",            f: arg=>new Window() },
 { lbl: "Pro-test clients",   ico: "res/ptclients.svgz",      f: arg=>new Clients() }
 ];
-
-/*
-analyze
-*/
 
 var sidemenu_isopen = false;
 var sidemenu_index = -1;

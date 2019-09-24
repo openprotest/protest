@@ -15,15 +15,15 @@ var date_month = document.getElementById("date_month");
 var date_date  = document.getElementById("date_date");
 var date_day   = document.getElementById("date_day");
 
-mnuEquip.onclick = ()=> { new EquipList(); };
-mnuUsers.onclick = ()=> { new UserList(); }; 
+mnuEquip.onclick = ()=> { if (EquipList) new EquipList(); };
+mnuUsers.onclick = ()=> { if (UserList) new UserList(); };
 mnuTools.onclick = ()=> { SideMenu_Open(); };
 
 mainSession.onclick = () => {
     let xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
         if (xhr.readyState == 4 && xhr.status == 200) {
-            if (xhr.responseText == "ok") 
+            if (xhr.responseText == "ok")
                 location.reload();
 
         } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
@@ -45,7 +45,7 @@ mainSettings.onclick = () => {
     let svg_analog = document.getElementById("analog_clock");
     for (let i = 0; i < 12; i++) {
         let newDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        newDot.setAttribute("r", i%3==0? 2.5 : 1.5);
+        newDot.setAttribute("r", i%3==0 ? 2.5 : 1.5);
         newDot.setAttribute("cx", 48 + Math.sin(i*30/57.29577951)*36);
         newDot.setAttribute("cy", 48 - Math.cos(i*30/57.29577951)*36);
         newDot.setAttribute("fill", "#202020");
@@ -57,7 +57,7 @@ mainSettings.onclick = () => {
     const S = 96;
     let now = new Date();
     let m = now.getMinutes();
-    let h = (now.getHours() % 12) + m / 60;
+    let h = (now.getHours() % 12) + m/60;
 
     analog_m.style.transform = "rotate(" + m*6 + "deg)";
     analog_h.style.transform = "rotate(" + h*30 + "deg)";

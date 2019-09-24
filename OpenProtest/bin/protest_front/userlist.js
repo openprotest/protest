@@ -190,9 +190,7 @@ class UserList extends Window {
                     this.DisplayList();
                     this.btnSort.style.borderBottom = "#FF7900 solid 2px";
                 };
-            }
-
-        this.lblTotal.innerHTML = this.list.length + " / " + db_users.length;
+            }        
 
         this.InvalidateRecyclerList();
     }
@@ -237,5 +235,7 @@ class UserList extends Window {
                 if (this.content.childNodes[i].childNodes.length > 0) continue;
                 this.FillElement(this.content.childNodes[i], this.list[i]);
             }
+
+        this.lblTotal.innerHTML = this.list.length + " / " + db_users.length;
     }
 }

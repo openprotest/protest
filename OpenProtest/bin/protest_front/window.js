@@ -484,6 +484,8 @@ class Window {
                 if (checkbox.onchange) checkbox.onchange();
             }
         };
+
+        return newLabel;
     }
 
 }

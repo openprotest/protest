@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Renci.SshNet;
 
 static class BandwidthMonitor {
-    private const int LOOP_SLEEP = 3600000 * 2;
+    private const int LOOP_SLEEP_DURATION = 3600000 * 2; //2 hours
     private static readonly object metrics_lock = new object();
     public static readonly string DIR_METRICS = $"{Directory.GetCurrentDirectory()}\\metrics";
     
@@ -100,7 +100,7 @@ static class BandwidthMonitor {
                     previous.Add(hosts[i], result[i]); //UInt64[3]            
 
             task.status = "Sleeping";
-            Thread.Sleep(LOOP_SLEEP); //2 hours
+            Thread.Sleep(LOOP_SLEEP_DURATION);
         }
     }
 
