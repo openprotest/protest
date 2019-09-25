@@ -23,7 +23,9 @@ class User extends Window {
             document.head.appendChild(csslink);
         }
 
-        super([208,208,208]);
+        super([208, 208, 208]);
+
+        this.hashEdit = {};
 
         if (user === null) { //add new entry
             this.setTitle("New user");
@@ -43,18 +45,130 @@ class User extends Window {
             };
 
             let obj = this.Edit(new_user);
-            const hashEdit = obj[0];
             const btnAdd = obj[1];
             const btnCancel = btnAdd.parentElement.childNodes[1];
-            const container = obj[2];            
+            const container = obj[2];
 
-            btnAdd.parentElement.childNodes[0].onclick = () => {
+            { //fetch button on new
+                let divFetch = document.createElement("div");
+                divFetch.style.position = "absolute";
+                divFetch.style.visibility = "hidden";
+                divFetch.style.left = "30%";
+                divFetch.style.top = "28px";
+                divFetch.style.width = "40%";
+                divFetch.style.minWidth = "220px";
+                divFetch.style.borderRadius = "8px";
+                divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+                divFetch.style.backgroundColor = "rgb(208,208,208)";
+                divFetch.style.padding = "16px 8px";
+                divFetch.style.overflow = "hidden";
+                divFetch.style.textAlign = "center";
+                container.parentElement.parentElement.appendChild(divFetch);
+
+                let txtFetchUser = document.createElement("input");
+                txtFetchUser.type = "text";
+                txtFetchUser.placeholder = "Username";
+                divFetch.appendChild(txtFetchUser);
+
+                divFetch.appendChild(document.createElement("br"));
+                divFetch.appendChild(document.createElement("br"));
+
+                let btnFetchOk = document.createElement("input");
+                btnFetchOk.type = "button";
+                btnFetchOk.value = "Fetch";
+                divFetch.appendChild(btnFetchOk);
+
+                let btnFetchCancel = document.createElement("input");
+                btnFetchCancel.type = "button";
+                btnFetchCancel.value = "Cancel";
+                divFetch.appendChild(btnFetchCancel);
+
+                let btnFetch = document.createElement("div");
+                btnFetch.setAttribute("tip-below", "Fetch");
+                btnFetch.style.position = "absolute";
+                btnFetch.style.left = "0px";
+                btnFetch.style.top = "32px";
+                btnFetch.style.width = "56px";
+                btnFetch.style.height = "56px";
+                btnFetch.style.borderRadius = "0 8px 8px 0";
+                btnFetch.style.backgroundColor = "rgb(208,208,208)";
+                btnFetch.style.backgroundImage = "url(res/fetch.svgz)";
+                btnFetch.style.backgroundPosition = "center";
+                btnFetch.style.backgroundSize = "48px 48px";
+                btnFetch.style.backgroundRepeat = "no-repeat";
+                btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+                btnFetch.style.transition = ".2s";
+                container.parentElement.parentElement.appendChild(btnFetch);
+
+                btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+
+                let fetchToogle = false;
+
+                btnFetch.onclick = () => {
+                    container.parentElement.style.transition = ".2s";
+                    container.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+                    container.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+                    container.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+                    divFetch.style.transition = ".2s";
+                    divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
+                    divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
+                    divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
+                    btnFetch.style.backgroundImage = fetchToogle ? "url(res/fetch.svgz)" : "url(res/close.svgz)";
+                    btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+
+                    fetchToogle = !fetchToogle;
+
+                    if (fetchToogle) setTimeout(() => { txtFetchUser.focus(); }, 1);
+                };
+
+                btnFetchOk.onclick = () => {
+                    let waitbox = document.createElement("span");
+                    waitbox.className = "waitbox";
+                    waitbox.style.top = "0";
+                    container.parentElement.parentElement.appendChild(waitbox);
+
+                    waitbox.appendChild(document.createElement("div"));
+
+                    let waitLabel = document.createElement("span");
+                    waitLabel.innerHTML = "Doing stuff. Please wait.";
+                    waitLabel.className = "wait-label";
+                    waitLabel.style.top = "0";
+                    container.parentElement.parentElement.appendChild(waitLabel);
+
+                    divFetch.style.opacity = "0";
+                    divFetch.style.visibility = "hidden";
+
+                    this.hashEdit = {};
+                    container.innerHTML = "";
+
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200) { //OK
+                            let split = xhr.responseText.split(String.fromCharCode(127));
+                            for (let i = 0; i < split.length - 1; i += 2)
+                                this.EditProp(split[i], split[i + 1], false, container);
+
+                            btnFetch.onclick();
+                            container.parentElement.parentElement.removeChild(waitbox);
+                            container.parentElement.parentElement.removeChild(waitLabel);
+                        }
+
+                        if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                            this.ConfirmBox("Server is unavailable.", true);
+                    };
+
+                    xhr.open("GET", "adverify&username=" + txtFetchUser.value, true);
+                    xhr.send();
+                };
+            }
+
+            btnAdd.parentElement.childNodes[0].onclick =() => {
                 btnAdd.setAttribute("disabled", true);
                 btnAdd.parentElement.childNodes[0].setAttribute("disabled", true);
 
                 let payload = "";
-                for (let k in hashEdit)
-                    payload += hashEdit[k][1].value + String.fromCharCode(127) + hashEdit[k][2].value + String.fromCharCode(127);
+                for (let k in this.hashEdit)
+                    payload += this.hashEdit[k][1].value + String.fromCharCode(127) + this.hashEdit[k][2].value + String.fromCharCode(127);
 
                 let xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = ()=> {
@@ -497,7 +611,7 @@ class User extends Window {
 
         container.parentElement.childNodes[1].style.minWidth = "350px"; //buttonsBox
 
-        btnAdd.onclick = ()=> { this.EditProp("", "", false, container, hashEdit)[1].focus(); };
+        btnAdd.onclick = () => { this.EditProp("", "", false, container, this.hashEdit)[1].focus(); };
 
         let autofill = document.createElement("datalist"); //Autofill
         autofill.id = "ur_autofill";
@@ -507,73 +621,21 @@ class User extends Window {
             opt.value = USER_ORDER[i];
             autofill.appendChild(opt);
         }
-        container.appendChild(autofill);
-
-        let hashEdit = {};
+        container.appendChild(autofill);        
 
         let done = [];
         for (let i=0; i<USER_ORDER.length; i++)
             if(!Array.isArray(USER_ORDER[i])) {
                 if (user[USER_ORDER[i]] == undefined) continue;
-                this.EditProp(USER_ORDER[i], user[USER_ORDER[i]][0], false, container, hashEdit);
+                this.EditProp(USER_ORDER[i], user[USER_ORDER[i]][0], false, container);
                 done.push(USER_ORDER[i]);
             }
             
         for (let k in user) 
             if (!done.includes(k, 0)) {
                 if (user[k] == undefined && k!="") continue;
-                this.EditProp(k, user[k][0], (k==".FILENAME"), container, hashEdit);
+                this.EditProp(k, user[k][0], (k==".FILENAME"), container);
             }
-
-        let divFetch = document.createElement("div");
-        divFetch.style.position = "absolute";
-        divFetch.style.visibility = "hidden";
-        divFetch.style.left = "30%";
-        divFetch.style.top = "28px";
-        divFetch.style.width = "40%";
-        divFetch.style.minWidth = "220px";
-        divFetch.style.borderRadius = "8px";
-        divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
-        divFetch.style.backgroundColor = "rgb(208,208,208)";
-        divFetch.style.padding = "16px 8px";
-        divFetch.style.overflow = "hidden";
-        divFetch.style.textAlign = "center";
-        container.parentElement.parentElement.appendChild(divFetch);
-
-        let txtFetchHost = document.createElement("input");
-        txtFetchHost.type = "text";
-        txtFetchHost.placeholder = "Username";
-        divFetch.appendChild(txtFetchHost);
-
-        divFetch.appendChild(document.createElement("br"));
-        divFetch.appendChild(document.createElement("br"));
-
-        let btnFetchOk = document.createElement("input");
-        btnFetchOk.type = "button";
-        btnFetchOk.value = "Fetch";
-        divFetch.appendChild(btnFetchOk);
-
-        let btnFetchCancel = document.createElement("input");
-        btnFetchCancel.type = "button";
-        btnFetchCancel.value = "Cancel";
-        divFetch.appendChild(btnFetchCancel);
-
-        let btnFetch = document.createElement("div");
-        btnFetch.setAttribute("tip-below", "Fetch");
-        btnFetch.style.position = "absolute";
-        btnFetch.style.left = "0px";
-        btnFetch.style.top = "32px";
-        btnFetch.style.width = "56px";
-        btnFetch.style.height = "56px";
-        btnFetch.style.borderRadius = "0 8px 8px 0";
-        btnFetch.style.backgroundColor = "rgb(208,208,208)";
-        btnFetch.style.backgroundImage = "url(res/fetch.svgz)";
-        btnFetch.style.backgroundPosition = "center";
-        btnFetch.style.backgroundSize = "48px 48px";
-        btnFetch.style.backgroundRepeat = "no-repeat";
-        btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
-        btnFetch.style.transition = ".2s";
-        container.parentElement.parentElement.appendChild(btnFetch);
 
         const ok_click = btnOK.onclick;
 
@@ -581,8 +643,8 @@ class User extends Window {
         btnOK.onclick = ()=> {
             btnOK.setAttribute("disabled", true);
             let payload = "";
-            for (let k in hashEdit)
-                payload += hashEdit[k][1].value + String.fromCharCode(127) + hashEdit[k][2].value + String.fromCharCode(127);
+            for (let k in this.hashEdit)
+                payload += this.hashEdit[k][1].value + String.fromCharCode(127) + this.hashEdit[k][2].value + String.fromCharCode(127);
 
             let xhr = new XMLHttpRequest();
             xhr.onreadystatechange = ()=> {
@@ -631,33 +693,7 @@ class User extends Window {
             xhr.send(payload);
         };
 
-        btnFetchCancel.onclick = () => { btnFetch.onclick(); };
-
-        let fetchToogle = false;
-
-        btnFetch.onclick = ()=> {
-            container.parentElement.style.transition = ".2s";
-            container.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
-            container.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
-            container.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
-            divFetch.style.transition = ".2s";
-            divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
-            divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
-            divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
-            btnFetch.style.backgroundImage = fetchToogle ? "url(res/fetch.svgz)" : "url(res/close.svgz)";
-            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
-            //btnFetch.style.width = fetchToogle ? "56px" : "72px";
-
-            fetchToogle = !fetchToogle;
-
-            if (fetchToogle) txtFetchHost.focus();
-        };
-
-        btnFetchOk.onclick = () => {
-            
-        };
-
-        return [hashEdit, btnAdd, container];
+        return [this.hashEdit, btnAdd, container];
     }
 
     Verify(user) {
@@ -686,11 +722,11 @@ class User extends Window {
                 let split = xhr.responseText.split(String.fromCharCode(127));
 
                 if (split.length > 1) {
+                    this.hashEdit = {};
                     const obj = this.Edit(user);
-                    const hashEdit  = obj[0];
                     const btnAdd    = obj[1];
                     const container = obj[2];
-                    this.Verify_Compare(hashEdit, split, container);
+                    this.Verify_Compare(split, container);
                 } else {
                     this.ConfirmBox(xhr.responseText, true);
                 }
@@ -704,22 +740,22 @@ class User extends Window {
         xhr.send();
     }
 
-    Verify_Compare(hashEdit, split, container) {
+    Verify_Compare(split, container) {
         for (let i=0; i<split.length-1; i+=2) 
-            if (hashEdit.hasOwnProperty(split[i])) {
-                if (hashEdit[split[i]][2].value.toLowerCase() == split[i+1].toLowerCase())
-                    hashEdit[split[i]][2].style.backgroundImage = "url(res/check.svgz)";
+            if (this.hashEdit.hasOwnProperty(split[i])) {
+                if (this.hashEdit[split[i]][2].value.toLowerCase() == split[i+1].toLowerCase())
+                    this.hashEdit[split[i]][2].style.backgroundImage = "url(res/check.svgz)";
                 else {
-                    hashEdit[split[i]][2].style.backgroundImage = "url(res/change.svgz)";
-                    hashEdit[split[i]][2].value = split[i+1];
+                    this.hashEdit[split[i]][2].style.backgroundImage = "url(res/change.svgz)";
+                    this.hashEdit[split[i]][2].value = split[i+1];
                 }                
             } else {
-                let entry = this.EditProp(split[i], split[i+1], false, container, hashEdit);
+                let entry = this.EditProp(split[i], split[i+1], false, container);
                 if (entry != undefined) entry[2].style.backgroundImage = "url(res/newentry.svgz)";
             }
     }
 
-    EditProp(name, value, readonly, container, hashEdit) {
+    EditProp(name, value, readonly, container) {
         let newProperty = document.createElement("div");
         newProperty.className = "eq-edit-property";
         container.appendChild(newProperty);
@@ -741,7 +777,7 @@ class User extends Window {
         if (!readonly) newProperty.appendChild(remove);
         remove.onclick = ()=> {
             if (newProperty.style.filter == "opacity(0)") return; //once
-            delete hashEdit[name];
+            delete this.hashEdit[name];
             newProperty.style.filter = "opacity(0)";
 
             for (let i=0; i<newProperty.childNodes.length; i++) {
@@ -756,8 +792,8 @@ class User extends Window {
         };
 
         let key = (name.length > 0) ? name : new Date().getTime();
-        hashEdit[key] = [newProperty, txtName, txtValue];
-        return hashEdit[key];
+        this.hashEdit[key] = [newProperty, txtName, txtValue];
+        return this.hashEdit[key];
     }
 
     Delete(user) {

@@ -152,12 +152,14 @@ static class Wmi {
     }
 
     public static string WmiVerify(in string[] para, bool portscan = false) {
-        string filename = "";
-        for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
+        string filename = "", host = "";
 
-        string host = "";
-        if (NoSQL.equip.ContainsKey(filename)) {
+        for (int i = 1; i < para.Length; i++) {
+            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
+            if (para[i].StartsWith("host=")) host = para[i].Substring(5);
+        }
+
+        if (host.Length == 0 && NoSQL.equip.ContainsKey(filename)) {
             NoSQL.DbEntry entry = (NoSQL.DbEntry)NoSQL.equip[filename];
             if (entry.hash.ContainsKey("IP"))            host = ((string[]) entry.hash["IP"])[0];
             else if (entry.hash.ContainsKey("HOSTNAME")) host = ((string[]) entry.hash["HOSTNAME"])[0];

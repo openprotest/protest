@@ -9,7 +9,7 @@ using System.Net.NetworkInformation;
 using System.DirectoryServices;
 
 static class Fetch {
-    public static byte[] FetchEquip(string[] para, string performer) {
+    public static byte[] FetchEquipTask(string[] para, string performer) {
         string domain = null;
         string ip = null;
         string portscan = null;
@@ -88,7 +88,7 @@ static class Fetch {
             while (true) {
                 List<Task<string>> tasks = new List<Task<string>>();
                 while (list.Count > index && tasks.Count < WINDOW) 
-                    tasks.Add(SingleFetchEquip(list[index++], performer, hashcopy, domain, ip, portscan, saveMethod, unreachable, implevel, un, ps));
+                    tasks.Add(FetchEquip(list[index++], performer, hashcopy, domain, ip, portscan, saveMethod, unreachable, implevel, un, ps));
 
                 index = 0;
 
@@ -132,7 +132,7 @@ static class Fetch {
         return Tools.OK.Array;
     }
 
-    public static async Task<string> SingleFetchEquip(string host, string performer, Hashtable hashcopy,
+    public static async Task<string> FetchEquip(string host, string performer, Hashtable hashcopy,
         string domain, string ip, string portscan, NoSQL.SaveMethod saveMethod, string unreachable, string implevel, string un, string ps) {
 
         try {
@@ -215,8 +215,8 @@ static class Fetch {
                 NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
                 byte s = 0;
 
-                if (v_ip != null) if (entry.hash.ContainsKey("IP") && ((string[])entry.hash["IP"])[0].ToString().Contains(v_ip)) s += 1;
-                if (v_mac != null) if (entry.hash.ContainsKey("MAC ADDRESS") && ((string[])entry.hash["MAC ADDRESS"])[0].ToString().ToUpper().Contains(v_mac)) s += 4;
+                if (v_ip != null)       if (entry.hash.ContainsKey("IP") && ((string[])entry.hash["IP"])[0].ToString().Contains(v_ip)) s += 1;
+                if (v_mac != null)      if (entry.hash.ContainsKey("MAC ADDRESS") && ((string[])entry.hash["MAC ADDRESS"])[0].ToString().ToUpper().Contains(v_mac)) s += 4;
                 if (v_hostname != null) if (entry.hash.ContainsKey("HOSTNAME") && ((string[])entry.hash["HOSTNAME"])[0].ToString().ToUpper().Contains(v_hostname)) s += 2;
 
                 if (s > score) {
@@ -237,7 +237,7 @@ static class Fetch {
         return "done";
     }
 
-    public static byte[] FetchUsers(string[] para, string performer) {
+    public static byte[] FetchUsersTask(string[] para, string performer) {
         string domain = null;
         string dublicate = null;
         string un = null;
@@ -281,7 +281,7 @@ static class Fetch {
             int count = 0;
             
             foreach (SearchResult o in result) {
-                SingleFetchUser(o, performer, hashcopy, domain, saveMethod, un, ps);
+                FetchUser(o, performer, hashcopy, domain, saveMethod, un, ps);
 
                 if (++count % 50 == 0) {
                     task.stepsCompleted = count;
@@ -303,7 +303,7 @@ static class Fetch {
         return Tools.OK.Array;
     }
 
-    public static string SingleFetchUser(SearchResult user, string performer, Hashtable hashcopy,
+    public static string FetchUser(SearchResult user, string performer, Hashtable hashcopy,
         string domain, NoSQL.SaveMethod saveMethod, string un, string ps) {
 
         try {
