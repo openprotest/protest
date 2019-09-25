@@ -236,11 +236,9 @@ class Http {
             ctx.Response.OutputStream.Dispose();
 
         } catch (ObjectDisposedException) {
-            //Console.WriteLine("ObjectDisposedException: " + ex.Message);
             //Do nothing
 
         } catch (HttpListenerException) {
-            //Console.WriteLine("HttpListenerException:" + ex.Message);
             //Do nothing
 
         } catch (Exception ex) {

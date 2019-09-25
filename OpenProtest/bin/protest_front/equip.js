@@ -397,12 +397,14 @@ class Equip extends Window {
             this.pingLabel.className = "eq-ping-label";
             btnPing.childNodes[1].appendChild(this.pingLabel);
 
-            this.dot = document.createElement("div");
-            this.dot.className = "task-icon-dots";
+            if (!this.dot) {
+                this.dot = document.createElement("div");
+                this.dot.className = "task-icon-dots";
+                this.dot.style.width = "18%";
+                this.dot.style.height = "18%";
+                this.task.appendChild(this.dot);
+            }
             this.dot.style.backgroundColor = this.pingResult.style.backgroundColor;
-            this.dot.style.width = "18%";
-            this.dot.style.height = "18%";
-            this.task.appendChild(this.dot);
         } else {
             btnPing.style.display = "none";
         }
