@@ -123,15 +123,15 @@ class Graph {
         this.svg.appendChild(lblTx);
 
 
-        this.svg.onmousewheel = event => {
-            this.Roll(event.deltaY);
+        this.svg.onwheel  = event => {
+            this.Roll((event.deltaY < 100 && event.deltaY > -100) ? event.deltaY / 3 * 100 : event.deltaY );
             event.preventDefault();
             this.Graph_onmousemove(event);
         };
 
         this.svg.scrollIntoView();
 
-        this.svg.onmousemove = event => { this.Graph_onmousemove(event); };
+        this.svg.onmousemove = event => { event.stopPropagation(); this.Graph_onmousemove(event); };
         this.svg.onmouseenter = event => { this.Graph_onmouseenter(event); };
         this.svg.onmouseleave = event => { this.Graph_onmouseleave(event); };
 
@@ -154,10 +154,28 @@ class Graph {
         this.hoverLabel.setAttribute("fill", "rgb(32,32,32)");
         this.hoverLabel.style.opacity = "0";
         this.svg.appendChild(this.hoverLabel);
+
+        this.frontGlass = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        this.frontGlass.setAttribute("x", 0);
+        this.frontGlass.setAttribute("y", 0);
+        this.frontGlass.setAttribute("width", GRAPH_WIDTH);
+        this.frontGlass.setAttribute("height", 256);
+        this.frontGlass.setAttribute("fill", "rgba(0,0,0,0)");
+        this.svg.appendChild(this.frontGlass);
     }
 
     Attach(container) {
         container.appendChild(this.svg);
+    }
+    
+    BytesToString(value) {
+        if (value == 0) return 0;
+        if (value < 1024) return value + " B";
+        if (value < Math.pow(1024, 2)) return Math.round(value / 1024 * 10) / 10 + " KB";
+        if (value < Math.pow(1024, 3)) return Math.round(value / Math.pow(1024, 2) * 10) / 10 + " MB";
+        if (value < Math.pow(1024, 4)) return Math.round(value / Math.pow(1024, 3) * 10) / 10 + " GB";
+        if (value < Math.pow(1024, 5)) return Math.round(value / Math.pow(1024, 4) * 10) / 10 + " TB";
+        return Math.round(value / Math.pow(1024, 5) * 10) / 10 + " PB";
     }
 
     Draw(map) {
@@ -346,7 +364,6 @@ class Graph {
             lblLine.setAttribute("font-size", "10.5px");
             this.svg.appendChild(lblLine);
         }
-
     }
 
     Roll(value) {
@@ -359,16 +376,6 @@ class Graph {
             this.rollingElements[i].style.transform = "translateX(" + this.offset + "px)";
     }
 
-    BytesToString(value) {
-        if (value == 0) return 0;
-        if (value < 1024) return value + " B";
-        if (value < Math.pow(1024,2)) return Math.round(value/1024*10)/10 + " KB";
-        if (value < Math.pow(1024,3)) return Math.round(value/Math.pow(1024,2)*10)/10 + " MB";
-        if (value < Math.pow(1024,4)) return Math.round(value/Math.pow(1024,3)*10)/10 + " GB";
-        if (value < Math.pow(1024,5)) return Math.round(value/Math.pow(1024,4)*10)/10 + " TB";
-        return Math.round(value / Math.pow(1024,5)*10)/10 + " PB";
-    }
-
     Graph_onmousemove(event) {
         if (this.map.length == 0) return;
 
@@ -379,7 +386,9 @@ class Graph {
             if (Math.abs(cur - this.map[i].t) < t) {
                 t = Math.abs(cur - this.map[i].t);
                 index = i;
-            }        
+            }
+
+        if (index < 0) return;
 
         let maxRx = 0, maxTx = 0;
         for (let i = 0; i < this.map.length; i++) { //find max value
@@ -391,6 +400,7 @@ class Graph {
         this.hoverElement.style.transform = "translate(" + (GRAPH_WIDTH - 60 - this.map[index].t + this.offset) + "px," + y + "px)";
         this.hoverLabel.style.transform = "translate(" + (GRAPH_WIDTH - 60 - this.map[index].t + this.offset + 4) + "px," + (y + (event.offsetY > 100 ? 12 : -12) + 4) + "px)";
         this.hoverLabel.innerHTML = event.offsetY > 100 ? this.BytesToString(this.map[index].tx) : this.BytesToString(this.map[index].rx);
+
     }
 
     Graph_onmouseenter(event) {

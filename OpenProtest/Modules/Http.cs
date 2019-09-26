@@ -235,12 +235,8 @@ class Http {
 
             ctx.Response.OutputStream.Dispose();
 
-        } catch (ObjectDisposedException) {
-            //Do nothing
-
-        } catch (HttpListenerException) {
-            //Do nothing
-
+        } catch (ObjectDisposedException) { //Do nothing
+        } catch (HttpListenerException) { //Do nothing
         } catch (Exception ex) {
             ErrorLog.Err(ex);
         }
@@ -253,7 +249,6 @@ class Http {
             case "ws/portscan":             Tools.WsPortScan(ctx, remoteIp); break;
             case "ws/traceroute":           Tools.WsTraceRoute(ctx, remoteIp); break;
             case "ws/webcheck":             Tools.WsWebCheck(ctx, remoteIp); break;
-
             //case "ws/speedtest":            Tools.WsSpeedTest(ctx, remoteIp); break;
         }
     }

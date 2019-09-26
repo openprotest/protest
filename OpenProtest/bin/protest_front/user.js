@@ -121,7 +121,9 @@ class User extends Window {
                     if (fetchToogle) setTimeout(() => { txtFetchUser.focus(); }, 1);
                 };
 
-                btnFetchOk.onclick = () => {
+                btnFetchOk.onclick = ()=> {
+                    if (txtFetchUser.value.length == 0) return;
+
                     let waitbox = document.createElement("span");
                     waitbox.className = "waitbox";
                     waitbox.style.top = "0";
@@ -135,6 +137,8 @@ class User extends Window {
                     waitLabel.style.top = "0";
                     container.parentElement.parentElement.appendChild(waitLabel);
 
+                    btnFetch.style.opacity = "0";
+                    btnFetch.style.visibility = "hidden";
                     divFetch.style.opacity = "0";
                     divFetch.style.visibility = "hidden";
 
@@ -159,6 +163,11 @@ class User extends Window {
 
                     xhr.open("GET", "adverify&username=" + txtFetchUser.value, true);
                     xhr.send();
+                };
+
+                txtFetchUser.onkeyup = event => {
+                    if (event.keyCode == 13) //enter
+                        btnFetchOk.onclick();
                 };
             }
 

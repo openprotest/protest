@@ -161,7 +161,9 @@ class Equip extends Window {
                     if (fetchToogle) setTimeout(() => { txtFetchHost.focus(); }, 1);
                 };
 
-                btnFetchOk.onclick = () => {
+                btnFetchOk.onclick = ()=> {
+                    if (txtFetchHost.value.length == 0) return;
+
                     let waitbox = document.createElement("span");
                     waitbox.className = "waitbox";
                     waitbox.style.top = "0";
@@ -175,6 +177,8 @@ class Equip extends Window {
                     waitLabel.style.top = "0";
                     container.parentElement.parentElement.appendChild(waitLabel);
 
+                    btnFetch.style.opacity = "0";
+                    btnFetch.style.visibility = "hidden";
                     divFetch.style.opacity = "0";
                     divFetch.style.visibility = "hidden";
 
@@ -199,6 +203,11 @@ class Equip extends Window {
 
                     xhr.open("GET", "wmiverify&host=" + txtFetchHost.value, true);
                     xhr.send();
+                };
+
+                txtFetchHost.onkeyup = event => {
+                    if (event.keyCode == 13) //enter
+                        btnFetchOk.onclick();
                 };
             }
 
