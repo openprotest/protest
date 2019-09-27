@@ -5,7 +5,7 @@ class Graph {
     constructor(array) {
         this.offset = 0;
         this.rollingElements = [];
-        
+
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         this.svg.setAttribute("width", GRAPH_WIDTH);
         this.svg.setAttribute("height", "250");
@@ -30,12 +30,12 @@ class Graph {
         stopS2.setAttribute("offset", "100%");
         stopS2.setAttribute("style", "stop-color:rgb(208,208,208);stop-opacity:1");
         gradientOpaque.appendChild(stopS2);
-        
+
         this.opaque = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         this.opaque.setAttribute("x", 500);
         this.opaque.setAttribute("y", 0);
         this.opaque.setAttribute("width", 60);
-        this.opaque.setAttribute("height", 250);        
+        this.opaque.setAttribute("height", 250);
         this.opaque.setAttribute("fill", "url(#opaque)");
         this.opaque.style = "opacity:0";
 
@@ -74,23 +74,23 @@ class Graph {
         stopUS2.setAttribute("offset", "100%");
         stopUS2.setAttribute("style", "stop-color:rgb(232,118,0);stop-opacity:.6");
         gradientUpstream.appendChild(stopUS2);
-        
+
         this.xMin = parseInt(array[0][0].substring(0,2)) * 24 * 60 +
-                   parseInt(array[0][0].substring(2,4)) * 60 +
-                   parseInt(array[0][0].substring(4,6));
+            parseInt(array[0][0].substring(2,4)) * 60 +
+            parseInt(array[0][0].substring(4,6));
 
         this.lastPixel = (parseInt(array[array.length-1][0].substring(0, 2)) * 24 * 60 +
-                         parseInt(array[array.length-1][0].substring(2, 4)) * 60 +
-                         parseInt(array[array.length-1][0].substring(4, 6)) - this.xMin) * GRAPH_SCALE_FACTOR ;
+            parseInt(array[array.length-1][0].substring(2, 4)) * 60 +
+            parseInt(array[array.length-1][0].substring(4, 6)) - this.xMin) * GRAPH_SCALE_FACTOR;
 
         this.map = array.map(o => {
-            let time = parseInt(o[0].substring(0,2)) * 24 * 60 +
-                       parseInt(o[0].substring(2,4)) * 60 +
-                       parseInt(o[0].substring(4,6));
+            let time = parseInt(o[0].substring(0, 2)) * 24 * 60 +
+                parseInt(o[0].substring(2, 4)) * 60 +
+                parseInt(o[0].substring(4, 6));
 
             let obj = {};
             obj.t = this.lastPixel - (time-this.xMin) * GRAPH_SCALE_FACTOR;
-            obj.date = [o[0].substring(0,2), o[0].substring(2,4), o[0].substring(4,6)];
+            obj.date = [o[0].substring(0, 2), o[0].substring(2, 4), o[0].substring(4, 6)];
             obj.rx = o[1];
             obj.tx = o[2];
 
@@ -123,15 +123,15 @@ class Graph {
         this.svg.appendChild(lblTx);
 
 
-        this.svg.onwheel  = event => {
-            this.Roll((event.deltaY < 100 && event.deltaY > -100) ? event.deltaY / 3 * 100 : event.deltaY );
+        this.svg.onwheel = event => {
+            this.Roll((event.deltaY < 100 && event.deltaY > -100) ? event.deltaY / 3 * 100 : event.deltaY);
             event.preventDefault();
             this.Graph_onmousemove(event);
         };
 
         this.svg.scrollIntoView();
 
-        this.svg.onmousemove = event => { event.stopPropagation(); this.Graph_onmousemove(event); };
+        this.svg.onmousemove = event => { this.Graph_onmousemove(event); };
         this.svg.onmouseenter = event => { this.Graph_onmouseenter(event); };
         this.svg.onmouseleave = event => { this.Graph_onmouseleave(event); };
 
@@ -163,7 +163,7 @@ class Graph {
         this.frontGlass.setAttribute("fill", "rgba(0,0,0,0)");
         this.svg.appendChild(this.frontGlass);
     }
-
+    
     Attach(container) {
         container.appendChild(this.svg);
     }
@@ -171,11 +171,11 @@ class Graph {
     BytesToString(value) {
         if (value == 0) return 0;
         if (value < 1024) return value + " B";
-        if (value < Math.pow(1024, 2)) return Math.round(value / 1024 * 10) / 10 + " KB";
-        if (value < Math.pow(1024, 3)) return Math.round(value / Math.pow(1024, 2) * 10) / 10 + " MB";
-        if (value < Math.pow(1024, 4)) return Math.round(value / Math.pow(1024, 3) * 10) / 10 + " GB";
-        if (value < Math.pow(1024, 5)) return Math.round(value / Math.pow(1024, 4) * 10) / 10 + " TB";
-        return Math.round(value / Math.pow(1024, 5) * 10) / 10 + " PB";
+        if (value < Math.pow(1024, 2)) return Math.round(value / 1024*10)/10 + " KB";
+        if (value < Math.pow(1024, 3)) return Math.round(value / Math.pow(1024, 2)*10)/10 + " MB";
+        if (value < Math.pow(1024, 4)) return Math.round(value / Math.pow(1024, 3)*10)/10 + " GB";
+        if (value < Math.pow(1024, 5)) return Math.round(value / Math.pow(1024, 4)*10)/10 + " TB";
+        return Math.round(value / Math.pow(1024, 5)*10)/10 + " PB";
     }
 
     Draw(map) {

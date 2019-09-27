@@ -566,7 +566,6 @@
     <Content Include="bin\protest_front\ctr_graph.js" />
     <Content Include="bin\protest_front\ctr_calendar.js" />
     <Content Include="bin\protest_front\ctr_ipbox.js" />
-    <Content Include="bin\protest_front\dbquery.js" />
     <Content Include="bin\protest_front\debitnotes.css" />
     <Content Include="bin\protest_front\debitnotes.js" />
     <Content Include="bin\protest_front\deskmenu.css" />
@@ -963,6 +962,8 @@
     <Content Include="bin\protest_front\res\wmi.svg" />
     <Content Include="bin\protest_front\res\wol.svg" />
     <Content Include="bin\protest_front\root.css" />
+    <Content Include="bin\protest_front\scripteditor.js" />
+    <Content Include="bin\protest_front\scripts.css" />
     <Content Include="bin\protest_front\serviceworker.js" />
     <Content Include="bin\protest_front\sidemenu.css" />
     <Content Include="bin\protest_front\sidemenu.js" />

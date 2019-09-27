@@ -15,7 +15,7 @@ class IpBox {
             this.textBoxes[i].style.margin = "2px 0px";
             this.textBoxes[i].style.padding = "4px 2px";
             this.textBoxes[i].style.border = "rgb(56,56,56) 1px solid";
-            this.textBoxes[i].setAttribute("i", i + 1);
+            this.textBoxes[i].setAttribute("i", i+1);
 
             this.textBoxes[i].onkeydown = event=> {
                 if (event.key == "ArrowLeft" ||
