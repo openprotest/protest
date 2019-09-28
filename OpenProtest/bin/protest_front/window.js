@@ -29,7 +29,6 @@ document.body.onresize    = body_resize;
 document.body.onmousemove = win_mousemove;
 document.body.onmouseup   = win_mouseup;
 document.body.onkeydown   = win_keydown;
-//document.body.oncontextmenu = (event) => { return false; };
 
 bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 

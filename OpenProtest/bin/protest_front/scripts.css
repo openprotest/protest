@@ -1,34 +1,88 @@
-.script-tools-list {
+.script-tools-pane {
     position: absolute;
     left: 0;
     top: 0;
     width: 225px;
     height: 100%;
-    box-shadow: rgb(64,64,64) 0 0 8px;
+}
+
+.script-tools-filter {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 8px;
+}
+
+.script-tools-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 48px;
+    bottom: 0;
+    background-color: rgb(64,64,64);
     overflow-x: hidden;
     overflow-y: scroll;
 }
 
-.script-edit-box {
+.script-properties {
     position: absolute;
-    left: 225px;
+    width: 250px;
     right: 0;
     top: 0;
     bottom: 0;
-    box-sizing: border-box;
+    background-color: rgb(64,64,64);
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.script-selected-name {
+    width: 100%;
+    height: 24px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.script-edit-box {
+    position: absolute;
+    left: 225px;
+    right: 250px;
+    top: 0;
+    bottom: 0;
+    background-color: rgb(160,160,160);
     overflow: hidden;
 }
 
 .script-edit-box-item {
-    color: rgb(32,32,23);
+    color: rgb(224,224,224);
     font-weight: 600;
     width: 100%;
     height: 22px;
-    padding: 4px 2px;
+    padding: 4px 2px 4px 8px;
 }
 
 .script-edit-box-item:hover {
+    color: rgb(32,32,32);
     background-color: var(--select-color);
+}
+
+.script-ghost-node {
+    visibility: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 200px;
+    height: 75px;
+    box-sizing: border-box;
+    z-index: 5;
+    text-align: center;
+    color: rgb(224,224,224);
+    font-weight: 600;
+    border: rgb(32,32,32) solid 1px;
+    border-radius: 4px;
+    /*backdrop-filter: blur(4px);*/
+    /*background-color: rgba(64,64,64,0);*/
 }
 
 .script-node {
@@ -45,19 +99,7 @@
     border-radius: 4px;
 }
 
-.script-ghost-node {
-    visibility: hidden;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 200px;
-    height: 75px;
-    z-index: 5;
-    text-align: center;
-    color: rgb(224,224,224);
-    font-weight: 600;
-    border: rgb(32,32,32) solid 1px;
-    border-radius: 4px;
-    /*backdrop-filter: blur(4px);*/
-    /*background-color: rgba(64,64,64,0);*/
+g > circle#dot {
+    cursor: alias;
+    animation: delayed-fade-in .8s;
 }
