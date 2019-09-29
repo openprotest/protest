@@ -1,6 +1,5 @@
 //o: output
 //i: input
-//p: optional input
 
 //0: select columns
 
@@ -15,19 +14,20 @@ const TOOLS_ARRAY = [
     {name:"Protest equipment",   color:"rgb(232,118,0)", p:[["o","Equipment"]]},
     {name:"Domain users",        color:"rgb(232,118,0)", p:[["o","Users"]]},
     {name:"Domain workstations", color:"rgb(232,118,0)", p:[["o","Workstations"]]},
+    {name:"IP subnet",           color:"rgb(232,118,0)", p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
 
-    {name:"SNMP query",   color:"rgb(32,32,32)", p:[["p","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"WMI query",    color:"rgb(32,32,32)", p:[["p","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"PS Exec",      color:"rgb(32,32,32)", p:[["p","Host",""], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Secure Shell", color:"rgb(32,32,32)", p:[["p","Host",""], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"SNMP query",   color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"WMI query",    color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"PS Exec",      color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Secure Shell", color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"ARP",         color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"DNS",         color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Ping",        color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
-    {name:"Trace route", color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Port scan",   color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
-    {name:"Locate IP",   color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"ARP",         color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"DNS",         color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Ping",        color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
+    {name:"Trace route", color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Port scan",   color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
+    {name:"Locate IP",   color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
 
     {name:"Sort",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
     {name:"Reverse",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
@@ -210,7 +210,16 @@ class ScriptEditor extends Window {
             newPara.appendChild(label);
 
             let value;
-            if (node.parameters[i][0] == "t" || node.parameters[i][0] == "p") { //text
+            if (node.parameters[i][0] == "i") { //input
+                value = document.createElement("div");
+                value.innerHTML = "null";
+                for (let i = 0; i < this.links.length; i++) //find linked node
+                    if (this.selectedNode === this.links[i][2][5]) {
+                        value.innerHTML = this.links[i][1][5].name;
+                        break;
+                    }
+
+            } else if (node.parameters[i][0] == "t") { //text
                 value = document.createElement("input");
                 value.type = "text";
                 value.value = node.values[i]===null ? "" : node.values[i];
@@ -250,9 +259,9 @@ class ScriptEditor extends Window {
                     //TODO:
                 };
 
-            } else { //i
+            } else {
                 value = document.createElement("div");
-                value.innerHTML = "null";
+                value.innerHTML = "";
             }
             value.setAttribute("i", i);
             newPara.appendChild(value);
@@ -267,7 +276,7 @@ class ScriptEditor extends Window {
                 newPara.appendChild(button);
                 button.onclick = () => {
                     if (value.tagName === "div") return;
-                    value.value = "";
+                    value.value = node.parameters[i].length>2 ? node.parameters[i][2] : "";
                     value.onchange();
                 };
             }
@@ -277,7 +286,7 @@ class ScriptEditor extends Window {
 
     Link(primary, secondary) {
         if ((primary[0]!="o" || secondary[0]=="o") && (primary[0]=="o" || secondary[0]!="o")) { //check slot type
-            console.log("You can only link output and input.");
+            console.log("You can only link output with input.");
             return;
         }
 
@@ -315,7 +324,6 @@ class ScriptEditor extends Window {
         y1 = p[5].y + p[4];
         x4 = s[5].x + s[3];
         y4 = s[5].y + s[4];
-
 
         if (x1 < x4) {
             let minX = Math.min(x1, x4);
@@ -505,7 +513,7 @@ class ScriptNode {
             this.parameters.push(tool.p[i]); //copy
             this.values.push(tool.p[i].length > 2 ? tool.p[i][2] : null);
 
-            if (tool.p[i][0] == "i" || tool.p[i][0] == "p" || tool.p[i][0] == "o") { //input or output
+            if (tool.p[i][0] == "i" || tool.p[i][0] == "o") { //input or output
                 let slot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 slot.id = "dot";
                 slot.setAttribute("r", 6);
