@@ -2,6 +2,8 @@
 //i: input
 //p: optional input
 
+//0: select columns
+
 //c: column
 //h: checkbox (preset)
 //n: numeric (preset, min, max)
@@ -9,10 +11,10 @@
 //m: multiline
 
 const TOOLS_ARRAY = [
-    {name:"Protest users",       color:"rgb(232,118,0)", p:[["o","Output"]]},
-    {name:"Protest equipment",   color:"rgb(232,118,0)", p:[["o","Output"]]},
-    {name:"Domain users",        color:"rgb(232,118,0)", p:[["o","Output"]]},
-    {name:"Domain workstations", color:"rgb(232,118,0)", p:[["o","Output"]]},
+    {name:"Protest users",       color:"rgb(232,118,0)", p:[["o","Users"]]},
+    {name:"Protest equipment",   color:"rgb(232,118,0)", p:[["o","Equipment"]]},
+    {name:"Domain users",        color:"rgb(232,118,0)", p:[["o","Users"]]},
+    {name:"Domain workstations", color:"rgb(232,118,0)", p:[["o","Workstations"]]},
 
     {name:"SNMP query",   color:"rgb(32,32,32)", p:[["p","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
     {name:"WMI query",    color:"rgb(32,32,32)", p:[["p","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
@@ -27,25 +29,26 @@ const TOOLS_ARRAY = [
     {name:"Locate IP",   color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
     {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["p","Host",""], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"Unique",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Sort",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Column",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Equals",   color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Output"]]},
-    {name:"Contains", color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Output"]]},
+    {name:"Sort",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
+    {name:"Reverse",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
+    {name:"Unique",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
+    {name:"Column",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
+    {name:"Equal",   color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Contain", color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
 
-    {name:"Absolute value", color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Round",          color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Maximum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Minimum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Mean",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]}, //average
-    {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Absolute value", color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
+    {name:"Round",          color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Rounded"]]},
+    {name:"Maximum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Maximum"]]},
+    {name:"Minimum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Minimum"]]},
+    {name:"Mean",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mean"]]}, //average
+    {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
+    {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
 
-    {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"]]},
-    {name:"CSV file",   color:"rgb(118,0,232)", p:[["i","Input"]]},
-    {name:"JSON file",  color:"rgb(118,0,232)", p:[["i","Input"]]},
-    {name:"XML file",   color:"rgb(118,0,232)", p:[["i","Input"]]},
-    {name:"HTML file",  color:"rgb(118,0,232)", p:[["i","Input"]]},
+    {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"CSV file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"JSON file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"XML file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"HTML file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
 ];
 
 class ScriptEditor extends Window {
@@ -62,9 +65,11 @@ class ScriptEditor extends Window {
         this.setIcon("res/scripts.svgz");
 
         this.nodes = [];
+        this.links = [];
         this.selectedTool = null;
         this.selectedNode = null;
         this.activeNode = null;
+        this.activeSlot = null;
         this.offsetX = 0;
         this.offsetY = 0;
         this.x0 = 0;
@@ -82,6 +87,17 @@ class ScriptEditor extends Window {
         this.svg.setAttribute("width", 1920);
         this.svg.setAttribute("height", 1080);
         this.box.appendChild(this.svg);
+
+        this.linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        this.linksGroup.setAttribute("stroke", "black");
+        this.linksGroup.setAttribute("stroke-width", 3);
+        this.linksGroup.setAttribute("fill", "rgba(0,0,0,0)");
+        this.svg.appendChild(this.linksGroup);
+
+        this.line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        this.line.setAttribute("stroke", "var(--select-color)");
+        this.line.setAttribute("stroke-width", 3);
+        this.svg.appendChild(this.line);
 
         this.tools = document.createElement("div");
         this.tools.className = "script-tools-pane";
@@ -113,16 +129,32 @@ class ScriptEditor extends Window {
         this.parametersList.className = "script-parameters-list";
         this.parameters.appendChild(this.parametersList);
 
+
         this.ghost.onmouseup = event => this.Ghost_onmouseup(event);
 
-        this.win.addEventListener("mouseup", ()=> { this.ghost.style.visibility = "hidden"; });
+        this.win.addEventListener("mouseleave", () => {
+            this.ghost.style.visibility = "hidden";
+            if (this.activeSlot != null) {
+                this.line.setAttribute("d", "");
+                this.activeSlot[1].setAttribute("fill", "rgb(96,96,96)");
+                this.activeSlot = null;
+            }
+        });
 
-        this.win.addEventListener("mousemove", event=> this.Node_onmousemove(event) );
-        this.win.addEventListener("mouseup", event=> this.Node_onmouseup(event));
+        this.win.addEventListener("mouseup", event => {
+            this.ghost.style.visibility = "hidden";
+            this.Node_onmouseup(event);
+            if (this.activeSlot != null) this.selectedNode.Slot_onmouseup(event);
+            this.activeSlot = null;
+        });
+        
+        this.win.addEventListener("mousemove", event => {
+            this.Node_onmousemove(event);
+            if (this.selectedTool != null) this.selectedTool.ScriptListTool_onmousemove(event);
+            if (this.activeSlot != null) this.selectedNode.Slot_onmousemove(event);
+        });
 
-        this.txtToolsFilter.oninput = event => {
-            this.LoadToolsList(this.txtToolsFilter.value);
-        };
+        this.txtToolsFilter.oninput = event => { this.LoadToolsList(this.txtToolsFilter.value); };
 
         this.LoadToolsList(null);
     }
@@ -146,21 +178,24 @@ class ScriptEditor extends Window {
         if (this.selectedNode !== null) {
             this.selectedNode.container.setAttribute("stroke", "rgb(0,0,0)");
             this.selectedNode.container.setAttribute("stroke-width", ".5");
-            for (let i = 0; i < this.selectedNode.links.length; i++) {
-                this.selectedNode.links[i][1].setAttribute("stroke", "rgb(0,0,0)");
-                this.selectedNode.links[i][1].setAttribute("stroke-width", ".5");
+            for (let i = 0; i < this.selectedNode.slots.length; i++) {
+                this.selectedNode.slots[i][1].setAttribute("stroke", "rgb(0,0,0)");
+                this.selectedNode.slots[i][1].setAttribute("stroke-width", ".5");
             }
         }
 
         node.container.setAttribute("stroke", "var(--select-color)");
         node.container.setAttribute("stroke-width", "3");
-        for (let i = 0; i < node.links.length; i++) {
-            node.links[i][1].setAttribute("stroke", "var(--select-color)");
-            node.links[i][1].setAttribute("stroke-width", "2");
+        for (let i = 0; i < node.slots.length; i++) {
+            node.slots[i][1].setAttribute("stroke", "var(--select-color)");
+            node.slots[i][1].setAttribute("stroke-width", "2");
         }
 
         this.selectedNode = node;
         this.selectedName.innerHTML = node.name;
+
+        this.svg.removeChild(node.g); //Bring to front
+        this.svg.appendChild(node.g);
 
         //Show parameters
         this.parametersList.innerHTML = "";
@@ -209,6 +244,8 @@ class ScriptEditor extends Window {
                 value = document.createElement("input");
                 value.type = "button";
                 value.value = "Edit";
+                value.style.backgroundColor = "var(--control-color)";
+                value.style.color = "rgb(32,32,32)";
                 value.onclick = () => {
                     //TODO:
                 };
@@ -220,8 +257,8 @@ class ScriptEditor extends Window {
             value.setAttribute("i", i);
             newPara.appendChild(value);
 
-            value.onchange = event => {
-                let index = parseInt(event.target.getAttribute("i"));
+            value.onchange = () => {
+                let index = parseInt(value.getAttribute("i"));
                 node.values[index] = value.value;
             };
      
@@ -231,10 +268,77 @@ class ScriptEditor extends Window {
                 button.onclick = () => {
                     if (value.tagName === "div") return;
                     value.value = "";
+                    value.onchange();
                 };
             }
 
         }
+    }
+
+    Link(primary, secondary) {
+        if ((primary[0]!="o" || secondary[0]=="o") && (primary[0]=="o" || secondary[0]!="o")) { //check slot type
+            console.log("You can only link output and input.");
+            return;
+        }
+
+        if (primary[5] === secondary[5]) {
+            console.log("A node can't link into it self.");
+            return;
+        }
+
+        //type, slot, label, x, y, node
+        let p = primary[0]=="o" ? primary : secondary;
+        let s = primary[0] == "o" ? secondary : primary;
+
+        this.Unlink(s);
+
+        const newPath = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        newPath.setAttribute("d", this.DrawLine(p, s));
+        this.linksGroup.appendChild(newPath);
+        
+        this.links.push([newPath, p, s]);
+    }
+
+    Unlink(slot) {
+        for (let i = 0; i < this.links.length; i++)
+            if (slot === this.links[i][1] || slot === this.links[i][2]) {
+                this.linksGroup.removeChild(this.links[i][0]);
+                this.links.splice(i, 1);
+                return;
+            }        
+    }
+
+    DrawLine(p, s) {
+        let x1, y1, x2, y2, x3, y3, x4, y4;
+
+        x1 = p[5].x + p[3];
+        y1 = p[5].y + p[4];
+        x4 = s[5].x + s[3];
+        y4 = s[5].y + s[4];
+
+
+        if (x1 < x4) {
+            let minX = Math.min(x1, x4);
+            x2 = minX + (x1-minX) *.7 + (x4-minX) *.3;
+            y2 = y1;
+            x3 = minX + (x1-minX) *.3 + (x4-minX) *.7;
+            y3 = y4;
+        } else {
+            let d = Math.min(Math.abs(x1-x4), 128);
+            x2 = x1 + d*.8;
+            x3 = x4 - d*.8;
+
+            let minY = Math.min(y1, y4);
+            if (y1 < y4) {
+                y2 = y1 + 32 + ((y1-minY) *.3 + (y4-minY) *.7);
+                y3 = y4 - 32 - ((y4-minY) *.7 + (y1-minY) *.3);
+            } else {
+                y2 = y1 - 32 - ((y1-minY) *.3 + (y4-minY) *.7);
+                y3 = y4 + 32 + ((y4-minY) *.7 + (y1-minY) *.3);
+            }
+        }
+
+        return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
     }
 
     Ghost_onmouseup(event) {
@@ -242,7 +346,7 @@ class ScriptEditor extends Window {
         let x = parseInt(pos[0].trim().replace("px", "")) - this.box.offsetLeft;
         let y = parseInt(pos[1].trim().replace("px", "")) - this.box.offsetTop - 38;
 
-        const newNode = new ScriptNode(this.selectedTool);
+        const newNode = new ScriptNode(this.selectedTool, this);
         newNode.MoveTo(x, y);
         newNode.Attach(this.svg);
 
@@ -258,9 +362,6 @@ class ScriptEditor extends Window {
     Node_onmousedown(event, node) {
         if (event.buttons != 1) return;
         this.activeNode = node;
-
-        this.svg.removeChild(node.g); //Bring to front
-        this.svg.appendChild(node.g);
 
         this.offsetX = this.activeNode.x;
         this.offsetY = this.activeNode.y;
@@ -280,6 +381,10 @@ class ScriptEditor extends Window {
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         this.activeNode.MoveTo(x, y);
+
+        for (let i = 0; i < this.links.length; i++)
+            if (this.activeNode === this.links[i][1][5] || this.activeNode === this.links[i][2][5])
+                this.links[i][0].setAttribute("d", this.DrawLine(this.links[i][1], this.links[i][2]));
     }
 
     Node_onmouseup(event) {
@@ -289,11 +394,11 @@ class ScriptEditor extends Window {
 }
 
 class ScriptListTool {
-    constructor(name, color, parameters, parent) {
+    constructor(name, color, parameters, editor) {
         this.name = name;
         this.color = color;
         this.p = parameters;
-        this.parent = parent;
+        this.editor = editor;
 
         this.element = document.createElement("div");
         //this.element.innerHTML = name;
@@ -316,9 +421,6 @@ class ScriptListTool {
         this.element.onmousedown = event => this.ScriptListTool_onmousedown(event);
         this.element.onmousemove = event => this.ScriptListTool_onmousemove(event);
         this.element.onmouseup = event => this.ScriptListTool_onmouseup(event);
-
-        parent.win.addEventListener("mousemove", event => this.ScriptListTool_onmousemove(event));
-        parent.win.addEventListener("mouseleave", event => { this.parent.ghost.style.visibility = "hidden" });
     }
 
     Attach(container) {
@@ -327,40 +429,41 @@ class ScriptListTool {
 
     ScriptListTool_onmousedown(event) {
         if (event.buttons != 1) return;
-        this.parent.ghost.style.visibility = "visible";
+        this.editor.ghost.style.visibility = "visible";
         this.ScriptListTool_onmousemove(event);
-        this.parent.selectedTool = this;
-        this.parent.ghost.innerHTML = this.name;
+        this.editor.selectedTool = this;
+        this.editor.ghost.innerHTML = this.name;
     }
 
     ScriptListTool_onmousemove(event) {
-        if (event.buttons == 1 && this.parent.ghost.style.visibility == "visible") { //left click
-            let a = Math.max((event.pageX - this.parent.win.offsetLeft - 100) / 100, 0);
-            let x = Math.max(event.pageX - this.parent.win.offsetLeft - 100, 230);
-            let y = event.pageY - this.parent.win.offsetTop - this.parent.content.offsetTop;
+        if (event.buttons == 1 && this.editor.ghost.style.visibility == "visible") { //left click
+            let a = Math.max((event.pageX - this.editor.win.offsetLeft - 100) / 100, 0);
+            let x = Math.max(event.pageX - this.editor.win.offsetLeft - 100, 230);
+            let y = event.pageY - this.editor.win.offsetTop - this.editor.content.offsetTop;
             
-            this.parent.ghost.style.backgroundColor = "rgba(64,64,64," + Math.min(a, .75) + ")";
-            this.parent.ghost.style.opacity = a;
-            this.parent.ghost.style.transform = "translate(" + x + "px," + y + "px)";
-            this.parent.ghost.style.backdropFilter = "blur(" + Math.min(a*4, 4) + "px)";
+            this.editor.ghost.style.backgroundColor = "rgba(64,64,64," + Math.min(a, .75) + ")";
+            this.editor.ghost.style.opacity = a;
+            this.editor.ghost.style.transform = "translate(" + x + "px," + y + "px)";
+            this.editor.ghost.style.backdropFilter = "blur(" + Math.min(a*4, 4) + "px)";
             
             event.stopPropagation();
         }
     }
 
     ScriptListTool_onmouseup(event) {
-        this.parent.ghost.style.visibility = "hidden";
+        this.editor.ghost.style.visibility = "hidden";
     }
 }
 
 class ScriptNode {
-    constructor(tool) {
+    constructor(tool, editor) {
         this.x = 0;
         this.y = 0;
+        this.editor = editor;
         this.name = tool.name;
         this.parameters = [];
         this.values     = [];
-        this.links      = [];
+        this.slots      = [];
         this.columns    = [];
 
         this.g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -403,30 +506,33 @@ class ScriptNode {
             this.values.push(tool.p[i].length > 2 ? tool.p[i][2] : null);
 
             if (tool.p[i][0] == "i" || tool.p[i][0] == "p" || tool.p[i][0] == "o") { //input or output
-                let link = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                link.id = "dot";
-                link.setAttribute("r", 6);
-                link.setAttribute("cx", tool.p[i][0]=="o" ? 200 : 0);
-                link.setAttribute("cy", top-1);
-                link.setAttribute("fill", "rgb(96,96,96)");
-                link.setAttribute("stroke", "rgb(0,0,0)");
-                link.setAttribute("stroke-width", ".5");
-                this.g.appendChild(link);
+                let slot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                slot.id = "dot";
+                slot.setAttribute("r", 6);
+                slot.setAttribute("cx", tool.p[i][0]=="o" ? 200 : 0);
+                slot.setAttribute("cy", top);
+                slot.setAttribute("fill", "rgb(96,96,96)");
+                slot.setAttribute("stroke", "rgb(0,0,0)");
+                slot.setAttribute("stroke-width", ".5");
+                this.g.appendChild(slot);
 
                 let label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 label.innerHTML = tool.p[i][1];
                 label.setAttribute("dominant-baseline", "middle");
                 label.setAttribute("text-anchor", tool.p[i][0]=="o" ? "end" : "start");
                 label.setAttribute("x", tool.p[i][0]=="o" ? 188 : 12);
-                label.setAttribute("y", top);
+                label.setAttribute("y", top+1);
                 label.setAttribute("fill", "rgb(224,224,224)");
                 this.g.appendChild(label);
 
-                this.links.push([tool.p[i][0], link, label]);
-
-                link.onmousedown = event => { event.stopPropagation(); };
+                //type, slot, label, x, y, node
+                this.slots.push([tool.p[i][0], slot, label, tool.p[i][0]=="o" ? 200 : 0, top, this]);
 
                 top += 24;
+
+                slot.onmousedown = event => this.Slot_onmousedown(event);
+                slot.onmousemove = event => this.Slot_onmousemove(event);
+                slot.onmouseup = event => this.Slot_onmouseup(event);
             }
         }
 
@@ -442,7 +548,52 @@ class ScriptNode {
         this.y = y;
         this.g.setAttribute("transform", "translate(" + x + "," + y + ")");
     }
-    
+
+    Slot_onmousedown(event) {
+        this.editor.ShowParameters(this);
+        
+        for (let i = 0; i < this.slots.length; i++) //find active slot
+            if (this.slots[i][1] === event.target) {
+                this.editor.activeSlot = this.slots[i];
+                break;
+            }
+
+        this.editor.activeSlot[1].setAttribute("fill", "var(--select-color)");
+
+        this.editor.offsetX = this.x + this.editor.activeSlot[3];
+        this.editor.offsetY = this.y + this.editor.activeSlot[4];
+        this.editor.x0 = event.clientX;
+        this.editor.y0 = event.clientY;
+
+        event.stopPropagation();
+    }
+
+    Slot_onmousemove(event) {
+        if (event.buttons != 1) return;
+        if (this.editor.activeSlot === null) return;
+
+        let x1 = this.x + this.editor.activeSlot[3];
+        let y1 = this.y + this.editor.activeSlot[4];
+        let x2 = this.editor.offsetX - (this.editor.x0 - event.clientX);
+        let y2 = this.editor.offsetY - (this.editor.y0 - event.clientY);
+
+        this.editor.line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
+    }
+
+    Slot_onmouseup(event) {
+        if (this.editor.activeSlot === null) return;
+
+        if (event.target.tagName == "circle" && event.target.id == "dot")
+            for (let i = 0; i < this.slots.length; i++) //find second slot
+                if (this.slots[i][1] === event.target) {
+                    this.editor.Link(this.editor.activeSlot, this.slots[i]);
+                    break;
+                }        
+
+        this.editor.line.setAttribute("d", "");
+        this.editor.activeSlot[1].setAttribute("fill", "rgb(96,96,96)");
+        this.editor.activeSlot = null;
+    }
 }
 
 new ScriptEditor();
