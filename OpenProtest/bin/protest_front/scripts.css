@@ -24,15 +24,13 @@
     overflow-y: scroll;
 }
 
-.script-properties {
+.script-parameters {
     position: absolute;
-    width: 250px;
+    width: 300px;
     right: 0;
     top: 0;
     bottom: 0;
     background-color: rgb(64,64,64);
-    overflow-x: hidden;
-    overflow-y: scroll;
 }
 
 .script-selected-name {
@@ -41,13 +39,65 @@
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 600;
+    text-decoration: underline;
 }
 
+.script-parameters-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 32px;
+    bottom: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.script-parameters-list > div:hover > *:nth-child(3){
+    visibility: visible;
+}
+
+.script-parameters-list > div:hover {
+    background-color: rgb(96,96,96);
+}
+
+.script-parameters-list > * {
+    padding: 4px 8px;
+    animation: fade-in .4s;
+}
+
+.script-parameters-list > div > * {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.script-parameters-list > div > *:nth-child(1) { /*label*/
+    width: 88px;
+}
+.script-parameters-list > div > *:nth-child(2) { /*value*/
+    display: inline-block;
+    width: 150px;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+.script-parameters-list > div > *:nth-child(3) { /*clear*/
+    visibility: hidden;
+    width: 24px;
+    height: 24px;
+    margin: 0 0 -4px 4px;
+    cursor: pointer;
+    background-image: url(res/l_clear.svgz);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
 
 .script-edit-box {
     position: absolute;
     left: 225px;
-    right: 250px;
+    right: 300px;
     top: 0;
     bottom: 0;
     background-color: rgb(160,160,160);
