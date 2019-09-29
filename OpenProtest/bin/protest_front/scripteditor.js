@@ -1,30 +1,51 @@
+//o: output
+//i: input
+//p: optional input
+
+//c: column
+//n: numeric property, min, max
+//t: text property
+//m: multiline
+//s: separator
+
 const TOOLS_ARRAY = [
-    {name:"Protest users",            color:"rgb(232,118,0)"},
-    {name:"Protest equipment",        color:"rgb(232,118,0)"},
-    {name:"Acrive dir. users",        color:"rgb(232,118,0)"},
-    {name:"Acrive dir. workstations", color:"rgb(232,118,0)"},
-    {name:"WMI query",    color:"rgb(232,118,0)"},
-    {name:"SNMP query",   color:"rgb(232,118,0)"},
-    {name:"PS Exec",      color:"rgb(232,118,0)"},
-    {name:"Secure Shell", color:"rgb(232,118,0)"},
+    {name:"Protest users",            color:"rgb(232,118,0)", p:[["o","Output"]]},
+    {name:"Protest equipment",        color:"rgb(232,118,0)", p:[["o","Output"]]},
+    {name:"Acrive dir. users",        color:"rgb(232,118,0)", p:[["o","Output"]]},
+    {name:"Acrive dir. workstations", color:"rgb(232,118,0)", p:[["o","Output"]]},
 
-    {name:"ARP",         color:"rgb(232,118,0)"},
-    {name:"DNS",         color:"rgb(232,118,0)"},
-    {name:"Ping",        color:"rgb(232,118,0)"},
-    {name:"Trace route", color:"rgb(232,118,0)"},
-    {name:"Port scan",   color:"rgb(232,118,0)"},
-    {name:"Locate IP",   color:"rgb(232,118,0)"},
-    {name:"MAC loopup",  color:"rgb(232,118,0)"},
+    {name:"SNMP query",   color:"rgb(32,32,32)", p:[["p","Host"], ["m","Query"], ["o","Output"]]},
+    {name:"WMI query",    color:"rgb(32,32,32)", p:[["p","Host"], ["m","Query"], ["o","Output"]]},
+    {name:"PS Exec",      color:"rgb(32,32,32)", p:[["p","Host"], ["m","Command"], ["o","Output"]]},
+    {name:"Secure Shell", color:"rgb(32,32,32)", p:[["p","Host"], ["m","Command"], ["o","Output"]]},
 
-    {name:"Find",    color:"rgb(232,232,0)"},
-    {name:"Unique",  color:"rgb(232,232,0)"},
-    {name:"Sort",    color:"rgb(232,232,0)"},
-    {name:"Maximum", color:"rgb(232,232,0)"},
-    {name:"Minimum", color:"rgb(232,232,0)"},
-    {name:"Mean",    color:"rgb(232,232,0)"}, //Average
-    {name:"Median",  color:"rgb(232,232,0)"},
-    {name:"Mode",    color:"rgb(232,232,0)"},
+    {name:"ARP",         color:"rgb(232,0,0)", p:[["p","Host"], ["o","Output"]]},
+    {name:"DNS",         color:"rgb(232,0,0)", p:[["p","Host"], ["o","Output"]]},
+    {name:"Ping",        color:"rgb(232,0,0)", p:[["p","Host"], ["n","Time out"], ["o","Output"]]},
+    {name:"Trace route", color:"rgb(232,0,0)", p:[["p","Host"], ["o","Output"]]},
+    {name:"Port scan",   color:"rgb(232,0,0)", p:[["p","Host"], ["n","From"], ["n","To"], ["o","Output"]]},
+    {name:"Locate IP",   color:"rgb(232,0,0)", p:[["p","Host"], ["o","Output"]]},
+    {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["p","Host"], ["o","Output"]]},
 
+    {name:"Unique",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Sort",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Column",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Equals",   color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value"], ["c","Column"], ["o","Output"]]},
+    {name:"Contains", color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value"], ["c","Column"], ["o","Output"]]},
+
+    {name:"Absolute value", color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Round",          color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Maximum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Minimum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Mean",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]}, //average
+    {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+
+    {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"]]},
+    {name:"CSV file",   color:"rgb(118,0,232)", p:[["i","Input"]]},
+    {name:"JSON file",  color:"rgb(118,0,232)", p:[["i","Input"]]},
+    {name:"XML file",   color:"rgb(118,0,232)", p:[["i","Input"]]},
+    {name:"HTML file",  color:"rgb(118,0,232)", p:[["i","Input"]]},
 ];
 
 class ScriptEditor extends Window {
@@ -40,7 +61,8 @@ class ScriptEditor extends Window {
         this.setTitle("Script editor");
         this.setIcon("res/scripts.svgz");
 
-        this.selectedTool = "";
+        this.nodes = [];
+        this.selectedTool = null;
         this.selectedNode = null;
         this.activeNode = null;
         this.offsetX = 0;
@@ -109,7 +131,7 @@ class ScriptEditor extends Window {
 
         for (let i = 0; i < TOOLS_ARRAY.length; i++) {
             if (TOOLS_ARRAY[i].name.toLowerCase().indexOf(filter) == -1) continue;
-            const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, this);
+            const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, TOOLS_ARRAY[i].p, this);
             newTool.Attach(this.toolsList);
         }
     }
@@ -139,6 +161,8 @@ class ScriptEditor extends Window {
         newNode.g.onmousedown = event => this.Node_onmousedown(event, newNode);
         newNode.g.onmousemove = event => this.Node_onmousemove(event);
         newNode.g.onmouseup = event => this.Node_onmouseup(event);
+
+        this.nodes.push(newNode);
 
         this.ShowProperties(newNode);
     }
@@ -177,13 +201,29 @@ class ScriptEditor extends Window {
 }
 
 class ScriptListTool {
-    constructor(name, color, parent) {
-        this.parent = parent;
+    constructor(name, color, paramiters, parent) {
         this.name = name;
+        this.color = color;
+        this.p = paramiters;
+        this.parent = parent;
 
         this.element = document.createElement("div");
-        this.element.innerHTML = name;
+        //this.element.innerHTML = name;
         this.element.className = "script-edit-box-item";
+
+        let dot = document.createElement("div");
+        dot.style.display = "inline-block";
+        dot.style.width = dot.style.height = "11px";
+        dot.style.marginRight = "8px";
+        dot.style.border = "rgb(64,64,64) solid 1px";
+        dot.style.borderRadius = "50%";
+        dot.style.backgroundColor = color;
+        this.element.appendChild(dot);
+
+        let label = document.createElement("div");
+        label.style.display = "inline-block";
+        label.innerHTML = name;
+        this.element.appendChild(label);
 
         this.element.onmousedown = event => this.ScriptListTool_onmousedown(event);
         this.element.onmousemove = event => this.ScriptListTool_onmousemove(event);
@@ -191,7 +231,6 @@ class ScriptListTool {
 
         parent.win.addEventListener("mousemove", event => this.ScriptListTool_onmousemove(event));
         parent.win.addEventListener("mouseleave", event => { this.parent.ghost.style.visibility = "hidden" });
-
     }
 
     Attach(container) {
@@ -199,14 +238,15 @@ class ScriptListTool {
     }
 
     ScriptListTool_onmousedown(event) {
+        if (event.buttons != 1) return;
         this.parent.ghost.style.visibility = "visible";
         this.ScriptListTool_onmousemove(event);
-        this.parent.selectedTool = this.name;
+        this.parent.selectedTool = this;
         this.parent.ghost.innerHTML = this.name;
     }
 
     ScriptListTool_onmousemove(event) {
-        if (event.buttons % 2 == 1 && this.parent.ghost.style.visibility == "visible") { //left click
+        if (event.buttons == 1 && this.parent.ghost.style.visibility == "visible") { //left click
             let a = Math.max((event.pageX - this.parent.win.offsetLeft - 100) / 100, 0);
             let x = Math.max(event.pageX - this.parent.win.offsetLeft - 100, 230);
             let y = event.pageY - this.parent.win.offsetTop - this.parent.content.offsetTop;
@@ -226,8 +266,8 @@ class ScriptListTool {
 }
 
 class ScriptNode {
-    constructor(title, color) {
-        this.title = title;
+    constructor(tool) {
+        this.title = tool.name;
         this.x = 0;
         this.y = 0;
 
@@ -245,44 +285,84 @@ class ScriptNode {
         this.container.setAttribute("stroke-width", ".5");
         this.g.appendChild(this.container);
 
-        this.txtTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        this.txtTitle.innerHTML = title;
-        this.txtTitle.setAttribute("font-weight", "600");
-        this.txtTitle.setAttribute("dominant-baseline", "middle");
-        this.txtTitle.setAttribute("text-anchor", "middle");
-        this.txtTitle.setAttribute("text-decoration", "underline");
-        this.txtTitle.setAttribute("x", 100);
-        this.txtTitle.setAttribute("y", 14);
-        this.txtTitle.setAttribute("fill", "rgb(224,224,224)");
-        this.g.appendChild(this.txtTitle);
+        this.titleBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        this.titleBox.setAttribute("x", 2);
+        this.titleBox.setAttribute("y", 2);
+        this.titleBox.setAttribute("width", 196);
+        this.titleBox.setAttribute("height", 20);
+        this.titleBox.setAttribute("rx", 4);
+        this.titleBox.setAttribute("ry", 4);
+        this.titleBox.setAttribute("fill", tool.color);
+        this.titleBox.setAttribute("opacity", .4);
+        this.g.appendChild(this.titleBox);
 
-        this.input = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        this.input.id = "dot";
-        this.input.setAttribute("r", 6);
-        this.input.setAttribute("cx", 0);
-        this.input.setAttribute("cy", 38);
-        this.input.setAttribute("fill", "rgb(96,96,96)");
-        this.input.setAttribute("stroke", "rgb(0,0,0)");
-        this.input.setAttribute("stroke-width", ".5");
-        this.g.appendChild(this.input);
+        this.titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        this.titleText.innerHTML = tool.name;
+        this.titleText.setAttribute("font-weight", "600");
+        this.titleText.setAttribute("dominant-baseline", "middle");
+        this.titleText.setAttribute("text-anchor", "middle");
+        //this.titleText.setAttribute("text-decoration", "underline");
+        this.titleText.setAttribute("x", 100);
+        this.titleText.setAttribute("y", 14);
+        this.titleText.setAttribute("fill", "rgb(224,224,224)");
+        this.g.appendChild(this.titleText);
 
-        this.output = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        this.output.id = "dot";
-        this.output.setAttribute("r", 6);
-        this.output.setAttribute("cx", 200);
-        this.output.setAttribute("cy", 38);
-        this.output.setAttribute("fill", "rgb(96,96,96)");
-        this.output.setAttribute("stroke", "rgb(0,0,0)");
-        this.output.setAttribute("stroke-width", ".5");
-        this.g.appendChild(this.output);
+        let top = 38;
 
-        this.input.onmousedown = event => {
-            event.stopPropagation();
-        };
+        for (let i = 0; i < tool.p.length; i++) {
 
-        this.output.onmousedown = event => {
-            event.stopPropagation();
-        };
+            console.log(tool.p);
+
+            if (tool.p[i][0]=="o") { //output
+                let outp = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                outp.id = "dot";
+                outp.setAttribute("r", 6);
+                outp.setAttribute("cx", 200);
+                outp.setAttribute("cy", top);
+                outp.setAttribute("fill", "rgb(96,96,96)");
+                outp.setAttribute("stroke", "rgb(0,0,0)");
+                outp.setAttribute("stroke-width", ".5");
+                this.g.appendChild(outp);
+
+                let label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.innerHTML = tool.p[i][1];
+                label.setAttribute("dominant-baseline", "middle");
+                label.setAttribute("text-anchor", "end");
+                label.setAttribute("x", 188);
+                label.setAttribute("y", top);
+                label.setAttribute("fill", "rgb(224,224,224)");
+                this.g.appendChild(label);
+
+                outp.onmousedown = event => { event.stopPropagation(); };
+
+                top += 24;
+
+            } else if (tool.p[i][0] == "i" || tool.p[i][0] == "p") { //input
+                let inp = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                inp.id = "dot";
+                inp.setAttribute("r", 6);
+                inp.setAttribute("cx", 0);
+                inp.setAttribute("cy", top);
+                inp.setAttribute("fill", "rgb(96,96,96)");
+                inp.setAttribute("stroke", "rgb(0,0,0)");
+                inp.setAttribute("stroke-width", ".5");
+                this.g.appendChild(inp);
+
+                let label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.innerHTML = tool.p[i][1];
+                label.setAttribute("dominant-baseline", "middle");
+                label.setAttribute("text-anchor", "start");
+                label.setAttribute("x", 12);
+                label.setAttribute("y", top);
+                label.setAttribute("fill", "rgb(224,224,224)");
+                this.g.appendChild(label);
+
+                inp.onmousedown = event => { event.stopPropagation(); };
+
+                top += 24;
+            }
+        }
+
     }
 
     Attach(container) {
