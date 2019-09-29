@@ -172,8 +172,8 @@ class ScriptEditor extends Window {
         }
     }
 
-    ShowParameters(node) {
-        if (this.selectedNode === node) return;
+    ShowParameters(node, force=false) {
+        if (this.selectedNode === node && !force) return;
 
         if (this.selectedNode !== null) {
             this.selectedNode.container.setAttribute("stroke", "rgb(0,0,0)");
@@ -306,6 +306,9 @@ class ScriptEditor extends Window {
         this.linksGroup.appendChild(newPath);
         
         this.links.push([newPath, p, s]);
+
+        if (s[5] === this.selectedNode) //update parameters
+            this.ShowParameters(s[5], true);
     }
 
     Unlink(slot) {
