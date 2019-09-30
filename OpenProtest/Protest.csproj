@@ -879,6 +879,8 @@
     <Content Include="bin\protest_front\res\logo.svg" />
     <Content Include="bin\protest_front\res\logoff.svg" />
     <Content Include="bin\protest_front\res\l_clear.svg" />
+    <Content Include="bin\protest_front\res\l_copy.svg" />
+    <Content Include="bin\protest_front\res\l_delete.svg" />
     <Content Include="bin\protest_front\res\l_download.svg" />
     <Content Include="bin\protest_front\res\l_filter.svg" />
     <Content Include="bin\protest_front\res\l_gear.svg" />
@@ -892,6 +894,7 @@
     <Content Include="bin\protest_front\res\l_save.svg" />
     <Content Include="bin\protest_front\res\l_search.svg" />
     <Content Include="bin\protest_front\res\l_sort.svg" />
+    <Content Include="bin\protest_front\res\l_unkink.svg" />
     <Content Include="bin\protest_front\res\l_user.svg" />
     <Content Include="bin\protest_front\res\maclookup.svg" />
     <Content Include="bin\protest_front\res\mappeddrive.svg" />

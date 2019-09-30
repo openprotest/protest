@@ -1,13 +1,15 @@
-//o: output
-//i: input
+/*
+ 0: i columns
 
-//0: select columns
+ o: output
+ i: input
 
-//c: column
-//h: checkbox (preset)
-//n: numeric (preset, min, max)
-//t: text (preset)
-//m: multiline
+ c: column
+ h: checkbox (preset)
+ n: numeric (preset, min, max)
+ t: text (preset)
+ m: multiline
+*/
 
 const TOOLS_ARRAY = [
     {name:"Protest users",       color:"rgb(232,118,0)", p:[["o","Users"]]},
@@ -15,27 +17,30 @@ const TOOLS_ARRAY = [
     {name:"Domain users",        color:"rgb(232,118,0)", p:[["o","Users"]]},
     {name:"Domain workstations", color:"rgb(232,118,0)", p:[["o","Workstations"]]},
     {name:"IP subnet",           color:"rgb(232,118,0)", p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
+    {name:"Single value",        color:"rgb(232,118,0)", p:[["t","Value"], ["o","Value"]]},
 
-    {name:"SNMP query",   color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"WMI query",    color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"PS Exec",      color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Secure Shell", color:"rgb(32,32,32)", p:[["i","Host",""], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    //{name:"SNMP query",   color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"WMI query",    color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"PS Exec",      color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Secure Shell", color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"ARP",         color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"DNS",         color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Ping",        color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
-    {name:"Trace route", color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Port scan",   color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
-    {name:"Locate IP",   color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["i","Host",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"ARP",         color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"DNS",         color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"Ping",        color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
+    {name:"Trace route", color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"Port scan",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
+    {name:"Locate IP",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"Sort",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
-    {name:"Reverse",     color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
-    {name:"Unique",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
-    {name:"Column",   color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
-    {name:"Equal",   color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Sort",    color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
+    {name:"Reverse", color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
+    {name:"Unique",  color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
+    {name:"Column",  color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
     {name:"Contain", color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
-
+    
+    {name:"Equal",          color:"rgb(111,212,43)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Greater than",   color:"rgb(111,212,43)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
+    {name:"Less than",      color:"rgb(111,212,43)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
     {name:"Absolute value", color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
     {name:"Round",          color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Rounded"]]},
     {name:"Maximum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Maximum"]]},
@@ -84,8 +89,8 @@ class ScriptEditor extends Window {
         this.content.appendChild(this.box);
 
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svg.setAttribute("width", 1920);
-        this.svg.setAttribute("height", 1080);
+        this.svg.setAttribute("width", 400);
+        this.svg.setAttribute("height", 300);
         this.box.appendChild(this.svg);
 
         this.linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -125,6 +130,28 @@ class ScriptEditor extends Window {
         this.selectedName.className = "script-selected-name";
         this.parameters.appendChild(this.selectedName);
 
+        this.parametersOptions = document.createElement("div");
+        this.parametersOptions.className = "script-parameters-options";
+        this.parameters.appendChild(this.parametersOptions);
+
+        const btnDuplicate = document.createElement("input");
+        btnDuplicate.type = "button";
+        btnDuplicate.style.backgroundImage = "url(res/l_copy.svgz)";
+        btnDuplicate.setAttribute("tip", "Duplicate");
+        this.parametersOptions.appendChild(btnDuplicate);
+
+        const btnUnlink = document.createElement("input");
+        btnUnlink.type = "button";
+        btnUnlink.style.backgroundImage = "url(res/l_unkink.svgz)";
+        btnUnlink.setAttribute("tip-below", "Unlink");
+        this.parametersOptions.appendChild(btnUnlink);
+
+        const btnDelete = document.createElement("input");
+        btnDelete.type = "button";
+        btnDelete.style.backgroundImage = "url(res/l_delete.svgz)";
+        btnDelete.setAttribute("tip-below", "Delete");
+        this.parametersOptions.appendChild(btnDelete);
+
         this.parametersList = document.createElement("div");
         this.parametersList.className = "script-parameters-list";
         this.parameters.appendChild(this.parametersList);
@@ -141,22 +168,45 @@ class ScriptEditor extends Window {
             }
         });
 
+        this.win.addEventListener("mousedown", event => {
+            this.ResizeToFit();
+        });
+
+        this.win.addEventListener("mousemove", event => {
+            this.Node_onmousemove(event);
+            if (this.selectedTool != null) this.selectedTool.ScriptListTool_onmousemove(event);
+            if (this.activeSlot != null) this.selectedNode.Slot_onmousemove(event);
+
+            if (event.buttons == 1) 
+                this.ResizeToFit(); //resize svg to fit
+        });
+
         this.win.addEventListener("mouseup", event => {
             this.ghost.style.visibility = "hidden";
             this.Node_onmouseup(event);
             if (this.activeSlot != null) this.selectedNode.Slot_onmouseup(event);
             this.activeSlot = null;
         });
-        
-        this.win.addEventListener("mousemove", event => {
-            this.Node_onmousemove(event);
-            if (this.selectedTool != null) this.selectedTool.ScriptListTool_onmousemove(event);
-            if (this.activeSlot != null) this.selectedNode.Slot_onmousemove(event);
-        });
 
         this.txtToolsFilter.oninput = event => { this.LoadToolsList(this.txtToolsFilter.value); };
 
         this.LoadToolsList(null);
+    }
+
+    ResizeToFit() {
+        let maxX = this.box.offsetWidth, maxY = this.box.offsetHeight;
+        for (let i = 0; i < this.nodes.length; i++) {
+            if (this.nodes[i].x + 200 > maxX) maxX = this.nodes[i].x+200;
+            if (this.nodes[i].y + 100 > maxY) maxY = this.nodes[i].y+100;
+        }
+
+        if (maxX == this.box.offsetWidth && maxY == this.box.offsetHeight) {
+            this.svg.setAttribute("width", maxX-20);
+            this.svg.setAttribute("height", maxY-20);
+        } else {
+            this.svg.setAttribute("width", maxX+50);
+            this.svg.setAttribute("height", maxY+50);
+        }
     }
 
     LoadToolsList(filter) {
@@ -336,8 +386,8 @@ class ScriptEditor extends Window {
             y3 = y4;
         } else {
             let d = Math.min(Math.abs(x1-x4), 128);
-            x2 = x1 + d*.8;
-            x3 = x4 - d*.8;
+            x2 = x1 + d*.9;
+            x3 = x4 - d*.9;
 
             let minY = Math.min(y1, y4);
             if (y1 < y4) {
@@ -354,8 +404,8 @@ class ScriptEditor extends Window {
 
     Ghost_onmouseup(event) {
         let pos = this.ghost.style.transform.replace("translate(", "").replace(")", "").split(",");
-        let x = parseInt(pos[0].trim().replace("px", "")) - this.box.offsetLeft;
-        let y = parseInt(pos[1].trim().replace("px", "")) - this.box.offsetTop - 38;
+        let x = parseInt(pos[0].trim().replace("px", "")) - this.box.offsetLeft + this.box.scrollLeft;
+        let y = parseInt(pos[1].trim().replace("px", "")) - this.box.offsetTop + this.box.scrollTop - 38;
 
         const newNode = new ScriptNode(this.selectedTool, this);
         newNode.MoveTo(x, y);
@@ -368,6 +418,7 @@ class ScriptEditor extends Window {
         this.nodes.push(newNode);
 
         this.ShowParameters(newNode);
+        this.ResizeToFit();
     }
 
     Node_onmousedown(event, node) {
@@ -401,7 +452,6 @@ class ScriptEditor extends Window {
     Node_onmouseup(event) {
         this.activeNode = null;
     }
-    
 }
 
 class ScriptListTool {
@@ -519,7 +569,7 @@ class ScriptNode {
             if (tool.p[i][0] == "i" || tool.p[i][0] == "o") { //input or output
                 let slot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 slot.id = "dot";
-                slot.setAttribute("r", 6);
+                slot.setAttribute("r", 7);
                 slot.setAttribute("cx", tool.p[i][0]=="o" ? 200 : 0);
                 slot.setAttribute("cy", top);
                 slot.setAttribute("fill", "rgb(96,96,96)");
@@ -560,6 +610,11 @@ class ScriptNode {
         this.g.setAttribute("transform", "translate(" + x + "," + y + ")");
     }
 
+    GetColumns() {
+        //TODO: ...
+        return null;
+    }
+    
     Slot_onmousedown(event) {
         this.editor.ShowParameters(this);
         
@@ -594,12 +649,44 @@ class ScriptNode {
     Slot_onmouseup(event) {
         if (this.editor.activeSlot === null) return;
 
+        let secondary = null;
+
         if (event.target.tagName == "circle" && event.target.id == "dot")
             for (let i = 0; i < this.slots.length; i++) //find second slot
                 if (this.slots[i][1] === event.target) {
-                    this.editor.Link(this.editor.activeSlot, this.slots[i]);
+                    secondary = this.slots[i];
                     break;
-                }        
+                }
+        
+        if (secondary === null) {//on miss-click, find closer node and link to first slot
+            let x = this.editor.offsetX - (this.editor.x0 - event.clientX);
+            let y = this.editor.offsetY - (this.editor.y0 - event.clientY);
+
+            let closer_node = null;
+            for (let i = 0; i < this.editor.nodes.length; i++)
+                if (this.editor.nodes[i].x < x && this.editor.nodes[i].x + 200 > x && this.editor.nodes[i].y < y && this.editor.nodes[i].y + 75 > y) {
+                    closer_node = this.editor.nodes[i];
+                    break;
+                }                                    
+
+            if (closer_node != null)
+                if (this.editor.activeSlot[0] == "o") { //output, link to 1st input
+                    for (let i = 0; i < closer_node.slots.length; i++)
+                        if (closer_node.slots[i][0]=="i") {
+                            secondary = closer_node.slots[i];
+                            break;
+                        }
+
+                } else { //input, link to 1st output
+                    for (let i = 0; i < closer_node.slots.length; i++)
+                        if (closer_node.slots[i][0]=="o") {
+                            secondary = closer_node.slots[i];
+                            break;
+                        }
+                }
+        }        
+
+        if (secondary != null) this.editor.Link(this.editor.activeSlot, secondary);
 
         this.editor.line.setAttribute("d", "");
         this.editor.activeSlot[1].setAttribute("fill", "rgb(96,96,96)");
