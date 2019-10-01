@@ -1,6 +1,4 @@
 /*
- l: columns list
- 
  o: output
  i: input
 
@@ -38,11 +36,11 @@ const TOOLS_ARRAY = [
     {name:"Reverse order", color:"rgb(0,118,232)", p:[["i","Input"], ["o","Reversed"]]},
     {name:"Unique",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
     {name:"Trim",          color:"rgb(0,118,232)", p:[["i","Input"], ["o","Trimmed"]]},
-    {name:"Contain",       color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
-    
-    {name:"Equal",          color:"rgb(111,212,43)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
-    {name:"Greater than",   color:"rgb(111,212,43)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
-    {name:"Less than",      color:"rgb(111,212,43)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
+    {name:"Contain",       color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},    
+    {name:"Equal",         color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Greater than",  color:"rgb(0,118,232)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
+    {name:"Less than",     color:"rgb(0,118,232)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
+
     {name:"Absolute value", color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
     {name:"Round",          color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Rounded"]]},
     {name:"Maximum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Maximum"]]},
@@ -51,11 +49,10 @@ const TOOLS_ARRAY = [
     {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
     {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
 
-    /*!!! modifications on "select column" effect ScriptNode.CalculateColumns !!!*/
+    //!!! modifications on "select column"'s p[] effect ScriptNode.CalculateColumns !!!
     {name:"Select column", color:"rgb(0,232,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
-    {name:"Remove column", color:"rgb(0,232,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
-    {name:"Add columns",   color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
-    {name:"Add rows",      color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    {name:"Merge columns", color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    {name:"Merge rows",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
     {name:"Difference",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
 
     {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
@@ -321,7 +318,7 @@ class ScriptEditor extends Window {
                     };
                 }
             }
-                
+                        
         for (let i = 0; i < node.parameters.length; i++) {
             if (node.parameters[i][0]=="o") continue; //skip ouputs
 
@@ -332,21 +329,21 @@ class ScriptEditor extends Window {
             newPara.appendChild(label);
 
             let value = null;
-            if (node.parameters[i][0] == "i") { //input
+            if (node.parameters[i][0]=="i") { //input or input list
                 //do nothing...
                 continue;
 
             } else if (node.parameters[i][0] == "t") { //text
                 value = document.createElement("input");
                 value.type = node.parameters[i][1] == "Password" ? "password" : "text";
-                value.value = node.values[i]===null ? "" : node.values[i];
+                value.value = node.values[i] === null ? "" : node.values[i];
 
             } else if (node.parameters[i][0] == "n") { //number
                 value = document.createElement("input");
                 value.type = "number";
                 value.min = node.parameters[i][3];
                 value.max = node.parameters[i][4];
-                value.value = node.values[i]===null ? value.min : node.values[i];
+                value.value = node.values[i] === null ? value.min : node.values[i];
 
             } else if (node.parameters[i][0] == "h") { //checkbox
                 value = document.createElement("select");
@@ -364,21 +361,21 @@ class ScriptEditor extends Window {
                 value.value = node.values[i] === null ? "False" : node.values[i];
 
             } else if (node.parameters[i][0] == "c") { //column
-                let inputSlot = node.slots.filter(o => o[0] == "i")[0];                
+                let inputSlot = node.slots.filter(o => o[0] == "i")[0];
                 let link = this.links.find(o => o[2] === inputSlot);
 
                 value = document.createElement("select");
                 if (link) {
                     let sourceNode = link[1][5];
-                    if (sourceNode.columns) 
+                    if (sourceNode.columns)
                         for (let i = 0; i < sourceNode.columns.length; i++) {
                             let optFalse = document.createElement("option");
                             optFalse.innerHTML = sourceNode.columns[i];
                             optFalse.value = sourceNode.columns[i];
                             value.appendChild(optFalse);
-                        }                    
+                        }
                     value.value = node.values[i] === null ? "" : node.values[i];
-                }                
+                }
 
             } else if (node.parameters[i][0] == "m") { //multiline
                 value = document.createElement("input");
@@ -406,7 +403,7 @@ class ScriptEditor extends Window {
                     if (node.columns) node.PropagateColumns();
             };
      
-            if (node.parameters[i][0] != "m" && node.parameters[i][0] != "h") {
+            if (node.parameters[i][0]!="m" && node.parameters[i][0]!="h") {
                 let button = document.createElement("div");
                 newPara.appendChild(button);
                 button.onclick = () => {
@@ -417,21 +414,36 @@ class ScriptEditor extends Window {
             }
 
         }
-               
+
         //Total columns
+        this.parametersList.appendChild(document.createElement("br"));
+
+        let hr = document.createElement("hr");
+        hr.style.padding = "0";
+        this.parametersList.appendChild(hr)
+
+        let lblColumns = document.createElement("div");
+        lblColumns.style.backgroundColor = "transparent";
+        lblColumns.style.textAlign = "center";
+        lblColumns.innerHTML = "Columns (" + node.columns.length + ")";
+        this.parametersList.appendChild(lblColumns); 
+
+        let list = document.createElement("div");
+        list.className = "columns-list";
+        this.parametersList.appendChild(list);
+
+        //input list
         if (node.columns && node.columns.length > 0) {
-            this.parametersList.appendChild(document.createElement("br"));
+            node.columns.forEach(o => {
+                let newItem = document.createElement("input");
+                newItem.type = "checkbox";
+                newItem.checked = true;
+                //newItem.innerHTML = o;                        
+                list.appendChild(newItem);
 
-            let newPara = document.createElement("div");
-            this.parametersList.appendChild(newPara);
-
-            let label = document.createElement("div");
-            label.innerHTML = "Columns:";
-            newPara.appendChild(label);
-
-            let value = document.createElement("div");
-            value.innerHTML = node.columns.length;
-            newPara.appendChild(value);
+                let label = this.AddCheckBoxLabel(list, newItem, o);
+                label.style.margin = "4px 2px";
+            });
         }
     }
 
@@ -786,16 +798,12 @@ class ScriptNode {
                 columns = this.values[1] == null ? collection[0] : [this.values[1].toString()];
                 break;
 
-            case "Remove column":
-                if (collection[0]) collection[0].forEach(o => { if (o != this.values[1]) columns.push(o); });
-                break;
-
-            case "Add columns":
+            case "Merge columns":
                 collection.forEach(o => { if (o != null) columns = columns.concat(o); });
                 break;
 
-            case "Add rows":
-                columns = collection[0] === null ? [] : collection[0];;
+            case "Merge rows":
+                columns = collection[0] === null ? [] : collection[0];
                 break;
 
             default: columns = collection[0] === null ? [] : collection[0];

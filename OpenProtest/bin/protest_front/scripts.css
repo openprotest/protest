@@ -87,16 +87,19 @@
     /*animation: fade-in .4s;*/
 }
 
-.script-parameters-list > div > * {
+.script-parameters-list > div > div {
     display: inline-block;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.script-parameters-list > div > *:nth-child(1) { /*label*/
+.script-parameters-list > div > div:nth-child(1) { /*label*/
     width: 88px;
 }
-.script-parameters-list > div > *:nth-child(2) { /*value*/
+
+.script-parameters-list > div > select:nth-child(2),
+.script-parameters-list > div > input:nth-child(2),
+.script-parameters-list > div > div:nth-child(2) { /*value*/
     display: inline-block;
     width: 150px;
     margin-left: 0;
@@ -104,7 +107,7 @@
     padding-left: 2px;
     padding-right: 2px;
 }
-.script-parameters-list > div > *:nth-child(3) { /*clear*/
+.script-parameters-list > div > div:nth-child(3) { /*clear*/
     visibility: hidden;
     width: 24px;
     height: 24px;
@@ -113,6 +116,12 @@
     background-image: url(res/l_clear.svgz);
     background-repeat: no-repeat;
     background-size: cover;
+}
+
+.columns-list {
+    max-height: 250px;
+    background-color: transparent !important;
+    overflow-y: scroll;
 }
 
 .script-edit-box {
