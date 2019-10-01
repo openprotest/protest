@@ -1,6 +1,6 @@
 /*
- 0: i columns
-
+ l: columns list
+ 
  o: output
  i: input
 
@@ -12,12 +12,12 @@
 */
 
 const TOOLS_ARRAY = [
-    {name:"Protest users",       color:"rgb(232,118,0)", p:[["o","Users"]]},
-    {name:"Protest equipment",   color:"rgb(232,118,0)", p:[["o","Equipment"]]},
-    {name:"Domain users",        color:"rgb(232,118,0)", p:[["o","Users"]]},
-    {name:"Domain workstations", color:"rgb(232,118,0)", p:[["o","Workstations"]]},
-    {name:"IP subnet",           color:"rgb(232,118,0)", p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
-    {name:"Single value",        color:"rgb(232,118,0)", p:[["t","Value"], ["o","Value"]]},
+    {name:"Protest users",       color:"rgb(232,118,0)", c:[], p:[["o","Users"]]},
+    {name:"Protest equipment",   color:"rgb(232,118,0)", c:[], p:[["o","Equipment"]]},
+    {name:"Domain users",        color:"rgb(232,118,0)", c:[], p:[["o","Users"]]},
+    {name:"Domain workstations", color:"rgb(232,118,0)", c:[], p:[["o","Workstations"]]},
+    {name:"IP subnet",           color:"rgb(232,118,0)", c:[], p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
+    {name:"Single value",        color:"rgb(232,118,0)", c:[], p:[["t","Value"], ["o","Value"]]},
 
     //{name:"SNMP query",   color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
     {name:"WMI query",    color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
@@ -32,11 +32,11 @@ const TOOLS_ARRAY = [
     {name:"Locate IP",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
     {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"Sort",    color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
-    {name:"Reverse", color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
-    {name:"Unique",  color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
-    {name:"Column",  color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
-    {name:"Contain", color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
+    {name:"Sort",          color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
+    {name:"Reverse order", color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
+    {name:"Unique",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
+    {name:"Column",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
+    {name:"Contain",       color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
     
     {name:"Equal",          color:"rgb(111,212,43)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
     {name:"Greater than",   color:"rgb(111,212,43)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
@@ -48,6 +48,10 @@ const TOOLS_ARRAY = [
     {name:"Mean",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mean"]]}, //average
     {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
     {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
+
+    {name:"Add columns", color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    {name:"Add rows",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    {name:"Difference",  color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
 
     {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
     {name:"CSV file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
@@ -201,8 +205,8 @@ class ScriptEditor extends Window {
         }
 
         if (maxX == this.box.offsetWidth && maxY == this.box.offsetHeight) {
-            this.svg.setAttribute("width", maxX-20);
-            this.svg.setAttribute("height", maxY-20);
+            this.svg.setAttribute("width", Math.max(maxX-20, 1));
+            this.svg.setAttribute("height", Math.max(maxY-20, 1));
         } else {
             this.svg.setAttribute("width", maxX+50);
             this.svg.setAttribute("height", maxY+50);
@@ -249,25 +253,51 @@ class ScriptEditor extends Window {
 
         //Show parameters
         this.parametersList.innerHTML = "";
+
+        //input labels
+        for (let i = 0; i < this.selectedNode.slots.length; i++)
+            if (this.selectedNode.slots[i][0] == "i") {
+                let match = null;                
+                for (let j = 0; j < this.links.length; j++)
+                    if (this.selectedNode.slots[i] === this.links[j][2]) {
+                        match = this.links[j][1];
+                        break;
+                    }
+
+                let newPara = document.createElement("div");
+                this.parametersList.appendChild(newPara);
+
+                let label = document.createElement("div");
+                label.innerHTML = this.selectedNode.slots[i][2].innerHTML + ":";
+                newPara.appendChild(label);
+
+                if (match != null) {
+                    let value = document.createElement("div");
+                    value.innerHTML = match[5].name;
+                    value.style.textDecoration = "underline";
+                    value.style.cursor = "pointer";
+                    newPara.appendChild(value);
+
+                    value.onclick = ()=> {
+                        this.ShowParameters(match[5]);
+                    };
+                }
+            }
+                
+                
         for (let i = 0; i < node.parameters.length; i++) {
             if (node.parameters[i][0]=="o") continue; //skip ouputs
 
-            let newPara = document.createElement("div");
-            this.parametersList.appendChild(newPara);
+            let newPara = document.createElement("div");            
 
             let label = document.createElement("div");
             label.innerHTML = node.parameters[i][1] + ":";
             newPara.appendChild(label);
 
-            let value;
+            let value = null;
             if (node.parameters[i][0] == "i") { //input
-                value = document.createElement("div");
-                value.innerHTML = "null";
-                for (let i = 0; i < this.links.length; i++) //find linked node
-                    if (this.selectedNode === this.links[i][2][5]) {
-                        value.innerHTML = this.links[i][1][5].name;
-                        break;
-                    }
+                //do nothing...
+                continue;
 
             } else if (node.parameters[i][0] == "t") { //text
                 value = document.createElement("input");
@@ -314,8 +344,9 @@ class ScriptEditor extends Window {
                 value.innerHTML = "";
             }
             value.setAttribute("i", i);
+            this.parametersList.appendChild(newPara);
             newPara.appendChild(value);
-
+            
             value.onchange = () => {
                 let index = parseInt(value.getAttribute("i"));
                 node.values[index] = value.value;
@@ -335,19 +366,19 @@ class ScriptEditor extends Window {
     }
 
     Link(primary, secondary) {
-        if ((primary[0]!="o" || secondary[0]=="o") && (primary[0]=="o" || secondary[0]!="o")) { //check slot type
-            console.log("You can only link output with input.");
-            return;
-        }
-
         if (primary[5] === secondary[5]) {
             console.log("A node can't link into it self.");
             return;
         }
 
+        if ((primary[0]!="o" || secondary[0]=="o") && (primary[0]=="o" || secondary[0]!="o")) { //check slot type
+            console.log("You can only link output with input.");
+            return;
+        }
+
         //type, slot, label, x, y, node
         let p = primary[0]=="o" ? primary : secondary;
-        let s = primary[0] == "o" ? secondary : primary;
+        let s = primary[0]=="o" ? secondary : primary;
 
         this.Unlink(s);
 
@@ -356,6 +387,9 @@ class ScriptEditor extends Window {
         this.linksGroup.appendChild(newPath);
         
         this.links.push([newPath, p, s]);
+
+        p[5].OnLinkChange();
+        s[5].OnLinkChange();
 
         if (s[5] === this.selectedNode) //update parameters
             this.ShowParameters(s[5], true);
@@ -366,6 +400,7 @@ class ScriptEditor extends Window {
             if (slot === this.links[i][1] || slot === this.links[i][2]) {
                 this.linksGroup.removeChild(this.links[i][0]);
                 this.links.splice(i, 1);
+                slot[5].OnLinkChange();
                 return;
             }        
     }
@@ -406,6 +441,9 @@ class ScriptEditor extends Window {
         let pos = this.ghost.style.transform.replace("translate(", "").replace(")", "").split(",");
         let x = parseInt(pos[0].trim().replace("px", "")) - this.box.offsetLeft + this.box.scrollLeft;
         let y = parseInt(pos[1].trim().replace("px", "")) - this.box.offsetTop + this.box.scrollTop - 38;
+
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
 
         const newNode = new ScriptNode(this.selectedTool, this);
         newNode.MoveTo(x, y);
@@ -586,6 +624,8 @@ class ScriptNode {
                 label.setAttribute("fill", "rgb(224,224,224)");
                 this.g.appendChild(label);
 
+                label.setAttribute("tip", "test");
+
                 //type, slot, label, x, y, node
                 this.slots.push([tool.p[i][0], slot, label, tool.p[i][0]=="o" ? 200 : 0, top, this]);
 
@@ -598,6 +638,8 @@ class ScriptNode {
         }
 
         this.container.setAttribute("height", Math.max(top-10, 75));
+
+        //this.OnLinkChange();
     }
 
     Attach(container) {
@@ -610,11 +652,19 @@ class ScriptNode {
         this.g.setAttribute("transform", "translate(" + x + "," + y + ")");
     }
 
+    CheckColumns() {
+
+    }
+
     GetColumns() {
         //TODO: ...
         return null;
     }
-    
+
+    OnLinkChange() {
+        CheckColumns();
+    }
+
     Slot_onmousedown(event) {
         this.editor.ShowParameters(this);
         
