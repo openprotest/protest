@@ -85,6 +85,10 @@ class ScriptEditor extends Window {
         this.y0 = 0;
 
         this.InitizialeComponent();
+
+        setTimeout(() => {
+            if (!this.isMaximized) this.Toogle();
+        }, 1);
     }
 
     InitizialeComponent() {
@@ -662,7 +666,7 @@ class ScriptNode {
     }
 
     OnLinkChange() {
-        CheckColumns();
+        this.CheckColumns();
     }
 
     Slot_onmousedown(event) {
