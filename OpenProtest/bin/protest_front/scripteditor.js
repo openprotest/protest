@@ -9,6 +9,7 @@
  n: numeric (preset, min, max)
  t: text (preset)
  m: multiline
+ s: separator
 */
 
 const TOOLS_ARRAY = [
@@ -18,24 +19,27 @@ const TOOLS_ARRAY = [
     {name:"Domain workstations", color:"rgb(232,118,0)", c:[], p:[["o","Workstations"]]},
     {name:"IP subnet",           color:"rgb(232,118,0)", c:[], p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
     {name:"Single value",        color:"rgb(232,118,0)", c:[], p:[["t","Value"], ["o","Value"]]},
+    
+    //{name:"HTTP request", color:"rgb(232,232,0)", c:[], p:[["t","URL"], ["o","Response"]]},
 
     //{name:"SNMP query",   color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
     {name:"WMI query",    color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
     {name:"PS Exec",      color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
     {name:"Secure Shell", color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"ARP",         color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"DNS",         color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"DNS lookup",  color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
     {name:"Ping",        color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
     {name:"Trace route", color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
     {name:"Port scan",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
     {name:"Locate IP",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
     {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"Sort",          color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Sorted"], ["o","Reversed sorted"]]},
-    {name:"Reverse order", color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Reversed"]]},
-    {name:"Unique",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
+    {name:"Sort",          color:"rgb(0,118,232)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
+    {name:"Reverse order", color:"rgb(0,118,232)", p:[["i","Input"], ["o","Reversed"]]},
     {name:"Column",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
+    {name:"Remove column", color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Unique",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
+    {name:"Trim",          color:"rgb(0,118,232)", p:[["i","Input"], ["o","Trimmed"]]},
     {name:"Contain",       color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
     
     {name:"Equal",          color:"rgb(111,212,43)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
@@ -58,10 +62,40 @@ const TOOLS_ARRAY = [
     {name:"JSON file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
     {name:"XML file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
     {name:"HTML file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
+
+    {name:"Send E-mail", color:"rgb(118,0,232)", p:[["i","Input"], ["t","Server",""], ["n","Port",587,1,65535], ["t","Username",""], ["t","Password",""], ["h","SSL","True"], ["t","Recipient",""]]}
+
 ];
+
+var Script_PtEquipColumns = null;
+var Script_PtUserColumns = null;
+
+const Script_LoadColumns = () => { //Headers
+    if (Script_PtEquipColumns === null) {
+        let xhrE = new XMLHttpRequest();
+        xhrE.onreadystatechange = () => {
+            if (xhrE.readyState == 4 && xhrE.status == 200)
+                Script_PtEquipColumns = xhrE.responseText.trim().split(String.fromCharCode(127));            
+        };
+        xhrE.open("GET", "getequipcolumns", true);
+        xhrE.send();
+    }
+
+    if (Script_PtEquipColumns === null) {
+        let xhrU = new XMLHttpRequest();
+        xhrU.onreadystatechange = () => {
+            if (xhrU.readyState == 4 && xhrU.status == 200) 
+                Script_PtUserColumns = xhrU.responseText.trim().split(String.fromCharCode(127));            
+        };
+        xhrU.open("GET", "getusercolumns", true);
+        xhrU.send();
+    }
+}
 
 class ScriptEditor extends Window {
     constructor() {
+        Script_LoadColumns();
+
         if (document.head.querySelectorAll("link[href$='scripts.css']").length==0) {
             let csslink = document.createElement("link");
             csslink.rel = "stylesheet";
@@ -177,7 +211,7 @@ class ScriptEditor extends Window {
         });
 
         this.win.addEventListener("mousedown", event => {
-            this.ResizeToFit();
+            this.FitSvgToView();
         });
 
         this.win.addEventListener("mousemove", event => {
@@ -186,7 +220,7 @@ class ScriptEditor extends Window {
             if (this.activeSlot != null) this.selectedNode.Slot_onmousemove(event);
 
             if (event.buttons == 1) 
-                this.ResizeToFit(); //resize svg to fit
+                this.FitSvgToView(); //resize svg to fit
         });
 
         this.win.addEventListener("mouseup", event => {
@@ -200,21 +234,20 @@ class ScriptEditor extends Window {
 
         this.LoadToolsList(null);
     }
+       
+    AfterResize() { //override
+        this.FitSvgToView();
+    }
 
-    ResizeToFit() {
+    FitSvgToView() {
         let maxX = this.box.offsetWidth, maxY = this.box.offsetHeight;
         for (let i = 0; i < this.nodes.length; i++) {
-            if (this.nodes[i].x + 200 > maxX) maxX = this.nodes[i].x+200;
-            if (this.nodes[i].y + 100 > maxY) maxY = this.nodes[i].y+100;
+            if (this.nodes[i].x + 250 > maxX) maxX = this.nodes[i].x+250;
+            if (this.nodes[i].y + 125 > maxY) maxY = this.nodes[i].y+125;
         }
 
-        if (maxX == this.box.offsetWidth && maxY == this.box.offsetHeight) {
-            this.svg.setAttribute("width", Math.max(maxX-20, 1));
-            this.svg.setAttribute("height", Math.max(maxY-20, 1));
-        } else {
-            this.svg.setAttribute("width", maxX+50);
-            this.svg.setAttribute("height", maxY+50);
-        }
+        this.svg.setAttribute("width", maxX == this.box.offsetWidth ? Math.max(maxX - 20, 1) : maxX + 50);
+        this.svg.setAttribute("height", maxY == this.box.offsetHeight ? Math.max(maxY - 20, 1) : maxY + 50);
     }
 
     LoadToolsList(filter) {
@@ -225,7 +258,7 @@ class ScriptEditor extends Window {
 
         for (let i = 0; i < TOOLS_ARRAY.length; i++) {
             if (TOOLS_ARRAY[i].name.toLowerCase().indexOf(filter) == -1) continue;
-            const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, TOOLS_ARRAY[i].p, this);
+            const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, TOOLS_ARRAY[i].c, TOOLS_ARRAY[i].p, this);
             newTool.Attach(this.toolsList);
         }
     }
@@ -255,7 +288,7 @@ class ScriptEditor extends Window {
         this.svg.removeChild(node.g); //Bring to front
         this.svg.appendChild(node.g);
 
-        //Show parameters
+
         this.parametersList.innerHTML = "";
 
         //input labels
@@ -288,7 +321,6 @@ class ScriptEditor extends Window {
                 }
             }
                 
-                
         for (let i = 0; i < node.parameters.length; i++) {
             if (node.parameters[i][0]=="o") continue; //skip ouputs
 
@@ -305,7 +337,7 @@ class ScriptEditor extends Window {
 
             } else if (node.parameters[i][0] == "t") { //text
                 value = document.createElement("input");
-                value.type = "text";
+                value.type = node.parameters[i][1] == "Password" ? "password" : "text";
                 value.value = node.values[i]===null ? "" : node.values[i];
 
             } else if (node.parameters[i][0] == "n") { //number
@@ -332,6 +364,12 @@ class ScriptEditor extends Window {
 
             } else if (node.parameters[i][0] == "c") { //column
                 value = document.createElement("select");
+                for (let i = 0; i < node.columns.length; i++) {
+                    let optFalse = document.createElement("option");
+                    optFalse.innerHTML = node.columns[i];
+                    optFalse.value = node.columns[i];
+                    value.appendChild(optFalse);
+                }
 
             } else if (node.parameters[i][0] == "m") { //multiline
                 value = document.createElement("input");
@@ -366,6 +404,22 @@ class ScriptEditor extends Window {
                 };
             }
 
+        }
+               
+        //Total columns
+        if (node.columns && node.columns.length > 0) {
+            this.parametersList.appendChild(document.createElement("br"));
+
+            let newPara = document.createElement("div");
+            this.parametersList.appendChild(newPara);
+
+            let label = document.createElement("div");
+            label.innerHTML = "Columns:";
+            newPara.appendChild(label);
+
+            let value = document.createElement("div");
+            value.innerHTML = node.columns.length;
+            newPara.appendChild(value);
         }
     }
 
@@ -460,7 +514,7 @@ class ScriptEditor extends Window {
         this.nodes.push(newNode);
 
         this.ShowParameters(newNode);
-        this.ResizeToFit();
+        this.FitSvgToView();
     }
 
     Node_onmousedown(event, node) {
@@ -497,9 +551,10 @@ class ScriptEditor extends Window {
 }
 
 class ScriptListTool {
-    constructor(name, color, parameters, editor) {
+    constructor(name, color, columns, parameters, editor) {
         this.name = name;
         this.color = color;
+        this.columns = columns;
         this.p = parameters;
         this.editor = editor;
 
@@ -564,10 +619,12 @@ class ScriptNode {
         this.y = 0;
         this.editor = editor;
         this.name = tool.name;
+        this.isSource = tool.columns ? true : false;
+
+        this.columns    = null;
         this.parameters = [];
         this.values     = [];
         this.slots      = [];
-        this.columns    = [];
 
         this.g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
@@ -643,7 +700,8 @@ class ScriptNode {
 
         this.container.setAttribute("height", Math.max(top-10, 75));
 
-        //this.OnLinkChange();
+        //this.PropagateColumns()
+        this.OnLinkChange();
     }
 
     Attach(container) {
@@ -656,17 +714,80 @@ class ScriptNode {
         this.g.setAttribute("transform", "translate(" + x + "," + y + ")");
     }
 
-    CheckColumns() {
+    PropagateColumns(queue = null) {
+        let target = queue === null ? this : queue;
+        let inputs = target.slots.filter(o=>o[0]=="i");
+        let results = []; //store values for each input
 
+        for (let i = 0; i < inputs.length; i++) {
+            let result = null;
+
+            for (let j = 0; j < this.editor.links.length; j++)
+                if (this.editor.links[j][2] === inputs[i]) {
+                    let sourceNode = this.editor.links[j][1][5];
+                    let sourceSlot = this.editor.links[j][1];
+                                            
+                    if (sourceSlot.isSource)
+                        result = sourceNode.columns;
+                     else 
+                        result = this.PropagateColumns(sourceNode);
+                }
+            
+            results.push(result);
+        }
+
+        return target.CalculateColumns(results);
     }
 
-    GetColumns() {
-        //TODO: ...
-        return null;
+    CalculateColumns(results) {
+        let columns = [];
+
+        switch (this.name) {
+            case "Protest equipment":   columns = Script_PtEquipColumns; break;
+            case "Protest users":       columns = Script_PtUserColumns; break;
+            case "Domain users":        columns = ["TODO:"]; break;
+            case "Domain workstations": columns = ["TODO:"]; break;
+            case "IP subnet":           columns = ["IP"]; break;
+            case "Single value":        columns = ["Value"]; break;
+
+            case "WMI query": for (let i = 0; i < 100; i++) columns.push(i); break; //TODO:
+            case "PS Exec":      columns = ["Timestamp", "Input", "Output"]; break;
+            case "Secure Shell": columns = ["Timestamp", "Input", "Output"]; break;
+
+            case "DNS lookup":  columns = ["Host", "IP Address"]; break;
+            case "Ping":        columns = ["Host", "Status", "Roundtrip time"]; break;
+            case "Trace route": columns = ["Host", "Route"]; break;
+            case "Port scan":   columns = ["Host", "Ports"]; break;
+            case "Locate IP":   columns = ["Host", "Code", "Country", "Region", "City", "Latitude", "Longitude"]; break;
+            case "MAC loopup":  columns = ["MAC address", "Manufacturer"]; break;
+
+            //case "Column": columns = [this.values[]]; break; //TODO:
+            //case "Remove column": columns = [this.values[]]; break; //TODO:
+
+            case "Maximum": columns = ["Maximum"]; break;
+            case "Minimum": columns = ["Minimum"]; break;
+            case "Mean":    columns = ["Mean"]; break;
+            case "Median":  columns = ["Median"]; break;
+            case "Mode":    columns = ["Mode"]; break;
+
+            case "Add columns":
+                results.forEach(o => { if (o != null) columns = columns.concat(o); });
+                break;
+
+            case "Add rows":
+                columns = results[0] === null ? [] : results[0];;
+                break;
+
+
+            default: columns = results[0] === null ? [] : results[0];
+        }
+
+        this.columns = columns;
+        return columns;
     }
 
     OnLinkChange() {
-        this.CheckColumns();
+        this.PropagateColumns();
     }
 
     Slot_onmousedown(event) {

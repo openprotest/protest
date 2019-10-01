@@ -125,6 +125,10 @@
     overflow: scroll;
 }
 
+.script-edit-box > svg > g > path {
+    animation: svg-fade-in .4s;
+}
+
 .script-edit-box-item {
     color: rgb(224,224,224);
     font-weight: 600;
@@ -173,4 +177,9 @@
 g > circle#dot {
     cursor: alias;
     animation: delayed-fade-in .8s;
+}
+
+@keyframes svg-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }

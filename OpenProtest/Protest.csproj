@@ -69,6 +69,7 @@
     <Compile Include="Modules\PasswordStrength.cs" />
     <Compile Include="Modules\ProTasks.cs" />
     <Compile Include="Modules\RaClient.cs" />
+    <Compile Include="Modules\Scripts.cs" />
     <Compile Include="Modules\Session.cs" />
     <Compile Include="Modules\Tools.cs" />
     <Compile Include="Modules\Wmi.cs" />
