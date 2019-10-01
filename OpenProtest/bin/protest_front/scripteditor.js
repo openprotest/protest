@@ -36,8 +36,6 @@ const TOOLS_ARRAY = [
 
     {name:"Sort",          color:"rgb(0,118,232)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
     {name:"Reverse order", color:"rgb(0,118,232)", p:[["i","Input"], ["o","Reversed"]]},
-    {name:"Column",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
-    {name:"Remove column", color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
     {name:"Unique",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
     {name:"Trim",          color:"rgb(0,118,232)", p:[["i","Input"], ["o","Trimmed"]]},
     {name:"Contain",       color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},
@@ -53,9 +51,12 @@ const TOOLS_ARRAY = [
     {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
     {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
 
-    {name:"Add columns", color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
-    {name:"Add rows",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
-    {name:"Difference",  color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    /*!!! modifications on "select column" effect ScriptNode.CalculateColumns !!!*/
+    {name:"Select column", color:"rgb(0,232,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
+    {name:"Remove column", color:"rgb(0,232,232)", p:[["i","Input"], ["c","Column"], ["o","Output"]]},
+    {name:"Add columns",   color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    {name:"Add rows",      color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
+    {name:"Difference",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
 
     {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
     {name:"CSV file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
@@ -294,7 +295,7 @@ class ScriptEditor extends Window {
         //input labels
         for (let i = 0; i < this.selectedNode.slots.length; i++)
             if (this.selectedNode.slots[i][0] == "i") {
-                let match = null;                
+                let match = null;
                 for (let j = 0; j < this.links.length; j++)
                     if (this.selectedNode.slots[i] === this.links[j][2]) {
                         match = this.links[j][1];
@@ -360,16 +361,24 @@ class ScriptEditor extends Window {
                 optFalse.value = "False";
                 value.appendChild(optFalse);
 
-                value.value = node.values[i] === null ? value.min : node.values[i];
+                value.value = node.values[i] === null ? "False" : node.values[i];
 
             } else if (node.parameters[i][0] == "c") { //column
+                let inputSlot = node.slots.filter(o => o[0] == "i")[0];                
+                let link = this.links.find(o => o[2] === inputSlot);
+
                 value = document.createElement("select");
-                for (let i = 0; i < node.columns.length; i++) {
-                    let optFalse = document.createElement("option");
-                    optFalse.innerHTML = node.columns[i];
-                    optFalse.value = node.columns[i];
-                    value.appendChild(optFalse);
-                }
+                if (link) {
+                    let sourceNode = link[1][5];
+                    if (sourceNode.columns) 
+                        for (let i = 0; i < sourceNode.columns.length; i++) {
+                            let optFalse = document.createElement("option");
+                            optFalse.innerHTML = sourceNode.columns[i];
+                            optFalse.value = sourceNode.columns[i];
+                            value.appendChild(optFalse);
+                        }                    
+                    value.value = node.values[i] === null ? "" : node.values[i];
+                }                
 
             } else if (node.parameters[i][0] == "m") { //multiline
                 value = document.createElement("input");
@@ -392,6 +401,9 @@ class ScriptEditor extends Window {
             value.onchange = () => {
                 let index = parseInt(value.getAttribute("i"));
                 node.values[index] = value.value;
+
+                if (node.parameters[i][0] == "c") //propagate on Column change
+                    if (node.columns) node.PropagateColumns();
             };
      
             if (node.parameters[i][0] != "m" && node.parameters[i][0] != "h") {
@@ -742,20 +754,20 @@ class ScriptNode {
         return result;
     }
 
-    CalculateColumns(results) {
+    CalculateColumns(collection) {
         let columns = [];
 
         switch (this.name) {
             case "Protest equipment":   columns = Script_PtEquipColumns; break;
             case "Protest users":       columns = Script_PtUserColumns; break;
-            case "Domain users":        columns = ["TODO:"]; break;
-            case "Domain workstations": columns = ["TODO:"]; break;
+            case "Domain users":        columns = ["TODO:"]; break; //TODO:
+            case "Domain workstations": columns = ["TODO:"]; break; //TODO:
             case "IP subnet":           columns = ["IP"]; break;
             case "Single value":        columns = ["Value"]; break;
 
-            case "WMI query": for (let i = 0; i < 100; i++) columns.push(i); break; //TODO:
-            case "PS Exec":      columns = ["Timestamp", "Input", "Output"]; break;
-            case "Secure Shell": columns = ["Timestamp", "Input", "Output"]; break;
+            case "WMI query":    columns = ["Host", "..."]; break; //TODO:
+            case "PS Exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
+            case "Secure Shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
 
             case "DNS lookup":  columns = ["Host", "IP Address"]; break;
             case "Ping":        columns = ["Host", "Status", "Roundtrip time"]; break;
@@ -764,28 +776,32 @@ class ScriptNode {
             case "Locate IP":   columns = ["Host", "Code", "Country", "Region", "City", "Latitude", "Longitude"]; break;
             case "MAC loopup":  columns = ["MAC address", "Manufacturer"]; break;
 
-            //case "Column": columns = [this.values[]]; break; //TODO:
-            //case "Remove column": columns = [this.values[]]; break; //TODO:
-
             case "Maximum": columns = ["Maximum"]; break;
             case "Minimum": columns = ["Minimum"]; break;
             case "Mean":    columns = ["Mean"]; break;
             case "Median":  columns = ["Median"]; break;
             case "Mode":    columns = ["Mode"]; break;
 
+            case "Select column":
+                columns = this.values[1] == null ? collection[0] : [this.values[1].toString()];
+                break;
+
+            case "Remove column":
+                if (collection[0]) collection[0].forEach(o => { if (o != this.values[1]) columns.push(o); });
+                break;
+
             case "Add columns":
-                results.forEach(o => { if (o != null) columns = columns.concat(o); });
+                collection.forEach(o => { if (o != null) columns = columns.concat(o); });
                 break;
 
             case "Add rows":
-                columns = results[0] === null ? [] : results[0];;
+                columns = collection[0] === null ? [] : collection[0];;
                 break;
 
-
-            default: columns = results[0] === null ? [] : results[0];
+            default: columns = collection[0] === null ? [] : collection[0];
         }
 
-        this.titleText.innerHTML = this.name + " (" + columns.length + ")";
+        //this.titleText.innerHTML = this.name + " (" + columns.length + ")";
         this.columns = columns;
         return columns;
     }
