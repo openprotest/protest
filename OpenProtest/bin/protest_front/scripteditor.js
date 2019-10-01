@@ -715,28 +715,31 @@ class ScriptNode {
     }
 
     PropagateColumns(queue = null) {
-        let target = queue === null ? this : queue;
-        let inputs = target.slots.filter(o=>o[0]=="i");
-        let results = []; //store values for each input
+        let target  = queue === null ? this : queue;       
+        let inputs  = target.slots.filter(o => o[0]=="i");
+        let outputs = target.slots.filter(o => o[0]=="o");
 
-        for (let i = 0; i < inputs.length; i++) {
-            let result = null;
-
+        let columnsCollection = []; //store values for each input
+        for (let i = 0; i < inputs.length; i++) { //find source
+            let columns = null;
             for (let j = 0; j < this.editor.links.length; j++)
                 if (this.editor.links[j][2] === inputs[i]) {
                     let sourceNode = this.editor.links[j][1][5];
-                    let sourceSlot = this.editor.links[j][1];
-                                            
-                    if (sourceSlot.isSource)
-                        result = sourceNode.columns;
-                     else 
-                        result = this.PropagateColumns(sourceNode);
-                }
-            
-            results.push(result);
+                    columns = sourceNode.columns;
+                    break;
+                }            
+            columnsCollection.push(columns);
         }
 
-        return target.CalculateColumns(results);
+        let result = target.CalculateColumns(columnsCollection);
+
+        for (let i = 0; i < outputs.length; i++) { //propagate forward
+            for (let j = 0; j < this.editor.links.length; j++)
+                if (this.editor.links[j][1] === outputs[i]) 
+                    this.PropagateColumns(this.editor.links[j][2][5]);
+        }
+        
+        return result;
     }
 
     CalculateColumns(results) {
@@ -782,6 +785,7 @@ class ScriptNode {
             default: columns = results[0] === null ? [] : results[0];
         }
 
+        this.titleText.innerHTML = this.name + " (" + columns.length + ")";
         this.columns = columns;
         return columns;
     }
