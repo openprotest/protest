@@ -217,8 +217,10 @@ class Http {
                     case "gettasksongoing": buffer = ProTasks.GetOnGoing(); break;
                     case "gettasksresults": buffer = ProTasks.GetResults(); break;
 
-                    case "getequipcolumns": buffer = Scripts.GetEquipColumns(); break;
                     case "getusercolumns": buffer = Scripts.GetUserColumns(); break;
+                    case "getequipcolumns": buffer = Scripts.GetEquipColumns(); break;
+                    case "getadusercolumns": buffer = Scripts.GetAdUsersColumns(); break;
+                    case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
 
                     case "getmetrics": buffer = BandwidthMonitor.GetMetrics(para); break;
 

@@ -148,7 +148,7 @@ class Program {
             "#    #   ##   #####  ## ##### ##  #\n" +
             "#  ###  # #   #  ##  ##   #   ##  #\n" +
             "###############  ##################\n";
-
+        
         Console.WriteLine();
         Console.Write("  ");
         for (int i = 0; i < PRO_TEST.Length; i++)

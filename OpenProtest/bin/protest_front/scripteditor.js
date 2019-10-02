@@ -65,28 +65,50 @@ const TOOLS_ARRAY = [
 
 ];
 
-var Script_PtEquipColumns = null;
 var Script_PtUserColumns = null;
+var Script_PtEquipColumns = null;
+var Script_AdUserColumns = null;
+var Script_AdWorkstationColumns = null;
 
 const Script_LoadColumns = () => { //Headers
     if (Script_PtEquipColumns === null) {
-        let xhrE = new XMLHttpRequest();
-        xhrE.onreadystatechange = () => {
-            if (xhrE.readyState == 4 && xhrE.status == 200)
-                Script_PtEquipColumns = xhrE.responseText.trim().split(String.fromCharCode(127));            
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200)
+                Script_PtUserColumns = xhr.responseText.trim().split(String.fromCharCode(127));
         };
-        xhrE.open("GET", "getequipcolumns", true);
-        xhrE.send();
+        xhr.open("GET", "getusercolumns", true);
+        xhr.send();
     }
 
     if (Script_PtEquipColumns === null) {
-        let xhrU = new XMLHttpRequest();
-        xhrU.onreadystatechange = () => {
-            if (xhrU.readyState == 4 && xhrU.status == 200) 
-                Script_PtUserColumns = xhrU.responseText.trim().split(String.fromCharCode(127));            
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200)
+                Script_PtEquipColumns = xhr.responseText.trim().split(String.fromCharCode(127));            
         };
-        xhrU.open("GET", "getusercolumns", true);
-        xhrU.send();
+        xhr.open("GET", "getequipcolumns", true);
+        xhr.send();
+    }
+       
+    if (Script_AdUserColumns === null) {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200)
+                Script_AdUserColumns = xhr.responseText.trim().split(String.fromCharCode(127));
+        };
+        xhr.open("GET", "getadusercolumns", true);
+        xhr.send();
+    }
+
+    if (Script_AdWorkstationColumns === null) {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200)
+                Script_AdWorkstationColumns = xhr.responseText.trim().split(String.fromCharCode(127));
+        };
+        xhr.open("GET", "getadworkstationcolumns", true);
+        xhr.send();
     }
 }
 
@@ -758,7 +780,7 @@ class ScriptNode {
         let inputs  = target.slots.filter(o => o[0]=="i");
         let outputs = target.slots.filter(o => o[0]=="o");
 
-        let columnsCollection = [];               //store values for each input
+        let columnsCollection = [];               //values for each input
         for (let i = 0; i < inputs.length; i++) { //find source
             let find = this.editor.links.find(o => o[2] === inputs[i]);
             if (find) {
@@ -788,10 +810,10 @@ class ScriptNode {
         let columns = [];
 
         switch (this.name) {
-            case "Protest equipment":   columns = Script_PtEquipColumns; break;
             case "Protest users":       columns = Script_PtUserColumns; break;
-            case "Domain users":        columns = ["TODO:"]; break; //TODO:
-            case "Domain workstations": columns = ["TODO:"]; break; //TODO:
+            case "Protest equipment":   columns = Script_PtEquipColumns; break;
+            case "Domain users":        columns = Script_AdUserColumns; break;
+            case "Domain workstations": columns = Script_AdWorkstationColumns; break;
             case "IP subnet":           columns = ["IP"]; break;
             case "Single value":        columns = ["Value"]; break;
 
