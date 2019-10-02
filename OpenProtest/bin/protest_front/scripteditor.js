@@ -292,13 +292,8 @@ class ScriptEditor extends Window {
         //input labels
         for (let i = 0; i < this.selectedNode.slots.length; i++)
             if (this.selectedNode.slots[i][0] == "i") {
-                let match = null;
-                for (let j = 0; j < this.links.length; j++)
-                    if (this.selectedNode.slots[i] === this.links[j][2]) {
-                        match = this.links[j][1];
-                        break;
-                    }
-
+                let match = this.links.find(o => this.selectedNode.slots[i] === o[2]);
+                
                 let newPara = document.createElement("div");
                 this.parametersList.appendChild(newPara);
 
@@ -306,16 +301,14 @@ class ScriptEditor extends Window {
                 label.innerHTML = this.selectedNode.slots[i][2].innerHTML + ":";
                 newPara.appendChild(label);
 
-                if (match != null) {
+                if (match) {
                     let value = document.createElement("div");
-                    value.innerHTML = match[5].name;
+                    value.innerHTML = match[1][5].name;
                     value.style.textDecoration = "underline";
                     value.style.cursor = "pointer";
                     newPara.appendChild(value);
 
-                    value.onclick = ()=> {
-                        this.ShowParameters(match[5]);
-                    };
+                    value.onclick = ()=> this.ShowParameters(match[1][5]);
                 }
             }
                         
@@ -368,12 +361,14 @@ class ScriptEditor extends Window {
                 if (link) {
                     let sourceNode = link[1][5];
                     if (sourceNode.columns)
-                        for (let i = 0; i < sourceNode.columns.length; i++) {
-                            let optFalse = document.createElement("option");
-                            optFalse.innerHTML = sourceNode.columns[i];
-                            optFalse.value = sourceNode.columns[i];
-                            value.appendChild(optFalse);
-                        }
+                        for (let i = 0; i < sourceNode.columns.length; i++) 
+                            if (sourceNode.selectedColumns === null || sourceNode.selectedColumns.includes(sourceNode.columns[i])) {
+                                let optFalse = document.createElement("option");
+                                optFalse.innerHTML = sourceNode.columns[i];
+                                optFalse.value = sourceNode.columns[i];
+                                value.appendChild(optFalse);
+                            }
+                        
                     value.value = node.values[i] === null ? "" : node.values[i];
                 }
 
@@ -412,7 +407,6 @@ class ScriptEditor extends Window {
                     value.onchange();
                 };
             }
-
         }
 
         //Total columns
@@ -437,12 +431,27 @@ class ScriptEditor extends Window {
             node.columns.forEach(o => {
                 let newItem = document.createElement("input");
                 newItem.type = "checkbox";
-                newItem.checked = true;
+                newItem.checked = node.selectedColumns === null || node.selectedColumns.includes(o);
                 //newItem.innerHTML = o;                        
                 list.appendChild(newItem);
 
                 let label = this.AddCheckBoxLabel(list, newItem, o);
                 label.style.margin = "4px 2px";
+
+                newItem.onchange = event => {
+                    if (node.selectedColumns === null) {
+                        node.selectedColumns = [];
+                        for (let i = 0; i < node.columns.length; i++) 
+                            node.selectedColumns.push(node.columns[i]);
+                    }
+                    
+                    if (newItem.checked)
+                        node.selectedColumns.push(label.innerHTML);
+                    else 
+                        node.selectedColumns.splice(node.selectedColumns.indexOf(label.innerHTML), 1);
+
+                    node.PropagateColumns();
+                };
             });
         }
     }
@@ -645,10 +654,11 @@ class ScriptNode {
         this.name = tool.name;
         this.isSource = tool.columns ? true : false;
 
-        this.columns    = null;
-        this.parameters = [];
-        this.values     = [];
-        this.slots      = [];
+        this.columns         = null;
+        this.selectedColumns = null;
+        this.parameters      = [];
+        this.values          = [];
+        this.slots           = [];
 
         this.g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
@@ -738,31 +748,39 @@ class ScriptNode {
         this.g.setAttribute("transform", "translate(" + x + "," + y + ")");
     }
 
-    PropagateColumns(queue = null) {
+    PropagateColumns(queue = null, count = 0) {
+        if (count > 127) {
+            console.log("Closed loop or a huge diagram error.");
+            return [];
+        } 
+
         let target  = queue === null ? this : queue;       
         let inputs  = target.slots.filter(o => o[0]=="i");
         let outputs = target.slots.filter(o => o[0]=="o");
 
-        let columnsCollection = []; //store values for each input
+        let columnsCollection = [];               //store values for each input
         for (let i = 0; i < inputs.length; i++) { //find source
-            let columns = null;
-            for (let j = 0; j < this.editor.links.length; j++)
-                if (this.editor.links[j][2] === inputs[i]) {
-                    let sourceNode = this.editor.links[j][1][5];
-                    columns = sourceNode.columns;
-                    break;
-                }            
-            columnsCollection.push(columns);
+            let find = this.editor.links.find(o => o[2] === inputs[i]);
+            if (find) {
+                let sourceNode = find[1][5];
+
+                let r = []; //filter non-selected columns
+                for (let i = 0; i < sourceNode.columns.length; i++) 
+                    if (sourceNode.selectedColumns === null || sourceNode.selectedColumns.includes(sourceNode.columns[i]))
+                        r.push(sourceNode.columns[i]);
+                
+                columnsCollection.push(r);
+
+            } else {
+                columnsCollection.push(null)
+            }
         }
 
         let result = target.CalculateColumns(columnsCollection);
 
-        for (let i = 0; i < outputs.length; i++) { //propagate forward
-            for (let j = 0; j < this.editor.links.length; j++)
-                if (this.editor.links[j][1] === outputs[i]) 
-                    this.PropagateColumns(this.editor.links[j][2][5]);
-        }
-        
+        for (let i = 0; i < outputs.length; i++)  //propagate forward
+            this.editor.links.forEach(o => { if (o[1] === outputs[i]) this.PropagateColumns(o[2][5], ++count); });
+
         return result;
     }
 
@@ -820,12 +838,8 @@ class ScriptNode {
 
     Slot_onmousedown(event) {
         this.editor.ShowParameters(this);
-        
-        for (let i = 0; i < this.slots.length; i++) //find active slot
-            if (this.slots[i][1] === event.target) {
-                this.editor.activeSlot = this.slots[i];
-                break;
-            }
+
+        this.editor.activeSlot = this.slots.find(o => o[1] === event.target);
 
         this.editor.activeSlot[1].setAttribute("fill", "var(--select-color)");
 
@@ -839,7 +853,7 @@ class ScriptNode {
 
     Slot_onmousemove(event) {
         if (event.buttons != 1) return;
-        if (this.editor.activeSlot === null) return;
+        if (!this.editor.activeSlot) return;
 
         let x1 = this.x + this.editor.activeSlot[3];
         let y1 = this.y + this.editor.activeSlot[4];
@@ -850,46 +864,22 @@ class ScriptNode {
     }
 
     Slot_onmouseup(event) {
-        if (this.editor.activeSlot === null) return;
+        if (!this.editor.activeSlot) return;
 
         let secondary = null;
-
         if (event.target.tagName == "circle" && event.target.id == "dot")
-            for (let i = 0; i < this.slots.length; i++) //find second slot
-                if (this.slots[i][1] === event.target) {
-                    secondary = this.slots[i];
-                    break;
-                }
+            secondary = this.slots.find(o => o[1] === event.target); //find second slot
         
-        if (secondary === null) {//on miss-click, find closer node and link to first slot
+        if (secondary === null) {//on miss-click, find closest node and link to first slot
             let x = this.editor.offsetX - (this.editor.x0 - event.clientX);
             let y = this.editor.offsetY - (this.editor.y0 - event.clientY);
 
-            let closer_node = null;
-            for (let i = 0; i < this.editor.nodes.length; i++)
-                if (this.editor.nodes[i].x < x && this.editor.nodes[i].x + 200 > x && this.editor.nodes[i].y < y && this.editor.nodes[i].y + 75 > y) {
-                    closer_node = this.editor.nodes[i];
-                    break;
-                }                                    
-
-            if (closer_node != null)
-                if (this.editor.activeSlot[0] == "o") { //output, link to 1st input
-                    for (let i = 0; i < closer_node.slots.length; i++)
-                        if (closer_node.slots[i][0]=="i") {
-                            secondary = closer_node.slots[i];
-                            break;
-                        }
-
-                } else { //input, link to 1st output
-                    for (let i = 0; i < closer_node.slots.length; i++)
-                        if (closer_node.slots[i][0]=="o") {
-                            secondary = closer_node.slots[i];
-                            break;
-                        }
-                }
+            let node = this.editor.nodes.find(o => o.x<x && o.x+200>x && o.y<y && o.y+75>y);
+            if (node)
+                secondary = this.editor.activeSlot[0]=="o" ? node.slots.find(o => o[0]=="i") : node.slots.find(o => o[0]=="o");
         }        
 
-        if (secondary != null) this.editor.Link(this.editor.activeSlot, secondary);
+        if (secondary) this.editor.Link(this.editor.activeSlot, secondary);
 
         this.editor.line.setAttribute("d", "");
         this.editor.activeSlot[1].setAttribute("fill", "rgb(96,96,96)");
