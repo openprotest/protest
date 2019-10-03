@@ -65,9 +65,9 @@ const TOOLS_ARRAY = [
 
 ];
 
-var Script_PtUserColumns = null;
+var Script_PtUserColumns  = null;
 var Script_PtEquipColumns = null;
-var Script_AdUserColumns = null;
+var Script_AdUserColumns  = null;
 var Script_AdWorkstationColumns = null;
 
 const Script_LoadColumns = () => { //Headers
@@ -85,7 +85,7 @@ const Script_LoadColumns = () => { //Headers
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200)
-                Script_PtEquipColumns = xhr.responseText.trim().split(String.fromCharCode(127));            
+                Script_PtEquipColumns = xhr.responseText.trim().split(String.fromCharCode(127));
         };
         xhr.open("GET", "getequipcolumns", true);
         xhr.send();
@@ -95,7 +95,7 @@ const Script_LoadColumns = () => { //Headers
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200)
-                Script_AdUserColumns = xhr.responseText.trim().split(String.fromCharCode(127));
+                Script_AdUserColumns = xhr.responseText.length > 0 ? xhr.responseText.trim().split(String.fromCharCode(127)) : [];
         };
         xhr.open("GET", "getadusercolumns", true);
         xhr.send();
@@ -105,7 +105,7 @@ const Script_LoadColumns = () => { //Headers
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200)
-                Script_AdWorkstationColumns = xhr.responseText.trim().split(String.fromCharCode(127));
+                Script_AdWorkstationColumns = xhr.responseText.length > 0 ? xhr.responseText.trim().split(String.fromCharCode(127)) : [];
         };
         xhr.open("GET", "getadworkstationcolumns", true);
         xhr.send();
@@ -337,7 +337,7 @@ class ScriptEditor extends Window {
         for (let i = 0; i < node.parameters.length; i++) {
             if (node.parameters[i][0]=="o") continue; //skip ouputs
 
-            let newPara = document.createElement("div");            
+            let newPara = document.createElement("div");
 
             let label = document.createElement("div");
             label.innerHTML = node.parameters[i][1] + ":";
@@ -401,6 +401,12 @@ class ScriptEditor extends Window {
                 value.style.backgroundColor = "var(--control-color)";
                 value.style.color = "rgb(32,32,32)";
                 value.onclick = () => {
+
+                    let obj = this.DialogBox("calc(100% - 24px)");
+                    if (obj === null) return;
+
+                    let btnOK = obj[0];
+                    let innerBox = obj[1];
                     //TODO:
                 };
 
@@ -454,7 +460,7 @@ class ScriptEditor extends Window {
                 let newItem = document.createElement("input");
                 newItem.type = "checkbox";
                 newItem.checked = node.selectedColumns === null || node.selectedColumns.includes(o);
-                //newItem.innerHTML = o;                        
+                //newItem.innerHTML = o;
                 list.appendChild(newItem);
 
                 let label = this.AddCheckBoxLabel(list, newItem, o);

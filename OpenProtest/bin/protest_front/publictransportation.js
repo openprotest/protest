@@ -27,7 +27,7 @@ function initPublicTransportation() {
                 return;
             }, 500);
             return;
-        }                      
+        }
 
         console.log("Pro-test is disconnected.");
         let opt = showNotification("Lost connection to the server.", false);
@@ -218,8 +218,7 @@ function initPublicTransportation() {
 
     pt_socket.onerror = error=> {
         console.log(error);
-        if (pt_force_autorefresh) 
-            location.reload();
+        //if (pt_force_autorefresh) location.reload();
     };
 }
 

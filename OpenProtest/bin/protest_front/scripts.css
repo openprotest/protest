@@ -26,7 +26,8 @@
 
 .script-parameters {
     position: absolute;
-    width: 300px;
+    width: 66%;
+    max-width: 300px;
     right: 0;
     top: 0;
     bottom: 0;
@@ -121,6 +122,7 @@
 .columns-list {
     max-height: 250px;
     background-color: transparent !important;
+    overflow-x: hidden;
     overflow-y: scroll;
 }
 
