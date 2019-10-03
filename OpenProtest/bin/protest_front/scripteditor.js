@@ -7,67 +7,66 @@
  n: numeric (preset, min, max)
  t: text (preset)
  m: multiline
- s: separator
 */
 
 const TOOLS_ARRAY = [
-    {name:"Protest users",       color:"rgb(232,118,0)", c:[], p:[["o","Users"]]},
-    {name:"Protest equipment",   color:"rgb(232,118,0)", c:[], p:[["o","Equipment"]]},
-    {name:"Domain users",        color:"rgb(232,118,0)", c:[], p:[["o","Users"]]},
-    {name:"Domain workstations", color:"rgb(232,118,0)", c:[], p:[["o","Workstations"]]},
-    {name:"IP subnet",           color:"rgb(232,118,0)", c:[], p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
-    {name:"Single value",        color:"rgb(232,118,0)", c:[], p:[["t","Value"], ["o","Value"]]},
-    
+    {label:"Data source"},
+    {name:"Protest users",       color:"rgb(32,32,32)", c:[], p:[["o","Users"]]},
+    {name:"Protest equipment",   color:"rgb(32,32,32)", c:[], p:[["o","Equipment"]]},
+    {name:"Domain users",        color:"rgb(32,32,32)", c:[], p:[["o","Users"]]},
+    {name:"Domain workstations", color:"rgb(32,32,32)", c:[], p:[["o","Workstations"]]},
+    {name:"IPv4 subnet",         color:"rgb(32,32,32)", c:[], p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
+    {name:"Single value",        color:"rgb(32,32,32)", c:[], p:[["t","Value"], ["o","Value"]]},    
     //{name:"HTTP request", color:"rgb(232,232,0)", c:[], p:[["t","URL"], ["o","Response"]]},
 
-    //{name:"SNMP query",   color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"WMI query",    color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"PS Exec",      color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Secure Shell", color:"rgb(32,32,32)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {label:"Tools"},
+    //{name:"SNMP query",   color:"hsl(20,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"WMI query",    color:"HSL(32,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"PS Exec",      color:"hsl(28,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Secure Shell", color:"hsl(24,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"DNS lookup",   color:"hsl(20,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"Ping",         color:"hsl(16,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
+    {name:"Trace route",  color:"hsl(12,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"Port scan",    color:"hsl(8,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
+    {name:"Locate IP",    color:"hsl(4,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"MAC loopup",   color:"hsl(0,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
 
-    {name:"DNS lookup",  color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"Ping",        color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
-    {name:"Trace route", color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"Port scan",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
-    {name:"Locate IP",   color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"MAC loopup",  color:"rgb(232,0,0)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {label:"Array modifiers"},
+    {name:"Sort",          color:"hsl(212,100%,45%)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
+    {name:"Reverse order", color:"hsl(210,100%,45%)", p:[["i","Input"], ["o","Reversed"]]},
+    {name:"Trim",          color:"hsl(208,100%,45%)", p:[["i","Input"], ["o","Trimmed"]]},
+    {name:"Unique",        color:"hsl(206,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
+    {name:"Merge columns", color:"hsl(204,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
+    {name:"Merge rows",    color:"hsl(202,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
+    {name:"Difference",    color:"hsl(200,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
+    
+    {label:"Logical operators"},
+    {name:"Contain",       color:"hsl(180,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},    
+    {name:"Equal",         color:"hsl(175,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Greater than",  color:"hsl(170,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
+    {name:"Less than",     color:"hsl(165,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
 
-    {name:"Sort",          color:"rgb(0,118,232)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
-    {name:"Reverse order", color:"rgb(0,118,232)", p:[["i","Input"], ["o","Reversed"]]},
-    {name:"Unique",        color:"rgb(0,118,232)", p:[["i","Input"], ["c","Column"], ["o","Unique"]]},
-    {name:"Trim",          color:"rgb(0,118,232)", p:[["i","Input"], ["o","Trimmed"]]},
-    {name:"Contain",       color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},    
-    {name:"Equal",         color:"rgb(0,118,232)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
-    {name:"Greater than",  color:"rgb(0,118,232)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
-    {name:"Less than",     color:"rgb(0,118,232)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
+    {label:"Math operators"},
+    {name:"Absolute value", color:"hsl(100,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
+    {name:"Round",          color:"hsl(96,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Rounded"]]},
+    {name:"Maximum",        color:"hsl(92,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Maximum"]]},
+    {name:"Minimum",        color:"hsl(88,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Minimum"]]},
+    {name:"Mean",           color:"hsl(84,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Mean"]]}, //average
+    {name:"Median",         color:"hsl(80,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
+    {name:"Mode",           color:"hsl(76,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
 
-    {name:"Absolute value", color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
-    {name:"Round",          color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Rounded"]]},
-    {name:"Maximum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Maximum"]]},
-    {name:"Minimum",        color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Minimum"]]},
-    {name:"Mean",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mean"]]}, //average
-    {name:"Median",         color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
-    {name:"Mode",           color:"rgb(111,212,43)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
-
-    //!!! modifications on "select column"'s p[] effect ScriptNode.CalculateColumns !!!
-    {name:"Select column", color:"rgb(0,232,232)", p:[["i","Input"], ["c","Column"], ["o","Column"]]},
-    {name:"Merge columns", color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
-    {name:"Merge rows",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
-    {name:"Difference",    color:"rgb(0,232,232)", p:[["i","A"], ["i","B"], ["o","Output"]]},
-
-    {name:"Text file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"CSV file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"JSON file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"XML file",   color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"HTML file",  color:"rgb(118,0,232)", p:[["i","Input"], ["t","Filename",""]]},
-
-    {name:"Send E-mail", color:"rgb(118,0,232)", p:[["i","Input"], ["t","Server",""], ["n","Port",587,1,65535], ["t","Username",""], ["t","Password",""], ["h","SSL","True"], ["t","Recipient",""]]}
-
+    {label:"Export"},
+    {name:"Text file",   color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"CSV file",    color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"JSON file",   color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"XML file",    color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"HTML file",   color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
+    {name:"Send E-mail", color:"rgb(224,224,224)", p:[["i","Input"], ["t","Server",""], ["n","Port",587,1,65535], ["t","Username",""], ["t","Password",""], ["h","SSL","True"], ["t","Recipient",""]]}
 ];
 
-var Script_PtUserColumns  = null;
-var Script_PtEquipColumns = null;
-var Script_AdUserColumns  = null;
+var Script_PtUserColumns        = null;
+var Script_PtEquipColumns       = null;
+var Script_AdUserColumns        = null;
 var Script_AdWorkstationColumns = null;
 
 const Script_LoadColumns = () => { //Headers
@@ -131,8 +130,8 @@ class ScriptEditor extends Window {
         this.links = [];
         this.selectedTool = null;
         this.selectedNode = null;
-        this.activeNode = null;
-        this.activeSlot = null;
+        this.activeNode   = null;
+        this.activeSocket = null;
         this.offsetX = 0;
         this.offsetY = 0;
         this.x0 = 0;
@@ -218,15 +217,79 @@ class ScriptEditor extends Window {
         this.parametersList.className = "script-parameters-list";
         this.parameters.appendChild(this.parametersList);
 
+        this.filePanel = document.createElement("div");
+        this.filePanel.className = "file-panel";
+        this.parameters.appendChild(this.filePanel);
+
+        const btnSave = document.createElement("input");
+        btnSave.type = "button";
+        btnSave.style.backgroundImage = "url(res/l_save.svgz)";
+        this.filePanel.appendChild(btnSave);
+
+        const btnRun = document.createElement("input");
+        btnRun.type = "button";
+        btnRun.style.backgroundImage = "url(res/l_run.svgz)";
+        this.filePanel.appendChild(btnRun);
+
+        const btnDebug = document.createElement("input");
+        btnDebug.type = "button";
+        btnDebug.style.backgroundImage = "url(res/l_bug.svgz)";
+        this.filePanel.appendChild(btnDebug);
+
+
+        btnDuplicate.onclick = () => {
+            if (!this.selectedNode) return;
+
+            let t = null;
+            for (let i = 0; i < TOOLS_ARRAY.length; i++)
+                if (TOOLS_ARRAY[i].name === this.selectedNode.name) {
+                    t = TOOLS_ARRAY[i];
+                    break;
+                }
+            
+            if (t === null) return;
+
+            const newNode = new ScriptNode(t, this);
+            newNode.MoveTo(this.selectedNode.x + 50, this.selectedNode.y+50);
+            newNode.Attach(this.svg);
+
+            newNode.g.onmousedown = event => this.Node_onmousedown(event, newNode);
+            newNode.g.onmousemove = event => this.Node_onmousemove(event);
+            newNode.g.onmouseup = event => this.Node_onmouseup(event);
+
+            this.nodes.push(newNode);
+
+            this.ShowParameters(newNode);
+            this.FitSvgToView();
+        };
+
+        btnUnlink.onclick = () => {
+            if (!this.selectedNode) return;
+            this.selectedNode.UnlinkAllSockets();
+        };
+
+        btnDelete.onclick = () => {
+            if (!this.selectedNode) return;
+            this.selectedNode.UnlinkAllSockets();
+            this.nodes.splice(this.nodes.indexOf(this.selectedNode), 1);
+            this.svg.removeChild(this.selectedNode.g);
+            this.selectedNode = null;
+            this.parametersList.innerHTML = "";
+        };
+
+
+        btnSave.onclick = () => { };
+        btnRun.onclick = () => { };
+        btnDebug.onclick = () => { };
 
         this.ghost.onmouseup = event => this.Ghost_onmouseup(event);
 
         this.win.addEventListener("mouseleave", () => {
             this.ghost.style.visibility = "hidden";
-            if (this.activeSlot != null) {
+            if (this.activeSocket != null) {
                 this.line.setAttribute("d", "");
-                this.activeSlot[1].setAttribute("fill", "rgb(96,96,96)");
-                this.activeSlot = null;
+                this.activeSocket[1].setAttribute("fill", "rgb(96,96,96)");
+                this.activeSocket = null;
             }
         });
 
@@ -237,24 +300,23 @@ class ScriptEditor extends Window {
         this.win.addEventListener("mousemove", event => {
             this.Node_onmousemove(event);
             if (this.selectedTool != null) this.selectedTool.ScriptListTool_onmousemove(event);
-            if (this.activeSlot != null) this.selectedNode.Slot_onmousemove(event);
+            if (this.activeSocket != null) this.selectedNode.Socket_onmousemove(event);
 
-            if (event.buttons == 1) 
-                this.FitSvgToView(); //resize svg to fit
+            if (event.buttons == 1) this.FitSvgToView(); //resize svg to fit
         });
 
         this.win.addEventListener("mouseup", event => {
             this.ghost.style.visibility = "hidden";
             this.Node_onmouseup(event);
-            if (this.activeSlot != null) this.selectedNode.Slot_onmouseup(event);
-            this.activeSlot = null;
+            if (this.activeSocket != null) this.selectedNode.Socket_onmouseup(event);
+            this.activeSocket = null;
         });
 
         this.txtToolsFilter.oninput = event => { this.LoadToolsList(this.txtToolsFilter.value); };
 
         this.LoadToolsList(null);
     }
-       
+    
     AfterResize() { //override
         this.FitSvgToView();
     }
@@ -276,8 +338,24 @@ class ScriptEditor extends Window {
         if (filter === null) filter = "";
         filter = filter.toLowerCase();
 
+        let label = null;
+
         for (let i = 0; i < TOOLS_ARRAY.length; i++) {
+            if (TOOLS_ARRAY[i].label) {
+                label = document.createElement("div");
+                label.innerHTML = TOOLS_ARRAY[i].label;
+                label.style.paddingLeft = "5px";
+                label.style.marginTop = "12px";
+                label.style.boxSizing = "border-box";
+                label.style.backgroundColor = "rgb(72,72,72)";
+                continue;
+            }
+                       
             if (TOOLS_ARRAY[i].name.toLowerCase().indexOf(filter) == -1) continue;
+
+            if (label) this.toolsList.appendChild(label);
+            label = null;
+
             const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, TOOLS_ARRAY[i].c, TOOLS_ARRAY[i].p, this);
             newTool.Attach(this.toolsList);
         }
@@ -289,17 +367,17 @@ class ScriptEditor extends Window {
         if (this.selectedNode !== null) {
             this.selectedNode.container.setAttribute("stroke", "rgb(0,0,0)");
             this.selectedNode.container.setAttribute("stroke-width", ".5");
-            for (let i = 0; i < this.selectedNode.slots.length; i++) {
-                this.selectedNode.slots[i][1].setAttribute("stroke", "rgb(0,0,0)");
-                this.selectedNode.slots[i][1].setAttribute("stroke-width", ".5");
+            for (let i = 0; i < this.selectedNode.sockets.length; i++) {
+                this.selectedNode.sockets[i][1].setAttribute("stroke", "rgb(0,0,0)");
+                this.selectedNode.sockets[i][1].setAttribute("stroke-width", ".5");
             }
         }
 
         node.container.setAttribute("stroke", "var(--select-color)");
         node.container.setAttribute("stroke-width", "3");
-        for (let i = 0; i < node.slots.length; i++) {
-            node.slots[i][1].setAttribute("stroke", "var(--select-color)");
-            node.slots[i][1].setAttribute("stroke-width", "2");
+        for (let i = 0; i < node.sockets.length; i++) {
+            node.sockets[i][1].setAttribute("stroke", "var(--select-color)");
+            node.sockets[i][1].setAttribute("stroke-width", "2");
         }
 
         this.selectedNode = node;
@@ -312,15 +390,15 @@ class ScriptEditor extends Window {
         this.parametersList.innerHTML = "";
 
         //input labels
-        for (let i = 0; i < this.selectedNode.slots.length; i++)
-            if (this.selectedNode.slots[i][0] == "i") {
-                let match = this.links.find(o => this.selectedNode.slots[i] === o[2]);
+        for (let i = 0; i < this.selectedNode.sockets.length; i++)
+            if (this.selectedNode.sockets[i][0] == "i") {
+                let match = this.links.find(o => this.selectedNode.sockets[i] === o[2]);
                 
                 let newPara = document.createElement("div");
                 this.parametersList.appendChild(newPara);
 
                 let label = document.createElement("div");
-                label.innerHTML = this.selectedNode.slots[i][2].innerHTML + ":";
+                label.innerHTML = this.selectedNode.sockets[i][2].innerHTML + ":";
                 newPara.appendChild(label);
 
                 if (match) {
@@ -376,8 +454,8 @@ class ScriptEditor extends Window {
                 value.value = node.values[i] === null ? "False" : node.values[i];
 
             } else if (node.parameters[i][0] == "c") { //column
-                let inputSlot = node.slots.filter(o => o[0] == "i")[0];
-                let link = this.links.find(o => o[2] === inputSlot);
+                let inputSocket = node.sockets.filter(o => o[0] == "i")[0];
+                let link = this.links.find(o => o[2] === inputSocket);
 
                 value = document.createElement("select");
                 if (link) {
@@ -447,7 +525,7 @@ class ScriptEditor extends Window {
         let lblColumns = document.createElement("div");
         lblColumns.style.backgroundColor = "transparent";
         lblColumns.style.textAlign = "center";
-        lblColumns.innerHTML = "Columns (" + node.columns.length + ")";
+        lblColumns.innerHTML = "Columns (" + (node.columns ? node.columns.length : "0") + ")";
         this.parametersList.appendChild(lblColumns); 
 
         let list = document.createElement("div");
@@ -514,14 +592,18 @@ class ScriptEditor extends Window {
             this.ShowParameters(s[5], true);
     }
 
-    Unlink(slot) {
+    Unlink(socket) {
+        let todo = [];
         for (let i = 0; i < this.links.length; i++)
-            if (slot === this.links[i][1] || slot === this.links[i][2]) {
+            if (socket === this.links[i][1] || socket === this.links[i][2]) {
                 this.linksGroup.removeChild(this.links[i][0]);
-                this.links.splice(i, 1);
-                slot[5].OnLinkChange();
-                return;
-            }        
+                todo.push(this.links[i]);
+            }
+
+        for (let i = 0; i < todo.length; i++)
+            this.links.splice(this.links.indexOf(todo[i]), 1);
+        
+        socket[5].OnLinkChange();
     }
 
     DrawLine(p, s) {
@@ -686,7 +768,7 @@ class ScriptNode {
         this.selectedColumns = null;
         this.parameters      = [];
         this.values          = [];
-        this.slots           = [];
+        this.sockets         = [];
 
         this.g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
@@ -708,7 +790,7 @@ class ScriptNode {
         this.titleBox.setAttribute("rx", 4);
         this.titleBox.setAttribute("ry", 4);
         this.titleBox.setAttribute("fill", tool.color);
-        this.titleBox.setAttribute("opacity", .4);
+        this.titleBox.setAttribute("opacity", tool.color == "rgb(224,224,224)" ? ".3" : ".4");
         this.g.appendChild(this.titleBox);
 
         this.titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -728,15 +810,15 @@ class ScriptNode {
             this.values.push(tool.p[i].length > 2 ? tool.p[i][2] : null);
 
             if (tool.p[i][0] == "i" || tool.p[i][0] == "o") { //input or output
-                let slot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                slot.id = "dot";
-                slot.setAttribute("r", 7);
-                slot.setAttribute("cx", tool.p[i][0]=="o" ? 200 : 0);
-                slot.setAttribute("cy", top);
-                slot.setAttribute("fill", "rgb(96,96,96)");
-                slot.setAttribute("stroke", "rgb(0,0,0)");
-                slot.setAttribute("stroke-width", ".5");
-                this.g.appendChild(slot);
+                let socket = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                socket.id = "dot";
+                socket.setAttribute("r", 7);
+                socket.setAttribute("cx", tool.p[i][0]=="o" ? 200 : 0);
+                socket.setAttribute("cy", top);
+                socket.setAttribute("fill", "rgb(96,96,96)");
+                socket.setAttribute("stroke", "rgb(0,0,0)");
+                socket.setAttribute("stroke-width", ".5");
+                this.g.appendChild(socket);
 
                 let label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 label.innerHTML = tool.p[i][1];
@@ -749,14 +831,14 @@ class ScriptNode {
 
                 label.setAttribute("tip", "test");
 
-                //type, slot, label, x, y, node
-                this.slots.push([tool.p[i][0], slot, label, tool.p[i][0]=="o" ? 200 : 0, top, this]);
+                //type, socket, label, x, y, node
+                this.sockets.push([tool.p[i][0], socket, label, tool.p[i][0]=="o" ? 200 : 0, top, this]);
 
                 top += 24;
 
-                slot.onmousedown = event => this.Slot_onmousedown(event);
-                slot.onmousemove = event => this.Slot_onmousemove(event);
-                slot.onmouseup = event => this.Slot_onmouseup(event);
+                socket.onmousedown = event => this.Socket_onmousedown(event);
+                socket.onmousemove = event => this.Socket_onmousemove(event);
+                socket.onmouseup = event => this.Socket_onmouseup(event);
             }
         }
 
@@ -776,6 +858,11 @@ class ScriptNode {
         this.g.setAttribute("transform", "translate(" + x + "," + y + ")");
     }
 
+    UnlinkAllSockets() {
+        for (let i = 0; i < this.sockets.length; i++)
+            this.editor.Unlink(this.sockets[i]);
+    }
+
     PropagateColumns(queue = null, count = 0) {
         if (count > 127) {
             console.log("Closed loop or a huge diagram error.");
@@ -783,8 +870,8 @@ class ScriptNode {
         } 
 
         let target  = queue === null ? this : queue;       
-        let inputs  = target.slots.filter(o => o[0]=="i");
-        let outputs = target.slots.filter(o => o[0]=="o");
+        let inputs  = target.sockets.filter(o => o[0]=="i");
+        let outputs = target.sockets.filter(o => o[0]=="o");
 
         let columnsCollection = [];               //values for each input
         for (let i = 0; i < inputs.length; i++) { //find source
@@ -820,7 +907,7 @@ class ScriptNode {
             case "Protest equipment":   columns = Script_PtEquipColumns; break;
             case "Domain users":        columns = Script_AdUserColumns; break;
             case "Domain workstations": columns = Script_AdWorkstationColumns; break;
-            case "IP subnet":           columns = ["IP"]; break;
+            case "IPv4 subnet":           columns = ["IP"]; break;
             case "Single value":        columns = ["Value"]; break;
 
             case "WMI query":    columns = ["Host", "..."]; break; //TODO:
@@ -839,10 +926,6 @@ class ScriptNode {
             case "Mean":    columns = ["Mean"]; break;
             case "Median":  columns = ["Median"]; break;
             case "Mode":    columns = ["Mode"]; break;
-
-            case "Select column":
-                columns = this.values[1] == null ? collection[0] : [this.values[1].toString()];
-                break;
 
             case "Merge columns":
                 collection.forEach(o => { if (o != null) columns = columns.concat(o); });
@@ -864,54 +947,54 @@ class ScriptNode {
         this.PropagateColumns();
     }
 
-    Slot_onmousedown(event) {
+    Socket_onmousedown(event) {
         this.editor.ShowParameters(this);
 
-        this.editor.activeSlot = this.slots.find(o => o[1] === event.target);
+        this.editor.activeSocket = this.sockets.find(o => o[1] === event.target);
 
-        this.editor.activeSlot[1].setAttribute("fill", "var(--select-color)");
+        this.editor.activeSocket[1].setAttribute("fill", "var(--select-color)");
 
-        this.editor.offsetX = this.x + this.editor.activeSlot[3];
-        this.editor.offsetY = this.y + this.editor.activeSlot[4];
+        this.editor.offsetX = this.x + this.editor.activeSocket[3];
+        this.editor.offsetY = this.y + this.editor.activeSocket[4];
         this.editor.x0 = event.clientX;
         this.editor.y0 = event.clientY;
 
         event.stopPropagation();
     }
 
-    Slot_onmousemove(event) {
+    Socket_onmousemove(event) {
         if (event.buttons != 1) return;
-        if (!this.editor.activeSlot) return;
+        if (!this.editor.activeSocket) return;
 
-        let x1 = this.x + this.editor.activeSlot[3];
-        let y1 = this.y + this.editor.activeSlot[4];
+        let x1 = this.x + this.editor.activeSocket[3];
+        let y1 = this.y + this.editor.activeSocket[4];
         let x2 = this.editor.offsetX - (this.editor.x0 - event.clientX);
         let y2 = this.editor.offsetY - (this.editor.y0 - event.clientY);
 
         this.editor.line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
     }
 
-    Slot_onmouseup(event) {
-        if (!this.editor.activeSlot) return;
+    Socket_onmouseup(event) {
+        if (!this.editor.activeSocket) return;
 
         let secondary = null;
         if (event.target.tagName == "circle" && event.target.id == "dot")
-            secondary = this.slots.find(o => o[1] === event.target); //find second slot
+            secondary = this.sockets.find(o => o[1] === event.target); //find second socket
         
-        if (secondary === null) {//on miss-click, find closest node and link to first slot
+        if (secondary === null) {//on miss-click, find closest node and link to first socket
             let x = this.editor.offsetX - (this.editor.x0 - event.clientX);
             let y = this.editor.offsetY - (this.editor.y0 - event.clientY);
 
             let node = this.editor.nodes.find(o => o.x<x && o.x+200>x && o.y<y && o.y+75>y);
             if (node)
-                secondary = this.editor.activeSlot[0]=="o" ? node.slots.find(o => o[0]=="i") : node.slots.find(o => o[0]=="o");
+                secondary = this.editor.activeSocket[0]=="o" ? node.sockets.find(o => o[0]=="i") : node.sockets.find(o => o[0]=="o");
         }        
 
-        if (secondary) this.editor.Link(this.editor.activeSlot, secondary);
+        if (secondary) this.editor.Link(this.editor.activeSocket, secondary);
 
         this.editor.line.setAttribute("d", "");
-        this.editor.activeSlot[1].setAttribute("fill", "rgb(96,96,96)");
-        this.editor.activeSlot = null;
+        this.editor.activeSocket[1].setAttribute("fill", "rgb(96,96,96)");
+        this.editor.activeSocket = null;
     }
 }
 

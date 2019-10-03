@@ -1,7 +1,6 @@
 var pt_socket;
 var pt_hash = {};
 
-var pt_force_autorefresh = false;
 var pt_last_autoconnect = 0;
 var pt_deathdate = 0;
 
@@ -15,13 +14,11 @@ function initPublicTransportation() {
 
     pt_socket.onopen = event => {
         console.log("Pro-test is connected.");
-        pt_force_autorefresh = false;
     };
 
     pt_socket.onclose = ()=> {
         if (new Date().getTime() - pt_last_autoconnect > 8000) { //autoconnect once every 8s
             setTimeout(()=> {
-                pt_force_autorefresh = true;
                 pt_last_autoconnect = new Date().getTime();
                 initPublicTransportation();
                 return;
@@ -218,7 +215,6 @@ function initPublicTransportation() {
 
     pt_socket.onerror = error=> {
         console.log(error);
-        //if (pt_force_autorefresh) location.reload();
     };
 }
 

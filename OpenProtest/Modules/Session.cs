@@ -17,7 +17,7 @@ static class Session {
     private static readonly object session_lock = new object();
 
     public static long HOUR = 36000000000;
-    public static long SESSION_TIMEOUT = 12; //12 hours
+    public static long SESSION_TIMEOUT = 120; //5 days
 
     struct SessionEntry {
         public string ip;

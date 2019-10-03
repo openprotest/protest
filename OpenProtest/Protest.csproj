@@ -892,6 +892,7 @@
     <Content Include="bin\protest_front\res\l_options.svg" />
     <Content Include="bin\protest_front\res\l_proxy.svg" />
     <Content Include="bin\protest_front\res\l_reload.svg" />
+    <Content Include="bin\protest_front\res\l_run.svg" />
     <Content Include="bin\protest_front\res\l_save.svg" />
     <Content Include="bin\protest_front\res\l_search.svg" />
     <Content Include="bin\protest_front\res\l_sort.svg" />
