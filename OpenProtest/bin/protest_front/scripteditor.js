@@ -15,21 +15,23 @@ const TOOLS_ARRAY = [
     {name:"Protest equipment",   color:"rgb(32,32,32)", c:[], p:[["o","Equipment"]]},
     {name:"Domain users",        color:"rgb(32,32,32)", c:[], p:[["o","Users"]]},
     {name:"Domain workstations", color:"rgb(32,32,32)", c:[], p:[["o","Workstations"]]},
+    {name:"Domain groups",       color:"rgb(32,32,32)", c:[], p:[["o","Groups"]]},
     {name:"IPv4 subnet",         color:"rgb(32,32,32)", c:[], p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
-    {name:"Single value",        color:"rgb(32,32,32)", c:[], p:[["t","Value"], ["o","Value"]]},    
+    {name:"Single value",        color:"rgb(32,32,32)", c:[], p:[["t","Value"], ["o","Value"]]},
     //{name:"HTTP request", color:"rgb(232,232,0)", c:[], p:[["t","URL"], ["o","Response"]]},
 
     {label:"Tools"},
-    //{name:"SNMP query",   color:"hsl(20,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"WMI query",    color:"HSL(32,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"PS Exec",      color:"hsl(28,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Secure Shell", color:"hsl(24,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"DNS lookup",   color:"hsl(20,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"Ping",         color:"hsl(16,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
-    {name:"Trace route",  color:"hsl(12,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"Port scan",    color:"hsl(8,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
-    {name:"Locate IP",    color:"hsl(4,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"MAC loopup",   color:"hsl(0,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    //{name:"SNMP query",   color:"hsl(36,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Secure Shell",    color:"hsl(34,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"PS Exec",         color:"hsl(32,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"WMI query",       color:"HSL(28,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"NetBIOS request", color:"HSL(24,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"DNS lookup",      color:"hsl(20,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"Ping",            color:"hsl(16,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
+    {name:"Trace route",     color:"hsl(12,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"Port scan",       color:"hsl(8,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
+    {name:"Locate IP",       color:"hsl(4,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+    {name:"MAC loopup",      color:"hsl(0,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
 
     {label:"Array modifiers"},
     {name:"Sort",          color:"hsl(212,100%,45%)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
@@ -68,6 +70,7 @@ var Script_PtUserColumns        = null;
 var Script_PtEquipColumns       = null;
 var Script_AdUserColumns        = null;
 var Script_AdWorkstationColumns = null;
+var Script_AdGroupsColumns      = null;
 
 const Script_LoadColumns = () => { //Headers
     if (Script_PtEquipColumns === null) {
@@ -109,6 +112,16 @@ const Script_LoadColumns = () => { //Headers
         xhr.open("GET", "getadworkstationcolumns", true);
         xhr.send();
     }
+
+    if (Script_AdGroupsColumns === null) {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200)
+                Script_AdGroupsColumns = xhr.responseText.length > 0 ? xhr.responseText.trim().split(String.fromCharCode(127)) : [];
+        };
+        xhr.open("GET", "getadgroupcolumn", true);
+        xhr.send();
+    }
 }
 
 class ScriptEditor extends Window {
@@ -125,6 +138,8 @@ class ScriptEditor extends Window {
         super([64,64,64]);
         this.setTitle("Script editor");
         this.setIcon("res/scripts.svgz");
+
+        this.filename = null;
 
         this.nodes = [];
         this.links = [];
@@ -278,7 +293,7 @@ class ScriptEditor extends Window {
         };
 
 
-        btnSave.onclick = () => { };
+        btnSave.onclick = () => this.SaveProject();
         btnRun.onclick = () => { };
         btnDebug.onclick = () => { };
 
@@ -316,7 +331,48 @@ class ScriptEditor extends Window {
 
         this.LoadToolsList(null);
     }
-    
+
+    LoadProject() {
+        let xhr = new XMLHttpRequest(filename);
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+        xhr.open("GET", "loadscriptproject&" + filename, true);
+        xhr.send();
+    }
+
+    SaveProject() {
+        let payload = "";
+
+        for (let i = 0; i < this.nodes.length; i++) {
+            payload += "n" + String.fromCharCode(127) +
+                this.nodes[i].name + String.fromCharCode(127) +
+                this.nodes[i].x + "," + this.nodes[i].y + String.fromCharCode(127);
+
+            for (let j = 0; j < this.nodes[i].parameters.length; j++) {
+
+            }
+            payload += "\n";
+        }
+        
+        for (let i = 0; i < this.links.length; i++) {
+            payload += "";
+        }
+        
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+        xhr.open("POST", "savescriptproject", true);
+        xhr.send(payload);
+    }
+
     AfterResize() { //override
         this.FitSvgToView();
     }
@@ -359,6 +415,38 @@ class ScriptEditor extends Window {
             const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, TOOLS_ARRAY[i].c, TOOLS_ARRAY[i].p, this);
             newTool.Attach(this.toolsList);
         }
+    }
+
+    DrawLine(p, s) {
+        let x1, y1, x2, y2, x3, y3, x4, y4;
+
+        x1 = p[5].x + p[3];
+        y1 = p[5].y + p[4];
+        x4 = s[5].x + s[3];
+        y4 = s[5].y + s[4];
+
+        if (x1 < x4) {
+            let minX = Math.min(x1, x4);
+            x2 = minX + (x1-minX) *.7 + (x4-minX) *.3;
+            y2 = y1;
+            x3 = minX + (x1-minX) *.3 + (x4-minX) *.7;
+            y3 = y4;
+        } else {
+            let d = Math.min(Math.abs(x1-x4), 128);
+            x2 = x1 + d*.9;
+            x3 = x4 - d*.9;
+
+            let minY = Math.min(y1, y4);
+            if (y1 < y4) {
+                y2 = y1 + 32 + ((y1-minY) *.3 + (y4-minY) *.7);
+                y3 = y4 - 32 - ((y4-minY) *.7 + (y1-minY) *.3);
+            } else {
+                y2 = y1 - 32 - ((y1-minY) *.3 + (y4-minY) *.7);
+                y3 = y4 + 32 + ((y4-minY) *.7 + (y1-minY) *.3);
+            }
+        }
+
+        return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
     }
 
     ShowParameters(node, force=false) {
@@ -561,7 +649,7 @@ class ScriptEditor extends Window {
             });
         }
     }
-
+    
     Link(primary, secondary) {
         if (primary[5] === secondary[5]) {
             console.log("A node can't link into it self.");
@@ -604,38 +692,6 @@ class ScriptEditor extends Window {
             this.links.splice(this.links.indexOf(todo[i]), 1);
         
         socket[5].OnLinkChange();
-    }
-
-    DrawLine(p, s) {
-        let x1, y1, x2, y2, x3, y3, x4, y4;
-
-        x1 = p[5].x + p[3];
-        y1 = p[5].y + p[4];
-        x4 = s[5].x + s[3];
-        y4 = s[5].y + s[4];
-
-        if (x1 < x4) {
-            let minX = Math.min(x1, x4);
-            x2 = minX + (x1-minX) *.7 + (x4-minX) *.3;
-            y2 = y1;
-            x3 = minX + (x1-minX) *.3 + (x4-minX) *.7;
-            y3 = y4;
-        } else {
-            let d = Math.min(Math.abs(x1-x4), 128);
-            x2 = x1 + d*.9;
-            x3 = x4 - d*.9;
-
-            let minY = Math.min(y1, y4);
-            if (y1 < y4) {
-                y2 = y1 + 32 + ((y1-minY) *.3 + (y4-minY) *.7);
-                y3 = y4 - 32 - ((y4-minY) *.7 + (y1-minY) *.3);
-            } else {
-                y2 = y1 - 32 - ((y1-minY) *.3 + (y4-minY) *.7);
-                y3 = y4 + 32 + ((y4-minY) *.7 + (y1-minY) *.3);
-            }
-        }
-
-        return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
     }
 
     Ghost_onmouseup(event) {
@@ -907,7 +963,8 @@ class ScriptNode {
             case "Protest equipment":   columns = Script_PtEquipColumns; break;
             case "Domain users":        columns = Script_AdUserColumns; break;
             case "Domain workstations": columns = Script_AdWorkstationColumns; break;
-            case "IPv4 subnet":           columns = ["IP"]; break;
+            case "Domain groups":       columns = Script_AdGroupsColumns; break;
+            case "IPv4 subnet":         columns = ["IP"]; break;
             case "Single value":        columns = ["Value"]; break;
 
             case "WMI query":    columns = ["Host", "..."]; break; //TODO:

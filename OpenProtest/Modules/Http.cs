@@ -219,8 +219,12 @@ class Http {
 
                     case "getusercolumns": buffer = Scripts.GetUserColumns(); break;
                     case "getequipcolumns": buffer = Scripts.GetEquipColumns(); break;
-                    case "getadusercolumns": buffer = Scripts.GetAdUsersColumns(); break;
+                    case "getadusercolumns": buffer = Scripts.GetAdUserColumns(); break;
                     case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
+                    case "getadgroupcolumn": buffer = Scripts.GetAdGroupColumns(); break;
+
+                    case "loadscriptproject": Scripts.LoadScript(ctx); break;
+                    case "savescriptproject": Scripts.SaveScript(ctx); break;
 
                     case "getmetrics": buffer = BandwidthMonitor.GetMetrics(para); break;
 

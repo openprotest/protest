@@ -26,7 +26,7 @@
 
 .script-parameters {
     position: absolute;
-    width: 66%;
+    width: 80%;
     max-width: 300px;
     right: 0;
     top: 0;
@@ -132,6 +132,7 @@
     width: 100%;
     height: 68px;
     background-color: rgb(48,48,48);
+    overflow: hidden;
 }
 
 .file-panel > input[type="button"] {

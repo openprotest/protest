@@ -64,6 +64,7 @@
     <Compile Include="Modules\Http.cs" />
     <Compile Include="Modules\Knowlage.cs" />
     <Compile Include="Modules\LastSeen.cs" />
+    <Compile Include="Modules\NetBios.cs" />
     <Compile Include="Modules\NetworkDrive.cs" />
     <Compile Include="Modules\NoSQL.cs" />
     <Compile Include="Modules\PasswordStrength.cs" />
@@ -879,6 +880,7 @@
     <Content Include="bin\protest_front\res\log.svg" />
     <Content Include="bin\protest_front\res\logo.svg" />
     <Content Include="bin\protest_front\res\logoff.svg" />
+    <Content Include="bin\protest_front\res\l_bug.svg" />
     <Content Include="bin\protest_front\res\l_clear.svg" />
     <Content Include="bin\protest_front\res\l_copy.svg" />
     <Content Include="bin\protest_front\res\l_delete.svg" />
