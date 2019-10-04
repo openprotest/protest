@@ -355,11 +355,20 @@ class ScriptEditor extends Window {
             for (let j = 0; j < this.nodes[i].parameters.length; j++) {
 
             }
+
+            let columns = this.nodes[i].selectedColumns === null ? this.nodes[i].columns : this.nodes[i].selectedColumns;
+            for (let j = 0; j < columns.length; j++) {
+                payload += "c" + String.fromCharCode(127);
+            }
+
             payload += "\n";
         }
         
         for (let i = 0; i < this.links.length; i++) {
-            payload += "";
+            payload += "l" + String.fromCharCode(127);
+                
+
+            payload += "\n";
         }
         
         let xhr = new XMLHttpRequest();
