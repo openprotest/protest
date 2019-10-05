@@ -11,6 +11,11 @@ using System.IO;
 
 static class Scripts {
 
+    static readonly string DIR_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts";
+    static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
+    static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
+
+
     public static byte[] GetEquipColumns() {
         Hashtable hash = new Hashtable();
         StringBuilder sb = new StringBuilder();
@@ -152,21 +157,56 @@ static class Scripts {
     public static byte[] LoadScript(in HttpListenerContext ctx) {
 
 
-
         return null;
     }
 
     public static byte[] SaveScript(in HttpListenerContext ctx) {
+        DirectoryInfo dir = new DirectoryInfo(DIR_SCRIPTS);
+        if (!dir.Exists) dir.Create();
+
+        DirectoryInfo dir_scripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
+        if (!dir_scripts.Exists) dir_scripts.Create();
+
+        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (!dir_reports.Exists) dir_reports.Create();
+
+
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
-
+               
         if (payload.Length == 0) return Tools.INV.Array;
+
+        //...
+
+        string[] lines = payload.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+        for (int i=0; i< lines.Length; i++) {
+            string[] split = lines[i].Split((char)127);
+
+            if (split[0] == "n") { //node
+
+            } else if (split[0] == "l") { //link
+
+            }
+        }
 
         Console.WriteLine(payload);
 
         return null;
     }
 
+    public static byte[] RunScript(in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++) 
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
+        return RunScript(filename);
+    }
+    public static byte[] RunScript(in string filename) {
+
+
+        return null;
+    }
 
 }

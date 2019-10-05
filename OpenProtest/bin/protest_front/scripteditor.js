@@ -9,6 +9,8 @@
  m: multiline
 */
 
+
+// !!! Changes here may requare update on the back-end !!!
 const TOOLS_ARRAY = [
     {label:"Data source"},
     {name:"Protest users",       color:"rgb(32,32,32)", c:[], p:[["o","Users"]]},
@@ -43,10 +45,11 @@ const TOOLS_ARRAY = [
     {name:"Difference",    color:"hsl(200,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
     
     {label:"Logical operators"},
-    {name:"Contain",       color:"hsl(180,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},    
-    {name:"Equal",         color:"hsl(175,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
-    {name:"Greater than",  color:"hsl(170,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
-    {name:"Less than",     color:"hsl(165,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
+    {name:"Have value",   color:"hsl(180,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Have"], ["o","Don't have"]]},    
+    {name:"Contain",      color:"hsl(175,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},    
+    {name:"Equal",        color:"hsl(170,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Greater than", color:"hsl(165,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
+    {name:"Less than",    color:"hsl(160,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
 
     {label:"Math operators"},
     {name:"Absolute value", color:"hsl(100,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
@@ -352,23 +355,54 @@ class ScriptEditor extends Window {
                 this.nodes[i].name + String.fromCharCode(127) +
                 this.nodes[i].x + "," + this.nodes[i].y + String.fromCharCode(127);
 
-            for (let j = 0; j < this.nodes[i].parameters.length; j++) {
-
-            }
-
-            let columns = this.nodes[i].selectedColumns === null ? this.nodes[i].columns : this.nodes[i].selectedColumns;
-            for (let j = 0; j < columns.length; j++) {
-                payload += "c" + String.fromCharCode(127);
-            }
-
+            for (let j = 0; j < this.nodes[i].parameters.length; j++) //parameters
+                if (this.nodes[i].values[j] === null)
+                    payload += "v:" + String.fromCharCode(127);
+                else 
+                    payload += "v:" + this.nodes[i].values[j] + String.fromCharCode(127);
+                
+            if (this.nodes[i].selectedColumns != null) //selected columns
+                for (let j = 0; j < this.nodes[i].selectedColumns.length; j++)
+                    payload += "c:" + this.nodes[i].selectedColumns[j] + String.fromCharCode(127);
+                
             payload += "\n";
         }
         
-        for (let i = 0; i < this.links.length; i++) {
-            payload += "l" + String.fromCharCode(127);
-                
+        for (let i = 0; i < this.links.length; i++) { //links
+            let sourceNode = null;
+            let destinationNode = null;
 
-            payload += "\n";
+            for (let j = 0; j < this.nodes.length; j++) {
+
+                if (this.links[i][1][5] === this.nodes[j]) //find source
+                    sourceNode = this.nodes[j];                
+
+                if (this.links[i][2][5] === this.nodes[j]) //find destination
+                    destinationNode = this.nodes[j];
+
+                if (sourceNode && destinationNode) break;
+            }
+
+            let source;
+            let destination;
+
+            for (let j = 0; j < sourceNode.parameters.length; j++) { //find source socket
+                if (sourceNode.parameters[j][0] != "o") continue;
+                if (sourceNode.parameters[j][1] === this.links[i][1][2].innerHTML) {
+                    source = this.nodes.indexOf(sourceNode) + "," + sourceNode.parameters[j][1];
+                    break;
+                }
+            }
+
+            for (let j = 0; j < destinationNode.parameters.length; j++) { //find destination socket
+                if (destinationNode.parameters[j][0] != "i") continue;
+                if (destinationNode.parameters[j][1] === this.links[i][2][2].innerHTML) {
+                    destination = this.nodes.indexOf(destinationNode) + "," + destinationNode.parameters[j][1];
+                    break;
+                }
+            }                            
+
+            payload += "l" + String.fromCharCode(127) + source + String.fromCharCode(127) + destination + "\n";
         }
         
         let xhr = new XMLHttpRequest();
