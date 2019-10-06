@@ -46,12 +46,16 @@ class Fetch extends Window {
         div2.style.textAlign = "center";
         div2.style.paddingTop = "16px";
         div2.style.backgroundColor = "rgb(96,96,96)";
+        div2.style.borderRadius = "4px 4px 0 0";
+        div2.style.margin = "0 8px 0 8px";
         this.content.appendChild(div2);
 
         let div3_0 = document.createElement("div");
         div3_0.style.paddingTop = "16px";
         div3_0.style.backgroundColor = "rgb(96,96,96)";
         div3_0.style.paddingBottom = "8px";
+        div3_0.style.borderRadius = "0 0 4px 4px";
+        div3_0.style.margin = "0 8px 0 8px";
         this.content.appendChild(div3_0);
 
         let div3 = document.createElement("div");
@@ -88,6 +92,7 @@ class Fetch extends Window {
         btnEquipIP.style.borderRadius = "8px 8px 0 0";
         btnEquipIP.style.marginBottom = "0";
         btnEquipIP.style.overflow = "hidden";
+        btnEquipIP.style.animation = "none";
         div1.appendChild(btnEquipIP);
 
         let subEquipIP = document.createElement("div");
@@ -113,6 +118,7 @@ class Fetch extends Window {
         btnEquipAD.style.borderRadius = "8px 8px 0 0";
         btnEquipAD.style.marginBottom = "0";
         btnEquipAD.style.overflow = "hidden";
+        btnEquipAD.style.animation = "none";
         div1.appendChild(btnEquipAD);
 
         let subEquipAD = document.createElement("div");
@@ -138,6 +144,7 @@ class Fetch extends Window {
         btnUsersAD.style.borderRadius = "8px 8px 0 0";
         btnUsersAD.style.marginBottom = "0";
         btnUsersAD.style.overflow = "hidden";
+        btnUsersAD.style.animation = "none";
         div1.appendChild(btnUsersAD);
 
         let subUsersAD = document.createElement("div");

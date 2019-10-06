@@ -154,13 +154,44 @@ static class Scripts {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] LoadScript(in HttpListenerContext ctx) {
+    public static byte[] ListScripts() {
+        DirectoryInfo dir = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
 
+        if (!dir.Exists) return null;
 
-        return null;
+        StringBuilder sb = new StringBuilder();
+
+        FileInfo[] files = dir.GetFiles();
+        for (int i = 0; i < files.Length; i++) 
+            sb.Append(sb.Length == 0 ? files[i].Name : $"{(char)127}{files[i].Name}");
+        
+        return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] SaveScript(in HttpListenerContext ctx) {
+    public static byte[] LoadScript(in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
+        FileInfo scriptfile = new FileInfo($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
+
+        Console.WriteLine(scriptfile.FullName);
+
+        if (!scriptfile.Exists) return Tools.FLE.Array;
+
+        try {
+            return File.ReadAllBytes(scriptfile.FullName);
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return Tools.FAI.Array;
+        }
+    }
+
+    public static byte[] SaveScript(in HttpListenerContext ctx, in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
         DirectoryInfo dir = new DirectoryInfo(DIR_SCRIPTS);
         if (!dir.Exists) dir.Create();
 
@@ -177,23 +208,14 @@ static class Scripts {
                
         if (payload.Length == 0) return Tools.INV.Array;
 
-        //...
-
-        string[] lines = payload.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-
-        for (int i=0; i< lines.Length; i++) {
-            string[] split = lines[i].Split((char)127);
-
-            if (split[0] == "n") { //node
-
-            } else if (split[0] == "l") { //link
-
-            }
+        try {
+            File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", payload);
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return Tools.FAI.Array;
         }
 
-        Console.WriteLine(payload);
-
-        return null;
+        return Tools.OK.Array;
     }
 
     public static byte[] RunScript(in string[] para) {
@@ -204,7 +226,29 @@ static class Scripts {
         return RunScript(filename);
     }
     public static byte[] RunScript(in string filename) {
+        if (filename.Length == 0) return Tools.INV.Array;
 
+        if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
+
+        string script = "";
+        try {
+            script = File.ReadAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return Tools.FAI.Array;
+        }
+
+        string[] lines = script.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+        for (int i = 0; i < lines.Length; i++) {
+            string[] split = lines[i].Split((char)127);
+
+            if (split[0] == "n") { //node
+
+            } else if (split[0] == "l") { //link
+
+            }
+        }
 
         return null;
     }

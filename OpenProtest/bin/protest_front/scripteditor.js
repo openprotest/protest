@@ -9,7 +9,6 @@
  m: multiline
 */
 
-
 // !!! Changes here may requare update on the back-end !!!
 const TOOLS_ARRAY = [
     {label:"Data source"},
@@ -24,7 +23,7 @@ const TOOLS_ARRAY = [
 
     {label:"Tools"},
     //{name:"SNMP query",   color:"hsl(36,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Secure Shell",    color:"hsl(34,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
+    {name:"Secure Shell",    color:"hsl(34,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["t","Username"], ["t","Password"], ["o","Output"]]},
     {name:"PS Exec",         color:"hsl(32,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
     {name:"WMI query",       color:"HSL(28,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
     {name:"NetBIOS request", color:"HSL(24,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
@@ -34,6 +33,12 @@ const TOOLS_ARRAY = [
     {name:"Port scan",       color:"hsl(8,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
     {name:"Locate IP",       color:"hsl(4,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
     {name:"MAC loopup",      color:"hsl(0,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
+
+    {label:"Actions"},
+    {name:"Wake on LAN", color:"hsl(285,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
+    {name:"Turn off PC", color:"hsl(280,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
+    {name:"Restart PC",  color:"hsl(275,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
+    {name:"Log off PC",  color:"hsl(270,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
 
     {label:"Array modifiers"},
     {name:"Sort",          color:"hsl(212,100%,45%)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
@@ -47,9 +52,10 @@ const TOOLS_ARRAY = [
     {label:"Logical operators"},
     {name:"Have value",   color:"hsl(180,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Have"], ["o","Don't have"]]},    
     {name:"Contain",      color:"hsl(175,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Contain"], ["o","Don't contain"]]},    
-    {name:"Equal",        color:"hsl(170,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
-    {name:"Greater than", color:"hsl(165,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
-    {name:"Less than",    color:"hsl(160,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
+    {name:"Regex match",  color:"hsl(170,100%,45%)", p:[["i","Input"], ["t","Regex",""], ["c","Column"], ["o","Match"]]},
+    {name:"Equal",        color:"hsl(165,100%,45%)", p:[["i","Input"], ["t","Value",""], ["c","Column"], ["o","Equal"], ["o","Not equal"]]},
+    {name:"Greater than", color:"hsl(160,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Greater"], ["o","Not greater"]]},
+    {name:"Less than",    color:"hsl(155,100%,45%)", p:[["i","Input"], ["n","Value"], ["c","Column"], ["o","Less"], ["o","Not less"]]},
 
     {label:"Math operators"},
     {name:"Absolute value", color:"hsl(100,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
@@ -128,7 +134,7 @@ const Script_LoadColumns = () => { //Headers
 }
 
 class ScriptEditor extends Window {
-    constructor() {
+    constructor(filename = null) {
         Script_LoadColumns();
 
         if (document.head.querySelectorAll("link[href$='scripts.css']").length==0) {
@@ -142,7 +148,7 @@ class ScriptEditor extends Window {
         this.setTitle("Script editor");
         this.setIcon("res/scripts.svgz");
 
-        this.filename = null;
+        this.filename = filename;
 
         this.nodes = [];
         this.links = [];
@@ -157,12 +163,32 @@ class ScriptEditor extends Window {
 
         this.InitizialeComponent();
 
+        if (filename != null)
+            this.LoadScript(filename);
+
         setTimeout(() => {
             if (!this.isMaximized) this.Toogle();
         }, 1);
     }
 
     InitizialeComponent() {
+        this.btnSave = document.createElement("div");
+        this.btnSave.style.backgroundImage = "url(res/l_save.svgz)";
+        this.btnSave.setAttribute("tip-below", "Save");
+        this.toolbox.appendChild(this.btnSave);
+
+        this.btnDebug = document.createElement("div");
+        this.btnDebug.style.backgroundImage = "url(res/l_bug.svgz)";
+        this.btnDebug.setAttribute("tip-below", "Degug");
+        this.toolbox.appendChild(this.btnDebug);
+
+        this.btnRun = document.createElement("div");
+        this.btnRun.style.backgroundImage = "url(res/l_run.svgz)";
+        this.btnRun.setAttribute("tip-below", "Run");
+        this.toolbox.appendChild(this.btnRun);
+
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+
         this.box = document.createElement("div");
         this.box.className = "script-edit-box";
         this.content.appendChild(this.box);
@@ -235,26 +261,6 @@ class ScriptEditor extends Window {
         this.parametersList.className = "script-parameters-list";
         this.parameters.appendChild(this.parametersList);
 
-        this.filePanel = document.createElement("div");
-        this.filePanel.className = "file-panel";
-        this.parameters.appendChild(this.filePanel);
-
-        const btnSave = document.createElement("input");
-        btnSave.type = "button";
-        btnSave.style.backgroundImage = "url(res/l_save.svgz)";
-        this.filePanel.appendChild(btnSave);
-
-        const btnRun = document.createElement("input");
-        btnRun.type = "button";
-        btnRun.style.backgroundImage = "url(res/l_run.svgz)";
-        this.filePanel.appendChild(btnRun);
-
-        const btnDebug = document.createElement("input");
-        btnDebug.type = "button";
-        btnDebug.style.backgroundImage = "url(res/l_bug.svgz)";
-        this.filePanel.appendChild(btnDebug);
-
-
         btnDuplicate.onclick = () => {
             if (!this.selectedNode) return;
 
@@ -275,6 +281,9 @@ class ScriptEditor extends Window {
             newNode.g.onmousemove = event => this.Node_onmousemove(event);
             newNode.g.onmouseup = event => this.Node_onmouseup(event);
 
+            for (let i = 0; i < this.selectedNode.values.length; i++) //copy values
+                newNode.values[i] = this.selectedNode.values[i];
+            
             this.nodes.push(newNode);
 
             this.ShowParameters(newNode);
@@ -296,9 +305,9 @@ class ScriptEditor extends Window {
         };
 
 
-        btnSave.onclick = () => this.SaveProject();
-        btnRun.onclick = () => { };
-        btnDebug.onclick = () => { };
+        this.btnSave.onclick = () => this.SaveScript();
+        this.btnDebug.onclick = () => { };
+        this.btnRun.onclick = () => { };
 
         this.ghost.onmouseup = event => this.Ghost_onmouseup(event);
 
@@ -335,19 +344,25 @@ class ScriptEditor extends Window {
         this.LoadToolsList(null);
     }
 
-    LoadProject() {
+    LoadScript(filename) {
         let xhr = new XMLHttpRequest(filename);
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
+                let lines = xhr.responseText.split("\n");
+                for (let i = 0; i < lines.length; i++) {
+                    //TODO: do stuff
+                }
+
+                console.log(lines);
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "loadscriptproject&" + filename, true);
+        xhr.open("GET", "loadscript&filename=" + filename, true);
         xhr.send();
     }
 
-    SaveProject() {
+    SaveScript() {
         let payload = "";
 
         for (let i = 0; i < this.nodes.length; i++) {
@@ -412,7 +427,11 @@ class ScriptEditor extends Window {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("POST", "savescriptproject", true);
+
+        let now = new Date();
+        if (this.filename === null) this.filename = now.getFullYear() + "_" + now.getMonth() + "_" + now.getDate() + "_" + now.getHours() + "_" + now.getMinutes() + "_" + now.getTime();
+
+        xhr.open("POST", "savescript&filename=" + this.filename, true);
         xhr.send(payload);
     }
 
@@ -1010,6 +1029,11 @@ class ScriptNode {
             case "IPv4 subnet":         columns = ["IP"]; break;
             case "Single value":        columns = ["Value"]; break;
 
+            case "Wake on LAN": columns = ["Host", "Result"]; break;
+            case "Turn off PC": columns = ["Host", "Result"]; break;
+            case "Restart PC":  columns = ["Host", "Result"]; break;
+            case "Log off PC":  columns = ["Host", "Result"]; break;
+
             case "WMI query":    columns = ["Host", "..."]; break; //TODO:
             case "PS Exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
             case "Secure Shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
@@ -1098,4 +1122,4 @@ class ScriptNode {
     }
 }
 
-new ScriptEditor();
+//new ScriptEditor();

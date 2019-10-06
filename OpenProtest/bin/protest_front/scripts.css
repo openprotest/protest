@@ -1,3 +1,48 @@
+
+.v-tabs {
+    position: absolute;
+    width: 150px;
+    margin-top: 24px;
+}
+
+.v-tabs > div {
+    margin: 4px 0 4px 4px;
+    padding: 8px;
+    color: rgb(192,192,192);
+    background-color: rgb(72,72,72);
+    border-radius: 8px 0 0 8px;
+    text-align: right;
+    padding-right: 16px;
+}
+
+.v-tabs > div:hover {
+    transition: .2s;
+    background-color: rgb(88,88,88) !important;
+}
+
+.v-tab-body {
+    position: absolute;
+    left: 150px;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    background-color: rgb(96,96,96);
+    border-radius: 4px;
+    padding: 8px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.v-tab-body > div {
+    padding: 4px;
+}
+
+.v-tab-body > div:hover {
+    background-color: var(--select-color);
+    color: rgb(32,32,32);
+}
+
+
 .script-tools-pane {
     position: absolute;
     left: 0;
@@ -70,7 +115,7 @@
     left: 0;
     right: 0;
     top: 88px;
-    bottom: 96px;
+    bottom: 0px;
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -124,27 +169,6 @@
     background-color: transparent !important;
     overflow-x: hidden;
     overflow-y: scroll;
-}
-
-.file-panel {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 68px;
-    background-color: rgb(48,48,48);
-    overflow: hidden;
-}
-
-.file-panel > input[type="button"] {
-    margin: 8px 4px 8px 8px;
-    padding: 0;
-    width: 48px;
-    min-width: 48px;
-    height: 48px;
-
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 40px 40px;
 }
 
 .script-edit-box {

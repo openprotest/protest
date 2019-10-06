@@ -2,7 +2,6 @@
 
 *[![GitHub](https://img.shields.io/github/license/veniware/openprotest)](https://github.com/veniware/OpenProtest/blob/master/LICENSE)*
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/veniware/openprotest)
-
 *[![GitHub All Releases](https://img.shields.io/github/downloads/veniware/openprotest/total)](https://github.com/veniware/OpenProtest/releases/latest)*
 *[![GitHub Release Date](https://img.shields.io/github/release-date/veniware/openprotest)](https://github.com/veniware/OpenProtest/releases/latest)*
 *[![GitHub commits since latest release](https://img.shields.io/github/commits-since/veniware/openprotest/latest)](https://github.com/veniware/OpenProtest/releases/latest)*

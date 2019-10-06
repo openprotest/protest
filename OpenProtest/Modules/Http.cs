@@ -158,36 +158,36 @@ class Http {
 
                     case "logout": buffer = Session.Logout(ctx); break;
 
-                    case "getequipver": buffer = Encoding.UTF8.GetBytes(NoSQL.equip_version.ToString()); break;
-                    case "getusersver": buffer = Encoding.UTF8.GetBytes(NoSQL.users_version.ToString()); break;
+                    case "getequipver":  buffer = Encoding.UTF8.GetBytes(NoSQL.equip_version.ToString()); break;
+                    case "getusersver":  buffer = Encoding.UTF8.GetBytes(NoSQL.users_version.ToString()); break;
                     case "getequiplist": buffer = NoSQL.GetTable(NoSQL.equip, NoSQL.equip_version); break;
                     case "getuserslist": buffer = NoSQL.GetTable(NoSQL.users, NoSQL.users_version); break;
 
                     case "gettargetequip": buffer = NoSQL.GetTargetEquip(para); break;
-                    case "gettargetuser": buffer = NoSQL.GetTargetUser(para); break;
+                    case "gettargetuser":  buffer = NoSQL.GetTargetUser(para); break;
 
                     case "saveequip": buffer = NoSQL.SaveEquip(ctx, performer); break;
-                    case "delequip": buffer = NoSQL.DeleteEquip(para, performer); break;
-                    case "saveuser": buffer = NoSQL.SaveUser(ctx, performer); break;
-                    case "deluser": buffer = NoSQL.DeleteUser(para, performer); break;
+                    case "delequip":  buffer = NoSQL.DeleteEquip(para, performer); break;
+                    case "saveuser":  buffer = NoSQL.SaveUser(ctx, performer); break;
+                    case "deluser":   buffer = NoSQL.DeleteUser(para, performer); break;
 
                     case "lastseen": buffer = LastSeen.HasBeenSeen(para); break;
 
                     case "dnslookup": buffer = Tools.DnsLookup(para); break;
                     case "maclookup": buffer = Tools.MacLookup(para); break;
-                    case "locateip": buffer = Tools.LocateIp(para); break;
-                    case "ping": buffer = Tools.XhrPing(para); break;
+                    case "locateip":  buffer = Tools.LocateIp(para); break;
+                    case "ping":      buffer = Tools.XhrPing(para); break;
 
-                    case "wakeup": buffer = WoL.Wakeup(para); break;
+                    case "wakeup":   buffer = WoL.Wakeup(para); break;
                     case "shutdown": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 12)); break;
-                    case "reboot": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
-                    case "logoff": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
+                    case "reboot":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
+                    case "logoff":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
 
                     case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, true)); break;
-                    case "adverify": buffer = Encoding.UTF8.GetBytes(ActiveDir.ActiveDirVerify(para)); break;
+                    case "adverify":  buffer = Encoding.UTF8.GetBytes(ActiveDir.ActiveDirVerify(para)); break;
 
-                    case "unlockuser": buffer = ActiveDir.UnlockUser(para); break;
-                    case "enableuser": buffer = ActiveDir.EnableUser(para); break;
+                    case "unlockuser":  buffer = ActiveDir.UnlockUser(para); break;
+                    case "enableuser":  buffer = ActiveDir.EnableUser(para); break;
                     case "disableuser": buffer = ActiveDir.DisableUser(para); break;
 
                     case "printtest": buffer = Tools.PrintTestPage(para); break;
@@ -204,27 +204,29 @@ class Http {
                     case "getclients": buffer = Session.GetClients(); break;
                     case "kickclient": buffer = Session.KickClients(para); break;
 
-                    case "getdebitnotes": buffer = DebitNotes.GetDebitNotes(para); break;
+                    case "getdebitnotes":         buffer = DebitNotes.GetDebitNotes(para); break;
                     case "getdebitnotestemplate": buffer = DebitNotes.GetDebitNoteTemplate(); break;
-                    case "createdebitnote": buffer = DebitNotes.CreateDebitNote(para); break;
-                    case "markdebitnote": buffer = DebitNotes.MarkDebitNote(para); break;
-                    case "deldebitnote": buffer = DebitNotes.DeleteDebitNote(para); break;
+                    case "createdebitnote":       buffer = DebitNotes.CreateDebitNote(para); break;
+                    case "markdebitnote":         buffer = DebitNotes.MarkDebitNote(para); break;
+                    case "deldebitnote":          buffer = DebitNotes.DeleteDebitNote(para); break;
 
-                    case "wmiquery": buffer = Wmi.WmiQuery(para); break;
+                    case "wmiquery":    buffer = Wmi.WmiQuery(para); break;
                     case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
 
-                    case "gettasksobj": buffer = ProTasks.GetTasks(); break;
+                    case "gettasksobj":     buffer = ProTasks.GetTasks(); break;
                     case "gettasksongoing": buffer = ProTasks.GetOnGoing(); break;
                     case "gettasksresults": buffer = ProTasks.GetResults(); break;
 
-                    case "getusercolumns": buffer = Scripts.GetUserColumns(); break;
-                    case "getequipcolumns": buffer = Scripts.GetEquipColumns(); break;
-                    case "getadusercolumns": buffer = Scripts.GetAdUserColumns(); break;
+                    case "getusercolumns":          buffer = Scripts.GetUserColumns(); break;
+                    case "getequipcolumns":         buffer = Scripts.GetEquipColumns(); break;
+                    case "getadusercolumns":        buffer = Scripts.GetAdUserColumns(); break;
                     case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
-                    case "getadgroupcolumn": buffer = Scripts.GetAdGroupColumns(); break;
+                    case "getadgroupcolumn":        buffer = Scripts.GetAdGroupColumns(); break;
 
-                    case "loadscriptproject": Scripts.LoadScript(ctx); break;
-                    case "savescriptproject": Scripts.SaveScript(ctx); break;
+                    case "listscripts": buffer = Scripts.ListScripts(); break;
+                    case "loadscript":  buffer = Scripts.LoadScript(para); break;
+                    case "savescript":  buffer = Scripts.SaveScript(ctx, para); break;
+                    case "runscript":   buffer = Scripts.RunScript(para); break;
 
                     case "getmetrics": buffer = BandwidthMonitor.GetMetrics(para); break;
 
