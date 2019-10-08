@@ -28,13 +28,14 @@
     bottom: 8px;
     background-color: rgb(96,96,96);
     border-radius: 4px;
-    padding: 8px;
+    padding: 4px;
     overflow-x: hidden;
     overflow-y: scroll;
 }
 
 .v-tab-body > div {
     padding: 4px;
+    border-radius: 2px;
 }
 
 .v-tab-body > div:hover {
@@ -233,7 +234,6 @@
 
 g > circle#dot {
     cursor: alias;
-    animation: delayed-fade-in .8s;
 }
 
 @keyframes svg-fade-in {

@@ -95,7 +95,7 @@ class Scripts extends Window {
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
-                if (split.length < 2) return;
+                if (split.length < 1) return;
                 this.payload = split;
                 this.ShowScripts();
 
