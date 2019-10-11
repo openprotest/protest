@@ -1,0 +1,73 @@
+#this file contains the tools signatures for scripts
+#
+# o: output
+# i: input
+# c: column
+# a: column + [ALL]
+# h: checkbox (preset)
+# n: numeric (preset, min, max)
+# t: text (preset)
+# m: multiline
+#
+#[name]	[css-color]	[type,label]*X
+
+Data source
+Protest users		rgb(32,32,32)	o,Users
+Protest equipment	rgb(32,32,32)	o,Equipment
+Domain users		rgb(32,32,32)	o,Users
+Domain workstations	rgb(32,32,32)	o,Workstations
+Domain groups		rgb(32,32,32)	o,Groups
+IPv4 subnet			rgb(32,32,32)	t,Subnet,192.168.0.0	n,CIDR prefix,24,4,30	o,Subnet
+Single value		rgb(32,32,32)	t,Value	o,Value
+
+Tools
+Secure shell	hsl(36,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	t,Username	t,Password	o,Output
+PS exec			hsl(32,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	o,Output
+WMI query		hsl(28,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
+NetBIOS request	hsl(24,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
+DNS lookup		hsl(20,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
+Ping			hsl(16,100%,45%)	i,Host	c,Column	h,Async,True	n,Time out,1000,200,5000	o,Output
+Trace route		hsl(12,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
+Port scan		hsl(8,100%,45%)		i,Host	c,Column	h,Async,True	n,From,1,1,65535	n,To,49152,1,65535	o,Output
+Locate IP		hsl(4,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
+MAC lookup		hsl(0,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
+
+Actions
+Wake on LAN		hsl(285,100%,45%)	i,Input	c,Column	o,Result
+Turn off PC		hsl(280,100%,45%)	i,Input	c,Column	o,Result
+Restart PC		hsl(275,100%,45%)	i,Input	c,Column	o,Result
+Log off PC		hsl(270,100%,45%)	i,Input	c,Column	o,Result
+
+Array modifiers
+Sort			hsl(212,100%,45%)	i,Input	c,Sort by	o,Sorted	o,Reversed sorted
+Reverse order	hsl(210,100%,45%)	i,Input	o,Reversed
+Trim			hsl(208,100%,45%)	i,Input	o,Trimmed
+Unique			hsl(206,100%,45%)	i,Input	a,Column	o,Unique
+Merge columns	hsl(204,100%,45%)	i,A	i,B	o,Outout
+Merge rows		hsl(202,100%,45%)	i,A	i,B	o,Outout
+Difference		hsl(200,100%,45%)	i,A	i,B	o,Outout
+
+Logical operators
+Have value		hsl(180,100%,45%)	i,Input	t,Value	a,Column	o,Have	o,Don't have
+Contain			hsl(175,100%,45%)	i,Input	t,Value	a,Column	o,Contain	o,Don't contain
+Regex match		hsl(170,100%,45%)	i,Input	t,Regex	a,Column	o,Matched
+Equal			hsl(165,100%,45%)	i,Input	t,Value	a,Column	o,Equal	o,Not equal
+Greater than	hsl(160,100%,45%)	i,Input	n,Value	a,Column	o,Greater	o,Not greater
+Less than		hsl(155,100%,45%)	i,Input	n,Value	a,Column	o,Less	o,Not less
+
+Math operators
+Absolute value	hsl(100,100%,45%)	i,Input	c,Column	o,Absolute value
+Round			hsl(96,100%,45%)	i,Input	c,Column	o,Round
+Maximum			hsl(92,100%,45%)	i,Input	c,Column	o,Maximum
+Minimum			hsl(88,100%,45%)	i,Input	c,Column	o,Minimum
+Mean			hsl(84,100%,45%)	i,Input	c,Column	o,Mean
+Median			hsl(80,100%,45%)	i,Input	c,Column	o,Median
+Mode			hsl(76,100%,45%)	i,Input	c,Column	o,Mode
+
+Export
+Text file	rgb(224,224,224)	i,Input	t,Filename
+CSV file	rgb(224,224,224)	i,Input	t,Filename
+JSON file	rgb(224,224,224)	i,Input	t,Filename
+XML file	rgb(224,224,224)	i,Input	t,Filename
+HTML file	rgb(224,224,224)	i,Input	t,Filename
+Send e-mail	rgb(224,224,224)	i,Input	t,Server	n,Port,587,1,65535	t,Username	t,Password	h,SSl,True	t,Recipient

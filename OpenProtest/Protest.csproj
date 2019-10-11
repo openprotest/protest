@@ -559,7 +559,6 @@
     <Content Include="bin\addressbook_front\user.svg" />
     <Content Include="bin\config.txt" />
     <Content Include="bin\knowlage\content_type.txt" />
-    <Content Include="bin\knowlage\wmi_classes.txt" />
     <Content Include="bin\protest_front\button.css" />
     <Content Include="bin\protest_front\calendar.css" />
     <Content Include="bin\protest_front\checkbox.css" />
@@ -990,6 +989,7 @@
     <Content Include="bin\protest_front\window.js" />
     <Content Include="bin\protest_front\wmi.css" />
     <Content Include="bin\protest_front\wmi.js" />
+    <Content Include="bin\scripts\scripts.txt" />
     <Content Include="pro-test.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

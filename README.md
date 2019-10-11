@@ -14,7 +14,7 @@
   * **Remote agent**
   * **Pro-tools** (convert IP2LOCATION CSV file to optimized binary files)
 
-Pro-test provide tools to organize your network environment. It can create a database of users and equipment by fetching from your domain controller or by scanning your network.
+Pro-test provide tools to organize your network environment. It can create an inventory database of users and equipment by fetching from your domain controller or by scanning your network.
 **It collects information such:**
   * Hardware specification
   * Model and serial number
@@ -44,6 +44,8 @@ Pro-test provide tools to organize your network environment. It can create a dat
 
 Pro-test is intended to be used as a portable tool. In that case, the web interface can be accessed via the loopback address without authentication.
 By default, it listens only on localhost:80. (check *[config file](https://github.com/veniware/OpenProtest/blob/master/OpenProtest/bin/config.txt)*).
+
+In order to use pro-test to its full capabilities, it must be runned as a network administrator. *(It uses WMI, active directory services and remote-powershell to gather information)*
 
 :exclamation: **If you use pro-test as a centralized service, we highly recommend to use a secure reverse proxy, such as [nginx](http://nginx.org/en/download.html).**
 You will also need to create your own SSL certificate (*[script example](https://github.com/veniware/OpenProtest/blob/master/Tools%20and%20Docs/generate_ssl.bat)*).

@@ -10,11 +10,60 @@ using System.Net.NetworkInformation;
 using System.IO;
 
 static class Scripts {
+    private static readonly string DIR_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts";
+    private static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
+    private static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
+    
 
-    static readonly string DIR_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts";
-    static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
-    static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
+    struct Node {
+        public string name;
+        public string[] columns;
+        public string[] parameters;
+        public string[] values;
+        public Socket[] sockets;
+    }
 
+    struct Socket {
+        public byte type;
+        public string label;
+    }
+
+    struct Link {
+        public Socket primary;
+        public Socket secondary;
+    }
+
+    private static string tools_payload = null;
+    private static Hashtable tools = new Hashtable();
+
+    //TODO: cache optimization
+
+    public static void LoadScript() {
+        string FILE_SCRIPT = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts.txt";
+        
+        if (tools_payload is null)
+            try {
+                tools_payload = File.ReadAllText(FILE_SCRIPT);
+                while(tools_payload.IndexOf("\t\t") > -1) tools_payload = tools_payload.Replace("\t\t", "\t");
+            } catch (Exception ex) {
+                ErrorLog.Err(ex);
+            }
+
+        string[] lines = tools_payload.Split('\n');
+        for (int i = 0; i < lines.Length; i++) {
+            lines[i] = lines[i].Trim();
+            string[] split = lines[i].Split('\t');
+
+            for (int j = 0; j < split.Length; j++) {
+
+            }
+        }
+    }
+
+    public static byte[] GetScriptTools() {
+        if (tools_payload is null) return null;
+        return Encoding.UTF8.GetBytes(tools_payload);
+    }
 
     public static byte[] GetEquipColumns() {
         Hashtable hash = new Hashtable();
@@ -175,8 +224,6 @@ static class Scripts {
 
         FileInfo scriptfile = new FileInfo($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
 
-        Console.WriteLine(scriptfile.FullName);
-
         if (!scriptfile.Exists) return Tools.FLE.Array;
 
         try {
@@ -206,7 +253,7 @@ static class Scripts {
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
                
-        if (payload.Length == 0) return Tools.INV.Array;
+        //if (payload.Length == 0) return Tools.INV.Array;
 
         try {
             File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", payload);
@@ -217,6 +264,7 @@ static class Scripts {
 
         return Tools.OK.Array;
     }
+
 
     public static byte[] RunScript(in string[] para) {
         string filename = "";
@@ -238,19 +286,96 @@ static class Scripts {
             return Tools.FAI.Array;
         }
 
+        List<Node> nodes = new List<Node>();
+        List<Link> links = new List<Link>();
+
         string[] lines = script.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
         for (int i = 0; i < lines.Length; i++) {
+
             string[] split = lines[i].Split((char)127);
 
             if (split[0] == "n") { //node
+                if (split.Length < 3) continue;
+
+                List<string> values = new List<string>();
+                List<string> columns = new List<string>();
+                for (int j = 3; j < split.Length; j++) {
+                    string[] vSplit = split[j].Split(':');
+                    if (vSplit[0] == "v")
+                        values.Add(vSplit[1]);
+                    else if (vSplit[0] == "c")
+                        columns.Add(vSplit[1]);
+                }
+
+                Node n = new Node() {
+                    name = split[1],
+                    values = values.ToArray(),
+                    columns = columns.ToArray()
+                    //TODO: parameters
+                    //TODO: sockets
+                };
+                nodes.Add(n);
+
+                Console.WriteLine(nodes.Count);
+                //calc calumns
+
+                values.Clear();
+                columns.Clear();
 
             } else if (split[0] == "l") { //link
+                if (split.Length < 5) continue;
 
+                int primartIndex = int.Parse(split[1]);
+                int secondaryIndex = int.Parse(split[3]);
+
+                Node primaryNode = nodes[primartIndex];
+                Node secondaryNode = nodes[secondaryIndex];
+
+                Socket? primary = null, secondary = null;
+                //primary = Array.Find(primaryNode.sockets, o=> {return o.type == (byte)'o' && o.label == split[2];});
+                //secondary = Array.Find(secondaryNode.sockets, o=> {return o.type == (byte)'i' && o.label == split[4];});
+
+                if (primary is null || secondary is null) continue;
+
+                Link l = new Link() {
+                    primary = (Socket) primary,
+                    secondary = (Socket) secondary
+                };
+                
+                links.Add(l);
             }
+        }
+
+        for (int i = 0; i < lines.Length; i++) {
+            //get nodes
+        }
+
+        for (int i = 0; i < lines.Length; i++) {
+            //find links and CalculateColumns
+        }
+
+        for (int i = 0; i < lines.Length; i++) {
+            //ignore links?
         }
 
         return null;
     }
 
+    private static string[] CalculateColumns(string name, string[] selectedColumns = null) {
+        List<string> columns = new List<string>();
+
+
+        switch (name) {
+            case "Protest users":        break;
+            case "Protest equipment":    break;
+            case "Domain users":         break;
+            case "Domain workstations":  break;
+            case "Domain groups":        break;
+            case "IPv4 subnet":          break;
+            case "Single value":         break;
+        }
+
+        return columns.ToArray();
+    }
 }

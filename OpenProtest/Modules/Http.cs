@@ -104,7 +104,9 @@ class Http {
         bool isModified = (ctx.Request.Headers.Get("If-Modified-Since") != cache.birthdate);
         bool acceptGzip = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower().Contains("gzip") ?? false;
 
+#if !DEBUG
         try {
+#endif
             if (!isModified) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.NotModified;
                 ctx.Response.OutputStream.Write(new byte[0], 0, 0);
@@ -217,6 +219,7 @@ class Http {
                     case "gettasksongoing": buffer = ProTasks.GetOnGoing(); break;
                     case "gettasksresults": buffer = ProTasks.GetResults(); break;
 
+                    case "getscripttools":         buffer = Scripts.GetScriptTools(); break;
                     case "getusercolumns":          buffer = Scripts.GetUserColumns(); break;
                     case "getequipcolumns":         buffer = Scripts.GetEquipColumns(); break;
                     case "getadusercolumns":        buffer = Scripts.GetAdUserColumns(); break;
@@ -246,11 +249,13 @@ class Http {
 
             ctx.Response.OutputStream.Dispose();
 
+#if !DEBUG
         } catch (ObjectDisposedException) { //Do nothing
         } catch (HttpListenerException) { //Do nothing
         } catch (Exception ex) {
             ErrorLog.Err(ex);
         }
+#endif
     }
 
     public virtual void ServeWebSocket(in HttpListenerContext ctx, in string[] para, in string remoteIp) {

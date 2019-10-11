@@ -9,79 +9,57 @@
  m: multiline
 */
 
-// !!! Changes here may requare update on the back-end !!!
-const TOOLS_ARRAY = [
-    {label:"Data source"},
-    {name:"Protest users",       color:"rgb(32,32,32)", c:[], p:[["o","Users"]]},
-    {name:"Protest equipment",   color:"rgb(32,32,32)", c:[], p:[["o","Equipment"]]},
-    {name:"Domain users",        color:"rgb(32,32,32)", c:[], p:[["o","Users"]]},
-    {name:"Domain workstations", color:"rgb(32,32,32)", c:[], p:[["o","Workstations"]]},
-    {name:"Domain groups",       color:"rgb(32,32,32)", c:[], p:[["o","Groups"]]},
-    {name:"IPv4 subnet",         color:"rgb(32,32,32)", c:[], p:[["t","Subnet","192.168.0.0"], ["n","CIDR prefix",24,4,30], ["o","Subnet"]]},
-    {name:"Single value",        color:"rgb(32,32,32)", c:[], p:[["t","Value"], ["o","Value"]]},
-    //{name:"HTTP request", color:"rgb(232,232,0)", c:[], p:[["t","URL"], ["o","Response"]]},
+var Script_ToolsArray = [];
 
-    {label:"Tools"},
-    //{name:"SNMP query",   color:"hsl(36,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"Secure Shell",    color:"hsl(34,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["t","Username"], ["t","Password"], ["o","Output"]]},
-    {name:"PS Exec",         color:"hsl(32,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Command",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"WMI query",       color:"HSL(28,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"NetBIOS request", color:"HSL(24,100%,45%)", p:[["i","Host"], ["c","Column"], ["m","Query",""], ["h","Async","True"], ["o","Output"]]},
-    {name:"DNS lookup",      color:"hsl(20,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"Ping",            color:"hsl(16,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","Time out",1000,200,5000], ["o","Output"]]},
-    {name:"Trace route",     color:"hsl(12,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"Port scan",       color:"hsl(8,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["n","From",1,1,65535], ["n","To",49152,1,65535], ["o","Output"]]},
-    {name:"Locate IP",       color:"hsl(4,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-    {name:"MAC loopup",      color:"hsl(0,100%,45%)", p:[["i","Host"], ["c","Column"], ["h","Async","True"], ["o","Output"]]},
-
-    {label:"Actions"},
-    {name:"Wake on LAN", color:"hsl(285,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
-    {name:"Turn off PC", color:"hsl(280,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
-    {name:"Restart PC",  color:"hsl(275,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
-    {name:"Log off PC",  color:"hsl(270,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Result"]]},
-
-    {label:"Array modifiers"},
-    {name:"Sort",          color:"hsl(212,100%,45%)", p:[["i","Input"], ["c","Sort by"], ["o","Sorted"], ["o","Reversed sorted"]]},
-    {name:"Reverse order", color:"hsl(210,100%,45%)", p:[["i","Input"], ["o","Reversed"]]},
-    {name:"Trim",          color:"hsl(208,100%,45%)", p:[["i","Input"], ["o","Trimmed"]]},
-    {name:"Unique",        color:"hsl(206,100%,45%)", p:[["i","Input"], ["a","Column"], ["o","Unique"]]},
-    {name:"Merge columns", color:"hsl(204,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
-    {name:"Merge rows",    color:"hsl(202,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
-    {name:"Difference",    color:"hsl(200,100%,45%)", p:[["i","A"], ["i","B"], ["o","Output"]] },
-    
-    {label:"Logical operators"},
-    {name:"Have value",   color:"hsl(180,100%,45%)", p:[["i","Input"], ["t","Value",""], ["a","Column"], ["o","Have"], ["o","Don't have"]]},    
-    {name:"Contain",      color:"hsl(175,100%,45%)", p:[["i","Input"], ["t","Value",""], ["a","Column"], ["o","Contain"], ["o","Don't contain"]]},    
-    {name:"Regex match",  color:"hsl(170,100%,45%)", p:[["i","Input"], ["t","Regex",""], ["a","Column"], ["o","Match"]]},
-    {name:"Equal",        color:"hsl(165,100%,45%)", p:[["i","Input"], ["t","Value",""], ["a","Column"], ["o","Equal"], ["o","Not equal"]]},
-    {name:"Greater than", color:"hsl(160,100%,45%)", p:[["i","Input"], ["n","Value"], ["a","Column"], ["o","Greater"], ["o","Not greater"]]},
-    {name:"Less than",    color:"hsl(155,100%,45%)", p:[["i","Input"], ["n","Value"], ["a","Column"], ["o","Less"], ["o","Not less"]]},
-
-    {label:"Math operators"},
-    {name:"Absolute value", color:"hsl(100,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Absolute value"]]},
-    {name:"Round",          color:"hsl(96,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Rounded"]]},
-    {name:"Maximum",        color:"hsl(92,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Maximum"]]},
-    {name:"Minimum",        color:"hsl(88,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Minimum"]]},
-    {name:"Mean",           color:"hsl(84,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Mean"]]}, //average
-    {name:"Median",         color:"hsl(80,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Median"]]},
-    {name:"Mode",           color:"hsl(76,100%,45%)", p:[["i","Input"], ["c","Column"], ["o","Mode"]]},
-
-    {label:"Export"},
-    {name:"Text file",   color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"CSV file",    color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"JSON file",   color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"XML file",    color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"HTML file",   color:"rgb(224,224,224)", p:[["i","Input"], ["t","Filename",""]]},
-    {name:"Send E-mail", color:"rgb(224,224,224)", p:[["i","Input"], ["t","Server",""], ["n","Port",587,1,65535], ["t","Username",""], ["t","Password",""], ["h","SSL","True"], ["t","Recipient",""]]}
-];
-
-var Script_PtUserColumns        = null;
-var Script_PtEquipColumns       = null;
-var Script_AdUserColumns        = null;
+var Script_PtUserColumns = null;
+var Script_PtEquipColumns = null;
+var Script_AdUserColumns = null;
 var Script_AdWorkstationColumns = null;
-var Script_AdGroupsColumns      = null;
+var Script_AdGroupsColumns = null;
 
-const Script_GetColumns = (callback) => {
+const Script_GetColumns = callback => {
+    let pScriptTools = new Promise((resolve, reject) => {
+        if (Script_ToolsArray.length > 0) {
+            resolve();
+            return;
+        }
+
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "getscripttools", true);
+        xhr.onload = () => {
+            Script_ToolsArray = [];
+
+            let lines = xhr.responseText.split("\n");
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].startsWith("#")) continue;
+
+                let split = lines[i].split("\t");
+
+                if (split.length == 1) { //label
+                    if (split[0].length > 0)
+                        Script_ToolsArray.push({ label: split[0] });
+
+                } else if (split.length > 2) { //name
+                    let newTool = {};
+                    newTool.name = split[0];
+                    newTool.color = split[1];
+                    newTool.p = [];
+
+                    for (let j = 2; j < split.length; j++) {
+                        let s = split[j].split(",").map(o => o.trim());
+                        if (s.length < 2) continue;
+                        newTool.p.push(s);
+                    }
+
+                    Script_ToolsArray.push(newTool);
+                }
+            }
+            resolve();
+        };
+        xhr.onerror = () => reject();
+        xhr.send();
+    });
+
     let pPtUser = new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "getusercolumns", true);
@@ -137,25 +115,30 @@ const Script_GetColumns = (callback) => {
         xhr.send();
     });
 
-    let promises = [pPtUser, pPtEquip, pAdWorkstation, pAdUser, pAdGroup];
-
-    Promise.all(promises).then(() => {
-        callback();
-    });
-}
+    let promises = [pScriptTools, pPtUser, pPtEquip, pAdWorkstation, pAdUser, pAdGroup];
+    Promise.all(promises).then(() => { callback(); });
+};
 
 class ScriptEditor extends Window {
     constructor(filename = null) {
-        if (document.head.querySelectorAll("link[href$='scripts.css']").length==0) {
+        if (document.head.querySelectorAll("link[href$='scripts.css']").length == 0) {
             let csslink = document.createElement("link");
             csslink.rel = "stylesheet";
             csslink.href = "scripts.css";
             document.head.appendChild(csslink);
         }
-        
+
         super([64,64,64]);
         this.setTitle("Script editor");
         this.setIcon("res/scripts.svgz");
+
+
+        let waitbox = document.createElement("span");
+        waitbox.className = "waitbox";
+        waitbox.style.top = "0";
+        waitbox.appendChild(document.createElement("div"));
+        this.content.appendChild(waitbox);
+       
 
         this.filename = filename;
 
@@ -169,11 +152,13 @@ class ScriptEditor extends Window {
         this.offsetY = 0;
         this.x0 = 0;
         this.y0 = 0;
-
-        this.InitizialeComponent();
-                           
+        
         Script_GetColumns(() => {
-            if (filename) this.LoadScript(filename);
+            this.content.removeChild(waitbox);
+            this.InitizialeComponent();
+
+            if (filename)
+                 this.LoadScript(filename);
         });
 
         setTimeout(() => {
@@ -189,7 +174,7 @@ class ScriptEditor extends Window {
 
         this.btnDebug = document.createElement("div");
         this.btnDebug.style.backgroundImage = "url(res/l_bug.svgz)";
-        this.btnDebug.setAttribute("tip-below", "Degug");
+        this.btnDebug.setAttribute("tip-below", "Debug");
         this.toolbox.appendChild(this.btnDebug);
 
         this.btnRun = document.createElement("div");
@@ -227,6 +212,7 @@ class ScriptEditor extends Window {
         this.txtToolsFilter.type = "search";
         this.txtToolsFilter.placeholder = "Find";
         this.txtToolsFilter.className = "script-tools-filter";
+        this.txtToolsFilter.style.width = "calc(100% - 24px)";
         this.tools.appendChild(this.txtToolsFilter);
 
         this.toolsList = document.createElement("div");
@@ -274,17 +260,17 @@ class ScriptEditor extends Window {
         btnDuplicate.onclick = () => {
             if (!this.selectedNode) return;
 
-            let t = TOOLS_ARRAY.find(o => o.name === this.selectedNode.name);;
-            
+            let t = Script_ToolsArray.find(o => o.name === this.selectedNode.name);;
+
             if (!t) return;
 
             const newNode = new ScriptNode(t, this);
-            newNode.MoveTo(this.selectedNode.x + 50, this.selectedNode.y+50);
+            newNode.MoveTo(this.selectedNode.x + 50, this.selectedNode.y + 50);
             newNode.Attach(this.svg);
 
             for (let i = 0; i < this.selectedNode.values.length; i++) //copy values
                 newNode.values[i] = this.selectedNode.values[i];
-            
+
             this.nodes.push(newNode);
 
             this.ShowParameters(newNode);
@@ -308,7 +294,7 @@ class ScriptEditor extends Window {
 
         this.btnSave.onclick = () => this.SaveScript();
         this.btnDebug.onclick = () => { };
-        this.btnRun.onclick = () => { };
+        this.btnRun.onclick = () => this.RunScript();
 
         this.ghost.onmouseup = event => this.Ghost_onmouseup(event);
 
@@ -355,7 +341,7 @@ class ScriptEditor extends Window {
                     if (split.length < 3) return;
 
                     if (split[0] == "n") { //node
-                        let tool = TOOLS_ARRAY.find(o => o.name === split[1]);
+                        let tool = Script_ToolsArray.find(o => o.name === split[1]);
                         if (!tool) return;
 
                         let position = split[2].split(",");
@@ -377,12 +363,12 @@ class ScriptEditor extends Window {
                         newNode.Attach(this.svg);
                         newNode.values = values;
                         if (columns.length > 0) newNode.selectedColumns = columns;
-                        this.nodes.push(newNode);                        
+                        this.nodes.push(newNode);
 
                     } else if (split[0] == "l") { //link
                         let primaryNode = this.nodes[parseInt(split[1])];
                         let secondaryNode = this.nodes[parseInt(split[3])];
-                        let primarySocket = primaryNode.sockets.find(o=> o[0]=="o" && o[2].innerHTML == split[2]);
+                        let primarySocket = primaryNode.sockets.find(o => o[0]=="o" && o[2].innerHTML == split[2]);
                         let secondarySocket = secondaryNode.sockets.find(o => o[0] == "i" && o[2].innerHTML == split[4]);
 
                         if (primarySocket && secondarySocket)
@@ -411,16 +397,16 @@ class ScriptEditor extends Window {
             for (let j = 0; j < this.nodes[i].parameters.length; j++) //parameters
                 if (this.nodes[i].values[j] === null)
                     payload += "v:" + String.fromCharCode(127);
-                else 
+                else
                     payload += "v:" + this.nodes[i].values[j] + String.fromCharCode(127);
-                
+
             if (this.nodes[i].selectedColumns != null) //selected columns
                 for (let j = 0; j < this.nodes[i].selectedColumns.length; j++)
                     payload += "c:" + this.nodes[i].selectedColumns[j] + String.fromCharCode(127);
-                
+
             payload += "\n";
         }
-        
+
         for (let i = 0; i < this.links.length; i++) { //links
             let sourceNode = null;
             let destinationNode = null;
@@ -428,7 +414,7 @@ class ScriptEditor extends Window {
             for (let j = 0; j < this.nodes.length; j++) {
 
                 if (this.links[i][1][5] === this.nodes[j]) //find source
-                    sourceNode = this.nodes[j];                
+                    sourceNode = this.nodes[j];
 
                 if (this.links[i][2][5] === this.nodes[j]) //find destination
                     destinationNode = this.nodes[j];
@@ -436,9 +422,7 @@ class ScriptEditor extends Window {
                 if (sourceNode && destinationNode) break;
             }
 
-            let source;
-            let destination;
-
+            let source, destination;
             for (let j = 0; j < sourceNode.parameters.length; j++) { //find source socket
                 if (sourceNode.parameters[j][0] != "o") continue;
                 if (sourceNode.parameters[j][1] === this.links[i][1][2].innerHTML) {
@@ -453,15 +437,15 @@ class ScriptEditor extends Window {
                     destination = this.nodes.indexOf(destinationNode) + String.fromCharCode(127) + destinationNode.parameters[j][1];
                     break;
                 }
-            }                            
+            }
 
             payload += "l" + String.fromCharCode(127) + source + String.fromCharCode(127) + destination + "\n";
         }
-        
+
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
-
+                //
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
@@ -473,15 +457,35 @@ class ScriptEditor extends Window {
         xhr.send(payload);
     }
 
+    RunScript() {
+        if (this.filename === null) {
+            this.ConfirmBox("Save the script file and try again.", true);
+            return;
+        }
+
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                //
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+
+        xhr.open("GET", "runscript&filename=" + this.filename, true);
+        xhr.send();
+    }
+
     AfterResize() { //override
         this.FitSvgToView();
     }
 
     FitSvgToView() {
+        if (!this.box) return;
+
         let maxX = this.box.offsetWidth, maxY = this.box.offsetHeight;
         for (let i = 0; i < this.nodes.length; i++) {
-            if (this.nodes[i].x + 250 > maxX) maxX = this.nodes[i].x+250;
-            if (this.nodes[i].y + 125 > maxY) maxY = this.nodes[i].y+125;
+            if (this.nodes[i].x + 250 > maxX) maxX = this.nodes[i].x + 250;
+            if (this.nodes[i].y + 125 > maxY) maxY = this.nodes[i].y + 125;
         }
 
         this.svg.setAttribute("width", maxX == this.box.offsetWidth ? Math.max(maxX - 20, 1) : maxX + 50);
@@ -496,23 +500,23 @@ class ScriptEditor extends Window {
 
         let label = null;
 
-        for (let i = 0; i < TOOLS_ARRAY.length; i++) {
-            if (TOOLS_ARRAY[i].label) {
+        for (let i = 0; i < Script_ToolsArray.length; i++) {
+            if (Script_ToolsArray[i].label) {
                 label = document.createElement("div");
-                label.innerHTML = TOOLS_ARRAY[i].label;
+                label.innerHTML = Script_ToolsArray[i].label;
                 label.style.paddingLeft = "5px";
                 label.style.marginTop = "12px";
                 label.style.boxSizing = "border-box";
                 label.style.backgroundColor = "rgb(72,72,72)";
                 continue;
             }
-                       
-            if (TOOLS_ARRAY[i].name.toLowerCase().indexOf(filter) == -1) continue;
+
+            if (Script_ToolsArray[i].name.toLowerCase().indexOf(filter) == -1) continue;
 
             if (label) this.toolsList.appendChild(label);
             label = null;
 
-            const newTool = new ScriptListTool(TOOLS_ARRAY[i].name, TOOLS_ARRAY[i].color, TOOLS_ARRAY[i].c, TOOLS_ARRAY[i].p, this);
+            const newTool = new ScriptListTool(Script_ToolsArray[i].name, Script_ToolsArray[i].color, Script_ToolsArray[i].p, this);
             newTool.Attach(this.toolsList);
         }
     }
@@ -581,7 +585,7 @@ class ScriptEditor extends Window {
         for (let i = 0; i < this.selectedNode.sockets.length; i++)
             if (this.selectedNode.sockets[i][0] == "i") {
                 let match = this.links.find(o => this.selectedNode.sockets[i] === o[2]);
-                
+
                 let newPara = document.createElement("div");
                 this.parametersList.appendChild(newPara);
 
@@ -599,7 +603,7 @@ class ScriptEditor extends Window {
                     value.onclick = ()=> this.ShowParameters(match[1][5]);
                 }
             }
-                        
+
         for (let i = 0; i < node.parameters.length; i++) {
             if (node.parameters[i][0]=="o") continue; //skip ouputs
 
@@ -654,14 +658,14 @@ class ScriptEditor extends Window {
 
                     let sourceNode = link[1][5];
                     if (sourceNode.columns)
-                        for (let i = 0; i < sourceNode.columns.length; i++) 
+                        for (let i = 0; i < sourceNode.columns.length; i++)
                             if (sourceNode.selectedColumns === null || sourceNode.selectedColumns.includes(sourceNode.columns[i])) {
                                 let optNew = document.createElement("option");
                                 optNew.innerHTML = sourceNode.columns[i];
                                 optNew.value = sourceNode.columns[i];
                                 value.appendChild(optNew);
                             }
-                        
+
                     value.value = node.values[i] === null ? "" : node.values[i];
                 }
 
@@ -707,14 +711,14 @@ class ScriptEditor extends Window {
             value.setAttribute("i", i);
             this.parametersList.appendChild(newPara);
             newPara.appendChild(value);
-            
+
             value.onchange = () => {
                 let index = parseInt(value.getAttribute("i"));
                 node.values[index] = value.value;
 
                 //if (node.parameters[i][0] == "c") if (node.columns) node.PropagateColumns(); //propagate on Column change
             };
-     
+
             if (node.parameters[i][0]!="m" && node.parameters[i][0]!="h") {
                 let button = document.createElement("div");
                 newPara.appendChild(button);
@@ -731,13 +735,13 @@ class ScriptEditor extends Window {
 
         let hr = document.createElement("hr");
         hr.style.padding = "0";
-        this.parametersList.appendChild(hr)
+        this.parametersList.appendChild(hr);
 
         let lblColumns = document.createElement("div");
         lblColumns.style.backgroundColor = "transparent";
         lblColumns.style.textAlign = "center";
         lblColumns.innerHTML = "Columns (" + (node.columns ? node.columns.length : "0") + ")";
-        this.parametersList.appendChild(lblColumns); 
+        this.parametersList.appendChild(lblColumns);
 
         let list = document.createElement("div");
         list.className = "columns-list";
@@ -758,13 +762,13 @@ class ScriptEditor extends Window {
                 newItem.onchange = event => {
                     if (node.selectedColumns === null) {
                         node.selectedColumns = [];
-                        for (let i = 0; i < node.columns.length; i++) 
+                        for (let i = 0; i < node.columns.length; i++)
                             node.selectedColumns.push(node.columns[i]);
                     }
-                    
+
                     if (newItem.checked)
                         node.selectedColumns.push(label.innerHTML);
-                    else 
+                    else
                         node.selectedColumns.splice(node.selectedColumns.indexOf(label.innerHTML), 1);
 
                     node.PropagateColumns();
@@ -772,7 +776,7 @@ class ScriptEditor extends Window {
             });
         }
     }
-    
+
     Link(primary, secondary) {
         if (primary[5] === secondary[5]) {
             console.log("A node can't link into it self.");
@@ -793,7 +797,7 @@ class ScriptEditor extends Window {
         const newPath = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
         newPath.setAttribute("d", this.DrawLine(p, s));
         this.linksGroup.appendChild(newPath);
-        
+
         this.links.push([newPath, p, s]);
 
         p[5].OnLinkChange();
@@ -813,7 +817,7 @@ class ScriptEditor extends Window {
 
         for (let i = 0; i < todo.length; i++)
             this.links.splice(this.links.indexOf(todo[i]), 1);
-        
+
         socket[5].OnLinkChange();
     }
 
@@ -869,12 +873,12 @@ class ScriptEditor extends Window {
 }
 
 class ScriptListTool {
-    constructor(name, color, columns, parameters, editor) {
-        this.name = name;
-        this.color = color;
-        this.columns = columns;
-        this.p = parameters;
-        this.editor = editor;
+    constructor(name, color, parameters, editor) {
+        this.name    = name;
+        this.color   = color;
+        this.columns = [];
+        this.p       = parameters;
+        this.editor  = editor;
 
         this.element = document.createElement("div");
         //this.element.innerHTML = name;
@@ -916,12 +920,12 @@ class ScriptListTool {
             let a = Math.max((event.pageX - this.editor.win.offsetLeft - 100) / 100, 0);
             let x = Math.max(event.pageX - this.editor.win.offsetLeft - 100, 230);
             let y = event.pageY - this.editor.win.offsetTop - this.editor.content.offsetTop;
-            
+
             this.editor.ghost.style.backgroundColor = "rgba(64,64,64," + Math.min(a, .75) + ")";
             this.editor.ghost.style.opacity = a;
             this.editor.ghost.style.transform = "translate(" + x + "px," + y + "px)";
             this.editor.ghost.style.backdropFilter = "blur(" + Math.min(a*4, 4) + "px)";
-            
+
             event.stopPropagation();
         }
     }
@@ -980,7 +984,7 @@ class ScriptNode {
         let top = 38;
 
         for (let i = 0; i < tool.p.length; i++) {
-            
+
             this.parameters.push(tool.p[i]); //copy
             this.values.push(tool.p[i].length > 2 ? tool.p[i][2] : null);
 
@@ -1008,7 +1012,6 @@ class ScriptNode {
 
                 //type, socket, label, x, y, node
                 this.sockets.push([tool.p[i][0], socket, label, tool.p[i][0]=="o" ? 200 : 0, top, this]);
-
                 top += 24;
 
                 socket.onmousedown = event => this.Socket_onmousedown(event);
@@ -1046,9 +1049,9 @@ class ScriptNode {
         if (count > 127) {
             console.log("Closed loop or a huge diagram error.");
             return [];
-        } 
+        }
 
-        let target  = queue === null ? this : queue;       
+        let target  = queue === null ? this : queue;
         let inputs  = target.sockets.filter(o => o[0]=="i");
         let outputs = target.sockets.filter(o => o[0]=="o");
 
@@ -1059,10 +1062,10 @@ class ScriptNode {
                 let sourceNode = find[1][5];
 
                 let r = []; //filter non-selected columns
-                for (let i = 0; i < sourceNode.columns.length; i++) 
+                for (let i = 0; i < sourceNode.columns.length; i++)
                     if (sourceNode.selectedColumns === null || sourceNode.selectedColumns.includes(sourceNode.columns[i]))
                         r.push(sourceNode.columns[i]);
-                
+
                 columnsCollection.push(r);
 
             } else {
@@ -1165,7 +1168,7 @@ class ScriptNode {
         let secondary = null;
         if (event.target.tagName == "circle" && event.target.id == "dot")
             secondary = this.sockets.find(o => o[1] === event.target); //find second socket
-        
+
         if (secondary === null) {//on miss-click, find closest node and link to first socket
             let x = this.editor.offsetX - (this.editor.x0 - event.clientX);
             let y = this.editor.offsetY - (this.editor.y0 - event.clientY);
@@ -1173,7 +1176,7 @@ class ScriptNode {
             let node = this.editor.nodes.find(o => o.x<x && o.x+200>x && o.y<y && o.y+75>y);
             if (node)
                 secondary = this.editor.activeSocket[0]=="o" ? node.sockets.find(o => o[0]=="i") : node.sockets.find(o => o[0]=="o");
-        }        
+        }
 
         if (secondary) this.editor.Link(this.editor.activeSocket, secondary);
 
