@@ -24,8 +24,8 @@ Pro-test provide tools to organize your network environment. It can create an in
 
 **Additionally you can:**
   * Send a wake on lan packet
-  * Turn off, restart, or log off computers
-  * Remotly connect to computers using SSH, RDP, SMB, uVNC or PSExec
+  * Remotly turn off, restart, or log off computers
+  * Connect to computers using SSH, RDP, SMB, uVNC or PSExec
   * Manage processes and services
   * Enable, disable or unlock users
 

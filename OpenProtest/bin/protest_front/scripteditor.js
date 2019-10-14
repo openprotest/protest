@@ -64,7 +64,7 @@ const Script_GetColumns = callback => {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "getusercolumns", true);
         xhr.onload = () => {
-            Script_PtUserColumns = xhr.responseText.split(String.fromCharCode(127));
+            Script_PtUserColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
         };
         xhr.onerror = () => reject();
@@ -75,7 +75,7 @@ const Script_GetColumns = callback => {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "getequipcolumns", true);
         xhr.onload = () => {
-            Script_PtEquipColumns = xhr.responseText.split(String.fromCharCode(127));
+            Script_PtEquipColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
         };
         xhr.onerror = () => reject();
@@ -86,7 +86,7 @@ const Script_GetColumns = callback => {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "getadworkstationcolumns", true);
         xhr.onload = () => {
-            Script_AdWorkstationColumns = xhr.responseText.split(String.fromCharCode(127));
+            Script_AdWorkstationColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
         };
         xhr.onerror = () => reject();
@@ -97,7 +97,7 @@ const Script_GetColumns = callback => {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "getadusercolumns", true);
         xhr.onload = () => {
-            Script_AdUserColumns = xhr.responseText.split(String.fromCharCode(127));
+            Script_AdUserColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
         };
         xhr.onerror = () => reject();
@@ -108,7 +108,7 @@ const Script_GetColumns = callback => {
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "getadgroupcolumn", true);
         xhr.onload = () => {
-            Script_AdGroupsColumns = xhr.responseText.split(String.fromCharCode(127));
+            Script_AdGroupsColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
         };
         xhr.onerror = () => reject();
@@ -506,8 +506,9 @@ class ScriptEditor extends Window {
                 label.innerHTML = Script_ToolsArray[i].label;
                 label.style.paddingLeft = "5px";
                 label.style.marginTop = "12px";
+                label.style.marginRight = "8px";
                 label.style.boxSizing = "border-box";
-                label.style.backgroundColor = "rgb(72,72,72)";
+                label.style.backgroundColor = "rgb(80,80,80)";
                 continue;
             }
 
@@ -1045,7 +1046,7 @@ class ScriptNode {
             this.editor.Unlink(this.sockets[i]);
     }
 
-    PropagateColumns(queue = null, count = 0) {
+    PropagateColumns(queue=null, count=0) {
         if (count > 127) {
             console.log("Closed loop or a huge diagram error.");
             return [];
@@ -1093,11 +1094,6 @@ class ScriptNode {
             case "IPv4 subnet":         columns = ["IP"]; break;
             case "Single value":        columns = ["Value"]; break;
 
-            case "Wake on LAN": columns = ["Host", "Result"]; break;
-            case "Turn off PC": columns = ["Host", "Result"]; break;
-            case "Restart PC":  columns = ["Host", "Result"]; break;
-            case "Log off PC":  columns = ["Host", "Result"]; break;
-
             case "WMI query":    columns = ["Host", "..."]; break; //TODO:
             case "PS Exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
             case "Secure Shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
@@ -1122,6 +1118,11 @@ class ScriptNode {
             case "Merge rows":
                 columns = collection[0] === null ? [] : collection[0];
                 break;
+
+            case "Wake on LAN": columns = []; break;
+            case "Turn off PC": columns = []; break;
+            case "Restart PC":  columns = []; break;
+            case "Log off PC":  columns = []; break;
 
             default: columns = collection[0] === null ? [] : collection[0];
         }

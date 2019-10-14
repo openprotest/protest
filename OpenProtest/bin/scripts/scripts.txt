@@ -32,12 +32,6 @@ Port scan		hsl(8,100%,45%)		i,Host	c,Column	h,Async,True	n,From,1,1,65535	n,To,4
 Locate IP		hsl(4,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
 MAC lookup		hsl(0,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
 
-Actions
-Wake on LAN		hsl(285,100%,45%)	i,Input	c,Column	o,Result
-Turn off PC		hsl(280,100%,45%)	i,Input	c,Column	o,Result
-Restart PC		hsl(275,100%,45%)	i,Input	c,Column	o,Result
-Log off PC		hsl(270,100%,45%)	i,Input	c,Column	o,Result
-
 Array modifiers
 Sort			hsl(212,100%,45%)	i,Input	c,Sort by	o,Sorted	o,Reversed sorted
 Reverse order	hsl(210,100%,45%)	i,Input	o,Reversed
@@ -63,6 +57,12 @@ Minimum			hsl(88,100%,45%)	i,Input	c,Column	o,Minimum
 Mean			hsl(84,100%,45%)	i,Input	c,Column	o,Mean
 Median			hsl(80,100%,45%)	i,Input	c,Column	o,Median
 Mode			hsl(76,100%,45%)	i,Input	c,Column	o,Mode
+
+Actions
+Wake on LAN		hsl(60,100%,45%)	i,Input	c,Column	h,Async	h,Log
+Turn off PC		hsl(56,100%,45%)	i,Input	c,Column	h,Async	h,Log
+Restart PC		hsl(52,100%,45%)	i,Input	c,Column	h,Async	h,Log
+Log off PC		hsl(48,100%,45%)	i,Input	c,Column	h,Async	h,Log
 
 Export
 Text file	rgb(224,224,224)	i,Input	t,Filename

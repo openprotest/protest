@@ -291,72 +291,71 @@ static class Scripts {
 
         string[] lines = script.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
-        for (int i = 0; i < lines.Length; i++) {
-
+        for (int i = 0; i < lines.Length; i++) { //nodes
             string[] split = lines[i].Split((char)127);
+            if (split.Length < 3) continue;
+            if (split[0] != "n") continue;  
 
-            if (split[0] == "n") { //node
-                if (split.Length < 3) continue;
-
-                List<string> values = new List<string>();
-                List<string> columns = new List<string>();
-                for (int j = 3; j < split.Length; j++) {
-                    string[] vSplit = split[j].Split(':');
-                    if (vSplit[0] == "v")
-                        values.Add(vSplit[1]);
-                    else if (vSplit[0] == "c")
-                        columns.Add(vSplit[1]);
-                }
-
-                Node n = new Node() {
-                    name = split[1],
-                    values = values.ToArray(),
-                    columns = columns.ToArray()
-                    //TODO: parameters
-                    //TODO: sockets
-                };
-                nodes.Add(n);
-
-                Console.WriteLine(nodes.Count);
-                //calc calumns
-
-                values.Clear();
-                columns.Clear();
-
-            } else if (split[0] == "l") { //link
-                if (split.Length < 5) continue;
-
-                int primartIndex = int.Parse(split[1]);
-                int secondaryIndex = int.Parse(split[3]);
-
-                Node primaryNode = nodes[primartIndex];
-                Node secondaryNode = nodes[secondaryIndex];
-
-                Socket? primary = null, secondary = null;
-                //primary = Array.Find(primaryNode.sockets, o=> {return o.type == (byte)'o' && o.label == split[2];});
-                //secondary = Array.Find(secondaryNode.sockets, o=> {return o.type == (byte)'i' && o.label == split[4];});
-
-                if (primary is null || secondary is null) continue;
-
-                Link l = new Link() {
-                    primary = (Socket) primary,
-                    secondary = (Socket) secondary
-                };
-                
-                links.Add(l);
+            List<string> values = new List<string>();
+            List<string> columns = new List<string>();
+            for (int j = 3; j < split.Length; j++) {
+                string[] vSplit = split[j].Split(':');
+                if (vSplit[0] == "v")
+                    values.Add(vSplit[1]);
+                else if (vSplit[0] == "c")
+                    columns.Add(vSplit[1]);
             }
+
+            Node n = new Node() {
+                name = split[1],
+                values = values.ToArray(),
+                columns = columns.ToArray()
+                //TODO: parameters
+                //TODO: sockets
+            };
+            nodes.Add(n);
+
+            //calc calumns
+
+            values.Clear();
+            columns.Clear();
+        }
+        
+        List<Node> endpoints = nodes.FindAll(o => isNodeEndPoint(o) );
+        Console.WriteLine(nodes.Count);
+        Console.WriteLine(endpoints.Count);
+
+        foreach (Node n in endpoints) {
+
         }
 
-        for (int i = 0; i < lines.Length; i++) {
-            //get nodes
-        }
+        /*for (int i = 0; i < lines.Length; i++) { //links
+            string[] split = lines[i].Split((char)127);
+            if (split.Length < 5) continue;
+            if (split[0] != "l") continue;
 
-        for (int i = 0; i < lines.Length; i++) {
-            //find links and CalculateColumns
-        }
 
-        for (int i = 0; i < lines.Length; i++) {
-            //ignore links?
+            int primartIndex = int.Parse(split[1]);
+            int secondaryIndex = int.Parse(split[3]);
+
+            Node primaryNode = nodes[primartIndex];
+            Node secondaryNode = nodes[secondaryIndex];
+
+            Socket? primary = null, secondary = null;
+            //primary = Array.Find(primaryNode.sockets, o=> {return o.type == (byte)'o' && o.label == split[2];});
+            //secondary = Array.Find(secondaryNode.sockets, o=> {return o.type == (byte)'i' && o.label == split[4];});
+
+            if (primary is null || secondary is null) continue;
+
+            Link l = new Link() {
+                primary = (Socket) primary,
+                secondary = (Socket) secondary
+            };
+            links.Add(l);
+        }*/
+        
+        for (int i = 0; i < lines.Length; i++) { //columns
+        
         }
 
         return null;
@@ -364,8 +363,7 @@ static class Scripts {
 
     private static string[] CalculateColumns(string name, string[] selectedColumns = null) {
         List<string> columns = new List<string>();
-
-
+        
         switch (name) {
             case "Protest users":        break;
             case "Protest equipment":    break;
@@ -378,4 +376,25 @@ static class Scripts {
 
         return columns.ToArray();
     }
+
+    private static bool isNodeEndPoint(Node node) {
+        switch (node.name) {
+            case "Text file":   return true;
+            case "CSV file":    return true;
+            case "JSON file":   return true;
+            case "XML file":    return true;
+            case "HTML file":   return true;
+            case "Send e-mail": return true;
+
+            case "Wake on LAN": return true;
+            case "Turn off PC": return true;
+            case "Restart PC":  return true;
+            case "Log off PC":  return true;
+
+            default: return false;
+        }
+    }
+
 }
+
+public class ScriptWrapper {}
