@@ -1,4 +1,4 @@
-rem feel free top modify this file
+rem feel free to modify this file
 
 rem !! This script requires OpenSSL !!
 rem https://www.openssl.org

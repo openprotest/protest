@@ -129,9 +129,12 @@ class ScriptEditor extends Window {
         }
 
         super([64,64,64]);
-        this.setTitle("Script editor");
         this.setIcon("res/scripts.svgz");
 
+        if (filename === null) 
+            this.setTitle("Script editor");
+        else
+            this.setTitle("Script editor - " + filename);
 
         let waitbox = document.createElement("span");
         waitbox.className = "waitbox";

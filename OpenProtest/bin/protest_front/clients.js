@@ -7,7 +7,7 @@ class Clients extends Window {
 
         this.content.className += " no-results";
         this.content.style.overflowY = "auto";
-        this.content.style.padding = "4px 64px";
+        this.content.style.padding = "4px 16px";
 
         this.GetClients();
     }

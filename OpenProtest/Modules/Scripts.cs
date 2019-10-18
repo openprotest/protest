@@ -9,30 +9,34 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.IO;
 
+public class ScriptNode {
+    public string name;
+    public string[] columns;
+    public string[] values;
+    public string[][] parameters;
+    public ScriptSocket[] sockets;
+
+    public List<string[]> data;
+}
+
+public class ScriptSocket {
+    public char type;
+    public string label;
+    public ScriptNode node;
+}
+
+public class ScriptLink {
+    public ScriptNode primaryNode;
+    public ScriptNode secondaryNode;
+    public ScriptSocket primary;
+    public ScriptSocket secondary;
+}
+
 static class Scripts {
     private static readonly string DIR_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts";
     private static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
     private static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
     
-
-    struct Node {
-        public string name;
-        public string[] columns;
-        public string[] parameters;
-        public string[] values;
-        public Socket[] sockets;
-    }
-
-    struct Socket {
-        public byte type;
-        public string label;
-    }
-
-    struct Link {
-        public Socket primary;
-        public Socket secondary;
-    }
-
     private static string tools_payload = null;
     private static Hashtable tools = new Hashtable();
 
@@ -52,11 +56,23 @@ static class Scripts {
         string[] lines = tools_payload.Split('\n');
         for (int i = 0; i < lines.Length; i++) {
             lines[i] = lines[i].Trim();
+            if (lines[i].StartsWith("#")) continue;
+            
             string[] split = lines[i].Split('\t');
+            if (split.Length == 1) continue; //label
 
-            for (int j = 0; j < split.Length; j++) {
+            string name = split[0].Trim();
+            List<string[]> parameters = new List<string[]>();
 
+            for (int j = 2; j < split.Length; j++) {
+                string[] s = split[j].Split(',');
+                if (s.Length < 2) continue;
+                s = s.Select(o => o.Trim()).ToArray();
+                parameters.Add(s);
             }
+
+            tools.Add(name, parameters.ToArray());
+            parameters.Clear();
         }
     }
 
@@ -266,6 +282,41 @@ static class Scripts {
     }
 
 
+    private static string[] CalcColumns(string name, string[] selectedColumns = null) {
+        List<string> columns = new List<string>();
+
+        switch (name) {
+            case "Protest users": break;
+            case "Protest equipment": break;
+            case "Domain users": break;
+            case "Domain workstations": break;
+            case "Domain groups": break;
+            case "IPv4 subnet": break;
+            case "Single value": break;
+        }
+
+        return columns.ToArray();
+    }
+
+    private static bool IsEndPoint(ScriptNode node) {
+        switch (node.name) {
+            case "Text file": return true;
+            case "CSV file": return true;
+            case "JSON file": return true;
+            case "XML file": return true;
+            case "HTML file": return true;
+            case "Send e-mail": return true;
+
+            case "Wake on LAN": return true;
+            case "Turn off PC": return true;
+            case "Restart PC": return true;
+            case "Log off PC": return true;
+
+            default: return false;
+        }
+    }
+
+
     public static byte[] RunScript(in string[] para) {
         string filename = "";
         for (int i = 1; i < para.Length; i++) 
@@ -275,7 +326,6 @@ static class Scripts {
     }
     public static byte[] RunScript(in string filename) {
         if (filename.Length == 0) return Tools.INV.Array;
-
         if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
 
         string script = "";
@@ -286,9 +336,8 @@ static class Scripts {
             return Tools.FAI.Array;
         }
 
-        List<Node> nodes = new List<Node>();
-        List<Link> links = new List<Link>();
-
+        List<ScriptNode> nodes = new List<ScriptNode>();
+        List<ScriptLink> links = new List<ScriptLink>();
         string[] lines = script.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
         for (int i = 0; i < lines.Length; i++) { //nodes
@@ -298,6 +347,8 @@ static class Scripts {
 
             List<string> values = new List<string>();
             List<string> columns = new List<string>();
+            List<ScriptSocket> sockets = new List<ScriptSocket>();
+
             for (int j = 3; j < split.Length; j++) {
                 string[] vSplit = split[j].Split(':');
                 if (vSplit[0] == "v")
@@ -306,95 +357,99 @@ static class Scripts {
                     columns.Add(vSplit[1]);
             }
 
-            Node n = new Node() {
+            ScriptNode newNode = new ScriptNode() {
                 name = split[1],
                 values = values.ToArray(),
-                columns = columns.ToArray()
-                //TODO: parameters
-                //TODO: sockets
+                columns = columns.ToArray(),
+                parameters = tools.ContainsKey(split[1]) ? (string[][])tools[split[1]] : new string[][] {}
             };
-            nodes.Add(n);
 
-            //calc calumns
+            foreach (string[] param in newNode.parameters) { //sockets
+                if (param[0] != "o" && param[0] != "i") continue;
+                ScriptSocket newSocket = new ScriptSocket() {
+                    type = param[0][0],
+                    label = param[1],
+                    node = newNode
+                };
+                sockets.Add(newSocket);
+            }
+            newNode.sockets = sockets.ToArray();
+                       
+            nodes.Add(newNode);
 
             values.Clear();
             columns.Clear();
-        }
-        
-        List<Node> endpoints = nodes.FindAll(o => isNodeEndPoint(o) );
-        Console.WriteLine(nodes.Count);
-        Console.WriteLine(endpoints.Count);
-
-        foreach (Node n in endpoints) {
-
+            sockets.Clear();
         }
 
-        /*for (int i = 0; i < lines.Length; i++) { //links
+        for (int i = 0; i < lines.Length; i++) { //links
             string[] split = lines[i].Split((char)127);
             if (split.Length < 5) continue;
             if (split[0] != "l") continue;
 
-
             int primartIndex = int.Parse(split[1]);
             int secondaryIndex = int.Parse(split[3]);
+            ScriptNode primaryNode = nodes[primartIndex];
+            ScriptNode secondaryNode = nodes[secondaryIndex];
 
-            Node primaryNode = nodes[primartIndex];
-            Node secondaryNode = nodes[secondaryIndex];
+            ScriptSocket primary, secondary;
 
-            Socket? primary = null, secondary = null;
-            //primary = Array.Find(primaryNode.sockets, o=> {return o.type == (byte)'o' && o.label == split[2];});
-            //secondary = Array.Find(secondaryNode.sockets, o=> {return o.type == (byte)'i' && o.label == split[4];});
+            primary = Array.Find(primaryNode.sockets, o=> o.type == 'o' && o.label == split[2]);
+            secondary = Array.Find(secondaryNode.sockets, o=> o.type == 'i' && o.label == split[4]);
 
             if (primary is null || secondary is null) continue;
 
-            Link l = new Link() {
-                primary = (Socket) primary,
-                secondary = (Socket) secondary
+            ScriptLink newLink = new ScriptLink() {
+                primaryNode   = primaryNode,
+                secondaryNode = secondaryNode,
+                primary       = primary,
+                secondary     = secondary
             };
-            links.Add(l);
-        }*/
-        
-        for (int i = 0; i < lines.Length; i++) { //columns
-        
+            links.Add(newLink);
+        }
+
+        List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
+        foreach (ScriptNode node in endpoints) {
+            List<string[]> result = CascadeNode(in node, in links);
         }
 
         return null;
     }
 
-    private static string[] CalculateColumns(string name, string[] selectedColumns = null) {
-        List<string> columns = new List<string>();
+    private static List<string[]> CascadeNode(in ScriptNode node, in List<ScriptLink> links) {
+        ScriptSocket[] inputSockets = node.sockets.Where(o => o.type == 'i').ToArray();
+
+        List<string[]>[] results = new List<string[]>[inputSockets.Length];
+
+        for (int i = 0; i < inputSockets.Length; i++) {
+            ScriptLink link = links.Find(o => o.secondary.GetHashCode() == inputSockets[i].GetHashCode());
+            if (link is null) { 
+                Console.WriteLine(" ! " + $"Node {node.name} is unlinked.");
+                continue;
+            }
+
+            if (link.primaryNode.data is null)
+                results[i] = CascadeNode(in link.primaryNode, in links);
+            else
+                results[i] = link.primaryNode.data;
+        }
         
-        switch (name) {
-            case "Protest users":        break;
-            case "Protest equipment":    break;
-            case "Domain users":         break;
-            case "Domain workstations":  break;
-            case "Domain groups":        break;
-            case "IPv4 subnet":          break;
-            case "Single value":         break;
-        }
-
-        return columns.ToArray();
+        return InvokeNode(in node, in results);
     }
 
-    private static bool isNodeEndPoint(Node node) {
+    private static List<string[]> InvokeNode(in ScriptNode node, in List<string[]>[] results) {
+        Console.WriteLine(node.name);
+
+        //TODO: ...
+
         switch (node.name) {
-            case "Text file":   return true;
-            case "CSV file":    return true;
-            case "JSON file":   return true;
-            case "XML file":    return true;
-            case "HTML file":   return true;
-            case "Send e-mail": return true;
+            case "Protest users":
+                return null;
 
-            case "Wake on LAN": return true;
-            case "Turn off PC": return true;
-            case "Restart PC":  return true;
-            case "Log off PC":  return true;
-
-            default: return false;
+            default:
+                return null;
         }
     }
-
 }
 
 public class ScriptWrapper {}

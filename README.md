@@ -34,7 +34,7 @@ Pro-test provide tools to organize your network environment. It can create an in
   * DNS lookup
   * Trace route
   * Port scan
-  * Locate IP  *[demo](https://veniware.github.io/#locateip)*
+  * Locate IP and proxy detection *[demo](https://veniware.github.io/#locateip)*
   * MAC lookup  *[demo](https://veniware.github.io/#maclookup)*
   * Website check
   * Sub-net calculator  *[demo](https://veniware.github.io/#netcalc)*

@@ -133,10 +133,11 @@ class LocateIp extends Console {
                     divLocation.style.position = "absolute";
                     divLocation.style.width = "24px";
                     divLocation.style.height = "24px";
-                    divLocation.style.right = "32px";
+                    divLocation.style.right = "64px";
                     divLocation.style.top = "4px";
                     divLocation.style.backgroundSize = "contain";
                     divLocation.style.backgroundImage = "url(res/l_locate.svgz)";
+                    divLocation.setAttribute("tip-below", "Location");
                     divLocation.style.cursor = "pointer";
                     element.appendChild(divLocation);
                     divLocation.onclick = () => window.open("http://www.google.com/maps/place/" + split[4]);
@@ -147,7 +148,7 @@ class LocateIp extends Console {
                     divProxy.style.position = "absolute";
                     divProxy.style.width = "24px";
                     divProxy.style.height = "24px";
-                    divProxy.style.right = "64px";
+                    divProxy.style.right = "96px";
                     divProxy.style.top = "4px";
                     divProxy.style.backgroundSize = "contain";
                     divProxy.style.backgroundImage = "url(res/l_proxy.svgz)";
