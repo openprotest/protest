@@ -116,9 +116,10 @@ class Program {
     }
 
     private static void LoadDB() {
+        Tools.ExtractZippedKnowlageFile();
         NoSQL.LoadEquip();
         NoSQL.LoadUsers();
-        Scripts.LoadScript();
+        Scripts.LoadScripts();
 
         Console.WriteLine($"Total equip loaded: {NoSQL.equip.Count}");
         Console.WriteLine($"Total users loaded: {NoSQL.users.Count}");

@@ -11,6 +11,7 @@ class Http {
     HttpListener listener;
     public Cache cache;
 
+
     public Http(in string ip, in ushort port, in string path) {
         this.ip = ip;
         this.port = port;

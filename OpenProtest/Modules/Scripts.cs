@@ -16,7 +16,8 @@ public class ScriptNode {
     public string[][] parameters;
     public ScriptSocket[] sockets;
 
-    public List<string[]> data;
+    public List<string> header;
+    public List<string[]> array;
 }
 
 public class ScriptSocket {
@@ -33,6 +34,8 @@ public class ScriptLink {
 }
 
 static class Scripts {
+    private const long QUARTER = 9000000000;
+
     private static readonly string DIR_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts";
     private static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
     private static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
@@ -40,9 +43,11 @@ static class Scripts {
     private static string tools_payload = null;
     private static Hashtable tools = new Hashtable();
 
-    //TODO: cache optimization
+    private static object cache_lock = new object();
+    private static byte[] AdUserCache = null, AdWorkstationCache = null, AdGroupCache = null;
+    private static long AdUserCache_timestamp = 0, AdWorkstationCache_timestamp = 0, AdGroupCache_timestamp = 0;
 
-    public static void LoadScript() {
+    public static void LoadScripts() {
         string FILE_SCRIPT = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts.txt";
         
         if (tools_payload is null)
@@ -56,7 +61,7 @@ static class Scripts {
         string[] lines = tools_payload.Split('\n');
         for (int i = 0; i < lines.Length; i++) {
             lines[i] = lines[i].Trim();
-            if (lines[i].StartsWith("#")) continue;
+            if (lines[i].StartsWith("#")) continue; //skip comments
             
             string[] split = lines[i].Split('\t');
             if (split.Length == 1) continue; //label
@@ -118,105 +123,126 @@ static class Scripts {
     }
 
     public static byte[] GetAdUserColumns() {
-        Hashtable hash = new Hashtable();
-        StringBuilder sb = new StringBuilder();
+        if (!(AdUserCache is null) && AdUserCache_timestamp > DateTime.Now.Ticks - QUARTER)
+            return AdUserCache;
 
-        string domain = null;
-        try {
-            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-        } catch { }
+        lock (cache_lock) {
+            Hashtable hash = new Hashtable();
+            StringBuilder sb = new StringBuilder();
 
-        SearchResultCollection result = null;
+            string domain = null;
+            try {
+                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            } catch { }
 
-        try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
-            searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
-            result = searcher.FindAll();
-        } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return null;
-        }
-
-        if (result is null || result.Count == 0) return null;
-
-        foreach (SearchResult o in result)
-            foreach (DictionaryEntry e in o.Properties) {
-                if (hash.ContainsKey(e.Key)) continue;
-                hash.Add(e.Key, null);
-                sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
+            SearchResultCollection result = null;
+            try {
+                DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+                DirectorySearcher searcher = new DirectorySearcher(dir);
+                searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
+                result = searcher.FindAll();
+            } catch (Exception ex) {
+                ErrorLog.Err(ex);
+                return null;
             }
 
-        hash.Clear();
-        return Encoding.UTF8.GetBytes(sb.ToString());
+            if (result is null || result.Count == 0) return null;
+
+            foreach (SearchResult o in result)
+                foreach (DictionaryEntry e in o.Properties) {
+                    if (hash.ContainsKey(e.Key)) continue;
+                    hash.Add(e.Key, null);
+                    sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
+                }
+
+            hash.Clear();
+
+            AdUserCache_timestamp = DateTime.Now.Ticks;
+            AdUserCache = Encoding.UTF8.GetBytes(sb.ToString());
+            return AdUserCache;
+        }
     }
 
     public static byte[] GetAdWorkstationColumns() {
-        Hashtable hash = new Hashtable();
-        StringBuilder sb = new StringBuilder();
+        if (!(AdWorkstationCache is null) && AdWorkstationCache_timestamp > DateTime.Now.Ticks - QUARTER)
+            return AdWorkstationCache;
 
-        string domain = null;
-        try {
-            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-        } catch { }
+        lock (cache_lock) {
+            Hashtable hash = new Hashtable();
+            StringBuilder sb = new StringBuilder();
 
-        SearchResultCollection result = null;
+            string domain = null;
+            try {
+                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            } catch { }
 
-        try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
-            searcher.Filter = "(objectClass=computer)";
-            result = searcher.FindAll();
-        } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return null;
+            SearchResultCollection result = null;
+            try {
+                DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+                DirectorySearcher searcher = new DirectorySearcher(dir);
+                searcher.Filter = "(objectClass=computer)";
+                result = searcher.FindAll();
+            } catch (Exception ex) {
+                ErrorLog.Err(ex);
+                return null;
+            }
+
+            if (result is null || result.Count == 0) return null;
+
+            foreach (SearchResult o in result)
+                foreach (DictionaryEntry e in o.Properties) {
+                    if (hash.ContainsKey(e.Key)) continue;
+                    hash.Add(e.Key, null);
+                    sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
+                }
+
+            hash.Clear();
+
+            AdWorkstationCache_timestamp = DateTime.Now.Ticks;
+            AdWorkstationCache = Encoding.UTF8.GetBytes(sb.ToString());
+            return AdWorkstationCache;
         }
-
-        if (result is null || result.Count == 0) return null;
-
-        foreach (SearchResult o in result) 
-            foreach (DictionaryEntry e in o.Properties) { 
-                if (hash.ContainsKey(e.Key)) continue;
-                hash.Add(e.Key, null);
-                sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
-            }        
-
-        hash.Clear();
-        return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
     public static byte[] GetAdGroupColumns() {
-        Hashtable hash = new Hashtable();
-        StringBuilder sb = new StringBuilder();
+        if (!(AdGroupCache is null) && AdGroupCache_timestamp > DateTime.Now.Ticks - QUARTER)
+            return AdGroupCache;
 
-        string domain = null;
-        try {
-            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-        } catch { }
+        lock (cache_lock) {        
+            Hashtable hash = new Hashtable();
+            StringBuilder sb = new StringBuilder();
 
-        SearchResultCollection result = null;
+            string domain = null;
+            try {
+                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            } catch { }
 
-        try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
-            searcher.Filter = "(&(objectClass=group))";
-            result = searcher.FindAll();
-        } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return null;
-        }
-
-        if (result is null || result.Count == 0) return null;
-
-        foreach (SearchResult o in result)
-            foreach (DictionaryEntry e in o.Properties) {
-                if (hash.ContainsKey(e.Key)) continue;
-                hash.Add(e.Key, null);
-                sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}\n{e.Key}");
+            SearchResultCollection result = null;
+            try {
+                DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+                DirectorySearcher searcher = new DirectorySearcher(dir);
+                searcher.Filter = "(&(objectClass=group))";
+                result = searcher.FindAll();
+            } catch (Exception ex) {
+                ErrorLog.Err(ex);
+                return null;
             }
 
-        hash.Clear();
-        return Encoding.UTF8.GetBytes(sb.ToString());
+            if (result is null || result.Count == 0) return null;
+
+            foreach (SearchResult o in result)
+                foreach (DictionaryEntry e in o.Properties) {
+                    if (hash.ContainsKey(e.Key)) continue;
+                    hash.Add(e.Key, null);
+                    sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}\n{e.Key}");
+                }
+
+            hash.Clear();
+
+            AdGroupCache_timestamp = DateTime.Now.Ticks;
+            AdGroupCache = Encoding.UTF8.GetBytes(sb.ToString());
+            return AdGroupCache;
+        }
     }
 
     public static byte[] ListScripts() {
@@ -316,7 +342,6 @@ static class Scripts {
         }
     }
 
-
     public static byte[] RunScript(in string[] para) {
         string filename = "";
         for (int i = 1; i < para.Length; i++) 
@@ -341,6 +366,9 @@ static class Scripts {
         string[] lines = script.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
         for (int i = 0; i < lines.Length; i++) { //nodes
+            lines[i] = lines[i].Trim();
+            if (lines[i].StartsWith("#")) continue; //skip comments
+
             string[] split = lines[i].Split((char)127);
             if (split.Length < 3) continue;
             if (split[0] != "n") continue;  
@@ -408,45 +436,59 @@ static class Scripts {
             links.Add(newLink);
         }
 
+        StringBuilder log = new StringBuilder();
+
         List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
         foreach (ScriptNode node in endpoints) {
-            List<string[]> result = CascadeNode(in node, in links);
+            List<string[]> result = CascadeNode(node, links, log);
         }
 
         return null;
     }
 
-    private static List<string[]> CascadeNode(in ScriptNode node, in List<ScriptLink> links) {
+    private static List<string[]> CascadeNode(in ScriptNode node, in List<ScriptLink> links, in StringBuilder log) {
         ScriptSocket[] inputSockets = node.sockets.Where(o => o.type == 'i').ToArray();
 
         List<string[]>[] results = new List<string[]>[inputSockets.Length];
 
         for (int i = 0; i < inputSockets.Length; i++) {
-            ScriptLink link = links.Find(o => o.secondary.GetHashCode() == inputSockets[i].GetHashCode());
+            ScriptLink link = links.Find(o => ScriptLink.Equals(o.secondary, inputSockets[i]));
             if (link is null) { 
                 Console.WriteLine(" ! " + $"Node {node.name} is unlinked.");
                 continue;
             }
 
-            if (link.primaryNode.data is null)
-                results[i] = CascadeNode(in link.primaryNode, in links);
+            if (link.primaryNode.array is null)
+                results[i] = CascadeNode(link.primaryNode, links, log);
             else
-                results[i] = link.primaryNode.data;
+                results[i] = link.primaryNode.array;
         }
         
-        return InvokeNode(in node, in results);
+        return InvokeNode(node, results, log);
     }
 
-    private static List<string[]> InvokeNode(in ScriptNode node, in List<string[]>[] results) {
-        Console.WriteLine(node.name);
-
-        //TODO: ...
+    private static List<string[]> InvokeNode(in ScriptNode node, in List<string[]>[] results, in StringBuilder log) {
 
         switch (node.name) {
-            case "Protest users":
-                return null;
+            case "Protest users":       return null;
+            case "Protest equipment":   return null;
+            case "Domain users":        return null;
+            case "Domain workstations": return null;
+            case "Domain groups":       return null;
+            case "IPv4 subnet":         return null;
+            case "Single value":        return null;
+
+            //TODO: ...
+
+            case "Text file":   return null;
+            case "CSV file":    return null;
+            case "JSON file":   return null;
+            case "XML file":    return null;
+            case "HTML file":   return null;
+            case "Send e-mail": return null;
 
             default:
+                log.AppendLine(" ! " + $"Undefined node: {node.name}.");
                 return null;
         }
     }

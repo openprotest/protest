@@ -340,6 +340,9 @@ class ScriptEditor extends Window {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let lines = xhr.responseText.split("\n");
                 lines.forEach(line => {
+                    line = line.trim();
+                    if (line.startsWith("#")) return; //skip comments
+
                     let split = line.split(String.fromCharCode(127));
                     if (split.length < 3) return;
 
@@ -804,8 +807,8 @@ class ScriptEditor extends Window {
 
         this.links.push([newPath, p, s]);
 
-        p[5].OnLinkChange();
-        s[5].OnLinkChange();
+        p[5].Link_onchange();
+        s[5].Link_onchange();
 
         if (s[5] === this.selectedNode) //update parameters
             this.ShowParameters(s[5], true);
@@ -822,7 +825,7 @@ class ScriptEditor extends Window {
         for (let i = 0; i < todo.length; i++)
             this.links.splice(this.links.indexOf(todo[i]), 1);
 
-        socket[5].OnLinkChange();
+        socket[5].Link_onchange();
     }
 
     Ghost_onmouseup(event) {
@@ -1031,7 +1034,7 @@ class ScriptNode {
         this.g.onmouseup = event => editor.Node_onmouseup(event);
 
         //this.PropagateColumns();
-        this.OnLinkChange();
+        this.Link_onchange();
     }
 
     Attach(container) {
@@ -1135,7 +1138,7 @@ class ScriptNode {
         return columns;
     }
 
-    OnLinkChange() {
+    Link_onchange() {
         this.PropagateColumns();
     }
 

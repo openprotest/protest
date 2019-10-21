@@ -14,6 +14,7 @@ using System.Text;
 using System.Management;
 using System.Diagnostics;
 using System.Net.Http;
+using System.IO.Compression;
 
 static class Tools {
     [System.Runtime.InteropServices.DllImport("iphlpapi.dll", ExactSpelling = true)] public static extern int SendARP(uint DestIP, uint SrcIP, byte[] pMacAddr, ref int PhyAddrLen);
@@ -630,6 +631,32 @@ static class Tools {
         } catch {
             return null;
         }
+    }
+
+    public static void ExtractZippedKnowlageFile() {
+        DirectoryInfo dirIp = new DirectoryInfo(IP_BIN_DIR);
+        FileInfo fileIpZip = new FileInfo($"{Directory.GetCurrentDirectory()}\\knowlage\\ip.zip");
+        if (!dirIp.Exists && fileIpZip.Exists) 
+            try {
+                Console.Write("Extracting ip.zip");
+                ZipFile.ExtractToDirectory(fileIpZip.FullName, dirIp.FullName);
+                Console.WriteLine("\t Done");
+            } catch (Exception ex) {
+                ErrorLog.Err(ex);
+            }
+
+        DirectoryInfo dirProxy = new DirectoryInfo(PROXY_BIN_DIR);
+        FileInfo fileProxyZip = new FileInfo($"{Directory.GetCurrentDirectory()}\\knowlage\\proxy.zip");
+        if (!dirProxy.Exists && fileProxyZip.Exists) 
+            try {
+                Console.Write("Extracting proxy.zip");
+                ZipFile.ExtractToDirectory(fileProxyZip.FullName, dirProxy.FullName);
+                Console.WriteLine("\t Done");
+            } catch (Exception ex) {
+                ErrorLog.Err(ex);
+            }
+
+        Console.WriteLine();
     }
 
     public static byte[] LocateIp(string[] para) {
