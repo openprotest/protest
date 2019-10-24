@@ -1097,7 +1097,7 @@ class ScriptNode {
             case "Domain users":        columns = Script_AdUserColumns; break;
             case "Domain workstations": columns = Script_AdWorkstationColumns; break;
             case "Domain groups":       columns = Script_AdGroupsColumns; break;
-            case "IPv4 subnet":         columns = ["IP"]; break;
+            case "IPv4 subnet":         columns = ["IP address"]; break;
             case "Single value":        columns = ["Value"]; break;
 
             case "WMI query":    columns = ["Host", "..."]; break; //TODO:

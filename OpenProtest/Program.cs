@@ -119,7 +119,7 @@ class Program {
         Tools.ExtractZippedKnowlageFile();
         NoSQL.LoadEquip();
         NoSQL.LoadUsers();
-        Scripts.LoadScripts();
+        Scripts.LoadTools();
 
         Console.WriteLine($"Total equip loaded: {NoSQL.equip.Count}");
         Console.WriteLine($"Total users loaded: {NoSQL.users.Count}");
@@ -160,7 +160,7 @@ class Program {
     static void Main(string[] args) {
         Console.Title = "Pro-test";
 
-        string PRO_TEST =
+        const string PRO_TEST =
             "###############  ###################\n" +
             "#    #    #   #  #    #   #   #    #\n" +
             "#  # #  # # # #####  ## ###  ###  ##\n" +

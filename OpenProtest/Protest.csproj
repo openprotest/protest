@@ -454,6 +454,7 @@
     <Content Include="bin\protest_front\res\l_reload.svg" />
     <Content Include="bin\protest_front\res\l_run.svg" />
     <Content Include="bin\protest_front\res\l_save.svg" />
+    <Content Include="bin\protest_front\res\l_scripts.svg" />
     <Content Include="bin\protest_front\res\l_search.svg" />
     <Content Include="bin\protest_front\res\l_sort.svg" />
     <Content Include="bin\protest_front\res\l_unkink.svg" />
@@ -548,7 +549,7 @@
     <Content Include="bin\protest_front\window.js" />
     <Content Include="bin\protest_front\wmi.css" />
     <Content Include="bin\protest_front\wmi.js" />
-    <Content Include="bin\scripts\scripts.txt" />
+    <Content Include="bin\scripts\tools.txt" />
     <Content Include="pro-test.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

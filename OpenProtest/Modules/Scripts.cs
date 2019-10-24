@@ -16,8 +16,7 @@ public class ScriptNode {
     public string[][] parameters;
     public ScriptSocket[] sockets;
 
-    public List<string> header;
-    public List<string[]> array;
+    public ScriptResult results;
 }
 
 public class ScriptSocket {
@@ -33,6 +32,11 @@ public class ScriptLink {
     public ScriptSocket secondary;
 }
 
+public class ScriptResult {
+    public string[] header;
+    public List<string[]> array = new List<string[]>();
+}
+
 static class Scripts {
     private const long QUARTER = 9000000000;
 
@@ -44,11 +48,11 @@ static class Scripts {
     private static Hashtable tools = new Hashtable();
 
     private static object cache_lock = new object();
-    private static byte[] AdUserCache = null, AdWorkstationCache = null, AdGroupCache = null;
-    private static long AdUserCache_timestamp = 0, AdWorkstationCache_timestamp = 0, AdGroupCache_timestamp = 0;
+    private static byte[] adUserCache = null, adWorkstationCache = null, adGroupCache = null;
+    private static long adUserCache_timestamp = 0, adWorkstationCache_timestamp = 0, adGroupCache_timestamp = 0;
 
-    public static void LoadScripts() {
-        string FILE_SCRIPT = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts.txt";
+    public static void LoadTools() {
+        string FILE_SCRIPT = $"{Directory.GetCurrentDirectory()}\\scripts\\tools.txt";
         
         if (tools_payload is null)
             try {
@@ -123,125 +127,125 @@ static class Scripts {
     }
 
     public static byte[] GetAdUserColumns() {
-        if (!(AdUserCache is null) && AdUserCache_timestamp > DateTime.Now.Ticks - QUARTER)
-            return AdUserCache;
+        if (!(adUserCache is null) && adUserCache_timestamp > DateTime.Now.Ticks - QUARTER)
+            return adUserCache;
 
-        lock (cache_lock) {
-            Hashtable hash = new Hashtable();
-            StringBuilder sb = new StringBuilder();
+        Hashtable hash = new Hashtable();
+        StringBuilder sb = new StringBuilder();
 
-            string domain = null;
-            try {
-                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-            } catch { }
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch { }
 
-            SearchResultCollection result = null;
-            try {
-                DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-                DirectorySearcher searcher = new DirectorySearcher(dir);
-                searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
-                result = searcher.FindAll();
-            } catch (Exception ex) {
-                ErrorLog.Err(ex);
-                return null;
+        SearchResultCollection result = null;
+        try {
+            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
+            result = searcher.FindAll();
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return null;
+        }
+
+        if (result is null || result.Count == 0) return null;
+
+        foreach (SearchResult o in result)
+            foreach (DictionaryEntry e in o.Properties) {
+                if (hash.ContainsKey(e.Key)) continue;
+                hash.Add(e.Key, null);
+                sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
             }
 
-            if (result is null || result.Count == 0) return null;
+        hash.Clear();
 
-            foreach (SearchResult o in result)
-                foreach (DictionaryEntry e in o.Properties) {
-                    if (hash.ContainsKey(e.Key)) continue;
-                    hash.Add(e.Key, null);
-                    sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
-                }
-
-            hash.Clear();
-
-            AdUserCache_timestamp = DateTime.Now.Ticks;
-            AdUserCache = Encoding.UTF8.GetBytes(sb.ToString());
-            return AdUserCache;
+        lock (cache_lock) {
+            adUserCache_timestamp = DateTime.Now.Ticks;
+            adUserCache = Encoding.UTF8.GetBytes(sb.ToString());
+            return adUserCache;
         }
     }
 
     public static byte[] GetAdWorkstationColumns() {
-        if (!(AdWorkstationCache is null) && AdWorkstationCache_timestamp > DateTime.Now.Ticks - QUARTER)
-            return AdWorkstationCache;
+        if (!(adWorkstationCache is null) && adWorkstationCache_timestamp > DateTime.Now.Ticks - QUARTER)
+            return adWorkstationCache;
 
-        lock (cache_lock) {
-            Hashtable hash = new Hashtable();
-            StringBuilder sb = new StringBuilder();
+        Hashtable hash = new Hashtable();
+        StringBuilder sb = new StringBuilder();
 
-            string domain = null;
-            try {
-                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-            } catch { }
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch { }
 
-            SearchResultCollection result = null;
-            try {
-                DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-                DirectorySearcher searcher = new DirectorySearcher(dir);
-                searcher.Filter = "(objectClass=computer)";
-                result = searcher.FindAll();
-            } catch (Exception ex) {
-                ErrorLog.Err(ex);
-                return null;
+        SearchResultCollection result = null;
+        try {
+            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = "(objectClass=computer)";
+            result = searcher.FindAll();
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return null;
+        }
+
+        if (result is null || result.Count == 0) return null;
+
+        foreach (SearchResult o in result)
+            foreach (DictionaryEntry e in o.Properties) {
+                if (hash.ContainsKey(e.Key)) continue;
+                hash.Add(e.Key, null);
+                sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
             }
 
-            if (result is null || result.Count == 0) return null;
+        hash.Clear();
 
-            foreach (SearchResult o in result)
-                foreach (DictionaryEntry e in o.Properties) {
-                    if (hash.ContainsKey(e.Key)) continue;
-                    hash.Add(e.Key, null);
-                    sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}{e.Key}");
-                }
-
-            hash.Clear();
-
-            AdWorkstationCache_timestamp = DateTime.Now.Ticks;
-            AdWorkstationCache = Encoding.UTF8.GetBytes(sb.ToString());
-            return AdWorkstationCache;
+        lock (cache_lock) {
+            adWorkstationCache_timestamp = DateTime.Now.Ticks;
+            adWorkstationCache = Encoding.UTF8.GetBytes(sb.ToString());
+            return adWorkstationCache;
         }
     }
 
     public static byte[] GetAdGroupColumns() {
-        if (!(AdGroupCache is null) && AdGroupCache_timestamp > DateTime.Now.Ticks - QUARTER)
-            return AdGroupCache;
+        if (!(adGroupCache is null) && adGroupCache_timestamp > DateTime.Now.Ticks - QUARTER)
+            return adGroupCache;
+     
+        Hashtable hash = new Hashtable();
+        StringBuilder sb = new StringBuilder();
 
-        lock (cache_lock) {        
-            Hashtable hash = new Hashtable();
-            StringBuilder sb = new StringBuilder();
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch { }
 
-            string domain = null;
-            try {
-                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-            } catch { }
+        SearchResultCollection result = null;
+        try {
+            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = "(&(objectClass=group))";
+            result = searcher.FindAll();
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return null;
+        }
 
-            SearchResultCollection result = null;
-            try {
-                DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-                DirectorySearcher searcher = new DirectorySearcher(dir);
-                searcher.Filter = "(&(objectClass=group))";
-                result = searcher.FindAll();
-            } catch (Exception ex) {
-                ErrorLog.Err(ex);
-                return null;
+        if (result is null || result.Count == 0) return null;
+
+        foreach (SearchResult o in result)
+            foreach (DictionaryEntry e in o.Properties) {
+                if (hash.ContainsKey(e.Key)) continue;
+                hash.Add(e.Key, null);
+                sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}\n{e.Key}");
             }
 
-            if (result is null || result.Count == 0) return null;
+        hash.Clear();
 
-            foreach (SearchResult o in result)
-                foreach (DictionaryEntry e in o.Properties) {
-                    if (hash.ContainsKey(e.Key)) continue;
-                    hash.Add(e.Key, null);
-                    sb.Append(sb.Length == 0 ? e.Key : $"{(char)127}\n{e.Key}");
-                }
-
-            hash.Clear();
-
-            AdGroupCache_timestamp = DateTime.Now.Ticks;
-            AdGroupCache = Encoding.UTF8.GetBytes(sb.ToString());
-            return AdGroupCache;
+        lock (cache_lock) {
+            adGroupCache_timestamp = DateTime.Now.Ticks;
+            adGroupCache = Encoding.UTF8.GetBytes(sb.ToString());
+            return adGroupCache;
         }
     }
 
@@ -401,8 +405,9 @@ static class Scripts {
                 };
                 sockets.Add(newSocket);
             }
+
             newNode.sockets = sockets.ToArray();
-                       
+            
             nodes.Add(newNode);
 
             values.Clear();
@@ -440,58 +445,339 @@ static class Scripts {
 
         List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
         foreach (ScriptNode node in endpoints) {
-            List<string[]> result = CascadeNode(node, links, log);
+            ScriptResult result = CascadeNode(node, links, log);
         }
 
         return null;
     }
 
-    private static List<string[]> CascadeNode(in ScriptNode node, in List<ScriptLink> links, in StringBuilder log) {
+    private static ScriptResult CascadeNode(in ScriptNode node, in List<ScriptLink> links, in StringBuilder log) {
         ScriptSocket[] inputSockets = node.sockets.Where(o => o.type == 'i').ToArray();
 
-        List<string[]>[] results = new List<string[]>[inputSockets.Length];
+        ScriptResult[] results = new ScriptResult[inputSockets.Length];
 
         for (int i = 0; i < inputSockets.Length; i++) {
             ScriptLink link = links.Find(o => ScriptLink.Equals(o.secondary, inputSockets[i]));
-            if (link is null) { 
-                Console.WriteLine(" ! " + $"Node {node.name} is unlinked.");
+            if (link is null) {
+                Console.WriteLine($" ! Node {node.name} is unlinked.");
                 continue;
             }
 
-            if (link.primaryNode.array is null)
+            if (link.primaryNode.results is null)
                 results[i] = CascadeNode(link.primaryNode, links, log);
             else
-                results[i] = link.primaryNode.array;
+                results[i] = link.primaryNode.results;
         }
         
         return InvokeNode(node, results, log);
     }
 
-    private static List<string[]> InvokeNode(in ScriptNode node, in List<string[]>[] results, in StringBuilder log) {
+    private static ScriptResult InvokeNode(in ScriptNode node, in ScriptResult[] results, in StringBuilder log) {
 
         switch (node.name) {
-            case "Protest users":       return null;
-            case "Protest equipment":   return null;
-            case "Domain users":        return null;
-            case "Domain workstations": return null;
-            case "Domain groups":       return null;
-            case "IPv4 subnet":         return null;
-            case "Single value":        return null;
+            case "Protest users":       return ProtestUsers(node);
+            case "Protest equipment":   return ProtestEquip(node);
+            case "Domain users":        return DomainUsers(node);
+            case "Domain workstations": return DomainWorkstation(node);
+            case "Domain groups":       return DomainGroups(node);
+            case "IPv4 subnet":         return IPv4Subnet(node);
+            case "Single value":        return SingleValue(node);
 
             //TODO: ...
 
-            case "Text file":   return null;
-            case "CSV file":    return null;
-            case "JSON file":   return null;
-            case "XML file":    return null;
-            case "HTML file":   return null;
-            case "Send e-mail": return null;
+            case "Text file":   return SaveTxt(node, results);
+            case "CSV file":    return SaveCsv(node, results);
+            case "JSON file":   return SaveJson(node, results);
+            case "XML file":    return SaveXml(node, results);
+            case "HTML file":   return SaveHtml(node, results);
+            case "Send e-mail": return SendEMail(node, results);
 
-            default:
-                log.AppendLine(" ! " + $"Undefined node: {node.name}.");
-                return null;
+            default: //bypass
+                log.AppendLine($" ! Undefined node: {node.name}.");
+                return results[0];
         }
     }
+
+    private static ScriptResult ProtestUsers(in ScriptNode node) {
+        List<string> header = new List<string>();
+        foreach (DictionaryEntry o in NoSQL.users) {
+            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+            foreach (DictionaryEntry c in entry.hash) {
+                string k = c.Key.ToString();
+                if (node.columns.Length > 0 && !node.columns.Contains(k)) continue;
+                if (header.Contains(k)) continue;
+                header.Add(k);
+            }
+        }
+
+        ScriptResult result = new ScriptResult();
+        result.header = header.ToArray();
+
+        foreach (DictionaryEntry o in NoSQL.users) {
+            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+
+            string[] row = new string[header.Count];
+            foreach (DictionaryEntry c in entry.hash) {
+                int index = header.IndexOf(c.Key.ToString());
+                if (index < 0) continue;
+                row[index] = ((string[])c.Value)[0];
+            }
+            result.array.Add(row);
+        }
+
+        header.Clear();
+
+        return result;
+    }
+
+    private static ScriptResult ProtestEquip(in ScriptNode node) {
+        List<string> header = new List<string>();
+        foreach (DictionaryEntry o in NoSQL.equip) {
+            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+            foreach (DictionaryEntry c in entry.hash) {
+                string k = c.Key.ToString();
+                if (node.columns.Length > 0 && !node.columns.Contains(k)) continue;
+                if (header.Contains(k)) continue;
+                header.Add(k);
+            }
+        }
+
+        ScriptResult result = new ScriptResult();
+        result.header = header.ToArray();
+
+        foreach (DictionaryEntry o in NoSQL.equip) {
+            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+
+            string[] row = new string[header.Count];
+            foreach (DictionaryEntry c in entry.hash) {
+                int index = header.IndexOf(c.Key.ToString());
+                if (index < 0) continue;
+                row[index] = ((string[])c.Value)[0];
+            }
+            result.array.Add(row);
+        }
+
+        header.Clear();
+
+        return result;
+    }
+
+    private static ScriptResult DomainToResult(in ScriptNode node, string filter) {
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch { }
+
+        SearchResultCollection adResult = null;
+        try {
+            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = filter;
+            adResult = searcher.FindAll();
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return null;
+        }
+
+        if (adResult is null || adResult.Count == 0) return null;
+
+        List<string> header = new List<string>();
+        foreach (SearchResult o in adResult)
+            foreach (DictionaryEntry e in o.Properties) {
+                if (node.columns.Length > 0 && !node.columns.Contains(e.Key.ToString())) continue;
+                if (header.Contains(e.Key.ToString())) continue;
+                header.Add(e.Key.ToString());
+            }
+
+
+        ScriptResult result = new ScriptResult();
+        result.header = header.ToArray();
+
+        foreach (SearchResult o in adResult) {
+            string[] row = new string[header.Count];
+            foreach (DictionaryEntry e in o.Properties) {
+                int index = header.IndexOf(e.Key.ToString());
+                if (index < 0) continue;
+                row[index] = o.Properties[e.Key.ToString()][0].ToString();
+            }
+            result.array.Add(row);
+        }
+
+        header.Clear();
+
+        return result;
+    }
+
+    private static ScriptResult DomainUsers(in ScriptNode node) {
+        return DomainToResult(node, "(&(objectClass=user)(objectCategory=person))");
+    }
+
+    private static ScriptResult DomainWorkstation(in ScriptNode node) {
+        return DomainToResult(node, "(objectClass=computer)");
+    }
+
+    private static ScriptResult DomainGroups(in ScriptNode node) {
+        return DomainToResult(node, "(&(objectClass=group))");
+    }
+
+    private static ScriptResult IPv4Subnet (in ScriptNode node) {
+        /* [0] IP
+         * [1] CIDR prefix
+         * [2] ->
+         */
+
+        if (node.values.Length < 2) return null;
+        IPAddress ip;
+        byte prefix;
+
+        if (!IPAddress.TryParse(node.values[0], out ip))
+            return null;
+
+        if (!byte.TryParse(node.values[1], out prefix))
+            return null;
+        
+        if (prefix > 31) return null;
+
+        IPAddress subnet = Tools.GetNetworkAddress(ip, prefix);
+
+        byte[] arrFrom = subnet.GetAddressBytes();
+        Array.Reverse(arrFrom);
+
+        uint intFrom = BitConverter.ToUInt32(arrFrom, 0);
+        uint intTo = (uint)(intFrom + Math.Pow(2, 32 - prefix));
+
+        List<string[]> array = new List<string[]>();
+        for (uint i = intFrom; i < intTo && i < UInt32.MaxValue - 1; i++) {
+            byte[] a = BitConverter.GetBytes(i);
+            Array.Reverse(a);
+            array.Add(new string[] { String.Join(".", a) });
+        }
+
+        ScriptResult result = new ScriptResult() {
+            header = new string[] { "IP address" },
+            array = array
+        };
+               
+        return result;
+    }
+
+    private static ScriptResult SingleValue(in ScriptNode node) {
+        /* [0] Value
+         * [1] ->
+         */
+
+        ScriptResult result = new ScriptResult() {
+            header = new string[] { "Value" },
+            array = new List<string[]>()
+        };
+        result.array.Add(new string[] { node.values[0] });
+
+        return result;
+    }
+
+    private static ScriptResult SaveTxt(in ScriptNode node, in ScriptResult[] results) {
+        StringBuilder text = new StringBuilder();
+
+        for (int i = 0; i < results[0].header.Length; i++) {
+            text.Append(results[0].header[i]);
+            if (i < results[0].header.Length - 1) text.Append("\t");
+        }
+        text.Append("\n");
+
+        for (int i = 0; i < results[0].header.Length; i++) {
+            text.Append(new String('-', results[0].header[i].Length));
+            if (i < results[0].header.Length - 1) text.Append("\t");
+        }
+        text.Append("\n");
+
+        for (int i = 0; i < results[0].array.Count; i++) {
+            for (int j=0; j < results[0].array[i].Length; j++) {
+                text.Append(results[0].array[i][j]);
+                if (j < results[0].array[i].Length - 1) text.Append("\t");
+            }
+            text.Append("\n");
+        }
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.txt", text.ToString());
+        return null;
+    }
+
+    private static ScriptResult SaveCsv(in ScriptNode node, in ScriptResult[] results) {
+        StringBuilder text = new StringBuilder();
+
+        for (int i = 0; i < results[0].header.Length; i++) {
+            text.Append($"\"{results[0].header[i].Replace("\"", "\"\"")}\"");
+            if (i < results[0].array.Count - 1) text.Append(",");
+        }
+
+        text.Append("\n");
+
+        for (int i = 0; i < results[0].array.Count; i++) {
+            for (int j = 0; j < results[0].array[i].Length; j++) {
+                string v = results[0].array[i][j];
+                text.Append($"\"{v?.Replace("\"", "\"\"")}\"");
+                if (j < results[0].array[i].Length - 1) text.Append(",");
+            }
+            text.Append("\n");
+        }
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.csv", text.ToString());
+        return null;
+    }
+
+    private static ScriptResult SaveJson(in ScriptNode node, in ScriptResult[] results) {
+        StringBuilder text = new StringBuilder();
+
+        text.AppendLine("{\"array\": [");
+
+        for (int i = 0; i < results[0].array.Count; i++) { //rows loop
+            text.AppendLine("{");
+            for (int j = 0; j < results[0].array[i].Length; j++) { //cell loop
+                string k = results[0].header[j];
+                k = k.Replace("\\", "\\\\"); //escape chars
+                k = k.Replace("/", "\\/");
+                k = k.Replace("\"", "\\\"");
+                k = k.Replace("\n", "\\n");
+                k = k.Replace("\r", "\\r");
+                k = k.Replace("\t", "\\t");
+
+                string v = results[0].array[i][j];
+                v = v?.Replace("\\", "\\\\"); //escape chars
+                v = v?.Replace("/", "\\/");
+                v = v?.Replace("\"", "\\\"");
+                v = v?.Replace("\n", "\\n");
+                v = v?.Replace("\r", "\\r");
+                v = v?.Replace("\t", "\\t");
+
+                text.Append($"\"{k}\": ");
+                text.Append(v is null ? "null" : $"\"{v}\"");
+                if (j < results[0].array[i].Length - 1) text.Append(",");
+                text.AppendLine();
+            }
+
+            text.Append("}");
+            if (i < results[0].array.Count - 1) text.Append(",");
+        }
+
+        text.AppendLine();
+        text.Append("]}");
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.json", text.ToString());
+        return null;
+    }
+
+    private static ScriptResult SaveXml(in ScriptNode node, in ScriptResult[] results) {
+        StringBuilder text = new StringBuilder();
+
+        text.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.xml", text.ToString());
+
+        return null;
+    }
+
+    private static ScriptResult SaveHtml(in ScriptNode node, in ScriptResult[] results) { return null; }
+    private static ScriptResult SendEMail(in ScriptNode node, in ScriptResult[] results) { return null; }
+    
 }
 
 public class ScriptWrapper {}

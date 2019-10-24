@@ -17,7 +17,7 @@ Protest equipment	rgb(32,32,32)	o,Equipment
 Domain users		rgb(32,32,32)	o,Users
 Domain workstations	rgb(32,32,32)	o,Workstations
 Domain groups		rgb(32,32,32)	o,Groups
-IPv4 subnet			rgb(32,32,32)	t,Subnet,192.168.0.0	n,CIDR prefix,24,4,30	o,Subnet
+IPv4 subnet			rgb(32,32,32)	t,Subnet,10.0.0.0	n,CIDR prefix,24,8,30	o,Subnet
 Single value		rgb(32,32,32)	t,Value	o,Value
 
 Tools

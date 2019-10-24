@@ -1152,6 +1152,39 @@ static class Tools {
         return false;
     }
 
+    public static IPAddress GetNetworkAddress(IPAddress ip, byte prefix) {
+        switch (prefix) {
+            case 31: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 254 }));
+            case 30: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 252 }));
+            case 29: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 248 }));
+            case 28: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 240 }));
+            case 27: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 224 }));
+            case 26: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 192 }));
+            case 25: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 128 }));
+            case 24: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 0 }));
+
+            case 23: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 254, 0 }));
+            case 22: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 252, 0 }));
+            case 21: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 248, 0 }));
+            case 20: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 240, 0 }));
+            case 19: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 224, 0 }));
+            case 18: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 192, 0 }));
+            case 17: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 128, 0 }));
+            case 16: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 0, 0 }));
+
+            case 15: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 254, 0, 0 }));
+            case 14: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 252, 0, 0 }));
+            case 13: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 248, 0, 0 }));
+            case 12: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 240, 0, 0 }));
+            case 11: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 224, 0, 0 }));
+            case 10: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 192, 0, 0 }));
+            case 9: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 128, 0, 0 }));
+            case 8: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 0, 0, 0}));
+        }
+
+        return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 0 }));
+    }
+
     public static IPAddress GetNetworkAddress(IPAddress ip, IPAddress mask) {
         byte[] bIp = ip.GetAddressBytes();
         byte[] bMask = mask.GetAddressBytes();

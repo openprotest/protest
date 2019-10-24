@@ -34,13 +34,19 @@
 }
 
 .v-tab-body > div {
-    padding: 4px;
+    padding: 8px;
     border-radius: 2px;
+    padding-left: 40px;
+    background-image: url(res/l_scripts.svgz);
+    background-repeat: no-repeat;
+    background-position: 2px 2px;
+    background-size: 32px 32px;
 }
 
 .v-tab-body > div:hover {
     background-color: var(--select-color);
     color: rgb(32,32,32);
+    background-image: url(res/scripts.svgz);
 }
 
 
