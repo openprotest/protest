@@ -708,6 +708,23 @@ class ScriptEditor extends Window {
 
                     let btnOK = obj[0];
                     let innerBox = obj[1];
+
+                    let txtQuery = document.createElement("textarea");
+                    txtQuery.value = node.values[i] === null ? "" : node.values[i];
+                    txtQuery.placeholder = "Query";
+                    txtQuery.style.width = "calc(100% - 24px)";
+                    txtQuery.style.height = "calc(100% - 32px)";
+                    txtQuery.style.fontFamily = "monospace";
+                    txtQuery.style.resize = "none";
+                    innerBox.appendChild(txtQuery);
+
+                    btnOK.addEventListener("click", () => {
+                        console.log("clicked");
+                        value.value = txtQuery.value;
+                        value.onchange();
+                        value.value = "Edit";
+                    });
+
                     //TODO:
                 };
 

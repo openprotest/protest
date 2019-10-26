@@ -26,7 +26,7 @@ PS exec			hsl(32,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	o,Output
 WMI query		hsl(28,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
 NetBIOS request	hsl(24,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
 DNS lookup		hsl(20,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
-Ping			hsl(16,100%,45%)	i,Host	c,Column	h,Async,True	n,Time out,1000,200,5000	o,Output
+Ping			hsl(16,100%,45%)	i,Host	c,Column	h,Async,True	n,Time out,1000,1,5000	o,Output
 Trace route		hsl(12,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
 Port scan		hsl(8,100%,45%)		i,Host	c,Column	h,Async,True	n,From,1,1,65535	n,To,49152,1,65535	o,Output
 Locate IP		hsl(4,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
@@ -52,11 +52,13 @@ Less than		hsl(155,100%,45%)	i,Input	n,Value	a,Column	o,Less	o,Not less
 Math operators
 Absolute value	hsl(100,100%,45%)	i,Input	c,Column	o,Absolute value
 Round			hsl(96,100%,45%)	i,Input	c,Column	o,Round
-Maximum			hsl(92,100%,45%)	i,Input	c,Column	o,Maximum
-Minimum			hsl(88,100%,45%)	i,Input	c,Column	o,Minimum
-Mean			hsl(84,100%,45%)	i,Input	c,Column	o,Mean
-Median			hsl(80,100%,45%)	i,Input	c,Column	o,Median
-Mode			hsl(76,100%,45%)	i,Input	c,Column	o,Mode
+Quantilize		hsl(92,100%,45%)	i,Input	c,Column	n,Step,10,1,2147483647	o,Quantized
+Sampling		hsl(88,100%,45%)	i,Input	n,Percentage,50,1,99	o,Sample
+Maximum			hsl(84,100%,45%)	i,Input	c,Column	o,Maximum
+Minimum			hsl(80,100%,45%)	i,Input	c,Column	o,Minimum
+Mean			hsl(76,100%,45%)	i,Input	c,Column	o,Mean
+Median			hsl(72,100%,45%)	i,Input	c,Column	o,Median
+Mode			hsl(68,100%,45%)	i,Input	c,Column	o,Mode
 
 Actions
 Wake on LAN		hsl(60,100%,45%)	i,Input	c,Column	h,Async	h,Log

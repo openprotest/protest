@@ -186,7 +186,7 @@ class Http {
                     case "reboot":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
                     case "logoff":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
 
-                    case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, true)); break;
+                    case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, "ba")); break;
                     case "adverify":  buffer = Encoding.UTF8.GetBytes(ActiveDir.ActiveDirVerify(para)); break;
 
                     case "unlockuser":  buffer = ActiveDir.UnlockUser(para); break;

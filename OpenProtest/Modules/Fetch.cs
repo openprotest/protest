@@ -170,32 +170,9 @@ static class Fetch {
 
             LastSeen.Seen(ipAddr.ToString());
 
-            string verify = Wmi.WmiVerify(ipAddr.ToString(), false);
-
-            if (portscan == "ba") {
-                bool[] ports = Tools.PortsScanAsync(ipAddr.ToString(), Knowlage.basic_ports).Result;
-                string strPorts = "";
-                for (int i = 0; i < ports.Length; i++)
-                    if (ports[i])
-                        strPorts += (strPorts.Length == 0) ? Knowlage.basic_ports[i].ToString() : $"; {Knowlage.basic_ports[i].ToString()}";
-                if (strPorts.Length > 0) verify += $"PORTS{(char)127}{strPorts}{(char)127}";
-
-            } else if (portscan == "fu") {
-                ushort[] known_ports = new ushort[Knowlage.protocol.Count];
-                int count = 0;
-                foreach (DictionaryEntry o in Knowlage.protocol)
-                    known_ports[count++] = (ushort)o.Key;
-
-                bool[] ports = Tools.PortsScanAsync(ipAddr.ToString(), Knowlage.basic_ports).Result;
-                string strPorts = "";
-                for (int i = 0; i < ports.Length; i++)
-                    if (ports[i])
-                        strPorts += (strPorts.Length == 0) ? Knowlage.basic_ports[i].ToString() : $"; {Knowlage.basic_ports[i].ToString()}";
-                if (strPorts.Length > 0) verify += $"PORTS{(char)127}{strPorts}{(char)127}";
-            }
+            string verify = Wmi.WmiVerify(ipAddr.ToString(), portscan);
 
             string[] split = verify.Split((char)127);
-
             if (split.Length < 4) return "noinfo";
 
             string v_ip = null;

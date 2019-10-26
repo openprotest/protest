@@ -209,7 +209,7 @@ static class NoSQL {
             array[i] = array[i].ToUpper();
             if (hash.ContainsKey(array[i])) continue;
             if (filename.Length == 0 && array[i] == ".FILENAME") filename = array[i + 1];
-            hash.Add(array[i], new string[] { array[i + 1], $"{performer}, {DateTime.Now.ToString(DATE_FORMAT)}", "" });
+            hash.Add(array[i], new string[] { array[i + 1], $"{performer}, { DateTime.Now.ToString(DATE_FORMAT)}", "" });
         }
         
         if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
@@ -236,7 +236,7 @@ static class NoSQL {
             }
 
             if (!entry.hash.ContainsKey(".FILENAME"))
-                entry.hash.Add(".FILENAME", new string[]{ filename, "", ""});
+                entry.hash.Add(".FILENAME", new string[]{ filename, "", "" });
 
             Write(entry, in performer);
             return true;

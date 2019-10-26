@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
@@ -151,7 +152,7 @@ static class Wmi {
         if (value != null && value.Length > 0) content.Append($"{label}{(char)127}{value}{(char)127}");
     }
 
-    public static string WmiVerify(in string[] para, bool portscan = false) {
+    public static string WmiVerify(in string[] para, string portscan = "no") {
         string filename = "", host = "";
 
         for (int i = 1; i < para.Length; i++) {
@@ -170,7 +171,7 @@ static class Wmi {
         return WmiVerify(host, portscan);
     }
 
-    public static string WmiVerify(string host, bool portscan = false) {
+    public static string WmiVerify(string host, string portscan = "no") {
         if (host.Contains(";")) host = host.Substring(0, host.IndexOf(";")).Trim();
 
         StringBuilder content = new StringBuilder();
@@ -381,8 +382,10 @@ static class Wmi {
             } catch { }
         }
 
-        if (portscan) { //basic port scan
+        if (portscan != "no") { //basic port scan
             bool[] result = Tools.PortsScanAsync(host, Knowlage.basic_ports).Result;
+            //TODO: full portscan
+
             List<int> list = new List<int>();
             string strResult = "";
             for (int i = 0; i < result.Length; i++)
@@ -424,8 +427,7 @@ static class Wmi {
             }
         }
 
-        if (manufacturer.Length == 0 && mac.Length > 0)
-            manufacturer = Encoding.UTF8.GetString(Tools.MacLookup(mac));
+        if (manufacturer.Length == 0 && mac.Length > 0) manufacturer = Encoding.UTF8.GetString(Tools.MacLookup(mac));
 
         if (ip.Length > 0) content.Append($"IP{(char)127}{ip}{(char)127}");
         if (name.Length > 0) content.Append($"NAME{(char)127}{name}{(char)127}");
