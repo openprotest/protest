@@ -239,7 +239,7 @@ class Program {
             NoSQL.FindDuplicates(NoSQL.users, "USERNAME");
         }).Start();
         
-        BandwidthMonitor.StartTask();
+        //TODO: BandwidthMonitor.StartTask();
 
 #if DEBUG
         //while (true) { Console.ReadLine(); }

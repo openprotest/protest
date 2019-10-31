@@ -15,8 +15,7 @@ public class ScriptNode {
     public string[] values;
     public string[][] parameters;
     public ScriptSocket[] sockets;
-
-    public ScriptResult results;
+    public ScriptResult result;
 }
 
 public class ScriptSocket {
@@ -44,10 +43,10 @@ static class Scripts {
     private static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
     private static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
     
+    private static readonly Hashtable tools = new Hashtable();
     private static string tools_payload = null;
-    private static Hashtable tools = new Hashtable();
 
-    private static object cache_lock = new object();
+    private static readonly object cache_lock = new object();
     private static byte[] adUserCache = null, adWorkstationCache = null, adGroupCache = null;
     private static long adUserCache_timestamp = 0, adWorkstationCache_timestamp = 0, adGroupCache_timestamp = 0;
 
@@ -311,23 +310,6 @@ static class Scripts {
         return Tools.OK.Array;
     }
 
-
-    private static string[] CalcColumns(string name, string[] selectedColumns = null) {
-        List<string> columns = new List<string>();
-
-        switch (name) {
-            case "Protest users": break;
-            case "Protest equipment": break;
-            case "Domain users": break;
-            case "Domain workstations": break;
-            case "Domain groups": break;
-            case "IPv4 subnet": break;
-            case "Single value": break;
-        }
-
-        return columns.ToArray();
-    }
-
     private static bool IsEndPoint(ScriptNode node) {
         switch (node.name) {
             case "Text file": return true;
@@ -444,18 +426,15 @@ static class Scripts {
         StringBuilder log = new StringBuilder();
 
         List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
-        foreach (ScriptNode node in endpoints) {
-            ScriptResult result = CascadeNode(node, links, log);
-        }
-
+        foreach (ScriptNode node in endpoints) 
+            CascadeNode(node, links, log);
+        
         return null;
     }
 
     private static ScriptResult CascadeNode(in ScriptNode node, in List<ScriptLink> links, in StringBuilder log) {
         ScriptSocket[] inputSockets = node.sockets.Where(o => o.type == 'i').ToArray();
-
-        ScriptResult[] results = new ScriptResult[inputSockets.Length];
-
+                
         for (int i = 0; i < inputSockets.Length; i++) {
             ScriptLink link = links.Find(o => ScriptLink.Equals(o.secondary, inputSockets[i]));
             if (link is null) {
@@ -463,16 +442,13 @@ static class Scripts {
                 continue;
             }
 
-            if (link.primaryNode.results is null)
-                results[i] = CascadeNode(link.primaryNode, links, log);
-            else
-                results[i] = link.primaryNode.results;
+            if (node.result is null) node.result = CascadeNode(link.primaryNode, links, log);
         }
         
-        return InvokeNode(node, results, log);
+        return InvokeNode(node, log);
     }
 
-    private static ScriptResult InvokeNode(in ScriptNode node, in ScriptResult[] results, in StringBuilder log) {
+    private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log) {
 
         switch (node.name) {
             case "Protest users":       return ProtestUsers(node);
@@ -483,18 +459,20 @@ static class Scripts {
             case "IPv4 subnet":         return IPv4Subnet(node);
             case "Single value":        return SingleValue(node);
 
+            case "Sort": return Sort(node);
+
             //TODO: ...
 
-            case "Text file":   return SaveTxt(node, results);
-            case "CSV file":    return SaveCsv(node, results);
-            case "JSON file":   return SaveJson(node, results);
-            case "XML file":    return SaveXml(node, results);
-            case "HTML file":   return SaveHtml(node, results);
-            case "Send e-mail": return SendEMail(node, results);
+            case "Text file":   return SaveTxt(node);
+            case "CSV file":    return SaveCsv(node);
+            case "JSON file":   return SaveJson(node);
+            case "XML file":    return SaveXml(node);
+            case "HTML file":   return SaveHtml(node);
+            case "Send e-mail": return SendEMail(node);
 
             default: //bypass
                 log.AppendLine($" ! Undefined node: {node.name}.");
-                return results[0];
+                return node.result;
         }
     }
 
@@ -561,7 +539,7 @@ static class Scripts {
 
         return result;
     }
-
+       
     private static ScriptResult DomainToResult(in ScriptNode node, string filter) {
         string domain = null;
         try {
@@ -657,7 +635,7 @@ static class Scripts {
             header = new string[] { "IP address" },
             array = array
         };
-               
+
         return result;
     }
 
@@ -674,26 +652,73 @@ static class Scripts {
 
         return result;
     }
+    
 
-    private static ScriptResult SaveTxt(in ScriptNode node, in ScriptResult[] results) {
+    private static ScriptResult Sort(in ScriptNode node) {
+        /* [0] <-
+         * [1] Sort by
+         * [2] ->
+         * [3] ->
+         */
+
+#nullable enable
+        int index = Array.IndexOf(node.result.header, node.values[1]);
+        List<string[]>? sorted = null, reversed = null;
+        
+        if (index > -1) {
+            sorted   = node.result.array.ConvertAll(o => o); //semi-deep copy
+            reversed = node.result.array.ConvertAll(o => o); //   -- >> --
+
+            sorted.Sort((string[] a, string[] b) => {
+                double da, db;
+                if (double.TryParse(a[index], out da) && double.TryParse(b[index], out db)) {
+                    if (da > db) return 1;
+                    if (da < db) return -1;
+                    return 0;
+                }
+                return a[index].CompareTo(b[index]);
+            });
+
+            reversed.Sort((string[] b, string[] a) => {
+                double da, db;
+                if (double.TryParse(a[index], out da) && double.TryParse(b[index], out db)) {
+                    if (da > db) return 1;
+                    if (da < db) return -1;
+                    return 0;
+                }
+                return a[index].CompareTo(b[index]);
+            });
+        }
+
+        ScriptResult result = new ScriptResult() { //sorted
+            header = node.result.header,
+            array = sorted is null ? node.result.array : sorted
+        };
+        
+#nullable disable
+        return result;
+    }
+
+
+    private static ScriptResult SaveTxt(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < results[0].header.Length; i++) {
-            text.Append(results[0].header[i]);
-            if (i < results[0].header.Length - 1) text.Append("\t");
+        for (int i = 0; i < node.result.header.Length; i++) {
+            text.Append(node.result.header[i]);
+            if (i < node.result.header.Length - 1) text.Append("\t");
         }
         text.Append("\n");
 
-        for (int i = 0; i < results[0].header.Length; i++) {
-            text.Append(new String('-', results[0].header[i].Length));
-            if (i < results[0].header.Length - 1) text.Append("\t");
+        for (int i = 0; i < node.result.header.Length; i++) {
+            text.Append(new String('-', node.result.header[i].Length));
+            if (i < node.result.header.Length - 1) text.Append("\t");
         }
         text.Append("\n");
 
-        for (int i = 0; i < results[0].array.Count; i++) {
-            for (int j=0; j < results[0].array[i].Length; j++) {
-                text.Append(results[0].array[i][j]);
-                if (j < results[0].array[i].Length - 1) text.Append("\t");
+        for (int i = 0; i < node.result.array.Count; i++) {
+            for (int j=0; j < node.result.array[i].Length; j++) {
+                text.Append(node.result.array[i][j]);
+                if (j < node.result.array[i].Length - 1) text.Append("\t");
             }
             text.Append("\n");
         }
@@ -702,21 +727,21 @@ static class Scripts {
         return null;
     }
 
-    private static ScriptResult SaveCsv(in ScriptNode node, in ScriptResult[] results) {
+    private static ScriptResult SaveCsv(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < results[0].header.Length; i++) {
-            text.Append($"\"{results[0].header[i].Replace("\"", "\"\"")}\"");
-            if (i < results[0].array.Count - 1) text.Append(",");
+        for (int i = 0; i < node.result.header.Length; i++) {
+            text.Append($"\"{node.result.header[i].Replace("\"", "\"\"")}\"");
+            if (i < node.result.array.Count - 1) text.Append(",");
         }
 
         text.Append("\n");
 
-        for (int i = 0; i < results[0].array.Count; i++) {
-            for (int j = 0; j < results[0].array[i].Length; j++) {
-                string v = results[0].array[i][j];
+        for (int i = 0; i < node.result.array.Count; i++) {
+            for (int j = 0; j < node.result.array[i].Length; j++) {
+                string v = node.result.array[i][j];
                 text.Append($"\"{v?.Replace("\"", "\"\"")}\"");
-                if (j < results[0].array[i].Length - 1) text.Append(",");
+                if (j < node.result.array[i].Length - 1) text.Append(",");
             }
             text.Append("\n");
         }
@@ -725,15 +750,15 @@ static class Scripts {
         return null;
     }
 
-    private static ScriptResult SaveJson(in ScriptNode node, in ScriptResult[] results) {
+    private static ScriptResult SaveJson(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("{\"array\": [");
 
-        for (int i = 0; i < results[0].array.Count; i++) { //rows loop
+        for (int i = 0; i < node.result.array.Count; i++) { //rows loop
             text.AppendLine("{");
-            for (int j = 0; j < results[0].array[i].Length; j++) { //cell loop
-                string k = results[0].header[j];
+            for (int j = 0; j < node.result.array[i].Length; j++) { //cell loop
+                string k = node.result.header[j];
                 k = k.Replace("\\", "\\\\"); //escape chars
                 k = k.Replace("/", "\\/");
                 k = k.Replace("\"", "\\\"");
@@ -741,7 +766,7 @@ static class Scripts {
                 k = k.Replace("\r", "\\r");
                 k = k.Replace("\t", "\\t");
 
-                string v = results[0].array[i][j];
+                string v = node.result.array[i][j];
                 v = v?.Replace("\\", "\\\\"); //escape chars
                 v = v?.Replace("/", "\\/");
                 v = v?.Replace("\"", "\\\"");
@@ -751,12 +776,12 @@ static class Scripts {
 
                 text.Append($"\"{k}\": ");
                 text.Append(v is null ? "null" : $"\"{v}\"");
-                if (j < results[0].array[i].Length - 1) text.Append(",");
+                if (j < node.result.array[i].Length - 1) text.Append(",");
                 text.AppendLine();
             }
 
             text.Append("}");
-            if (i < results[0].array.Count - 1) text.Append(",");
+            if (i < node.result.array.Count - 1) text.Append(",");
         }
 
         text.AppendLine();
@@ -766,7 +791,7 @@ static class Scripts {
         return null;
     }
 
-    private static ScriptResult SaveXml(in ScriptNode node, in ScriptResult[] results) {
+    private static ScriptResult SaveXml(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -775,8 +800,8 @@ static class Scripts {
         return null;
     }
 
-    private static ScriptResult SaveHtml(in ScriptNode node, in ScriptResult[] results) { return null; }
-    private static ScriptResult SendEMail(in ScriptNode node, in ScriptResult[] results) { return null; }
+    private static ScriptResult SaveHtml(in ScriptNode node) { return null; }
+    private static ScriptResult SendEMail(in ScriptNode node) { return null; }
     
 }
 

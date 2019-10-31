@@ -211,7 +211,7 @@ static class BandwidthMonitor {
             else
                 return new Int64[] { (Int64)bytesReceived, (Int64)bytesSent, (Int64)DateTime.Now.Ticks }; // <-
 
-        } catch  {
+        } catch {
             return new Int64[] { -2 }; //no service
         }
     } 

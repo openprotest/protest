@@ -223,9 +223,7 @@ class Netcalc extends Window {
         else if (octet >= 224 && octet < 240) this.lblClass.innerHTML = "Class D";
         else this.lblClass.innerHTML = "";
 
-        let net = [];
-        let broadcast = [];
-
+        let net = [], broadcast = [];
         for (let i = 0; i < 4; i++) {
             net.push(ip[i] & mask[i]);
             broadcast.push(ip[i] | (255-mask[i]));

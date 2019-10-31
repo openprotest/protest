@@ -378,6 +378,15 @@ static class Wmi {
                     ContentBuilderAddValue(moc, "CSDVersion", "SERVICE PACK", content);
                     ContentBuilderAddValue(moc, "InstallDate", "OS INSTALL DATE", content, new FormatMethodPtr(DateToString));
                     ContentBuilderAddValue(moc, "SerialNumber", "OS SERIAL NO", content);
+
+                    foreach (ManagementObject o in moc) {
+                        string osName = o.GetPropertyValue("Caption").ToString();
+                        if (osName.ToLower().IndexOf("server") > -1) {
+                            type = "Server";
+                            break;
+                        }
+                    }
+
                 }
             } catch { }
         }

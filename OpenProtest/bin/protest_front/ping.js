@@ -263,11 +263,11 @@ class Ping extends Console {
 
         if (hostname.indexOf(";", 0) > -1) {
             let ips = hostname.split(";");
-            for (let i=0; i<ips.length; i++) await this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) await this.Add(ips[i].trim());
 
         } else if (hostname.indexOf(",", 0) > -1) {
             let ips = hostname.split(",");
-            for (let i=0; i<ips.length; i++) await this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) await this.Add(ips[i].trim());
 
         } else if (hostname.indexOf("-", 0) > -1) {
             let split = hostname.split("-");
@@ -276,9 +276,9 @@ class Ping extends Console {
 
             let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
             let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
-            
+
             if (istart > iend) iend = istart;
-            if (iend - istart > 255) iend = istart + 255;
+            if (iend - istart > 1024) iend = istart + 1024;
 
             function intToBytes(int) {
                 let b = [0, 0, 0, 0];
@@ -289,16 +289,41 @@ class Ping extends Console {
                 } while (i);
                 return b;
             }
-            for (let i=istart; i<=iend; i++)
+            for (let i = istart; i <= iend; i++)
                 await this.Add(intToBytes(i).join("."));
-                
+
+        } else if (hostname.indexOf("/", 0) > -1) {
+            let cidr = parseInt(hostname.split("/")[1].trim());
+            if (isNaN(cidr)) return;
+
+            let ip = hostname.split("/")[0].trim();
+            let ipBytes = ip.split(".");
+            if (ipBytes.length != 4) return;
+
+            ipBytes = ipBytes.map(o=> parseInt(o));
+
+            let bits = "1".repeat(cidr).padEnd(32, "0");
+            let mask = [];
+            mask.push(parseInt(bits.substr(0, 8), 2));
+            mask.push(parseInt(bits.substr(8, 8), 2));
+            mask.push(parseInt(bits.substr(16, 8), 2));
+            mask.push(parseInt(bits.substr(24, 8), 2));
+
+            let net = [], broadcast = [];
+            for (let i = 0; i < 4; i++) {
+                net.push(ipBytes[i] & mask[i]);
+                broadcast.push(ipBytes[i] | (255-mask[i]));
+            }
+
+            this.Filter(net.join(".") + " - " + broadcast.join("."));
+
         } else
             await this.Add(hostname);
 
         let size1 = this.list.childNodes.length;
 
         if (size0 == 0 && size1 > 63) //if 64 or more entries, switch to tied mode
-            this.list.className = "tied-list  no-entries";
+            this.list.className = "tied-list no-entries";
         
         this.InvalidateRecyclerList();
     }

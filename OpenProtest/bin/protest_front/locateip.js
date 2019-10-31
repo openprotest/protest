@@ -7,17 +7,6 @@ class LocateIp extends Console {
         this.setTitle("Locate IP");
         this.setIcon("res/locate.svgz");
         
-        let powered = document.createElement("div");
-        powered.innerHTML = "powered by ip2location.com";
-        powered.style.position = "absolute";
-        powered.style.right = "16px";
-        powered.style.bottom = "8px";
-        powered.style.fontSize = "12px";
-        powered.style.color = "gray";
-        this.content.appendChild(powered);
-
-        this.txtInput.style.zIndex = "3";
-
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
     }
 
