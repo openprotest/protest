@@ -34,7 +34,7 @@ Locate IP			hsl(4,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
 MAC lookup			hsl(0,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
 
 Array modifiers
-Subtract		hsl(280,100%,45%)	i,Minuend	i,Subtrahend	o,Difference
+Subtract rows	hsl(280,100%,45%)	i,Minuend	i,Subtrahend	o,Difference
 Sort			hsl(278,100%,45%)	i,Input	c,Sort by	o,Sorted
 Reverse order	hsl(276,100%,45%)	i,Input	o,Reversed
 Trim			hsl(274,100%,45%)	i,Input	o,Trimmed

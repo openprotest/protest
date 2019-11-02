@@ -15,6 +15,8 @@ public class ScriptNode {
     public string[] values;
     public string[][] parameters;
     public ScriptSocket[] sockets;
+
+    public ScriptNode[] sourceNodes;
     public ScriptResult result;
 }
 
@@ -389,7 +391,7 @@ static class Scripts {
             }
 
             newNode.sockets = sockets.ToArray();
-            
+
             nodes.Add(newNode);
 
             values.Clear();
@@ -426,30 +428,37 @@ static class Scripts {
         StringBuilder log = new StringBuilder();
 
         List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
-        foreach (ScriptNode node in endpoints) 
+        foreach (ScriptNode node in endpoints)
             CascadeNode(node, links, log);
         
-        return null;
+        return Tools.OK.Array;
     }
 
-    private static ScriptResult CascadeNode(in ScriptNode node, in List<ScriptLink> links, in StringBuilder log) {
-        ScriptSocket[] inputSockets = node.sockets.Where(o => o.type == 'i').ToArray();
-                
-        for (int i = 0; i < inputSockets.Length; i++) {
-            ScriptLink link = links.Find(o => ScriptLink.Equals(o.secondary, inputSockets[i]));
-            if (link is null) {
-                Console.WriteLine($" ! Node {node.name} is unlinked.");
-                continue;
-            }
+    private static void CascadeNode(in ScriptNode node, in List<ScriptLink> allLinks, in StringBuilder log) {
+        ScriptSocket[] inputs = node.sockets.Where(o => o.type == 'i').ToArray();
 
-            if (node.result is null) node.result = CascadeNode(link.primaryNode, links, log);
+        foreach (ScriptSocket input in inputs) {
+            if (node.sourceNodes is null) node.sourceNodes = new ScriptNode[inputs.Length];
+
+            for (int i = 0; i < inputs.Length; i++) {
+                ScriptLink link = allLinks.Find(o => ScriptLink.Equals(o.secondary, inputs[i]));
+                if (link is null) {
+                    Console.WriteLine($" ! Node {node.name} is unlinked.");
+                    continue;
+                }
+
+                node.sourceNodes[i] = link.primaryNode;
+            }
         }
-        
-        return InvokeNode(node, log);
+
+        if (!(node.sourceNodes is null))
+            for (int i = 0; i < node.sourceNodes.Length; i++) //cascade
+                CascadeNode(node.sourceNodes[i], allLinks, log);
+
+        if (node.result is null) node.result = InvokeNode(node, log);
     }
 
     private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log) {
-
         switch (node.name) {
             case "Protest users":       return ProtestUsers(node);
             case "Protest equipment":   return ProtestEquip(node);
@@ -459,9 +468,13 @@ static class Scripts {
             case "IPv4 subnet":         return IPv4Subnet(node);
             case "Single value":        return SingleValue(node);
 
-            case "Sort": return Sort(node);
-
-            //TODO: ...
+            case "Subtract rows": return SubtractRows(node);
+            case "Sort":          return Sort(node);
+            case "Reverse order": return ReverseOrder(node);
+            case "Trim":          return Trim(node);
+            case "Unique":        return Unique(node);
+            case "Merge columns": return MergeColumns(node);
+            case "Merge rows":    return MergeRows(node);
 
             case "Text file":   return SaveTxt(node);
             case "CSV file":    return SaveCsv(node);
@@ -472,7 +485,7 @@ static class Scripts {
 
             default: //bypass
                 log.AppendLine($" ! Undefined node: {node.name}.");
-                return node.result;
+                return node.sourceNodes[0].result;
         }
     }
 
@@ -601,18 +614,15 @@ static class Scripts {
     private static ScriptResult IPv4Subnet (in ScriptNode node) {
         /* [0] IP
          * [1] CIDR prefix
-         * [2] ->
-         */
+         * [2] -> */
 
         if (node.values.Length < 2) return null;
         IPAddress ip;
         byte prefix;
 
-        if (!IPAddress.TryParse(node.values[0], out ip))
-            return null;
+        if (!IPAddress.TryParse(node.values[0], out ip)) return null;
 
-        if (!byte.TryParse(node.values[1], out prefix))
-            return null;
+        if (!byte.TryParse(node.values[1], out prefix)) return null;
         
         if (prefix > 31) return null;
 
@@ -641,8 +651,7 @@ static class Scripts {
 
     private static ScriptResult SingleValue(in ScriptNode node) {
         /* [0] Value
-         * [1] ->
-         */
+         * [1] -> */
 
         ScriptResult result = new ScriptResult() {
             header = new string[] { "Value" },
@@ -654,21 +663,46 @@ static class Scripts {
     }
     
 
+    private static ScriptResult SubtractRows(in ScriptNode node) {
+        /* [0] <- Minuend
+        /* [1] <- Subtrahend
+        /* [2] -> Difference */
+
+        List<string[]> minuend = node.sourceNodes[0].result.array;
+        List<string[]> subtrahend = node.sourceNodes[1].result.array;
+        List<string[]> difference = new List<string[]>();
+               
+        for (int i = 0; i < minuend.Count; i++) {
+            bool mached = false;
+
+            for (int j = 0; j < subtrahend.Count; j++)
+                if (subtrahend[j].SequenceEqual(minuend[i])) {
+                    mached = true;
+                    break;
+                }           
+
+            if (mached) continue;
+            difference.Add(minuend[i]);
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = difference
+        };
+    }
+
     private static ScriptResult Sort(in ScriptNode node) {
         /* [0] <-
          * [1] Sort by
-         * [2] ->
-         * [3] ->
-         */
+         * [2] -> */
 
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
 #nullable enable
-        int index = Array.IndexOf(node.result.header, node.values[1]);
-        List<string[]>? sorted = null, reversed = null;
-        
-        if (index > -1) {
-            sorted   = node.result.array.ConvertAll(o => o); //semi-deep copy
-            reversed = node.result.array.ConvertAll(o => o); //   -- >> --
+        List<string[]>? sorted = null;
+#nullable disable
 
+        if (index > -1) {
+            sorted = node.sourceNodes[0].result.array.ConvertAll(o => o); //semi-deep copy
             sorted.Sort((string[] a, string[] b) => {
                 double da, db;
                 if (double.TryParse(a[index], out da) && double.TryParse(b[index], out db)) {
@@ -678,75 +712,199 @@ static class Scripts {
                 }
                 return a[index].CompareTo(b[index]);
             });
-
-            reversed.Sort((string[] b, string[] a) => {
-                double da, db;
-                if (double.TryParse(a[index], out da) && double.TryParse(b[index], out db)) {
-                    if (da > db) return 1;
-                    if (da < db) return -1;
-                    return 0;
-                }
-                return a[index].CompareTo(b[index]);
-            });
         }
 
-        ScriptResult result = new ScriptResult() { //sorted
-            header = node.result.header,
-            array = sorted is null ? node.result.array : sorted
+        return new ScriptResult() { //sorted
+            header = node.sourceNodes[0].result.header,
+            array = sorted is null ? node.sourceNodes[0].result.array : sorted
         };
-        
-#nullable disable
-        return result;
+    }
+
+    private static ScriptResult ReverseOrder(in ScriptNode node) {
+        /* [0] <-
+         * [2] -> */
+
+        List<string[]> reversed = node.sourceNodes[0].result.array.ConvertAll(o => o); //shallow copy
+        reversed.Reverse();
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = reversed
+        };
+    }
+
+    private static ScriptResult Trim(in ScriptNode node) { //remove if empty
+        /* [0] <-
+         * [1] -> */
+
+        List<string[]> trimmed = new List<string[]>();
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            if (node.sourceNodes[0].result.array.TrueForAll(o => o.Length == 0)) continue;
+            trimmed.Add(node.sourceNodes[0].result.array[i]);
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = trimmed
+        };
+    }
+
+    private static ScriptResult Unique(in ScriptNode node) { //remove duplicates
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        List<string[]> unique = new List<string[]>();
+
+        if (index == -1) //[All] or not found
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                bool mached = false;
+                for (int j = 0; j < node.sourceNodes[0].result.array.Count; j++)
+                    if (i != j && node.sourceNodes[0].result.array[i].SequenceEqual(node.sourceNodes[0].result.array[j])) {
+                        mached = true;
+                        break;
+                    }
+
+                if (mached) continue;
+                unique.Add(node.sourceNodes[0].result.array[i]);
+            }
+
+        else 
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                bool mached = false;
+                for (int j = 0; j < node.sourceNodes[0].result.array.Count; j++)
+                    if (i != j && node.sourceNodes[0].result.array[i][index] == node.sourceNodes[0].result.array[j][index]) {
+                        mached = true;
+                        break;
+                    }
+
+                if (mached) continue;
+                unique.Add(node.sourceNodes[0].result.array[i]);
+            }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = unique
+        };
+    }
+    
+    private static ScriptResult MergeColumns(in ScriptNode node) {
+        /* [0] <- A
+        /* [1] <- B
+        /* [2] -> Out */
+
+        ScriptResult a = node.sourceNodes[0].result;
+        ScriptResult b = node.sourceNodes[1].result;
+
+        if (a.array.Count == 0 || b.array.Count == 0)
+            return new ScriptResult() {
+                header = a.header,
+                array = a.array
+            };
+
+        List<string[]> array = new List<string[]>();
+
+        for (int i = 0; i < Math.Max(a.array.Count, b.array.Count); i++) {
+            string[] newRow = new string[a.header.Length + b.header.Length];
+
+            if (i < a.array.Count)
+                Array.Copy(a.array[i], 0, newRow, 0, a.array[i].Length);
+
+            if (i < b.array.Count)
+                Array.Copy(b.array[i], 0, newRow, a.array[0].Length, b.array[i].Length);
+
+            array.Add(newRow);
+        }
+
+        string[] header = new string[a.header.Length + b.header.Length];
+        Array.Copy(a.header, 0, header, 0, a.header.Length);
+        Array.Copy(b.header, 0, header, a.header.Length, b.header.Length);
+
+        return new ScriptResult() {
+            header = header,
+            array = array
+        };
+    }
+    
+    private static ScriptResult MergeRows(in ScriptNode node) {
+        /* [0] <- A
+        /* [1] <- B
+        /* [2] -> Out */
+
+        List<string[]> a = node.sourceNodes[0].result.array;
+        List<string[]> b = node.sourceNodes[1].result.array;
+        List<string[]> output = new List<string[]>();
+
+        output.AddRange(a);
+        output.AddRange(b);
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = output
+        };
     }
 
 
     private static ScriptResult SaveTxt(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < node.result.header.Length; i++) {
-            text.Append(node.result.header[i]);
-            if (i < node.result.header.Length - 1) text.Append("\t");
+        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
+            text.Append(node.sourceNodes[0].result.header[i]);
+            if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
         }
         text.Append("\n");
 
-        for (int i = 0; i < node.result.header.Length; i++) {
-            text.Append(new String('-', node.result.header[i].Length));
-            if (i < node.result.header.Length - 1) text.Append("\t");
+        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
+            text.Append(new String('-', node.sourceNodes[0].result.header[i].Length));
+            if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
         }
         text.Append("\n");
 
-        for (int i = 0; i < node.result.array.Count; i++) {
-            for (int j=0; j < node.result.array[i].Length; j++) {
-                text.Append(node.result.array[i][j]);
-                if (j < node.result.array[i].Length - 1) text.Append("\t");
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            for (int j=0; j < node.sourceNodes[0].result.array[i].Length; j++) {
+                text.Append(node.sourceNodes[0].result.array[i][j]);
+                if (j < node.sourceNodes[0].result.array[i].Length - 1) text.Append("\t");
             }
             text.Append("\n");
         }
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.txt", text.ToString());
+        string filename = escapeFilename(node.values[1]);
+        if (filename.Length == 0)
+            filename = DateTime.Now.Ticks.ToString();
+        else
+            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
         return null;
     }
 
     private static ScriptResult SaveCsv(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < node.result.header.Length; i++) {
-            text.Append($"\"{node.result.header[i].Replace("\"", "\"\"")}\"");
-            if (i < node.result.array.Count - 1) text.Append(",");
+        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
+            text.Append($"\"{node.sourceNodes[0].result.header[i].Replace("\"", "\"\"")}\"");
+            if (i < node.sourceNodes[0].result.array.Count - 1) text.Append(",");
         }
 
         text.Append("\n");
 
-        for (int i = 0; i < node.result.array.Count; i++) {
-            for (int j = 0; j < node.result.array[i].Length; j++) {
-                string v = node.result.array[i][j];
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) {
+                string v = node.sourceNodes[0].result.array[i][j];
                 text.Append($"\"{v?.Replace("\"", "\"\"")}\"");
-                if (j < node.result.array[i].Length - 1) text.Append(",");
+                if (j < node.sourceNodes[0].result.array[i].Length - 1) text.Append(",");
             }
             text.Append("\n");
         }
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.csv", text.ToString());
+        string filename = escapeFilename(node.values[1]);
+        if (filename.Length == 0)
+            filename = DateTime.Now.Ticks.ToString();
+        else
+            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
         return null;
     }
 
@@ -755,10 +913,10 @@ static class Scripts {
 
         text.AppendLine("{\"array\": [");
 
-        for (int i = 0; i < node.result.array.Count; i++) { //rows loop
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //rows loop
             text.AppendLine("{");
-            for (int j = 0; j < node.result.array[i].Length; j++) { //cell loop
-                string k = node.result.header[j];
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) { //cell loop
+                string k = node.sourceNodes[0].result.header[j];
                 k = k.Replace("\\", "\\\\"); //escape chars
                 k = k.Replace("/", "\\/");
                 k = k.Replace("\"", "\\\"");
@@ -766,7 +924,7 @@ static class Scripts {
                 k = k.Replace("\r", "\\r");
                 k = k.Replace("\t", "\\t");
 
-                string v = node.result.array[i][j];
+                string v = node.sourceNodes[0].result.array[i][j];
                 v = v?.Replace("\\", "\\\\"); //escape chars
                 v = v?.Replace("/", "\\/");
                 v = v?.Replace("\"", "\\\"");
@@ -776,18 +934,24 @@ static class Scripts {
 
                 text.Append($"\"{k}\": ");
                 text.Append(v is null ? "null" : $"\"{v}\"");
-                if (j < node.result.array[i].Length - 1) text.Append(",");
+                if (j < node.sourceNodes[0].result.array[i].Length - 1) text.Append(",");
                 text.AppendLine();
             }
 
             text.Append("}");
-            if (i < node.result.array.Count - 1) text.Append(",");
+            if (i < node.sourceNodes[0].result.array.Count - 1) text.Append(",");
         }
 
         text.AppendLine();
         text.Append("]}");
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.json", text.ToString());
+        string filename = escapeFilename(node.values[1]);
+        if (filename.Length == 0)
+            filename = DateTime.Now.Ticks.ToString();
+        else
+            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
         return null;
     }
 
@@ -795,14 +959,68 @@ static class Scripts {
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{DateTime.Now.Ticks}.xml", text.ToString());
+        text.AppendLine("<array>");
 
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //rows loop
+            text.AppendLine("\t<entry>");
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) { //cell loop
+                string k = node.sourceNodes[0].result.header[j];
+                string v = node.sourceNodes[0].result.array[i][j];
+                if (v is null) continue;
+
+                string symbols = "!\"#$%&'()*+'-./:;<=>?@[\\]^`{|}~";
+                k = k.Replace(" ", "_");
+
+                foreach (char c in symbols) 
+                    k = k.Replace(c, '_');
+
+                foreach (char c in symbols)
+                    while (k.StartsWith(c.ToString()))
+                        k = k.Substring(1);
+
+                string value = "";
+                for (int c = 0; c < v.Length; c++)
+                    if (v[c] < 127) value += v[c];
+
+                value = value.Replace("<", "&lt;");
+                value = value.Replace(">", "&gt;");
+                value = value.Replace("&", "&amp;");
+                value = value.Replace("'", "&apos;");
+                value = value.Replace("\"", "&quot;");
+
+                text.AppendLine($"\t\t<{k}>{value}</{k}>");
+            }
+            text.AppendLine("\t</entry>");
+        }
+
+        text.AppendLine("</array>");
+
+        string filename = escapeFilename(node.values[1]);
+        if (filename.Length == 0)
+            filename = DateTime.Now.Ticks.ToString();
+        else
+            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
     }
 
     private static ScriptResult SaveHtml(in ScriptNode node) { return null; }
+
     private static ScriptResult SendEMail(in ScriptNode node) { return null; }
     
+    public static string escapeFilename(string filename) {
+        return filename.Replace("\\", "_")
+            .Replace("/", "_")
+            .Replace(":", "_")
+            .Replace("*", "_")
+            .Replace("?", "_")
+            .Replace("\"", "_")
+            .Replace("<", "_")
+            .Replace(">", "_")
+            .Replace("|", "_");
+    }
+
 }
 
 public class ScriptWrapper {}
