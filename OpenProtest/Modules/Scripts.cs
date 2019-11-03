@@ -769,7 +769,7 @@ static class Scripts {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
                     if (host is null) {
-                        array.Add(new string[] { "null", "null", "null" });
+                        array.Add(new string[] { "", "", "Invalid address" });
                         continue;
                     }
 
