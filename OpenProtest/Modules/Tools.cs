@@ -186,7 +186,7 @@ static class Tools {
         List<Task<string>> tasks = new List<Task<string>>();
         for (int i=0; i<name.Length; i++) tasks.Add(PingAsync(name[i], id[i], timeout));
         string[] result = await Task.WhenAll(tasks);
-        return String.Join (((char)127).ToString(), result);
+        return String.Join(((char)127).ToString(), result);
     }
     public static async Task<string> PingAsync(string hostname, string id, int timeout) {
         Ping p = new Ping();

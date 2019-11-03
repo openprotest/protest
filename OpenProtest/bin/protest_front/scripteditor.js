@@ -1123,13 +1123,14 @@ class ScriptNode {
             case "PS Exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
             case "Secure Shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
 
+            case "NetBIOS request":     columns = ["IP Address", "NetBIOS name"]; break;
             case "DNS lookup":          columns = ["Hostname", "IP Address"]; break;
             case "Reverse DNS lookup":  columns = ["IP address", "Hostname"]; break;
             case "Ping":                columns = ["Host", "Status", "Roundtrip time"]; break;
             case "Trace route":         columns = ["Host", "Route"]; break;
             case "Port scan":           columns = ["Host", "Ports"]; break;
-            case "Locate IP":           columns = ["Host", "Code", "Country", "Region", "City", "Latitude", "Longitude"]; break;
-            case "MAC loopup":          columns = ["MAC address", "Manufacturer"]; break;
+            case "Locate IP":           columns = ["Host", "Code", "Country", "Region", "City", "Latitude", "Longitude", "Is proxy"]; break;
+            case "MAC lookup":          columns = ["MAC address", "Manufacturer"]; break;
 
             case "Sum":     columns = ["Sum"]; break;
             case "Maximum": columns = ["Maximum"]; break;

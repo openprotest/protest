@@ -468,6 +468,18 @@ static class Scripts {
             case "IPv4 subnet":         return IPv4Subnet(node);
             case "Single value":        return SingleValue(node);
 
+            case "Secure shell":       return SSh(node);
+            case "PS exec":            return PsExec(node);
+            case "WMI query":          return WmiQuery(node);
+            case "NetBIOS request":    return NetBiosRequest(node);
+            case "DNS lookup":         return DnsLookUp(node);
+            case "Reverse DNS lookup": return ReverseDnsLookUp(node);
+            case "Ping":               return Ping(node).Result;
+            case "Trace route":        return TraceRoute(node);
+            case "Port scan":          return PortScan(node);
+            case "Locate IP":          return LocateIp(node);
+            case "MAC lookup":         return MacLookUp(node);
+
             case "Subtract rows": return SubtractRows(node);
             case "Sort":          return Sort(node);
             case "Reverse order": return ReverseOrder(node);
@@ -520,7 +532,6 @@ static class Scripts {
 
         return result;
     }
-
     private static ScriptResult ProtestEquip(in ScriptNode node) {
         List<string> header = new List<string>();
         foreach (DictionaryEntry o in NoSQL.equip) {
@@ -552,7 +563,6 @@ static class Scripts {
 
         return result;
     }
-       
     private static ScriptResult DomainToResult(in ScriptNode node, string filter) {
         string domain = null;
         try {
@@ -598,19 +608,15 @@ static class Scripts {
 
         return result;
     }
-
     private static ScriptResult DomainUsers(in ScriptNode node) {
         return DomainToResult(node, "(&(objectClass=user)(objectCategory=person))");
     }
-
     private static ScriptResult DomainWorkstation(in ScriptNode node) {
         return DomainToResult(node, "(objectClass=computer)");
     }
-
     private static ScriptResult DomainGroups(in ScriptNode node) {
         return DomainToResult(node, "(&(objectClass=group))");
     }
-
     private static ScriptResult IPv4Subnet (in ScriptNode node) {
         /* [0] IP
          * [1] CIDR prefix
@@ -648,7 +654,6 @@ static class Scripts {
 
         return result;
     }
-
     private static ScriptResult SingleValue(in ScriptNode node) {
         /* [0] Value
          * [1] -> */
@@ -662,6 +667,194 @@ static class Scripts {
         return result;
     }
     
+    private static ScriptResult SSh(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() { //sorted
+            header = new string[] { "Host", "Timestamp", "Input", "Output" },
+            array = array
+        };
+    }
+    private static ScriptResult PsExec(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() { //sorted
+            header = new string[] { "Host", "Timestamp", "Input", "Output" },
+            array = array
+        };
+    }
+    private static ScriptResult WmiQuery(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() {
+            header = new string[] { },
+            array = array
+        };
+    }
+    private static ScriptResult NetBiosRequest(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() {
+            header = new string[] { "IP Address", "NetBIOS name"  },
+            array = array
+        };
+    }
+    private static ScriptResult DnsLookUp(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() {
+            header = new string[] { "Hostname", "IP Address" },
+            array = array
+        };
+    }
+    private static ScriptResult ReverseDnsLookUp(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() {
+            header = new string[] { "IP address", "Hostname" },
+            array = array
+        };
+    }
+    private static async Task<ScriptResult> Ping(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] async
+         * [3] Time out
+         * [4] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        List<string[]> array = new List<string[]>();
+
+        if (index > -1) {
+            bool isAsync = node.values[2] == "True";
+            int timeout = 1000;
+            int.TryParse(node.values[3], out timeout);
+                        
+            if (isAsync) {
+                List<Task<string>> tasks = new List<Task<string>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add( Tools.PingAsync(host, "", timeout) );
+                }
+
+                string[] result = await Task.WhenAll(tasks);
+                for (int i = 0; i < result.Length; i++) {
+                    string host = node.sourceNodes[0].result.array[i]?[index] ?? "";
+
+                    result[i] = result[i].Substring(1);
+                    int roundtrip = 0;
+                    bool isInt = int.TryParse(result[i], out roundtrip);
+
+                    if (isInt)
+                        array.Add(new string[] { host, roundtrip.ToString(), "Success" });
+                    else
+                        array.Add(new string[] { host, "", result[i] });
+                }
+
+            } else {
+
+                Ping p = new Ping();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    if (host is null) {
+                        array.Add(new string[] { "null", "null", "null" });
+                        continue;
+                    }
+
+                    PingReply reply = await p.SendPingAsync(host, timeout);
+                    array.Add(new string[] { reply.Address.ToString(), reply.Status.ToString(), reply.RoundtripTime.ToString() });
+                }
+                p.Dispose();
+            }
+        }
+
+        return new ScriptResult() {
+            header = new string[] { "Host", "Status", "Roundtrip time" },
+            array = array
+        };
+    }
+    private static ScriptResult TraceRoute(in ScriptNode node) {
+
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() {
+            header = new string[] { "Host", "Route" },
+            array = array
+        };
+    }
+    private static ScriptResult PortScan(in ScriptNode node) {
+        List<string[]> array = new List<string[]>();
+
+
+        return new ScriptResult() {
+            header = new string[] { "Host", "Route" },
+            array = array
+        };
+    }
+    private static ScriptResult LocateIp(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        List<string[]> array = new List<string[]>();
+        
+        if (index > -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string host = node.sourceNodes[0].result.array[i][index];
+                if (host is null) {
+                    array.Add(new string[] { "null", "null", "null", "null", "null", "null", "null", "null" });
+                    continue;
+                }
+
+                string[] result = Encoding.UTF8.GetString(Tools.LocateIp(host)).Split(';');
+                string[] coordinates = result[4].Split(',');
+                array.Add(new string[] { host, result[0], result[1], result[2], result[3], coordinates[0], coordinates[1], result[5] });
+            }
+
+        return new ScriptResult() {
+            header = new string[] { "Host", "Code", "Country", "Region", "City", "Latitude", "Longitude", "Is proxy" },
+            array = array
+        };
+    }
+    private static ScriptResult MacLookUp(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        List<string[]> array = new List<string[]>();
+
+        if (index > -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string mac = node.sourceNodes[0].result.array[i][index];
+                if (mac is null) {
+                    array.Add(new string[] { "null", "null"});
+                    continue;
+                }
+
+                string manufacturer = Encoding.UTF8.GetString(Tools.MacLookup(mac));
+                array.Add(new string[] { mac, manufacturer });
+            }
+
+        return new ScriptResult() { //sorted
+            header = new string[] { "MAC address", "Manufacturer" },
+            array = array
+        };
+    }
 
     private static ScriptResult SubtractRows(in ScriptNode node) {
         /* [0] <- Minuend
@@ -690,7 +883,6 @@ static class Scripts {
             array = difference
         };
     }
-
     private static ScriptResult Sort(in ScriptNode node) {
         /* [0] <-
          * [1] Sort by
@@ -719,7 +911,6 @@ static class Scripts {
             array = sorted is null ? node.sourceNodes[0].result.array : sorted
         };
     }
-
     private static ScriptResult ReverseOrder(in ScriptNode node) {
         /* [0] <-
          * [2] -> */
@@ -732,7 +923,6 @@ static class Scripts {
             array = reversed
         };
     }
-
     private static ScriptResult Trim(in ScriptNode node) { //remove if empty
         /* [0] <-
          * [1] -> */
@@ -748,7 +938,6 @@ static class Scripts {
             array = trimmed
         };
     }
-
     private static ScriptResult Unique(in ScriptNode node) { //remove duplicates
         /* [0] <-
          * [1] column
@@ -788,7 +977,6 @@ static class Scripts {
             array = unique
         };
     }
-    
     private static ScriptResult MergeColumns(in ScriptNode node) {
         /* [0] <- A
         /* [1] <- B
@@ -826,7 +1014,6 @@ static class Scripts {
             array = array
         };
     }
-    
     private static ScriptResult MergeRows(in ScriptNode node) {
         /* [0] <- A
         /* [1] <- B
@@ -845,25 +1032,32 @@ static class Scripts {
         };
     }
 
-
     private static ScriptResult SaveTxt(in ScriptNode node) {
+        int[] columnsLength = new int[node.sourceNodes[0].result.header.Length];
+        for (int i = 0; i < columnsLength.Length; i++)
+            columnsLength[i] = node.sourceNodes[0].result.header[i].Length;
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) 
+            for (int j = 0; j < columnsLength.Length; j++)
+                if (columnsLength[j] < node.sourceNodes[0].result.array[i][j].Length)
+                    columnsLength[j] = node.sourceNodes[0].result.array[i][j].Length;
+        
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
-            text.Append(node.sourceNodes[0].result.header[i]);
+        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) { //header
+            text.Append(node.sourceNodes[0].result.header[i].PadRight(columnsLength[i], ' '));
             if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
         }
         text.Append("\n");
 
-        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
-            text.Append(new String('-', node.sourceNodes[0].result.header[i].Length));
-            if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
+        for (int i = 0; i < columnsLength.Length; i++) { //dash line
+            text.Append(new string('-', columnsLength[i]));
+            if (i < columnsLength.Length - 1) text.Append("\t");
         }
         text.Append("\n");
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //data
             for (int j=0; j < node.sourceNodes[0].result.array[i].Length; j++) {
-                text.Append(node.sourceNodes[0].result.array[i][j]);
+                text.Append(node.sourceNodes[0].result.array[i][j].PadRight(columnsLength[j], ' '));
                 if (j < node.sourceNodes[0].result.array[i].Length - 1) text.Append("\t");
             }
             text.Append("\n");
@@ -878,7 +1072,6 @@ static class Scripts {
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
         return null;
     }
-
     private static ScriptResult SaveCsv(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
@@ -907,7 +1100,6 @@ static class Scripts {
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
         return null;
     }
-
     private static ScriptResult SaveJson(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
@@ -954,7 +1146,6 @@ static class Scripts {
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
         return null;
     }
-
     private static ScriptResult SaveXml(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
@@ -1004,11 +1195,8 @@ static class Scripts {
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
     }
-
     private static ScriptResult SaveHtml(in ScriptNode node) { return null; }
-
     private static ScriptResult SendEMail(in ScriptNode node) { return null; }
-    
     public static string escapeFilename(string filename) {
         return filename.Replace("\\", "_")
             .Replace("/", "_")

@@ -30,8 +30,8 @@ Reverse DNS lookup	hsl(20,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
 Ping				hsl(16,100%,45%)	i,Host	c,Column	h,Async,True	n,Time out,1000,1,5000	o,Output
 Trace route			hsl(12,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
 Port scan			hsl(8,100%,45%)		i,Host	c,Column	h,Async,True	n,From,1,1,65535	n,To,49152,1,65535	o,Output
-Locate IP			hsl(4,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
-MAC lookup			hsl(0,100%,45%)		i,Host	c,Column	h,Async,True	o,Output
+Locate IP			hsl(4,100%,45%)		i,Host	c,Column	o,Output
+MAC lookup			hsl(0,100%,45%)		i,Host	c,Column	o,Output
 
 Array modifiers
 Subtract rows	hsl(280,100%,45%)	i,Minuend	i,Subtrahend	o,Difference
