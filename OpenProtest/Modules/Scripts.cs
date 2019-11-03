@@ -468,15 +468,15 @@ static class Scripts {
             case "IPv4 subnet":         return IPv4Subnet(node);
             case "Single value":        return SingleValue(node);
 
-            case "Secure shell":       return SSh(node);
-            case "PS exec":            return PsExec(node);
-            case "WMI query":          return WmiQuery(node);
-            case "NetBIOS request":    return NetBiosRequest(node);
-            case "DNS lookup":         return DnsLookUp(node);
-            case "Reverse DNS lookup": return ReverseDnsLookUp(node);
+            case "Secure shell":       return SSh(node).Result;
+            case "PS exec":            return PsExec(node).Result;
+            case "WMI query":          return WmiQuery(node).Result;
+            case "NetBIOS request":    return NetBiosRequest(node).Result;
+            case "DNS lookup":         return DnsLookup(node).Result;
+            case "Reverse DNS lookup": return ReverseDnsLookUp(node).Result;
             case "Ping":               return Ping(node).Result;
-            case "Trace route":        return TraceRoute(node);
-            case "Port scan":          return PortScan(node);
+            case "Trace route":        return TraceRoute(node).Result;
+            case "Port scan":          return PortScan(node).Result;
             case "Locate IP":          return LocateIp(node);
             case "MAC lookup":         return MacLookUp(node);
 
@@ -667,7 +667,7 @@ static class Scripts {
         return result;
     }
     
-    private static ScriptResult SSh(in ScriptNode node) {
+    private static async Task<ScriptResult> SSh(ScriptNode node) {
 
         List<string[]> array = new List<string[]>();
 
@@ -677,7 +677,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult PsExec(in ScriptNode node) {
+    private static async Task<ScriptResult> PsExec(ScriptNode node) {
 
         List<string[]> array = new List<string[]>();
 
@@ -687,7 +687,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult WmiQuery(in ScriptNode node) {
+    private static async Task<ScriptResult> WmiQuery(ScriptNode node) {
 
         List<string[]> array = new List<string[]>();
 
@@ -697,7 +697,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult NetBiosRequest(in ScriptNode node) {
+    private static async Task<ScriptResult> NetBiosRequest(ScriptNode node) {
 
         List<string[]> array = new List<string[]>();
 
@@ -707,21 +707,94 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult DnsLookUp(in ScriptNode node) {
+    private static async Task<ScriptResult> DnsLookup(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] async
+         * [3] -> */
 
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
 
+        if (index > -1) {
+            bool isAsync = node.values[2] == "True";
 
+            if (isAsync) {
+                List<Task<IPAddress[]>> tasks = new List<Task<IPAddress[]>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string hostname = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add(DnsLookupAsync(hostname));
+                }
+
+                IPAddress[][] result = await Task.WhenAll(tasks);
+                for (int i = 0; i < result.Length; i++) {
+                    if (result[i] is null) {
+                        array.Add(new string[] { "", "no such host is known" });
+                        continue;
+                    }
+                    array.Add(new string[] { node.sourceNodes[0].result.array[i][index], String.Join(";", result[i].Select(o => o.ToString())) });
+                }
+
+            } else {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string hostname = node.sourceNodes[0].result.array[i][index];
+                    IPAddress[] ips = await DnsLookupAsync(hostname);
+
+                    if (ips is null) {
+                        array.Add(new string[] { "", "no such host is known" });
+                        continue;
+                    }
+                    array.Add(new string[] { hostname, String.Join(";", ips.Select(o => o.ToString())) });
+                }
+            }
+        }
+        
         return new ScriptResult() {
             header = new string[] { "Hostname", "IP Address" },
             array = array
         };
     }
-    private static ScriptResult ReverseDnsLookUp(in ScriptNode node) {
+    private static async Task<ScriptResult> ReverseDnsLookUp(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] async
+         * [3] -> */
 
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
 
+        if (index > -1) {
+            bool isAsync = node.values[2] == "True";
 
+            if (isAsync) {
+                List<Task<IPHostEntry>> tasks = new List<Task<IPHostEntry>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string ip = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add(ReverseDnsLookupAsync(ip));
+                }
+
+                IPHostEntry[] result = await Task.WhenAll(tasks);
+                for (int i = 0; i < result.Length; i++) {
+                    if (result[i] is null) {
+                        array.Add(new string[] { "", "no such host is known" });
+                        continue;
+                    }
+                    array.Add(new string[] { node.sourceNodes[0].result.array[i][index], result[i].HostName });
+                }
+
+            } else {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string ip = node.sourceNodes[0].result.array[i][index];
+                    IPHostEntry host = await ReverseDnsLookupAsync(ip);
+
+                    if (host is null) {
+                        array.Add(new string[] { "", "no such host is known" });
+                        continue;
+                    }
+                    array.Add(new string[] { ip, host.HostName });
+                }
+            }
+        }
         return new ScriptResult() {
             header = new string[] { "IP address", "Hostname" },
             array = array
@@ -741,42 +814,34 @@ static class Scripts {
             bool isAsync = node.values[2] == "True";
             int timeout = 1000;
             int.TryParse(node.values[3], out timeout);
-                        
+            
             if (isAsync) {
-                List<Task<string>> tasks = new List<Task<string>>();
+                List<Task<PingReply>> tasks = new List<Task<PingReply>>();
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
-                    tasks.Add( Tools.PingAsync(host, "", timeout) );
+                    tasks.Add(PingAsync(host, timeout));
                 }
 
-                string[] result = await Task.WhenAll(tasks);
+                PingReply[] result = await Task.WhenAll(tasks);
                 for (int i = 0; i < result.Length; i++) {
-                    string host = node.sourceNodes[0].result.array[i]?[index] ?? "";
-
-                    result[i] = result[i].Substring(1);
-                    int roundtrip = 0;
-                    bool isInt = int.TryParse(result[i], out roundtrip);
-
-                    if (isInt)
-                        array.Add(new string[] { host, roundtrip.ToString(), "Success" });
-                    else
-                        array.Add(new string[] { host, "", result[i] });
+                    if (result[i] is null) {
+                        array.Add(new string[] { "", "invalid address", "" });
+                        continue;
+                    }
+                    array.Add(new string[] { result[i].Address.ToString(), result[i].Status.ToString(), result[i].RoundtripTime.ToString() });
                 }
 
             } else {
-
-                Ping p = new Ping();
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
-                    if (host is null) {
-                        array.Add(new string[] { "", "", "Invalid address" });
+                    PingReply reply = await PingAsync(host, timeout);
+
+                    if (reply is null) {
+                        array.Add(new string[] { "", "invalid address", "" });
                         continue;
                     }
-
-                    PingReply reply = await p.SendPingAsync(host, timeout);
                     array.Add(new string[] { reply.Address.ToString(), reply.Status.ToString(), reply.RoundtripTime.ToString() });
                 }
-                p.Dispose();
             }
         }
 
@@ -785,7 +850,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult TraceRoute(in ScriptNode node) {
+    private static async Task<ScriptResult> TraceRoute(ScriptNode node) {
 
         List<string[]> array = new List<string[]>();
 
@@ -795,7 +860,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult PortScan(in ScriptNode node) {
+    private static async Task<ScriptResult> PortScan(ScriptNode node) {
         List<string[]> array = new List<string[]>();
 
 
@@ -1207,6 +1272,37 @@ static class Scripts {
             .Replace("<", "_")
             .Replace(">", "_")
             .Replace("|", "_");
+    }
+
+    private static async Task<IPAddress[]> DnsLookupAsync(string hostname) {
+        if (hostname is null) return null;
+        try {
+            return await Dns.GetHostAddressesAsync(hostname);
+        } catch {
+            return null;
+        }
+    }
+
+    private static async Task<IPHostEntry> ReverseDnsLookupAsync(string ip) {
+        if (ip is null) return null;
+        try {
+            return await Dns.GetHostEntryAsync(ip);
+        } catch {
+            return null;
+        }
+    }
+
+    private static async Task<PingReply> PingAsync(string host, int timeout) {
+        if (host is null) return null;
+        Ping p = new Ping();
+        try {
+            PingReply reply = await p.SendPingAsync(host, timeout);
+            p.Dispose();
+            return reply;
+        } catch {
+            p.Dispose();
+            return null;
+        }
     }
 
 }
