@@ -8,6 +8,7 @@ using System.DirectoryServices;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.IO;
+using System.Text.RegularExpressions;
 
 public class ScriptNode {
     public string name;
@@ -488,6 +489,24 @@ static class Scripts {
             case "Merge columns": return MergeColumns(node);
             case "Merge rows":    return MergeRows(node);
 
+            case "Equal":        return Equal(node);
+            case "Greater than": return GreaterThan(node);
+            case "Less than":    return LessThan(node);
+            case "Contain":      return Contain(node);
+            case "Regex match":  return RegexMatch(node);
+
+            case "Absolute value": return AbsValue(node);
+            case "Round":          return Round(node);
+            case "Quantization":   return Quantization(node);
+            case "Sampling":       return Sampling(node);
+            case "Sum":            return Sum(node);
+            case "Maximum":        return Maximum(node);
+            case "Minimum":        return Minimum(node);
+            case "Mean":           return Mean(node);
+            case "Median":         return Median(node);
+            case "Mode":           return Mode(node);
+            case "Range":          return Range(node);
+
             case "Text file":   return SaveTxt(node);
             case "CSV file":    return SaveCsv(node);
             case "JSON file":   return SaveJson(node);
@@ -668,9 +687,7 @@ static class Scripts {
     }
     
     private static async Task<ScriptResult> SSh(ScriptNode node) {
-
         List<string[]> array = new List<string[]>();
-
 
         return new ScriptResult() { //sorted
             header = new string[] { "Host", "Timestamp", "Input", "Output" },
@@ -678,9 +695,7 @@ static class Scripts {
         };
     }
     private static async Task<ScriptResult> PsExec(ScriptNode node) {
-
         List<string[]> array = new List<string[]>();
-
 
         return new ScriptResult() { //sorted
             header = new string[] { "Host", "Timestamp", "Input", "Output" },
@@ -688,9 +703,7 @@ static class Scripts {
         };
     }
     private static async Task<ScriptResult> WmiQuery(ScriptNode node) {
-
         List<string[]> array = new List<string[]>();
-
 
         return new ScriptResult() {
             header = new string[] { },
@@ -698,12 +711,40 @@ static class Scripts {
         };
     }
     private static async Task<ScriptResult> NetBiosRequest(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] async
+         * [3] -> */
 
+        bool isAsync = node.values[2] == "True";
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
 
+        if (index > -1) 
+            if (isAsync) {
+                List<Task<string>> tasks = new List<Task<string>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string ip = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add(NetBios.GetBiosNameAsync(ip));
+                }
+
+                string[] result = await Task.WhenAll(tasks);
+                for (int i = 0; i < result.Length; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    array.Add(new string[] { host, result[i] });
+                }
+
+            } else {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string ip = node.sourceNodes[0].result.array[i][index];
+                    string biosName = await NetBios.GetBiosNameAsync(ip);
+                    array.Add(new string[] { ip is null ? "" : ip, biosName });
+                }
+            }
 
         return new ScriptResult() {
-            header = new string[] { "IP Address", "NetBIOS name"  },
+            header = new string[] { "IP Address", "NetBIOS name" },
             array = array
         };
     }
@@ -825,7 +866,7 @@ static class Scripts {
                 PingReply[] result = await Task.WhenAll(tasks);
                 for (int i = 0; i < result.Length; i++) {
                     if (result[i] is null) {
-                        array.Add(new string[] { "", "invalid address", "" });
+                        array.Add(new string[] { "", "Invalid address", "" });
                         continue;
                     }
                     array.Add(new string[] { result[i].Address.ToString(), result[i].Status.ToString(), result[i].RoundtripTime.ToString() });
@@ -837,7 +878,7 @@ static class Scripts {
                     PingReply reply = await PingAsync(host, timeout);
 
                     if (reply is null) {
-                        array.Add(new string[] { "", "invalid address", "" });
+                        array.Add(new string[] { "", "Invalid address", "" });
                         continue;
                     }
                     array.Add(new string[] { reply.Address.ToString(), reply.Status.ToString(), reply.RoundtripTime.ToString() });
@@ -851,9 +892,41 @@ static class Scripts {
         };
     }
     private static async Task<ScriptResult> TraceRoute(ScriptNode node) {
+         /* [0] <-
+          * [1] column
+          * [2] async
+          * [3] -> */
 
+        bool isAsync = node.values[2] == "True";
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
 
+        if (index > -1) {
+            const short timeout = 2000; //2s
+            const short ttl = 30;
+        
+            if (isAsync) {
+                List<Task<string>> tasks = new List<Task<string>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add(TraceRouteAsync(host, timeout, ttl));
+                }
+
+                string[] result = await Task.WhenAll(tasks);
+                for (int i = 0; i < result.Length; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    array.Add(new string[] { host, result[i] });
+                }
+
+            } else {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    string result = await TraceRouteAsync(host, timeout, ttl);
+                    array.Add(new string[] { host is null ? "" : host, result });
+                }
+            }
+        }
 
         return new ScriptResult() {
             header = new string[] { "Host", "Route" },
@@ -861,11 +934,48 @@ static class Scripts {
         };
     }
     private static async Task<ScriptResult> PortScan(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] async
+         * [3] from
+         * [4] to
+         * [5] -> */
+
+        bool isAsync = node.values[2] == "True";
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
 
+        if (index > -1) {
+            int from = 1;
+            int to = 1023;
+            int.TryParse(node.values[3], out from);
+            int.TryParse(node.values[4], out to);
+
+            if (isAsync) {
+                List<Task<string>> tasks = new List<Task<string>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add(PortScanAsync(host, from, to));
+                }
+
+                string[] result = await Task.WhenAll(tasks);
+                for (int i = 0; i < result.Length; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    array.Add(new string[] { host, result[i] });
+                }
+
+            } else {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    string result = await PortScanAsync(host, from, to);
+                    array.Add(new string[] { host is null ? "" : host, result });
+                }
+            }
+        }
 
         return new ScriptResult() {
-            header = new string[] { "Host", "Route" },
+            header = new string[] { "Host", "Ports" },
             array = array
         };
     }
@@ -886,6 +996,11 @@ static class Scripts {
                 }
 
                 string[] result = Encoding.UTF8.GetString(Tools.LocateIp(host)).Split(';');
+                if (result.Length < 6) {
+                    array.Add(new string[] { host, result[0], "", "", "", "", "", "" });
+                    continue;
+                }
+
                 string[] coordinates = result[4].Split(',');
                 array.Add(new string[] { host, result[0], result[1], result[2], result[3], coordinates[0], coordinates[1], result[5] });
             }
@@ -1097,13 +1212,443 @@ static class Scripts {
         };
     }
 
+    private static ScriptResult Equal(in ScriptNode node) {
+        /* [0] <-
+         * [1] value
+         * [2] column
+         * [3] -> */
+
+        string value = node.values[1];
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[2]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1)
+            array = node.sourceNodes[0].result.array.Where(o => o[index] == value).ToList();
+        
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult GreaterThan(in ScriptNode node) {
+        /* [0] <-
+         * [1] value
+         * [2] column
+         * [3] -> */
+
+        string value = node.values[1];
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[2]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1) {
+            double a;
+            if (double.TryParse(value, out a))
+                array = node.sourceNodes[0].result.array.Where(o => {
+                    double b;
+                    if (double.TryParse(o[index], out b)) {
+                        if (a < b) return true;
+                        return false;
+                    }
+
+                    if (String.Compare(value, o[index]) < 0) return true;
+                    return false;
+                }).ToList();                
+
+             else 
+                array = node.sourceNodes[0].result.array.Where(o => {
+                    if (String.Compare(value, o[index]) < 0) return true;
+                    return false;
+                }).ToList();
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult LessThan(in ScriptNode node) {
+        /* [0] <-
+         * [1] value
+         * [2] column
+         * [3] -> */
+
+        string value = node.values[1];
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[2]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1) {
+            double a;
+            if (double.TryParse(value, out a))
+                array = node.sourceNodes[0].result.array.Where(o => {
+                    double b;
+                    if (double.TryParse(o[index], out b)) {
+                        if (b < a) return true;
+                        return false;
+                    }
+
+                    if (String.Compare(o[index], value) < 0) return true;
+                    return false;
+                }).ToList();
+
+            else
+                array = node.sourceNodes[0].result.array.Where(o => {
+                    if (String.Compare(o[index], value) < 0) return true;
+                    return false;
+                }).ToList();
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult Contain(in ScriptNode node) {
+        /* [0] <-
+         * [1] value
+         * [2] column
+         * [3] -> */
+
+        string value = node.values[1];
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[2]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1)
+            array = node.sourceNodes[0].result.array.Where(o => o[index].IndexOf(value) > -1).ToList();
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult RegexMatch(in ScriptNode node) {
+        /* [0] <-
+         * [1] regex
+         * [2] column
+         * [3] -> */
+
+        string pattern = node.values[1];
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[2]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1) 
+            try {
+                Regex regex = new Regex(pattern);
+                array = node.sourceNodes[0].result.array.Where(o => regex.Match(o[index]).Success).ToList();
+            } catch { }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+
+    private static ScriptResult AbsValue(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1) 
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string[] targetRow = node.sourceNodes[0].result.array[i];
+                string[] newRow = new string[targetRow.Length];
+                Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
+
+                double n;
+                newRow[index] = double.TryParse(targetRow[index], out n) ? Math.Abs(n).ToString() : targetRow[index];
+
+                array.Add(newRow);
+            }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult Round(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string[] targetRow = node.sourceNodes[0].result.array[i];
+                string[] newRow = new string[targetRow.Length];
+                Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
+
+                double n;
+                newRow[index] = double.TryParse(targetRow[index], out n) ? Math.Round(n).ToString() : targetRow[index];
+
+                array.Add(newRow);
+            }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult Quantization(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] step
+         * [3] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1) {
+            int step = 10;
+            int.TryParse(node.values[2], out step);
+            
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string[] targetRow = node.sourceNodes[0].result.array[i];
+                string[] newRow = new string[targetRow.Length];
+                Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
+
+                double n;
+                newRow[index] = double.TryParse(targetRow[index], out n) ? (n - n%step).ToString() : targetRow[index];
+                array.Add(newRow);
+            }
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult Sampling(in ScriptNode node) {
+        /* [0] <-
+         * [1] percent
+         * [2] -> */
+
+        double percent = 50;
+        double.TryParse(node.values[1], out percent);
+
+        int step = (int)(100 / percent);
+
+        List<string[]> array = new List<string[]>();
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i+=step)
+            array.Add(node.sourceNodes[0].result.array[i]);
+                
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+    private static ScriptResult Sum(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        double sum = 0;
+        try {
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                double n;
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                    sum += n;
+            }
+        } catch { }
+
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { sum.ToString() });
+
+        return new ScriptResult() {
+            header = new string[] { "Sum" },
+            array = array
+        };
+    }
+    private static ScriptResult Maximum(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        
+        double max = double.MinValue;
+        try {
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                double n;
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                    if (max < n) max = n;
+            }
+        } catch { }
+
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { max.ToString() });
+
+        return new ScriptResult() {
+            header = new string[] { "Maximium" },
+            array = array
+        };
+    }
+    private static ScriptResult Minimum(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        double min = double.MaxValue;
+        try {
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                double n;
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                    if (min > n) min = n;
+            }
+        } catch { }
+
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { min.ToString() });
+
+        return new ScriptResult() {
+            header = new string[] { "Minimum" },
+            array = array
+        };
+    }
+    private static ScriptResult Mean(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        double sum = 0;
+        try {
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                double n;
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                    sum += n;
+            }
+        } catch { }
+
+        double avg = sum / (double)node.sourceNodes[0].result.array.Count;
+
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { avg.ToString() });
+
+        return new ScriptResult() {
+            header = new string[] { "Mean" },
+            array = array
+        };
+    }
+    private static ScriptResult Median(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        string mean = "";
+
+        if (index > -1) {
+            List<string> sort = new List<string>();
+            sort = node.sourceNodes[0].result.array.ConvertAll(o => o[index]); //semi-deep copy
+            sort.Sort((string a, string b) => {
+                double da, db;
+                if (double.TryParse(a, out da) && double.TryParse(b, out db)) {
+                    if (da > db) return 1;
+                    if (da < db) return -1;
+                    return 0;
+                }
+                return a.CompareTo(b);
+            });
+
+            mean = sort[(int)(sort.Count / 2)];
+        }
+
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { mean });
+
+        return new ScriptResult() {
+            header = new string[] { "Median" },
+            array = array
+        };
+    }
+    private static ScriptResult Mode(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        string mode = "";
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        if (index > -1) {
+            Hashtable hash = new Hashtable();
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string value = node.sourceNodes[0].result.array[i][index];
+                if (hash.ContainsKey(value)) {
+                    int last = (int)hash[value];
+                    hash[value] = ++last;
+                } else
+                    hash.Add(value, 1);                
+            }
+
+            int max = 0;
+            
+            foreach (DictionaryEntry e in hash)
+                if (max < (int)e.Value) {
+                    max = (int)e.Value;
+                    mode = e.Key.ToString();
+                }            
+        }
+
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { mode });
+
+        return new ScriptResult() {
+            header = new string[] { "Mode" },
+            array = array
+        };
+    }
+    private static ScriptResult Range(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        double min = double.MaxValue;
+        double max = double.MinValue;
+        double range = 0;
+
+        if (index > -1)
+            try {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    double n;
+                    if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n)) {
+                        if (max < n) max = n;
+                        if (min > n) min = n;
+                    }
+                }
+
+                range = max - min;
+            } catch { }
+        
+        List<string[]> array = new List<string[]>();
+        array.Add(new string[] { range.ToString() });
+
+        return new ScriptResult() {
+            header = new string[] { "Range" },
+            array = array
+        };
+    }
+
     private static ScriptResult SaveTxt(in ScriptNode node) {
         int[] columnsLength = new int[node.sourceNodes[0].result.header.Length];
         for (int i = 0; i < columnsLength.Length; i++)
             columnsLength[i] = node.sourceNodes[0].result.header[i].Length;
+
         for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) 
-            for (int j = 0; j < columnsLength.Length; j++)
-                if (columnsLength[j] < node.sourceNodes[0].result.array[i][j].Length)
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
+                if (columnsLength[j] < node.sourceNodes[0].result.array[i][j]?.Length)
                     columnsLength[j] = node.sourceNodes[0].result.array[i][j].Length;
         
         StringBuilder text = new StringBuilder();
@@ -1122,8 +1667,16 @@ static class Scripts {
 
         for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //data
             for (int j=0; j < node.sourceNodes[0].result.array[i].Length; j++) {
-                text.Append(node.sourceNodes[0].result.array[i][j].PadRight(columnsLength[j], ' '));
-                if (j < node.sourceNodes[0].result.array[i].Length - 1) text.Append("\t");
+                if (!(node.sourceNodes[0].result.array[i][j] is null))
+                    text.Append(node.sourceNodes[0].result.array[i][j]);
+
+                if (j < node.sourceNodes[0].result.array[i].Length - 1) {
+                    if (node.sourceNodes[0].result.array[i][j] is null)
+                        text.Append(new string(' ', columnsLength[j]));
+                    else 
+                        text.Append(new string(' ', columnsLength[j] - node.sourceNodes[0].result.array[i][j].Length));                    
+                    text.Append("\t");
+                }
             }
             text.Append("\n");
         }
@@ -1260,8 +1813,22 @@ static class Scripts {
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
     }
-    private static ScriptResult SaveHtml(in ScriptNode node) { return null; }
+    private static ScriptResult SaveHtml(in ScriptNode node) {
+        StringBuilder text = new StringBuilder();
+
+        //TODO:
+
+        string filename = escapeFilename(node.values[1]);
+        if (filename.Length == 0)
+            filename = DateTime.Now.Ticks.ToString();
+        else
+            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
+        return null;
+    }
     private static ScriptResult SendEMail(in ScriptNode node) { return null; }
+    
     public static string escapeFilename(string filename) {
         return filename.Replace("\\", "_")
             .Replace("/", "_")
@@ -1273,7 +1840,8 @@ static class Scripts {
             .Replace(">", "_")
             .Replace("|", "_");
     }
-
+    
+    
     private static async Task<IPAddress[]> DnsLookupAsync(string hostname) {
         if (hostname is null) return null;
         try {
@@ -1303,6 +1871,53 @@ static class Scripts {
             p.Dispose();
             return null;
         }
+    }
+
+    private static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
+    private static async Task<string> TraceRouteAsync(string host, int timeout, short ttl) {
+        if (host is null) return "";
+
+        string route = "";
+        string lastAddress = "";
+
+        using (Ping p = new Ping())
+            for (short i = 1; i < ttl; i++) 
+                try {
+                    PingReply reply = await p.SendPingAsync(host, timeout, TRACE_ROUTE_BUFFER, new PingOptions(i, true));
+
+                    if (reply.Status == IPStatus.Success || reply.Status == IPStatus.TtlExpired) {
+
+                        if (lastAddress == reply.Address.ToString())
+                            break;
+                        else
+                            lastAddress = reply.Address.ToString();
+
+                        route += reply.Address.ToString() + ";";
+
+                    } else if (reply.Status == IPStatus.TimedOut)
+                        route += "Timed out;";
+
+                    else
+                        break;
+
+                } catch {}
+
+        if (route.EndsWith(";")) return route.Substring(0, route.Length -1);
+        return route;
+    }
+
+    private static async Task<string> PortScanAsync(string host, int from, int to) {
+        if (host is null) return "";
+        
+        bool[] t = await Tools.PortsScanAsync(host, from, to);
+
+        string ports = "";
+        for (int i = 0; i < t.Length; i++) 
+            if (t[i]) 
+                ports += (from+i).ToString() + ";"; 
+
+        if (ports.EndsWith(";")) return ports.Substring(0, ports.Length - 1);
+        return ports;
     }
 
 }

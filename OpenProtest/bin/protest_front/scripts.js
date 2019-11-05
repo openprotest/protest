@@ -49,7 +49,7 @@ class Scripts extends Window {
         this.btnReload.onclick = () => this.ListScripts();
 
         this.body = document.createElement("div");
-        this.body.className = "v-tab-body";
+        this.body.className = "v-tab-body no-results";
         this.content.appendChild(this.body);
 
         this.btnScripts.onclick = () => this.ShowScripts();

@@ -222,6 +222,7 @@ static class Tools {
         }
     }
 
+    private static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
     public static async void WsTraceRoute(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc = null;
         WebSocket ws = null;
@@ -265,10 +266,9 @@ static class Tools {
                     await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);
                     continue;
                 }
-
-                byte[] buffer = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
-                short timeout = 3000; //3s
-                short ttl = 30;
+                
+                const short timeout = 2000; //2s
+                const short ttl = 30;
 
                 List<string> list = new List<string>();
 
@@ -276,19 +276,19 @@ static class Tools {
                     List<IPAddress> ipList = new List<IPAddress>();
                     string lastAddress = "";
 
-                    for (int i=1; i<ttl; i++) {
-                        if (ws.State != WebSocketState.Open) break;
-
-                        string result = $"{hostname}{(char)127}";
-                        using (Ping p = new Ping()) {
+                    using (Ping p = new Ping())
+                        for (short i = 1; i < ttl; i++) {
+                            if (ws.State != WebSocketState.Open) break;
+                            string result = $"{hostname}{(char)127}";
+                        
                             try {
-                                PingReply reply = p.Send(hostname, timeout, buffer, new PingOptions(i, true));
+                                PingReply reply = p.Send(hostname, timeout, TRACE_ROUTE_BUFFER, new PingOptions(i, true));
                                 if (reply.Status == IPStatus.Success || reply.Status == IPStatus.TtlExpired) {
                                     if (lastAddress == reply.Address.ToString())
                                         break;
                                     else
                                         lastAddress = reply.Address.ToString();
-                                        
+                                    
                                     result += reply.Address.ToString();
                                     ipList.Add(reply.Address);
 
@@ -302,11 +302,10 @@ static class Tools {
                                 ErrorLog.Err(ex);
                                 break;
                             }
-                            
+                        
                             lock (send_lock) //once send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
-                    }
+                        }                                        
 
                     List<Task<string>> tasks = new List<Task<string>>();
                     for (int j = 0; j < ipList.Count; j++) tasks.Add(DnsLookupAsync(ipList[j]));
