@@ -3,12 +3,13 @@
     position: absolute;
     width: 150px;
     margin-top: 24px;
+    left: 25px;
 }
 
 .v-tabs > div {
     margin: 4px 0 4px 4px;
-    padding: 8px;
-    color: rgb(192,192,192);
+    padding: 10px;
+    color: rgb(224,224,224);
     background-color: rgb(72,72,72);
     border-radius: 8px 0 0 8px;
     text-align: right;
@@ -20,35 +21,82 @@
     background-color: rgb(88,88,88) !important;
 }
 
+.v-tabs > div:active {
+    transition: .2s;
+    background-color: rgb(80,80,80) !important;
+}
+
 .v-tab-body {
     position: absolute;
-    left: 150px;
+    left: 175px;
     right: 8px;
     top: 8px;
     bottom: 8px;
     background-color: rgb(96,96,96);
     border-radius: 4px;
     padding: 4px;
+    overflow: hidden;
+}
+
+.script-list {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 40px;
+    bottom: 0;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
-.v-tab-body > div {
-    padding: 8px;
+.script-list > .script-list-item {
+    position: relative;
+    height: 48px;
     border-radius: 2px;
-    padding-left: 40px;
-    background-image: url(res/l_scripts.svgz);
-    background-repeat: no-repeat;
-    background-position: 2px 2px;
-    background-size: 32px 32px;
 }
 
-.v-tab-body > div:hover {
+.script-list > .script-list-item:hover {
     background-color: var(--select-color);
     color: rgb(32,32,32);
-    background-image: url(res/scripts.svgz);
 }
 
+.script-list > .script-list-item:hover > div:nth-child(1) {
+    filter: none;
+}
+
+.script-list > .script-list-item:hover > div:nth-child(3) {
+    visibility: visible;
+}
+
+.script-list > .script-list-item > div {
+    position: absolute;
+}
+
+.script-list > .script-list-item > div:nth-child(1) {
+    left: 4px;
+    top: 4px;
+    width: 40px;
+    height: 40px;
+    filter: brightness(6);
+}
+
+.script-list > .script-list-item > div:nth-child(2) {
+    left: 48px;
+    top: 12px;
+    width: calc(100% - 80px);
+}
+
+.script-list > .script-list-item > div:nth-child(3) {
+    visibility: hidden;
+
+    right: 8px;
+    top: 13px;
+    width: 22px;
+    height: 22px;
+    background-image: url(res/close.svgz);
+    background-size: 22px 22px;
+    background-repeat: no-repeat;
+    border-radius: 50%;    
+}
 
 .script-tools-pane {
     position: absolute;

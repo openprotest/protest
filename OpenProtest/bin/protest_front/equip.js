@@ -572,6 +572,17 @@ class Equip extends Window {
             }
 
             if (ports_split.includes(445) && equip.hasOwnProperty("OPERATING SYSTEM")) {
+                let btnCMG = this.SideBar("res/compmgmt.svgz", "PC Management"); //compmgmt
+                btnCMG.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ramsg&cmg&" + this.filename, true);
+                    xhr.send();
+                };
+
                 let btnPSE = this.SideBar("res/psremote.svgz", "PS Remoting"); //PSExec
                 btnPSE.onclick = () => {
                     let xhr = new XMLHttpRequest();

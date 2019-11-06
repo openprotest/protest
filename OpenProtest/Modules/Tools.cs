@@ -66,6 +66,7 @@ static class Tools {
     public static readonly ArraySegment<byte> INV = new ArraySegment<byte>(Encoding.UTF8.GetBytes("invalid argument"));
     public static readonly ArraySegment<byte> FAI = new ArraySegment<byte>(Encoding.UTF8.GetBytes("failed"));
     public static readonly ArraySegment<byte> FLE = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such file"));
+    public static readonly ArraySegment<byte> EXS = new ArraySegment<byte>(Encoding.UTF8.GetBytes("file already exists"));
     public static readonly ArraySegment<byte> NHO = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such host is known"));
     public static readonly ArraySegment<byte> UNA = new ArraySegment<byte>(Encoding.UTF8.GetBytes("service is unavailable"));
     public static readonly ArraySegment<byte> UNR = new ArraySegment<byte>(Encoding.UTF8.GetBytes("host is unreachable"));

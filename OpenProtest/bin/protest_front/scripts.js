@@ -10,8 +10,9 @@ class Scripts extends Window {
         super();
         this.setTitle("Scripts");
         this.setIcon("res/scripts.svgz");
-
+        
         this.payload = null;
+        this.selectedTab = 0;
 
         this.content.style.overflow = "hidden";
 
@@ -33,61 +34,209 @@ class Scripts extends Window {
 
         this.btnScripts = document.createElement("div");
         this.btnScripts.innerHTML = "Scripts";
-        this.btnScripts.className = "";
         tabsContainer.appendChild(this.btnScripts);
 
         this.btnReports = document.createElement("div");
         this.btnReports.innerHTML = "Reports";
-        this.btnReports.className = "";
         tabsContainer.appendChild(this.btnReports);
 
         this.btnOngoing = document.createElement("div");
         this.btnOngoing.innerHTML = "Ongoing scripts";
-        this.btnOngoing.className = "";
         tabsContainer.appendChild(this.btnOngoing);
-        
+
+        this.btnNew.onclick = () => this.AddNew();
         this.btnReload.onclick = () => this.ListScripts();
 
         this.body = document.createElement("div");
-        this.body.className = "v-tab-body no-results";
+        this.body.className = "v-tab-body";
         this.content.appendChild(this.body);
+
+        this.txtFilter = document.createElement("input");
+        this.txtFilter.type = "text";
+        this.txtFilter.placeholder = "Find";
+        this.txtFilter.style.position = "absolute";
+        this.txtFilter.style.right = "4px";
+        this.txtFilter.style.top = "4px";
+        this.txtFilter.style.width = "50%";
+        this.txtFilter.style.maxWidth = "200px";
+        this.body.appendChild(this.txtFilter);
+
+        this.list = document.createElement("div");
+        this.list.className = "script-list no-results";
+        this.body.appendChild(this.list);
 
         this.btnScripts.onclick = () => this.ShowScripts();
         this.btnReports.onclick = () => this.ShowReports();
         this.btnOngoing.onclick = () => this.ShowOngoing();
 
+        this.txtFilter.oninput = () => {
+            switch (this.selectedTab) {
+                case 0: this.ShowScripts(); break;
+                case 1: this.ShowReports(); break;
+                case 2: this.ShowOngoing(); break;
+            }
+        };
+
         this.ListScripts();
     }
 
     ShowScripts() {
+        this.selectedTab = 0;
         this.btnScripts.style.backgroundColor = "rgb(96,96,96)";
         this.btnReports.style.backgroundColor = "rgb(72,72,72)";
         this.btnOngoing.style.backgroundColor = "rgb(72,72,72)";
-        this.body.innerHTML = "";
+        this.list.innerHTML = "";
+
+        let filter = this.txtFilter.value.toLocaleLowerCase();
 
         for (let i = 0; i < this.payload.length; i++) {
-            let script = document.createElement("div");
-            script.innerHTML = this.payload[i];
-            this.body.appendChild(script);
+            if (!this.payload[i].startsWith("s:")) continue;
+            if (this.payload[i].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
 
-            script.ondblclick = () => {
-                new ScriptEditor(this.payload[i]);
+            let filename = this.payload[i].substring(2);
+
+            let script = document.createElement("div");
+            script.className = "script-list-item";
+            this.list.appendChild(script);
+
+            let icon = document.createElement("div");
+            icon.style.backgroundImage = "url(res/scriptfile.svgz)";
+            script.appendChild(icon);
+
+            let label = document.createElement("div");
+            label.innerHTML = filename;
+            script.appendChild(label);
+
+            let remove = document.createElement("div");
+            script.appendChild(remove);
+
+            script.ondblclick = () => { new ScriptEditor(filename); };
+
+            remove.onclick = event => {
+                event.stopPropagation();
+                this.ConfirmBox("Are you sure you want to delete " + filename).addEventListener("click", ()=> {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            if (xhr.responseText == "ok")
+                                this.ListScripts();
+                            else
+                                this.ConfirmBox(xhr.responseText, true);
+
+                        } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                            this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "delscript&filename=" + filename, true);
+                    xhr.send();
+                });
             };
         }
     }
 
     ShowReports() {
+        this.selectedTab = 1;
         this.btnScripts.style.backgroundColor = "rgb(72,72,72)";
         this.btnReports.style.backgroundColor = "rgb(96,96,96)";
         this.btnOngoing.style.backgroundColor = "rgb(72,72,72)";
-        this.body.innerHTML = "";
+        this.list.innerHTML = "";
+
+        let filter = this.txtFilter.value.toLocaleLowerCase();
+
+        for (let i = 0; i < this.payload.length; i++) {
+            if (!this.payload[i].startsWith("r:")) continue;
+            if (this.payload[i].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
+
+            let filename = this.payload[i].substring(2);
+
+            let script = document.createElement("div");
+            script.className = "script-list-item";
+            this.list.appendChild(script);
+
+            let icon = document.createElement("div");
+            icon.style.backgroundImage = "url(res/reportfile.svgz)";
+            script.appendChild(icon);
+
+            let label = document.createElement("div");
+            label.innerHTML = filename;
+            script.appendChild(label);
+
+            let remove = document.createElement("div");
+            script.appendChild(remove);
+
+            script.ondblclick = () => {  };
+
+            remove.onclick = event => {
+                event.stopPropagation();
+                this.ConfirmBox("Are you sure you want to delete " + filename).addEventListener("click", () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            if (xhr.responseText == "ok")
+                                this.ListScripts();
+                            else
+                                this.ConfirmBox(xhr.responseText, true);
+
+                        } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                            this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "delreport&filename=" + filename, true);
+                    xhr.send();
+                });
+            };
+        }
     }
 
     ShowOngoing() {
+        this.selectedTab = 2;
         this.btnScripts.style.backgroundColor = "rgb(72,72,72)";
         this.btnReports.style.backgroundColor = "rgb(72,72,72)";
         this.btnOngoing.style.backgroundColor = "rgb(96,96,96)";
-        this.body.innerHTML = "";
+        this.list.innerHTML = "";
+    }
+
+    AddNew() {
+        let obj = this.DialogBox("128px");
+        let btnOK = obj[0];
+        let innerBox = obj[1];
+
+        innerBox.parentNode.style.maxWidth = "480px";
+        innerBox.style.padding = "16px";
+        innerBox.style.textAlign = "center";
+
+        let txtFilename = document.createElement("input");
+        txtFilename.type = "text";
+        txtFilename.placeholder = "File name";
+        innerBox.appendChild(txtFilename);
+
+        const create = () => {
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.responseText == "ok")
+                        this.ListScripts();
+                    else 
+                        this.ConfirmBox(xhr.responseText, true);                    
+
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+            xhr.open("GET", "newscript&filename=" + txtFilename.value, true);
+            xhr.send();
+        };
+
+        txtFilename.onkeyup = event => {
+            if (event.keyCode == 13) { //enter
+                btnOK.parentNode.childNodes[1].onclick();
+                create();
+            }
+
+            if (event.keyCode == 27) //esc
+                btnOK.parentNode.childNodes[1].onclick();
+        };
+        
+        btnOK.addEventListener("click", () => { create(); });
+
+        txtFilename.focus();
     }
 
     ListScripts() {
@@ -97,11 +246,15 @@ class Scripts extends Window {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split.length < 1) return;
                 this.payload = split;
-                this.ShowScripts();
+
+                switch (this.selectedTab) {
+                    case 0: this.ShowScripts(); break;
+                    case 1: this.ShowReports(); break;
+                    case 2: this.ShowOngoing(); break;
+                }
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
-                
         };
         xhr.open("GET", "listscripts", true);
         xhr.send();

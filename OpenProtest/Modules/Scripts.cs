@@ -252,15 +252,21 @@ static class Scripts {
     }
 
     public static byte[] ListScripts() {
-        DirectoryInfo dir = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
-
-        if (!dir.Exists) return null;
-
         StringBuilder sb = new StringBuilder();
 
-        FileInfo[] files = dir.GetFiles();
-        for (int i = 0; i < files.Length; i++) 
-            sb.Append(sb.Length == 0 ? files[i].Name : $"{(char)127}{files[i].Name}");
+        DirectoryInfo dirScripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
+        if (dirScripts.Exists) {
+            FileInfo[] scripts = dirScripts.GetFiles();
+            for (int i = 0; i < scripts.Length; i++)
+                sb.Append(sb.Length == 0 ? $"s:{scripts[i].Name}" : $"{(char)127}s:{scripts[i].Name}");
+        }
+
+        DirectoryInfo dirReports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (dirReports.Exists) {
+            FileInfo[] reports = dirReports.GetFiles();
+            for (int i = 0; i < reports.Length; i++)
+                sb.Append(sb.Length == 0 ? $"r:{reports[i].Name}" : $"{(char)127}r:{reports[i].Name}");
+        }
         
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
@@ -305,6 +311,47 @@ static class Scripts {
 
         try {
             File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", payload);
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return Tools.FAI.Array;
+        }
+
+        return Tools.OK.Array;
+    }
+
+    public static byte[] NewScript(in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
+        filename = escapeFilename(filename);
+
+        if (filename.Length == 0) return Tools.INV.Array;
+        if (File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.EXS.Array;
+        
+        try {
+            File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", "");
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return Tools.FAI.Array;
+        }
+
+        return Tools.OK.Array;
+    }
+
+    public static byte[] DeleteScript(in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
+        filename = escapeFilename(filename);
+
+        if (filename.Length == 0) return Tools.INV.Array;
+
+        if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
+
+        try {
+            File.Delete($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
         } catch (Exception ex) {
             ErrorLog.Err(ex);
             return Tools.FAI.Array;

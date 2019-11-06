@@ -21,9 +21,9 @@ IPv4 subnet			rgb(32,32,32)	t,Subnet,10.0.0.0	n,CIDR prefix,24,8,30	o,Subnet
 Single value		rgb(32,32,32)	t,Value	o,Value
 
 Tools
-#Secure shell		hsl(40,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	t,Username	t,Password	o,Output
-#PS exec				hsl(36,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	o,Output
-#WMI query			hsl(32,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
+Secure shell		hsl(40,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	t,Username	t,Password	o,Output
+PS exec				hsl(36,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	o,Output
+WMI query			hsl(32,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
 NetBIOS request		hsl(28,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
 DNS lookup			hsl(24,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
 Reverse DNS lookup	hsl(20,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
@@ -73,5 +73,5 @@ Text file	rgb(224,224,224)	i,Input	t,Filename
 CSV file	rgb(224,224,224)	i,Input	t,Filename
 JSON file	rgb(224,224,224)	i,Input	t,Filename
 XML file	rgb(224,224,224)	i,Input	t,Filename
-#HTML file	rgb(224,224,224)	i,Input	t,Filename
-#Send e-mail	rgb(224,224,224)	i,Input	t,Server	n,Port,587,1,65535	t,Username	t,Password	h,SSL,True	t,Recipient
+HTML file	rgb(224,224,224)	i,Input	t,Filename
+Send e-mail	rgb(224,224,224)	i,Input	t,Server	n,Port,587,1,65535	t,Username	t,Password	h,SSL,True	t,Recipient

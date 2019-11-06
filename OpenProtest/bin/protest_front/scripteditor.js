@@ -129,7 +129,7 @@ class ScriptEditor extends Window {
         }
 
         super([64,64,64]);
-        this.setIcon("res/scripts.svgz");
+        this.setIcon("res/scriptfile.svgz");
 
         if (filename === null) 
             this.setTitle("Script editor");
@@ -194,6 +194,8 @@ class ScriptEditor extends Window {
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         this.svg.setAttribute("width", 400);
         this.svg.setAttribute("height", 300);
+        this.svg.tabIndex = 0;
+        this.svg.style.outline = "none";
         this.box.appendChild(this.svg);
 
         this.linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -260,6 +262,13 @@ class ScriptEditor extends Window {
         this.parametersList.className = "script-parameters-list";
         this.parameters.appendChild(this.parametersList);
 
+        this.svg.onkeyup = event => {
+            if (event.keyCode == 46) {//del
+                if (!this.selectedNode) return;
+                this.Delete(this.selectedNode);
+            }
+        };
+
         btnDuplicate.onclick = () => {
             if (!this.selectedNode) return;
 
@@ -287,14 +296,9 @@ class ScriptEditor extends Window {
 
         btnDelete.onclick = () => {
             if (!this.selectedNode) return;
-            this.selectedNode.UnlinkAllSockets();
-            this.nodes.splice(this.nodes.indexOf(this.selectedNode), 1);
-            this.svg.removeChild(this.selectedNode.g);
-            this.selectedNode = null;
-            this.parametersList.innerHTML = "";
+            this.Delete(this.selectedNode);
         };
-
-
+        
         this.btnSave.onclick = () => this.SaveScript();
         this.btnDebug.onclick = () => { };
         this.btnRun.onclick = () => this.RunScript();
@@ -845,6 +849,14 @@ class ScriptEditor extends Window {
             this.links.splice(this.links.indexOf(todo[i]), 1);
 
         socket[5].Link_onchange();
+    }
+
+    Delete(node) {
+        node.UnlinkAllSockets();
+        this.nodes.splice(this.nodes.indexOf(node), 1);
+        this.svg.removeChild(node.g);
+        this.selectedNode = null;
+        this.parametersList.innerHTML = "";
     }
 
     Ghost_onmouseup(event) {

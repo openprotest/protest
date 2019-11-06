@@ -81,6 +81,17 @@ static class RaClient {
                     } catch {}
                     break;
 
+                case "cmg":
+                    try {
+                        using (Process p = new Process()) {
+                            p.StartInfo.FileName = "compmgmt.msc";
+                            p.StartInfo.Arguments = $"/computer=\"{hostname}\"";
+                            p.StartInfo.UseShellExecute = true;
+                            p.Start();
+                        }
+                    } catch {}
+                    break;
+
                 /*case "ssh":
                     try {
                         using (Process p = new Process()) {

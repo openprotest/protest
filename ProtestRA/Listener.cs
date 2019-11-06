@@ -161,6 +161,17 @@ namespace Protest_RA {
                     //frmStamp.setKeystroke(arg);
                     Main.ShowStamp(arg); //invoke
                     break;
+
+                case "cmg":
+                    try {
+                        using (Process p = new Process()) {
+                            p.StartInfo.FileName = "compmgmt.msc";
+                            p.StartInfo.Arguments = $"/computer=\"{targer}\"";
+                            p.StartInfo.UseShellExecute = true;
+                            p.Start();
+                        }
+                    } catch { }
+                    break;
             }
 
             return false;

@@ -220,7 +220,7 @@ class Http {
                     case "gettasksongoing": buffer = ProTasks.GetOnGoing(); break;
                     case "gettasksresults": buffer = ProTasks.GetResults(); break;
 
-                    case "getscripttools":         buffer = Scripts.GetScriptTools(); break;
+                    case "getscripttools":          buffer = Scripts.GetScriptTools(); break;
                     case "getusercolumns":          buffer = Scripts.GetUserColumns(); break;
                     case "getequipcolumns":         buffer = Scripts.GetEquipColumns(); break;
                     case "getadusercolumns":        buffer = Scripts.GetAdUserColumns(); break;
@@ -231,6 +231,8 @@ class Http {
                     case "loadscript":  buffer = Scripts.LoadScript(para); break;
                     case "savescript":  buffer = Scripts.SaveScript(ctx, para); break;
                     case "runscript":   buffer = Scripts.RunScript(para); break;
+                    case "newscript":   buffer = Scripts.NewScript(para); break;
+                    case "delscript":   buffer = Scripts.DeleteScript(para); break;
 
                     case "getmetrics": buffer = BandwidthMonitor.GetMetrics(para); break;
 

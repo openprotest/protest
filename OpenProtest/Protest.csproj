@@ -402,6 +402,7 @@
     <Content Include="bin\protest_front\res\charges.svg" />
     <Content Include="bin\protest_front\res\check.svg" />
     <Content Include="bin\protest_front\res\close.svg" />
+    <Content Include="bin\protest_front\res\compmgmt.svg" />
     <Content Include="bin\protest_front\res\console.svg" />
     <Content Include="bin\protest_front\res\contact.svg" />
     <Content Include="bin\protest_front\res\copy.svg" />
@@ -456,7 +457,6 @@
     <Content Include="bin\protest_front\res\l_reload.svg" />
     <Content Include="bin\protest_front\res\l_run.svg" />
     <Content Include="bin\protest_front\res\l_save.svg" />
-    <Content Include="bin\protest_front\res\l_scripts.svg" />
     <Content Include="bin\protest_front\res\l_search.svg" />
     <Content Include="bin\protest_front\res\l_sort.svg" />
     <Content Include="bin\protest_front\res\l_unkink.svg" />
@@ -492,10 +492,12 @@
     <Content Include="bin\protest_front\res\ptclients.svg" />
     <Content Include="bin\protest_front\res\ram.svg" />
     <Content Include="bin\protest_front\res\rdp.svg" />
+    <Content Include="bin\protest_front\res\reportfile.svg" />
     <Content Include="bin\protest_front\res\restart.svg" />
     <Content Include="bin\protest_front\res\retured.svg" />
     <Content Include="bin\protest_front\res\router.svg" />
     <Content Include="bin\protest_front\res\scannner.svg" />
+    <Content Include="bin\protest_front\res\scriptfile.svg" />
     <Content Include="bin\protest_front\res\scripts.svg" />
     <Content Include="bin\protest_front\res\search.svg" />
     <Content Include="bin\protest_front\res\serialconverter.svg" />
