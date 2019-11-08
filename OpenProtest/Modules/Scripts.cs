@@ -257,15 +257,23 @@ static class Scripts {
         DirectoryInfo dirScripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
         if (dirScripts.Exists) {
             FileInfo[] scripts = dirScripts.GetFiles();
-            for (int i = 0; i < scripts.Length; i++)
-                sb.Append(sb.Length == 0 ? $"s:{scripts[i].Name}" : $"{(char)127}s:{scripts[i].Name}");
+            for (int i = 0; i < scripts.Length; i++) {
+                sb.Append($"s{(char)127}");
+                sb.Append($"{scripts[i].Name}{(char)127}");
+                sb.Append($"{scripts[i].LastWriteTime.ToString(NoSQL.DATETIME_FORMAT)}{(char)127}");
+                sb.Append($"{Wmi.SizeToString(scripts[i].Length.ToString())}{(char)127}");
+            }
         }
 
         DirectoryInfo dirReports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
         if (dirReports.Exists) {
             FileInfo[] reports = dirReports.GetFiles();
-            for (int i = 0; i < reports.Length; i++)
-                sb.Append(sb.Length == 0 ? $"r:{reports[i].Name}" : $"{(char)127}r:{reports[i].Name}");
+            for (int i = 0; i < reports.Length; i++) {
+                sb.Append($"r{(char)127}");
+                sb.Append($"{reports[i].Name}{(char)127}");
+                sb.Append($"{reports[i].LastWriteTime.ToString(NoSQL.DATETIME_FORMAT)}{(char)127}");
+                sb.Append($"{Wmi.SizeToString(reports[i].Length.ToString())}{(char)127}");
+            }
         }
         
         return Encoding.UTF8.GetBytes(sb.ToString());
@@ -358,6 +366,44 @@ static class Scripts {
         }
 
         return Tools.OK.Array;
+    }
+    
+    public static byte[] DeleteReport(in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
+        filename = escapeFilename(filename);
+
+        if (filename.Length == 0) return Tools.INV.Array;
+
+        if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return Tools.FLE.Array;
+
+        try {
+            File.Delete($"{DIR_SCRIPTS_REPORTS}\\{filename}");
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return Tools.FAI.Array;
+        }
+
+        return Tools.OK.Array;
+    }
+
+    public static byte[] GetReport(in string[] para) {
+        string filename = "";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+
+        if (filename.Length == 0) return null;
+
+        if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return null;
+
+        try {
+            return File.ReadAllBytes($"{DIR_SCRIPTS_REPORTS}\\{filename}");
+        } catch (Exception ex) {
+            ErrorLog.Err(ex);
+            return null;
+        }
     }
 
     private static bool IsEndPoint(ScriptNode node) {
@@ -503,7 +549,30 @@ static class Scripts {
             for (int i = 0; i < node.sourceNodes.Length; i++) //cascade
                 CascadeNode(node.sourceNodes[i], allLinks, log);
 
-        if (node.result is null) node.result = InvokeNode(node, log);
+        if (node.result is null) 
+            node.result = InvokeNode(node, log);
+        
+        SelectColumns(node);
+    }
+
+    private static void SelectColumns(ScriptNode node) {
+        if (node.result is null) return;
+        if (node.columns.Length == 0) return;
+        
+        string[] header = node.result.header.Where(o => node.columns.Contains(o)).ToArray();
+        int[] index = new int[header.Length];
+
+        for (int i = 0; i < header.Length; i++)
+            index[i] = Array.IndexOf(node.result.header, header[i]);
+
+        for (int i = 0; i < node.result.array.Count; i++) {
+            string[] newRow = new string[header.Length];
+            for (int j = 0; j < header.Length; j++) 
+                newRow[j] = node.result.array[i][index[j]];
+            node.result.array[i] = newRow;
+        }
+
+        node.result.header = header;
     }
 
     private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log) {
@@ -539,7 +608,7 @@ static class Scripts {
             case "Equal":        return Equal(node);
             case "Greater than": return GreaterThan(node);
             case "Less than":    return LessThan(node);
-            case "Contain":      return Contain(node);
+            case "Contains":     return Contains(node);
             case "Regex match":  return RegexMatch(node);
 
             case "Absolute value": return AbsValue(node);
@@ -1349,7 +1418,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Contain(in ScriptNode node) {
+    private static ScriptResult Contains(in ScriptNode node) {
         /* [0] <-
          * [1] value
          * [2] column

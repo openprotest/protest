@@ -396,7 +396,7 @@ class ScriptEditor extends Window {
         xhr.send();
     }
 
-    SaveScript() {
+    SaveScript(callback = null) {
         let payload = "";
 
         for (let i = 0; i < this.nodes.length; i++) {
@@ -455,9 +455,12 @@ class ScriptEditor extends Window {
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
-                //
-            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                if (callback) callback("ok");
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
+                if (callback) callback("failed");
+            }
         };
 
         let now = new Date();
@@ -473,18 +476,25 @@ class ScriptEditor extends Window {
             return;
         }
 
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                if (xhr.responseText != "ok") 
-                    this.ConfirmBox(xhr.responseText, true);
+        this.SaveScript(response => {
+            if (response != "ok") {
+                this.ConfirmBox("Failed to save script file", false);
+                return;
+            }
 
-            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
-                this.ConfirmBox("Server is unavailable.", true);
-        };
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.responseText != "ok")
+                        this.ConfirmBox(xhr.responseText, true);
 
-        xhr.open("GET", "runscript&filename=" + this.filename, true);
-        xhr.send();
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+
+            xhr.open("GET", "runscript&filename=" + this.filename, true);
+            xhr.send();
+        });
     }
 
     AfterResize() { //override

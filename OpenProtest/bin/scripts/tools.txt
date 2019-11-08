@@ -46,7 +46,7 @@ Logical operators
 Equal			hsl(200,100%,45%)	i,Input	t,Value	c,Column	o,Equal
 Greater than	hsl(204,100%,45%)	i,Input	n,Value	c,Column	o,Greater
 Less than		hsl(208,100%,45%)	i,Input	n,Value	c,Column	o,Less
-Contain			hsl(212,100%,45%)	i,Input	t,Value	c,Column	o,Contain
+Contains		hsl(212,100%,45%)	i,Input	t,Value	c,Column	o,Contain
 Regex match		hsl(216,100%,45%)	i,Input	t,Regex	c,Column	o,Matched
 
 Math operators

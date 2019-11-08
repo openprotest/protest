@@ -233,6 +233,8 @@ class Http {
                     case "runscript":   buffer = Scripts.RunScript(para); break;
                     case "newscript":   buffer = Scripts.NewScript(para); break;
                     case "delscript":   buffer = Scripts.DeleteScript(para); break;
+                    case "delreport":   buffer = Scripts.DeleteReport(para); break;
+                    case "getreport":   buffer = Scripts.GetReport(para); break;
 
                     case "getmetrics": buffer = BandwidthMonitor.GetMetrics(para); break;
 

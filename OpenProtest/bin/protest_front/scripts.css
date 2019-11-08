@@ -63,15 +63,17 @@
     filter: none;
 }
 
-.script-list > .script-list-item:hover > div:nth-child(3) {
+.script-list > .script-list-item:hover > div:nth-child(5) {
     visibility: visible;
 }
 
 .script-list > .script-list-item > div {
     position: absolute;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.script-list > .script-list-item > div:nth-child(1) {
+.script-list > .script-list-item > div:nth-child(1) { /*icon*/
     left: 4px;
     top: 4px;
     width: 40px;
@@ -79,13 +81,28 @@
     filter: brightness(6);
 }
 
-.script-list > .script-list-item > div:nth-child(2) {
+.script-list > .script-list-item > div:nth-child(2) { /*name*/
     left: 48px;
     top: 12px;
-    width: calc(100% - 80px);
+    width: calc(50% - 40px);
+    height: 20px;
 }
 
-.script-list > .script-list-item > div:nth-child(3) {
+.script-list > .script-list-item > div:nth-child(3) { /*date*/
+    left: calc(48px + 50%);
+    top: 12px;
+    width: calc(30% - 20px);
+    height: 20px;
+}
+
+.script-list > .script-list-item > div:nth-child(4) { /*size*/
+    left: calc(48px + 80%);
+    top: 12px;
+    width: calc(20% - 20px);
+    height: 20px;
+}
+
+.script-list > .script-list-item > div:nth-child(5) { /*del*/
     visibility: hidden;
 
     right: 8px;

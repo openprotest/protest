@@ -89,11 +89,13 @@ class Scripts extends Window {
 
         let filter = this.txtFilter.value.toLocaleLowerCase();
 
-        for (let i = 0; i < this.payload.length; i++) {
-            if (!this.payload[i].startsWith("s:")) continue;
-            if (this.payload[i].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
+        for (let i = 0; i < this.payload.length; i+=4) {
+            if (this.payload[i] != "s") continue;
+            if (this.payload[i+1].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
 
-            let filename = this.payload[i].substring(2);
+            let name = this.payload[i+1];
+            let date = this.payload[i+2];
+            let size = this.payload[i+3];
 
             let script = document.createElement("div");
             script.className = "script-list-item";
@@ -103,18 +105,26 @@ class Scripts extends Window {
             icon.style.backgroundImage = "url(res/scriptfile.svgz)";
             script.appendChild(icon);
 
-            let label = document.createElement("div");
-            label.innerHTML = filename;
-            script.appendChild(label);
+            let lblName = document.createElement("div");
+            lblName.innerHTML = name;
+            script.appendChild(lblName);
+
+            let lblDate = document.createElement("div");
+            lblDate.innerHTML = date;
+            script.appendChild(lblDate);
+
+            let lblSize = document.createElement("div");
+            lblSize.innerHTML = size;
+            script.appendChild(lblSize);
 
             let remove = document.createElement("div");
             script.appendChild(remove);
 
-            script.ondblclick = () => { new ScriptEditor(filename); };
+            script.ondblclick = () => { new ScriptEditor(name); };
 
             remove.onclick = event => {
                 event.stopPropagation();
-                this.ConfirmBox("Are you sure you want to delete " + filename).addEventListener("click", ()=> {
+                this.ConfirmBox("Are you sure you want to delete " + name).addEventListener("click", ()=> {
                     let xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) {
@@ -126,7 +136,7 @@ class Scripts extends Window {
                         } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                             this.ConfirmBox("Server is unavailable.", true);
                     };
-                    xhr.open("GET", "delscript&filename=" + filename, true);
+                    xhr.open("GET", "delscript&filename=" + name, true);
                     xhr.send();
                 });
             };
@@ -142,11 +152,13 @@ class Scripts extends Window {
 
         let filter = this.txtFilter.value.toLocaleLowerCase();
 
-        for (let i = 0; i < this.payload.length; i++) {
-            if (!this.payload[i].startsWith("r:")) continue;
-            if (this.payload[i].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
+        for (let i = 0; i < this.payload.length; i+=4) {
+            if (this.payload[i] != "r") continue;
+            if (this.payload[i+1].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
 
-            let filename = this.payload[i].substring(2);
+            let name = this.payload[i+1];
+            let date = this.payload[i+2];
+            let size = this.payload[i+3];
 
             let script = document.createElement("div");
             script.className = "script-list-item";
@@ -156,20 +168,28 @@ class Scripts extends Window {
             icon.style.backgroundImage = "url(res/reportfile.svgz)";
             script.appendChild(icon);
 
-            let label = document.createElement("div");
-            label.innerHTML = filename;
-            script.appendChild(label);
+            let lblName = document.createElement("div");
+            lblName.innerHTML = name;
+            script.appendChild(lblName);
+
+            let lblDate = document.createElement("div");
+            lblDate.innerHTML = date;
+            script.appendChild(lblDate);
+
+            let lblSize = document.createElement("div");
+            lblSize.innerHTML = size;
+            script.appendChild(lblSize);
 
             let remove = document.createElement("div");
             script.appendChild(remove);
 
-            script.ondblclick = () => {  };
+            script.ondblclick = () => { new ScriptReport(name); };
 
             remove.onclick = event => {
                 event.stopPropagation();
-                this.ConfirmBox("Are you sure you want to delete " + filename).addEventListener("click", () => {
+                this.ConfirmBox("Are you sure you want to delete " + name).addEventListener("click", () => {
                     let xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
+                    xhr.onreadystatechange =() => {
                         if (xhr.readyState == 4 && xhr.status == 200) {
                             if (xhr.responseText == "ok")
                                 this.ListScripts();
@@ -179,7 +199,7 @@ class Scripts extends Window {
                         } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                             this.ConfirmBox("Server is unavailable.", true);
                     };
-                    xhr.open("GET", "delreport&filename=" + filename, true);
+                    xhr.open("GET", "delreport&filename=" + name, true);
                     xhr.send();
                 });
             };
@@ -192,6 +212,39 @@ class Scripts extends Window {
         this.btnReports.style.backgroundColor = "rgb(72,72,72)";
         this.btnOngoing.style.backgroundColor = "rgb(96,96,96)";
         this.list.innerHTML = "";
+
+        let filter = this.txtFilter.value.toLocaleLowerCase();
+
+        for (let i = 0; i < this.payload.length; i += 4) {
+            if (this.payload[i] != "o") continue;
+            if (this.payload[i + 1].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
+
+            let name = this.payload[i+1];
+            let date = this.payload[i+2];
+            let size = this.payload[i+3];
+
+            let script = document.createElement("div");
+            script.className = "script-list-item";
+            this.list.appendChild(script);
+
+            let icon = document.createElement("div");
+            icon.style.backgroundImage = "url(res/l_run.svgz)";
+            script.appendChild(icon);
+
+            let lblName = document.createElement("div");
+            lblName.innerHTML = name;
+            script.appendChild(lblName);
+
+            let lblDate = document.createElement("div");
+            lblDate.innerHTML = date;
+            script.appendChild(lblDate);
+
+            let lblSize = document.createElement("div");
+            lblSize.innerHTML = size;
+            script.appendChild(lblSize);
+
+            script.ondblclick = () => { new ScriptReport(name); };
+        }
     }
 
     AddNew() {
@@ -259,6 +312,62 @@ class Scripts extends Window {
         xhr.open("GET", "listscripts", true);
         xhr.send();
     }
+}
+
+class ScriptReport extends Window {
+    constructor(filename) {
+        super();
+        this.setTitle("Report - " + filename);
+        this.setIcon("res/reportfile.svgz");
+
+        this.content.style.padding = "12px";
+        this.content.style.fontFamily = "monospace";
+        this.content.style.overflow = "auto";
+        this.content.style.userSelect = "text";
+        this.content.style.webkitUserSelect = "text";
+
+        let text = "";
+
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                text = xhr.responseText;
+                let report = xhr.responseText;
+
+                while (report.indexOf("\n") > -1)
+                    report = report.replace("\n", "<br>");
+
+                while (report.indexOf("\t") > -1)
+                    report = report.replace("\t", "&emsp;");
+
+                this.content.innerHTML = report;
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true).addEventListener("click", () => { this.Close(); });
+        };
+        xhr.open("GET", "getreport&filename=" + filename, true);
+        xhr.send();
+
+        this.btnDownload = document.createElement("div");
+        this.btnDownload.style.backgroundImage = "url(res/l_download.svgz)";
+        this.btnDownload.setAttribute("tip-below", "Download");
+        this.toolbox.appendChild(this.btnDownload);
+
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+
+        this.btnDownload.addEventListener("click", event => {
+            if (text.length == 0) return;
+
+            let psudo = document.createElement("a");
+            psudo.style.display = "none";
+            this.win.appendChild(psudo);
+
+            psudo.setAttribute("href", "data:text/plain;base64," + btoa(text));
+            psudo.setAttribute("download", filename);
+
+            psudo.click(null);
+        });
+    }    
 }
 
 new Scripts();
