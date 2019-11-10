@@ -419,6 +419,7 @@
     <Content Include="bin\protest_front\res\disable.svg" />
     <Content Include="bin\protest_front\res\diskdrive.svg" />
     <Content Include="bin\protest_front\res\dns.svg" />
+    <Content Include="bin\protest_front\res\documentation.svg" />
     <Content Include="bin\protest_front\res\earth.svg" />
     <Content Include="bin\protest_front\res\email.svg" />
     <Content Include="bin\protest_front\res\enable.svg" />

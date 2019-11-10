@@ -1142,8 +1142,8 @@ class ScriptNode {
             case "Single value":        columns = ["Value"]; break;
 
             case "WMI query":    columns = ["Host", "..."]; break; //TODO:
-            case "PS Exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
-            case "Secure Shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
+            case "PS exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
+            case "Secure shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
 
             case "NetBIOS request":     columns = ["IP Address", "NetBIOS name"]; break;
             case "DNS lookup":          columns = ["Hostname", "IP Address"]; break;

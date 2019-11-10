@@ -26,6 +26,7 @@ const TOOLS = [
 //{ lbl: "Mapped drives",      ico: "res/mappeddrive.svgz",    f: arg=>new MappedDrives() },
 { lbl: "Debit notes",        ico: "res/charges.svgz",        f: arg=>new DebitNotes() },
 //{ lbl: "Backup",             ico: "res/backup.svgz",         f: arg=>new Window() },
+{ lbl: "Documentation",      ico: "res/documentation.svgz",  f: arg=>new Window() },
 { lbl: "Settings",           ico: "res/tool02.svgz",         f: arg=>new Settings() },
 //{ lbl: "Log",                ico: "res/log.svgz",            f: arg=>new Window() },
 { lbl: "Pro-test clients",   ico: "res/ptclients.svgz",      f: arg=>new Clients() }

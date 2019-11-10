@@ -79,26 +79,27 @@
     width: 40px;
     height: 40px;
     filter: brightness(6);
+    background-size: contain;
 }
 
 .script-list > .script-list-item > div:nth-child(2) { /*name*/
     left: 48px;
     top: 12px;
-    width: calc(50% - 40px);
+    width: calc(45% - 56px);
     height: 20px;
 }
 
 .script-list > .script-list-item > div:nth-child(3) { /*date*/
-    left: calc(48px + 50%);
+    left: calc(45%);
     top: 12px;
-    width: calc(30% - 20px);
+    width: calc(30% - 8px);
     height: 20px;
 }
 
 .script-list > .script-list-item > div:nth-child(4) { /*size*/
-    left: calc(48px + 80%);
+    left: calc(75%);
     top: 12px;
-    width: calc(20% - 20px);
+    width: calc(25% - 32px);
     height: 20px;
 }
 
