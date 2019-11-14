@@ -89,7 +89,6 @@ class DhcpDiscover extends Window {
             };
             xhr.open("GET", "dhcpdiscover", true);
             xhr.send();
-
         };
     }
 
