@@ -62,6 +62,7 @@
     <Compile Include="Modules\Cache.cs" />
     <Compile Include="Modules\Crypto.cs" />
     <Compile Include="Modules\DebitNotes.cs" />
+    <Compile Include="Modules\DhcpDiscover.cs" />
     <Compile Include="Modules\ErrorLog.cs" />
     <Compile Include="Modules\Fetch.cs" />
     <Compile Include="Modules\Http.cs" />
@@ -381,6 +382,7 @@
     <Content Include="bin\protest_front\loader.js" />
     <Content Include="bin\protest_front\locateip.js" />
     <Content Include="bin\protest_front\login.html" />
+    <Content Include="bin\protest_front\dhcpdiscover.js" />
     <Content Include="bin\protest_front\maclookup.js" />
     <Content Include="bin\protest_front\mappeddrives.css" />
     <Content Include="bin\protest_front\mappeddrives.js" />
@@ -416,6 +418,7 @@
     <Content Include="bin\protest_front\res\db_gear_mask.svg" />
     <Content Include="bin\protest_front\res\db_user_mask.svg" />
     <Content Include="bin\protest_front\res\department.svg" />
+    <Content Include="bin\protest_front\res\dhcp.svg" />
     <Content Include="bin\protest_front\res\disable.svg" />
     <Content Include="bin\protest_front\res\diskdrive.svg" />
     <Content Include="bin\protest_front\res\dns.svg" />

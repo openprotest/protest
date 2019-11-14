@@ -52,7 +52,7 @@ body {
 }*/
 
 ::selection {
-    background: var(--select-color);
+    background: rgb(48,48,48);
     color: #fff;
 }
 

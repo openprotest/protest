@@ -583,7 +583,7 @@ class User extends Window {
             for (let i=0; i<values.length; i++) {
                 if (values[i].trim().length == 0) continue;
                 let subvalue = document.createElement("div");
-                subvalue.innerHTML = values[i];
+                subvalue.innerHTML = values[i] + "&thinsp;";
                 value.appendChild(subvalue);
             }
 

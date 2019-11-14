@@ -178,7 +178,7 @@ class ScriptEditor extends Window {
         this.btnDebug = document.createElement("div");
         this.btnDebug.style.backgroundImage = "url(res/l_bug.svgz)";
         this.btnDebug.setAttribute("tip-below", "Debug");
-        this.toolbox.appendChild(this.btnDebug);
+        //this.toolbox.appendChild(this.btnDebug);
 
         this.btnRun = document.createElement("div");
         this.btnRun.style.backgroundImage = "url(res/l_run.svgz)";
@@ -1055,8 +1055,6 @@ class ScriptNode {
                 label.setAttribute("y", top+1);
                 label.setAttribute("fill", "rgb(224,224,224)");
                 this.g.appendChild(label);
-
-                label.setAttribute("tip", "test");
 
                 //type, socket, label, x, y, node
                 this.sockets.push([tool.p[i][0], socket, label, tool.p[i][0]=="o" ? 200 : 0, top, this]);

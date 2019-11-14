@@ -238,12 +238,11 @@ class Program {
             NoSQL.FindDuplicates(NoSQL.equip, "IP");
             NoSQL.FindDuplicates(NoSQL.users, "USERNAME");
         }).Start();
-        
+
         //TODO: BandwidthMonitor.StartTask();
 
 #if DEBUG
         //while (true) { Console.ReadLine(); }
 #endif
     }
-
 }

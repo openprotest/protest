@@ -51,13 +51,14 @@
     width: 100%;
     max-width: 800px;
     min-height: 24px;
+    padding-top: 1px;
     border-radius: 2px;
     overflow: hidden;
     transition: background-color .2s;
 }
 
 .eq-property:hover {
-    background-color: rgb(168,168,168);
+    background-color: var(--select-color);
 }
 
 .eq-property > div {
@@ -79,7 +80,7 @@
     -webkit-user-select: text;
 }
 
-.eq-property > div:nth-child(2) > div {
+.eq-property > div:nth-child(2) > div { /*multiple value boxes*/
     display: inline-block;
     border: 1px black solid;
     border-radius: 2px;
@@ -93,7 +94,7 @@
 .eq-property:hover > div:nth-child(3) {
     visibility: visible;
     opacity: 1;
-    transition-delay: .5s;
+    transition-delay: .8s;
 }
 .eq-property > div:nth-child(3) {
     position: absolute;

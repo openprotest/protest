@@ -176,10 +176,11 @@ class Http {
 
                     case "lastseen": buffer = LastSeen.HasBeenSeen(para); break;
 
-                    case "dnslookup": buffer = Tools.DnsLookup(para); break;
-                    case "maclookup": buffer = Tools.MacLookup(para); break;
-                    case "locateip":  buffer = Tools.LocateIp(para); break;
-                    case "ping":      buffer = Tools.XhrPing(para); break;
+                    case "dnslookup":    buffer = Tools.DnsLookup(para); break;
+                    case "dhcpdiscover": buffer = DhcpDiscover.Discover(); break;
+                    case "maclookup":    buffer = Tools.MacLookup(para); break;
+                    case "locateip":     buffer = Tools.LocateIp(para); break;
+                    case "ping":         buffer = Tools.XhrPing(para); break;
 
                     case "wakeup":   buffer = WoL.Wakeup(para); break;
                     case "shutdown": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 12)); break;

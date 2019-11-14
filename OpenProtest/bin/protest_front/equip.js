@@ -858,7 +858,7 @@ class Equip extends Window {
             for (let i=0; i<values.length; i++) {
                 if (values[i].trim().length == 0) continue;
                 let subvalue = document.createElement("div");
-                subvalue.innerHTML = values[i];
+                subvalue.innerHTML = values[i] + "&thinsp;";;
                 value.appendChild(subvalue);
             }
 
@@ -876,13 +876,13 @@ class Equip extends Window {
                 bar.className = "eq-progress-bar";
 
                 let caption = document.createElement("div");
-                caption.innerHTML = split[i];
+                caption.innerHTML = split[i] + "&thinsp;";
 
                 let progress = document.createElement("div");
-                progress.style.boxShadow = "var(--theme-color) " + 100*used/size + "px 0 0 inset";
+                progress.style.boxShadow = "rgb(64,64,64) " + 100*used/size + "px 0 0 inset";
 
                 let text = document.createElement("div");
-                text.innerHTML = split[i+1] + "/" + split[i+2] + " " + split[i+3];
+                text.innerHTML = "&thinsp;" + split[i+1] + "/" + split[i+2] + " " + split[i+3];
 
                 bar.appendChild(caption);
                 bar.appendChild(progress);

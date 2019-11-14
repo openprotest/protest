@@ -2,11 +2,11 @@
 #
 # o: output
 # i: input
-# c: column
-# a: column + [ALL]
-# h: checkbox (preset)
-# n: numeric (preset, min, max)
-# t: text (preset)
+# c: column (default)
+# a: column + [ALL] (default)
+# h: checkbox (default)
+# n: numeric (default, min, max)
+# t: text (default)
 # m: multiline
 #
 #[name]	[css-color]	[type,label]*X
@@ -21,17 +21,17 @@ IPv4 subnet			rgb(32,32,32)	t,Subnet,10.0.0.0	n,CIDR prefix,24,8,30	o,Subnet
 Single value		rgb(32,32,32)	t,Value	o,Value
 
 Tools
-#Secure shell		hsl(40,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	t,Username	t,Password	o,Output
-#PS exec				hsl(36,100%,45%)	i,Host	c,Column	m,Command	h,Async,True	o,Output
-#WMI query			hsl(32,100%,45%)	i,Host	c,Column	m,Query		h,Async,True	o,Output
-NetBIOS request		hsl(28,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
+#Secure shell		hsl(40,100%,45%)	i,Host	c,Column,IP address	m,Command	h,Async,True	t,Username	t,Password	o,Output
+#PS exec				hsl(36,100%,45%)	i,Host	c,Column,IP address	m,Command	h,Async,True	o,Output
+#WMI query			hsl(32,100%,45%)	i,Host	c,Column,IP address	m,Query		h,Async,True	o,Output
+NetBIOS request		hsl(28,100%,45%)	i,Host	c,Column,IP address	h,Async,True	o,Output
 DNS lookup			hsl(24,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
-Reverse DNS lookup	hsl(20,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
-Ping				hsl(16,100%,45%)	i,Host	c,Column	h,Async,True	n,Time out,1000,1,5000	o,Output
-Trace route			hsl(12,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
-Port scan			hsl(8,100%,45%)		i,Host	c,Column	h,Async,True	n,From,1,1,65535	n,To,49152,1,65535	o,Output
-Locate IP			hsl(4,100%,45%)		i,Host	c,Column	o,Output
-MAC lookup			hsl(0,100%,45%)		i,Host	c,Column	o,Output
+Reverse DNS lookup	hsl(20,100%,45%)	i,Host	c,Column,IP address	h,Async,True	o,Output
+Ping				hsl(16,100%,45%)	i,Host	c,Column,IP address	h,Async,True	n,Time out,1000,1,5000	o,Output
+Trace route			hsl(12,100%,45%)	i,Host	c,Column,IP address	h,Async,True	o,Output
+Port scan			hsl(8,100%,45%)		i,Host	c,Column,IP address	h,Async,True	n,From,1,1,65535	n,To,49152,1,65535	o,Output
+Locate IP			hsl(4,100%,45%)		i,Host	c,Column,IP address	o,Output
+MAC lookup			hsl(0,100%,45%)		i,Host	c,Column,MAC address	o,Output
 
 Array modifiers
 Subtract rows	hsl(280,100%,45%)	i,Minuend	i,Subtrahend	o,Difference
@@ -63,10 +63,10 @@ Mode			hsl(152,100%,45%)	i,Input	c,Column	o,Mode
 Range			hsl(150,100%,45%)	i,Input	c,Column	o,Mode
 
 Actions
-Wake on LAN		hsl(92,100%,45%)	i,Input	c,Column	h,Async	h,Log
-Turn off PC		hsl(84,100%,45%)	i,Input	c,Column	h,Async	h,Log
-Restart PC		hsl(84,100%,45%)	i,Input	c,Column	h,Async	h,Log
-Log off PC		hsl(80,100%,45%)	i,Input	c,Column	h,Async	h,Log
+Wake on LAN		hsl(92,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+Turn off PC		hsl(84,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+Restart PC		hsl(84,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+Log off PC		hsl(80,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
 
 Export
 Text file	rgb(224,224,224)	i,Input	t,Filename

@@ -6,7 +6,6 @@
 
 .eql-element:hover {
     background-color: var(--select-color);
-    /*background-color: rgb(160,160,160);*/
 }
 
 .eql-element:active > .eql-icon {
