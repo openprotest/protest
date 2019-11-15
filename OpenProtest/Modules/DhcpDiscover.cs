@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 static class DhcpDiscover {
 
@@ -158,16 +156,20 @@ static class DhcpDiscover {
 
             byte[] offer = new byte[1024];
             socket.Receive(offer);
+            socket.Dispose();
             return offer;
 
         } catch (ArgumentNullException ex) {
             ErrorLog.Err(ex);
 
-        } catch (SocketException ex) {
-            ErrorLog.Err(ex);
+        //} catch (SocketException ex) {
+            //ErrorLog.Err(ex);
 
         } catch (System.Security.SecurityException ex) {
             ErrorLog.Err(ex);
+            
+        } catch (Exception ex) {
+            //ErrorLog.Err(ex);
         }
 
         return null;
@@ -179,6 +181,8 @@ static class DhcpDiscover {
 
         bool isOffer = offer[0] == 2;
         if (!isOffer) return "invalid response";
+
+        if (offer.Length < 34) return "invalid response";
 
         byte hardware = offer[1]; //hardware type
         byte maclen = offer[2]; //hardware address length
@@ -194,8 +198,8 @@ static class DhcpDiscover {
 
         StringBuilder sb = new StringBuilder();
         sb.AppendLine($"message type:offer");
-        sb.AppendLine($"hardware type:{hardware}");
-        sb.AppendLine($"hardware address length:{maclen}");
+        //sb.AppendLine($"hardware type:{hardware}");
+        //sb.AppendLine($"hardware address length:{maclen}");
         sb.AppendLine($"hops:{hops}");
 
         sb.AppendLine($"transaction id:{id}");
@@ -205,7 +209,8 @@ static class DhcpDiscover {
         sb.AppendLine($"next server ip:{nextServerIp}");
         sb.AppendLine($"relay server ip:{relayServerIp}");
         sb.AppendLine($"client mac:{clientMac}");
-                
+
+        //https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml
         int p = 240; //-42
         while (p < offer.Length && offer[p] != 255) {
             byte opt = offer[p++];
@@ -224,7 +229,7 @@ static class DhcpDiscover {
                 case 6:
                     sb.Append("domain name server:");
                     for (int i = 0; i < length; i+=4) {
-                        sb.Append($"{offer[p+i]}{offer[p+i+1]}{offer[p+i+2]}{offer[p+i+3]}");
+                        sb.Append($"{offer[p+i]}.{offer[p+i+1]}.{offer[p+i+2]}.{offer[p+i+3]}");
                         if (i + 4 < length) sb.Append(", ");
                     }
                     sb.AppendLine();
@@ -236,6 +241,22 @@ static class DhcpDiscover {
                         sb.Append((char)offer[p+i]);
                     
                     sb.AppendLine();
+                    break;
+
+                case 28:
+                    sb.AppendLine($"broadcast address{offer[p]}.{offer[p+1]}.{offer[p+2]}.{offer[p+3]}");
+                    break;
+
+                case 35:
+                    sb.Append("arp timeout:");
+                    value = BitConverter.ToInt32(new byte[] { offer[p+3], offer[p+2], offer[p+1], offer[p] }, 0);
+                    sb.AppendLine(value.ToString());
+                    break;
+
+                case 38:
+                    sb.Append("tcp keepalive interval:");
+                    value = BitConverter.ToInt32(new byte[] { offer[p+3], offer[p+2], offer[p+1], offer[p] }, 0);
+                    sb.AppendLine(value.ToString());
                     break;
 
                 case 51:
@@ -254,18 +275,16 @@ static class DhcpDiscover {
                     sb.Append("renewal time value:");
                     value = BitConverter.ToInt32(new byte[] { offer[p + 3], offer[p + 2], offer[p + 1], offer[p] }, 0);
                     sb.Append($"{value}s");
-                    if (value > 86400) sb.Append($" ({value / 86400} days)");
+                    if (value > 86400) sb.Append($" ({value/86400} days)");
                     sb.AppendLine();
-                    break;
                     break;
 
                 case 59:
                     sb.Append("rebinding time value:");
                     value = BitConverter.ToInt32(new byte[] { offer[p + 3], offer[p + 2], offer[p + 1], offer[p] }, 0);
                     sb.Append($"{value}s");
-                    if (value > 86400) sb.Append($" ({value / 86400} days)");
+                    if (value > 86400) sb.Append($" ({value/86400} days)");
                     sb.AppendLine();
-                    break;
                     break;
 
                 default: break;

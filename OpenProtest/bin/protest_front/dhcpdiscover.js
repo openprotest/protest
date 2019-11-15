@@ -1,7 +1,6 @@
 class DhcpDiscover extends Window {
     constructor() {
-        super();
-        
+        super();        
         this.setTitle("DHCP discover");
         this.setIcon("res/dhcp.svgz");
 
@@ -65,13 +64,11 @@ class DhcpDiscover extends Window {
 
                     for (let i = 0; i < res.length; i++) {
                         let result = res[i].split("\n");
-
                         for (let j = 0; j < result.length; j++) {
                             let tr = document.createElement("tr");
                             table.appendChild(tr);
 
                             let split = result[j].split(":");
-
                             if (split.length == 1) continue;
 
                             let td1 = document.createElement("td");
@@ -84,8 +81,11 @@ class DhcpDiscover extends Window {
                         }
                     }
 
-                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                } else if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
+                    this.btnDiscover.removeAttribute("disabled", true);
+                    this.waitbox.style.display = "none";
+                }
             };
             xhr.open("GET", "dhcpdiscover", true);
             xhr.send();

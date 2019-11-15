@@ -369,5 +369,3 @@ class ScriptReport extends Window {
         });
     }    
 }
-
-new Scripts();
