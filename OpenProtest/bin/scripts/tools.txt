@@ -63,10 +63,10 @@ Mode			hsl(152,100%,45%)	i,Input	c,Column	o,Mode
 Range			hsl(150,100%,45%)	i,Input	c,Column	o,Mode
 
 Actions
-Wake on LAN		hsl(92,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-Turn off PC		hsl(84,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-Restart PC		hsl(84,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-Log off PC		hsl(80,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Wake on LAN		hsl(92,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Turn off PC		hsl(84,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Restart PC		hsl(84,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Log off PC		hsl(80,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
 
 Export
 Text file	rgb(224,224,224)	i,Input	t,Filename

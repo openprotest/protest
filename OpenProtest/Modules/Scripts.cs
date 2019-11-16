@@ -55,7 +55,10 @@ static class Scripts {
 
     public static void LoadTools() {
         string FILE_SCRIPT = $"{Directory.GetCurrentDirectory()}\\scripts\\tools.txt";
-        
+
+        FileInfo toolsFile = new FileInfo(FILE_SCRIPT);
+        if (!toolsFile.Exists) return;
+
         if (tools_payload is null)
             try {
                 tools_payload = File.ReadAllText(FILE_SCRIPT);
@@ -284,6 +287,8 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
+        filename = NoSQL.UrlDecode(filename);
+
         FileInfo scriptfile = new FileInfo($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
 
         if (!scriptfile.Exists) return Tools.FLE.Array;
@@ -301,6 +306,8 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
+        filename = NoSQL.UrlDecode(filename);
+
         DirectoryInfo dir = new DirectoryInfo(DIR_SCRIPTS);
         if (!dir.Exists) dir.Create();
 
@@ -309,7 +316,6 @@ static class Scripts {
 
         DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
-
 
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
@@ -332,12 +338,16 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
+        filename = NoSQL.UrlDecode(filename);
         filename = escapeFilename(filename);
 
         if (filename.Length == 0) return Tools.INV.Array;
         if (File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.EXS.Array;
         
         try {
+            DirectoryInfo dir_scripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
+            if (!dir_scripts.Exists) dir_scripts.Create();
+
             File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", "");
         } catch (Exception ex) {
             ErrorLog.Err(ex);
@@ -351,10 +361,10 @@ static class Scripts {
         string filename = "";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-
-        filename = escapeFilename(filename);
-
+        
         if (filename.Length == 0) return Tools.INV.Array;
+        filename = NoSQL.UrlDecode(filename);
+        filename = escapeFilename(filename);
 
         if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
 
@@ -372,10 +382,10 @@ static class Scripts {
         string filename = "";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-
-        filename = escapeFilename(filename);
-
+        
         if (filename.Length == 0) return Tools.INV.Array;
+        filename = NoSQL.UrlDecode(filename);
+        filename = escapeFilename(filename);
 
         if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return Tools.FLE.Array;
 
@@ -393,8 +403,9 @@ static class Scripts {
         string filename = "";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-
+        
         if (filename.Length == 0) return null;
+        filename = NoSQL.UrlDecode(filename);
 
         if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return null;
 
@@ -429,9 +440,12 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++) 
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
+        filename = NoSQL.UrlDecode(filename);
         return RunScript(filename);
     }
-    public static byte[] RunScript(in string filename) {
+    public static byte[] RunScript(string filename) {
+        filename = NoSQL.UrlDecode(filename);
+
         if (filename.Length == 0) return Tools.INV.Array;
         if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
 
@@ -854,7 +868,7 @@ static class Scripts {
             } else {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string ip = node.sourceNodes[0].result.array[i][index];
-                    string biosName = await NetBios.GetBiosNameAsync(ip);
+                    string biosName = NetBios.GetBiosNameAsync(ip).Result;
                     array.Add(new string[] { ip is null ? "" : ip, biosName });
                 }
             }
@@ -895,7 +909,7 @@ static class Scripts {
             } else {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string hostname = node.sourceNodes[0].result.array[i][index];
-                    IPAddress[] ips = await DnsLookupAsync(hostname);
+                    IPAddress[] ips = DnsLookupAsync(hostname).Result;
 
                     if (ips is null) {
                         array.Add(new string[] { "", "no such host is known" });
@@ -942,7 +956,7 @@ static class Scripts {
             } else {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string ip = node.sourceNodes[0].result.array[i][index];
-                    IPHostEntry host = await ReverseDnsLookupAsync(ip);
+                    IPHostEntry host = ReverseDnsLookupAsync(ip).Result;
 
                     if (host is null) {
                         array.Add(new string[] { "", "no such host is known" });
@@ -982,22 +996,22 @@ static class Scripts {
                 PingReply[] result = await Task.WhenAll(tasks);
                 for (int i = 0; i < result.Length; i++) {
                     if (result[i] is null) {
-                        array.Add(new string[] { "", "Invalid address", "" });
+                        array.Add(new string[] { node.sourceNodes[0].result.array[i][index], "Invalid address", "" });
                         continue;
                     }
-                    array.Add(new string[] { result[i].Address.ToString(), result[i].Status.ToString(), result[i].RoundtripTime.ToString() });
+                    array.Add(new string[] { node.sourceNodes[0].result.array[i][index], result[i].Status.ToString(), result[i].RoundtripTime.ToString() });
                 }
 
             } else {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
-                    PingReply reply = await PingAsync(host, timeout);
+                    PingReply reply = PingAsync(host, timeout).Result;
 
                     if (reply is null) {
                         array.Add(new string[] { "", "Invalid address", "" });
                         continue;
                     }
-                    array.Add(new string[] { reply.Address.ToString(), reply.Status.ToString(), reply.RoundtripTime.ToString() });
+                    array.Add(new string[] { host, reply.Status.ToString(), reply.RoundtripTime.ToString() });
                 }
             }
         }
@@ -1038,7 +1052,7 @@ static class Scripts {
             } else {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
-                    string result = await TraceRouteAsync(host, timeout, ttl);
+                    string result = TraceRouteAsync(host, timeout, ttl).Result;
                     array.Add(new string[] { host is null ? "" : host, result });
                 }
             }
@@ -1084,7 +1098,7 @@ static class Scripts {
             } else {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
-                    string result = await PortScanAsync(host, from, to);
+                    string result = PortScanAsync(host, from, to).Result;
                     array.Add(new string[] { host is null ? "" : host, result });
                 }
             }
@@ -1797,11 +1811,15 @@ static class Scripts {
             text.Append("\n");
         }
 
+        node.values[1] = NoSQL.UrlDecode(node.values[1]);
         string filename = escapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (!dir_reports.Exists) dir_reports.Create();
 
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
         return null;
@@ -1825,11 +1843,15 @@ static class Scripts {
             text.Append("\n");
         }
 
+        node.values[1] = NoSQL.UrlDecode(node.values[1]);
         string filename = escapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (!dir_reports.Exists) dir_reports.Create();
 
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
         return null;
@@ -1871,11 +1893,15 @@ static class Scripts {
         text.AppendLine();
         text.Append("]}");
 
+        node.values[1] = NoSQL.UrlDecode(node.values[1]);
         string filename = escapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (!dir_reports.Exists) dir_reports.Create();
 
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
         return null;
@@ -1920,11 +1946,15 @@ static class Scripts {
 
         text.AppendLine("</array>");
 
+        node.values[1] = NoSQL.UrlDecode(node.values[1]);
         string filename = escapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (!dir_reports.Exists) dir_reports.Create();
 
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
@@ -1933,12 +1963,15 @@ static class Scripts {
         StringBuilder text = new StringBuilder();
 
         //TODO:
-
+        node.values[1] = NoSQL.UrlDecode(node.values[1]);
         string filename = escapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+
+        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        if (!dir_reports.Exists) dir_reports.Create();
 
         File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
