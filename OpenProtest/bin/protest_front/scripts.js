@@ -332,13 +332,14 @@ class ScriptReport extends Window {
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 text = xhr.responseText;
-                let report = xhr.responseText;
-
-                while (report.indexOf("\n") > -1)
-                    report = report.replace("\n", "<br>");
-
-                while (report.indexOf("\t") > -1)
-                    report = report.replace("\t", "&emsp;");
+                
+                let split = xhr.responseText.split("\n");
+                let report = "";
+                for (let i = 0; i < split.length; i++) {
+                    while (split[i].indexOf("\t") > -1) split[i] = split[i].replace("\t", "&emsp;");
+                    while (split[i].indexOf(" ") > -1) split[i] = split[i].replace(" ", "&nbsp;");
+                    report += "<br>" + split[i]
+                }
 
                 this.content.innerHTML = report;
 
@@ -367,5 +368,19 @@ class ScriptReport extends Window {
 
             psudo.click(null);
         });
-    }    
+
+        let zoom = document.createElement("input");
+        zoom.type = "range";
+        zoom.min = 8;
+        zoom.max = 24;
+        zoom.value = 16;
+        zoom.style.position = "absolute";
+        zoom.style.opacity = ".8";
+        zoom.style.right = "32px";
+        zoom.style.bottom = "8px";
+        this.win.appendChild(zoom);
+
+        zoom.onmousedown = event => event.stopPropagation();
+        zoom.onchange = () => { this.content.style.fontSize = zoom.value+"px";};
+    }
 }
