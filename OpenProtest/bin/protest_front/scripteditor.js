@@ -1,13 +1,11 @@
-/*
- o: output
- i: input
- c: column
- a: column + [ALL]
- h: checkbox (preset)
- n: numeric (preset, min, max)
- t: text (preset)
- m: multiline
-*/
+/* o: output
+   i: input
+   c: column
+   a: column + [ALL]
+   h: checkbox (preset)
+   n: numeric (preset, min, max)
+   t: text (preset)
+   m: multiline */
 
 var Script_ToolsArray = [];
 
@@ -770,25 +768,29 @@ class ScriptEditor extends Window {
             }
         }
 
+        let outputsCount = node.sockets.filter(o => o[0] == "o").length;
+
         //Total columns
-        this.parametersList.appendChild(document.createElement("br"));
+        if (outputsCount > 0) {
+            this.parametersList.appendChild(document.createElement("br"));
+            
+            let hr = document.createElement("hr");
+            hr.style.padding = "0";
+            this.parametersList.appendChild(hr);
 
-        let hr = document.createElement("hr");
-        hr.style.padding = "0";
-        this.parametersList.appendChild(hr);
-
-        let lblColumns = document.createElement("div");
-        lblColumns.style.backgroundColor = "transparent";
-        lblColumns.style.textAlign = "center";
-        lblColumns.innerHTML = "Columns (" + (node.columns ? node.columns.length : "0") + ")";
-        this.parametersList.appendChild(lblColumns);
+            let lblColumns = document.createElement("div");
+            lblColumns.style.backgroundColor = "transparent";
+            lblColumns.style.textAlign = "center";
+            lblColumns.innerHTML = "Columns (" + (node.columns ? node.columns.length : "0") + ")";
+            this.parametersList.appendChild(lblColumns);
+        }
 
         let list = document.createElement("div");
         list.className = "columns-list";
         this.parametersList.appendChild(list);
 
         //input list
-        if (node.columns && node.columns.length > 0) {
+        if (node.columns && node.columns.length > 0 && outputsCount > 0) {
             node.columns.forEach(o => {
                 let newItem = document.createElement("input");
                 newItem.type = "checkbox";
@@ -796,7 +798,7 @@ class ScriptEditor extends Window {
                 //newItem.innerHTML = o;
                 list.appendChild(newItem);
 
-                let label = this.AddCheckBoxLabel(list, newItem, o);
+                let label = this.AddCheckBoxLabel(list, newItem, o.length == 0 ? "&nbsp;" : o);
                 label.style.margin = "4px 2px";
 
                 newItem.onchange = event => {
@@ -1143,14 +1145,14 @@ class ScriptNode {
             case "PS exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
             case "Secure shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
 
-            case "NetBIOS request":     columns = ["IP Address", "NetBIOS name"]; break;
-            case "DNS lookup":          columns = ["Hostname", "IP Address"]; break;
-            case "Reverse DNS lookup":  columns = ["IP address", "Hostname"]; break;
-            case "Ping":                columns = ["Host", "Status", "Roundtrip time"]; break;
-            case "Trace route":         columns = ["Host", "Route"]; break;
-            case "Port scan":           columns = ["Host", "Ports"]; break;
-            case "Locate IP":           columns = ["Host", "Code", "Country", "Region", "City", "Latitude", "Longitude", "Is proxy"]; break;
-            case "MAC lookup":          columns = ["MAC address", "Manufacturer"]; break;
+            case "NetBIOS request":    columns = ["IP Address", "NetBIOS name"]; break;
+            case "DNS lookup":         columns = ["Hostname", "IP Address"]; break;
+            case "Reverse DNS lookup": columns = ["IP address", "Hostname"]; break;
+            case "Ping":               columns = ["Host", "Status", "Roundtrip time"]; break;
+            case "Trace route":        columns = ["Host", "Route"]; break;
+            case "Port scan":          columns = ["Host", "Ports"]; break;
+            case "Locate IP":          columns = ["Host", "Code", "Country", "Region", "City", "Latitude", "Longitude", "Is proxy"]; break;
+            case "MAC lookup":         columns = ["MAC address", "Manufacturer"]; break;
 
             case "Sum":     columns = ["Sum"]; break;
             case "Maximum": columns = ["Maximum"]; break;

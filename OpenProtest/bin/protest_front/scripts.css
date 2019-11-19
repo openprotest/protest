@@ -238,7 +238,7 @@
 }
 
 .columns-list {
-    max-height: 250px;
+    max-height: 350px;
     background-color: transparent !important;
     overflow-x: hidden;
     overflow-y: scroll;

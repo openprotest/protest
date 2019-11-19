@@ -1353,7 +1353,7 @@ static class Scripts {
 
         List<string[]> array = new List<string[]>();
         if (index > -1)
-            array = node.sourceNodes[0].result.array.Where(o => o[index] == value).ToList();
+            array = node.sourceNodes[0].result.array.Where(o => !(o[index] is null) && o[index] == value).ToList();
         
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
@@ -1380,13 +1380,13 @@ static class Scripts {
                         return false;
                     }
 
-                    if (String.Compare(value, o[index]) < 0) return true;
+                    if (String.Compare(value, o[index] ?? "") < 0) return true;
                     return false;
                 }).ToList();                
 
-             else 
+             else //is string
                 array = node.sourceNodes[0].result.array.Where(o => {
-                    if (String.Compare(value, o[index]) < 0) return true;
+                    if (String.Compare(value, o[index] ?? "") < 0) return true;
                     return false;
                 }).ToList();
         }
@@ -1416,13 +1416,13 @@ static class Scripts {
                         return false;
                     }
 
-                    if (String.Compare(o[index], value) < 0) return true;
+                    if (String.Compare(o[index] ?? "", value) < 0) return true;
                     return false;
                 }).ToList();
 
             else
                 array = node.sourceNodes[0].result.array.Where(o => {
-                    if (String.Compare(o[index], value) < 0) return true;
+                    if (String.Compare(o[index] ?? "", value) < 0) return true;
                     return false;
                 }).ToList();
         }
@@ -1443,7 +1443,7 @@ static class Scripts {
 
         List<string[]> array = new List<string[]>();
         if (index > -1)
-            array = node.sourceNodes[0].result.array.Where(o => o[index].IndexOf(value) > -1).ToList();
+            array = node.sourceNodes[0].result.array.Where(o => !(o[index] is null) && o[index].IndexOf(value) > -1).ToList();
 
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
@@ -1463,7 +1463,7 @@ static class Scripts {
         if (index > -1) 
             try {
                 Regex regex = new Regex(pattern);
-                array = node.sourceNodes[0].result.array.Where(o => regex.Match(o[index]).Success).ToList();
+                array = node.sourceNodes[0].result.array.Where(o =>  !(o[index] is null) && regex.Match(o[index]).Success).ToList();
             } catch { }
 
         return new ScriptResult() {
