@@ -605,7 +605,8 @@ static class Scripts {
             case "NetBIOS request":    return NetBiosRequest(node).Result;
             case "DNS lookup":         return DnsLookup(node).Result;
             case "Reverse DNS lookup": return ReverseDnsLookUp(node).Result;
-            case "Ping":               return Ping(node).Result;
+            case "ICMP ping":          return Ping(node).Result;
+            case "ARP ping":           return ArpPing(node);
             case "Trace route":        return TraceRoute(node).Result;
             case "Port scan":          return PortScan(node).Result;
             case "Locate IP":          return LocateIp(node);
@@ -1018,6 +1019,32 @@ static class Scripts {
 
         return new ScriptResult() {
             header = new string[] { "Host", "Status", "Roundtrip time" },
+            array = array
+        };
+    }
+    private static ScriptResult ArpPing(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        List<string[]> array = new List<string[]>();
+
+        if (index > -1) {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    string reply = Tools.Arp(host);
+ 
+                    if (reply is null) {
+                        array.Add(new string[] { "", "Invalid address", "" });
+                        continue;
+                    }
+                    array.Add(new string[] { host, reply });
+                }
+        }
+
+        return new ScriptResult() {
+            header = new string[] { "Host", "Response" },
             array = array
         };
     }

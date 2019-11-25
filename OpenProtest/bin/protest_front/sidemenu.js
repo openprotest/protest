@@ -366,8 +366,8 @@ function SideMenu_Open() {
     btnCloseSidemenu.style.visibility = "visible";
 
     txtSearch.focus();
-    setTimeout(()=> txtSearch.focus(), 50);
-    setTimeout(()=> txtSearch.focus(), 100);
+    setTimeout(()=> txtSearch.focus(), 40);
+    setTimeout(()=> txtSearch.focus(), 80);
 
     sidemenu_isopen = true;
 }

@@ -380,6 +380,8 @@ class ScriptReport extends Window {
         zoom.style.bottom = "8px";
         this.win.appendChild(zoom);
 
+        this.content.style.transition = "font-size .2s";
+
         zoom.onmousedown = event => event.stopPropagation();
         zoom.onchange = () => { this.content.style.fontSize = zoom.value+"px";};
     }

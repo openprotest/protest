@@ -119,16 +119,15 @@
 
 .sidemenu-square-item {
     display: inline-grid;
-    width: 33.33%;
+    width: calc(33.33% - 4px);
     height: 96px;
     color: rgb(32,32,32);
     background-color: rgb(208,208,208);
     background-repeat: no-repeat;
     background-size: 64px 64px;
     background-position: center 4px;
-    border: rgb(48,48,48) 2px solid;
-    border-radius: 4px;
-    box-sizing: border-box;
+    border-radius: 2px;
+    margin: 2px;
     transition: .1s;
 }
 

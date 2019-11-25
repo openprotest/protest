@@ -6,15 +6,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Net;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Management;
 using System.Diagnostics;
-using System.Net.Http;
-using System.IO.Compression;
 
 static class Tools {
     [System.Runtime.InteropServices.DllImport("iphlpapi.dll", ExactSpelling = true)] public static extern int SendARP(uint DestIP, uint SrcIP, byte[] pMacAddr, ref int PhyAddrLen);
@@ -39,8 +39,6 @@ static class Tools {
         try {
             if (!OnSameNetwork(ip)) return "";
 
-            new Ping().Send(ip, 2000);
-
             int len = 6;
             byte[] mac = new byte[len];
             byte[] byte_ip = ip.GetAddressBytes();
@@ -48,9 +46,6 @@ static class Tools {
             SendARP(long_ip, 0, mac, ref len);
 
             return BitConverter.ToString(mac, 0, len).Replace("-", ":");
-
-        } catch (SocketException) {
-            return "";
         } catch {
             return "";
         }
@@ -105,6 +100,9 @@ static class Tools {
         Hashtable hostnames = new Hashtable();
         object send_lock = new object();
 
+        int timeout = 1000;
+        int method = 0; //0:icmp, 1:arp
+        
         try {
             while (ws.State == WebSocketState.Open) {
                 byte[] buff = new byte[2048];
@@ -129,59 +127,64 @@ static class Tools {
 
                 switch (msg[0]) {
                     case "add":
-                    string[] h = msg[1].Split(';');
-                    if (h.Length > 1) {
-                        for (int i = 0; i < h.Length - 1; i += 2) {
-                            h[i] = h[i].Trim();
-                            h[i+1] = h[i+1].Trim();
-                            if (h[i].Length > 0 && h[i+1].Length > 0 && !hostnames.ContainsKey(h[i]))
-                                hostnames.Add(h[i], h[i + 1]);
-                             else
-                                await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
-                        await ws.SendAsync(ACK, WebSocketMessageType.Text, true, CancellationToken.None);
-                    } else 
-                        await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);
-                    break;
+                        string[] h = msg[1].Split(';');
+                        if (h.Length > 1) {
+                            for (int i = 0; i < h.Length - 1; i += 2) {
+                                h[i] = h[i].Trim();
+                                h[i+1] = h[i+1].Trim();
+                                if (h[i].Length > 0 && h[i+1].Length > 0 && !hostnames.ContainsKey(h[i]))
+                                    hostnames.Add(h[i], h[i + 1]);
+                                 else
+                                    await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);
+                            }
+                            await ws.SendAsync(ACK, WebSocketMessageType.Text, true, CancellationToken.None);
+                        } else 
+                            await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);
+                        break;
 
                     case "remove":
-                    string value = msg[1].Trim();
-                    if (hostnames.Contains(value)) {
-                        hostnames.Remove(value);
-                        await ws.SendAsync(ACK, WebSocketMessageType.Text, true, CancellationToken.None);
-                    } else
-                        await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);             
-                    break;
+                        string value = msg[1].Trim();
+                        if (hostnames.Contains(value)) {
+                            hostnames.Remove(value);
+                            await ws.SendAsync(ACK, WebSocketMessageType.Text, true, CancellationToken.None);
+                        } else
+                            await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);             
+                        break;
+
+                    case "timeout":
+                        int.TryParse(msg[1], out timeout);
+                        break;
+
+                    case "method":
+                        method = msg[1] == "arp" ? 1 : 0;
+                        break;
 
                     case "ping":
-                    new Thread(() => {
-                        int i = 0;
-                        string[] name = new string[hostnames.Count];
-                        string[] id = new string[hostnames.Count];
+                        new Thread(() => {
+                            int i = 0;
+                            string[] name = new string[hostnames.Count];
+                            string[] id = new string[hostnames.Count];
                         
-                        foreach (DictionaryEntry o in hostnames) {
-                            id[i] = o.Key.ToString();
-                            name[i] = o.Value.ToString();
-                            i++;
-                        }
+                            foreach (DictionaryEntry o in hostnames) {
+                                id[i] = o.Key.ToString();
+                                name[i] = o.Value.ToString();
+                                i++;
+                            }
 
-                        Task<string> s = PingArrayAsync(name, id, 1001);
-                        s.Wait();
+                            Task<string> s = (method == 0) ? PingArrayAsync(name, id, timeout) : ArpPingArrayAsync(name, id);
+                            s.Wait();
 
-                        lock(send_lock) { //one send per socket
-                           ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(s.Result), 0, s.Result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
-                    }).Start();
-                    break;
+                            lock(send_lock) { //one send per socket
+                               ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(s.Result), 0, s.Result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            }
+                        }).Start();
+                        break;
                 }
             }
 
         } catch (Exception ex) {
             ErrorLog.Err(ex);
-        } /*finally {
-            ctx.Response.Close();
-        }*/
-
+        }
     }
     public static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {
         List<Task<string>> tasks = new List<Task<string>>();
@@ -222,6 +225,29 @@ static class Tools {
             p.Dispose();
         }
     }
+
+    public static async Task<string> ArpPingArrayAsync(string[] name, string[] id) {
+        List<Task<string>> tasks = new List<Task<string>>();
+        for (int i = 0; i < name.Length; i++) tasks.Add(ArpPingAsync(name[i], id[i]));
+        string[] result = await Task.WhenAll(tasks);
+        return String.Join(((char)127).ToString(), result);
+    }
+    public static async Task<string> ArpPingAsync(string name, string id) {
+        try {
+            IPAddress[] ip = await Dns.GetHostAddressesAsync(name);
+            if (ip.Length == 0) return id + ((char)127).ToString() + "Unkown host";
+
+            string response = Arp(ip[0]);
+
+            if (!(response is null) && response.Length > 0)
+                return id + ((char)127).ToString() + "0";
+
+            return id + ((char)127).ToString() + "Unreachable";
+        } catch (Exception) {
+            return id + ((char)127).ToString() + "Unkown error";
+        }
+    }
+
 
     private static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
     public static async void WsTraceRoute(HttpListenerContext ctx, string remoteIp) {

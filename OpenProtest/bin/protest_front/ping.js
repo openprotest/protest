@@ -10,6 +10,8 @@ class Ping extends Console {
         this.ws = null;         //websocket
         this.taskIconDots = []; //dots on icon task-bar
 
+        this.timeout = 1000;
+        this.method = "icmp";
         this.moveToBottom = false;
 
         this.setTitle("Ping");
@@ -82,28 +84,61 @@ class Ping extends Console {
         });
 
         this.btnOptions.addEventListener("click", event => {
-            let obj = this.DialogBox("170px");
+            let obj = this.DialogBox("214px");
             let btnOK = obj[0];
             let innerBox = obj[1];
 
             innerBox.parentElement.style.maxWidth = "600px";
             innerBox.style.padding = "16px 0px 0px 16px";
+            
+            let lblTimeout = document.createElement("div");
+            lblTimeout.innerHTML = "Time out (ms):";
+            lblTimeout.style.display = "inline-block";
+            lblTimeout.style.minWidth = "120px";
+            innerBox.appendChild(lblTimeout);
 
-            let chkMoveToBottom = document.createElement("input");
-            chkMoveToBottom.type = "checkbox";
-            chkMoveToBottom.checked = this.moveToBottom;
-            innerBox.appendChild(chkMoveToBottom);
-            this.AddCheckBoxLabel(innerBox, chkMoveToBottom, "Move to bottom on status changed.");
-
+            let txtTimeout = document.createElement("input");
+            txtTimeout.type = "number";
+            txtTimeout.min = "1";
+            txtTimeout.max = "5000";
+            txtTimeout.value = this.timeout;
+            txtTimeout.style.minWidth = "100px";
+            innerBox.appendChild(txtTimeout);
+            
             innerBox.appendChild(document.createElement("br"));
+
+            let lblPingMethod = document.createElement("div");
+            lblPingMethod.innerHTML = "Ping method:";
+            lblPingMethod.style.display = "inline-block";
+            lblPingMethod.style.minWidth = "120px";
+            innerBox.appendChild(lblPingMethod);
+
+            let selPingMethod = document.createElement("select");
+            selPingMethod.style.minWidth = "100px";
+            innerBox.appendChild(selPingMethod);
+
+            let optICMP = document.createElement("option");
+            optICMP.innerHTML = "ICMP";
+            optICMP.value = "icmp";
+            selPingMethod.appendChild(optICMP);
+
+            let optARP = document.createElement("option");
+            optARP.innerHTML = "ARP";
+            optARP.value = "arp";
+            selPingMethod.appendChild(optARP);
+
+            selPingMethod.value = this.method;
+
             innerBox.appendChild(document.createElement("br"));
 
             let lblDisplayMode = document.createElement("div");
-            lblDisplayMode.innerHTML = "Display mode: ";
+            lblDisplayMode.innerHTML = "Display mode:";
             lblDisplayMode.style.display = "inline-block";
+            lblDisplayMode.style.minWidth = "120px";
             innerBox.appendChild(lblDisplayMode);
 
             let selDisplayMode = document.createElement("select");
+            selDisplayMode.style.minWidth = "100px";
             innerBox.appendChild(selDisplayMode);
 
             let optNormal = document.createElement("option");
@@ -118,7 +153,16 @@ class Ping extends Console {
 
             if (this.list.className != "no-entries") 
                 selDisplayMode.selectedIndex = 1;
-            
+
+            innerBox.appendChild(document.createElement("br"));
+            innerBox.appendChild(document.createElement("br"));
+
+            let chkMoveToBottom = document.createElement("input");
+            chkMoveToBottom.type = "checkbox";
+            chkMoveToBottom.checked = this.moveToBottom;
+            innerBox.appendChild(chkMoveToBottom);
+            this.AddCheckBoxLabel(innerBox, chkMoveToBottom, "Move to bottom on status changed.");
+
             innerBox.appendChild(document.createElement("br"));
             innerBox.appendChild(document.createElement("br"));
 
@@ -212,14 +256,30 @@ class Ping extends Console {
                 tr2.appendChild(td6b);
             }
             
+            selPingMethod.onchange = () => {
+                if (selPingMethod.value == "arp") 
+                    txtTimeout.setAttribute("disabled", true);
+
+                else if (txtTimeout.disabled) 
+                    txtTimeout.removeAttribute("disabled");
+            };
+            
             btnOK.addEventListener("click", ()=> {
+                this.timeout = txtTimeout.value;
+                this.method = selPingMethod.value;
                 this.moveToBottom = chkMoveToBottom.checked;
+
+                if (!this.isClosed && this.ws != null && this.ws.readyState === 1) {//ready
+                    this.ws.send("timeout:" + this.timeout);
+                    this.ws.send("method:" + this.method);
+                }
 
                 if (selDisplayMode.selectedIndex == 0) //normal
                     this.list.className = "no-entries";
                 else if (selDisplayMode.selectedIndex == 1) //tied
                     this.list.className = "tied-list  no-entries";
 
+                this.setTitle(selPingMethod.value == "arp" ? "ARP ping" : "Ping");
                 this.InvalidateRecyclerList();
             });
         });
@@ -462,6 +522,9 @@ class Ping extends Console {
             let split = this.request.split(";");
             let i=0;
             
+            this.ws.send("timeout:" + this.timeout);
+            this.ws.send("method:" + this.method);
+
             while (i < split.length) {
                 let req = "";
                 while (req.length < 768 && i < split.length) {
@@ -470,7 +533,7 @@ class Ping extends Console {
                 }
                 this.ws.send("add:" + req);
             }
-
+                        
             for (let i=0; i<this.list.childNodes.length; i++) //remove warnings, if exist
                 if (this.list.childNodes[i].id == "self_destruct") 
                     this.list.removeChild(this.list.childNodes[i]);
