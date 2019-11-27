@@ -402,7 +402,7 @@ static class NoSQL {
     }
 
     public static byte[] DeleteEquip(string[] para, in string performer) {
-        string filename = null;
+        string filename;
         if (para.Length > 1) 
             filename = para[1];
         else 
@@ -507,7 +507,7 @@ static class NoSQL {
     }
 
     public static byte[] DeleteUser(string[] para, in string performer) {
-        string filename = null;
+        string filename;
         if (para.Length > 1)
             filename = para[1];
         else

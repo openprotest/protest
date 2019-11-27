@@ -12,7 +12,7 @@ static class Session {
     public static Hashtable user_access = new Hashtable();
 
     //private static Hashtable onTimeOut = new Hashtable(); //TODO:
-    private static Hashtable sessions = new Hashtable();
+    private static readonly Hashtable sessions = new Hashtable();
 
     private static readonly object session_lock = new object();
 
@@ -28,9 +28,9 @@ static class Session {
     }
 
     public static string TryLogin(in HttpListenerContext ctx, string remoteIp) {
-
         try {
-            string payload = new StreamReader(ctx.Request.InputStream).ReadToEnd();
+            using StreamReader streamReader = new StreamReader(ctx.Request.InputStream);
+            string payload = streamReader.ReadToEnd();
             string[] split = payload.Split((char)127);
             if (split.Length < 2) return null;
 
@@ -202,7 +202,7 @@ static class Session {
         return GetSHA(Encoding.UTF8.GetBytes(value));
     }
     public static string GetSHA(byte[] value) {
-        SHA384 sha = SHA384.Create();
+        using SHA384 sha = SHA384.Create();
         byte[] bytes = sha.ComputeHash(value);
 
         StringBuilder sb = new StringBuilder();

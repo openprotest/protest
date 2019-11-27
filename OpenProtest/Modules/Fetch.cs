@@ -160,7 +160,8 @@ static class Fetch {
             
             bool ping;
             try {
-                PingReply reply = await new Ping().SendPingAsync(ipAddr.ToString(), 2000);
+                using Ping p = new Ping();
+                PingReply reply = await p.SendPingAsync(ipAddr.ToString(), 2000);
                 ping = (reply.Status == IPStatus.Success);
             } catch {
                 ping = false;
@@ -242,7 +243,7 @@ static class Fetch {
         
         try {
             DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
             result = searcher.FindAll();
         } catch (Exception ex) {

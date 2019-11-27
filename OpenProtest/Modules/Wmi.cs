@@ -54,7 +54,7 @@ static class Wmi {
 
         options.Authentication = AuthenticationLevel.PacketPrivacy;
 
-        ManagementScope scope = null;
+        ManagementScope scope;
         try {
             scope = new ManagementScope($"\\\\{host}\\root\\cimv2", options);
             scope.Connect();
@@ -204,97 +204,102 @@ static class Wmi {
         if (!(scope is null)) {
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure")).Get()) {
-                    string chassi = "";
-                    foreach (ManagementObject o in moc) {
-                        short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
-                        chassi = ChassiToString(chassisTypes);
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure")).Get();
+                string chassi = "";
+                foreach (ManagementObject o in moc) {
+                    short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
+                    chassi = ChassiToString(chassisTypes);
 
-                        switch (chassisTypes) {
-                            case 8: case 9: case 10: case 14:
-                                type = "Laptop";
-                                break;
-
-                            case 17: case 18: case 20: case 22: case 23:
-                                type = "Server";
-                                break;
-
-                            case 3: case 4: case 5: case 6: case 7: case 24:
-                                type = "PC Tower";
-                                break;
-
-                            case 13:
-                                type = "All in one";
-                                break;
-                        }
-
-                        if (chassi.Length > 0) {
-                            content.Append($"CHASSI TYPE{(char)127}{chassi}{(char)127}");
+                    switch (chassisTypes) {
+                        case 8:
+                        case 9:
+                        case 10:
+                        case 14:
+                            type = "Laptop";
                             break;
-                        }
+
+                        case 17:
+                        case 18:
+                        case 20:
+                        case 22:
+                        case 23:
+                            type = "Server";
+                            break;
+
+                        case 3:
+                        case 4:
+                        case 5:
+                        case 6:
+                        case 7:
+                        case 24:
+                            type = "PC Tower";
+                            break;
+
+                        case 13:
+                            type = "All in one";
+                            break;
+                    }
+
+                    if (chassi.Length > 0) {
+                        content.Append($"CHASSI TYPE{(char)127}{chassi}{(char)127}");
+                        break;
                     }
                 }
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")).Get()) {
-                    //ContentBuilderAddArray(moc, "IPAddress", "IP", content, new FormatMethodPtr(IPv4Filter));
-                    //ContentBuilderAddArray(moc, "IPAddress", "IPV6", content, new FormatMethodPtr(IPv6Filter));
-                    //ContentBuilderAddArray(moc, "MACAddress", "MAC ADDRESS", content);
-                    ContentBuilderAddArray(moc, "DHCPEnabled", "DHCP ENABLED", content);
-                    ContentBuilderAddArray(moc, "IPSubnet", "MASK", content);
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")).Get();
+                //ContentBuilderAddArray(moc, "IPAddress", "IP", content, new FormatMethodPtr(IPv4Filter));
+                //ContentBuilderAddArray(moc, "IPAddress", "IPV6", content, new FormatMethodPtr(IPv6Filter));
+                //ContentBuilderAddArray(moc, "MACAddress", "MAC ADDRESS", content);
+                ContentBuilderAddArray(moc, "DHCPEnabled", "DHCP ENABLED", content);
+                ContentBuilderAddArray(moc, "IPSubnet", "MASK", content);
 
-                    //if (ip.Length == 0) ip = WmiGet(moc, "IPAddress", true);
-                    ip = WmiGet(moc, "IPAddress", true, IPv4Filter); //if wmi is available. overwrite dns value
-                    mac = WmiGet(moc, "MACAddress", true);
-                }
+                //if (ip.Length == 0) ip = WmiGet(moc, "IPAddress", true);
+                ip = WmiGet(moc, "IPAddress", true, IPv4Filter); //if wmi is available. overwrite dns value
+                mac = WmiGet(moc, "MACAddress", true);
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapter WHERE PhysicalAdapter = True")).Get()) {
-                    ContentBuilderAddArray(moc, "Speed", "NETWORK ADAPTER SPEED", content, new FormatMethodPtr(TransferRateToString));
-                }
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapter WHERE PhysicalAdapter = True")).Get();
+                ContentBuilderAddArray(moc, "Speed", "NETWORK ADAPTER SPEED", content, new FormatMethodPtr(TransferRateToString));
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem")).Get()) {
-                    //ContentBuilderAddValue(moc, "Name", "NAME", content);
-                    //ContentBuilderAddValue(moc, "UserName", "USERNAME", content);                    
-                    //ContentBuilderAddValue(moc, "DNSHostName", "HOSTNAME", content);
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem")).Get();
+                //ContentBuilderAddValue(moc, "Name", "NAME", content);
+                //ContentBuilderAddValue(moc, "UserName", "USERNAME", content);                    
+                //ContentBuilderAddValue(moc, "DNSHostName", "HOSTNAME", content);
 
-                    //ContentBuilderAddValue(moc, "Manufacturer", "MANUFACTURER", content);
-                    ContentBuilderAddValue(moc, "Model", "MODEL", content);
-                    //ContentBuilderAddValue(moc, "Description", "DESCRIPTION", content);
-                    ContentBuilderAddValue(moc, "UserName", "OWNER", content);
+                //ContentBuilderAddValue(moc, "Manufacturer", "MANUFACTURER", content);
+                ContentBuilderAddValue(moc, "Model", "MODEL", content);
+                //ContentBuilderAddValue(moc, "Description", "DESCRIPTION", content);
+                ContentBuilderAddValue(moc, "UserName", "OWNER", content);
 
-                    name = WmiGet(moc, "Name", true);
-                    manufacturer = WmiGet(moc, "Manufacturer", true);
-                    hostname = WmiGet(moc, "DNSHostName", true);
-                }
+                name = WmiGet(moc, "Name", true);
+                manufacturer = WmiGet(moc, "Manufacturer", true);
+                hostname = WmiGet(moc, "DNSHostName", true);
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Baseboard")).Get()) {
-                    ContentBuilderAddValue(moc, "Manufacturer", "MOTHERBOARD MANUFACTURER", content);
-                    ContentBuilderAddValue(moc, "Product", "MOTHERBOARD", content);
-                    ContentBuilderAddValue(moc, "SerialNumber", "MOTHERBOARD SERIAL NUMBER", content);
-                }
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Baseboard")).Get();
+                ContentBuilderAddValue(moc, "Manufacturer", "MOTHERBOARD MANUFACTURER", content);
+                ContentBuilderAddValue(moc, "Product", "MOTHERBOARD", content);
+                ContentBuilderAddValue(moc, "SerialNumber", "MOTHERBOARD SERIAL NUMBER", content);
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS")).Get()) {
-                    ContentBuilderAddValue(moc, "Name", "BIOS", content);
-                    ContentBuilderAddValue(moc, "SerialNumber", "SERIAL NUMBER", content);
-                }
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS")).Get();
+                ContentBuilderAddValue(moc, "Name", "BIOS", content);
+                ContentBuilderAddValue(moc, "SerialNumber", "SERIAL NUMBER", content);
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor")).Get()) {
-                    ContentBuilderAddArray(moc, "Name", "PROCESSOR", content, new FormatMethodPtr(ProcessorString));
-                    ContentBuilderAddValue(moc, "NumberOfCores", "CPU CORES", content);
-                    ContentBuilderAddValue(moc, "CurrentClockSpeed", "CPU FREQUENCY", content, new FormatMethodPtr(ToMHz));
-                    ContentBuilderAddValue(moc, "AddressWidth", "CPU ARCHITECTURE", content, new FormatMethodPtr(ArchitechtureString));
-                }
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor")).Get();
+                ContentBuilderAddArray(moc, "Name", "PROCESSOR", content, new FormatMethodPtr(ProcessorString));
+                ContentBuilderAddValue(moc, "NumberOfCores", "CPU CORES", content);
+                ContentBuilderAddValue(moc, "CurrentClockSpeed", "CPU FREQUENCY", content, new FormatMethodPtr(ToMHz));
+                ContentBuilderAddValue(moc, "AddressWidth", "CPU ARCHITECTURE", content, new FormatMethodPtr(ArchitechtureString));
             } catch { }
 
             try {
@@ -330,63 +335,58 @@ static class Wmi {
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory")).Get()) {
-                    ContentBuilderAddArray(moc, "Capacity", "MEMORY", content, new FormatMethodPtr(SizeToString));
-                    ContentBuilderAddValue(moc, "Speed", "RAM SPEED", content, new FormatMethodPtr(ToMHz));
-                    ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", content, new FormatMethodPtr(RamType));
-                    ContentBuilderAddValue(moc, "FormFactor", "RAM FORM FACTOR", content, new FormatMethodPtr(RamFormFactor));
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory")).Get();
+                ContentBuilderAddArray(moc, "Capacity", "MEMORY", content, new FormatMethodPtr(SizeToString));
+                ContentBuilderAddValue(moc, "Speed", "RAM SPEED", content, new FormatMethodPtr(ToMHz));
+                ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", content, new FormatMethodPtr(RamType));
+                ContentBuilderAddValue(moc, "FormFactor", "RAM FORM FACTOR", content, new FormatMethodPtr(RamFormFactor));
+            } catch { }
+
+            try {
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray")).Get();
+                ContentBuilderAddValue(moc, "MemoryDevices", "RAM SLOT", content);
+            } catch { }
+
+            try {
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_DiskDrive WHERE MediaType = \"Fixed hard disk media\"")).Get();
+                ContentBuilderAddArray(moc, "Size", "PHYSICAL DISK", content, new FormatMethodPtr(SizeToString));
+            } catch { }
+
+            try {
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
+                string value = "";
+                foreach (ManagementObject o in moc) {
+                    string caption = o.GetPropertyValue("Caption").ToString().Replace(":", "");
+                    UInt64 size = (UInt64)o.GetPropertyValue("Size");
+                    UInt64 used = size - (UInt64)o.GetPropertyValue("FreeSpace");
+                    value += $"{caption}:{Math.Round((double)used / 1024 / 1024 / 1024, 1)}:{Math.Round((double)size / 1024 / 1024 / 1024, 1)}:GB:";
                 }
+                if (value.EndsWith(":")) value = value.Substring(0, value.Length - 1);
+                if (value.Length > 0) content.Append($"LOGICAL DISK{(char)127}bar:{value}{(char)127}");
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray")).Get())
-                    ContentBuilderAddValue(moc, "MemoryDevices", "RAM SLOT", content);
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_VideoController")).Get();
+                ContentBuilderAddArray(moc, "Name", "VIDEO CONTROLLER", content);
+                ContentBuilderAddArray(moc, "DriverVersion", "VIDEO DRIVER", content);
             } catch { }
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_DiskDrive WHERE MediaType = \"Fixed hard disk media\"")).Get())
-                    ContentBuilderAddArray(moc, "Size", "PHYSICAL DISK", content, new FormatMethodPtr(SizeToString));
-            } catch { }
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
+                ContentBuilderAddValue(moc, "Caption", "OPERATING SYSTEM", content);
+                ContentBuilderAddValue(moc, "OSArchitecture", "OS ARCHITECTURE", content);
+                ContentBuilderAddValue(moc, "Version", "OS VERSION", content);
+                ContentBuilderAddValue(moc, "BuildNumber", "OS BUILD", content);
+                ContentBuilderAddValue(moc, "CSDVersion", "SERVICE PACK", content);
+                ContentBuilderAddValue(moc, "InstallDate", "OS INSTALL DATE", content, new FormatMethodPtr(DateToString));
+                ContentBuilderAddValue(moc, "SerialNumber", "OS SERIAL NO", content);
 
-            try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get()) {
-                    string value = "";
-                    foreach (ManagementObject o in moc) {
-                        string caption = o.GetPropertyValue("Caption").ToString().Replace(":", "");
-                        UInt64 size = (UInt64)o.GetPropertyValue("Size");
-                        UInt64 used = size - (UInt64)o.GetPropertyValue("FreeSpace");
-                        value += $"{caption}:{Math.Round((double)used / 1024 / 1024 / 1024, 1)}:{Math.Round((double)size / 1024 / 1024 / 1024, 1)}:GB:";
+                foreach (ManagementObject o in moc) {
+                    string osName = o.GetPropertyValue("Caption").ToString();
+                    if (osName.ToLower().IndexOf("server") > -1) {
+                        type = "Server";
+                        break;
                     }
-                    if (value.EndsWith(":")) value = value.Substring(0, value.Length - 1);
-                    if (value.Length > 0) content.Append($"LOGICAL DISK{(char)127}bar:{value}{(char)127}");
-                }
-            } catch { }
-
-            try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_VideoController")).Get()) {
-                    ContentBuilderAddArray(moc, "Name", "VIDEO CONTROLLER", content);
-                    ContentBuilderAddArray(moc, "DriverVersion", "VIDEO DRIVER", content);
-                }
-            } catch { }
-
-            try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get()) {
-                    ContentBuilderAddValue(moc, "Caption", "OPERATING SYSTEM", content);
-                    ContentBuilderAddValue(moc, "OSArchitecture", "OS ARCHITECTURE", content);
-                    ContentBuilderAddValue(moc, "Version", "OS VERSION", content);
-                    ContentBuilderAddValue(moc, "BuildNumber", "OS BUILD", content);
-                    ContentBuilderAddValue(moc, "CSDVersion", "SERVICE PACK", content);
-                    ContentBuilderAddValue(moc, "InstallDate", "OS INSTALL DATE", content, new FormatMethodPtr(DateToString));
-                    ContentBuilderAddValue(moc, "SerialNumber", "OS SERIAL NO", content);
-
-                    foreach (ManagementObject o in moc) {
-                        string osName = o.GetPropertyValue("Caption").ToString();
-                        if (osName.ToLower().IndexOf("server") > -1) {
-                            type = "Server";
-                            break;
-                        }
-                    }
-
                 }
             } catch { }
         }
@@ -459,7 +459,7 @@ static class Wmi {
         ManagementScope scope = WmiScope(host);
         if (scope is null) return null;
 
-        ManagementObjectCollection moc = null;
+        ManagementObjectCollection moc;
         try {
             moc = new ManagementObjectSearcher(scope.Path.ToString(), query).Get();
             if (moc.Count == 0) return null;
@@ -508,7 +508,7 @@ static class Wmi {
         ManagementScope scope = WmiScope(host);
         if (scope is null) return WMI_UNK.Array;
 
-        ManagementObjectCollection moc = null;
+        ManagementObjectCollection moc;
         try {
             moc = new ManagementObjectSearcher(scope.Path.ToString(), "SELECT * FROM Win32_Process WHERE ProcessId = " + pid).Get();
             if (moc.Count == 0) return Encoding.UTF8.GetBytes("no such process id");
@@ -546,7 +546,7 @@ static class Wmi {
         ManagementScope scope = WmiScope(host);
         if (scope is null) return Encoding.UTF8.GetString(Tools.UNA.Array);
 
-        ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
+        using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
 
         try {
             foreach (ManagementObject o in searcher.Get()) {
@@ -585,44 +585,44 @@ static class Wmi {
     }
 
     public static string ChassiToString(short chassiType) {
-        switch (chassiType) {
-            case 3:  return "Desktop;";
-            case 4:  return "Low profile desktop";
-            case 5:  return "Pizza box";
-            case 6:  return "Mini tower";
-            case 7:  return "Tower";
-            case 8:  return "Portable";
-            case 9:  return "Laptop";
-            case 10: return "Notebook";
-            case 11: return "Hand held";
-            case 12: return "Docking station";
-            case 13: return "All in one";
-            case 14: return "Sub notebook";
-            case 15: return "Space-saving";
-            case 16: return "Lunch box";
-            case 17: return "Main system chassis";
-            case 18: return "Expansion chassis";
-            case 19: return "Sub-chassis";
-            case 20: return "Bus expansion chassis";
-            case 21: return "Peripheral chassis";
-            case 22: return "Storage chassis";
-            case 23: return "Rack mount chassis";
-            case 24: return "Sealed-case PC";
-            case 25: return "Multi-system chassis";
-            case 26: return "Compact PCI";
-            case 27: return "Advanced TCA";
-            case 28: return "Blade ";
-            case 29: return "Blade Enclosure";
-            case 30: return "Tablet ";
-            case 31: return "Convertible ";
-            case 32: return "Detachable ";
-            case 33: return "IoT Gateway";
-            case 34: return "Embedded PC";
-            case 35: return "Mini PC";
-            case 36: return "Stick PC";
-        }
+        return chassiType switch {
+            3 => "Desktop;",
+            4 => "Low profile desktop",
+            5 => "Pizza box",
+            6 => "Mini tower",
+            7 => "Tower",
+            8 => "Portable",
+            9 => "Laptop",
+            10 => "Notebook",
+            11 => "Hand held",
+            12 => "Docking station",
+            13 => "All in one",
+            14 => "Sub notebook",
+            15 => "Space-saving",
+            16 => "Lunch box",
+            17 => "Main system chassis",
+            18 => "Expansion chassis",
+            19 => "Sub-chassis",
+            20 => "Bus expansion chassis",
+            21 => "Peripheral chassis",
+            22 => "Storage chassis",
+            23 => "Rack mount chassis",
+            24 => "Sealed-case PC",
+            25 => "Multi-system chassis",
+            26 => "Compact PCI",
+            27 => "Advanced TCA",
+            28 => "Blade ",
+            29 => "Blade Enclosure",
+            30 => "Tablet ",
+            31 => "Convertible ",
+            32 => "Detachable ",
+            33 => "IoT Gateway",
+            34 => "Embedded PC",
+            35 => "Mini PC",
+            36 => "Stick PC",
 
-        return "";
+            _ => "",
+        };
     }
 
     public static string SizeToString(string value) {
@@ -682,74 +682,73 @@ static class Wmi {
     }
 
     public static string RamType(string value) {
-        switch (value) {
-            case "0": return "";
+        return value switch {
+            "0" => "",
 
-            case "2": return "DRAM";
-            case "3": return "Synchronous DRAM";
-            case "4": return "Cache DRAM";
-            case "5": return "EDO";
-            case "6": return "EDRAM";
-            case "7": return "VRAM";
-            case "8": return "SRAM";
-            case "9": return "RAM";
-            case "10": return "ROM";
-            case "11": return "Flash";
-            case "12": return "EEPROM";
-            case "13": return "FEPROM";
-            case "14": return "EPROM";
-            case "15": return "CDRAM";
-            case "16": return "3DRAM";
-            case "17": return "SDRAM";
-            case "18": return "SGRAM";
-            case "19": return "RDRAM";
-            case "20": return "DDR";
-            case "21": return "DDR2";
-            case "22": return "DDR2 FB-DIMM";
-            case "23": return "";
-            case "24": return "DDR3";
-            case "25": return "FBD2";
-
-        }
-        return "";
+            "2" => "DRAM",
+            "3" => "Synchronous DRAM",
+            "4" => "Cache DRAM",
+            "5" => "EDO",
+            "6" => "EDRAM",
+            "7" => "VRAM",
+            "8" => "SRAM",
+            "9" => "RAM",
+            "10" => "ROM",
+            "11" => "Flash",
+            "12" => "EEPROM",
+            "13" => "FEPROM",
+            "14" => "EPROM",
+            "15" => "CDRAM",
+            "16" => "3DRAM",
+            "17" => "SDRAM",
+            "18" => "SGRAM",
+            "19" => "RDRAM",
+            "20" => "DDR",
+            "21" => "DDR2",
+            "22" => "DDR2 FB-DIMM",
+            "23" => "",
+            "24" => "DDR3",
+            "25" => "FBD2",
+            _ => "",
+        };
     }
 
     public static string RamFormFactor(string value) {
-        switch (value) {
-            case "0": return "Unknown";
+        return value switch {
+            "0" => "Unknown",
 
-            case "2": return "SIP";
-            case "3": return "DIP";
-            case "4": return "ZIP";
-            case "5": return "SOJ";
-            case "6": return "Proprietary";
-            case "7": return "SIMM";
-            case "8": return "DIMM";
-            case "9": return "TSOP";
-            case "10": return "PGA";
-            case "11": return "RIMM";
-            case "12": return "SODIMM";
-            case "13": return "SRIMM";
-            case "14": return "SMD";
-            case "15": return "SSMP";
-            case "16": return "QFP";
-            case "17": return "TQFP";
-            case "18": return "SOIC";
-            case "19": return "LCC";
-            case "20": return "PLCC";
-            case "21": return "BGA";
-            case "22": return "FPBGA";
-            case "23": return "LGA";
-        }
-        return "";
+            "2" => "SIP",
+            "3" => "DIP",
+            "4" => "ZIP",
+            "5" => "SOJ",
+            "6" => "Proprietary",
+            "7" => "SIMM",
+            "8" => "DIMM",
+            "9" => "TSOP",
+            "10" => "PGA",
+            "11" => "RIMM",
+            "12" => "SODIMM",
+            "13" => "SRIMM",
+            "14" => "SMD",
+            "15" => "SSMP",
+            "16" => "QFP",
+            "17" => "TQFP",
+            "18" => "SOIC",
+            "19" => "LCC",
+            "20" => "PLCC",
+            "21" => "BGA",
+            "22" => "FPBGA",
+            "23" => "LGA",
+            _ => "",
+        };
     }
 
     public static string ArchitechtureString(string value) {
-        switch (value) {
-            case "32": return "32-bit";
-            case "64": return "64-bit";
-            default: return value;
-        }
+        return value switch {
+            "32" => "32-bit",
+            "64" => "64-bit",
+            _ => value,
+        };
     }
 
     public static string ProcessorString(string value) {

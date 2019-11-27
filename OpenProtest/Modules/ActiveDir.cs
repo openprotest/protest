@@ -23,7 +23,7 @@ static class ActiveDir {
 
         try {
             DirectoryEntry dir = GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(objectClass=computer)";
             result = searcher.FindAll();
         } catch (Exception ex) {
@@ -45,7 +45,7 @@ static class ActiveDir {
         SearchResultCollection result = null;
         try {
             DirectoryEntry dir = GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
             result = searcher.FindAll();
         } catch (Exception ex) {
@@ -80,7 +80,7 @@ static class ActiveDir {
             DirectoryEntry entry = new DirectoryEntry($"LDAP://{domain}", username, password);
             object o = entry.NativeObject;
 
-            DirectorySearcher searcher = new DirectorySearcher(entry);
+            using DirectorySearcher searcher = new DirectorySearcher(entry);
             searcher.Filter = $"(SAMAccountName={username})";
             searcher.PropertiesToLoad.Add("cn");
 
@@ -102,7 +102,7 @@ static class ActiveDir {
 
         DirectoryEntry dir = GetDirectoryEntry(domain);
 
-        DirectorySearcher searcher = new DirectorySearcher(dir);
+        using DirectorySearcher searcher = new DirectorySearcher(dir);
         searcher.Filter = "(&(objectClass=computer)(name = " + name + "))";
 
         try {
@@ -120,12 +120,11 @@ static class ActiveDir {
         } catch { }
 
         DirectoryEntry dir = GetDirectoryEntry(domain);
-        SearchResultCollection result = null;
-
-        DirectorySearcher searcher = new DirectorySearcher(dir);
+        using DirectorySearcher searcher = new DirectorySearcher(dir);
         searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
         //searcher.Filter = "(&(objectClass=user)(objectCategory=person)(cn=" + username + "))";
 
+        SearchResultCollection result;
         try {
             result = searcher.FindAll();
             //TODO: try this: searcher.FindOne();
@@ -300,7 +299,7 @@ static class ActiveDir {
 
         DirectoryEntry user = new DirectoryEntry(sr.Path);
         int userAccountControl = (int)user.Properties["userAccountControl"].Value;
-        userAccountControl = userAccountControl | 0x2;
+        userAccountControl |= 0x2;
         user.Properties["userAccountControl"].Value = userAccountControl;
 
         user.CommitChanges();
@@ -329,7 +328,7 @@ static class ActiveDir {
 
         DirectoryEntry user = new DirectoryEntry(sr.Path);
         int userAccountControl = (int)user.Properties["userAccountControl"].Value;
-        userAccountControl = userAccountControl & ~0x2;
+        userAccountControl &= ~0x2;
         user.Properties["userAccountControl"].Value = userAccountControl;
 
         user.CommitChanges();

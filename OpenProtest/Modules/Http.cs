@@ -6,16 +6,16 @@ using System.Threading;
 class Http {
     readonly string ip;
     readonly ushort port;
-    readonly string path;
+    //readonly string path;
 
-    HttpListener listener;
+    readonly HttpListener listener;
     public Cache cache;
 
 
     public Http(in string ip, in ushort port, in string path) {
         this.ip = ip;
         this.port = port;
-        this.path = path;
+        //this.path = path;
 
         cache = new Cache(path);
 

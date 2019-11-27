@@ -143,10 +143,10 @@ static class Scripts {
             domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
         } catch { }
 
-        SearchResultCollection result = null;
+        SearchResultCollection result;
         try {
             DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
             result = searcher.FindAll();
         } catch (Exception ex) {
@@ -184,10 +184,10 @@ static class Scripts {
             domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
         } catch { }
 
-        SearchResultCollection result = null;
+        SearchResultCollection result;
         try {
             DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(objectClass=computer)";
             result = searcher.FindAll();
         } catch (Exception ex) {
@@ -225,10 +225,10 @@ static class Scripts {
             domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
         } catch { }
 
-        SearchResultCollection result = null;
+        SearchResultCollection result;
         try {
             DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=group))";
             result = searcher.FindAll();
         } catch (Exception ex) {
@@ -339,7 +339,7 @@ static class Scripts {
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
         filename = NoSQL.UrlDecode(filename);
-        filename = escapeFilename(filename);
+        filename = EscapeFilename(filename);
 
         if (filename.Length == 0) return Tools.INV.Array;
         if (File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.EXS.Array;
@@ -364,7 +364,7 @@ static class Scripts {
         
         if (filename.Length == 0) return Tools.INV.Array;
         filename = NoSQL.UrlDecode(filename);
-        filename = escapeFilename(filename);
+        filename = EscapeFilename(filename);
 
         if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
 
@@ -385,7 +385,7 @@ static class Scripts {
         
         if (filename.Length == 0) return Tools.INV.Array;
         filename = NoSQL.UrlDecode(filename);
-        filename = escapeFilename(filename);
+        filename = EscapeFilename(filename);
 
         if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return Tools.FLE.Array;
 
@@ -418,21 +418,21 @@ static class Scripts {
     }
 
     private static bool IsEndPoint(ScriptNode node) {
-        switch (node.name) {
-            case "Text file": return true;
-            case "CSV file": return true;
-            case "JSON file": return true;
-            case "XML file": return true;
-            case "HTML file": return true;
-            case "Send e-mail": return true;
+        return node.name switch {
+            "Text file" => true,
+            "CSV file" => true,
+            "JSON file" => true,
+            "XML file" => true,
+            "HTML file" => true,
+            "Send e-mail" => true,
 
-            case "Wake on LAN": return true;
-            case "Turn off PC": return true;
-            case "Restart PC": return true;
-            case "Log off PC": return true;
+            "Wake on LAN" => true,
+            "Turn off PC" => true,
+            "Restart PC" => true,
+            "Log off PC" => true,
 
-            default: return false;
-        }
+            _ => false,
+        };
     }
 
     public static byte[] RunScript(in string[] para) {
@@ -722,7 +722,7 @@ static class Scripts {
         SearchResultCollection adResult = null;
         try {
             DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
-            DirectorySearcher searcher = new DirectorySearcher(dir);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = filter;
             adResult = searcher.FindAll();
         } catch (Exception ex) {
@@ -773,12 +773,9 @@ static class Scripts {
          * [2] -> */
 
         if (node.values.Length < 2) return null;
-        IPAddress ip;
-        byte prefix;
 
-        if (!IPAddress.TryParse(node.values[0], out ip)) return null;
-
-        if (!byte.TryParse(node.values[1], out prefix)) return null;
+        if (!IPAddress.TryParse(node.values[0], out IPAddress ip)) return null;
+        if (!byte.TryParse(node.values[1], out byte prefix)) return null;
         
         if (prefix > 31) return null;
 
@@ -1233,8 +1230,7 @@ static class Scripts {
         if (index > -1) {
             sorted = node.sourceNodes[0].result.array.ConvertAll(o => o); //semi-deep copy
             sorted.Sort((string[] a, string[] b) => {
-                double da, db;
-                if (double.TryParse(a[index], out da) && double.TryParse(b[index], out db)) {
+                if (double.TryParse(a[index], out double da) && double.TryParse(b[index], out double db)) {
                     if (da > db) return 1;
                     if (da < db) return -1;
                     return 0;
@@ -1398,20 +1394,18 @@ static class Scripts {
 
         List<string[]> array = new List<string[]>();
         if (index > -1) {
-            double a;
-            if (double.TryParse(value, out a))
+            if (double.TryParse(value, out double a))
                 array = node.sourceNodes[0].result.array.Where(o => {
-                    double b;
-                    if (double.TryParse(o[index], out b)) {
+                    if (double.TryParse(o[index], out double b)) {
                         if (a < b) return true;
                         return false;
                     }
 
                     if (String.Compare(value, o[index] ?? "") < 0) return true;
                     return false;
-                }).ToList();                
+                }).ToList();
 
-             else //is string
+            else //is string
                 array = node.sourceNodes[0].result.array.Where(o => {
                     if (String.Compare(value, o[index] ?? "") < 0) return true;
                     return false;
@@ -1434,11 +1428,9 @@ static class Scripts {
 
         List<string[]> array = new List<string[]>();
         if (index > -1) {
-            double a;
-            if (double.TryParse(value, out a))
+            if (double.TryParse(value, out double a))
                 array = node.sourceNodes[0].result.array.Where(o => {
-                    double b;
-                    if (double.TryParse(o[index], out b)) {
+                    if (double.TryParse(o[index], out double b)) {
                         if (b < a) return true;
                         return false;
                     }
@@ -1513,8 +1505,7 @@ static class Scripts {
                 string[] newRow = new string[targetRow.Length];
                 Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
 
-                double n;
-                newRow[index] = double.TryParse(targetRow[index], out n) ? Math.Abs(n).ToString() : targetRow[index];
+                newRow[index] = double.TryParse(targetRow[index], out double n) ? Math.Abs(n).ToString() : targetRow[index];
 
                 array.Add(newRow);
             }
@@ -1538,8 +1529,7 @@ static class Scripts {
                 string[] newRow = new string[targetRow.Length];
                 Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
 
-                double n;
-                newRow[index] = double.TryParse(targetRow[index], out n) ? Math.Round(n).ToString() : targetRow[index];
+                newRow[index] = double.TryParse(targetRow[index], out double n) ? Math.Round(n).ToString() : targetRow[index];
 
                 array.Add(newRow);
             }
@@ -1607,8 +1597,7 @@ static class Scripts {
         double sum = 0;
         try {
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                double n;
-                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out double n))
                     sum += n;
             }
         } catch { }
@@ -1679,8 +1668,7 @@ static class Scripts {
         double sum = 0;
         try {
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                double n;
-                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out double n))
                     sum += n;
             }
         } catch { }
@@ -1708,8 +1696,7 @@ static class Scripts {
             List<string> sort = new List<string>();
             sort = node.sourceNodes[0].result.array.ConvertAll(o => o[index]); //semi-deep copy
             sort.Sort((string a, string b) => {
-                double da, db;
-                if (double.TryParse(a, out da) && double.TryParse(b, out db)) {
+                if (double.TryParse(a, out double da) && double.TryParse(b, out double db)) {
                     if (da > db) return 1;
                     if (da < db) return -1;
                     return 0;
@@ -1839,7 +1826,7 @@ static class Scripts {
         }
 
         node.values[1] = NoSQL.UrlDecode(node.values[1]);
-        string filename = escapeFilename(node.values[1]);
+        string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -1871,7 +1858,7 @@ static class Scripts {
         }
 
         node.values[1] = NoSQL.UrlDecode(node.values[1]);
-        string filename = escapeFilename(node.values[1]);
+        string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -1921,7 +1908,7 @@ static class Scripts {
         text.Append("]}");
 
         node.values[1] = NoSQL.UrlDecode(node.values[1]);
-        string filename = escapeFilename(node.values[1]);
+        string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -1974,7 +1961,7 @@ static class Scripts {
         text.AppendLine("</array>");
 
         node.values[1] = NoSQL.UrlDecode(node.values[1]);
-        string filename = escapeFilename(node.values[1]);
+        string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -1991,7 +1978,7 @@ static class Scripts {
 
         //TODO:
         node.values[1] = NoSQL.UrlDecode(node.values[1]);
-        string filename = escapeFilename(node.values[1]);
+        string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -2005,7 +1992,7 @@ static class Scripts {
     }
     private static ScriptResult SendEMail(in ScriptNode node) { return null; }
     
-    public static string escapeFilename(string filename) {
+    public static string EscapeFilename(string filename) {
         return filename.Replace("\\", "_")
             .Replace("/", "_")
             .Replace(":", "_")

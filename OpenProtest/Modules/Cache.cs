@@ -50,7 +50,7 @@ class Cache {
         FileInfo file = new FileInfo($"{Directory.GetCurrentDirectory()}\\knowlage\\content_type.txt");
         if (!file.Exists) return false;
 
-        StreamReader fileReader = new StreamReader(file.FullName);
+        using StreamReader fileReader = new StreamReader(file.FullName);
         string line;
         while ((line = fileReader.ReadLine()) != null) {
             line = line.Trim();

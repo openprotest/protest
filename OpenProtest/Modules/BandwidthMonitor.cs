@@ -129,11 +129,11 @@ static class BandwidthMonitor {
             if (scope is null) return GatherSecureShell(host); //try ssh
 
             try {
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfRawData_Tcpip_NetworkInterface")).Get())
-                    foreach (ManagementObject o in moc) {
-                        bytesReceived += UInt64.Parse(o.GetPropertyValue("BytesReceivedPersec").ToString());
-                        bytesSent += UInt64.Parse(o.GetPropertyValue("BytesSentPersec").ToString());
-                    }
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfRawData_Tcpip_NetworkInterface")).Get();
+                foreach (ManagementObject o in moc) {
+                    bytesReceived += UInt64.Parse(o.GetPropertyValue("BytesReceivedPersec").ToString());
+                    bytesSent += UInt64.Parse(o.GetPropertyValue("BytesSentPersec").ToString());
+                }
             } catch { }
 
             if (bytesReceived == 0 && bytesSent == 0)

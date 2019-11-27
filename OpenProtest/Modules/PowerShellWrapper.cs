@@ -9,7 +9,7 @@ using System.Collections.ObjectModel;
 
 class PowerShellWrapper {
 
-    public static void test() {
+    public static void Test() {
         Console.WriteLine("conn..");
 
         WSManConnectionInfo connectionInfo = new WSManConnectionInfo();

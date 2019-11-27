@@ -133,7 +133,7 @@ static class Tools {
                                 h[i] = h[i].Trim();
                                 h[i+1] = h[i+1].Trim();
                                 if (h[i].Length > 0 && h[i+1].Length > 0 && !hostnames.ContainsKey(h[i]))
-                                    hostnames.Add(h[i], h[i + 1]);
+                                    hostnames.Add(h[i], h[i+1]);
                                  else
                                     await ws.SendAsync(INV, WebSocketMessageType.Text, true, CancellationToken.None);
                             }
@@ -246,8 +246,7 @@ static class Tools {
         } catch (Exception) {
             return id + ((char)127).ToString() + "Unkown error";
         }
-    }
-
+    }    
 
     private static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
     public static async void WsTraceRoute(HttpListenerContext ctx, string remoteIp) {
@@ -515,8 +514,9 @@ static class Tools {
                 RedirectStandardError = true
             };
 
-            Process p = new Process();
-            p.StartInfo = info;
+            using Process p = new Process {
+                StartInfo = info
+            };
             p.Start();
 
             Thread.Sleep(50);
@@ -841,7 +841,7 @@ static class Tools {
             FileInfo file = new FileInfo($"{PROXY_BIN_DIR}{split[0]}.bin");
             if (!file.Exists) return false;
 
-            FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+            using FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
 
             uint from, to;
             uint pivot;
@@ -850,7 +850,7 @@ static class Tools {
 
             do { //binary search
                 pivot = (low + high) / 2;
-                pivot = pivot - pivot % 6;
+                pivot -= pivot % 6;
                 stream.Position = pivot;
 
                 from = BitConverter.ToUInt32(new byte[] {
@@ -917,7 +917,7 @@ static class Tools {
         random.NextBytes(big);
 
         ArraySegment<byte> small_segment = new ArraySegment<byte>(small, 0, small.Length);
-        ArraySegment<byte> big_segment = new ArraySegment<byte>(big, 0, big.Length);
+        //ArraySegment<byte> big_segment = new ArraySegment<byte>(big, 0, big.Length);
 
         try {
 
@@ -1007,13 +1007,12 @@ static class Tools {
                     keep = split[0];
                     port = int.Parse(sPort);
 
-                } else 
-                    switch(protocol) {
-                        case "http": port = 80; break;
-                        case "https": port = 443; break;
-                        default: port = 80; break;
-                    }
-
+                } else
+                    port = protocol switch {
+                        //"http" => 80,
+                        "https" => 443,
+                        _ => 80,
+                    };
                 domain = keep;
             }
 
@@ -1043,7 +1042,8 @@ static class Tools {
             }
 
             try { //HTTP check
-                HttpResponseMessage get = await new HttpClient().GetAsync(uri);
+                using HttpClient httpClient = new HttpClient();
+                using HttpResponseMessage get = await httpClient.GetAsync(uri);
 
                 string http = $"HTTP response: {((int)get.StatusCode).ToString()} {get.StatusCode.ToString()}";
                 await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(http + "\n"), 0, http.Length + 1), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -1051,7 +1051,6 @@ static class Tools {
                 result = $"HTTP/{get.Version} {((int)get.StatusCode).ToString()} {get.StatusCode.ToString()}";
                 result += "\n";
                 result += get.Headers.ToString();
-
             } catch (ArgumentException) {
                 result = "invalid request URI";
 
@@ -1179,36 +1178,36 @@ static class Tools {
     }
 
     public static IPAddress GetNetworkAddress(IPAddress ip, byte prefix) {
-        switch (prefix) {
-            case 31: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 254 }));
-            case 30: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 252 }));
-            case 29: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 248 }));
-            case 28: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 240 }));
-            case 27: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 224 }));
-            case 26: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 192 }));
-            case 25: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 128 }));
-            case 24: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 0 }));
+        return prefix switch {
+            31 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 254 })),
+            30 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 252 })),
+            29 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 248 })),
+            28 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 240 })),
+            27 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 224 })),
+            26 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 192 })),
+            25 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 128 })),
+            24 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 0 })),
 
-            case 23: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 254, 0 }));
-            case 22: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 252, 0 }));
-            case 21: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 248, 0 }));
-            case 20: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 240, 0 }));
-            case 19: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 224, 0 }));
-            case 18: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 192, 0 }));
-            case 17: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 128, 0 }));
-            case 16: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 0, 0 }));
+            23 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 254, 0 })),
+            22 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 252, 0 })),
+            21 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 248, 0 })),
+            20 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 240, 0 })),
+            19 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 224, 0 })),
+            18 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 192, 0 })),
+            17 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 128, 0 })),
+            16 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 0, 0 })),
 
-            case 15: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 254, 0, 0 }));
-            case 14: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 252, 0, 0 }));
-            case 13: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 248, 0, 0 }));
-            case 12: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 240, 0, 0 }));
-            case 11: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 224, 0, 0 }));
-            case 10: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 192, 0, 0 }));
-            case 9: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 128, 0, 0 }));
-            case 8: return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 0, 0, 0}));
-        }
+            15 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 254, 0, 0 })),
+            14 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 252, 0, 0 })),
+            13 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 248, 0, 0 })),
+            12 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 240, 0, 0 })),
+            11 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 224, 0, 0 })),
+            10 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 192, 0, 0 })),
+            9 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 128, 0, 0 })),
+            8 => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 0, 0, 0 })),
 
-        return GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 0 }));
+            _ => GetNetworkAddress(ip, new IPAddress(new byte[] { 255, 255, 255, 0 })),
+        };
     }
 
     public static IPAddress GetNetworkAddress(IPAddress ip, IPAddress mask) {
@@ -1384,10 +1383,9 @@ static class Tools {
 
     public static async Task<string> InstantInfoUserAsync(string filename) {
         if (!NoSQL.users.ContainsKey(filename)) return "";
-
-        string username = "";
-        
+                
         NoSQL.DbEntry user = (NoSQL.DbEntry)NoSQL.users[filename];
+        string username;
         if (user.hash.ContainsKey("USERNAME"))
             username = ((string[])user.hash["USERNAME"])[0];
         else

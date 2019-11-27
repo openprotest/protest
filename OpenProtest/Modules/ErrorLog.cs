@@ -19,10 +19,9 @@ static class ErrorLog {
     public static void Err(in string ex) {
         lock (log_lock) 
             try {
-                using (StreamWriter writer = new StreamWriter(LOG_FILENAME, true, System.Text.Encoding.UTF8)) {
-                        writer.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                        writer.WriteLine($"\t{ex}");
-                }
+                using StreamWriter writer = new StreamWriter(LOG_FILENAME, true, System.Text.Encoding.UTF8);
+                writer.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                writer.WriteLine($"\t{ex}");
             } catch { }
 
         Console.ForegroundColor = ConsoleColor.Red;

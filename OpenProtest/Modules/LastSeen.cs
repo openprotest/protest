@@ -29,7 +29,7 @@ static class LastSeen {
         string filename = $"{DIR_LASTSEEN}\\{ip}.txt";
 
         try {
-            Ping p = new Ping();
+            using Ping p = new Ping();
             if (p.Send(ip, 1000).Status == IPStatus.Success) {
                 Seen(ip);
                 return Encoding.UTF8.GetBytes("Just now");

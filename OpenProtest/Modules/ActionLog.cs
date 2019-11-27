@@ -9,8 +9,8 @@ static class ActionLog {
     public static void Action(in string performer, in string action) {
         lock (log_lock)
             try {
-                using (StreamWriter writer = new StreamWriter(LOG_FILENAME, true, System.Text.Encoding.UTF8)) 
-                    writer.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}\t{performer}\t{action}");
+                using StreamWriter writer = new StreamWriter(LOG_FILENAME, true, System.Text.Encoding.UTF8);
+                writer.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}\t{performer}\t{action}");
             } catch { }
     }
 }

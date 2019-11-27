@@ -168,9 +168,7 @@ static class DhcpDiscover {
         } catch (System.Security.SecurityException ex) {
             ErrorLog.Err(ex);
             
-        } catch (Exception ex) {
-            //ErrorLog.Err(ex);
-        }
+        } catch (Exception) { }
 
         return null;
     }
@@ -184,8 +182,8 @@ static class DhcpDiscover {
 
         if (offer.Length < 34) return "invalid response";
 
-        byte hardware = offer[1]; //hardware type
-        byte maclen = offer[2]; //hardware address length
+        //byte hardware = offer[1]; //hardware type
+        //byte maclen = offer[2]; //hardware address length
         byte hops = offer[3];
 
         string id = "0x"+ offer[4].ToString("X2") + offer[5].ToString("X2") + offer[6].ToString("X2") + offer[7].ToString("X2");

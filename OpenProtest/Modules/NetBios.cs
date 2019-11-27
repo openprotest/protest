@@ -17,7 +17,7 @@ static class NetBios {
             0x00, 0x01 };
 
     public static string GetBiosName(in string ip) {
-        Socket requestSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        using Socket requestSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         requestSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
         
         EndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse(ip), 137);
@@ -40,7 +40,7 @@ static class NetBios {
     }
 
     public static async Task<string> GetBiosNameAsync(string ip) {
-        UdpClient client = new UdpClient();
+        using UdpClient client = new UdpClient();
         try {
             await client.SendAsync(BIOS_NAME_REQUEST, BIOS_NAME_REQUEST.Length, ip, 137);
 
@@ -55,9 +55,9 @@ static class NetBios {
                 string biosName = enc.GetString(buffer, 57, 16).Trim();
                 return biosName;
 
-            } else { //time out
+            } else //time out
                 return "";
-            }
+            
         } catch {
             return "";
         }

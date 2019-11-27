@@ -5,7 +5,7 @@ using System.Text;
 using System.Collections.Generic;
 
 class PasswordStrength {
-    static string[] BLACKLIST = new string[] {
+    static readonly string[] BLACKLIST = new string[] {
             "123456789",
             "12345678",
             "1234567",

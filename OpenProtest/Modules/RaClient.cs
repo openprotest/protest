@@ -72,23 +72,21 @@ static class RaClient {
 
                 case "smb":
                     try {
-                        using (Process p = new Process()) {
-                            p.StartInfo.FileName = "explorer.exe";
-                            p.StartInfo.Arguments = $"\\\\{hostname}\\{arg}";
-                            p.StartInfo.UseShellExecute = true;
-                            p.Start();
-                        }
+                        using Process p = new Process();
+                        p.StartInfo.FileName = "explorer.exe";
+                        p.StartInfo.Arguments = $"\\\\{hostname}\\{arg}";
+                        p.StartInfo.UseShellExecute = true;
+                        p.Start();
                     } catch {}
                     break;
 
                 case "cmg":
                     try {
-                        using (Process p = new Process()) {
-                            p.StartInfo.FileName = "compmgmt.msc";
-                            p.StartInfo.Arguments = $"/computer=\"{hostname}\"";
-                            p.StartInfo.UseShellExecute = true;
-                            p.Start();
-                        }
+                        using Process p = new Process();
+                        p.StartInfo.FileName = "compmgmt.msc";
+                        p.StartInfo.Arguments = $"/computer=\"{hostname}\"";
+                        p.StartInfo.UseShellExecute = true;
+                        p.Start();
                     } catch {}
                     break;
 

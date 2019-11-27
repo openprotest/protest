@@ -573,7 +573,7 @@ class Ping extends Console {
                     this.ws !=null && this.ws.readyState === 1) {
                     this.ws.send("ping:all");
                 }
-            }, 1250);
+            }, 1000);
         };
 
         //this.ws.onerror = (error)=> { console.log(error); };

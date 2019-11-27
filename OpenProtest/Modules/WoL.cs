@@ -67,7 +67,7 @@ static class WoL {
         try {
             IPAddress broadcast = Tools.GetBroadcastAddress(ip, mask);
 
-            UdpClient client = new UdpClient();
+            using UdpClient client = new UdpClient();
             client.Send(datagram, datagram.Length, broadcast.ToString(), 1);
             client.Send(datagram, datagram.Length, "255.255.255.255", 1);
 

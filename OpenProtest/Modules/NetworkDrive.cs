@@ -60,7 +60,7 @@ static class NetworkDrive {
 
             Console.WriteLine(info.Arguments);
 
-            Process p = new Process();
+            using Process p = new Process();
             p.StartInfo = info;
             p.Start();
 
