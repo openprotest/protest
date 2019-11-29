@@ -1,11 +1,6 @@
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-var deskmenu = document.getElementById("deskmenu");
-var mnuEquip = document.getElementById("mnuEquip");
-var mnuUsers = document.getElementById("mnuUsers");
-var mnuTools = document.getElementById("mnuTools");
-
 var mainSession = document.getElementById("mainSession");
 var mainSettings = document.getElementById("mainSettings");
 
@@ -14,10 +9,6 @@ var analog_m = document.getElementById("analog_clock_m");
 var date_month = document.getElementById("date_month");
 var date_date  = document.getElementById("date_date");
 var date_day   = document.getElementById("date_day");
-
-mnuEquip.onclick = ()=> { if (EquipList) new EquipList(); };
-mnuUsers.onclick = ()=> { if (UserList) new UserList(); };
-mnuTools.onclick = ()=> { SideMenu_Open(); };
 
 mainSession.onclick = () => {
     let xhr = new XMLHttpRequest();

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <title>Protest</title>
@@ -7,14 +7,6 @@
     <meta name="theme-color" content="#E87600">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A solution for System Administrators and IT professionals. It provides tools to organize your network environment and troubleshoot problems.">
-
-    <link rel="preload" as="image" href="res/database.svgz" importance="high" />
-    <link rel="preload" as="image" href="res/gear.svgz"     importance="high" />
-    <link rel="preload" as="image" href="res/user.svgz"     importance="high" />
-    <link rel="preload" as="image" href="res/toolbox.svgz"  importance="high" />
-    <link rel="preload" as="image" href="res/tool01.svgz"   importance="high" />
-    <link rel="preload" as="image" href="res/tool02.svgz"   importance="high" />
-    <link rel="preload" as="image" href="res/tool03.svgz"   importance="high" />
     
     <link rel="stylesheet" href="root.css" />
     <link rel="stylesheet" href="deskmenu.css" />
@@ -36,43 +28,11 @@
         <div id="cap" style="background-color:#444;"></div>
 
         <div id="container">
-            <div id="deskmenu">
-
-                <div id="mnuEquip" role="button">
-                    <div>
-                        <img class="back" src="res/database.svgz" width="96" height="96" aria-label="Equipment"/>
-                        <img class="front" src="res/gear.svgz" width="67" height="67" aria-label="Equipment"/>
-                    </div>
-                    Equipment
-                </div>
-
-                <div id="mnuUsers" role="button">
-                    <div>
-                        <img class="back" src="res/database.svgz" width="96" height="96" aria-label="Users"/>
-                        <img class="front" src="res/user.svgz" width="67" height="67" aria-label="Users"/>
-                    </div>
-                    Users
-                </div>
-
-                <div id="mnuTools" role="button">
-                    <div>
-                        <img class="back" src="res/toolbox.svgz" width="96" height="96" aria-label="Tools"/>
-                        <svg class="front" width="96" height="96">
-                            <image xlink:href="res/tool01.svgz" width="48" height="48" />
-                            <image xlink:href="res/tool02.svgz" width="56" height="56" />
-                            <image xlink:href="res/tool03.svgz" width="48" height="48" />
-                        </svg>
-                    </div>
-                    Tools
-                </div>
-
-            </div>
-
             <div id="mainSession" class="floating-elements"><div></div></div>
             <div id="mainSettings" class="floating-elements" style="display:none"><div></div></div>
 
             <svg id="analog_clock" width="96" height="96">
-                <circle cx="48" cy="48" r="44" stroke="#202020" stroke-width="6" fill="rgba(224,224,224,.4)"/>
+                <circle cx="48" cy="48" r="44" stroke="#202020" stroke-width="6" fill="rgba(224,224,224,.5)"/>
                 <circle cx="48" cy="48" r="4" fill="#202020"/>
                 <line id="analog_clock_h" x1="48" y1="48" x2="48" y2="24" stroke-width="5"/>
                 <line id="analog_clock_m" x1="48" y1="48" x2="48" y2="16" stroke-width="3"/>
@@ -85,7 +45,7 @@
                         <text id="date_month" x="50%" y="18px" font-size="18" font-weight="bold" fill="#000" text-anchor="middle"></text>
                     </mask>
                 </defs>
-                <rect x="2" y="2" width="92" height="92" fill="rgba(224,224,224,.4)"/>
+                <rect x="2" y="2" width="92" height="92" fill="rgba(224,224,224,.5)"/>
                 <path mask="url(#date_month_mask)" fill="#202020" d="M93.5,0h-91C1.119,0,0,1.119,0,2.5v91C0,94.881,1.119,96,2.5,96h91c1.381,0,2.5-1.119,2.5-2.5v-91 C96,1.119,94.881,0,93.5,0z M91,88.5c0,1.381-1.117,2.5-2.495,2.5H7.495C6.117,91,5,89.881,5,88.5v-61C5,26.119,6.117,25,7.495,25 h81.01C89.883,25,91,26.119,91,27.5V88.5z"/>
                 <text id="date_date" x="50%" y="64px" font-size="40" font-weight="bold" fill="#202020" text-anchor="middle">00</text>
                 <text id="date_day" x="50%" y="80px" font-size="15" fill="#202020" text-anchor="middle"></text>

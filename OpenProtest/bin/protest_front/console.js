@@ -6,6 +6,8 @@ class Console extends Window {
 
         this.history = [];
 
+        this.task.style.backgroundColor = "rgb(56,56,56)";
+
         this.list = document.createElement("div");
         this.list.style.position = "absolute";
         this.list.style.overflowY = "auto";
@@ -49,7 +51,7 @@ class Console extends Window {
 
                 event.preventDefault();
 
-            } else if (event.keyCode != 37 && event.keyCode != 39) { // not left or rigth
+            } else if (event.keyCode != 37 && event.keyCode != 39) { // not left nor rigth
                 historyIndex = -1;
             }
 

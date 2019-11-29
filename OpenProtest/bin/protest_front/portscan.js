@@ -218,7 +218,7 @@ class PortScan extends Console {
     BringToFront() { //override
         super.BringToFront();
 
-        this.task.style.backgroundColor = "rgb(48,48,48)";
+        this.task.style.backgroundColor = "rgb(56,56,56)";
         this.icon.style.filter = "brightness(6)";
     }
 
