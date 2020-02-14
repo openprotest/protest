@@ -48,14 +48,25 @@ mainSettings.onclick = () => {
     const S = 96;
     let now = new Date();
     let m = now.getMinutes();
-    let h = (now.getHours() % 12) + m/60;
+    let h = (now.getHours() % 12) + m / 60;
 
-    analog_m.style.transform = "rotate(" + m*6 + "deg)";
-    analog_h.style.transform = "rotate(" + h*30 + "deg)";
+    analog_m.style.transform = "rotate(" + m * 6 + "deg)";
+    analog_h.style.transform = "rotate(" + h * 30 + "deg)";
 
     date_month.innerHTML = monthNames[now.getMonth()];
-    date_date.innerHTML = now.getDate();
     date_day.innerHTML = dayNames[now.getDay()];
-    
+
+    if (now.getMonth() === 0 && now.getDate() === 1) { //new year
+        date_date.innerHTML = "&#129346;";
+    } else if (now.getMonth() === 1 && now.getDate() === 14) { //valentines day
+        date_date.innerHTML = "&#10084;";        
+    } else if (now.getMonth() === 2 && now.getDate() === 14) { //PI day
+        date_date.innerHTML = "&#120645;";
+    } else if (now.getMonth() === 6 && now.getDate() === 31) { //sys admin day
+        date_date.innerHTML = "&#128374;";
+    } else {
+        date_date.innerHTML = now.getDate();
+    }
+
     setTimeout(() => updateClock(), 60000);
 })();

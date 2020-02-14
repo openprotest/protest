@@ -65,7 +65,7 @@ static class Tools {
     public static readonly ArraySegment<byte> NHO = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such host is known"));
     public static readonly ArraySegment<byte> UNA = new ArraySegment<byte>(Encoding.UTF8.GetBytes("service is unavailable"));
     public static readonly ArraySegment<byte> UNR = new ArraySegment<byte>(Encoding.UTF8.GetBytes("host is unreachable"));
-    public static readonly ArraySegment<byte> TCP = new ArraySegment<byte>(Encoding.UTF8.GetBytes("TCP connection failure"));
+    public static readonly ArraySegment<byte> TCP = new ArraySegment<byte>(Encoding.UTF8.GetBytes("tcp connection failure"));
 
     public static byte[] XhrPing(string[] para) {
         string ip = null;
@@ -235,16 +235,16 @@ static class Tools {
     public static async Task<string> ArpPingAsync(string name, string id) {
         try {
             IPAddress[] ip = await Dns.GetHostAddressesAsync(name);
-            if (ip.Length == 0) return id + ((char)127).ToString() + "Unkown host";
+            if (ip.Length == 0) return id + ((char)127).ToString() + "unknown host";
 
             string response = Arp(ip[0]);
 
             if (!(response is null) && response.Length > 0)
                 return id + ((char)127).ToString() + "0";
 
-            return id + ((char)127).ToString() + "Unreachable";
+            return id + ((char)127).ToString() + "unreachable";
         } catch (Exception) {
-            return id + ((char)127).ToString() + "Unkown error";
+            return id + ((char)127).ToString() + "unknown error";
         }
     }    
 
@@ -1411,5 +1411,19 @@ static class Tools {
 
         return result;
     }
+    
+
+
+    public static void testing() {
+        Socket pingSocket;
+        IPEndPoint localEndPoint;
+        IPEndPoint destEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
+
+
+        pingSocket = new Socket(destEndPoint.AddressFamily, SocketType.Raw, ProtocolType.Icmp);
+        
+    }
+
+
 
 }

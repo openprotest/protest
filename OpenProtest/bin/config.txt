@@ -1,4 +1,4 @@
-#ver. 3.1
+#ver. 3.2
 
 key = TEST_EMX2fpbDyMQ8T1P0WV22WwHJ9V9jrLkq3Y8EJUsQsNLN6xUdE6Ie1F54YX5
 

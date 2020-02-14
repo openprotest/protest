@@ -323,11 +323,11 @@ class Ping extends Console {
 
         if (hostname.indexOf(";", 0) > -1) {
             let ips = hostname.split(";");
-            for (let i = 0; i < ips.length; i++) await this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) this.Add(ips[i].trim());
 
         } else if (hostname.indexOf(",", 0) > -1) {
             let ips = hostname.split(",");
-            for (let i = 0; i < ips.length; i++) await this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) this.Add(ips[i].trim());
 
         } else if (hostname.indexOf("-", 0) > -1) {
             let split = hostname.split("-");
@@ -350,7 +350,7 @@ class Ping extends Console {
                 return b;
             }
             for (let i = istart; i <= iend; i++)
-                await this.Add(intToBytes(i).join("."));
+                this.Add(intToBytes(i).join("."));
 
         } else if (hostname.indexOf("/", 0) > -1) {
             let cidr = parseInt(hostname.split("/")[1].trim());
@@ -378,7 +378,7 @@ class Ping extends Console {
             this.Filter(net.join(".") + " - " + broadcast.join("."));
 
         } else
-            await this.Add(hostname);
+            this.Add(hostname);
 
         let size1 = this.list.childNodes.length;
 
