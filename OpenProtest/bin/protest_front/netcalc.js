@@ -95,7 +95,7 @@ class Netcalc extends Window {
         this.content.appendChild(this.lblSubnet);
 
         this.lblBroadcast = document.createElement("div");
-        this.lblBroadcast.innerHTML = "Boadcast:<br>192.168.0.255";
+        this.lblBroadcast.innerHTML = "Broadcast:<br>192.168.0.255";
         this.lblBroadcast.style.gridArea = "9 / 3 / 1 / auto";
         this.lblBroadcast.style.textAlign = "center";
         this.content.appendChild(this.lblBroadcast);
@@ -241,7 +241,7 @@ class Netcalc extends Window {
             this.divMap.childNodes[i].style.backgroundColor = i < this.rngCIDR.value ? "rgb(232,0,0)" : "rgb(111,212,43)";
         
         this.lblSubnet.innerHTML = "Subnet:<br>" + net.join(".");
-        this.lblBroadcast.innerHTML = "Boadcast:<br>" + broadcast.join(".");
+        this.lblBroadcast.innerHTML = "Broadcast:<br>" + broadcast.join(".");
         this.lblRange.innerHTML = "Host range:<br>" + net[0] + "." + net[1] + "." + net[2] + "." + (net[3] + 1) + " - " +
                                    broadcast[0] + "." + broadcast[1] + "." + broadcast[2] + "." + (broadcast[3]-1);
 

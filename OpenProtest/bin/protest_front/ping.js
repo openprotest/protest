@@ -582,7 +582,7 @@ class Ping extends Console {
         if (this.ws.readyState != 1) return; //if not connected return        
 
         for (let i=0; i<payload.length-1; i+=2) {
-            let index  = payload[i];
+            let index = payload[i];
             let value = payload[i+1];
 
             if (this.hashtable.hasOwnProperty(index)) {
@@ -611,7 +611,7 @@ class Ping extends Console {
                     let p1 = (isNaN(this.hashtable[index].ping[PING_HISTORY_LEN-2])) ? 4 : 5;
                     if (p0 != p1 && this.hashtable[index].element != this.list.childNodes[this.list.childNodes.length-1]) {//if status changed and not already last
                         this.list.appendChild(this.hashtable[index].element);
-                        this.list.scrollTop = this.list.scrollHeight
+                        this.list.scrollTop = this.list.scrollHeight;
                         this.hashtable[index].graph.style.display = "initial";
                     }
                 }
@@ -626,7 +626,6 @@ class Ping extends Console {
             if (this.hashtable[key].element.offsetTop - this.list.scrollTop < -30 ||
                 this.hashtable[key].element.offsetTop - this.list.scrollTop > this.list.clientHeight) {
                 this.hashtable[key].graph.style.display = "none";
-                
             } else {
                 this.hashtable[key].graph.style.display = "initial";
             }
@@ -641,7 +640,7 @@ class Ping extends Console {
         
         let firstGraph = this.list.childNodes[0].childNodes[1];
         for (let i=0; i<6; i++) {
-            this.taskIconDots[5-i].style.backgroundColor = firstGraph.childNodes[firstGraph.childNodes.length - 1 - i].style.backgroundColor;
+            this.taskIconDots[5-i].style.backgroundColor = firstGraph.childNodes[firstGraph.childNodes.length-1-i].style.backgroundColor;
             this.taskIconDots[5-i].style.display = "initial";
         }
     }

@@ -207,7 +207,7 @@ class Window {
         if (this.isClosed) return;
         this.isClosed = true;
 
-        this.win.style.transition = ANIM_DURATION/1000 + "s";
+        this.win.style.transition = ANIM_DURATION/1333 + "s";
         this.win.style.opacity    = "0";
         this.win.style.transform  = "scale(.85)";
 

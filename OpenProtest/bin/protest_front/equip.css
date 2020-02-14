@@ -39,12 +39,13 @@
 }
 
 .eq-protocols > div:hover {
-    background-color: rgb(64,64,64);
+    background-color: rgb(54,54,54);
     width: 160px;
 }
 
 .eq-protocols > div:active {
-    background-color: rgb(54,54,54);
+    background-color: var(--theme-color);
+    transition: .4s;
 }
 
 .eq-property {
@@ -210,14 +211,17 @@
     background-color: rgb(72,72,72);
     color: rgb(224,224,224);
     border-radius: 4px;
+
+    transition: .2s;
 }
 
 .eq-square-button:hover {
-    background-color: rgb(64,64,64);
+    background-color: rgb(54,54,54);
 }
 
 .eq-square-button:active {
-    background-color: rgb(54,54,54);
+    background-color: var(--theme-color);
+    transition: .4s;
 }
 
 .eq-square-button > div:nth-child(1) {

@@ -67,7 +67,7 @@ class Equip extends Window {
             const btnCancel = btnAdd.parentElement.childNodes[1];
             const container = obj[2];
 
-            { //fetch button on new 
+            { //fetch button on new
                 let divFetch = document.createElement("div");
                 divFetch.style.position = "absolute";
                 divFetch.style.visibility = "hidden";
