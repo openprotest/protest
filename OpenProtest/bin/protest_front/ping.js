@@ -382,7 +382,7 @@ class Ping extends Console {
 
         let size1 = this.list.childNodes.length;
 
-        if (size0 == 0 && size1 > 63) //if 64 or more entries, switch to tied mode
+        if (size0 == 0 && size1 > 63) //for 64 or more entries, switch to tied mode
             this.list.className = "tied-list no-entries";
         
         this.InvalidateRecyclerList();
@@ -510,12 +510,11 @@ class Ping extends Console {
         server = server.replace("http://", "");
         if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
-        if (this.ws != null) {
+        if (this.ws != null) 
             try {
                 this.ws.close();
             } catch (error) {};
-        }
-        
+                
         this.ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/ping");
 
         this.ws.onopen = ()=> {
@@ -655,5 +654,5 @@ function PingColor(pingResult) {
     else if (pingResult == -1)
         return "rgb(192,192,192)";
     
-    return "hsl(" + Math.round(96 + pingResult*250/1000) + ",66%,50%)"
+    return "hsl(" + Math.round(96 + pingResult*250/1000) + ",66%,50%)";
 }

@@ -1,7 +1,7 @@
-rem feel free to modify this file
+:: feel free to modify this file
 
-rem !! This script requires OpenSSL !!
-rem https://www.openssl.org
+:: !! This script requires OpenSSL !!
+:: https://www.openssl.org
 
 ECHO off
 

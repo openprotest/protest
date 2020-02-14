@@ -37,7 +37,7 @@
     height: 100%;
     z-index: 3;
     transform: translateX(calc(-100% - 8px));
-    background-color: rgb(48,48,48);
+    background-color: rgb(32,32,32);
     box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
     overflow: hidden;
     transition: .2s;

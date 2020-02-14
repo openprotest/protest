@@ -90,6 +90,7 @@ class Fetch extends Window {
         btnEquipIP.style.backgroundPosition = "4px center";
         btnEquipIP.style.boxSizing = "content-box";
         btnEquipIP.style.borderRadius = "8px 8px 0 0";
+        btnEquipIP.style.border = "0";
         btnEquipIP.style.marginBottom = "0";
         btnEquipIP.style.overflow = "hidden";
         btnEquipIP.style.animation = "none";
@@ -116,6 +117,7 @@ class Fetch extends Window {
         btnEquipAD.style.backgroundPosition = "4px center";
         btnEquipAD.style.boxSizing = "content-box";
         btnEquipAD.style.borderRadius = "8px 8px 0 0";
+        btnEquipAD.style.border = "0";
         btnEquipAD.style.marginBottom = "0";
         btnEquipAD.style.overflow = "hidden";
         btnEquipAD.style.animation = "none";
@@ -142,6 +144,7 @@ class Fetch extends Window {
         btnUsersAD.style.backgroundPosition = "4px center";
         btnUsersAD.style.boxSizing = "content-box";
         btnUsersAD.style.borderRadius = "8px 8px 0 0";
+        btnUsersAD.style.border = "0";
         btnUsersAD.style.marginBottom = "0";
         btnUsersAD.style.overflow = "hidden";
         btnUsersAD.style.animation = "none";
@@ -234,7 +237,7 @@ class Fetch extends Window {
         txtPassword.style.marginTop = "4px";
         div3.appendChild(txtPassword);
 
-        for (let i = 0; i < div3.childNodes.length; i++) { //alight elemets in div3
+        for (let i = 0; i < div3.childNodes.length; i++) { //align elemets in div3
             div3.childNodes[i].style.float = "left";
             div3.childNodes[i].style.marginBottom = "4px";
         }
@@ -243,14 +246,14 @@ class Fetch extends Window {
         btnOK.type = "button";
         btnOK.value = "Fetch";
         btnOK.style.minWidth = "96px";
-        btnOK.style.height = "28px";
+        btnOK.style.height = "32px";
         div4.appendChild(btnOK);
 
         let btnCancel = document.createElement("input");
         btnCancel.type = "button";
         btnCancel.value = "Close";
         btnCancel.style.minWidth = "96px";
-        btnCancel.style.height = "28px";
+        btnCancel.style.height = "32px";
         div4.appendChild(btnCancel);
 
         let option = -1;

@@ -24,7 +24,7 @@ class MappedDrives extends Window {
         
         this.content.style.overflowX = "auto";
         this.content.style.display = "grid";
-        this.content.style.gridTemplateColumns = "minmax(236px,17.5%) auto auto";
+        this.content.style.gridTemplateColumns = "minmax(236px,15%) auto auto";
         this.content.style.gridTemplateRows = "56px auto";
 
         let search_box = document.createElement("div");
@@ -33,7 +33,7 @@ class MappedDrives extends Window {
 
         this.txtSearch = document.createElement("input");
         this.txtSearch.type = "text";
-        this.txtSearch.placeholder = "Search username";
+        this.txtSearch.placeholder = "Search";
         search_box.appendChild(this.txtSearch);
 
         this.list = document.createElement("div");
@@ -198,8 +198,8 @@ class MappedDrives extends Window {
         let chkAdServEnabled = document.createElement("input");
         chkAdServEnabled.type = "checkbox";
         chkAdServEnabled.checked = true;
-        container.appendChild(chkAdServEnabled);
-        this.AddCheckBoxLabel(container, chkAdServEnabled, "Show only MS Dir. Services enabled devices");
+        //container.appendChild(chkAdServEnabled);
+        //this.AddCheckBoxLabel(container, chkAdServEnabled, "Show only MS Dir. Services enabled devices");
 
         let list_target = document.createElement("div");
         list_target.className = "no-results";
