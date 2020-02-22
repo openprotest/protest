@@ -1412,18 +1412,4 @@ static class Tools {
         return result;
     }
     
-
-
-    public static void testing() {
-        Socket pingSocket;
-        IPEndPoint localEndPoint;
-        IPEndPoint destEndPoint = new IPEndPoint(IPAddress.Loopback, 0);
-
-
-        pingSocket = new Socket(destEndPoint.AddressFamily, SocketType.Raw, ProtocolType.Icmp);
-        
-    }
-
-
-
 }
