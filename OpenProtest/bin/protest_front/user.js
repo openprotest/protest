@@ -45,9 +45,9 @@ class User extends Window {
             };
 
             let obj = this.Edit(new_user);
-            const btnAdd = obj[1];
-            const btnCancel = btnAdd.parentElement.childNodes[1];
-            const container = obj[2];
+            const btnAdd = obj.btnAdd;
+            const btnCancel = obj.btnCancel;
+            const innerBox = obj.innerBox;
 
             { //fetch button on new
                 let divFetch = document.createElement("div");
@@ -63,7 +63,7 @@ class User extends Window {
                 divFetch.style.padding = "16px 8px";
                 divFetch.style.overflow = "hidden";
                 divFetch.style.textAlign = "center";
-                container.parentElement.parentElement.appendChild(divFetch);
+                innerBox.parentElement.parentElement.appendChild(divFetch);
 
                 let txtFetchUser = document.createElement("input");
                 txtFetchUser.type = "text";
@@ -98,17 +98,17 @@ class User extends Window {
                 btnFetch.style.backgroundRepeat = "no-repeat";
                 btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
                 btnFetch.style.transition = ".2s";
-                container.parentElement.parentElement.appendChild(btnFetch);
+                innerBox.parentElement.parentElement.appendChild(btnFetch);
 
                 btnFetchCancel.onclick = () => { btnFetch.onclick(); };
 
                 let fetchToogle = false;
 
                 btnFetch.onclick = () => {
-                    container.parentElement.style.transition = ".2s";
-                    container.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
-                    container.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
-                    container.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+                    innerBox.parentElement.style.transition = ".2s";
+                    innerBox.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+                    innerBox.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+                    innerBox.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
                     divFetch.style.transition = ".2s";
                     divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
                     divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
@@ -127,7 +127,7 @@ class User extends Window {
                     let waitbox = document.createElement("span");
                     waitbox.className = "waitbox";
                     waitbox.style.top = "0";
-                    container.parentElement.parentElement.appendChild(waitbox);
+                    innerBox.parentElement.parentElement.appendChild(waitbox);
 
                     waitbox.appendChild(document.createElement("div"));
 
@@ -135,7 +135,7 @@ class User extends Window {
                     waitLabel.innerHTML = "Doing stuff. Please wait.";
                     waitLabel.className = "wait-label";
                     waitLabel.style.top = "0";
-                    container.parentElement.parentElement.appendChild(waitLabel);
+                    innerBox.parentElement.parentElement.appendChild(waitLabel);
 
                     btnFetch.style.opacity = "0";
                     btnFetch.style.visibility = "hidden";
@@ -143,18 +143,18 @@ class User extends Window {
                     divFetch.style.visibility = "hidden";
 
                     this.hashEdit = {};
-                    container.innerHTML = "";
+                    innerBox.innerHTML = "";
 
                     let xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) { //OK
                             let split = xhr.responseText.split(String.fromCharCode(127));
                             for (let i = 0; i < split.length - 1; i += 2)
-                                this.EditProp(split[i], split[i + 1], false, container);
+                                this.EditProp(split[i], split[i + 1], false, innerBox);
 
                             btnFetch.onclick();
-                            container.parentElement.parentElement.removeChild(waitbox);
-                            container.parentElement.parentElement.removeChild(waitLabel);
+                            innerBox.parentElement.parentElement.removeChild(waitbox);
+                            innerBox.parentElement.parentElement.removeChild(waitLabel);
                         }
 
                         if (xhr.readyState == 4 && xhr.status == 0) //disconnected
@@ -352,7 +352,7 @@ class User extends Window {
             if (unlock_once) return;
 
             let xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
+            xhr.onreadystatechange = ()=> {
                 if (xhr.readyState == 4) unlock_once = false;
 
                 if (xhr.readyState == 4 && xhr.status == 200) //OK
@@ -605,22 +605,23 @@ class User extends Window {
     }
 
     Edit(user) {
-        let dialog    = this.DialogBox();
-        let btnOK     = dialog[0];
-        let container = dialog[1];
+        const dialog    = this.DialogBox();
+        const btnOK     = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
+        const innerBox  = dialog.innerBox;
 
-        container.style.padding = "8px";
+        innerBox.style.padding = "8px";
 
         let btnAdd = document.createElement("input");
         btnAdd.type = "button";
         btnAdd.value = "Add";
         btnAdd.style.position = "absolute";
         btnAdd.style.left = "16px";
-        container.parentElement.childNodes[1].appendChild(btnAdd);
+        innerBox.parentElement.childNodes[1].appendChild(btnAdd);
 
-        container.parentElement.childNodes[1].style.minWidth = "350px"; //buttonsBox
+        innerBox.parentElement.childNodes[1].style.minWidth = "350px"; //buttonsBox
 
-        btnAdd.onclick = () => { this.EditProp("", "", false, container, this.hashEdit)[1].focus(); };
+        btnAdd.onclick = () => { this.EditProp("", "", false, innerBox, this.hashEdit)[1].focus(); };
 
         let autofill = document.createElement("datalist"); //Autofill
         autofill.id = "ur_autofill";
@@ -630,20 +631,20 @@ class User extends Window {
             opt.value = USER_ORDER[i];
             autofill.appendChild(opt);
         }
-        container.appendChild(autofill);        
+        innerBox.appendChild(autofill);        
 
         let done = [];
         for (let i=0; i<USER_ORDER.length; i++)
             if(!Array.isArray(USER_ORDER[i])) {
                 if (user[USER_ORDER[i]] == undefined) continue;
-                this.EditProp(USER_ORDER[i], user[USER_ORDER[i]][0], false, container);
+                this.EditProp(USER_ORDER[i], user[USER_ORDER[i]][0], false, innerBox);
                 done.push(USER_ORDER[i]);
             }
             
         for (let k in user) 
             if (!done.includes(k, 0)) {
                 if (user[k] == undefined && k!="") continue;
-                this.EditProp(k, user[k][0], (k==".FILENAME"), container);
+                this.EditProp(k, user[k][0], (k == ".FILENAME"), innerBox);
             }
 
         const ok_click = btnOK.onclick;
@@ -702,7 +703,12 @@ class User extends Window {
             xhr.send(payload);
         };
 
-        return [this.hashEdit, btnAdd, container];
+        return {
+            hash      : this.hashEdit,
+            btnAdd    : btnAdd,
+            btnCancel : btnCancel,
+            innerBox  : innerBox
+        };
     }
 
     Verify(user) {
@@ -733,9 +739,8 @@ class User extends Window {
                 if (split.length > 1) {
                     this.hashEdit = {};
                     const obj = this.Edit(user);
-                    const btnAdd    = obj[1];
-                    const container = obj[2];
-                    this.Verify_Compare(split, container);
+                    const innerBox = obj.innerBox;
+                    this.Verify_Compare(split, innerBox);
                 } else {
                     this.ConfirmBox(xhr.responseText, true);
                 }

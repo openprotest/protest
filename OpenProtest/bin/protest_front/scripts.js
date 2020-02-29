@@ -248,9 +248,9 @@ class Scripts extends Window {
     }
 
     AddNew() {
-        let obj = this.DialogBox("128px");
-        let btnOK = obj[0];
-        let innerBox = obj[1];
+        const dialog   = this.DialogBox("128px");
+        const btnOK    = dialog.btnOK;
+        const innerBox = dialog.innerBox;
 
         innerBox.parentNode.style.maxWidth = "480px";
         innerBox.style.padding = "16px";

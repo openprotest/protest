@@ -77,7 +77,7 @@ class Calendar {
         day = day % 7;
 
         for (let i=1; i<lenMonth+1; i++) {
-            var newDay = document.createElement("div");
+            let newDay = document.createElement("div");
             newDay.style.left = "calc(4px + " + day * 14.285 + "%)";
             newDay.style.top = 2 + week * 32 + "px";
             newDay.style.animationDuration = .02 * i + "s";

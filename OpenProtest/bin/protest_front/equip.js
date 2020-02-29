@@ -63,9 +63,9 @@ class Equip extends Window {
             };
 
             let obj = this.Edit(new_equip);
-            const btnAdd = obj[1];
-            const btnCancel = btnAdd.parentElement.childNodes[1];
-            const container = obj[2];
+            const btnAdd    = obj.btnAdd;
+            const btnCancel = obj.btnCancel;
+            const innerBox  = obj.innerBox;
 
             { //fetch button on new
                 let divFetch = document.createElement("div");
@@ -81,7 +81,7 @@ class Equip extends Window {
                 divFetch.style.padding = "16px 8px";
                 divFetch.style.overflow = "hidden";
                 divFetch.style.textAlign = "center";
-                container.parentElement.parentElement.appendChild(divFetch);
+                innerBox.parentElement.parentElement.appendChild(divFetch);
 
                 let txtFetchHost = document.createElement("input");
                 txtFetchHost.type = "text";
@@ -138,17 +138,17 @@ class Equip extends Window {
                 btnFetch.style.backgroundRepeat = "no-repeat";
                 btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
                 btnFetch.style.transition = ".2s";
-                container.parentElement.parentElement.appendChild(btnFetch);
+                innerBox.parentElement.parentElement.appendChild(btnFetch);
 
                 btnFetchCancel.onclick = () => { btnFetch.onclick(); };
 
                 let fetchToogle = false;
 
                 btnFetch.onclick = () => {
-                    container.parentElement.style.transition = ".2s";
-                    container.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
-                    container.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
-                    container.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+                    innerBox.parentElement.style.transition = ".2s";
+                    innerBox.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+                    innerBox.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+                    innerBox.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
                     divFetch.style.transition = ".2s";
                     divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
                     divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
@@ -167,7 +167,7 @@ class Equip extends Window {
                     let waitbox = document.createElement("span");
                     waitbox.className = "waitbox";
                     waitbox.style.top = "0";
-                    container.parentElement.parentElement.appendChild(waitbox);
+                    innerBox.parentElement.parentElement.appendChild(waitbox);
 
                     waitbox.appendChild(document.createElement("div"));
 
@@ -175,7 +175,7 @@ class Equip extends Window {
                     waitLabel.innerHTML = "Doing stuff. Please wait.";
                     waitLabel.className = "wait-label";
                     waitLabel.style.top = "0";
-                    container.parentElement.parentElement.appendChild(waitLabel);
+                    innerBox.parentElement.parentElement.appendChild(waitLabel);
 
                     btnFetch.style.opacity = "0";
                     btnFetch.style.visibility = "hidden";
@@ -183,18 +183,18 @@ class Equip extends Window {
                     divFetch.style.visibility = "hidden";
 
                     this.hashEdit = {};
-                    container.innerHTML = "";
+                    innerBox.innerHTML = "";
 
                     let xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) { //OK
                             let split = xhr.responseText.split(String.fromCharCode(127));
                             for (let i = 0; i < split.length - 1; i += 2)
-                                this.EditProp(split[i], split[i + 1], false, container);
+                                this.EditProp(split[i], split[i + 1], false, innerBox);
 
                             btnFetch.onclick();
-                            container.parentElement.parentElement.removeChild(waitbox);
-                            container.parentElement.parentElement.removeChild(waitLabel);
+                            innerBox.parentElement.parentElement.removeChild(waitbox);
+                            innerBox.parentElement.parentElement.removeChild(waitLabel);
                         }
 
                         if (xhr.readyState == 4 && xhr.status == 0) //disconnected
@@ -908,22 +908,23 @@ class Equip extends Window {
     }
 
     Edit(equip) {
-        let dialog    = this.DialogBox();
-        let btnOK     = dialog[0];
-        let container = dialog[1];
+        const dialog    = this.DialogBox();
+        const btnOK     = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
+        const innerBox  = dialog.innerBox;
 
-        container.style.padding = "8px";
+        innerBox.style.padding = "8px";
 
         let btnAdd = document.createElement("input");
         btnAdd.type = "button";
         btnAdd.value = "Add";
         btnAdd.style.position = "absolute";
         btnAdd.style.left = "16px";
-        container.parentElement.childNodes[1].appendChild(btnAdd);
+        innerBox.parentElement.childNodes[1].appendChild(btnAdd);
 
-        container.parentElement.childNodes[1].style.minWidth = "350px"; //buttonsBox
+        innerBox.parentElement.childNodes[1].style.minWidth = "350px"; //buttonsBox
 
-        btnAdd.onclick = ()=> { this.EditProp("", "", false, container)[1].focus(); };
+        btnAdd.onclick = ()=> { this.EditProp("", "", false, innerBox)[1].focus(); };
 
         let autofill = document.createElement("datalist"); //Autofill
         autofill.id = "eq_autofill";
@@ -933,7 +934,7 @@ class Equip extends Window {
             opt.value = EQUIP_ORDER[i];
             autofill.appendChild(opt);
         }
-        container.appendChild(autofill);
+        innerBox.appendChild(autofill);
 
         let autofill_type = document.createElement("datalist"); //Autofill if type
         autofill_type.id = "eq_autofill_type";
@@ -942,20 +943,20 @@ class Equip extends Window {
             opt.value = o.toUpperCase();
             autofill_type.appendChild(opt);
         }
-        container.appendChild(autofill_type);
+        innerBox.appendChild(autofill_type);
 
         let done = [];
         for (let i=0; i<EQUIP_ORDER.length; i++)
             if(!Array.isArray(EQUIP_ORDER[i])) {
                 if (equip[EQUIP_ORDER[i]] == undefined) continue;
-                this.EditProp(EQUIP_ORDER[i], equip[EQUIP_ORDER[i]][0], false, container);
+                this.EditProp(EQUIP_ORDER[i], equip[EQUIP_ORDER[i]][0], false, innerBox);
                 done.push(EQUIP_ORDER[i]);
             }
 
         for (let k in equip)
             if (!done.includes(k, 0)) {
                 if (equip[k] == undefined && k!="") continue;
-                this.EditProp(k, equip[k][0], (k==".FILENAME"), container);
+                this.EditProp(k, equip[k][0], (k==".FILENAME"), innerBox);
             }
 
         const ok_click = btnOK.onclick;
@@ -1016,7 +1017,13 @@ class Equip extends Window {
             xhr.open("POST", "saveequip", true);
             xhr.send(payload);
         };
-        return [this.hashEdit, btnAdd, container];
+
+        return {
+            hash      : this.hashEdit,
+            btnAdd    : btnAdd,
+            btnCancel : btnCancel,
+            innerBox  : innerBox
+        };
     }
 
     Verify(equip) {
@@ -1047,9 +1054,8 @@ class Equip extends Window {
                 if (split.length > 1) {
                     this.hashEdit = {};
                     const obj = this.Edit(equip);
-                    const btnAdd    = obj[1];
-                    const container = obj[2];
-                    this.Verify_Compare(split, container);
+                    const innerBox = obj.innerBox;
+                    this.Verify_Compare(split, innerBox);
                 } else {
                     this.ConfirmBox(xhr.responseText, true);
                 }

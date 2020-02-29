@@ -142,23 +142,23 @@ class PortScan extends Console {
             if (options_once) return;
             options_once = true;
 
-            let dialog    = this.DialogBox("128px");
-            let btnOK     = dialog[0];
-            let container = dialog[1];
+            const dialog   = this.DialogBox("128px");
+            const btnOK    = dialog.btnOK;
+            const innerBox = dialog.innerBox;
 
-            container.style.textAlign = "center";
+            innerBox.style.textAlign = "center";
 
             let lblPortRange = document.createElement("div");
             lblPortRange.innerHTML = "Port range: ";
             lblPortRange.style.padding = "8px 0 4px 0";
             lblPortRange.style.fontWeight = "600";
             lblPortRange.style.textDecoration = "underline";
-            container.appendChild(lblPortRange);
+            innerBox.appendChild(lblPortRange);
 
             let lblFrom = document.createElement("div");
             lblFrom.innerHTML = "From ";
             lblFrom.style.display = "inline";
-            container.appendChild(lblFrom);
+            innerBox.appendChild(lblFrom);
 
             let txtFrom = document.createElement("input");
             txtFrom.type = "number";
@@ -166,12 +166,12 @@ class PortScan extends Console {
             txtFrom.max = 65534;
             txtFrom.value = this.rangeFrom;
             txtFrom.style.display = "inline";
-            container.appendChild(txtFrom);
+            innerBox.appendChild(txtFrom);
 
             let lblTo = document.createElement("div");
             lblTo.innerHTML = " to ";
             lblTo.style.display = "inline";
-            container.appendChild(lblTo);
+            innerBox.appendChild(lblTo);
 
             let txtTo = document.createElement("input");
             txtTo.type = "number";
@@ -179,7 +179,7 @@ class PortScan extends Console {
             txtTo.max = 65535;
             txtTo.value = this.rangeTo;
             txtTo.style.display = "inline";
-            container.appendChild(txtTo);
+            innerBox.appendChild(txtTo);
 
             txtFrom.onchange = ()=> {
                 if (parseInt(txtFrom.value) >= parseInt(txtTo.value)) txtTo.value = parseInt(txtFrom.value) + 1;
@@ -232,26 +232,26 @@ class PortScan extends Console {
             for (let i=0; i<ips.length; i++) this.Add(ips[i].trim());
 
         } else if (hostname.indexOf("-", 0) > -1) {
-            var split = hostname.split("-");
-            var start = split[0].trim().split(".");
-            var end = split[1].trim().split(".");
+            let split = hostname.split("-");
+            let start = split[0].trim().split(".");
+            let end = split[1].trim().split(".");
 
-            var istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
-            var iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
+            let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
+            let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
             
             if (istart > iend) iend = istart;
             if (iend - istart > 255) iend = istart + 255;
         
             function intToBytes(int) {
-                var b = [0, 0, 0, 0];
-                var i = 4;
+                let b = [0, 0, 0, 0];
+                let i = 4;
                 do {
                     b[--i] = int & (255);
                     int = int >> 8;
                 } while (i);
                 return b;
             }
-            for (var i=istart; i<=iend; i++) this.Add(intToBytes(i).join("."));
+            for (let i=istart; i<=iend; i++) this.Add(intToBytes(i).join("."));
 
         } else {
             this.Add(hostname);

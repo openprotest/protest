@@ -82,26 +82,26 @@ class TraceRoute extends Console {
             for (let i=0; i<ips.length; i++) this.Add(ips[i].trim());
 
         } else if (hostname.indexOf("-", 0) > -1) {
-            var split = hostname.split("-");
-            var start = split[0].trim().split(".");
-            var end = split[1].trim().split(".");
+            let split = hostname.split("-");
+            let start = split[0].trim().split(".");
+            let end = split[1].trim().split(".");
 
-            var istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
-            var iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
+            let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
+            let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
             
             if (istart > iend) iend = istart;
             if (iend - istart > 255) iend = istart + 255;
         
             function intToBytes(int) {
-                var b = [0, 0, 0, 0];
-                var i = 4;
+                let b = [0, 0, 0, 0];
+                let i = 4;
                 do {
                     b[--i] = int & (255);
                     int = int >> 8;
                 } while (i);
                 return b;
             }
-            for (var i=istart; i<=iend; i++) this.Add(intToBytes(i).join("."));
+            for (let i=istart; i<=iend; i++) this.Add(intToBytes(i).join("."));
 
         } else {
             this.Add(hostname);

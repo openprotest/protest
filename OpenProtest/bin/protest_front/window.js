@@ -440,6 +440,14 @@ class Window {
 
         btnOK.onclick = event=> btnCancel.onclick(event);
         btnOK.focus();
+
+        return {
+            innerBox  : innerBox,
+            buttonBox : buttonBox,
+            btnOK     : btnOK,
+            btnCancel : btnCancel
+        };
+
         return [btnOK, innerBox];
     }
 

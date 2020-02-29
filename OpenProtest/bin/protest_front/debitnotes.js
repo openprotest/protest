@@ -546,11 +546,10 @@ class DebitNotes extends Window {
     AddNew() {
         this.GenerateEquipAutoComplite(false);
 
-        let obj = this.DialogBox("100%");
-        if (obj === null) return;
-
-        let btnOK = obj[0];
-        let innerBox = obj[1];
+        const dialog = this.DialogBox("100%");
+        if (dialog === null) return;
+        const btnOK = dialog.btnOK;
+        const innerBox = dialog.innerBox;
 
         let grid = document.createElement("div");
         grid.className = "debit-note-create-dialog";

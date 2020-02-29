@@ -184,22 +184,22 @@ class MappedDrives extends Window {
     }
 
     ListEquip() {
-        let dialog = this.DialogBox("640px");
-        let btnOK = dialog[0];
-        let container = dialog[1];
+        const dialog   = this.DialogBox("640px");
+        const btnOK    = dialog.btnOK;
+        const innerBox = dialog.innerBox;
 
         let txtSearch_eq = document.createElement("input");
         txtSearch_eq.type = "text";
         txtSearch_eq.placeholder = "Search devices";
         txtSearch_eq.style.width = "200px";
         txtSearch_eq.style.margin = "8px 16px 0px 8px";
-        container.appendChild(txtSearch_eq);
+        innerBox.appendChild(txtSearch_eq);
 
         let chkAdServEnabled = document.createElement("input");
         chkAdServEnabled.type = "checkbox";
         chkAdServEnabled.checked = true;
-        //container.appendChild(chkAdServEnabled);
-        //this.AddCheckBoxLabel(container, chkAdServEnabled, "Show only MS Dir. Services enabled devices");
+        //innerBox.appendChild(chkAdServEnabled);
+        //this.AddCheckBoxLabel(innerBox, chkAdServEnabled, "Show only MS Dir. Services enabled devices");
 
         let list_target = document.createElement("div");
         list_target.className = "no-results";
@@ -209,7 +209,7 @@ class MappedDrives extends Window {
         list_target.style.top = "48px";
         list_target.style.bottom = "8px";
         list_target.style.overflowY = "scroll";
-        container.appendChild(list_target);
+        innerBox.appendChild(list_target);
         
         txtSearch_eq.oninput = () => {
             list_target.innerHTML = "";

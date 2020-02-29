@@ -84,9 +84,9 @@ class Ping extends Console {
         });
 
         this.btnOptions.addEventListener("click", event => {
-            let obj = this.DialogBox("214px");
-            let btnOK = obj[0];
-            let innerBox = obj[1];
+            const dialog   = this.DialogBox("214px");
+            const btnOK    = dialog.btnOK;
+            const innerBox = dialog.innerBox;
 
             innerBox.parentElement.style.maxWidth = "600px";
             innerBox.style.padding = "16px 0px 0px 16px";

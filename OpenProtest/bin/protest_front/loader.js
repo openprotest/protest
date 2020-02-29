@@ -36,7 +36,7 @@ function GetEquipment() {
     let xhr = new XMLHttpRequest();
     xhr.onreadystatechange = ()=> {
         if (xhr.readyState == 4 && xhr.status == 200) {
-            var split = xhr.responseText.split(String.fromCharCode(127));
+            let split = xhr.responseText.split(String.fromCharCode(127));
             if (split.length < 2) return;
 
             let ver = parseInt(split[0]);
@@ -92,7 +92,7 @@ function GetUsers() {
     let xhr = new XMLHttpRequest();
     xhr.onreadystatechange = ()=> {
         if (xhr.readyState == 4 && xhr.status == 200) {
-            var split = xhr.responseText.split(String.fromCharCode(127));
+            let split = xhr.responseText.split(String.fromCharCode(127));
             if (split.length < 2) return;
 
             let ver = parseInt(split[0]);

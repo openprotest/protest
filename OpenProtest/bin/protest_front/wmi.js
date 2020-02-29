@@ -158,11 +158,10 @@ class Wmi extends Window {
                     break;
                 }
         
-        let obj = this.DialogBox("640px");
-        if (obj === null) return;
-
-        let btnOK = obj[0];
-        let innerBox = obj[1];
+        const dialog = this.DialogBox("640px");
+        if (dialog === null) return;
+        const btnOK = dialog.btnOK;
+        const innerBox = dialog.btnOK;
 
         innerBox.style.margin = "16px";
         innerBox.style.display = "grid";
@@ -275,11 +274,9 @@ class Wmi extends Window {
     }
 
     CallMethodDialog() {
-        let obj = this.DialogBox("640px");
-        if (obj === null) return;
-
-        let btnOK = obj[0];
-        let innerBox = obj[1];
+        const dialog = this.DialogBox("640px");
+        if (dialog === null) return;
+        const btnOK = dialog.btnOK;
 
         btnOK.addEventListener("click", () => {
 

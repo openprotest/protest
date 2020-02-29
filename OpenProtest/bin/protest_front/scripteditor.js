@@ -717,11 +717,10 @@ class ScriptEditor extends Window {
                 value.style.color = "rgb(32,32,32)";
                 value.onclick = () => {
 
-                    let obj = this.DialogBox("calc(100% - 24px)");
-                    if (obj === null) return;
-
-                    let btnOK = obj[0];
-                    let innerBox = obj[1];
+                    const dialog = this.DialogBox("calc(100% - 24px)");
+                    if (dialog === null) return;
+                    const btnOK = dialog.btnOK;
+                    const innerBox = dialog.innerBox;
 
                     let txtQuery = document.createElement("textarea");
                     txtQuery.value = node.values[i] === null ? "" : node.values[i];
