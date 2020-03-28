@@ -1,0 +1,334 @@
+.input-box-dark {
+    background-color: rgb(48,48,48) !important;
+    margin: 0 0 !important;
+    color: white;
+    font-size: 16px;
+    border: 0;
+    outline: none;
+    box-sizing: border-box;
+    padding: 4px;
+}
+
+.input-box-floatting {
+    box-sizing: border-box;
+    left: 40px !important;
+    width: calc(100% - 80px) !important;
+    bottom: 40px !important;
+    margin: 0 !important;
+    box-shadow: rgba(16,16,16,.5) 0 4px 8px;
+}
+
+.list-element {
+    position: relative;
+    margin: 0 0 2px 0;
+    height: 32px;
+}
+.list-element:hover {
+    background-color: rgb(96,96,96) !important;
+}
+
+.list-element > .list-btnExpand {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 4px;
+    top: 9px;
+
+    transform: rotate(-90deg);
+    transition: .2s;
+}
+
+.list-element > .list-btnExpand::after {
+    position: absolute;
+    border: solid;
+    border-color: rgb(192,192,192) transparent;
+    border-width: 12px 7px 0 7px;
+    top: 2px;
+    content: "";
+    left: 2px;
+}
+
+.list-element > .list-icon {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 24px;
+    height: 24px;
+
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+
+    filter: invert(1);
+}
+
+.list-element > .list-label {
+    max-width: 30%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 32px;
+    max-height: 32px;
+    padding-left: 32px; 
+    bottom: 0;
+
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    background-position: 4px 4px;
+
+    /*make the results selectable*/
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-user-drag: none;
+}
+
+.list-element > .list-result {
+    position: relative;
+    left: 30%;
+    top: -32px;
+    width: 69%;
+    right: 64px;
+    bottom: 0;
+    height: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 32px;
+
+    /*make the results selectable*/
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-user-drag: none;
+}
+
+.list-element > .list-result > div {
+    float: left;
+    height: 26px;
+    max-height: 26px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    /*make the results selectable*/
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-user-drag: none;
+}
+.list-element > .expaned { overflow-y: scroll; }
+.list-element > .expaned > div { width:33%; }
+.list-element > .expaned > div:nth-child(2n) { width:66%; }
+.list-element > .collapsed > div { width:auto;}
+.list-element > .collapsed div:nth-child(2n) { display:none; }
+.list-element > .collapsed > div:nth-last-child(2):after { content:""; }
+.list-element > .collapsed > div:only-child:after { content:""; }
+.list-element > .collapsed > div::after {
+    padding-right: 8px;
+    content: ", ";
+}
+
+.list-element > .expaned { counter-reset: enumeration; }
+.list-element > .enumerated > div:nth-child(2n-1)::before { /* enumeration */
+    counter-increment: enumeration;
+    content: counter(enumeration) ". ";
+    display: inline-block;
+    min-width: 32px;
+    font-style: italic;
+    /*margin-right: 8px;*/
+}
+
+.list-element > .enumerated > div[roundrtip]:nth-child(2n)::before { /* rount-trip */
+    content: attr(roundrtip);
+    display: inline-block;
+    min-width: 40px;
+    font-style: italic;
+    margin-right: 24px;
+}
+
+.list-element > .expaned100 { overflow-y: scroll; }
+.list-element > .expaned100 > div { width:100%; }
+.list-element > .collapsed100 > div { width: auto; }
+.list-element > .collapsed100 > div:nth-last-child(1):after { content: ""; }
+.list-element > .collapsed100 > div::after {
+    padding-right: 8px;
+    content: ", ";
+}
+
+.list-element > .list-status {
+    position: absolute;
+    right: 36px;
+    top: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border-style: solid;
+    border-color: rgb(192,192,192) rgb(192,192,192) transparent transparent;
+    border-width: 2px 3px 3px 0px;
+    box-sizing: border-box;
+    animation: spin 2s linear infinite;
+}
+
+.list-element > .list-graph {
+    position: absolute;
+    left: 30%;
+    right: 128px;
+    top: 0;
+    height: 100%;
+}
+
+.list-element > .list-graph > div {
+    position: absolute;
+    max-width: 16px;
+    width: 4%;
+    height: 16px;
+    top: 8px;
+    border-radius: 2px;
+}
+
+.list-small-graph > div:nth-child(2n) {
+    visibility: hidden;
+}
+
+.list-element > .list-msg {
+    position: absolute;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 32px;
+    max-height: 32px;
+    bottom: 0;
+    right: 32px;
+    width: 96px;
+    text-align: right;
+}
+
+.list-element:hover > .list-remove {
+    visibility: visible;
+    opacity: 1;
+}
+
+.list-element > .list-remove {
+    visibility: hidden;
+    opacity: 0;
+    transition: .2s;
+    position: absolute;
+    right: 4px;
+    top: 6px;
+    width: 20px;
+    height: 20px;
+    background-image: url("res/close.svgz");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-color: rgb(192,192,192);
+    border-radius: 50%;
+}
+
+.tied-list > .list-element {
+    margin: 0 0 1px 0;
+}
+
+.tied-list > .list-element > .list-icon {
+    left: 4px;
+    top: 0px;
+    width: 19px;
+    height: 19px;
+    background-size: 19px 19px;
+}
+
+.tied-list > .list-element > .list-label {
+    line-height: 20px;
+    max-height: 20px;
+}
+
+.tied-list > .list-element {
+    height: 20px;
+    max-height: 20px;
+}
+
+.tied-list > .list-element > .list-graph > div {
+    max-width: 14px;
+    width: 4%;
+    height: 14px;
+    top: 3px;
+    border-radius: 2px;
+}
+
+.tied-list > .list-element > .list-msg {
+    line-height: 20px;
+    max-height: 20px;
+}
+
+.tied-list > .list-element > .list-remove {
+    right: 4px;
+    top: 0px;
+    width: 20px;
+    height: 20px;
+    background-size: 20px 20px;
+}
+
+.expaned-box,
+.collapsed-box {
+    background-color : var(--control-color);
+    color: #202020;
+    margin: 8px 0;
+    padding: 4px 8px;
+    border-radius: 2px;
+}
+
+.expaned-box > div:first-child,
+.collapsed-box > div:first-child {
+    text-transform: capitalize;
+    padding-left: 8px;
+    font-size: large;
+    font-weight: 500;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.expaned-box > div:first-child:before,
+.collapsed-box > div:first-child:before {
+    position: relative;
+    border: solid;
+    border-color: rgb(32,32,32) transparent;
+    border-width: 14px 8px 0 8px;
+    top: 20px;
+    content: "";
+    left: -4px;
+
+    transition: .4s;
+}
+
+.collapsed-box > div:first-child:before {
+    transform: rotate(-90deg);
+}
+
+.task-icon-dots {
+    position: absolute;
+    bottom: 2px;
+    width: 12%;
+    height: 12%;
+    border-radius: 50%;
+    box-shadow: rgb(32,32,32) 0 0 0 1px;
+    transition: .4s;
+}
+.task-icon-dots:nth-child(2) { left: 6.5%; }
+.task-icon-dots:nth-child(3) { left: 21.5% }
+.task-icon-dots:nth-child(4) { left: 36.5% }
+.task-icon-dots:nth-child(5) { left: 51.5% }
+.task-icon-dots:nth-child(6) { left: 66.5% }
+.task-icon-dots:nth-child(7) { left: 81.5% }
+
+.task-icon-spin {
+    visibility: hidden;
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border-style: solid;
+    border-color: rgb(92,189,28) rgb(92,189,28)  transparent transparent;
+    border-width: 2px 3px 3px 0px;
+    box-sizing: border-box;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

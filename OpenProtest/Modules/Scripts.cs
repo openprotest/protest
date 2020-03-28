@@ -39,39 +39,36 @@ public class ScriptResult {
     public List<string[]> array = new List<string[]>();
 }
 
-static class Scripts {
+public static class Scripts {
     private const long QUARTER = 9000000000;
 
-    private static readonly string DIR_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts";
-    private static readonly string DIR_SCRIPTS_SCRIPTS = $"{Directory.GetCurrentDirectory()}\\scripts\\scripts";
-    private static readonly string DIR_SCRIPTS_REPORTS = $"{Directory.GetCurrentDirectory()}\\scripts\\reports";
-    
     private static readonly Hashtable tools = new Hashtable();
-    private static string tools_payload = null;
+    private static byte[] tools_payload = null;
 
     private static readonly object cache_lock = new object();
     private static byte[] adUserCache = null, adWorkstationCache = null, adGroupCache = null;
     private static long adUserCache_timestamp = 0, adWorkstationCache_timestamp = 0, adGroupCache_timestamp = 0;
 
     public static void LoadTools() {
-        string FILE_SCRIPT = $"{Directory.GetCurrentDirectory()}\\scripts\\tools.txt";
+        string FILE_SCRIPT = $"{Strings.DIR_SCRIPTS}\\tools.txt";
 
         FileInfo toolsFile = new FileInfo(FILE_SCRIPT);
         if (!toolsFile.Exists) return;
 
-        if (tools_payload is null)
-            try {
-                tools_payload = File.ReadAllText(FILE_SCRIPT);
-                while(tools_payload.IndexOf("\t\t") > -1) tools_payload = tools_payload.Replace("\t\t", "\t");
-            } catch (Exception ex) {
-                ErrorLog.Err(ex);
-            }
+        string tools_string = "";
 
-        string[] lines = tools_payload.Split('\n');
+        try {
+            tools_string = File.ReadAllText(FILE_SCRIPT);
+            while (tools_string.IndexOf("\t\t") > -1) tools_string = tools_string.Replace("\t\t", "\t");
+        } catch (Exception ex) {
+            Logging.Err(ex);
+        }
+
+        string[] lines = tools_string.Split('\n');
         for (int i = 0; i < lines.Length; i++) {
             lines[i] = lines[i].Trim();
             if (lines[i].StartsWith("#")) continue; //skip comments
-            
+
             string[] split = lines[i].Split('\t');
             if (split.Length == 1) continue; //label
 
@@ -88,19 +85,22 @@ static class Scripts {
             tools.Add(name, parameters.ToArray());
             parameters.Clear();
         }
+
+        tools_payload =  Encoding.UTF8.GetBytes(tools_string);
     }
 
     public static byte[] GetScriptTools() {
-        if (tools_payload is null) return null;
-        return Encoding.UTF8.GetBytes(tools_payload);
+        if (tools_payload is null) LoadTools();
+        if (!(tools_payload is null)) return tools_payload;
+        return null;
     }
 
     public static byte[] GetEquipColumns() {
         Hashtable hash = new Hashtable();
         StringBuilder sb = new StringBuilder();
 
-        foreach (DictionaryEntry o in NoSQL.equip) {
-            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+        foreach (KeyValuePair<string, Database.DbEntry> o in Database.equip) {
+            Database.DbEntry entry = (Database.DbEntry)o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
                 if (hash.ContainsKey(k)) continue;
@@ -117,8 +117,8 @@ static class Scripts {
         Hashtable hash = new Hashtable();
         StringBuilder sb = new StringBuilder();
 
-        foreach (DictionaryEntry o in NoSQL.users) {
-            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
+            Database.DbEntry entry = (Database.DbEntry)o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
                 if (hash.ContainsKey(k)) continue;
@@ -145,12 +145,12 @@ static class Scripts {
 
         SearchResultCollection result;
         try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectoryEntry dir = ActiveDirectory.GetDirectoryEntry(domain);
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
             result = searcher.FindAll();
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
+            Logging.Err(ex);
             return null;
         }
 
@@ -186,12 +186,12 @@ static class Scripts {
 
         SearchResultCollection result;
         try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectoryEntry dir = ActiveDirectory.GetDirectoryEntry(domain);
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(objectClass=computer)";
             result = searcher.FindAll();
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
+            Logging.Err(ex);
             return null;
         }
 
@@ -216,7 +216,7 @@ static class Scripts {
     public static byte[] GetAdGroupColumns() {
         if (!(adGroupCache is null) && adGroupCache_timestamp > DateTime.Now.Ticks - QUARTER)
             return adGroupCache;
-     
+
         Hashtable hash = new Hashtable();
         StringBuilder sb = new StringBuilder();
 
@@ -227,12 +227,12 @@ static class Scripts {
 
         SearchResultCollection result;
         try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectoryEntry dir = ActiveDirectory.GetDirectoryEntry(domain);
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=group))";
             result = searcher.FindAll();
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
+            Logging.Err(ex);
             return null;
         }
 
@@ -257,28 +257,28 @@ static class Scripts {
     public static byte[] ListScripts() {
         StringBuilder sb = new StringBuilder();
 
-        DirectoryInfo dirScripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
+        DirectoryInfo dirScripts = new DirectoryInfo(Strings.DIR_SCRIPTS_SCRIPTS);
         if (dirScripts.Exists) {
             FileInfo[] scripts = dirScripts.GetFiles();
             for (int i = 0; i < scripts.Length; i++) {
                 sb.Append($"s{(char)127}");
                 sb.Append($"{scripts[i].Name}{(char)127}");
-                sb.Append($"{scripts[i].LastWriteTime.ToString(NoSQL.DATETIME_FORMAT)}{(char)127}");
+                sb.Append($"{scripts[i].LastWriteTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}");
                 sb.Append($"{Wmi.SizeToString(scripts[i].Length.ToString())}{(char)127}");
             }
         }
 
-        DirectoryInfo dirReports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dirReports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (dirReports.Exists) {
             FileInfo[] reports = dirReports.GetFiles();
             for (int i = 0; i < reports.Length; i++) {
                 sb.Append($"r{(char)127}");
                 sb.Append($"{reports[i].Name}{(char)127}");
-                sb.Append($"{reports[i].LastWriteTime.ToString(NoSQL.DATETIME_FORMAT)}{(char)127}");
+                sb.Append($"{reports[i].LastWriteTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}");
                 sb.Append($"{Wmi.SizeToString(reports[i].Length.ToString())}{(char)127}");
             }
         }
-        
+
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
@@ -287,17 +287,17 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = NoSQL.UrlDecode(filename);
+        filename = Strings.UrlDecode(filename);
 
-        FileInfo scriptfile = new FileInfo($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
+        FileInfo scriptfile = new FileInfo($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}");
 
-        if (!scriptfile.Exists) return Tools.FLE.Array;
+        if (!scriptfile.Exists) return Strings.FLE.Array;
 
         try {
             return File.ReadAllBytes(scriptfile.FullName);
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return Tools.FAI.Array;
+            Logging.Err(ex);
+            return Strings.FAI.Array;
         }
     }
 
@@ -306,31 +306,31 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = NoSQL.UrlDecode(filename);
+        filename = Strings.UrlDecode(filename);
 
-        DirectoryInfo dir = new DirectoryInfo(DIR_SCRIPTS);
+        DirectoryInfo dir = new DirectoryInfo(Strings.DIR_SCRIPTS);
         if (!dir.Exists) dir.Create();
 
-        DirectoryInfo dir_scripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
+        DirectoryInfo dir_scripts = new DirectoryInfo(Strings.DIR_SCRIPTS_SCRIPTS);
         if (!dir_scripts.Exists) dir_scripts.Create();
 
-        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
-               
+
         //if (payload.Length == 0) return Tools.INV.Array;
 
         try {
-            File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", payload);
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}", payload);
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return Tools.FAI.Array;
+            Logging.Err(ex);
+            return Strings.FAI.Array;
         }
 
-        return Tools.OK.Array;
+        return Strings.OK.Array;
     }
 
     public static byte[] NewScript(in string[] para) {
@@ -338,87 +338,88 @@ static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = NoSQL.UrlDecode(filename);
+        filename = Strings.UrlDecode(filename);
         filename = EscapeFilename(filename);
 
-        if (filename.Length == 0) return Tools.INV.Array;
-        if (File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.EXS.Array;
-        
+        if (filename.Length == 0) return Strings.INV.Array;
+        if (File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Strings.EXS.Array;
+
         try {
-            DirectoryInfo dir_scripts = new DirectoryInfo(DIR_SCRIPTS_SCRIPTS);
+            DirectoryInfo dir_scripts = new DirectoryInfo(Strings.DIR_SCRIPTS_SCRIPTS);
             if (!dir_scripts.Exists) dir_scripts.Create();
 
-            File.WriteAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}", "");
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}", "");
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return Tools.FAI.Array;
+            Logging.Err(ex);
+            return Strings.FAI.Array;
         }
 
-        return Tools.OK.Array;
+        return Strings.OK.Array;
     }
 
     public static byte[] DeleteScript(in string[] para) {
         string filename = "";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-        
-        if (filename.Length == 0) return Tools.INV.Array;
-        filename = NoSQL.UrlDecode(filename);
+
+        if (filename.Length == 0) return Strings.INV.Array;
+        filename = Strings.UrlDecode(filename);
         filename = EscapeFilename(filename);
 
-        if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
+        if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Strings.FLE.Array;
 
         try {
-            File.Delete($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
+            File.Delete($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}");
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return Tools.FAI.Array;
+            Logging.Err(ex);
+            return Strings.FAI.Array;
         }
 
-        return Tools.OK.Array;
+        return Strings.OK.Array;
     }
-    
+
     public static byte[] DeleteReport(in string[] para) {
         string filename = "";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-        
-        if (filename.Length == 0) return Tools.INV.Array;
-        filename = NoSQL.UrlDecode(filename);
+
+        if (filename.Length == 0) return Strings.INV.Array;
+        filename = Strings.UrlDecode(filename);
         filename = EscapeFilename(filename);
 
-        if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return Tools.FLE.Array;
+        if (!File.Exists($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}")) return Strings.FLE.Array;
 
         try {
-            File.Delete($"{DIR_SCRIPTS_REPORTS}\\{filename}");
+            File.Delete($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}");
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return Tools.FAI.Array;
+            Logging.Err(ex);
+            return Strings.FAI.Array;
         }
 
-        return Tools.OK.Array;
+        return Strings.OK.Array;
     }
 
     public static byte[] GetReport(in string[] para) {
         string filename = "";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-        
-        if (filename.Length == 0) return null;
-        filename = NoSQL.UrlDecode(filename);
 
-        if (!File.Exists($"{DIR_SCRIPTS_REPORTS}\\{filename}")) return null;
+        if (filename.Length == 0) return null;
+        filename = Strings.UrlDecode(filename);
+
+        if (!File.Exists($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}")) return null;
 
         try {
-            return File.ReadAllBytes($"{DIR_SCRIPTS_REPORTS}\\{filename}");
+            return File.ReadAllBytes($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}");
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
+            Logging.Err(ex);
             return null;
         }
     }
 
     private static bool IsEndPoint(ScriptNode node) {
-        return node.name switch {
+        return node.name switch
+        {
             "Text file" => true,
             "CSV file" => true,
             "JSON file" => true,
@@ -437,24 +438,24 @@ static class Scripts {
 
     public static byte[] RunScript(in string[] para) {
         string filename = "";
-        for (int i = 1; i < para.Length; i++) 
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = NoSQL.UrlDecode(filename);
+        filename = Strings.UrlDecode(filename);
         return RunScript(filename);
     }
     public static byte[] RunScript(string filename) {
-        filename = NoSQL.UrlDecode(filename);
+        filename = Strings.UrlDecode(filename);
 
-        if (filename.Length == 0) return Tools.INV.Array;
-        if (!File.Exists($"{DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Tools.FLE.Array;
+        if (filename.Length == 0) return Strings.INV.Array;
+        if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Strings.FLE.Array;
 
         string script = "";
         try {
-            script = File.ReadAllText($"{DIR_SCRIPTS_SCRIPTS}\\{filename}");
+            script = File.ReadAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}");
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
-            return Tools.FAI.Array;
+            Logging.Err(ex);
+            return Strings.FAI.Array;
         }
 
         List<ScriptNode> nodes = new List<ScriptNode>();
@@ -467,7 +468,7 @@ static class Scripts {
 
             string[] split = lines[i].Split((char)127);
             if (split.Length < 3) continue;
-            if (split[0] != "n") continue;  
+            if (split[0] != "n") continue;
 
             List<string> values = new List<string>();
             List<string> columns = new List<string>();
@@ -485,7 +486,7 @@ static class Scripts {
                 name = split[1],
                 values = values.ToArray(),
                 columns = columns.ToArray(),
-                parameters = tools.ContainsKey(split[1]) ? (string[][])tools[split[1]] : new string[][] {}
+                parameters = tools.ContainsKey(split[1]) ? (string[][])tools[split[1]] : new string[][] { }
             };
 
             foreach (string[] param in newNode.parameters) { //sockets
@@ -519,16 +520,16 @@ static class Scripts {
 
             ScriptSocket primary, secondary;
 
-            primary = Array.Find(primaryNode.sockets, o=> o.type == 'o' && o.label == split[2]);
-            secondary = Array.Find(secondaryNode.sockets, o=> o.type == 'i' && o.label == split[4]);
+            primary = Array.Find(primaryNode.sockets, o => o.type == 'o' && o.label == split[2]);
+            secondary = Array.Find(secondaryNode.sockets, o => o.type == 'i' && o.label == split[4]);
 
             if (primary is null || secondary is null) continue;
 
             ScriptLink newLink = new ScriptLink() {
-                primaryNode   = primaryNode,
+                primaryNode = primaryNode,
                 secondaryNode = secondaryNode,
-                primary       = primary,
-                secondary     = secondary
+                primary = primary,
+                secondary = secondary
             };
             links.Add(newLink);
         }
@@ -538,8 +539,8 @@ static class Scripts {
         List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
         foreach (ScriptNode node in endpoints)
             CascadeNode(node, links, log);
-        
-        return Tools.OK.Array;
+
+        return Strings.OK.Array;
     }
 
     private static void CascadeNode(in ScriptNode node, in List<ScriptLink> allLinks, in StringBuilder log) {
@@ -563,16 +564,16 @@ static class Scripts {
             for (int i = 0; i < node.sourceNodes.Length; i++) //cascade
                 CascadeNode(node.sourceNodes[i], allLinks, log);
 
-        if (node.result is null) 
+        if (node.result is null)
             node.result = InvokeNode(node, log);
-        
+
         SelectColumns(node);
     }
 
     private static void SelectColumns(ScriptNode node) {
         if (node.result is null) return;
         if (node.columns.Length == 0) return;
-        
+
         string[] header = node.result.header.Where(o => node.columns.Contains(o)).ToArray();
         int[] index = new int[header.Length];
 
@@ -581,7 +582,7 @@ static class Scripts {
 
         for (int i = 0; i < node.result.array.Count; i++) {
             string[] newRow = new string[header.Length];
-            for (int j = 0; j < header.Length; j++) 
+            for (int j = 0; j < header.Length; j++)
                 newRow[j] = node.result.array[i][index[j]];
             node.result.array[i] = newRow;
         }
@@ -591,59 +592,59 @@ static class Scripts {
 
     private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log) {
         switch (node.name) {
-            case "Protest users":       return ProtestUsers(node);
-            case "Protest equipment":   return ProtestEquip(node);
-            case "Domain users":        return DomainUsers(node);
-            case "Domain workstations": return DomainWorkstation(node);
-            case "Domain groups":       return DomainGroups(node);
-            case "IPv4 subnet":         return IPv4Subnet(node);
-            case "Single value":        return SingleValue(node);
+            case "Protest users": return N_ProtestUsers(node);
+            case "Protest equipment": return N_ProtestEquip(node);
+            case "Domain users": return N_DomainUsers(node);
+            case "Domain workstations": return N_DomainWorkstation(node);
+            case "Domain groups": return N_DomainGroups(node);
+            case "IPv4 subnet": return N_IPv4Subnet(node);
+            case "Single value": return N_SingleValue(node);
 
-            case "Secure shell":       return SSh(node).Result;
-            case "PS exec":            return PsExec(node).Result;
-            case "WMI query":          return WmiQuery(node).Result;
-            case "NetBIOS request":    return NetBiosRequest(node).Result;
-            case "DNS lookup":         return DnsLookup(node).Result;
-            case "Reverse DNS lookup": return ReverseDnsLookUp(node).Result;
-            case "ICMP ping":          return Ping(node).Result;
-            case "ARP ping":           return ArpPing(node);
-            case "Trace route":        return TraceRoute(node).Result;
-            case "Port scan":          return PortScan(node).Result;
-            case "Locate IP":          return LocateIp(node);
-            case "MAC lookup":         return MacLookUp(node);
+            case "Secure shell": return N_SSh(node).Result;
+            case "PS exec": return N_PsExec(node).Result;
+            case "WMI query": return N_WmiQuery(node).Result;
+            case "NetBIOS request": return N_NetBiosRequest(node).Result;
+            case "DNS lookup": return N_DnsLookup(node).Result;
+            case "Reverse DNS lookup": return N_ReverseDnsLookUp(node).Result;
+            case "ICMP ping": return N_Ping(node).Result;
+            case "ARP ping": return N_ArpPing(node);
+            case "Trace route": return N_TraceRoute(node).Result;
+            case "Port scan": return N_PortScan(node).Result;
+            case "Locate IP": return N_LocateIp(node);
+            case "MAC lookup": return N_MacLookUp(node);
 
-            case "Subtract rows": return SubtractRows(node);
-            case "Sort":          return Sort(node);
-            case "Reverse order": return ReverseOrder(node);
-            case "Trim":          return Trim(node);
-            case "Unique":        return Unique(node);
-            case "Merge columns": return MergeColumns(node);
-            case "Merge rows":    return MergeRows(node);
+            case "Subtract rows": return N_SubtractRows(node);
+            case "Sort": return N_Sort(node);
+            case "Reverse order": return N_ReverseOrder(node);
+            case "Trim": return N_Trim(node);
+            case "Unique": return N_Unique(node);
+            case "Merge columns": return N_MergeColumns(node);
+            case "Merge rows": return N_MergeRows(node);
 
-            case "Equal":        return Equal(node);
-            case "Greater than": return GreaterThan(node);
-            case "Less than":    return LessThan(node);
-            case "Contains":     return Contains(node);
-            case "Regex match":  return RegexMatch(node);
+            case "Equal": return N_Equal(node);
+            case "Greater than": return N_GreaterThan(node);
+            case "Less than": return N_LessThan(node);
+            case "Contains": return N_Contains(node);
+            case "Regex match": return N_RegexMatch(node);
 
-            case "Absolute value": return AbsValue(node);
-            case "Round":          return Round(node);
-            case "Quantization":   return Quantization(node);
-            case "Sampling":       return Sampling(node);
-            case "Sum":            return Sum(node);
-            case "Maximum":        return Maximum(node);
-            case "Minimum":        return Minimum(node);
-            case "Mean":           return Mean(node);
-            case "Median":         return Median(node);
-            case "Mode":           return Mode(node);
-            case "Range":          return Range(node);
+            case "Absolute value": return N_AbsValue(node);
+            case "Round": return N_Round(node);
+            case "Quantization": return N_Quantization(node);
+            case "Sampling": return N_Sampling(node);
+            case "Sum": return N_Sum(node);
+            case "Maximum": return N_Maximum(node);
+            case "Minimum": return N_Minimum(node);
+            case "Mean": return N_Mean(node);
+            case "Median": return N_Median(node);
+            case "Mode": return N_Mode(node);
+            case "Range": return N_Range(node);
 
-            case "Text file":   return SaveTxt(node);
-            case "CSV file":    return SaveCsv(node);
-            case "JSON file":   return SaveJson(node);
-            case "XML file":    return SaveXml(node);
-            case "HTML file":   return SaveHtml(node);
-            case "Send e-mail": return SendEMail(node);
+            case "Text file": return N_SaveTxt(node);
+            case "CSV file": return N_SaveCsv(node);
+            case "JSON file": return N_SaveJson(node);
+            case "XML file": return N_SaveXml(node);
+            case "HTML file": return N_SaveHtml(node);
+            case "Send e-mail": return N_SendEMail(node);
 
             default: //bypass
                 log.AppendLine($" ! Undefined node: {node.name}.");
@@ -651,10 +652,10 @@ static class Scripts {
         }
     }
 
-    private static ScriptResult ProtestUsers(in ScriptNode node) {
+    private static ScriptResult N_ProtestUsers(in ScriptNode node) {
         List<string> header = new List<string>();
-        foreach (DictionaryEntry o in NoSQL.users) {
-            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
+            Database.DbEntry entry = o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
                 if (node.columns.Length > 0 && !node.columns.Contains(k)) continue;
@@ -666,8 +667,8 @@ static class Scripts {
         ScriptResult result = new ScriptResult();
         result.header = header.ToArray();
 
-        foreach (DictionaryEntry o in NoSQL.users) {
-            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
+            Database.DbEntry entry = o.Value;
 
             string[] row = new string[header.Count];
             foreach (DictionaryEntry c in entry.hash) {
@@ -682,10 +683,10 @@ static class Scripts {
 
         return result;
     }
-    private static ScriptResult ProtestEquip(in ScriptNode node) {
+    private static ScriptResult N_ProtestEquip(in ScriptNode node) {
         List<string> header = new List<string>();
-        foreach (DictionaryEntry o in NoSQL.equip) {
-            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+        foreach (KeyValuePair<string, Database.DbEntry> o in Database.equip) {
+            Database.DbEntry entry = o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
                 if (node.columns.Length > 0 && !node.columns.Contains(k)) continue;
@@ -697,8 +698,8 @@ static class Scripts {
         ScriptResult result = new ScriptResult();
         result.header = header.ToArray();
 
-        foreach (DictionaryEntry o in NoSQL.equip) {
-            NoSQL.DbEntry entry = (NoSQL.DbEntry)o.Value;
+        foreach (KeyValuePair<string, Database.DbEntry> o in Database.equip) {
+            Database.DbEntry entry = o.Value;
 
             string[] row = new string[header.Count];
             foreach (DictionaryEntry c in entry.hash) {
@@ -713,7 +714,7 @@ static class Scripts {
 
         return result;
     }
-    private static ScriptResult DomainToResult(in ScriptNode node, string filter) {
+    private static ScriptResult N_DomainToResult(in ScriptNode node, string filter) {
         string domain = null;
         try {
             domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
@@ -721,12 +722,12 @@ static class Scripts {
 
         SearchResultCollection adResult = null;
         try {
-            DirectoryEntry dir = ActiveDir.GetDirectoryEntry(domain);
+            DirectoryEntry dir = ActiveDirectory.GetDirectoryEntry(domain);
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = filter;
             adResult = searcher.FindAll();
         } catch (Exception ex) {
-            ErrorLog.Err(ex);
+            Logging.Err(ex);
             return null;
         }
 
@@ -758,16 +759,16 @@ static class Scripts {
 
         return result;
     }
-    private static ScriptResult DomainUsers(in ScriptNode node) {
-        return DomainToResult(node, "(&(objectClass=user)(objectCategory=person))");
+    private static ScriptResult N_DomainUsers(in ScriptNode node) {
+        return N_DomainToResult(node, "(&(objectClass=user)(objectCategory=person))");
     }
-    private static ScriptResult DomainWorkstation(in ScriptNode node) {
-        return DomainToResult(node, "(objectClass=computer)");
+    private static ScriptResult N_DomainWorkstation(in ScriptNode node) {
+        return N_DomainToResult(node, "(objectClass=computer)");
     }
-    private static ScriptResult DomainGroups(in ScriptNode node) {
-        return DomainToResult(node, "(&(objectClass=group))");
+    private static ScriptResult N_DomainGroups(in ScriptNode node) {
+        return N_DomainToResult(node, "(&(objectClass=group))");
     }
-    private static ScriptResult IPv4Subnet (in ScriptNode node) {
+    private static ScriptResult N_IPv4Subnet(in ScriptNode node) {
         /* [0] IP
          * [1] CIDR prefix
          * [2] -> */
@@ -776,10 +777,10 @@ static class Scripts {
 
         if (!IPAddress.TryParse(node.values[0], out IPAddress ip)) return null;
         if (!byte.TryParse(node.values[1], out byte prefix)) return null;
-        
+
         if (prefix > 31) return null;
 
-        IPAddress subnet = Tools.GetNetworkAddress(ip, prefix);
+        IPAddress subnet = IpTools.GetNetworkAddress(ip, prefix);
 
         byte[] arrFrom = subnet.GetAddressBytes();
         Array.Reverse(arrFrom);
@@ -801,7 +802,7 @@ static class Scripts {
 
         return result;
     }
-    private static ScriptResult SingleValue(in ScriptNode node) {
+    private static ScriptResult N_SingleValue(in ScriptNode node) {
         /* [0] Value
          * [1] -> */
 
@@ -813,8 +814,8 @@ static class Scripts {
 
         return result;
     }
-    
-    private static async Task<ScriptResult> SSh(ScriptNode node) {
+
+    private static async Task<ScriptResult> N_SSh(ScriptNode node) {
         List<string[]> array = new List<string[]>();
 
         return new ScriptResult() { //sorted
@@ -822,7 +823,7 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> PsExec(ScriptNode node) {
+    private static async Task<ScriptResult> N_PsExec(ScriptNode node) {
         List<string[]> array = new List<string[]>();
 
         return new ScriptResult() { //sorted
@@ -830,7 +831,7 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> WmiQuery(ScriptNode node) {
+    private static async Task<ScriptResult> N_WmiQuery(ScriptNode node) {
         List<string[]> array = new List<string[]>();
 
         return new ScriptResult() {
@@ -838,7 +839,7 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> NetBiosRequest(ScriptNode node) {
+    private static async Task<ScriptResult> N_NetBiosRequest(ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] async
@@ -849,7 +850,7 @@ static class Scripts {
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
 
-        if (index > -1) 
+        if (index > -1)
             if (isAsync) {
                 List<Task<string>> tasks = new List<Task<string>>();
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
@@ -876,7 +877,7 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> DnsLookup(ScriptNode node) {
+    private static async Task<ScriptResult> N_DnsLookup(ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] async
@@ -917,13 +918,13 @@ static class Scripts {
                 }
             }
         }
-        
+
         return new ScriptResult() {
             header = new string[] { "Hostname", "IP Address" },
             array = array
         };
     }
-    private static async Task<ScriptResult> ReverseDnsLookUp(ScriptNode node) {
+    private static async Task<ScriptResult> N_ReverseDnsLookUp(ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] async
@@ -969,7 +970,7 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> Ping(ScriptNode node) {
+    private static async Task<ScriptResult> N_Ping(ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] async
@@ -983,7 +984,7 @@ static class Scripts {
             bool isAsync = node.values[2] == "True";
             int timeout = 1000;
             int.TryParse(node.values[3], out timeout);
-            
+
             if (isAsync) {
                 List<Task<PingReply>> tasks = new List<Task<PingReply>>();
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
@@ -1019,7 +1020,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult ArpPing(ScriptNode node) {
+    private static ScriptResult N_ArpPing(ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1028,16 +1029,16 @@ static class Scripts {
         List<string[]> array = new List<string[]>();
 
         if (index > -1) {
-                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                    string host = node.sourceNodes[0].result.array[i][index];
-                    string reply = Tools.Arp(host);
- 
-                    if (reply is null) {
-                        array.Add(new string[] { "", "Invalid address", "" });
-                        continue;
-                    }
-                    array.Add(new string[] { host, reply });
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string host = node.sourceNodes[0].result.array[i][index];
+                string reply = Arp.ArpRequest(host);
+
+                if (reply is null) {
+                    array.Add(new string[] { "", "Invalid address", "" });
+                    continue;
                 }
+                array.Add(new string[] { host, reply });
+            }
         }
 
         return new ScriptResult() {
@@ -1045,11 +1046,11 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> TraceRoute(ScriptNode node) {
-         /* [0] <-
-          * [1] column
-          * [2] async
-          * [3] -> */
+    private static async Task<ScriptResult> N_TraceRoute(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] async
+         * [3] -> */
 
         bool isAsync = node.values[2] == "True";
 
@@ -1059,7 +1060,7 @@ static class Scripts {
         if (index > -1) {
             const short timeout = 2000; //2s
             const short ttl = 30;
-        
+
             if (isAsync) {
                 List<Task<string>> tasks = new List<Task<string>>();
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
@@ -1087,7 +1088,7 @@ static class Scripts {
             array = array
         };
     }
-    private static async Task<ScriptResult> PortScan(ScriptNode node) {
+    private static async Task<ScriptResult> N_PortScan(ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] async
@@ -1133,14 +1134,14 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult LocateIp(in ScriptNode node) {
+    private static ScriptResult N_LocateIp(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
 
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
         List<string[]> array = new List<string[]>();
-        
+
         if (index > -1)
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                 string host = node.sourceNodes[0].result.array[i][index];
@@ -1149,7 +1150,7 @@ static class Scripts {
                     continue;
                 }
 
-                string[] result = Encoding.UTF8.GetString(Tools.LocateIp(host)).Split(';');
+                string[] result = Encoding.UTF8.GetString(LocateIp.Locate(host)).Split(';');
                 if (result.Length < 6) {
                     array.Add(new string[] { host, result[0], "", "", "", "", "", "" });
                     continue;
@@ -1164,7 +1165,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult MacLookUp(in ScriptNode node) {
+    private static ScriptResult N_MacLookUp(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1176,11 +1177,11 @@ static class Scripts {
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                 string mac = node.sourceNodes[0].result.array[i][index];
                 if (mac is null) {
-                    array.Add(new string[] { "null", "null"});
+                    array.Add(new string[] { "null", "null" });
                     continue;
                 }
 
-                string manufacturer = Encoding.UTF8.GetString(Tools.MacLookup(mac));
+                string manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
                 array.Add(new string[] { mac, manufacturer });
             }
 
@@ -1190,7 +1191,7 @@ static class Scripts {
         };
     }
 
-    private static ScriptResult SubtractRows(in ScriptNode node) {
+    private static ScriptResult N_SubtractRows(in ScriptNode node) {
         /* [0] <- Minuend
         /* [1] <- Subtrahend
         /* [2] -> Difference */
@@ -1198,7 +1199,7 @@ static class Scripts {
         List<string[]> minuend = node.sourceNodes[0].result.array;
         List<string[]> subtrahend = node.sourceNodes[1].result.array;
         List<string[]> difference = new List<string[]>();
-               
+
         for (int i = 0; i < minuend.Count; i++) {
             bool mached = false;
 
@@ -1206,7 +1207,7 @@ static class Scripts {
                 if (subtrahend[j].SequenceEqual(minuend[i])) {
                     mached = true;
                     break;
-                }           
+                }
 
             if (mached) continue;
             difference.Add(minuend[i]);
@@ -1217,7 +1218,7 @@ static class Scripts {
             array = difference
         };
     }
-    private static ScriptResult Sort(in ScriptNode node) {
+    private static ScriptResult N_Sort(in ScriptNode node) {
         /* [0] <-
          * [1] Sort by
          * [2] -> */
@@ -1244,7 +1245,7 @@ static class Scripts {
             array = sorted is null ? node.sourceNodes[0].result.array : sorted
         };
     }
-    private static ScriptResult ReverseOrder(in ScriptNode node) {
+    private static ScriptResult N_ReverseOrder(in ScriptNode node) {
         /* [0] <-
          * [2] -> */
 
@@ -1256,7 +1257,7 @@ static class Scripts {
             array = reversed
         };
     }
-    private static ScriptResult Trim(in ScriptNode node) { //remove if empty
+    private static ScriptResult N_Trim(in ScriptNode node) { //remove if empty
         /* [0] <-
          * [1] -> */
 
@@ -1271,7 +1272,7 @@ static class Scripts {
             array = trimmed
         };
     }
-    private static ScriptResult Unique(in ScriptNode node) { //remove duplicates
+    private static ScriptResult N_Unique(in ScriptNode node) { //remove duplicates
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1292,7 +1293,7 @@ static class Scripts {
                 unique.Add(node.sourceNodes[0].result.array[i]);
             }
 
-        else 
+        else
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                 bool mached = false;
                 for (int j = 0; j < node.sourceNodes[0].result.array.Count; j++)
@@ -1310,7 +1311,7 @@ static class Scripts {
             array = unique
         };
     }
-    private static ScriptResult MergeColumns(in ScriptNode node) {
+    private static ScriptResult N_MergeColumns(in ScriptNode node) {
         /* [0] <- A
         /* [1] <- B
         /* [2] -> Out */
@@ -1347,7 +1348,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult MergeRows(in ScriptNode node) {
+    private static ScriptResult N_MergeRows(in ScriptNode node) {
         /* [0] <- A
         /* [1] <- B
         /* [2] -> Out */
@@ -1365,7 +1366,7 @@ static class Scripts {
         };
     }
 
-    private static ScriptResult Equal(in ScriptNode node) {
+    private static ScriptResult N_Equal(in ScriptNode node) {
         /* [0] <-
          * [1] value
          * [2] column
@@ -1377,13 +1378,13 @@ static class Scripts {
         List<string[]> array = new List<string[]>();
         if (index > -1)
             array = node.sourceNodes[0].result.array.Where(o => !(o[index] is null) && o[index] == value).ToList();
-        
+
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
             array = array
         };
     }
-    private static ScriptResult GreaterThan(in ScriptNode node) {
+    private static ScriptResult N_GreaterThan(in ScriptNode node) {
         /* [0] <-
          * [1] value
          * [2] column
@@ -1417,7 +1418,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult LessThan(in ScriptNode node) {
+    private static ScriptResult N_LessThan(in ScriptNode node) {
         /* [0] <-
          * [1] value
          * [2] column
@@ -1451,7 +1452,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Contains(in ScriptNode node) {
+    private static ScriptResult N_Contains(in ScriptNode node) {
         /* [0] <-
          * [1] value
          * [2] column
@@ -1469,7 +1470,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult RegexMatch(in ScriptNode node) {
+    private static ScriptResult N_RegexMatch(in ScriptNode node) {
         /* [0] <-
          * [1] regex
          * [2] column
@@ -1479,10 +1480,10 @@ static class Scripts {
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[2]);
 
         List<string[]> array = new List<string[]>();
-        if (index > -1) 
+        if (index > -1)
             try {
                 Regex regex = new Regex(pattern);
-                array = node.sourceNodes[0].result.array.Where(o =>  !(o[index] is null) && regex.Match(o[index]).Success).ToList();
+                array = node.sourceNodes[0].result.array.Where(o => !(o[index] is null) && regex.Match(o[index]).Success).ToList();
             } catch { }
 
         return new ScriptResult() {
@@ -1491,7 +1492,7 @@ static class Scripts {
         };
     }
 
-    private static ScriptResult AbsValue(in ScriptNode node) {
+    private static ScriptResult N_AbsValue(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1499,7 +1500,7 @@ static class Scripts {
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
 
         List<string[]> array = new List<string[]>();
-        if (index > -1) 
+        if (index > -1)
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                 string[] targetRow = node.sourceNodes[0].result.array[i];
                 string[] newRow = new string[targetRow.Length];
@@ -1515,7 +1516,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Round(in ScriptNode node) {
+    private static ScriptResult N_Round(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1539,7 +1540,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Quantization(in ScriptNode node) {
+    private static ScriptResult N_Quantization(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] step
@@ -1551,14 +1552,14 @@ static class Scripts {
         if (index > -1) {
             int step = 10;
             int.TryParse(node.values[2], out step);
-            
+
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                 string[] targetRow = node.sourceNodes[0].result.array[i];
                 string[] newRow = new string[targetRow.Length];
                 Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
 
                 double n;
-                newRow[index] = double.TryParse(targetRow[index], out n) ? (n - n%step).ToString() : targetRow[index];
+                newRow[index] = double.TryParse(targetRow[index], out n) ? (n - n % step).ToString() : targetRow[index];
                 array.Add(newRow);
             }
         }
@@ -1568,7 +1569,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Sampling(in ScriptNode node) {
+    private static ScriptResult N_Sampling(in ScriptNode node) {
         /* [0] <-
          * [1] percent
          * [2] -> */
@@ -1579,15 +1580,15 @@ static class Scripts {
         int step = (int)(100 / percent);
 
         List<string[]> array = new List<string[]>();
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i+=step)
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i += step)
             array.Add(node.sourceNodes[0].result.array[i]);
-                
+
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
             array = array
         };
     }
-    private static ScriptResult Sum(in ScriptNode node) {
+    private static ScriptResult N_Sum(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1610,13 +1611,13 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Maximum(in ScriptNode node) {
+    private static ScriptResult N_Maximum(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
 
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
-        
+
         double max = double.MinValue;
         try {
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
@@ -1634,7 +1635,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Minimum(in ScriptNode node) {
+    private static ScriptResult N_Minimum(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1658,7 +1659,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Mean(in ScriptNode node) {
+    private static ScriptResult N_Mean(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1683,7 +1684,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Median(in ScriptNode node) {
+    private static ScriptResult N_Median(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1715,7 +1716,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Mode(in ScriptNode node) {
+    private static ScriptResult N_Mode(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1732,16 +1733,16 @@ static class Scripts {
                     int last = (int)hash[value];
                     hash[value] = ++last;
                 } else
-                    hash.Add(value, 1);                
+                    hash.Add(value, 1);
             }
 
             int max = 0;
-            
+
             foreach (DictionaryEntry e in hash)
                 if (max < (int)e.Value) {
                     max = (int)e.Value;
                     mode = e.Key.ToString();
-                }            
+                }
         }
 
         List<string[]> array = new List<string[]>();
@@ -1752,7 +1753,7 @@ static class Scripts {
             array = array
         };
     }
-    private static ScriptResult Range(in ScriptNode node) {
+    private static ScriptResult N_Range(in ScriptNode node) {
         /* [0] <-
          * [1] column
          * [2] -> */
@@ -1775,7 +1776,7 @@ static class Scripts {
 
                 range = max - min;
             } catch { }
-        
+
         List<string[]> array = new List<string[]>();
         array.Add(new string[] { range.ToString() });
 
@@ -1785,16 +1786,16 @@ static class Scripts {
         };
     }
 
-    private static ScriptResult SaveTxt(in ScriptNode node) {
+    private static ScriptResult N_SaveTxt(in ScriptNode node) {
         int[] columnsLength = new int[node.sourceNodes[0].result.header.Length];
         for (int i = 0; i < columnsLength.Length; i++)
             columnsLength[i] = node.sourceNodes[0].result.header[i].Length;
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) 
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
                 if (columnsLength[j] < node.sourceNodes[0].result.array[i][j]?.Length)
                     columnsLength[j] = node.sourceNodes[0].result.array[i][j].Length;
-        
+
         StringBuilder text = new StringBuilder();
 
         for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) { //header
@@ -1810,35 +1811,35 @@ static class Scripts {
         text.Append("\n");
 
         for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //data
-            for (int j=0; j < node.sourceNodes[0].result.array[i].Length; j++) {
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) {
                 if (!(node.sourceNodes[0].result.array[i][j] is null))
                     text.Append(node.sourceNodes[0].result.array[i][j]);
 
                 if (j < node.sourceNodes[0].result.array[i].Length - 1) {
                     if (node.sourceNodes[0].result.array[i][j] is null)
                         text.Append(new string(' ', columnsLength[j]));
-                    else 
-                        text.Append(new string(' ', columnsLength[j] - node.sourceNodes[0].result.array[i][j].Length));                    
+                    else
+                        text.Append(new string(' ', columnsLength[j] - node.sourceNodes[0].result.array[i][j].Length));
                     text.Append("\t");
                 }
             }
             text.Append("\n");
         }
 
-        node.values[1] = NoSQL.UrlDecode(node.values[1]);
+        node.values[1] = Strings.UrlDecode(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
 
-        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
+        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
         return null;
     }
-    private static ScriptResult SaveCsv(in ScriptNode node) {
+    private static ScriptResult N_SaveCsv(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
         for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
@@ -1857,20 +1858,20 @@ static class Scripts {
             text.Append("\n");
         }
 
-        node.values[1] = NoSQL.UrlDecode(node.values[1]);
+        node.values[1] = Strings.UrlDecode(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
 
-        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
+        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
         return null;
     }
-    private static ScriptResult SaveJson(in ScriptNode node) {
+    private static ScriptResult N_SaveJson(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("{\"array\": [");
@@ -1907,20 +1908,20 @@ static class Scripts {
         text.AppendLine();
         text.Append("]}");
 
-        node.values[1] = NoSQL.UrlDecode(node.values[1]);
+        node.values[1] = Strings.UrlDecode(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
 
-        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
+        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
         return null;
     }
-    private static ScriptResult SaveXml(in ScriptNode node) {
+    private static ScriptResult N_SaveXml(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -1936,7 +1937,7 @@ static class Scripts {
                 string symbols = "!\"#$%&'()*+'-./:;<=>?@[\\]^`{|}~";
                 k = k.Replace(" ", "_");
 
-                foreach (char c in symbols) 
+                foreach (char c in symbols)
                     k = k.Replace(c, '_');
 
                 foreach (char c in symbols)
@@ -1960,38 +1961,38 @@ static class Scripts {
 
         text.AppendLine("</array>");
 
-        node.values[1] = NoSQL.UrlDecode(node.values[1]);
+        node.values[1] = Strings.UrlDecode(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
 
-        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
+        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
     }
-    private static ScriptResult SaveHtml(in ScriptNode node) {
+    private static ScriptResult N_SaveHtml(in ScriptNode node) {
         StringBuilder text = new StringBuilder();
 
         //TODO:
-        node.values[1] = NoSQL.UrlDecode(node.values[1]);
+        node.values[1] = Strings.UrlDecode(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
             filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
 
-        DirectoryInfo dir_reports = new DirectoryInfo(DIR_SCRIPTS_REPORTS);
+        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
+        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         return null;
     }
-    private static ScriptResult SendEMail(in ScriptNode node) { return null; }
-    
+    private static ScriptResult N_SendEMail(in ScriptNode node) { return null; }
+
     public static string EscapeFilename(string filename) {
         return filename.Replace("\\", "_")
             .Replace("/", "_")
@@ -2003,12 +2004,12 @@ static class Scripts {
             .Replace(">", "_")
             .Replace("|", "_");
     }
-    
-    
+
+
     private static async Task<IPAddress[]> DnsLookupAsync(string hostname) {
         if (hostname is null) return null;
         try {
-            return await Dns.GetHostAddressesAsync(hostname);
+            return await System.Net.Dns.GetHostAddressesAsync(hostname);
         } catch {
             return null;
         }
@@ -2017,7 +2018,7 @@ static class Scripts {
     private static async Task<IPHostEntry> ReverseDnsLookupAsync(string ip) {
         if (ip is null) return null;
         try {
-            return await Dns.GetHostEntryAsync(ip);
+            return await System.Net.Dns.GetHostEntryAsync(ip);
         } catch {
             return null;
         }
@@ -2025,7 +2026,7 @@ static class Scripts {
 
     private static async Task<PingReply> PingAsync(string host, int timeout) {
         if (host is null) return null;
-        Ping p = new Ping();
+        System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
         try {
             PingReply reply = await p.SendPingAsync(host, timeout);
             p.Dispose();
@@ -2043,8 +2044,8 @@ static class Scripts {
         string route = "";
         string lastAddress = "";
 
-        using (Ping p = new Ping())
-            for (short i = 1; i < ttl; i++) 
+        using (System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping())
+            for (short i = 1; i < ttl; i++)
                 try {
                     PingReply reply = await p.SendPingAsync(host, timeout, TRACE_ROUTE_BUFFER, new PingOptions(i, true));
 
@@ -2063,21 +2064,21 @@ static class Scripts {
                     else
                         break;
 
-                } catch {}
+                } catch { }
 
-        if (route.EndsWith(";")) return route.Substring(0, route.Length -1);
+        if (route.EndsWith(";")) return route.Substring(0, route.Length - 1);
         return route;
     }
 
     private static async Task<string> PortScanAsync(string host, int from, int to) {
         if (host is null) return "";
-        
-        bool[] t = await Tools.PortsScanAsync(host, from, to);
+
+        bool[] t = await  PortScan.PortsScanAsync(host, from, to);
 
         string ports = "";
-        for (int i = 0; i < t.Length; i++) 
-            if (t[i]) 
-                ports += (from+i).ToString() + ";"; 
+        for (int i = 0; i < t.Length; i++)
+            if (t[i])
+                ports += (from + i).ToString() + ";";
 
         if (ports.EndsWith(";")) return ports.Substring(0, ports.Length - 1);
         return ports;
@@ -2085,4 +2086,4 @@ static class Scripts {
 
 }
 
-public class ScriptWrapper {}
+public class ScriptWrapper { }

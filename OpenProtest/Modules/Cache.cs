@@ -4,15 +4,18 @@
 #define SVG_TO_SVGZ
 
 #if !DEBUG
-    #define MINIFY
-    #define BUNDLING
+#define MINIFY
+#define BUNDLING
 #endif
+
 
 using System;
 using System.Text;
+using System.Collections;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
-using System.Collections;
+using System.IO.Compression;
 
 class Cache {
     public struct CacheEntry {
@@ -26,28 +29,38 @@ class Cache {
         {"htm",  "text/html"},
         {"html", "text/html"},
         {"css",  "text/css"},
-        {"js",   "application/javascript"},
         {"png",  "image/png"},
         {"jpg",  "image/jpeg"},
         {"webp", "image/webp"},
+        {"ico",  "image/x-icon"},
         {"svg",  "image/svg+xml"},
-        {"svgz", "image/svg+xml"}
+        {"svgz", "image/svg+xml"},
+        {"js",   "application/javascript"},
+        {"json", "application/json"},
+        {"zip",  "application"}
     };
 
     public readonly string birthdate;
-    public Hashtable hash = new Hashtable();
     private readonly string path;
+    public Hashtable hash = new Hashtable();
 
     public Cache(in string path) {
-        birthdate = DateTime.Now.ToString(NoSQL.DATETIME_FORMAT);
+        birthdate = DateTime.Now.ToString(Strings.DATETIME_FORMAT);
 
         this.path = path;
         LoadExternalContentType();
         LoadCache();
     }
 
+    public void ReloadCache() {
+        LoadExternalContentType();
+        hash.Clear();
+        LoadCache();
+        GC.Collect();
+    }
+
     private bool LoadExternalContentType() {
-        FileInfo file = new FileInfo($"{Directory.GetCurrentDirectory()}\\knowlage\\content_type.txt");
+        FileInfo file = new FileInfo(Strings.FILE_CONTENT_TYPE);
         if (!file.Exists) return false;
 
         using StreamReader fileReader = new StreamReader(file.FullName);
@@ -56,7 +69,7 @@ class Cache {
             line = line.Trim();
             if (line.StartsWith("#")) continue;
 
-            string[] split = line.Split((char) 9);
+            string[] split = line.Split((char)9);
             if (split.Length < 2) continue;
 
             split[0] = split[0].Trim().ToLower();
@@ -82,7 +95,6 @@ class Cache {
 
         DirectoryInfo dir = new DirectoryInfo(path);
         if (!dir.Exists) return false;
-
 
         Hashtable files = new Hashtable();
 
@@ -111,14 +123,8 @@ class Cache {
 #if MINIFY //minify
             if (extention == "htm" || extention == "html" || extention == "css" || extention == "js") {
                 _preMinify += bytes.LongLength;
-                if (name.Length > 0) bytes = Minify(bytes);
+                bytes = Minify(bytes);
                 _postMinify += bytes.LongLength;
-            }
-#endif
-
-#if BUNDLING //bundling
-            if (extention == "htm" || extention == "html") {
-                bytes = Bundling(bytes, files, ref _bundling);
             }
 #endif
 
@@ -132,9 +138,8 @@ class Cache {
                 _postGZip += bytes.LongLength;
             }
 
-
 #if SVG_TO_SVGZ //svgz
-            if (extention == "svg" && !files.ContainsKey($"{o.Key}z")) 
+            if (extention == "svg" && !files.ContainsKey($"{o.Key}z"))
                 toSVG.Add($"{file.FullName}z", gzip);
 #endif
 
@@ -161,6 +166,17 @@ class Cache {
             _totalCache += entry.webp?.LongLength ?? 0;
         }
 
+#if BUNDLING //bundling
+        foreach (DictionaryEntry o in hash) {
+            string name = (string)o.Key;
+            if (name.Length == 0 || name.EndsWith(".htm") || name.EndsWith(".html")) {
+                CacheEntry entry = (CacheEntry)o.Value;
+                entry.bytes = Bundling(entry.bytes, files, ref _bundling);
+                entry.gzip = GZip(entry.bytes);
+            }
+        }
+#endif
+
 #if SVG_TO_SVGZ //svgz
         foreach (DictionaryEntry o in toSVG) {
             string name = o.Key.ToString();
@@ -178,14 +194,16 @@ class Cache {
         }
 #endif
 
+#if DEBUG
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine($" Bundling  : {_bundling, 5} files");
+        Console.WriteLine($" Bundling  : {_bundling,5} files");
         Console.WriteLine($" Minify    : {100 * _postMinify / (_preMinify + 1),5}% {_preMinify,10} -> {_postMinify,8}");
         Console.WriteLine($" GZip      : {100 * _postGZip / (_preGZip + 1),5}% {_preGZip,10} -> {_postGZip,8}");
         Console.WriteLine($" Webp      : {100 * _postWebp / (_preWebp + 1),5}% {_preWebp,10} -> {_postWebp,8}");
-
         Console.WriteLine();
         Console.ResetColor();
+#endif
+
         return true;
     }
 
@@ -195,21 +213,21 @@ class Cache {
         name = name.Replace("\\", "/");
 
         if (name.ToLower() == "thumbs.db") return;
-        
+
         FileStream fs = new FileStream(f.FullName, FileMode.Open, FileAccess.Read);
         BinaryReader br = new BinaryReader(fs);
 
-        byte[] bytes = br.ReadBytes((int) f.Length);
-        
+        byte[] bytes = br.ReadBytes((int)f.Length);
+
         br.Dispose();
         fs.Dispose();
 
         //Console.WriteLine((char)bytes[0] + " " + (char)bytes[1] + " "  + (char)bytes[2] + " " + (char)bytes[3] + " " + (char)bytes[4] + "    " + name);
 
         files.Add(name, bytes);
-    }    
+    }
 
-    public byte[] Bundling(byte[] bytes, Hashtable files, ref int _bundling) { //bundling
+    private byte[] Bundling(byte[] bytes, Hashtable files, ref int _bundling) { //bundling
         string str = Encoding.UTF8.GetString(bytes);
 
         //bundling js
@@ -234,24 +252,13 @@ class Cache {
             }
         }
 
-        //bundling svg in js url
-        /*string svgjsPattern = "url\\(\\w+\\.svg\\)";
-        foreach (Match match in Regex.Matches(str, svgjsPattern, RegexOptions.IgnoreCase)) {
-            string svgFilename = Regex.Match(match.Value, "\\w+\\.svg").Value;
-            if (files.ContainsKey(svgFilename)) {
-                string replacement = $"url(\"data:image/svg+xml;utf8,{Encoding.Default.GetString(((byte[])files[svgFilename])).Replace("\n", "").Replace("\"","'")}\")";
-                str = str.Replace(match.Value, replacement);
-                _bundling++;
-            }
-        }*/
-
         return Encoding.Default.GetBytes(str);
     }
 
-    public byte[] Minify(byte[] bytes) {
+    private byte[] Minify(byte[] bytes) {
         string[] lines = Encoding.Default.GetString(bytes).Split('\n');
 
-        for (int i=0; i< lines.Length; i++) {
+        for (int i = 0; i < lines.Length; i++) {
             lines[i] = lines[i].Trim();
 
             lines[i] = lines[i].Replace("\t", " ");
@@ -262,8 +269,6 @@ class Cache {
 
             //lines[i] = lines[i].Replace(" + ", "+"); because css calc() sux
             //lines[i] = lines[i].Replace(" - ", "-"); because css calc() sux
-            //lines[i] = lines[i].Replace(" * ", "*");
-            //lines[i] = lines[i].Replace(" / ", "/");
             lines[i] = lines[i].Replace(" = ", "=");
             lines[i] = lines[i].Replace(" == ", "==");
             lines[i] = lines[i].Replace(" === ", "===");
@@ -274,24 +279,19 @@ class Cache {
             lines[i] = lines[i].Replace("} }", "}}");
 
             lines[i] = lines[i].Replace(") {", "){");
-            /*lines[i] = lines[i].Replace("{ ", "{");
-            lines[i] = lines[i].Replace(" {", "{");
-
-            lines[i] = lines[i].Replace("} ", "}");
-            lines[i] = lines[i].Replace(" }", "}");*/
-
+  
             lines[i] = lines[i].Replace("; ", ";");
             lines[i] = lines[i].Replace(": ", ":");
 
             //lines[i] = lines[i].Replace(";}", "}"); // <--
-          
+
             //remove single line comment
             int p = lines[i].IndexOf("//");
-            if (p > -1) 
+            if (p > -1)
                 if (p == 0)
                     lines[i] = "";
                 else if (lines[i][p - 1] != ':') //if not a url, e.g: http://...
-                    lines[i] = lines[i].Substring(0, p);            
+                    lines[i] = lines[i].Substring(0, p);
         }
 
         string mini = "";
@@ -312,14 +312,14 @@ class Cache {
         return Encoding.UTF8.GetBytes(mini);
     }
 
-    public static byte[] GZip(byte[] bytes) {
+    private static byte[] GZip(byte[] bytes) {
         if (bytes is null) return null;
 
         MemoryStream mem = new MemoryStream();
-        using (System.IO.Compression.GZipStream zip = new System.IO.Compression.GZipStream(mem, System.IO.Compression.CompressionMode.Compress, true)) {
+        using (GZipStream zip = new GZipStream(mem, System.IO.Compression.CompressionMode.Compress, true)) {
             zip.Write(bytes, 0, bytes.Length);
         }
-   
+
         byte[] arary = mem.ToArray();
         mem.Dispose();
 

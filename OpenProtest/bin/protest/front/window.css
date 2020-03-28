@@ -1,0 +1,350 @@
+.window {
+    position: absolute;
+    background-color: rgb(64,64,64);
+    border-radius: 8px 8px 0 0;
+    border-top: 1px solid rgb(84, 84, 84);
+    box-shadow: rgba(0,0,0,.85) 0 0 8px;
+
+    transition-timing-function: ease-out;
+    min-width: 240px;
+    min-height: 160px;
+
+    animation: win-open .2s;
+}
+
+.window > .content {
+    position: absolute;
+    /*background-color: rgb(224,224,224);*/
+    color: rgb(224,224,244);
+    left: 2px;
+    right: 2px;
+    top: 30px;
+    bottom: 2px;
+
+    transition: top .2s;
+}
+
+.window > .title {
+    position: absolute;
+    cursor: default;
+    left: 24px;
+    right: 84px;
+    top: 0px;
+    height: 30px;
+
+    color: whitesmoke;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 16px;
+    line-height: 28px;
+}
+
+.window > .control {
+    position: absolute;
+    top: 4px;
+    width: 22px;
+    height: 22px;
+    background-color: rgb(192,192,192);
+    border-radius: 50%;
+    transition: .2s;
+}
+
+.window > .control:hover {
+    filter: brightness(115%);
+}
+
+.window > .control:active {
+    filter: brightness(85%);
+    transform: scale(.95);
+}
+
+.window > .close-box {
+    right: 4px;
+    background-color: var(--theme-color);
+    background-image: url(res/close.svgz);
+}
+.window > .maximize-box {
+    right: 30px;
+    background-image: url(res/maximize.svgz);
+}
+.window > .minimize-box {
+    right: 56px;
+    background-image: url(res/minimize.svgz);
+}
+
+.window > .resize {
+    position: absolute;
+    z-index: 5;
+    bottom: 0;
+    right: 0;
+    cursor: nw-resize;
+
+	border-bottom: 16px solid rgb(128,128,128);
+	border-left: 16px solid transparent;
+}
+
+.window > .titleicon {
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    width: 20px;
+    height: 20px;
+
+    background-repeat: no-repeat;
+    background-size: cover;
+    filter: invert(1);
+}
+
+.window > .toolbox {
+    position: absolute;
+    left: 48px;
+    top: 2px;
+    width: auto;
+    height: 22px;
+
+    transition: .2s;
+}
+
+.window > .toolbox > div {
+    float: left;
+    width: 22px;
+    height: 22px;
+    border-radius: 2px;
+    margin-right: 4px;
+
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+.window > .toolbox > div:hover { background-color: rgba(128,128,128,.5); }
+.window > .toolbox > div:active { background-color: rgba(0,0,0,.2); }
+
+.window > .toolbox > div > * {
+    position: relative;
+    top: 22px;
+    width: 250px;
+
+    background-color: rgb(96,96,96);
+    color: white;
+    box-shadow: rgba(0,0,0,.6) 0 4px 4px;
+
+    visibility: hidden;
+    transform-origin: 0 0;
+    transform: scaleY(.01);
+    transition: .1s;
+    
+    text-transform: capitalize;
+    transition-delay: .1s;
+}
+
+.window > .toolbox > div > *:focus,
+.window > .toolbox > div:hover > * {
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+}
+
+.window > .toolbox > div > div {
+    min-height: 100px;
+    border-radius: 2px;
+    overflow-y: auto;
+}
+
+.window > .toolbox > div > div > div {
+    padding: 8px 8px;
+}
+
+.window > .toolbox > div > div > div:hover {
+    background-color: rgb(72,72,72);
+}
+
+.window > .toolbox > div > input[type="text"] {
+    outline: none;
+    border: 0;
+    padding: 8px;
+    text-transform: initial;
+}
+
+.window > .dialog {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 30px;
+    bottom: 0;
+    overflow: hidden;
+    animation: fade-in .2s;
+    transition: .2s;
+}
+
+.window > .dialog > div:first-child {
+    position: relative;
+    min-width: 236px;
+    max-width: 960px;
+    width: 80%;
+    height: calc(100% - 2px);
+    margin: 0 auto;
+    background-color: rgb(203,203,203);
+    box-shadow: rgba(0,0,0,.4) 0 12px 16px;
+
+    transform-origin: 50% 0;
+    animation: roll-in .2s;
+}
+
+.window > .confirm {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 8px 8px 0 0;
+    background-color: rgba(64,64,64,.8);
+    overflow: hidden;
+    animation: fade-in .2s;
+    transition: .2s;
+}
+
+.window > .confirm > div {
+    text-align: center;
+    font-weight: 500;
+    background-color: rgb(203,203,203);
+    height: auto;
+    width: 400px;
+    max-width: 100%;
+    margin: 0px auto;
+    
+    box-shadow: rgba(0,0,0,.2) 0 12px 16px;
+    border-radius: 0 0 8px 8px;
+    padding: 32px 8px 16px 8px;
+    box-sizing: border-box;
+
+    transform-origin: 50% 0;
+    animation: roll-in .2s;
+}
+
+.bar-icon {
+    top: 2px;
+    width: 60px;
+    height: 60px;
+    border-radius: 12.5%;
+    position: absolute;
+
+    transition: .2s,
+                filter 0s;
+}
+
+.bar-icon > .icon {
+    position: relative;
+    left: 4%;
+    top: 4%;
+    width: 91.5%;
+    height: 91.5%;
+    z-index: 0;
+
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    transition: filter 0s;
+    animation: task-icon-open .25s ease-in-out;
+}
+
+.no-results:empty::after {
+    display: block;
+    content: "no results..";
+    font-size: 24px;
+    color: #888;
+    margin-top: 20px;
+    height: 100px;
+    text-align: center;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url(res/l_clear.svgz);
+    background-size: 64px 64px;
+    background-position-y: 36px;
+    animation: fade-in .4s ease-in;
+}
+
+.no-entries:empty::after {
+    display: block;
+    content: "no results..";
+    font-size: 24px;
+    color: #888;
+    margin-top: 20px;
+    height: 100px;
+    text-align: center;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url(res/l_clear.svgz);
+    background-size: 64px 64px;
+    background-position-y: 36px;
+    animation: fade-in .4s ease-in;
+}
+
+
+.waitbox {
+    position: absolute;
+    width: 100%;
+    height: 64px;
+}
+
+.waitbox > div {
+    width: 32px;
+    height: 32px;
+    margin: 64px auto;
+    border-radius: 50%;
+    background-color: rgb(224,224,224);
+    box-shadow: rgb(224,224,224) 0 0 8px 2px;
+    animation: wait-animation 2s ease infinite;
+}
+
+.wait-label {
+    position: absolute;
+    margin: 127px auto;
+    width: 100%;
+    text-align: center;
+    color: rgb(224,224,224);
+    font-weight: bold;
+    animation: delayed-fade-in 2s ease-in 1;
+}
+
+@keyframes wait-animation {
+    0% { transform: translateX(175px); }
+    50% { transform: translateX(-175px); }
+    100% { transform: translateX(175px); }
+}
+
+@keyframes win-open {
+    0%{   transform: scale(1.1); filter: opacity(0); }
+    100%{ transform: scale(1);   filter: opacity(1); }
+}
+
+@keyframes task-icon-open {
+    0%{   transform: scale(.5); }
+    60%{  transform: scale(1.1); }
+    100%{ transform: scale(1); }
+}
+
+@keyframes focus-pop {
+    0%{   transform: scale(1); }
+    50%{  transform: scale(1.05); }
+    100%{ transform: scale(1); }
+}
+
+@keyframes fade-in {
+    0%{   filter: opacity(0); }
+    100%{ filter: opacity(1); }
+}
+
+@keyframes roll-in {
+    0%{   transform: translateY(-100%); }
+    100%{ transform: translateY(0%); }
+}
+
+@keyframes slide-in {
+    0%{   transform: translateX(100%); }
+    100%{ transform: translateY(0%); }
+}
+
+@keyframes wakeup {
+    0%{ background-color: #444; visibility:visible; opacity:1; z-index: 100;}
+    100%{ background-color: transparent; visibility:visible; opacity:1; z-index: 100;}
+}

@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Net;
 using System.Text;
 using System.IO;
-using System.Collections.Generic;
+using System.Threading;
 
-static class Session {
+public static class Session {
     public static Hashtable ip_access = new Hashtable();
     public static Hashtable user_access = new Hashtable();
 
     //private static Hashtable onTimeOut = new Hashtable(); //TODO:
-    private static readonly Hashtable sessions = new Hashtable();
+    //private static readonly Hashtable sessions = new Hashtable();
+    //private static readonly object session_lock = new object();
 
-    private static readonly object session_lock = new object();
+    private static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
 
     public static long HOUR = 36000000000;
     public static long SESSION_TIMEOUT = 120; //5 days
@@ -23,7 +26,6 @@ static class Session {
         public string ip;
         public string username;
         public DateTime loginTime;
-        //public DateTime lastAction;
         public string sessionId;
     }
 
@@ -36,79 +38,38 @@ static class Session {
 
             string username = split[0];
             string password = split[1];
-            
+
             if (!user_access.ContainsKey("*") && !user_access.ContainsKey(username))
                 return null;
-        
-            bool auth = ActiveDir.AuthenticateDomainUser(username, password);
-        
+
+            bool auth = ActiveDirectory.AuthenticateDomainUser(username, password);
+
             if (auth) {
-                string token = GrantAccess(in remoteIp, in username);
+                string sessionId = GrantAccess(in remoteIp, in username);
+                if (sessionId is null) return null;
 
                 Cookie cookie = new Cookie() {
                     Name = "sessionid",
-                    Value = token,
+                    Value = sessionId,
                     HttpOnly = true,
                     //Domain = ctx.Request.UserHostName, //TODO: brakes reverce proxy
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };
-                    
-                ActionLog.Action($"{username}@{remoteIp}", "Login successfuly");
+
+                Logging.Action($"{username}@{remoteIp}", "Login successfuly");
 
                 ctx.Response.AppendCookie(cookie);
-                return token;
+                return sessionId;
             }
 
-            ActionLog.Action($"{username}@{remoteIp}", "Unsuccessful login attempt");
+            Logging.Action($"{username}@{remoteIp}", "Unsuccessful login attempt");
             return null;
 
-        } catch (Exception ex){
-            ErrorLog.Err(ex);
+        } catch (Exception ex) {
+            Logging.Err(ex);
         }
 
         return null;
-    }
-
-    public static string GetUsername(string sessionId) {
-        lock (session_lock) {
-            if (sessions.ContainsKey(sessionId))
-                return ((SessionEntry)sessions[sessionId]).username;
-        }
-
-        return null;
-    }
-
-    public static string GetSessionId(in HttpListenerContext ctx) {
-        string sessionId = null;
-        for (int i = 0; i < ctx.Request.Cookies.Count; i++)
-            if (ctx.Request.Cookies[i].Name == "sessionid") {
-                sessionId = ctx.Request.Cookies[i].Value;
-                break;
-            }
-
-        return sessionId;
-    }
-
-    public static long GetSessionLife(string sessionId) {
-        if (!sessions.ContainsKey(sessionId)) return -1;
-        SessionEntry entry = (SessionEntry)sessions[sessionId];
-
-        return (HOUR * SESSION_TIMEOUT - DateTime.Now.Ticks + entry.loginTime.Ticks) / 10000000; //to seconds
-    }
-
-    public static byte[] Logout(in HttpListenerContext ctx) {
-        string sessionId = GetSessionId(ctx);
-
-        if (sessionId is null) return new byte[] { };
-        if (!sessions.ContainsKey(sessionId)) return new byte[] { };
-
-        lock (session_lock) 
-            sessions.Remove(sessionId);
-
-        lock (Tools.pt_lock)
-            Tools.PublicTransportationSessionSearchAndDestroy(sessionId);
-
-        return Tools.OK.Array;
     }
 
     public static string GrantAccess(in string remoteIp, in string username) {
@@ -116,32 +77,50 @@ static class Session {
             ip = remoteIp,
             username = username,
             loginTime = DateTime.Now,
-            //lastAction = DateTime.Now,
             sessionId = GetSHA(DateTime.Now.ToString())
         };
 
-        lock (session_lock) {
-            sessions[newEntry.sessionId] = newEntry;
-        }
+        if (sessions.TryAdd(newEntry.sessionId, newEntry)) 
+            return newEntry.sessionId;
 
-        return newEntry.sessionId;
+        Thread.Sleep(5);
+        if (sessions.TryAdd(newEntry.sessionId, newEntry)) //retry
+            return newEntry.sessionId;
+
+        return null;
+    }
+
+    public static bool RevokeAccess(in HttpListenerContext ctx) {
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        if (sessionId is null) return false;
+        return RevokeAccess(sessionId);
+    }
+    public static bool RevokeAccess(in string sessionId) {
+        if (sessionId is null) return false;
+        if (!sessions.ContainsKey(sessionId)) return false;
+
+
+        if (sessions.TryRemove(sessionId, out _)) 
+            return true;
+
+        Thread.Sleep(5);
+        if (sessions.TryRemove(sessionId, out _)) //retry
+            return true;
+
+        return false;
     }
 
     public static bool CheckAccess(in HttpListenerContext ctx, in string remoteIp) {
-        string sessionId = GetSessionId(ctx);
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
-
         return CheckAccess(in sessionId, in remoteIp);
     }
     public static bool CheckAccess(in string sessionId, in string remoteIp) {
         if (!sessions.ContainsKey(sessionId)) return false;
 
-        SessionEntry entry = (SessionEntry)sessions[sessionId];
-
+        SessionEntry entry = sessions[sessionId];
         if (DateTime.Now.Ticks - entry.loginTime.Ticks > HOUR * SESSION_TIMEOUT) { //expired
-            lock (session_lock) {
-                sessions.Remove(entry.sessionId);
-            }
+            RevokeAccess(sessionId);
             return false;
         }
 
@@ -151,51 +130,11 @@ static class Session {
         return false;
     }
 
-    public static byte[] GetClients() {
-        List<string> remove = new List<string>();
-        StringBuilder sb = new StringBuilder();
+    public static string GetUsername(string sessionId) {
+        if (sessions.ContainsKey(sessionId))
+            return sessions[sessionId].username;
 
-        lock (session_lock) {
-            foreach (DictionaryEntry o in sessions) {
-                SessionEntry e = (SessionEntry)o.Value;
-                if (DateTime.Now.Ticks - e.loginTime.Ticks > HOUR * SESSION_TIMEOUT) //expired
-                    remove.Add(e.sessionId);
-            }
-
-            foreach (string o in remove)
-                sessions.Remove(o);
-            
-            foreach (DictionaryEntry o in sessions) {
-                SessionEntry e = (SessionEntry)o.Value;
-                sb.Append($"{e.ip}{(char)127}{e.loginTime}{(char)127}{e.username}{(char)127}{e.sessionId.Substring(0,8)}{(char)127}");
-            }
-        }
-
-        return Encoding.UTF8.GetBytes(sb.ToString());
-    }
-
-    public static byte[] KickClients(string[] para) {
-        string ip = "";
-        string hash = "";
-        for (int i = 1; i < para.Length; i++) {
-            if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);
-            if (para[i].StartsWith("hash=")) hash = para[i].Substring(5);
-        }
-               
-        foreach (DictionaryEntry o in sessions) {
-            SessionEntry e = (SessionEntry)o.Value;
-            if (e.ip == ip && e.sessionId.StartsWith(hash)) {
-                lock (session_lock) 
-                    sessions.Remove(e.sessionId);
-
-                lock (Tools.pt_lock) 
-                    Tools.PublicTransportationSessionSearchAndDestroy(e.sessionId);
-                
-                return Tools.OK.Array;
-            }
-        }
-
-        return Tools.OK.Array;
+        return null;
     }
 
     public static string GetSHA(string value) {
@@ -208,7 +147,7 @@ static class Session {
         StringBuilder sb = new StringBuilder();
         foreach (byte b in bytes)
             sb.Append(b.ToString("x2")); //byte to hex
-        
+
         return sb.ToString();
     }
 

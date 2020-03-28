@@ -1,0 +1,38 @@
+.v-tabs {
+    position: absolute;
+    width: 150px;
+    margin-top: 24px;
+    left: 25px;
+}
+
+.v-tabs > div {
+    margin: 4px 0 4px 4px;
+    padding: 10px;
+    color: rgb(224,224,224);
+    background-color: rgb(72,72,72);
+    border-radius: 8px 0 0 8px;
+    text-align: right;
+    padding-right: 16px;
+}
+
+.v-tabs > div:hover {
+    transition: .2s;
+    background-color: rgb(88,88,88) !important;
+}
+
+.v-tabs > div:active {
+    transition: .2s;
+    background-color: rgb(80,80,80) !important;
+}
+
+.v-tab-body {
+    position: absolute;
+    left: 175px;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    background-color: rgb(96,96,96);
+    border-radius: 4px;
+    padding: 4px;
+    overflow: hidden;
+}

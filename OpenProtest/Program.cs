@@ -1,6 +1,6 @@
 ﻿/*
     Pro-test
-    Copyright (C) 2019 veniware
+    Copyright (C) 2020 veniware
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,170 +14,86 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+    Pro-test is open source.
+    For more information, visit https://github.com/veniware/OpenProtest
  */
 
 using System;
 using System.Threading;
 using System.Security.Principal;
+using System.Diagnostics;
+using System.Linq;
+using System.IO;
+using System.IO.Compression;
 
 class Program {
-    static readonly string CONFIG_FILENAME = "config.txt";
-
-    public static string DB_KEY;
-    public static string PRESHARED_KEY;
+    public static string db_key;
+    public static string preshared_key;
 
     public static bool force_registry_keys = false;
 
-    static bool http_enable = true;
-    static string http_ip = "127.0.0.1";
-    static ushort http_port = 80;
-    static readonly ThreadPriority http_priority = ThreadPriority.AboveNormal;
+    private static bool http_enable = true;
+    private static string http_ip = "127.0.0.1";
+    private static ushort http_port = 80;
+    private static readonly ThreadPriority http_priority = ThreadPriority.AboveNormal;
+    private static HttpMainListener mainListener;
 
-    static bool addressbook_enable = true;
-    static string addressbook_ip = "*";
-    static ushort addressbook_port = 911;
-    static readonly ThreadPriority addressbook_priority = ThreadPriority.Normal;
-
-    static bool protest_enable = false;
-    static string protest_ip = "*";
-    static ushort protest_port = 3210;
-    static readonly ThreadPriority protest_priority = ThreadPriority.AboveNormal;
-
-    private static bool IsElevated() {
-        return (new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole(WindowsBuiltInRole.Administrator);
-    }
-
-    private static void LoadConfig() {
-        if (!System.IO.File.Exists(CONFIG_FILENAME)) return;
-
-        System.IO.StreamReader fileReader = new System.IO.StreamReader(CONFIG_FILENAME);
-        string line;
-        while ((line = fileReader.ReadLine()) != null) {
-            line = line.Trim();
-            if (line.StartsWith("#")) continue;
-
-            string[] split = line.Split('=');
-            if (split.Length < 2) continue;
-
-            split[0] = split[0].Trim().ToLower();
-            split[1] = split[1].Trim();
-
-            switch (split[0]) {
-                case "key":
-                    DB_KEY = split[1];
-                    PRESHARED_KEY = split[1];
-                    break;
-
-                case "force_registry_keys":
-                    force_registry_keys = (split[1] == "true");
-                    break;
-
-                case "http_enable":
-                    http_enable = (split[1] == "true");
-                    break;
-                case "http_ip":
-                    http_ip = split[1];
-                    break;
-                case "http_port":
-                    http_port = ushort.Parse(split[1]);
-                    break;
-
-                case "addressbook_enable":
-                    addressbook_enable = (split[1] == "true");
-                    break;
-                case "addressbook_ip":
-                    addressbook_ip = split[1];
-                    break;
-                case "addressbook_port":
-                    addressbook_port = ushort.Parse(split[1]);
-                    break;
-
-                case "protest_app_enable":
-                    protest_enable = (split[1] == "true");
-                    break;
-                case "protest_ip":
-                    protest_ip = split[1];
-                    break;
-                case "protest_port":
-                    protest_port = ushort.Parse(split[1]);
-                    break;
-
-                case "ip_access":
-                    Session.ip_access.Add(split[1], null);
-                    break;
-
-                case "user_access":
-                    Session.user_access.Add(split[1], null);
-                    break;
-            }
-        }
-
-        fileReader.Close();
-    }
-
-    private static void LoadDB() {
-        Tools.ExtractZippedKnowlageFile();
-        NoSQL.LoadEquip();
-        NoSQL.LoadUsers();
-        Scripts.LoadTools();
-
-        Console.WriteLine($"Total equip loaded: {NoSQL.equip.Count}");
-        Console.WriteLine($"Total users loaded: {NoSQL.users.Count}");
-        Console.WriteLine();
-    }
-
-    static bool CheckUrlSegmentLengthRegKey() {
-        string value;
-        bool isOk = true;
-
-        try {
-            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\Services\HTTP\Parameters");
-            value = key.GetValue("UrlSegmentMaxLength").ToString();
-            key.Close();
-        } catch {
-            value = "";
-            isOk = false;
-        }
-
-        if (force_registry_keys && (!isOk || value != "0"))
-            try {
-                Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\Services\HTTP\Parameters");
-                key.SetValue("UrlSegmentMaxLength", 0, Microsoft.Win32.RegistryValueKind.DWord);
-                key.SetValue("DisableServerHeader", 2, Microsoft.Win32.RegistryValueKind.DWord);
-                key.Close();
-                Console.BackgroundColor = ConsoleColor.Red;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("!! Reboot your machine !!");
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.WriteLine();
-            } catch {
-                ErrorLog.Err(@"Failed to update Registry Key (HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\HTTP\Parameters)");
-            }
-
-        return false;
-    }
+    private static bool addressbook_enable = false;
+    private static string addressbook_ip = "*";
+    private static ushort addressbook_port = 911;
+    private static readonly ThreadPriority addressbook_priority = ThreadPriority.Normal;
+    private static HttpAddressBookListener addressbookListener;
 
     static void Main(string[] args) {
         Console.Title = "Pro-test";
+        DrawProTest();
+        Console.WriteLine();
+
+        Strings.InitDirs();
+        Thread.Sleep(50);
+
+#if DEBUG
+        Console.WriteLine("  - Debug mode");
+#endif
+
+        if (IsElevated()) Console.WriteLine("  - Elevated");
+        else SelfElevate();
+
+        Console.WriteLine();
+        LoadConfig();
+        ExtractZippedKnowlageFile();
+        StartServices();
+
+        Thread.Sleep(1000);
+        Console.ResetColor();
+        Console.WriteLine();
+        while (true) {
+            Console.Write(">");
+            UserCommand(Console.ReadLine());
+        }
+    }
+
+    private static void DrawProTest() {
+        string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         const string PRO_TEST =
-            "###############  ###################\n" +
-            "#    #    #   #  #    #   #   #    #\n" +
-            "#  # #  # # # #####  ## ###  ###  ##\n" +
-            "#  # #  # # # #   #  ##  ##   ##  #\n" +
-            "#    #   ##   #####  ## ##### ##  #\n" +
-            "#  ###  # #   #  ##  ##   #   ##  #\n" +
-            "###############  ##################\n";
-        
+        "                                    \n" +
+        " #### #### ###    #### ### ### #### \n" +
+        " ## # ## # # #     ##  #   ##   ##  \n" +
+        " ## # ## # # # ### ##  ##  ###  ## \n" +
+        " #### ###  ###     ##  #     #  ## \n" +
+        " ##   ## # ###     ##  ### ###  ## \n";
+
         Console.WriteLine();
         Console.Write("  ");
         for (int i = 0; i < PRO_TEST.Length; i++)
-            if (PRO_TEST[i] == '#') {
+            if (PRO_TEST[i] == ' ') {
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.BackgroundColor = ConsoleColor.Gray;
-                Console.Write("#");
+                Console.Write(" ");
 
-            } else if (PRO_TEST[i] == ' ') {
+            } else if (PRO_TEST[i] == '#') {
                 Console.ForegroundColor = ConsoleColor.Black;
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.Write("#");
@@ -185,64 +101,119 @@ class Program {
             } else if (PRO_TEST[i] == '\n') {
                 Console.ForegroundColor = ConsoleColor.Black;
                 Console.BackgroundColor = ConsoleColor.Black;
-                Console.WriteLine("#");
+                Console.WriteLine(".");
                 Console.Write("  ");
             }
 
-        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.BackgroundColor = ConsoleColor.Gray;
+        for (int i = 0; i < 35 - version.Length - 2; i++)
+            Console.Write(" ");
+        Console.Write($"v{version} ");
+        Console.ForegroundColor = ConsoleColor.Black;
         Console.BackgroundColor = ConsoleColor.Black;
-        Console.WriteLine($"{"v" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(),35}");
-        Console.WriteLine();
+        Console.WriteLine(".");
+        Console.ResetColor();
+    }
 
-        Console.ForegroundColor = ConsoleColor.White;
-#if DEBUG
-        Console.WriteLine(" - Debug mode");
-#endif
-        if (IsElevated()) {
-            Console.WriteLine(" - Elevated");
-            Console.WriteLine();
+    private static void SelfElevate() {
+        try {
+            ProcessStartInfo info = new ProcessStartInfo(System.Reflection.Assembly.GetEntryAssembly().Location) {
+                Verb = "runas"
+            };
+
+            Process process = new Process {
+                StartInfo = info
+            };
+
+            process.Start();
+            Environment.Exit(0);
+        } catch (Exception ex) {
+            Logging.Err($"  - Unable to elevate: {ex.Message}");
         }
+    }
 
-        CheckUrlSegmentLengthRegKey();
+    private static bool IsElevated() {
+        return (new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole(WindowsBuiltInRole.Administrator);
+    }
 
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        LoadConfig();
-        NoSQL.InitDirs();
-        LoadDB();
+    private static void LoadConfig() {
+        //TODO
+    }
 
+    public static void ExtractZippedKnowlageFile() {
+        DirectoryInfo dirIp = new DirectoryInfo(Strings.DIR_IP_LOCATION);
+        FileInfo fileIpZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\ip.zip");
+        if (!dirIp.Exists && fileIpZip.Exists)
+            try {
+                Console.Write("Extracting ip.zip");
+                ZipFile.ExtractToDirectory(fileIpZip.FullName, dirIp.FullName);
+                Console.WriteLine("\t Done");
+            } catch (Exception ex) {
+                Logging.Err(ex);
+            }
+
+        DirectoryInfo dirProxy = new DirectoryInfo(Strings.DIR_PROXY);
+        FileInfo fileProxyZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\proxy.zip");
+        if (!dirProxy.Exists && fileProxyZip.Exists)
+            try {
+                Console.Write("Extracting proxy.zip");
+                ZipFile.ExtractToDirectory(fileProxyZip.FullName, dirProxy.FullName);
+                Console.WriteLine("\t Done");
+            } catch (Exception ex) {
+                Logging.Err(ex);
+            }
+
+        Console.WriteLine();
+    }
+
+    private static void StartServices() {
         if (http_enable) {
-            Console.WriteLine($"HTTP:    \t {http_ip}:{http_port}");
-            Thread thread = new Thread(() => { Http http = new Http(http_ip, http_port, $"{System.IO.Directory.GetCurrentDirectory()}\\protest_front"); });
+            Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_ip, http_port, Strings.DIR_FRONTEND); });
             thread.Priority = http_priority;
             thread.Start();
         }
 
         if (addressbook_enable) {
-            Console.WriteLine($"Address Book:\t {addressbook_ip}:{addressbook_port}");
-            Thread thread = new Thread(() => { AddressBook http = new AddressBook(addressbook_ip, addressbook_port, $"{System.IO.Directory.GetCurrentDirectory()}\\addressbook_front"); });
+            Thread thread = new Thread(() => { addressbookListener = new HttpAddressBookListener(addressbook_ip, addressbook_port, Strings.DIR_ADDRESSBOOK); });
             thread.Priority = addressbook_priority;
             thread.Start();
         }
+    }
 
-        if (protest_enable) {
-            Console.WriteLine($"Pro-test App:\t {protest_ip}:{protest_port}");
-            Thread thread = new Thread(() => { Http http = new Http(protest_ip, protest_port, $"{System.IO.Directory.GetCurrentDirectory()}\\"); });
-            thread.Priority = protest_priority;
-            thread.Start();
+    private static void UserCommand(in string command) {
+        switch (command.ToLower()) {
+            case "logo":
+            case "version":
+                DrawProTest();
+                break;
+
+            case "reload":
+                mainListener?.cache?.ReloadCache();
+                addressbookListener?.cache?.ReloadCache();
+                break;
+
+            case "restart":
+                try {
+                    new Process {
+                        StartInfo = new ProcessStartInfo(System.Reflection.Assembly.GetEntryAssembly().Location)
+                    }.Start();
+                    Environment.Exit(0);
+                } catch {}
+                break;
+
+            case "elevate":
+                if (IsElevated())
+                    Console.WriteLine("Process is already elevated.");
+                else
+                    SelfElevate();
+                break;
+
+            default:
+                break;
         }
 
-        Console.ResetColor();
         Console.WriteLine();
-        new Thread(() => {
-            Thread.Sleep(3000);
-            NoSQL.FindDuplicates(NoSQL.equip, "IP");
-            NoSQL.FindDuplicates(NoSQL.users, "USERNAME");
-        }).Start();
-
-        //TODO: BandwidthMonitor.StartTask();
-
-#if DEBUG
-        //while (true) { Console.ReadLine(); }
-#endif
     }
+
 }
