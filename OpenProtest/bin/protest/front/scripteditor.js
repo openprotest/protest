@@ -118,7 +118,7 @@ const Script_GetColumns = callback => {
 };
 
 class ScriptEditor extends Window {
-    constructor(filename = null) {
+    constructor(args) {
         if (document.head.querySelectorAll("link[href$='scripts.css']").length == 0) {
             let csslink = document.createElement("link");
             csslink.rel = "stylesheet";
@@ -129,10 +129,12 @@ class ScriptEditor extends Window {
         super([64,64,64]);
         this.setIcon("res/scriptfile.svgz");
 
-        if (filename === null) 
+        this.args = args ? args : { file: null };
+
+        if (this.args.file === null) 
             this.setTitle("Script editor");
         else
-            this.setTitle("Script editor - " + filename);
+            this.setTitle("Script editor - " + this.args.file);
 
         let waitbox = document.createElement("span");
         waitbox.className = "waitbox";
@@ -140,9 +142,6 @@ class ScriptEditor extends Window {
         waitbox.appendChild(document.createElement("div"));
         this.content.appendChild(waitbox);
        
-
-        this.filename = filename;
-
         this.nodes = [];
         this.links = [];
         this.selectedTool = null;
@@ -158,8 +157,8 @@ class ScriptEditor extends Window {
             this.content.removeChild(waitbox);
             this.InitizialeComponent();
 
-            if (filename)
-                 this.LoadScript(filename);
+            if (this.args.file)
+                this.LoadScript();
         });
 
         setTimeout(() => {
@@ -336,8 +335,8 @@ class ScriptEditor extends Window {
         this.LoadToolsList(null);
     }
 
-    LoadScript(filename) {
-        let xhr = new XMLHttpRequest(filename);
+    LoadScript() {
+        let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let lines = xhr.responseText.split("\n");
@@ -390,7 +389,7 @@ class ScriptEditor extends Window {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "loadscript&filename=" + filename, true);
+        xhr.open("GET", "loadscript&filename=" + this.args.file, true);
         xhr.send();
     }
 
@@ -462,21 +461,21 @@ class ScriptEditor extends Window {
         };
 
         let now = new Date();
-        if (this.filename === null) this.filename = now.getFullYear() + "_" + now.getMonth() + "_" + now.getDate() + "_" + now.getHours() + "_" + now.getMinutes() + "_" + now.getTime();
+        if (this.args.file === null) this.args.file = now.getFullYear() + "_" + now.getMonth() + "_" + now.getDate() + "_" + now.getHours() + "_" + now.getMinutes() + "_" + now.getTime();
 
-        xhr.open("POST", "savescript&filename=" + this.filename, true);
+        xhr.open("POST", "savescript&filename=" + this.args.file, true);
         xhr.send(payload);
     }
 
     RunScript() {
-        if (this.filename === null) {
+        if (this.args.file === null) {
             this.ConfirmBox("Save the script file and try again.", true);
             return;
         }
 
         this.SaveScript(response => {
             if (response != "ok") {
-                this.ConfirmBox("Failed to save script file", false);
+                this.ConfirmBox("Failed to save script file", true);
                 return;
             }
 
@@ -490,7 +489,7 @@ class ScriptEditor extends Window {
                     this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", "runscript&filename=" + this.filename, true);
+            xhr.open("GET", "runscript&filename=" + this.args.file, true);
             xhr.send();
         });
     }
@@ -1132,8 +1131,8 @@ class ScriptNode {
         let columns = [];
 
         switch (this.name) {
-            case "Protest users":       columns = Script_PtUserColumns; break;
-            case "Protest equipment":   columns = Script_PtEquipColumns; break;
+            case "Pro-test users":       columns = Script_PtUserColumns; break;
+            case "Pro-test equipment":   columns = Script_PtEquipColumns; break;
             case "Domain users":        columns = Script_AdUserColumns; break;
             case "Domain workstations": columns = Script_AdWorkstationColumns; break;
             case "Domain groups":       columns = Script_AdGroupsColumns; break;

@@ -1,4 +1,4 @@
-/* Windows.js is a vanilla javascript UI library, designed for Pro-test 3.1
+/* windows.js is a vanilla javascript library, designed for Pro-test 4.0
  * Created by Andreas Venizelou, 2020.
  * Released into the public domain.
  */
@@ -108,6 +108,12 @@ class Window {
             btnMinimize.className = "control minimize-box";
             this.win.appendChild(btnMinimize);
         }
+
+        /*let btnPopout = document.createElement("div");
+        if (!onMobile) {
+            btnPopout.className = "control popout-box";
+            this.win.appendChild(btnPopout);
+        }*/
         
         this.toolbox = document.createElement("div");
         this.toolbox.className = "toolbox";
@@ -182,6 +188,7 @@ class Window {
         btnClose.onmousedown =
         btnMaximize.onmousedown =
         btnMinimize.onmousedown =
+        //btnPopout.onmousedown = 
         (event)=> {
             $w.control_pressed = this;
             this.BringToFront();
@@ -191,6 +198,7 @@ class Window {
         btnClose.onmouseup    = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Close();} };
         btnMaximize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Toogle();} };
         btnMinimize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Minimize();} };
+        //btnPopout.onmouseup   = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Popout();} };
     
         this.setTitle("Title");
         $w.array.push(this);
@@ -318,6 +326,26 @@ class Window {
             this.BringToFront();
             setTimeout(()=> { this.win.style.animation = "none" }, 200);
         }
+    }
+
+    Popout() {
+        let newWin= window.open(
+            "", "",
+            "width=" + this.win.clientWidth +
+            ",height=" + this.win.clientHeight +
+            ",left=" + this.win.offsetLeft +
+            ",top=" + this.win.offsetTop);
+
+        newWin.document.title = this.lblTitle.innerHTML;
+        newWin.document.head.appendChild
+        newWin.document.body.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
+
+        newWin.document.body.appendChild(this.content);
+
+        let css1 = document.createElement("link");
+        css1.rel = "stylesheet";
+        css1.href = "tools.css";
+        newWin.document.head.appendChild(css1);
     }
 
     BringToFront() {

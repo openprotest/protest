@@ -166,8 +166,8 @@
 
 .list-element > .list-graph {
     position: absolute;
-    left: 30%;
-    right: 128px;
+    left: 35%;
+    right: 72px;
     top: 0;
     height: 100%;
 }
@@ -295,6 +295,16 @@
 
 .collapsed-box > div:first-child:before {
     transform: rotate(-90deg);
+}
+
+.expaned-box > table {
+    border-collapse: collapse;
+}
+.expaned-box > table > tr > td {
+    padding: 2px 8px;
+}
+.expaned-box > table > tr:hover {
+    background-color: var(--theme-color);
 }
 
 .task-icon-dots {

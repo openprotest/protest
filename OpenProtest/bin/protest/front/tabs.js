@@ -23,17 +23,30 @@ class Tabs extends Window {
         this.content.appendChild(this.tabsContainer);
     }
 
-    AddTab(name, icon) {
+    AddTab(text, icon, subtext) {
         let newTab = document.createElement("div");
-        newTab.innerHTML = name;
         this.tabsContainer.appendChild(newTab);
         this.tabsList.push(newTab);
 
+        let divIcon = document.createElement("div");
+        divIcon.style.backgroundImage = "url(" + icon + ")";
+        newTab.appendChild(divIcon);
+
+        let divText = document.createElement("div");
+        divText.innerHTML = text;
+        newTab.appendChild(divText);
+
+        if (subtext) {
+            let divSubtext = document.createElement("div");
+            divSubtext.innerHTML = subtext;
+            newTab.appendChild(divSubtext);
+        }
+
         newTab.addEventListener("click", event => {
             for (let i = 0; i < this.tabsList.length; i++)
-                this.tabsList[i].style.backgroundColor = "rgb(72,72,72)";
+                this.tabsList[i].className = "";
 
-            newTab.style.backgroundColor = "rgb(96,96,96)";
+            newTab.className = "v-tab-selected";
         });
 
         return newTab;

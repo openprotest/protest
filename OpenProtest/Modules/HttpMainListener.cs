@@ -189,6 +189,6 @@ class HttpMainListener : Http {
     }
 
     public override string ToString() {
-        return $"Protest listening on {this.ip}:{this.port}";
+        return $"Pro-test listening on {this.ip}:{this.port}";
     }
 }

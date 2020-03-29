@@ -12,8 +12,8 @@
 #[name]	[css-color]	[type,label]*X
 
 Data source
-Protest users		rgb(32,32,32)	o,Users
-Protest equipment	rgb(32,32,32)	o,Equipment
+Pro-test users		rgb(32,32,32)	o,Users
+Pro-test equipment	rgb(32,32,32)	o,Equipment
 Domain users		rgb(32,32,32)	o,Users
 Domain workstations	rgb(32,32,32)	o,Workstations
 Domain groups		rgb(32,32,32)	o,Groups

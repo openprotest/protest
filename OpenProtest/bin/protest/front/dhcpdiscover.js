@@ -155,7 +155,7 @@ class DhcpDiscover extends Window {
                     }
 
                     title.onclick = ()=> {
-                        div.className = table.style.display == "none" ? "collapsed-box" : "expaned-box";
+                        div.className = table.style.display == "none" ? "expaned-box" : "collapsed-box";
                         table.style.display = table.style.display == "none" ? "block" : "none";
                     };
                 }

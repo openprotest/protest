@@ -592,8 +592,8 @@ public static class Scripts {
 
     private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log) {
         switch (node.name) {
-            case "Protest users": return N_ProtestUsers(node);
-            case "Protest equipment": return N_ProtestEquip(node);
+            case "Pro-test users": return N_ProtestUsers(node);
+            case "Pro-test equipment": return N_ProtestEquip(node);
             case "Domain users": return N_DomainUsers(node);
             case "Domain workstations": return N_DomainWorkstation(node);
             case "Domain groups": return N_DomainGroups(node);

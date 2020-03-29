@@ -36,7 +36,7 @@ document.body.onunload = () => { storeSession(); };
 
     let primaryScripts = [
         "sidemenu.js",
-        "window.js",
+        "window.js"
     ];
 
     let secondaryScripts = [

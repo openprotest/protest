@@ -412,8 +412,6 @@
     <Content Include="bin\protest\front\res\databasesearch.svg" />
     <Content Include="bin\protest\front\res\database_equip.svg" />
     <Content Include="bin\protest\front\res\database_users.svg" />
-    <Content Include="bin\protest\front\res\db_gear_mask.svg" />
-    <Content Include="bin\protest\front\res\db_user_mask.svg" />
     <Content Include="bin\protest\front\res\department.svg" />
     <Content Include="bin\protest\front\res\dhcp.svg" />
     <Content Include="bin\protest\front\res\disable.svg" />

@@ -11,6 +11,9 @@ class Scripts extends Tabs {
         this.setTitle("Scripts");
         this.setIcon("res/scripts.svgz");
 
+        this.tabsContainer.style.width = "150px";
+        this.subContent.style.left = "175px";
+
         this.payload = null;
         this.selectedTab = 0;
 
@@ -60,7 +63,6 @@ class Scripts extends Tabs {
         };
 
         this.ListScripts();
-        //this.ShowScripts();
     }
 
     ShowScripts() {
@@ -100,7 +102,7 @@ class Scripts extends Tabs {
             let remove = document.createElement("div");
             script.appendChild(remove);
 
-            script.ondblclick = () => { new ScriptEditor(name); };
+            script.ondblclick = () => { new ScriptEditor({file: name}); };
 
             remove.onclick = event => {
                 event.stopPropagation();
@@ -274,24 +276,24 @@ class Scripts extends Tabs {
                 if (split.length < 1) return;
                 this.payload = split;
 
-                this.btnScripts.style.backgroundColor = "rgb(72,72,72)";
-                this.btnReports.style.backgroundColor = "rgb(72,72,72)";
-                this.btnOngoing.style.backgroundColor = "rgb(72,72,72)";
+                this.btnScripts.className = "";
+                this.btnReports.className = "";
+                this.btnOngoing.className = "";
 
                 switch (this.selectedTab) {
                     case 0:
                         this.ShowScripts();
-                        this.btnScripts.style.backgroundColor = "rgb(96,96,96)";
+                        this.btnScripts.className = "v-tab-selected";
                         break;
 
                     case 1:
                         this.ShowReports();
-                        this.btnReports.style.backgroundColor = "rgb(96,96,96)";
+                        this.btnReports.className = "v-tab-selected";
                         break;
 
                     case 2:
                         this.ShowOngoing();
-                        this.btnOngoing.style.backgroundColor = "rgb(96,96,96)";
+                        this.btnOngoing.className = "v-tab-selected";
                         break;
                 }
 

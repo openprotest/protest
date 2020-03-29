@@ -2,9 +2,7 @@ class MacLookup extends Console {
     constructor(args) {
         super();
 
-        this.args = args ? args : {
-            entries: []
-        };
+        this.args = args ? args : { entries: [] };
 
         this.hashtable = {}; //contains all elements
 

@@ -73,6 +73,10 @@
     background-image: url(res/minimize.svgz);
 }
 
+.window > .popout-box {
+    right: 92px;
+}
+
 .window > .resize {
     position: absolute;
     z-index: 5;
