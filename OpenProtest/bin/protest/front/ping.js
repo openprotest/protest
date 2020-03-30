@@ -325,11 +325,11 @@ class Ping extends Console {
 
         if (hostname.indexOf(";", 0) > -1) {
             let ips = hostname.split(";");
-            for (let i = 0; i < ips.length; i++) this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) this.Filter(ips[i].trim());
 
         } else if (hostname.indexOf(",", 0) > -1) {
             let ips = hostname.split(",");
-            for (let i = 0; i < ips.length; i++) this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) this.Filter(ips[i].trim());
 
         } else if (hostname.indexOf("-", 0) > -1) {
             let split = hostname.split("-");

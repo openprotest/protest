@@ -250,11 +250,11 @@ class PortScan extends Console {
     Filter(hostname) {
         if (hostname.indexOf(";", 0) > -1) {
             let ips = hostname.split(";");
-            for (let i = 0; i < ips.length; i++) this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) this.Filter(ips[i].trim());
 
         } else if (hostname.indexOf(",", 0) > -1) {
             let ips = hostname.split(",");
-            for (let i = 0; i < ips.length; i++) this.Add(ips[i].trim());
+            for (let i = 0; i < ips.length; i++) this.Filter(ips[i].trim());
 
         } else if (hostname.indexOf("-", 0) > -1) {
             let split = hostname.split("-");
@@ -276,7 +276,33 @@ class PortScan extends Console {
                 } while (i);
                 return b;
             }
-            for (let i = istart; i <= iend; i++) this.Add(intToBytes(i).join("."));
+            for (let i = istart; i <= iend; i++)
+                this.Add(intToBytes(i).join("."));
+
+        } else if (hostname.indexOf("/", 0) > -1) {
+            let cidr = parseInt(hostname.split("/")[1].trim());
+            if (isNaN(cidr)) return;
+
+            let ip = hostname.split("/")[0].trim();
+            let ipBytes = ip.split(".");
+            if (ipBytes.length != 4) return;
+
+            ipBytes = ipBytes.map(o => parseInt(o));
+
+            let bits = "1".repeat(cidr).padEnd(32, "0");
+            let mask = [];
+            mask.push(parseInt(bits.substr(0, 8), 2));
+            mask.push(parseInt(bits.substr(8, 8), 2));
+            mask.push(parseInt(bits.substr(16, 8), 2));
+            mask.push(parseInt(bits.substr(24, 8), 2));
+
+            let net = [], broadcast = [];
+            for (let i = 0; i < 4; i++) {
+                net.push(ipBytes[i] & mask[i]);
+                broadcast.push(ipBytes[i] | (255 - mask[i]));
+            }
+
+            this.Filter(net.join(".") + " - " + broadcast.join("."));
 
         } else {
             this.Add(hostname);
