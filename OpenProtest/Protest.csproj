@@ -68,6 +68,7 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
+    <Compile Include="Modules\Tools\Crypto.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
     <Compile Include="Modules\Tools\WebCheck.cs" />
     <Compile Include="Modules\Tools\Arp.cs" />
@@ -120,6 +121,7 @@
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\front\list.js" />
+    <Content Include="bin\protest\front\settings.js" />
     <Content Include="bin\protest\front\tabs.css" />
     <Content Include="bin\protest\front\tabs.js" />
     <Content Include="bin\protest\front\fetch.js" />

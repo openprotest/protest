@@ -74,14 +74,15 @@ public static class Strings {
         }
     }
 
-    public static string UrlDecode(string url) {
+    public static string ValitateUrl(string url) {
         string s = url;
+
+        //s = s.Replace("+", " ");
 
         s = s.Replace("%0D%0A", "\n");
         //s = s.Replace("%0A", "\n");
         //s = s.Replace("%0D", "\n");
 
-        //s = s.Replace("+", " ");
         s = s.Replace("%20", " ");
         s = s.Replace("%21", "!");
         s = s.Replace("%22", "\"");
@@ -118,12 +119,7 @@ public static class Strings {
         s = s.Replace("%7C", "|");
         s = s.Replace("%7D", "}");
         s = s.Replace("%7E", "~");
-
         s = s.Replace("%7F", ((char)127).ToString());
-
-        //s = s.Replace("%99", "™");
-        //s = s.Replace("%A9", "©");
-        //s = s.Replace("%AE", "®");
 
         return s;
     }

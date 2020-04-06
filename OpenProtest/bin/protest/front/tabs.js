@@ -29,7 +29,7 @@ class Tabs extends Window {
         this.tabsList.push(newTab);
 
         let divIcon = document.createElement("div");
-        divIcon.style.backgroundImage = "url(" + icon + ")";
+        if (icon) divIcon.style.backgroundImage = "url(" + icon + ")";
         newTab.appendChild(divIcon);
 
         let divText = document.createElement("div");

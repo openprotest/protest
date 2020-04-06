@@ -28,8 +28,8 @@ using System.IO;
 using System.IO.Compression;
 
 class Program {
-    public static string db_key;
-    public static string preshared_key;
+    public static string DB_KEY;
+    public static string PRESHARED_KEY;
 
     public static bool force_registry_keys = false;
 
@@ -57,7 +57,7 @@ class Program {
         Console.WriteLine("  - Debug mode");
 #endif
 
-        if (IsElevated()) Console.WriteLine("  - Elevated");
+        if (IsElevated()) Console.WriteLine("  - Elevated privileges");
         else SelfElevate();
 
         Console.WriteLine();

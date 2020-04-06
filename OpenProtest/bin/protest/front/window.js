@@ -337,12 +337,16 @@ class Window {
             ",top=" + this.win.offsetTop);
 
         newWin.document.title = this.lblTitle.innerHTML;
-        newWin.document.head.appendChild
         newWin.document.body.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
+
+        const favicon = document.createElement("link");
+        favicon.rel = "icon";
+        favicon.href = "res/icon24.png";
+        newWin.document.head.appendChild(favicon);
 
         newWin.document.body.appendChild(this.content);
 
-        let css1 = document.createElement("link");
+        const css1 = document.createElement("link");
         css1.rel = "stylesheet";
         css1.href = "tools.css";
         newWin.document.head.appendChild(css1);

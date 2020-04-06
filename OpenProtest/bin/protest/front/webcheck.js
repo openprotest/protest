@@ -116,7 +116,9 @@ class WebCheck extends Window {
             this.waitbox.style.display = "none";
         };
 
-        this.ws.onerror = (error) => { console.log(error); };
+        this.ws.onerror = (error) => {
+            this.ConfirmBox("Server is unavailable.", true);
+        };
     }
 
     Close() { //override

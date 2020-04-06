@@ -33,6 +33,8 @@ const TOOLS = [
 { lbl: "Pro-test clients",   ico: "res/ptclients.svgz",      f: arg => new Clients() }
 ];
 
+let sidemenu_dynamicicon = false;
+
 let sidemenu_isopen = false;
 let sidemenu_index = -1;
 let sidemenu_list = [];
@@ -45,9 +47,42 @@ SideMenu_Update("");
 
 btnSidemenu.onclick = event => { if (event.button == 0) SideMenu_Open(); };
 
+document.body.addEventListener("mousemove", event => {
+    if (!sidemenu_dynamicicon) return;
+    if (onMobile) return;
+    if (sidemenu_isopen) return;
+
+    let y = 0;
+    if (event.x < 128) y = event.y - 32;
+    if (event.x > 96) y *= (192 - event.x) / 96;
+
+    if (y < 8) {
+        y = 0;
+        btnSidemenu.style.borderRadius = "6px 8px 48px 8px";
+        btnSidemenu.style.height = "48px";
+        imgSearch.style.transform = "none";
+
+    } else if (y > container.clientHeight - 72) {
+        y = container.clientHeight - 48;
+        btnSidemenu.style.borderRadius = "8px 48px 8px 4px";
+        btnSidemenu.style.height = "48px";
+        imgSearch.style.transform = "translate(31px,6px) rotate(90deg)";
+
+    } else {
+        btnSidemenu.style.height = "64px";
+        btnSidemenu.style.borderRadius = "14px 40px 40px 14px";
+        imgSearch.style.transform = "translate(14px,4px) rotate(40deg)";
+    }
+
+    btnSidemenu.style.transform = "translateY(" + y + "px)";
+});
+
 container.onclick = event => {
     if (event == null) return;
-    if (event.clientX < 2 && event.clientY < window.innerHeight / 4 && event.clientY > 0) SideMenu_Open();
+    if (event.clientX > 2) return;
+
+    if (sidemenu_dynamicicon) SideMenu_Open();
+    else if (event.clientY < window.innerHeight / 4 && event.clientY > 0) SideMenu_Open();
 };
 
 document.body.onkeyup = event => {
@@ -139,6 +174,7 @@ btnCloseSidemenu.onclick = event => {
 };
 
 btnSettings.onclick = () => {
+    SideMenu_Close();
     new Settings();
 };
 
@@ -370,6 +406,10 @@ function SideMenu_Open() {
 
     btnSidemenu.style.borderRadius = "0";
     btnSidemenu.style.boxShadow = "none";
+
+    btnSidemenu.style.transform = "none";
+    btnSidemenu.style.height = "48px";
+
     imgSearch.style.transform = "scale(1.25)";
     txtSearch.style.visibility = "visible";
     btnCloseSidemenu.style.visibility = "visible";

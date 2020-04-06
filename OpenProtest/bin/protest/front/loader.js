@@ -60,7 +60,8 @@ document.body.onunload = () => { storeSession(); };
         "webcheck.js",
         "wmi.js",
         "scripts.js",
-        "scripteditor.js"
+        "scripteditor.js",
+        "settings.js"
     ];
 
     let count = 0;
@@ -165,6 +166,7 @@ function restoreSession() {
             case "Wmi"          : win = new Wmi(session[i].args); break;
             case "Scripts"      : win = new Scripts(session[i].args); break;
             case "ScriptEditor" : win = new ScriptEditor(session[i].args); break;
+            case "Settings"     : win = new Settings(); break;
         }
 
         if (win) {

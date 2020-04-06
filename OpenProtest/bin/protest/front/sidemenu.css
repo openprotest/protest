@@ -7,12 +7,13 @@
     z-index: 4;
     
     overflow: hidden;
-    border-radius: 0px 8px 48px 8px;
+    border-radius: 6px 8px 48px 8px;
     background: var(--toolbar-bg-rev);
     box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
     
-    transition: all .2s,
-                left 0s;
+    transition: border-radius .25s,
+        height .2s,
+        transform .05s;
 }
 
 #btnSidemenu > #imgSearch {
