@@ -10,24 +10,27 @@
     min-height: 32px;
     margin: 4px 0 4px 4px;
     padding: 4px;
-    color: rgb(224,224,224);
-    background: linear-gradient(90deg, rgba(72,72,72,0) 90%, rgba(16,16,16,.2) 100%);
-    background-color: rgb(72,72,72);
+    color: rgb(16,16,16);
+    background: linear-gradient(90deg, rgba(160,160,160,0) 90%, rgba(16,16,16,.2) 100%);
+    background-color: rgb(160,160,160);
     border-radius: 8px 0 0 8px;
+    transform: scaleX(.975);
+    transform-origin: 100%;
     transition: .2s;
 }
 
 .v-tabs > .v-tab-selected {
-    background: linear-gradient(90deg, rgb(96,96,96) 90%, rgb(96,96,96) 100%);
-    background-color: rgb(96,96,96);
+    background: linear-gradient(90deg, rgb(192,192,192) 90%, rgb(192,192,192) 100%);
+    background-color: rgb(192,192,192);
+    transform: scaleX(1);
 }
 
 .v-tabs > div:hover {
-    background-color: rgb(80,80,80) !important;
+    background-color: rgb(172,172,172) !important;
 }
 
 .v-tabs > div:active {
-    background-color: rgb(88,88,88) !important;
+    background-color: rgb(208,208,208) !important;
 }
 
 .v-tabs > div > div:nth-child(1) { /*icon*/
@@ -36,7 +39,6 @@
     top: calc(50% - 16px);
     width: 32px;
     height: 32px;
-    filter: invert(1);
     background-size: contain;
 }
 
@@ -47,6 +49,7 @@
     top: 8px;
     text-align: right;
     font-size: medium;
+    font-weight: 500;
 }
 
 .v-tabs > div > div:nth-child(3) { /*subtext*/
@@ -65,7 +68,8 @@
     right: 8px;
     top: 8px;
     bottom: 8px;
-    background-color: rgb(96,96,96);
+    background-color: rgb(192,192,192);
+    color: rgb(16,16,16);
     border-radius: 4px;
     padding: 4px;
     overflow: hidden;

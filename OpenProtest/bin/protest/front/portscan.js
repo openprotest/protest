@@ -118,7 +118,7 @@ class PortScan extends Console {
             let temp = this.args.entries;
             this.args.entries = [];
             for (let i = 0; i < temp.length; i++)
-                this.Add(temp[i]);
+                this.Push(temp[i]);
         }
 
         this.btnDownload.addEventListener("click", event => {
@@ -314,8 +314,6 @@ class PortScan extends Console {
             this.list.appendChild(this.hashtable[hostname].element);
             return;
         }
-
-        this.txtInput.className = "input-box-dark";
 
         let element = document.createElement("div");
         element.className = "list-element collapsible-box";

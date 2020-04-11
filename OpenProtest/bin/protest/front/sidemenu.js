@@ -63,8 +63,8 @@ document.body.addEventListener("mousemove", event => {
         imgSearch.style.transform = "none";
 
     } else if (y > container.clientHeight - 72) {
-        y = container.clientHeight - 48;
-        btnSidemenu.style.borderRadius = "8px 48px 8px 4px";
+        y = container.clientHeight - 49;
+        btnSidemenu.style.borderRadius = "8px 48px 8px 6px";
         btnSidemenu.style.height = "48px";
         imgSearch.style.transform = "translate(31px,6px) rotate(90deg)";
 

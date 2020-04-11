@@ -120,7 +120,9 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\license.txt" />
     <Content Include="bin\protest\front\list.js" />
+    <Content Include="bin\protest\front\res\gpl.svg" />
     <Content Include="bin\protest\front\settings.js" />
     <Content Include="bin\protest\front\tabs.css" />
     <Content Include="bin\protest\front\tabs.js" />

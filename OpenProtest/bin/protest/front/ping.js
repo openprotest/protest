@@ -40,7 +40,7 @@ class Ping extends Console {
             let temp = this.args.entries;
             this.args.entries = [];
             for (let i = 0; i < temp.length; i++) 
-                this.Add(temp[i]);
+                this.Push(temp[i]);
         }
 
         this.btnDownload.addEventListener("click", event => {
@@ -392,8 +392,6 @@ class Ping extends Console {
 
     Add(hostname) {
         if (hostname.length === 0) return;
-
-        this.txtInput.className = "input-box-dark";
 
         for (let key in this.hashtable)
             if (this.hashtable[key].hostname == hostname) {

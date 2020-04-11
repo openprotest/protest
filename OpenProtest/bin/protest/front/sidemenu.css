@@ -11,9 +11,9 @@
     background: var(--toolbar-bg-rev);
     box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
     
-    transition: border-radius .25s,
+    transition: border-radius .4s,
         height .2s,
-        transform .05s;
+        transform .0001s;
 }
 
 #btnSidemenu > #imgSearch {

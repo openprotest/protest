@@ -18,13 +18,13 @@ class HttpMainListener : Http {
             return;
         }
 
-        if (ctx.Request.UrlReferrer != null && !ctx.Request.UrlReferrer.IsLoopback)  //CSRF protection
+        /*if (ctx.Request.UrlReferrer != null && !ctx.Request.UrlReferrer.IsLoopback)  //CSRF protection
             if (ctx.Request.UrlReferrer.Host != ctx.Request.UserHostName.Split(':')[0]) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 ctx.Response.OutputStream.Write(Encoding.UTF8.GetBytes("403 Forbidden"), 0, 13);
                 ctx.Response.Close();
                 return;
-            }
+            }*/
 
         string url = ctx.Request.Url.AbsolutePath;
         string[] para = url.Split('&');
@@ -91,6 +91,9 @@ class HttpMainListener : Http {
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
             ctx.Response.AddHeader("Last-Modified", cache.birthdate);
             ctx.Response.AddHeader("Referrer-Policy", "no-referrer");
+
+            ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
+            //ctx.Response.AddHeader("Cache-Control", $"min-fresh={Cache.CACHE_CONTROL_MIN_FRESH}");
 
             Cache.CacheEntry entry = (Cache.CacheEntry)cache.hash[para[0]];
 

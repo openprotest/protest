@@ -19,9 +19,6 @@
     color: rgb(32,32,32);
 }
 
-.script-list > .script-list-item:hover > div:nth-child(1) {
-    filter: none;
-}
 
 .script-list > .script-list-item:hover > div:nth-child(5) {
     visibility: visible;
@@ -38,7 +35,6 @@
     top: 4px;
     width: 40px;
     height: 40px;
-    filter: brightness(6);
     background-size: contain;
 }
 

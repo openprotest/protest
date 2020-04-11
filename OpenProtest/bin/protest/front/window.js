@@ -33,7 +33,7 @@ document.body.onkeydown   = win_keydown;
 bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 
 class Window {
-    constructor(themeColor = [56, 56, 56]) {
+    constructor(themeColor = [56,56,56]) {
         this.isMaximized    = false;
         this.isMinimized    = false;
         this.isClosed       = false;

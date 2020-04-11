@@ -15,7 +15,7 @@ class LocateIp extends Console {
             let temp = this.args.entries;
             this.args.entries = [];
             for (let i = 0; i < temp.length; i++)
-                this.Add(temp[i]);
+                this.Push(temp[i]);
         }
     }
 
@@ -102,8 +102,6 @@ class LocateIp extends Console {
             this.list.appendChild(this.hashtable[ipaddr].element);
             return;
         }
-
-        this.txtInput.className = "input-box-dark";
 
         let element = document.createElement("div");
         element.className = "list-element collapsible-box";

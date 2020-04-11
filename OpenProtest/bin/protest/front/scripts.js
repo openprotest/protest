@@ -29,9 +29,9 @@ class Scripts extends Tabs {
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
 
-        this.btnScripts = this.AddTab("Scripts");
-        this.btnReports = this.AddTab("Reports");
-        this.btnOngoing = this.AddTab("Ongoing scripts");
+        this.tabScripts = this.AddTab("Scripts");
+        this.tabReports = this.AddTab("Reports");
+        this.tabOngoing = this.AddTab("Ongoing scripts");
 
         this.btnNew.onclick = () => this.AddNew();
         this.btnReload.onclick = () => this.ListScripts();
@@ -50,9 +50,9 @@ class Scripts extends Tabs {
         this.list.className = "script-list no-results";
         this.subContent.appendChild(this.list);
 
-        this.btnScripts.onclick = ()=> this.ShowScripts();
-        this.btnReports.onclick = ()=> this.ShowReports();
-        this.btnOngoing.onclick = ()=> this.ShowOngoing();
+        this.tabScripts.onclick = ()=> this.ShowScripts();
+        this.tabReports.onclick = ()=> this.ShowReports();
+        this.tabOngoing.onclick = ()=> this.ShowOngoing();
 
         this.txtFilter.oninput = () => {
             switch (this.selectedTab) {
@@ -89,6 +89,7 @@ class Scripts extends Tabs {
 
             let lblName = document.createElement("div");
             lblName.innerHTML = name;
+            lblName.style.fontWeight = "500";
             script.appendChild(lblName);
 
             let lblDate = document.createElement("div");
@@ -149,6 +150,7 @@ class Scripts extends Tabs {
 
             let lblName = document.createElement("div");
             lblName.innerHTML = name;
+            lblName.style.fontWeight = "500";
             script.appendChild(lblName);
 
             let lblDate = document.createElement("div");
@@ -209,6 +211,7 @@ class Scripts extends Tabs {
 
             let lblName = document.createElement("div");
             lblName.innerHTML = name;
+            lblName.style.fontWeight = "500";
             script.appendChild(lblName);
 
             let lblDate = document.createElement("div");
@@ -276,24 +279,24 @@ class Scripts extends Tabs {
                 if (split.length < 1) return;
                 this.payload = split;
 
-                this.btnScripts.className = "";
-                this.btnReports.className = "";
-                this.btnOngoing.className = "";
+                this.tabScripts.className = "";
+                this.tabReports.className = "";
+                this.tabOngoing.className = "";
 
                 switch (this.selectedTab) {
                     case 0:
                         this.ShowScripts();
-                        this.btnScripts.className = "v-tab-selected";
+                        this.tabScripts.className = "v-tab-selected";
                         break;
 
                     case 1:
                         this.ShowReports();
-                        this.btnReports.className = "v-tab-selected";
+                        this.tabReports.className = "v-tab-selected";
                         break;
 
                     case 2:
                         this.ShowOngoing();
-                        this.btnOngoing.className = "v-tab-selected";
+                        this.tabOngoing.className = "v-tab-selected";
                         break;
                 }
 

@@ -13,5 +13,25 @@ class Fetch extends Tabs {
         tabEquipDc.style.height = "40px";
         tabUsersDc.style.height = "40px";
         tabProtest.style.height = "40px";
+
+        tabEquipIp.onclick = () => this.ShowEquipIp();
+        tabEquipDc.onclick = () => this.ShowEquipDc();
+        tabUsersDc.onclick = () => this.ShowUsersDc();
+        tabProtest.onclick = () => this.ShowProtest();
+
+        tabEquipIp.className = "v-tab-selected";
+        tabEquipIp.onclick();
+    }
+
+    ShowEquipIp() {
+    }
+
+    ShowEquipDc() {
+    }
+
+    ShowUsersDc() {
+    }
+
+    ShowProtest() {
     }
 }

@@ -1,12 +1,8 @@
 class Console extends Window {
     constructor() {
         super();
-        //this.setTitle("");
-        //this.setIcon("");
 
         this.history = [];
-
-        this.task.style.backgroundColor = "rgb(56,56,56)";
 
         this.list = document.createElement("div");
         this.list.style.position = "absolute";
@@ -14,18 +10,21 @@ class Console extends Window {
         this.list.style.left = "0";
         this.list.style.right = "0";
         this.list.style.top = "0";
-        this.list.style.bottom = "28px";
+        this.list.style.bottom = "40px";
         this.list.className = "no-entries";
         this.content.appendChild(this.list);
 
         this.txtInput = document.createElement("input");
         this.txtInput.type = "text";
-        this.txtInput.style.position = "absolute";
-        this.txtInput.style.left = "0";
-        this.txtInput.style.width = "100%";
-        this.txtInput.style.bottom = "0px";
-        this.txtInput.className = "input-box-floatting";
         this.txtInput.placeholder = "hostname or ip";
+        this.txtInput.style.position  = "absolute";
+        this.txtInput.style.left      = "40px";
+        this.txtInput.style.bottom    = "40px";
+        this.txtInput.style.width     = "calc(100% - 80px)";
+        this.txtInput.style.margin    = "0";
+        this.txtInput.style.border    = "0";
+        this.txtInput.style.outline   = "none";
+        this.txtInput.style.boxSizing = "border-box";
         this.content.appendChild(this.txtInput);
 
         let historyIndex = -1;
@@ -73,7 +72,9 @@ class Console extends Window {
             return false;
         }
 
-        this.txtInput.className = "input-box-dark";
+        this.txtInput.style.left = "8px";
+        this.txtInput.style.bottom = "8px";
+        this.txtInput.style.width = "calc(100% - 16px)";
 
         if (this.history.includes(command))
             this.history.splice(this.history.indexOf(command), 1);

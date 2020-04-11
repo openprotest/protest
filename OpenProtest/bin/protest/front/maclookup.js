@@ -12,6 +12,13 @@ class MacLookup extends Console {
         this.txtInput.placeholder = "mac address";
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+
+        if (this.args.entries) { //restore entries from previous session
+            let temp = this.args.entries;
+            this.args.entries = [];
+            for (let i = 0; i < temp.length; i++)
+                this.Push(temp[i]);
+        }
     }
 
     Push(name) { //override
@@ -45,8 +52,6 @@ class MacLookup extends Console {
             this.list.appendChild(this.hashtable[macaddr].element);
             return;
         }
-
-        this.txtInput.className = "input-box-dark";
 
         let element = document.createElement("div");
         element.className = "list-element collapsible-box";

@@ -172,11 +172,14 @@ function restoreSession() {
         if (win) {
             if (session[i].isMaximized) win.Toogle();
             if (session[i].isMinimized) win.Minimize();
-            win.position         = session[i].position;
-            win.win.style.left   = session[i].left;
-            win.win.style.top    = session[i].top;
-            win.win.style.width  = session[i].width;
-            win.win.style.height = session[i].height;
+            win.position = session[i].position;
+
+            if (!$w.always_maxxed) {
+                win.win.style.left   = session[i].left;
+                win.win.style.top    = session[i].top;
+                win.win.style.width  = session[i].width;
+                win.win.style.height = session[i].height;
+            }
         }
     }
 }

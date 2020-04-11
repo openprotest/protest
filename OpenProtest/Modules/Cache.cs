@@ -40,6 +40,9 @@ class Cache {
         {"zip",  "application"}
     };
 
+    public const int CACHE_CONTROL_MIN_FRESH = 28_800; //8h
+    public const int CACHE_CONTROL_MAX_AGE = 86_400; //8h
+
     public readonly string birthdate;
     private readonly string path;
     public Hashtable hash = new Hashtable();
@@ -167,18 +170,27 @@ class Cache {
         }
 
 #if BUNDLING //bundling
+        Hashtable bundling = new Hashtable();
+
         foreach (DictionaryEntry o in hash) {
             string name = (string)o.Key;
             if (name.Length == 0 || name.EndsWith(".htm") || name.EndsWith(".html")) {
                 CacheEntry entry = (CacheEntry)o.Value;
-                entry.bytes = Bundling(entry.bytes, files, ref _bundling);
+                entry.bytes = Bundling(entry.bytes, ref _bundling);
                 entry.gzip = GZip(entry.bytes);
+                bundling.Add(name, entry);
             }
+        }
+
+        foreach (DictionaryEntry o in bundling) {
+            string name = (string)o.Key;
+            if (hash.ContainsKey(name)) hash.Remove(name);
+            hash.Add(name, o.Value);
         }
 #endif
 
 #if SVG_TO_SVGZ //svgz
-        foreach (DictionaryEntry o in toSVG) {
+            foreach (DictionaryEntry o in toSVG) {
             string name = o.Key.ToString();
             name = name.Replace($"{path}\\", "");
             name = name.Replace("\\", "/");
@@ -227,15 +239,15 @@ class Cache {
         files.Add(name, bytes);
     }
 
-    private byte[] Bundling(byte[] bytes, Hashtable files, ref int _bundling) { //bundling
+    private byte[] Bundling(byte[] bytes, ref int _bundling) { //bundling
         string str = Encoding.UTF8.GetString(bytes);
 
         //bundling js
         string scriptPattern = "<script\\ssrc=.\\w+\\.\\w+.></script>";
         foreach (Match match in Regex.Matches(str, scriptPattern, RegexOptions.IgnoreCase)) {
             string jsFilename = Regex.Match(match.Value, "\\w+\\.js").Value;
-            if (files.ContainsKey(jsFilename)) {
-                string replacement = $"<script>{Encoding.Default.GetString((byte[])files[jsFilename])}</script>";
+            if (hash.ContainsKey(jsFilename)) {
+                string replacement = $"<script>{Encoding.Default.GetString(((CacheEntry)hash[jsFilename]).bytes)}</script>";
                 str = str.Replace(match.Value, replacement);
                 _bundling++;
             }
@@ -245,8 +257,8 @@ class Cache {
         string stylePattern = "<link\\srel=.stylesheet.\\shref=.\\w+\\.css.\\s/>|<link\\srel=.stylesheet.\\shref=.\\w+\\.css./>";
         foreach (Match match in Regex.Matches(str, stylePattern, RegexOptions.IgnoreCase)) {
             string cssFilename = Regex.Match(match.Value, "\\w+\\.css").Value;
-            if (files.ContainsKey(cssFilename)) {
-                string replacement = $"<style>{Encoding.Default.GetString((byte[])files[cssFilename])}</style>";
+            if (hash.ContainsKey(cssFilename)) {
+                string replacement = $"<style>{Encoding.Default.GetString(((CacheEntry)hash[cssFilename]).bytes)}</style>";
                 str = str.Replace(match.Value, replacement);
                 _bundling++;
             }
@@ -308,6 +320,8 @@ class Cache {
             p0 = mini.IndexOf("/*");
             p1 = mini.IndexOf("*/");
         }
+
+        
 
         return Encoding.UTF8.GetBytes(mini);
     }
