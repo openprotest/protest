@@ -89,6 +89,11 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
     <None Include="bin\protest\addressbook\icon.png.webp" />
+    <None Include="bin\protest\front\opensans300.ttf" />
+    <None Include="bin\protest\front\opensans400.ttf" />
+    <None Include="bin\protest\front\opensans500.ttf" />
+    <None Include="bin\protest\front\opensans700.ttf" />
+    <None Include="bin\protest\front\opensans900.ttf" />
     <None Include="bin\protest\front\res\icon144.png.webp" />
     <None Include="bin\protest\front\res\icon192.png.webp" />
     <None Include="bin\protest\front\res\icon24.png.webp" />
