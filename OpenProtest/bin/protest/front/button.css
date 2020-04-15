@@ -32,13 +32,13 @@ button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, i
 }
 
 @keyframes inner-glow {
-    0%   { box-shadow: rgba(255,102,0,.8) 0 0 4px 2px, rgba(255,102,0,1) 0 0 1px 1px inset; }
-    50%  { box-shadow: rgba(255,102,0,.2) 0 0 4px 2px, rgba(255,102,0,1) 0 0 1px 1px inset; }
-    100% { box-shadow: rgba(255,102,0,.8) 0 0 4px 2px, rgba(255,102,0,1) 0 0 1px 1px inset; }
+    0%   { box-shadow: var(--theme-color) 0 0 4px 2px, var(--theme-color) 0 0 1px 1px inset; }
+    50%  { box-shadow: transparent 0 0 4px 2px, var(--theme-color) 0 0 1px 1px inset; }
+    100% { box-shadow: var(--theme-color) 0 0 4px 2px, var(--theme-color) 0 0 1px 1px inset; }
 }
 
 @keyframes inner-glow-ligth {
-    0%   { box-shadow: rgba(255,102,0,.8) 0 0 2px 1px, rgba(255,102,0,1) 0 0 1px 1px inset; }
-    50%  { box-shadow: rgba(255,102,0,.2) 0 0 2px 1px, rgba(255,102,0,1) 0 0 1px 1px inset; }
-    100% { box-shadow: rgba(255,102,0,.8) 0 0 2px 1px, rgba(255,102,0,1) 0 0 1px 1px inset; }
+    0%   { box-shadow: var(--theme-color) 0 0 2px 1px, var(--theme-color) 0 0 1px 1px inset; }
+    50%  { box-shadow: transparent 0 0 2px 1px, var(--theme-color) 0 0 1px 1px inset; }
+    100% { box-shadow: var(--theme-color) 0 0 2px 1px, var(--theme-color) 0 0 1px 1px inset; }
 }

@@ -326,7 +326,7 @@
 }
 
 @keyframes task-icon-open {
-    0%{   transform: scale(.5); }
+    0%{   transform: scale(.8); }
     60%{  transform: scale(1.1); }
     100%{ transform: scale(1); }
 }

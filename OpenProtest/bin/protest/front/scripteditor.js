@@ -1021,7 +1021,7 @@ class ScriptNode {
 
         this.titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
         this.titleText.innerHTML = tool.name;
-        this.titleText.setAttribute("font-weight", "600");
+        this.titleText.setAttribute("font-weight", "500");
         this.titleText.setAttribute("dominant-baseline", "middle");
         this.titleText.setAttribute("text-anchor", "middle");
         this.titleText.setAttribute("x", 100);

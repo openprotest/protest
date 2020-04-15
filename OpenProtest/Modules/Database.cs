@@ -77,8 +77,6 @@ class Database {
     }
 
 
-
-
     public static byte[] GetValue(Hashtable table, string[] para) {
         string filename = "", property = "";
         for (int i = 1; i < para.Length; i++) {

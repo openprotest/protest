@@ -479,8 +479,6 @@ class Window {
             btnOK     : btnOK,
             btnCancel : btnCancel
         };
-
-        return [btnOK, innerBox];
     }
 
     AfterResize() { } //overridable

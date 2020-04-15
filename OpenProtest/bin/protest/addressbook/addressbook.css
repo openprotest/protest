@@ -1,8 +1,3 @@
-@font-face {
-    font-family: "Segoe UI";
-    src: local("Segoe UI") url("segoeui.ttf");
-}
-
 ::selection {
     background: #f32;
     color: #fff;
@@ -54,7 +49,7 @@ body {
 #title {
     position: absolute;
     font-size: 32px;
-    font-weight: 600;
+    font-weight: 500;
     left: 24px;
     top: 8px;
     cursor: default;

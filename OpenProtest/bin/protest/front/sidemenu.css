@@ -121,7 +121,7 @@
     width: calc(33.33% - 4px);
     height: 96px;
     color: rgb(32,32,32);
-    font-size: 15px;
+    font-size: 14px;
     background-color: rgb(208,208,208);
     background-repeat: no-repeat;
     background-size: 64px 64px;
@@ -147,7 +147,7 @@
 .sidemenu-square-item > div {
     position: relative;
     height: 22px;
-    top: 68px;
+    top: 72px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -174,7 +174,7 @@
     line-height: 2.1;
 
     color: #C0C0C0;
-    background-color: rgb(48,48,48);
+    background-color: rgb(64,64,64);
     background-repeat: no-repeat;
     background-size: 32px 32px;
     background-position: 4px 2px;
@@ -194,9 +194,9 @@
 }
 
 #btnSettings:hover, #btnLogout:hover {
-    background-color: rgb(64,64,64);
+    background-color: rgb(72,72,72);
 }
 
 #btnSettings:active, #btnLogout:active {
-    background-color: rgb(48,48,48);
+    background-color: rgb(56,56,56);
 } 

@@ -9,10 +9,10 @@ class Fetch extends Tabs {
         let tabUsersDc = this.AddTab("Users",     "res/user.svgz", "from DC");
         let tabProtest = this.AddTab("Database",  "res/logo.svgz", "from other Pro-test");
 
-        tabEquipIp.style.height = "40px";
-        tabEquipDc.style.height = "40px";
-        tabUsersDc.style.height = "40px";
-        tabProtest.style.height = "40px";
+        tabEquipIp.style.height = "42px";
+        tabEquipDc.style.height = "42px";
+        tabUsersDc.style.height = "42px";
+        tabProtest.style.height = "42px";
 
         tabEquipIp.onclick = () => this.ShowEquipIp();
         tabEquipDc.onclick = () => this.ShowEquipDc();

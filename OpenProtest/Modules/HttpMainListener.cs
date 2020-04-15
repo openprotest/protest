@@ -92,7 +92,7 @@ class HttpMainListener : Http {
             ctx.Response.AddHeader("Last-Modified", cache.birthdate);
             ctx.Response.AddHeader("Referrer-Policy", "no-referrer");
 
-            ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
+            //ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
             //ctx.Response.AddHeader("Cache-Control", $"min-fresh={Cache.CACHE_CONTROL_MIN_FRESH}");
 
             Cache.CacheEntry entry = (Cache.CacheEntry)cache.hash[para[0]];

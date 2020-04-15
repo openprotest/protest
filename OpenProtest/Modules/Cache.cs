@@ -41,7 +41,7 @@ class Cache {
     };
 
     public const int CACHE_CONTROL_MIN_FRESH = 28_800; //8h
-    public const int CACHE_CONTROL_MAX_AGE = 86_400; //8h
+    public const int CACHE_CONTROL_MAX_AGE = 86_400; //24h
 
     public readonly string birthdate;
     private readonly string path;
@@ -190,7 +190,7 @@ class Cache {
 #endif
 
 #if SVG_TO_SVGZ //svgz
-            foreach (DictionaryEntry o in toSVG) {
+        foreach (DictionaryEntry o in toSVG) {
             string name = o.Key.ToString();
             name = name.Replace($"{path}\\", "");
             name = name.Replace("\\", "/");

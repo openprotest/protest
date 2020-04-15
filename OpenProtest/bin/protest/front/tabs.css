@@ -46,9 +46,8 @@
     position: absolute;
     left: 8px;
     right: 8px;
-    top: 8px;
+    top: 10px;
     text-align: right;
-    font-size: medium;
     font-weight: 500;
 }
 

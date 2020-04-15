@@ -29,8 +29,6 @@
 
     perspective: 800px;
     perspective-origin: center;
-
-    transition: transform .3s;
 }
 
 #bottombar {
@@ -41,7 +39,6 @@
     height: 64px;
     background-color: #E87600;
     background: var(--toolbar-bg);
-    /*backdrop-filter: blur(4px);*/
 
     transition: .2s;
 }

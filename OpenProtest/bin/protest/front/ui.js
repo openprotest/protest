@@ -5,6 +5,8 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 const isSecure = window.location.href.toLowerCase().startsWith("https://");
 const onMobile = (/Android|webOS|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent));
 
+const favicon   = document.getElementById("favicon");
+
 const main      = document.getElementById("main");
 const cap       = document.getElementById("cap");
 const container = document.getElementById("container");
@@ -81,3 +83,58 @@ window.addEventListener("keydown", () => {
 
     setTimeout(() => updateClock(), 60000);
 })();
+
+function RgbToHsl(color) {
+    let r = color[0] / 255;
+    let g = color[1] / 255;
+    let b = color[2] / 255;
+
+    let cmin = Math.min(r, g, b);
+    let cmax = Math.max(r, g, b);
+    let delta = cmax - cmin;
+
+    let h, s, l;
+
+    if (delta == 0) h = 0;
+    else if (cmax == r) h = ((g - b) / delta) % 6;
+    else if (cmax == g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+
+    h = Math.round(h * 60);
+
+    if (h < 0) h += 360;
+
+    l = (cmax + cmin) / 2;
+    s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+
+    return [h, s, l];
+}
+function SetAccentColor(accent) {
+    let rgbString = `rgb(${accent[0]},${accent[1]},${accent[2]})`;
+    let hsl = this.RgbToHsl(accent);
+
+    let step1 = `hsl(${hsl[0]-4},${hsl[1]}%,${hsl[2]*.78}%)`;
+    let step2 = `hsl(${hsl[0]+7},${hsl[1]}%,${hsl[2]*.9}%)`; //--select-color
+    let step3 = `hsl(${hsl[0]-4},${hsl[1]}%,${hsl[2]*.8}%)`;
+    let gradient = `linear-gradient(to bottom, ${step1}0%, ${step2}92%, ${step3}100%)`;
+
+    let root = document.documentElement;
+    root.style.setProperty("--theme-color", rgbString);
+    root.style.setProperty("--select-color", step2);
+    root.style.setProperty("--toolbar-bg", gradient);
+    root.style.setProperty("--toolbar-bg-rev", `linear-gradient(to bottom, ${step3}0%, ${step2}2%, ${step1}100%)`);
+
+    let ico = "<svg version=\"1.1\" xmlns:serif=\"http://www.serif.com/\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" width=\"48px\" height=\"48px\"  viewBox=\"0 0 48 48\" enable-background=\"new 0 0 48 48\" xml:space=\"preserve\">"+
+        "<g fill=\""+step2+"\">"+
+        "<path d=\"M26.935,0.837h7.491l0.624,14.984l-8.24,1.873L26.935,0.837z\"/>"+
+        "<path d=\"M38.172,19.068l-3.871,8.866l-22.974,9.489l0.125-8.44l13.412-2.299V15.821L1.712,20.566l1.998,26.221 l42.579,0.375l-0.249-30.466L38.172,19.068z\"/>"+
+        "<path d=\"M4.459,0.837l0.374,16.857l8.741-1.873l-0.5-14.984H4.459z\"/>"+
+        "<path d=\"M15.821,0.837h7.304L24,13.2l-8.054,1.498L15.821,0.837z\"/>"+
+        "<path d=\"M37.672,0.837h7.367l1.249,12.986l-8.491,1.998L37.672,0.837z\"/>"+
+        "</g></svg>"
+
+    favicon.href = "data:image/svg+xml;base64," + btoa(ico);
+
+}
