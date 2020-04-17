@@ -49,7 +49,7 @@ body {
 #title {
     position: absolute;
     font-size: 32px;
-    font-weight: 500;
+    font-weight: bold;
     left: 24px;
     top: 8px;
     cursor: default;

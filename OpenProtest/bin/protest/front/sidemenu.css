@@ -131,6 +131,15 @@
     transition: .1s;
 }
 
+@media (prefers-color-scheme: dark) {
+    .sidemenu-item {
+        background-color: rgb(192,192,192);
+    }
+    .sidemenu-square-item {
+        background-color: rgb(192,192,192);
+    }
+}
+
 .sidemenu-item:hover,
 .sidemenu-square-item:hover {
     transition: .4s;
@@ -156,7 +165,7 @@
 
 .sidemenu-item > div:first-child,
 .sidemenu-square-item > div:first-child{
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .sidemenu-item > div:nth-child(3) {

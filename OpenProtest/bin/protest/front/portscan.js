@@ -468,11 +468,11 @@ class PortScan extends Console {
                         if (split[i].length == 0) continue;
 
                         let port = document.createElement("div");
-                        port.innerHTML = split[i];
+                        port.innerHTML = split[i] + "&nbsp;";
                         this.hashtable[name].result.appendChild(port);
 
                         let protocol = document.createElement("div");
-                        protocol.innerHTML = (PROTOCOL.hasOwnProperty(parseInt(split[i]))) ? PROTOCOL[parseInt(split[i])] : "";
+                        protocol.innerHTML = (PROTOCOL.hasOwnProperty(parseInt(split[i]))) ? PROTOCOL[parseInt(split[i])] + "&nbsp;" : "";
                         this.hashtable[name].result.appendChild(protocol);
 
                         this.hashtable[name].list.push(split[i]);

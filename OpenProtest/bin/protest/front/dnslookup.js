@@ -159,7 +159,7 @@ class DnsLookup extends Console {
                     if (split[i].length == 0) continue;
 
                     let label = document.createElement("div");
-                    label.innerHTML = split[i];
+                    label.innerHTML = split[i] + "&nbsp;";
                     result.appendChild(label);
 
                     this.hashtable[hostname].list.push(split[i]);

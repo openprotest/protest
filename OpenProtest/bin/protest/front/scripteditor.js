@@ -1021,7 +1021,7 @@ class ScriptNode {
 
         this.titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
         this.titleText.innerHTML = tool.name;
-        this.titleText.setAttribute("font-weight", "500");
+        this.titleText.setAttribute("font-weight", "600");
         this.titleText.setAttribute("dominant-baseline", "middle");
         this.titleText.setAttribute("text-anchor", "middle");
         this.titleText.setAttribute("x", 100);
@@ -1032,7 +1032,6 @@ class ScriptNode {
         let top = 38;
 
         for (let i = 0; i < tool.p.length; i++) {
-
             this.parameters.push(tool.p[i]); //copy
             this.values.push(tool.p[i].length > 2 ? tool.p[i][2] : null);
 

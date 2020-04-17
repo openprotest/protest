@@ -47,6 +47,9 @@ class TraceRoute extends Console {
                 text += NL;
             }
 
+            while (text.indexOf("&nbsp;") > -1)
+                text = text.replace("&nbsp;", " ");
+
             if (text.length == 0) return;
 
             const pseudo = document.createElement("a");
@@ -308,8 +311,8 @@ class TraceRoute extends Console {
                 if (this.hashtable.hasOwnProperty(target)) {
                     for (let i = 2; i < split.length - 1; i += 2)
                         for (let j = 0; j < this.hashtable[target].result.childNodes.length; j++)
-                            if (this.hashtable[target].result.childNodes[j].innerHTML == split[i]) {
-                                this.hashtable[target].result.childNodes[j+1].innerHTML = split[i+1];
+                            if (this.hashtable[target].result.childNodes[j].innerHTML == split[i] + "&nbsp;") {
+                                this.hashtable[target].result.childNodes[j+1].innerHTML = split[i+1]+ "&nbsp;";
                                 break;
                             }
                 }
@@ -317,7 +320,7 @@ class TraceRoute extends Console {
             } else
                 if (this.hashtable.hasOwnProperty(name)) {
                     let hop = document.createElement("div");
-                    hop.innerHTML = split[1];
+                    hop.innerHTML = split[1] + "&nbsp;";
                     this.hashtable[name].result.appendChild(hop);
 
                     let hostname = document.createElement("div");

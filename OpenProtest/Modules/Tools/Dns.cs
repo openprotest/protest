@@ -20,7 +20,7 @@ public static class Dns {
 
         return null;
     }
-    public static async Task<string> DnsLookupAsync(IPAddress ip) {
+    public static async Task<string> DnsLookupAsync(IPAddress ip) { 
         try {
             return (await System.Net.Dns.GetHostEntryAsync(ip)).HostName;
         } catch {

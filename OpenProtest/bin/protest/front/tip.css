@@ -27,6 +27,7 @@
     border-radius: 4px;
     min-width: 44px;
     max-width: 192px;
+    height: 20px;
     max-height: 20px;
     overflow: hidden;
     text-overflow: ellipsis;

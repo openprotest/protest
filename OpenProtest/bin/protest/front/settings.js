@@ -47,7 +47,7 @@ class Settings extends Tabs {
         this.chkDynamicSearchIcon = document.createElement("input");
         this.chkDynamicSearchIcon.type = "checkbox";
         this.subContent.appendChild(this.chkDynamicSearchIcon);
-        this.AddCheckBoxLabel(this.subContent, this.chkDynamicSearchIcon, "Dynamic search icon").style.fontWeight = "500";
+        this.AddCheckBoxLabel(this.subContent, this.chkDynamicSearchIcon, "Dynamic search icon").style.fontWeight = "600";
 
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
@@ -55,7 +55,7 @@ class Settings extends Tabs {
         this.chkWinMaxxed = document.createElement("input");
         this.chkWinMaxxed.type = "checkbox";
         this.subContent.appendChild(this.chkWinMaxxed);
-        this.AddCheckBoxLabel(this.subContent, this.chkWinMaxxed, "Always maximize windows").style.fontWeight = "500";
+        this.AddCheckBoxLabel(this.subContent, this.chkWinMaxxed, "Always maximize windows").style.fontWeight = "600";
 
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
@@ -63,7 +63,7 @@ class Settings extends Tabs {
         this.chkDisableAnime = document.createElement("input");
         this.chkDisableAnime.type = "checkbox";
         this.subContent.appendChild(this.chkDisableAnime);
-        this.AddCheckBoxLabel(this.subContent, this.chkDisableAnime, "Disable animations").style.fontWeight = "500";
+        this.AddCheckBoxLabel(this.subContent, this.chkDisableAnime, "Disable animations").style.fontWeight = "600";
 
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
@@ -71,7 +71,7 @@ class Settings extends Tabs {
         this.chkWindowShadows = document.createElement("input");
         this.chkWindowShadows.type = "checkbox";
         this.subContent.appendChild(this.chkWindowShadows);
-        this.AddCheckBoxLabel(this.subContent, this.chkWindowShadows, "Disable window drop-shadows").style.fontWeight = "500";
+        this.AddCheckBoxLabel(this.subContent, this.chkWindowShadows, "Disable window drop-shadows").style.fontWeight = "600";
 
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
@@ -80,7 +80,7 @@ class Settings extends Tabs {
         divZoom.innerHTML = "Zoom: ";
         divZoom.style.display = "inline-block";
         divZoom.style.minWidth = "200px";
-        divZoom.style.fontWeight = "500";
+        divZoom.style.fontWeight = "600";
         this.subContent.appendChild(divZoom);
 
         this.zoom = document.createElement("input");
@@ -103,13 +103,13 @@ class Settings extends Tabs {
         const divFontFamily = document.createElement("div");
         divFontFamily.innerHTML = "Font: ";
         divFontFamily.style.display = "inline-block";
-        divFontFamily.style.fontWeight = "500";
+        divFontFamily.style.fontWeight = "600";
         divFontFamily.style.minWidth = "200px";
         this.subContent.appendChild(divFontFamily);
 
         const txtFontFamily = document.createElement("input");
         txtFontFamily.type = "text";
-        txtFontFamily.placeholder = "Segoe UI";
+        txtFontFamily.placeholder = "Open Sans";
         txtFontFamily.value = localStorage.getItem("font") ? localStorage.getItem("font") : "";
         this.subContent.appendChild(txtFontFamily);
 
@@ -124,7 +124,7 @@ class Settings extends Tabs {
 
         const divColor = document.createElement("div");
         divColor.innerHTML = "Accent color: ";
-        divColor.style.fontWeight = "500";
+        divColor.style.fontWeight = "600";
         divColor.style.paddingBottom = "8px";
         this.subContent.appendChild(divColor);
 
@@ -133,7 +133,7 @@ class Settings extends Tabs {
         if (localStorage.getItem("accent_color"))
             selected_accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o));    
 
-        const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [0,128,240], [192,64,192]];
+        const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [32,144,240], [192,64,192]];
 
         for (let i = 0; i < accentColors.length; i++) {
             let rgbString = `rgb(${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]})`;
@@ -228,8 +228,6 @@ class Settings extends Tabs {
         this.chkWindowShadows.onclick     = Apply;
         this.zoom.onchange                = Apply;
         this.zoom.oninput = () => { divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%"; };
-
-        Apply();
     }
 
     ShowSession() {
@@ -238,7 +236,7 @@ class Settings extends Tabs {
         this.chkAliveOnClose = document.createElement("input");
         this.chkAliveOnClose.type = "checkbox";
         this.subContent.appendChild(this.chkAliveOnClose);
-        this.AddCheckBoxLabel(this.subContent, this.chkAliveOnClose, "Keep session alive when browser is closed").style.fontWeight = "500";
+        this.AddCheckBoxLabel(this.subContent, this.chkAliveOnClose, "Keep session alive when browser is closed").style.fontWeight = "600";
 
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
@@ -247,7 +245,7 @@ class Settings extends Tabs {
         divSessionTimeout.innerHTML = "Logout if inactive for: ";
         divSessionTimeout.style.display = "inline-block";
         divSessionTimeout.style.minWidth = "200px";
-        divSessionTimeout.style.fontWeight = "500";
+        divSessionTimeout.style.fontWeight = "600";
         this.subContent.appendChild(divSessionTimeout);
 
         this.sessionTimeout = document.createElement("input");
@@ -294,7 +292,6 @@ class Settings extends Tabs {
 
         this.chkAliveOnClose.onchange = Apply;
         this.sessionTimeout.oninput = Apply;
-        Apply();
     }
 
     ShowLegal() {

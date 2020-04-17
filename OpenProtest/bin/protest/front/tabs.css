@@ -48,7 +48,7 @@
     right: 8px;
     top: 10px;
     text-align: right;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .v-tabs > div > div:nth-child(3) { /*subtext*/

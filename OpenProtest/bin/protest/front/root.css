@@ -1,28 +1,28 @@
-@font-face {
+@font-face { /*light*/
     font-family: "Open Sans";
-    src: local("OpenSans"), url("opensans300.ttf") format("truetype");
+    src: local("Open Sans"), url("opensans300.ttf") format("truetype");
     font-weight: 300;
 }
-@font-face {
+@font-face { /*normal*/
     font-family: "Open Sans";
-    src: local("OpenSans"), url("opensans400.ttf") format("truetype");
+    src: local("Open Sans"), url("opensans400.ttf") format("truetype");
     font-weight: 400;
 }
-@font-face {
+@font-face { /*semi-bold*/
     font-family: "Open Sans";
-    src: local("OpenSans"), url("opensans500.ttf") format("truetype");
-    font-weight: 500;
+    src: local("Open Sans"), url("opensans600.ttf") format("truetype");
+    font-weight: 600;
 }
-@font-face {
+@font-face { /*bold*/
     font-family: "Open Sans";
-    src: local("OpenSans"), url("opensans700.ttf") format("truetype");
+    src: local("Open Sans"), url("opensans700.ttf") format("truetype");
     font-weight: 700;
 }
-@font-face {
+/*@font-face { extra-bold
     font-family: "Open Sans";
-    src: local("OpenSans"), url("opensans900.ttf") format("truetype");
-    font-weight: 900;
-}
+    src: local("Open Sans"), url("opensans800.ttf") format("truetype");
+    font-weight: 800;
+}*/
 
 :root {
     --sidemenu-width: 360px;

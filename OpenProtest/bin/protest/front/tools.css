@@ -110,8 +110,7 @@
     content: counter(enumeration) ". ";
     display: inline-block;
     min-width: 32px;
-    font-style: italic;
-    /*margin-right: 8px;*/
+    font-weight: 300;
 }
 
 .list-element > .enumerated > div[roundrtip]:nth-child(2n)::before { /* rount-trip */
@@ -256,7 +255,7 @@
     text-transform: capitalize;
     padding-left: 8px;
     font-size: large;
-    font-weight: 500;
+    font-weight: 600;
     user-select: none;
     -webkit-user-select: none;
 }
