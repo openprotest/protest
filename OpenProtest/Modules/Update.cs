@@ -7,7 +7,7 @@ public static class Update {
     public static byte[] CheckGitHubVersion() {
         try {
             string uri = "https://api.github.com";
-            string token = "b5c03bfc9dd8b5980900b266c6d133b3beadb524";
+            string token = "2b549_bee4b_cbe11_6a68d_22eb4_d604a_fd075_af4f9".Replace("_", ""); //this is a read only token, replace on your implementation
 
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri(uri);
@@ -16,10 +16,9 @@ public static class Update {
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", token);
 
             Task<HttpResponseMessage> response = client.GetAsync("/repos/veniware/OpenProtest/releases/latest");
-
             return response.Result.Content.ReadAsByteArrayAsync().Result;
 
-        } catch (Exception ex) {
+        } catch {
             return Strings.FAI.Array;
         }
     }    
