@@ -167,8 +167,8 @@ class DnsLookup extends Console {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "dnslookup&" + hostname, true);
-        xhr.send();
+        xhr.open("POST", "dnslookup", true);
+        xhr.send(hostname);
     }
 
     Remove(hostname) {

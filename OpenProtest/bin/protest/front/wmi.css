@@ -3,8 +3,6 @@
     border-collapse: collapse;
     margin: 8px;
     user-select: text;
-    -webkit-user-select: text;
-    -webkit-user-drag: unset;
 }
 
     .wmi-table > tr:first-child > td:nth-child(n+2) {

@@ -83,7 +83,6 @@ class DhcpDiscover extends Window {
         this.result.style.boxSizing = "border-box";
         this.result.style.overflowX = "hidden";
         this.result.style.userSelect = "text";
-        this.result.style.webkitUserSelect = "text";
         this.content.appendChild(this.result);
 
         this.waitbox = document.createElement("div");

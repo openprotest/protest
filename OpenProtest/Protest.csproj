@@ -70,6 +70,7 @@
     <Compile Include="Modules\Logging.cs" />
     <Compile Include="Modules\Tools\Crypto.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
+    <Compile Include="Modules\Update.cs" />
     <Compile Include="Modules\Tools\WebCheck.cs" />
     <Compile Include="Modules\Tools\Arp.cs" />
     <Compile Include="Modules\Tools\Dhcp.cs" />
@@ -127,8 +128,14 @@
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\front\license.txt" />
     <Content Include="bin\protest\front\list.js" />
+    <Content Include="bin\protest\front\res\atom.svg" />
     <Content Include="bin\protest\front\res\gpl.svg" />
+    <Content Include="bin\protest\front\res\hourglass.svg" />
+    <Content Include="bin\protest\front\res\download.svg" />
+    <Content Include="bin\protest\front\res\update.svg" />
+    <Content Include="bin\protest\front\res\userguide.svg" />
     <Content Include="bin\protest\front\settings.js" />
+    <Content Include="bin\protest\front\log.js" />
     <Content Include="bin\protest\front\tabs.css" />
     <Content Include="bin\protest\front\tabs.js" />
     <Content Include="bin\protest\front\fetch.js" />
@@ -525,7 +532,6 @@
     <Content Include="bin\protest\front\res\tool02.svg" />
     <Content Include="bin\protest\front\res\tool03.svg" />
     <Content Include="bin\protest\front\res\toolbox.svg" />
-    <Content Include="bin\protest\front\res\toolbox_mask.svg" />
     <Content Include="bin\protest\front\res\traceroute.svg" />
     <Content Include="bin\protest\front\res\traffic.svg" />
     <Content Include="bin\protest\front\res\turnoff.svg" />

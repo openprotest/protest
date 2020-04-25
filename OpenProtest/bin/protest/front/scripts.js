@@ -318,7 +318,6 @@ class ScriptReport extends Window {
         this.content.style.fontFamily = "monospace";
         this.content.style.overflow = "auto";
         this.content.style.userSelect = "text";
-        this.content.style.webkitUserSelect = "text";
 
         let text = "";
 

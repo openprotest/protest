@@ -185,8 +185,8 @@ class LocateIp extends Console {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "locateip&" + ipaddr, true);
-        xhr.send();
+        xhr.open("POST", "locateip", true);
+        xhr.send(ipaddr);
     }
 
     Remove(ipaddr) {

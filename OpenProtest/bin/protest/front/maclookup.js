@@ -90,8 +90,8 @@ class MacLookup extends Console {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "maclookup&" + macaddr, true);
-        xhr.send();
+        xhr.open("POST", "maclookup", true);
+        xhr.send(macaddr);
     }
 
     Remove(macaddr) {

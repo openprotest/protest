@@ -1,36 +1,41 @@
 const SUBMENU_WIDTH = 360;
 
 const TOOLS = [
-{ lbl: "Equipment",          ico: "res/database_equip.svgz", f: arg => new EquipList() },
-{ lbl: "Users",              ico: "res/database_users.svgz", f: arg => new UserList() },
-//{ lbl: "DB query",           ico: "res/databasesearch.svgz", f: arg=>new DbQuery() },
-{ lbl: "Fetch",              ico: "res/fetch.svgz",          f: arg => new Fetch(arg) },
-{ lbl: "New equipment",      ico: "res/new_equip.svgz",      f: arg => new Equip(null) },
-{ lbl: "New user",           ico: "res/new_user.svgz",       f: arg => new User(null) },
-{ lbl: "Password strength",  ico: "res/strength.svgz",       f: arg => new PasswordStrength(arg) },
-{ lbl: "Ping",               ico: "res/ping.svgz",           f: arg => new Ping(arg) },
-{ lbl: "DNS lookup",         ico: "res/dns.svgz",            f: arg => new DnsLookup(arg) },
-{ lbl: "DHCP discover",      ico: "res/dhcp.svgz",           f: arg => new DhcpDiscover(arg) },
-{ lbl: "Trace route",        ico: "res/traceroute.svgz",     f: arg => new TraceRoute(arg) },
-{ lbl: "TCP port scan",      ico: "res/portscan.svgz",       f: arg => new PortScan(arg) },
-{ lbl: "Locate IP",          ico: "res/locate.svgz",         f: arg => new LocateIp(arg) },
-{ lbl: "MAC lookup",         ico: "res/maclookup.svgz",      f: arg => new MacLookup(arg) },
-{ lbl: "Website check",      ico: "res/websitecheck.svgz",   f: arg => new WebCheck(arg) },
-//{ lbl: "Speed test",         ico: "res/speedtest.svgz",      f: arg=>new SpeedTest() },
-{ lbl: "Network calculator", ico: "res/netcalc.svgz",        f: arg => new Netcalc(arg) },
-{ lbl: "WMI console",        ico: "res/wmi.svgz",            f: arg => new Wmi() },
-{ lbl: "Scripts",            ico: "res/scripts.svgz",        f: arg => new Scripts() },
-{ lbl: "Password generator", ico: "res/passgen.svgz",        f: arg => new Passgen() },
-//{ lbl: "Secure shell",       ico: "res/ssh.svgz",            f: arg=>new Window() },
-//{ lbl: "Telnet",             ico: "res/telnet.svgz",         f: arg=>new Window() },
-//{ lbl: "Tasks",              ico: "res/task.svgz",           f: arg=>new Tasks() },
-//{ lbl: "Mapped drives",      ico: "res/mappeddrive.svgz",    f: arg=>new MappedDrives() },
-{ lbl: "Debit notes",        ico: "res/charges.svgz",        f: arg => new DebitNotes() },
-{ lbl: "Backup",             ico: "res/backup.svgz",         f: arg=>new Window() },
-{ lbl: "Documentation",      ico: "res/documentation.svgz",  f: arg=>new Window() },
-{ lbl: "Settings",           ico: "res/tool02.svgz",         f: arg => new Settings() },
-{ lbl: "Log",                ico: "res/log.svgz",            f: arg=>new Window() },
-{ lbl: "Pro-test clients",   ico: "res/ptclients.svgz",      f: arg => new Clients() }
+{ lbl:"Equipment",          ico:"res/database_equip.svgz", sqr:true,  f:arg=> new EquipList() },
+{ lbl:"Users",              ico:"res/database_users.svgz", sqr:true,  f:arg=> new UserList() },
+{ lbl:"Query",              ico:"res/databasesearch.svgz", sqr:true,  f:arg=> new Query() },
+{ lbl:"New equipment",      ico:"res/new_equip.svgz",      sqr:true,  f:arg=> new Equip(null) },
+{ lbl:"New user",           ico:"res/new_user.svgz",       sqr:true,  f:arg=> new User(null) },
+{ lbl:"Fetch",              ico:"res/fetch.svgz",          sqr:true,  f:arg=> new Fetch(arg) },
+{ lbl:"Documentation",      ico:"res/documentation.svgz",  sqr:true,  f:arg=> new Window() },
+{ lbl:"Debit notes",        ico:"res/charges.svgz",        sqr:true,  f:arg=> new DebitNotes() },
+{ lbl:"Password strength",  ico:"res/strength.svgz",       sqr:true,  f:arg=> new PasswordStrength(arg) },
+{ lbl:"Ping",               ico:"res/ping.svgz",           sqr:true,  f:arg=> new Ping(arg) },
+{ lbl:"DNS lookup",         ico:"res/dns.svgz",            sqr:true,  f:arg=> new DnsLookup(arg) },
+{ lbl:"DHCP discover",      ico:"res/dhcp.svgz",           sqr:true,  f:arg=> new DhcpDiscover(arg) },
+{ lbl:"Trace route",        ico:"res/traceroute.svgz",     sqr:true,  f:arg=> new TraceRoute(arg) },
+{ lbl:"TCP port scan",      ico:"res/portscan.svgz",       sqr:true,  f:arg=> new PortScan(arg) },
+{ lbl:"Locate IP",          ico:"res/locate.svgz",         sqr:true,  f:arg=> new LocateIp(arg) },
+{ lbl:"MAC lookup",         ico:"res/maclookup.svgz",      sqr:true,  f:arg=> new MacLookup(arg) },
+{ lbl:"Website check",      ico:"res/websitecheck.svgz",   sqr:true,  f:arg=> new WebCheck(arg) },
+{ lbl:"Speed test",         ico:"res/speedtest.svgz",      sqr:true,  f:arg=> new SpeedTest() },
+{ lbl:"Scripts",            ico:"res/scripts.svgz",        sqr:true,  f:arg=> new Scripts() },
+{ lbl:"Network calculator", ico:"res/netcalc.svgz",        sqr:true,  f:arg=> new Netcalc(arg) },
+{ lbl:"Password generator", ico:"res/passgen.svgz",        sqr:true,  f:arg=> new Passgen() },
+{ lbl:"WMI console",        ico:"res/wmi.svgz",            sqr:true,  f:arg=> new Wmi() },
+{ lbl:"Secure shell",       ico:"res/ssh.svgz",            sqr:true,  f:arg=> new Window() },
+{ lbl:"Telnet",             ico:"res/telnet.svgz",         sqr:true,  f:arg=> new Window() },
+//{ lbl:"Tasks",              ico:"res/task.svgz",           sqr:true,  f:arg=> new Tasks() },
+//{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",    sqr:true,  f:arg=> new MappedDrives() },
+{ lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },
+{ lbl:"Backup",             ico:"res/backup.svgz",         sqr:true,  f:arg=> new Window() },
+{ lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Window() },
+{ lbl: "Pro-test clients",  ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
+{ lbl:"Settings",           ico:"res/tool02.svgz",         sqr:false, f:arg=> new Settings() },
+{ lbl:"Update",             ico:"res/update.svgz",         sqr:false, f:arg=> new Settings("update") },
+{ lbl:"Legal",              ico:"res/gpl.svgz",            sqr:false, f:arg=> new Settings("legal") },
+{ lbl:"About",              ico:"res/logo.svgz",           sqr:false, f:arg=> new Settings("about") },
+{ lbl:"Logout",             ico:"res/logoff.svgz",         sqr:false, f:arg=> btnLogout.onclick() },
 ];
 
 let sidemenu_dynamicicon = false;
@@ -208,6 +213,7 @@ function SideMenu_Update(filter) {
 
     if (filter.length == 0)
         for (let i = 0; i < TOOLS.length; i++) {
+            if (!TOOLS[i].sqr) continue;
             let item = CreateSquareItem(TOOLS[i].lbl, TOOLS[i].ico, TOOLS[i].f);
             sidemenu_list.push(item);
             lstSideMenu.appendChild(item);

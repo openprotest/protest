@@ -54,11 +54,8 @@
     background-repeat: no-repeat;
     background-size: 24px 24px;
     background-position: 4px 4px;
-
-    /*make the results selectable*/
-    user-select: text;
-    -webkit-user-select: text;
-    -webkit-user-drag: none;
+        
+    user-select: text; /*make the results selectable*/
 }
 
 .list-element > .list-result {
@@ -72,11 +69,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 32px;
-
-    /*make the results selectable*/
-    user-select: text;
-    -webkit-user-select: text;
-    -webkit-user-drag: none;
+    user-select: text; /*make the results selectable*/
 }
 
 .list-element > .list-result > div {
@@ -86,11 +79,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
-    /*make the results selectable*/
-    user-select: text;
-    -webkit-user-select: text;
-    -webkit-user-drag: none;
+    user-select: text; /*make the results selectable*/
 }
 .list-element > .expaned { overflow-y: scroll; }
 .list-element > .expaned > div { width:33%; }
@@ -257,7 +246,6 @@
     font-size: large;
     font-weight: 600;
     user-select: none;
-    -webkit-user-select: none;
 }
 
 .expaned-box > div:first-child:before,
@@ -316,9 +304,4 @@
     border-width: 2px 3px 3px 0px;
     box-sizing: border-box;
     animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }

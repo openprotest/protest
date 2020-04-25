@@ -133,7 +133,7 @@ function SetAccentColor(accent) {
         "<path d=\"M4.459,0.837l0.374,16.857l8.741-1.873l-0.5-14.984H4.459z\"/>"+
         "<path d=\"M15.821,0.837h7.304L24,13.2l-8.054,1.498L15.821,0.837z\"/>"+
         "<path d=\"M37.672,0.837h7.367l1.249,12.986l-8.491,1.998L37.672,0.837z\"/>"+
-        "</g></svg>"
+        "</g></svg>";
 
     favicon.href = "data:image/svg+xml;base64," + btoa(ico);
 

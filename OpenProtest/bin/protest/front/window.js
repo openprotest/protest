@@ -405,8 +405,9 @@ class Window {
         btnCancel.onclick = (event)=> {
             if (once) return;
             once = true;
-
             confirm.style.filter = "opacity(0)";
+            confirmBox.style.transition = ".2s";
+            confirmBox.style.transform = "scaleY(.2)";
             this.content.style.filter = "none";
             setTimeout(()=> {this.win.removeChild(confirm);}, ANIM_DURATION);
         };
@@ -466,6 +467,9 @@ class Window {
             if (once) return;
             once = true;
             dialog.style.filter = "opacity(0)";
+            container.style.transition = ".2s";
+            container.style.transformOrigin = "50% 0";
+            container.style.transform = "scaleY(.2)";
             this.content.style.filter = "none";
             setTimeout(()=> {this.win.removeChild(dialog);}, ANIM_DURATION);
         };

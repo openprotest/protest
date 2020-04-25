@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 
 public static class Dhcp {
     //https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml

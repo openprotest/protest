@@ -1,12 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 public static class LocateIp {
+    public static byte[] Locate(HttpListenerContext ctx) {
+        string payload;
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
+            payload = reader.ReadToEnd();
+
+        if (payload.Length == 0) return Strings.INV.Array;
+        return Locate(payload);
+    }
     public static byte[] Locate(string[] para) {
         if (para.Length < 2) return null;
         string ip = para[1];

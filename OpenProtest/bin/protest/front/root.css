@@ -72,16 +72,13 @@ body {
     font-family: var(--global-font-family);
     background-color: #F5F5F5;
     overflow: hidden;
-
     user-select: none;
-    -webkit-user-select: none;
-    -webkit-user-drag: none;
 }
 
-/*a {
-    color: #000000;
-    text-decoration: none;
-}*/
+a {
+    color: #202020;
+    font-weight: 600;
+}
 
 ::selection {
     background: rgb(48,48,48);

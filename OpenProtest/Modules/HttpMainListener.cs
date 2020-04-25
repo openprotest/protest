@@ -101,7 +101,7 @@ class HttpMainListener : Http {
                 buffer = entry.webp;
                 ctx.Response.ContentType = "image/webp";
 
-            } else if (acceptGzip && entry.gzip != null) { //GZip
+            } else if (acceptGzip && entry.gzip != null) { //gzip
                 buffer = entry.gzip;
                 ctx.Response.ContentType = entry.contentType;
                 ctx.Response.AddHeader("Content-Encoding", "gzip");
@@ -125,26 +125,38 @@ class HttpMainListener : Http {
                     break;
 
                 case "logout": buffer = Session.RevokeAccess(ctx) ? Strings.OK.Array : Strings.FAI.Array; break;
+                case "version": buffer = Strings.Version(); break;
+                case "checkforupdate": buffer = Update.CheckGitHubVersion(); break;
 
-                case "dnslookup":    buffer = Dns.DnsLookup(para); break;
+                case "getequipver":   buffer = Encoding.UTF8.GetBytes(Database.equipVer.ToString()); break;
+                case "getusersver":   buffer = Encoding.UTF8.GetBytes(Database.usersVer.ToString()); break;
+                case "getequiptable": buffer = Database.GetEquipTable(); break;
+                case "getuserstable": buffer = Database.GetUsersTable(); break;
+
+                case "saveequip": buffer = Database.SaveEquip(ctx, performer); break;
+                case "delequip":  buffer = Database.DeleteEquip(para, performer); break;
+                case "saveuser":  buffer = Database.SaveUser(ctx, performer); break;
+                case "deluser":   buffer = Database.DeleteUser(para, performer); break;
+
+                case "dnslookup":    buffer = Dns.DnsLookup(ctx); break;
+                case "locateip":     buffer = LocateIp.Locate(ctx); break;
+                case "maclookup":    buffer = MacLookup.Lookup(ctx); break;
                 case "dhcpdiscover": buffer = Dhcp.DiscoverDhcp(para); break;
-                case "locateip":     buffer = LocateIp.Locate(para); break;
-                case "maclookup":    buffer = MacLookup.Lookup(para); break;
 
-                case "wakeup": buffer = WoL.Wakeup(para); break;
+                case "wakeup":   buffer = WoL.Wakeup(para); break;
                 case "shutdown": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 12)); break;
-                case "reboot": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
-                case "logoff": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
+                case "reboot":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
+                case "logoff":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
 
-                case "wmiquery": buffer = Wmi.WmiQuery(para); break;
+                case "wmiquery":    buffer = Wmi.WmiQuery(para); break;
                 case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
 
                 case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, "ba")); break;
-                case "adverify": buffer = Encoding.UTF8.GetBytes(ActiveDirectory.ActiveDirVerify(para)); break;
+                case "adverify":  buffer = Encoding.UTF8.GetBytes(ActiveDirectory.ActiveDirVerify(para)); break;
 
-                case "getscripttools": buffer = Scripts.GetScriptTools(); break;
-                case "getusercolumns": buffer = Scripts.GetUserColumns(); break;
-                case "getequipcolumns": buffer = Scripts.GetEquipColumns(); break;
+                case "getscripttools":   buffer = Scripts.GetScriptTools(); break;
+                case "getusercolumns":   buffer = Scripts.GetUserColumns(); break;
+                case "getequipcolumns":  buffer = Scripts.GetEquipColumns(); break;
                 case "getadusercolumns": buffer = Scripts.GetAdUserColumns(); break;
                 case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
                 case "getadgroupcolumn": buffer = Scripts.GetAdGroupColumns(); break;
@@ -170,8 +182,8 @@ class HttpMainListener : Http {
 
         ctx.Response.OutputStream.Dispose();
 
-        } catch (ObjectDisposedException) { //Do nothing
-        } catch (HttpListenerException) { //Do nothing
+        } catch (ObjectDisposedException) { //do nothing
+        } catch (HttpListenerException) { //do nothing
         }
 #if !DEBUG
         catch (Exception ex) {

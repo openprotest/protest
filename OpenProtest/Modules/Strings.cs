@@ -124,4 +124,19 @@ public static class Strings {
         return s;
     }
 
+    public static byte[] Version() {
+        Version ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+        string result = "{";
+        result += $"\"name\":\"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}\",";
+        result += $"\"string\":\"{ver.ToString()}\",";
+        result += $"\"major\":\"{ver.Major}\",";
+        result += $"\"minor\":\"{ver.Minor}\",";
+        result += $"\"build\":\"{ver.Build}\",";
+        result += $"\"revision\":\"{ver.Revision}\"";
+        result += "}";
+
+
+        return Encoding.UTF8.GetBytes(result);
+    }
 }

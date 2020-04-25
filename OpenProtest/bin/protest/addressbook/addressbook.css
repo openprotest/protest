@@ -23,8 +23,6 @@ body {
     background-color: #F5F5F5;
     overflow: hidden;
     user-select: none;
-    -webkit-user-select: none;
-    -webkit-user-drag: none;
 }
 
 #searchbar {
@@ -341,8 +339,6 @@ body {
     cursor: default;
 
     user-select: text !important;
-    -webkit-user-select: text !important;
-    -webkit-user-drag: text !important;
 }
 
 .dialog > * {
@@ -370,9 +366,7 @@ body {
 .dialog > * {
     color: #eee;
     height: 32px;
-
     user-select: text;
-    -webkit-user-select: text;
 }
 
 .dialog *:nth-child(1) {

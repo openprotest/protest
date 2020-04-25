@@ -61,6 +61,7 @@ document.body.onunload = () => { storeSession(); };
         "wmi.js",
         "scripts.js",
         "scripteditor.js",
+        "log.js",
         "settings.js"
     ];
 
@@ -166,7 +167,8 @@ function restoreSession() {
             case "Wmi"          : win = new Wmi(session[i].args); break;
             case "Scripts"      : win = new Scripts(session[i].args); break;
             case "ScriptEditor" : win = new ScriptEditor(session[i].args); break;
-            case "Settings"     : win = new Settings(); break;
+            case "Log"          : win = new Log(session[i].args); break;
+            case "Settings"     : win = new Settings(session[i].args); break;
         }
 
         if (win) {
