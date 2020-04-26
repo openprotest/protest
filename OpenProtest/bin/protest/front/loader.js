@@ -58,6 +58,7 @@ document.body.onunload = () => { storeSession(); };
         "locateip.js",
         "maclookup.js",
         "webcheck.js",
+        "speedtest.js",
         "wmi.js",
         "scripts.js",
         "scripteditor.js",
@@ -164,6 +165,7 @@ function restoreSession() {
             case "LocateIp"     : win = new LocateIp(session[i].args); break;
             case "MacLookup"    : win = new MacLookup(session[i].args); break;
             case "WebCheck"     : win = new WebCheck(session[i].args); break;
+            case "SpeedTest"    : win = new SpeedTest(session[i].args); break;
             case "Wmi"          : win = new Wmi(session[i].args); break;
             case "Scripts"      : win = new Scripts(session[i].args); break;
             case "ScriptEditor" : win = new ScriptEditor(session[i].args); break;

@@ -41,7 +41,7 @@
     background-color: rgb(32,32,32);
     box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
     overflow: hidden;
-    transition: .2s;
+    transition: transform .2s;
 }
 
 @media only screen and (max-width: 480px) {

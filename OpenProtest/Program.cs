@@ -138,7 +138,64 @@ class Program {
     }
 
     private static void LoadConfig() {
-        //TODO
+        if (!File.Exists(Strings.FILE_CONFIG)) return;
+
+        StreamReader fileReader = new StreamReader(Strings.FILE_CONFIG);
+        string line;
+        while ((line = fileReader.ReadLine()) != null) {
+            line = line.Trim();
+            if (line.StartsWith("#")) continue;
+
+            string[] split = line.Split('=');
+            if (split.Length < 2) continue;
+
+            split[0] = split[0].Trim().ToLower();
+            split[1] = split[1].Trim();
+
+            switch (split[0]) {
+                case "db_key":
+                    DB_KEY = split[1];
+                    break;
+
+                case "preshared_key":
+                    PRESHARED_KEY = split[1];
+                    break;
+
+                case "force_registry_keys":
+                    force_registry_keys = (split[1] == "true");
+                    break;
+
+                case "http_enable":
+                    http_enable = (split[1] == "true");
+                    break;
+                case "http_ip":
+                    http_ip = split[1];
+                    break;
+                case "http_port":
+                    http_port = ushort.Parse(split[1]);
+                    break;
+
+                case "addressbook_enable":
+                    addressbook_enable = (split[1] == "true");
+                    break;
+                case "addressbook_ip":
+                    addressbook_ip = split[1];
+                    break;
+                case "addressbook_port":
+                    addressbook_port = ushort.Parse(split[1]);
+                    break;
+
+                case "ip_access":
+                    Session.ip_access.Add(split[1], null);
+                    break;
+
+                case "user_access":
+                    Session.user_access.Add(split[1], null);
+                    break;
+            }
+        }
+
+        fileReader.Close();
     }
 
     public static void ExtractZippedKnowlageFile() {

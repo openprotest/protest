@@ -12,9 +12,9 @@ class IpBox {
             this.textBoxes[i].value = "0";
             this.textBoxes[i].style.textAlign = "center";
             this.textBoxes[i].style.width = "38px";
-            this.textBoxes[i].style.margin = "2px 0px";
+            this.textBoxes[i].style.margin = "2px 1px";
             this.textBoxes[i].style.padding = "4px 2px";
-            this.textBoxes[i].style.border = "rgb(56,56,56) 1px solid";
+            //this.textBoxes[i].style.border = "rgb(56,56,56) 1px solid";
             this.textBoxes[i].setAttribute("i", i + 1);
 
             this.textBoxes[i].onkeydown = event => {
@@ -66,7 +66,7 @@ class IpBox {
                     let v = parseInt(event.srcElement.value);
                     if (v == NaN) v = 0;
                     if (v > 255) event.srcElement.value = 255;
-                    this.FocusNext(event.srcElement);
+                    if (!isNaN(event.key)) this.FocusNext(event.srcElement);
 
                 } else if (event.srcElement.value.length > 3 && window.getSelection().toString().length <= 3) {
                     event.srcElement.value = 255;
@@ -81,6 +81,11 @@ class IpBox {
                 event.srcElement.value = v;
             };
         }
+
+        this.textBoxes[0].style.borderRadius = "4px 0 0 4px";
+        this.textBoxes[1].style.borderRadius = "0";
+        this.textBoxes[2].style.borderRadius = "0";
+        this.textBoxes[3].style.borderRadius = "0 4px 4px 0";
     }
 
     Attach(container) {

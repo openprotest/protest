@@ -10,11 +10,10 @@ using System.Threading.Tasks;
 
 public static class TraceRoute {
 
-    private static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
+    public static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
     public static async void WsTraceRoute(HttpListenerContext ctx, string remoteIp) {
-        WebSocketContext wsc = null;
-        WebSocket ws = null;
-
+        WebSocketContext wsc;
+        WebSocket ws;
         try {
             wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;

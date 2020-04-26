@@ -1,0 +1,19 @@
+#version 4.0
+
+db_key        = TESTINGcPP88E62A4K0Ob2M2B7T6CD33BMWER22gr25PBV2YLeUtb9PO4Z6Y83RT
+preshared_key = TESTINGcPP88E62A4K0Ob2M2B7T6CD33BMWER22gr25PBV2YLeUtb9PO4Z6Y83RT
+
+force_registry_keys = true
+
+#ip_access = [ip]
+#user_access = [domain/user]
+
+ip_access = *
+
+http_enable = true
+http_ip     = *
+http_port   = 80
+
+addressbook_enable = false
+addressbook_ip     = *
+addressbook_port   = 911

@@ -113,7 +113,7 @@ public static class Dhcp {
         dgram[p++] = transactionId[2];
         dgram[p++] = transactionId[3];
 
-        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100000000;
+        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100_000_000;
         sb.AppendLine($"seconds elapsed:{secElapsed}");
         dgram[p++] = 0x00; //seconds elapsed
         dgram[p++] = secElapsed > 255 ? (byte)0xff : (byte)secElapsed;
@@ -257,7 +257,7 @@ public static class Dhcp {
         dgram[p++] = transactionId[2];
         dgram[p++] = transactionId[3];
 
-        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100000000;
+        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100_000_000;
         sb.AppendLine($"seconds elapsed:{secElapsed}");
         dgram[p++] = 0x00; //seconds elapsed
         dgram[p++] = secElapsed > 255 ? (byte)0xff : (byte)secElapsed;

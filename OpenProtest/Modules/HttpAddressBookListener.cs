@@ -78,7 +78,7 @@ class HttpAddressBookListener : Http {
 
     private byte[] GetAddressBook(bool force_update = false) {
 
-        if (force_update && DateTime.Now.Ticks - lastAddressBookBirthdate.Ticks < 600000000) //less than a minute
+        if (force_update && DateTime.Now.Ticks - lastAddressBookBirthdate.Ticks < 600_000_000) //less than a minute
             return lastAddressBook;
 
         StringBuilder sb = new StringBuilder();

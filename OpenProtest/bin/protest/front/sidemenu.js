@@ -11,6 +11,7 @@ const TOOLS = [
 { lbl:"Debit notes",        ico:"res/charges.svgz",        sqr:true,  f:arg=> new DebitNotes() },
 { lbl:"Password strength",  ico:"res/strength.svgz",       sqr:true,  f:arg=> new PasswordStrength(arg) },
 { lbl:"Ping",               ico:"res/ping.svgz",           sqr:true,  f:arg=> new Ping(arg) },
+{ lbl:"ARP Ping",           ico:"res/ping.svgz",           sqr:false, f:arg=> new Ping({entries:[], timeout:500, method:"arp", moveToBottom:false}) },
 { lbl:"DNS lookup",         ico:"res/dns.svgz",            sqr:true,  f:arg=> new DnsLookup(arg) },
 { lbl:"DHCP discover",      ico:"res/dhcp.svgz",           sqr:true,  f:arg=> new DhcpDiscover(arg) },
 { lbl:"Trace route",        ico:"res/traceroute.svgz",     sqr:true,  f:arg=> new TraceRoute(arg) },

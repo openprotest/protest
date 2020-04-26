@@ -69,7 +69,9 @@
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
     <Compile Include="Modules\Tools\Crypto.cs" />
+    <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
+    <Compile Include="Modules\Tools\SpeedTest.cs" />
     <Compile Include="Modules\Update.cs" />
     <Compile Include="Modules\Tools\WebCheck.cs" />
     <Compile Include="Modules\Tools\Arp.cs" />
@@ -126,8 +128,11 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\config.txt" />
     <Content Include="bin\protest\front\license.txt" />
     <Content Include="bin\protest\front\list.js" />
+    <Content Include="bin\protest\front\res\opensource.svg" />
+    <Content Include="bin\protest\front\speedtest.js" />
     <Content Include="bin\protest\front\res\atom.svg" />
     <Content Include="bin\protest\front\res\gpl.svg" />
     <Content Include="bin\protest\front\res\hourglass.svg" />

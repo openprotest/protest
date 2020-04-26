@@ -22,9 +22,8 @@ public static class Ping {
         return Encoding.UTF8.GetBytes(t.Result.Replace(((char)127).ToString(), ""));
     }
     public static async void WsPing(HttpListenerContext ctx, string remoteIp) {
-        WebSocketContext wsc = null;
-        WebSocket ws = null;
-
+        WebSocketContext wsc;
+        WebSocket ws;
         try {
             wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;

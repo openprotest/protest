@@ -40,7 +40,7 @@ public class ScriptResult {
 }
 
 public static class Scripts {
-    private const long QUARTER = 9000000000;
+    private const long QUARTER = 9_000_000_000;
 
     private static readonly Hashtable tools = new Hashtable();
     private static byte[] tools_payload = null;
@@ -2037,7 +2037,6 @@ public static class Scripts {
         }
     }
 
-    private static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
     private static async Task<string> TraceRouteAsync(string host, int timeout, short ttl) {
         if (host is null) return "";
 
@@ -2047,7 +2046,7 @@ public static class Scripts {
         using (System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping())
             for (short i = 1; i < ttl; i++)
                 try {
-                    PingReply reply = await p.SendPingAsync(host, timeout, TRACE_ROUTE_BUFFER, new PingOptions(i, true));
+                    PingReply reply = await p.SendPingAsync(host, timeout, TraceRoute.TRACE_ROUTE_BUFFER, new PingOptions(i, true));
 
                     if (reply.Status == IPStatus.Success || reply.Status == IPStatus.TtlExpired) {
 

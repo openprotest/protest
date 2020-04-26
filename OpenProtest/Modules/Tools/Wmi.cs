@@ -664,11 +664,11 @@ static class Wmi {
     public static string TransferRateToString(string value) {
         UInt64 v = UInt64.Parse(value);
         if (v < 1000) return $"{ v } bps";
-        if (v < 1000000) return $"{ v / 1000 } Kbps";
-        if (v < 1000000000) return $"{ v / 1000000 } Mbps";
-        if (v < 1000000000000) return $"{ v / 1000000000 } Gbps";
-        if (v < 1000000000000000) return $"{ v / 1000000000000 } Tbps";
-        return $"{ v / 1000000000000000 } Pbps";
+        if (v < 1_000_000) return $"{ v / 1000 } Kbps";
+        if (v < 1_000_000_000) return $"{ v / 1000000 } Mbps";
+        if (v < 1_000_000_000_000) return $"{ v / 1_000_000_000 } Gbps";
+        if (v < 1_000_000_000_000_000) return $"{ v / 1_000_000_000_000 } Tbps";
+        return $"{ v / 1_000_000_000_000_000 } Pbps";
     }
 
     public static string ToMHz(string value) {

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 class HttpMainListener : Http {
     public HttpMainListener(string ip, ushort port, string path) : base(ip, port, path) { }
@@ -143,6 +141,9 @@ class HttpMainListener : Http {
                 case "maclookup":    buffer = MacLookup.Lookup(ctx); break;
                 case "dhcpdiscover": buffer = Dhcp.DiscoverDhcp(para); break;
 
+                case "speedtest_downstream": buffer = SpeedTest.TestDownstream(ctx, para); break;
+                case "speedtest_upstream":   buffer = SpeedTest.TestUpstream(ctx, para); break;
+
                 case "wakeup":   buffer = WoL.Wakeup(para); break;
                 case "shutdown": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 12)); break;
                 case "reboot":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
@@ -170,6 +171,10 @@ class HttpMainListener : Http {
                 case "delreport":   buffer = Scripts.DeleteReport(para); break;
                 case "getreport":   buffer = Scripts.GetReport(para); break;
                 
+                case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
+
+                case "fetch_importdata" : buffer = Fetch.ImportDatabase(ctx); break;
+
                 default: //not found
                     ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     buffer = null;
@@ -199,7 +204,12 @@ class HttpMainListener : Http {
             case "ws/portscan": PortScan.WsPortScan(ctx, remoteIp); break;
             case "ws/traceroute": TraceRoute.WsTraceRoute(ctx, remoteIp); break;
             case "ws/webcheck": WebCheck.WsWebCheck(ctx, remoteIp); break;
-            //case "ws/speedtest": Tools.WsSpeedTest(ctx, remoteIp); break;
+            case "ws/speedtest_down": SpeedTest.WsSpeedtest_down(ctx, remoteIp, para); break;
+            case "ws/speedtest_up": SpeedTest.WsSpeedtest_up(ctx, remoteIp, para); break;
+
+            default: ctx.Response.Close(); break;
+            
+
         }
     }
 

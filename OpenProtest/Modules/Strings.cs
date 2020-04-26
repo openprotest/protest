@@ -31,8 +31,8 @@ public static class Strings {
     public static readonly string DIR_IP_LOCATION   = $"{DIR_KNOWLAGE}\\ip";
     public static readonly string DIR_PROXY         = $"{DIR_KNOWLAGE}\\proxy";
 
-    public static readonly string DIR_SCRIPTS_SCRIPTS = $"{DIR_SCRIPTS}\\scripts\\scripts";
-    public static readonly string DIR_SCRIPTS_REPORTS = $"{DIR_SCRIPTS}\\scripts\\reports";
+    public static readonly string DIR_SCRIPTS_SCRIPTS = $"{DIR_SCRIPTS}\\scripts";
+    public static readonly string DIR_SCRIPTS_REPORTS = $"{DIR_SCRIPTS}\\reports";
 
     public static readonly ArraySegment<byte> OK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("ok"));
     public static readonly ArraySegment<byte> ACK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("acknowledge"));

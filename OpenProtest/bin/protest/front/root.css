@@ -62,7 +62,9 @@
     }
 }
 
-.disable-animation * {
+.disable-animation *,
+.disable-animation *::after,
+.disable-animation *::before {
     transition: 0s !important;
     animation: none !important;
 }

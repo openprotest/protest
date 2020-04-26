@@ -369,6 +369,12 @@ class Settings extends Tabs {
 
                 let jsonUpdate = JSON.parse(xhrUpdate.responseText);
 
+                if (!jsonUpdate.tag_name) {
+                    status.innerHTML = "Failed to check updates.";
+                    animation.style.animation = "none";
+                    return;
+                }
+
                 let xhrVersion = new XMLHttpRequest();
                 xhrVersion.onreadystatechange = () => {
                     if (xhrVersion.readyState == 4 && xhrVersion.status == 200) {
@@ -518,6 +524,24 @@ class Settings extends Tabs {
 
         center.appendChild(document.createElement("br"));
         center.appendChild(document.createElement("br"));
+
+        const credits = document.createElement("div");
+        credits.style.display = "inline-block";
+        credits.style.paddingTop = "32px";
+        credits.style.maxWidth = "640px";
+        credits.style.textAlign = "left";
+        credits.style.userSelect = "text";
+        credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
+        credits.innerHTML += "<b>-</b> MAC addresses lookup table          <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
+        credits.innerHTML += "<b>-</b> IP2Location LITE                    <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
+        credits.innerHTML += "<b>-</b> IP2Proxy LITE                       <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
+        credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
+        credits.innerHTML += "<b>-</b> Microsoft.Management.Infrastructure <a target='_blank' href='https://nuget.org/packages/Microsoft.Management.Infrastructure/'>by Microsoft</a><br>";
+        credits.innerHTML += "<b>-</b> System.Management.Automation        <a target='_blank' href='https://docs.microsoft.com/en-us/dotnet/api/system.management.automation'>by Microsoft</a><br>";
+        center.appendChild(credits);
+
+        center.appendChild(document.createElement("br"));
+        center.appendChild(document.createElement("br"));
         center.appendChild(document.createElement("br"));
 
         const donate = document.createElement("a");
@@ -553,21 +577,21 @@ class Settings extends Tabs {
         center.appendChild(involve);
 
         center.appendChild(document.createElement("br"));
+        center.appendChild(document.createElement("br"));
+        center.appendChild(document.createElement("br"));
 
-        const credits = document.createElement("div");
-        credits.style.display = "inline-block";
-        credits.style.paddingTop = "64px";
-        credits.style.maxWidth = "640px";
-        credits.style.textAlign = "left";
-        credits.style.userSelect = "text";
-        credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
-        credits.innerHTML += "<b>-</b> MAC addresses lookup table          <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
-        credits.innerHTML += "<b>-</b> IP2Location LITE                    <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-        credits.innerHTML += "<b>-</b> IP2Proxy LITE                       <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-        credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
-        credits.innerHTML += "<b>-</b> Microsoft.Management.Infrastructure <a target='_blank' href='https://nuget.org/packages/Microsoft.Management.Infrastructure/'>by Microsoft</a><br>";
-        credits.innerHTML += "<b>-</b> System.Management.Automation        <a target='_blank' href='https://docs.microsoft.com/en-us/dotnet/api/system.management.automation'>by Microsoft</a><br>";
-        center.appendChild(credits);
+        const icons = ["res/logo.svgz", "res/opensource.svgz","res/gpl.svgz", "res/github.svgz"];
+        for (let i = 0; i < icons.length; i++) {
+            const newIcon = document.createElement("div");
+            newIcon.style.display = "inline-block";
+            newIcon.style.width = "52px";
+            newIcon.style.height = "52px";
+            newIcon.style.margin = "16px";
+            newIcon.style.background = `url(${icons[i]})`;
+            newIcon.style.backgroundSize = "contain";
+            center.appendChild(newIcon);
+        }
+        
 
         logo.onclick = () => {
             logo.animate([
@@ -582,8 +606,7 @@ class Settings extends Tabs {
                 {transform:"translateX(-2px) rotate(-1deg)"},
                 {transform:"translateX(0)    rotate(0deg)"}
             ], {
-                duration: 1200,
-                iterations: 1
+                duration:1200, iterations:1
             });
         };
 
@@ -606,4 +629,3 @@ class Settings extends Tabs {
     }
 
 }
-

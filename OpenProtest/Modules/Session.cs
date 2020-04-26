@@ -19,7 +19,7 @@ public static class Session {
 
     private static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
 
-    public static long HOUR = 36000000000;
+    public static long HOUR = 36_000_000_000;
     public static long SESSION_TIMEOUT = 120; //5 days
 
     struct SessionEntry {
