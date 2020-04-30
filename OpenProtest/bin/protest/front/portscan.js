@@ -153,7 +153,8 @@ class PortScan extends Console {
         });
 
         this.btnClear.addEventListener("click", event => {
-            this.ConfirmBox("Are you sure you want to clear the list?").addEventListener("click", () => {
+            const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
+            if (btnOK) btnOK.addEventListener("click", () => {
                 this.args.entries = [];
                 this.list.innerHTML = "";
                 this.hashtable = {};
@@ -168,6 +169,7 @@ class PortScan extends Console {
             options_once = true;
 
             const dialog = this.DialogBox("128px");
+            if (dialog === null) return;
             const btnOK = dialog.btnOK;
             const innerBox = dialog.innerBox;
 

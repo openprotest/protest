@@ -165,7 +165,7 @@
     right: 4px;
 }
 
-#btnSettings, #btnLogout {
+#btnScreenCapture, #btnSettings, #btnLogout {
     position: absolute;
     width: 40px;
     height: 36px;
@@ -183,6 +183,11 @@
     transition: .2s;
 }
 
+#btnScreenCapture {
+    right: 100px;
+    background-image: url("res/l_screencapture.svg");
+}
+
 #btnSettings {
     right: 52px;
     background-image: url("res/l_tool02.svg");
@@ -193,10 +198,23 @@
     background-image: url("res/l_logoff.svg");
 }
 
-#btnSettings:hover, #btnLogout:hover {
+#btnScreenCapture:hover, #btnSettings:hover, #btnLogout:hover {
     background-color: rgb(72,72,72);
 }
 
-#btnSettings:active, #btnLogout:active {
+#btnScreenCapture:active, #btnSettings:active, #btnLogout:active {
     background-color: rgb(56,56,56);
 } 
+
+@media screen and (-ms-high-contrast: active) {
+    .sidemenu-square-item,
+    .sidemenu-item {
+        filter: brightness(4);
+    }
+
+    .sidemenu-item:hover,
+    .sidemenu-square-item:hover {
+        box-sizing: border-box;
+        border: 2px solid #ff0;
+    }
+}

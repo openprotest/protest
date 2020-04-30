@@ -68,7 +68,7 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
-    <Compile Include="Modules\Tools\Crypto.cs" />
+    <Compile Include="Modules\Crypto.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
     <Compile Include="Modules\Tools\SpeedTest.cs" />
@@ -131,7 +131,11 @@
     <Content Include="bin\protest\config.txt" />
     <Content Include="bin\protest\front\license.txt" />
     <Content Include="bin\protest\front\list.js" />
+    <Content Include="bin\protest\front\res\github.svg" />
+    <Content Include="bin\protest\front\res\l_screencapture.svg" />
     <Content Include="bin\protest\front\res\opensource.svg" />
+    <Content Include="bin\protest\front\res\popout.svg" />
+    <Content Include="bin\protest\front\res\screencapture.svg" />
     <Content Include="bin\protest\front\speedtest.js" />
     <Content Include="bin\protest\front\res\atom.svg" />
     <Content Include="bin\protest\front\res\gpl.svg" />
@@ -147,6 +151,7 @@
     <Content Include="bin\protest\front\scripteditor.js" />
     <Content Include="bin\protest\front\scripts.css" />
     <Content Include="bin\protest\front\scripts.js" />
+    <Content Include="bin\protest\front\screencapture.js" />
     <Content Include="bin\protest\front\wmi.css" />
     <Content Include="bin\protest\front\wmi.js" />
     <Content Include="bin\protest\front\webcheck.js" />

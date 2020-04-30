@@ -119,14 +119,10 @@ const Script_GetColumns = callback => {
 
 class ScriptEditor extends Window {
     constructor(args) {
-        if (document.head.querySelectorAll("link[href$='scripts.css']").length == 0) {
-            let csslink = document.createElement("link");
-            csslink.rel = "stylesheet";
-            csslink.href = "scripts.css";
-            document.head.appendChild(csslink);
-        }
+        super([64, 64, 64]);
 
-        super([64,64,64]);
+        this.AddCssDependencies("scripts.css");
+
         this.setIcon("res/scriptfile.svgz");
 
         this.args = args ? args : { file: null };
@@ -528,6 +524,8 @@ class ScriptEditor extends Window {
                 label.style.marginRight = "8px";
                 label.style.boxSizing = "border-box";
                 label.style.backgroundColor = "rgb(80,80,80)";
+                label.style.position = "sticky";
+                label.style.top = "0";
                 continue;
             }
 

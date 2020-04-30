@@ -38,7 +38,7 @@ label:after {
     border-radius: 9px;
 
     transition: transform .2s,
-                background-color .8s;
+                background-color .4s;
 }
 
 label:focus::before {

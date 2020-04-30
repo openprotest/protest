@@ -1,7 +1,19 @@
 let db_equip = [];
 let db_users = [];
 
-document.body.onunload = () => { storeSession(); };
+let loader_styles = [
+    "sidemenu.css",
+    "window.css",
+    "tip.css",
+    "button.css",
+    "textbox.css",
+    "checkbox.css",
+    "range.css",
+    "tools.css",
+    //"tabs.css",
+    //"wmi.css",
+    //"scripts.css"
+];
 
 (function loadFiles() {
     let loader = document.createElement("div");
@@ -19,20 +31,6 @@ document.body.onunload = () => { storeSession(); };
     let loader_decr = document.createElement("div");
     loader_decr.className = "loader-description";
     loader.appendChild(loader_decr);
-
-    let listStyle = [
-        "sidemenu.css",
-        "window.css",
-        "tip.css",
-        "button.css",
-        "textbox.css",
-        "checkbox.css",
-        "range.css",
-        "tools.css",
-        //"tabs.css",
-        //"wmi.css",
-        //"scripts.css"
-    ];
 
     let primaryScripts = [
         "sidemenu.js",
@@ -63,20 +61,21 @@ document.body.onunload = () => { storeSession(); };
         "scripts.js",
         "scripteditor.js",
         "log.js",
+        "screencapture.js",
         "settings.js"
     ];
 
     let count = 0;
-    let total = listStyle.length + primaryScripts.length + secondaryScripts.length + tertiaryScripts.length;
+    let total = loader_styles.length + primaryScripts.length + secondaryScripts.length + tertiaryScripts.length;
     const callbackHandle = (status, filename)=> {
         loader_progress.style.width = 100 * ++count / total + "%";
         loader_decr.innerHTML = filename;
 
-        if (listStyle.length + primaryScripts.length == count) { //load secondary
+        if (loader_styles.length + primaryScripts.length == count) { //load secondary
             for (let i = 0; i < secondaryScripts.length; i++)
                 loadScript(secondaryScripts[i], callbackHandle);
 
-        } else if (listStyle.length + primaryScripts.length + secondaryScripts.length == count) { //load tertiary
+        } else if (loader_styles.length + primaryScripts.length + secondaryScripts.length == count) { //load tertiary
             for (let i = 0; i < tertiaryScripts.length; i++)
                 loadScript(tertiaryScripts[i], callbackHandle);
 
@@ -89,15 +88,15 @@ document.body.onunload = () => { storeSession(); };
         }
     };
 
-    for (let i=0; i< listStyle.length; i++)
-        loadStyle(listStyle[i], callbackHandle);    
+    for (let i=0; i< loader_styles.length; i++)
+        loadStyle(loader_styles[i], callbackHandle);    
 
     for (let i=0; i< primaryScripts.length; i++)
         loadScript(primaryScripts[i], callbackHandle);
 })();
 
 function loadStyle(filename, callback) {
-    if (document.head.querySelectorAll("link[href$='" + filename + "']").length > 0) {
+    if (document.head.querySelectorAll(`link[href$='${filename}']`).length > 0) {
         callback("exists", filename);
         return;
     }
@@ -112,7 +111,7 @@ function loadStyle(filename, callback) {
 }
 
 function loadScript(filename, callback) {
-    if (document.head.querySelectorAll("script[src$='" + filename + "']").length > 0) {
+    if (document.head.querySelectorAll(`script[src$='${filename}']`).length > 0) {
         callback("exists", filename);
         return;
     }
@@ -170,6 +169,7 @@ function restoreSession() {
             case "Scripts"      : win = new Scripts(session[i].args); break;
             case "ScriptEditor" : win = new ScriptEditor(session[i].args); break;
             case "Log"          : win = new Log(session[i].args); break;
+            case "ScreenCapture": win = new ScreenCapture(session[i].args); break;
             case "Settings"     : win = new Settings(session[i].args); break;
         }
 

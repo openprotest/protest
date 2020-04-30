@@ -76,7 +76,8 @@ class Ping extends Console {
         });
 
         this.btnClear.addEventListener("click", event => {
-            this.ConfirmBox("Are you sure you want to clear the list?").addEventListener("click", () => {
+            const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
+            if (btnOK) btnOK.addEventListener("click", () => {
                 let split = this.request.split(";");
                 for (let i = 0; i < split.length; i++) {
                     if (split[i].length == 0) continue;
@@ -87,6 +88,7 @@ class Ping extends Console {
 
         this.btnOptions.addEventListener("click", event => {
             const dialog = this.DialogBox("214px");
+            if (dialog === null) return;
             const btnOK = dialog.btnOK;
             const innerBox = dialog.innerBox;
 

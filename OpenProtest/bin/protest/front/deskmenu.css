@@ -5,9 +5,15 @@
     top: 0;
     bottom: 64px;
     background-color: #DFE6EA;
-    background: var(--workplace-bg);
+    background: var(--bg);
 
     filter: contrast(0) brightness(.5);
+}
+
+@media (prefers-color-scheme: dark) {
+    #main {
+        background: var(--bg-dark);
+    }
 }
 
 #cap {

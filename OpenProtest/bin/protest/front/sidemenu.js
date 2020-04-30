@@ -31,7 +31,8 @@ const TOOLS = [
 { lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },
 { lbl:"Backup",             ico:"res/backup.svgz",         sqr:true,  f:arg=> new Window() },
 { lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Window() },
-{ lbl: "Pro-test clients",  ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
+{ lbl:"Pro-test clients",   ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
+{ lbl:"Screen capture",     ico:"res/screencapture.svgz",  sqr:false, f:arg=> btnScreenCapture.onclick() },
 { lbl:"Settings",           ico:"res/tool02.svgz",         sqr:false, f:arg=> new Settings() },
 { lbl:"Update",             ico:"res/update.svgz",         sqr:false, f:arg=> new Settings("update") },
 { lbl:"Legal",              ico:"res/gpl.svgz",            sqr:false, f:arg=> new Settings("legal") },
@@ -177,6 +178,11 @@ btnCloseSidemenu.onclick = event => {
         SideMenu_Update("");
     } else
         SideMenu_Close();
+};
+
+btnScreenCapture.onclick = () => {
+    SideMenu_Close();
+    new ScreenCapture();
 };
 
 btnSettings.onclick = () => {

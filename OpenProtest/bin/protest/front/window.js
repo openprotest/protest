@@ -1,5 +1,5 @@
 /* windows.js is a vanilla javascript library, designed for Pro-test 4.0
- * Created by Andreas Venizelou, 2020.
+ * Developed by Andreas Venizelou, 2020.
  * Released into the public domain.
  */
 
@@ -32,16 +32,25 @@ document.body.onkeydown   = win_keydown;
 
 bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 
+document.body.onunload = () => {
+    storeSession();
+
+    for (let i = 0; i < $w.array.length; i++)
+        if ($w.array[i].popoutWindow)
+            $w.array[i].popoutWindow.close();
+};
+
 class Window {
     constructor(themeColor = [56,56,56]) {
-        this.isMaximized    = false;
-        this.isMinimized    = false;
-        this.isClosed       = false;
-        this.position       = null;
-        this.themeColor     = themeColor;
-        this.escAction      = null;
-        this.defaultElement = null;
-        this.args           = {};
+        this.isMaximized     = false;
+        this.isMinimized     = false;
+        this.isClosed        = false;
+        this.position        = null;
+        this.themeColor      = themeColor;
+        this.escAction       = null;
+        this.defaultElement  = null;
+        this.args            = {};
+        this.cssDependencies = [];
 
         $w.startX += 2;
         $w.startY += 6;
@@ -88,35 +97,35 @@ class Window {
         this.resize.className = "resize";
         this.win.appendChild(this.resize);
 
-        let btnClose = document.createElement("div");
-        btnClose.className = "control close-box";
-        this.win.appendChild(btnClose);
+        this.btnClose = document.createElement("div");
+        this.btnClose.className = "control close-box";
+        this.win.appendChild(this.btnClose);
         if (onMobile) {
-            btnClose.style.width = btnClose.style.height = "28px";
-            btnClose.style.backgroundSize = "26px";
-            btnClose.style.backgroundPosition = "1px 1px";
+            this.btnClose.style.width = this.btnClose.style.height = "28px";
+            this.btnClose.style.backgroundSize = "26px";
+            this.btnClose.style.backgroundPosition = "1px 1px";
         }
 
-        let btnMaximize = document.createElement("div");
+        this.btnMaximize = document.createElement("div");
         if (!onMobile) {
-            btnMaximize.className = "control maximize-box";
-            this.win.appendChild(btnMaximize);
+            this.btnMaximize.className = "control maximize-box";
+            this.win.appendChild(this.btnMaximize);
         }
 
-        let btnMinimize = document.createElement("div");
+        this.btnMinimize = document.createElement("div");
         if (!onMobile) {
-            btnMinimize.className = "control minimize-box";
-            this.win.appendChild(btnMinimize);
+            this.btnMinimize.className = "control minimize-box";
+            this.win.appendChild(this.btnMinimize);
         }
 
-        /*let btnPopout = document.createElement("div");
+        this.btnPopout = document.createElement("div");
         if (!onMobile) {
-            btnPopout.className = "control popout-box";
-            this.win.appendChild(btnPopout);
-        }*/
+            this.btnPopout.className = "control popout-box";
+            this.win.appendChild(this.btnPopout);
+        }
         
         this.toolbox = document.createElement("div");
-        this.toolbox.className = "toolbox";
+        this.toolbox.className = "win-toolbox";
         this.win.appendChild(this.toolbox);
 
         this.toolbox.onmousedown = (event) => { event.stopPropagation(); this.BringToFront(); };
@@ -143,7 +152,7 @@ class Window {
             $w.focused = this;
         };
 
-        //this.win.onmouseup = (event)=> { if (this.defaultElement != null) this.defaultElement.focus(); };
+        this.win.onmouseup = (event)=> { if (this.defaultElement != null) this.defaultElement.focus(); };
 
         this.resize.onmousedown = (event)=> {
             this.BringToFront();
@@ -172,7 +181,11 @@ class Window {
         };
 
         this.task.onmouseup = (event)=> {
-            if (event.button==0 && (Math.abs(icoPosition - this.task.offsetLeft) < 2)) { //clicked but not moved
+            if (event.button == 0 && (Math.abs(icoPosition - this.task.offsetLeft) < 2)) { //clicked but not moved
+
+                if (this.popoutWindow) 
+                    this.popoutWindow.focus();
+               
                 this.Minimize();
                 if (!this.isMinimized) if (this.defaultElement != null) this.defaultElement.focus();
             }
@@ -185,20 +198,20 @@ class Window {
         
         this.content.onmousedown = (event)=> { this.BringToFront(); event.stopPropagation(); };
 
-        btnClose.onmousedown =
-        btnMaximize.onmousedown =
-        btnMinimize.onmousedown =
-        //btnPopout.onmousedown = 
+        this.btnClose.onmousedown =
+        this.btnMaximize.onmousedown =
+        this.btnMinimize.onmousedown =
+        this.btnPopout.onmousedown = 
         (event)=> {
             $w.control_pressed = this;
             this.BringToFront();
             event.stopPropagation();
         };
         
-        btnClose.onmouseup    = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Close();} };
-        btnMaximize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Toogle();} };
-        btnMinimize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Minimize();} };
-        //btnPopout.onmouseup   = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Popout();} };
+        this.btnClose.onmouseup    = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Close();} };
+        this.btnMaximize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Toogle();} };
+        this.btnMinimize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Minimize();} };
+        this.btnPopout.onmouseup   = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Popout();} };
     
         this.setTitle("Title");
         $w.array.push(this);
@@ -224,7 +237,11 @@ class Window {
         this.task.style.transform  = "scale(.85)";
 
         setTimeout(()=> {
-            container.removeChild(this.win);
+            if (this.popoutWindow)
+                this.popoutWindow.close();
+            else
+                container.removeChild(this.win);
+
             bottombar.removeChild(this.task);
             $w.array.splice($w.array.indexOf(this), 1);
             alignIcon(false);
@@ -300,17 +317,18 @@ class Window {
             this.Pop();
 
         } else { //minimize
+            if (this.popoutWindow) return;
+
             let iconPosition = this.task.getBoundingClientRect().x - this.win.offsetLeft - this.win.clientWidth/2;
 
             this.win.style.opacity    = "0";
             this.win.style.visibility = "hidden";
             this.win.style.transform  = "scale(.5) rotateX(10deg) translateY(" + container.clientHeight + "px) translateX(" + iconPosition + "px)";
             this.isMinimized = true;
-          
+
             this.task.style.top = "2px";
             this.task.style.borderRadius = "12.5%";
-            this.task.style.backgroundColor = "rgba(0,0,0,0)";
-            this.icon.style.filter = "none";
+            this.task.className = "bar-icon";
 
             $w.focused = null;
         }
@@ -329,27 +347,78 @@ class Window {
     }
 
     Popout() {
-        let newWin= window.open(
+        //close any open dialog box
+        const dialog = this.win.getElementsByClassName("win-dim")[0];
+        if (dialog != null) {
+            this.win.removeChild(dialog);
+            this.content.style.filter = "none";
+        }
+
+        let newWin = window.open(
             "", "",
-            "width=" + this.win.clientWidth +
-            ",height=" + this.win.clientHeight +
-            ",left=" + this.win.offsetLeft +
-            ",top=" + this.win.offsetTop);
+            `width=${this.win.clientWidth},height=${this.win.clientHeight},left=${window.screenX+this.win.offsetLeft},top=${window.screenY+this.win.offsetTop}`);
 
-        newWin.document.title = this.lblTitle.innerHTML;
+        newWin.document.write(`<html><head><title>${this.lblTitle.innerHTML}</title>`);
+        newWin.document.write("<link rel='icon' href='res/icon24.png'>");
+        newWin.document.write("<link rel='stylesheet' href='root.css'>");
+
+        for (let i = 0; i < loader_styles.length; i++)
+            newWin.document.write(`<link rel='stylesheet' href='${loader_styles[i]}'>`);
+
+        for (let i = 0; i < this.cssDependencies.length; i++)
+            newWin.document.write(`<link rel='stylesheet' href='${this.cssDependencies[i]}'>`);
+
+        newWin.document.write("</head><body>");
+        newWin.document.write("</body></html>");
+        newWin.document.close();
+
         newWin.document.body.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
+        newWin.document.body.style.padding = "0";
+        newWin.document.body.style.margin = "0";
+        if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 < 128) newWin.document.body.style.color = "rgb(224,224,224)";
 
-        const favicon = document.createElement("link");
-        favicon.rel = "icon";
-        favicon.href = "res/icon24.png";
-        newWin.document.head.appendChild(favicon);
+        this.popoutWindow = newWin;
+        container.removeChild(this.win);        
 
-        newWin.document.body.appendChild(this.content);
+        const toolbar = document.createElement("div");
+        toolbar.style.position = "absolute";
+        toolbar.style.width = "100%";
+        toolbar.style.height = "26px";
+        toolbar.style.backgroundColor = "rgba(128,128,128,.1)";
+        newWin.document.body.appendChild(toolbar);
+        toolbar.appendChild(this.toolbox);
 
-        const css1 = document.createElement("link");
-        css1.rel = "stylesheet";
-        css1.href = "tools.css";
-        newWin.document.head.appendChild(css1);
+        const content = document.createElement("div");
+        content.style.position = "absolute";
+        content.style.left = "0";
+        content.style.right = "0";
+        content.style.top = "28px";
+        content.style.bottom = "0";
+        newWin.document.body.appendChild(content);        
+        content.appendChild(this.content);
+
+        const btnUnpop = document.createElement("div");
+        btnUnpop.style.position = "absolute";
+        btnUnpop.style.width = "22px";
+        btnUnpop.style.height = "22px";
+        btnUnpop.style.right = "4px";
+        btnUnpop.style.top = "2px";
+        btnUnpop.style.borderRadius = "2px";
+        btnUnpop.style.backgroundColor = "rgb(224,224,224)";
+        btnUnpop.style.backgroundImage = "url(res/popout.svgz)";
+        toolbar.appendChild(btnUnpop);
+
+        btnUnpop.onclick = () => {
+            container.appendChild(this.win);
+            this.win.appendChild(this.toolbox);
+            this.win.appendChild(this.content);
+
+            newWin.onbeforeunload = () => { };
+            newWin.close();
+            this.popoutWindow = null;
+        };
+
+        newWin.onbeforeunload = () => this.Close();
     }
 
     BringToFront() {
@@ -358,6 +427,8 @@ class Window {
             $w.array[i].task.style.borderRadius = "12.5%";
             $w.array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
             $w.array[i].icon.style.filter = "none";
+
+            $w.array[i].task.className = "bar-icon";
         }
 
         if (this.isMaximized) {
@@ -365,6 +436,7 @@ class Window {
             this.task.style.borderRadius = "0 0 12.5% 12.5%";
         }
 
+        this.task.className = "bar-icon bar-icon-focused";
         this.task.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
         if ((this.themeColor[0]+this.themeColor[1]+this.themeColor[2]) / 3 < 128) this.icon.style.filter = "brightness(6)";
 
@@ -373,66 +445,91 @@ class Window {
         $w.focused = this;
     }
 
-    ConfirmBox(message, okOnly=false) {
-        let confirm = document.createElement("div");
-        confirm.className = "confirm";
-        this.win.appendChild(confirm);
+    ConfirmBox(message, okOnly = false) {
+        //if  a dialog is already opened, do nothing
+        if (this.popoutWindow) {
+            if (this.popoutWindow.document.body.getElementsByClassName("win-dim")[0] != null) return null;
+        } else {
+            if (this.win.getElementsByClassName("win-dim")[0] != null) return null;
+        }
 
-        let confirmBox = document.createElement("div");
-        confirmBox.innerHTML = message;
-        confirm.appendChild(confirmBox);
+        const dim = document.createElement("div");
+        dim.className = "win-dim";
 
-        let buttonBox = document.createElement("div");
-        buttonBox.style.textAlign = "center";
+        if (this.popoutWindow)
+            this.popoutWindow.document.body.appendChild(dim);
+        else
+            this.win.appendChild(dim);
+
+        const confirmBox = document.createElement("div");
+        confirmBox.className = "win-confirm";
+        dim.appendChild(confirmBox);
+
+        const lblMessage = document.createElement("div");
+        lblMessage.innerHTML = message;
+        confirmBox.appendChild(lblMessage);
+
+        const buttonBox = document.createElement("div");
         buttonBox.style.paddingTop = "24px";
         confirmBox.appendChild(buttonBox);
 
-        let btnOK = document.createElement("input");
+        const btnOK = document.createElement("input");
         btnOK.type = "button";
         btnOK.value = "OK";
         buttonBox.appendChild(btnOK);
 
-        let btnCancel = document.createElement("input");
+        const btnCancel = document.createElement("input");
         btnCancel.type = "button";
         btnCancel.value = "Cancel";
         if (!okOnly) buttonBox.appendChild(btnCancel);
 
-        confirmBox.onmousedown = event=> {event.stopPropagation(); this.BringToFront(); };
-
-        this.content.style.filter = "blur(2px)";
+        this.content.style.filter = "blur(4px)";
 
         let once = false;
-        btnCancel.onclick = (event)=> {
+        btnCancel.onclick = (event) => {
             if (once) return;
             once = true;
-            confirm.style.filter = "opacity(0)";
-            confirmBox.style.transition = ".2s";
+            dim.style.filter = "opacity(0)";
             confirmBox.style.transform = "scaleY(.2)";
             this.content.style.filter = "none";
-            setTimeout(()=> {this.win.removeChild(confirm);}, ANIM_DURATION);
+            setTimeout(() => {
+                if (this.popoutWindow) 
+                    this.popoutWindow.document.body.removeChild(dim);
+                else
+                    this.win.removeChild(dim);
+            }, ANIM_DURATION);
         };
 
-        btnOK.onclick = event=> btnCancel.onclick(event);
+        btnOK.onclick = event => btnCancel.onclick(event);
         btnOK.focus();
+
         return btnOK;
     }
 
     DialogBox(height) {
         //if  a dialog is already opened, do nothing
-        if (this.win.getElementsByClassName("dialog")[0] != null) return null;
-
-        this.content.style.filter = "blur(2px) opacity(.2)";
-
-        let dialog = document.createElement("div");
-        dialog.className = "dialog";
-        this.win.appendChild(dialog);
-
-        let container = document.createElement("div");
-        if (height != undefined) {
-            container.style.maxHeight = height;
-            container.style.borderRadius = "0 0 8px 8px";
+        if (this.popoutWindow) {
+            if (this.popoutWindow.document.body.getElementsByClassName("win-dim")[0] != null) return null;
+        } else {
+            if (this.win.getElementsByClassName("win-dim")[0] != null) return null;
         }
-        dialog.appendChild(container);
+
+        const dim = document.createElement("div");
+        dim.className = "win-dim";
+
+        if (this.popoutWindow)
+            this.popoutWindow.document.body.appendChild(dim);
+        else
+            this.win.appendChild(dim);
+
+        const dialogBox = document.createElement("div");
+        dialogBox.className = "win-dialog";
+        dim.appendChild(dialogBox);
+        if (height != undefined) {
+            dialogBox.style.maxHeight = height;
+            dialogBox.style.borderRadius = "0 0 8px 8px";
+        }
+        dim.appendChild(dialogBox);
 
         let innerBox = document.createElement("div");
         innerBox.style.position = "absolute";
@@ -441,47 +538,54 @@ class Window {
         innerBox.style.top = "0";
         innerBox.style.bottom = "52px";
         innerBox.style.overflowY = "auto";
-        container.appendChild(innerBox);
+        dialogBox.appendChild(innerBox);
 
-        let buttonBox = document.createElement("div");
+        const buttonBox = document.createElement("div");
         buttonBox.style.position = "absolute";
         buttonBox.style.textAlign = "center";
-        buttonBox.style.bottom = "16px";
-        buttonBox.style.width = "100%";
-        container.appendChild(buttonBox);
+        buttonBox.style.left = "4px";
+        buttonBox.style.right = "4px";
+        buttonBox.style.bottom = "8px";
+        dialogBox.appendChild(buttonBox);
 
-        let btnOK = document.createElement("input");
+        const btnOK = document.createElement("input");
         btnOK.type = "button";
         btnOK.value = "OK";
         buttonBox.appendChild(btnOK);
 
-        let btnCancel = document.createElement("input");
+        const btnCancel = document.createElement("input");
         btnCancel.type = "button";
         btnCancel.value = "Cancel";
         buttonBox.appendChild(btnCancel);
 
-        dialog.onmousedown = event=> {event.stopPropagation(); this.BringToFront(); };
+        this.content.style.filter = "blur(4px)";
 
-        let once = false;
-        btnCancel.onclick = (event)=> {
-            if (once) return;
-            once = true;
-            dialog.style.filter = "opacity(0)";
-            container.style.transition = ".2s";
-            container.style.transformOrigin = "50% 0";
-            container.style.transform = "scaleY(.2)";
-            this.content.style.filter = "none";
-            setTimeout(()=> {this.win.removeChild(dialog);}, ANIM_DURATION);
+        dim.onmousedown = event => {
+            event.stopPropagation();
         };
 
-        btnOK.onclick = event=> btnCancel.onclick(event);
-        btnOK.focus();
+        let once = false;
+        btnCancel.onclick = (event) => {
+            if (once) return;
+            once = true;
+            dim.style.filter = "opacity(0)";
+            dialogBox.style.transform = "scaleY(.2)";
+            this.content.style.filter = "none";
+            setTimeout(() => {
+                if (this.popoutWindow)
+                    this.popoutWindow.document.body.removeChild(dim);
+                else
+                    this.win.removeChild(dim);
+            }, ANIM_DURATION);
+        };
+
+        btnOK.onclick = event => btnCancel.onclick(event);
 
         return {
-            innerBox  : innerBox,
-            buttonBox : buttonBox,
-            btnOK     : btnOK,
-            btnCancel : btnCancel
+            innerBox: innerBox,
+            buttonBox: buttonBox,
+            btnOK: btnOK,
+            btnCancel: btnCancel
         };
     }
 
@@ -527,6 +631,18 @@ class Window {
         };
 
         return newLabel;
+    }
+
+    AddCssDependencies(filename) {
+        if (document.head.querySelectorAll(`link[href$='${filename}']`).length == 0) {
+            let csslink = document.createElement("link");
+            csslink.rel = "stylesheet";
+            csslink.href = filename;
+            document.head.appendChild(csslink);
+        }
+
+        if (this.cssDependencies.indexOf(filename) === -1)
+            this.cssDependencies.push(filename);        
     }
 }
 

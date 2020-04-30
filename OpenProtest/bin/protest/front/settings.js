@@ -1,8 +1,12 @@
-
 (function initSettings() {
+    //automatically disable animations if prefers-reduced-motion
+    if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("disable_anime") === null)
+        localStorage.setItem("disable_anime", "true");
+
     sidemenu_dynamicicon      = localStorage.getItem("dynamic_search_icon") === "true";
     $w.always_maxxed          = localStorage.getItem("w_always_maxed") === "true";
-    document.body.className   = localStorage.getItem("disable_anime") === "true" ? "disable-animation" : "";
+    document.body.className   = localStorage.getItem("high_contrast") === "true" ? "high-contrast" : "";
+    document.body.className   += localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
     container.className       = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
 
     if (localStorage.getItem("zoom"))
@@ -13,9 +17,12 @@
     else
         SetAccentColor([255, 102, 0]);
 
+    if (localStorage.getItem("background"))
+        main.style.background = localStorage.getItem("background");
+
+
     if (localStorage.getItem("font") && localStorage.getItem("font").length > 0)
         document.documentElement.style.setProperty("--global-font-family", localStorage.getItem("font"));
-
 })();
 
 class Settings extends Tabs {
@@ -35,7 +42,7 @@ class Settings extends Tabs {
         this.tabGui     = this.AddTab("Appearence", "res/tv.svgz");
         this.tabSession = this.AddTab("Session", "res/hourglass.svgz");
         this.tabUpdate  = this.AddTab("Update", "res/update.svgz");
-        this.tabLegal   = this.AddTab("Legal", "res/gpl.svgz");
+        this.tabLegal   = this.AddTab("License", "res/gpl.svgz");
         this.tabAbout   = this.AddTab("About", "res/logo.svgz");
 
         this.tabGui.onclick = () => this.ShowGui();
@@ -74,7 +81,7 @@ class Settings extends Tabs {
 
     ShowGui() {
         this.args = "appearence";
-        this.subContent.innerHTML = "";        
+        this.subContent.innerHTML = "";
 
         this.chkDynamicSearchIcon = document.createElement("input");
         this.chkDynamicSearchIcon.type = "checkbox";
@@ -87,6 +94,13 @@ class Settings extends Tabs {
         this.chkWinMaxxed.type = "checkbox";
         this.subContent.appendChild(this.chkWinMaxxed);
         this.AddCheckBoxLabel(this.subContent, this.chkWinMaxxed, "Always maximize windows").style.fontWeight = "600";
+        this.subContent.appendChild(document.createElement("br"));
+        this.subContent.appendChild(document.createElement("br"));
+
+        this.chkHighContrast = document.createElement("input");
+        this.chkHighContrast.type = "checkbox";
+        this.subContent.appendChild(this.chkHighContrast);
+        this.AddCheckBoxLabel(this.subContent, this.chkHighContrast, "High contrast").style.fontWeight = "600";
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
 
@@ -156,10 +170,10 @@ class Settings extends Tabs {
         divColor.style.paddingBottom = "8px";
         this.subContent.appendChild(divColor);
 
-        let indicators = [];
-        let selected_accent = [255,102,0];
+        let accentIndicators = [];
+        let selected_accent = [255, 102, 0];
         if (localStorage.getItem("accent_color"))
-            selected_accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o));    
+            selected_accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o));
 
         const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [32,144,240], [192,64,192]];
 
@@ -167,9 +181,9 @@ class Settings extends Tabs {
             let rgbString = `rgb(${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]})`;
             let hsl = RgbToHsl(accentColors[i]);
 
-            let step1 = `hsl(${hsl[0]-4},${hsl[1]}%,${hsl[2]*.78}%)`;
-            let step2 = `hsl(${hsl[0]+7},${hsl[1]}%,${hsl[2]*.9}%)`; //--select-color
-            let step3 = `hsl(${hsl[0]-4},${hsl[1]}%,${hsl[2]*.8}%)`;
+            let step1 = `hsl(${hsl[0] - 4},${hsl[1]}%,${hsl[2] * .78}%)`;
+            let step2 = `hsl(${hsl[0] + 7},${hsl[1]}%,${hsl[2] * .9}%)`; //--select-color
+            let step3 = `hsl(${hsl[0] - 4},${hsl[1]}%,${hsl[2] * .8}%)`;
             let gradient = `linear-gradient(to bottom, ${step1}0%, ${step2}92%, ${step3}100%)`;
 
             const themeBox = document.createElement("div");
@@ -198,19 +212,93 @@ class Settings extends Tabs {
             indicator.style.transition = ".4s";
             themeBox.appendChild(indicator);
 
-            indicators.push(indicator);
+            accentIndicators.push(indicator);
 
             themeBox.onclick = () => {
                 localStorage.setItem("accent_color", `${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]}`);
 
                 SetAccentColor(accentColors[i]);
-                for (let j = 0; j < indicators.length; j++) {
-                    indicators[j].style.width = "8px";
-                    indicators[j].style.marginLeft = "20px";
+                for (let j = 0; j < accentIndicators.length; j++) {
+                    accentIndicators[j].style.width = "8px";
+                    accentIndicators[j].style.marginLeft = "20px";
                 }
 
-                indicators[i].style.width = "48px";
-                indicators[i].style.marginLeft = "0px";
+                accentIndicators[i].style.width = "48px";
+                accentIndicators[i].style.marginLeft = "0px";
+            };
+        }
+
+        this.subContent.appendChild(document.createElement("hr"));
+
+        const divBackground = document.createElement("div");
+        divBackground.innerHTML = "Background: ";
+        divBackground.style.fontWeight = "600";
+        divBackground.style.paddingBottom = "8px";
+        this.subContent.appendChild(divBackground);
+
+
+        let bgIndicators = [];
+        let selected_bg = "";
+        if (localStorage.getItem("background"))
+            selected_bg = localStorage.getItem("background");
+
+        const background_list = [
+            ["System",  ""],
+            ["Light",   "var(--bg-light)"],
+            ["Default", "var(--bg)"],
+            ["Dark",    "var(--bg-dark)"],
+            ["Blue",    "var(--bg-blue)"],
+            ["Green",   "var(--bg-green)"],
+            ["Hipster",   "var(--bg-hipster)"],
+            ["Carbon",   "var(--bg-carbon)"],
+            ["Metal",   "var(--bg-metal)"]
+        ];
+
+        for (let i = 0; i < background_list.length; i++) {
+            const bgBox = document.createElement("div");
+            bgBox.style.display = "inline-block";
+            bgBox.style.margin = "2px 4px";
+            this.subContent.appendChild(bgBox);
+
+            const previewBox = document.createElement("div");
+            previewBox.innerHTML = background_list[i][0];
+            previewBox.style.textAlign = "center";
+            previewBox.style.lineHeight = "72px";
+            previewBox.style.fontWeight = "800";
+            previewBox.style.textShadow = "#fff 0px 0px 2px";
+            previewBox.style.width = "96px";
+            previewBox.style.height = "80px";
+            previewBox.style.borderRadius = "4px";
+            previewBox.style.background = background_list[i][1];
+            previewBox.style.border = "rgb(96,96,96) 2px solid";
+            bgBox.appendChild(previewBox);
+
+            let isSelected = selected_bg == background_list[i][1];
+
+            const indicator = document.createElement("div");
+            indicator.style.width = isSelected ? "96px" : "8px";
+            indicator.style.height = "8px";
+            indicator.style.borderRadius = "8px";
+            indicator.style.marginTop = "4px";
+            indicator.style.marginLeft = isSelected ? "0" : "44px";
+            indicator.style.backgroundColor = "rgb(64,64,64)";
+            indicator.style.border = "transparent 1px solid";
+            indicator.style.transition = ".4s";
+            bgBox.appendChild(indicator);
+
+            bgIndicators.push(indicator);
+
+            bgBox.onclick = () => {
+                localStorage.setItem("background", background_list[i][1]);
+                main.style.background = background_list[i][1];
+
+                for (let j = 0; j < bgIndicators.length; j++) {
+                    bgIndicators[j].style.width = "8px";
+                    bgIndicators[j].style.marginLeft = "44px";
+                }
+
+                bgIndicators[i].style.width = "96px";
+                bgIndicators[i].style.marginLeft = "0px";
             };
         }
 
@@ -226,6 +314,7 @@ class Settings extends Tabs {
 
         this.chkDynamicSearchIcon.checked = localStorage.getItem("dynamic_search_icon") === "true";
         this.chkWinMaxxed.checked         = localStorage.getItem("w_always_maxed") === "true";
+        this.chkHighContrast.checked      = localStorage.getItem("high_contrast") === "true";
         this.chkDisableAnime.checked      = localStorage.getItem("disable_anime") === "true";
         this.chkWindowShadows.checked     = localStorage.getItem("w_disable_dropshadow") === "true";
         this.zoom.value                   = localStorage.getItem("zoom") == null ? 5 : parseInt(localStorage.getItem("zoom"));
@@ -235,7 +324,8 @@ class Settings extends Tabs {
         const Apply = ()=> {
             sidemenu_dynamicicon = this.chkDynamicSearchIcon.checked;
             $w.always_maxxed = this.chkWinMaxxed.checked;
-            document.body.className = this.chkDisableAnime.checked ? "disable-animation" : "";
+            document.body.className = this.chkHighContrast.checked ? "high-contrast" : "";
+            document.body.className += this.chkDisableAnime.checked ? " disable-animation" : "";
             document.body.style.zoom = 75 + this.zoom.value * 5 + "%";
             divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%";
             container.className = this.chkWindowShadows.checked ? "disable-window-dropshadows" : "";
@@ -243,6 +333,7 @@ class Settings extends Tabs {
 
             localStorage.setItem("dynamic_search_icon", this.chkDynamicSearchIcon.checked);
             localStorage.setItem("w_always_maxed", this.chkWinMaxxed.checked);
+            localStorage.setItem("high_contrast", this.chkHighContrast.checked);
             localStorage.setItem("disable_anime", this.chkDisableAnime.checked);
             localStorage.setItem("w_disable_dropshadow", this.chkWindowShadows.checked);
             localStorage.setItem("zoom", this.zoom.value);
@@ -252,6 +343,7 @@ class Settings extends Tabs {
         //btnFontFamily.onclick             = Apply;
         this.chkDynamicSearchIcon.onclick = Apply;
         this.chkWinMaxxed.onclick         = Apply;
+        this.chkHighContrast.onclick      = Apply;
         this.chkDisableAnime.onclick      = Apply;
         this.chkWindowShadows.onclick     = Apply;
         this.zoom.onchange                = Apply;
@@ -538,6 +630,7 @@ class Settings extends Tabs {
         credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
         credits.innerHTML += "<b>-</b> Microsoft.Management.Infrastructure <a target='_blank' href='https://nuget.org/packages/Microsoft.Management.Infrastructure/'>by Microsoft</a><br>";
         credits.innerHTML += "<b>-</b> System.Management.Automation        <a target='_blank' href='https://docs.microsoft.com/en-us/dotnet/api/system.management.automation'>by Microsoft</a><br>";
+        credits.innerHTML += "<b>-</b> Open Sans facetype                  <a>by Steve Matteson</a><br>";
         center.appendChild(credits);
 
         center.appendChild(document.createElement("br"));
@@ -546,8 +639,6 @@ class Settings extends Tabs {
 
         const donate = document.createElement("a");
         donate.style.display = "inline-block";
-        //donate.style.color = "rgb(224,224,224)";
-        //donate.style.backgroundColor = "#202020";
         donate.style.border = "#202020 1px solid";
         donate.style.borderRadius = "4px";
         donate.style.padding = "2px 4px";
@@ -565,8 +656,6 @@ class Settings extends Tabs {
 
         const involve = document.createElement("a");
         involve.style.display = "inline-block";
-        //involve.style.color = "rgb(224,224,224)";
-        //involve.style.backgroundColor = "#202020";
         involve.style.border = "#202020 1px solid";
         involve.style.borderRadius = "4px";
         involve.style.padding = "2px 4px";
@@ -622,10 +711,10 @@ class Settings extends Tabs {
     }
 
     ClearCache() {
-        this.ConfirmBox("Are you sure you want clear local storage? The page will reload after the cleaning.", false).addEventListener("click", () => {
+        const btnOK = this.ConfirmBox("Are you sure you want clear local storage? The page will reload after the cleaning.", false);
+        if (btnOK) btnOK.addEventListener("click", () => {
             localStorage.clear();
             location.reload();
         });
     }
-
 }

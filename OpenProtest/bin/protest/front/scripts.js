@@ -1,13 +1,9 @@
 class Scripts extends Tabs {
     constructor() {
-        if (document.head.querySelectorAll("link[href$='scripts.css']").length == 0) {
-            let csslink = document.createElement("link");
-            csslink.rel = "stylesheet";
-            csslink.href = "scripts.css";
-            document.head.appendChild(csslink);
-        }
-
         super();
+
+        this.AddCssDependencies("scripts.css");
+
         this.setTitle("Scripts");
         this.setIcon("res/scripts.svgz");
 
@@ -107,7 +103,8 @@ class Scripts extends Tabs {
 
             remove.onclick = event => {
                 event.stopPropagation();
-                this.ConfirmBox("Are you sure you want to delete " + name).addEventListener("click", () => {
+                const btnOK = this.ConfirmBox("Are you sure you want to delete " + name);
+                if (btnOK) btnOK.addEventListener("click", () => {
                     let xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) {
@@ -168,7 +165,8 @@ class Scripts extends Tabs {
 
             remove.onclick = event => {
                 event.stopPropagation();
-                this.ConfirmBox("Are you sure you want to delete " + name).addEventListener("click", () => {
+                const btnOK = this.ConfirmBox("Are you sure you want to delete " + name);
+                if (btnOK) btnOK.addEventListener("click", () => {
                     let xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) {
@@ -228,6 +226,7 @@ class Scripts extends Tabs {
 
     AddNew() {
         const dialog = this.DialogBox("128px");
+        if (dialog === null) return;
         const btnOK = dialog.btnOK;
         const innerBox = dialog.innerBox;
 
@@ -336,8 +335,10 @@ class ScriptReport extends Window {
 
                 this.content.innerHTML = report;
 
-            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
-                this.ConfirmBox("Server is unavailable.", true).addEventListener("click", () => { this.Close(); });
+            } else if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
+                const btnOK = this.ConfirmBox("Server is unavailable.", true);
+                if (btnOK) btnOK.addEventListener("click", () => { this.Close(); });
+            }
         };
         xhr.open("GET", "getreport&filename=" + filename, true);
         xhr.send();

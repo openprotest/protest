@@ -1,13 +1,8 @@
 class Wmi extends Window {
     constructor(args) {
-        if (document.head.querySelectorAll("link[href$='wmi.css']").length == 0) {
-            let csslink = document.createElement("link");
-            csslink.rel = "stylesheet";
-            csslink.href = "wmi.css";
-            document.head.appendChild(csslink);
-        }
-
         super();
+
+        this.AddCssDependencies("wmi.css");
 
         this.args = args ? args : {
             target: "",

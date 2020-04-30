@@ -79,6 +79,7 @@
 
 .window > .popout-box {
     right: 92px;
+    background-image: url(res/popout.svgz);
 }
 
 .window > .resize {
@@ -104,7 +105,7 @@
     filter: invert(1);
 }
 
-.window > .toolbox {
+.win-toolbox {
     position: absolute;
     left: 48px;
     top: 2px;
@@ -114,7 +115,7 @@
     transition: .2s;
 }
 
-.window > .toolbox > div {
+.win-toolbox > div {
     float: left;
     width: 22px;
     height: 22px;
@@ -124,10 +125,10 @@
     background-repeat: no-repeat;
     background-size: cover;
 }
-.window > .toolbox > div:hover { background-color: rgba(128,128,128,.5); }
-.window > .toolbox > div:active { background-color: rgba(0,0,0,.2); }
+.win-toolbox > div:hover { background-color: rgba(128,128,128,.5); }
+.win-toolbox > div:active { background-color: rgba(0,0,0,.2); }
 
-.window > .toolbox > div > * {
+.win-toolbox > div > * {
     position: relative;
     top: 22px;
     width: 250px;
@@ -145,99 +146,90 @@
     transition-delay: .1s;
 }
 
-.window > .toolbox > div > *:focus,
-.window > .toolbox > div:hover > * {
+.win-toolbox > div > *:focus,
+.win-toolbox > div:hover > * {
     visibility: visible;
     transform: none;
     transition-delay: 0s;
 }
 
-.window > .toolbox > div > div {
+.win-toolbox > div > div {
     min-height: 100px;
     border-radius: 2px;
     overflow-y: auto;
 }
 
-.window > .toolbox > div > div > div {
+.win-toolbox > div > div > div {
     padding: 8px 8px;
 }
 
-.window > .toolbox > div > div > div:hover {
+.win-toolbox > div > div > div:hover {
     background-color: rgb(72,72,72);
 }
 
-.window > .toolbox > div > input[type="text"] {
+.win-toolbox > div > input[type="text"] {
     outline: none;
     border: 0;
     padding: 8px;
     text-transform: initial;
 }
 
-.window > .dialog {
+.win-dim {
     position: absolute;
     left: 0;
     right: 0;
     top: 30px;
     bottom: 0;
     overflow: hidden;
-    animation: fade-in .2s;
-    transition: .2s;
-}
-
-.window > .dialog > div:first-child {
-    position: relative;
-    min-width: 236px;
-    max-width: 960px;
-    width: 80%;
-    height: calc(100% - 2px);
-    margin: 0 auto;
-    background-color: rgb(203,203,203);
-    box-shadow: rgba(0,0,0,.4) 0 12px 16px;
-
-    transform-origin: 50% 0;
-    animation: roll-in .2s;
-}
-
-.window > .confirm {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    border-radius: 8px 8px 0 0;
+    
     background-color: rgba(64,64,64,.8);
-    overflow: hidden;
+    /*backdrop-filter: blur(4px*);*/
+
     animation: fade-in .2s;
-    transition: .2s;
+    transition: opacity .2s, filter .2s;
 }
 
-.window > .confirm > div {
-    text-align: center;
-    font-weight: 600;
-    background-color: rgb(203,203,203);
-    height: auto;
-    width: 400px;
+.win-confirm, .win-dialog {
+    background-color: rgb(192,192,192);
+    color: rgb(32,32,32);
     max-width: 100%;
     margin: 0px auto;
-    
+
     box-shadow: rgba(0,0,0,.2) 0 12px 16px;
     border-radius: 0 0 8px 8px;
     padding: 32px 8px 16px 8px;
     box-sizing: border-box;
 
-    transform-origin: 50% 0;
     animation: roll-in .2s;
+    transform-origin: 50% 0;
+    transition: transform .2s;
 }
 
+.win-confirm {
+    width: 400px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.win-dialog {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    max-width: 960px;
+    height: calc(100% - 2px);
+}
+
+
 .bar-icon {
+    position: absolute;
     top: 2px;
     width: 60px;
     height: 60px;
     border-radius: 12.5%;
-    position: absolute;
+    background-color: rgba(0,0,0,0);
+    filter: "none";
 
-    transition: .2s,
-                filter 0s;
+    transition: .2s, filter 0s;
 }
 
 .bar-icon > .icon {
@@ -253,6 +245,10 @@
 
     transition: filter 0s;
     animation: task-icon-open .25s ease-in-out;
+}
+
+.bar-icon-focused {
+
 }
 
 .no-results:empty::after {
@@ -314,6 +310,26 @@
     animation: delayed-fade-in 2s ease-in 1;
 }
 
+.high-contrast > #main > #container > .window {
+    background-color: rgb(20,20,20);
+    color: #fff;
+    /*backdrop-filter: blur(8px);*/
+    box-shadow: #fff 0 0 1px;
+}
+
+.high-contrast > #main > #container > .window > .content {
+    background-color: rgba(20,20,20,0) !important;
+    color: #fff;
+}
+
+.high-contrast > #bottombar > .bar-icon-focused {
+    background-color: rgb(20,20,20) !important;
+}
+
+.high-contrast > #bottombar > .bar-icon-focused > .icon {
+    filter: brightness(6);
+}
+
 @keyframes wait-animation {
     0% { transform: translateX(175px); }
     50% { transform: translateX(-175px); }
@@ -360,4 +376,16 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@media screen and (-ms-high-contrast: active) {
+    .window {
+        background-color: #000;
+        color: #fff;
+        border: 1px solid #ff0;
+    }
+
+    .window > .control {
+        filter: brightness(4);
+    }
 }

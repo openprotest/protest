@@ -93,7 +93,7 @@
     right: 0;
     top: 48px;
     bottom: 0;
-    background-color: rgb(64,64,64);
+    background-color: inherit;
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -105,7 +105,7 @@
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: rgb(64,64,64);
+    background-color: inherit;
 }
 
 .script-selected-name {

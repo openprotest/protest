@@ -104,12 +104,6 @@ class Fetch extends Tabs {
 
         btnOK.onclick = () => { };
         btnCancel.onclick = () => this.Close();
-
-        const description = document.createElement("div");
-        description.innerHTML = "Use this utility to fetch network devices within the specified IP range.";
-        description.style.textAlign = "center";
-        description.style.gridArea = "12 / 2 / 14 / 7";
-        this.subContent.appendChild(description);
     }
 
     ShowEquipDc() {
@@ -148,12 +142,6 @@ class Fetch extends Tabs {
 
         btnOK.onclick = () => { };
         btnCancel.onclick = () => this.Close();
-
-        const description = document.createElement("div");
-        description.innerHTML = "Use this utility to fetch computers from a Domain Controller.";
-        description.style.textAlign = "center";
-        description.style.gridArea = "12 / 2 / 14 / 7";
-        this.subContent.appendChild(description);
     }
 
     ShowUsersDc() {
@@ -190,12 +178,6 @@ class Fetch extends Tabs {
         btnCancel.style.height = "28px";
         buttonsContainer.appendChild(btnCancel);
 
-        const description = document.createElement("div");
-        description.innerHTML = "Use this utility to fetch users from a Domain Controller.";
-        description.style.textAlign = "center";
-        description.style.gridArea = "12 / 2 / 14 / 7";
-        this.subContent.appendChild(description);
-
         btnOK.onclick = () => { };
         btnCancel.onclick = () => this.Close();
     }
@@ -212,6 +194,7 @@ class Fetch extends Tabs {
         txtTargetContainer.style.gridArea = "2 / 5";
         this.subContent.appendChild(txtTargetContainer);
         const txtTarget = new IpBox();
+        txtTarget.SetIp(127,0,0,1);
         txtTarget.Attach(txtTargetContainer);
 
 
@@ -229,7 +212,7 @@ class Fetch extends Tabs {
         txtPort.style.marginLeft = "0";
         txtPort.style.width = "160px";
         this.subContent.appendChild(txtPort);
-
+        txtTarget.exitElement = txtPort;
 
         const lblProtocol = document.createElement("div");
         lblProtocol.style.gridArea = "4 / 3";
@@ -328,7 +311,7 @@ class Fetch extends Tabs {
         buttonsContainer.appendChild(btnCancel);
 
         const description = document.createElement("div");
-        description.innerHTML = "Use this utility to import entries from another Pro-tests database.<br>It is recommended to import only on a blank database. Conflicts and duplicate records will not be managed.";
+        description.innerHTML = "Use this utility to import entries from another Pro-tests database.<br>It is recommended to import on a blank database. Conflicts and duplicate records will not be managed.";
         description.style.gridArea = "12 / 2 / 14 / 7";  
         this.subContent.appendChild(description);
 
@@ -338,15 +321,6 @@ class Fetch extends Tabs {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    let json = JSON.parse(xhr.responseText);
-
-                    let firstAddress = json.firstIp ? json.firstIp.split(".") : [10, 0, 0, 1];
-                    let lastAddress = json.lastIp ? json.lastIp.split(".") : [10, 0, 0, 254];
-                    let domain = json.domain ? json.domain : "";
-
-                    this.ipFrom.SetIp(firstAddress[0], firstAddress[1], firstAddress[2], firstAddress[3]);
-                    this.ipTo.SetIp(lastAddress[0], lastAddress[1], lastAddress[2], lastAddress[3]);
-                    this.txtDomain.value = domain;
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
@@ -355,6 +329,5 @@ class Fetch extends Tabs {
             xhr.send(`ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${txtUsername.value}&password=${txtPassword.value}&equip=${chkEquip.checked}&users=${chkUsers.checked}`);
         };
     }
-
 
 }

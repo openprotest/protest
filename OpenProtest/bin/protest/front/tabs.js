@@ -1,13 +1,8 @@
 class Tabs extends Window {
     constructor(themeColor = [64,64,64]) {
-        if (document.head.querySelectorAll("link[href$='tabs.css']").length == 0) {
-            let csslink = document.createElement("link");
-            csslink.rel = "stylesheet";
-            csslink.href = "tabs.css";
-            document.head.appendChild(csslink);
-        }
-
         super(themeColor);
+
+        this.AddCssDependencies("tabs.css");
 
         this.tabsList = [];
         this.content.style.overflow = "hidden";
