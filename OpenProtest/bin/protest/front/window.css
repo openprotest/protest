@@ -16,18 +16,6 @@
     box-shadow: none;
 }
 
-.window > .content {
-    position: absolute;
-    /*background-color: rgb(224,224,224);*/
-    color: rgb(224,224,244);
-    left: 2px;
-    right: 2px;
-    top: 30px;
-    bottom: 2px;
-
-    transition: top .2s;
-}
-
 .window > .title {
     position: absolute;
     cursor: default;
@@ -103,6 +91,16 @@
     background-repeat: no-repeat;
     background-size: cover;
     filter: invert(1);
+}
+
+.win-content {
+    position: absolute;
+    color: rgb(224,224,244);
+    left: 2px;
+    right: 2px;
+    top: 30px;
+    bottom: 2px;
+    transition: top .2s;
 }
 
 .win-toolbox {
@@ -317,8 +315,8 @@
     box-shadow: #fff 0 0 1px;
 }
 
-.high-contrast > #main > #container > .window > .content {
-    background-color: rgba(20,20,20,0) !important;
+.high-contrast > #main > #container > .window > .win-content {
+    background-color: inherit !important;
     color: #fff;
 }
 

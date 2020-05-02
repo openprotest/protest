@@ -133,6 +133,7 @@
     <Content Include="bin\protest\front\list.js" />
     <Content Include="bin\protest\front\res\github.svg" />
     <Content Include="bin\protest\front\res\l_screencapture.svg" />
+    <Content Include="bin\protest\front\res\ongoingscript.svg" />
     <Content Include="bin\protest\front\res\opensource.svg" />
     <Content Include="bin\protest\front\res\popout.svg" />
     <Content Include="bin\protest\front\res\screencapture.svg" />
@@ -562,6 +563,7 @@
     <Content Include="bin\protest\front\ui.js" />
     <Content Include="bin\protest\front\window.css" />
     <Content Include="bin\protest\front\window.js" />
+    <Content Include="bin\protest\front\wordslist.txt" />
     <Content Include="bin\protest\knowlage\content_type.txt" />
     <Content Include="bin\protest\scripts\tools.txt" />
     <Content Include="pro-test.ico" />

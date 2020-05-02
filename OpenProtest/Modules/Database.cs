@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 
 class Database {
-
     public struct DbEntry {
         public string    filename;
         public bool      isUser;

@@ -29,7 +29,7 @@ class Settings extends Tabs {
     constructor(args) {
         super();
 
-        this.args = args ? args : { value: "" };
+        this.args = args ? args : "";
 
         this.setTitle("Settings");
         this.setIcon("res/tool02.svgz");

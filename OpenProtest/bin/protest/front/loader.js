@@ -153,7 +153,7 @@ function restoreSession() {
     for (let i = 0; i < session.length; i++) {
         let win;
         switch (session[i].class) {
-            case "Fetch"        : win = new Fetch(); break;
+            case "Fetch"        : win = new Fetch(session[i].args); break;
             case "Netcalc"      : win = new Netcalc(); break;
             case "Passgen"      : win = new Passgen(); break;
             case "Ping"         : win = new Ping(session[i].args); break;

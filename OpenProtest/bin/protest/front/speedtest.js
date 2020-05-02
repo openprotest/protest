@@ -237,7 +237,7 @@ class SpeedTest extends Window {
         this.socket = [];
         this.downstream = [];
         this.upstream = [];
-        this.downpeak = 0
+        this.downpeak = 0;
         this.uppeak = 0;
         this.lastPlot = new Date().getTime();
 

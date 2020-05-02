@@ -22,32 +22,6 @@ class Passgen extends Window {
         this.divStrength.style.marginTop = "4px";
         this.content.appendChild(this.divStrength);
 
-        let divOptions = document.createElement("div");
-        divOptions.style.textAlign = "left";
-        divOptions.style.display = "inline-block";
-        divOptions.style.marginTop = "24px";
-        divOptions.style.width = "100%";
-        divOptions.style.maxWidth = "400px";
-        this.content.appendChild(divOptions);
-
-        let divLength = document.createElement("div");
-        divLength.style.float = "left";
-        divLength.style.width = "300px";
-        divLength.style.height = "100px";
-        divOptions.appendChild(divLength);
-
-        let divPool = document.createElement("div");
-        divPool.style.float = "left";
-        divPool.style.width = "50px";
-        divPool.style.height = "100px";
-        divOptions.appendChild(divPool);
-
-        let divButtons = document.createElement("div");
-        divButtons.style.width = "100%";
-        divButtons.style.textAlign = "center";
-        divButtons.style.paddingTop = "32px";
-        divOptions.appendChild(divButtons);
-
         this.divBar = document.createElement("div");
         this.divBar.className = "passwors-strength-bar";
         this.divBar.style.display = "inline-block";
@@ -64,13 +38,39 @@ class Passgen extends Window {
         this.lblComment.style.marginTop = "0px";
         this.divStrength.appendChild(this.lblComment);
 
+        let grid = document.createElement("div");
+        grid.style.display = "grid";
+        grid.style.marginTop = "40px";
+        grid.style.gridTemplateColumns = "auto 208px 96px 120px auto";
+        grid.style.gridTemplateRows = "40px repeat(5, 32px)";
+        grid.style.alignItems = "center";
+        this.content.appendChild(grid);
+
+        this.cmbOptions = document.createElement("select");
+        this.cmbOptions.style.margin = "0 80px 12px 80px";
+        this.cmbOptions.style.gridArea = "1 / 2 / auto / 4";
+        grid.appendChild(this.cmbOptions);
+
+        let optPin = document.createElement("option");
+        optPin.value = "pin";
+        optPin.text = "Pin";
+        this.cmbOptions.appendChild(optPin);
+
+        let optRandom = document.createElement("option");
+        optRandom.value = "rnd";
+        optRandom.text = "Random";
+        this.cmbOptions.appendChild(optRandom);
+
+        this.cmbOptions.value = "rnd";
 
         let lblLength = document.createElement("div");
+        lblLength.innerHTML = "Length:";
         lblLength.style.textDecoration = "underline";
         lblLength.style.width = "100%";
         lblLength.style.marginBottom = "4px";
-        lblLength.innerHTML = "Length:";
-        divLength.appendChild(lblLength);
+        lblLength.style.textAlign = "left";
+        lblLength.style.gridArea = "2 / 2";
+        grid.appendChild(lblLength);
 
         this.rngLength = document.createElement("input");
         this.rngLength.type = "range";
@@ -79,51 +79,76 @@ class Passgen extends Window {
         this.rngLength.value = "16";
         this.rngLength.style.width = "200px";
         this.rngLength.style.float = "left";
-        this.rngLength.style.marginTop = "8px";
-        this.rngLength.style.marginRight = "8px";
-        divLength.appendChild(this.rngLength);
+        this.rngLength.style.gridArea = "3 / 2";
+        grid.appendChild(this.rngLength);
 
-        let txtLength = document.createElement("input");
-        txtLength.type = "number";
-        txtLength.min = this.rngLength.min;
-        txtLength.max = this.txtPassword.maxLength;
-        txtLength.value = this.rngLength.value;
-        txtLength.style.width = "48px";
-        divLength.appendChild(txtLength);
+        this.txtLength = document.createElement("input");
+        this.txtLength.type = "number";
+        this.txtLength.min = this.rngLength.min;
+        this.txtLength.max = this.txtPassword.maxLength;
+        this.txtLength.value = this.rngLength.value;
+        this.txtLength.style.width = "48px";
+        this.txtLength.style.gridArea = "3 / 3";
+        grid.appendChild(this.txtLength);
+
+        let divLowercase = document.createElement("div");
+        divLowercase.style.gridArea = "3 / 4";
+        grid.appendChild(divLowercase);
 
         this.chkLowercase = document.createElement("input");
         this.chkLowercase.type = "checkbox";
         this.chkLowercase.checked = true;
-        divPool.appendChild(this.chkLowercase);
-        this.AddCheckBoxLabel(divPool, this.chkLowercase, "Lowercase").style.marginBottom = "2px";
+        divLowercase.appendChild(this.chkLowercase);
+        this.AddCheckBoxLabel(divLowercase, this.chkLowercase, "Lowercase");
+
+
+        let divUppercase = document.createElement("div");
+        divUppercase.style.gridArea = "4 / 4";
+        grid.appendChild(divUppercase);
 
         this.chkUppercase = document.createElement("input");
         this.chkUppercase.type = "checkbox";
         this.chkUppercase.checked = true;
-        divPool.appendChild(this.chkUppercase);
-        this.AddCheckBoxLabel(divPool, this.chkUppercase, "Uppercase").style.marginBottom = "2px";
+        divUppercase.appendChild(this.chkUppercase);
+        this.AddCheckBoxLabel(divUppercase, this.chkUppercase, "Uppercase");
+
+
+        let divNumbers = document.createElement("div");
+        divNumbers.style.gridArea = "5 / 4";
+        grid.appendChild(divNumbers);
 
         this.chkNumbers = document.createElement("input");
         this.chkNumbers.type = "checkbox";
         this.chkNumbers.checked = true;
-        divPool.appendChild(this.chkNumbers);
-        this.AddCheckBoxLabel(divPool, this.chkNumbers, "Numbers").style.marginBottom = "2px";
+        divNumbers.appendChild(this.chkNumbers);
+        this.AddCheckBoxLabel(divNumbers, this.chkNumbers, "Numbers");
+
+        let divSymbols = document.createElement("div");
+        divSymbols.style.gridArea = "6 / 4";
+        grid.appendChild(divSymbols);
 
         this.chkSymbols = document.createElement("input");
         this.chkSymbols.type = "checkbox";
         this.chkSymbols.checked = false;
-        divPool.appendChild(this.chkSymbols);
-        this.AddCheckBoxLabel(divPool, this.chkSymbols, "Symbols").style.marginBottom = "2px";
+        divSymbols.appendChild(this.chkSymbols);
+        this.AddCheckBoxLabel(divSymbols, this.chkSymbols, "Symbols");
 
         this.rngLength.oninput = () => {
-            txtLength.value = this.rngLength.value;
+            this.txtLength.value = this.rngLength.value;
             this.Generate();
         };
 
-        txtLength.oninput = () => {
-            this.rngLength.value = txtLength.value;
+        this.txtLength.oninput = () => {
+            this.rngLength.value = this.txtLength.value;
             this.Generate();
         };
+
+        let divButtons = document.createElement("div");
+        divButtons.style.width = "100%";
+        divButtons.style.textAlign = "center";
+        divButtons.style.paddingTop = "32px";
+        divButtons.style.gridArea = "5 / 2 / 6 / 4";
+        grid.appendChild(divButtons);
 
         let btnGenerate = document.createElement("input");
         btnGenerate.type = "button";
@@ -141,6 +166,44 @@ class Passgen extends Window {
         btnGenerate.style.borderRadius = "4px 0 0 4px";
         btnCopy.style.borderRadius = "0 4px 4px 0";
 
+
+        this.cmbOptions.onchange = () => {
+            switch (this.cmbOptions.value) {
+                case "pin":
+                    this.rngLength.min = 4;
+                    this.rngLength.value = 4;
+                    this.chkNumbers.checked = true;
+                    this.chkLowercase.checked = false;
+                    this.chkUppercase.checked = false;
+                    this.chkSymbols.checked = false;
+                    break;
+
+                case "rnd":
+                    this.rngLength.value = 16;
+                    this.rngLength.min = 6;
+                    this.chkLowercase.checked = true;
+                    this.chkUppercase.checked = true;
+                    this.chkNumbers.checked = false;
+                    this.chkSymbols.checked = false;
+                    break;
+
+                case "mem":
+                    this.rngLength.value = 3;
+                    this.rngLength.min = 2;
+                    this.chkLowercase.checked = true;
+                    this.chkUppercase.checked = false;
+                    this.chkNumbers.checked = false;
+                    this.chkSymbols.checked = false;
+                    break;
+            }
+
+            this.txtLength.min = this.rngLength.min;
+            this.txtLength.value = this.rngLength.value;
+
+            this.Generate();
+        };
+
+
         this.chkLowercase.onchange = this.chkUppercase.onchange = this.chkNumbers.onchange = this.chkSymbols.onchange = () => { this.Generate(); };
 
         btnGenerate.onclick = () => { this.Generate(); };
@@ -152,10 +215,17 @@ class Passgen extends Window {
         };
 
         this.txtPassword.oninput = () => {
+            if (this.cmbOptions.value == "mem") {
+                let phrase = this.txtPassword.value.split("-");
+                this.rngLength.value = phrase.length;
+                this.txtLength.value = phrase.length;
+                return;
+            }
+
             let word = this.txtPassword.value;
 
             this.rngLength.value = word.length;
-            txtLength.value = word.length;
+            this.txtLength.value = word.length;
 
             let hasUppercase = false;
             let hasLowercase = false;
@@ -180,11 +250,53 @@ class Passgen extends Window {
         };
 
         this.Generate();
+
+        this.LoadWords();
+    }
+
+    LoadWords() {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let words = xhr.responseText.split("\n");
+                if (words.length > 2) this.words = words;
+
+                let optMemorable = document.createElement("option");
+                optMemorable.value = "mem";
+                optMemorable.text = "Memorable";
+                this.cmbOptions.appendChild(optMemorable);
+            }
+        };
+
+        xhr.open("GET", "wordslist.txt", true);
+        xhr.send();
     }
 
     Generate() {
         if (!this.chkLowercase.checked && !this.chkUppercase.checked && !this.chkNumbers.checked && !this.chkSymbols.checked)
             this.chkLowercase.checked = true;
+
+        if (this.cmbOptions.value == "mem") {
+            let word = "";
+            if (this.words)
+                for (let i = 0; i < this.rngLength.value; i++) {
+                    if (this.chkLowercase.checked && this.chkUppercase.checked) {
+                        let w = this.words[Math.round(Math.random() * this.words.length)];
+                        word += w[0].toUpperCase() + w.substring(1);
+
+                    } else if (this.chkUppercase.checked) 
+                        word += this.words[Math.round(Math.random() * this.words.length)].toUpperCase();
+
+                    else
+                        word += this.words[Math.round(Math.random() * this.words.length)];
+
+                    if (i+1 < this.rngLength.value)word += "-";
+                }
+
+            this.txtPassword.value = word;
+            this.Strength();
+            return;
+        }
 
         let pool = [];
         let flag = [];
@@ -214,9 +326,7 @@ class Passgen extends Window {
             flag.push(false);
         }
 
-
         let word = "";
-
         for (let i = 0; i < this.rngLength.value; i++) {
             let dice = Math.round(Math.random() * (pool.length + 1));
             if (dice < pool.length) {
@@ -253,7 +363,7 @@ class Passgen extends Window {
         if (this.chkLowercase.checked) pool += 26;
         if (this.chkSymbols.checked) pool += 32;
 
-        let entropy = Math.log(Math.pow(pool, this.rngLength.value), 2);
+        let entropy = Math.log(Math.pow(pool, this.txtPassword.value.length), 2);
 
         let strength = StrengthBar(entropy);
         let color = strength[0];

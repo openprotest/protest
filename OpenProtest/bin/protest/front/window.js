@@ -82,7 +82,7 @@ class Window {
         this.task.appendChild(this.icon);
 
         this.content = document.createElement("div");
-        this.content.className = "content";
+        this.content.className = "win-content";
         this.win.appendChild(this.content);
 
         this.lblTitle = document.createElement("div");
@@ -153,6 +153,7 @@ class Window {
         };
 
         this.win.onmouseup = (event)=> { if (this.defaultElement != null) this.defaultElement.focus(); };
+        this.content.onmouseup = (event) => event.stopPropagation();;
 
         this.resize.onmousedown = (event)=> {
             this.BringToFront();
@@ -372,13 +373,13 @@ class Window {
         newWin.document.write("</body></html>");
         newWin.document.close();
 
-        newWin.document.body.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
+        newWin.document.body.style.backgroundColor = `rgb(${this.themeColor[0]},${this.themeColor[1]},${this.themeColor[2]})`;
         newWin.document.body.style.padding = "0";
         newWin.document.body.style.margin = "0";
         if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 < 128) newWin.document.body.style.color = "rgb(224,224,224)";
 
         this.popoutWindow = newWin;
-        container.removeChild(this.win);        
+        container.removeChild(this.win);
 
         const toolbar = document.createElement("div");
         toolbar.style.position = "absolute";
@@ -386,7 +387,6 @@ class Window {
         toolbar.style.height = "26px";
         toolbar.style.backgroundColor = "rgba(128,128,128,.1)";
         newWin.document.body.appendChild(toolbar);
-        toolbar.appendChild(this.toolbox);
 
         const content = document.createElement("div");
         content.style.position = "absolute";
@@ -397,16 +397,33 @@ class Window {
         newWin.document.body.appendChild(content);        
         content.appendChild(this.content);
 
-        const btnUnpop = document.createElement("div");
+        const btnUnpop = document.createElement("input");
+        btnUnpop.type = "button";
+        btnUnpop.style.padding = "0";
+        btnUnpop.style.margin = "0";
+        btnUnpop.style.minWidth = "0";
         btnUnpop.style.position = "absolute";
         btnUnpop.style.width = "22px";
         btnUnpop.style.height = "22px";
         btnUnpop.style.right = "4px";
         btnUnpop.style.top = "2px";
-        btnUnpop.style.borderRadius = "2px";
         btnUnpop.style.backgroundColor = "rgb(224,224,224)";
         btnUnpop.style.backgroundImage = "url(res/popout.svgz)";
         toolbar.appendChild(btnUnpop);
+
+        this.toolbox.style.left = "8px";
+        toolbar.appendChild(this.toolbox);
+
+        this.content.style.top = "0";
+
+        if (localStorage.getItem("accent_color")) { //apply accent color
+            let accent = localStorage.getItem("accent_color").split(",").map(o=>parseInt(o.trim()));
+            let select = `hsl(${accent[0]+7},${accent[1]}%,${accent[2]*.9}%)`;
+            newWin.document.querySelector(":root").style.setProperty("--theme-color", `rgb(${accent[0]},${accent[1]},${accent[2]})`);
+            newWin.document.querySelector(":root").style.setProperty("--select-color", select);
+        }
+
+        if (this.isMaximized) this.Toogle();
 
         btnUnpop.onclick = () => {
             container.appendChild(this.win);
@@ -416,6 +433,9 @@ class Window {
             newWin.onbeforeunload = () => { };
             newWin.close();
             this.popoutWindow = null;
+
+            this.content.style.top = "30px";
+            this.toolbox.style.left = "";
         };
 
         newWin.onbeforeunload = () => this.Close();
@@ -437,7 +457,7 @@ class Window {
         }
 
         this.task.className = "bar-icon bar-icon-focused";
-        this.task.style.backgroundColor = "rgb(" + this.themeColor[0] + "," + this.themeColor[1] + "," + this.themeColor[2] + ")";
+        this.task.style.backgroundColor = `rgb(${this.themeColor[0]},${this.themeColor[1]},${this.themeColor[2]})`;
         if ((this.themeColor[0]+this.themeColor[1]+this.themeColor[2]) / 3 < 128) this.icon.style.filter = "brightness(6)";
 
         if (this.win.style.zIndex < $w.count) this.win.style.zIndex = ++$w.count;
@@ -485,8 +505,11 @@ class Window {
 
         this.content.style.filter = "blur(4px)";
 
+        dim.onmouseup = event => event.stopPropagation();
+        dim.onmousedown = event => event.stopPropagation();
+
         let once = false;
-        btnCancel.onclick = (event) => {
+        btnCancel.onclick = event => {
             if (once) return;
             once = true;
             dim.style.filter = "opacity(0)";
@@ -501,7 +524,7 @@ class Window {
         };
 
         btnOK.onclick = event => btnCancel.onclick(event);
-        btnOK.focus();
+        btnOK.focus();        
 
         return btnOK;
     }
@@ -560,12 +583,11 @@ class Window {
 
         this.content.style.filter = "blur(4px)";
 
-        dim.onmousedown = event => {
-            event.stopPropagation();
-        };
+        dim.onmouseup = event => event.stopPropagation();
+        dim.onmousedown = event => event.stopPropagation();
 
         let once = false;
-        btnCancel.onclick = (event) => {
+        btnCancel.onclick = event => {
             if (once) return;
             once = true;
             dim.style.filter = "opacity(0)";
@@ -603,7 +625,7 @@ class Window {
 
     setThemeColor(color) {
         this.themeColor = color;
-        this.content.style.backgroundColor = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
+        this.content.style.backgroundColor = `rgb(${color[0]},${color[1]},${color[2]})`;
 
         if ((this.themeColor[0]+this.themeColor[1]+this.themeColor[2]) / 3 > 127)
             this.content.style.color = "#202020";

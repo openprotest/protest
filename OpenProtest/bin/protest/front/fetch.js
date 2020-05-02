@@ -1,6 +1,9 @@
 class Fetch extends Tabs {
-    constructor() {
+    constructor(args) {
         super();
+
+        this.args = args ? args : {value:""};
+
         this.setTitle("Fetch");
         this.setIcon("res/fetch.svgz");
 
@@ -23,8 +26,26 @@ class Fetch extends Tabs {
         tabUsersDc.onclick = () => this.ShowUsersDc();
         tabProtest.onclick = () => this.ShowProtest();
 
-        tabEquipIp.className = "v-tab-selected";
-        tabEquipIp.onclick();
+        switch (this.args.value) {
+            case "equipdc":
+                tabEquipDc.className = "v-tab-selected";
+                tabEquipDc.onclick();
+                break;
+
+            case "usersdc":
+                tabUsersDc.className = "v-tab-selected";
+                tabUsersDc.onclick();
+                break;
+
+            case "protest":
+                tabProtest.className = "v-tab-selected";
+                tabProtest.onclick();
+                break;
+
+            default:
+                tabEquipIp.className = "v-tab-selected";
+                tabEquipIp.onclick();
+        }
 
         this.subContent.style.display = "grid";
         this.subContent.style.gridTemplateColumns = "auto 100px 150px 8px 200px 50px auto";
@@ -57,6 +78,8 @@ class Fetch extends Tabs {
     }
 
     ShowEquipIp() {
+        this.args.value = "equipip";
+
         this.subContent.innerHTML = "";
 
         const btnOK = document.createElement("input");
@@ -107,6 +130,8 @@ class Fetch extends Tabs {
     }
 
     ShowEquipDc() {
+        this.args.value = "equipdc";
+
         this.subContent.innerHTML = "";
 
         const lblDomain = document.createElement("div");
@@ -145,6 +170,8 @@ class Fetch extends Tabs {
     }
 
     ShowUsersDc() {
+        this.args.value = "usersdc";
+
         this.subContent.innerHTML = "";
 
         const lblDomain = document.createElement("div");
@@ -183,6 +210,8 @@ class Fetch extends Tabs {
     }
 
     ShowProtest() {
+        this.args.value = "protest";
+
         this.subContent.innerHTML = "";
 
         const lblProtest = document.createElement("div");

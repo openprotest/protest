@@ -1,6 +1,8 @@
 class Scripts extends Tabs {
-    constructor() {
+    constructor(args) {
         super();
+
+        this.args = args ? args : "";
 
         this.AddCssDependencies("scripts.css");
 
@@ -58,11 +60,18 @@ class Scripts extends Tabs {
             }
         };
 
-        this.ListScripts();
+        switch (this.args) {
+            case "reports": this.selectedTab = 1; break;
+            case "ongoing": this.selectedTab = 2; break;
+            default: this.selectedTab = 0;
+        }
+
+        this.ListScripts();        
     }
 
     ShowScripts() {
         this.selectedTab = 0;
+        this.args = "scripts";
         this.list.innerHTML = "";
 
         let filter = this.txtFilter.value.toLocaleLowerCase();
@@ -125,6 +134,7 @@ class Scripts extends Tabs {
 
     ShowReports() {
         this.selectedTab = 1;
+        this.args = "reports";
         this.list.innerHTML = "";
 
         let filter = this.txtFilter.value.toLocaleLowerCase();
@@ -187,6 +197,7 @@ class Scripts extends Tabs {
 
     ShowOngoing() {
         this.selectedTab = 2;
+        this.args = "ongoing";
         this.list.innerHTML = "";
 
         let filter = this.txtFilter.value.toLocaleLowerCase();
@@ -313,10 +324,18 @@ class ScriptReport extends Window {
         this.setTitle("Report - " + filename);
         this.setIcon("res/reportfile.svgz");
 
-        this.content.style.padding = "12px";
-        this.content.style.fontFamily = "monospace";
-        this.content.style.overflow = "auto";
-        this.content.style.userSelect = "text";
+        let divReport = document.createElement("div");
+        divReport.style.overflow = "auto";
+        divReport.style.fontFamily = "monospace";
+        divReport.style.userSelect = "text";
+        divReport.style.position = "absolute";
+        divReport.style.padding = "16px";
+        divReport.style.left = "0";
+        divReport.style.right = "0";
+        divReport.style.top = "0";
+        divReport.style.bottom = "32px";
+        divReport.style.transition = "font-size .2s";
+        this.content.appendChild(divReport);
 
         let text = "";
 
@@ -330,10 +349,10 @@ class ScriptReport extends Window {
                 for (let i = 0; i < split.length; i++) {
                     while (split[i].indexOf("\t") > -1) split[i] = split[i].replace("\t", "&emsp;");
                     while (split[i].indexOf(" ") > -1) split[i] = split[i].replace(" ", "&nbsp;");
-                    report += "<br>" + split[i]
+                    report += "<br>" + split[i];
                 }
 
-                this.content.innerHTML = report;
+                divReport.innerHTML = report;
 
             } else if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
                 const btnOK = this.ConfirmBox("Server is unavailable.", true);
@@ -372,11 +391,9 @@ class ScriptReport extends Window {
         zoom.style.opacity = ".8";
         zoom.style.right = "32px";
         zoom.style.bottom = "8px";
-        this.win.appendChild(zoom);
-
-        this.content.style.transition = "font-size .2s";
+        this.content.appendChild(zoom);        
 
         zoom.onmousedown = event => event.stopPropagation();
-        zoom.onchange = () => { this.content.style.fontSize = zoom.value + "px"; };
+        zoom.onchange = () => { divReport.style.fontSize = zoom.value + "px"; };
     }
 }

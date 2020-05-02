@@ -7,15 +7,6 @@ class ScreenCapture extends Window {
         this.setTitle("Screen capture");
         this.setIcon("res/screencapture.svgz");
 
-        this.Toogle = () => { };
-
-        this.win.removeChild(this.btnMaximize);
-        this.win.removeChild(this.btnMinimize);
-        this.win.removeChild(this.btnPopout);
-
-        /*this.win.style.maxWidth = "300px";
-        this.win.style.maxHeight = "150px";*/
-
         this.content.style.textAlign = "center";
 
         const btnCapture = document.createElement("input");
@@ -89,7 +80,7 @@ class ScreenCapture extends Window {
             }
         }
 
-        if (element.tagName === "INPUT" && element.type === "text") {
+        if (element.tagName === "INPUT" && element.type === "text" || element.type === "button") {
             let size = window.getComputedStyle(element).getPropertyValue("font-size");
             let font = window.getComputedStyle(element).getPropertyValue("font-family");
             let align = window.getComputedStyle(element).getPropertyValue("text-align");
@@ -105,7 +96,7 @@ class ScreenCapture extends Window {
 
             } else if (align == "center") {
                 ctx.textAlign = "center";
-                ctx.fillText(element.value, rect.left, paddingTop + rect.top + rect.height / 2, rect.width);
+                ctx.fillText(element.value, rect.left + rect.width/2, paddingTop + rect.top + rect.height / 2, rect.width);
 
             } else {
                 let paddingLeft = parseInt(window.getComputedStyle(element).getPropertyValue("padding-left"));
