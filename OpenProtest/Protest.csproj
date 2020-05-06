@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Modules\ActiveDirectory.cs" />
     <Compile Include="Modules\Cache.cs" />
+    <Compile Include="Modules\CryptoAes.cs" />
     <Compile Include="Modules\Scripts.cs" />
     <Compile Include="Modules\Session.cs" />
     <Compile Include="Modules\Strings.cs" />
@@ -68,7 +69,7 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
-    <Compile Include="Modules\Crypto.cs" />
+    <Compile Include="Modules\CryptoX.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
     <Compile Include="Modules\Tools\SpeedTest.cs" />

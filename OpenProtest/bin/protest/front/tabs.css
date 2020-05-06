@@ -21,7 +21,7 @@
 
 .v-tabs > .v-tab-selected {
     background: linear-gradient(90deg, rgb(224,224,224) 90%, rgb(224,224,224) 100%);
-    background-color: rgb(224,224,224);
+    background-color: var(--pane-color);
     transform: scaleX(1);
 }
 
@@ -67,7 +67,7 @@
     right: 8px;
     top: 8px;
     bottom: 8px;
-    background-color: rgb(224,224,224);
+    background-color: var(--pane-color);
     color: rgb(16,16,16);
     border-radius: 4px;
     padding: 4px;
@@ -75,14 +75,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-
     .v-tabs > .v-tab-selected {
         background: linear-gradient(90deg, rgb(192,192,192) 90%, rgb(192,192,192) 100%);
-        background-color: rgb(192,192,192);
+        background-color: var(--pane-color);
     }
-
-    .v-tab-body {
-        background-color: rgb(192,192,192);
-    }
-
 }

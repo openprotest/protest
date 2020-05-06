@@ -502,7 +502,6 @@ class ScriptEditor extends Window {
                 this.Node_onmousemove(event);
                 this.FitSvgToView();
             }
-            this.popoutWindow.onresize = event => this.FitSvgToView();
         }
     }
 

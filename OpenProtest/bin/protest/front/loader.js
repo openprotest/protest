@@ -15,7 +15,7 @@ let loader_styles = [
     //"scripts.css"
 ];
 
-(function loadFiles() {
+(function LoadStuff() {
     let loader = document.createElement("div");
     loader.className = "loader";
     document.body.appendChild(loader);
@@ -66,7 +66,7 @@ let loader_styles = [
     ];
 
     let count = 0;
-    let total = loader_styles.length + primaryScripts.length + secondaryScripts.length + tertiaryScripts.length;
+    let total = loader_styles.length + primaryScripts.length + secondaryScripts.length + tertiaryScripts.length + 2;
     const callbackHandle = (status, filename)=> {
         loader_progress.style.width = 100 * ++count / total + "%";
         loader_decr.innerHTML = filename;
@@ -79,20 +79,27 @@ let loader_styles = [
             for (let i = 0; i < tertiaryScripts.length; i++)
                 loadScript(tertiaryScripts[i], callbackHandle);
 
+        } else if (count == total - 2) { //load db
+            loadEquip(callbackHandle);
+            loadUsers(callbackHandle);
+
         } else if (count == total) { //all done
             setTimeout(() => {
                 loader.style.filter = "opacity(0)";
+                btnSidemenu.style.filter = "none";
+                //main.style.filter = "none";
                 setTimeout(() => { document.body.removeChild(loader); }, 200);
                 setTimeout(() => { restoreSession(); }, 250); //restore previous session
-            }, 200);
+            }, 200);            
         }
     };
 
     for (let i=0; i< loader_styles.length; i++)
-        loadStyle(loader_styles[i], callbackHandle);    
+        loadStyle(loader_styles[i], callbackHandle);
 
     for (let i=0; i< primaryScripts.length; i++)
         loadScript(primaryScripts[i], callbackHandle);
+
 })();
 
 function loadStyle(filename, callback) {
@@ -123,6 +130,61 @@ function loadScript(filename, callback) {
 
     script.onload = ()=> callback("done", filename);
     script.onerror = ()=> callback("error", filename);
+}
+
+function loadEquip(callback) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onload = ()=> {
+        let split = xhr.responseText.split(String.fromCharCode(127));
+        db_equip = [];
+
+        let i = 1;
+        while (i < split.length-1) {
+            let len = parseInt(split[i]);
+            let obj = {};
+            for (let j = i + 1; j < i + len * 4; j += 4)
+                obj[split[j]] = [split[j + 1], split[j + 2]];
+
+            db_equip.push(obj);
+            i += 1 + len * 4;
+        }
+
+        callback("done", "equipment");
+    };
+
+    xhr.onerror = ()=> callback("error", "equipment");
+
+    xhr.open("GET", "getequiptable", true);
+    xhr.send();
+
+}
+
+function loadUsers(callback) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onload = ()=> {
+        let split = xhr.responseText.split(String.fromCharCode(127));
+        db_users = [];
+
+        let i = 1;
+        while (i < split.length-1) {
+            let len = parseInt(split[i]);
+            let obj = {};
+            for (let j = i + 1; j < i + len * 4; j += 4)
+                obj[split[j]] = [split[j + 1], split[j + 2]];
+
+            db_users.push(obj);
+            i += 1 + len * 4;
+        }
+
+        callback("done", "users");
+    };
+
+    xhr.onerror = ()=> callback("error", "users");
+
+    xhr.open("GET", "getuserstable", true);
+    xhr.send();
 }
 
 function storeSession() {

@@ -155,12 +155,12 @@ class HttpMainListener : Http {
                 case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, "ba")); break;
                 case "adverify":  buffer = Encoding.UTF8.GetBytes(ActiveDirectory.ActiveDirVerify(para)); break;
 
-                case "getscripttools":   buffer = Scripts.GetScriptTools(); break;
-                case "getusercolumns":   buffer = Scripts.GetUserColumns(); break;
-                case "getequipcolumns":  buffer = Scripts.GetEquipColumns(); break;
-                case "getadusercolumns": buffer = Scripts.GetAdUserColumns(); break;
+                case "getscripttools":          buffer = Scripts.GetScriptTools(); break;
+                case "getusercolumns":          buffer = Scripts.GetUserColumns(); break;
+                case "getequipcolumns":         buffer = Scripts.GetEquipColumns(); break;
+                case "getadusercolumns":        buffer = Scripts.GetAdUserColumns(); break;
                 case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
-                case "getadgroupcolumn": buffer = Scripts.GetAdGroupColumns(); break;
+                case "getadgroupcolumn":        buffer = Scripts.GetAdGroupColumns(); break;
 
                 case "listscripts": buffer = Scripts.ListScripts(); break;
                 case "loadscript":  buffer = Scripts.LoadScript(para); break;
@@ -173,7 +173,7 @@ class HttpMainListener : Http {
                 
                 case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
-                case "fetch_importdata" : buffer = Fetch.ImportDatabase(ctx); break;
+                case "fetch_importdata" : buffer = Fetch.ImportDatabase(ctx, performer); break;
 
                 default: //not found
                     ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -208,8 +208,6 @@ class HttpMainListener : Http {
             case "ws/speedtest_up": SpeedTest.WsSpeedtest_up(ctx, remoteIp, para); break;
 
             default: ctx.Response.Close(); break;
-            
-
         }
     }
 

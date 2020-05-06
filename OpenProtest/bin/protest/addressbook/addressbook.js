@@ -124,8 +124,6 @@ function btnGetContacts_onclick() {
 }
 
 function txtSearch_onchange() {
-    txtSearch.style.backgroundPositionX = (txtSearch.value.length == 0)? "4px" : "-32px";
-
     if (lastSearchValue == txtSearch.value.trim()) return;
     lastSearchValue = txtSearch.value.trim();
 

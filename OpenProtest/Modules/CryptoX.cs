@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 
-public static class Crypto {
+public static class CryptoX {
     private const string SALT = "3pVDs55EbUDHL48qMm4oY13uUw69RQoH"; //you can change this value on your own implementation
     private const string PEPPER = "";
 

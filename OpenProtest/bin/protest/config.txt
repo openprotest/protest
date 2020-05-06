@@ -1,9 +1,10 @@
 #version 4.0
 
+#null key is allowed
 db_key        = TESTINGcPP88E62A4K0Ob2M2B7T6CD33BMWER22gr25PBV2YLeUtb9PO4Z6Y83RT
 preshared_key = TESTINGcPP88E62A4K0Ob2M2B7T6CD33BMWER22gr25PBV2YLeUtb9PO4Z6Y83RT
 
-force_registry_keys = true
+force_registry_keys = false
 
 #ip_access = [ip]
 #user_access = [domain/user]

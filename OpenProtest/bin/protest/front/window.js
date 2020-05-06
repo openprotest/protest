@@ -152,9 +152,6 @@ class Window {
             $w.focused = this;
         };
 
-        this.win.onmouseup = (event)=> { if (this.defaultElement != null) this.defaultElement.focus(); };
-        this.content.onmouseup = (event) => event.stopPropagation();;
-
         this.resize.onmousedown = (event)=> {
             this.BringToFront();
             if (event.button == 0) { //left click
@@ -424,6 +421,8 @@ class Window {
         }
 
         if (this.isMaximized) this.Toogle();
+
+        newWin.onresize = () => this.AfterResize();
 
         btnUnpop.onclick = () => {
             container.appendChild(this.win);

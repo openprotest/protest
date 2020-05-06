@@ -40,15 +40,21 @@ class Passgen extends Window {
 
         let grid = document.createElement("div");
         grid.style.display = "grid";
-        grid.style.marginTop = "40px";
-        grid.style.gridTemplateColumns = "auto 208px 96px 120px auto";
+        grid.style.width = "424px";
+        grid.style.margin = "40px auto";
+        grid.style.padding = "16px 24px";
+        grid.style.backgroundColor = "var(--pane-color)";
+        grid.style.color = "rgb(16,16,16)";
+        grid.style.fontWeight = "600";
+        grid.style.borderRadius = "4px";
+        grid.style.gridTemplateColumns = "208px 96px 120px";
         grid.style.gridTemplateRows = "40px repeat(5, 32px)";
         grid.style.alignItems = "center";
         this.content.appendChild(grid);
 
         this.cmbOptions = document.createElement("select");
         this.cmbOptions.style.margin = "0 80px 12px 80px";
-        this.cmbOptions.style.gridArea = "1 / 2 / auto / 4";
+        this.cmbOptions.style.gridArea = "1 / 1 / auto / 3";
         grid.appendChild(this.cmbOptions);
 
         let optPin = document.createElement("option");
@@ -69,7 +75,7 @@ class Passgen extends Window {
         lblLength.style.width = "100%";
         lblLength.style.marginBottom = "4px";
         lblLength.style.textAlign = "left";
-        lblLength.style.gridArea = "2 / 2";
+        lblLength.style.gridArea = "2 / 1";
         grid.appendChild(lblLength);
 
         this.rngLength = document.createElement("input");
@@ -79,7 +85,7 @@ class Passgen extends Window {
         this.rngLength.value = "16";
         this.rngLength.style.width = "200px";
         this.rngLength.style.float = "left";
-        this.rngLength.style.gridArea = "3 / 2";
+        this.rngLength.style.gridArea = "3 / 1";
         grid.appendChild(this.rngLength);
 
         this.txtLength = document.createElement("input");
@@ -88,11 +94,11 @@ class Passgen extends Window {
         this.txtLength.max = this.txtPassword.maxLength;
         this.txtLength.value = this.rngLength.value;
         this.txtLength.style.width = "48px";
-        this.txtLength.style.gridArea = "3 / 3";
+        this.txtLength.style.gridArea = "3 / 2";
         grid.appendChild(this.txtLength);
 
         let divLowercase = document.createElement("div");
-        divLowercase.style.gridArea = "3 / 4";
+        divLowercase.style.gridArea = "3 / 3";
         grid.appendChild(divLowercase);
 
         this.chkLowercase = document.createElement("input");
@@ -103,7 +109,7 @@ class Passgen extends Window {
 
 
         let divUppercase = document.createElement("div");
-        divUppercase.style.gridArea = "4 / 4";
+        divUppercase.style.gridArea = "4 / 3";
         grid.appendChild(divUppercase);
 
         this.chkUppercase = document.createElement("input");
@@ -114,7 +120,7 @@ class Passgen extends Window {
 
 
         let divNumbers = document.createElement("div");
-        divNumbers.style.gridArea = "5 / 4";
+        divNumbers.style.gridArea = "5 / 3";
         grid.appendChild(divNumbers);
 
         this.chkNumbers = document.createElement("input");
@@ -124,7 +130,7 @@ class Passgen extends Window {
         this.AddCheckBoxLabel(divNumbers, this.chkNumbers, "Numbers");
 
         let divSymbols = document.createElement("div");
-        divSymbols.style.gridArea = "6 / 4";
+        divSymbols.style.gridArea = "6 / 3";
         grid.appendChild(divSymbols);
 
         this.chkSymbols = document.createElement("input");
@@ -147,7 +153,7 @@ class Passgen extends Window {
         divButtons.style.width = "100%";
         divButtons.style.textAlign = "center";
         divButtons.style.paddingTop = "32px";
-        divButtons.style.gridArea = "5 / 2 / 6 / 4";
+        divButtons.style.gridArea = "5 / 1 / 6 / 3";
         grid.appendChild(divButtons);
 
         let btnGenerate = document.createElement("input");
@@ -176,6 +182,10 @@ class Passgen extends Window {
                     this.chkLowercase.checked = false;
                     this.chkUppercase.checked = false;
                     this.chkSymbols.checked = false;
+                    this.chkLowercase.setAttribute("disabled", true);
+                    this.chkUppercase.setAttribute("disabled", true);
+                    this.chkNumbers.setAttribute("disabled", true);
+                    this.chkSymbols.setAttribute("disabled", true);
                     break;
 
                 case "rnd":
@@ -185,17 +195,27 @@ class Passgen extends Window {
                     this.chkUppercase.checked = true;
                     this.chkNumbers.checked = false;
                     this.chkSymbols.checked = false;
+                    this.chkLowercase.removeAttribute("disabled");
+                    this.chkUppercase.removeAttribute("disabled");
+                    this.chkNumbers.removeAttribute("disabled");
+                    this.chkSymbols.removeAttribute("disabled");
                     break;
 
                 case "mem":
-                    this.rngLength.value = 3;
                     this.rngLength.min = 2;
+                    this.rngLength.value = 4;
                     this.chkLowercase.checked = true;
                     this.chkUppercase.checked = false;
                     this.chkNumbers.checked = false;
                     this.chkSymbols.checked = false;
+                    this.chkLowercase.removeAttribute("disabled");
+                    this.chkUppercase.removeAttribute("disabled");
+                    this.chkNumbers.removeAttribute("disabled");
+                    this.chkSymbols.setAttribute("disabled", true);
                     break;
             }
+
+
 
             this.txtLength.min = this.rngLength.min;
             this.txtLength.value = this.rngLength.value;
@@ -292,6 +312,25 @@ class Passgen extends Window {
 
                     if (i+1 < this.rngLength.value)word += "-";
                 }
+
+            if (this.chkNumbers.checked) {
+                let temp = word;
+                word = "";
+                for (let i = 0; i < temp.length; i++)
+                    if (Math.random() > .4) {
+                        let c = temp[i].toLowerCase();
+
+                        if (c == "i") word += "1";
+                        else if (c == "e") word += "3";
+                        else if (c == "a") word += "4";
+                        else if (c == "s") word += "5";
+                        else if (c == "t") word += "7";
+                        else word += temp[i];                        
+
+                    } else {
+                        word += temp[i];
+                    }
+            }
 
             this.txtPassword.value = word;
             this.Strength();

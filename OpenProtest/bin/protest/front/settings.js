@@ -302,24 +302,12 @@ class Settings extends Tabs {
             };
         }
 
-        this.subContent.appendChild(document.createElement("hr"));
-        this.subContent.appendChild(document.createElement("br"));
-
-        const btnClearLocalCache = document.createElement("input");
-        btnClearLocalCache.type = "button";
-        btnClearLocalCache.value = "Clear local storage";
-        btnClearLocalCache.style.height = "36px";
-        btnClearLocalCache.style.padding = "8px";
-        this.subContent.appendChild(btnClearLocalCache);
-
         this.chkDynamicSearchIcon.checked = localStorage.getItem("dynamic_search_icon") === "true";
         this.chkWinMaxxed.checked         = localStorage.getItem("w_always_maxed") === "true";
         this.chkHighContrast.checked      = localStorage.getItem("high_contrast") === "true";
         this.chkDisableAnime.checked      = localStorage.getItem("disable_anime") === "true";
         this.chkWindowShadows.checked     = localStorage.getItem("w_disable_dropshadow") === "true";
         this.zoom.value                   = localStorage.getItem("zoom") == null ? 5 : parseInt(localStorage.getItem("zoom"));
-
-        btnClearLocalCache.onclick = () => { this.ClearCache(); };
 
         const Apply = ()=> {
             sidemenu_dynamicicon = this.chkDynamicSearchIcon.checked;
@@ -341,12 +329,12 @@ class Settings extends Tabs {
         };
 
         //btnFontFamily.onclick             = Apply;
-        this.chkDynamicSearchIcon.onclick = Apply;
-        this.chkWinMaxxed.onclick         = Apply;
-        this.chkHighContrast.onclick      = Apply;
-        this.chkDisableAnime.onclick      = Apply;
-        this.chkWindowShadows.onclick     = Apply;
-        this.zoom.onchange                = Apply;
+        this.chkDynamicSearchIcon.onchange = Apply;
+        this.chkWinMaxxed.onchange         = Apply;
+        this.chkHighContrast.onchange      = Apply;
+        this.chkDisableAnime.onchange      = Apply;
+        this.chkWindowShadows.onchange     = Apply;
+        this.zoom.onchange                 = Apply;
         this.zoom.oninput = () => { divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%"; };
 
         Apply();
@@ -450,6 +438,10 @@ class Settings extends Tabs {
         status.style.fontWeight = "500";
         this.subContent.appendChild(status);
 
+        const center = document.createElement("div");
+        center.style.textAlign = "center";
+        this.subContent.appendChild(center);
+
         let xhrUpdate = new XMLHttpRequest();
         xhrUpdate.onreadystatechange = () => {
             if (xhrUpdate.readyState == 4 && xhrUpdate.status == 200) {
@@ -472,10 +464,6 @@ class Settings extends Tabs {
                     if (xhrVersion.readyState == 4 && xhrVersion.status == 200) {
                         let jsonVersion = JSON.parse(xhrVersion.responseText);
 
-                        const center = document.createElement("div");
-                        center.style.textAlign = "center";
-                        this.subContent.appendChild(center);
-
                         const info = document.createElement("div");
                         info.style.display = "inline-block";
                         info.style.maxWidth = "640px";
@@ -483,7 +471,7 @@ class Settings extends Tabs {
                         info.style.marginBottom = "32px";
                         info.style.textAlign = "left";
                         info.style.userSelect = "text";
-                        info.innerHTML = "Version: " + jsonUpdate.tag_name + "<br>Published at: " + jsonUpdate.published_at;
+                        info.innerHTML = "Version:&nbsp;" + jsonUpdate.tag_name + "<br>Published at:&nbsp;" + jsonUpdate.published_at.split("T")[0];
                         center.appendChild(info);
 
                         let curent = jsonVersion.string.split(".").map(o=>parseInt(o));
@@ -630,7 +618,7 @@ class Settings extends Tabs {
         credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
         credits.innerHTML += "<b>-</b> Microsoft.Management.Infrastructure <a target='_blank' href='https://nuget.org/packages/Microsoft.Management.Infrastructure/'>by Microsoft</a><br>";
         credits.innerHTML += "<b>-</b> System.Management.Automation        <a target='_blank' href='https://docs.microsoft.com/en-us/dotnet/api/system.management.automation'>by Microsoft</a><br>";
-        credits.innerHTML += "<b>-</b> Open Sans facetype                  <a>by Steve Matteson</a><br>";
+        credits.innerHTML += "<b>-</b> Open Sans typeface                  <a>by Steve Matteson</a><br>";
         center.appendChild(credits);
 
         center.appendChild(document.createElement("br"));

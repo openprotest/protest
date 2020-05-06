@@ -70,7 +70,7 @@ class Database {
             if (f.Length < 2) throw new Exception("null file: " + f.FullName);
             byte[] bytes = File.ReadAllBytes(f.FullName);
 
-            string plain = Encoding.UTF8.GetString(Crypto.Decrypt(bytes, Program.DB_KEY));
+            string plain = Encoding.UTF8.GetString(CryptoAes.Decrypt(bytes, Program.DB_KEY_A, Program.DB_KEY_B));
             string[] split = plain.Split((char)127);
 
             entry.hash.Add(".FILENAME", new string[] { f.Name, "", "" });
@@ -96,7 +96,7 @@ class Database {
         string filename = ((string[])e.hash[".FILENAME"])[0];
 
         byte[] plain = GetEntryPayload(e);
-        byte[] cipher = Crypto.Encrypt(plain, Program.DB_KEY);
+        byte[] cipher = CryptoAes.Encrypt(plain, Program.DB_KEY_A, Program.DB_KEY_B);
 
         byte[] bytes = new byte[cipher.Length];
         Array.Copy(cipher, 0, bytes, 0, cipher.Length);
@@ -109,9 +109,7 @@ class Database {
             return false;
         }
 
-        //para[i] = para[i].Replace("%7F", ""); //remove asc127 before unescape, to prevent data corruption and unwanted insertion (VERY IMPORTAND!)
-
-        Logging.Action(in performer, $"DB write: {(e.isUser ? "user" : "equip")} {filename}");
+        if (!(performer is null)) Logging.Action(in performer, $"DB write: {(e.isUser ? "user" : "equip")} {filename}");
 
         return true;
     }
@@ -327,10 +325,12 @@ class Database {
             split[i] = split[i].ToUpper();
             if (split[i] == ".FILENAME") filename = split[i + 1];
 
-            if (payloadHash.ContainsKey(split[i])) //if property exists append on it
-                payloadHash[split[i]] = $"{payloadHash[split[i]]}; {split[i + 1]}";
-            else
-                payloadHash.Add(split[i], split[i + 1]);
+            //if (payloadHash.ContainsKey(split[i])) //if property exists append on it
+            //    payloadHash[split[i]] = $"{payloadHash[split[i]]}; {split[i+1]}";
+            //else
+            //    payloadHash.Add(split[i], split[i+1]);
+
+            payloadHash.Add(split[i], split[i + 1]);
         }
 
         if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();

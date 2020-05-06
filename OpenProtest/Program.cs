@@ -30,6 +30,10 @@ using System.IO.Compression;
 class Program {
     public static string DB_KEY;
     public static string PRESHARED_KEY;
+    public static byte[] DB_KEY_A; //AES key
+    public static byte[] DB_KEY_B; //AES iv
+    public static byte[] PRESHARED_KEY_A; //AES key
+    public static byte[] PRESHARED_KEY_B; //AES iv
 
     public static bool force_registry_keys = false;
 
@@ -63,6 +67,8 @@ class Program {
         Console.WriteLine();
         LoadConfig();
         ExtractZippedKnowlageFile();
+        Database.LoadEquip();
+        Database.LoadUsers();
         StartServices();
 
         Thread.Sleep(1000);
@@ -155,10 +161,14 @@ class Program {
             switch (split[0]) {
                 case "db_key":
                     DB_KEY = split[1];
+                    DB_KEY_A = DB_KEY.Length > 0 ? CryptoAes.KeyToBytes(DB_KEY, 32) : null; //256-bits
+                    DB_KEY_B = CryptoAes.KeyToBytes(DB_KEY, 16); //128-bits
                     break;
 
                 case "preshared_key":
                     PRESHARED_KEY = split[1];
+                    PRESHARED_KEY_A = PRESHARED_KEY.Length > 0 ? CryptoAes.KeyToBytes(PRESHARED_KEY, 32) : null; //256-bits
+                    PRESHARED_KEY_B = CryptoAes.KeyToBytes(PRESHARED_KEY, 16); //128-bits
                     break;
 
                 case "force_registry_keys":

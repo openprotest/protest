@@ -49,7 +49,7 @@ class Fetch extends Tabs {
 
         this.subContent.style.display = "grid";
         this.subContent.style.gridTemplateColumns = "auto 100px 150px 8px 200px 50px auto";
-        this.subContent.style.gridTemplateRows = "repeat(14, 32px)";
+        this.subContent.style.gridTemplateRows = "repeat(14, 36px)";
         this.subContent.style.alignItems = "center";
         this.subContent.style.overflow = "auto";
 
@@ -286,6 +286,7 @@ class Fetch extends Tabs {
 
         const txtPassword = document.createElement("input");
         txtPassword.type = "password";
+        txtPassword.placeholder = " ";
         txtPassword.style.gridArea = "6 / 5";
         txtPassword.style.marginLeft = "0";
         txtPassword.style.width = "160px";

@@ -28,7 +28,7 @@ input[type="email"]:focus,
 input[type="number"]:focus,
 textarea:focus,
 select:focus {
-    /*animation: inner-glow-ligth 2s infinite linear;*/
+    animation: inner-glow-ligth 2s infinite linear;
 }
 
 input[type="text"]:disabled,
@@ -41,6 +41,13 @@ select:disabled {
     background-color: rgb(192,192,192);
 }
 
-select:focus {
-    animation: inner-glow-ligth 2s infinite linear;
+input[type="password"]{
+    background-image: url(res/credencial.svg);
+    background-repeat: no-repeat;
+    background-size: 18px 18px;
+    background-position: calc(100% + 18px) center;
+}
+
+input[type="password"]:placeholder-shown {
+    background-position: calc(100% - 4px) center;
 }

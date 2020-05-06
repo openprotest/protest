@@ -99,7 +99,7 @@ public static class Scripts {
         Hashtable hash = new Hashtable();
         StringBuilder sb = new StringBuilder();
 
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.equip) {
+        foreach (DictionaryEntry o in Database.equip) {
             Database.DbEntry entry = (Database.DbEntry)o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
@@ -117,7 +117,7 @@ public static class Scripts {
         Hashtable hash = new Hashtable();
         StringBuilder sb = new StringBuilder();
 
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
+        foreach (DictionaryEntry o in Database.users) {
             Database.DbEntry entry = (Database.DbEntry)o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
@@ -654,8 +654,8 @@ public static class Scripts {
 
     private static ScriptResult N_ProtestUsers(in ScriptNode node) {
         List<string> header = new List<string>();
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
-            Database.DbEntry entry = o.Value;
+        foreach (DictionaryEntry o in Database.users) {
+            Database.DbEntry entry = (Database.DbEntry)o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
                 if (node.columns.Length > 0 && !node.columns.Contains(k)) continue;
@@ -667,8 +667,8 @@ public static class Scripts {
         ScriptResult result = new ScriptResult();
         result.header = header.ToArray();
 
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
-            Database.DbEntry entry = o.Value;
+        foreach (DictionaryEntry o in Database.users) {
+            Database.DbEntry entry = (Database.DbEntry)o.Value;
 
             string[] row = new string[header.Count];
             foreach (DictionaryEntry c in entry.hash) {
@@ -685,8 +685,8 @@ public static class Scripts {
     }
     private static ScriptResult N_ProtestEquip(in ScriptNode node) {
         List<string> header = new List<string>();
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.equip) {
-            Database.DbEntry entry = o.Value;
+        foreach (DictionaryEntry o in Database.equip) {
+            Database.DbEntry entry = (Database.DbEntry)o.Value;
             foreach (DictionaryEntry c in entry.hash) {
                 string k = c.Key.ToString();
                 if (node.columns.Length > 0 && !node.columns.Contains(k)) continue;
@@ -698,8 +698,8 @@ public static class Scripts {
         ScriptResult result = new ScriptResult();
         result.header = header.ToArray();
 
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.equip) {
-            Database.DbEntry entry = o.Value;
+        foreach (DictionaryEntry o in Database.equip) {
+            Database.DbEntry entry = (Database.DbEntry)o.Value;
 
             string[] row = new string[header.Count];
             foreach (DictionaryEntry c in entry.hash) {

@@ -91,6 +91,10 @@ body {
     background-position: 4px 4px;
 }
 
+#txtSearch:not(:placeholder-shown) {
+    background-position-x: -32px;
+}
+
 .bar-button {
     position: absolute;
     top: 6px;

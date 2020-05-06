@@ -83,7 +83,7 @@ class HttpAddressBookListener : Http {
 
         StringBuilder sb = new StringBuilder();
 
-        foreach (KeyValuePair<string, Database.DbEntry> o in Database.users) {
+        foreach (DictionaryEntry o in Database.users) {
             Database.DbEntry entry = (Database.DbEntry)o.Value;
 
             string title = Encoding.UTF8.GetString(Database.GetValue(entry, "TITLE")).Trim();

@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 public static class Fetch {
 
-    public static byte[] ImportDatabase(HttpListenerContext ctx) {
+    public static byte[] ImportDatabase(in HttpListenerContext ctx, in string performer) {
         string ip = "127.0.0.1";
         int port = 443;
         string protocol = "https";
@@ -38,8 +40,7 @@ public static class Fetch {
 
         ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => { return true; };
 
-        /*try*/
-        {
+        try {
             using HttpClient client_auth = new HttpClient();
             client_auth.BaseAddress = uri;
             client_auth.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
@@ -57,7 +58,9 @@ public static class Fetch {
                     break;
                 }
             }
-        }
+        } catch { }
+
+        if (sessionid.Length == 0) return Strings.FAI.Array;
 
         CookieContainer cookieContainer = new CookieContainer();
         cookieContainer.Add(new Cookie() {
@@ -66,7 +69,7 @@ public static class Fetch {
             Domain = ip
         });
 
-        {
+        try {
             using HttpClientHandler handler = new HttpClientHandler();
             handler.CookieContainer = cookieContainer;
             using (HttpClient client_ver = new HttpClient(handler)) {
@@ -94,28 +97,8 @@ public static class Fetch {
                     version = double.Parse($"{major}.{minor}");
                 }
             };
-        }
 
-        if (sessionid.Length == 0) {
-            //TODO:
-            return null;
-        }
-
-        if (importEquip) {
-            if (version < 4) 
-                ImportEquip_3(uri, cookieContainer);
-            else if (version == 4)
-                ImportEquip_4(uri, cookieContainer);
-        }
-
-        if (importUsers) {
-            if (version < 4) 
-                ImportUsers_3(uri, cookieContainer);
-             else if (version == 4)
-                ImportUsers_4(uri, cookieContainer);
-        }
-
-        /*}catch (HttpRequestException ex) {
+         } catch (HttpRequestException ex) {
             Logging.Err(ex);
 
         } catch (ArgumentNullException ex) {
@@ -126,9 +109,27 @@ public static class Fetch {
 
         } catch (Exception ex) {
             Logging.Err(ex);
-        }*/
+        }
 
-        return null;
+        if (importEquip) {
+            Logging.Action(in performer, $"Import users from {ip}");
+            if (version < 4) 
+                ImportEquip_3(uri, cookieContainer);
+            else if (version == 4)
+                ImportEquip_4(uri, cookieContainer);
+        }
+
+        if (importUsers) {
+            Logging.Action(in performer, $"Import equipment from {ip}");
+            if (version < 4) 
+                ImportUsers_3(uri, cookieContainer);
+             else if (version == 4)
+                ImportUsers_4(uri, cookieContainer);
+        }
+
+        GC.Collect();
+
+        return Strings.OK.Array;
     }
 
 
@@ -149,14 +150,29 @@ public static class Fetch {
         int i = 1;
         while (i < split.Length) {
             if (int.TryParse(split[i], out int len)) {
-                Database.DbEntry entry = new Database.DbEntry();
 
-                for (int j = i + 1; j < i + len * 4; j += 4) {
-                    entry.hash.Add(split[j], new string[] { split[j + 1], split[j + 2] });
+                Hashtable hash = new Hashtable();
+                for (int j = i + 1; j < i + len * 4; j += 4)
+                    hash.Add(split[j], new string[] { split[j + 1], split[j + 2], "" });
+
+                string filename = DateTime.Now.Ticks.ToString();
+
+                while (Database.equip.ContainsKey(filename)) {
+                    Thread.Sleep(1);
+                    filename = DateTime.Now.Ticks.ToString();
                 }
-                
-                //Database.equip.Add(filename, entry);
-                //Database.Write(entry, performer);
+
+                hash[".FILENAME"] = new string[] { filename, "", "" };
+
+                Database.DbEntry entry = new Database.DbEntry() {
+                    filename = filename,
+                    hash = hash,
+                    isUser = false,
+                    write_lock = new object()
+                };
+
+                Database.equip.Add(entry.filename, entry);
+                Database.Write(entry, null);
             }
             i += 1 + len * 4;
         }
@@ -175,6 +191,37 @@ public static class Fetch {
         Task<HttpResponseMessage> res = client.GetAsync("getuserslist");
         string payload = res.Result.Content.ReadAsStringAsync().Result;
 
+        string[] split = payload.Split((char)127);
+
+        int i = 1;
+        while (i < split.Length) {
+            if (int.TryParse(split[i], out int len)) {
+
+                Hashtable hash = new Hashtable();
+                for (int j = i + 1; j < i + len * 4; j += 4)
+                    hash.Add(split[j], new string[] { split[j + 1], split[j + 2], "" });
+
+                string filename = DateTime.Now.Ticks.ToString();
+
+                while (Database.users.ContainsKey(filename)) {
+                    Thread.Sleep(1);
+                    filename = DateTime.Now.Ticks.ToString();
+                }
+
+                hash[".FILENAME"] = new string[] { filename, "", "" };
+
+                Database.DbEntry entry = new Database.DbEntry() {
+                    filename = filename,
+                    hash = hash,
+                    isUser = true,
+                    write_lock = new object()
+                };
+
+                Database.users.Add(entry.filename, entry);
+                Database.Write(entry, null);
+            }
+            i += 1 + len * 4;
+        }
     }
 
     public static void ImportEquip_4(Uri uri, CookieContainer cookieContainer) { }
