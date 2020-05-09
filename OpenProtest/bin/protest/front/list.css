@@ -1,0 +1,150 @@
+
+.list-titlebar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 2px;
+    height: 22px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(rgb(96,96,96), rgb(80,80,80));
+}
+
+.list-title-0, .list-title-1, .list-title-2, .list-title-3 {
+    position: absolute;
+    top: 0;
+    max-width: 25%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+.list-title-0:hover, .list-title-1:hover, .list-title-2:hover, .list-title-3:hover {
+    text-decoration: underline;
+}
+
+.list-title-0 {
+    left: 48px;
+    max-width: calc(25% - 48px);
+}
+.list-title-1 {
+    left: 25%;
+}
+.list-title-2 {
+    left: 50%;
+}
+.list-title-3 {
+    left: 75%;
+    max-width: calc(25% - 20px);
+}
+
+.list-titlebar-options {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background-image: url(res/l_tool02.svg);
+    background-size: contain;
+}
+
+.list-titlebar-options:hover {
+    background-color: rgba(16,16,16,.15);
+    cursor: pointer;
+}
+
+.list-total{
+    position: absolute;
+    left: 8px;
+    bottom: 2px;
+    color: var(--pane-color);
+    font-weight: 600;
+
+    padding: 0px 8px;
+    border: 1px solid var(--pane-color);
+    border-radius: 2px;
+}
+
+.list-view {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 24px;
+    bottom: 28px;
+    background-color: var(--pane-color);
+    color: #202020;
+    overflow-y: auto;
+}
+
+.lst-obj-ele {
+    position: relative;
+    height: 44px;
+    border-bottom: rgb(128,128,128) 1px solid;
+}
+
+.lst-obj-ele:hover{
+    background-color: var(--select-color);
+}
+
+.lst-obj-ele > * {
+    position: absolute;
+}
+
+.lst-obj-ico {
+    left: 2px;
+    top: 2px;
+    width: 40px;
+    height: 40px;
+    background-size: contain;
+}
+
+.lst-obj-lbl-0, .lst-obj-lbl-1, .lst-obj-lbl-2, .lst-obj-lbl-3, .lst-obj-lbl-4, .lst-obj-lbl-5, .lst-obj-lbl-6, .lst-obj-lbl-7 {
+    width: 25%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lst-obj-lbl-0 {
+    font-weight: 600;
+    width: calc(25% - 48px);
+    left: 48px;
+    top: 2px;
+}
+
+.lst-obj-lbl-1 {
+    font-weight: 600;
+    width: calc(25% - 48px);
+    left: 48px;
+    top: 20px;
+}
+
+.lst-obj-lbl-2 {
+    left: 25%;
+    top: 2px;
+}
+
+.lst-obj-lbl-3 {
+    left: 25%;
+    top: 20px;
+}
+
+.lst-obj-lbl-4 {
+    left: 50%;
+    top: 2px;
+}
+
+.lst-obj-lbl-5 {
+    left: 50%;
+    top: 20px;
+}
+
+.lst-obj-lbl-6 {
+    left: 75%;
+    top: 2px;
+}
+
+.lst-obj-lbl-7 {
+    left: 75%;
+    top: 20px;
+}

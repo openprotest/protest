@@ -20,7 +20,7 @@ class Wmi extends Window {
         this.btnDownload.setAttribute("tip-below", "Download");
         this.toolbox.appendChild(this.btnDownload);
 
-        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.content.style.overflow = "hidden";
 

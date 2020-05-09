@@ -14,27 +14,27 @@ input[type="range"]::-ms-slider-thumb {
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     outline: none;
-    border-radius: 50%;
+    border-radius: 4px;
     background-color: var(--theme-color);
     box-shadow: rgba(0,0,0,.5) -1px 0 2px;
     transition: transform .2s;
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     outline: none;
-    border-radius: 50%;
+    border-radius: 4px;
     background: var(--theme-color);
     box-shadow: rgba(0,0,0,.5) -1px 0 2px;
     transition: transform .2s;
 }
 
 input[type="range"]:focus {
-    animation: inner-glow-ligth 2s infinite linear;
+    animation: inner-glow 2s infinite linear;
 }
 
 input[type="range"]:disabled::-webkit-slider-thumb {

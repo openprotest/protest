@@ -45,6 +45,8 @@ let loader_styles = [
     ];
 
     let tertiaryScripts = [
+        "listequip.js",
+        "listusers.js",
         "fetch.js",
         "netcalc.js",
         "passwordgen.js",
@@ -73,36 +75,37 @@ let loader_styles = [
 
         if (loader_styles.length + primaryScripts.length == count) { //load secondary
             for (let i = 0; i < secondaryScripts.length; i++)
-                loadScript(secondaryScripts[i], callbackHandle);
+                LoadScript(secondaryScripts[i], callbackHandle);
 
         } else if (loader_styles.length + primaryScripts.length + secondaryScripts.length == count) { //load tertiary
             for (let i = 0; i < tertiaryScripts.length; i++)
-                loadScript(tertiaryScripts[i], callbackHandle);
+                LoadScript(tertiaryScripts[i], callbackHandle);
 
-        } else if (count == total - 2) { //load db
-            loadEquip(callbackHandle);
-            loadUsers(callbackHandle);
+        } else if (count == total - 2) { //js is done, load db
+            btnSidemenu.style.filter = "none";
+
+            LoadEquip(callbackHandle);
+            LoadUsers(callbackHandle);
 
         } else if (count == total) { //all done
+            loader.style.filter = "opacity(0)";
+
             setTimeout(() => {
-                loader.style.filter = "opacity(0)";
-                btnSidemenu.style.filter = "none";
-                //main.style.filter = "none";
                 setTimeout(() => { document.body.removeChild(loader); }, 200);
-                setTimeout(() => { restoreSession(); }, 250); //restore previous session
-            }, 200);            
+                setTimeout(() => { RestoreSession(); }, 250); //restore previous session
+            }, 200);
         }
     };
 
     for (let i=0; i< loader_styles.length; i++)
-        loadStyle(loader_styles[i], callbackHandle);
+        LoadStyle(loader_styles[i], callbackHandle);
 
     for (let i=0; i< primaryScripts.length; i++)
-        loadScript(primaryScripts[i], callbackHandle);
+        LoadScript(primaryScripts[i], callbackHandle);
 
 })();
 
-function loadStyle(filename, callback) {
+function LoadStyle(filename, callback) {
     if (document.head.querySelectorAll(`link[href$='${filename}']`).length > 0) {
         callback("exists", filename);
         return;
@@ -117,7 +120,7 @@ function loadStyle(filename, callback) {
     csslink.onerror = ()=> callback("error", filename);
 }
 
-function loadScript(filename, callback) {
+function LoadScript(filename, callback) {
     if (document.head.querySelectorAll(`script[src$='${filename}']`).length > 0) {
         callback("exists", filename);
         return;
@@ -132,7 +135,7 @@ function loadScript(filename, callback) {
     script.onerror = ()=> callback("error", filename);
 }
 
-function loadEquip(callback) {
+function LoadEquip(callback) {
     let xhr = new XMLHttpRequest();
 
     xhr.onload = ()=> {
@@ -160,7 +163,7 @@ function loadEquip(callback) {
 
 }
 
-function loadUsers(callback) {
+function LoadUsers(callback) {
     let xhr = new XMLHttpRequest();
 
     xhr.onload = ()=> {
@@ -187,7 +190,7 @@ function loadUsers(callback) {
     xhr.send();
 }
 
-function storeSession() {
+function StoreSession() {
     let session = [];
     for (let i = 0; i < $w.array.length; i++)
         session.push({
@@ -207,7 +210,7 @@ function storeSession() {
     return session;
 }
 
-function restoreSession() {
+function RestoreSession() {
     let session = JSON.parse(localStorage.getItem("session"));
     if (session == null || session.length == 0) return;
     //if (!confirm("Restore previous session")) return;
@@ -215,6 +218,8 @@ function restoreSession() {
     for (let i = 0; i < session.length; i++) {
         let win;
         switch (session[i].class) {
+            case "ListEquip"    : win = new ListEquip(session[i].args); break;
+            case "ListUsers"    : win = new ListUsers(session[i].args); break;
             case "Fetch"        : win = new Fetch(session[i].args); break;
             case "Netcalc"      : win = new Netcalc(); break;
             case "Passgen"      : win = new Passgen(); break;

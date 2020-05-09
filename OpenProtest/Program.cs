@@ -65,12 +65,25 @@ class Program {
         else SelfElevate();
 
         Console.WriteLine();
-        LoadConfig();
+        
+        Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", LoadConfig() ? "Done" : "Failed"));
+
+        Console.Write(string.Format("{0, -24}", "Knowlage base"));
         ExtractZippedKnowlageFile();
+        Console.WriteLine("Done");
+
+        Console.Write(string.Format("{0, -24}", "Loading equipment"));
         Database.LoadEquip();
+        Console.WriteLine("Done");
+
+        Console.Write(string.Format("{0, -24}", "Loading users"));
         Database.LoadUsers();
+        Console.WriteLine("Done");
+
+        Console.WriteLine();
         StartServices();
 
+#if DEBUG
         Thread.Sleep(1000);
         Console.ResetColor();
         Console.WriteLine();
@@ -78,6 +91,7 @@ class Program {
             Console.Write(">");
             UserCommand(Console.ReadLine());
         }
+#endif
     }
 
     private static void DrawProTest() {
@@ -143,8 +157,8 @@ class Program {
         return (new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole(WindowsBuiltInRole.Administrator);
     }
 
-    private static void LoadConfig() {
-        if (!File.Exists(Strings.FILE_CONFIG)) return;
+    private static bool LoadConfig() {
+        if (!File.Exists(Strings.FILE_CONFIG)) return false;
 
         StreamReader fileReader = new StreamReader(Strings.FILE_CONFIG);
         string line;
@@ -206,9 +220,10 @@ class Program {
         }
 
         fileReader.Close();
+        return true;
     }
 
-    public static void ExtractZippedKnowlageFile() {
+    public static bool ExtractZippedKnowlageFile() {
         DirectoryInfo dirIp = new DirectoryInfo(Strings.DIR_IP_LOCATION);
         FileInfo fileIpZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\ip.zip");
         if (!dirIp.Exists && fileIpZip.Exists)
@@ -218,6 +233,7 @@ class Program {
                 Console.WriteLine("\t Done");
             } catch (Exception ex) {
                 Logging.Err(ex);
+                return false;
             }
 
         DirectoryInfo dirProxy = new DirectoryInfo(Strings.DIR_PROXY);
@@ -229,9 +245,10 @@ class Program {
                 Console.WriteLine("\t Done");
             } catch (Exception ex) {
                 Logging.Err(ex);
+                return false;
             }
 
-        Console.WriteLine();
+        return true;
     }
 
     private static void StartServices() {

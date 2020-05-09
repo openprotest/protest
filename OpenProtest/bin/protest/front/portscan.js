@@ -112,7 +112,7 @@ class PortScan extends Console {
         this.btnOptions.setAttribute("tip-below", "Options");
         this.toolbox.appendChild(this.btnOptions);
 
-        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         if (this.args.entries) { //restore entries from previous session
             let temp = this.args.entries;

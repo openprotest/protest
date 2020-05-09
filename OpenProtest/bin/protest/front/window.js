@@ -33,7 +33,7 @@ document.body.onkeydown   = win_keydown;
 bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 
 document.body.onunload = () => {
-    storeSession();
+    StoreSession();
 
     for (let i = 0; i < $w.array.length; i++)
         if ($w.array[i].popoutWindow)
@@ -414,8 +414,9 @@ class Window {
         this.content.style.top = "0";
 
         if (localStorage.getItem("accent_color")) { //apply accent color
-            let accent = localStorage.getItem("accent_color").split(",").map(o=>parseInt(o.trim()));
-            let select = `hsl(${accent[0]+7},${accent[1]}%,${accent[2]*.9}%)`;
+            let accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o.trim()));
+            let hsl = RgbToHsl(accent);
+            let select = `hsl(${hsl[0]+7},${hsl[1]}%,${hsl[2]*.9}%)`;
             newWin.document.querySelector(":root").style.setProperty("--theme-color", `rgb(${accent[0]},${accent[1]},${accent[2]})`);
             newWin.document.querySelector(":root").style.setProperty("--select-color", select);
         }

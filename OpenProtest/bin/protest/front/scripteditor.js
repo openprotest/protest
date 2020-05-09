@@ -178,7 +178,7 @@ class ScriptEditor extends Window {
         this.btnRun.setAttribute("tip-below", "Run");
         this.toolbox.appendChild(this.btnRun);
 
-        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.box = document.createElement("div");
         this.box.className = "script-edit-box";

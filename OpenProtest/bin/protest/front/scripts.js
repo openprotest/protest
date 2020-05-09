@@ -25,7 +25,7 @@ class Scripts extends Tabs {
         this.btnReload.setAttribute("tip-below", "Reload");
         this.toolbox.appendChild(this.btnReload);
 
-        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.tabScripts = this.AddTab("Scripts");
         this.tabReports = this.AddTab("Reports");
@@ -367,7 +367,7 @@ class ScriptReport extends Window {
         this.btnDownload.setAttribute("tip-below", "Download");
         this.toolbox.appendChild(this.btnDownload);
 
-        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 22 + "px";
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.btnDownload.addEventListener("click", event => {
             if (text.length == 0) return;

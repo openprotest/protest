@@ -19,30 +19,29 @@ label:before {
     width: 28px;
     height: 16px;
     content: " ";
-    border-radius: 12px;
+    border-radius: 4px;
     background-color: var(--control-color);
     transition: .2s;
 }
 
 label:after {
+    content: " ";
     position: absolute;
     top: 3px;
     left: -1px;
     width: 14px;
     height: 14px;
     margin: 2px 2px;
-    border-radius: 2px;
-    content: " ";
 
+    border-radius: 4px;
     background-color: rgb(96,96,96);
-    border-radius: 9px;
 
     transition: transform .2s,
                 background-color .4s;
 }
 
 label:focus::before {
-    animation: inner-glow-ligth 2s infinite;
+    animation: inner-glow 2s infinite linear;
 }
 
 input[type="checkbox"]:checked + label:after {

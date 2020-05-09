@@ -177,10 +177,10 @@
     line-height: 2.1;
 
     color: #C0C0C0;
-    background-color: rgb(64,64,64);
     background-repeat: no-repeat;
     background-size: 32px 32px;
     background-position: 4px 2px;
+    box-shadow: #C0C0C0 0 0 0 1px;
 
     border-radius: 2px;
     transition: .2s;

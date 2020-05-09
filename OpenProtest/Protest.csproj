@@ -131,6 +131,9 @@
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\config.txt" />
     <Content Include="bin\protest\front\license.txt" />
+    <Content Include="bin\protest\front\listusers.js" />
+    <Content Include="bin\protest\front\listequip.js" />
+    <Content Include="bin\protest\front\list.css" />
     <Content Include="bin\protest\front\list.js" />
     <Content Include="bin\protest\front\res\github.svg" />
     <Content Include="bin\protest\front\res\l_screencapture.svg" />

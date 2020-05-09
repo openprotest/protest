@@ -1,8 +1,8 @@
 const SUBMENU_WIDTH = 360;
 
 const TOOLS = [
-{ lbl:"Equipment",          ico:"res/database_equip.svgz", sqr:true,  f:arg=> new EquipList() },
-{ lbl:"Users",              ico:"res/database_users.svgz", sqr:true,  f:arg=> new UserList() },
+{ lbl:"Equipment",          ico:"res/database_equip.svgz", sqr:true,  f:arg=> new ListEquip() },
+{ lbl:"Users",              ico:"res/database_users.svgz", sqr:true,  f:arg=> new ListUsers() },
 { lbl:"Query",              ico:"res/databasesearch.svgz", sqr:true,  f:arg=> new Query() },
 { lbl:"New equipment",      ico:"res/new_equip.svgz",      sqr:true,  f:arg=> new Equip(null) },
 { lbl:"New user",           ico:"res/new_user.svgz",       sqr:true,  f:arg=> new User(null) },

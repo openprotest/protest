@@ -19,8 +19,8 @@
 .window > .title {
     position: absolute;
     cursor: default;
-    left: 24px;
-    right: 84px;
+    left: 28px;
+    right: 120px;
     top: 0px;
     height: 30px;
 
@@ -85,8 +85,8 @@
     position: absolute;
     left: 6px;
     top: 4px;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
 
     background-repeat: no-repeat;
     background-size: cover;
@@ -106,7 +106,7 @@
 .win-toolbox {
     position: absolute;
     left: 48px;
-    top: 2px;
+    top: 3px;
     width: auto;
     height: 22px;
 
@@ -115,62 +115,22 @@
 
 .win-toolbox > div {
     float: left;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
+    outline: 0;
     border-radius: 2px;
-    margin-right: 4px;
+    margin-right: 5px;
+    box-shadow: rgba(128,128,128,.6) 0 0 0 1px;
 
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: 22px 22px;
+    background-position: 50% 50%;
+
+    transition: .2s;
 }
-.win-toolbox > div:hover { background-color: rgba(128,128,128,.5); }
-.win-toolbox > div:active { background-color: rgba(0,0,0,.2); }
-
-.win-toolbox > div > * {
-    position: relative;
-    top: 22px;
-    width: 250px;
-
-    background-color: rgb(96,96,96);
-    color: white;
-    box-shadow: rgba(0,0,0,.6) 0 4px 4px;
-
-    visibility: hidden;
-    transform-origin: 0 0;
-    transform: scaleY(.01);
-    transition: .1s;
-    
-    text-transform: capitalize;
-    transition-delay: .1s;
-}
-
-.win-toolbox > div > *:focus,
-.win-toolbox > div:hover > * {
-    visibility: visible;
-    transform: none;
-    transition-delay: 0s;
-}
-
-.win-toolbox > div > div {
-    min-height: 100px;
-    border-radius: 2px;
-    overflow-y: auto;
-}
-
-.win-toolbox > div > div > div {
-    padding: 8px 8px;
-}
-
-.win-toolbox > div > div > div:hover {
-    background-color: rgb(72,72,72);
-}
-
-.win-toolbox > div > input[type="text"] {
-    outline: none;
-    border: 0;
-    padding: 8px;
-    text-transform: initial;
-}
+.win-toolbox > div:hover { background-color: rgba(128,128,128,.4); }
+.win-toolbox > div:focus { background-color: rgba(128,128,128,.4); }
+.win-toolbox > div:active { background-color: rgba(16,16,16,.2); }
 
 .win-dim {
     position: absolute;

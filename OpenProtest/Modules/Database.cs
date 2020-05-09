@@ -29,6 +29,8 @@ class Database {
 
     public static long lastCachedEquipVer = -1;
     public static long lastCachedUsersVer = -1;
+    public static long lastCachedEquipTimestamp = 0;
+    public static long lastCachedUsersTimestamp = 0;
     public static byte[] lastCachedEquip = null;
     public static byte[] lastCachedUsers = null;
 
