@@ -175,7 +175,7 @@ class Settings extends Tabs {
         if (localStorage.getItem("accent_color"))
             selected_accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o));
 
-        const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [32,144,240], [192,64,192]];
+        const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [32,144,240]];
 
         for (let i = 0; i < accentColors.length; i++) {
             let rgbString = `rgb(${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]})`;
@@ -657,7 +657,7 @@ class Settings extends Tabs {
         center.appendChild(document.createElement("br"));
         center.appendChild(document.createElement("br"));
 
-        const icons = ["res/logo.svgz", "res/opensource.svgz","res/gpl.svgz", "res/github.svgz"];
+        const icons = ["res/logo.svgz", "res/copyleft.svgz", "res/opensource.svgz","res/gpl.svgz", "res/github.svgz"];
         for (let i = 0; i < icons.length; i++) {
             const newIcon = document.createElement("div");
             newIcon.style.display = "inline-block";

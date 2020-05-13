@@ -408,10 +408,13 @@ class Window {
         btnUnpop.style.backgroundImage = "url(res/popout.svgz)";
         toolbar.appendChild(btnUnpop);
 
+        if (this.isMaximized) this.Toogle();
+
         this.toolbox.style.left = "8px";
         toolbar.appendChild(this.toolbox);
 
         this.content.style.top = "0";
+        this.content.style.filter = "none";
 
         if (localStorage.getItem("accent_color")) { //apply accent color
             let accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o.trim()));
@@ -420,8 +423,6 @@ class Window {
             newWin.document.querySelector(":root").style.setProperty("--theme-color", `rgb(${accent[0]},${accent[1]},${accent[2]})`);
             newWin.document.querySelector(":root").style.setProperty("--select-color", select);
         }
-
-        if (this.isMaximized) this.Toogle();
 
         newWin.onresize = () => this.AfterResize();
 
@@ -434,6 +435,7 @@ class Window {
             newWin.close();
             this.popoutWindow = null;
 
+            this.content.style.filter = "none";
             this.content.style.top = "30px";
             this.toolbox.style.left = "";
         };
@@ -505,8 +507,10 @@ class Window {
 
         this.content.style.filter = "blur(4px)";
 
-        dim.onmouseup = event => event.stopPropagation();
-        dim.onmousedown = event => event.stopPropagation();
+        dim.onmouseup = dim.onmousedown = event => {
+            event.stopPropagation();
+            this.BringToFront();
+        };
 
         let once = false;
         btnCancel.onclick = event => {
@@ -583,8 +587,10 @@ class Window {
 
         this.content.style.filter = "blur(4px)";
 
-        dim.onmouseup = event => event.stopPropagation();
-        dim.onmousedown = event => event.stopPropagation();
+        dim.onmouseup = dim.onmousedown = event => {
+            event.stopPropagation();
+            this.BringToFront();
+        };
 
         let once = false;
         btnCancel.onclick = event => {

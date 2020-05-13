@@ -1,15 +1,12 @@
 class ListUsers extends List {
     constructor(args) {
-        super();
-
-        this.args = args ? args : { value: "" };
+        super(args);
 
         this.setTitle("Users");
         this.setIcon("res/database_users.svgz");
 
         this.columns = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
         this.db = db_users;
-
 
         this.toolbox.removeChild(this.btnFilter);
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
