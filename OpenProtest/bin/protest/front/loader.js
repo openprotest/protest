@@ -47,6 +47,8 @@ let loader_styles = [
     let tertiaryScripts = [
         "listequip.js",
         "listusers.js",
+        "viewequip.js",
+        "viewuser.js",
         "fetch.js",
         "netcalc.js",
         "passwordgen.js",

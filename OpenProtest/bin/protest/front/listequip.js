@@ -43,14 +43,19 @@ function GetEquipIcon(type) {
         return "res/gear.svgz";;
 }
 
-class ListEquip extends List {
+class ListEquip extends ListWindow {
     constructor(args) {
         super(args);
 
         this.setTitle("Equipment");
         this.setIcon("res/database_equip.svgz");
 
-        this.columns = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+        
+        if (localStorage.getItem("columns_equip"))
+            this.columns = JSON.parse(localStorage.getItem("columns_equip"));
+        else
+            this.columns = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+        
         this.db = db_equip;
 
         this.typeslist = [];

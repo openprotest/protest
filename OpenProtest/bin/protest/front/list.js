@@ -1,4 +1,4 @@
-class List extends Window {
+class ListWindow extends Window {
     constructor(args) {
         super([64, 64, 64]);
 
@@ -72,6 +72,7 @@ class List extends Window {
 
         this.view = [];
         this.db = null;
+        this.titleLabels = [];
 
         this.btnFilter.onfocus = () => {
             if (this.popoutWindow) {
@@ -150,20 +151,19 @@ class List extends Window {
     }
 
     UpdateTitlebar() {
-        let titles = [];
-
-        if (this.titlebar.length === 1 || true)
+        if (this.titleLabels.length === 0) {
             for (let i = 0; i < 4; i++) {
                 let lblTitle = document.createElement("div");
                 lblTitle.className = "list-title-" + i;
                 this.titlebar.appendChild(lblTitle);
-                titles.push(lblTitle);
-            }        
+                this.titleLabels.push(lblTitle);
+            }
+        }
+
+        for (let i = 0; i < this.titleLabels.length; i++)
+            this.titleLabels[i].innerHTML = `${this.columns[i*2]}/${this.columns[i*2+1]}`.toLowerCase();
 
         this.sortSubmenu.innerHTML = "";
-
-        for (let i = 0; i < titles.length; i++)
-            titles[i].innerHTML = `${this.columns[i*2]}/${this.columns[i*2+1]}`.toLowerCase();
 
         for (let i = 0; i < this.columns.length; i++) {
             let newItem = document.createElement("div");
@@ -194,13 +194,83 @@ class List extends Window {
     }
 
     CustomizeColumns() {
-        const dialog = this.DialogBox("240px");
+        const dialog = this.DialogBox("200px");
         if (dialog === null) return;
         const btnOK = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
+        const buttonBox = dialog.buttonBox;
         const innerBox = dialog.innerBox;
 
+        const btnApplyAll = document.createElement("input");
+        btnApplyAll.type = "button";
+        btnApplyAll.value = "Apply to all";
+        buttonBox.appendChild(btnApplyAll);
+
+        btnOK.value = "Apply";
+        buttonBox.appendChild(btnOK);
+
+        buttonBox.appendChild(btnCancel);
+
+        innerBox.style.textAlign = "center";
+
+        const title = document.createElement("div");
+        title.innerHTML = "Customize columns:";
+        title.style.padding = "16px 0";
+        title.style.fontWeight = "600";
+        title.style.textDecoration = "underline";
+        innerBox.appendChild(title);
+
+        let selBoxes = [];
+        let allColumns = [];
+
+        for (let i = 0; i < this.db.length; i++) 
+            for (const p in this.db[i]) 
+                if (allColumns.indexOf(p) === -1)
+                    allColumns.push(p);
+        allColumns.sort();
+
+        for (let i = 0; i < 8; i++) {
+            const selBox = document.createElement("select");
+            selBox.style.width = "calc(25% - 16px)";
+            selBox.style.textTransform = "capitalize";
+            selBoxes.push(selBox);
+            //innerBox.appendChild(selBox);
+
+            for (let j = 0; j < allColumns.length; j++) {
+                const newOpt = document.createElement("option");
+                newOpt.text = allColumns[j].toLowerCase();
+                newOpt.value = allColumns[j];
+                selBox.appendChild(newOpt);
+            }
+
+            selBox.value = this.columns[i];
+        }
+
+        innerBox.appendChild(selBoxes[0]);
+        innerBox.appendChild(selBoxes[2]);
+        innerBox.appendChild(selBoxes[4]);
+        innerBox.appendChild(selBoxes[6]);
+        innerBox.appendChild(selBoxes[1]);
+        innerBox.appendChild(selBoxes[3]);
+        innerBox.appendChild(selBoxes[5]);
+        innerBox.appendChild(selBoxes[7]);        
+
+        btnApplyAll.addEventListener("click", event => {
+            this.columns = [selBoxes[0].value, selBoxes[2].value, selBoxes[4].value, selBoxes[6].value, selBoxes[1].value, selBoxes[3].value, selBoxes[5].value, selBoxes[7].value];
+
+            if (this instanceof ListEquip)
+                localStorage.setItem("columns_equip", JSON.stringify(this.columns));
+            else if (this instanceof ListUsers)
+                localStorage.setItem("columns_users", JSON.stringify(this.columns));
+
+            this.UpdateTitlebar();
+            this.RefreshList();
+            btnCancel.onclick();
+        });
+
         btnOK.addEventListener("click", event => {
-            //todo:
+            this.columns = [selBoxes[0].value, selBoxes[2].value, selBoxes[4].value, selBoxes[6].value, selBoxes[1].value, selBoxes[3].value, selBoxes[5].value, selBoxes[7].value];
+            this.UpdateTitlebar();
             this.RefreshList();
         });
     }

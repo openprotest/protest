@@ -162,7 +162,7 @@
 .toolbox-with-submenu > div::before {
     position: relative;
     left: 6px;
-    top: 100%;
+    top: 0%;
     content: "";
     border: solid;
     border-color: rgb(224,224,224) transparent;

@@ -1,11 +1,15 @@
-class ListUsers extends List {
+class ListUsers extends ListWindow {
     constructor(args) {
         super(args);
 
         this.setTitle("Users");
         this.setIcon("res/database_users.svgz");
 
-        this.columns = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
+        if (localStorage.getItem("columns_users"))
+            this.columns = JSON.parse(localStorage.getItem("columns_users"));
+        else
+            this.columns = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
+                
         this.db = db_users;
 
         this.toolbox.removeChild(this.btnFilter);
@@ -41,7 +45,7 @@ class ListUsers extends List {
                         return;
                     }
 
-                new Equip(entry);
+                new User(entry);
                 event.stopPropagation();
             };
     }
