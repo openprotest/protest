@@ -143,6 +143,8 @@
     
     background-color: rgb(224, 224, 224);
     color: rgb(32,32,32);
+    font-weight: 600;
+
     min-height: 48px;
     border-radius: 4px;
     box-shadow: rgba(64,64,64,.6) 0 0 4px;
@@ -185,13 +187,11 @@
 }
 
 .toolbox-with-submenu > div > .tool-submenu > div:hover {
-    background-color: rgb(64,64,64);
-    color: rgb(224,224,224);
+    background-color: var(--select-color);
 }
 
 .toolbox-with-submenu > div > .tool-submenu > div:active {
-    background-color: rgb(32,32,32);
-    color: rgb(224,224,224);
+    box-shadow: rgb(64,64,64) 0 0 0 1px inset !important;
     transition: .2s;
 }
 
@@ -207,11 +207,6 @@
     float: left;
     height: 20px;
     padding-left: 4px;
-}
-
-.toolbox-with-submenu > div > .tool-submenu > div:hover > div:nth-child(1),
-.toolbox-with-submenu > div > .tool-submenu > div:active > div:nth-child(1) {
-    filter: invert(1);
 }
 
 .win-dim {

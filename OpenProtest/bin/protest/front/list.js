@@ -42,7 +42,6 @@ class ListWindow extends Window {
 
         this.btnFind = document.createElement("div");
         this.btnFind.style.backgroundImage = "url(res/l_search.svgz)";
-        this.btnFind.tabIndex = 0;
         this.btnFind.style.cursor = "text";
         this.btnFind.style.backgroundPosition = "1px 50%";
         this.btnFind.style.overflow = "hidden";
@@ -80,6 +79,7 @@ class ListWindow extends Window {
             } else {
                 this.filterSubmenu.style.maxHeight = container.clientHeight - this.win.offsetTop - 64 + "px";
             }
+            this.BringToFront();
         };
 
         this.btnFilter.ondblclick = () => {
@@ -97,6 +97,7 @@ class ListWindow extends Window {
             } else {
                 this.sortSubmenu.style.maxHeight = container.clientHeight - this.win.offsetTop - 64 + "px";
             }
+            this.BringToFront();
         };
 
         this.btnSort.ondblclick = () => {
@@ -115,11 +116,13 @@ class ListWindow extends Window {
             this.txtFind.onchange();
         };
 
+        this.btnFind.onclick =
         this.btnFind.onfocus =
         this.txtFind.onfocus = () => {
             this.txtFind.focus();
             this.btnFind.style.width = "180px";
             this.btnFind.style.backgroundColor = "rgb(96,96,96)";
+            this.BringToFront();
         };
 
         this.btnFind.ondblclick = () => {

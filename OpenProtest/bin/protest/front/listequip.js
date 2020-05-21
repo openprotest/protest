@@ -49,8 +49,7 @@ class ListEquip extends ListWindow {
 
         this.setTitle("Equipment");
         this.setIcon("res/database_equip.svgz");
-
-        
+                
         if (localStorage.getItem("columns_equip"))
             this.columns = JSON.parse(localStorage.getItem("columns_equip"));
         else
@@ -86,13 +85,14 @@ class ListEquip extends ListWindow {
 
         if (!element.ondblclick)
             element.ondblclick = (event) => {
+                let filename = entry[".FILENAME"][0];
                 for (let i = 0; i < $w.array.length; i++)
-                    if ($w.array[i] instanceof Equip && $w.array[i].filename == entry[".FILENAME"][0]) {
+                    if ($w.array[i] instanceof Equip && $w.array[i].filename === filename) {
                         $w.array[i].Minimize(); //minimize/restore
                         return;
                     }
 
-                new Equip(entry);
+                new Equip(filename);
                 event.stopPropagation();
             };
     }
@@ -134,5 +134,4 @@ class ListEquip extends ListWindow {
         }
 
     }
-
 }

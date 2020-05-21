@@ -69,7 +69,6 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
-    <Compile Include="Modules\CryptoX.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
     <Compile Include="Modules\Tools\SpeedTest.cs" />
@@ -131,6 +130,7 @@
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\config.txt" />
     <Content Include="bin\protest\front\license.txt" />
+    <Content Include="bin\protest\front\dbview.css" />
     <Content Include="bin\protest\front\viewequip.js" />
     <Content Include="bin\protest\front\viewuser.js" />
     <Content Include="bin\protest\front\listusers.js" />

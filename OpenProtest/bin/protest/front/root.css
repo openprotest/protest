@@ -91,11 +91,6 @@
         linear-gradient(378deg,rgba(36,36,36,0.04) 0%,rgba(36,36,36,0.04) 20%,rgba(91,91,91,0.04) 20%,rgba(91,91,91,0.04) 100%),
         linear-gradient(155deg,rgb(8,48,20),rgb(164,228,36));
 
-    --bg-hipster:
-        repeating-linear-gradient(0deg, rgba(0,64,128,.4) 0px,rgba(0,64,128,.6) 50px,transparent 50px,transparent 100px),
-        repeating-linear-gradient(90deg, rgba(0,64,128,.6) 0px,rgba(0,64,128,.4) 50px,transparent 50px,transparent 100px),
-        linear-gradient(90deg, rgb(225,69,0),rgb(255,69,0));
-
     --bg-carbon:
         repeating-linear-gradient(90deg, rgba(12,12,12,.2) 0px, rgba(64,64,64,.2) 1px, rgba(16,16,16,.2) 2px, rgba(44,44,44,.2) 3px, rgba(64,64,64,.2) 4px, rgba(32,32,32,.2) 5px, rgba(48,48,48,.2) 6px, rgba(32,32,32,.2) 7px),
         repeating-linear-gradient(135deg, rgba(32,32,32,.5) 0px, rgba(12,12,12,.5) 16px),

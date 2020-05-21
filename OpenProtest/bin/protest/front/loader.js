@@ -222,6 +222,8 @@ function RestoreSession() {
         switch (session[i].class) {
             case "ListEquip"    : win = new ListEquip(session[i].args); break;
             case "ListUsers"    : win = new ListUsers(session[i].args); break;
+            case "Equip"        : win = new Equip(session[i].args); break;
+            case "User"         : win = new User(session[i].args); break;
             case "Fetch"        : win = new Fetch(session[i].args); break;
             case "Netcalc"      : win = new Netcalc(); break;
             case "Passgen"      : win = new Passgen(); break;

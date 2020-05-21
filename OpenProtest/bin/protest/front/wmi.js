@@ -91,7 +91,7 @@ class Wmi extends Window {
 
         this.divPlot = document.createElement("div");
         this.divPlot.className = "no-results";
-        this.divPlot.style.backgroundColor = "rgb(208,208,208)";
+        this.divPlot.style.backgroundColor = "var(--pane-color)";
         this.divPlot.style.borderRadius = "2px";
         this.divPlot.style.overflow = "auto";
         this.divPlot.style.position = "absolute";
@@ -211,14 +211,14 @@ class Wmi extends Window {
 
         let lstClasses = document.createElement("div");
         lstClasses.className = "wmi-classes-list";
-        lstClasses.style.backgroundColor = "var(--control-color)";
+        lstClasses.style.backgroundColor = "rgb(180,180,180)";
         lstClasses.style.gridArea = "3 / 1";
         lstClasses.style.overflowY = "scroll";
         innerBox.appendChild(lstClasses);
 
         let lstProperties = document.createElement("div");
         lstProperties.className = "wmi-properties-list";
-        lstProperties.style.backgroundColor = "var(--control-color)";
+        lstProperties.style.backgroundColor = "rgb(180,180,180)";
         lstProperties.style.gridArea = "3 / 3";
         lstProperties.style.overflowY = "scroll";
         innerBox.appendChild(lstProperties);

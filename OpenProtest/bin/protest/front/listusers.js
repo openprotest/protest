@@ -39,15 +39,15 @@ class ListUsers extends ListWindow {
 
         if (!element.ondblclick)
             element.ondblclick = (event) => {
+                let filename = entry[".FILENAME"][0];
                 for (let i = 0; i < $w.array.length; i++)
-                    if ($w.array[i] instanceof User && $w.array[i].filename == entry[".FILENAME"][0]) {
+                    if ($w.array[i] instanceof User && $w.array[i].filename === filename) {
                         $w.array[i].Minimize(); //minimize/restore
                         return;
                     }
 
-                new User(entry);
+                new User(filename);
                 event.stopPropagation();
             };
     }
-
 }

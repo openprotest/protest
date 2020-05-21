@@ -15,7 +15,7 @@
         filter .4s,
         border-radius .4s,
         height .2s,
-        transform .0001s;
+        transform .00001s;
 }
 
 #btnSidemenu > #imgSearch {
@@ -68,7 +68,7 @@
     margin: 2px 0;
     font-size: 22px;
     text-shadow: rgba(255,255,255,.5) 0 0 4px;
-    animation: none !important;
+    box-shadow: none !important;
 }
 
 #sidemenu > #searchbox > #txtSearch::selection {

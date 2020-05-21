@@ -3,11 +3,11 @@
     if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("disable_anime") === null)
         localStorage.setItem("disable_anime", "true");
 
-    sidemenu_dynamicicon      = localStorage.getItem("dynamic_search_icon") === "true";
-    $w.always_maxxed          = localStorage.getItem("w_always_maxed") === "true";
-    document.body.className   = localStorage.getItem("high_contrast") === "true" ? "high-contrast" : "";
-    document.body.className   += localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
-    container.className       = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
+    sidemenu_dynamicicon     = localStorage.getItem("dynamic_search_icon") === "true";
+    $w.always_maxxed         = localStorage.getItem("w_always_maxed") === "true";
+    document.body.className  = localStorage.getItem("high_contrast") === "true" ? "high-contrast" : "";
+    document.body.className += localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
+    container.className      = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
 
     if (localStorage.getItem("zoom"))
         document.body.style.zoom = 75 + localStorage.getItem("zoom") * 5 + "%";
@@ -19,7 +19,6 @@
 
     if (localStorage.getItem("background"))
         main.style.background = localStorage.getItem("background");
-
 
     if (localStorage.getItem("font") && localStorage.getItem("font").length > 0)
         document.documentElement.style.setProperty("--global-font-family", localStorage.getItem("font"));
@@ -181,9 +180,9 @@ class Settings extends Tabs {
             let rgbString = `rgb(${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]})`;
             let hsl = RgbToHsl(accentColors[i]);
 
-            let step1 = `hsl(${hsl[0] - 4},${hsl[1]}%,${hsl[2] * .78}%)`;
-            let step2 = `hsl(${hsl[0] + 7},${hsl[1]}%,${hsl[2] * .9}%)`; //--select-color
-            let step3 = `hsl(${hsl[0] - 4},${hsl[1]}%,${hsl[2] * .8}%)`;
+            let step1 = `hsl(${hsl[0]-4},${hsl[1]}%,${hsl[2]*.78}%)`;
+            let step2 = `hsl(${hsl[0]+7},${hsl[1]}%,${hsl[2]*.9}%)`; //--select-color
+            let step3 = `hsl(${hsl[0]-4},${hsl[1]}%,${hsl[2]*.8}%)`;
             let gradient = `linear-gradient(to bottom, ${step1}0%, ${step2}92%, ${step3}100%)`;
 
             const themeBox = document.createElement("div");
@@ -249,8 +248,7 @@ class Settings extends Tabs {
             ["Dark",    "var(--bg-dark)"],
             ["Blue",    "var(--bg-blue)"],
             ["Green",   "var(--bg-green)"],
-            ["Hipster",   "var(--bg-hipster)"],
-            ["Carbon",   "var(--bg-carbon)"],
+            ["Carbon",  "var(--bg-carbon)"],
             ["Metal",   "var(--bg-metal)"]
         ];
 
@@ -574,12 +572,6 @@ class Settings extends Tabs {
         version.style.fontWeight = "500";
         version.innerHTML = "Version 4";
         aboutBox.appendChild(version);
-
-        const developer = document.createElement("div");
-        developer.style.gridArea = "4 / 3";
-        developer.style.fontWeight = "500";
-        developer.innerHTML = "&copy; 2020 veniware";
-        aboutBox.appendChild(developer);
 
         const description = document.createElement("div");
         description.style.fontWeight = "500";

@@ -70,7 +70,7 @@
     bottom: 16px;
 }
 
-@media only screen and (max-height: 400px) {
+@media only screen and (max-height: 280px) {
     #analog_clock, #date_calendar {
         opacity: 0;
         visibility: hidden;
@@ -81,10 +81,10 @@
 
 .loader {
     position: relative;
-    margin: 40px auto;
+    margin: 64px auto;
     max-width: 300px;
     width: 50%;
-    z-index: 9999;
+    z-index: 1000;
     transition: .2s;
 }
 
@@ -95,7 +95,7 @@
 
 .loader-container > .loader-progress {
     width: 0%;
-    height: 20px;
+    height: 8px;
     border-radius: 1px;
     background-color: var(--theme-color);
     transition: .1s;
@@ -104,4 +104,5 @@
 .loader-description {
     text-align: center;
     color: var(--theme-color);
+    padding-top: 8px;
 }

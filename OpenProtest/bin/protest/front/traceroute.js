@@ -47,8 +47,8 @@ class TraceRoute extends Console {
                 text += NL;
             }
 
-            while (text.indexOf("&nbsp;") > -1)
-                text = text.replace("&nbsp;", " ");
+            while (text.indexOf("&thinsp;") > -1)
+                text = text.replace("&thinsp;", " ");
 
             if (text.length == 0) return;
 
@@ -312,8 +312,8 @@ class TraceRoute extends Console {
                 if (this.hashtable.hasOwnProperty(target)) {
                     for (let i = 2; i < split.length - 1; i += 2)
                         for (let j = 0; j < this.hashtable[target].result.childNodes.length; j++)
-                            if (this.hashtable[target].result.childNodes[j].innerHTML == split[i] + "&nbsp;") {
-                                this.hashtable[target].result.childNodes[j+1].innerHTML = split[i+1]+ "&nbsp;";
+                            if (this.hashtable[target].result.childNodes[j].innerHTML == split[i] + "&thinsp;") {
+                                this.hashtable[target].result.childNodes[j+1].innerHTML = split[i+1]+ "&thinsp;";
                                 break;
                             }
                 }
@@ -321,7 +321,7 @@ class TraceRoute extends Console {
             } else
                 if (this.hashtable.hasOwnProperty(name)) {
                     let hop = document.createElement("div");
-                    hop.innerHTML = split[1] + "&nbsp;";
+                    hop.innerHTML = split[1] + "&thinsp;";
                     this.hashtable[name].result.appendChild(hop);
 
                     let hostname = document.createElement("div");
