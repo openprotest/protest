@@ -20,11 +20,11 @@ public static class CryptoAes {
         }
     }
 
-    public static byte[] Encrypt(byte[] plain, byte[] key, byte[] iv) {
+    public static byte[] Encrypt(byte[] plain, byte[] key, byte[] initVector) {
         if (plain is null || plain.Length == 0) return new byte[0];
-        if (key is null || key.Length == 0) return plain; //if case of a null key, don't encrypt
+        if (key is null || key.Length == 0) return plain; //in case of a null key, don't encrypt
 
-        using (ICryptoTransform encryptor = Aes.Create().CreateEncryptor(key, iv)) 
+        using (ICryptoTransform encryptor = Aes.Create().CreateEncryptor(key, initVector)) 
             using (MemoryStream memoryStream = new MemoryStream()) {
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write)) {
                     cryptoStream.Write(plain, 0, plain.Length);
@@ -34,11 +34,11 @@ public static class CryptoAes {
             }        
     }
 
-    public static byte[] Decrypt(byte[] cipher, byte[] key, byte[] iv) {
+    public static byte[] Decrypt(byte[] cipher, byte[] key, byte[] initVector) {
         if (cipher is null || cipher.Length == 0) return new byte[0];
-        if (key is null || key.Length == 0) return cipher; //if case of a null key, don't decrypt
+        if (key is null || key.Length == 0) return cipher; //in case of a null key, don't decrypt
 
-        using (ICryptoTransform decryptor = Aes.Create().CreateDecryptor(key, iv))
+        using (ICryptoTransform decryptor = Aes.Create().CreateDecryptor(key, initVector))
             using (MemoryStream memoryStream = new MemoryStream()) {
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Write)) {
                     cryptoStream.Write(cipher, 0, cipher.Length);

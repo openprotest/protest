@@ -49,11 +49,13 @@ class ListEquip extends ListWindow {
 
         this.setTitle("Equipment");
         this.setIcon("res/database_equip.svgz");
-                
+
+        this.defaultColumns = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+
         if (localStorage.getItem("columns_equip"))
             this.columns = JSON.parse(localStorage.getItem("columns_equip"));
         else
-            this.columns = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+            this.columns = this.defaultColumns;
         
         this.db = db_equip;
 

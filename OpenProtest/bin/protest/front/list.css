@@ -144,3 +144,56 @@
     left: 75%;
     top: 20px;
 }
+
+
+.property-box {
+    position: absolute;
+    left: 4px;
+    right: 220px;
+    top: 40px;
+}
+
+.property-box > div {
+    display: inline-block;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(25% - 16px);
+    padding: 6px 4px;
+    margin: 0 2px;
+    border-radius: 4px;
+    background-color: var(--control-color);
+    transition: .2s;
+}
+
+.properties-list {
+    position: absolute;
+    right: 4px;
+    width: 200px;
+    top: 0;
+    bottom: 0;
+}
+
+.properties-list > div { /*list*/
+    position: absolute;
+    border-radius: 4px;
+    background-color: var(--control-color);
+    width: 100%;
+    top: 40px;
+    bottom: 0;
+    overflow-y: scroll;
+}
+
+.properties-list > div > div {/*list item*/
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.properties-list > div > div:hover {
+    background-color: var(--select-color);
+}

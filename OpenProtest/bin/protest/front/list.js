@@ -193,12 +193,12 @@ class ListWindow extends Window {
     }
 
     UpdateViewport() { //override
-
-    }
+    } 
 
     CustomizeColumns() {
-        const dialog = this.DialogBox("200px");
+        const dialog = this.DialogBox("320px");
         if (dialog === null) return;
+
         const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
         const buttonBox = dialog.buttonBox;
@@ -214,52 +214,114 @@ class ListWindow extends Window {
 
         buttonBox.appendChild(btnCancel);
 
-        innerBox.style.textAlign = "center";
+        const divBoxes = document.createElement("div");
+        divBoxes.className = "property-box";
+        innerBox.appendChild(divBoxes);
 
-        const title = document.createElement("div");
-        title.innerHTML = "Customize columns:";
-        title.style.padding = "16px 0";
-        title.style.fontWeight = "600";
-        title.style.textDecoration = "underline";
-        innerBox.appendChild(title);
+        let target = -1;
+        const boxes = [];
+        for (let i = 0; i < 8; i++) {
+            const box = document.createElement("div");
+            box.innerHTML = this.columns[i].toLowerCase();
+            boxes.push(box);
+            //divBoxes.appendChild(box);
 
-        let selBoxes = [];
+            boxes[i].ondragover = event => {
+                event.preventDefault(); //
+            };
+
+            boxes[i].ondragenter = () => {
+                for (let j = 0; j < 8; j++)
+                    boxes[j].style.backgroundColor = "var(--control-color)";
+
+                boxes[i].style.backgroundColor = "var(--select-color)";
+                target = i;
+            };
+        }
+
+        divBoxes.appendChild(boxes[0]);
+        divBoxes.appendChild(boxes[2]);
+        divBoxes.appendChild(boxes[4]);
+        divBoxes.appendChild(boxes[6]);
+        divBoxes.appendChild(boxes[1]);
+        divBoxes.appendChild(boxes[3]);
+        divBoxes.appendChild(boxes[5]);
+        divBoxes.appendChild(boxes[7]);
+
+        const divProperties = document.createElement("div");
+        divProperties.className = "properties-list";
+        innerBox.appendChild(divProperties);
+
+        const txtFilter = document.createElement("input");
+        txtFilter.type = "text";
+        txtFilter.placeholder = "Find..";
+        txtFilter.style.marginLeft = "0";
+        txtFilter.style.marginRight = "0";
+        txtFilter.style.marginTop = "4px";
+        txtFilter.style.width = "calc(100% - 16px)";
+        divProperties.appendChild(txtFilter);
+
+        const listProperties = document.createElement("div");
+        divProperties.appendChild(listProperties);
+
+        const btnReset = document.createElement("input");
+        btnReset.type = "button";
+        btnReset.value = "Reset default";
+        btnReset.style.position = "absolute";
+        btnReset.style.left = "4px";
+        btnReset.style.bottom = "4px";
+        innerBox.appendChild(btnReset);
+
         let allColumns = [];
-
-        for (let i = 0; i < this.db.length; i++) 
-            for (const p in this.db[i]) 
+        for (let i = 0; i < this.db.length; i++)
+            for (const p in this.db[i])
                 if (allColumns.indexOf(p) === -1)
                     allColumns.push(p);
         allColumns.sort();
 
-        for (let i = 0; i < 8; i++) {
-            const selBox = document.createElement("select");
-            selBox.style.width = "calc(25% - 16px)";
-            selBox.style.textTransform = "capitalize";
-            selBoxes.push(selBox);
-            //innerBox.appendChild(selBox);
 
-            for (let j = 0; j < allColumns.length; j++) {
-                const newOpt = document.createElement("option");
-                newOpt.text = allColumns[j].toLowerCase();
-                newOpt.value = allColumns[j];
-                selBox.appendChild(newOpt);
+        const Filter = () => {
+            listProperties.innerHTML = "";
+
+            for (let i = 0; i < allColumns.length; i++) {
+                let keyword = txtFilter.value.toLowerCase();
+                if (allColumns[i].toLowerCase().indexOf(keyword) > -1) {
+                    let newProp = document.createElement("div");
+                    newProp.innerHTML = allColumns[i].toLowerCase();
+                    newProp.draggable = true;
+                    listProperties.appendChild(newProp);
+
+                    newProp.ondragstart = () => {
+                        target = -1;
+                    };
+
+                    newProp.ondragend = () => {
+                        if (target > -1) {
+                            boxes[target].innerHTML = allColumns[i].toLowerCase();
+                            for (let j = 0; j < 8; j++)
+                                boxes[j].style.backgroundColor = "var(--control-color)";
+
+                            target = -1;
+                        }
+                    };
+
+                }
             }
+        };
 
-            selBox.value = this.columns[i];
-        }
+        btnReset.onclick = () => {
+            if (!this.defaultColumns) return;
+            for (let i = 0; i < 8; i++)
+                boxes[i].innerHTML = this.defaultColumns[i].toLowerCase();
+        };
 
-        innerBox.appendChild(selBoxes[0]);
-        innerBox.appendChild(selBoxes[2]);
-        innerBox.appendChild(selBoxes[4]);
-        innerBox.appendChild(selBoxes[6]);
-        innerBox.appendChild(selBoxes[1]);
-        innerBox.appendChild(selBoxes[3]);
-        innerBox.appendChild(selBoxes[5]);
-        innerBox.appendChild(selBoxes[7]);        
 
         btnApplyAll.addEventListener("click", event => {
-            this.columns = [selBoxes[0].value, selBoxes[2].value, selBoxes[4].value, selBoxes[6].value, selBoxes[1].value, selBoxes[3].value, selBoxes[5].value, selBoxes[7].value];
+            this.columns = [
+                boxes[0].innerHTML.toUpperCase(), boxes[1].innerHTML.toUpperCase(),
+                boxes[2].innerHTML.toUpperCase(), boxes[3].innerHTML.toUpperCase(),
+                boxes[4].innerHTML.toUpperCase(), boxes[5].innerHTML.toUpperCase(),
+                boxes[6].innerHTML.toUpperCase(), boxes[7].innerHTML.toUpperCase()];
 
             if (this instanceof ListEquip)
                 localStorage.setItem("columns_equip", JSON.stringify(this.columns));
@@ -272,10 +334,19 @@ class ListWindow extends Window {
         });
 
         btnOK.addEventListener("click", event => {
-            this.columns = [selBoxes[0].value, selBoxes[2].value, selBoxes[4].value, selBoxes[6].value, selBoxes[1].value, selBoxes[3].value, selBoxes[5].value, selBoxes[7].value];
+            this.columns = [
+                boxes[0].innerHTML.toUpperCase(), boxes[1].innerHTML.toUpperCase(),
+                boxes[2].innerHTML.toUpperCase(), boxes[3].innerHTML.toUpperCase(),
+                boxes[4].innerHTML.toUpperCase(), boxes[5].innerHTML.toUpperCase(),
+                boxes[6].innerHTML.toUpperCase(), boxes[7].innerHTML.toUpperCase()];
+
             this.UpdateTitlebar();
             this.RefreshList();
         });
+
+
+        txtFilter.oninput = Filter;
+        Filter();
     }
 
     RefreshList() { //override

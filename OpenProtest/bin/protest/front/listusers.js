@@ -5,10 +5,12 @@ class ListUsers extends ListWindow {
         this.setTitle("Users");
         this.setIcon("res/database_users.svgz");
 
+        this.defaultColumns = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
+
         if (localStorage.getItem("columns_users"))
             this.columns = JSON.parse(localStorage.getItem("columns_users"));
         else
-            this.columns = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
+            this.columns = this.defaultColumns;
                 
         this.db = db_users;
 
