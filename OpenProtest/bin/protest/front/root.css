@@ -134,7 +134,7 @@ a {
 }
 
 ::selection {
-    background: rgb(48,48,48);
+    background: #222;
     color: #fff;
 }
 

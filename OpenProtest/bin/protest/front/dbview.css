@@ -1,23 +1,45 @@
 .db-buttons {
-    margin: 16px 0 16px 32px;
+    position: absolute;
+    left: 220px;
+    right: 8px;
+    top: 16px;
+    max-height: 36px;
+    overflow: hidden;
+}
+
+.db-sidetools {
+    position: absolute;
+    top: 16px;
+    left: 8px;
+
+    width: 200px;
+    height: 100px;
+
+    box-shadow: white 0 0 0 1px; 
+}
+
+.db-scroll {
+    position: absolute;
+    top: 60px;
+    bottom: 8px;
+    left: 220px;
+    right: 8px;
+    max-width: 800px;
+    overflow-y: auto;
 }
 
 .db-proberties {
     background-color: var(--pane-color);
     color: rgb(32,32,32);
     border-radius: 4px;
-
-    width: calc(100% - 64px);
-    max-width: 720px;
-    min-height: 320px;
-    margin: 16px 32px 16px 32px;
+    min-height: 240px;
     padding: 8px;
+    margin-right: 4px;
 }
 
 
 .db-property {
     width: 100%;
-    max-width: 800px;
     min-height: 22px;
     padding: 4px 0 2px 0;
     border-radius: 2px;
@@ -88,6 +110,7 @@
 .db-property:hover > div:nth-child(3) {
     visibility: visible;
     opacity: 1;
+    right: 15px;
     transition-delay: .8s;
 }
 .db-property > div:nth-child(3) {
@@ -95,21 +118,22 @@
     visibility: hidden;
     opacity: 0;
     
+    right: 0px;
+
     overflow: hidden;
     font-style: italic;
     border: 1px black solid;
     border-radius: 2px;
     background-color: #202020;
     color: rgb(224,224,224);
-    right: 0;
     max-width: 60%;
     width: auto;
-    height: 20px;
+    font-size: 13px;
+    height: 12px;
     padding: 0px 4px;
   
-    transition: opacity .2s;
+    transition: .2s;
 }
-
 
 .db-progress-bar {
     display: block !important;

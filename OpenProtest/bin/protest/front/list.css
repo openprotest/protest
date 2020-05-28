@@ -149,7 +149,7 @@
 .property-box {
     position: absolute;
     left: 4px;
-    right: 220px;
+    right: 216px;
     top: 40px;
 }
 
@@ -159,7 +159,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: calc(25% - 16px);
+    width: calc(25% - 12px);
     padding: 6px 4px;
     margin: 0 2px;
     border-radius: 4px;
@@ -192,6 +192,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: move;
 }
 
 .properties-list > div > div:hover {

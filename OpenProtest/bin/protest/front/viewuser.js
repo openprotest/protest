@@ -18,7 +18,7 @@ class User extends Window {
     constructor(filename) {
         super([56,56,56]);
 
-        this.setTitle("User");
+        //this.setTitle("User");
         this.setIcon("res/user.svgz");
 
         this.args = filename;
@@ -31,6 +31,11 @@ class User extends Window {
         }
 
         this.AddCssDependencies("dbview.css");
+
+        if (this.user["TITLE"] == undefined || this.user["TITLE"][0].length == 0)
+            this.setTitle("[untitled]");
+        else
+            this.setTitle(this.user["TITLE"][0]);
 
         this.content.style.overflowY = "auto";
 
@@ -53,12 +58,26 @@ class User extends Window {
         btnDelete.value = "Delete";
         buttons.appendChild(btnDelete);
 
+        const sidetools = document.createElement("div");
+        sidetools.className = "db-sidetools";
+        this.content.appendChild(sidetools);
+
+        const scroll = document.createElement("div");
+        scroll.className = "db-scroll";
+        this.content.appendChild(scroll);
+
+        const instant = document.createElement("div");
+        scroll.appendChild(instant);
+
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
-        this.content.appendChild(this.properties);
+        scroll.appendChild(this.properties);
 
         this.InitializeComponent();
     }
+
+    AfterResize() { //override
+    } 
 
     InitializeComponent() {
 

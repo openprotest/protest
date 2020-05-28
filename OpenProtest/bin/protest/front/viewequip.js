@@ -36,8 +36,8 @@ class Equip extends Window {
     constructor(filename) {
         super([56,56,56]);
 
-        this.setTitle("Equip");
-        this.setIcon("res/gear.svgz");
+        //this.setTitle("Equip");
+        //this.setIcon("res/gear.svgz");
 
         this.args = filename;
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
@@ -49,6 +49,13 @@ class Equip extends Window {
         }
 
         this.AddCssDependencies("dbview.css");
+
+        if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
+            this.setTitle("[untitled]");
+        else
+            this.setTitle(this.entry["NAME"][0]);
+
+        this.setIcon(GetEquipIcon(this.entry["TYPE"]));
 
         this.content.style.overflowY = "auto";
 
@@ -71,12 +78,27 @@ class Equip extends Window {
         btnDelete.value = "Delete";
         buttons.appendChild(btnDelete);
 
+        const sidetools = document.createElement("div");
+        sidetools.className = "db-sidetools";
+        this.content.appendChild(sidetools);
+
+        const scroll = document.createElement("div");
+        scroll.className = "db-scroll";
+        this.content.appendChild(scroll);
+
+        const instant = document.createElement("div");
+        scroll.appendChild(instant);
+
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
-        this.content.appendChild(this.properties);
+        scroll.appendChild(this.properties);
 
         this.InitializeComponent();
     }
+
+    AfterResize() { //override
+
+    } 
 
     InitializeComponent() {
         let done = [];
@@ -84,7 +106,7 @@ class Equip extends Window {
 
         for (let i = 0; i < EQUIP_ORDER.length; i++)
             if (Array.isArray(EQUIP_ORDER[i])) {
-                this.AddGroup((EQUIP_ORDER[i][0] == ".") ? GetEquipIcon(this.entry["TYPE"]) : EQUIP_ORDER[i][0], EQUIP_ORDER[i][1]);
+                this.AddGroup((EQUIP_ORDER[i][0] === ".") ? GetEquipIcon(this.entry["TYPE"]) : EQUIP_ORDER[i][0], EQUIP_ORDER[i][1]);
             } else {
                 if (!this.entry.hasOwnProperty(EQUIP_ORDER[i])) continue;
                 let newProperty = this.AddProperty(EQUIP_ORDER[i], this.entry[EQUIP_ORDER[i]][0], this.entry[EQUIP_ORDER[i]][1]);

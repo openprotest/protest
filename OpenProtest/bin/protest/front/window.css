@@ -66,7 +66,7 @@
 }
 
 .window > .popout-box {
-    right: 92px;
+    right: 88px;
     background-image: url(res/popout.svgz);
 }
 
@@ -131,7 +131,12 @@
 .win-toolbox > div:hover { background-color: rgba(128,128,128,.4); }
 .win-toolbox > div:focus { background-color: rgba(128,128,128,.4); }
 
-.toolbox-with-submenu > div > .tool-submenu {
+.win-toolbox-texttool:focus-within {
+    background-color: rgb(96,96,96) !important;
+    width: 180px;
+}
+
+.tool-with-submenu > .tool-submenu {
     visibility: hidden;
     filter: opacity(0);
 
@@ -155,13 +160,13 @@
     transition: .2s;
 }
 
-.toolbox-with-submenu > div:focus > .tool-submenu {
+.tool-with-submenu:focus > .tool-submenu {
     visibility: visible;
     filter: none;
     transform: none;
 }
 
-.toolbox-with-submenu > div::before {
+.tool-with-submenu::before {
     position: relative;
     left: 6px;
     top: 0%;
@@ -175,27 +180,27 @@
 
     filter: opacity(0);
 }
-.toolbox-with-submenu > div:focus::before {
+.tool-with-submenu:focus::before {
     filter: none;
 }
 
-.toolbox-with-submenu > div > .tool-submenu > div {
+.tool-with-submenu > .tool-submenu > div {
     border-radius: 4px;
     text-transform: capitalize;
     padding: 4px 8px;
     height: 22px;
 }
 
-.toolbox-with-submenu > div > .tool-submenu > div:hover {
+.tool-with-submenu > .tool-submenu > div:hover {
     background-color: var(--select-color);
 }
 
-.toolbox-with-submenu > div > .tool-submenu > div:active {
+.tool-with-submenu > .tool-submenu > div:active {
     box-shadow: rgb(64,64,64) 0 0 0 1px inset !important;
     transition: .2s;
 }
 
-.toolbox-with-submenu > div > .tool-submenu > div > div:nth-child(1) {
+.tool-with-submenu > .tool-submenu > div > div:nth-child(1) {
     float: left;
     background-repeat: no-repeat;
     background-size: contain;
@@ -203,7 +208,7 @@
     height: 22px;
 }
 
-.toolbox-with-submenu > div > .tool-submenu > div > div:nth-child(2) {
+.tool-with-submenu > .tool-submenu > div > div:nth-child(2) {
     float: left;
     height: 20px;
     padding-left: 4px;

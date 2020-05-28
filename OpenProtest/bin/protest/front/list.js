@@ -13,6 +13,8 @@ class ListWindow extends Window {
         this.content.appendChild(this.titlebar);
 
         this.columnsOptions = document.createElement("div");
+        this.columnsOptions.role = "button";
+        this.columnsOptions.ariaLabel = "Edit columns";
         this.columnsOptions.className = "list-titlebar-options";
         this.titlebar.appendChild(this.columnsOptions);
 
@@ -20,9 +22,8 @@ class ListWindow extends Window {
         this.list.className = "list-view";
         this.content.appendChild(this.list);
 
-        this.toolbox.className += " toolbox-with-submenu";
-
         this.btnFilter = document.createElement("div");
+        this.btnFilter.className = "tool-with-submenu";
         this.btnFilter.style.backgroundImage = "url(res/l_filter.svgz)";
         this.btnFilter.tabIndex = 0;
         this.toolbox.appendChild(this.btnFilter);
@@ -32,6 +33,7 @@ class ListWindow extends Window {
         this.btnFilter.appendChild(this.filterSubmenu);
 
         this.btnSort = document.createElement("div");
+        this.btnSort.className = "tool-with-submenu";
         this.btnSort.style.backgroundImage = "url(res/l_sort.svgz)";
         this.btnSort.tabIndex = 0;
         this.toolbox.appendChild(this.btnSort);
@@ -41,6 +43,7 @@ class ListWindow extends Window {
         this.btnSort.appendChild(this.sortSubmenu);
 
         this.btnFind = document.createElement("div");
+        this.btnFind.classList.add("win-toolbox-texttool");
         this.btnFind.style.backgroundImage = "url(res/l_search.svgz)";
         this.btnFind.style.cursor = "text";
         this.btnFind.style.backgroundPosition = "1px 50%";
@@ -55,7 +58,7 @@ class ListWindow extends Window {
         this.txtFind.style.paddingLeft = "26px";
         this.txtFind.style.width = "calc(100% - 26px)";
         this.txtFind.style.background = "none";
-        this.txtFind.style.animation = "none";
+        this.txtFind.style.boxShadow = "none";
         this.btnFind.appendChild(this.txtFind);
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
@@ -109,31 +112,29 @@ class ListWindow extends Window {
             this.RefreshList();
         };
 
-        this.txtFind.onblur = () => {
-            if (this.txtFind.value.length > 0) return;
-            this.btnFind.style.width = "";
-            this.btnFind.style.backgroundColor = "";
-            this.txtFind.onchange();
-        };
 
         this.btnFind.onclick =
         this.btnFind.onfocus =
         this.txtFind.onfocus = () => {
             this.txtFind.focus();
-            this.btnFind.style.width = "180px";
-            this.btnFind.style.backgroundColor = "rgb(96,96,96)";
             this.BringToFront();
         };
 
         this.btnFind.ondblclick = () => {
             this.txtFind.value = "";
-            this.btnFind.style.borderBottom = "none";
+            this.txtFind.onchange();
         };
-        this.txtFind.onkeyup = event => { if (event.key === "Escape") this.txtFind.value = ""; };
+        this.txtFind.onkeyup = event => {
+            if (event.key === "Escape") {
+                this.txtFind.value = "";
+                this.txtFind.onchange();
+            }
+        };
 
         this.txtFind.onchange = () => {
             this.RefreshList();
             this.btnFind.style.borderBottom = this.txtFind.value.length === 0 ? "none" : "var(--theme-color) solid 2px";
+            this.btnFind.style.width = this.txtFind.value.length === 0 ? "" : "180px";
             this.args.find = this.txtFind.value;
         };
 
@@ -224,20 +225,26 @@ class ListWindow extends Window {
             const box = document.createElement("div");
             box.innerHTML = this.columns[i].toLowerCase();
             boxes.push(box);
-            //divBoxes.appendChild(box);
 
             boxes[i].ondragover = event => {
-                event.preventDefault(); //
+                event.preventDefault();
             };
 
-            boxes[i].ondragenter = () => {
+            boxes[i].ondragenter = event => {
                 for (let j = 0; j < 8; j++)
                     boxes[j].style.backgroundColor = "var(--control-color)";
 
                 boxes[i].style.backgroundColor = "var(--select-color)";
                 target = i;
+                event.stopPropagation();
             };
         }
+
+        innerBox.ondragenter = event => {
+            for (let j = 0; j < 8; j++)
+                boxes[j].style.backgroundColor = "var(--control-color)";
+            target = -1;
+        };
 
         divBoxes.appendChild(boxes[0]);
         divBoxes.appendChild(boxes[2]);
