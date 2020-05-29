@@ -342,6 +342,16 @@ class Settings extends Tabs {
         this.args = "session";
         this.subContent.innerHTML = "";
 
+        this.chkRestoreSession = document.createElement("input");
+        this.chkRestoreSession.type = "checkbox";
+        this.subContent.appendChild(this.chkRestoreSession);
+        this.AddCheckBoxLabel(this.subContent, this.chkRestoreSession, "Re-open previous windows on page load").style.fontWeight = "600";
+
+        this.subContent.appendChild(document.createElement("br"));
+        this.subContent.appendChild(document.createElement("br"));
+        this.subContent.appendChild(document.createElement("hr"));
+        this.subContent.appendChild(document.createElement("br"));
+
         this.chkAliveOnClose = document.createElement("input");
         this.chkAliveOnClose.type = "checkbox";
         this.subContent.appendChild(this.chkAliveOnClose);
@@ -382,12 +392,14 @@ class Settings extends Tabs {
         btnClearLocalCache.style.padding = "8px";
         this.subContent.appendChild(btnClearLocalCache);
 
+        this.chkRestoreSession.checked = localStorage.getItem("restore_session") === "true";
         this.chkAliveOnClose.checked = localStorage.getItem("alive_after_close") === "true";
         this.sessionTimeout.value = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
  
         btnClearLocalCache.onclick = () => { this.ClearCache() };
 
         const Apply = () => {
+            localStorage.setItem("restore_session", this.chkRestoreSession.checked);
             localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
             localStorage.setItem("session_timeout", this.sessionTimeout.value);
 
@@ -400,6 +412,7 @@ class Settings extends Tabs {
             }
         };
 
+        this.chkRestoreSession.onchange = Apply;
         this.chkAliveOnClose.onchange = Apply;
         this.sessionTimeout.oninput = Apply;
 

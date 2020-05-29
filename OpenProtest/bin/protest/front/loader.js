@@ -194,18 +194,20 @@ function LoadUsers(callback) {
 
 function StoreSession() {
     let session = [];
-    for (let i = 0; i < $w.array.length; i++)
-        session.push({
-            class       : $w.array[i].constructor.name,
-            args        : $w.array[i].args,
-            isMaximized : $w.array[i].isMaximized,
-            isMinimized : $w.array[i].isMinimized,
-            position    : $w.array[i].position,
-            left        : $w.array[i].win.style.left,
-            top         : $w.array[i].win.style.top,
-            width       : $w.array[i].win.style.width,
-            height      : $w.array[i].win.style.height
-        });
+
+    if (localStorage.getItem("restore_session") === "true")
+        for (let i = 0; i < $w.array.length; i++)
+            session.push({
+                class       : $w.array[i].constructor.name,
+                args        : $w.array[i].args,
+                isMaximized : $w.array[i].isMaximized,
+                isMinimized : $w.array[i].isMinimized,
+                position    : $w.array[i].position,
+                left        : $w.array[i].win.style.left,
+                top         : $w.array[i].win.style.top,
+                width       : $w.array[i].win.style.width,
+                height      : $w.array[i].win.style.height
+            });
 
     localStorage.setItem("session", JSON.stringify(session));
 
@@ -213,6 +215,8 @@ function StoreSession() {
 }
 
 function RestoreSession() {
+    if (localStorage.getItem("restore_session") != "true") return;
+
     let session = JSON.parse(localStorage.getItem("session"));
     if (session == null || session.length == 0) return;
     //if (!confirm("Restore previous session")) return;
