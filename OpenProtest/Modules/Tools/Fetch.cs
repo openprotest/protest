@@ -149,19 +149,47 @@ public static class Fetch {
 
         int i = 1;
         while (i < split.Length) {
+            Program.ProgressBar(i * 100 / split.Length, "Importing equipment");
+
             if (int.TryParse(split[i], out int len)) {
 
                 Hashtable hash = new Hashtable();
                 for (int j = i + 1; j < i + len * 4; j += 4)
                     hash.Add(split[j], new string[] { split[j + 1], split[j + 2], "" });
 
-                string filename = DateTime.Now.Ticks.ToString();
+                string filename = hash.ContainsKey(".FILENAME") ? ((string[])hash[".FILENAME"])[0] : DateTime.Now.Ticks.ToString();
+
+
+                if (hash.ContainsKey("L1 CACHE") && hash.ContainsKey("L2 CACHE") && hash.ContainsKey("L3 CACHE")) { //normalize
+                    string L1 = ((string[])hash["L1 CACHE"])[0];
+                    string L2 = ((string[])hash["L2 CACHE"])[0];
+                    string L3 = ((string[])hash["L3 CACHE"])[0];
+                    string date = ((string[])hash["L1 CACHE"])[1];
+                    
+                    hash.Remove("L1 CACHE");
+                    hash.Remove("L2 CACHE");
+                    hash.Remove("L3 CACHE");
+                    
+                    hash["CPU CACHE"] = new string[] {$"{L1}/{L2}/{L3}", date, "" };
+                }
+
+                if (hash.ContainsKey(".VOLUME")) hash.Remove(".VOLUME");
+                if (hash.ContainsKey(".CANREMOTE")) hash.Remove(".CANREMOTE");
+
+                Hashtable passwords = new Hashtable();
+                foreach (DictionaryEntry e in hash) //get passwords
+                    if (((string)e.Key).Contains("PASSWORD")) {
+                        string password = GetHiddenProperty(uri, cookieContainer, $"getequiprop&file={filename}&property={(string)e.Key}");
+                        passwords.Add(e.Key, password);
+                    }
+                foreach (DictionaryEntry e in passwords)
+                    hash[e.Key] = new string[] { e.Value.ToString(), "fetched from v3", "" };
+
 
                 while (Database.equip.ContainsKey(filename)) {
                     Thread.Sleep(1);
                     filename = DateTime.Now.Ticks.ToString();
                 }
-
                 hash[".FILENAME"] = new string[] { filename, "", "" };
 
                 Database.DbEntry entry = new Database.DbEntry() {
@@ -171,12 +199,14 @@ public static class Fetch {
                     write_lock = new object()
                 };
 
-                Database.equip.Add(entry.filename, entry);
+                Database.equip.Add(filename, entry);
                 Database.Write(entry, null);
             }
             i += 1 + len * 4;
         }
 
+        Program.ProgressBar(100, "Importing equipment", true);
+        Console.WriteLine();
     }
 
     public static void ImportUsers_3(Uri uri, CookieContainer cookieContainer) {
@@ -186,7 +216,7 @@ public static class Fetch {
         using HttpClient client = new HttpClient(handler);
         client.BaseAddress = uri;
         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
-        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+        //client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> res = client.GetAsync("getuserslist");
         string payload = res.Result.Content.ReadAsStringAsync().Result;
@@ -195,19 +225,31 @@ public static class Fetch {
 
         int i = 1;
         while (i < split.Length) {
+            Program.ProgressBar(i * 100 / split.Length, "Importing users");
+
             if (int.TryParse(split[i], out int len)) {
 
                 Hashtable hash = new Hashtable();
                 for (int j = i + 1; j < i + len * 4; j += 4)
                     hash.Add(split[j], new string[] { split[j + 1], split[j + 2], "" });
 
-                string filename = DateTime.Now.Ticks.ToString();
+                string filename = hash.ContainsKey(".FILENAME") ? ((string[])hash[".FILENAME"])[0] : DateTime.Now.Ticks.ToString();
+
+
+                Hashtable passwords = new Hashtable();
+                foreach (DictionaryEntry e in hash) //get passwords
+                    if (((string)e.Key).Contains("PASSWORD")) {
+                        string password = GetHiddenProperty(uri, cookieContainer, $"getuserprop&file={filename}&property={(string)e.Key}");
+                        passwords.Add(e.Key, password);
+                    }
+                foreach (DictionaryEntry e in passwords) 
+                    hash[e.Key] = new string[] { e.Value.ToString(), "fetched from v3", "" };
+
 
                 while (Database.users.ContainsKey(filename)) {
                     Thread.Sleep(1);
                     filename = DateTime.Now.Ticks.ToString();
                 }
-
                 hash[".FILENAME"] = new string[] { filename, "", "" };
 
                 Database.DbEntry entry = new Database.DbEntry() {
@@ -217,15 +259,32 @@ public static class Fetch {
                     write_lock = new object()
                 };
 
-                Database.users.Add(entry.filename, entry);
+                Database.users.Add(filename, entry);
                 Database.Write(entry, null);
             }
             i += 1 + len * 4;
         }
+
+        Program.ProgressBar(100, "Importing users", true);
+        Console.WriteLine();
     }
 
     public static void ImportEquip_4(Uri uri, CookieContainer cookieContainer) { }
 
     public static void ImportUsers_4(Uri uri, CookieContainer cookieContainer) { }
 
+    public static string GetHiddenProperty(Uri uri, CookieContainer cookieContainer, string path) {
+        using HttpClientHandler handler = new HttpClientHandler();
+        handler.CookieContainer = cookieContainer;
+
+        using HttpClient client = new HttpClient(handler);
+        client.BaseAddress = uri;
+        client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
+        //client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+
+        Task<HttpResponseMessage> res = client.GetAsync(path);
+        string payload = res.Result.Content.ReadAsStringAsync().Result;
+
+        return payload;
+    }
 }

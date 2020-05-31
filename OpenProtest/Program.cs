@@ -83,10 +83,11 @@ class Program {
         Console.WriteLine();
         StartServices();
 
-#if DEBUG
-        Thread.Sleep(1000);
         Console.ResetColor();
+        Thread.Sleep(1000);
         Console.WriteLine();
+
+#if DEBUG
         while (true) {
             Console.Write(">");
             UserCommand(Console.ReadLine());
@@ -223,34 +224,6 @@ class Program {
         return true;
     }
 
-    public static bool ExtractZippedKnowlageFile() {
-        DirectoryInfo dirIp = new DirectoryInfo(Strings.DIR_IP_LOCATION);
-        FileInfo fileIpZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\ip.zip");
-        if (!dirIp.Exists && fileIpZip.Exists)
-            try {
-                Console.Write("Extracting ip.zip");
-                ZipFile.ExtractToDirectory(fileIpZip.FullName, dirIp.FullName);
-                Console.WriteLine("\t Done");
-            } catch (Exception ex) {
-                Logging.Err(ex);
-                return false;
-            }
-
-        DirectoryInfo dirProxy = new DirectoryInfo(Strings.DIR_PROXY);
-        FileInfo fileProxyZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\proxy.zip");
-        if (!dirProxy.Exists && fileProxyZip.Exists)
-            try {
-                Console.Write("Extracting proxy.zip");
-                ZipFile.ExtractToDirectory(fileProxyZip.FullName, dirProxy.FullName);
-                Console.WriteLine("\t Done");
-            } catch (Exception ex) {
-                Logging.Err(ex);
-                return false;
-            }
-
-        return true;
-    }
-
     private static void StartServices() {
         if (http_enable) {
             Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_ip, http_port, Strings.DIR_FRONTEND); });
@@ -300,4 +273,61 @@ class Program {
         Console.WriteLine();
     }
 
+    public static bool ExtractZippedKnowlageFile() {
+        DirectoryInfo dirIp = new DirectoryInfo(Strings.DIR_IP_LOCATION);
+        FileInfo fileIpZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\ip.zip");
+        if (!dirIp.Exists && fileIpZip.Exists)
+            try {
+                Console.Write("Extracting ip.zip");
+                ZipFile.ExtractToDirectory(fileIpZip.FullName, dirIp.FullName);
+                Console.WriteLine("\t Done");
+            } catch (Exception ex) {
+                Logging.Err(ex);
+                return false;
+            }
+
+        DirectoryInfo dirProxy = new DirectoryInfo(Strings.DIR_PROXY);
+        FileInfo fileProxyZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\proxy.zip");
+        if (!dirProxy.Exists && fileProxyZip.Exists)
+            try {
+                Console.Write("Extracting proxy.zip");
+                ZipFile.ExtractToDirectory(fileProxyZip.FullName, dirProxy.FullName);
+                Console.WriteLine("\t Done");
+            } catch (Exception ex) {
+                Logging.Err(ex);
+                return false;
+            }
+
+        return true;
+    }
+
+    public static int lastProgressValue = -1;
+    public static void ProgressBar(in int percent, in string label, in bool isDone = false, in int width = 16) {
+        if (lastProgressValue == percent) return; //refresh only if changed
+        int c = percent * width / 100;
+        int r = width - c;
+
+        lastProgressValue = percent;
+
+        Console.Write(string.Format("{0, -23} ", label));
+
+        if (isDone) {
+            lastProgressValue = -1;
+            Console.Write("Done");
+            for (int i = 0; i < width; i++) Console.Write(" ");
+            return;
+        }
+
+        Console.BackgroundColor = ConsoleColor.White;
+         for (int i = 0; i < c; i++) Console.Write(" ");
+
+        Console.BackgroundColor = ConsoleColor.DarkGray;
+        for (int i = 0; i < r; i++) Console.Write(" ");
+
+        Console.ResetColor();
+        Console.Write($" {percent}%");
+
+        Console.Write((char)13);
+
+    }
 }

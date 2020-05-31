@@ -242,14 +242,14 @@ class Settings extends Tabs {
             selected_bg = localStorage.getItem("background");
 
         const background_list = [
-            ["System",  ""],
-            ["Light",   "var(--bg-light)"],
-            ["Default", "var(--bg)"],
-            ["Dark",    "var(--bg-dark)"],
-            ["Blue",    "var(--bg-blue)"],
-            ["Green",   "var(--bg-green)"],
-            ["Carbon",  "var(--bg-carbon)"],
-            ["Metal",   "var(--bg-metal)"]
+            ["System",   ""],
+            ["Light",    "var(--bg-light)"],
+            ["Sky blue", "var(--bg)"],
+            ["Dark",     "var(--bg-dark)"],
+            ["Blue",     "var(--bg-blue)"],
+            ["Green",    "var(--bg-green)"],
+            ["Carbon",   "var(--bg-carbon)"],
+            ["Metal",    "var(--bg-metal)"]
         ];
 
         for (let i = 0; i < background_list.length; i++) {
