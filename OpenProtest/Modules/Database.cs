@@ -38,12 +38,15 @@ class Database {
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_EQUIP);
         if (!dir.Exists) return;
 
-        foreach (FileInfo f in dir.GetFiles()) {
-            DbEntry entry = Read(f, false);
+        FileInfo[] files = dir.GetFiles();
+        for (int i=0; i<files.Length; i++) {
+            Program.ProgressBar(i * 100 / files.Length, "Loading equipment");
+            DbEntry entry = Read(files[i], false);
             if (entry.hash == null) continue;
-            equip.Add(f.Name, entry);
+            equip.Add(files[i].Name, entry);
         }
 
+        Program.ProgressBar(100, "Loading equipment", true);
         equipVer = DateTime.Now.Ticks;
     }
 
@@ -51,12 +54,15 @@ class Database {
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_USERS);
         if (!dir.Exists) return;
 
-        foreach (FileInfo f in dir.GetFiles()) {
-            DbEntry entry = Read(f, true);
+        FileInfo[] files = dir.GetFiles();
+        for (int i = 0; i < files.Length; i++) {
+            Program.ProgressBar(i * 100 / files.Length, "Loading user");
+            DbEntry entry = Read(files[i], true);
             if (entry.hash == null) continue;            
-            users.Add(f.Name, entry);
+            users.Add(files[i].Name, entry);
         }
 
+        Program.ProgressBar(100, "Loading user", true);
         usersVer = DateTime.Now.Ticks;
     }
 

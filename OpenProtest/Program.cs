@@ -72,13 +72,10 @@ class Program {
         ExtractZippedKnowlageFile();
         Console.WriteLine("Done");
 
-        Console.Write(string.Format("{0, -24}", "Loading equipment"));
         Database.LoadEquip();
-        Console.WriteLine("Done");
-
-        Console.Write(string.Format("{0, -24}", "Loading users"));
+        Console.WriteLine();
         Database.LoadUsers();
-        Console.WriteLine("Done");
+        Console.WriteLine();
 
         Console.WriteLine();
         StartServices();
@@ -302,7 +299,7 @@ class Program {
     }
 
     public static int lastProgressValue = -1;
-    public static void ProgressBar(in int percent, in string label, in bool isDone = false, in int width = 16) {
+    public static void ProgressBar(in int percent, in string label, in bool isDone = false, in int width = 12) {
         if (lastProgressValue == percent) return; //refresh only if changed
         int c = percent * width / 100;
         int r = width - c;
