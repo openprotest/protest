@@ -68,9 +68,7 @@ class Program {
         
         Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", LoadConfig() ? "Done" : "Failed"));
 
-        Console.Write(string.Format("{0, -24}", "Knowlage base"));
         ExtractZippedKnowlageFile();
-        Console.WriteLine("Done");
 
         Database.LoadEquip();
         Console.WriteLine();
@@ -270,32 +268,30 @@ class Program {
         Console.WriteLine();
     }
 
-    public static bool ExtractZippedKnowlageFile() {
+    public static void ExtractZippedKnowlageFile() {
         DirectoryInfo dirIp = new DirectoryInfo(Strings.DIR_IP_LOCATION);
         FileInfo fileIpZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\ip.zip");
         if (!dirIp.Exists && fileIpZip.Exists)
             try {
-                Console.Write("Extracting ip.zip");
+                Console.Write(string.Format("{0, -24}", "Extracting proxy.zip"));
                 ZipFile.ExtractToDirectory(fileIpZip.FullName, dirIp.FullName);
-                Console.WriteLine("\t Done");
+                Console.WriteLine("Done");
             } catch (Exception ex) {
+                Console.WriteLine("Failed");
                 Logging.Err(ex);
-                return false;
             }
 
         DirectoryInfo dirProxy = new DirectoryInfo(Strings.DIR_PROXY);
         FileInfo fileProxyZip = new FileInfo($"{Strings.DIR_KNOWLAGE}\\proxy.zip");
         if (!dirProxy.Exists && fileProxyZip.Exists)
             try {
-                Console.Write("Extracting proxy.zip");
+                Console.Write(string.Format("{0, -24}", "Extracting proxy.zip"));
                 ZipFile.ExtractToDirectory(fileProxyZip.FullName, dirProxy.FullName);
-                Console.WriteLine("\t Done");
+                Console.WriteLine("Done");
             } catch (Exception ex) {
+                Console.WriteLine("Failed");
                 Logging.Err(ex);
-                return false;
             }
-
-        return true;
     }
 
     public static int lastProgressValue = -1;

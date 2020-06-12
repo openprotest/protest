@@ -131,7 +131,7 @@
 .win-toolbox > div:hover { background-color: rgba(128,128,128,.4); }
 .win-toolbox > div:focus { background-color: rgba(128,128,128,.4); }
 
-.win-toolbox-texttool:focus-within {
+.win-toolbox-text:focus-within {
     background-color: rgb(96,96,96) !important;
     width: 180px;
 }

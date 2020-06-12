@@ -43,7 +43,7 @@ class ListWindow extends Window {
         this.btnSort.appendChild(this.sortSubmenu);
 
         this.btnFind = document.createElement("div");
-        this.btnFind.classList.add("win-toolbox-texttool");
+        this.btnFind.classList.add("win-toolbox-text");
         this.btnFind.style.backgroundImage = "url(res/l_search.svgz)";
         this.btnFind.style.cursor = "text";
         this.btnFind.style.backgroundPosition = "1px 50%";
@@ -133,6 +133,7 @@ class ListWindow extends Window {
 
         this.txtFind.onchange = () => {
             this.RefreshList();
+            this.btnFind.style.backgroundColor = this.txtFind.value.length === 0 ? "" : "rgb(96,96,96)";
             this.btnFind.style.borderBottom = this.txtFind.value.length === 0 ? "none" : "var(--theme-color) solid 2px";
             this.btnFind.style.width = this.txtFind.value.length === 0 ? "" : "180px";
             this.args.find = this.txtFind.value;
