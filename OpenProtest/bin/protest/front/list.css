@@ -76,10 +76,12 @@
     position: relative;
     height: 44px;
     border-bottom: rgb(128,128,128) 1px solid;
+
+    transition: background-color .2s;
 }
 
 .lst-obj-ele:hover{
-    background-color: var(--select-color);
+    background-color: rgb(176,176,176);
 }
 
 .lst-obj-ele > * {

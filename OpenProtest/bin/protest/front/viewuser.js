@@ -32,7 +32,7 @@ class User extends Window {
 
         this.AddCssDependencies("dbview.css");
 
-        if (this.user["TITLE"] == undefined || this.user["TITLE"][0].length == 0)
+        if (this.user["TITLE"] == undefined || this.user["TITLE"][0].length === 0)
             this.setTitle("[untitled]");
         else
             this.setTitle(this.user["TITLE"][0]);

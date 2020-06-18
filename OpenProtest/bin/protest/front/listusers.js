@@ -23,6 +23,8 @@ class ListUsers extends ListWindow {
     }
 
     InflateElement(element, entry) { //override
+        super.InflateElement(element, entry, null);
+
         element.id = "u" + entry[".FILENAME"][0];
 
         let icon = document.createElement("div");

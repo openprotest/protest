@@ -32,6 +32,16 @@ document.body.onkeydown   = win_keydown;
 
 bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
 
+document.body.onbeforeunload = () => {
+    if (localStorage.getItem("alive_after_close") != "true") {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "logout", true);
+        xhr.send();
+
+        document.cookie = "";
+    }
+};
+
 document.body.onunload = () => {
     StoreSession();
 

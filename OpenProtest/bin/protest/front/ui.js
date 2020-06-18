@@ -31,7 +31,7 @@ main.style.filter = "none";
 
 let last_activity = new Date().getTime();
 
-window.addEventListener("mousedown", ()=> {
+window.addEventListener("mousedown", () => {
     last_activity = new Date().getTime();
 });
 
@@ -53,7 +53,7 @@ window.addEventListener("keydown", () => {
         }
 
         checkSession();
-    }, 60000);
+    }, 60000); // every minute
 })();
 
 (function() { //init clock

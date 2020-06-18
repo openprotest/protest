@@ -85,19 +85,19 @@ function btnGetContacts_onclick() {
             numbers[j] = numbers[j].replace(" ", "");
             if (numbers[j].length == 0) continue;
 
-            if (numbers[j].length == 4 && numbers[j][0] == "5") //annabelle
+            if (numbers[j].length == 4 && numbers[j][0] == "5")
                 numbers[j] == "2688-" + numbers[j];
 
-            else if (numbers[j].length == 3 && numbers[j][0] == "7") //almyra
+            else if (numbers[j].length == 3 && numbers[j][0] == "7")
                 numbers[j] = "26888-" + numbers[j];
 
-            else if (numbers[j].length == 2 && numbers[j][0] == "2") //almyra
+            else if (numbers[j].length == 2 && numbers[j][0] == "2")
                 numbers[j] = "26888-" + numbers[j];
 
-            else if (numbers[j].length == 4 && numbers[j][0] == "8") //anassa
+            else if (numbers[j].length == 4 && numbers[j][0] == "8")
                 numbers[j] = "2688-" + numbers[j];
 
-            else if (numbers[j].length == 4 && numbers[j][0] == "3") //aloe
+            else if (numbers[j].length == 4 && numbers[j][0] == "3")
                 numbers[j] = "2620-" + numbers[j];
 
             text += "TEL;WORK:" + numbers[j] + NL;

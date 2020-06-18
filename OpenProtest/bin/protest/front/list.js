@@ -3,6 +3,7 @@ class ListWindow extends Window {
         super([64, 64, 64]);
 
         this.args = args ? args : { find:"", filter:"", sort:"" };
+        this.selected = null;
 
         this.AddCssDependencies("list.css");
 
@@ -422,7 +423,16 @@ class ListWindow extends Window {
         this.UpdateViewport();
     }
 
-    InflateElement(element, entry, c_type) { } //overridable
+    InflateElement(element, entry, c_type) { //overridable
+
+        element.onclick = () => {
+            if (this.selected) 
+                this.selected.style.backgroundColor = "";
+
+            this.selected = element;
+            element.style.backgroundColor = "var(--select-color)";
+        };
+    }
 
     AfterResize() { //override
         this.UpdateViewport();

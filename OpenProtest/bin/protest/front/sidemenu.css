@@ -14,8 +14,7 @@
     transition:
         filter .4s,
         border-radius .4s,
-        height .2s,
-        transform .00001s;
+        height .2s;
 }
 
 #btnSidemenu > #imgSearch {

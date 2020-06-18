@@ -8,7 +8,7 @@ class SpeedTest extends Window {
         this.content.style.overflowY = "auto";
 
         this.graph = document.createElement("div");
-        this.graph.style.backgroundColor = "var(--control-color)";
+        this.graph.style.backgroundColor = "var(--pane-color)";
         this.graph.style.width = "640px";
         this.graph.style.height = "320px";
         this.graph.style.margin = "24px auto";

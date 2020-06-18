@@ -174,7 +174,7 @@ class Settings extends Tabs {
         if (localStorage.getItem("accent_color"))
             selected_accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o));
 
-        const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [32,144,240]];
+        const accentColors = [[255,51,34], [255,102,0], [255,186,0], [96,192,32], [36,176,244]];
 
         for (let i = 0; i < accentColors.length; i++) {
             let rgbString = `rgb(${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]})`;
@@ -604,7 +604,7 @@ class Settings extends Tabs {
         opensource.style.textAlign = "left";
         opensource.style.maxWidth = "640px";
         opensource.style.userSelect = "text";
-        opensource.innerHTML = "Pro-test is a free and open source tool developed and maintained by Venizelou Andreas.<br>All of the source code to this product is available to you under the GNU General Public License. This means you may use, copy, distribute and modify the source code of Pro-test as you want to meet your needs.";
+        opensource.innerHTML = "Pro-test is a free and open source tool developed and maintained by Andreas Venizelou.<br>All of the source code to this product is available to you under the GNU General Public License. This means you may use, copy, distribute and modify the source code of Pro-test as you want to meet your needs.";
         center.appendChild(opensource);
 
         center.appendChild(document.createElement("br"));

@@ -69,6 +69,8 @@ class ListEquip extends ListWindow {
     }
 
     InflateElement(element, entry, type) { //override
+        super.InflateElement(element, entry, type);
+
         element.id = "e" + entry[".FILENAME"][0];
 
         const icon = document.createElement("div");

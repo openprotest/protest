@@ -251,7 +251,6 @@ function SideMenu_Update(filter) {
         for (let j = 0; j < keywords.length; j++) {
             let flag = false;
             for (let k in db_equip[i]) {
-                //if (k.startsWith(".") && k != ".FILENAME") continue;
                 if (db_equip[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
                     flag = true;
             }
@@ -270,14 +269,14 @@ function SideMenu_Update(filter) {
                     $w.array[j].Pop();
                     return $w.array[j];
                 }
-            return new Equip(current);
+            return new Equip(current[".FILENAME"][0]);
         };
 
         let label = current.hasOwnProperty("NAME") ? current["NAME"][0] : (current.hasOwnProperty("HOSTNAME") ? current["HOSTNAME"][0] : "");
         let type = current.hasOwnProperty("TYPE") ? current["TYPE"][0] : "";
         let ip = current.hasOwnProperty("IP") ? current["IP"][0] : "";
 
-        let item = CreateSideItem(label, GetIcon([type]), type, ip, f);
+        let item = CreateSideItem(label, GetEquipIcon([type]), type, ip, f);
         sidemenu_list.push(item);
         lstSideMenu.appendChild(item);
     }
@@ -288,7 +287,6 @@ function SideMenu_Update(filter) {
         for (let j = 0; j < keywords.length; j++) {
             let flag = false;
             for (let k in db_users[i]) {
-                //if (k.startsWith(".") && k != ".FILENAME") continue;
                 if (db_users[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
                     flag = true;
             }
@@ -307,7 +305,7 @@ function SideMenu_Update(filter) {
                     $w.array[j].Pop();
                     return $w.array[j];
                 }
-            return new User(current);
+            return new User(current[".FILENAME"][0]);
         };
 
         let label = current.hasOwnProperty("DISPLAY NAME") ? current["DISPLAY NAME"][0] : (current.hasOwnProperty("TITLE") ? current["TITLE"][0] : "");

@@ -440,7 +440,7 @@ class Ping extends Console {
 
                     let icon = document.createElement("div");
                     icon.className = "list-icon";
-                    icon.style.backgroundImage = "url(" + GetIcon(db_equip[i].TYPE); +")";
+                    icon.style.backgroundImage = "url(" + GetEquipIcon(db_equip[i].TYPE); +")";
                     div.appendChild(icon);
 
                     icon.ondblclick = () => {
