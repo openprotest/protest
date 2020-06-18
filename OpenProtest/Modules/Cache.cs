@@ -108,7 +108,11 @@ class Cache {
             foreach (FileInfo f in d.GetFiles())
                 LoadFile(f, files);
 
+        int count = 0;
         foreach (DictionaryEntry o in files) {
+            if (path == Strings.DIR_FRONTEND)
+                Program.ProgressBar(count++ * 100 / files.Count, "Caching front-end");
+
             byte[] bytes = (byte[])o.Value;
 
             FileInfo file = new FileInfo($"{path}\\{(string)o.Key}");
@@ -167,6 +171,11 @@ class Cache {
             _totalCache += entry.bytes.LongLength;
             _totalCache += entry.gzip?.LongLength ?? 0;
             _totalCache += entry.webp?.LongLength ?? 0;
+        }
+
+        if (path == Strings.DIR_FRONTEND) {
+            Program.ProgressBar(100, "Caching front-end", true);
+            Console.WriteLine();
         }
 
 #if BUNDLING //bundling

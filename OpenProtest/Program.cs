@@ -71,11 +71,8 @@ class Program {
         ExtractZippedKnowlageFile();
 
         Database.LoadEquip();
-        Console.WriteLine();
         Database.LoadUsers();
-        Console.WriteLine();
 
-        Console.WriteLine();
         StartServices();
 
         Console.ResetColor();
@@ -227,6 +224,7 @@ class Program {
         }
 
         if (addressbook_enable) {
+            Thread.Sleep(3000);
             Thread thread = new Thread(() => { addressbookListener = new HttpAddressBookListener(addressbook_ip, addressbook_port, Strings.DIR_ADDRESSBOOK); });
             thread.Priority = addressbook_priority;
             thread.Start();
@@ -308,6 +306,7 @@ class Program {
             lastProgressValue = -1;
             Console.Write("Done");
             for (int i = 0; i < width; i++) Console.Write(" ");
+            Console.WriteLine();
             return;
         }
 
@@ -321,6 +320,5 @@ class Program {
         Console.Write($" {percent}%");
 
         Console.Write((char)13);
-
     }
 }
