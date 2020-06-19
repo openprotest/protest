@@ -41,6 +41,7 @@ class Equip extends Window {
 
         this.args = filename;
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
+        this.filename = filename;
 
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
@@ -86,8 +87,9 @@ class Equip extends Window {
         scroll.className = "db-scroll";
         this.content.appendChild(scroll);
 
-        const instant = document.createElement("div");
-        scroll.appendChild(instant);
+        this.live = document.createElement("div");
+        this.live.className = "db-live";
+        scroll.appendChild(this.live);
 
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
@@ -128,6 +130,117 @@ class Equip extends Window {
 
         if (isGroupEmpty && this.properties.childNodes[this.properties.childNodes.length - 1].className == "db-property-group")
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
+
+        if (this.entry.IP) { //IPs
+            let ips = this.entry.IP[0].split(";").map(o=>o.trim());
+            for (let i = 0; i < ips.length; i++) {
+                let button = this.LiveButton("res/ping.svgz", ips[i]);
+                let div = button.div;
+                let roundtrip = button.sub;
+
+                this.live.appendChild(div);
+
+                let dot = document.createElement("div");
+                dot.style.display = "inline-block";
+                dot.style.border = "#202020 1px solid";
+                dot.style.borderRadius = "50%";
+                dot.style.width = "10px";
+                dot.style.height= "10px";
+                dot.style.marginRight = "4px";
+                dot.style.marginBottom = "-2px";
+                roundtrip.appendChild(dot);
+
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4 && xhr.status == 200) {      
+                        let reply = xhr.responseText;
+                        dot.style.backgroundColor = PingColor(reply);
+                        roundtrip.innerHTML += isNaN(reply) ? reply : `${reply}ms`;
+                    }
+                }
+                xhr.open("GET", "ping&ip=" + ips[i], true);
+                xhr.send();
+
+                div.onclick = ()=> {
+                    let winPing = null;
+                    for (let i = $w.array.length - 1; i > -1; i--)
+                        if ($w.array[i] instanceof Ping) {
+                            winPing = $w.array[i];
+                            break;
+                        }
+
+                    if (winPing === null) {
+                        new Ping().Filter(this.entry["IP"][0]);
+                    } else {
+                        winPing.Filter(this.entry["IP"][0]);
+                        winPing.BringToFront();
+                    }
+                };
+            }
+        }
+
+        if (this.entry.hasOwnProperty("LOGICAL DISK")) { //Disks
+            let disks = this.entry["LOGICAL DISK"][0].split(":").map(o => o.trim());
+            for (let i = 1; i < disks.length; i += 4) {
+                let button = this.LiveButton("res/diskdrive.svgz", disks[i]);
+                let div = button.div;
+                let usage = button.sub;
+
+                this.live.appendChild(div);
+
+                usage.style.width = "72px";
+                usage.style.borderRadius = "2px";
+                usage.style.boxShadow = "#202020 0 0 0 1px inset, #202020 0 0 0 inset";
+                usage.innerHTML = "&nbsp;";
+                div.appendChild(usage);
+
+                usage.style.transition = "box-shadow .4s";
+                setTimeout(() => {
+                    let used = parseInt(disks[i+1]);
+                    let total = parseInt(disks[i+2]);
+                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${72*used/total}px 0 0  inset`;
+                }, 400);
+            }
+        }
+
+        if (this.entry.hasOwnProperty("OWNER")) {
+            let owners = this.entry["OWNER"][0].split(";").map(o => o.trim());
+            for (let i = 0; i < owners.length; i++) {
+                let owner = (owners[i].indexOf("\\") > -1) ? owners[i].split("\\")[1] : owners[i];
+
+                for (let j = 0; j < db_users.length; j++) {
+                    if (db_users[j].hasOwnProperty("USERNAME") && db_users[j]["USERNAME"][0] == owner) {
+                        let filename = db_users[j][".FILENAME"][0];
+
+                        let btnUser = this.LiveButton("res/user.svgz", owner);
+                        btnUser.div.onclick = ()=> {
+                            for (let k = 0; k < $w.array.length; k++)
+                                if ($w.array[k] instanceof User && $w.array[k].filename == filename) {
+                                    $w.array[k].Minimize(); //minimize/restore
+                                    return;
+                                }
+                            if (db_users[j][".FILENAME"][0] == filename) new User(db_users[j][".FILENAME"][0]);
+                        };
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        /*if (this.entry.hasOwnProperty("PORTS")) {
+            let ports = this.entry["PORTS"][0].split(";").map(o => parseInt(o.trim()));
+            if (ports.includes(445) && this.entry.hasOwnProperty("OPERATING SYSTEM")) {
+                if (this.entry.hasOwnProperty("IP")) {
+                    let btnProcesses = this.LiveButton("res/console.svgz", "Processes");
+                    this.live.appendChild(btnProcesses.div);
+
+                    let btnServices = this.LiveButton("res/service.svgz", "Services");
+                    this.live.appendChild(btnServices.div);
+                }
+            }
+        }*/
+
     }
 
     PushProperty(equip, name, done) {
@@ -135,6 +248,39 @@ class Equip extends Window {
         let newProperty = this.Property(name, equip[name][0], equip[name][1]);
         if (done != null) done.push(name);
         this.properties.appendChild(newProperty);
+    }
+
+    LiveButton(icon, label, ) {
+        let div = document.createElement("div");
+        div.innerHTML = label;
+        div.style.backgroundImage = `url(${icon})`;
+        this.live.appendChild(div);
+
+        let sub = document.createElement("div");
+        sub.style.fontSize = "smaller";
+        sub.style.height = "14px";
+        sub.innerHTML = "&nbsp;";
+        div.appendChild(sub);
+
+        return {
+            div: div,
+            sub: sub
+        };
+    }
+
+    SideButton(icon, label) {
+        let button = document.createElement("div");
+        button.className = "db-square-button";
+
+        let divIcon = document.createElement("div");
+        divIcon.style.backgroundImage = `url(${icon})`;
+        button.appendChild(divIcon);
+
+        let divLabel = document.createElement("div");
+        divLabel.innerHTML = label;
+        button.appendChild(divLabel);
+
+        return button;
     }
 
     AddGroup(icon, title) {
@@ -303,5 +449,4 @@ class Equip extends Window {
     Edit() {
 
     }
-    
 }

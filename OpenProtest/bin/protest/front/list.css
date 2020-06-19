@@ -81,7 +81,7 @@
 }
 
 .lst-obj-ele:hover{
-    background-color: rgb(176,176,176);
+    background-color: var(--highlight-color);
 }
 
 .lst-obj-ele > * {

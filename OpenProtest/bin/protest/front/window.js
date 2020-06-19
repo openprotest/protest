@@ -150,6 +150,8 @@ class Window {
                 $w.y0       = event.clientY;
                 $w.isMoving = true;
 
+                this.win.style.transition = "0s";
+
                 if (dblclickCheck && !onMobile) {
                     this.Toogle();
                     dblclickCheck = false;
@@ -209,7 +211,7 @@ class Window {
         this.btnClose.onmousedown =
         this.btnMaximize.onmousedown =
         this.btnMinimize.onmousedown =
-        this.btnPopout.onmousedown = 
+        this.btnPopout.onmousedown =
         (event)=> {
             $w.control_pressed = this;
             this.BringToFront();

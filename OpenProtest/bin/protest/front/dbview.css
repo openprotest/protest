@@ -51,7 +51,7 @@
     max-width: 800px;
     height: 32px;
     margin-top: 24px;
-    background-color: rgb(176,176,176);
+    background-color: rgb(168,168,168);
     overflow: hidden;
 }
 
@@ -76,6 +76,11 @@
 }
 
 .db-property:hover {
+    background-color: var(--highlight-color);
+}
+
+.db-property:active {
+    transition-delay: .4s;
     background-color: var(--select-color);
 }
 
@@ -164,4 +169,30 @@
 .db-progress-bar  > div:nth-child(3) {
     padding-left: 8px;
     font-size: small;
+}
+
+.db-live > div {
+    display: inline-block;
+    background-color: var(--pane-color);
+    color: rgb(32,32,32);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 0 8px 8px 0;
+    min-width: 120px;
+    max-width: 250px;
+
+    padding-left: 40px;
+    background-repeat: no-repeat;
+    background-size: 32px 32px;
+    background-position: 4px 50%;
+
+    transition: .2s;
+}
+
+.db-live > div:hover {
+    background-color: var(--highlight-color);
+}
+
+.db-live > div:active {
+    background-color: var(--select-color);
 }

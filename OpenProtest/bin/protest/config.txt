@@ -12,7 +12,6 @@ force_registry_keys = false
 ip_access = *
 
 user_access = administrator
-user_access = dev
 
 http_enable = true
 http_ip     = *

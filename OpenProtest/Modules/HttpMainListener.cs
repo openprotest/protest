@@ -140,6 +140,7 @@ class HttpMainListener : Http {
                 case "locateip":     buffer = LocateIp.Locate(ctx); break;
                 case "maclookup":    buffer = MacLookup.Lookup(ctx); break;
                 case "dhcpdiscover": buffer = Dhcp.DiscoverDhcp(para); break;
+                case "ping":         buffer = Ping.XhrPing(para); break;
 
                 case "speedtest_downstream": buffer = SpeedTest.TestDownstream(ctx, para); break;
                 case "speedtest_upstream":   buffer = SpeedTest.TestUpstream(ctx, para); break;

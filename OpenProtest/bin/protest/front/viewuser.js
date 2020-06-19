@@ -23,6 +23,7 @@ class User extends Window {
 
         this.args = filename;
         this.entry = db_users.find(e => e[".FILENAME"][0] === filename);
+        this.filename = filename;
 
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
@@ -32,10 +33,10 @@ class User extends Window {
 
         this.AddCssDependencies("dbview.css");
 
-        if (this.user["TITLE"] == undefined || this.user["TITLE"][0].length === 0)
+        if (this.entry["TITLE"] == undefined || this.entry["TITLE"][0].length === 0)
             this.setTitle("[untitled]");
         else
-            this.setTitle(this.user["TITLE"][0]);
+            this.setTitle(this.entry["TITLE"][0]);
 
         this.content.style.overflowY = "auto";
 
@@ -66,8 +67,9 @@ class User extends Window {
         scroll.className = "db-scroll";
         this.content.appendChild(scroll);
 
-        const instant = document.createElement("div");
-        scroll.appendChild(instant);
+        this.live = document.createElement("div");
+        this.live.className = "db-live";
+        scroll.appendChild(this.live);
 
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
