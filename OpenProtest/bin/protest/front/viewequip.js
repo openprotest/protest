@@ -79,9 +79,9 @@ class Equip extends Window {
         btnDelete.value = "Delete";
         buttons.appendChild(btnDelete);
 
-        const sidetools = document.createElement("div");
-        sidetools.className = "db-sidetools";
-        this.content.appendChild(sidetools);
+        this.sidetools = document.createElement("div");
+        this.sidetools.className = "db-sidetools";
+        this.content.appendChild(this.sidetools);
 
         const scroll = document.createElement("div");
         scroll.className = "db-scroll";
@@ -111,7 +111,7 @@ class Equip extends Window {
                 this.AddGroup((EQUIP_ORDER[i][0] === ".") ? GetEquipIcon(this.entry["TYPE"]) : EQUIP_ORDER[i][0], EQUIP_ORDER[i][1]);
             } else {
                 if (!this.entry.hasOwnProperty(EQUIP_ORDER[i])) continue;
-                let newProperty = this.AddProperty(EQUIP_ORDER[i], this.entry[EQUIP_ORDER[i]][0], this.entry[EQUIP_ORDER[i]][1]);
+                const newProperty = this.AddProperty(EQUIP_ORDER[i], this.entry[EQUIP_ORDER[i]][0], this.entry[EQUIP_ORDER[i]][1]);
                 if (done != null) done.push(EQUIP_ORDER[i]);
                 this.properties.appendChild(newProperty);
             }
@@ -121,7 +121,7 @@ class Equip extends Window {
         for (let k in this.entry)
             if (!done.includes(k, 0) && !k.startsWith(".")) {
                 if (!this.entry.hasOwnProperty(k)) continue;
-                let newProperty = this.AddProperty(k, this.entry[k][0], this.entry[k][1]);
+                const newProperty = this.AddProperty(k, this.entry[k][0], this.entry[k][1]);
                 if (done != null) done.push(k);
                 this.properties.appendChild(newProperty);
 
@@ -134,13 +134,13 @@ class Equip extends Window {
         if (this.entry.IP) { //IPs
             let ips = this.entry.IP[0].split(";").map(o=>o.trim());
             for (let i = 0; i < ips.length; i++) {
-                let button = this.LiveButton("res/ping.svgz", ips[i]);
-                let div = button.div;
-                let roundtrip = button.sub;
+                const button = this.LiveButton("res/ping.svgz", ips[i]);
+                const div = button.div;
+                const roundtrip = button.sub;
 
                 this.live.appendChild(div);
 
-                let dot = document.createElement("div");
+                const dot = document.createElement("div");
                 dot.style.display = "inline-block";
                 dot.style.border = "#202020 1px solid";
                 dot.style.borderRadius = "50%";
@@ -150,14 +150,14 @@ class Equip extends Window {
                 dot.style.marginBottom = "-2px";
                 roundtrip.appendChild(dot);
 
-                let xhr = new XMLHttpRequest();
+                const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
-                    if (xhr.readyState == 4 && xhr.status == 200) {      
+                    if (xhr.readyState == 4 && xhr.status == 200) {
                         let reply = xhr.responseText;
                         dot.style.backgroundColor = PingColor(reply);
                         roundtrip.innerHTML += isNaN(reply) ? reply : `${reply}ms`;
                     }
-                }
+                };
                 xhr.open("GET", "ping&ip=" + ips[i], true);
                 xhr.send();
 
@@ -180,15 +180,15 @@ class Equip extends Window {
         }
 
         if (this.entry.hasOwnProperty("LOGICAL DISK")) { //Disks
-            let disks = this.entry["LOGICAL DISK"][0].split(":").map(o => o.trim());
+            const disks = this.entry["LOGICAL DISK"][0].split(":").map(o => o.trim());
             for (let i = 1; i < disks.length; i += 4) {
-                let button = this.LiveButton("res/diskdrive.svgz", disks[i]);
-                let div = button.div;
-                let usage = button.sub;
+                const button = this.LiveButton("res/diskdrive.svgz", `Drive ${disks[i]}`);
+                const div = button.div;
+                const usage = button.sub;
 
                 this.live.appendChild(div);
 
-                usage.style.width = "72px";
+                usage.style.width = "100px";
                 usage.style.borderRadius = "2px";
                 usage.style.boxShadow = "#202020 0 0 0 1px inset, #202020 0 0 0 inset";
                 usage.innerHTML = "&nbsp;";
@@ -198,7 +198,7 @@ class Equip extends Window {
                 setTimeout(() => {
                     let used = parseInt(disks[i+1]);
                     let total = parseInt(disks[i+2]);
-                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${72*used/total}px 0 0  inset`;
+                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${100*used/total}px 0 0  inset`;
                 }, 400);
             }
         }
@@ -212,7 +212,7 @@ class Equip extends Window {
                     if (db_users[j].hasOwnProperty("USERNAME") && db_users[j]["USERNAME"][0] == owner) {
                         let filename = db_users[j][".FILENAME"][0];
 
-                        let btnUser = this.LiveButton("res/user.svgz", owner);
+                        const btnUser = this.LiveButton("res/user.svgz", owner);
                         btnUser.div.onclick = ()=> {
                             for (let k = 0; k < $w.array.length; k++)
                                 if ($w.array[k] instanceof User && $w.array[k].filename == filename) {
@@ -228,18 +228,162 @@ class Equip extends Window {
             }
         }
 
-        /*if (this.entry.hasOwnProperty("PORTS")) {
-            let ports = this.entry["PORTS"][0].split(";").map(o => parseInt(o.trim()));
-            if (ports.includes(445) && this.entry.hasOwnProperty("OPERATING SYSTEM")) {
-                if (this.entry.hasOwnProperty("IP")) {
-                    let btnProcesses = this.LiveButton("res/console.svgz", "Processes");
-                    this.live.appendChild(btnProcesses.div);
+        if (this.entry.hasOwnProperty("MAC ADDRESS")) {
+            const btnWoL = this.SideButton("res/wol.svgz", "Wake on LAN");
+            this.sidetools.appendChild(btnWoL);
 
-                    let btnServices = this.LiveButton("res/service.svgz", "Services");
-                    this.live.appendChild(btnServices.div);
+            btnWoL.onclick = () => {
+                if (btnWoL.hasAttribute("busy")) return;
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4) btnWoL.removeAttribute("busy");
+                    if (xhr.readyState == 4 && xhr.status == 200) //OK
+                        if (xhr.responseText == "ok") this.ConfirmBox("Magic package has been sent successfully.", true);
+                        else this.ConfirmBox(xhr.responseText, true);
+                    else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                        this.ConfirmBox("Server is unavailable.", true);
+                };
+                btnWoL.setAttribute("busy", true);
+                xhr.open("GET", "wakeup&file=" + this.filename, true);
+                xhr.send();
+            };
+        }
+
+        if (this.entry.hasOwnProperty("PORTS")) {
+            let ports = this.entry["PORTS"][0].split(";").map(o => parseInt(o.trim()));
+
+            if (ports.includes(445) && this.entry.hasOwnProperty("OPERATING SYSTEM")) { //Power control 445
+                const btnOff = this.SideButton("res/turnoff.svgz", "Power off");
+                this.sidetools.appendChild(btnOff);
+                btnOff.onclick = () => {
+                    if (btnOff.hasAttribute("busy")) return;
+                    this.ConfirmBox("Are you sure you want to turn off this device?").addEventListener("click", () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState == 4) btnOff.removeAttribute("busy");
+                            if (xhr.readyState == 4 && xhr.status == 200)
+                                if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0)
+                                this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        btnOff.setAttribute("busy", true);
+                        xhr.open("GET", "shutdown&file=" + this.filename, true);
+                        xhr.send();
+                    });
+                };
+
+                const btnReboot = this.SideButton("res/restart.svgz", "Reboot");
+                this.sidetools.appendChild(btnReboot);
+                btnReboot.onclick = () => {
+                    if (btnReboot.hasAttribute("busy")) return;
+                    this.ConfirmBox("Are you sure you want to reboot this device?").addEventListener("click", () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState == 4) btnReboot.removeAttribute("busy");
+                            if (xhr.readyState == 4 && xhr.status == 200)
+                                if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0)
+                                this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        btnReboot.setAttribute("busy", true);
+                        xhr.open("GET", "reboot&file=" + this.filename, true);
+                        xhr.send();
+                    });
+                };
+
+                const btnLogoff = this.SideButton("res/logoff.svgz", "Log off");
+                this.sidetools.appendChild(btnLogoff);
+                btnLogoff.onclick = () => {
+                    if (btnLogoff.hasAttribute("busy")) return;
+                    this.ConfirmBox("Are you sure you want to log off this device?").addEventListener("click", () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState == 4) btnLogoff.removeAttribute("busy");
+                            if (xhr.readyState == 4 && xhr.status == 200)
+                                if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0)
+                                this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        btnLogoff.setAttribute("busy", true);
+                        xhr.open("GET", "logoff&file=" + this.filename, true);
+                        xhr.send();
+                    });
+                };
+                
+                if (this.entry.hasOwnProperty("IP")) {
+                    const btnProcesses = this.SideButton("res/console.svgz", "Processes");
+                    this.sidetools.appendChild(btnProcesses);
+                    btnProcesses.onclick = () => {
+                        let win = new Wmi({ target:this.entry["IP"][0].split(";")[0].trim(), query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
+                        win.setIcon("res/console.svgz");
+                        if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
+                            win.setTitle("[untitled] - Processes");
+                        else
+                            win.setTitle(this.entry["NAME"][0] + " - Processes");
+                    };
+
+                    const btnServices = this.SideButton("res/service.svgz", "Services");
+                    this.sidetools.appendChild(btnServices);
+                    btnServices.onclick = () => {
+                        let win = new Wmi({target: this.entry["IP"][0].split(";")[0].trim(), query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
+                        win.setIcon("res/service.svgz");
+                        if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
+                            win.setTitle("[untitled] - Services");
+                        else
+                            win.setTitle(this.entry["NAME"][0] + " - Services");
+                    };
                 }
+
             }
-        }*/
+
+            if (ports.includes(80) && this.entry.hasOwnProperty("IP")) {
+                const btnAction = this.SideButton("res/earth.svgz", "HTTP");
+                this.sidetools.appendChild(btnAction);
+                btnAction.onclick = () => window.open("http://" + this.entry["IP"][0].split(";")[0].trim());
+            }
+
+            if (ports.includes(443) && this.entry.hasOwnProperty("IP")) {
+                const btnAction = this.SideButton("res/earth.svgz", "HTTPs");
+                this.sidetools.appendChild(btnAction);
+                btnAction.onclick = () => window.open("https://" + this.entry["IP"][0].split(";")[0].trim());
+                
+            }
+
+            if (ports.includes(21) && this.entry.hasOwnProperty("IP")) {
+                const btnAction = this.SideButton("res/shared.svgz", "FTP");
+                this.sidetools.appendChild(btnAction);
+                btnAction.onclick = () => window.open("ftp://" + this.entry["IP"][0].split(";")[0].trim());
+            }
+
+            if (ports.includes(989) && this.entry.hasOwnProperty("IP")) {
+                const btnAction = this.SideButton("res/shared.svgz", "FTPs");
+                this.sidetools.appendChild(btnAction);
+                btnAction.onclick = () => window.open("ftps://" + this.entry["IP"][0].split(";")[0].trim());
+            }
+
+            if (ports.includes(9100) && this.entry.hasOwnProperty("IP")) { //print test
+                let btnPrintTest = this.SideButton("res/printer.svgz", "Print test page");
+                this.sidetools.appendChild(btnPrintTest);
+                btnPrintTest.onclick = () => {
+                    if (btnPrintTest.hasAttribute("busy")) return;
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4) btnPrintTest.removeAttribute("busy");
+                        if (xhr.readyState == 4 && xhr.status == 200)
+                            if (xhr.responseText != "ok")
+                                this.ConfirmBox(xhr.responseText, true);
+                            else
+                                this.ConfirmBox("Test sent successfully.", true);
+
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    btnPrintTest.setAttribute("busy", true);
+                    xhr.open("GET", "printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
+                    xhr.send();
+                };
+            }
+
+        }
 
     }
 
@@ -250,7 +394,7 @@ class Equip extends Window {
         this.properties.appendChild(newProperty);
     }
 
-    LiveButton(icon, label, ) {
+    LiveButton(icon, label) {
         let div = document.createElement("div");
         div.innerHTML = label;
         div.style.backgroundImage = `url(${icon})`;
@@ -270,13 +414,9 @@ class Equip extends Window {
 
     SideButton(icon, label) {
         let button = document.createElement("div");
-        button.className = "db-square-button";
-
-        let divIcon = document.createElement("div");
-        divIcon.style.backgroundImage = `url(${icon})`;
-        button.appendChild(divIcon);
 
         let divLabel = document.createElement("div");
+        divLabel.style.backgroundImage = "url(" + icon + ")";
         divLabel.innerHTML = label;
         button.appendChild(divLabel);
 

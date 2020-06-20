@@ -150,6 +150,8 @@ class HttpMainListener : Http {
                 case "reboot":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
                 case "logoff":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
 
+                case "printtest": buffer = PrintTools.PrintTestPage(para); break;
+
                 case "wmiquery":    buffer = Wmi.WmiQuery(para); break;
                 case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
 

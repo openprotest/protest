@@ -12,17 +12,58 @@
     top: 16px;
     left: 8px;
 
-    width: 200px;
-    height: 100px;
-
-    box-shadow: white 0 0 0 1px; 
+    width: 175px;
 }
+
+.db-sidetools > div {
+    background-color: var(--pane-color);
+    color: rgb(32,32,32);
+
+    border-radius: 4px;
+    padding: 2px;
+    margin: 0 0 4px 0;
+    min-width: 120px;
+    max-width: 250px;
+
+    transition: .2s;
+}
+
+.db-sidetools > div:hover {
+    background-color: var(--highlight-color);
+}
+
+.db-sidetools > div:active {
+    background-color: var(--select-color);
+}
+
+.db-sidetools > div[busy] > div::after {
+    content: "";
+    position: absolute;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+
+    border-style: solid;
+    border-radius: 50%;
+    border-width: 3px 4px 4px 0px;
+    border-color: #202020 #202020  transparent transparent;
+    box-sizing: border-box;
+    animation: spin 2s linear infinite;
+}
+
+.db-sidetools > div > div {
+    padding: 4px 4px 4px 36px;
+    background-repeat: no-repeat;
+    background-size: 28px 28px;
+    background-position: 4px 50%;
+}
+
 
 .db-scroll {
     position: absolute;
     top: 60px;
     bottom: 8px;
-    left: 220px;
+    left: 200px;
     right: 8px;
     max-width: 800px;
     overflow-y: auto;
@@ -185,7 +226,7 @@
     background-repeat: no-repeat;
     background-size: 32px 32px;
     background-position: 4px 50%;
-
+    box-sizing: border-box;
     transition: .2s;
 }
 
