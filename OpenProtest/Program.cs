@@ -58,10 +58,10 @@ class Program {
         Thread.Sleep(50);
 
 #if DEBUG
-        Console.WriteLine("  - Debug mode");
+        Console.WriteLine(" - Debug mode");
 #endif
 
-        if (IsElevated()) Console.WriteLine("  - Elevated privileges");
+        if (IsElevated()) Console.WriteLine(" - Elevated privileges");
         else SelfElevate();
 
         Console.WriteLine();
@@ -76,10 +76,10 @@ class Program {
         StartServices();
 
         Console.ResetColor();
-        Thread.Sleep(1000);
-        Console.WriteLine();
 
 #if DEBUG
+        Thread.Sleep(1000);
+        Console.WriteLine();
         while (true) {
             Console.Write(">");
             UserCommand(Console.ReadLine());

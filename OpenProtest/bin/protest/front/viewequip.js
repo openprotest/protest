@@ -134,6 +134,8 @@ class Equip extends Window {
         if (this.entry.IP) { //IPs
             let ips = this.entry.IP[0].split(";").map(o=>o.trim());
             for (let i = 0; i < ips.length; i++) {
+                if (ips[i].length === 0) continue;
+
                 const button = this.LiveButton("res/ping.svgz", ips[i]);
                 const div = button.div;
                 const roundtrip = button.sub;
@@ -188,7 +190,7 @@ class Equip extends Window {
 
                 this.live.appendChild(div);
 
-                usage.style.width = "100px";
+                usage.style.width = "72px";
                 usage.style.borderRadius = "2px";
                 usage.style.boxShadow = "#202020 0 0 0 1px inset, #202020 0 0 0 inset";
                 usage.innerHTML = "&nbsp;";
@@ -198,15 +200,16 @@ class Equip extends Window {
                 setTimeout(() => {
                     let used = parseInt(disks[i+1]);
                     let total = parseInt(disks[i+2]);
-                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${100*used/total}px 0 0  inset`;
+                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${72*used/total}px 0 0  inset`;
                 }, 400);
             }
         }
 
-        if (this.entry.hasOwnProperty("OWNER")) {
+        if (this.entry.hasOwnProperty("OWNER")) { //users
             let owners = this.entry["OWNER"][0].split(";").map(o => o.trim());
             for (let i = 0; i < owners.length; i++) {
                 let owner = (owners[i].indexOf("\\") > -1) ? owners[i].split("\\")[1] : owners[i];
+                if (owner.length === 0) continue;
 
                 for (let j = 0; j < db_users.length; j++) {
                     if (db_users[j].hasOwnProperty("USERNAME") && db_users[j]["USERNAME"][0] == owner) {
@@ -231,7 +234,6 @@ class Equip extends Window {
         if (this.entry.hasOwnProperty("MAC ADDRESS")) {
             const btnWoL = this.SideButton("res/wol.svgz", "Wake on LAN");
             this.sidetools.appendChild(btnWoL);
-
             btnWoL.onclick = () => {
                 if (btnWoL.hasAttribute("busy")) return;
                 const xhr = new XMLHttpRequest();
@@ -252,12 +254,13 @@ class Equip extends Window {
         if (this.entry.hasOwnProperty("PORTS")) {
             let ports = this.entry["PORTS"][0].split(";").map(o => parseInt(o.trim()));
 
-            if (ports.includes(445) && this.entry.hasOwnProperty("OPERATING SYSTEM")) { //Power control 445
+            if (ports.includes(445) && this.entry.hasOwnProperty("OPERATING SYSTEM")) { //wmi service 445
+
                 const btnOff = this.SideButton("res/turnoff.svgz", "Power off");
                 this.sidetools.appendChild(btnOff);
                 btnOff.onclick = () => {
                     if (btnOff.hasAttribute("busy")) return;
-                    this.ConfirmBox("Are you sure you want to turn off this device?").addEventListener("click", () => {
+                    this.ConfirmBox("Are you sure you want to power off this device?").addEventListener("click", () => {
                         const xhr = new XMLHttpRequest();
                         xhr.onreadystatechange = () => {
                             if (xhr.readyState == 4) btnOff.removeAttribute("busy");
@@ -334,31 +337,109 @@ class Equip extends Window {
                     };
                 }
 
+                const btnMgmt = this.SideButton("res/compmgmt.svgz", "PC Management"); //compmgmt
+                this.sidetools.appendChild(btnMgmt);
+                btnMgmt.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&cmg&" + this.filename, true);
+                    xhr.send();
+                };
+
+                let btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
+                this.sidetools.appendChild(btnPse);
+                btnPse.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&pse&" + this.filename, true);
+                    xhr.send();
+                };
             }
 
-            if (ports.includes(80) && this.entry.hasOwnProperty("IP")) {
+            if (ports.includes(22)) { //ssh
+                let btnSsh = this.SideButton("res/ssh.svgz", "Secure Shell");
+                this.sidetools.appendChild(btnSsh);
+                btnSsh.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&ssh&" + this.filename, true);
+                    xhr.send();
+                };
+            }
+
+            if (ports.includes(445) && this.entry.hasOwnProperty("IP")) { //smb
+                const btnSmb = this.SideButton("res/shared.svgz", "SMB");
+                this.sidetools.appendChild(btnSmb);
+                btnSmb.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&smb&" + this.filename, true);
+                    xhr.send();
+                };
+            }
+
+            if (ports.includes(80) && this.entry.hasOwnProperty("IP")) { //http
                 const btnAction = this.SideButton("res/earth.svgz", "HTTP");
                 this.sidetools.appendChild(btnAction);
                 btnAction.onclick = () => window.open("http://" + this.entry["IP"][0].split(";")[0].trim());
             }
 
-            if (ports.includes(443) && this.entry.hasOwnProperty("IP")) {
+            if (ports.includes(443) && this.entry.hasOwnProperty("IP")) { //https
                 const btnAction = this.SideButton("res/earth.svgz", "HTTPs");
                 this.sidetools.appendChild(btnAction);
                 btnAction.onclick = () => window.open("https://" + this.entry["IP"][0].split(";")[0].trim());
-                
             }
 
-            if (ports.includes(21) && this.entry.hasOwnProperty("IP")) {
+            if (ports.includes(21) && this.entry.hasOwnProperty("IP")) { //ftp
                 const btnAction = this.SideButton("res/shared.svgz", "FTP");
                 this.sidetools.appendChild(btnAction);
                 btnAction.onclick = () => window.open("ftp://" + this.entry["IP"][0].split(";")[0].trim());
             }
 
-            if (ports.includes(989) && this.entry.hasOwnProperty("IP")) {
+            if (ports.includes(989) && this.entry.hasOwnProperty("IP")) { //ftps
                 const btnAction = this.SideButton("res/shared.svgz", "FTPs");
                 this.sidetools.appendChild(btnAction);
                 btnAction.onclick = () => window.open("ftps://" + this.entry["IP"][0].split(";")[0].trim());
+            }
+
+            if (ports.includes(3389) && this.entry.hasOwnProperty("IP")) { //rdp
+                let btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
+                this.sidetools.appendChild(btnRdp);
+                btnRdp.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&rdp&" + this.filename, true);
+                    xhr.send();
+                };
+            }
+
+            if (ports.includes(5900) && this.entry.hasOwnProperty("IP")) { //uvnc
+                let btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
+                this.sidetools.appendChild(btnUvnc);
+                btnUvnc.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&vnc&" + this.filename, true);
+                    xhr.send();
+                };
             }
 
             if (ports.includes(9100) && this.entry.hasOwnProperty("IP")) { //print test
@@ -522,7 +603,7 @@ class Equip extends Window {
                         this.ConfirmBox("Server is unavailable.", true);
                 };
 
-                xhr.open("GET", "ramsg&stpe&" + this.filename + ":" + n, true);
+                xhr.open("GET", "ra&stpe&" + this.filename + ":" + n, true);
                 xhr.send();
             };
 
