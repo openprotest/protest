@@ -47,7 +47,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\OpenProtest\Modules\CryptoAes.cs">
+    <Compile Include="..\Protest\Modules\CryptoAes.cs">
       <Link>CryptoAes.cs</Link>
     </Compile>
     <Compile Include="Listener.cs" />
