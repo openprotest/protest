@@ -54,7 +54,7 @@
             this.lblExe.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblExe.Location = new System.Drawing.Point(100, 2);
             this.lblExe.Name = "lblExe";
-            this.lblExe.Size = new System.Drawing.Size(66, 15);
+            this.lblExe.Size = new System.Drawing.Size(67, 15);
             this.lblExe.TabIndex = 1;
             this.lblExe.Text = "Executable:";
             // 

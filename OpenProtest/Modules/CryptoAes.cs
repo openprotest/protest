@@ -31,7 +31,7 @@ public static class CryptoAes {
                     cryptoStream.FlushFinalBlock();
                 }
                 return memoryStream.ToArray();
-            }        
+            }
     }
 
     public static byte[] Decrypt(byte[] cipher, byte[] key, byte[] initVector) {
@@ -48,5 +48,22 @@ public static class CryptoAes {
             }
     }
 
+
+    public static string EncryptB64(string text, byte[] key, byte[] iv) {
+        if (text.Length == 0) return "";
+
+        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        byte[] cipher = Encrypt(bytes, key, iv);
+        return Convert.ToBase64String(cipher);
+    }
+
+    public static string DecryptB64(string encodedText, byte[] key, byte[] iv) {
+        if (encodedText.Length == 0) return "";
+
+        byte[] bytes = Convert.FromBase64String(encodedText);
+        byte[] plain = Decrypt(bytes, key, iv);
+        if (plain is null || plain.Length == 0) return "";
+        return Encoding.UTF8.GetString(plain);
+    }
 
 }

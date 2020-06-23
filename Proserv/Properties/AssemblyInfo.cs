@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Pro-test Remote Agent")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Proserv")]
+[assembly: AssemblyDescription("A service wrapper for Pro-test")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("veniware")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("© 2020 veniware. Released into the public domain.")]
+[assembly: AssemblyProduct("Pro-serv")]
+[assembly: AssemblyCopyright("© 2020 veniware. Release into the public domain")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3c12dc79-5ba4-48c2-89f3-c751f7763145")]
+[assembly: Guid("de30b769-8dc6-4fa0-a25a-24ca1b4cf058")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("4.0.0.0")]
-[assembly: AssemblyFileVersion("4.0.0.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

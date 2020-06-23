@@ -35,12 +35,12 @@
             this.btnApply = new System.Windows.Forms.Button();
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.TrayMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.tmrAutoHide = new System.Windows.Forms.Timer(this.components);
-            this.btnClose = new System.Windows.Forms.Button();
-            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.recentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tmrAutoHide = new System.Windows.Forms.Timer(this.components);
+            this.btnClose = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtListennerPort)).BeginInit();
             this.TrayMenu.SuspendLayout();
@@ -174,27 +174,20 @@
             this.TrayMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.TrayMenu.Size = new System.Drawing.Size(133, 88);
             // 
-            // tmrAutoHide
+            // recentsToolStripMenuItem
             // 
-            this.tmrAutoHide.Enabled = true;
-            this.tmrAutoHide.Interval = 10;
-            this.tmrAutoHide.Tick += new System.EventHandler(this.tmrAutoHide_Tick);
+            this.recentsToolStripMenuItem.Enabled = false;
+            this.recentsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F);
+            this.recentsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.recentsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.recent24;
+            this.recentsToolStripMenuItem.Name = "recentsToolStripMenuItem";
+            this.recentsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
+            this.recentsToolStripMenuItem.Text = "Recents";
             // 
-            // btnClose
+            // toolStripMenuItem1
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.btnClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.btnClose.Location = new System.Drawing.Point(657, 428);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(78, 30);
-            this.btnClose.TabIndex = 2;
-            this.btnClose.Text = "Close";
-            this.btnClose.UseVisualStyleBackColor = false;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(129, 6);
             // 
             // optionsToolStripMenuItem
             // 
@@ -216,20 +209,27 @@
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
-            // recentsToolStripMenuItem
+            // tmrAutoHide
             // 
-            this.recentsToolStripMenuItem.Enabled = false;
-            this.recentsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 11.25F);
-            this.recentsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.recentsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.recent24;
-            this.recentsToolStripMenuItem.Name = "recentsToolStripMenuItem";
-            this.recentsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
-            this.recentsToolStripMenuItem.Text = "Recents";
+            this.tmrAutoHide.Enabled = true;
+            this.tmrAutoHide.Interval = 10;
+            this.tmrAutoHide.Tick += new System.EventHandler(this.tmrAutoHide_Tick);
             // 
-            // toolStripMenuItem1
+            // btnClose
             // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(129, 6);
+            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.btnClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.btnClose.Location = new System.Drawing.Point(657, 428);
+            this.btnClose.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnClose.Name = "btnClose";
+            this.btnClose.Size = new System.Drawing.Size(78, 30);
+            this.btnClose.TabIndex = 2;
+            this.btnClose.Text = "Close";
+            this.btnClose.UseVisualStyleBackColor = false;
+            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
             // Main
             // 

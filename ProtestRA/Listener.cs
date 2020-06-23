@@ -68,8 +68,8 @@ namespace Protest_RA {
                 client.Close();
                 return; 
             }
-                       
-            byte[] decrypt = Crypto.Decrypt(buffer, Main.key);
+            
+            byte[] decrypt = CryptoAes.Decrypt(buffer, Main.bKey, Main.bIv);
             if (decrypt is null) {
                 client.Close();
                 return;

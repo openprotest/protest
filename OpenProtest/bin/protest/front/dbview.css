@@ -210,6 +210,7 @@
 .db-progress-bar  > div:nth-child(3) {
     padding-left: 8px;
     font-size: small;
+    font-weight: 400;
 }
 
 .db-live > div {

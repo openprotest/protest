@@ -13,6 +13,8 @@ namespace Protest_RA {
         public static Service srv_pse;
 
         public static string key = "";
+        public static byte[] bKey;
+        public static byte[] bIv;
 
         public static Main self;
         private static Stamp frmStamp = new Stamp();
@@ -70,15 +72,20 @@ namespace Protest_RA {
             txtKey.Text = Settings.Default.key;
 
             key = txtKey.Text;
+            bKey = key.Length > 0 ? CryptoAes.KeyToBytes(key, 32) : null; //256-bits
+            bIv = CryptoAes.KeyToBytes(key, 16); //128-bits
 
             srv_uvnc.chkEnable.Checked = Settings.Default.uvnc_enable;
             srv_uvnc.txtExe.Text = Settings.Default.uvnc_exe;
             srv_uvnc.txtParam.Text = Settings.Default.uvnc_para;
-            srv_uvnc.txtPassword.Text = Crypto.DecryptB64(Settings.Default.uvnc_pass, key);
             srv_uvnc.txtPassword.Left = srv_uvnc.txtUsername.Left;
             srv_uvnc.lblPassword.Left = srv_uvnc.lblUsername.Left;
             srv_uvnc.lblUsername.Visible = false;
             srv_uvnc.txtUsername.Visible = false;
+            srv_uvnc.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.uvnc_pass, bKey, bIv);
+
+            if (srv_uvnc.txtPassword.Text.Length > 0) //remove salt
+                srv_uvnc.txtPassword.Text = srv_uvnc.txtPassword.Text.Substring(1);
 
             srv_rdp.chkEnable.Checked = Settings.Default.mstsc_enable;
             srv_rdp.txtExe.Text = Settings.Default.mstsc_exe;
@@ -92,7 +99,10 @@ namespace Protest_RA {
             srv_pse.txtExe.Text = Settings.Default.pse_exe;
             srv_pse.txtParam.Text = Settings.Default.pse_para;
             srv_pse.txtUsername.Text = Settings.Default.pse_user;
-            srv_pse.txtPassword.Text = Crypto.DecryptB64(Settings.Default.pse_pass, key);
+            srv_pse.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.pse_pass, bKey, bIv);
+
+            if (srv_pse.txtPassword.Text.Length > 0) //remove salt
+                srv_pse.txtPassword.Text = srv_pse.txtPassword.Text.Substring(1);
         }
 
         public void SaveSettings() {
@@ -102,11 +112,13 @@ namespace Protest_RA {
             Settings.Default.key = txtKey.Text;
 
             key = txtKey.Text;
+            bKey = key.Length > 0 ? CryptoAes.KeyToBytes(key, 32) : null; //256-bits
+            bIv = CryptoAes.KeyToBytes(key, 16); //128-bits
 
             Settings.Default.uvnc_enable = srv_uvnc.chkEnable.Checked;
             Settings.Default.uvnc_exe = srv_uvnc.txtExe.Text;
             Settings.Default.uvnc_para = srv_uvnc.txtParam.Text;
-            Settings.Default.uvnc_pass = Crypto.EncryptB64(srv_uvnc.txtPassword.Text, key);
+            Settings.Default.uvnc_pass = CryptoAes.EncryptB64($"3{srv_uvnc.txtPassword.Text}", bKey, bIv); //add salt
 
             Settings.Default.mstsc_enable = srv_rdp.chkEnable.Checked;
             Settings.Default.mstsc_exe = srv_rdp.txtExe.Text;
@@ -116,7 +128,7 @@ namespace Protest_RA {
             Settings.Default.pse_exe = srv_pse.txtExe.Text;
             Settings.Default.pse_para = srv_pse.txtParam.Text;
             Settings.Default.pse_user = srv_pse.txtUsername.Text;
-            Settings.Default.pse_pass = Crypto.EncryptB64(srv_pse.txtPassword.Text, key);
+            Settings.Default.pse_pass = CryptoAes.EncryptB64($"6{srv_pse.txtPassword.Text}", bKey, bIv); //add salt
 
             Settings.Default.Save();
         }

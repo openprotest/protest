@@ -390,7 +390,6 @@ body {
 }
 
 .closebox {
-    color: white;
     position: absolute;
     text-align: center;
     cursor: default;
@@ -398,6 +397,7 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 50%;
+    color: white;
     background-color: #202020;
     box-shadow: rgba(16, 16, 16, 0.4) 12px 12px 16px;
     border: 1.5px solid #f32;
