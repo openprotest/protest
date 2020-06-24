@@ -1,0 +1,582 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{12FED691-8C9F-4844-B06E-9365568E32CB}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Protest</RootNamespace>
+    <AssemblyName>protest</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>false</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>pro-test.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.PowerShell.5.ReferenceAssemblies.1.1.0\lib\net4\System.Management.Automation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Modules\ActiveDirectory.cs" />
+    <Compile Include="Modules\Cache.cs" />
+    <Compile Include="Modules\CryptoAes.cs" />
+    <Compile Include="Modules\Scripts.cs" />
+    <Compile Include="Modules\Session.cs" />
+    <Compile Include="Modules\Strings.cs" />
+    <Compile Include="Modules\Database.cs" />
+    <Compile Include="Modules\Http.cs" />
+    <Compile Include="Modules\HttpAddressBookListener.cs" />
+    <Compile Include="Modules\HttpMainListener.cs" />
+    <Compile Include="Modules\Logging.cs" />
+    <Compile Include="Modules\Tools\PrintTools.cs" />
+    <Compile Include="Modules\Tools\Fetch.cs" />
+    <Compile Include="Modules\Tools\NetBios.cs" />
+    <Compile Include="Modules\Tools\SpeedTest.cs" />
+    <Compile Include="Modules\Update.cs" />
+    <Compile Include="Modules\Tools\WebCheck.cs" />
+    <Compile Include="Modules\Tools\Arp.cs" />
+    <Compile Include="Modules\Tools\Dhcp.cs" />
+    <Compile Include="Modules\Tools\Dns.cs" />
+    <Compile Include="Modules\Tools\IpTools.cs" />
+    <Compile Include="Modules\Tools\LocateIp.cs" />
+    <Compile Include="Modules\Tools\MacLookup.cs" />
+    <Compile Include="Modules\Tools\Ping.cs" />
+    <Compile Include="Modules\Tools\PortScan.cs" />
+    <Compile Include="Modules\Tools\TraceRoute.cs" />
+    <Compile Include="Modules\Tools\Wmi.cs" />
+    <Compile Include="Modules\Tools\WoL.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="app.manifest" />
+    <None Include="bin\protest\addressbook\icon.png.webp" />
+    <None Include="bin\protest\front\opensans300.ttf" />
+    <None Include="bin\protest\front\opensans400.ttf" />
+    <None Include="bin\protest\front\opensans600.ttf" />
+    <None Include="bin\protest\front\opensans700.ttf" />
+    <None Include="bin\protest\front\opensans800.ttf" />
+    <None Include="bin\protest\front\res\icon144.png.webp" />
+    <None Include="bin\protest\front\res\icon192.png.webp" />
+    <None Include="bin\protest\front\res\icon24.png.webp" />
+    <None Include="bin\protest\front\res\icon36.png.webp" />
+    <None Include="bin\protest\front\res\icon48.png.webp" />
+    <None Include="bin\protest\front\res\icon512.png.webp" />
+    <None Include="bin\protest\front\res\icon72.png.webp" />
+    <None Include="bin\protest\front\res\icon96.png.webp" />
+    <None Include="bin\protest\knowlage\ip.zip" />
+    <None Include="bin\protest\knowlage\mac.bin" />
+    <None Include="bin\protest\knowlage\proxy.zip" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\protest\front\wmi_classes.json" />
+    <Content Include="bin\protest\addressbook\addressbook.css" />
+    <Content Include="bin\protest\addressbook\addressbook.js" />
+    <Content Include="bin\protest\addressbook\department.svg" />
+    <Content Include="bin\protest\addressbook\download.svg" />
+    <Content Include="bin\protest\addressbook\email.svg" />
+    <Content Include="bin\protest\addressbook\icon.png" />
+    <Content Include="bin\protest\addressbook\index.html" />
+    <Content Include="bin\protest\addressbook\l_department.svg" />
+    <Content Include="bin\protest\addressbook\l_email.svg" />
+    <Content Include="bin\protest\addressbook\l_mobile.svg" />
+    <Content Include="bin\protest\addressbook\l_phone.svg" />
+    <Content Include="bin\protest\addressbook\l_user.svg" />
+    <Content Include="bin\protest\addressbook\mobile.svg" />
+    <Content Include="bin\protest\addressbook\phone.svg" />
+    <Content Include="bin\protest\addressbook\search.svg" />
+    <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\config.txt" />
+    <Content Include="bin\protest\front\license.txt" />
+    <Content Include="bin\protest\front\dbview.css" />
+    <Content Include="bin\protest\front\res\desktop.svg" />
+    <Content Include="bin\protest\front\viewequip.js" />
+    <Content Include="bin\protest\front\viewuser.js" />
+    <Content Include="bin\protest\front\listusers.js" />
+    <Content Include="bin\protest\front\listequip.js" />
+    <Content Include="bin\protest\front\list.css" />
+    <Content Include="bin\protest\front\list.js" />
+    <Content Include="bin\protest\front\res\copyleft.svg" />
+    <Content Include="bin\protest\front\res\github.svg" />
+    <Content Include="bin\protest\front\res\l_screencapture.svg" />
+    <Content Include="bin\protest\front\res\ongoingscript.svg" />
+    <Content Include="bin\protest\front\res\opensource.svg" />
+    <Content Include="bin\protest\front\res\popout.svg" />
+    <Content Include="bin\protest\front\res\screencapture.svg" />
+    <Content Include="bin\protest\front\speedtest.js" />
+    <Content Include="bin\protest\front\res\atom.svg" />
+    <Content Include="bin\protest\front\res\gpl.svg" />
+    <Content Include="bin\protest\front\res\hourglass.svg" />
+    <Content Include="bin\protest\front\res\download.svg" />
+    <Content Include="bin\protest\front\res\update.svg" />
+    <Content Include="bin\protest\front\res\userguide.svg" />
+    <Content Include="bin\protest\front\settings.js" />
+    <Content Include="bin\protest\front\log.js" />
+    <Content Include="bin\protest\front\tabs.css" />
+    <Content Include="bin\protest\front\tabs.js" />
+    <Content Include="bin\protest\front\fetch.js" />
+    <Content Include="bin\protest\front\scripteditor.js" />
+    <Content Include="bin\protest\front\scripts.css" />
+    <Content Include="bin\protest\front\scripts.js" />
+    <Content Include="bin\protest\front\screencapture.js" />
+    <Content Include="bin\protest\front\wmi.css" />
+    <Content Include="bin\protest\front\wmi.js" />
+    <Content Include="bin\protest\front\webcheck.js" />
+    <Content Include="bin\protest\front\maclookup.js" />
+    <Content Include="bin\protest\front\locateip.js" />
+    <Content Include="bin\protest\front\portscan.js" />
+    <Content Include="bin\protest\front\traceroute.js" />
+    <Content Include="bin\protest\front\dhcpdiscover.js" />
+    <Content Include="bin\protest\front\dnslookup.js" />
+    <Content Include="bin\protest\front\tools.css" />
+    <Content Include="bin\protest\front\ping.js" />
+    <Content Include="bin\protest\front\deskmenu.css" />
+    <Content Include="bin\protest\front\flags\ad.svg" />
+    <Content Include="bin\protest\front\flags\ae.svg" />
+    <Content Include="bin\protest\front\flags\af.svg" />
+    <Content Include="bin\protest\front\flags\ag.svg" />
+    <Content Include="bin\protest\front\flags\ai.svg" />
+    <Content Include="bin\protest\front\flags\al.svg" />
+    <Content Include="bin\protest\front\flags\am.svg" />
+    <Content Include="bin\protest\front\flags\ao.svg" />
+    <Content Include="bin\protest\front\flags\ar.svg" />
+    <Content Include="bin\protest\front\flags\as.svg" />
+    <Content Include="bin\protest\front\flags\at.svg" />
+    <Content Include="bin\protest\front\flags\au.svg" />
+    <Content Include="bin\protest\front\flags\aw.svg" />
+    <Content Include="bin\protest\front\flags\ax.svg" />
+    <Content Include="bin\protest\front\flags\az.svg" />
+    <Content Include="bin\protest\front\flags\ba.svg" />
+    <Content Include="bin\protest\front\flags\bb.svg" />
+    <Content Include="bin\protest\front\flags\bd.svg" />
+    <Content Include="bin\protest\front\flags\be.svg" />
+    <Content Include="bin\protest\front\flags\bf.svg" />
+    <Content Include="bin\protest\front\flags\bg.svg" />
+    <Content Include="bin\protest\front\flags\bh.svg" />
+    <Content Include="bin\protest\front\flags\bi.svg" />
+    <Content Include="bin\protest\front\flags\bj.svg" />
+    <Content Include="bin\protest\front\flags\bl.svg" />
+    <Content Include="bin\protest\front\flags\bm.svg" />
+    <Content Include="bin\protest\front\flags\bn.svg" />
+    <Content Include="bin\protest\front\flags\bo.svg" />
+    <Content Include="bin\protest\front\flags\bq.svg" />
+    <Content Include="bin\protest\front\flags\br.svg" />
+    <Content Include="bin\protest\front\flags\bs.svg" />
+    <Content Include="bin\protest\front\flags\bt.svg" />
+    <Content Include="bin\protest\front\flags\bw.svg" />
+    <Content Include="bin\protest\front\flags\by.svg" />
+    <Content Include="bin\protest\front\flags\bz.svg" />
+    <Content Include="bin\protest\front\flags\ca.svg" />
+    <Content Include="bin\protest\front\flags\cd.svg" />
+    <Content Include="bin\protest\front\flags\cf.svg" />
+    <Content Include="bin\protest\front\flags\cg.svg" />
+    <Content Include="bin\protest\front\flags\ch.svg" />
+    <Content Include="bin\protest\front\flags\ci.svg" />
+    <Content Include="bin\protest\front\flags\ck.svg" />
+    <Content Include="bin\protest\front\flags\cl.svg" />
+    <Content Include="bin\protest\front\flags\cm.svg" />
+    <Content Include="bin\protest\front\flags\cn.svg" />
+    <Content Include="bin\protest\front\flags\co.svg" />
+    <Content Include="bin\protest\front\flags\cr.svg" />
+    <Content Include="bin\protest\front\flags\cu.svg" />
+    <Content Include="bin\protest\front\flags\cv.svg" />
+    <Content Include="bin\protest\front\flags\cw.svg" />
+    <Content Include="bin\protest\front\flags\cx.svg" />
+    <Content Include="bin\protest\front\flags\cy.svg" />
+    <Content Include="bin\protest\front\flags\cz.svg" />
+    <Content Include="bin\protest\front\flags\de.svg" />
+    <Content Include="bin\protest\front\flags\dj.svg" />
+    <Content Include="bin\protest\front\flags\dk.svg" />
+    <Content Include="bin\protest\front\flags\dm.svg" />
+    <Content Include="bin\protest\front\flags\do.svg" />
+    <Content Include="bin\protest\front\flags\dz.svg" />
+    <Content Include="bin\protest\front\flags\ec.svg" />
+    <Content Include="bin\protest\front\flags\ee.svg" />
+    <Content Include="bin\protest\front\flags\eg.svg" />
+    <Content Include="bin\protest\front\flags\er.svg" />
+    <Content Include="bin\protest\front\flags\es.svg" />
+    <Content Include="bin\protest\front\flags\et.svg" />
+    <Content Include="bin\protest\front\flags\fi.svg" />
+    <Content Include="bin\protest\front\flags\fj.svg" />
+    <Content Include="bin\protest\front\flags\fk.svg" />
+    <Content Include="bin\protest\front\flags\fm.svg" />
+    <Content Include="bin\protest\front\flags\fo.svg" />
+    <Content Include="bin\protest\front\flags\fr.svg" />
+    <Content Include="bin\protest\front\flags\ga.svg" />
+    <Content Include="bin\protest\front\flags\gb.svg" />
+    <Content Include="bin\protest\front\flags\gd.svg" />
+    <Content Include="bin\protest\front\flags\ge.svg" />
+    <Content Include="bin\protest\front\flags\gf.svg" />
+    <Content Include="bin\protest\front\flags\gg.svg" />
+    <Content Include="bin\protest\front\flags\gh.svg" />
+    <Content Include="bin\protest\front\flags\gi.svg" />
+    <Content Include="bin\protest\front\flags\gl.svg" />
+    <Content Include="bin\protest\front\flags\gm.svg" />
+    <Content Include="bin\protest\front\flags\gn.svg" />
+    <Content Include="bin\protest\front\flags\gp.svg" />
+    <Content Include="bin\protest\front\flags\gq.svg" />
+    <Content Include="bin\protest\front\flags\gr.svg" />
+    <Content Include="bin\protest\front\flags\gt.svg" />
+    <Content Include="bin\protest\front\flags\gu.svg" />
+    <Content Include="bin\protest\front\flags\gw.svg" />
+    <Content Include="bin\protest\front\flags\gy.svg" />
+    <Content Include="bin\protest\front\flags\hk.svg" />
+    <Content Include="bin\protest\front\flags\hn.svg" />
+    <Content Include="bin\protest\front\flags\hr.svg" />
+    <Content Include="bin\protest\front\flags\ht.svg" />
+    <Content Include="bin\protest\front\flags\hu.svg" />
+    <Content Include="bin\protest\front\flags\id.svg" />
+    <Content Include="bin\protest\front\flags\ie.svg" />
+    <Content Include="bin\protest\front\flags\il.svg" />
+    <Content Include="bin\protest\front\flags\im.svg" />
+    <Content Include="bin\protest\front\flags\in.svg" />
+    <Content Include="bin\protest\front\flags\io.svg" />
+    <Content Include="bin\protest\front\flags\iq.svg" />
+    <Content Include="bin\protest\front\flags\ir.svg" />
+    <Content Include="bin\protest\front\flags\is.svg" />
+    <Content Include="bin\protest\front\flags\it.svg" />
+    <Content Include="bin\protest\front\flags\je.svg" />
+    <Content Include="bin\protest\front\flags\jm.svg" />
+    <Content Include="bin\protest\front\flags\jo.svg" />
+    <Content Include="bin\protest\front\flags\jp.svg" />
+    <Content Include="bin\protest\front\flags\ke.svg" />
+    <Content Include="bin\protest\front\flags\kg.svg" />
+    <Content Include="bin\protest\front\flags\kh.svg" />
+    <Content Include="bin\protest\front\flags\ki.svg" />
+    <Content Include="bin\protest\front\flags\km.svg" />
+    <Content Include="bin\protest\front\flags\kn.svg" />
+    <Content Include="bin\protest\front\flags\kp.svg" />
+    <Content Include="bin\protest\front\flags\kr.svg" />
+    <Content Include="bin\protest\front\flags\kw.svg" />
+    <Content Include="bin\protest\front\flags\ky.svg" />
+    <Content Include="bin\protest\front\flags\kz.svg" />
+    <Content Include="bin\protest\front\flags\la.svg" />
+    <Content Include="bin\protest\front\flags\lb.svg" />
+    <Content Include="bin\protest\front\flags\lc.svg" />
+    <Content Include="bin\protest\front\flags\li.svg" />
+    <Content Include="bin\protest\front\flags\lk.svg" />
+    <Content Include="bin\protest\front\flags\lr.svg" />
+    <Content Include="bin\protest\front\flags\ls.svg" />
+    <Content Include="bin\protest\front\flags\lt.svg" />
+    <Content Include="bin\protest\front\flags\lu.svg" />
+    <Content Include="bin\protest\front\flags\lv.svg" />
+    <Content Include="bin\protest\front\flags\ly.svg" />
+    <Content Include="bin\protest\front\flags\ma.svg" />
+    <Content Include="bin\protest\front\flags\mc.svg" />
+    <Content Include="bin\protest\front\flags\md.svg" />
+    <Content Include="bin\protest\front\flags\me.svg" />
+    <Content Include="bin\protest\front\flags\mf.svg" />
+    <Content Include="bin\protest\front\flags\mg.svg" />
+    <Content Include="bin\protest\front\flags\mh.svg" />
+    <Content Include="bin\protest\front\flags\mk.svg" />
+    <Content Include="bin\protest\front\flags\ml.svg" />
+    <Content Include="bin\protest\front\flags\mm.svg" />
+    <Content Include="bin\protest\front\flags\mn.svg" />
+    <Content Include="bin\protest\front\flags\mo.svg" />
+    <Content Include="bin\protest\front\flags\mp.svg" />
+    <Content Include="bin\protest\front\flags\mq.svg" />
+    <Content Include="bin\protest\front\flags\mr.svg" />
+    <Content Include="bin\protest\front\flags\ms.svg" />
+    <Content Include="bin\protest\front\flags\mt.svg" />
+    <Content Include="bin\protest\front\flags\mu.svg" />
+    <Content Include="bin\protest\front\flags\mv.svg" />
+    <Content Include="bin\protest\front\flags\mw.svg" />
+    <Content Include="bin\protest\front\flags\mx.svg" />
+    <Content Include="bin\protest\front\flags\my.svg" />
+    <Content Include="bin\protest\front\flags\mz.svg" />
+    <Content Include="bin\protest\front\flags\na.svg" />
+    <Content Include="bin\protest\front\flags\nc.svg" />
+    <Content Include="bin\protest\front\flags\ne.svg" />
+    <Content Include="bin\protest\front\flags\nf.svg" />
+    <Content Include="bin\protest\front\flags\ng.svg" />
+    <Content Include="bin\protest\front\flags\ni.svg" />
+    <Content Include="bin\protest\front\flags\nl.svg" />
+    <Content Include="bin\protest\front\flags\no.svg" />
+    <Content Include="bin\protest\front\flags\np.svg" />
+    <Content Include="bin\protest\front\flags\nr.svg" />
+    <Content Include="bin\protest\front\flags\nu.svg" />
+    <Content Include="bin\protest\front\flags\nz.svg" />
+    <Content Include="bin\protest\front\flags\om.svg" />
+    <Content Include="bin\protest\front\flags\pa.svg" />
+    <Content Include="bin\protest\front\flags\pe.svg" />
+    <Content Include="bin\protest\front\flags\pf.svg" />
+    <Content Include="bin\protest\front\flags\pg.svg" />
+    <Content Include="bin\protest\front\flags\ph.svg" />
+    <Content Include="bin\protest\front\flags\pk.svg" />
+    <Content Include="bin\protest\front\flags\pl.svg" />
+    <Content Include="bin\protest\front\flags\pm.svg" />
+    <Content Include="bin\protest\front\flags\pr.svg" />
+    <Content Include="bin\protest\front\flags\ps.svg" />
+    <Content Include="bin\protest\front\flags\pt.svg" />
+    <Content Include="bin\protest\front\flags\pw.svg" />
+    <Content Include="bin\protest\front\flags\py.svg" />
+    <Content Include="bin\protest\front\flags\qa.svg" />
+    <Content Include="bin\protest\front\flags\re.svg" />
+    <Content Include="bin\protest\front\flags\ro.svg" />
+    <Content Include="bin\protest\front\flags\rs.svg" />
+    <Content Include="bin\protest\front\flags\ru.svg" />
+    <Content Include="bin\protest\front\flags\rw.svg" />
+    <Content Include="bin\protest\front\flags\sa.svg" />
+    <Content Include="bin\protest\front\flags\sb.svg" />
+    <Content Include="bin\protest\front\flags\sc.svg" />
+    <Content Include="bin\protest\front\flags\sd.svg" />
+    <Content Include="bin\protest\front\flags\se.svg" />
+    <Content Include="bin\protest\front\flags\sg.svg" />
+    <Content Include="bin\protest\front\flags\si.svg" />
+    <Content Include="bin\protest\front\flags\sk.svg" />
+    <Content Include="bin\protest\front\flags\sl.svg" />
+    <Content Include="bin\protest\front\flags\sm.svg" />
+    <Content Include="bin\protest\front\flags\sn.svg" />
+    <Content Include="bin\protest\front\flags\so.svg" />
+    <Content Include="bin\protest\front\flags\sr.svg" />
+    <Content Include="bin\protest\front\flags\ss.svg" />
+    <Content Include="bin\protest\front\flags\st.svg" />
+    <Content Include="bin\protest\front\flags\sv.svg" />
+    <Content Include="bin\protest\front\flags\sx.svg" />
+    <Content Include="bin\protest\front\flags\sy.svg" />
+    <Content Include="bin\protest\front\flags\sz.svg" />
+    <Content Include="bin\protest\front\flags\tc.svg" />
+    <Content Include="bin\protest\front\flags\td.svg" />
+    <Content Include="bin\protest\front\flags\tg.svg" />
+    <Content Include="bin\protest\front\flags\th.svg" />
+    <Content Include="bin\protest\front\flags\tj.svg" />
+    <Content Include="bin\protest\front\flags\tk.svg" />
+    <Content Include="bin\protest\front\flags\tl.svg" />
+    <Content Include="bin\protest\front\flags\tm.svg" />
+    <Content Include="bin\protest\front\flags\tn.svg" />
+    <Content Include="bin\protest\front\flags\to.svg" />
+    <Content Include="bin\protest\front\flags\tr.svg" />
+    <Content Include="bin\protest\front\flags\tt.svg" />
+    <Content Include="bin\protest\front\flags\tv.svg" />
+    <Content Include="bin\protest\front\flags\tw.svg" />
+    <Content Include="bin\protest\front\flags\tz.svg" />
+    <Content Include="bin\protest\front\flags\ua.svg" />
+    <Content Include="bin\protest\front\flags\ug.svg" />
+    <Content Include="bin\protest\front\flags\um.svg" />
+    <Content Include="bin\protest\front\flags\us.svg" />
+    <Content Include="bin\protest\front\flags\uy.svg" />
+    <Content Include="bin\protest\front\flags\uz.svg" />
+    <Content Include="bin\protest\front\flags\va.svg" />
+    <Content Include="bin\protest\front\flags\vc.svg" />
+    <Content Include="bin\protest\front\flags\ve.svg" />
+    <Content Include="bin\protest\front\flags\vg.svg" />
+    <Content Include="bin\protest\front\flags\vi.svg" />
+    <Content Include="bin\protest\front\flags\vn.svg" />
+    <Content Include="bin\protest\front\flags\vu.svg" />
+    <Content Include="bin\protest\front\flags\wf.svg" />
+    <Content Include="bin\protest\front\flags\ws.svg" />
+    <Content Include="bin\protest\front\flags\ye.svg" />
+    <Content Include="bin\protest\front\flags\yt.svg" />
+    <Content Include="bin\protest\front\flags\za.svg" />
+    <Content Include="bin\protest\front\flags\zm.svg" />
+    <Content Include="bin\protest\front\flags\zw.svg" />
+    <Content Include="bin\protest\front\button.css" />
+    <Content Include="bin\protest\front\index.html" />
+    <Content Include="bin\protest\front\console.js" />
+    <Content Include="bin\protest\front\ipbox.js" />
+    <Content Include="bin\protest\front\checkbox.css" />
+    <Content Include="bin\protest\front\range.css" />
+    <Content Include="bin\protest\front\res\l_logoff.svg" />
+    <Content Include="bin\protest\front\res\l_tool01.svg" />
+    <Content Include="bin\protest\front\res\l_tool02.svg" />
+    <Content Include="bin\protest\front\res\l_tool03.svg" />
+    <Content Include="bin\protest\front\textbox.css" />
+    <Content Include="bin\protest\front\passwordgen.js" />
+    <Content Include="bin\protest\front\netcalc.js" />
+    <Content Include="bin\protest\front\loader.js" />
+    <Content Include="bin\protest\front\login.html" />
+    <Content Include="bin\protest\front\other\logo.svg" />
+    <Content Include="bin\protest\front\res\antenna.svg" />
+    <Content Include="bin\protest\front\res\backup.svg" />
+    <Content Include="bin\protest\front\res\battery.svg" />
+    <Content Include="bin\protest\front\res\camera.svg" />
+    <Content Include="bin\protest\front\res\change.svg" />
+    <Content Include="bin\protest\front\res\charges.svg" />
+    <Content Include="bin\protest\front\res\check.svg" />
+    <Content Include="bin\protest\front\res\close.svg" />
+    <Content Include="bin\protest\front\res\compmgmt.svg" />
+    <Content Include="bin\protest\front\res\console.svg" />
+    <Content Include="bin\protest\front\res\contact.svg" />
+    <Content Include="bin\protest\front\res\copy.svg" />
+    <Content Include="bin\protest\front\res\copymachine.svg" />
+    <Content Include="bin\protest\front\res\cpu.svg" />
+    <Content Include="bin\protest\front\res\credencial.svg" />
+    <Content Include="bin\protest\front\res\database.svg" />
+    <Content Include="bin\protest\front\res\databasesearch.svg" />
+    <Content Include="bin\protest\front\res\database_equip.svg" />
+    <Content Include="bin\protest\front\res\database_users.svg" />
+    <Content Include="bin\protest\front\res\department.svg" />
+    <Content Include="bin\protest\front\res\dhcp.svg" />
+    <Content Include="bin\protest\front\res\disable.svg" />
+    <Content Include="bin\protest\front\res\diskdrive.svg" />
+    <Content Include="bin\protest\front\res\dns.svg" />
+    <Content Include="bin\protest\front\res\documentation.svg" />
+    <Content Include="bin\protest\front\res\earth.svg" />
+    <Content Include="bin\protest\front\res\email.svg" />
+    <Content Include="bin\protest\front\res\enable.svg" />
+    <Content Include="bin\protest\front\res\fax.svg" />
+    <Content Include="bin\protest\front\res\fetch.svg" />
+    <Content Include="bin\protest\front\res\filter.svg" />
+    <Content Include="bin\protest\front\res\folder.svg" />
+    <Content Include="bin\protest\front\res\gear.svg" />
+    <Content Include="bin\protest\front\res\icon144.png" />
+    <Content Include="bin\protest\front\res\icon192.png" />
+    <Content Include="bin\protest\front\res\icon24.png" />
+    <Content Include="bin\protest\front\res\icon36.png" />
+    <Content Include="bin\protest\front\res\icon48.png" />
+    <Content Include="bin\protest\front\res\icon512.png" />
+    <Content Include="bin\protest\front\res\icon72.png" />
+    <Content Include="bin\protest\front\res\icon96.png" />
+    <Content Include="bin\protest\front\res\laptop.svg" />
+    <Content Include="bin\protest\front\res\locate.svg" />
+    <Content Include="bin\protest\front\res\lock.svg" />
+    <Content Include="bin\protest\front\res\log.svg" />
+    <Content Include="bin\protest\front\res\logo.svg" />
+    <Content Include="bin\protest\front\res\logoff.svg" />
+    <Content Include="bin\protest\front\res\l_bug.svg" />
+    <Content Include="bin\protest\front\res\l_clear.svg" />
+    <Content Include="bin\protest\front\res\l_copy.svg" />
+    <Content Include="bin\protest\front\res\l_delete.svg" />
+    <Content Include="bin\protest\front\res\l_download.svg" />
+    <Content Include="bin\protest\front\res\l_filter.svg" />
+    <Content Include="bin\protest\front\res\l_gear.svg" />
+    <Content Include="bin\protest\front\res\l_legend.svg" />
+    <Content Include="bin\protest\front\res\l_locate.svg" />
+    <Content Include="bin\protest\front\res\l_move1st.svg" />
+    <Content Include="bin\protest\front\res\l_new.svg" />
+    <Content Include="bin\protest\front\res\l_options.svg" />
+    <Content Include="bin\protest\front\res\l_proxy.svg" />
+    <Content Include="bin\protest\front\res\l_reload.svg" />
+    <Content Include="bin\protest\front\res\l_run.svg" />
+    <Content Include="bin\protest\front\res\l_save.svg" />
+    <Content Include="bin\protest\front\res\l_search.svg" />
+    <Content Include="bin\protest\front\res\l_sort.svg" />
+    <Content Include="bin\protest\front\res\l_stamp.svg" />
+    <Content Include="bin\protest\front\res\l_unkink.svg" />
+    <Content Include="bin\protest\front\res\l_user.svg" />
+    <Content Include="bin\protest\front\res\maclookup.svg" />
+    <Content Include="bin\protest\front\res\mappeddrive.svg" />
+    <Content Include="bin\protest\front\res\maximize.svg" />
+    <Content Include="bin\protest\front\res\mediaplayer.svg" />
+    <Content Include="bin\protest\front\res\mikrotik.svg" />
+    <Content Include="bin\protest\front\res\minimize.svg" />
+    <Content Include="bin\protest\front\res\mobile.svg" />
+    <Content Include="bin\protest\front\res\mobilephone.svg" />
+    <Content Include="bin\protest\front\res\motherboard.svg" />
+    <Content Include="bin\protest\front\res\multiprinter.svg" />
+    <Content Include="bin\protest\front\res\netcalc.svg" />
+    <Content Include="bin\protest\front\res\netscan.svg" />
+    <Content Include="bin\protest\front\res\newentry.svg" />
+    <Content Include="bin\protest\front\res\new_equip.svg" />
+    <Content Include="bin\protest\front\res\new_user.svg" />
+    <Content Include="bin\protest\front\res\noconn.svg" />
+    <Content Include="bin\protest\front\res\os.svg" />
+    <Content Include="bin\protest\front\res\other.svg" />
+    <Content Include="bin\protest\front\res\passgen.svg" />
+    <Content Include="bin\protest\front\res\pc.svg" />
+    <Content Include="bin\protest\front\res\phone.svg" />
+    <Content Include="bin\protest\front\res\ping.svg" />
+    <Content Include="bin\protest\front\res\portscan.svg" />
+    <Content Include="bin\protest\front\res\pos.svg" />
+    <Content Include="bin\protest\front\res\posprinter.svg" />
+    <Content Include="bin\protest\front\res\printer.svg" />
+    <Content Include="bin\protest\front\res\proxy.svg" />
+    <Content Include="bin\protest\front\res\psremote.svg" />
+    <Content Include="bin\protest\front\res\ptclients.svg" />
+    <Content Include="bin\protest\front\res\ram.svg" />
+    <Content Include="bin\protest\front\res\rdp.svg" />
+    <Content Include="bin\protest\front\res\reportfile.svg" />
+    <Content Include="bin\protest\front\res\restart.svg" />
+    <Content Include="bin\protest\front\res\retured.svg" />
+    <Content Include="bin\protest\front\res\router.svg" />
+    <Content Include="bin\protest\front\res\scannner.svg" />
+    <Content Include="bin\protest\front\res\scriptfile.svg" />
+    <Content Include="bin\protest\front\res\scripts.svg" />
+    <Content Include="bin\protest\front\res\search.svg" />
+    <Content Include="bin\protest\front\res\serialconverter.svg" />
+    <Content Include="bin\protest\front\res\server.svg" />
+    <Content Include="bin\protest\front\res\service.svg" />
+    <Content Include="bin\protest\front\res\shared.svg" />
+    <Content Include="bin\protest\front\res\sim.svg" />
+    <Content Include="bin\protest\front\res\speedtest.svg" />
+    <Content Include="bin\protest\front\res\ssh.svg" />
+    <Content Include="bin\protest\front\res\strength.svg" />
+    <Content Include="bin\protest\front\res\switch.svg" />
+    <Content Include="bin\protest\front\res\tablet.svg" />
+    <Content Include="bin\protest\front\res\task.svg" />
+    <Content Include="bin\protest\front\res\telnet.svg" />
+    <Content Include="bin\protest\front\res\tool01.svg" />
+    <Content Include="bin\protest\front\res\tool02.svg" />
+    <Content Include="bin\protest\front\res\tool03.svg" />
+    <Content Include="bin\protest\front\res\toolbox.svg" />
+    <Content Include="bin\protest\front\res\traceroute.svg" />
+    <Content Include="bin\protest\front\res\traffic.svg" />
+    <Content Include="bin\protest\front\res\turnoff.svg" />
+    <Content Include="bin\protest\front\res\tv.svg" />
+    <Content Include="bin\protest\front\res\unlock.svg" />
+    <Content Include="bin\protest\front\res\ups.svg" />
+    <Content Include="bin\protest\front\res\user.svg" />
+    <Content Include="bin\protest\front\res\uvnc.svg" />
+    <Content Include="bin\protest\front\res\videocard.svg" />
+    <Content Include="bin\protest\front\res\visamachine.svg" />
+    <Content Include="bin\protest\front\res\websitecheck.svg" />
+    <Content Include="bin\protest\front\res\wmi.svg" />
+    <Content Include="bin\protest\front\res\wol.svg" />
+    <Content Include="bin\protest\front\tip.css" />
+    <Content Include="bin\protest\front\root.css" />
+    <Content Include="bin\protest\front\sidemenu.js" />
+    <Content Include="bin\protest\front\sidemenu.css" />
+    <Content Include="bin\protest\front\ui.js" />
+    <Content Include="bin\protest\front\window.css" />
+    <Content Include="bin\protest\front\window.js" />
+    <Content Include="bin\protest\front\wordslist.txt" />
+    <Content Include="bin\protest\knowlage\content_type.txt" />
+    <Content Include="bin\protest\scripts\tools.txt" />
+    <Content Include="pro-test.ico" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

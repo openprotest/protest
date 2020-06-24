@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Pro-test</title>
+    <meta charset="utf-8" />
+    <meta name="theme-color" content="#E87600">   
+    <link rel="icon" href="res/icon24.png"/>
+
+    <style>
+    body {
+        background: rgb(64,64,64);
+        color: rgb(224,224,224);
+        font-family: "Segoe UI";
+        display: block;
+    }
+
+    #message {visibility: hidden;}
+
+    input[type="text"],
+    input[type="password"] {
+        outline: 0;
+        height: 32px;
+        padding: 0px 8px;
+        margin: 4px 0px;
+        border: 0;
+        color: black;
+        background-color: rgb(192,192,192);
+    }
+        
+    #txtUsername {
+        width: 198px;
+        border-radius: 8px;
+    }
+
+    #txtPassword {
+        width: 150px;
+        border-radius: 8px 0 0 8px;
+    }
+
+    #btnLogin {
+        outline: 0;
+        height: 32px;
+        padding: 2px 8px;
+        margin: 0;
+        border: 0;
+        border-radius: 0 8px 8px 0;
+        color: black;
+        background-color: rgb(192,192,192);
+    }
+
+    #btnLogin:focus  { background-color: rgb(208,208,208);}
+    #btnLogin:hover  { background-color: rgb(208,208,208);}
+    #btnLogin:active { background-color: rgb(224,224,224);}
+
+    #lock-latch {
+        transform: translateY(22px);
+        transition: 1s;
+        animation: lock 2s 1;
+    }
+
+    ::selection {
+        background: #222;
+        color: #ddd;
+    }
+
+    @keyframes shake {
+        10%, 90% { transform: translateX(-1px); }
+        20%, 80% { transform: translateX(2px); }
+        30%, 50%, 70% { transform: translateX(-4px); }
+        40%, 60% { transform: translateX(4px); }
+    }
+
+    @keyframes lock {
+        0%   { transform: translateY(0px); }
+        50%   { transform: translateY(0px); }
+        90%  { transform: translateY(27px); }
+        100% { transform: translateY(22px); }
+    }
+
+    @keyframes fail {
+        0%   { transform: translateY(22px); }
+        50%  { transform: translateY(26px); }
+        100% { transform: translateY(22px); }
+    }
+
+    #bottombar {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        bottom: 0;
+        height: 64px;
+        background-color: #E87600;
+        background: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)92%, rgb(199,64,0)100%);;
+    }
+
+    </style>
+
+    <script>
+    const login = ()=> {
+        if (txtPassword.value=="") return;
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = ()=> {
+            if (xhr.readyState==4 && xhr.status==200) {
+                let response = xhr.responseText;
+                if (response!="") {
+                    localStorage.setItem("lastUsername", txtUsername.value);
+                    let container = document.getElementById("container");
+                    container.style.transition = ".1s";
+                    container.style.opacity = "0";
+                    container.style.transform = "scale(.8)";
+                    location.reload();
+
+                } else {
+                    txtPassword.value="";
+                    document.getElementById("message").style.visibility="visible";
+                    document.getElementById("message").style.animation="shake 1s 1";
+                    document.getElementById("lock-latch").style.animation="fail .4s 1";
+                    setTimeout(()=> {
+                        document.getElementById("message").style.animation="none";
+                        document.getElementById("lock-latch").style.animation="none";
+                    }, 1000);
+                }
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) { //unavailabe
+                document.getElementById("message").style.visibility = "visible";
+                document.getElementById("message").style.color = "red";
+                document.getElementById("message").innerHTML = "Server is unavailable.";
+                txtUsername.style.visibility = "hidden";
+                txtPassword.style.visibility = "hidden";
+                btnLogin.style.visibility = "hidden";
+            }
+        };
+
+        let data = txtUsername.value + String.fromCharCode(127) + txtPassword.value;
+
+        xhr.open("POST", "a", true);
+         xhr.send(data);
+    };
+
+    const txtUsername_onkeypress = event=> { if (event.keyCode==13) txtPassword.focus(); };
+    const txtPassword_onkeypress = event=> { if (event.keyCode==13) login(); };
+    </script>
+
+</head>
+<body>
+    <div id="container" style="text-align:center;">
+        <svg width="250" height="250">
+            <path id="lock-latch" fill="#E87600" d="M177.904,26.714C163.172,12.238,145.535,5,125.005,5C104.469,5,86.831,12.238,72.1,26.714 C57.367,41.188,50,58.52,50,78.7V135h32.133V78.7c0-11.627,4.183-21.55,12.558-29.779c8.368-8.225,18.47-12.336,30.295-12.336 c11.83,0,21.939,4.111,30.312,12.336c8.369,8.229,12.558,18.152,12.558,29.779v28.346H200V78.7 C200,58.52,192.634,41.188,177.904,26.714z" />
+            <path id="lock-body" fill="#E87600" d="M202.167,129H47.833C37.984,129,30,136.211,30,145.104v87.792c0,8.893,7.984,16.104,17.833,16.104h154.334 c9.849,0,17.833-7.211,17.833-16.104v-87.791C220,136.212,212.016,129,202.167,129z" />
+        </svg>
+
+        <br>
+        <div style="color:rgb(232,118,0); font-weight:600;" id="message">Sorry, I don't like this password.</div>
+        <br>
+        <input type="text" id="txtUsername" placeholder="Username" onkeypress="txtUsername_onkeypress(event)" autocomplete="off">
+        <br>
+        <input type="password" id="txtPassword" placeholder="Password" onkeypress="txtPassword_onkeypress(event)" autocomplete="off" autofocus><input type="button" id="btnLogin" value="Login" onclick="login();">
+    </div>
+
+    <div id="bottombar"></div>
+    
+    <script>
+        let txtPassword = document.getElementById("txtPassword");
+        let txtUsername = document.getElementById("txtUsername");        
+        txtUsername.value = localStorage.getItem("lastUsername", "");
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+#btnSidemenu {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 48px;
+    height: 48px;
+    z-index: 4;
+    
+    overflow: hidden;
+    border-radius: 6px 8px 48px 8px;
+    background: var(--toolbar-bg-rev);
+    box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
+    
+    transition:
+        filter .4s,
+        border-radius .4s,
+        height .2s;
+}
+
+#btnSidemenu > #imgSearch {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 32px;
+    height: 32px;
+    transform-origin: 0 0;
+
+    background-image: url(res/search.svgz);
+    background-size: cover;
+
+    transition: .2s;
+}
+
+#sidemenu {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: var(--sidemenu-width);
+    height: 100%;
+    z-index: 3;
+    transform: translateX(calc(-100% - 8px));
+    background-color: rgb(32,32,32);
+    box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
+    overflow: hidden;
+    transition: transform .2s;
+}
+
+@media only screen and (max-width: 480px) {
+    #sidemenu { width: 100%; }
+}
+
+#sidemenu > #searchbox {
+    width: 100%;
+    height: 48px;
+    overflow: hidden;
+    background: var(--toolbar-bg-rev);
+}
+
+#sidemenu > #searchbox > #txtSearch {
+    position: absolute;
+    left: 52px;
+    top: 6px;
+    width: calc(100% - 88px);
+    background-color: transparent; 
+    outline: none; border: none;
+    padding: 2px 0;
+    margin: 2px 0;
+    font-size: 22px;
+    text-shadow: rgba(255,255,255,.5) 0 0 4px;
+    box-shadow: none !important;
+}
+
+#sidemenu > #searchbox > #txtSearch::selection {
+    background: rgb(64,64,64);
+    color: #fff;
+    text-shadow: black 0 0 8px;
+}
+
+#btnCloseSidemenu {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    right: 2px;
+    top: 10px;
+    background-image: url(res/close.svgz);
+    background-size: cover;
+    border-radius: 50%;
+    visibility: hidden;
+
+    transition: .2s;
+}
+
+#btnCloseSidemenu:hover { background-color: rgba(64,64,64,.2); }
+#btnCloseSidemenu:active { background-color: rgba(96,96,96,.2); }
+
+#lstSideMenu {
+    position: absolute;
+    width: 100%;
+    top: 48px;
+    bottom: 48px;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    color: rgb(224,224,224);
+}
+
+.sidemenu-item {
+    position: relative;
+    height: 44px;
+    color: rgb(32,32,32);
+    font-size: 16px;
+    background-color: rgb(208,208,208);
+    background-repeat: no-repeat;
+    background-size: 40px 40px;
+    background-position: 4px 2px;
+    border-top: rgb(192,192,192) 1px solid;
+    border-right: rgb(48,48,48) 1px solid;
+    transition: .1s;
+}
+
+.sidemenu-square-item {
+    display: inline-grid;
+    width: calc(33.33% - 4px);
+    height: 96px;
+    color: rgb(32,32,32);
+    font-size: 14px;
+    background-color: rgb(208,208,208);
+    background-repeat: no-repeat;
+    background-size: 64px 64px;
+    background-position: center 4px;
+    border-radius: 2px;
+    margin: 2px;
+    transition: .1s;
+}
+
+.sidemenu-item:hover,
+.sidemenu-square-item:hover {
+    transition: .4s;
+    background-color: var(--select-color) !important;
+}
+
+.sidemenu-item > div {
+    margin-left: 52px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidemenu-square-item > div {
+    position: relative;
+    height: 22px;
+    top: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.sidemenu-item > div:first-child,
+.sidemenu-square-item > div:first-child{
+    font-weight: 600;
+}
+
+.sidemenu-item > div:nth-child(3) {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+}
+
+#btnScreenCapture, #btnSettings, #btnLogout {
+    position: absolute;
+    width: 40px;
+    height: 36px;
+    bottom: 4px;
+    margin: 2px;
+    line-height: 2.1;
+
+    color: #C0C0C0;
+    background-repeat: no-repeat;
+    background-size: 32px 32px;
+    background-position: 4px 2px;
+    box-shadow: #C0C0C0 0 0 0 1px;
+
+    border-radius: 2px;
+    transition: .2s;
+}
+
+#btnScreenCapture {
+    right: 100px;
+    background-image: url("res/l_screencapture.svg");
+}
+
+#btnSettings {
+    right: 52px;
+    background-image: url("res/l_tool02.svg");
+}
+
+#btnLogout {
+    right: 4px;
+    background-image: url("res/l_logoff.svg");
+}
+
+#btnScreenCapture:hover, #btnSettings:hover, #btnLogout:hover {
+    background-color: rgb(72,72,72);
+}
+
+#btnScreenCapture:active, #btnSettings:active, #btnLogout:active {
+    background-color: rgb(56,56,56);
+} 
+
+@media screen and (-ms-high-contrast: active) {
+    .sidemenu-square-item,
+    .sidemenu-item {
+        filter: brightness(4);
+    }
+
+    .sidemenu-item:hover,
+    .sidemenu-square-item:hover {
+        box-sizing: border-box;
+        border: 2px solid #ff0;
+    }
+}

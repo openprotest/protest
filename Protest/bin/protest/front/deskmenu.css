@@ -1,0 +1,108 @@
+#main {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 64px;
+    background-color: #DFE6EA;
+    background: var(--bg);
+
+    filter: contrast(0) brightness(.5);
+}
+
+@media (prefers-color-scheme: dark) {
+    #main {
+        background: var(--bg-dark);
+    }
+}
+
+#cap {
+    background-color: transparent;
+    position: absolute;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    animation: wakeup .4s linear;
+}
+
+#container {
+    position: absolute;
+
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0;
+
+    perspective: 800px;
+    perspective-origin: center;
+}
+
+#bottombar {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0;
+    height: 64px;
+    background-color: #E87600;
+    background: var(--toolbar-bg);
+
+    transition: .2s;
+}
+
+#analog_clock {
+    filter: drop-shadow(rgba(255,255,255,.4) 0 0 1px);
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+}
+
+#analog_clock_h,
+#analog_clock_m {
+    stroke: #202020;
+    transform-origin: 50% 50%;
+    transition: transform .8s;
+}
+
+#date_calendar {
+    filter: drop-shadow(rgba(255,255,255,.4) 0 0 1px);
+    position: absolute;
+    right: 128px;
+    bottom: 16px;
+}
+
+@media only screen and (max-height: 280px) {
+    #analog_clock, #date_calendar {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(96px);
+        transition: .4s;
+    }
+}
+
+.loader {
+    position: relative;
+    margin: 64px auto;
+    max-width: 300px;
+    width: 50%;
+    z-index: 1000;
+    transition: .2s;
+}
+
+.loader-container {
+    border: var(--theme-color) solid 2px;
+    border-radius: 4px;
+}
+
+.loader-container > .loader-progress {
+    width: 0%;
+    height: 8px;
+    border-radius: 1px;
+    background-color: var(--theme-color);
+    transition: .1s;
+}
+
+.loader-description {
+    text-align: center;
+    color: var(--theme-color);
+    padding-top: 8px;
+}

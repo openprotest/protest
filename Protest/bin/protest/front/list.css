@@ -1,0 +1,202 @@
+
+.list-titlebar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 2px;
+    height: 22px;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(rgb(96,96,96), rgb(80,80,80));
+}
+
+.list-title-0, .list-title-1, .list-title-2, .list-title-3 {
+    position: absolute;
+    top: 0;
+    max-width: 25%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+.list-title-0 {
+    left: 48px;
+    max-width: calc(25% - 48px);
+}
+.list-title-1 {
+    left: 25%;
+}
+.list-title-2 {
+    left: 50%;
+}
+.list-title-3 {
+    left: 75%;
+    max-width: calc(25% - 20px);
+}
+
+.list-titlebar-options {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background-image: url(res/l_tool02.svg);
+    background-size: contain;
+}
+
+.list-titlebar-options:hover {
+    background-color: rgba(16,16,16,.15);
+    cursor: pointer;
+}
+
+.list-total {
+    position: absolute;
+    left: 8px;
+    bottom: 2px;
+    color: var(--pane-color);
+    font-weight: 600;
+
+    padding: 0px 8px;
+    border: 1px solid var(--pane-color);
+    border-radius: 2px;
+}
+
+.list-view {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 24px;
+    bottom: 28px;
+    background-color: var(--pane-color);
+    color: #202020;
+    overflow-y: auto;
+}
+
+.lst-obj-ele {
+    position: relative;
+    height: 44px;
+    border-bottom: rgb(128,128,128) 1px solid;
+
+    transition: background-color .2s;
+}
+
+.lst-obj-ele:hover{
+    background-color: var(--highlight-color);
+}
+
+.lst-obj-ele > * {
+    position: absolute;
+}
+
+.lst-obj-ico {
+    left: 2px;
+    top: 2px;
+    width: 40px;
+    height: 40px;
+    background-size: contain;
+}
+
+.lst-obj-lbl-0, .lst-obj-lbl-1, .lst-obj-lbl-2, .lst-obj-lbl-3, .lst-obj-lbl-4, .lst-obj-lbl-5, .lst-obj-lbl-6, .lst-obj-lbl-7 {
+    width: 25%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lst-obj-lbl-0 {
+    font-weight: 600;
+    width: calc(25% - 48px);
+    left: 48px;
+    top: 2px;
+}
+
+.lst-obj-lbl-1 {
+    font-weight: 600;
+    width: calc(25% - 48px);
+    left: 48px;
+    top: 20px;
+}
+
+.lst-obj-lbl-2 {
+    left: 25%;
+    top: 2px;
+}
+
+.lst-obj-lbl-3 {
+    left: 25%;
+    top: 20px;
+}
+
+.lst-obj-lbl-4 {
+    left: 50%;
+    top: 2px;
+}
+
+.lst-obj-lbl-5 {
+    left: 50%;
+    top: 20px;
+}
+
+.lst-obj-lbl-6 {
+    left: 75%;
+    top: 2px;
+}
+
+.lst-obj-lbl-7 {
+    left: 75%;
+    top: 20px;
+}
+
+
+.property-box {
+    position: absolute;
+    left: 4px;
+    right: 216px;
+    top: 40px;
+}
+
+.property-box > div {
+    display: inline-block;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(25% - 12px);
+    padding: 6px 4px;
+    margin: 0 2px;
+    border-radius: 4px;
+    background-color: var(--control-color);
+    transition: .2s;
+}
+
+.properties-list {
+    position: absolute;
+    right: 4px;
+    width: 200px;
+    top: 0;
+    bottom: 0;
+}
+
+.properties-list > div { /*list*/
+    position: absolute;
+    border-radius: 4px;
+    background-color: var(--control-color);
+    width: 100%;
+    top: 40px;
+    bottom: 0;
+    overflow-y: scroll;
+}
+
+.properties-list > div > div {/*list item*/
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: move;
+}
+
+.properties-list > div > div:hover {
+    background-color: var(--select-color);
+}
