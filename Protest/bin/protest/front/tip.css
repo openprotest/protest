@@ -1,0 +1,104 @@
+*[tip]::before, *[tip]::after {
+    position: absolute;
+    filter: opacity(0);
+    visibility: hidden;
+    transform: translateY(8px);
+    z-index: 5;
+    transition: .1s;
+}
+
+*[tip]::after {
+    border: solid;
+    border-color: rgb(32,32,32) transparent;
+    border-width: 6px 6px 0 6px;
+    top: -12px;
+    content: "";
+    left: calc(50% - 6px);
+    transform-origin: 50% 0%;
+}
+
+*[tip]::before {
+    content: attr(tip);
+    white-space: nowrap;
+    background-color: rgb(32,32,32);
+    color: white;
+    text-align: center;
+    line-height: normal;
+    border-radius: 4px;
+    min-width: 44px;
+    max-width: 192px;
+    height: 20px;
+    max-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    top: -35px;
+    padding: 2px 8px;
+    box-shadow: rgba(127,127,127,.6) 0 0 2px;
+    transform-origin: 50% 100%;
+}
+
+*[tip]:hover::before, *[tip]:hover::after {
+    transition-delay: .1s;
+    visibility: visible;
+    filter: opacity(1);
+    transform: translateY(0);
+}
+
+*[tip=""]:hover::before, *[tip=""]:hover::after {
+    visibility: hidden;
+}
+
+*[tip]:active::before, *[tip]:active::after {
+    transition-delay: .25s;
+    transform: translateY(-8px);
+}
+
+
+
+*[tip-below]::before, *[tip-below]::after {
+    position: absolute;
+    filter: opacity(0);
+    visibility: hidden;
+    transform: translateY(-8px);
+    z-index: 5;
+    transition: .1s;
+}
+
+*[tip-below]::after {
+    content: "";
+    border: solid;
+    border-color: rgb(224,224,224) transparent;
+    border-width: 0 6px 6px 6px;
+    transform: translateX(6px) !important;
+    transform-origin: 50% 100%;
+    top: 100%;
+}
+
+*[tip-below]::before {
+    content: attr(tip-below);
+    white-space: nowrap;
+    background-color: rgb(224,224,224);
+    color: black;
+    text-align: center;
+    border-radius: 4px;
+    min-width: 44px;
+    max-width: 192px;
+    max-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    top: calc(100% + 6px);
+    padding: 2px 8px;
+    box-shadow: rgba(64,64,64,.6) 0 0 4px;
+    transform-origin: 50% 100%;
+}
+
+*[tip-below]:hover::before, *[tip-below]:hover::after {
+    transition-delay: .1s;
+    visibility: visible;
+    filter: opacity(1);
+    transform: translateY(0);
+}
+
+*[tip-below=""]:hover::before, *[tip-below=""]:hover::after {
+    visibility: hidden;
+}
