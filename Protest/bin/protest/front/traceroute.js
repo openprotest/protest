@@ -43,12 +43,11 @@ class TraceRoute extends Console {
             for (let key in this.hashtable) {
                 text += key + NL;
                 for (let i = 0; i < this.hashtable[key].result.childNodes.length; i += 2)
-                    text += TB + this.hashtable[key].result.childNodes[i].innerHTML + TB + this.hashtable[key].result.childNodes[i + 1].innerHTML + NL;
+                    text += TB + this.hashtable[key].result.childNodes[i].innerHTML.trim() + TB + this.hashtable[key].result.childNodes[i + 1].innerHTML.trim() + NL;
                 text += NL;
             }
 
-            while (text.indexOf("&thinsp;") > -1)
-                text = text.replace("&thinsp;", " ");
+            while (text.indexOf("&thinsp;") > -1) text = text.replace("&thinsp;", " ");
 
             if (text.length == 0) return;
 
@@ -310,18 +309,17 @@ class TraceRoute extends Console {
             } else if (name == "[hostnames]") {
                 let target = split[1];
                 if (this.hashtable.hasOwnProperty(target)) {
-                    for (let i = 2; i < split.length - 1; i += 2)
-                        for (let j = 0; j < this.hashtable[target].result.childNodes.length; j++)
-                            if (this.hashtable[target].result.childNodes[j].innerHTML == split[i] + "&thinsp;") {
-                                this.hashtable[target].result.childNodes[j+1].innerHTML = split[i+1]+ "&thinsp;";
+                    for (let i = 2; i < split.length; i+=2)
+                        for (let j = 0; j < this.hashtable[target].result.childNodes.length; j += 2)
+                            if (this.hashtable[target].result.childNodes[j].innerHTML.trim() == split[i]) {
+                                this.hashtable[target].result.childNodes[j + 1].innerHTML = `${split[i + 1]}&thinsp;`;
                                 break;
                             }
                 }
-
             } else
                 if (this.hashtable.hasOwnProperty(name)) {
                     let hop = document.createElement("div");
-                    hop.innerHTML = split[1] + "&thinsp;";
+                    hop.innerHTML = `${split[1]}&thinsp;`;
                     this.hashtable[name].result.appendChild(hop);
 
                     let hostname = document.createElement("div");
@@ -329,7 +327,6 @@ class TraceRoute extends Console {
 
                     //if (split.length == 3)
                     //    hostname.setAttribute("roundrtip", split[2]+"ms");
-                    
                 }
         };
 

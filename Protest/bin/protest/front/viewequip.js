@@ -60,46 +60,55 @@ class Equip extends Window {
 
         this.content.style.overflowY = "auto";
 
-        const buttons = document.createElement("div");
-        buttons.className = "db-buttons";
-        this.content.appendChild(buttons);
+        this.buttons = document.createElement("div");
+        this.buttons.className = "db-buttons";
+        this.content.appendChild(this.buttons);
 
         const btnEdit = document.createElement("input");
         btnEdit.type = "button";
         btnEdit.value = "Edit";
-        buttons.appendChild(btnEdit);
+        this.buttons.appendChild(btnEdit);
 
         const btnFetch = document.createElement("input");
         btnFetch.type = "button";
         btnFetch.value = "Fetch";
-        buttons.appendChild(btnFetch);
+        this.buttons.appendChild(btnFetch);
 
         const btnDelete = document.createElement("input");
         btnDelete.type = "button";
         btnDelete.value = "Delete";
-        buttons.appendChild(btnDelete);
+        this.buttons.appendChild(btnDelete);
 
         this.sidetools = document.createElement("div");
         this.sidetools.className = "db-sidetools";
         this.content.appendChild(this.sidetools);
 
-        const scroll = document.createElement("div");
-        scroll.className = "db-scroll";
-        this.content.appendChild(scroll);
+        this.scroll = document.createElement("div");
+        this.scroll.className = "db-scroll";
+        this.content.appendChild(this.scroll);
 
         this.live = document.createElement("div");
         this.live.className = "db-live";
-        scroll.appendChild(this.live);
+        this.scroll.appendChild(this.live);
 
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
-        scroll.appendChild(this.properties);
+        this.scroll.appendChild(this.properties);
 
         this.InitializeComponent();
+        setTimeout(() => { this.AfterResize(); }, 200);        
     }
 
     AfterResize() { //override
-
+        if (this.content.getBoundingClientRect().width < 800) {
+            this.sidetools.style.width = "36px";
+            this.scroll.style.left = "56px";
+            this.buttons.style.left = "56px";
+        } else {
+            this.sidetools.style.width = "";
+            this.scroll.style.left = "";
+            this.buttons.style.left = "";
+        }
     } 
 
     InitializeComponent() {
@@ -202,6 +211,16 @@ class Equip extends Window {
                     let total = parseInt(disks[i+2]);
                     usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${72*used/total}px 0 0  inset`;
                 }, 400);
+
+                div.onclick = () => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        if (xhr.readyState == 4 && xhr.status == 200) if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    };
+                    xhr.open("GET", "ra&smb&" + this.filename + "&" + disks[i] + "$", true);
+                    xhr.send();
+                };
             }
         }
 
@@ -476,12 +495,12 @@ class Equip extends Window {
     }
 
     LiveButton(icon, label) {
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.innerHTML = label;
         div.style.backgroundImage = `url(${icon})`;
         this.live.appendChild(div);
 
-        let sub = document.createElement("div");
+        const sub = document.createElement("div");
         sub.style.fontSize = "smaller";
         sub.style.height = "14px";
         sub.innerHTML = "&nbsp;";
@@ -494,9 +513,9 @@ class Equip extends Window {
     }
 
     SideButton(icon, label) {
-        let button = document.createElement("div");
+        const button = document.createElement("div");
 
-        let divLabel = document.createElement("div");
+        const divLabel = document.createElement("div");
         divLabel.style.backgroundImage = "url(" + icon + ")";
         divLabel.innerHTML = label;
         button.appendChild(divLabel);
@@ -505,14 +524,14 @@ class Equip extends Window {
     }
 
     AddGroup(icon, title) {
-        let newGroup = document.createElement("div");
+        const newGroup = document.createElement("div");
         newGroup.className = "db-property-group";
 
-        let ico = document.createElement("div");
+        const ico = document.createElement("div");
         if (icon.length > 0) ico.style.backgroundImage = "url(" + icon + ")";
         newGroup.appendChild(ico);
 
-        let label = document.createElement("div");
+        const label = document.createElement("div");
         label.innerHTML = title;
         newGroup.appendChild(label);
 
@@ -524,23 +543,39 @@ class Equip extends Window {
     }
 
     AddProperty(n, v, m) {
-        let newProperty = document.createElement("div");
+        const newProperty = document.createElement("div");
         newProperty.className = "db-property";
 
-        let label = document.createElement("div");
+        const label = document.createElement("div");
         label.innerHTML = n.toUpperCase();
         newProperty.appendChild(label);
 
         if (n.includes("PASSWORD")) { //password
-            let value = document.createElement("div");
+            const value = document.createElement("div");
             newProperty.appendChild(value);
 
-            let btnShow = document.createElement("input");
+            const preview = document.createElement("span");
+            value.appendChild(preview);
+
+            const countdown = document.createElement("span");
+            countdown.className = "password-countdown";
+            countdown.style.display = "none";
+            value.appendChild(countdown);
+
+            const cd_left = document.createElement("div");
+            cd_left.appendChild(document.createElement("div"));
+            countdown.appendChild(cd_left);
+
+            const cd_right = document.createElement("div");
+            cd_right.appendChild(document.createElement("div"));
+            countdown.appendChild(cd_right);
+
+            const btnShow = document.createElement("input");
             btnShow.type = "button";
             btnShow.value = "Show";
             value.appendChild(btnShow);
 
-            let btnStamp = document.createElement("input");
+            const btnStamp = document.createElement("input");
             btnStamp.type = "button";
             btnStamp.value = " ";
             btnStamp.style.minWidth = "40px";
@@ -552,33 +587,18 @@ class Equip extends Window {
             value.appendChild(btnStamp);
 
             btnShow.onclick = () => {
-                value.removeChild(btnShow);
-
-                let xhr = new XMLHttpRequest();
+                const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK
-                        value.innerHTML = xhr.responseText;
-
-                        let countdown = document.createElement("span");
-                        countdown.className = "password-countdown";
-                        countdown.style.transition = "all 20s linear 0s";
-                        value.appendChild(countdown);
-
-                        let cd_left = document.createElement("div");
-                        cd_left.appendChild(document.createElement("div"));
-                        countdown.appendChild(cd_left);
-
-                        let cd_right = document.createElement("div");
-                        cd_right.appendChild(document.createElement("div"));
-                        countdown.appendChild(cd_right);
+                        preview.innerHTML = xhr.responseText;
+                        countdown.style.display = "inline-block";
+                        btnShow.style.display = "none";
 
                         setTimeout(() => {
                             if (!this.isClosed) {
-                                //btnShow.style.animation = "fade-in .4s";
-                                //btnStamp.style.animation = "fade-in .4s";
-                                value.innerHTML = "";
-                                value.appendChild(btnShow);
-                                value.appendChild(btnStamp);
+                                preview.innerHTML = "";
+                                countdown.style.display = "none";
+                                btnShow.style.display = "inline-block";
                             }
                         }, 20000);
 
@@ -608,12 +628,12 @@ class Equip extends Window {
             };
 
         } else if (v.includes(";")) {
-            let value = document.createElement("div");
+            const value = document.createElement("div");
 
             let values = v.split(";");
             for (let i = 0; i < values.length; i++) {
                 if (values[i].trim().length == 0) continue;
-                let subvalue = document.createElement("div");
+                const subvalue = document.createElement("div");
                 subvalue.innerHTML = values[i] + "&thinsp;";;
                 value.appendChild(subvalue);
             }
@@ -621,23 +641,23 @@ class Equip extends Window {
             newProperty.appendChild(value);
 
         } else if (v.startsWith("bar:")) { //bar
-            let value = document.createElement("div");
+            const value = document.createElement("div");
 
             let split = v.split(":");
             for (let i = 1; i < split.length - 3; i += 4) {
                 let used = parseFloat(split[i + 1]);
                 let size = parseFloat(split[i + 2]);
 
-                let bar = document.createElement("div");
+                const bar = document.createElement("div");
                 bar.className = "db-progress-bar";
 
-                let caption = document.createElement("div");
+                const caption = document.createElement("div");
                 caption.innerHTML = split[i] + "&thinsp;";
 
-                let progress = document.createElement("div");
+                const progress = document.createElement("div");
                 progress.style.boxShadow = "rgb(64,64,64) " + 100 * used / size + "px 0 0 inset";
 
-                let text = document.createElement("div");
+                const text = document.createElement("div");
                 text.innerHTML = "&thinsp;" + split[i + 1] + "/" + split[i + 2] + " " + split[i + 3];
 
                 bar.appendChild(caption);
@@ -649,13 +669,13 @@ class Equip extends Window {
             newProperty.appendChild(value);
 
         } else {
-            let value = document.createElement("div");
+            const value = document.createElement("div");
             value.innerHTML = v;
             newProperty.appendChild(value);
         }
 
         if (m.length > 0) {
-            let comme = document.createElement("div");
+            const comme = document.createElement("div");
             comme.innerHTML = m;
             newProperty.appendChild(comme);
         }

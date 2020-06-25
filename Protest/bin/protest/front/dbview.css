@@ -5,14 +5,18 @@
     top: 16px;
     max-height: 36px;
     overflow: hidden;
+
+    transition: left .2s;
 }
 
 .db-sidetools {
     position: absolute;
     top: 16px;
     left: 8px;
-
     width: 175px;
+    z-index: 2;
+
+    transition: width .2s;
 }
 
 .db-sidetools > div {
@@ -22,14 +26,19 @@
     border-radius: 4px;
     padding: 2px;
     margin: 0 0 4px 0;
-    min-width: 120px;
     max-width: 250px;
 
-    transition: .2s;
+    overflow: hidden;
+
+    transition:
+        background-color .2s,
+        width .2s;
 }
 
 .db-sidetools > div:hover {
     background-color: var(--highlight-color);
+    width: 171px;
+    box-shadow: rgb(56,56,56) 0 0 0 3px;
 }
 
 .db-sidetools > div:active {
@@ -52,12 +61,12 @@
 }
 
 .db-sidetools > div > div {
+    white-space: nowrap;
     padding: 4px 4px 4px 36px;
     background-repeat: no-repeat;
     background-size: 28px 28px;
-    background-position: 4px 50%;
+    background-position: 2px 50%;
 }
-
 
 .db-scroll {
     position: absolute;
@@ -67,6 +76,8 @@
     right: 8px;
     max-width: 800px;
     overflow-y: auto;
+
+    transition: left .2s;
 }
 
 .db-proberties {
@@ -121,7 +132,7 @@
 }
 
 .db-property:active {
-    transition-delay: .4s;
+    transition-delay: .25s;
     background-color: var(--select-color);
 }
 
@@ -170,7 +181,7 @@
     font-style: italic;
     border: 1px black solid;
     border-radius: 2px;
-    background-color: #202020;
+    background-color: rgb(56,56,56);
     color: rgb(224,224,224);
     max-width: 60%;
     width: auto;
@@ -237,4 +248,59 @@
 
 .db-live > div:active {
     background-color: var(--select-color);
+}
+
+.password-countdown {
+    display: inline-block;
+    width: 24px;
+    height: 24px;    
+    margin: 8px;
+    vertical-align: top;
+}
+
+.password-countdown > div {
+    display: inline-block;
+    overflow: hidden;
+    width: 12px;
+    height: 24px;
+}
+.password-countdown > div:nth-child(1)  {
+
+}
+.password-countdown > div:nth-child(2)  {
+    transform: rotate(180deg);
+}
+
+.password-countdown > div > div {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    transform-origin: 50% 50%;
+
+    border-top:    var(--theme-color) 5px solid;
+    border-left:   var(--theme-color) 5px solid;
+    border-bottom: transparent 5px solid;
+    border-right:  transparent 5px solid;
+    border-radius: 50%;
+}
+.password-countdown > div:nth-child(1) > div {
+    transform: rotate(-45deg);
+    animation: password-countdown_a 20s linear 1 !important;
+}
+.password-countdown > div:nth-child(2) > div {
+    transform: rotate(-45deg);
+    animation: password-countdown_b 20s linear 1 !important;
+}
+
+@keyframes password-countdown_a {
+    0%  { transform: rotate(-45deg); }
+    50% { transform: rotate(-226deg); }
+    100%{ transform: rotate(-226deg); }
+}
+
+@keyframes password-countdown_b {
+    0%  { transform: rotate(-45deg); }
+    50% { transform: rotate(-45deg); }
+    100%{ transform: rotate(-225deg); }
 }

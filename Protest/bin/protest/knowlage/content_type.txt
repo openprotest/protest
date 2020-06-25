@@ -1,0 +1,59 @@
+## text ##
+htm	text/html
+html	text/html
+css	text/css
+txt	text/plain
+text	text/plain
+log	text/plain
+csv	text/csv
+xml	text/xml
+vcf	text/vcard
+vcard	text/vcard
+
+## image ##
+ico	image/x-icon
+cur	application/octet-stream
+bmp	image/bmp
+png	image/png
+gif	image/gif
+tif	image/tiff
+tiff	image/tiff
+jpg	image/jpeg
+jpe	image/jpeg
+jpeg	image/jpeg
+webp	image/webp
+svg	image/svg+xml
+svgz	image/svg+xml
+
+## audio ##
+aac	audio/x-aac
+aif	audio/x-aiff
+m3u	audio/x-mpegurl
+wma	audio/x-ms-wma
+mid	audio/midi
+midi	audio/midi
+mpga	audio/mpeg
+mp4a	audio/mp4
+oga	audio/ogg
+ogg	audio/ogg
+au	audio/basic
+wav	audio/x-wav
+
+## video ##
+avi	video/x-msvideo
+mp4	video/mp4
+mpeg	video/mpeg
+
+## font ##
+ttf	font/opentype
+otf	font/otf
+
+## application ##
+js	application/javascript
+json	application/json
+pdf	application/pdf
+swf	application/x-shockwave-flash
+jar	application/java-archive
+zip	application/zip
+7z	application/x-7z-compressed
+rar	application/x-rar-compressed

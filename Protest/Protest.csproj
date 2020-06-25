@@ -61,6 +61,7 @@
     <Compile Include="Modules\ActiveDirectory.cs" />
     <Compile Include="Modules\Cache.cs" />
     <Compile Include="Modules\CryptoAes.cs" />
+    <Compile Include="Modules\RaHandler.cs" />
     <Compile Include="Modules\Scripts.cs" />
     <Compile Include="Modules\Session.cs" />
     <Compile Include="Modules\Strings.cs" />

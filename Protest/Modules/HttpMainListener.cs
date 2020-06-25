@@ -173,10 +173,15 @@ class HttpMainListener : Http {
                 case "delscript":   buffer = Scripts.DeleteScript(para); break;
                 case "delreport":   buffer = Scripts.DeleteReport(para); break;
                 case "getreport":   buffer = Scripts.GetReport(para); break;
-                
+
+                case "getequiprop": buffer = Database.GetValue(Database.equip, para); break;
+                case "getuserprop": buffer = Database.GetValue(Database.users, para); break;
+
                 case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
                 case "fetch_importdata" : buffer = Fetch.ImportDatabase(ctx, performer); break;
+
+                case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 
                 default: //not found
                     ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
