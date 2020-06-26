@@ -156,12 +156,12 @@ class Passgen extends Window {
         divButtons.style.gridArea = "5 / 1 / 6 / 3";
         grid.appendChild(divButtons);
 
-        let btnGenerate = document.createElement("input");
+        const btnGenerate = document.createElement("input");
         btnGenerate.type = "button";
         btnGenerate.value = "Generate";
         divButtons.appendChild(btnGenerate);
 
-        let btnCopy = document.createElement("input");
+        const btnCopy = document.createElement("input");
         btnCopy.type = "button";
         btnCopy.value = "Copy";
         divButtons.appendChild(btnCopy);
@@ -171,7 +171,6 @@ class Passgen extends Window {
         btnGenerate.style.margin = btnCopy.style.margin = "2px";
         btnGenerate.style.borderRadius = "4px 0 0 4px";
         btnCopy.style.borderRadius = "0 4px 4px 0";
-
 
         this.cmbOptions.onchange = () => {
             switch (this.cmbOptions.value) {

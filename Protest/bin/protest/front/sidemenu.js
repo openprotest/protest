@@ -18,6 +18,7 @@ const TOOLS = [
 { lbl:"ARP Ping",           ico:"res/ping.svgz",           sqr:false, f:arg=> new Ping({entries:[], timeout:500, method:"arp", moveToBottom:false}) },
 { lbl:"DNS lookup",         ico:"res/dns.svgz",            sqr:true,  f:arg=> new DnsLookup(arg) },
 { lbl:"DHCP discover",      ico:"res/dhcp.svgz",           sqr:true,  f:arg=> new DhcpDiscover(arg) },
+{ lbl:"NTP client",         ico:"res/clock.svgz",          sqr:true,  f:arg=> new NtpClient(arg) },
 { lbl:"Trace route",        ico:"res/traceroute.svgz",     sqr:true,  f:arg=> new TraceRoute(arg) },
 { lbl:"TCP port scan",      ico:"res/portscan.svgz",       sqr:true,  f:arg=> new PortScan(arg) },
 { lbl:"Locate IP",          ico:"res/locate.svgz",         sqr:true,  f:arg=> new LocateIp(arg) },

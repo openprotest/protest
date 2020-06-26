@@ -132,8 +132,10 @@
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\config.txt" />
+    <Content Include="bin\protest\front\ntpclient.js" />
     <Content Include="bin\protest\front\license.txt" />
     <Content Include="bin\protest\front\dbview.css" />
+    <Content Include="bin\protest\front\res\clock.svg" />
     <Content Include="bin\protest\front\res\desktop.svg" />
     <Content Include="bin\protest\front\viewequip.js" />
     <Content Include="bin\protest\front\viewuser.js" />

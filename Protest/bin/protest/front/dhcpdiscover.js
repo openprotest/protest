@@ -108,7 +108,7 @@ class DhcpDiscover extends Window {
         this.waitbox.style.display = "contents";
         this.result.innerHTML = "";
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 this.btnDiscover.removeAttribute("disabled", true);
@@ -136,7 +136,7 @@ class DhcpDiscover extends Window {
                         table.appendChild(tr);
 
                         let split = result[j].split(":");
-                        if (split.length == 1) continue;                        
+                        if (split.length == 1) continue;
 
                         let td1 = document.createElement("td");
                         td1.innerHTML = split[0];

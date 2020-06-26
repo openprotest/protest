@@ -7,25 +7,43 @@ using System.Text;
 using System.Threading.Tasks;
 
 static class Ntp {
-    public static string NtpRequest(string server = "time.google.com", int timeout = 3000) {       
+
+    public static byte[] NtpRequest(string[] para) {
+        string server = "time.nist.gov";
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("server=")) server = para[i].Substring(7);
+
+        if (server.Length == 0) return Encoding.UTF8.GetBytes("Invalid address");
+        return NtpRequest(server, 3000);
+    }
+
+    public static byte[] NtpRequest(string server, int timeout = 3000) {       
         byte[] data = new byte[48];
-        data[0] = 0xDB; //Leap Indicator
-        
+        data[0] = 0xDB; //leap indicator
+
+        DateTime start;
+        DateTime end;
+
         try {
             IPAddress address = System.Net.Dns.GetHostEntry(server).AddressList[0];
             var remoteEndPoint = new IPEndPoint(address, 123);
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)) {
+                start = DateTime.Now;
+
                 socket.Connect(remoteEndPoint);
-
                 socket.ReceiveTimeout = timeout;
-
                 socket.Send(data);
                 socket.Receive(data);
+
+                end = DateTime.Now;
+
                 socket.Close();
             }
         } catch {
             return null;
         }
+
+        long roundtrip = (end.Ticks - start.Ticks) / 10_000;
 
         //ulong reference = FlipBits(BitConverter.ToUInt32(data, 16)) * 1000 + FlipBits(BitConverter.ToUInt32(data, 20)) * 1000 / 0x100000000L;
         //ulong origin    = FlipBits(BitConverter.ToUInt32(data, 24)) * 1000 + FlipBits(BitConverter.ToUInt32(data, 28)) * 1000 / 0x100000000L;
@@ -35,7 +53,7 @@ static class Ntp {
         DateTime transmit_time = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(transmit);
         DateTime local_time = transmit_time.ToLocalTime();
 
-        return $"{{\"transmit\":\"{transmit_time.ToString(Strings.TIME_FORMAT_MILLI)}\",\"local\":\"{local_time.ToString(Strings.TIME_FORMAT_MILLI)}\"}}";
+        return Encoding.UTF8.GetBytes($"{{\"transmit\":\"{transmit_time.ToString(Strings.TIME_FORMAT_MILLI)}\",\"local\":\"{local_time.ToString(Strings.TIME_FORMAT_MILLI)}\",\"roundtrip\":\"{roundtrip}\"}}");
     }
     
     static ulong FlipBits(ulong n) {

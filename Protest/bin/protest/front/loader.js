@@ -55,6 +55,7 @@ let loader_styles = [
         "ping.js",
         "dnslookup.js",
         "dhcpdiscover.js",
+        "ntpclient.js",
         "traceroute.js",
         "portscan.js",
         "locateip.js",
@@ -234,6 +235,7 @@ function RestoreSession() {
             case "Ping"         : win = new Ping(session[i].args); break;
             case "DnsLookup"    : win = new DnsLookup(session[i].args); break;
             case "DhcpDiscover" : win = new DhcpDiscover(); break;
+            case "NtpClient"    : win = new NtpClient(); break;
             case "TraceRoute"   : win = new TraceRoute(session[i].args); break;
             case "PortScan"     : win = new PortScan(session[i].args); break;
             case "LocateIp"     : win = new LocateIp(session[i].args); break;

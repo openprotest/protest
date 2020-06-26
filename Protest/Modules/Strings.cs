@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 public static class Strings {
     public const string DATE_FORMAT = "HH:mm:ss";
-    public const string TIME_FORMAT_MILLI = "HH:mm:ss.fff";
+    public const string TIME_FORMAT_MILLI = "HH:mm:ss:fff";
     public const string DATETIME_FORMAT = "ddd, dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_LONG = "dddd dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_FILE = "yyyy-MM-dd HH:mm:ss";
