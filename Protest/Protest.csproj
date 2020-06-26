@@ -70,6 +70,7 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
+    <Compile Include="Modules\Tools\Ntp.cs" />
     <Compile Include="Modules\Tools\PrintTools.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
