@@ -153,6 +153,10 @@ class HttpMainListener : Http {
 
                 case "printtest": buffer = PrintTools.PrintTestPage(para); break;
 
+                case "unlockuser": buffer =  ActiveDirectory.UnlockUser(para); break;
+                case "enableuser": buffer =  ActiveDirectory.EnableUser(para); break;
+                case "disableuser": buffer = ActiveDirectory.DisableUser(para); break;
+
                 case "wmiquery":    buffer = Wmi.WmiQuery(para); break;
                 case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
 
@@ -215,6 +219,9 @@ class HttpMainListener : Http {
             case "ws/webcheck": WebCheck.WsWebCheck(ctx, remoteIp); break;
             case "ws/speedtest_down": SpeedTest.WsSpeedtest_down(ctx, remoteIp, para); break;
             case "ws/speedtest_up": SpeedTest.WsSpeedtest_up(ctx, remoteIp, para); break;
+
+            case "ws/liveinfo_equip": LiveInfo.InstantInfoEquip(ctx, remoteIp); break;
+            case "ws/liveinfo_user": LiveInfo.InstantInfoUser(ctx, remoteIp); break;
 
             default: ctx.Response.Close(); break;
         }

@@ -91,12 +91,21 @@ class Equip extends Window {
         this.live.className = "db-live";
         this.scroll.appendChild(this.live);
 
+        this.liveinfo = document.createElement("div");
+        this.liveinfo.className = "db-liveinfo";
+        this.scroll.appendChild(this.liveinfo);
+
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
         this.scroll.appendChild(this.properties);
 
+        this.rightside = document.createElement("div");
+        this.rightside.className = "db-rightside";
+        this.content.appendChild(this.rightside);
+
         this.InitializeComponent();
-        setTimeout(() => { this.AfterResize(); }, 200);        
+        this.LiveInfo();
+        setTimeout(() => { this.AfterResize(); }, 200);
     }
 
     AfterResize() { //override
@@ -109,7 +118,25 @@ class Equip extends Window {
             this.scroll.style.left = "";
             this.buttons.style.left = "";
         }
-    } 
+
+        if (this.content.getBoundingClientRect().width > 1440) {
+            if (this.rightside.style.opacity === "1") return;
+            this.rightside.style.opacity = "1";
+            this.rightside.style.border = "var(--pane-color) 1px solid";
+
+            this.rightside.appendChild(this.live);
+            this.rightside.appendChild(this.liveinfo);
+        } else {
+            if (this.rightside.style.opacity === "0") return;
+            this.rightside.style.opacity = "0";
+            this.rightside.style.border = "none";
+
+
+            this.scroll.appendChild(this.live);
+            this.scroll.appendChild(this.liveinfo);
+            this.scroll.appendChild(this.properties);
+        }
+    }
 
     InitializeComponent() {
         let done = [];
@@ -382,7 +409,7 @@ class Equip extends Window {
             }
 
             if (ports.includes(22)) { //ssh
-                let btnSsh = this.SideButton("res/ssh.svgz", "Secure Shell");
+                let btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
                 this.sidetools.appendChild(btnSsh);
                 btnSsh.onclick = () => {
                     let xhr = new XMLHttpRequest();
@@ -487,11 +514,23 @@ class Equip extends Window {
 
     }
 
-    PushProperty(equip, name, done) {
-        if (!equip.hasOwnProperty(name)) return;
-        let newProperty = this.Property(name, equip[name][0], equip[name][1]);
-        if (done != null) done.push(name);
-        this.properties.appendChild(newProperty);
+    LiveInfo() {
+        let server = window.location.href;
+        server = server.replace("https://", "");
+        server = server.replace("http://", "");
+        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+
+        const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/liveinfo_equip");
+
+        ws.onopen = () => {
+            ws.send(this.filename);
+        };
+
+        ws.onmessage = (event) => {
+            let split = event.data.split(String.fromCharCode(127));
+            const newProperty = this.AddProperty(split[0], split[1], "");
+            this.liveinfo.appendChild(newProperty);
+        };
     }
 
     LiveButton(icon, label) {

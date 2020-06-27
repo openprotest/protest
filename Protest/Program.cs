@@ -55,7 +55,6 @@ class Program {
         Console.WriteLine();
 
         Strings.InitDirs();
-        Thread.Sleep(50);
 
 #if DEBUG
         Console.WriteLine(" - Debug mode");

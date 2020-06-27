@@ -76,7 +76,6 @@ class NtpClient extends Window {
                 }
 
                 let timestamp = new Date().getTime();
-
                 let json = JSON.parse(xhr.responseText);
 
                 if (json.local && json.transmit) {
@@ -87,8 +86,10 @@ class NtpClient extends Window {
                     this.lblStuff.innerHTML += `Local time: <b>${json.local}</b>`;
 
                     let split = json.local.split(":").map(o => parseInt(o));
-                    let local = new Date(0, 0, 0, split[0], split[1], split[2], split[3]).getTime() + json.roundtrip / 2;
-                    this.Update(id, timestamp, local);
+                    setTimeout(() => {
+                        let local = new Date(0, 0, 0, split[0], split[1], split[2], split[3]).getTime() + json.roundtrip / 2;
+                        this.Update(id, timestamp, local);
+                    }, 1000 - split[3]);
 
                 } else {
                     this.id = null;

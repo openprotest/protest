@@ -70,6 +70,8 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
+    <Compile Include="Modules\Tools\LastSeen.cs" />
+    <Compile Include="Modules\Tools\LiveInfo.cs" />
     <Compile Include="Modules\Tools\Ntp.cs" />
     <Compile Include="Modules\Tools\PrintTools.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
@@ -137,6 +139,7 @@
     <Content Include="bin\protest\front\dbview.css" />
     <Content Include="bin\protest\front\res\clock.svg" />
     <Content Include="bin\protest\front\res\desktop.svg" />
+    <Content Include="bin\protest\front\res\encoder.svg" />
     <Content Include="bin\protest\front\viewequip.js" />
     <Content Include="bin\protest\front\viewuser.js" />
     <Content Include="bin\protest\front\listusers.js" />

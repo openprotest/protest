@@ -192,6 +192,55 @@
     transition: .2s;
 }
 
+.db-live > div {
+    display: inline-block;
+    background-color: var(--pane-color);
+    color: rgb(32,32,32);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 0 8px 8px 0;
+    min-width: 120px;
+    max-width: 250px;
+
+    padding-left: 40px;
+    background-repeat: no-repeat;
+    background-size: 32px 32px;
+    background-position: 4px 50%;
+    box-sizing: border-box;
+    transition: .2s;
+}
+.db-live > div:hover {
+    background-color: var(--highlight-color);
+}
+.db-live > div:active {
+    background-color: var(--select-color);
+}
+
+.db-liveinfo {
+    padding: 0 8px 8px 8px;
+}
+.db-liveinfo:empty {
+    padding: 0;
+}
+.db-liveinfo > div:hover {
+    background-color: rgb(72,72,72);
+}
+.db-liveinfo > div:active {
+    background-color: var(--select-color);
+}
+
+.db-rightside {
+    position: absolute;
+    right: 8px;
+    top: 60px;
+    width: calc(100% - 1064px);
+    min-height: 40px;
+    border-radius: 4px;
+    padding: 8px;
+
+    transition: opacity .4s
+}
+
 .db-progress-bar {
     display: block !important;
     border: none !important;
@@ -222,32 +271,6 @@
     padding-left: 8px;
     font-size: small;
     font-weight: 400;
-}
-
-.db-live > div {
-    display: inline-block;
-    background-color: var(--pane-color);
-    color: rgb(32,32,32);
-    border-radius: 4px;
-    padding: 8px;
-    margin: 0 8px 8px 0;
-    min-width: 120px;
-    max-width: 250px;
-
-    padding-left: 40px;
-    background-repeat: no-repeat;
-    background-size: 32px 32px;
-    background-position: 4px 50%;
-    box-sizing: border-box;
-    transition: .2s;
-}
-
-.db-live > div:hover {
-    background-color: var(--highlight-color);
-}
-
-.db-live > div:active {
-    background-color: var(--select-color);
 }
 
 .password-countdown {

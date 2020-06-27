@@ -71,9 +71,17 @@ class User extends Window {
         this.live.className = "db-live";
         this.scroll.appendChild(this.live);
 
+        this.liveinfo = document.createElement("div");
+        this.liveinfo.className = "db-liveinfo";
+        this.scroll.appendChild(this.liveinfo);
+
         this.properties = document.createElement("div");
         this.properties.className = "db-proberties";
         this.scroll.appendChild(this.properties);
+
+        this.rightside = document.createElement("div");
+        this.rightside.className = "db-rightside";
+        this.content.appendChild(this.rightside);
 
         this.InitializeComponent();
         setTimeout(() => { this.AfterResize(); }, 400);
@@ -88,6 +96,24 @@ class User extends Window {
             this.sidetools.style.width = "";
             this.scroll.style.left = "";
             this.buttons.style.left = "";
+        }
+
+        if (this.content.getBoundingClientRect().width > 1440) {
+            if (this.rightside.style.opacity === "1") return;
+            this.rightside.style.opacity = "1";
+            this.rightside.style.border = "var(--pane-color) 1px solid";
+
+            this.rightside.appendChild(this.live);
+            this.rightside.appendChild(this.liveinfo);
+        } else {
+            if (this.rightside.style.opacity === "0") return;
+            this.rightside.style.opacity = "0";
+            this.rightside.style.border = "none";
+
+
+            this.scroll.appendChild(this.live);
+            this.scroll.appendChild(this.liveinfo);
+            this.scroll.appendChild(this.properties);
         }
     } 
 
@@ -120,7 +146,123 @@ class User extends Window {
         if (isGroupEmpty && this.properties.childNodes[this.properties.childNodes.length - 1].className == "db-property-group")
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
 
-        //todo:
+        if (this.entry.USERNAME) {
+            const button = this.LiveButton("res/unlock.svgz", this.entry.USERNAME[0]);
+            const div = button.div;
+            const sub = button.sub;
+
+            sub.innerHTML = "unlocked";
+        }
+
+        const btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
+        this.sidetools.appendChild(btnUnlock);
+        btnUnlock.onclick = () => {
+            if (btnUnlock.hasAttribute("busy")) return;
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4) btnUnlock.removeAttribute("busy");
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            };
+            btnUnlock.setAttribute("busy", true);
+            xhr.open("GET", "unlockuser&file=" + this.filename, true);
+            xhr.send();
+        };
+
+        const btnEnable = this.SideButton("res/enable.svgz", "Enable");
+        this.sidetools.appendChild(btnEnable);
+        btnEnable.onclick = () => {
+            if (btnEnable.hasAttribute("busy")) return;
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4) btnEnable.removeAttribute("busy");
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            };
+            btnEnable.setAttribute("busy", true);
+            xhr.open("GET", "enableuser&file=" + this.filename, true);
+            xhr.send();
+        };
+
+        const btnDisable = this.SideButton("res/disable.svgz", "Disable");
+        this.sidetools.appendChild(btnDisable);
+        btnDisable.onclick = () => {
+            if (btnDisable.hasAttribute("busy")) return;
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4) btnDisable.removeAttribute("busy");
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            };
+            btnDisable.setAttribute("busy", true);
+            xhr.open("GET", "disableuser&file=" + this.filename, true);
+            xhr.send();
+        };
+
+
+        if (this.entry.hasOwnProperty("E-MAIL"))
+            this.LiveButton("res/email.svgz", "E-mail").div.onclick = () => {
+                window.location.href = "mailto:" + this.entry["E-MAIL"][0];
+            };
+
+        if (this.entry.hasOwnProperty("TELEPHONE NUMBER"))
+            this.LiveButton("res/phone.svgz", "Telephone").div.onclick = () => {
+                window.location.href = "tel:" + this.entry["TELEPHONE NUMBER"][0];
+            };       
+
+        if (this.entry.hasOwnProperty("MOBILE NUMBER"))
+            this.LiveButton("res/mobile.svgz", "Mobile phone").div.onclick = () => {
+                window.location.href = "tel:" + this.entry["MOBILE NUMBER"][0];
+            };
+
+    }
+
+    LiveInfo() {
+        let server = window.location.href;
+        server = server.replace("https://", "");
+        server = server.replace("http://", "");
+        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+
+        const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/liveinfo_user");
+
+        this.ws.onopen = () => {
+            ws.send(this.filename);
+        };
+
+        this.ws.onclose = () => { };
+
+        this.ws.onerror = (error) => { console.log(error); };
+
+        this.ws.onmessage = (event) => { };
+    }
+
+    LiveButton(icon, label) {
+        const div = document.createElement("div");
+        div.innerHTML = label;
+        div.style.backgroundImage = `url(${icon})`;
+        this.live.appendChild(div);
+
+        const sub = document.createElement("div");
+        sub.style.fontSize = "smaller";
+        sub.style.height = "14px";
+        sub.innerHTML = "&nbsp;";
+        div.appendChild(sub);
+
+        return {
+            div: div,
+            sub: sub
+        };
+    }
+
+    SideButton(icon, label) {
+        const button = document.createElement("div");
+
+        const divLabel = document.createElement("div");
+        divLabel.style.backgroundImage = "url(" + icon + ")";
+        divLabel.innerHTML = label;
+        button.appendChild(divLabel);
+
+        return button;
     }
 
     AddGroup(icon, title) {
@@ -245,8 +387,8 @@ class User extends Window {
 
             let split = v.split(":");
             for (let i = 1; i < split.length - 3; i += 4) {
-                let used = parseFloat(split[i + 1]);
-                let size = parseFloat(split[i + 2]);
+                let used = parseFloat(split[i+1]);
+                let size = parseFloat(split[i+2]);
 
                 const bar = document.createElement("div");
                 bar.className = "db-progress-bar";

@@ -89,4 +89,136 @@ public static class ActiveDirectory {
         return null;
     }
 
+
+    public static SearchResult GetUser(string username) {
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch { }
+
+        DirectoryEntry dir = GetDirectoryEntry(domain);
+        using DirectorySearcher searcher = new DirectorySearcher(dir);
+        searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
+        //searcher.Filter = "(&(objectClass=user)(objectCategory=person)(cn=" + username + "))";
+
+        SearchResultCollection result;
+        try {
+            result = searcher.FindAll();
+            //TODO: try this: searcher.FindOne();
+        } catch (Exception ex) {
+            Logging.Err(ex);
+            return null;
+        }
+
+        if (result is null || result.Count == 0) return null;
+
+        username = username.ToLower();
+
+        int index = -1;
+        for (int i = 0; i < result.Count; i++) {
+            if (result[i].Properties["userPrincipalName"].Count == 0) continue;
+
+            string un = result[i].Properties["userPrincipalName"][0].ToString();
+
+            if (un.Contains("@")) un = un.Substring(0, un.IndexOf("@"));
+
+            if (un.ToLower() == username) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index < 0) return null;
+
+        return result[index];
+    }
+
+    public static string FileTimeString(string value) {
+        long ticks = long.Parse(value);
+        if (ticks == 0) return "";
+        return DateTime.FromFileTime(ticks).ToString("dddd dd-MMM-yyyy HH:mm:ss");
+    }
+
+    public static byte[] UnlockUser(in string[] para) {
+        string filename = "", username = "";
+        for (int i = 1; i < para.Length; i++) {
+            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
+            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
+        }
+
+        if (username.Length == 0 && Database.users.ContainsKey(filename)) {
+            Database.DbEntry entry = (Database.DbEntry)Database.users[filename];
+            if (entry.hash.ContainsKey("USERNAME")) username = ((string[])entry.hash["USERNAME"])[0];
+        }
+
+        if (username.Length == 0) return Strings.INF.Array;
+
+        SearchResult sr = GetUser(username);
+        if (sr is null) return Encoding.UTF8.GetBytes("not found");
+
+        DirectoryEntry user = new DirectoryEntry(sr.Path);
+        user.Properties["LockOutTime"].Value = 0; //unlock account
+        user.CommitChanges();
+        user.Close();
+
+        return Strings.OK.Array;
+    }
+
+    public static byte[] DisableUser(in string[] para) {
+        string filename = "", username = "";
+        for (int i = 1; i < para.Length; i++) {
+            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
+            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
+        }
+
+        if (username.Length == 0 && Database.users.ContainsKey(filename)) {
+            Database.DbEntry entry = (Database.DbEntry)Database.users[filename];
+            if (entry.hash.ContainsKey("USERNAME")) username = ((string[])entry.hash["USERNAME"])[0];
+        }
+
+        if (username.Length == 0) return Strings.INF.Array;
+
+        SearchResult sr = GetUser(username);
+        if (sr is null) return Strings.INV.Array;
+
+        DirectoryEntry user = new DirectoryEntry(sr.Path);
+        int userAccountControl = (int)user.Properties["userAccountControl"].Value;
+        userAccountControl |= 0x2;
+        user.Properties["userAccountControl"].Value = userAccountControl;
+
+        user.CommitChanges();
+        user.Close();
+
+        return Strings.OK.Array;
+    }
+
+    public static byte[] EnableUser(in string[] para) {
+        string filename = "";
+        string username = "";
+        for (int i = 1; i < para.Length; i++) {
+            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
+            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
+        }
+
+        if (username.Length == 0 && Database.users.ContainsKey(filename)) {
+            Database.DbEntry entry = (Database.DbEntry)Database.users[filename];
+            if (entry.hash.ContainsKey("USERNAME")) username = ((string[])entry.hash["USERNAME"])[0];
+        }
+
+        if (username.Length == 0) return Strings.INF.Array;
+
+        SearchResult sr = GetUser(username);
+        if (sr is null) return Strings.INV.Array;
+
+        DirectoryEntry user = new DirectoryEntry(sr.Path);
+        int userAccountControl = (int)user.Properties["userAccountControl"].Value;
+        userAccountControl &= ~0x2;
+        user.Properties["userAccountControl"].Value = userAccountControl;
+
+        user.CommitChanges();
+        user.Close();
+
+        return Strings.OK.Array;
+    }
+
 }

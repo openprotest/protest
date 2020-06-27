@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 static class RaHandler {
     public static byte[] RaResponse(string[] para, string ip) {
         if (para.Length < 3) return Strings.INF.Array;
-
         return ip.StartsWith("127.0.0.") ? LocalAgent(para) : RemoteAgent(para, ip);
     }
 
@@ -27,14 +26,23 @@ static class RaHandler {
         }
 
         if (filename.Length == 0) return Strings.INF.Array;
-        if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
 
-        Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
-
+        Database.DbEntry entry;
         string hostname = "";
-        if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
-        else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
-        if (hostname.Length == 0) return Strings.INF.Array;
+
+        if (method == "stpu") {
+            if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
+            entry = (Database.DbEntry)Database.users[filename];
+
+        } else {
+            if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
+            entry = (Database.DbEntry)Database.equip[filename];
+
+            if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
+            else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
+            if (hostname.Length == 0) return Strings.INF.Array;
+        }
+
 
         switch (method) {
 
