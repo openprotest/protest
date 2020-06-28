@@ -450,6 +450,8 @@ class Window {
             this.content.style.filter = "none";
             this.content.style.top = "30px";
             this.toolbox.style.left = "";
+
+            this.AfterResize();
         };
 
         newWin.onbeforeunload = () => this.Close();

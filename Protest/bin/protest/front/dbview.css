@@ -235,10 +235,11 @@
     top: 60px;
     width: calc(100% - 1064px);
     min-height: 40px;
+    max-width: 960px;
     border: var(--pane-color) solid 1px;
     border-radius: 4px;
     padding: 8px;
-
+    
     animation: slide-right .2s ease-out 1;
 }
 

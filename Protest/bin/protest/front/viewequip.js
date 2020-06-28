@@ -500,6 +500,8 @@ class Equip extends Window {
 
         this.liveinfo.innerHTML = "";
 
+        this.CameraSnap();
+
         const icon = this.task.querySelector(".icon"); //remove old dots
         this.task.innerHTML = "";
         this.task.appendChild(icon);
@@ -549,6 +551,41 @@ class Equip extends Window {
             if (split[0].startsWith(".")) return; //hidden property
             const newProperty = this.AddProperty(split[0], split[1], split[2]);
             this.liveinfo.appendChild(newProperty);
+        };
+    }
+
+    CameraSnap() {
+        if (!this.entry.hasOwnProperty("IP")) return;
+        if (!this.entry.hasOwnProperty("PORTS")) return;
+        if (!this.entry.hasOwnProperty("TYPE")) return;
+
+        if (this.entry["TYPE"][0].toUpperCase() != "CAMERA") return;
+
+        let ports = this.entry["PORTS"][0].split(";").map(o => parseInt(o.trim()));
+        if (!ports.includes(80)) return;
+
+        let div = document.createElement("div");
+        div.style.display = "none";
+        div.style.overflow = "hidden";
+        div.style.textAlign = "center";
+        div.style.backgroundColor = "transparent";
+        this.liveinfo.appendChild(div);
+
+        let ip = this.entry["IP"][0].split(";")[0];
+
+        let snap = document.createElement("img");
+        snap.height = 300;
+        snap.style.border = "var(--pane-color) 2px solid";
+        snap.style.borderRadius = "4px";
+        snap.src = `http://${ip}/snap.jpeg`;
+        div.appendChild(snap);
+
+        snap.onload = () => {
+            div.style.display = "block";
+        };
+
+        snap.onerror = () => {
+            this.liveinfo.removeChild(div);
         };
     }
 
