@@ -278,18 +278,17 @@
 .task-icon-dots {
     position: absolute;
     bottom: 2px;
-    width: 12%;
-    height: 12%;
+    width: 17%;
+    height: 17%;
     border-radius: 50%;
     box-shadow: rgb(32,32,32) 0 0 0 1px;
     transition: .4s;
 }
 .task-icon-dots:nth-child(2) { left: 6.5%; }
-.task-icon-dots:nth-child(3) { left: 21.5% }
-.task-icon-dots:nth-child(4) { left: 36.5% }
-.task-icon-dots:nth-child(5) { left: 51.5% }
-.task-icon-dots:nth-child(6) { left: 66.5% }
-.task-icon-dots:nth-child(7) { left: 81.5% }
+.task-icon-dots:nth-child(3) { left: 26.5% }
+.task-icon-dots:nth-child(4) { left: 46.5% }
+.task-icon-dots:nth-child(5) { left: 66.5% }
+.task-icon-dots:nth-child(6) { left: 86.5% }
 
 .task-icon-spin {
     visibility: hidden;

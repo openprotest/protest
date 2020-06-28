@@ -18,7 +18,7 @@ class User extends Window {
     constructor(filename) {
         super([56,56,56]);
 
-        //this.setTitle("User");
+        this.setTitle("User");
         this.setIcon("res/user.svgz");
 
         this.args = filename;
@@ -84,6 +84,7 @@ class User extends Window {
         this.content.appendChild(this.rightside);
 
         this.InitializeComponent();
+        this.LiveInfo();
         setTimeout(() => { this.AfterResize(); }, 400);
     }
 
@@ -99,17 +100,16 @@ class User extends Window {
         }
 
         if (this.content.getBoundingClientRect().width > 1440) {
-            if (this.rightside.style.opacity === "1") return;
-            this.rightside.style.opacity = "1";
-            this.rightside.style.border = "var(--pane-color) 1px solid";
+            if (this.rightside.style.display === "block") return;
+            this.rightside.style.display = "block";
+            this.rightside.classList.add("db-rightside");
 
             this.rightside.appendChild(this.live);
             this.rightside.appendChild(this.liveinfo);
         } else {
-            if (this.rightside.style.opacity === "0") return;
-            this.rightside.style.opacity = "0";
-            this.rightside.style.border = "none";
-
+            if (this.rightside.style.display === "none") return;
+            this.rightside.style.display = "none";
+            this.rightside.classList.remove("db-rightside");
 
             this.scroll.appendChild(this.live);
             this.scroll.appendChild(this.liveinfo);
@@ -145,14 +145,6 @@ class User extends Window {
 
         if (isGroupEmpty && this.properties.childNodes[this.properties.childNodes.length - 1].className == "db-property-group")
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
-
-        if (this.entry.USERNAME) {
-            const button = this.LiveButton("res/unlock.svgz", this.entry.USERNAME[0]);
-            const div = button.div;
-            const sub = button.sub;
-
-            sub.innerHTML = "unlocked";
-        }
 
         const btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
         this.sidetools.appendChild(btnUnlock);
@@ -218,6 +210,10 @@ class User extends Window {
     }
 
     LiveInfo() {
+        if (!this.entry.hasOwnProperty("USERNAME")) return;
+
+        this.liveinfo.innerHTML = "";
+
         let server = window.location.href;
         server = server.replace("https://", "");
         server = server.replace("http://", "");
@@ -225,15 +221,17 @@ class User extends Window {
 
         const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/liveinfo_user");
 
-        this.ws.onopen = () => {
-            ws.send(this.filename);
+        ws.onopen = () => { ws.send(this.filename); };
+
+        ws.onmessage = (event) => {
+            let split = event.data.split(String.fromCharCode(127));
+
+            if (split[0].startsWith(".")) return; //hidden property
+            if (split[0] == "LOCKOUT TIME" && split[1] == "0") return;
+
+            const newProperty = this.AddProperty(split[0], split[1], split[2]);
+            this.liveinfo.appendChild(newProperty);
         };
-
-        this.ws.onclose = () => { };
-
-        this.ws.onerror = (error) => { console.log(error); };
-
-        this.ws.onmessage = (event) => { };
     }
 
     LiveButton(icon, label) {

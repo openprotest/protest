@@ -74,7 +74,7 @@ class Program {
 
         StartServices();
 
-        Console.ResetColor();
+        Console.ResetColor();       
 
 #if DEBUG
         Thread.Sleep(1000);

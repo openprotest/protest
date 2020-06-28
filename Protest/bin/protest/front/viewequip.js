@@ -36,12 +36,13 @@ class Equip extends Window {
     constructor(filename) {
         super([56,56,56]);
 
-        //this.setTitle("Equip");
-        //this.setIcon("res/gear.svgz");
+        this.setTitle("Equipment");
+        this.setIcon("res/gear.svgz");
 
         this.args = filename;
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
+        this.pingButtons = {};
 
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
@@ -120,17 +121,16 @@ class Equip extends Window {
         }
 
         if (this.content.getBoundingClientRect().width > 1440) {
-            if (this.rightside.style.opacity === "1") return;
-            this.rightside.style.opacity = "1";
-            this.rightside.style.border = "var(--pane-color) 1px solid";
+            if (this.rightside.style.display === "block") return;
+            this.rightside.style.display = "block";
+            this.rightside.classList.add("db-rightside");
 
             this.rightside.appendChild(this.live);
             this.rightside.appendChild(this.liveinfo);
         } else {
-            if (this.rightside.style.opacity === "0") return;
-            this.rightside.style.opacity = "0";
-            this.rightside.style.border = "none";
-
+            if (this.rightside.style.display === "none") return;
+            this.rightside.style.display = "none";
+            this.rightside.classList.remove("db-rightside");
 
             this.scroll.appendChild(this.live);
             this.scroll.appendChild(this.liveinfo);
@@ -178,26 +178,7 @@ class Equip extends Window {
 
                 this.live.appendChild(div);
 
-                const dot = document.createElement("div");
-                dot.style.display = "inline-block";
-                dot.style.border = "#202020 1px solid";
-                dot.style.borderRadius = "50%";
-                dot.style.width = "10px";
-                dot.style.height= "10px";
-                dot.style.marginRight = "4px";
-                dot.style.marginBottom = "-2px";
-                roundtrip.appendChild(dot);
-
-                const xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = () => {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        let reply = xhr.responseText;
-                        dot.style.backgroundColor = PingColor(reply);
-                        roundtrip.innerHTML += isNaN(reply) ? reply : `${reply}ms`;
-                    }
-                };
-                xhr.open("GET", "ping&ip=" + ips[i], true);
-                xhr.send();
+                this.pingButtons[ips[i]] = button;
 
                 div.onclick = ()=> {
                     let winPing = null;
@@ -208,9 +189,9 @@ class Equip extends Window {
                         }
 
                     if (winPing === null) {
-                        new Ping().Filter(this.entry["IP"][0]);
+                        new Ping().Filter(ips[i]);
                     } else {
-                        winPing.Filter(this.entry["IP"][0]);
+                        winPing.Filter(ips[i]);
                         winPing.BringToFront();
                     }
                 };
@@ -515,6 +496,14 @@ class Equip extends Window {
     }
 
     LiveInfo() {
+        if (!this.entry.hasOwnProperty("IP") && !this.entry.hasOwnProperty("HOSTNAME")) return;
+
+        this.liveinfo.innerHTML = "";
+
+        const icon = this.task.querySelector(".icon"); //remove old dots
+        this.task.innerHTML = "";
+        this.task.appendChild(icon);
+        
         let server = window.location.href;
         server = server.replace("https://", "");
         server = server.replace("http://", "");
@@ -522,13 +511,43 @@ class Equip extends Window {
 
         const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/liveinfo_equip");
 
-        ws.onopen = () => {
-            ws.send(this.filename);
-        };
+        ws.onopen = () => { ws.send(this.filename); };
 
         ws.onmessage = (event) => {
             let split = event.data.split(String.fromCharCode(127));
-            const newProperty = this.AddProperty(split[0], split[1], "");
+
+            if (split[0].startsWith(".roundtrip:")) {
+                let ping = split[0].split(":");
+                let ip = ping[1];
+
+                if (this.pingButtons.hasOwnProperty(ip)) {
+                    let button = this.pingButtons[ip];
+                    button.sub.innerHTML = "";
+
+                    const dot = document.createElement("div");
+                    dot.style.display = "inline-block";
+                    dot.style.border = "#202020 1px solid";
+                    dot.style.borderRadius = "50%";
+                    dot.style.width = "10px";
+                    dot.style.height = "10px";
+                    dot.style.marginRight = "4px";
+                    dot.style.marginBottom = "-2px";
+                    dot.style.backgroundColor = PingColor(split[1]);
+                    button.sub.appendChild(dot);
+
+                    button.sub.innerHTML += isNaN(split[1]) ? split[1] : `${split[1]}ms`;
+
+                    if (this.task.childNodes.length < 6) {
+                        this.dot = document.createElement("div");
+                        this.dot.className = "task-icon-dots";
+                        this.dot.style.backgroundColor = dot.style.backgroundColor;
+                        this.task.appendChild(this.dot);
+                    }
+                }
+            }
+
+            if (split[0].startsWith(".")) return; //hidden property
+            const newProperty = this.AddProperty(split[0], split[1], split[2]);
             this.liveinfo.appendChild(newProperty);
         };
     }

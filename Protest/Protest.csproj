@@ -71,12 +71,13 @@
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
     <Compile Include="Modules\Tools\LastSeen.cs" />
-    <Compile Include="Modules\Tools\LiveInfo.cs" />
+    <Compile Include="Modules\LiveInfo.cs" />
     <Compile Include="Modules\Tools\Ntp.cs" />
     <Compile Include="Modules\Tools\PrintTools.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
     <Compile Include="Modules\Tools\SpeedTest.cs" />
+    <Compile Include="Modules\Unifi.cs" />
     <Compile Include="Modules\Update.cs" />
     <Compile Include="Modules\Tools\WebCheck.cs" />
     <Compile Include="Modules\Tools\Arp.cs" />
