@@ -146,6 +146,11 @@ static class RaHandler {
         string arg = (para.Length > 3) ? para[3] : "";
         string property = "";
 
+        if (filename.Contains(":")) {
+            property = filename.Split(':')[1];
+            filename = filename.Split(':')[0];
+        }
+
         byte[] payload;
 
         if (method == "stpe")
@@ -185,7 +190,6 @@ static class RaHandler {
         }
 
         return Strings.OK.Array;
-
     }
 
 }

@@ -20,7 +20,7 @@ class ListWindow extends Window {
         this.titlebar.appendChild(this.columnsOptions);
 
         this.list = document.createElement("div");
-        this.list.className = "list-view";
+        this.list.className = "list-view no-entries";
         this.content.appendChild(this.list);
 
         this.btnFilter = document.createElement("div");

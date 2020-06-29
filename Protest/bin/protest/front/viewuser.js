@@ -67,6 +67,13 @@ class User extends Window {
         this.scroll.className = "db-scroll";
         this.content.appendChild(this.scroll);
 
+        /*const fade = document.createElement("div");
+        fade.style.position = "sticky";
+        fade.style.top = "0";
+        fade.style.height = "16px";
+        fade.style.background = "linear-gradient(rgb(56, 56, 56), transparent)";
+        this.scroll.appendChild(fade);*/
+
         this.live = document.createElement("div");
         this.live.className = "db-live";
         this.scroll.appendChild(this.live);
