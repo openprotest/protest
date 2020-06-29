@@ -60,6 +60,7 @@ const PROTOCOL = {
     993: "IMAP over SSL/TSL",
     995: "POP3 over SSL/TSL",
     1433: "MS-SQL	Microsoft SQL server",
+    3269: "LDAP over SSL"
     3389: "RDP	Remote Desktop Protocol",
     5500: "VNC	Virtual Network Computer",
     5800: "VNC	Virtual Network Computer",
@@ -70,7 +71,7 @@ const PROTOCOL = {
     5903: "uVNC	Virtual Network Computer",
     7680: "WUDO	Windows Update Delivery Optimization",
     8080: "HTTP alternate	Hypertext Transfer Protocol",
-    8443: "HTTP over SSL/TSL alternate	",
+    8443: "HTTP over SSL/TSL alternate",
     9100: "Print Server",
     10000: "NDMP	Network Data Management Protocol"
 };
