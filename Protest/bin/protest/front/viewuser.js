@@ -28,6 +28,7 @@ class User extends Window {
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
             this.ConfirmBox("User do not exist.", true).addEventListener("click", () => this.Close());
+            this.AfterResize = () => {};
             return;
         }
 

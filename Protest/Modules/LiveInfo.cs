@@ -74,18 +74,17 @@ class LiveInfo {
 
             
             if (ipArray.Length > 1) 
-                for (int i = 1; i < ipArray.Length; i++) {
+                for (int i = 1; i < ipArray.Length; i++)
                     try {
-                    using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
-                    PingReply reply = p.Send(ipArray[i], 1000);
-                    if (reply.Status == IPStatus.Success)
-                        WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.RoundtripTime}{(char)127}ICMP");
-                    else 
-                        WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.Status.ToString()}{(char)127}ICMP");
+                        using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
+                        PingReply reply = p.Send(ipArray[i], 1000);
+                        if (reply.Status == IPStatus.Success)
+                            WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.RoundtripTime}{(char)127}ICMP");
+                        else 
+                            WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.Status.ToString()}{(char)127}ICMP");
                     } catch {
                         WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}Error{(char)127}ICMP");
-                    }
-                }
+                    }                
             
             if (lastseen == "Just now") {
                 ManagementScope scope = Wmi.WmiScope(ip);
@@ -98,7 +97,22 @@ class LiveInfo {
                 }
             }
 
-            //TODO: active dir info
+            if (equip.hash.ContainsKey("HOSTNAME")) {
+                string hostname = ((string[])equip.hash["HOSTNAME"])[0];
+                SearchResult sr = ActiveDirectory.GetWorkstation(hostname);
+
+                if (sr != null) {
+                    if (sr.Properties["lastLogonTimestamp"].Count > 0) {
+                        string time = ActiveDirectory.FileTimeString(sr.Properties["lastLogonTimestamp"][0].ToString());
+                        if (time.Length > 0) WsWriteText(ws, $"last logon{(char)127}{time}{(char)127}Active directory");
+                    }
+
+                    if (sr.Properties["lastLogoff"].Count > 0) {
+                        string time = ActiveDirectory.FileTimeString(sr.Properties["lastLogoff"][0].ToString());
+                        if (time.Length > 0) WsWriteText(ws, $"last logoff{(char)127}{time}{(char)127}Active directory");
+                    }
+                }
+            }
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
 
@@ -145,16 +159,17 @@ class LiveInfo {
 
                 if (sr.Properties["lastLogonTimestamp"].Count > 0) {
                     string time = ActiveDirectory.FileTimeString(sr.Properties["lastLogonTimestamp"][0].ToString());
-                    if (time.Length > 0) WsWriteText(ws, $"Last logon{(char)127}{time}{(char)127}Active directory");
+                    if (time.Length > 0) WsWriteText(ws, $"last logon{(char)127}{time}{(char)127}Active directory");
                 }
 
                 if (sr.Properties["lastLogoff"].Count > 0) {
                     string time = ActiveDirectory.FileTimeString(sr.Properties["lastLogoff"][0].ToString());
-                    if (time.Length > 0) WsWriteText(ws, $"Last logoff{(char)127}{time}{(char)127}Active directory");
+                    if (time.Length > 0) WsWriteText(ws, $"last logoff{(char)127}{time}{(char)127}Active directory");
                 }
+
                 if (sr.Properties["lockoutTime"].Count > 0) {
                     string time = ActiveDirectory.FileTimeString(sr.Properties["lockoutTime"][0].ToString());
-                    if (time.Length > 0) WsWriteText(ws, $"Lockout time{(char)127}{time}{(char)127}Active directory");                
+                    if (time.Length > 0) WsWriteText(ws, $"lockout time{(char)127}{time}{(char)127}Active directory");                
                 }
             } catch { }
 

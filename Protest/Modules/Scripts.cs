@@ -1988,9 +1988,15 @@ public static class Scripts {
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
+        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.html", text.ToString());
         return null;
     }
+
+    private static ScriptResult N_Preview(in ScriptNode node) {
+        //TODO:
+        return null;
+    }
+
     private static ScriptResult N_SendEMail(in ScriptNode node) { return null; }
 
     public static string EscapeFilename(string filename) {

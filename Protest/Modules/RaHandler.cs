@@ -184,7 +184,6 @@ static class RaHandler {
             TcpClient client = new TcpClient(ip, 5810);
             client.GetStream().Write(payload, 0, payload.Length);
             client.Close();
-
         } catch {
             return Strings.TCP.Array;
         }

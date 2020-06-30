@@ -47,6 +47,7 @@ class Equip extends Window {
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
             this.ConfirmBox("Equipment do not exist.", true).addEventListener("click", () => this.Close());
+            this.AfterResize = () => {};
             return;
         }
 

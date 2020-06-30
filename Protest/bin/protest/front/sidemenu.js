@@ -72,7 +72,7 @@ document.body.addEventListener("mousemove", event => {
 
     if (y < 8) {
         y = 0;
-        btnSidemenu.style.borderRadius = "6px 8px 48px 8px";
+        btnSidemenu.style.borderRadius = "4px 8px 48px 8px";
         btnSidemenu.style.height = "48px";
         imgSearch.style.transform = "none";
 
@@ -418,7 +418,6 @@ function CreateItemEvents(item, func) {
 }
 
 function SideMenu_Open() {
-    //container.style.transform = "translate(" + SUBMENU_WIDTH + "px)";
     cap.style.visibility = "visible";
     sidemenu.style.transform = "translateX(0)";
 
@@ -446,11 +445,10 @@ function SideMenu_Close() {
     sidemenu_session = [];
     lastSearchValue = "";
 
-    //container.style.transform = "none";
     cap.style.visibility = "hidden";
     sidemenu.style.transform = "translateX(calc(-100% - 8px))";
 
-    btnSidemenu.style.borderRadius = "0px 8px 48px 8px";
+    btnSidemenu.style.borderRadius = "4px 8px 48px 8px";
     btnSidemenu.style.boxShadow = "rgba(0,0,0,.2) 2px 2px 2px";
     imgSearch.style.transform = "none";
     txtSearch.style.visibility = "hidden";

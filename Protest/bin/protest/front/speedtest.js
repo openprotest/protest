@@ -348,7 +348,7 @@ class SpeedTest extends Window {
             let downDuration = (this.downstream[this.downstream.length - 1] - this.downstarttime) / 1000; //s
             let downAvg = downSize * 8 / downDuration; //bps
 
-            this.lblDownAvg.innerHTML = "Agerage: " + ((downAvg < 1000000) ? Math.round(downAvg / 1000) + " Kbps" : Math.round(downAvg / 1000000) + " Mbps");
+            this.lblDownAvg.innerHTML = "Average: " + ((downAvg < 1000000) ? Math.round(downAvg / 1000) + " Kbps" : Math.round(downAvg / 1000000) + " Mbps");
             this.lblDownProgress.innerHTML = this.SizeToString(downSize) + " / " + Math.round(downDuration * 10) / 10 + "s";
         }
 

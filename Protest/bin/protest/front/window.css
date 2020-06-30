@@ -295,7 +295,7 @@
     display: block;
     content: "no results..";
     font-size: 24px;
-    color: #888;
+    color: #C0C0C0;
     margin-top: 20px;
     height: 100px;
     text-align: center;
@@ -304,6 +304,7 @@
     background-image: url(res/l_clear.svgz);
     background-size: 64px 64px;
     background-position-y: 36px;
+    filter: drop-shadow(0px 0px 1px rgb(56,56,56));
     animation: fade-in .4s ease-in;
 }
 

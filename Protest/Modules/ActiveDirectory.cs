@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -14,6 +15,51 @@ public static class ActiveDirectory {
         //dir.Username = ".\administrator";
         //dir.Password = "";
         return dir;
+    }
+
+    public static string[] GetAllWorkstations(string domain) {
+        SearchResultCollection result = null;
+
+        try {
+            DirectoryEntry dir = GetDirectoryEntry(domain);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = "(objectClass=computer)";
+            result = searcher.FindAll();
+        } catch (Exception ex) {
+            Logging.Err(ex);
+            return null;
+        }
+
+        if (result is null || result.Count == 0) return null;
+
+        List<string> list = new List<string>();
+        foreach (SearchResult o in result)
+            if (o.Properties.Contains("name") && o.Properties["name"].Count > 0)
+                list.Add(o.Properties["name"][0].ToString());
+
+        return list.ToArray();
+    }
+
+    public static string[] GetAllUsers(string domain) {
+        SearchResultCollection result = null;
+        try {
+            DirectoryEntry dir = GetDirectoryEntry(domain);
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
+            result = searcher.FindAll();
+        } catch (Exception ex) {
+            Logging.Err(ex);
+            return null;
+        }
+
+        if (result is null || result.Count == 0) return null;
+
+        List<string> list = new List<string>();
+        foreach (SearchResult o in result)
+            if (o.Properties.Contains("userPrincipalName") && o.Properties["userPrincipalName"].Count > 0)
+                list.Add(o.Properties["userPrincipalName"][0].ToString());
+
+        return list.ToArray();
     }
 
     public static bool AuthenticateDomainUser(string username, in string password) {
@@ -89,6 +135,25 @@ public static class ActiveDirectory {
         return null;
     }
 
+    public static SearchResult GetWorkstation(string name) {
+        if (name.Length > 0) return null;
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch { }
+
+        DirectoryEntry dir = GetDirectoryEntry(domain);
+
+        using DirectorySearcher searcher = new DirectorySearcher(dir);
+        searcher.Filter = "(&(objectClass=computer)(cn=" + name + "))";
+
+        try {
+            return searcher.FindOne();
+        } catch (Exception ex) {
+            Logging.Err(ex);
+            return null;
+        }
+    }
 
     public static SearchResult GetUser(string username) {
         string domain = null;
@@ -101,36 +166,17 @@ public static class ActiveDirectory {
         searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
         //searcher.Filter = "(&(objectClass=user)(objectCategory=person)(cn=" + username + "))";
 
-        SearchResultCollection result;
+        SearchResult result = null;
         try {
-            result = searcher.FindAll();
-            //TODO: try this: searcher.FindOne();
+            result = searcher.FindOne();
         } catch (Exception ex) {
             Logging.Err(ex);
             return null;
         }
 
-        if (result is null || result.Count == 0) return null;
+        if (result is null) return null;
 
-        username = username.ToLower();
-
-        int index = -1;
-        for (int i = 0; i < result.Count; i++) {
-            if (result[i].Properties["userPrincipalName"].Count == 0) continue;
-
-            string un = result[i].Properties["userPrincipalName"][0].ToString();
-
-            if (un.Contains("@")) un = un.Substring(0, un.IndexOf("@"));
-
-            if (un.ToLower() == username) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index < 0) return null;
-
-        return result[index];
+        return result;
     }
 
     public static string FileTimeString(string value) {
