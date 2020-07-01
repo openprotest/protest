@@ -70,16 +70,19 @@ class Equip extends Window {
         btnEdit.type = "button";
         btnEdit.value = "Edit";
         this.buttons.appendChild(btnEdit);
+        btnEdit.onclick = () => this.Edit();
 
         const btnFetch = document.createElement("input");
         btnFetch.type = "button";
         btnFetch.value = "Fetch";
         this.buttons.appendChild(btnFetch);
+        btnFetch.onclick = () => this.Fetch();
 
         const btnDelete = document.createElement("input");
         btnDelete.type = "button";
         btnDelete.value = "Delete";
         this.buttons.appendChild(btnDelete);
+        btnDelete.onclick = () => this.Delete();
 
         this.sidetools = document.createElement("div");
         this.sidetools.className = "db-sidetools";
@@ -792,5 +795,15 @@ class Equip extends Window {
 
     Edit() {
 
+    }
+
+    Fetch() {
+
+    }
+
+    Delete() {
+        this.ConfirmBox("Are you sure you want to delete this entry?").addEventListener("click", () => {
+
+        });
     }
 }
