@@ -11,7 +11,7 @@ class ListUsers extends ListWindow {
             this.columns = JSON.parse(localStorage.getItem("columns_users"));
         else
             this.columns = this.defaultColumns;
-                
+
         this.db = db_users;
 
         this.toolbox.removeChild(this.btnFilter);
@@ -25,9 +25,7 @@ class ListUsers extends ListWindow {
     InflateElement(element, entry) { //override
         super.InflateElement(element, entry, null);
 
-        element.id = "u" + entry[".FILENAME"][0];
-
-        let icon = document.createElement("div");
+        const icon = document.createElement("div");
         icon.className = "lst-obj-ico";
         icon.style.backgroundImage = "url(res/user.svgz)";
         element.appendChild(icon);
@@ -35,7 +33,7 @@ class ListUsers extends ListWindow {
         for (let j = 0; j < 8; j++) {
             if (!entry.hasOwnProperty(this.columns[j])) continue;
 
-            let newLabel = document.createElement("div");
+            const newLabel = document.createElement("div");
             newLabel.innerHTML = entry[this.columns[j]][0];
             newLabel.className = "lst-obj-lbl-" + j;
             element.appendChild(newLabel);

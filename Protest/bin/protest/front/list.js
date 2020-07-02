@@ -414,6 +414,7 @@ class ListWindow extends Window {
 
         for (let i = 0; i < this.view.length; i++) { //display
             let element = document.createElement("div");
+            element.id = this.view[i][".FILENAME"][0];
             element.className = "lst-obj-ele";
             this.list.appendChild(element);
         }

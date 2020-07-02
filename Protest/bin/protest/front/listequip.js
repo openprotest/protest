@@ -56,7 +56,7 @@ class ListEquip extends ListWindow {
             this.columns = JSON.parse(localStorage.getItem("columns_equip"));
         else
             this.columns = this.defaultColumns;
-        
+
         this.db = db_equip;
 
         this.typeslist = [];
@@ -70,8 +70,6 @@ class ListEquip extends ListWindow {
 
     InflateElement(element, entry, type) { //override
         super.InflateElement(element, entry, type);
-
-        element.id = "e" + entry[".FILENAME"][0];
 
         const icon = document.createElement("div");
         icon.className = "lst-obj-ico";
