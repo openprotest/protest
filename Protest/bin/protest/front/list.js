@@ -151,9 +151,9 @@ class ListWindow extends Window {
 
     OnUiReady(count=0) {
         if (this.list.clientHeight === 0 && count < 500)
-            setTimeout(() => { this.OnUiReady() }, 25);
+            setTimeout(() => { this.OnUiReady(++count) }, 25);
         else
-            this.UpdateViewport(++count);
+            this.UpdateViewport();
     }
 
     UpdateTitlebar() {

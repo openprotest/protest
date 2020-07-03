@@ -398,6 +398,8 @@ class Database {
         else
             return Strings.INV.Array;
 
+        Console.WriteLine(filename);
+
         if (equip.ContainsKey(filename)) {
             DbEntry entry = (DbEntry)equip[filename];
 

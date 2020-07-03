@@ -55,10 +55,11 @@ class Window {
         this.isMaximized     = false;
         this.isMinimized     = false;
         this.isClosed        = false;
-        this.position        = null;
         this.themeColor      = themeColor;
+        this.position        = null;
         this.escAction       = null;
         this.defaultElement  = null;
+        this.messagesQueue   = [];
         this.args            = {};
         this.cssDependencies = [];
 
@@ -482,13 +483,19 @@ class Window {
     }
 
     ConfirmBox(message, okOnly = false) {
-        //if  a dialog is already opened, do nothing
+        //if a dialog is already opened, queue
         if (this.popoutWindow) {
-            if (this.popoutWindow.document.body.getElementsByClassName("win-dim")[0] != null) return null;
+            if (this.popoutWindow.document.body.getElementsByClassName("win-dim")[0] != null) {
+                this.messagesQueue.push([message, okOnly]);
+                return null;
+            }
         } else {
-            if (this.win.getElementsByClassName("win-dim")[0] != null) return null;
+            if (this.win.getElementsByClassName("win-dim")[0] != null) {
+                this.messagesQueue.push([message, okOnly]);
+                return null;
+            }
         }
-
+        
         const dim = document.createElement("div");
         dim.className = "win-dim";
 
@@ -538,17 +545,20 @@ class Window {
                     this.popoutWindow.document.body.removeChild(dim);
                 else
                     this.win.removeChild(dim);
+
+                let next = this.messagesQueue.shift();
+                if (next) this.ConfirmBox(next[0], next[1]);
             }, ANIM_DURATION);
         };
 
         btnOK.onclick = event => btnCancel.onclick(event);
-        btnOK.focus();        
+        btnOK.focus();
 
         return btnOK;
     }
 
     DialogBox(height) {
-        //if  a dialog is already opened, do nothing
+        //if a dialog is already opened, do nothing
         if (this.popoutWindow) {
             if (this.popoutWindow.document.body.getElementsByClassName("win-dim")[0] != null) return null;
         } else {

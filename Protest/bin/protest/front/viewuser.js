@@ -457,7 +457,7 @@ class User extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", "deluser&file=" + this.filename, true);
+            xhr.open("GET", "deluser&" + this.filename, true);
             xhr.send();
         });
     }

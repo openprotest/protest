@@ -805,14 +805,17 @@ class Equip extends Window {
         this.ConfirmBox("Are you sure you want to delete this entry?").addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") {
-                    this.Close();
-                }
+                if (xhr.readyState == 4 && xhr.status == 200)
+                    if (xhr.responseText == "ok") {
+                        this.Close();
+                    } else {
+                        this.ConfirmBox(xhr.responseText, true);
+                    }
 
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", "delequip&file=" + this.filename, true);
+            xhr.open("GET", "delequip&" + this.filename, true);
             xhr.send();
         });
     }
