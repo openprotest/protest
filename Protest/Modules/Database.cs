@@ -308,12 +308,12 @@ class Database {
     public static byte[] GetValue(DbEntry entry, string property) {
 #if DEBUG
         return Encoding.UTF8.GetBytes("(debug mode)");
-#endif
-
+#else
         if (!entry.hash.ContainsKey(property)) return new byte[] { };
         string[] value = (string[])entry.hash[property];
 
         return Encoding.UTF8.GetBytes(value[0]);
+#endif
     }
 
     public static byte[] SaveEquip(HttpListenerContext ctx, in string performer) {
@@ -324,30 +324,28 @@ class Database {
         if (payload.Length == 0) return Strings.INV.Array;
 
         string[] split = payload.Split((char)127);
-        if (split.Length < 4) return Strings.INF.Array; //not enough information
+        if (split.Length < 4) return Strings.INF.Array;
 
         Hashtable payloadHash = new Hashtable(); //payload as string
 
         string filename = "";
         for (int i = 0; i < split.Length - 1; i += 2) {
             split[i] = split[i].ToUpper();
-            if (split[i] == ".FILENAME") filename = split[i + 1];
+            if (split[i] == ".FILENAME") filename = split[i+1];
 
-            //if (payloadHash.ContainsKey(split[i])) //if property exists append on it
-            //    payloadHash[split[i]] = $"{payloadHash[split[i]]}; {split[i+1]}";
-            //else
-            //    payloadHash.Add(split[i], split[i+1]);
-
-            payloadHash.Add(split[i], split[i + 1]);
+            if (payloadHash.ContainsKey(split[i])) //if property exists append on it
+                payloadHash[split[i]] = $"{payloadHash[split[i]]}; {split[i+1]}";
+            else
+                payloadHash.Add(split[i], split[i+1]);
         }
 
         if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
 
         DbEntry entry;
-        if (equip.ContainsKey(filename)) //existing entry
+        if (equip.ContainsKey(filename)) { //existing entry
             entry = (DbEntry)equip[filename];
 
-        else { //new entry
+        } else { //new entry
             entry = new DbEntry() {
                 filename = DateTime.Now.Ticks.ToString(),
                 hash = new Hashtable(),
@@ -361,34 +359,55 @@ class Database {
             equip.Add(filename, entry);
         }
 
-        List<string> removed = new List<string>();
-        foreach (DictionaryEntry o in entry.hash) if (!payloadHash.ContainsKey(o.Key)) removed.Add(o.Key.ToString());
-        foreach (string o in removed) entry.hash.Remove(o);
-        removed.Clear();
+        List<string> remove = new List<string>();
+        foreach (DictionaryEntry o in entry.hash) if (!payloadHash.ContainsKey(o.Key)) remove.Add(o.Key.ToString());
+        foreach (string o in remove) entry.hash.Remove(o);
+        remove.Clear();
+                
+        foreach (DictionaryEntry o in payloadHash)
+            if (entry.hash.ContainsKey(o.Key)) { //overwrite property
+                string key = (string)o.Key;
+                string[] current = (string[])entry.hash[key];
+                if (key.Contains("PASSWORD")) {
+                    if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
+                } else
+                    entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
 
-        lock (entry.write_lock) {
-            foreach (DictionaryEntry o in payloadHash) {
-                if (entry.hash.ContainsKey(o.Key)) { //overwrite property
-                    string key = (string)o.Key;
-                    string[] current = (string[])entry.hash[key];
-                    if (key.Contains("PASSWORD")) {
-                        if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
-                    } else
-                        entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
-
-                } else //new property
-                    entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
+            } else {//new property
+                entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
             }
+        
+        //if hash don't have ".FILENAME" property, create one
+        if (!entry.hash.ContainsKey(".FILENAME")) entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
 
-            //if hash don't have ".FILENAME" property, create it
-            if (!entry.hash.ContainsKey(".FILENAME")) entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
-        }
-
-        Write(entry, in performer); //Write uses its own lock
+        Write(entry, in performer); //Write() uses its own lock
 
         equipVer = DateTime.Now.Ticks;
-        BroadcastMessage("");
-        return Encoding.UTF8.GetBytes($"ok{(char)127}{equipVer}");
+
+        StringBuilder respone = new StringBuilder();
+        respone.Append("{");
+        respone.Append("\"status\":\"ok\",");
+        respone.Append("\"action\":\"update\",");
+        respone.Append("\"type\":\"equip\",");
+        respone.Append($"\"target\":\"{filename}\",");
+        respone.Append($"\"version\":\"{equipVer}\",");
+
+        respone.Append("\"string\":[");
+        bool fst = true;
+        foreach (DictionaryEntry o in entry.hash) {
+            if (!fst) respone.Append(",");
+            string key = (string)o.Key;
+            string[] current = (string[])entry.hash[key];
+            respone.Append($"[\"{key.Replace("\"", "\\\"")}\",\"{current[0].Replace("\"", "\\\"")}\",\"{current[1].Replace("\"", "\\\"")}\"]");
+            fst = false;
+        }
+        respone.Append("]");
+         
+        respone.Append("}");
+
+        byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
+        BroadcastMessage(bytes);
+        return bytes;
     }
 
     public static byte[] DeleteEquip(string[] para, in string performer) {
@@ -397,8 +416,6 @@ class Database {
             filename = para[1];
         else
             return Strings.INV.Array;
-
-        Console.WriteLine(filename);
 
         if (equip.ContainsKey(filename)) {
             DbEntry entry = (DbEntry)equip[filename];
@@ -421,7 +438,7 @@ class Database {
 
             equipVer = DateTime.Now.Ticks;
             BroadcastMessage("");
-            return Encoding.UTF8.GetBytes($"ok{(char)127}{equipVer}");
+            return Strings.OK.Array;
         } else
             return Strings.FLE.Array;
     }
@@ -434,27 +451,28 @@ class Database {
         if (payload.Length == 0) return Strings.INV.Array;
 
         string[] split = payload.Split((char)127);
-        if (split.Length < 4) return Strings.INF.Array; //not enough information
+        if (split.Length < 4) return Strings.INF.Array;
 
         Hashtable payloadHash = new Hashtable(); //payload as string
 
         string filename = "";
         for (int i = 0; i < split.Length - 1; i += 2) {
             split[i] = split[i].ToUpper();
-            if (split[i] == ".FILENAME") filename = split[i + 1];
+            if (split[i] == ".FILENAME") filename = split[i+1];
 
             if (payloadHash.ContainsKey(split[i])) //if property exists append on it
-                payloadHash[split[i]] = $"{payloadHash[split[i]]}; {split[i + 1]}";
+                payloadHash[split[i]] = $"{payloadHash[split[i]]}; {split[i+1]}";
             else
-                payloadHash.Add(split[i], split[i + 1]);
+                payloadHash.Add(split[i], split[i+1]);
         }
 
         if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
 
         DbEntry entry;
-        if (users.ContainsKey(filename)) //existing entry
+        if (users.ContainsKey(filename)) { //existing entry
             entry = (DbEntry)users[filename];
-        else {
+
+        } else {
             entry = new DbEntry() { //new entry
                 filename = DateTime.Now.Ticks.ToString(),
                 hash = new Hashtable(),
@@ -473,28 +491,49 @@ class Database {
         foreach (string o in removed) entry.hash.Remove(o);
         removed.Clear();
 
-        lock (entry.write_lock) {
-            foreach (DictionaryEntry o in payloadHash) {
-                if (entry.hash.ContainsKey(o.Key)) { //overwrite property
-                    string key = (string)o.Key;
-                    string[] current = (string[])entry.hash[key];
-                    if (key.Contains("PASSWORD")) {
-                        if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
-                    } else
-                        entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
-                } else //new property
-                    entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
+        foreach (DictionaryEntry o in payloadHash)
+            if (entry.hash.ContainsKey(o.Key)) { //overwrite property
+                string key = (string)o.Key;
+                string[] current = (string[])entry.hash[key];
+                if (key.Contains("PASSWORD")) {
+                    if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
+                } else
+                    entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
+            } else {//new property
+                entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
             }
+        
+        //if hash don't have ".FILENAME" property, create it
+        if (!entry.hash.ContainsKey(".FILENAME")) entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
 
-            //if hash don't have ".FILENAME" property, create it
-            if (!entry.hash.ContainsKey(".FILENAME")) entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
-        }
-
-        Write(entry, in performer); //Write uses its own lock
+        Write(entry, in performer); //Write() uses its own lock
 
         usersVer = DateTime.Now.Ticks;
-        BroadcastMessage("");
-        return Encoding.UTF8.GetBytes($"ok{(char)127}{usersVer}");
+
+        StringBuilder respone = new StringBuilder();
+        respone.Append("{");
+        respone.Append("\"status\":\"ok\",");
+        respone.Append("\"action\":\"update\",");
+        respone.Append("\"type\":\"user\",");
+        respone.Append($"\"target\":\"{filename}\",");
+        respone.Append($"\"version\":\"{usersVer}\",");
+
+        respone.Append("\"string\":[");
+        bool fst = true;
+        foreach (DictionaryEntry o in entry.hash) {
+            if (!fst) respone.Append(",");
+            string key = (string)o.Key;
+            string[] current = (string[])entry.hash[key];
+            respone.Append($"[\"{key.Replace("\"", "\\\"")}\",\"{current[0].Replace("\"", "\\\"")}\",\"{current[1].Replace("\"", "\\\"")}\"]");
+            fst = false;
+        }
+        respone.Append("]");
+
+        respone.Append("}");
+
+        byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
+        BroadcastMessage(bytes);
+        return bytes;
     }
 
     public static byte[] DeleteUser(string[] para, in string performer) {
@@ -525,14 +564,17 @@ class Database {
 
             usersVer = DateTime.Now.Ticks;
             BroadcastMessage("");
-            return Encoding.UTF8.GetBytes($"ok{(char)127}{usersVer}");
+            return Strings.OK.Array;
         } else
             return Strings.FLE.Array;
     }
 
     public static void BroadcastMessage(string message) {
+        BroadcastMessage(Encoding.UTF8.GetBytes(message));
+    }
+    public static void BroadcastMessage(byte[] message) {
         new Thread(() => {
-            //TODO: 
+            //TODO:
         }).Start();
     }
 

@@ -511,7 +511,6 @@
     <Content Include="bin\protest\front\res\mediaplayer.svg" />
     <Content Include="bin\protest\front\res\mikrotik.svg" />
     <Content Include="bin\protest\front\res\minimize.svg" />
-    <Content Include="bin\protest\front\res\mobile.svg" />
     <Content Include="bin\protest\front\res\mobilephone.svg" />
     <Content Include="bin\protest\front\res\motherboard.svg" />
     <Content Include="bin\protest\front\res\multiprinter.svg" />

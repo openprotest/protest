@@ -141,42 +141,43 @@ public static class ActiveDirectory {
         string domain = null;
         try {
             domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-        } catch { }
-
-        DirectoryEntry dir = GetDirectoryEntry(domain);
-
-        using DirectorySearcher searcher = new DirectorySearcher(dir);
-        searcher.Filter = "(&(objectClass=computer)(cn=" + name + "))";
-
-        try {
-            return searcher.FindOne();
-        } catch (Exception ex) {
-            Logging.Err(ex);
-            return null;
-        }
-    }
-
-    public static SearchResult GetUser(string username) {
-        string domain = null;
-        try {
-            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-        } catch { }
+        } catch {}
 
         DirectoryEntry dir = GetDirectoryEntry(domain);
         using DirectorySearcher searcher = new DirectorySearcher(dir);
-        searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
-        //searcher.Filter = "(&(objectClass=user)(objectCategory=person)(cn=" + username + "))";
+        searcher.Filter = $"(&(objectClass=computer)(cn={name}))";
 
         SearchResult result = null;
         try {
             result = searcher.FindOne();
-        } catch (Exception ex) {
-            Logging.Err(ex);
+        } catch {
             return null;
         }
 
         if (result is null) return null;
+        return result;
+    }
 
+    public static SearchResult GetUser(string username) {
+        if (username.Length == 0) return null;
+
+        string domain = null;
+        try {
+            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+        } catch {}
+
+        DirectoryEntry dir = GetDirectoryEntry(domain);
+        using DirectorySearcher searcher = new DirectorySearcher(dir);
+        searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={username}))";
+
+        SearchResult result = null;
+        try {
+            result = searcher.FindOne();
+        } catch {
+            return null;
+        }
+
+        if (result is null) return null;
         return result;
     }
 

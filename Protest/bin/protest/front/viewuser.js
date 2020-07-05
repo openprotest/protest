@@ -214,7 +214,7 @@ class User extends Window {
             };       
 
         if (this.entry.hasOwnProperty("MOBILE NUMBER"))
-            this.LiveButton("res/mobile.svgz", "Mobile phone").div.onclick = () => {
+            this.LiveButton("res/mobilephone.svgz", "Mobile phone").div.onclick = () => {
                 window.location.href = "tel:" + this.entry["MOBILE NUMBER"][0];
             };
 
@@ -434,12 +434,121 @@ class User extends Window {
         return newProperty;
     }
 
+    EditProperty(name, value, readonly, container) {
+        const newProperty = document.createElement("div");
+        newProperty.className = "db-edit-property";
+        container.appendChild(newProperty);
+
+        const txtName = document.createElement("input");
+        txtName.type = "text";
+        txtName.value = name.toUpperCase();
+        txtName.setAttribute("list", "us_autofill");
+        if (readonly) txtName.setAttribute("readonly", true);
+        newProperty.appendChild(txtName);
+
+        const txtValue = document.createElement("input");
+        txtValue.type = "text";
+        txtValue.value = (name == "") ? "" : value;
+        if (readonly) txtValue.setAttribute("readonly", true);
+        newProperty.appendChild(txtValue);
+
+        let remove = document.createElement("div");
+        if (!readonly) newProperty.appendChild(remove);
+        remove.onclick = () => {
+            if (newProperty.style.filter == "opacity(0)") return; //once
+            newProperty.style.filter = "opacity(0)";
+
+            for (let i = 0; i < newProperty.childNodes.length; i++) {
+                newProperty.childNodes[i].style.height = "0";
+                newProperty.childNodes[i].style.margin = "0";
+                newProperty.childNodes[i].style.padding = "0";
+            }
+
+            setTimeout(() => {
+                container.removeChild(newProperty);
+            }, 150);
+        };
+
+        return {
+            name: txtName,
+            value: txtValue,
+        };
+    }
+
     New() {
 
     }
 
     Edit() {
+        const dialog = this.DialogBox("100%");
+        const innerBox = dialog.innerBox;
+        const buttonBox = dialog.buttonBox;
+        const btnOK = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
 
+        btnOK.value = "Save";
+
+        innerBox.style.overflowY = "auto";
+        innerBox.style.padding = "8px";
+
+        const autofill = document.createElement("datalist"); //autofill
+        autofill.id = "ur_autofill";
+        innerBox.appendChild(autofill);
+        for (let i = 0; i < USER_ORDER.length; i++) {
+            if (Array.isArray(USER_ORDER[i])) continue;
+            const opt = document.createElement("option");
+            opt.value = USER_ORDER[i];
+            autofill.appendChild(opt);
+        }
+
+        for (let i = 0; i < USER_ORDER.length; i++)
+            if (!Array.isArray(USER_ORDER[i])) {
+                if (this.entry[USER_ORDER[i]] == undefined) continue;
+                this.EditProperty(USER_ORDER[i], this.entry[USER_ORDER[i]][0], false, innerBox);
+            }
+
+        for (let k in this.entry)
+            if (!USER_ORDER.includes(k, 0)) {
+                if (this.entry[k] == undefined && k != "") continue;
+                this.EditProperty(k, this.entry[k][0], (k == ".FILENAME"), innerBox);
+            }
+
+        const btnAdd = document.createElement("input");
+        btnAdd.type = "button";
+        btnAdd.value = "Add";
+        btnAdd.style.position = "absolute";
+        btnAdd.style.left = "0px";
+        buttonBox.appendChild(btnAdd);
+
+        btnAdd.onclick = () => {
+            let property = this.EditProperty("", "", false, innerBox);
+            property.name.focus();
+        };
+
+        btnOK.addEventListener("click", () => {
+            let properties = innerBox.querySelectorAll(".db-edit-property");
+
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+
+                if (xhr.readyState == 4 && xhr.status == 200)
+                    if (xhr.responseText == "ok") {
+
+                    } else {
+                        this.ConfirmBox(xhr.responseText, true);
+                    }
+            };
+
+            let payload = "";
+            for (let i = 0; i < properties.length; i++) {
+                let c = properties[i].childNodes;
+                payload += `${c[0].value}${String.fromCharCode(127)}${c[1].value}${String.fromCharCode(127)}`;
+            }
+
+            xhr.open("POST", "saveuser&" + this.filename, true);
+            xhr.send(payload);
+        });
     }
 
     Fetch() {
@@ -450,11 +559,35 @@ class User extends Window {
         this.ConfirmBox("Are you sure you want to delete this entry?").addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") {
-                    this.Close();
-                }
-
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+
+                if (xhr.readyState == 4 && xhr.status == 200)
+                    if (xhr.responseText == "ok") {
+                        this.Close();
+
+                        for (let i = 0; i < db_users.length; i++) //delete from db_users
+                            if (db_users[i][".FILENAME"][0] == this.filename) {
+                                db_users.splice(i, 1);
+                                break;
+                            }
+
+                        for (let i = 0; i < $w.array.length; i++) { //for each users list
+                            if (!($w.array[i] instanceof ListUsers)) continue;
+
+                            for (let j = 0; j < $w.array[i].view.length; j++) //delete from view list 
+                                if ($w.array[i].view[j][".FILENAME"][0] == this.filename)
+                                    $w.array[i].view.splice(j, 1);
+
+                            let elements = $w.array[i].content.querySelectorAll(`#id${this.filename}`);
+                            for (let j = 0; j < elements.length; j++) // remove list element
+                                $w.array[i].list.removeChild(elements[j]);
+
+                            $w.array[i].UpdateViewport();
+                        }
+
+                    } else {
+                        this.ConfirmBox(xhr.responseText, true);
+                    }
             };
 
             xhr.open("GET", "deluser&" + this.filename, true);

@@ -195,9 +195,6 @@ class ListWindow extends Window {
         }
     }
 
-    UpdateViewport() { //override
-    } 
-
     CustomizeColumns() {
         const dialog = this.DialogBox("320px");
         if (dialog === null) return;
@@ -358,7 +355,7 @@ class ListWindow extends Window {
         Filter();
     }
 
-    RefreshList() { //override
+    RefreshList() {
         this.view = [];
         this.list.innerHTML = "";
 
@@ -414,7 +411,7 @@ class ListWindow extends Window {
 
         for (let i = 0; i < this.view.length; i++) { //display
             let element = document.createElement("div");
-            element.id = this.view[i][".FILENAME"][0];
+            element.id = `id${this.view[i][".FILENAME"][0]}`;
             element.className = "lst-obj-ele";
             this.list.appendChild(element);
         }
@@ -425,7 +422,6 @@ class ListWindow extends Window {
     }
 
     InflateElement(element, entry, c_type) { //overridable
-
         element.onclick = () => {
             if (this.selected) 
                 this.selected.style.backgroundColor = "";
@@ -439,7 +435,7 @@ class ListWindow extends Window {
         this.UpdateViewport();
     }
 
-    UpdateViewport() { //override
+    UpdateViewport() {
         for (let i = 0; i < this.list.childNodes.length; i++)
             if (this.list.childNodes[i].offsetTop - this.list.scrollTop < -40 ||
                 this.list.childNodes[i].offsetTop - this.list.scrollTop > this.list.clientHeight) {
