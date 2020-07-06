@@ -849,10 +849,9 @@ class Equip extends Window {
         const btnOK     = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
 
-        btnOK.value = "Save";
-
         innerBox.style.overflowY = "auto";
         innerBox.style.padding = "8px";
+        btnOK.value = "Save";
 
         const autofill = document.createElement("datalist"); //autofill
         autofill.id = "eq_autofill";
@@ -905,15 +904,48 @@ class Equip extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    let j = JSON.parse(xhr.responseText);
-                    console.log(j);
 
-                    /*try {
-                        let j = JSON.parse(xhr.responseText);
-                        console.log(j);
-                    } catch (e) {
+                    if (xhr.responseText.startsWith("{")) {
+                        let json = JSON.parse(xhr.responseText);
+                        this.entry = json.obj;
+
+                        this.setIcon(GetEquipIcon(this.entry["TYPE"]));
+                        if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
+                            this.setTitle("[untitled]");
+                        else
+                            this.setTitle(this.entry["NAME"][0]);
+
+                        this.sidetools.innerHTML = "";
+                        this.live.innerHTML = "";
+                        this.InitializeComponent();
+                        this.LiveInfo();
+
+                        for (let i = 0; i < db_equip.length; i++) //update db_equip
+                            if (db_equip[i][".FILENAME"][0] == this.filename) {
+                                db_equip[i] = json.obj;
+                                break;
+                            }
+
+                        for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                            if (!($w.array[i] instanceof ListEquip)) continue;
+
+                            for (let j = 0; j < $w.array[i].view.length; j++) //update view lists
+                                if ($w.array[i].view[j][".FILENAME"][0] == this.filename) {
+                                    $w.array[i].view[j] = json.obj;
+                                    break;
+                                }
+
+                            let elements = $w.array[i].content.querySelectorAll(`#id${this.filename}`);
+                            for (let j = 0; j < elements.length; j++) { //update list element
+                                elements[j].innerHTML = "";
+                                let type = (json.obj.hasOwnProperty("TYPE")) ? json.obj["TYPE"][0].toLowerCase() : "";
+                                $w.array[i].InflateElement(elements[j], json.obj, type);
+                            }
+                        }
+
+                    } else {
                         this.ConfirmBox(xhr.responseText, true);
-                    }*/
+                    }
                 }
             };
 
@@ -926,10 +958,73 @@ class Equip extends Window {
             xhr.open("POST", "saveequip&" + this.filename, true);
             xhr.send(payload);
         });
+
+        return dialog;
     }
 
     Fetch() {
+        const dialog = this.Edit();
+        const innerBox  = dialog.innerBox;
+        const buttonBox = dialog.buttonBox;
+        const btnOK     = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
 
+        innerBox.parentNode.style.display = "none";
+        innerBox.innerHTML = "";
+
+        let waitbox = document.createElement("span");
+        waitbox.className = "waitbox";
+        waitbox.style.top = "0";
+        innerBox.parentNode.parentNode.appendChild(waitbox);
+
+        waitbox.appendChild(document.createElement("div"));
+
+        let waitLabel = document.createElement("span");
+        waitLabel.innerHTML = "Doing stuff. Please wait.";
+        waitLabel.className = "wait-label";
+        waitLabel.style.top = "0";
+        innerBox.parentNode.parentNode.appendChild(waitLabel);
+
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+
+            if (xhr.readyState == 4) {
+                if (xhr.status == 0) {
+                    dialog.Abort();
+                    this.ConfirmBox("Server is unavailable.", true);
+                    return;
+                }
+
+                if (xhr.status == 200) {
+                    let split = xhr.responseText.split(String.fromCharCode(127));
+
+                    if (split.length == 1) {
+                        dialog.Abort();
+                        this.ConfirmBox(xhr.responseText, true);
+                        return;
+                    }
+
+                    for (let i = 0; i < split.length - 1; i += 2)
+                        if (this.entry.hasOwnProperty(split[i])) { //exists
+                            if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
+                                this.entry[split[i]][0].backgroundImage = "url(res/check.svgz)";
+                            } else { //modified
+                                if (split[i] != "TYPE") { //ignore suggested TYPE if aldeady TYPE exists
+                                    this.entry[split[i]][0].style.backgroundImage = "url(res/change.svgz)";
+                                    this.entry[split[i]][0].value = split[i+1];
+                                }
+                            }
+                        } else { //new
+                            const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+                            if (entry != undefined) entry.value.style.backgroundImage = "url(res/newentry.svgz)";
+                        }
+                }
+            }
+
+        };
+
+        xhr.open("GET", "fetchequip&" + this.filename, true);
+        xhr.send();        
     }
 
     Delete() {

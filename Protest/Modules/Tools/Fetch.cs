@@ -90,7 +90,7 @@ public static class Fetch {
                         .Split(',');
 
                     string major="0", minor="0";
-                    for (int i=0;i< ver.Length; i++) {
+                    for (int i=0; i<ver.Length; i++) {
                         if (ver[i].StartsWith("major:")) major = ver[i].Substring(6);
                         if (ver[i].StartsWith("minor:")) minor = ver[i].Substring(6);
                     }
@@ -98,7 +98,7 @@ public static class Fetch {
                 }
             };
 
-         } catch (HttpRequestException ex) {
+        } catch (HttpRequestException ex) {
             Logging.Err(ex);
 
         } catch (ArgumentNullException ex) {
@@ -113,7 +113,7 @@ public static class Fetch {
 
         if (importEquip) {
             Logging.Action(in performer, $"Import users from {ip}");
-            if (version < 4) 
+            if (version < 4)
                 ImportEquip_3(uri, cookieContainer);
             else if (version == 4)
                 ImportEquip_4(uri, cookieContainer);
@@ -121,9 +121,9 @@ public static class Fetch {
 
         if (importUsers) {
             Logging.Action(in performer, $"Import equipment from {ip}");
-            if (version < 4) 
+            if (version < 4)
                 ImportUsers_3(uri, cookieContainer);
-             else if (version == 4)
+            else if (version == 4)
                 ImportUsers_4(uri, cookieContainer);
         }
 
@@ -165,12 +165,12 @@ public static class Fetch {
                     string L2 = ((string[])hash["L2 CACHE"])[0];
                     string L3 = ((string[])hash["L3 CACHE"])[0];
                     string date = ((string[])hash["L1 CACHE"])[1];
-                    
+
                     hash.Remove("L1 CACHE");
                     hash.Remove("L2 CACHE");
                     hash.Remove("L3 CACHE");
-                    
-                    hash["CPU CACHE"] = new string[] {$"{L1}/{L2}/{L3}", date, "" };
+
+                    hash["CPU CACHE"] = new string[] { $"{L1}/{L2}/{L3}", date, "" };
                 }
 
                 if (hash.ContainsKey(".VOLUME")) hash.Remove(".VOLUME");
@@ -242,7 +242,7 @@ public static class Fetch {
                         string password = GetHiddenProperty(uri, cookieContainer, $"getuserprop&file={filename}&property={(string)e.Key}");
                         passwords.Add(e.Key, password);
                     }
-                foreach (DictionaryEntry e in passwords) 
+                foreach (DictionaryEntry e in passwords)
                     hash[e.Key] = new string[] { e.Value.ToString(), "fetched from v3", "" };
 
 
@@ -287,4 +287,62 @@ public static class Fetch {
 
         return payload;
     }
+
+    public static byte[] SingleFetchEquip(string[] para) {
+        string filename = null;
+        if (para.Length > 1)
+            filename = para[1];
+        else
+            return Strings.INV.Array;
+
+        if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
+
+        Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
+
+        if (!entry.hash.ContainsKey("IP")) return Strings.INF.Array;
+
+        string ip = ((string[])entry.hash["IP"])[0];
+        if (ip.IndexOf(";") > -1) ip = ip.Split(';')[0].Trim();
+
+        return SingleFetchEquip(ip);
+    }
+    public static byte[] SingleFetchEquip(string ip) {
+        Thread.Sleep(2000);
+
+        if (ip is null) return Strings.INF.Array;
+        if (ip.Length == 0) return Strings.INF.Array;
+
+        //TODO: wmi
+
+        return null;
+    }
+
+    public static byte[] SingleFetchUser(string[] para) {
+        string filename = null;
+        if (para.Length > 1)
+            filename = para[1];
+        else
+            return Strings.INV.Array;
+
+        if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
+
+        Database.DbEntry entry = (Database.DbEntry) Database.users[filename];
+        if (!entry.hash.ContainsKey("USERNAME")) return Strings.INF.Array;
+
+        string username = ((string[])entry.hash["IP"])[0];
+        if (username.IndexOf(";") > -1) username = username.Split(';')[0].Trim();
+
+        return SingleFetchUser(username);
+    }
+    public static byte[] SingleFetchUser(string username) {
+        Thread.Sleep(2000);
+
+        if (username is null) return Strings.INF.Array;
+        if (username.Length == 0) return Strings.INF.Array;       
+
+        //TODO: fetch frrom domain controller
+
+        return null;
+    }
+
 }

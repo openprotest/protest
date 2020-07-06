@@ -616,6 +616,13 @@ class Window {
             this.BringToFront();
         };
 
+        const Abort = () => {
+            if (this.popoutWindow)
+                this.popoutWindow.document.body.removeChild(dim);
+            else
+                this.win.removeChild(dim);
+        };
+
         let once = false;
         btnCancel.onclick = event => {
             if (once) return;
@@ -624,10 +631,7 @@ class Window {
             dialogBox.style.transform = "scaleY(.2)";
             this.content.style.filter = "none";
             setTimeout(() => {
-                if (this.popoutWindow)
-                    this.popoutWindow.document.body.removeChild(dim);
-                else
-                    this.win.removeChild(dim);
+                Abort();
             }, ANIM_DURATION);
         };
 
@@ -637,7 +641,8 @@ class Window {
             innerBox: innerBox,
             buttonBox: buttonBox,
             btnOK: btnOK,
-            btnCancel: btnCancel
+            btnCancel: btnCancel,
+            Abort: Abort
         };
     }
 

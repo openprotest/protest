@@ -298,7 +298,7 @@ class Database {
         if (filename.Length == 0) return null;
         if (property.Length == 0) return null;
 
-        property = Strings.ValitateUrl(property);
+        property = Strings.EscapeUrl(property);
 
         if (!table.ContainsKey(filename)) return null;
         DbEntry entry = (DbEntry)table[filename];
@@ -386,23 +386,23 @@ class Database {
 
         StringBuilder respone = new StringBuilder();
         respone.Append("{");
-        respone.Append("\"status\":\"ok\",");
         respone.Append("\"action\":\"update\",");
         respone.Append("\"type\":\"equip\",");
         respone.Append($"\"target\":\"{filename}\",");
         respone.Append($"\"version\":\"{equipVer}\",");
 
-        respone.Append("\"string\":[");
+        respone.Append("\"obj\":{");
         bool fst = true;
         foreach (DictionaryEntry o in entry.hash) {
             if (!fst) respone.Append(",");
             string key = (string)o.Key;
             string[] current = (string[])entry.hash[key];
-            respone.Append($"[\"{key.Replace("\"", "\\\"")}\",\"{current[0].Replace("\"", "\\\"")}\",\"{current[1].Replace("\"", "\\\"")}\"]");
+            respone.Append($"\"{Strings.EscapeJson(key)}\":");
+            respone.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
             fst = false;
         }
-        respone.Append("]");
-         
+        respone.Append("}");
+
         respone.Append("}");
 
         byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
@@ -512,22 +512,22 @@ class Database {
 
         StringBuilder respone = new StringBuilder();
         respone.Append("{");
-        respone.Append("\"status\":\"ok\",");
         respone.Append("\"action\":\"update\",");
         respone.Append("\"type\":\"user\",");
         respone.Append($"\"target\":\"{filename}\",");
         respone.Append($"\"version\":\"{usersVer}\",");
 
-        respone.Append("\"string\":[");
+        respone.Append("\"obj\":{");
         bool fst = true;
         foreach (DictionaryEntry o in entry.hash) {
             if (!fst) respone.Append(",");
             string key = (string)o.Key;
             string[] current = (string[])entry.hash[key];
-            respone.Append($"[\"{key.Replace("\"", "\\\"")}\",\"{current[0].Replace("\"", "\\\"")}\",\"{current[1].Replace("\"", "\\\"")}\"]");
+            respone.Append($"\"{Strings.EscapeJson(key)}\":");
+            respone.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
             fst = false;
         }
-        respone.Append("]");
+        respone.Append("}");
 
         respone.Append("}");
 

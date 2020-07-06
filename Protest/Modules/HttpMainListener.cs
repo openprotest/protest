@@ -131,10 +131,12 @@ class HttpMainListener : Http {
                 case "getequiptable": buffer = Database.GetEquipTable(); break;
                 case "getuserstable": buffer = Database.GetUsersTable(); break;
 
-                case "saveequip": buffer = Database.SaveEquip(ctx, performer); break;
-                case "delequip":  buffer = Database.DeleteEquip(para, performer); break;
-                case "saveuser":  buffer = Database.SaveUser(ctx, performer); break;
-                case "deluser":   buffer = Database.DeleteUser(para, performer); break;
+                case "fetchequip": buffer = Fetch.SingleFetchEquip(para); break;
+                case "saveequip":  buffer = Database.SaveEquip(ctx, performer); break;
+                case "delequip":   buffer = Database.DeleteEquip(para, performer); break;
+                case "fetchuser":  buffer = Fetch.SingleFetchUser(para); break;
+                case "saveuser":   buffer = Database.SaveUser(ctx, performer); break;
+                case "deluser":    buffer = Database.DeleteUser(para, performer); break;
 
                 case "dnslookup":    buffer = Dns.DnsLookup(ctx); break;
                 case "locateip":     buffer = LocateIp.Locate(ctx); break;

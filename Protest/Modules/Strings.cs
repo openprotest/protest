@@ -6,8 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 public static class Strings {
-    public const string DATE_FORMAT = "HH:mm:ss";
     public const string TIME_FORMAT_MILLI = "HH:mm:ss:fff";
+    public const string Time_FORMAT = "HH:mm:ss";
+    public const string DATE_FORMAT = "dd-MM-yyyy";
     public const string DATETIME_FORMAT = "ddd, dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_LONG = "dddd dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_FILE = "yyyy-MM-dd HH:mm:ss";
@@ -75,7 +76,7 @@ public static class Strings {
         }
     }
 
-    public static string ValitateUrl(string url) {
+    public static string EscapeUrl(string url) {
         string s = url;
 
         //s = s.Replace("+", " ");
@@ -121,6 +122,20 @@ public static class Strings {
         s = s.Replace("%7D", "}");
         s = s.Replace("%7E", "~");
         s = s.Replace("%7F", ((char)127).ToString());
+
+        return s;
+    }
+
+    public static string EscapeJson(string json) {
+        string s = json;
+
+        s = s.Replace("\\", "\\\\");
+        s = s.Replace("\"", "\\\"");
+        s = s.Replace("\b", "\\\b");
+        s = s.Replace("\f", "\\\f");
+        s = s.Replace("\n", "\\\n");
+        s = s.Replace("\r", "\\\r");
+        s = s.Replace("\t", "\\\t");
 
         return s;
     }

@@ -486,10 +486,9 @@ class User extends Window {
         const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
 
-        btnOK.value = "Save";
-
         innerBox.style.overflowY = "auto";
         innerBox.style.padding = "8px";
+        btnOK.value = "Save";
 
         const autofill = document.createElement("datalist"); //autofill
         autofill.id = "ur_autofill";
@@ -532,12 +531,48 @@ class User extends Window {
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
-                if (xhr.readyState == 4 && xhr.status == 200)
-                    if (xhr.responseText == "ok") {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+
+                    if (xhr.responseText.startsWith("{")) {
+                        let json = JSON.parse(xhr.responseText);
+                        this.entry = json.obj;
+
+                        if (!this.entry.hasOwnProperty("TITLE") || this.entry["TITLE"][0].length == 0)
+                            this.setTitle("[untitled]");
+                        else
+                            this.setTitle(this.entry["TITLE"][0]);
+
+                        this.sidetools.innerHTML = "";
+                        this.live.innerHTML = "";
+                        this.InitializeComponent();
+                        this.LiveInfo();
+
+                        for (let i = 0; i < db_users.length; i++) //update db_users
+                            if (db_users[i][".FILENAME"][0] == this.filename) {
+                                db_users[i] = json.obj;
+                                break;
+                            }
+
+                        for (let i = 0; i < $w.array.length; i++) { //for each user list
+                            if (!($w.array[i] instanceof ListUsers)) continue;
+
+                            for (let j = 0; j < $w.array[i].view.length; j++) //update view lists
+                                if ($w.array[i].view[j][".FILENAME"][0] == this.filename) {
+                                    $w.array[i].view[j] = json.obj;
+                                    break;
+                                }
+
+                            let elements = $w.array[i].content.querySelectorAll(`#id${this.filename}`);
+                            for (let j = 0; j < elements.length; j++) { //update list element
+                                elements[j].innerHTML = "";
+                                $w.array[i].InflateElement(elements[j], json.obj);
+                            }
+                        }
 
                     } else {
                         this.ConfirmBox(xhr.responseText, true);
                     }
+                }
             };
 
             let payload = "";
@@ -552,7 +587,17 @@ class User extends Window {
     }
 
     Fetch() {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                const obj = this.Edit();
+            }
+        };
+
+        xhr.open("GET", "fetchuser&" + this.filename, true);
+        xhr.send(); 
     }
 
     Delete() {

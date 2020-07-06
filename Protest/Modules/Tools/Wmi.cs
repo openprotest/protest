@@ -445,8 +445,8 @@ static class Wmi {
         string host = "";
         string query = "";
         for (int i = 1; i < para.Length; i++) {
-            if (para[i].StartsWith("target=")) host = Strings.ValitateUrl(para[i].Substring(7));
-            if (para[i].StartsWith("q=")) query = Strings.ValitateUrl(para[i].Substring(2));
+            if (para[i].StartsWith("target=")) host = Strings.EscapeUrl(para[i].Substring(7));
+            if (para[i].StartsWith("q=")) query = Strings.EscapeUrl(para[i].Substring(2));
         }
 
         ManagementScope scope = WmiScope(host);
@@ -492,8 +492,8 @@ static class Wmi {
         string host = "";
         int pid = -1;
         for (int i = 1; i < para.Length; i++) {
-            if (para[i].StartsWith("target=")) host = Strings.ValitateUrl(para[i].Substring(7));
-            if (para[i].StartsWith("pid=")) pid = Int32.Parse(Strings.ValitateUrl(para[i].Substring(4)));
+            if (para[i].StartsWith("target=")) host = Strings.EscapeUrl(para[i].Substring(7));
+            if (para[i].StartsWith("pid=")) pid = Int32.Parse(Strings.EscapeUrl(para[i].Substring(4)));
         }
 
         if (pid == -1) return Strings.WMI_PAR.Array;
