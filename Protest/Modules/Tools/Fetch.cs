@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.DirectoryServices;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -291,21 +288,6 @@ public static class Fetch {
         return payload;
     }
 
-
-    private delegate string FormatMethodPtr(string value);
-    private static void ContentBuilderAddValue(in SearchResult sr, in string property, in string label, in StringBuilder content, FormatMethodPtr format = null) {
-        for (int i = 0; i < sr.Properties[property].Count; i++) {
-            string value = sr.Properties[property][i].ToString();
-            if (value.Length > 0) {
-                if (format != null) value = format.Invoke(value);
-                if (value.Length == 0) continue;
-                content.Append($"{label}{(char)127}{value}{(char)127}");
-                break;
-            }
-        }
-    }
-
-
     public static byte[] SingleFetchEquip(string[] para) {
         string host = null, filename = null;
         for (int i = 0; i < para.Length; i++) {
@@ -337,58 +319,114 @@ public static class Fetch {
         if (ip is null) return Strings.INF.Array;
         if (ip.Length == 0) return Strings.INF.Array;
 
-        string biosnetname = NetBios.GetBiosName(ip);
+        string netbios = NetBios.GetBiosName(ip);
 
         Hashtable wmi      = new Hashtable();
         Hashtable ad       = new Hashtable();
-        Hashtable portscan = new Hashtable();
-
-        Console.WriteLine("start");
-
-        new Thread(() => { }).Start();
+        string portscan = "";
 
         Thread tWmi = new Thread(()=> {
-            Thread.Sleep(1000);
-            //Hashtable hash = Wmi.WmiFetch(ip);
+            wmi = Wmi.WmiFetch(ip);
         });
 
         Thread tAd = new Thread(()=> {
-            Thread.Sleep(1000);
-            //if (biosnetname is null) return;
-           //ActiveDirectory.GetWorkstation(biosnetname);
+            if (netbios is null) return;
+
+            System.DirectoryServices.SearchResult result = ActiveDirectory.GetWorkstation(netbios);
+            if (result is null) return;
+
+            if (result.Properties["description"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["description"][0].ToString());
+                if (value.Length > 0) ad.Add("DESCRIPTION", value);
+            }
+            
+            if (result.Properties["distinguishedName"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["distinguishedName"][0].ToString());
+                if (value.Length > 0) ad.Add("DISTINGUISHED NAME", value);
+            }
+            
+            if (result.Properties["dNSHostName"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["dNSHostName"][0].ToString());
+                if (value.Length > 0) ad.Add("DNS HOSTNAME", value);
+            }
+            
+            if (result.Properties["objectSid"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["objectSid"][0].ToString());
+                if (value.Length > 0) ad.Add("SID", value);
+            }
+
+            if (result.Properties["operatingSystem"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["operatingSystem"][0].ToString());
+                if (value.Length > 0) ad.Add("OPERATING SYSTEM", value);
+            }
+            
+            if (result.Properties["whenCreated"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["whenCreated"][0].ToString());
+                if (value.Length > 0) ad.Add("CREATED ON DC", value);
+            }
+
+            if (result.Properties["whenChanged"].Count > 0) {
+                string value = ActiveDirectory.FileTimeString(result.Properties["whenChanged"][0].ToString());
+                if (value.Length > 0) ad.Add("CHANGED ON DC", value);
+            }
         });
 
-        Thread tPortscan = new Thread(()=> {
-            Thread.Sleep(1000);
-            //PortScan.PortsScanAsync(ip,PortScan.basic_ports);
+        Thread tPortscan = new Thread(async()=> {
+            bool[] ports = await PortScan.PortsScanAsync(ip, PortScan.basic_ports);
+
+            for (int i = 0; i< PortScan.basic_ports.Length; i++)
+                if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";
+
+            if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);
+
         });
 
-        Console.WriteLine($"START TASK {DateTime.Now.ToString("HH:mm:ss:fff")}");
-
-        tWmi.Start();
-        tAd.Start();
-        tPortscan.Start();
-        tWmi.Join();
-        tAd.Join();
-        tPortscan.Join();
-
-        Console.WriteLine($"STOP TASK {DateTime.Now.ToString("HH:mm:ss:fff")}");
+        tWmi.Start(); tAd.Start(); tPortscan.Start();
+        tWmi.Join();  tAd.Join();  tPortscan.Join();
 
         StringBuilder content = new StringBuilder();
 
-        if (!wmi.ContainsKey("MAC ADDRESS")) {
-            Arp.ArpRequest(ip);
+        foreach (DictionaryEntry o in wmi)
+            content.Append($"{o.Key}{(char)127}{o.Value}{(char)127}WMI{(char)127}");
+
+        foreach (DictionaryEntry o in ad) {
+            string key = o.Key.ToString();
+
+            if (key == "OPERATING SYSTEM") {
+                if (!wmi.ContainsKey("OPERATING SYSTEM"))
+                    content.Append($"{key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
+
+            } else {
+                content.Append($"{key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
+            }
         }
 
-        if (!wmi.ContainsKey("MANUFACTURER")) {
-            //manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
+        if (portscan.Length > 0) 
+            content.Append($"PORTS{(char)127}{portscan}{(char)127}Port-scan{(char)127}");
+        
+        string mac = "";
+        if (wmi.ContainsKey("MAC ADDRESS")) {
+            mac = ((string)wmi["MAC ADDRESS"]).Split(';')[0].Trim();
+        } else {
+            mac = Arp.ArpRequest(ip);
+            if (!(mac is null) && mac.Length > 0)
+                content.Append($"MAC ADDRESS{(char)127}{mac}{(char)127}ARP{(char)127}");
+        }
+
+        if (!wmi.ContainsKey("MANUFACTURER") && mac.Length > 0) {
+            string manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
+            if (!(manufacturer is null) && manufacturer.Length > 0)
+                content.Append($"MANUFACTURER{(char)127}{mac}{(char)127}MAC lookup{(char)127}");
         }
 
         if (!wmi.ContainsKey("HOSTNAME"))
-            if (!(biosnetname is null) && biosnetname.Length > 0) { //user biosnet
-
-            } else { //user dns
-                Hashtable dns = new Hashtable();
+            if (!(netbios is null) && netbios.Length > 0) { //use biosnet
+                content.Append($"HOSTNAME{(char)127}{netbios}{(char)127}NetBIOS{(char)127}");
+            } else { //use dns
+                try {
+                    string hostname = System.Net.Dns.GetHostEntry(ip).HostName;
+                    content.Append($"HOSTNAME{(char)127}{hostname}{(char)127}DNS{(char)127}");
+                } catch { }
             }
         
         //name and type
@@ -420,34 +458,14 @@ public static class Fetch {
         if (username is null) return Strings.INF.Array;
         if (username.Length == 0) return Strings.INF.Array;
 
-        SearchResult sr = ActiveDirectory.GetUser(username);
-        if (sr is null) return Strings.FAI.Array;
+        Hashtable hash = ActiveDirectory.AdFetch(username);
+        if (hash is null) return Strings.FAI.Array;
 
         StringBuilder content = new StringBuilder();
 
-        ContentBuilderAddValue(sr, "personalTitle", "TITLE", content, null);
-        if (content.Length == 0) ContentBuilderAddValue(sr, "title", "TITLE", content, null);
-
-        ContentBuilderAddValue(sr, "givenName", "FIRST NAME", content, null);
-        ContentBuilderAddValue(sr, "middleName", "MIDDLE NAME", content, null);
-        ContentBuilderAddValue(sr, "sn", "LAST NAME", content, null);
-
-        ContentBuilderAddValue(sr, "displayName", "DISPLAY NAME", content, null);
-
-        ContentBuilderAddValue(sr, "userPrincipalName", "USERNAME", content, ActiveDirectory.GetUsername);
-
-        ContentBuilderAddValue(sr, "mail", "E-MAIL", content, null);
-        ContentBuilderAddValue(sr, "otherMailbox", "SECONDARY E-MAIL", content, null);
-        ContentBuilderAddValue(sr, "mobile", "MOBILE NUMBER", content, null);
-        ContentBuilderAddValue(sr, "telephoneNumber", "TELEPHONE NUMBER", content, null);
-        ContentBuilderAddValue(sr, "facsimileTelephoneNumber", "FAX", content, null);
-
-        ContentBuilderAddValue(sr, "employeeID", "EMPLOYEE ID", content, null);
-        ContentBuilderAddValue(sr, "company", "COMPANY", content, null);
-        ContentBuilderAddValue(sr, "department", "DEPARTMENT", content, null);
-        ContentBuilderAddValue(sr, "division", "DIVISION", content, null);
-        ContentBuilderAddValue(sr, "comment", "COMMENT", content, null);
-
+        foreach (DictionaryEntry o in hash) 
+            content.Append($"{o.Key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
+        
         return Encoding.UTF8.GetBytes(content.ToString());
     }
 

@@ -34,6 +34,7 @@ static class WoL {
 
     public static byte[] Wakeup(string mac, string ip, string mask) {
         if (ip.Contains(";")) ip = ip.Substring(0, ip.IndexOf(";")).Trim();
+        if (mask.Contains(";")) mask = mask.Substring(0, mask.IndexOf(";")).Trim();
         return Wakeup(mac, IPAddress.Parse(ip), IPAddress.Parse(mask));
     }
 

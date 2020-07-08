@@ -99,16 +99,16 @@ class LiveInfo {
 
             if (equip.hash.ContainsKey("HOSTNAME")) {
                 string hostname = ((string[])equip.hash["HOSTNAME"])[0];
-                SearchResult sr = ActiveDirectory.GetWorkstation(hostname);
+                SearchResult result = ActiveDirectory.GetWorkstation(hostname);
 
-                if (sr != null) {
-                    if (sr.Properties["lastLogonTimestamp"].Count > 0) {
-                        string time = ActiveDirectory.FileTimeString(sr.Properties["lastLogonTimestamp"][0].ToString());
+                if (result != null) {
+                    if (result.Properties["lastLogonTimestamp"].Count > 0) {
+                        string time = ActiveDirectory.FileTimeString(result.Properties["lastLogonTimestamp"][0].ToString());
                         if (time.Length > 0) WsWriteText(ws, $"last logon{(char)127}{time}{(char)127}Active directory");
                     }
 
-                    if (sr.Properties["lastLogoff"].Count > 0) {
-                        string time = ActiveDirectory.FileTimeString(sr.Properties["lastLogoff"][0].ToString());
+                    if (result.Properties["lastLogoff"].Count > 0) {
+                        string time = ActiveDirectory.FileTimeString(result.Properties["lastLogoff"][0].ToString());
                         if (time.Length > 0) WsWriteText(ws, $"last logoff{(char)127}{time}{(char)127}Active directory");
                     }
                 }

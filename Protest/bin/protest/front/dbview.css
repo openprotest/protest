@@ -319,6 +319,7 @@
 }
 
 .db-edit-property {
+    height: 32px;
     transition: .2s;
 }
 
@@ -370,8 +371,14 @@
     background-color: rgb(140,140,140);
 }
 
-.db-edit-property > *:active {
-    background-color: rgb(162,162,162);
+.db-edit-property > div:nth-child(4) {
+    display: inline-block;
+    background-color: transparent;
+    width: 150px;
+    padding: 6px 0px 0px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 

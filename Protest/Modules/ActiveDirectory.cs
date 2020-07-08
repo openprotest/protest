@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Net;
@@ -179,6 +180,54 @@ public static class ActiveDirectory {
 
         if (result is null) return null;
         return result;
+    }
+
+    private delegate string FormatMethodPtr(string value);
+    private static void ContentBuilderAddValue(in SearchResult sr, in string property, in string label, in Hashtable hash, FormatMethodPtr format = null) {
+        for (int i = 0; i < sr.Properties[property].Count; i++) {
+            string value = sr.Properties[property][i].ToString();
+            if (value.Length > 0) {
+                if (format != null) value = format.Invoke(value);
+                if (value.Length == 0) continue;
+                hash.Add(label, value);
+                break;
+            }
+        }
+    }
+
+    public static Hashtable AdFetch(string username) {
+        SearchResult result = ActiveDirectory.GetUser(username);
+        if (result is null) return null;
+        return AdFetch(result);
+    }
+
+    public static Hashtable AdFetch(SearchResult result) {
+        Hashtable hash = new Hashtable();
+
+        ContentBuilderAddValue(result, "personalTitle", "TITLE", hash, null);
+        if (hash.Count == 0) ContentBuilderAddValue(result, "title", "TITLE", hash, null);
+
+        ContentBuilderAddValue(result, "givenName", "FIRST NAME", hash, null);
+        ContentBuilderAddValue(result, "middleName", "MIDDLE NAME", hash, null);
+        ContentBuilderAddValue(result, "sn", "LAST NAME", hash, null);
+
+        ContentBuilderAddValue(result, "displayName", "DISPLAY NAME", hash, null);
+
+        ContentBuilderAddValue(result, "userPrincipalName", "USERNAME", hash, ActiveDirectory.GetUsername);
+
+        ContentBuilderAddValue(result, "mail", "E-MAIL", hash, null);
+        ContentBuilderAddValue(result, "otherMailbox", "SECONDARY E-MAIL", hash, null);
+        ContentBuilderAddValue(result, "mobile", "MOBILE NUMBER", hash, null);
+        ContentBuilderAddValue(result, "telephoneNumber", "TELEPHONE NUMBER", hash, null);
+        ContentBuilderAddValue(result, "facsimileTelephoneNumber", "FAX", hash, null);
+
+        ContentBuilderAddValue(result, "employeeID", "EMPLOYEE ID", hash, null);
+        ContentBuilderAddValue(result, "company", "COMPANY", hash, null);
+        ContentBuilderAddValue(result, "department", "DEPARTMENT", hash, null);
+        ContentBuilderAddValue(result, "division", "DIVISION", hash, null);
+        ContentBuilderAddValue(result, "comment", "COMMENT", hash, null);
+
+        return hash;
     }
 
     public static string GetUsername(string value) {

@@ -172,7 +172,7 @@ static class Wmi {
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")).Get();
                 //ContentBuilderAddArray(moc, "IPAddress", "IPV6", hash, new FormatMethodPtr(IPv6Filter));
-                ContentBuilderAddArray(moc, "IPAddress", "IP", hash);
+                ContentBuilderAddArray(moc, "IPAddress", "IP", hash, new FormatMethodPtr(IPv4Filter));
                 ContentBuilderAddArray(moc, "MACAddress", "MAC ADDRESS", hash);
                 ContentBuilderAddArray(moc, "IPSubnet", "MASK", hash);
                 ContentBuilderAddArray(moc, "DHCPEnabled", "DHCP ENABLED", hash);

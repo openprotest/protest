@@ -28,6 +28,8 @@ const EQUIP_ORDER = [
     ["res/user.svgz", "Owner"],
     "OWNER", "OWNER FULLNAME", "LOCATION",
 
+
+
     ["res/credencial.svgz", "Credential"],
     "DOMAIN", "USERNAME", "PASSWORD", "LA PASSWORD", "SSH USERNAME", "SSH PASSWORD"
 ];
@@ -820,6 +822,7 @@ class Equip extends Window {
         remove.onclick = () => {
             if (newProperty.style.filter == "opacity(0)") return; //once
             newProperty.style.filter = "opacity(0)";
+            newProperty.style.height = "0";
 
             for (let i = 0; i < newProperty.childNodes.length; i++) {
                 newProperty.childNodes[i].style.height = "0";
@@ -996,44 +999,44 @@ class Equip extends Window {
 
                 if (xhr.status == 200) {
                     let split = xhr.responseText.split(String.fromCharCode(127));
-
                     if (split.length == 1) {
                         dialog.Abort();
                         this.ConfirmBox(xhr.responseText, true);
                         return;
                     }
 
-                    for (let i = 0; i < split.length - 1; i += 2)
-                        if (this.entry.hasOwnProperty(split[i])) { //exists
+                    let names = new Set(Object.keys(this.entry));
+                    for (let i = 0; i < split.length - 1; i += 3) {
+                        const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+
+                        if (names.has(split[i])) { //exists
                             if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
-                                this.entry[split[i]][0].backgroundImage = "url(res/check.svgz)";
+                                entry.value.style.backgroundImage = "url(res/check.svgz)";
                             } else { //modified
-                                if (split[i] != "TYPE") { //ignore suggested TYPE if aldeady TYPE exists
-                                    this.entry[split[i]][0].style.backgroundImage = "url(res/change.svgz)";
-                                    this.entry[split[i]][0].value = split[i+1];
-                                }
+                                entry.value.style.backgroundImage = "url(res/change.svgz)";
                             }
+                            names.delete(split[i]);
                         } else { //new
-                            const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
-                            if (entry != undefined) entry.value.style.backgroundImage = "url(res/newentry.svgz)";
+                            entry.value.style.backgroundImage = "url(res/newentry.svgz)";
                         }
 
-                    for (let i = 0; i < split.length - 1; i += 2)
-                        if (this.entry.hasOwnProperty(split[i])) { //exists
-                            if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
-                                const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
-                                entry.value.style.backgroundImage = "url(res/check.svgz)";
-                                entry.value.style.paddingRight = "24px";
-                            } else { //modified
-                                const entry = this.EditProperty(split[i], split[i]=="TYPE" && this.entry.hasOwnProperty("TYPE") ? this.entry["TYPE"][0] : split[i+1], false, innerBox);
-                                entry.value.style.backgroundImage = "url(res/change.svgz)";
-                                entry.value.style.paddingRight = "24px";
-                            }
-                        } else { //new
-                            const entry = this.EditProperty(split[i], split[i + 1], false, innerBox);
-                            entry.value.style.backgroundImage = "url(res/newentry.svgz)";
-                            entry.value.style.paddingRight = "24px";
-                        }
+                        entry.value.style.paddingRight = "24px";
+                        entry.value.style.width = "calc(60% - 200px)";
+
+                        let lblSource = document.createElement("div");
+                        lblSource.innerHTML = split[i+2];
+                        entry.value.parentNode.appendChild(lblSource);
+                    }
+
+                    for (let name of names) {
+                        const entry = this.EditProperty(name, this.entry[name][0], name===".FILENAME", innerBox);
+                        //entry.value.style.paddingRight = "24px";
+                        entry.value.style.width = "calc(60% - 200px)";
+                    }
+
+                    innerBox.parentNode.parentNode.removeChild(waitbox);
+                    innerBox.parentNode.parentNode.removeChild(waitLabel);
+                    innerBox.parentNode.style.display = "block";
                 }
             }
 

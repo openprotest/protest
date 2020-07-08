@@ -457,6 +457,7 @@ class User extends Window {
         remove.onclick = () => {
             if (newProperty.style.filter == "opacity(0)") return; //once
             newProperty.style.filter = "opacity(0)";
+            newProperty.style.height = "0";
 
             for (let i = 0; i < newProperty.childNodes.length; i++) {
                 newProperty.childNodes[i].style.height = "0";
@@ -622,29 +623,33 @@ class User extends Window {
 
                 if (xhr.status == 200) {
                     let split = xhr.responseText.split(String.fromCharCode(127));
-
                     if (split.length == 1) {
                         dialog.Abort();
                         this.ConfirmBox(xhr.responseText, true);
                         return;
                     }
 
-                    for (let i = 0; i < split.length - 1; i += 2)
-                        if (this.entry.hasOwnProperty(split[i])) { //exists
-                            if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
-                                const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+                    let names = new Set(Object.keys(this.entry));
+                    for (let i = 0; i < split.length - 1; i += 3) {
+                        const entry = this.EditProperty(split[i], split[i + 1], false, innerBox);
+                        entry.value.style.paddingRight = "24px";
+
+                        if (names.has(split[i])) { //exists
+                            if (this.entry[split[i]][0].toLowerCase() == split[i + 1].toLowerCase()) { //same
                                 entry.value.style.backgroundImage = "url(res/check.svgz)";
-                                entry.value.style.paddingRight = "24px";
                             } else { //modified
-                                const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
                                 entry.value.style.backgroundImage = "url(res/change.svgz)";
-                                entry.value.style.paddingRight = "24px";
                             }
+                            names.delete(split[i]);
                         } else { //new
-                            const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
                             entry.value.style.backgroundImage = "url(res/newentry.svgz)";
-                            entry.value.style.paddingRight = "24px";
                         }
+                    }
+
+                    for (let name of names) {
+                        const entry = this.EditProperty(name, this.entry[name][0], name === ".FILENAME", innerBox);
+                        //entry.value.style.paddingRight = "24px";
+                    }
 
                     innerBox.parentNode.parentNode.removeChild(waitbox);
                     innerBox.parentNode.parentNode.removeChild(waitLabel);
