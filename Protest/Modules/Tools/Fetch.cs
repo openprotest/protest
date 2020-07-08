@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.DirectoryServices;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -288,61 +291,164 @@ public static class Fetch {
         return payload;
     }
 
-    public static byte[] SingleFetchEquip(string[] para) {
-        string filename = null;
-        if (para.Length > 1)
-            filename = para[1];
-        else
-            return Strings.INV.Array;
 
-        if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
-
-        Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
-
-        if (!entry.hash.ContainsKey("IP")) return Strings.INF.Array;
-
-        string ip = ((string[])entry.hash["IP"])[0];
-        if (ip.IndexOf(";") > -1) ip = ip.Split(';')[0].Trim();
-
-        return SingleFetchEquip(ip);
+    private delegate string FormatMethodPtr(string value);
+    private static void ContentBuilderAddValue(in SearchResult sr, in string property, in string label, in StringBuilder content, FormatMethodPtr format = null) {
+        for (int i = 0; i < sr.Properties[property].Count; i++) {
+            string value = sr.Properties[property][i].ToString();
+            if (value.Length > 0) {
+                if (format != null) value = format.Invoke(value);
+                if (value.Length == 0) continue;
+                content.Append($"{label}{(char)127}{value}{(char)127}");
+                break;
+            }
+        }
     }
-    public static byte[] SingleFetchEquip(string ip) {
-        Thread.Sleep(2000);
 
+
+    public static byte[] SingleFetchEquip(string[] para) {
+        string host = null, filename = null;
+        for (int i = 0; i < para.Length; i++) {
+            if (para[i].StartsWith("host=")) host = para[i].Substring(5);
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+        }
+
+        if (!(filename is null) && filename.Length > 0) {
+            if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
+
+            Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
+            if (!entry.hash.ContainsKey("IP")) return Strings.INF.Array;
+
+            host = ((string[])entry.hash["IP"])[0];
+            if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
+
+            if (host.Length == 0) {
+                host = ((string[])entry.hash["HOSTNAME"])[0];
+                if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
+                host = System.Net.Dns.GetHostAddresses(host)[0].ToString();
+            }
+        }
+
+        if (host is null || host.Length == 0) return Strings.INV.Array;
+        return SingleFetchEquip(host);
+    }
+
+    public static byte[] SingleFetchEquip(string ip) {
         if (ip is null) return Strings.INF.Array;
         if (ip.Length == 0) return Strings.INF.Array;
 
-        //TODO: wmi
+        string biosnetname = NetBios.GetBiosName(ip);
 
-        return null;
+        Hashtable wmi      = new Hashtable();
+        Hashtable ad       = new Hashtable();
+        Hashtable portscan = new Hashtable();
+
+        Console.WriteLine("start");
+
+        new Thread(() => { }).Start();
+
+        Thread tWmi = new Thread(()=> {
+            Thread.Sleep(1000);
+            //Hashtable hash = Wmi.WmiFetch(ip);
+        });
+
+        Thread tAd = new Thread(()=> {
+            Thread.Sleep(1000);
+            //if (biosnetname is null) return;
+           //ActiveDirectory.GetWorkstation(biosnetname);
+        });
+
+        Thread tPortscan = new Thread(()=> {
+            Thread.Sleep(1000);
+            //PortScan.PortsScanAsync(ip,PortScan.basic_ports);
+        });
+
+        Console.WriteLine($"START TASK {DateTime.Now.ToString("HH:mm:ss:fff")}");
+
+        tWmi.Start();
+        tAd.Start();
+        tPortscan.Start();
+        tWmi.Join();
+        tAd.Join();
+        tPortscan.Join();
+
+        Console.WriteLine($"STOP TASK {DateTime.Now.ToString("HH:mm:ss:fff")}");
+
+        StringBuilder content = new StringBuilder();
+
+        if (!wmi.ContainsKey("MAC ADDRESS")) {
+            Arp.ArpRequest(ip);
+        }
+
+        if (!wmi.ContainsKey("MANUFACTURER")) {
+            //manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
+        }
+
+        if (!wmi.ContainsKey("HOSTNAME"))
+            if (!(biosnetname is null) && biosnetname.Length > 0) { //user biosnet
+
+            } else { //user dns
+                Hashtable dns = new Hashtable();
+            }
+        
+        //name and type
+
+        return Encoding.UTF8.GetBytes(content.ToString());
     }
 
     public static byte[] SingleFetchUser(string[] para) {
-        string filename = null;
-        if (para.Length > 1)
-            filename = para[1];
-        else
-            return Strings.INV.Array;
+        string username = null, filename = null;
+        for (int i = 0; i < para.Length; i++) {
+            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
+            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+        }
 
-        if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
+        if (!(filename is null) && filename.Length > 0) {
+            if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
 
-        Database.DbEntry entry = (Database.DbEntry) Database.users[filename];
-        if (!entry.hash.ContainsKey("USERNAME")) return Strings.INF.Array;
+            Database.DbEntry entry = (Database.DbEntry)Database.users[filename];
+            if (!entry.hash.ContainsKey("USERNAME")) return Strings.INF.Array;
 
-        string username = ((string[])entry.hash["IP"])[0];
-        if (username.IndexOf(";") > -1) username = username.Split(';')[0].Trim();
+            username = ((string[])entry.hash["USERNAME"])[0];
+            if (username.IndexOf(";") > -1) username = username.Split(';')[0].Trim();
+        }
 
+        if (username is null || username.Length == 0) return Strings.INV.Array;
         return SingleFetchUser(username);
     }
     public static byte[] SingleFetchUser(string username) {
-        Thread.Sleep(2000);
-
         if (username is null) return Strings.INF.Array;
-        if (username.Length == 0) return Strings.INF.Array;       
+        if (username.Length == 0) return Strings.INF.Array;
 
-        //TODO: fetch frrom domain controller
+        SearchResult sr = ActiveDirectory.GetUser(username);
+        if (sr is null) return Strings.FAI.Array;
 
-        return null;
+        StringBuilder content = new StringBuilder();
+
+        ContentBuilderAddValue(sr, "personalTitle", "TITLE", content, null);
+        if (content.Length == 0) ContentBuilderAddValue(sr, "title", "TITLE", content, null);
+
+        ContentBuilderAddValue(sr, "givenName", "FIRST NAME", content, null);
+        ContentBuilderAddValue(sr, "middleName", "MIDDLE NAME", content, null);
+        ContentBuilderAddValue(sr, "sn", "LAST NAME", content, null);
+
+        ContentBuilderAddValue(sr, "displayName", "DISPLAY NAME", content, null);
+
+        ContentBuilderAddValue(sr, "userPrincipalName", "USERNAME", content, ActiveDirectory.GetUsername);
+
+        ContentBuilderAddValue(sr, "mail", "E-MAIL", content, null);
+        ContentBuilderAddValue(sr, "otherMailbox", "SECONDARY E-MAIL", content, null);
+        ContentBuilderAddValue(sr, "mobile", "MOBILE NUMBER", content, null);
+        ContentBuilderAddValue(sr, "telephoneNumber", "TELEPHONE NUMBER", content, null);
+        ContentBuilderAddValue(sr, "facsimileTelephoneNumber", "FAX", content, null);
+
+        ContentBuilderAddValue(sr, "employeeID", "EMPLOYEE ID", content, null);
+        ContentBuilderAddValue(sr, "company", "COMPANY", content, null);
+        ContentBuilderAddValue(sr, "department", "DEPARTMENT", content, null);
+        ContentBuilderAddValue(sr, "division", "DIVISION", content, null);
+        ContentBuilderAddValue(sr, "comment", "COMMENT", content, null);
+
+        return Encoding.UTF8.GetBytes(content.ToString());
     }
 
 }

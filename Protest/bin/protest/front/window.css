@@ -432,6 +432,12 @@
     100%{ filter: opacity(1); }
 }
 
+@keyframes delayed-fade-in {
+    0%{   filter: opacity(0); }
+    60%{   filter: opacity(0); }
+    100%{ filter: opacity(1); }
+}
+
 @keyframes roll-in {
     0%{   transform: translateY(-100%); }
     100%{ transform: translateY(0%); }

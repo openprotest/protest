@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Net;
+using System.Security.Policy;
 using System.Text;
+using System.Threading.Tasks;
 
 //http://msdn.microsoft.com/en-us/library/aa394388(v=vs.85).aspx
 
 static class Wmi {
     //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-impersonationlevel
     //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-authenticationlevel
-
-
 
     public static ManagementScope WmiScope(in string host) {
         return WmiScope(host, ImpersonationLevel.Impersonate, "", "");
@@ -136,62 +136,19 @@ static class Wmi {
         return "";
     }
 
-    private static void ContentBuilderAddValue(in ManagementObjectCollection moc, in string property, in string label, in StringBuilder content, FormatMethodPtr format = null) {
+    private static void ContentBuilderAddValue(in ManagementObjectCollection moc, in string property, in string label, in Hashtable hash, FormatMethodPtr format = null) {
         string value = WmiGet(moc, property, false, format);
-        if (value != null && value.Length > 0) content.Append($"{label}{(char)127}{value}{(char)127}");
+        if (value != null && value.Length > 0) hash.Add(label, value);
     }
-    private static void ContentBuilderAddArray(in ManagementObjectCollection moc, in string property, in string label, in StringBuilder content, FormatMethodPtr format = null) {
+    private static void ContentBuilderAddArray(in ManagementObjectCollection moc, in string property, in string label, in Hashtable hash, FormatMethodPtr format = null) {
         string value = WmiGet(moc, property, true, format);
-        if (value != null && value.Length > 0) content.Append($"{label}{(char)127}{value}{(char)127}");
+        if (value != null && value.Length > 0) hash.Add(label, value);
     }
 
-    public static string WmiVerify(in string[] para, string portscan = "no") {
-        string filename = "", host = "";
+    public static Hashtable WmiFetch(string host) {
+        Hashtable hash = new Hashtable();
 
-        for (int i = 1; i < para.Length; i++) {
-            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-            if (para[i].StartsWith("host=")) host = para[i].Substring(5);
-        }
-
-        if (host.Length == 0 && Database.equip.ContainsKey(filename)) {
-            Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
-            if (entry.hash.ContainsKey("IP")) host = ((string[])entry.hash["IP"])[0];
-            else if (entry.hash.ContainsKey("HOSTNAME")) host = ((string[])entry.hash["HOSTNAME"])[0];
-        }
-
-        if (host.Length == 0) return Encoding.UTF8.GetString(Strings.INF.Array);
-
-        return WmiVerify(host, portscan);
-    }
-
-    public static string WmiVerify(string host, string portscan = "no") {
-        if (host.Contains(";")) host = host.Substring(0, host.IndexOf(";")).Trim();
-
-        StringBuilder content = new StringBuilder();
-
-        string ip = "";
-        string name = "";
-        string hostname = "";
         string type = "";
-        string mac = "";
-        string manufacturer = "";
-
-        try { //get hostname from dns
-            IPHostEntry hostEntry = System.Net.Dns.GetHostEntry(host);
-            if (hostEntry != null) {
-                try {
-                    IPAddress checkIp = IPAddress.Parse(host);
-                    ip = checkIp.ToString();
-                } catch { }
-
-                if (ip.Length == 0) { //if ip parse failed => host is the hostname
-                    hostname = host;
-                } else { //host is the ip
-                    hostname = hostEntry.HostName;
-                    if (hostname.Contains(".")) hostname = hostname.Split('.')[0];
-                }
-            }
-        } catch { }
 
         ManagementScope scope = WmiScope(host);
         if (!(scope is null)) {
@@ -203,38 +160,10 @@ static class Wmi {
                     short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
                     chassi = ChassiToString(chassisTypes);
 
-                    switch (chassisTypes) {
-                        case 8:
-                        case 9:
-                        case 10:
-                        case 14:
-                            type = "Laptop";
-                            break;
-
-                        case 17:
-                        case 18:
-                        case 20:
-                        case 22:
-                        case 23:
-                            type = "Server";
-                            break;
-
-                        case 3:
-                        case 4:
-                        case 5:
-                        case 6:
-                        case 7:
-                        case 24:
-                            type = "PC Tower";
-                            break;
-
-                        case 13:
-                            type = "All in one";
-                            break;
-                    }
-
+                    type = ChassiToType(chassisTypes);
+                    
                     if (chassi.Length > 0) {
-                        content.Append($"CHASSI TYPE{(char)127}{chassi}{(char)127}");
+                        hash.Add("CHASSI TYPE", chassi);
                         break;
                     }
                 }
@@ -242,57 +171,46 @@ static class Wmi {
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")).Get();
-                //ContentBuilderAddArray(moc, "IPAddress", "IP", content, new FormatMethodPtr(IPv4Filter));
-                //ContentBuilderAddArray(moc, "IPAddress", "IPV6", content, new FormatMethodPtr(IPv6Filter));
-                //ContentBuilderAddArray(moc, "MACAddress", "MAC ADDRESS", content);
-                ContentBuilderAddArray(moc, "DHCPEnabled", "DHCP ENABLED", content);
-                ContentBuilderAddArray(moc, "IPSubnet", "MASK", content);
-
-                //if (ip.Length == 0) ip = WmiGet(moc, "IPAddress", true);
-                ip = WmiGet(moc, "IPAddress", true, IPv4Filter); //if wmi is available. overwrite dns value
-                mac = WmiGet(moc, "MACAddress", true);
+                //ContentBuilderAddArray(moc, "IPAddress", "IPV6", hash, new FormatMethodPtr(IPv6Filter));
+                ContentBuilderAddArray(moc, "IPAddress", "IP", hash);
+                ContentBuilderAddArray(moc, "MACAddress", "MAC ADDRESS", hash);
+                ContentBuilderAddArray(moc, "IPSubnet", "MASK", hash);
+                ContentBuilderAddArray(moc, "DHCPEnabled", "DHCP ENABLED", hash);
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapter WHERE PhysicalAdapter = True")).Get();
-                ContentBuilderAddArray(moc, "Speed", "NETWORK ADAPTER SPEED", content, new FormatMethodPtr(TransferRateToString));
+                ContentBuilderAddArray(moc, "Speed", "NETWORK ADAPTER SPEED", hash, new FormatMethodPtr(TransferRateToString));
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem")).Get();
-                //ContentBuilderAddValue(moc, "Name", "NAME", content);
-                //ContentBuilderAddValue(moc, "UserName", "USERNAME", content);                    
-                //ContentBuilderAddValue(moc, "DNSHostName", "HOSTNAME", content);
-
-                //ContentBuilderAddValue(moc, "Manufacturer", "MANUFACTURER", content);
-                ContentBuilderAddValue(moc, "Model", "MODEL", content);
-                //ContentBuilderAddValue(moc, "Description", "DESCRIPTION", content);
-                ContentBuilderAddValue(moc, "UserName", "OWNER", content);
-
-                name = WmiGet(moc, "Name", true);
-                manufacturer = WmiGet(moc, "Manufacturer", true);
-                hostname = WmiGet(moc, "DNSHostName", true);
+                ContentBuilderAddValue(moc, "Name", "NAME", hash);
+                ContentBuilderAddValue(moc, "DNSHostName", "HOSTNAME", hash);
+                ContentBuilderAddValue(moc, "Manufacturer", "MANUFACTURER", hash);
+                ContentBuilderAddValue(moc, "UserName", "OWNER", hash);
+                ContentBuilderAddValue(moc, "Model", "MODEL", hash);
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Baseboard")).Get();
-                ContentBuilderAddValue(moc, "Manufacturer", "MOTHERBOARD MANUFACTURER", content);
-                ContentBuilderAddValue(moc, "Product", "MOTHERBOARD", content);
-                ContentBuilderAddValue(moc, "SerialNumber", "MOTHERBOARD SERIAL NUMBER", content);
+                ContentBuilderAddValue(moc, "Manufacturer", "MOTHERBOARD MANUFACTURER", hash);
+                ContentBuilderAddValue(moc, "Product", "MOTHERBOARD", hash);
+                ContentBuilderAddValue(moc, "SerialNumber", "MOTHERBOARD SERIAL NUMBER", hash);
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS")).Get();
-                ContentBuilderAddValue(moc, "Name", "BIOS", content);
-                ContentBuilderAddValue(moc, "SerialNumber", "SERIAL NUMBER", content);
+                ContentBuilderAddValue(moc, "Name", "BIOS", hash);
+                ContentBuilderAddValue(moc, "SerialNumber", "SERIAL NUMBER", hash);
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor")).Get();
-                ContentBuilderAddArray(moc, "Name", "PROCESSOR", content, new FormatMethodPtr(ProcessorString));
-                ContentBuilderAddValue(moc, "NumberOfCores", "CPU CORES", content);
-                ContentBuilderAddValue(moc, "CurrentClockSpeed", "CPU FREQUENCY", content, new FormatMethodPtr(ToMHz));
-                ContentBuilderAddValue(moc, "AddressWidth", "CPU ARCHITECTURE", content, new FormatMethodPtr(ArchitechtureString));
+                ContentBuilderAddArray(moc, "Name", "PROCESSOR", hash, new FormatMethodPtr(ProcessorString));
+                ContentBuilderAddValue(moc, "NumberOfCores", "CPU CORES", hash);
+                ContentBuilderAddValue(moc, "CurrentClockSpeed", "CPU FREQUENCY", hash, new FormatMethodPtr(ToMHz));
+                ContentBuilderAddValue(moc, "AddressWidth", "CPU ARCHITECTURE", hash, new FormatMethodPtr(ArchitechtureString));
             } catch { }
 
             try {
@@ -322,27 +240,27 @@ static class Wmi {
                         L3 += numberOfBlocks * blockSize;
                     }
 
-                if (L1 > 0) content.Append($"L1 CACHE{(char)127}{SizeToString(L1.ToString())}{(char)127}");
-                if (L2 > 0) content.Append($"L2 CACHE{(char)127}{SizeToString(L2.ToString())}{(char)127}");
-                if (L3 > 0) content.Append($"L3 CACHE{(char)127}{SizeToString(L3.ToString())}{(char)127}");
+                if (L1 > 0 || L2 > 0 || L3 > 0)
+                    hash.Add("CPU CACHE", $"{L1}/{L2}/{L3}");
+                
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory")).Get();
-                ContentBuilderAddArray(moc, "Capacity", "MEMORY", content, new FormatMethodPtr(SizeToString));
-                ContentBuilderAddValue(moc, "Speed", "RAM SPEED", content, new FormatMethodPtr(ToMHz));
-                ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", content, new FormatMethodPtr(RamType));
-                ContentBuilderAddValue(moc, "FormFactor", "RAM FORM FACTOR", content, new FormatMethodPtr(RamFormFactor));
+                ContentBuilderAddArray(moc, "Capacity", "MEMORY", hash, new FormatMethodPtr(SizeToString));
+                ContentBuilderAddValue(moc, "Speed", "RAM SPEED", hash, new FormatMethodPtr(ToMHz));
+                ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", hash, new FormatMethodPtr(RamType));
+                ContentBuilderAddValue(moc, "FormFactor", "RAM FORM FACTOR", hash, new FormatMethodPtr(RamFormFactor));
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray")).Get();
-                ContentBuilderAddValue(moc, "MemoryDevices", "RAM SLOT", content);
+                ContentBuilderAddValue(moc, "MemoryDevices", "RAM SLOT", hash);
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_DiskDrive WHERE MediaType = \"Fixed hard disk media\"")).Get();
-                ContentBuilderAddArray(moc, "Size", "PHYSICAL DISK", content, new FormatMethodPtr(SizeToString));
+                ContentBuilderAddArray(moc, "Size", "PHYSICAL DISK", hash, new FormatMethodPtr(SizeToString));
             } catch { }
 
             try {
@@ -355,24 +273,24 @@ static class Wmi {
                     value += $"{caption}:{Math.Round((double)used / 1024 / 1024 / 1024, 1)}:{Math.Round((double)size / 1024 / 1024 / 1024, 1)}:GB:";
                 }
                 if (value.EndsWith(":")) value = value.Substring(0, value.Length - 1);
-                if (value.Length > 0) content.Append($"LOGICAL DISK{(char)127}bar:{value}{(char)127}");
+                if (value.Length > 0) hash.Add("LOGICAL DISK", $"bar:{value}");
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_VideoController")).Get();
-                ContentBuilderAddArray(moc, "Name", "VIDEO CONTROLLER", content);
-                ContentBuilderAddArray(moc, "DriverVersion", "VIDEO DRIVER", content);
+                ContentBuilderAddArray(moc, "Name", "VIDEO CONTROLLER", hash);
+                ContentBuilderAddArray(moc, "DriverVersion", "VIDEO DRIVER", hash);
             } catch { }
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
-                ContentBuilderAddValue(moc, "Caption", "OPERATING SYSTEM", content);
-                ContentBuilderAddValue(moc, "OSArchitecture", "OS ARCHITECTURE", content);
-                ContentBuilderAddValue(moc, "Version", "OS VERSION", content);
-                ContentBuilderAddValue(moc, "BuildNumber", "OS BUILD", content);
-                ContentBuilderAddValue(moc, "CSDVersion", "SERVICE PACK", content);
-                ContentBuilderAddValue(moc, "InstallDate", "OS INSTALL DATE", content, new FormatMethodPtr(DateToString));
-                ContentBuilderAddValue(moc, "SerialNumber", "OS SERIAL NO", content);
+                ContentBuilderAddValue(moc, "Caption", "OPERATING SYSTEM", hash);
+                ContentBuilderAddValue(moc, "OSArchitecture", "OS ARCHITECTURE", hash);
+                ContentBuilderAddValue(moc, "Version", "OS VERSION", hash);
+                ContentBuilderAddValue(moc, "BuildNumber", "OS BUILD", hash);
+                ContentBuilderAddValue(moc, "CSDVersion", "SERVICE PACK", hash);
+                ContentBuilderAddValue(moc, "InstallDate", "OS INSTALL DATE", hash, new FormatMethodPtr(DateToString));
+                ContentBuilderAddValue(moc, "SerialNumber", "OS SERIAL NO", hash);
 
                 foreach (ManagementObject o in moc) {
                     string osName = o.GetPropertyValue("Caption").ToString();
@@ -384,61 +302,9 @@ static class Wmi {
             } catch { }
         }
 
-        if (portscan != "no") { //basic port scan
-            bool[] result = PortScan.PortsScanAsync(host, PortScan.basic_ports).Result;
-            //TODO: full portscan
+        if (type.Length > 0)  hash.Add("TYPE", $"{type}");
 
-            List<int> list = new List<int>();
-            string strResult = "";
-            for (int i = 0; i < result.Length; i++)
-                if (result[i]) {
-                    list.Add(PortScan.basic_ports[i]);
-                    strResult += (strResult.Length == 0) ? PortScan.basic_ports[i].ToString() : $"; {PortScan.basic_ports[i]}";
-                }
-
-            if (strResult.Length > 0) content.Append($"PORTS{(char)127}{strResult}{(char)127}");
-
-            if (type.Length == 0)
-                if (list.Contains(445) && list.Contains(3389) && (list.Contains(53) || list.Contains(67) || list.Contains(389) || list.Contains(636) || list.Contains(853))) //SMB, RDP, DNS, DHCP, LDAP
-                    type = "Server";
-
-                else if (list.Contains(445) && list.Contains(3389)) //SMB, RDP
-                    type = "PC Tower";
-
-                else if (list.Contains(515) || list.Contains(631) || list.Contains(9100)) //LPD, IPP, Printserver
-                    type = "Printer";
-
-                else if (list.Contains(38)) //RAP
-                    type = "Router";
-
-                else if (list.Contains(6789) || list.Contains(10001))
-                    type = "Access Point";
-
-                else if (list.Contains(7442) || list.Contains(7550))
-                    type = "Camera";
-        }
-
-        if (mac.Length == 0 && ip.Length > 0) {
-            string[] ipSplit = ip.Split(';');
-            for (int i = 0; i < ipSplit.Length; i++) {
-                string result = Arp.ArpRequest(ipSplit[i].Trim());
-                if (result.Length > 0) {
-                    mac = result;
-                    break;
-                }
-            }
-        }
-
-        if (manufacturer.Length == 0 && mac.Length > 0) manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
-
-        if (ip.Length > 0) content.Append($"IP{(char)127}{ip}{(char)127}");
-        if (name.Length > 0) content.Append($"NAME{(char)127}{name}{(char)127}");
-        if (type.Length > 0) content.Append($"TYPE{(char)127}{type}{(char)127}");
-        if (hostname.Length > 0) content.Append($"HOSTNAME{(char)127}{hostname}{(char)127}");
-        if (mac.Length > 0) content.Append($"MAC ADDRESS{(char)127}{mac}{(char)127}");
-        if (manufacturer.Length > 0) content.Append($"MANUFACTURER{(char)127}{manufacturer}{(char)127}");
-
-        return content.ToString();
+        return hash;
     }
 
     public static byte[] WmiQuery(string[] para) {
@@ -615,7 +481,34 @@ static class Wmi {
             35 => "Mini PC",
             36 => "Stick PC",
 
-            _ => "",
+            _ => ""
+        };
+    }
+
+    public static string ChassiToType(short chassiType) {
+        return chassiType switch
+        {
+            8  => "Laptop",
+            9  => "Laptop",
+            10 => "Laptop",
+            14 => "Laptop",
+
+            17 => "Server",
+            18 => "Server",
+            20 => "Server",
+            22 => "Server",
+            23 => "Server",
+
+            3  => "PC tower",
+            4  => "PC tower",
+            5  => "PC tower",
+            6  => "PC tower",
+            7  => "PC tower",
+            24 => "PC tower",
+
+            13 => "All in one",
+
+            _ => ""
         };
     }
 

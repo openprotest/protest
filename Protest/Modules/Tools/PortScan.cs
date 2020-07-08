@@ -183,8 +183,8 @@ public static class PortScan {
 
                 string[] message = Encoding.Default.GetString(buff, 0, receiveResult.Count).Trim().Split(';');
 
-                string hostname = message[0].Trim();
-                if (hostname.Length == 0) {
+                string host = message[0].Trim();
+                if (host.Length == 0) {
                     await ws.SendAsync(Strings.INV, WebSocketMessageType.Text, true, CancellationToken.None);
                     continue;
                 }
@@ -205,11 +205,11 @@ public static class PortScan {
                 /*bool reachable = false;
                 try {
                     Ping p = new Ping();
-                    PingReply reply = await p.SendPingAsync(hostname, 2500);
+                    PingReply reply = await p.SendPingAsync(host, 2500);
                     reachable = reply.Status == IPStatus.Success;
                 } catch { }*/
                 /*if (!reachable) {
-                    string unreachable = "unreachable" + ((char)127).ToString() + hostname;
+                    string unreachable = "unreachable" + ((char)127).ToString() + host;
                     await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(unreachable), 0, unreachable.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                 }*/
 
@@ -222,7 +222,7 @@ public static class PortScan {
                         int from = i;
                         int to = Math.Min(i + 255, rangeTo);
 
-                        Task<bool[]> s = PortsScanAsync(hostname, from, to);
+                        Task<bool[]> s = PortsScanAsync(host, from, to);
                         s.Wait();
 
                         for (int port = 0; port < s.Result.Length; port++)
@@ -230,14 +230,14 @@ public static class PortScan {
                                 result += (port + from) + ((char)127).ToString();
 
                         if (result.Length > 0) {
-                            result = hostname + ((char)127).ToString() + result;
+                            result = host + ((char)127).ToString() + result;
                             lock (send_lock) { //once send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                             }
                         }
                     }
 
-                    string over = "over" + ((char)127).ToString() + hostname;
+                    string over = "over" + ((char)127).ToString() + host;
                     ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(over), 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                 }).Start();
 
@@ -248,8 +248,8 @@ public static class PortScan {
             ctx.Response.Close();
         }*/
     }
-    public static async Task<bool[]> PortsScanAsync(string hostname, int from, int to) {
-        int[] q = QPortScan(hostname);
+    public static async Task<bool[]> PortsScanAsync(string host, int from, int to) {
+        int[] q = QPortScan(host);
         if ((!(q is null))) {
             bool[] p = new bool[to - from];
             for (int i = 0; i < p.Length; i++)
@@ -258,12 +258,12 @@ public static class PortScan {
         }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
-        for (int port = from; port < to; port++) tasks.Add(PortScanAsync(hostname, port));
+        for (int port = from; port < to; port++) tasks.Add(PortScanAsync(host, port));
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
-    public static async Task<bool[]> PortsScanAsync(string hostname, short[] ports) {
-        int[] q = QPortScan(hostname);
+    public static async Task<bool[]> PortsScanAsync(string host, short[] ports) {
+        int[] q = QPortScan(host);
         if (!(q is null)) {
             bool[] p = new bool[ports.Length];
             for (int i = 0; i < p.Length; i++)
@@ -272,14 +272,14 @@ public static class PortScan {
         }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
-        for (int i = 0; i < ports.Length; i++) tasks.Add(PortScanAsync(hostname, ports[i]));
+        for (int i = 0; i < ports.Length; i++) tasks.Add(PortScanAsync(host, ports[i]));
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
-    public static async Task<bool> PortScanAsync(string hostname, int port) {
+    public static async Task<bool> PortScanAsync(string host, int port) {
         try {
             TcpClient client = new TcpClient();
-            await client.ConnectAsync(hostname, port);
+            await client.ConnectAsync(host, port);
             bool status = client.Connected;
             client.Close();
             client.Dispose();
@@ -289,11 +289,11 @@ public static class PortScan {
         }
     }
 
-    public static int[] QPortScan(string hostname) {
+    public static int[] QPortScan(string host) {
         try {
             ProcessStartInfo info = new ProcessStartInfo {
                 FileName = "psexec",
-                Arguments = $"\\\\{hostname} netstat -nq -p TCP",
+                Arguments = $"\\\\{host} netstat -nq -p TCP",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,

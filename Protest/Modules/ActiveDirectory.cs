@@ -181,6 +181,13 @@ public static class ActiveDirectory {
         return result;
     }
 
+    public static string GetUsername(string value) {
+        if (value.Contains("@"))
+            return value.Substring(0, value.IndexOf("@"));
+        else
+            return value;
+    }
+
     public static string FileTimeString(string value) {
         long ticks = long.Parse(value);
         if (ticks == 0) return "";
@@ -268,5 +275,7 @@ public static class ActiveDirectory {
 
         return Strings.OK.Array;
     }
+
+
 
 }

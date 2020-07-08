@@ -162,8 +162,8 @@ class HttpMainListener : Http {
                 case "wmiquery":    buffer = Wmi.WmiQuery(para); break;
                 case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
 
-                case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, "ba")); break;
-                case "adverify":  buffer = Encoding.UTF8.GetBytes(ActiveDirectory.ActiveDirVerify(para)); break;
+                //case "wmiverify": buffer = Encoding.UTF8.GetBytes(Wmi.WmiVerify(para, "ba")); break;
+                //case "adverify":  buffer = Encoding.UTF8.GetBytes(ActiveDirectory.ActiveDirVerify(para)); break;
 
                 case "getscripttools":          buffer = Scripts.GetScriptTools(); break;
                 case "getusercolumns":          buffer = Scripts.GetUserColumns(); break;

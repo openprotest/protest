@@ -584,20 +584,77 @@ class User extends Window {
             xhr.open("POST", "saveuser&" + this.filename, true);
             xhr.send(payload);
         });
+
+        return dialog;
     }
 
     Fetch() {
+        const dialog = this.Edit();
+        const innerBox = dialog.innerBox;
+        const buttonBox = dialog.buttonBox;
+        const btnOK = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
+
+        innerBox.parentNode.style.display = "none";
+        innerBox.innerHTML = "";
+
+        let waitbox = document.createElement("span");
+        waitbox.className = "waitbox";
+        waitbox.style.top = "0";
+        innerBox.parentNode.parentNode.appendChild(waitbox);
+
+        waitbox.appendChild(document.createElement("div"));
+
+        let waitLabel = document.createElement("span");
+        waitLabel.innerHTML = "Doing stuff. Please wait.";
+        waitLabel.className = "wait-label";
+        waitLabel.style.top = "0";
+        innerBox.parentNode.parentNode.appendChild(waitLabel);
+
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
-            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            if (xhr.readyState == 4) {
+                if (xhr.status == 0) {
+                    dialog.Abort();
+                    this.ConfirmBox("Server is unavailable.", true);
+                    return;
+                }
 
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                const obj = this.Edit();
+                if (xhr.status == 200) {
+                    let split = xhr.responseText.split(String.fromCharCode(127));
+
+                    if (split.length == 1) {
+                        dialog.Abort();
+                        this.ConfirmBox(xhr.responseText, true);
+                        return;
+                    }
+
+                    for (let i = 0; i < split.length - 1; i += 2)
+                        if (this.entry.hasOwnProperty(split[i])) { //exists
+                            if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
+                                const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+                                entry.value.style.backgroundImage = "url(res/check.svgz)";
+                                entry.value.style.paddingRight = "24px";
+                            } else { //modified
+                                const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+                                entry.value.style.backgroundImage = "url(res/change.svgz)";
+                                entry.value.style.paddingRight = "24px";
+                            }
+                        } else { //new
+                            const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+                            entry.value.style.backgroundImage = "url(res/newentry.svgz)";
+                            entry.value.style.paddingRight = "24px";
+                        }
+
+                    innerBox.parentNode.parentNode.removeChild(waitbox);
+                    innerBox.parentNode.parentNode.removeChild(waitLabel);
+                    innerBox.parentNode.style.display = "block";
+                }
             }
-        };
 
-        xhr.open("GET", "fetchuser&" + this.filename, true);
-        xhr.send(); 
+        };
+        xhr.open("GET", `fetchuser&filename=${this.filename}`, true);
+        xhr.send();
     }
 
     Delete() {

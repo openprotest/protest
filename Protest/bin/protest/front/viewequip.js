@@ -987,7 +987,6 @@ class Equip extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
-
             if (xhr.readyState == 4) {
                 if (xhr.status == 0) {
                     dialog.Abort();
@@ -1018,13 +1017,30 @@ class Equip extends Window {
                             const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
                             if (entry != undefined) entry.value.style.backgroundImage = "url(res/newentry.svgz)";
                         }
+
+                    for (let i = 0; i < split.length - 1; i += 2)
+                        if (this.entry.hasOwnProperty(split[i])) { //exists
+                            if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
+                                const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
+                                entry.value.style.backgroundImage = "url(res/check.svgz)";
+                                entry.value.style.paddingRight = "24px";
+                            } else { //modified
+                                const entry = this.EditProperty(split[i], split[i]=="TYPE" && this.entry.hasOwnProperty("TYPE") ? this.entry["TYPE"][0] : split[i+1], false, innerBox);
+                                entry.value.style.backgroundImage = "url(res/change.svgz)";
+                                entry.value.style.paddingRight = "24px";
+                            }
+                        } else { //new
+                            const entry = this.EditProperty(split[i], split[i + 1], false, innerBox);
+                            entry.value.style.backgroundImage = "url(res/newentry.svgz)";
+                            entry.value.style.paddingRight = "24px";
+                        }
                 }
             }
 
         };
 
-        xhr.open("GET", "fetchequip&" + this.filename, true);
-        xhr.send();        
+        xhr.open("GET", `fetchequip&filename=${this.filename}`, true);
+        xhr.send();
     }
 
     Delete() {
