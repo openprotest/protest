@@ -89,11 +89,11 @@ class LiveInfo {
             if (lastseen == "Just now") {
                 ManagementScope scope = Wmi.WmiScope(ip);
                 if (scope != null) {
-                    string starttime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
-                    if (starttime.Length > 0) WsWriteText(ws, $"start time{(char)127}{starttime}{(char)127}WMI");
-
                     string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
                     if (username.Length > 0) WsWriteText(ws, $"logged in user{(char)127}{username}{(char)127}WMI");
+
+                    string starttime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
+                    if (starttime.Length > 0) WsWriteText(ws, $"start time{(char)127}{starttime}{(char)127}WMI");
                 }
             }
 

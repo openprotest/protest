@@ -7,7 +7,7 @@ const TOOLS = [
 { lbl:"New equipment",      ico:"res/new_equip.svgz",      sqr:true,  f:arg=> new Equip(null) },
 { lbl:"New user",           ico:"res/new_user.svgz",       sqr:true,  f:arg=> new User(null) },
 { lbl:"Fetch",              ico:"res/fetch.svgz",          sqr:true,  f:arg=> new Fetch(arg) },
-{ lbl:"Fetch equipment from IP range", ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch({value:"equipip"})},
+{ lbl:"Fetch equipment from IP range",         ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch({value:"equipip"})},
 { lbl:"Fetch equipment from Domain Controler", ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch({value:"equipdc"})},
 { lbl:"Fetch users from Domain Controller",    ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch({value:"usersdc"})},
 { lbl:"Import from another Pro-test",          ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch({value:"protest"})},
@@ -42,7 +42,7 @@ const TOOLS = [
 { lbl:"Screen capture",     ico:"res/screencapture.svgz",  sqr:false, f:arg=> btnScreenCapture.onclick() },
 { lbl:"Settings",           ico:"res/tool02.svgz",         sqr:false, f:arg=> new Settings() },
 { lbl:"Update",             ico:"res/update.svgz",         sqr:false, f:arg=> new Settings("update") },
-{ lbl:"Legal",              ico:"res/gpl.svgz",            sqr:false, f:arg=> new Settings("legal") },
+{ lbl:"License",            ico:"res/gpl.svgz",            sqr:false, f:arg=> new Settings("legal") },
 { lbl:"About",              ico:"res/logo.svgz",           sqr:false, f:arg=> new Settings("about") },
 { lbl:"Logout",             ico:"res/logoff.svgz",         sqr:false, f:arg=> btnLogout.onclick() },
 ];

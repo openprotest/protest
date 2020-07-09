@@ -28,7 +28,8 @@ const EQUIP_ORDER = [
     ["res/user.svgz", "Owner"],
     "OWNER", "OWNER FULLNAME", "LOCATION",
 
-
+    ["res/directory.svgz", "Active Directory"],
+    "DISTINGUISHED NAME", "DNS HOSTNAME", "CREATED ON DC",
 
     ["res/credencial.svgz", "Credential"],
     "DOMAIN", "USERNAME", "PASSWORD", "LA PASSWORD", "SSH USERNAME", "SSH PASSWORD"
@@ -38,10 +39,18 @@ class Equip extends Window {
     constructor(filename) {
         super([56,56,56]);
 
+        this.args = filename;
+
+        this.AddCssDependencies("dbview.css");
+
+        if (this.args === null) {
+            this.New();
+            return;
+        }
+
         this.setTitle("Equipment");
         this.setIcon("res/gear.svgz");
-
-        this.args = filename;
+        
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
         this.pingButtons = {};
@@ -52,8 +61,6 @@ class Equip extends Window {
             this.AfterResize = () => {};
             return;
         }
-
-        this.AddCssDependencies("dbview.css");
 
         if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
             this.setTitle("[untitled]");
@@ -123,6 +130,7 @@ class Equip extends Window {
     }
 
     AfterResize() { //override
+
         if (this.content.getBoundingClientRect().width < 800) {
             this.sidetools.style.width = "36px";
             this.scroll.style.left = "56px";
@@ -842,7 +850,42 @@ class Equip extends Window {
     }
 
     New() {
+        this.AfterResize = () => { };
+        this.btnPopout.style.display = "none";
 
+        this.setTitle("New equipment");
+        this.setIcon("res/new_equip.svgz");
+
+        this.entry = {
+            "NAME": ["", ""],
+            "TYPE": ["", ""],
+            "IP": ["", ""],
+            "HOSTNAME": ["", ""],
+            "MANUFACTURER": ["", ""],
+            "MODEL": ["", ""],
+            "OWNER": ["", ""],
+            "LOCATION": ["", ""]
+        };
+
+        const dialog = this.Edit();
+
+        const btnOK = dialog.btnOK; //remove previous event listeners
+        const newOK = btnOK.cloneNode(false);
+        btnOK.parentNode.replaceChild(newOK, btnOK);
+
+        const btnCancel = dialog.btnCancel;
+        const newCancel = btnCancel.cloneNode(false); //remove previous event listeners
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+        newOK.addEventListener("click", () => {
+
+
+            this.Close();
+        });
+
+        newCancel.addEventListener("click", () => {
+            this.Close();
+        });
     }
 
     Edit() {

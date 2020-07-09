@@ -314,12 +314,17 @@ public static class Fetch {
         if (host is null || host.Length == 0) return Strings.INV.Array;
         return SingleFetchEquip(host);
     }
-
     public static byte[] SingleFetchEquip(string ip) {
         if (ip is null) return Strings.INF.Array;
         if (ip.Length == 0) return Strings.INF.Array;
 
         string netbios = NetBios.GetBiosName(ip);
+
+        string hostname = null;
+        try {
+            hostname = System.Net.Dns.GetHostEntry(ip).HostName;
+            hostname = hostname.Split('.')[0];
+        } catch { }
 
         Hashtable wmi      = new Hashtable();
         Hashtable ad       = new Hashtable();
@@ -330,45 +335,40 @@ public static class Fetch {
         });
 
         Thread tAd = new Thread(()=> {
-            if (netbios is null) return;
+            if (hostname is null) return;
 
-            System.DirectoryServices.SearchResult result = ActiveDirectory.GetWorkstation(netbios);
+            System.DirectoryServices.SearchResult result = ActiveDirectory.GetWorkstation(hostname);
             if (result is null) return;
 
             if (result.Properties["description"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["description"][0].ToString());
+                string value = result.Properties["description"][0].ToString();
                 if (value.Length > 0) ad.Add("DESCRIPTION", value);
             }
             
             if (result.Properties["distinguishedName"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["distinguishedName"][0].ToString());
+                string value = result.Properties["distinguishedName"][0].ToString();
                 if (value.Length > 0) ad.Add("DISTINGUISHED NAME", value);
             }
             
             if (result.Properties["dNSHostName"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["dNSHostName"][0].ToString());
+                string value = result.Properties["dNSHostName"][0].ToString();
                 if (value.Length > 0) ad.Add("DNS HOSTNAME", value);
             }
             
-            if (result.Properties["objectSid"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["objectSid"][0].ToString());
-                if (value.Length > 0) ad.Add("SID", value);
-            }
-
             if (result.Properties["operatingSystem"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["operatingSystem"][0].ToString());
+                string value = result.Properties["operatingSystem"][0].ToString();
                 if (value.Length > 0) ad.Add("OPERATING SYSTEM", value);
             }
             
             if (result.Properties["whenCreated"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["whenCreated"][0].ToString());
+                string value = result.Properties["whenCreated"][0].ToString();
                 if (value.Length > 0) ad.Add("CREATED ON DC", value);
             }
 
-            if (result.Properties["whenChanged"].Count > 0) {
-                string value = ActiveDirectory.FileTimeString(result.Properties["whenChanged"][0].ToString());
+            /*if (result.Properties["whenChanged"].Count > 0) {
+                string value = result.Properties["whenChanged"][0].ToString();
                 if (value.Length > 0) ad.Add("CHANGED ON DC", value);
-            }
+            }*/
         });
 
         Thread tPortscan = new Thread(async()=> {
@@ -378,7 +378,6 @@ public static class Fetch {
                 if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";
 
             if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);
-
         });
 
         tWmi.Start(); tAd.Start(); tPortscan.Start();
@@ -395,7 +394,6 @@ public static class Fetch {
             if (key == "OPERATING SYSTEM") {
                 if (!wmi.ContainsKey("OPERATING SYSTEM"))
                     content.Append($"{key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
-
             } else {
                 content.Append($"{key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
             }
@@ -423,10 +421,7 @@ public static class Fetch {
             if (!(netbios is null) && netbios.Length > 0) { //use biosnet
                 content.Append($"HOSTNAME{(char)127}{netbios}{(char)127}NetBIOS{(char)127}");
             } else { //use dns
-                try {
-                    string hostname = System.Net.Dns.GetHostEntry(ip).HostName;
-                    content.Append($"HOSTNAME{(char)127}{hostname}{(char)127}DNS{(char)127}");
-                } catch { }
+                content.Append($"HOSTNAME{(char)127}{hostname}{(char)127}DNS{(char)127}");
             }
         
         //name and type

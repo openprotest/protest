@@ -468,14 +468,19 @@ class Window {
             $w.array[i].task.className = "bar-icon";
         }
 
+        this.task.className = "bar-icon bar-icon-focused";
+        this.task.style.backgroundColor = `rgb(${this.themeColor[0]},${this.themeColor[1]},${this.themeColor[2]})`;
+        if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 < 128) this.icon.style.filter = "brightness(6)";
+
+        if (this.popoutWindow) {
+            this.popoutWindow.focus();
+            return;
+        }
+
         if (this.isMaximized) {
             this.task.style.top = "0";
             this.task.style.borderRadius = "0 0 12.5% 12.5%";
         }
-
-        this.task.className = "bar-icon bar-icon-focused";
-        this.task.style.backgroundColor = `rgb(${this.themeColor[0]},${this.themeColor[1]},${this.themeColor[2]})`;
-        if ((this.themeColor[0]+this.themeColor[1]+this.themeColor[2]) / 3 < 128) this.icon.style.filter = "brightness(6)";
 
         if (this.win.style.zIndex < $w.count) this.win.style.zIndex = ++$w.count;
 

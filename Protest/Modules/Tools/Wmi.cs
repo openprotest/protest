@@ -159,7 +159,6 @@ static class Wmi {
                 foreach (ManagementObject o in moc) {
                     short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
                     chassi = ChassiToString(chassisTypes);
-
                     type = ChassiToType(chassisTypes);
                     
                     if (chassi.Length > 0) {
@@ -174,7 +173,7 @@ static class Wmi {
                 //ContentBuilderAddArray(moc, "IPAddress", "IPV6", hash, new FormatMethodPtr(IPv6Filter));
                 ContentBuilderAddArray(moc, "IPAddress", "IP", hash, new FormatMethodPtr(IPv4Filter));
                 ContentBuilderAddArray(moc, "MACAddress", "MAC ADDRESS", hash);
-                ContentBuilderAddArray(moc, "IPSubnet", "MASK", hash);
+                ContentBuilderAddArray(moc, "IPSubnet", "MASK", hash, new FormatMethodPtr(IPv4MaskFilter));
                 ContentBuilderAddArray(moc, "DHCPEnabled", "DHCP ENABLED", hash);
             } catch { }
 
@@ -241,7 +240,7 @@ static class Wmi {
                     }
 
                 if (L1 > 0 || L2 > 0 || L3 > 0)
-                    hash.Add("CPU CACHE", $"{L1}/{L2}/{L3}");
+                    hash.Add("CPU CACHE", $"{SizeToString(L1.ToString())}/{SizeToString(L2.ToString())}/{SizeToString(L3.ToString())}");
                 
             } catch { }
 
@@ -660,6 +659,11 @@ static class Wmi {
     }
 
     public static string IPv4Filter(string value) {
+        if (!value.Contains(".")) return "";
+        return value;
+    }
+
+    public static string IPv4MaskFilter(string value) {
         if (!value.Contains(".")) return "";
         return value;
     }

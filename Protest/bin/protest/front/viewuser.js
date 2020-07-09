@@ -18,10 +18,18 @@ class User extends Window {
     constructor(filename) {
         super([56,56,56]);
 
+        this.args = filename;
+
+        this.AddCssDependencies("dbview.css");
+
+        if (this.args === null) {
+            this.New();
+            return;
+        }
+
         this.setTitle("User");
         this.setIcon("res/user.svgz");
-
-        this.args = filename;
+        
         this.entry = db_users.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
 
@@ -31,8 +39,6 @@ class User extends Window {
             this.AfterResize = () => {};
             return;
         }
-
-        this.AddCssDependencies("dbview.css");
 
         if (this.entry["TITLE"] == undefined || this.entry["TITLE"][0].length === 0)
             this.setTitle("[untitled]");
@@ -442,7 +448,7 @@ class User extends Window {
         const txtName = document.createElement("input");
         txtName.type = "text";
         txtName.value = name.toUpperCase();
-        txtName.setAttribute("list", "us_autofill");
+        txtName.setAttribute("list", "ur_autofill");
         if (readonly) txtName.setAttribute("readonly", true);
         newProperty.appendChild(txtName);
 
@@ -477,7 +483,42 @@ class User extends Window {
     }
 
     New() {
+        this.AfterResize = () => { };
+        this.btnPopout.style.display = "none";
 
+        this.setTitle("New user");
+        this.setIcon("res/new_user.svgz");
+
+        this.entry = {
+            "TITLE": ["", ""],
+            "DEPARTMENT": ["", ""],
+            "FIRST NAME": ["", ""],
+            "LAST NAME": ["", ""],
+            "USERNAME": ["", ""],
+            "E-MAIL": ["", ""],
+            "TELEPHONE NUMBER": ["", ""],
+            "MOBILE NUMBER": ["", ""]
+        };
+
+        const dialog = this.Edit();
+
+        const btnOK = dialog.btnOK; //remove previous event listeners
+        const newOK = btnOK.cloneNode(false);
+        btnOK.parentNode.replaceChild(newOK, btnOK);
+
+        const btnCancel = dialog.btnCancel; //remove previous event listeners
+        const newCancel = btnCancel.cloneNode(false);
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+        newOK.addEventListener("click", () => {
+
+
+            this.Close();
+        });
+
+        newCancel.addEventListener("click", () => {
+            this.Close();
+        });
     }
 
     Edit() {
