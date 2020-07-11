@@ -143,7 +143,7 @@ class ListWindow extends Window {
         this.columnsOptions.onclick = () => this.CustomizeColumns();
         this.list.onscroll = () => this.UpdateViewport();
 
-        if (args.find.length > 0) {
+        if (args.find && args.find.length > 0) {
             this.txtFind.value = args.find;
             this.btnFind.style.borderBottom = this.txtFind.value.length === 0 ? "none" : "var(--theme-color) solid 2px";
         }
@@ -167,11 +167,16 @@ class ListWindow extends Window {
         }
 
         for (let i = 0; i < this.titleLabels.length; i++)
-            this.titleLabels[i].innerHTML = `${this.columns[i*2]}/${this.columns[i*2+1]}`.toLowerCase();
-
+            if (this.columns[i * 2 + 1].length === 0) 
+                this.titleLabels[i].innerHTML = this.columns[i*2].toLowerCase();
+            else 
+                this.titleLabels[i].innerHTML = `${this.columns[i*2]}/${this.columns[i*2+1]}`.toLowerCase();
+        
         this.sortSubmenu.innerHTML = "";
 
-        for (let i = 0; i < this.columns.length; i++) {
+        for (let i=0; i<this.columns.length; i++) {
+            if (this.columns[i].length === 0) continue;
+
             let newItem = document.createElement("div");
             newItem.innerHTML = this.columns[i].toLowerCase();
             this.sortSubmenu.appendChild(newItem);
@@ -446,7 +451,8 @@ class ListWindow extends Window {
                 this.InflateElement(this.list.childNodes[i], this.view[i], type);
             }
 
-        this.lblTotal.innerHTML = "Total:&nbsp;" + (this.db.length === this.view.length ? this.db.length : this.view.length + " / " + this.db.length);
+        if (this.db)
+            this.lblTotal.innerHTML = "Total:&nbsp;" + (this.db.length === this.view.length ? this.db.length : this.view.length + " / " + this.db.length);
     }
 
 }

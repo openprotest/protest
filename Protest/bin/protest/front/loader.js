@@ -50,6 +50,7 @@ let loader_styles = [
         "viewequip.js",
         "viewuser.js",
         "fetch.js",
+        "passwordstrength.js",
         "netcalc.js",
         "passwordgen.js",
         "ping.js",
@@ -67,7 +68,8 @@ let loader_styles = [
         "scripteditor.js",
         "log.js",
         "screencapture.js",
-        "settings.js"
+        "settings.js",
+        "keepalive.js"
     ];
 
     let count = 0;
@@ -91,6 +93,8 @@ let loader_styles = [
             LoadUsers(callbackHandle);
 
         } else if (count == total) { //all done
+            initKeepAlive();
+
             loader.style.filter = "opacity(0)";
 
             setTimeout(() => {
@@ -225,29 +229,30 @@ function RestoreSession() {
     for (let i = 0; i < session.length; i++) {
         let win;
         switch (session[i].class) {
-            case "ListEquip"    : win = new ListEquip(session[i].args); break;
-            case "ListUsers"    : win = new ListUsers(session[i].args); break;
-            case "Equip"        : win = new Equip(session[i].args); break;
-            case "User"         : win = new User(session[i].args); break;
-            case "Fetch"        : win = new Fetch(session[i].args); break;
-            case "Netcalc"      : win = new Netcalc(); break;
-            case "Passgen"      : win = new Passgen(); break;
-            case "Ping"         : win = new Ping(session[i].args); break;
-            case "DnsLookup"    : win = new DnsLookup(session[i].args); break;
-            case "DhcpDiscover" : win = new DhcpDiscover(); break;
-            case "NtpClient"    : win = new NtpClient(); break;
-            case "TraceRoute"   : win = new TraceRoute(session[i].args); break;
-            case "PortScan"     : win = new PortScan(session[i].args); break;
-            case "LocateIp"     : win = new LocateIp(session[i].args); break;
-            case "MacLookup"    : win = new MacLookup(session[i].args); break;
-            case "WebCheck"     : win = new WebCheck(session[i].args); break;
-            case "SpeedTest"    : win = new SpeedTest(session[i].args); break;
-            case "Wmi"          : win = new Wmi(session[i].args); break;
-            case "Scripts"      : win = new Scripts(session[i].args); break;
-            case "ScriptEditor" : win = new ScriptEditor(session[i].args); break;
-            case "Log"          : win = new Log(session[i].args); break;
-            case "ScreenCapture": win = new ScreenCapture(session[i].args); break;
-            case "Settings"     : win = new Settings(session[i].args); break;
+            case "ListEquip"        : win = new ListEquip(session[i].args); break;
+            case "ListUsers"        : win = new ListUsers(session[i].args); break;
+            case "Equip"            : win = new Equip(session[i].args); break;
+            case "User"             : win = new User(session[i].args); break;
+            case "Fetch"            : win = new Fetch(session[i].args); break;
+            case "PasswordStrength" : win = new PasswordStrength(session[i].args); break;
+            case "Netcalc"          : win = new Netcalc(); break;
+            case "Passgen"          : win = new Passgen(); break;
+            case "Ping"             : win = new Ping(session[i].args); break;
+            case "DnsLookup"        : win = new DnsLookup(session[i].args); break;
+            case "DhcpDiscover"     : win = new DhcpDiscover(); break;
+            case "NtpClient"        : win = new NtpClient(); break;
+            case "TraceRoute"       : win = new TraceRoute(session[i].args); break;
+            case "PortScan"         : win = new PortScan(session[i].args); break;
+            case "LocateIp"         : win = new LocateIp(session[i].args); break;
+            case "MacLookup"        : win = new MacLookup(session[i].args); break;
+            case "WebCheck"         : win = new WebCheck(session[i].args); break;
+            case "SpeedTest"        : win = new SpeedTest(session[i].args); break;
+            case "Wmi"              : win = new Wmi(session[i].args); break;
+            case "Scripts"          : win = new Scripts(session[i].args); break;
+            case "ScriptEditor"     : win = new ScriptEditor(session[i].args); break;
+            case "Log"              : win = new Log(session[i].args); break;
+            case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
+            case "Settings"         : win = new Settings(session[i].args); break;
         }
 
         if (win) {

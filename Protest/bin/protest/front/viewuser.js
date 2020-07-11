@@ -45,6 +45,13 @@ class User extends Window {
         else
             this.setTitle(this.entry["TITLE"][0]);
 
+        this.InitializeComponent();
+        this.Plot();
+        this.LiveInfo();
+        setTimeout(() => { this.AfterResize(); }, 400);
+    }
+
+    InitializeComponent() {
         this.content.style.overflowY = "auto";
 
         this.buttons = document.createElement("div");
@@ -99,10 +106,6 @@ class User extends Window {
         this.rightside = document.createElement("div");
         this.rightside.className = "db-rightside";
         this.content.appendChild(this.rightside);
-
-        this.InitializeComponent();
-        this.LiveInfo();
-        setTimeout(() => { this.AfterResize(); }, 400);
     }
 
     AfterResize() { //override
@@ -134,7 +137,7 @@ class User extends Window {
         }
     } 
 
-    InitializeComponent() {
+    Plot() {
         let done = [];
         this.properties.innerHTML = "";
 
@@ -415,7 +418,7 @@ class User extends Window {
                 progress.style.boxShadow = "rgb(64,64,64) " + 100 * used / size + "px 0 0 inset";
 
                 const text = document.createElement("div");
-                text.innerHTML = "&thinsp;" + split[i + 1] + "/" + split[i + 2] + " " + split[i + 3];
+                text.innerHTML = "&thinsp;" + split[i+1] + "/" + split[i+2] + " " + split[i+3];
 
                 bar.appendChild(caption);
                 bar.appendChild(progress);
@@ -483,7 +486,8 @@ class User extends Window {
     }
 
     New() {
-        this.AfterResize = () => { };
+        this.InitializeComponent();
+
         this.btnPopout.style.display = "none";
 
         this.setTitle("New user");
@@ -501,22 +505,138 @@ class User extends Window {
         };
 
         const dialog = this.Edit();
+        const btnOK = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
 
-        const btnOK = dialog.btnOK; //remove previous event listeners
-        const newOK = btnOK.cloneNode(false);
-        btnOK.parentNode.replaceChild(newOK, btnOK);
+        const btnFetch = document.createElement("div");
+        btnFetch.setAttribute("tip-below", "Fetch");
+        btnFetch.style.position = "absolute";
+        btnFetch.style.left = "0px";
+        btnFetch.style.top = "32px";
+        btnFetch.style.width = "56px";
+        btnFetch.style.height = "56px";
+        btnFetch.style.paddingLeft = "4px";
+        btnFetch.style.borderRadius = "0 8px 8px 0";
+        btnFetch.style.backgroundColor = "rgb(208,208,208)";
+        btnFetch.style.backgroundImage = "url(res/fetch.svgz)";
+        btnFetch.style.backgroundPosition = "center";
+        btnFetch.style.backgroundSize = "48px 48px";
+        btnFetch.style.backgroundRepeat = "no-repeat";
+        btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        btnFetch.style.transition = ".2s";
+        dialog.innerBox.parentNode.parentNode.appendChild(btnFetch);
 
-        const btnCancel = dialog.btnCancel; //remove previous event listeners
-        const newCancel = btnCancel.cloneNode(false);
-        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+        const divFetch = document.createElement("div");
+        divFetch.style.position = "absolute";
+        divFetch.style.visibility = "hidden";
+        divFetch.style.left = "30%";
+        divFetch.style.top = "28px";
+        divFetch.style.width = "40%";
+        divFetch.style.maxWidth = "400px";
+        divFetch.style.minWidth = "220px";
+        divFetch.style.borderRadius = "8px";
+        divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        divFetch.style.backgroundColor = "rgb(208,208,208)";
+        divFetch.style.padding = "16px 8px";
+        divFetch.style.overflow = "hidden";
+        divFetch.style.textAlign = "center";
+        dialog.innerBox.parentElement.parentElement.appendChild(divFetch);
 
-        newOK.addEventListener("click", () => {
+        const txtuser = document.createElement("input");
+        txtuser.type = "text";
+        txtuser.placeholder = "Username";
+        divFetch.appendChild(txtuser);
 
+        divFetch.appendChild(document.createElement("br"));
+        divFetch.appendChild(document.createElement("br"));
 
-            this.Close();
+        const btnFetchOk = document.createElement("input");
+        btnFetchOk.type = "button";
+        btnFetchOk.value = "Fetch";
+        divFetch.appendChild(btnFetchOk);
+
+        const btnFetchCancel = document.createElement("input");
+        btnFetchCancel.type = "button";
+        btnFetchCancel.value = "Cancel";
+        divFetch.appendChild(btnFetchCancel);
+
+        let fetchToogle = false;
+        btnFetch.onclick = () => {
+            dialog.innerBox.parentElement.style.transition = ".2s";
+            dialog.innerBox.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+            dialog.innerBox.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+            dialog.innerBox.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+
+            divFetch.style.transition = ".2s";
+            divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
+            divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
+            divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
+
+            btnFetch.style.backgroundImage = fetchToogle ? "url(res/fetch.svgz)" : "url(res/close.svgz)";
+            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+
+            fetchToogle = !fetchToogle;
+        };
+
+        btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+
+        btnFetchOk.onclick = () => {
+            if (txtuser.value.length == 0) return;
+
+            btnFetch.style.filter = "opacity(0)";
+            btnFetch.style.visibility = "hidden";
+            divFetch.style.filter = "opacity(0)";
+            divFetch.style.transform = "translateY(-25%)";
+            divFetch.style.visibility = "hidden";
+
+            const waitbox = document.createElement("span");
+            waitbox.className = "waitbox";
+            waitbox.style.top = "0";
+            dialog.innerBox.parentElement.parentElement.appendChild(waitbox);
+
+            waitbox.appendChild(document.createElement("div"));
+
+            const waitLabel = document.createElement("span");
+            waitLabel.innerHTML = "Doing stuff. Please wait.";
+            waitLabel.className = "wait-label";
+            waitLabel.style.top = "0";
+            dialog.innerBox.parentElement.parentElement.appendChild(waitLabel);
+
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) { //OK
+                    dialog.innerBox.innerHTML = "";
+
+                    let split = xhr.responseText.split(String.fromCharCode(127));
+                    for (let i = 0; i < split.length - 1; i += 3)
+                        this.EditProperty(split[i], split[i + 1], false, dialog.innerBox);
+
+                    btnFetch.onclick();
+                    dialog.innerBox.parentElement.parentElement.removeChild(waitbox);
+                    dialog.innerBox.parentElement.parentElement.removeChild(waitLabel);
+                }
+
+                if (xhr.readyState == 4 && xhr.status == 0) {//disconnected
+                    dialog.Abort();
+                    this.ConfirmBox("Server is unavailable.", true);
+                }
+            };
+
+            xhr.open("GET", "fetchuser&host=" + txtuser.value, true);
+            xhr.send();
+        };
+
+        txtuser.onkeyup = event => {
+            if (event.keyCode == 13) //enter
+                btnFetchOk.onclick();
+        };
+
+        btnOK.addEventListener("click", () => {
+            this.Plot();
+            this.LiveInfo();
         });
 
-        newCancel.addEventListener("click", () => {
+        btnCancel.addEventListener("click", () => {
             this.Close();
         });
     }
@@ -526,7 +646,6 @@ class User extends Window {
         const innerBox = dialog.innerBox;
         const buttonBox = dialog.buttonBox;
         const btnOK = dialog.btnOK;
-        const btnCancel = dialog.btnCancel;
 
         innerBox.style.overflowY = "auto";
         innerBox.style.padding = "8px";
@@ -569,6 +688,12 @@ class User extends Window {
         btnOK.addEventListener("click", () => {
             let properties = innerBox.querySelectorAll(".db-edit-property");
 
+            let payload = "";
+            for (let i = 0; i < properties.length; i++) {
+                let c = properties[i].childNodes;
+                payload += `${c[0].value}${String.fromCharCode(127)}${c[1].value}${String.fromCharCode(127)}`;
+            }
+
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -578,6 +703,7 @@ class User extends Window {
                     if (xhr.responseText.startsWith("{")) {
                         let json = JSON.parse(xhr.responseText);
                         this.entry = json.obj;
+                        let filename = this.entry[".FILENAME"][0];
 
                         if (!this.entry.hasOwnProperty("TITLE") || this.entry["TITLE"][0].length == 0)
                             this.setTitle("[untitled]");
@@ -586,28 +712,35 @@ class User extends Window {
 
                         this.sidetools.innerHTML = "";
                         this.live.innerHTML = "";
-                        this.InitializeComponent();
+                        this.Plot();
                         this.LiveInfo();
 
-                        for (let i = 0; i < db_users.length; i++) //update db_users
-                            if (db_users[i][".FILENAME"][0] == this.filename) {
-                                db_users[i] = json.obj;
-                                break;
-                            }
+                        let db_entry = db_users.find(o => o[".FILENAME"][0] === filename); //update db_users
+                        if (db_entry) { //exist
+                            db_users[db_users.indexOf(db_entry)] = json.obj;
+                        } else { //new
+                            db_users.push(json.obj);
+                            this.filename = filename;
+                            this.args = filename;
+                        }
 
                         for (let i = 0; i < $w.array.length; i++) { //for each user list
                             if (!($w.array[i] instanceof ListUsers)) continue;
 
-                            for (let j = 0; j < $w.array[i].view.length; j++) //update view lists
-                                if ($w.array[i].view[j][".FILENAME"][0] == this.filename) {
-                                    $w.array[i].view[j] = json.obj;
-                                    break;
-                                }
+                            let view = $w.array[i].view.find(o => o[[".FILENAME"][0] == filename]); //update view lists
+                            if (view) $w.array[i].view[$w.array[i].view.indexOf(view)] = json.obj;
 
-                            let elements = $w.array[i].content.querySelectorAll(`#id${this.filename}`);
-                            for (let j = 0; j < elements.length; j++) { //update list element
-                                elements[j].innerHTML = "";
-                                $w.array[i].InflateElement(elements[j], json.obj);
+                            if (db_entry) { //exist
+                                const elements = $w.array[i].content.querySelectorAll(`#id${filename}`);
+                                for (let j = 0; j < elements.length; j++) { //update list element
+                                    elements[j].innerHTML = "";
+                                    $w.array[i].InflateElement(elements[j], json.obj);
+                                }
+                            } else { //new
+                                const element = document.createElement("div");
+                                element.className = "lst-obj-ele";
+                                $w.array[i].list.appendChild(element);
+                                $w.array[i].InflateElement(element, json.obj, type);
                             }
                         }
 
@@ -617,13 +750,11 @@ class User extends Window {
                 }
             };
 
-            let payload = "";
-            for (let i = 0; i < properties.length; i++) {
-                let c = properties[i].childNodes;
-                payload += `${c[0].value}${String.fromCharCode(127)}${c[1].value}${String.fromCharCode(127)}`;
-            }
+            if (this.filename)
+                xhr.open("POST", "saveuser&" + this.filename, true);
+            else 
+                xhr.open("POST", "saveuser", true);
 
-            xhr.open("POST", "saveuser&" + this.filename, true);
             xhr.send(payload);
         });
 
@@ -671,12 +802,12 @@ class User extends Window {
                     }
 
                     let names = new Set(Object.keys(this.entry));
-                    for (let i = 0; i < split.length - 1; i += 3) {
-                        const entry = this.EditProperty(split[i], split[i + 1], false, innerBox);
+                    for (let i=0; i < split.length-1; i+=3) {
+                        const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
                         entry.value.style.paddingRight = "24px";
 
                         if (names.has(split[i])) { //exists
-                            if (this.entry[split[i]][0].toLowerCase() == split[i + 1].toLowerCase()) { //same
+                            if (this.entry[split[i]][0].toLowerCase() == split[i+1].toLowerCase()) { //same
                                 entry.value.style.backgroundImage = "url(res/check.svgz)";
                             } else { //modified
                                 entry.value.style.backgroundImage = "url(res/change.svgz)";

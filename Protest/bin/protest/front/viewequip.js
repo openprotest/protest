@@ -43,6 +43,8 @@ class Equip extends Window {
 
         this.AddCssDependencies("dbview.css");
 
+        this.pingButtons = {};
+
         if (this.args === null) {
             this.New();
             return;
@@ -53,7 +55,6 @@ class Equip extends Window {
         
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
-        this.pingButtons = {};
 
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
@@ -69,6 +70,13 @@ class Equip extends Window {
 
         this.setIcon(GetEquipIcon(this.entry["TYPE"]));
 
+        this.InitializeComponent();
+        this.Plot();
+        this.LiveInfo();
+        setTimeout(() => { this.AfterResize(); }, 200);
+    }
+
+    InitializeComponent() {
         this.content.style.overflowY = "auto";
 
         this.buttons = document.createElement("div");
@@ -123,10 +131,6 @@ class Equip extends Window {
         this.rightside = document.createElement("div");
         this.rightside.className = "db-rightside";
         this.content.appendChild(this.rightside);
-
-        this.InitializeComponent();
-        this.LiveInfo();
-        setTimeout(() => { this.AfterResize(); }, 200);
     }
 
     AfterResize() { //override
@@ -159,7 +163,7 @@ class Equip extends Window {
         }
     }
 
-    InitializeComponent() {
+    Plot() {
         let done = [];
         this.properties.innerHTML = "";
 
@@ -850,7 +854,9 @@ class Equip extends Window {
     }
 
     New() {
-        this.AfterResize = () => { };
+        this.InitializeComponent();
+        setTimeout(() => { this.AfterResize(); }, 200);
+
         this.btnPopout.style.display = "none";
 
         this.setTitle("New equipment");
@@ -868,22 +874,145 @@ class Equip extends Window {
         };
 
         const dialog = this.Edit();
-
-        const btnOK = dialog.btnOK; //remove previous event listeners
-        const newOK = btnOK.cloneNode(false);
-        btnOK.parentNode.replaceChild(newOK, btnOK);
-
+        const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
-        const newCancel = btnCancel.cloneNode(false); //remove previous event listeners
-        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
 
-        newOK.addEventListener("click", () => {
+        const btnFetch = document.createElement("div");
+        btnFetch.setAttribute("tip-below", "Fetch");
+        btnFetch.style.position = "absolute";
+        btnFetch.style.left = "0px";
+        btnFetch.style.top = "32px";
+        btnFetch.style.width = "56px";
+        btnFetch.style.height = "56px";
+        btnFetch.style.paddingLeft = "4px";
+        btnFetch.style.borderRadius = "0 8px 8px 0";
+        btnFetch.style.backgroundColor = "rgb(208,208,208)";
+        btnFetch.style.backgroundImage = "url(res/fetch.svgz)";
+        btnFetch.style.backgroundPosition = "center";
+        btnFetch.style.backgroundSize = "48px 48px";
+        btnFetch.style.backgroundRepeat = "no-repeat";
+        btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        btnFetch.style.transition = ".2s";
+        dialog.innerBox.parentNode.parentNode.appendChild(btnFetch);
 
+        const divFetch = document.createElement("div");
+        divFetch.style.position = "absolute";
+        divFetch.style.visibility = "hidden";
+        divFetch.style.left = "30%";
+        divFetch.style.top = "28px";
+        divFetch.style.width = "40%";
+        divFetch.style.maxWidth = "400px";
+        divFetch.style.minWidth = "220px";
+        divFetch.style.borderRadius = "8px";
+        divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        divFetch.style.backgroundColor = "rgb(208,208,208)";
+        divFetch.style.padding = "16px 8px";
+        divFetch.style.overflow = "hidden";
+        divFetch.style.textAlign = "center";
+        dialog.innerBox.parentElement.parentElement.appendChild(divFetch);
 
-            this.Close();
+        const txtFetchHost = document.createElement("input");
+        txtFetchHost.type = "text";
+        txtFetchHost.placeholder = "Host";
+        divFetch.appendChild(txtFetchHost);
+
+        divFetch.appendChild(document.createElement("br"));
+        divFetch.appendChild(document.createElement("br"));
+
+        const btnFetchOk = document.createElement("input");
+        btnFetchOk.type = "button";
+        btnFetchOk.value = "Fetch";
+        divFetch.appendChild(btnFetchOk);
+
+        const btnFetchCancel = document.createElement("input");
+        btnFetchCancel.type = "button";
+        btnFetchCancel.value = "Cancel";
+        divFetch.appendChild(btnFetchCancel);
+
+        let fetchToogle = false;
+        btnFetch.onclick = () => {
+            dialog.innerBox.parentElement.style.transition = ".2s";
+            dialog.innerBox.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+            dialog.innerBox.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+            dialog.innerBox.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+
+            divFetch.style.transition = ".2s";
+            divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
+            divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
+            divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
+
+            btnFetch.style.backgroundImage = fetchToogle ? "url(res/fetch.svgz)" : "url(res/close.svgz)";
+            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+
+            fetchToogle = !fetchToogle;
+        };
+
+        btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+
+        btnFetchOk.onclick = () => {
+            if (txtFetchHost.value.length == 0) return;
+
+            btnFetch.style.filter = "opacity(0)";
+            btnFetch.style.visibility = "hidden";
+            divFetch.style.filter = "opacity(0)";
+            divFetch.style.transform ="translateY(-25%)";
+            divFetch.style.visibility = "hidden";
+
+            const waitbox = document.createElement("span");
+            waitbox.className = "waitbox";
+            waitbox.style.top = "0";
+            dialog.innerBox.parentElement.parentElement.appendChild(waitbox);
+
+            waitbox.appendChild(document.createElement("div"));
+
+            const waitLabel = document.createElement("span");
+            waitLabel.innerHTML = "Doing stuff. Please wait.";
+            waitLabel.className = "wait-label";
+            waitLabel.style.top = "0";
+            dialog.innerBox.parentElement.parentElement.appendChild(waitLabel);
+
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) { //OK
+                    dialog.innerBox.innerHTML = "";
+
+                    let split = xhr.responseText.split(String.fromCharCode(127));
+                    for (let i=0; i<split.length-1; i+=3) {
+                        const entry = this.EditProperty(split[i], split[i+1], false, dialog.innerBox);
+                        entry.value.style.paddingRight = "24px";
+                        entry.value.style.width = "calc(60% - 200px)";
+
+                        let lblSource = document.createElement("div");
+                        lblSource.innerHTML = split[i + 2];
+                        entry.value.parentNode.appendChild(lblSource);
+                    }
+
+                    btnFetch.onclick();
+                    dialog.innerBox.parentElement.parentElement.removeChild(waitbox);
+                    dialog.innerBox.parentElement.parentElement.removeChild(waitLabel);
+                }
+
+                if (xhr.readyState == 4 && xhr.status == 0) {//disconnected
+                    dialog.Abort();
+                    this.ConfirmBox("Server is unavailable.", true);
+                }
+            };
+
+            xhr.open("GET", "fetchequip&host=" + txtFetchHost.value, true);
+            xhr.send();
+        };
+
+        txtFetchHost.onkeyup = event => {
+            if (event.keyCode == 13) //enter
+                btnFetchOk.onclick();
+        };
+
+        btnOK.addEventListener("click", () => {
+            this.Plot();
+            this.LiveInfo();
         });
 
-        newCancel.addEventListener("click", () => {
+        btnCancel.addEventListener("click", () => {
             this.Close();
         });
     }
@@ -893,7 +1022,6 @@ class Equip extends Window {
         const innerBox  = dialog.innerBox;
         const buttonBox = dialog.buttonBox;
         const btnOK     = dialog.btnOK;
-        const btnCancel = dialog.btnCancel;
 
         innerBox.style.overflowY = "auto";
         innerBox.style.padding = "8px";
@@ -945,6 +1073,12 @@ class Equip extends Window {
         btnOK.addEventListener("click", ()=> {
             let properties = innerBox.querySelectorAll(".db-edit-property");
 
+            let payload = "";
+            for (let i = 0; i < properties.length; i++) {
+                let c = properties[i].childNodes;
+                payload += `${c[0].value}${String.fromCharCode(127)}${c[1].value}${String.fromCharCode(127)}`;
+            }
+
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -954,6 +1088,7 @@ class Equip extends Window {
                     if (xhr.responseText.startsWith("{")) {
                         let json = JSON.parse(xhr.responseText);
                         this.entry = json.obj;
+                        let filename = this.entry[".FILENAME"][0];                        
 
                         this.setIcon(GetEquipIcon(this.entry["TYPE"]));
                         if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
@@ -963,29 +1098,36 @@ class Equip extends Window {
 
                         this.sidetools.innerHTML = "";
                         this.live.innerHTML = "";
-                        this.InitializeComponent();
+                        this.Plot();
                         this.LiveInfo();
 
-                        for (let i = 0; i < db_equip.length; i++) //update db_equip
-                            if (db_equip[i][".FILENAME"][0] == this.filename) {
-                                db_equip[i] = json.obj;
-                                break;
-                            }
+                        let db_entry = db_equip.find(o => o[".FILENAME"][0] === filename); //update db_equip
+                        if (db_entry) { //exist
+                            db_equip[db_equip.indexOf(db_entry)] = json.obj;
+                        } else { //new
+                            db_equip.push(json.obj);
+                            this.filename = filename;
+                            this.args = filename;
+                        }
 
                         for (let i = 0; i < $w.array.length; i++) { //for each equip list
                             if (!($w.array[i] instanceof ListEquip)) continue;
 
-                            for (let j = 0; j < $w.array[i].view.length; j++) //update view lists
-                                if ($w.array[i].view[j][".FILENAME"][0] == this.filename) {
-                                    $w.array[i].view[j] = json.obj;
-                                    break;
-                                }
+                            let view = $w.array[i].view.find(o => o[[".FILENAME"][0] == filename]); //update view lists
+                            if (view) $w.array[i].view[$w.array[i].view.indexOf(view)] = json.obj;
+                            let type = (json.obj.hasOwnProperty("TYPE")) ? json.obj["TYPE"][0].toLowerCase() : "";
 
-                            let elements = $w.array[i].content.querySelectorAll(`#id${this.filename}`);
-                            for (let j = 0; j < elements.length; j++) { //update list element
-                                elements[j].innerHTML = "";
-                                let type = (json.obj.hasOwnProperty("TYPE")) ? json.obj["TYPE"][0].toLowerCase() : "";
-                                $w.array[i].InflateElement(elements[j], json.obj, type);
+                            if (db_entry) { //exist
+                                const elements = $w.array[i].content.querySelectorAll(`#id${filename}`);
+                                for (let j = 0; j < elements.length; j++) { //update list element
+                                    elements[j].innerHTML = "";                                    
+                                    $w.array[i].InflateElement(elements[j], json.obj, type);
+                                }
+                            } else { //new
+                                const element = document.createElement("div");
+                                element.className = "lst-obj-ele";
+                                $w.array[i].list.appendChild(element);
+                                $w.array[i].InflateElement(element, json.obj, type);
                             }
                         }
 
@@ -995,13 +1137,11 @@ class Equip extends Window {
                 }
             };
 
-            let payload = "";
-            for (let i = 0; i < properties.length; i++) {
-                let c = properties[i].childNodes;
-                payload += `${c[0].value}${String.fromCharCode(127)}${c[1].value}${String.fromCharCode(127)}`;
-            }
+            if (this.filename)
+                xhr.open("POST", "saveequip&" + this.filename, true);
+            else
+                xhr.open("POST", "saveequip", true);
 
-            xhr.open("POST", "saveequip&" + this.filename, true);
             xhr.send(payload);
         });
 

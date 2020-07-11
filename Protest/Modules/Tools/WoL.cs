@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-static class WoL {
+public static class WoL {
 
     public static byte[] Wakeup(string[] para) {
         string filename = "";

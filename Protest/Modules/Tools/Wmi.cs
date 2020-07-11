@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 //http://msdn.microsoft.com/en-us/library/aa394388(v=vs.85).aspx
 
-static class Wmi {
+public static class Wmi {
     //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-impersonationlevel
     //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-authenticationlevel
 

@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-static class Ntp {
+public static class Ntp {
 
     public static byte[] NtpRequest(string[] para) {
         string server = "time.nist.gov";

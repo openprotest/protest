@@ -406,7 +406,7 @@ class Database {
         respone.Append("}");
 
         byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
-        BroadcastMessage(bytes);
+        KeepAlive.Broadcast(bytes);
         return bytes;
     }
 
@@ -437,7 +437,7 @@ class Database {
             Logging.Action(in performer, $"Delete equip: {filename}");
 
             equipVer = DateTime.Now.Ticks;
-            BroadcastMessage("");
+            KeepAlive.Broadcast("");
             return Strings.OK.Array;
         } else
             return Strings.FLE.Array;
@@ -532,10 +532,10 @@ class Database {
         respone.Append("}");
 
         byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
-        BroadcastMessage(bytes);
+        KeepAlive.Broadcast(bytes);
         return bytes;
     }
-
+    
     public static byte[] DeleteUser(string[] para, in string performer) {
         string filename;
         if (para.Length > 1)
@@ -563,19 +563,10 @@ class Database {
             Logging.Action(in performer, $"Delete user: {filename}");
 
             usersVer = DateTime.Now.Ticks;
-            BroadcastMessage("");
+            KeepAlive.Broadcast("");
             return Strings.OK.Array;
         } else
             return Strings.FLE.Array;
-    }
-
-    public static void BroadcastMessage(string message) {
-        BroadcastMessage(Encoding.UTF8.GetBytes(message));
-    }
-    public static void BroadcastMessage(byte[] message) {
-        new Thread(() => {
-            //TODO:
-        }).Start();
     }
 
 }

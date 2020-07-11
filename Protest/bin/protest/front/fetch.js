@@ -12,8 +12,8 @@ class Fetch extends Tabs {
         this.ipTo = new IpBox();
 
         let tabEquipIp = this.AddTab("Equipment", "res/gear.svgz", "from IP range");
-        let tabEquipDc = this.AddTab("Equipment", "res/gear.svgz", "from DC");
-        let tabUsersDc = this.AddTab("Users",     "res/user.svgz", "from DC");
+        let tabEquipDc = this.AddTab("Equipment", "res/gear.svgz", "from a domain");
+        let tabUsersDc = this.AddTab("Users",     "res/user.svgz", "from a domain");
         let tabProtest = this.AddTab("Database",  "res/logo.svgz", "from other Pro-test");
 
         tabEquipIp.style.height = "42px";

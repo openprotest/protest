@@ -58,7 +58,8 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Modules\ActiveDirectory.cs" />
+    <Compile Include="Modules\Tools\ActiveDirectory.cs" />
+    <Compile Include="Modules\KeepAlive.cs" />
     <Compile Include="Modules\Cache.cs" />
     <Compile Include="Modules\CryptoAes.cs" />
     <Compile Include="Modules\RaHandler.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Modules\Tools\LastSeen.cs" />
     <Compile Include="Modules\LiveInfo.cs" />
     <Compile Include="Modules\Tools\Ntp.cs" />
+    <Compile Include="Modules\Tools\PasswordStrength.cs" />
     <Compile Include="Modules\Tools\PrintTools.cs" />
     <Compile Include="Modules\Tools\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
@@ -135,9 +137,13 @@
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\config.txt" />
+    <Content Include="bin\protest\front\keepalive.js" />
+    <Content Include="bin\protest\front\passwordstrength.css" />
+    <Content Include="bin\protest\front\passwordstrength.js" />
     <Content Include="bin\protest\front\ntpclient.js" />
     <Content Include="bin\protest\front\license.txt" />
     <Content Include="bin\protest\front\dbview.css" />
+    <Content Include="bin\protest\front\res\ball.svg" />
     <Content Include="bin\protest\front\res\clock.svg" />
     <Content Include="bin\protest\front\res\desktop.svg" />
     <Content Include="bin\protest\front\res\directory.svg" />

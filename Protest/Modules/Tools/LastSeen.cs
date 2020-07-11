@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
 
-class LastSeen {
+public static class LastSeen {
 
     public static void Seen(string ip) {
         try {

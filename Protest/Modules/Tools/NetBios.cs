@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-static class NetBios {
+public static class NetBios {
 
     static readonly byte[] BIOS_NAME_REQUEST = new byte[]{
             0x80, 0x94, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,

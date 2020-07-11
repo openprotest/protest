@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-static class RaHandler {
+public static class RaHandler {
     public static byte[] RaResponse(string[] para, string ip) {
         if (para.Length < 3) return Strings.INF.Array;
         return ip.StartsWith("127.0.0.") ? LocalAgent(para) : RemoteAgent(para, ip);

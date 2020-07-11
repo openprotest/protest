@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-class PrintTools {
+public static class PrintTools {
     public static byte[] PrintTestPage(string[] para) {
         string target = "";
         for (int i = 1; i < para.Length; i++)

@@ -8,7 +8,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 
-class LiveInfo {
+public static class LiveInfo {
 
     public static async void WsWriteText(WebSocket ws, string text){
         await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -37,6 +37,11 @@ class LiveInfo {
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
             string filename = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            if (!Database.equip.ContainsKey(filename)) {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                return;
+            }
+            
             Database.DbEntry equip = (Database.DbEntry)Database.equip[filename];
 
             string ip = null;
@@ -144,6 +149,10 @@ class LiveInfo {
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
             string filename = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            if (!Database.users.ContainsKey(filename)) {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                return;
+            }
             Database.DbEntry user = (Database.DbEntry)Database.users[filename];
 
             string username;

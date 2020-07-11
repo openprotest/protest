@@ -78,6 +78,7 @@ class ListEquip extends ListWindow {
 
         for (let j = 0; j < 8; j++) {
             if (!entry.hasOwnProperty(this.columns[j])) continue;
+            if (entry[this.columns[j]][0].length == 0) continue;
 
             const newLabel = document.createElement("div");
             newLabel.innerHTML = entry[this.columns[j]][0];

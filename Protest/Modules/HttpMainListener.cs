@@ -169,6 +169,8 @@ class HttpMainListener : Http {
                 case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
                 case "getadgroupcolumn":        buffer = Scripts.GetAdGroupColumns(); break;
 
+                case "getentropy": buffer = PasswordStrength.GetEntropy(); break;
+
                 case "listscripts": buffer = Scripts.ListScripts(); break;
                 case "loadscript":  buffer = Scripts.LoadScript(para); break;
                 case "savescript":  buffer = Scripts.SaveScript(ctx, para); break;
@@ -216,11 +218,14 @@ class HttpMainListener : Http {
             case "ws/portscan": PortScan.WsPortScan(ctx, remoteIp); break;
             case "ws/traceroute": TraceRoute.WsTraceRoute(ctx, remoteIp); break;
             case "ws/webcheck": WebCheck.WsWebCheck(ctx, remoteIp); break;
-            case "ws/speedtest_down": SpeedTest.WsSpeedtest_down(ctx, remoteIp, para); break;
-            case "ws/speedtest_up": SpeedTest.WsSpeedtest_up(ctx, remoteIp, para); break;
+            
+            case "ws/keepalive": KeepAlive.Connect(ctx, remoteIp); break;
 
             case "ws/liveinfo_equip": LiveInfo.InstantInfoEquip(ctx, remoteIp); break;
             case "ws/liveinfo_user": LiveInfo.InstantInfoUser(ctx, remoteIp); break;
+
+            case "ws/speedtest_down": SpeedTest.WsSpeedtest_down(ctx, remoteIp, para); break;
+            case "ws/speedtest_up": SpeedTest.WsSpeedtest_up(ctx, remoteIp, para); break;
 
             default: ctx.Response.Close(); break;
         }
