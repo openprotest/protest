@@ -176,14 +176,18 @@ public static class Fetch {
                 if (hash.ContainsKey(".VOLUME")) hash.Remove(".VOLUME");
                 if (hash.ContainsKey(".CANREMOTE")) hash.Remove(".CANREMOTE");
 
+
                 Hashtable passwords = new Hashtable();
                 foreach (DictionaryEntry e in hash) //get passwords
                     if (((string)e.Key).Contains("PASSWORD")) {
                         string password = GetHiddenProperty(uri, cookieContainer, $"getequiprop&file={filename}&property={(string)e.Key}");
-                        passwords.Add(e.Key, password);
+                        string performer = ((string[])hash[e.Key])[1];
+                        passwords.Add(e.Key, new string[] { password, performer});
                     }
-                foreach (DictionaryEntry e in passwords)
-                    hash[e.Key] = new string[] { e.Value.ToString(), "fetched from v3", "" };
+                foreach (DictionaryEntry e in passwords) {
+                    string[] value = (string[])passwords[e.Key];
+                    hash[e.Key] = new string[] { value[0], value[1], "" };
+                }
 
 
                 while (Database.equip.ContainsKey(filename)) {
@@ -240,10 +244,13 @@ public static class Fetch {
                 foreach (DictionaryEntry e in hash) //get passwords
                     if (((string)e.Key).Contains("PASSWORD")) {
                         string password = GetHiddenProperty(uri, cookieContainer, $"getuserprop&file={filename}&property={(string)e.Key}");
-                        passwords.Add(e.Key, password);
+                        string performer = ((string[])hash[e.Key])[1];
+                        passwords.Add(e.Key, new string[] { password, performer });
                     }
-                foreach (DictionaryEntry e in passwords)
-                    hash[e.Key] = new string[] { e.Value.ToString(), "fetched from v3", "" };
+                foreach (DictionaryEntry e in passwords) {
+                    string[] value = (string[])passwords[e.Key];
+                    hash[e.Key] = new string[] { value[0], value[1], "" };
+                }
 
 
                 while (Database.users.ContainsKey(filename)) {

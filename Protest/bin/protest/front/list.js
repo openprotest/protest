@@ -157,14 +157,13 @@ class ListWindow extends Window {
     }
 
     UpdateTitlebar() {
-        if (this.titleLabels.length === 0) {
+        if (this.titleLabels.length === 0)
             for (let i = 0; i < 4; i++) {
                 let lblTitle = document.createElement("div");
                 lblTitle.className = "list-title-" + i;
                 this.titlebar.appendChild(lblTitle);
                 this.titleLabels.push(lblTitle);
-            }
-        }
+            }        
 
         for (let i = 0; i < this.titleLabels.length; i++)
             if (this.columns[i * 2 + 1].length === 0) 

@@ -1087,49 +1087,11 @@ class Equip extends Window {
 
                     if (xhr.responseText.startsWith("{")) {
                         let json = JSON.parse(xhr.responseText);
-                        this.entry = json.obj;
-                        let filename = this.entry[".FILENAME"][0];                        
+                        //this.Update(json.obj);
 
-                        this.setIcon(GetEquipIcon(this.entry["TYPE"]));
-                        if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
-                            this.setTitle("[untitled]");
-                        else
-                            this.setTitle(this.entry["NAME"][0]);
-
-                        this.sidetools.innerHTML = "";
-                        this.live.innerHTML = "";
-                        this.Plot();
-                        this.LiveInfo();
-
-                        let db_entry = db_equip.find(o => o[".FILENAME"][0] === filename); //update db_equip
-                        if (db_entry) { //exist
-                            db_equip[db_equip.indexOf(db_entry)] = json.obj;
-                        } else { //new
-                            db_equip.push(json.obj);
-                            this.filename = filename;
-                            this.args = filename;
-                        }
-
-                        for (let i = 0; i < $w.array.length; i++) { //for each equip list
-                            if (!($w.array[i] instanceof ListEquip)) continue;
-
-                            let view = $w.array[i].view.find(o => o[[".FILENAME"][0] == filename]); //update view lists
-                            if (view) $w.array[i].view[$w.array[i].view.indexOf(view)] = json.obj;
-                            let type = (json.obj.hasOwnProperty("TYPE")) ? json.obj["TYPE"][0].toLowerCase() : "";
-
-                            if (db_entry) { //exist
-                                const elements = $w.array[i].content.querySelectorAll(`#id${filename}`);
-                                for (let j = 0; j < elements.length; j++) { //update list element
-                                    elements[j].innerHTML = "";                                    
-                                    $w.array[i].InflateElement(elements[j], json.obj, type);
-                                }
-                            } else { //new
-                                const element = document.createElement("div");
-                                element.className = "lst-obj-ele";
-                                $w.array[i].list.appendChild(element);
-                                $w.array[i].InflateElement(element, json.obj, type);
-                            }
-                        }
+                        let filename = json.obj[".FILENAME"][0];
+                        this.filename = filename;
+                        this.args = filename;
 
                     } else {
                         this.ConfirmBox(xhr.responseText, true);
@@ -1238,27 +1200,6 @@ class Equip extends Window {
                 if (xhr.readyState == 4 && xhr.status == 200)
                     if (xhr.responseText == "ok") {
                         this.Close();
-
-                        for (let i = 0; i < db_equip.length; i++) //delete from db_equip
-                            if (db_equip[i][".FILENAME"][0] == this.filename) {
-                                db_equip.splice(i, 1);
-                                break;
-                            }
-
-                        for (let i = 0; i < $w.array.length; i++) { //for each equip list
-                            if (!($w.array[i] instanceof ListEquip)) continue;
-
-                            for (let j = 0; j < $w.array[i].view.length; j++) //delete from view list 
-                                if ($w.array[i].view[j][".FILENAME"][0] == this.filename)
-                                    $w.array[i].view.splice(j, 1);
-
-                            let elements = $w.array[i].content.querySelectorAll(`#id${this.filename}`);
-                            for (let j = 0; j < elements.length; j++) //remove list element
-                                $w.array[i].list.removeChild(elements[j]);
-
-                            $w.array[i].UpdateViewport();
-                        }
-
                     } else {
                         this.ConfirmBox(xhr.responseText, true);
                     }
@@ -1267,5 +1208,20 @@ class Equip extends Window {
             xhr.open("GET", "delequip&" + this.filename, true);
             xhr.send();
         });
+    }
+
+    Update(obj) {
+        this.entry = obj;
+
+        this.setIcon(GetEquipIcon(this.entry["TYPE"]));
+        if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
+            this.setTitle("[untitled]");
+        else
+            this.setTitle(this.entry["NAME"][0]);
+
+        this.sidetools.innerHTML = "";
+        this.live.innerHTML = "";
+        this.Plot();
+        this.LiveInfo();
     }
 }

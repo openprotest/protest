@@ -21,6 +21,18 @@ class PasswordStrength extends ListWindow {
         this.GetEntropy();
     }
 
+    UpdateTitlebar() { //override
+        super.UpdateTitlebar();
+
+        let labels = this.titleLabels;
+        labels[0].style.left = "28px";
+        labels[0].style.maxWidth = "calc(35% - 32px)";
+        labels[1].style.left = "35%";
+        labels[1].style.maxWidth = "15%";
+        labels[2].style.left = "50%";
+        labels[3].style.left = "75%";
+    }
+
     GetEntropy(callback) {
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {

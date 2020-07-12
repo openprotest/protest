@@ -384,28 +384,28 @@ class Database {
 
         equipVer = DateTime.Now.Ticks;
 
-        StringBuilder respone = new StringBuilder();
-        respone.Append("{");
-        respone.Append("\"action\":\"update\",");
-        respone.Append("\"type\":\"equip\",");
-        respone.Append($"\"target\":\"{filename}\",");
-        respone.Append($"\"version\":\"{equipVer}\",");
+        StringBuilder broadcast = new StringBuilder();
+        broadcast.Append("{");
+        broadcast.Append("\"action\":\"update\",");
+        broadcast.Append("\"type\":\"equip\",");
+        broadcast.Append($"\"target\":\"{filename}\",");
+        broadcast.Append($"\"version\":\"{equipVer}\",");
 
-        respone.Append("\"obj\":{");
+        broadcast.Append("\"obj\":{");
         bool fst = true;
         foreach (DictionaryEntry o in entry.hash) {
-            if (!fst) respone.Append(",");
+            if (!fst) broadcast.Append(",");
             string key = (string)o.Key;
             string[] current = (string[])entry.hash[key];
-            respone.Append($"\"{Strings.EscapeJson(key)}\":");
-            respone.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
+            broadcast.Append($"\"{Strings.EscapeJson(key)}\":");
+            broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
             fst = false;
         }
-        respone.Append("}");
+        broadcast.Append("}");
 
-        respone.Append("}");
+        broadcast.Append("}");
 
-        byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
+        byte[] bytes = Encoding.UTF8.GetBytes(broadcast.ToString());
         KeepAlive.Broadcast(bytes);
         return bytes;
     }
@@ -419,7 +419,6 @@ class Database {
 
         if (equip.ContainsKey(filename)) {
             DbEntry entry = (DbEntry)equip[filename];
-
             lock (entry.write_lock) {
                 try {
                     string fullpath = $"{Strings.DIR_EQUIP}_del";
@@ -437,7 +436,18 @@ class Database {
             Logging.Action(in performer, $"Delete equip: {filename}");
 
             equipVer = DateTime.Now.Ticks;
-            KeepAlive.Broadcast("");
+
+            StringBuilder broadcast = new StringBuilder();
+            broadcast.Append("{");
+            broadcast.Append("\"action\":\"delete\",");
+            broadcast.Append("\"type\":\"equip\",");
+            broadcast.Append($"\"target\":\"{filename}\",");
+            broadcast.Append($"\"version\":\"{equipVer}\"");
+            broadcast.Append("}");
+
+            byte[] bytes = Encoding.UTF8.GetBytes(broadcast.ToString());
+            KeepAlive.Broadcast(bytes);
+
             return Strings.OK.Array;
         } else
             return Strings.FLE.Array;
@@ -510,28 +520,28 @@ class Database {
 
         usersVer = DateTime.Now.Ticks;
 
-        StringBuilder respone = new StringBuilder();
-        respone.Append("{");
-        respone.Append("\"action\":\"update\",");
-        respone.Append("\"type\":\"user\",");
-        respone.Append($"\"target\":\"{filename}\",");
-        respone.Append($"\"version\":\"{usersVer}\",");
+        StringBuilder broadcast = new StringBuilder();
+        broadcast.Append("{");
+        broadcast.Append("\"action\":\"update\",");
+        broadcast.Append("\"type\":\"user\",");
+        broadcast.Append($"\"target\":\"{filename}\",");
+        broadcast.Append($"\"version\":\"{usersVer}\",");
 
-        respone.Append("\"obj\":{");
+        broadcast.Append("\"obj\":{");
         bool fst = true;
         foreach (DictionaryEntry o in entry.hash) {
-            if (!fst) respone.Append(",");
+            if (!fst) broadcast.Append(",");
             string key = (string)o.Key;
             string[] current = (string[])entry.hash[key];
-            respone.Append($"\"{Strings.EscapeJson(key)}\":");
-            respone.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
+            broadcast.Append($"\"{Strings.EscapeJson(key)}\":");
+            broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
             fst = false;
         }
-        respone.Append("}");
+        broadcast.Append("}");
 
-        respone.Append("}");
+        broadcast.Append("}");
 
-        byte[] bytes = Encoding.UTF8.GetBytes(respone.ToString());
+        byte[] bytes = Encoding.UTF8.GetBytes(broadcast.ToString());
         KeepAlive.Broadcast(bytes);
         return bytes;
     }
@@ -545,7 +555,6 @@ class Database {
 
         if (users.ContainsKey(filename)) {
             DbEntry entry = (DbEntry)users[filename];
-
             lock (entry.write_lock) {
                 try {
                     string fullpath = $"{Strings.DIR_USERS}_del";
@@ -563,7 +572,18 @@ class Database {
             Logging.Action(in performer, $"Delete user: {filename}");
 
             usersVer = DateTime.Now.Ticks;
-            KeepAlive.Broadcast("");
+
+            StringBuilder broadcast = new StringBuilder();
+            broadcast.Append("{");
+            broadcast.Append("\"action\":\"delete\",");
+            broadcast.Append("\"type\":\"user\",");
+            broadcast.Append($"\"target\":\"{filename}\",");
+            broadcast.Append($"\"version\":\"{usersVer}\"");
+            broadcast.Append("}");
+
+            byte[] bytes = Encoding.UTF8.GetBytes(broadcast.ToString());
+            KeepAlive.Broadcast(bytes);
+
             return Strings.OK.Array;
         } else
             return Strings.FLE.Array;

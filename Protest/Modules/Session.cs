@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Net;
@@ -20,7 +19,7 @@ public static class Session {
     private static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
 
     public static long HOUR = 36_000_000_000;
-    public static long SESSION_TIMEOUT = 120; //5 days
+    public static long SESSION_TIMEOUT = 168; //7 days
 
     struct SessionEntry {
         public string ip;
@@ -98,7 +97,6 @@ public static class Session {
     public static bool RevokeAccess(in string sessionId) {
         if (sessionId is null) return false;
         if (!sessions.ContainsKey(sessionId)) return false;
-
 
         if (sessions.TryRemove(sessionId, out _)) 
             return true;

@@ -15,6 +15,7 @@ public static class KeepAlive {
 
     private struct AliveEntry {
         public WebSocket ws;
+        public string session;
         public object syncLock;
     }
 
@@ -42,6 +43,7 @@ public static class KeepAlive {
             if (ws.State == WebSocketState.Open) {
                 connections.Add(ws, new AliveEntry() {
                     ws = ws,
+                    session = sessionId,
                     syncLock = new object()
                 });
 #if KA_LOGGING
@@ -49,8 +51,13 @@ public static class KeepAlive {
 #endif
             }
 
+            byte[] version = Encoding.UTF8.GetBytes(
+                $"{{\"action\":\"version\",\"userver\":\"{Database.usersVer}\",\"equipver\":\"{Database.equipVer}\"}}"
+            );
+            await ws.SendAsync(new ArraySegment<byte>(version, 0, version.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+
             while (ws.State == WebSocketState.Open) {
-                byte[] buff = new byte[4096];
+                byte[] buff = new byte[1024]; //<-
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
@@ -67,6 +74,8 @@ public static class KeepAlive {
                 }
 
                 string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
+
+                //TODO:
             }
 
         } catch (Exception ex) {
@@ -80,6 +89,9 @@ public static class KeepAlive {
     }
 
     public static void Broadcast(byte[] message) {
+#if KA_LOGGING
+        Console.WriteLine($"broadcasting");
+#endif
         List<WebSocket> remove = new List<WebSocket>();
 
         foreach (DictionaryEntry e in connections) { 
@@ -92,7 +104,7 @@ public static class KeepAlive {
                         lock(entry.syncLock) {
                             entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
-                    } catch { }
+                    } catch {}
                 }).Start();
 
             } else {

@@ -1,5 +1,7 @@
 let db_equip = [];
 let db_users = [];
+let db_equip_ver = 0;
+let db_users_ver = 0;
 
 let loader_styles = [
     "sidemenu.css",
@@ -147,6 +149,7 @@ function LoadEquip(callback) {
 
     xhr.onload = ()=> {
         let split = xhr.responseText.split(String.fromCharCode(127));
+        db_equip_ver = parseInt(split[0]);
         db_equip = [];
 
         let i = 1;
@@ -175,6 +178,7 @@ function LoadUsers(callback) {
 
     xhr.onload = ()=> {
         let split = xhr.responseText.split(String.fromCharCode(127));
+        db_users_ver = parseInt(split[0]);
         db_users = [];
 
         let i = 1;
