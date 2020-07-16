@@ -56,7 +56,7 @@ class PasswordStrength extends ListWindow {
                 //this.OnUiReady();
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
-                this.ConfirmBox("Server is unavailable.", true);
+                this.ConfirmBox("Server is unavailable.", true).addEventListener("click", ()=> this.Close());
         };
         xhr.open("GET", "getentropy", true);
         xhr.send();

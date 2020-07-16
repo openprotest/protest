@@ -15,7 +15,7 @@
 }
 
 .script-list > .script-list-item:hover {
-    background-color: var(--select-color);
+    background-color: var(--highlight-color);
     color: rgb(32,32,32);
 }
 

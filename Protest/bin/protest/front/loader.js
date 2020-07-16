@@ -152,12 +152,12 @@ function LoadEquip(callback) {
         db_equip_ver = parseInt(split[0]);
         db_equip = [];
 
-        let i = 1;
+        let i=1;
         while (i < split.length-1) {
             let len = parseInt(split[i]);
             let obj = {};
             for (let j = i + 1; j < i + len * 4; j += 4)
-                obj[split[j]] = [split[j + 1], split[j + 2]];
+                obj[split[j]] = [split[j+1], split[j+2]];
 
             db_equip.push(obj);
             i += 1 + len * 4;
@@ -170,7 +170,6 @@ function LoadEquip(callback) {
 
     xhr.open("GET", "getequiptable", true);
     xhr.send();
-
 }
 
 function LoadUsers(callback) {
@@ -181,12 +180,12 @@ function LoadUsers(callback) {
         db_users_ver = parseInt(split[0]);
         db_users = [];
 
-        let i = 1;
+        let i=1;
         while (i < split.length-1) {
             let len = parseInt(split[i]);
             let obj = {};
             for (let j = i + 1; j < i + len * 4; j += 4)
-                obj[split[j]] = [split[j + 1], split[j + 2]];
+                obj[split[j]] = [split[j+1], split[j+2]];
 
             db_users.push(obj);
             i += 1 + len * 4;

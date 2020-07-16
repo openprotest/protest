@@ -39,4 +39,5 @@ input[type="range"]:focus {
 
 input[type="range"]:disabled::-webkit-slider-thumb {
     background-color: rgb(128,128,128) !important;
+    opacity: .8;
 }

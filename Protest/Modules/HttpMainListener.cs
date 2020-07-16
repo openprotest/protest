@@ -16,13 +16,13 @@ class HttpMainListener : Http {
             return;
         }
 
-        /*if (ctx.Request.UrlReferrer != null && !ctx.Request.UrlReferrer.IsLoopback)  //CSRF protection
+        if (ctx.Request.UrlReferrer != null && !ctx.Request.UrlReferrer.IsLoopback)  //CSRF protection
             if (ctx.Request.UrlReferrer.Host != ctx.Request.UserHostName.Split(':')[0]) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 ctx.Response.OutputStream.Write(Encoding.UTF8.GetBytes("403 Forbidden"), 0, 13);
                 ctx.Response.Close();
                 return;
-            }*/
+            }
 
         string url = ctx.Request.Url.AbsolutePath;
         string[] para = url.Split('&');
@@ -185,7 +185,10 @@ class HttpMainListener : Http {
 
                 case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
-                case "fetch_importdata" : buffer = Fetch.ImportDatabase(ctx, performer); break;
+                case "fetch_import" : buffer = Fetch.ImportDatabase(ctx, performer); break;
+                case "fetch_equip_ip"   : buffer = null; break;
+                case "fetch_equip_dc"   : buffer = null; break;
+                case "fetch_users_dc"   : buffer = null; break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 

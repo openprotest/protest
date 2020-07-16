@@ -63,17 +63,31 @@ const PROTOCOL = {
     3269: "LDAP over SSL",
     3389: "RDP	Remote Desktop Protocol",
     5500: "VNC	Virtual Network Computer",
+    5656: "UniFi AP-EDU broadcasting",
+    5657: "UniFi AP-EDU broadcasting",
+    5658: "UniFi AP-EDU broadcasting",
+    5659: "UniFi AP-EDU broadcasting",
     5800: "VNC	Virtual Network Computer",
     5801: "VNC	Virtual Network Computer",
     5900: "uVNC	Virtual Network Computer",
     5901: "uVNC	Virtual Network Computer",
     5902: "uVNC	Virtual Network Computer",
     5903: "uVNC	Virtual Network Computer",
+    6666: "UniFi Camera Stream Listenner",
+    6789: "UniFi Mobile Speed Test",
+    6969: "BitTorrent tracker",
+    7004: "UniFi UVC-Micro Talkback",
+    7442: "UniFi Camera Management",
+    7447: "UniFi RTSP, Real Time Streaming Protocol",
     7680: "WUDO	Windows Update Delivery Optimization",
     8080: "HTTP alternate	Hypertext Transfer Protocol",
+    8291: "Mikrotik RouterOS Winbox",
     8443: "HTTP over SSL/TSL alternate",
+    8728: "Mikrotik RouterOS API",
+    8729: "Mikrotik RouterOS API over SSL/TSL",
     9100: "Print Server",
-    10000: "NDMP	Network Data Management Protocol"
+    10000: "NDMP	Network Data Management Protocol",
+    10001: "UniFi Discovery Service"
 };
 
 class PortScan extends Console {
@@ -87,7 +101,7 @@ class PortScan extends Console {
         };
 
         this.hashtable = {};      //contains all the ping elements
-        this.pending = [];      //pending request
+        this.pending = [];        //pending request
         this.ws = null;           //websocket
         this.taskIconSpin = null; //spinner on icon task-bar
 

@@ -295,6 +295,7 @@ public static class Fetch {
         return payload;
     }
 
+
     public static byte[] SingleFetchEquip(string[] para) {
         string host = null, filename = null;
         for (int i = 0; i < para.Length; i++) {
@@ -321,24 +322,45 @@ public static class Fetch {
         if (host is null || host.Length == 0) return Strings.INV.Array;
         return SingleFetchEquip(host);
     }
-    public static byte[] SingleFetchEquip(string ip) {
-        if (ip is null) return Strings.INF.Array;
-        if (ip.Length == 0) return Strings.INF.Array;
+    public static byte[] SingleFetchEquip(string host) {
+        if (host is null) return Strings.INF.Array;
+        if (host.Length == 0) return Strings.INF.Array;       
 
-        string netbios = NetBios.GetBiosName(ip);
+        string ip = null;
+        if (host?.Split('.').Length == 4) {
+            bool isIp = true;
+            string[] split = host.Split('.');
+            for (int i = 0; i < 4; i++)
+                if (!byte.TryParse(split[i], out _)) {
+                    isIp = false;
+                    break;
+                }
+            if (isIp) ip = host;
+        }
 
         string hostname = null;
         try {
-            hostname = System.Net.Dns.GetHostEntry(ip).HostName;
+            hostname = System.Net.Dns.GetHostEntry(host).HostName;
             hostname = hostname.Split('.')[0];
+
+            if (ip is null) {
+                IPAddress[] resolvedIp = System.Net.Dns.GetHostEntry(host).AddressList;
+                for (int i = 0; i < resolvedIp.Length; i++) //getIPv4 from DNS
+                    if (resolvedIp[i].AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                        ip = resolvedIp[i].ToString();
+                        break;
+                    }
+            }
         } catch { }
 
+        string netbios = NetBios.GetBiosName(ip?.ToString());
+        
         Hashtable wmi      = new Hashtable();
         Hashtable ad       = new Hashtable();
         string portscan = "";
 
         Thread tWmi = new Thread(()=> {
-            wmi = Wmi.WmiFetch(ip);
+            wmi = Wmi.WmiFetch(host);
         });
 
         Thread tAd = new Thread(()=> {
@@ -379,7 +401,7 @@ public static class Fetch {
         });
 
         Thread tPortscan = new Thread(async()=> {
-            bool[] ports = await PortScan.PortsScanAsync(ip, PortScan.basic_ports);
+            bool[] ports = await PortScan.PortsScanAsync(host, PortScan.basic_ports);
 
             for (int i = 0; i< PortScan.basic_ports.Length; i++)
                 if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";
@@ -413,7 +435,7 @@ public static class Fetch {
         if (wmi.ContainsKey("MAC ADDRESS")) {
             mac = ((string)wmi["MAC ADDRESS"]).Split(';')[0].Trim();
         } else {
-            mac = Arp.ArpRequest(ip);
+            mac = Arp.ArpRequest(host);
             if (!(mac is null) && mac.Length > 0)
                 content.Append($"MAC ADDRESS{(char)127}{mac}{(char)127}ARP{(char)127}");
         }
@@ -443,6 +465,9 @@ public static class Fetch {
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
         }
 
+        Console.WriteLine(username);
+        Console.WriteLine(filename);
+
         if (!(filename is null) && filename.Length > 0) {
             if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
 
@@ -470,5 +495,14 @@ public static class Fetch {
         
         return Encoding.UTF8.GetBytes(content.ToString());
     }
+
+    public static byte[] TaskFetchEquip() {
+        return null;
+    }
+
+    public static byte[] TaskFetchUsers() {
+        return null;
+    }
+
 
 }

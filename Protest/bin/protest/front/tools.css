@@ -232,7 +232,7 @@
 
 .expaned-box,
 .collapsed-box {
-    background-color : var(--control-color);
+    background-color : var(--pane-color);
     color: #202020;
     margin: 8px 0;
     padding: 4px 8px;
@@ -272,7 +272,7 @@
     padding: 2px 8px;
 }
 .expaned-box > table > tr:hover {
-    background-color: var(--theme-color);
+    background-color: var(--highlight-color);
 }
 
 .task-icon-dots {

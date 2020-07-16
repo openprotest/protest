@@ -12,7 +12,7 @@
 }
 
 .wmi-table > tr:nth-child(n+2):hover td:nth-child(n+2) {
-    background-color: var(--select-color);
+    background-color: var(--highlight-color);
 }
 
 .wmi-table > tr > td {

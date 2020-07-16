@@ -622,7 +622,7 @@ class User extends Window {
                 }
             };
 
-            xhr.open("GET", "fetchuser&host=" + txtuser.value, true);
+            xhr.open("GET", "fetchuser&username=" + txtuser.value, true);
             xhr.send();
         };
 
