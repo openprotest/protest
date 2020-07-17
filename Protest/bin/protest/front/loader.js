@@ -53,6 +53,7 @@ let loader_styles = [
         "viewuser.js",
         "fetch.js",
         "passwordstrength.js",
+        "documentation.js",
         "netcalc.js",
         "passwordgen.js",
         "ping.js",
@@ -238,6 +239,7 @@ function RestoreSession() {
             case "User"             : win = new User(session[i].args); break;
             case "Fetch"            : win = new Fetch(session[i].args); break;
             case "PasswordStrength" : win = new PasswordStrength(session[i].args); break;
+            case "Documentation"    : win = new Documentation(session[i].args); break;
             case "Netcalc"          : win = new Netcalc(); break;
             case "Passgen"          : win = new Passgen(); break;
             case "Ping"             : win = new Ping(session[i].args); break;

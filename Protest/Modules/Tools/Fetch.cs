@@ -276,9 +276,13 @@ public static class Fetch {
         Console.WriteLine();
     }
 
-    public static void ImportEquip_4(Uri uri, CookieContainer cookieContainer) { }
+    public static void ImportEquip_4(Uri uri, CookieContainer cookieContainer) {
+        ImportEquip_3(uri, cookieContainer);
+    }
 
-    public static void ImportUsers_4(Uri uri, CookieContainer cookieContainer) { }
+    public static void ImportUsers_4(Uri uri, CookieContainer cookieContainer) {
+        ImportUsers_3(uri, cookieContainer);
+    }
 
     public static string GetHiddenProperty(Uri uri, CookieContainer cookieContainer, string path) {
         using HttpClientHandler handler = new HttpClientHandler();
@@ -496,13 +500,37 @@ public static class Fetch {
         return Encoding.UTF8.GetBytes(content.ToString());
     }
 
-    public static byte[] TaskFetchEquip() {
-        return null;
+
+    public static byte[] FetchEquip(string[] para) {
+        string from = null, to = null, domain = null;
+        for (int i = 0; i < para.Length; i++) {
+            if (para[i].StartsWith("from=")) from = para[i].Substring(5);
+            if (para[i].StartsWith("to=")) to = para[i].Substring(3);
+            if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
+        }
+
+
+
+        return Strings.OK.Array;
+    }
+    
+    public static byte[] FetchUsers(string[] para) {
+        string domain = null;
+        for (int i = 0; i < para.Length; i++) {
+            if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
+        }
+
+
+
+        return Strings.OK.Array;
     }
 
-    public static byte[] TaskFetchUsers() {
-        return null;
+    public static byte[] TaskFetchEquip(string[] equip) {
+        return Strings.OK.Array;
     }
 
+    public static byte[] TaskFetchUsers(string[] users) {
+        return Strings.OK.Array;
+    }
 
 }

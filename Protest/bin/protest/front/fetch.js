@@ -168,7 +168,7 @@ class Fetch extends Tabs {
         optSerialNo.value = "2";
         txtConflictContition.appendChild(optSerialNo);
         const optSmart = document.createElement("option");
-        optSmart.text = "Smart detection (score based)";
+        optSmart.text = "Smart conflict detection";
         optSmart.value = "3";
         txtConflictContition.appendChild(optSmart);
 
@@ -246,9 +246,26 @@ class Fetch extends Tabs {
         lblIntervalComment.style.width = "240px";
         this.subContent.appendChild(lblIntervalComment);
 
+        const lblAwait = document.createElement("div");
+        lblAwait.style.gridArea = "9 / 3";
+        lblAwait.innerHTML = "Await approval: ";
+        this.subContent.appendChild(lblAwait);
+        const chkAwaitContainer = document.createElement("div");
+        chkAwaitContainer.style.gridArea = "9 / 5";
+        this.subContent.appendChild(chkAwaitContainer);
+        const chkAwait = document.createElement("input");
+        chkAwait.type = "checkbox";
+        chkAwait.checked = true;
+        chkAwaitContainer.appendChild(chkAwait);
+        this.AddCheckBoxLabel(chkAwaitContainer, chkAwait, "&nbsp;").style = "width:4px; min-width:4px";
+        const lblAwaitComment = document.createElement("div");
+        lblAwaitComment.style.gridArea = "9 / 6 / auto / 8";
+        lblAwaitComment.style.fontSize = "small";
+        lblAwaitComment.style.width = "240px";
+        this.subContent.appendChild(lblAwaitComment);
 
         const buttonsContainer = document.createElement("div");
-        buttonsContainer.style.gridArea = "10 / 2 / auto / 7";
+        buttonsContainer.style.gridArea = "11 / 2 / auto / 7";
         buttonsContainer.style.textAlign = "center";
         this.subContent.appendChild(buttonsContainer);
         
@@ -312,10 +329,15 @@ class Fetch extends Tabs {
             }
         };
 
+        chkAwait.onchange = () => {
+            lblAwaitComment.innerHTML = chkAwait.checked ? "Await for user approval" : "Automaticaly appove";
+        };
+
         txtPortscan.onchange();
         txtConflict.onchange();
         rngRetries.oninput();
         rngInterval.oninput();
+        chkAwait.onchange();
 
         btnCancel.onclick = () => this.Close();
 
@@ -415,7 +437,7 @@ class Fetch extends Tabs {
         optSerialNo.value = "2";
         txtConflictContition.appendChild(optSerialNo);
         const optSmart = document.createElement("option");
-        optSmart.text = "Smart detection (score based)";
+        optSmart.text = "Smart conflict detection";
         optSmart.value = "3";
         txtConflictContition.appendChild(optSmart);
 
@@ -493,9 +515,27 @@ class Fetch extends Tabs {
         lblIntervalComment.style.width = "240px";
         this.subContent.appendChild(lblIntervalComment);
 
+        const lblAwait = document.createElement("div");
+        lblAwait.style.gridArea = "9 / 3";
+        lblAwait.innerHTML = "Await approval: ";
+        this.subContent.appendChild(lblAwait);
+        const chkAwaitContainer = document.createElement("div");
+        chkAwaitContainer.style.gridArea = "9 / 5";
+        this.subContent.appendChild(chkAwaitContainer);
+        const chkAwait = document.createElement("input");
+        chkAwait.type = "checkbox";
+        chkAwait.checked = true;
+        chkAwaitContainer.appendChild(chkAwait);
+        this.AddCheckBoxLabel(chkAwaitContainer, chkAwait, "&nbsp;").style = "width:4px; min-width:4px";
+        const lblAwaitComment = document.createElement("div");
+        lblAwaitComment.style.gridArea = "9 / 6 / auto / 8";
+        lblAwaitComment.style.fontSize = "small";
+        lblAwaitComment.style.width = "240px";
+        this.subContent.appendChild(lblAwaitComment);
+
 
         const buttonsContainer = document.createElement("div");
-        buttonsContainer.style.gridArea = "10 / 2 / auto / 7";
+        buttonsContainer.style.gridArea = "11 / 2 / auto / 7";
         buttonsContainer.style.textAlign = "center";
         this.subContent.appendChild(buttonsContainer);
 
@@ -561,10 +601,15 @@ class Fetch extends Tabs {
             }
         };
 
+        chkAwait.onchange = () => {
+            lblAwaitComment.innerHTML = chkAwait.checked ? "Await for user approval" : "Automaticaly appove";
+        };
+
         txtPortscan.onchange();
         txtConflict.onchange();
         rngRetries.oninput();
         rngInterval.oninput();
+        chkAwait.onchange();
 
         btnCancel.onclick = () => this.Close();
 
@@ -619,7 +664,7 @@ class Fetch extends Tabs {
         optUN.value = "0";
         txtConflictContition.appendChild(optUN);
         const optSmart = document.createElement("option");
-        optSmart.text = "Smart detection (score based)";
+        optSmart.text = "Smart conflict detection";
         optSmart.value = "3";
         txtConflictContition.appendChild(optSmart);
 
@@ -661,8 +706,26 @@ class Fetch extends Tabs {
 
         txtConflict.value = "4";
 
+        const lblAwait = document.createElement("div");
+        lblAwait.style.gridArea = "6 / 3";
+        lblAwait.innerHTML = "Await approval: ";
+        this.subContent.appendChild(lblAwait);
+        const chkAwaitContainer = document.createElement("div");
+        chkAwaitContainer.style.gridArea = "6 / 5";
+        this.subContent.appendChild(chkAwaitContainer);
+        const chkAwait = document.createElement("input");
+        chkAwait.type = "checkbox";
+        chkAwait.checked = true;
+        chkAwaitContainer.appendChild(chkAwait);
+        this.AddCheckBoxLabel(chkAwaitContainer, chkAwait, "&nbsp;").style = "width:4px; min-width:4px";
+        const lblAwaitComment = document.createElement("div");
+        lblAwaitComment.style.gridArea = "6 / 6 / auto / 8";
+        lblAwaitComment.style.fontSize = "small";
+        lblAwaitComment.style.width = "240px";
+        this.subContent.appendChild(lblAwaitComment);
+
         const buttonsContainer = document.createElement("div");
-        buttonsContainer.style.gridArea = "10 / 2 / auto / 7";
+        buttonsContainer.style.gridArea = "11 / 2 / auto / 7";
         buttonsContainer.style.textAlign = "center";
         this.subContent.appendChild(buttonsContainer);
 
@@ -690,7 +753,12 @@ class Fetch extends Tabs {
             }
         };
 
+        chkAwait.onchange = () => {
+            lblAwaitComment.innerHTML = chkAwait.checked ? "Await for user approval" : "Automaticaly appove";
+        };
+
         txtConflict.onchange();
+        chkAwait.onchange();
 
         btnCancel.onclick = () => this.Close();
 
@@ -811,7 +879,7 @@ class Fetch extends Tabs {
         this.AddCheckBoxLabel(chkUsersContainer, chkUsers, "&nbsp;").style = "width:4px; min-width:4px";
 
         const buttonsContainer = document.createElement("div");
-        buttonsContainer.style.gridArea = "10 / 2 / auto / 7";        
+        buttonsContainer.style.gridArea = "11 / 2 / auto / 7";        
         buttonsContainer.style.textAlign = "center";
         this.subContent.appendChild(buttonsContainer);
 

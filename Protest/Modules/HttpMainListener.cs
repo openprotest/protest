@@ -185,10 +185,10 @@ class HttpMainListener : Http {
 
                 case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
-                case "fetch_import" : buffer = Fetch.ImportDatabase(ctx, performer); break;
-                case "fetch_equip_ip"   : buffer = null; break;
-                case "fetch_equip_dc"   : buffer = null; break;
-                case "fetch_users_dc"   : buffer = null; break;
+                case "fetch_import"     : buffer = Fetch.ImportDatabase(ctx, performer); break;
+                case "fetch_equip_ip"   : buffer = Fetch.FetchEquip(para); break;
+                case "fetch_equip_dc"   : buffer = Fetch.FetchEquip(para); break;
+                case "fetch_users_dc"   : buffer = Fetch.FetchUsers(para); break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 
