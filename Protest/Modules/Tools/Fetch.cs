@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 
 public static class Fetch {
 
+    public static TaskWrapper fetchTask = null;
+
     public static byte[] ImportDatabase(in HttpListenerContext ctx, in string performer) {
         string ip = "127.0.0.1";
         int port = 443;
@@ -501,35 +503,111 @@ public static class Fetch {
     }
 
 
-    public static byte[] FetchEquip(string[] para) {
+    public static byte[] FetchEquip(string[] para, string performer) {
         string from = null, to = null, domain = null;
+        int portscan=0, conflictcontition = 0, conflictaction = 0, retries = 0, interval = 0;
         for (int i = 0; i < para.Length; i++) {
             if (para[i].StartsWith("from=")) from = para[i].Substring(5);
             if (para[i].StartsWith("to=")) to = para[i].Substring(3);
             if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
+
+            if (para[i].StartsWith("portscan=")) portscan = int.Parse(para[i].Substring(9));
+            if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
+            if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
+            if (para[i].StartsWith("retries=")) int.TryParse(para[i].Substring(8), out retries);
+            if (para[i].StartsWith("interval=")) int.TryParse(para[i].Substring(9), out interval);
         }
 
+        if (!(from is null) && !(to is null)) {
+            byte[] arrFrom = IPAddress.Parse(from).GetAddressBytes();
+            byte[] arrTo = IPAddress.Parse(to).GetAddressBytes();
+            Array.Reverse(arrFrom);
+            Array.Reverse(arrTo);
 
+            uint intFrom = BitConverter.ToUInt32(arrFrom, 0);
+            uint intTo = BitConverter.ToUInt32(arrTo, 0);
 
-        return Strings.OK.Array;
+            string[]  hosts = new string[intTo - intFrom + 1];
+            for (uint i = intFrom; i < intTo + 1 && i < UInt32.MaxValue - 1; i++)
+                hosts[i - intFrom] = i.ToString();
+
+            return FetchEquipTask(hosts, portscan, conflictcontition, conflictaction, retries, interval , performer);
+        }
+
+        if (!(domain is null)) {
+            string[] hosts = ActiveDirectory.GetAllWorkstations(domain);
+            return FetchEquipTask(hosts, portscan, conflictcontition, conflictaction, retries, interval, performer);
+        }
+
+        return Strings.INF.Array;
     }
     
-    public static byte[] FetchUsers(string[] para) {
+    public static byte[] FetchUsers(string[] para, string performer) {
         string domain = null;
+        int conflictcontition = 0, conflictaction = 0;
         for (int i = 0; i < para.Length; i++) {
             if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
+            if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
+            if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
         }
 
+        if (!(domain is null))
+            return FetchUsersTask(null, conflictcontition, conflictaction, performer);
 
+        return Strings.INF.Array;
+    }
+
+    public static byte[] FetchEquipTask(string[] hosts, int portscan, int conflictcontition, int conflictaction, int retries, int interval, string performer) {
+        if (!(fetchTask is null)) return Strings.TSK.Array; 
+        
+        TaskWrapper task = null;
+
+        Action onComplete = () => {
+            fetchTask = null;
+        };
+
+        Thread thread = new Thread(() => {
+
+            //
+
+            onComplete();
+            task.Complete();
+        });
+
+        task = new TaskWrapper("Fetching equipment", performer) {
+            stepsTotal = hosts.Length,
+            thread = thread,
+        };
+
+        task.thread.Start();
 
         return Strings.OK.Array;
     }
 
-    public static byte[] TaskFetchEquip(string[] equip) {
-        return Strings.OK.Array;
-    }
+    public static byte[] FetchUsersTask(string[] users,  int conflictcontition, int conflictaction, string performer) {
+        if (!(fetchTask is null)) return Strings.TSK.Array;
+        
+        TaskWrapper task = null;
 
-    public static byte[] TaskFetchUsers(string[] users) {
+        Action onComplete = () => {
+            fetchTask = null;
+        };
+
+        Thread thread = new Thread(() => {
+
+            //
+
+            onComplete();
+            task.Complete();
+        });
+
+        task = new TaskWrapper("Fetching users", performer) {
+            stepsTotal = users.Length,
+            thread = thread,
+        };
+
+        task.thread.Start();
+
         return Strings.OK.Array;
     }
 
