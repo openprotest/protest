@@ -22,12 +22,12 @@ public static class NetBios {
         using Socket requestSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         requestSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
 
-        EndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse(ip), 137);
-        requestSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
-        requestSocket.SendTo(BIOS_NAME_REQUEST, remoteEndpoint);
-
-        byte[] receiveBuffer = new byte[1024];
         try {
+            EndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse(ip), 137);
+            requestSocket.Bind(new IPEndPoint(IPAddress.Any, 0));
+            requestSocket.SendTo(BIOS_NAME_REQUEST, remoteEndpoint);
+
+            byte[] receiveBuffer = new byte[1024];
             int receivedByteCount = requestSocket.ReceiveFrom(receiveBuffer, ref remoteEndpoint);
             if (receivedByteCount >= 90) {
                 Encoding enc = new ASCIIEncoding();

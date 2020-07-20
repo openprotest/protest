@@ -13,30 +13,40 @@ using System.Threading.Tasks;
 public static class Fetch {
     
     struct FetchResult {
-        Hashtable conf;
-        Hashtable new_;
-        Hashtable fail;
-        bool isComplete;
+        public string name;
+        public DateTime started;
+        public DateTime finished;
+        public Hashtable dataset;
+        public int successful;
+        public int unsuccessful;
     }
     
     public static TaskWrapper fetchTask = null;
     private static FetchResult? lastFetch = null;
-
 
     public static string GetFetchTaskStatus() {
         string response;
 
         if (!(fetchTask is null)) {
             response = "{";
+            response += $"\"status\":\"{Strings.EscapeJson(fetchTask.status)}\",";
             response += $"\"name\":\"{Strings.EscapeJson(fetchTask.name)}\",";
             response += $"\"started\":\"{Strings.EscapeJson(fetchTask.started.ToString())}\",";
-            response += $"\"status\":\"{Strings.EscapeJson(fetchTask.status)}\",";
             response += $"\"completed\":\"{Strings.EscapeJson(fetchTask.stepsCompleted.ToString())}\",";
-            response += $"\"total\":\"{Strings.EscapeJson(fetchTask.stepsTotal.ToString())}\"";
+            response += $"\"total\":\"{Strings.EscapeJson(fetchTask.stepsTotal.ToString())}\",";
+            response += $"\"etc\":\"{Strings.EscapeJson(fetchTask.GetETC())}\"";
             response += "}";
 
         } else if (!(lastFetch is null)) {
-            response = "{\"status\":\"pending\"}";
+            response = "{";
+            response += $"\"status\":\"pending\",";
+            response += $"\"name\":\"{Strings.EscapeJson(lastFetch?.name)}\",";
+            response += $"\"started\":\"{Strings.EscapeJson(lastFetch?.started.ToString())}\",";
+            response += $"\"finished\":\"{Strings.EscapeJson(lastFetch?.finished.ToString())}\",";
+            response += $"\"successful\":\"{Strings.EscapeJson(lastFetch?.successful.ToString())}\",";
+            response += $"\"unsuccessful\":\"{Strings.EscapeJson(lastFetch?.unsuccessful.ToString())}\"";
+            response += "}";
+
 
         } else {
             response = "{\"status\":\"none\"}";
@@ -45,11 +55,24 @@ public static class Fetch {
         return response;
     }
 
-    public static byte[] GetLastFetch() {
-        if (lastFetch is null) return null;
-        return null;
+    public static byte[] AbortFetch(in string performer) {
+        fetchTask.Abort(performer);
+        fetchTask = null;
+        GC.Collect();
+        return Strings.OK.Array;
     }
-    
+
+    public static byte[] ApproveLastFetch(in string performer) {
+        //TODO:
+        return Strings.OK.Array;
+    }
+
+    public static byte[] DiscardLastFetch(in string performer) {
+        lastFetch = null;
+        GC.Collect();
+        return Strings.OK.Array;
+    }
+
     public static byte[] ImportDatabase(in HttpListenerContext ctx, in string performer) {
         string ip = "127.0.0.1";
         int port = 443;
@@ -574,6 +597,8 @@ public static class Fetch {
             uint intFrom = BitConverter.ToUInt32(arrFrom, 0);
             uint intTo = BitConverter.ToUInt32(arrTo, 0);
 
+            if (intFrom > intTo) return Strings.INV.Array;
+
             string[]  hosts = new string[intTo - intFrom + 1];
             for (uint i = intFrom; i < intTo + 1 && i < UInt32.MaxValue - 1; i++)
                 hosts[i - intFrom] = i.ToString();
@@ -612,6 +637,7 @@ public static class Fetch {
 
     public static byte[] FetchEquipTask(string[] hosts, int portscan, int conflictcontition, int conflictaction, int retries, int interval, string performer) {
         if (!(fetchTask is null)) return Strings.TSK.Array;
+        if (!(lastFetch is null)) return Strings.TSK.Array;
 
         Database.SaveMethod saveMethod = (Database.SaveMethod)conflictaction;
         Hashtable dataset = new Hashtable();
@@ -629,7 +655,6 @@ public static class Fetch {
             for (int i = 0; i < hosts.Length; i++) {
                 Hashtable hash = SingleFetchEquip(hosts[i]);
 
-                Thread.Sleep(50);
                 if (DateTime.Now.Ticks - lastBroadcast.Ticks > 600_000_000) { //after a minute(s)
                     KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
                     lastBroadcast = DateTime.Now;
@@ -639,6 +664,15 @@ public static class Fetch {
                 fetchTask.stepsCompleted = i + 1;
                 dataset.Add(hosts[i], hash);
             }
+
+            lastFetch = new FetchResult() {
+                name = fetchTask.name,
+                started = fetchTask.started,
+                finished = DateTime.Now,
+                dataset = dataset,
+                successful = fetchTask.stepsCompleted,
+                unsuccessful = fetchTask.stepsTotal - fetchTask.stepsCompleted,
+            };
 
             fetchTask.Complete();
             onComplete();
@@ -656,6 +690,7 @@ public static class Fetch {
 
     public static byte[] FetchUsersTask(string[] users,  int conflictcontition, int conflictaction, string performer) {
         if (!(fetchTask is null)) return Strings.TSK.Array;
+        if (!(lastFetch is null)) return Strings.TSK.Array;
 
         Database.SaveMethod saveMethod = (Database.SaveMethod)conflictaction;
         Hashtable dataset = new Hashtable();
@@ -683,6 +718,15 @@ public static class Fetch {
                 if (hash is null) continue;
                 dataset.Add(users[i], hash);
             }
+
+            lastFetch = new FetchResult() {
+                name = fetchTask.name,
+                started = fetchTask.started,
+                finished = DateTime.Now,
+                dataset = dataset,
+                successful = fetchTask.stepsCompleted,
+                unsuccessful = fetchTask.stepsTotal - fetchTask.stepsCompleted,
+            };
 
             fetchTask.Complete();
             onComplete();

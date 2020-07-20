@@ -137,8 +137,11 @@ class HttpMainListener : Http {
                 case "fetchuser":  buffer = Fetch.SingleFetchUserBytes(para); break;
                 case "saveuser":   buffer = Database.SaveUser(ctx, performer); break;
                 case "deluser":    buffer = Database.DeleteUser(para, performer); break;
+
                 case "getfetchtaskstatus": buffer = Encoding.UTF8.GetBytes(Fetch.GetFetchTaskStatus()); break;
-                case "getlastfetch": buffer = Fetch.GetLastFetch(); break;
+                case "abortfetch": buffer = Fetch.AbortFetch(performer); break;
+                case "approvelastfetch": buffer = Fetch.ApproveLastFetch(performer); break;
+                case "discardlastfetch": buffer = Fetch.DiscardLastFetch(performer); break;
 
                 case "dnslookup":    buffer = Dns.DnsLookup(ctx); break;
                 case "locateip":     buffer = LocateIp.Locate(ctx); break;

@@ -224,7 +224,8 @@ function KeepAlive_MessageHandler(msg) {
                 $w.array[i].tabTask.style.visibility = "visible";
                 $w.array[i].lblStatusValue.innerHTML = "Initializing";
                 $w.array[i].lblProgressValue.innerHTML = "0/0";
-                $w.array[i].divProgress.style.width = "0"
+                $w.array[i].lblEtcValue.innerHTML = "Calculating";
+                $w.array[i].divProgress.style.width = "0";
             }
             break;
 
@@ -234,6 +235,7 @@ function KeepAlive_MessageHandler(msg) {
                 $w.array[i].tabTask.style.visibility = "visible";
                 $w.array[i].lblStatusValue.innerHTML = "Fetching";
                 $w.array[i].lblProgressValue.innerHTML = `${msg.task.completed}/${msg.task.total}`;
+                $w.array[i].lblEtcValue.innerHTML = msg.task.etc;
                 $w.array[i].divProgress.style.width = `${(100 * msg.task.completed) / msg.task.total}%`;
             }
             break;
@@ -242,25 +244,25 @@ function KeepAlive_MessageHandler(msg) {
             for (let i = 0; i < $w.array.length; i++) { //for each equip list
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "visible";
-                $w.array[i].lblStatusValue.innerHTML = "Finished";
-                $w.array[i].lblProgressValue.innerHTML = "Finished";
-                $w.array[i].divProgress.style.width = "100%"
+
+                if ($w.array[i].args == "task") 
+                    $w.array[i].ShowPending(msg.task);
             }
             break;
 
-        case "discardfetch":
+        /*case "discardfetch":
             for (let i = 0; i < $w.array.length; i++) { //for each equip list
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "hidden";
             }
-            break;
+            break;*/
 
-        case "approvedfetch":
+        /*case "approvedfetch":
             for (let i = 0; i < $w.array.length; i++) { //for each equip list
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "hidden";
             }
-            break;
+            break;*/
     }
 }
 

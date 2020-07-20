@@ -42,7 +42,7 @@ public class TaskWrapper {
             }
 
         lock (lockTokken) {
-            if (onGoingTasks.Contains(this)) onGoingTasks.Remove(this);
+            if (onGoingTasks.Contains(this.name)) onGoingTasks.Remove(this.name);
             status = $"Aborted by user: {performer}";
         }
     }
@@ -54,6 +54,21 @@ public class TaskWrapper {
         }
 
         Console.WriteLine($"Finish task: \t{name}\t" + DateTime.Now.ToString());
+    }
+
+    public string GetETC() {
+        if (stepsCompleted < 2) return "Calculating";
+
+        long d = DateTime.Now.Ticks - started.Ticks; //total duration
+        double tps = d / stepsCompleted; //avg ticks/step 
+        TimeSpan etc = new TimeSpan((long)(tps * (stepsTotal - stepsCompleted)));
+
+        if (etc.Days == 0) 
+            return $"{etc.Hours}:{etc.Minutes.ToString().PadLeft(2, '0')}:{etc.Seconds.ToString().PadLeft(2, '0')}";
+        else if (etc.Days == 1)
+            return $"1 day, {etc.Hours}:{etc.Minutes.ToString().PadLeft(2, '0')}:{etc.Seconds.ToString().PadLeft(2, '0')}";
+        else 
+            return $"{etc.TotalDays} days";
     }
 
     public static byte[] GetOnGoing() {

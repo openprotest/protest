@@ -2,7 +2,7 @@ class Fetch extends Tabs {
     constructor(args) {
         super();
 
-        this.args = args ? args : {value:""};
+        this.args = args ? args : "";
 
         this.setTitle("Fetch");
         this.setIcon("res/fetch.svgz");
@@ -15,15 +15,18 @@ class Fetch extends Tabs {
         this.lblStatusValue.style.textTransform = "capitalize";
         this.lblStatusValue.innerHTML = "";
 
-        this.divProgress = document.createElement("div");
-        this.divProgress.style.backgroundColor = "#404040";
-        this.divProgress.style.width = "0";
-        this.divProgress.style.height= "100%";
-        this.divProgress.style.transition = ".4s";
-
         this.lblProgressValue = document.createElement("div");
         this.lblProgressValue.style.textTransform = "capitalize";
         this.lblProgressValue.innerHTML = "0/0";
+
+        this.lblEtcValue = document.createElement("div");
+        this.lblEtcValue.innerHTML = "Calculating";
+
+        this.divProgress = document.createElement("div");
+        this.divProgress.style.backgroundColor = "#404040";
+        this.divProgress.style.width = "0";
+        this.divProgress.style.height = "100%";
+        this.divProgress.style.transition = ".4s";
 
         const tabEquipIp = this.AddTab("Equipment", "res/gear.svgz", "from IP range");
         const tabEquipDc = this.AddTab("Equipment", "res/gear.svgz", "from a domain");
@@ -53,7 +56,7 @@ class Fetch extends Tabs {
         tabProtest.onclick   = () => this.ShowProtest();
         this.tabTask.onclick = () => this.ShowFetching();
 
-        switch (this.args.value) {
+        switch (this.args) {
             case "equipdc":
                 tabEquipDc.className = "v-tab-selected";
                 tabEquipDc.onclick();
@@ -126,7 +129,7 @@ class Fetch extends Tabs {
                     this.tabTask.style.animation = "slide-in .4s 1";
                 }
 
-                if (this.tabTask.style.visibility == "visible" && this.args.value == "task") {
+                if (this.tabTask.style.visibility == "visible" && this.args == "task") {
                     this.tabsList[0].className = "v-tab-selected";
                     this.tabsList[0].onclick();
                 }
@@ -137,7 +140,7 @@ class Fetch extends Tabs {
     }
 
     ShowEquipIp() {
-        this.args.value = "equipip";
+        this.args = "equipip";
 
         this.subContent.innerHTML = "";
 
@@ -381,16 +384,14 @@ class Fetch extends Tabs {
         btnCancel.onclick = () => this.Close();
 
         btnOK.onclick = () => {
-
-            console.log(this.ipFrom.GetIpString());
-            console.log(this.ipTo.GetIpString());
-
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
                         this.tabTask.style.animation = "slide-in .4s 1";
+                    } else {
+                        this.ConfirmBox(xhr.response, true);
                     }
                     
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
@@ -406,7 +407,7 @@ class Fetch extends Tabs {
     }
 
     ShowEquipDc() {
-        this.args.value = "equipdc";
+        this.args = "equipdc";
 
         this.subContent.innerHTML = "";
 
@@ -416,7 +417,6 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblDomain);
 
         this.subContent.appendChild(this.txtDomain);
-
 
         const lblPortscan = document.createElement("div");
         lblPortscan.style.gridArea = "4 / 3";
@@ -639,6 +639,8 @@ class Fetch extends Tabs {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
                         this.tabTask.style.animation = "slide-in .4s 1";
+                    } else {
+                        this.ConfirmBox(xhr.response, true);
                     }
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
@@ -650,7 +652,7 @@ class Fetch extends Tabs {
     }
 
     ShowUsersDc() {
-        this.args.value = "usersdc";
+        this.args = "usersdc";
 
         this.subContent.innerHTML = "";
 
@@ -766,6 +768,8 @@ class Fetch extends Tabs {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
                         this.tabTask.style.animation = "slide-in .4s 1";
+                    } else {
+                        this.ConfirmBox(xhr.response, true);
                     }
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
@@ -777,7 +781,7 @@ class Fetch extends Tabs {
     }
 
     ShowProtest() {
-        this.args.value = "protest";
+        this.args = "protest";
 
         this.subContent.innerHTML = "";
 
@@ -922,7 +926,7 @@ class Fetch extends Tabs {
 
     ShowFetching() {
         this.subContent.innerHTML = "";
-        this.args.value = "task";
+        this.args = "task";
 
         const lblName = document.createElement("div");
         lblName.style.gridArea = "2 / 7 / auto / 2";
@@ -955,8 +959,16 @@ class Fetch extends Tabs {
         //if (this.status) this.lblProgressValue.innerHTML = `${this.status.completed}/${this.status.total}`;
         this.subContent.appendChild(this.lblProgressValue);
 
+        const lblEtc = document.createElement("div");
+        lblEtc.style.gridArea = "7 / 3";
+        lblEtc.innerHTML = "ETC: ";
+        this.subContent.appendChild(lblEtc);
+        this.lblEtcValue.style.gridArea = "7 / 5";
+        //if (this.status) this.lblEtcValue.innerHTML = this.status.etc;
+        this.subContent.appendChild(this.lblEtcValue);
+
         const divProgressBar = document.createElement("div");
-        divProgressBar.style.gridArea = "7 / 3 / auto / 6";
+        divProgressBar.style.gridArea = "8 / 3 / auto / 6";
         divProgressBar.style.height = "16px";
         divProgressBar.style.border = "#404040 2px solid";
         divProgressBar.style.borderRadius = "4px";
@@ -965,7 +977,7 @@ class Fetch extends Tabs {
         divProgressBar.appendChild(this.divProgress);
 
         const buttonsContainer = document.createElement("div");
-        buttonsContainer.style.gridArea = "9 / 3 / auto / 6";
+        buttonsContainer.style.gridArea = "10 / 3 / auto / 6";
         buttonsContainer.style.textAlign = "center";
         this.subContent.appendChild(buttonsContainer);
 
@@ -982,23 +994,152 @@ class Fetch extends Tabs {
                 let json = JSON.parse(xhr.responseText);
 
                 if (json.status == "pending") {
-                    this.ShowPending();
+                    this.ShowPending(json);
 
                 } else if (json.status == "fetching") {
                     lblName.innerHTML = json.name;
                     lblDateValue.innerHTML = json.started;
                     this.lblStatusValue.innerHTML = "Fetching";
                     this.lblProgressValue.innerHTML = `${json.completed}/${json.total}`;
+                    this.lblEtcValue.innerHTML = json.etc;
                     this.divProgress.style.width = `${(100 * json.completed) / json.total}%`;
-                }                
+
+                } else {
+                    this.tabTask.style.visibility = "hidden";
+                    this.tabTask.style.animation = "none";
+                    this.tabsList[0].className = "v-tab-selected";
+                    this.tabsList[0].onclick();
+                }
             }
         };
         xhr.open("GET", "getfetchtaskstatus", true);
         xhr.send();
+
+        btnAbort.onclick = () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.response == "ok") {
+                        this.tabTask.style.visibility = "hidden";
+                        this.tabTask.style.animation = "none";
+                        this.tabsList[0].className = "v-tab-selected";
+                        this.tabsList[0].onclick();
+                    } else {
+                        this.ConfirmBox(xhr.response, true);
+                    }
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+            xhr.open("GET", "abortfetch", true);
+            xhr.send();
+        };
     }
 
-    ShowPending() {
+    ShowPending(json) {
+        this.subContent.innerHTML = "";
 
+        const lblName = document.createElement("div");
+        lblName.style.gridArea = "2 / 7 / auto / 2";
+        lblName.style.textAlign = "center";
+        lblName.style.fontWeight = "600";
+        if (this.status) lblName.innerHTML = json.name;
+        this.subContent.appendChild(lblName);
+
+        const lblStart = document.createElement("div");
+        lblStart.style.gridArea = "4 / 3";
+        lblStart.innerHTML = "Started date: ";
+        this.subContent.appendChild(lblStart);
+        const lblStartValue = document.createElement("div");
+        lblStartValue.style.gridArea = "4 / 5";
+        if (this.status) lblStartValue.innerHTML = json.started;
+        this.subContent.appendChild(lblStartValue);
+
+        const lblFinish = document.createElement("div");
+        lblFinish.style.gridArea = "5 / 3";
+        lblFinish.innerHTML = "Finished date: ";
+        this.subContent.appendChild(lblFinish);
+        const lblFinishValue = document.createElement("div");
+        lblFinishValue.style.gridArea = "5 / 5";
+        if (this.status) lblFinishValue.innerHTML = json.finished;
+        this.subContent.appendChild(lblFinishValue);
+
+        const lblSuccess = document.createElement("div");
+        lblSuccess.style.gridArea = "6 / 3";
+        lblSuccess.innerHTML = "Successfully fetched: ";
+        this.subContent.appendChild(lblSuccess);
+        const lblSuccessValue = document.createElement("div");
+        lblSuccessValue.style.gridArea = "6 / 5";
+        if (this.status) lblSuccessValue.innerHTML = json.successful;
+        this.subContent.appendChild(lblSuccessValue);
+
+        const lblUnuccess = document.createElement("div");
+        lblUnuccess.style.gridArea = "7 / 3";
+        lblUnuccess.innerHTML = "Unsuccessful: ";
+        this.subContent.appendChild(lblUnuccess);
+        const lblUnuccessValue = document.createElement("div");
+        lblUnuccessValue.style.gridArea = "7 / 5";
+        if (this.status) lblUnuccessValue.innerHTML = json.unsuccessful;
+        this.subContent.appendChild(lblUnuccessValue);
+
+
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.style.gridArea = "10 / 2 / auto / 7";
+        buttonsContainer.style.textAlign = "center";
+        this.subContent.appendChild(buttonsContainer);
+
+        const btnOK = document.createElement("input");
+        btnOK.type = "button";
+        btnOK.value = "Approve";
+        btnOK.style.minWidth = "96px";
+        btnOK.style.height = "28px";
+        buttonsContainer.appendChild(btnOK);
+
+        const btnDiscard = document.createElement("input");
+        btnDiscard.type = "button";
+        btnDiscard.value = "Discard";
+        btnDiscard.style.minWidth = "96px";
+        btnDiscard.style.height = "28px";
+        buttonsContainer.appendChild(btnDiscard);
+
+        btnOK.onclick = () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.response == "ok") {
+                        this.tabTask.style.visibility = "hidden";
+                        this.tabTask.style.animation = "none";
+                        this.tabsList[0].className = "v-tab-selected";
+                        this.tabsList[0].onclick();
+                    } else {
+                        this.ConfirmBox(xhr.response, true);
+                    }
+
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+            xhr.open("GET", "approvelastfetch", true);
+            xhr.send();
+        };
+
+        btnDiscard.onclick = () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.response == "ok") {
+                        this.tabTask.style.visibility = "hidden";
+                        this.tabTask.style.animation = "none";
+                        this.tabsList[0].className = "v-tab-selected";
+                        this.tabsList[0].onclick();
+                    } else {
+                        this.ConfirmBox(xhr.response, true);
+                    }
+
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+            xhr.open("GET", "discardlastfetch", true);
+            xhr.send();
+        };
     }
 
 }
