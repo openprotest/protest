@@ -1016,22 +1016,26 @@ class Fetch extends Tabs {
         xhr.send();
 
         btnAbort.onclick = () => {
-            const xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.response == "ok") {
-                        this.tabTask.style.visibility = "hidden";
-                        this.tabTask.style.animation = "none";
-                        this.tabsList[0].className = "v-tab-selected";
-                        this.tabsList[0].onclick();
-                    } else {
-                        this.ConfirmBox(xhr.response, true);
-                    }
-                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
-                    this.ConfirmBox("Server is unavailable.", true);
-            };
-            xhr.open("GET", "abortfetch", true);
-            xhr.send();
+
+            this.ConfirmBox("Are you sure you want to abort this task?").addEventListener("click", () => {
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        if (xhr.response == "ok") {
+                            this.tabTask.style.visibility = "hidden";
+                            this.tabTask.style.animation = "none";
+                            this.tabsList[0].className = "v-tab-selected";
+                            this.tabsList[0].onclick();
+                        } else {
+                            this.ConfirmBox(xhr.response, true);
+                        }
+                    } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                        this.ConfirmBox("Server is unavailable.", true);
+                };
+                xhr.open("GET", "abortfetch", true);
+                xhr.send();
+            });
+
         };
     }
 
@@ -1102,43 +1106,51 @@ class Fetch extends Tabs {
         buttonsContainer.appendChild(btnDiscard);
 
         btnOK.onclick = () => {
-            const xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.response == "ok") {
-                        this.tabTask.style.visibility = "hidden";
-                        this.tabTask.style.animation = "none";
-                        this.tabsList[0].className = "v-tab-selected";
-                        this.tabsList[0].onclick();
-                    } else {
-                        this.ConfirmBox(xhr.response, true);
-                    }
 
-                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
-                    this.ConfirmBox("Server is unavailable.", true);
-            };
-            xhr.open("GET", "approvelastfetch", true);
-            xhr.send();
+            this.ConfirmBox("Are you sure you want to approve the fetched dataset?").addEventListener("click", () => {
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        if (xhr.response == "ok") {
+                            this.tabTask.style.visibility = "hidden";
+                            this.tabTask.style.animation = "none";
+                            this.tabsList[0].className = "v-tab-selected";
+                            this.tabsList[0].onclick();
+                        } else {
+                            this.ConfirmBox(xhr.response, true);
+                        }
+
+                    } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                        this.ConfirmBox("Server is unavailable.", true);
+                };
+                xhr.open("GET", "approvelastfetch", true);
+                xhr.send();
+            });
+
         };
 
         btnDiscard.onclick = () => {
-            const xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.response == "ok") {
-                        this.tabTask.style.visibility = "hidden";
-                        this.tabTask.style.animation = "none";
-                        this.tabsList[0].className = "v-tab-selected";
-                        this.tabsList[0].onclick();
-                    } else {
-                        this.ConfirmBox(xhr.response, true);
-                    }
 
-                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
-                    this.ConfirmBox("Server is unavailable.", true);
-            };
-            xhr.open("GET", "discardlastfetch", true);
-            xhr.send();
+            this.ConfirmBox("Are you sure you want to discard the fetched dataset?").addEventListener("click", () => {
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        if (xhr.response == "ok") {
+                            this.tabTask.style.visibility = "hidden";
+                            this.tabTask.style.animation = "none";
+                            this.tabsList[0].className = "v-tab-selected";
+                            this.tabsList[0].onclick();
+                        } else {
+                            this.ConfirmBox(xhr.response, true);
+                        }
+
+                    } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                        this.ConfirmBox("Server is unavailable.", true);
+                };
+                xhr.open("GET", "discardlastfetch", true);
+                xhr.send();
+            });
+
         };
     }
 

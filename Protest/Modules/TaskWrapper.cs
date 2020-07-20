@@ -32,7 +32,7 @@ public class TaskWrapper {
         started = DateTime.Now;
 
         Logging.Action(performer, $"Start task: {name}");
-        Console.WriteLine($"Start task:  \t{name}\t{started}");
+        //Console.WriteLine($"Start task:  \t{name}\t{started}");
     }
 
     public void Abort(in string performer) {
@@ -53,11 +53,11 @@ public class TaskWrapper {
             status = "Completed";
         }
 
-        Console.WriteLine($"Finish task: \t{name}\t" + DateTime.Now.ToString());
+        //Console.WriteLine($"Finish task: \t{name}\t" + DateTime.Now.ToString());
     }
 
     public string GetETC() {
-        if (stepsCompleted < 2) return "Calculating";
+        if (stepsCompleted < 1) return "Calculating";
 
         long d = DateTime.Now.Ticks - started.Ticks; //total duration
         double tps = d / stepsCompleted; //avg ticks/step 
