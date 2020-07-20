@@ -16,10 +16,11 @@ class Database {
     }
 
     public enum SaveMethod {
-        Discard   = 0,
+        Skip      = 0,
         CreateNew = 1,
         Overwrite = 2,
         Append    = 3,
+        Merge     = 4
     }
 
     public static long equipVer = 0;
@@ -122,18 +123,6 @@ class Database {
         return true;
     }
 
-    public static byte[] GetEquipPayload(string[] para) {
-        if (para.Length < 2) return null;
-        if (!equip.ContainsKey(para[1])) return null;
-        DbEntry entry = (DbEntry)equip[para[1]];
-        return GetEntryPayload(entry);
-    }
-    public static byte[] GetUserPayload(string[] para) {
-        if (para.Length < 2) return null;
-        if (!users.ContainsKey(para[1])) return null;
-        DbEntry entry = (DbEntry)users[para[1]];
-        return GetEntryPayload(entry);
-    }
     public static byte[] GetEntryPayload(in DbEntry entry) {
         StringBuilder payload = new StringBuilder();
 
@@ -233,7 +222,7 @@ class Database {
 
 
         switch (method) { //if do exists
-            case SaveMethod.Discard: //Ignore            
+            case SaveMethod.Skip: //Ignore            
                 return true;
 
             case SaveMethod.CreateNew: { //keep the old one and create new
@@ -389,6 +378,7 @@ class Database {
         broadcast.Append("\"action\":\"update\",");
         broadcast.Append("\"type\":\"equip\",");
         broadcast.Append($"\"target\":\"{filename}\",");
+        broadcast.Append($"\"performer\":\"{performer}\",");
         broadcast.Append($"\"version\":\"{equipVer}\",");
 
         broadcast.Append("\"obj\":{");
@@ -442,6 +432,7 @@ class Database {
             broadcast.Append("\"action\":\"delete\",");
             broadcast.Append("\"type\":\"equip\",");
             broadcast.Append($"\"target\":\"{filename}\",");
+            broadcast.Append($"\"performer\":\"{performer}\",");
             broadcast.Append($"\"version\":\"{equipVer}\"");
             broadcast.Append("}");
 
@@ -525,6 +516,7 @@ class Database {
         broadcast.Append("\"action\":\"update\",");
         broadcast.Append("\"type\":\"user\",");
         broadcast.Append($"\"target\":\"{filename}\",");
+        broadcast.Append($"\"performer\":\"{performer}\",");
         broadcast.Append($"\"version\":\"{usersVer}\",");
 
         broadcast.Append("\"obj\":{");
@@ -578,6 +570,7 @@ class Database {
             broadcast.Append("\"action\":\"delete\",");
             broadcast.Append("\"type\":\"user\",");
             broadcast.Append($"\"target\":\"{filename}\",");
+            broadcast.Append($"\"performer\":\"{performer}\",");
             broadcast.Append($"\"version\":\"{usersVer}\"");
             broadcast.Append("}");
 

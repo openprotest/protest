@@ -131,12 +131,14 @@ class HttpMainListener : Http {
                 case "getequiptable": buffer = Database.GetEquipTable(); break;
                 case "getuserstable": buffer = Database.GetUsersTable(); break;
 
-                case "fetchequip": buffer = Fetch.SingleFetchEquip(para); break;
+                case "fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
                 case "saveequip":  buffer = Database.SaveEquip(ctx, performer); break;
                 case "delequip":   buffer = Database.DeleteEquip(para, performer); break;
-                case "fetchuser":  buffer = Fetch.SingleFetchUser(para); break;
+                case "fetchuser":  buffer = Fetch.SingleFetchUserBytes(para); break;
                 case "saveuser":   buffer = Database.SaveUser(ctx, performer); break;
                 case "deluser":    buffer = Database.DeleteUser(para, performer); break;
+                case "getfetchtaskstatus": buffer = Encoding.UTF8.GetBytes(Fetch.GetFetchTaskStatus()); break;
+                case "getlastfetch": buffer = Fetch.GetLastFetch(); break;
 
                 case "dnslookup":    buffer = Dns.DnsLookup(ctx); break;
                 case "locateip":     buffer = LocateIp.Locate(ctx); break;
@@ -186,9 +188,9 @@ class HttpMainListener : Http {
                 case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
                 case "fetch_import"     : buffer = Fetch.ImportDatabase(ctx, performer); break;
-                case "fetch_equip_ip"   : buffer = Fetch.FetchEquip(para, performer); break;
-                case "fetch_equip_dc"   : buffer = Fetch.FetchEquip(para, performer); break;
-                case "fetch_users_dc"   : buffer = Fetch.FetchUsers(para, performer); break;
+                case "fetch_equip_ip"   : buffer = Fetch.FetchEquip(ctx, performer); break;
+                case "fetch_equip_dc"   : buffer = Fetch.FetchEquip(ctx, performer); break;
+                case "fetch_users_dc"   : buffer = Fetch.FetchUsers(ctx, performer); break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 

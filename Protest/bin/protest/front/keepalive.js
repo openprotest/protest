@@ -40,7 +40,7 @@ function initKeepAlive() {
 function KeepAlive_MessageHandler(msg) {
     const action  = msg.action;
     const type    = msg.type;
-    const target  = msg.target;
+    const target = msg.target;
     const version = msg.version;
 
     switch (action) {
@@ -217,6 +217,50 @@ function KeepAlive_MessageHandler(msg) {
             }
 
             break;
+
+        case "startfetch":
+            for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                if (!($w.array[i] instanceof Fetch)) continue;
+                $w.array[i].tabTask.style.visibility = "visible";
+                $w.array[i].lblStatusValue.innerHTML = "Initializing";
+                $w.array[i].lblProgressValue.innerHTML = "0/0";
+                $w.array[i].divProgress.style.width = "0"
+            }
+            break;
+
+        case "updatefetch":
+            for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                if (!($w.array[i] instanceof Fetch)) continue;
+                $w.array[i].tabTask.style.visibility = "visible";
+                $w.array[i].lblStatusValue.innerHTML = "Fetching";
+                $w.array[i].lblProgressValue.innerHTML = `${msg.task.completed}/${msg.task.total}`;
+                $w.array[i].divProgress.style.width = `${(100 * msg.task.completed) / msg.task.total}%`;
+            }
+            break;
+
+        case "finishfetch":
+            for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                if (!($w.array[i] instanceof Fetch)) continue;
+                $w.array[i].tabTask.style.visibility = "visible";
+                $w.array[i].lblStatusValue.innerHTML = "Finished";
+                $w.array[i].lblProgressValue.innerHTML = "Finished";
+                $w.array[i].divProgress.style.width = "100%"
+            }
+            break;
+
+        case "discardfetch":
+            for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                if (!($w.array[i] instanceof Fetch)) continue;
+                $w.array[i].tabTask.style.visibility = "hidden";
+            }
+            break;
+
+        case "approvedfetch":
+            for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                if (!($w.array[i] instanceof Fetch)) continue;
+                $w.array[i].tabTask.style.visibility = "hidden";
+            }
+            break;
     }
 }
 
@@ -232,7 +276,7 @@ function KeepAlive_Notification(message) {
     container.style.padding = "16px 8px";
     container.style.border = "rgb(84,84,84) solid 1px";
     container.style.borderRadius = "4px";
-    container.style.boxShadow = "rgba(0,0,0,.85) 0 0 8px";
+    //container.style.boxShadow = "rgba(0,0,0,.85) 0 0 8px";
     container.style.animation = "slide-in .4s 1";
     container.style.transition = ".4s";
     main.appendChild(container);

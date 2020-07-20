@@ -12,7 +12,7 @@ public class TaskWrapper {
 
     public readonly string name;
     public string status;
-    public string report;
+    //public string report;
     public int stepsTotal;
     public int stepsCompleted;
     public readonly object lockTokken;

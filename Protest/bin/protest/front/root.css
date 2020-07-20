@@ -28,9 +28,9 @@
     --sidemenu-width: 360px;
     --theme-color: rgb(255,102,0);
     --select-color: rgb(232,118,0);
-    --highlight-color : rgb(176,176,176);
-    --control-color: rgb(160,160,160);
     --pane-color: rgb(224,224,224);
+    --highlight-color : rgb(192,192,192);
+    --control-color: rgb(176,176,176);
     --global-font-size: 15px;
     --global-font-family: "Open Sans";
 
@@ -111,6 +111,8 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --pane-color: rgb(192,192,192);
+        --highlight-color: rgb(176,176,176);
+        --control-color: rgb(156,156,156);
     }
 }
 

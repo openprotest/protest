@@ -103,7 +103,8 @@
     max-width: 800px;
     height: 32px;
     margin-top: 24px;
-    background-color: rgb(168,168,168);
+    margin-bottom: 4px;
+    background-color: rgba(168,168,168,.6);
     overflow: hidden;
 }
 

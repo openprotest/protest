@@ -17,6 +17,8 @@ public static class NetBios {
             0x00, 0x01 };
 
     public static string GetBiosName(in string ip) {
+        if (ip is null) return null;
+
         using Socket requestSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         requestSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
 

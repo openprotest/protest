@@ -11,11 +11,32 @@ class Fetch extends Tabs {
         this.ipFrom = new IpBox();
         this.ipTo = new IpBox();
 
-        let tabEquipIp = this.AddTab("Equipment", "res/gear.svgz", "from IP range");
-        let tabEquipDc = this.AddTab("Equipment", "res/gear.svgz", "from a domain");
-        let tabUsersDc = this.AddTab("Users",     "res/user.svgz", "from a domain");
-        let tabProtest = this.AddTab("Database",  "res/logo.svgz", "from other Pro-test");
+        this.lblStatusValue = document.createElement("div");
+        this.lblStatusValue.style.textTransform = "capitalize";
+        this.lblStatusValue.innerHTML = "";
 
+        this.divProgress = document.createElement("div");
+        this.divProgress.style.backgroundColor = "#404040";
+        this.divProgress.style.width = "0";
+        this.divProgress.style.height= "100%";
+        this.divProgress.style.transition = ".4s";
+
+        this.lblProgressValue = document.createElement("div");
+        this.lblProgressValue.style.textTransform = "capitalize";
+        this.lblProgressValue.innerHTML = "0/0";
+
+        const tabEquipIp = this.AddTab("Equipment", "res/gear.svgz", "from IP range");
+        const tabEquipDc = this.AddTab("Equipment", "res/gear.svgz", "from a domain");
+        const tabUsersDc = this.AddTab("Users",     "res/user.svgz", "from a domain");
+        const tabProtest = this.AddTab("Database",  "res/logo.svgz", "from other Pro-test");
+        this.tabTask     = this.AddTab("Fetching",  "res/ball.svgz", "");
+
+        this.tabTask.style.position = "absolute";
+        this.tabTask.style.left = "0";
+        this.tabTask.style.right = "0";
+        this.tabTask.style.top = "max(216px, 100% - 48px)";
+        this.tabTask.style.visibility = "hidden";
+        
         this.txtDomain.type = "text";
         this.txtDomain.style.gridArea = "2 / 5";
         this.txtDomain.style.marginLeft = "0px";
@@ -26,10 +47,11 @@ class Fetch extends Tabs {
         tabUsersDc.style.height = "42px";
         tabProtest.style.height = "42px";
 
-        tabEquipIp.onclick = () => this.ShowEquipIp();
-        tabEquipDc.onclick = () => this.ShowEquipDc();
-        tabUsersDc.onclick = () => this.ShowUsersDc();
-        tabProtest.onclick = () => this.ShowProtest();
+        tabEquipIp.onclick   = () => this.ShowEquipIp();
+        tabEquipDc.onclick   = () => this.ShowEquipDc();
+        tabUsersDc.onclick   = () => this.ShowUsersDc();
+        tabProtest.onclick   = () => this.ShowProtest();
+        this.tabTask.onclick = () => this.ShowFetching();
 
         switch (this.args.value) {
             case "equipdc":
@@ -47,6 +69,11 @@ class Fetch extends Tabs {
                 tabProtest.onclick();
                 break;
 
+            /*case "task":
+                this.tabTask.className = "v-tab-selected";
+                this.tabTask.onclick();
+                break;*/
+
             default:
                 tabEquipIp.className = "v-tab-selected";
                 tabEquipIp.onclick();
@@ -59,6 +86,7 @@ class Fetch extends Tabs {
         this.subContent.style.overflow = "auto";
 
         this.GetCurrentNetworkInfo();
+        this.CheckFetchTaskStatus();
     }
 
     GetCurrentNetworkInfo() {
@@ -79,6 +107,32 @@ class Fetch extends Tabs {
                 this.ConfirmBox("Server is unavailable.", true);
         };
         xhr.open("GET", "getcurrentnetworkinfo", true);
+        xhr.send();
+    }
+
+    CheckFetchTaskStatus() {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let json = JSON.parse(xhr.responseText);
+                this.status = json;
+
+                if (json.status == "fetching") {
+                    this.tabTask.style.visibility = "visible";
+                    this.tabTask.style.animation = "slide-in .4s 1";
+
+                } else if (json.status == "pending") {
+                    this.tabTask.style.visibility = "visible";
+                    this.tabTask.style.animation = "slide-in .4s 1";
+                }
+
+                if (this.tabTask.style.visibility == "visible" && this.args.value == "task") {
+                    this.tabsList[0].className = "v-tab-selected";
+                    this.tabsList[0].onclick();
+                }
+            }
+        };
+        xhr.open("GET", "getfetchtaskstatus", true);
         xhr.send();
     }
 
@@ -160,22 +214,24 @@ class Fetch extends Tabs {
         lblConflictContitionComment.innerHTML = "Trigger a conflict when the condition is met";
         this.subContent.appendChild(lblConflictContitionComment);
 
-        const optIP = document.createElement("option");
-        optIP.text = "Same IP";
-        optIP.value = "0";
-        txtConflictContition.appendChild(optIP);
-        const optMAC = document.createElement("option");
-        optMAC.text = "Same  MAC";
-        optMAC.value = "1";
-        txtConflictContition.appendChild(optMAC);
-        const optSerialNo = document.createElement("option");
-        optSerialNo.text = "Same serial no.";
-        optSerialNo.value = "2";
-        txtConflictContition.appendChild(optSerialNo);
         const optSmart = document.createElement("option");
         optSmart.text = "Smart conflict detection";
-        optSmart.value = "3";
+        optSmart.value = "0";
         txtConflictContition.appendChild(optSmart);
+        const optIP = document.createElement("option");
+        optIP.text = "Same IP address";
+        optIP.value = "1";
+        txtConflictContition.appendChild(optIP);
+        const optMAC = document.createElement("option");
+        optMAC.text = "Same hostname";
+        optMAC.value = "2";
+        txtConflictContition.appendChild(optMAC);
+        const optHostname = document.createElement("option");
+        optHostname.text = "Same MAC address";
+        optHostname.value = "3";
+        txtConflictContition.appendChild(optHostname);
+
+        txtConflictContition.value = "1";
 
         const lblConflict = document.createElement("div");
         lblConflict.style.gridArea = "6 / 3";
@@ -332,7 +388,11 @@ class Fetch extends Tabs {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    //TODO:
+                    if (xhr.response == "ok") {
+                        this.tabTask.style.visibility = "visible";
+                        this.tabTask.style.animation = "slide-in .4s 1";
+                    }
+                    
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
@@ -404,22 +464,24 @@ class Fetch extends Tabs {
         lblConflictContitionComment.innerHTML = "Trigger a conflict when the condition is met";
         this.subContent.appendChild(lblConflictContitionComment);
 
-        const optIP = document.createElement("option");
-        optIP.text = "Same IP";
-        optIP.value = "0";
-        txtConflictContition.appendChild(optIP);
-        const optMAC = document.createElement("option");
-        optMAC.text = "Same  MAC";
-        optMAC.value = "1";
-        txtConflictContition.appendChild(optMAC);
-        const optSerialNo = document.createElement("option");
-        optSerialNo.text = "Same serial no.";
-        optSerialNo.value = "2";
-        txtConflictContition.appendChild(optSerialNo);
         const optSmart = document.createElement("option");
         optSmart.text = "Smart conflict detection";
-        optSmart.value = "3";
+        optSmart.value = "0";
         txtConflictContition.appendChild(optSmart);
+        const optIP = document.createElement("option");
+        optIP.text = "Same IP address";
+        optIP.value = "1";
+        txtConflictContition.appendChild(optIP);
+        const optMAC = document.createElement("option");
+        optMAC.text = "Same hostname";
+        optMAC.value = "2";
+        txtConflictContition.appendChild(optMAC);
+        const optHostname = document.createElement("option");
+        optHostname.text = "Same MAC address";
+        optHostname.value = "3";
+        txtConflictContition.appendChild(optHostname);
+
+        txtConflictContition.value = "2";
 
         const lblConflict = document.createElement("div");
         lblConflict.style.gridArea = "6 / 3";
@@ -574,7 +636,11 @@ class Fetch extends Tabs {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    //TODO:
+                    if (xhr.response == "ok") {
+                        this.tabTask.style.visibility = "visible";
+                        this.tabTask.style.animation = "slide-in .4s 1";
+                    }
+
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
@@ -611,14 +677,16 @@ class Fetch extends Tabs {
         lblConflictContitionComment.innerHTML = "Trigger a conflict when the condition is met";
         this.subContent.appendChild(lblConflictContitionComment);
 
+        /*const optSmart = document.createElement("option");
+        optSmart.text = "Smart conflict detection";
+        optSmart.value = "0";
+        txtConflictContition.appendChild(optSmart);*/
         const optUN = document.createElement("option");
         optUN.text = "Same username";
-        optUN.value = "0";
+        optUN.value = "1";
         txtConflictContition.appendChild(optUN);
-        const optSmart = document.createElement("option");
-        optSmart.text = "Smart conflict detection";
-        optSmart.value = "3";
-        txtConflictContition.appendChild(optSmart);
+
+        //txtConflictContition.value = "1";
 
         const lblConflict = document.createElement("div");
         lblConflict.style.gridArea = "5 / 3";
@@ -695,7 +763,11 @@ class Fetch extends Tabs {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    //TODO:
+                    if (xhr.response == "ok") {
+                        this.tabTask.style.visibility = "visible";
+                        this.tabTask.style.animation = "slide-in .4s 1";
+                    }
+
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
@@ -838,6 +910,7 @@ class Fetch extends Tabs {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.response == "ok") this.CheckFetchTaskStatus();
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
@@ -845,6 +918,87 @@ class Fetch extends Tabs {
             xhr.open("POST", "fetch_import", true);
             xhr.send(`ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${txtUsername.value}&password=${txtPassword.value}&equip=${chkEquip.checked}&users=${chkUsers.checked}`);
         };
+    }
+
+    ShowFetching() {
+        this.subContent.innerHTML = "";
+        this.args.value = "task";
+
+        const lblName = document.createElement("div");
+        lblName.style.gridArea = "2 / 7 / auto / 2";
+        lblName.style.textAlign = "center";
+        lblName.style.fontWeight = "600";
+        if (this.status) lblName.innerHTML = this.status.name;
+        this.subContent.appendChild(lblName);
+
+        const lblStatus = document.createElement("div");
+        lblStatus.style.gridArea = "4 / 3";
+        lblStatus.innerHTML = "Status: ";
+        this.subContent.appendChild(lblStatus);
+        this.lblStatusValue.style.gridArea = "4 / 5";
+        this.subContent.appendChild(this.lblStatusValue);
+
+        const lblDate = document.createElement("div");
+        lblDate.style.gridArea = "5 / 3";
+        lblDate.innerHTML = "Started date: ";
+        this.subContent.appendChild(lblDate);
+        const lblDateValue = document.createElement("div");
+        lblDateValue.style.gridArea = "5 / 5";
+        if (this.status) lblDateValue.innerHTML = this.status.started;
+        this.subContent.appendChild(lblDateValue);
+
+        const lblProgress = document.createElement("div");
+        lblProgress.style.gridArea = "6 / 3";
+        lblProgress.innerHTML = "Progress: ";
+        this.subContent.appendChild(lblProgress);
+        this.lblProgressValue.style.gridArea = "6 / 5";
+        //if (this.status) this.lblProgressValue.innerHTML = `${this.status.completed}/${this.status.total}`;
+        this.subContent.appendChild(this.lblProgressValue);
+
+        const divProgressBar = document.createElement("div");
+        divProgressBar.style.gridArea = "7 / 3 / auto / 6";
+        divProgressBar.style.height = "16px";
+        divProgressBar.style.border = "#404040 2px solid";
+        divProgressBar.style.borderRadius = "4px";
+        this.subContent.appendChild(divProgressBar);
+        //if (this.status) this.divProgress.style.width = `${100 * this.status.completed / this.status.total}%`
+        divProgressBar.appendChild(this.divProgress);
+
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.style.gridArea = "9 / 3 / auto / 6";
+        buttonsContainer.style.textAlign = "center";
+        this.subContent.appendChild(buttonsContainer);
+
+        const btnAbort = document.createElement("input");
+        btnAbort.type = "button";
+        btnAbort.value = "Abort";
+        btnAbort.style.minWidth = "96px";
+        btnAbort.style.height = "28px";
+        buttonsContainer.appendChild(btnAbort);
+
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let json = JSON.parse(xhr.responseText);
+
+                if (json.status == "pending") {
+                    this.ShowPending();
+
+                } else if (json.status == "fetching") {
+                    lblName.innerHTML = json.name;
+                    lblDateValue.innerHTML = json.started;
+                    this.lblStatusValue.innerHTML = "Fetching";
+                    this.lblProgressValue.innerHTML = `${json.completed}/${json.total}`;
+                    this.divProgress.style.width = `${(100 * json.completed) / json.total}%`;
+                }                
+            }
+        };
+        xhr.open("GET", "getfetchtaskstatus", true);
+        xhr.send();
+    }
+
+    ShowPending() {
+
     }
 
 }

@@ -1,8 +1,9 @@
 .v-tabs {
     position: absolute;
     width: 175px;
-    margin-top: 24px;
     left: 25px;
+    top: 16px;
+    bottom: 16px;
 }
 
 .v-tabs > div {
@@ -67,6 +68,7 @@
     right: 8px;
     top: 8px;
     bottom: 8px;
+    z-index: +1;
     background-color: var(--pane-color);
     color: rgb(16,16,16);
     border-radius: 4px;

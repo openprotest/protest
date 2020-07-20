@@ -84,7 +84,7 @@ public static class Wmi {
         if (property.Type.ToString() == "DateTime") {
             return DateTimeToString(property.Value?.ToString() ?? "");
         } else {
-            if (format != null) return format.Invoke(property.Value.ToString());
+            if (format != null && property.Value != null) return format.Invoke(property.Value.ToString());
             return property.Value?.ToString() ?? "";
         }
     }
@@ -267,7 +267,7 @@ public static class Wmi {
                 string value = "";
                 foreach (ManagementObject o in moc) {
                     string caption = o.GetPropertyValue("Caption").ToString().Replace(":", "");
-                    UInt64 size = (UInt64)o.GetPropertyValue("Size");
+                    UInt64 size = UInt64.Parse((string)o.GetPropertyValue("Size"));
                     UInt64 used = size - (UInt64)o.GetPropertyValue("FreeSpace");
                     value += $"{caption}:{Math.Round((double)used / 1024 / 1024 / 1024, 1)}:{Math.Round((double)size / 1024 / 1024 / 1024, 1)}:GB:";
                 }
@@ -557,7 +557,7 @@ public static class Wmi {
         UInt64 v = UInt64.Parse(value);
         if (v < 1000) return $"{ v } bps";
         if (v < 1_000_000) return $"{ v / 1000 } Kbps";
-        if (v < 1_000_000_000) return $"{ v / 1000000 } Mbps";
+        if (v < 1_000_000_000) return $"{ v / 1_000_000 } Mbps";
         if (v < 1_000_000_000_000) return $"{ v / 1_000_000_000 } Gbps";
         if (v < 1_000_000_000_000_000) return $"{ v / 1_000_000_000_000 } Tbps";
         return $"{ v / 1_000_000_000_000_000 } Pbps";
@@ -568,8 +568,7 @@ public static class Wmi {
     }
 
     public static string RamType(string value) {
-        return value switch
-        {
+        return value switch {
             "0" => "",
 
             "2" => "DRAM",
@@ -601,8 +600,7 @@ public static class Wmi {
     }
 
     public static string RamFormFactor(string value) {
-        return value switch
-        {
+        return value switch {
             "0" => "Unknown",
 
             "2" => "SIP",
@@ -632,8 +630,7 @@ public static class Wmi {
     }
 
     public static string ArchitechtureString(string value) {
-        return value switch
-        {
+        return value switch {
             "32" => "32-bit",
             "64" => "64-bit",
             _ => value

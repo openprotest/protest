@@ -146,6 +146,7 @@
     <Content Include="bin\protest\front\dbview.css" />
     <Content Include="bin\protest\front\res\ball.svg" />
     <Content Include="bin\protest\front\res\clock.svg" />
+    <Content Include="bin\protest\front\res\conflict.svg" />
     <Content Include="bin\protest\front\res\desktop.svg" />
     <Content Include="bin\protest\front\res\directory.svg" />
     <Content Include="bin\protest\front\res\encoder.svg" />

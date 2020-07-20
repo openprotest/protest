@@ -4,14 +4,52 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 public static class Fetch {
-
+    
+    struct FetchResult {
+        Hashtable conf;
+        Hashtable new_;
+        Hashtable fail;
+        bool isComplete;
+    }
+    
     public static TaskWrapper fetchTask = null;
+    private static FetchResult? lastFetch = null;
 
+
+    public static string GetFetchTaskStatus() {
+        string response;
+
+        if (!(fetchTask is null)) {
+            response = "{";
+            response += $"\"name\":\"{Strings.EscapeJson(fetchTask.name)}\",";
+            response += $"\"started\":\"{Strings.EscapeJson(fetchTask.started.ToString())}\",";
+            response += $"\"status\":\"{Strings.EscapeJson(fetchTask.status)}\",";
+            response += $"\"completed\":\"{Strings.EscapeJson(fetchTask.stepsCompleted.ToString())}\",";
+            response += $"\"total\":\"{Strings.EscapeJson(fetchTask.stepsTotal.ToString())}\"";
+            response += "}";
+
+        } else if (!(lastFetch is null)) {
+            response = "{\"status\":\"pending\"}";
+
+        } else {
+            response = "{\"status\":\"none\"}";
+        }
+
+        return response;
+    }
+
+    public static byte[] GetLastFetch() {
+        if (lastFetch is null) return null;
+        return null;
+    }
+    
     public static byte[] ImportDatabase(in HttpListenerContext ctx, in string performer) {
         string ip = "127.0.0.1";
         int port = 443;
@@ -301,8 +339,18 @@ public static class Fetch {
         return payload;
     }
 
+    public static byte[] FetchArrayToBytes(Hashtable hash) {
+        if (hash is null) return Strings.INF.Array;
 
-    public static byte[] SingleFetchEquip(string[] para) {
+        StringBuilder sb = new StringBuilder();
+        foreach (DictionaryEntry o in hash) {
+            string[] value = (string[])o.Value;
+            sb.Append($"{o.Key}{(char)127}{value[0]}{(char)127}{value[1]}{(char)127}");
+        }
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    public static byte[] SingleFetchEquipBytes(string[] para) {
         string host = null, filename = null;
         for (int i = 0; i < para.Length; i++) {
             if (para[i].StartsWith("host=")) host = para[i].Substring(5);
@@ -326,11 +374,10 @@ public static class Fetch {
         }
 
         if (host is null || host.Length == 0) return Strings.INV.Array;
-        return SingleFetchEquip(host);
-    }
-    public static byte[] SingleFetchEquip(string host) {
-        if (host is null) return Strings.INF.Array;
-        if (host.Length == 0) return Strings.INF.Array;       
+        return FetchArrayToBytes(SingleFetchEquip(host));
+    }    
+    public static Hashtable SingleFetchEquip(string host) {
+        if (host is null) return null;
 
         string ip = null;
         if (host?.Split('.').Length == 4) {
@@ -418,24 +465,25 @@ public static class Fetch {
         tWmi.Start(); tAd.Start(); tPortscan.Start();
         tWmi.Join();  tAd.Join();  tPortscan.Join();
 
-        StringBuilder content = new StringBuilder();
+        //StringBuilder content = new StringBuilder();
+        Hashtable hash = new Hashtable();
 
         foreach (DictionaryEntry o in wmi)
-            content.Append($"{o.Key}{(char)127}{o.Value}{(char)127}WMI{(char)127}");
+            hash.Add(o.Key,  new string[] { o.Value.ToString(), "WMI" });
 
         foreach (DictionaryEntry o in ad) {
             string key = o.Key.ToString();
 
             if (key == "OPERATING SYSTEM") {
                 if (!wmi.ContainsKey("OPERATING SYSTEM"))
-                    content.Append($"{key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
+                    hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory" });
             } else {
-                content.Append($"{key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
+                hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory" });
             }
         }
 
-        if (portscan.Length > 0) 
-            content.Append($"PORTS{(char)127}{portscan}{(char)127}Port-scan{(char)127}");
+        if (portscan.Length > 0)
+            hash.Add("PORTS", new string[] { portscan, "Port-scan" });
         
         string mac = "";
         if (wmi.ContainsKey("MAC ADDRESS")) {
@@ -443,36 +491,33 @@ public static class Fetch {
         } else {
             mac = Arp.ArpRequest(host);
             if (!(mac is null) && mac.Length > 0)
-                content.Append($"MAC ADDRESS{(char)127}{mac}{(char)127}ARP{(char)127}");
+                hash.Add("MAC ADDRESS", new string[] { mac, "ARP"});
         }
 
         if (!wmi.ContainsKey("MANUFACTURER") && mac.Length > 0) {
             string manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
             if (!(manufacturer is null) && manufacturer.Length > 0)
-                content.Append($"MANUFACTURER{(char)127}{mac}{(char)127}MAC lookup{(char)127}");
+                hash.Add("MANUFACTURER", new string[] { mac , "MAC lookup" });
         }
 
         if (!wmi.ContainsKey("HOSTNAME"))
             if (!(netbios is null) && netbios.Length > 0) { //use biosnet
-                content.Append($"HOSTNAME{(char)127}{netbios}{(char)127}NetBIOS{(char)127}");
+                hash.Add("HOSTNAME", new string[] { netbios, "NetBIOS" });
             } else { //use dns
-                content.Append($"HOSTNAME{(char)127}{hostname}{(char)127}DNS{(char)127}");
+                hash.Add("HOSTNAME", new string[] { hostname, "DNS" });
             }
         
         //name and type
 
-        return Encoding.UTF8.GetBytes(content.ToString());
+        return hash;
     }
 
-    public static byte[] SingleFetchUser(string[] para) {
+    public static byte[] SingleFetchUserBytes(string[] para) {
         string username = null, filename = null;
         for (int i = 0; i < para.Length; i++) {
             if (para[i].StartsWith("username=")) username = para[i].Substring(9);
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
         }
-
-        Console.WriteLine(username);
-        Console.WriteLine(filename);
 
         if (!(filename is null) && filename.Length > 0) {
             if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
@@ -485,37 +530,39 @@ public static class Fetch {
         }
 
         if (username is null || username.Length == 0) return Strings.INV.Array;
-        return SingleFetchUser(username);
+        return FetchArrayToBytes(SingleFetchUser(username));
     }
-    public static byte[] SingleFetchUser(string username) {
-        if (username is null) return Strings.INF.Array;
-        if (username.Length == 0) return Strings.INF.Array;
-
-        Hashtable hash = ActiveDirectory.AdFetch(username);
-        if (hash is null) return Strings.FAI.Array;
-
-        StringBuilder content = new StringBuilder();
-
-        foreach (DictionaryEntry o in hash) 
-            content.Append($"{o.Key}{(char)127}{o.Value}{(char)127}Active directory{(char)127}");
+    public static Hashtable SingleFetchUser(string username) {
+        if (username is null) return null;
         
-        return Encoding.UTF8.GetBytes(content.ToString());
+        Hashtable fetch = ActiveDirectory.AdFetch(username);
+        if (fetch is null) return null;
+
+        Hashtable hash = new Hashtable();
+
+        foreach (DictionaryEntry o in fetch)
+            hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory" });
+
+        return hash;
     }
 
 
-    public static byte[] FetchEquip(string[] para, string performer) {
+    public static byte[] FetchEquip(in HttpListenerContext ctx, string performer) {
         string from = null, to = null, domain = null;
         int portscan=0, conflictcontition = 0, conflictaction = 0, retries = 0, interval = 0;
-        for (int i = 0; i < para.Length; i++) {
-            if (para[i].StartsWith("from=")) from = para[i].Substring(5);
-            if (para[i].StartsWith("to=")) to = para[i].Substring(3);
-            if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
+            string[] para = reader.ReadToEnd().Split('&');
+            for (int i = 0; i < para.Length; i++) {
+                if (para[i].StartsWith("from=")) from = para[i].Substring(5);
+                if (para[i].StartsWith("to=")) to = para[i].Substring(3);
+                if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
 
-            if (para[i].StartsWith("portscan=")) portscan = int.Parse(para[i].Substring(9));
-            if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
-            if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
-            if (para[i].StartsWith("retries=")) int.TryParse(para[i].Substring(8), out retries);
-            if (para[i].StartsWith("interval=")) int.TryParse(para[i].Substring(9), out interval);
+                if (para[i].StartsWith("portscan=")) portscan = int.Parse(para[i].Substring(9));
+                if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
+                if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
+                if (para[i].StartsWith("retries=")) int.TryParse(para[i].Substring(8), out retries);
+                if (para[i].StartsWith("interval=")) int.TryParse(para[i].Substring(9), out interval);
+            }
         }
 
         if (!(from is null) && !(to is null)) {
@@ -536,77 +583,117 @@ public static class Fetch {
 
         if (!(domain is null)) {
             string[] hosts = ActiveDirectory.GetAllWorkstations(domain);
+            if (hosts is null) return Strings.FAI.Array;
             return FetchEquipTask(hosts, portscan, conflictcontition, conflictaction, retries, interval, performer);
         }
 
         return Strings.INF.Array;
     }
     
-    public static byte[] FetchUsers(string[] para, string performer) {
+    public static byte[] FetchUsers(in HttpListenerContext ctx, string performer) {
         string domain = null;
         int conflictcontition = 0, conflictaction = 0;
-        for (int i = 0; i < para.Length; i++) {
-            if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
-            if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
-            if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
+            string[] para = reader.ReadToEnd().Split('&'); 
+            for (int i = 0; i < para.Length; i++) {
+                if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
+                if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
+                if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
+            }
         }
+        
+        if (domain is null) return Strings.INF.Array;
 
-        if (!(domain is null))
-            return FetchUsersTask(null, conflictcontition, conflictaction, performer);
+        string[] users = ActiveDirectory.GetAllUsers(domain);
+        if (users is null) return Strings.FAI.Array;
 
-        return Strings.INF.Array;
+        return FetchUsersTask(users, conflictcontition, conflictaction, performer);
     }
 
     public static byte[] FetchEquipTask(string[] hosts, int portscan, int conflictcontition, int conflictaction, int retries, int interval, string performer) {
-        if (!(fetchTask is null)) return Strings.TSK.Array; 
-        
-        TaskWrapper task = null;
+        if (!(fetchTask is null)) return Strings.TSK.Array;
+
+        Database.SaveMethod saveMethod = (Database.SaveMethod)conflictaction;
+        Hashtable dataset = new Hashtable();
 
         Action onComplete = () => {
             fetchTask = null;
         };
 
         Thread thread = new Thread(() => {
+            fetchTask.status = "fetching";
 
-            //
+            DateTime lastBroadcast = DateTime.Now;
+            KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
 
+            for (int i = 0; i < hosts.Length; i++) {
+                Hashtable hash = SingleFetchEquip(hosts[i]);
+
+                Thread.Sleep(50);
+                if (DateTime.Now.Ticks - lastBroadcast.Ticks > 600_000_000) { //after a minute(s)
+                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
+                    lastBroadcast = DateTime.Now;
+                }
+
+                if (hash is null) continue;
+                fetchTask.stepsCompleted = i + 1;
+                dataset.Add(hosts[i], hash);
+            }
+
+            fetchTask.Complete();
             onComplete();
-            task.Complete();
+            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
         });
 
-        task = new TaskWrapper("Fetching equipment", performer) {
+        fetchTask = new TaskWrapper("Fetching equipment", performer) {
             stepsTotal = hosts.Length,
             thread = thread,
         };
-
-        task.thread.Start();
+        fetchTask.thread.Start();
 
         return Strings.OK.Array;
     }
 
     public static byte[] FetchUsersTask(string[] users,  int conflictcontition, int conflictaction, string performer) {
         if (!(fetchTask is null)) return Strings.TSK.Array;
-        
-        TaskWrapper task = null;
+
+        Database.SaveMethod saveMethod = (Database.SaveMethod)conflictaction;
+        Hashtable dataset = new Hashtable();
 
         Action onComplete = () => {
             fetchTask = null;
         };
 
         Thread thread = new Thread(() => {
+            fetchTask.status = "fetching";
 
-            //
+            DateTime lastBroadcast = new DateTime(0); //DateTime.Now;
+            KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}");
 
+            for (int i = 0; i < users.Length; i++) {
+                Hashtable hash = SingleFetchUser(users[i]);                
+                fetchTask.stepsCompleted = i + 1;
+                
+                Thread.Sleep(10);
+                if (DateTime.Now.Ticks - lastBroadcast.Ticks > 100_000_000) { //after 10 seconds
+                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}"); 
+                    lastBroadcast = DateTime.Now;
+                }
+
+                if (hash is null) continue;
+                dataset.Add(users[i], hash);
+            }
+
+            fetchTask.Complete();
             onComplete();
-            task.Complete();
+            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}");
         });
 
-        task = new TaskWrapper("Fetching users", performer) {
+        fetchTask = new TaskWrapper("Fetching users", performer) {
             stepsTotal = users.Length,
             thread = thread,
         };
-
-        task.thread.Start();
+        fetchTask.thread.Start();
 
         return Strings.OK.Array;
     }
