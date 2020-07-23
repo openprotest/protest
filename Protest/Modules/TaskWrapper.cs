@@ -10,11 +10,12 @@ public class TaskWrapper {
 
     private static readonly Hashtable onGoingTasks = Hashtable.Synchronized(new Hashtable());
 
+    private long lastSet = 0;
+
     public readonly string name;
     public string status;
-    //public string report;
+    private int stepsCompleted;
     public int stepsTotal;
-    public int stepsCompleted;
     public readonly object lockTokken;
     public readonly DateTime started;
 
@@ -46,6 +47,34 @@ public class TaskWrapper {
             status = $"Aborted by user: {performer}";
         }
     }
+    
+    public string GetEtc() {
+        if (stepsCompleted < 1) return "Calculating";
+
+        long d = lastSet - started.Ticks; //total duration
+        
+        double tps = d / stepsCompleted; //avg ticks/step
+
+        long etc = (long)(tps * (stepsTotal - stepsCompleted));
+        if (etc - (DateTime.Now.Ticks - lastSet) > 0) //subtract time passed since last-set
+            etc -= DateTime.Now.Ticks - lastSet;
+
+        TimeSpan ts = new TimeSpan(etc);
+        if (ts.Days == 0) 
+            return $"{ts.Hours.ToString().PadLeft(2, '0')}:{ts.Minutes.ToString().PadLeft(2, '0')}:{ts.Seconds.ToString().PadLeft(2, '0')}";
+        else if (ts.Days == 1)
+            return $"1 day, {ts.Hours.ToString().PadLeft(2, '0')}:{ts.Minutes.ToString().PadLeft(2, '0')}:{ts.Seconds.ToString().PadLeft(2, '0')}";
+        else 
+            return $"{Math.Round(ts.TotalDays)} days";
+    }
+
+    public int GetStepsCompleted() {
+        return stepsCompleted;
+    }
+    public void SetStepsCompleted(int value) {
+        stepsCompleted = value;
+        lastSet = DateTime.Now.Ticks;
+    }
 
     public void Complete() {
         lock (lockTokken) {
@@ -56,20 +85,6 @@ public class TaskWrapper {
         //Console.WriteLine($"Finish task: \t{name}\t" + DateTime.Now.ToString());
     }
 
-    public string GetETC() {
-        if (stepsCompleted < 1) return "Calculating";
-
-        long d = DateTime.Now.Ticks - started.Ticks; //total duration
-        double tps = d / stepsCompleted; //avg ticks/step 
-        TimeSpan etc = new TimeSpan((long)(tps * (stepsTotal - stepsCompleted)));
-
-        if (etc.Days == 0) 
-            return $"{etc.Hours}:{etc.Minutes.ToString().PadLeft(2, '0')}:{etc.Seconds.ToString().PadLeft(2, '0')}";
-        else if (etc.Days == 1)
-            return $"1 day, {etc.Hours}:{etc.Minutes.ToString().PadLeft(2, '0')}:{etc.Seconds.ToString().PadLeft(2, '0')}";
-        else 
-            return $"{etc.TotalDays} days";
-    }
 
     public static byte[] GetOnGoing() {
         StringBuilder sb = new StringBuilder();

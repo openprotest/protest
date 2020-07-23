@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices;
+using System.Net.NetworkInformation;
 using System.Security.Policy;
 using System.Text;
 using System.Threading;
@@ -14,11 +15,14 @@ public static class Fetch {
     
     struct FetchResult {
         public string name;
+        public string type;
         public DateTime started;
         public DateTime finished;
         public Hashtable dataset;
         public int successful;
         public int unsuccessful;
+        public int conflictContition;
+        public int conflictAction;
     }
     
     public static TaskWrapper fetchTask = null;
@@ -32,9 +36,9 @@ public static class Fetch {
             response += $"\"status\":\"{Strings.EscapeJson(fetchTask.status)}\",";
             response += $"\"name\":\"{Strings.EscapeJson(fetchTask.name)}\",";
             response += $"\"started\":\"{Strings.EscapeJson(fetchTask.started.ToString())}\",";
-            response += $"\"completed\":\"{Strings.EscapeJson(fetchTask.stepsCompleted.ToString())}\",";
+            response += $"\"completed\":\"{Strings.EscapeJson(fetchTask.GetStepsCompleted().ToString())}\",";
             response += $"\"total\":\"{Strings.EscapeJson(fetchTask.stepsTotal.ToString())}\",";
-            response += $"\"etc\":\"{Strings.EscapeJson(fetchTask.GetETC())}\"";
+            response += $"\"etc\":\"{Strings.EscapeJson(fetchTask.GetEtc())}\"";
             response += "}";
 
         } else if (!(lastFetch is null)) {
@@ -56,6 +60,9 @@ public static class Fetch {
     }
 
     public static byte[] AbortFetch(in string performer) {
+        if (fetchTask is null) return Strings.NTK.Array;
+        if (!fetchTask.thread.IsAlive) return Strings.NTK.Array;
+
         fetchTask.Abort(performer);
         fetchTask = null;
         GC.Collect();
@@ -63,8 +70,28 @@ public static class Fetch {
     }
 
     public static byte[] ApproveLastFetch(in string performer) {
-        //TODO:
-        return Strings.OK.Array;
+        if (lastFetch is null) return Strings.NTK.Array;
+
+        Database.SaveMethod saveMethod = (Database.SaveMethod)lastFetch?.conflictContition;
+
+        if (lastFetch?.type == "equip") {
+            foreach (DictionaryEntry o in lastFetch?.dataset)
+                Database.SaveEntry((Hashtable)o.Value, null, saveMethod, performer, false);
+
+            lastFetch = null;
+            KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"equip\"}}");
+            return Strings.OK.Array;
+
+        } else if (lastFetch?.type == "users") {
+            foreach (DictionaryEntry o in lastFetch?.dataset)
+                Database.SaveEntry((Hashtable)o.Value, null, saveMethod, performer, true);
+
+            lastFetch = null;
+            KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"user\"}}");
+            return Strings.OK.Array;
+        }
+
+        return Strings.INV.Array;
     }
 
     public static byte[] DiscardLastFetch(in string performer) {
@@ -399,7 +426,7 @@ public static class Fetch {
         if (host is null || host.Length == 0) return Strings.INV.Array;
         return FetchArrayToBytes(SingleFetchEquip(host));
     }    
-    public static Hashtable SingleFetchEquip(string host) {
+    public static Hashtable SingleFetchEquip(string host, bool async = true) {
         if (host is null) return null;
 
         string ip = null;
@@ -484,29 +511,35 @@ public static class Fetch {
 
             if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);
         });
-
-        tWmi.Start(); tAd.Start(); tPortscan.Start();
-        tWmi.Join();  tAd.Join();  tPortscan.Join();
+        
+        if (async) {
+            tWmi.Start(); tAd.Start(); tPortscan.Start();
+            tWmi.Join(); tAd.Join(); tPortscan.Join();
+        } else {
+            tWmi.Start(); tWmi.Join();            
+            tAd.Start(); tAd.Join();
+            tPortscan.Start(); tPortscan.Join();
+        }
 
         //StringBuilder content = new StringBuilder();
         Hashtable hash = new Hashtable();
 
         foreach (DictionaryEntry o in wmi)
-            hash.Add(o.Key,  new string[] { o.Value.ToString(), "WMI" });
+            hash.Add(o.Key,  new string[] { o.Value.ToString(), "WMI", "" });
 
         foreach (DictionaryEntry o in ad) {
             string key = o.Key.ToString();
 
             if (key == "OPERATING SYSTEM") {
                 if (!wmi.ContainsKey("OPERATING SYSTEM"))
-                    hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory" });
+                    hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory", "" });
             } else {
-                hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory" });
+                hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory", "" });
             }
         }
 
         if (portscan.Length > 0)
-            hash.Add("PORTS", new string[] { portscan, "Port-scan" });
+            hash.Add("PORTS", new string[] { portscan, "Port-scan", "" });
         
         string mac = "";
         if (wmi.ContainsKey("MAC ADDRESS")) {
@@ -514,20 +547,20 @@ public static class Fetch {
         } else {
             mac = Arp.ArpRequest(host);
             if (!(mac is null) && mac.Length > 0)
-                hash.Add("MAC ADDRESS", new string[] { mac, "ARP"});
+                hash.Add("MAC ADDRESS", new string[] { mac, "ARP", "" });
         }
 
         if (!wmi.ContainsKey("MANUFACTURER") && mac.Length > 0) {
             string manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
             if (!(manufacturer is null) && manufacturer.Length > 0)
-                hash.Add("MANUFACTURER", new string[] { mac , "MAC lookup" });
+                hash.Add("MANUFACTURER", new string[] { mac , "MAC lookup", "" });
         }
 
         if (!wmi.ContainsKey("HOSTNAME"))
             if (!(netbios is null) && netbios.Length > 0) { //use biosnet
-                hash.Add("HOSTNAME", new string[] { netbios, "NetBIOS" });
+                hash.Add("HOSTNAME", new string[] { netbios, "NetBIOS", "" });
             } else { //use dns
-                hash.Add("HOSTNAME", new string[] { hostname, "DNS" });
+                hash.Add("HOSTNAME", new string[] { hostname, "DNS", "" });
             }
         
         //name and type
@@ -557,18 +590,17 @@ public static class Fetch {
     }
     public static Hashtable SingleFetchUser(string username) {
         if (username is null) return null;
-        
-        Hashtable fetch = ActiveDirectory.AdFetch(username);
-        if (fetch is null) return null;
 
+        Hashtable fetch = ActiveDirectory.AdFetch(username);
+
+        if (fetch is null) return null;
         Hashtable hash = new Hashtable();
 
         foreach (DictionaryEntry o in fetch)
-            hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory" });
+            hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory", "" });
 
         return hash;
     }
-
 
     public static byte[] FetchEquip(in HttpListenerContext ctx, string performer) {
         string from = null, to = null, domain = null;
@@ -639,8 +671,7 @@ public static class Fetch {
         if (!(fetchTask is null)) return Strings.TSK.Array;
         if (!(lastFetch is null)) return Strings.TSK.Array;
 
-        Database.SaveMethod saveMethod = (Database.SaveMethod)conflictaction;
-        Hashtable dataset = new Hashtable();
+        const int WINDOW = 32;
 
         Action onComplete = () => {
             fetchTask = null;
@@ -648,9 +679,60 @@ public static class Fetch {
 
         Thread thread = new Thread(() => {
             fetchTask.status = "fetching";
-
             DateTime lastBroadcast = DateTime.Now;
             KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
+
+            int retriesCount = 0;
+            int idle = interval switch
+            {
+                0 => (int)Session.HOUR / 2,
+                1 => (int)Session.HOUR,
+                2 => (int)Session.HOUR * 2,
+                3 => (int)Session.HOUR * 4,
+                4 => (int)Session.HOUR * 6,
+                5 => (int)Session.HOUR * 8,
+                6 => (int)Session.HOUR * 12,
+                7 => (int)Session.HOUR * 24,
+                8 => (int)Session.HOUR * 48,
+                _ => 0
+            };
+
+            Hashtable dataset = Hashtable.Synchronized(new Hashtable());
+            List<string> queue = new List<string>();
+            List<string> redo = new List<string>();
+            List<string> done = new List<string>();
+
+            queue.AddRange(hosts);
+
+            do {
+                List<Task<Hashtable>> tasks = new List<Task<Hashtable>>();
+
+                for (int i = 0; i <  Math.Min(WINDOW, queue.Count); i++)
+                    tasks.Add(new Task<Hashtable> (()=> {
+
+                        PingReply reply = null;
+                        try {
+                            reply = new System.Net.NetworkInformation.Ping().SendPingAsync(hosts[i], 1500).Result;
+                        } catch { }
+
+                        if (reply?.Status == IPStatus.Success) {
+                            return SingleFetchEquip(hosts[i]);
+                        }
+
+                        return null;
+                    }));
+
+                Hashtable[] result = Task.WhenAll(tasks).Result;
+
+
+
+                fetchTask.status = "sleeping";
+                Thread.Sleep(idle);
+                fetchTask.status = "fetching";
+
+            } while (retries < retriesCount++ && queue.Count > 0);
+
+
 
             for (int i = 0; i < hosts.Length; i++) {
                 Hashtable hash = SingleFetchEquip(hosts[i]);
@@ -661,17 +743,20 @@ public static class Fetch {
                 }
 
                 if (hash is null) continue;
-                fetchTask.stepsCompleted = i + 1;
+                fetchTask.SetStepsCompleted(i + 1);
                 dataset.Add(hosts[i], hash);
             }
 
             lastFetch = new FetchResult() {
                 name = fetchTask.name,
+                type = "equip",
                 started = fetchTask.started,
                 finished = DateTime.Now,
                 dataset = dataset,
-                successful = fetchTask.stepsCompleted,
-                unsuccessful = fetchTask.stepsTotal - fetchTask.stepsCompleted,
+                successful = fetchTask.GetStepsCompleted(),
+                unsuccessful = fetchTask.stepsTotal - fetchTask.GetStepsCompleted(),
+                conflictContition = conflictcontition,
+                conflictAction = conflictaction
             };
 
             fetchTask.Complete();
@@ -681,7 +766,7 @@ public static class Fetch {
 
         fetchTask = new TaskWrapper("Fetching equipment", performer) {
             stepsTotal = hosts.Length,
-            thread = thread,
+            thread = thread
         };
         fetchTask.thread.Start();
 
@@ -692,7 +777,6 @@ public static class Fetch {
         if (!(fetchTask is null)) return Strings.TSK.Array;
         if (!(lastFetch is null)) return Strings.TSK.Array;
 
-        Database.SaveMethod saveMethod = (Database.SaveMethod)conflictaction;
         Hashtable dataset = new Hashtable();
 
         Action onComplete = () => {
@@ -706,26 +790,27 @@ public static class Fetch {
             KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}");
 
             for (int i = 0; i < users.Length; i++) {
-                Hashtable hash = SingleFetchUser(users[i]);                
-                fetchTask.stepsCompleted = i + 1;
+                Hashtable hash = SingleFetchUser(users[i]);
+                fetchTask.SetStepsCompleted(i + 1);
                 
-                Thread.Sleep(10);
-                if (DateTime.Now.Ticks - lastBroadcast.Ticks > 100_000_000) { //after 10 seconds
+                if (DateTime.Now.Ticks - lastBroadcast.Ticks > 50_000_000) { //after 5 seconds
                     KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}"); 
                     lastBroadcast = DateTime.Now;
                 }
 
-                if (hash is null) continue;
                 dataset.Add(users[i], hash);
             }
 
             lastFetch = new FetchResult() {
                 name = fetchTask.name,
+                type = "users",
                 started = fetchTask.started,
                 finished = DateTime.Now,
                 dataset = dataset,
-                successful = fetchTask.stepsCompleted,
-                unsuccessful = fetchTask.stepsTotal - fetchTask.stepsCompleted,
+                successful = dataset.Count,
+                unsuccessful = fetchTask.stepsTotal - dataset.Count,
+                conflictContition = conflictcontition,
+                conflictAction = conflictaction
             };
 
             fetchTask.Complete();

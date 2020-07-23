@@ -434,7 +434,7 @@
 
 @keyframes delayed-fade-in {
     0%{   filter: opacity(0); }
-    60%{   filter: opacity(0); }
+    60%{  filter: opacity(0); }
     100%{ filter: opacity(1); }
 }
 

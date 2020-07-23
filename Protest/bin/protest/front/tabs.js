@@ -36,13 +36,16 @@ class Tabs extends Window {
         }
 
         newTab.addEventListener("click", event => {
-            for (let i = 0; i < this.tabsList.length; i++)
-                this.tabsList[i].className = "";
-
+            this.DeselectAllTabs();
             newTab.className = "v-tab-selected";
         });
 
         return newTab;
+    }
+
+    DeselectAllTabs() {
+        for (let i = 0; i < this.tabsList.length; i++)
+            this.tabsList[i].className = "";
     }
 
     RemoveTab() { }

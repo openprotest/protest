@@ -257,12 +257,12 @@ function KeepAlive_MessageHandler(msg) {
             }
             break;*/
 
-        /*case "approvedfetch":
+        case "approvedfetch":
             for (let i = 0; i < $w.array.length; i++) { //for each equip list
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "hidden";
             }
-            break;*/
+            break;
     }
 }
 

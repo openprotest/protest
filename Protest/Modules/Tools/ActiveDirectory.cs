@@ -168,15 +168,22 @@ public static class ActiveDirectory {
         } catch {}
 
         DirectoryEntry dir = GetDirectoryEntry(domain);
-        using DirectorySearcher searcher = new DirectorySearcher(dir);
-        searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={username}))";
-
         SearchResult result = null;
+
         try {
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(userPrincipalName={username}))";
             result = searcher.FindOne();
-        } catch {
-            return null;
-        }
+        } catch { }
+
+        if (result is null)
+            try {
+                if (username.IndexOf("@") > -1) username = username.Split('@')[0];
+                using DirectorySearcher searcher = new DirectorySearcher(dir);
+                //searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
+                searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={username}))";
+                result = searcher.FindOne();
+            } catch { }
 
         if (result is null) return null;
         return result;
@@ -196,9 +203,9 @@ public static class ActiveDirectory {
     }
 
     public static Hashtable AdFetch(string username) {
-        SearchResult result = ActiveDirectory.GetUser(username);
-        if (result is null) return null;
-        return AdFetch(result);
+        SearchResult sr = ActiveDirectory.GetUser(username);        
+        if (sr is null) return null;
+        return AdFetch(sr);
     }
 
     public static Hashtable AdFetch(SearchResult result) {

@@ -184,13 +184,16 @@ class Database {
         for (int i = 0; i < array.Length - 1; i += 2) { //copy from array to hash
             array[i] = array[i].ToUpper();
             if (hash.ContainsKey(array[i])) continue;
-            if (filename.Length == 0 && array[i] == ".FILENAME") filename = array[i + 1];
+            if ((filename is null || filename.Length == 0) && array[i] == ".FILENAME") filename = array[i + 1];
             hash.Add(array[i], new string[] { array[i + 1], $"{performer}, { DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
         }
 
-        if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
-        bool exists = isUser ? users.ContainsKey(filename) : equip.ContainsKey(filename);
+        return SaveEntry(hash, filename, method, performer, isUser);
+    }
 
+    public static bool SaveEntry(Hashtable hash, string filename, SaveMethod method, in string performer, bool isUser) {
+        if (filename is null || filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
+        bool exists = isUser ? users.ContainsKey(filename) : equip.ContainsKey(filename);
 
         DbEntry entry;
         if (exists)
@@ -251,8 +254,9 @@ class Database {
                 removed.Clear();
                 break;
             }
-
+            
             case SaveMethod.Append: { 
+            //TODO:
                 lock (entry.write_lock) {
                     foreach (DictionaryEntry o in hash) {
                         if (entry.hash.ContainsKey(o.Key)) {
@@ -263,6 +267,11 @@ class Database {
                     }
                 }
                 Write(entry, in performer); //Write uses its own lock
+                break;
+            }
+
+            case SaveMethod.Merge: {
+                //TODO:
                 break;
             }
         }

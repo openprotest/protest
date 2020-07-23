@@ -13,13 +13,16 @@ class Fetch extends Tabs {
 
         this.lblStatusValue = document.createElement("div");
         this.lblStatusValue.style.textTransform = "capitalize";
+        this.lblStatusValue.style.fontWeight = "600";
         this.lblStatusValue.innerHTML = "";
 
         this.lblProgressValue = document.createElement("div");
         this.lblProgressValue.style.textTransform = "capitalize";
+        this.lblProgressValue.style.fontWeight = "600";
         this.lblProgressValue.innerHTML = "0/0";
 
         this.lblEtcValue = document.createElement("div");
+        this.lblEtcValue.style.fontWeight = "600";
         this.lblEtcValue.innerHTML = "Calculating";
 
         this.divProgress = document.createElement("div");
@@ -79,7 +82,7 @@ class Fetch extends Tabs {
 
             default:
                 tabEquipIp.className = "v-tab-selected";
-                tabEquipIp.onclick();
+                this.ShowEquipIp(true);
         }
 
         this.subContent.style.display = "grid";
@@ -130,8 +133,9 @@ class Fetch extends Tabs {
                 }
 
                 if (this.tabTask.style.visibility == "visible" && this.args == "task") {
-                    this.tabsList[0].className = "v-tab-selected";
-                    this.tabsList[0].onclick();
+                    this.ShowFetching();
+                    this.DeselectAllTabs();
+                    this.tabTask.className = "v-tab-selected";
                 }
             }
         };
@@ -139,8 +143,8 @@ class Fetch extends Tabs {
         xhr.send();
     }
 
-    ShowEquipIp() {
-        this.args = "equipip";
+    ShowEquipIp(ignoreArgs = false) {
+        if (!ignoreArgs) this.args = "equipip";
 
         this.subContent.innerHTML = "";
 
@@ -298,7 +302,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblInterval);
         const rngInterval = document.createElement("input");
         rngInterval.type = "range";
-        rngInterval.min = 1;
+        rngInterval.min = 0;
         rngInterval.max = 8;
         rngInterval.value = 1;
         rngInterval.style.gridArea = "8 / 5";
@@ -365,14 +369,15 @@ class Fetch extends Tabs {
 
         rngInterval.oninput = () => {
             switch (parseInt(rngInterval.value)) {
-                case 1: lblIntervalComment.innerHTML = "Try again in an hour if unreachable"; break;
-                case 2: lblIntervalComment.innerHTML = "Try again in 2 hours if unreachable"; break;
-                case 3: lblIntervalComment.innerHTML = "Try again in 4 hours if unreachable"; break;
-                case 4: lblIntervalComment.innerHTML = "Try again in 6 hours if unreachable"; break;
-                case 5: lblIntervalComment.innerHTML = "Try again in 8 hours if unreachable"; break;
-                case 6: lblIntervalComment.innerHTML = "Try again in 12 hours if unreachable"; break;
-                case 7: lblIntervalComment.innerHTML = "Try again in 24 hours if unreachable"; break;
-                case 8: lblIntervalComment.innerHTML = "Try again in 48 hours if unreachable"; break;
+                case 0: lblIntervalComment.innerHTML = "Try again in half-hour if unreachable"; break;
+                case 1: lblIntervalComment.innerHTML = "Try again in an hour if unreachable";   break;
+                case 2: lblIntervalComment.innerHTML = "Try again in 2 hours if unreachable";   break;
+                case 3: lblIntervalComment.innerHTML = "Try again in 4 hours if unreachable";   break;
+                case 4: lblIntervalComment.innerHTML = "Try again in 6 hours if unreachable";   break;
+                case 5: lblIntervalComment.innerHTML = "Try again in 8 hours if unreachable";   break;
+                case 6: lblIntervalComment.innerHTML = "Try again in 12 hours if unreachable";  break;
+                case 7: lblIntervalComment.innerHTML = "Try again in 24 hours if unreachable";  break;
+                case 8: lblIntervalComment.innerHTML = "Try again in 48 hours if unreachable";  break;
             }
         };
 
@@ -390,6 +395,11 @@ class Fetch extends Tabs {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
                         this.tabTask.style.animation = "slide-in .4s 1";
+
+                        this.DeselectAllTabs();
+                        this.tabTask.className = "v-tab-selected";
+                        this.ShowFetching();
+
                     } else {
                         this.ConfirmBox(xhr.response, true);
                     }
@@ -545,7 +555,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblInterval);
         const rngInterval = document.createElement("input");
         rngInterval.type = "range";
-        rngInterval.min = 1;
+        rngInterval.min = 0;
         rngInterval.max = 8;
         rngInterval.value = 1;
         rngInterval.style.gridArea = "8 / 5";
@@ -614,14 +624,15 @@ class Fetch extends Tabs {
 
         rngInterval.oninput = () => {
             switch (parseInt(rngInterval.value)) {
-                case 1: lblIntervalComment.innerHTML = "Try again in an hour if unreachable"; break;
-                case 2: lblIntervalComment.innerHTML = "Try again in 2 hours if unreachable"; break;
-                case 3: lblIntervalComment.innerHTML = "Try again in 4 hours if unreachable"; break;
-                case 4: lblIntervalComment.innerHTML = "Try again in 6 hours if unreachable"; break;
-                case 5: lblIntervalComment.innerHTML = "Try again in 8 hours if unreachable"; break;
-                case 6: lblIntervalComment.innerHTML = "Try again in 12 hours if unreachable"; break;
-                case 7: lblIntervalComment.innerHTML = "Try again in 24 hours if unreachable"; break;
-                case 8: lblIntervalComment.innerHTML = "Try again in 48 hours if unreachable"; break;
+                case 0: lblIntervalComment.innerHTML = "Try again in half-hour if unreachable"; break;
+                case 1: lblIntervalComment.innerHTML = "Try again in an hour if unreachable";   break;
+                case 2: lblIntervalComment.innerHTML = "Try again in 2 hours if unreachable";   break;
+                case 3: lblIntervalComment.innerHTML = "Try again in 4 hours if unreachable";   break;
+                case 4: lblIntervalComment.innerHTML = "Try again in 6 hours if unreachable";   break;
+                case 5: lblIntervalComment.innerHTML = "Try again in 8 hours if unreachable";   break;
+                case 6: lblIntervalComment.innerHTML = "Try again in 12 hours if unreachable";  break;
+                case 7: lblIntervalComment.innerHTML = "Try again in 24 hours if unreachable";  break;
+                case 8: lblIntervalComment.innerHTML = "Try again in 48 hours if unreachable";  break;
             }
         };
 
@@ -639,6 +650,11 @@ class Fetch extends Tabs {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
                         this.tabTask.style.animation = "slide-in .4s 1";
+
+                        this.DeselectAllTabs();
+                        this.tabTask.className = "v-tab-selected";
+                        this.ShowFetching();
+
                     } else {
                         this.ConfirmBox(xhr.response, true);
                     }
@@ -768,6 +784,11 @@ class Fetch extends Tabs {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
                         this.tabTask.style.animation = "slide-in .4s 1";
+
+                        this.DeselectAllTabs();
+                        this.tabTask.className = "v-tab-selected";
+                        this.ShowFetching();
+
                     } else {
                         this.ConfirmBox(xhr.response, true);
                     }
@@ -932,6 +953,7 @@ class Fetch extends Tabs {
         lblName.style.gridArea = "2 / 7 / auto / 2";
         lblName.style.textAlign = "center";
         lblName.style.fontWeight = "600";
+        lblName.style.textDecoration = "underline";
         if (this.status) lblName.innerHTML = this.status.name;
         this.subContent.appendChild(lblName);
 
@@ -948,6 +970,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblDate);
         const lblDateValue = document.createElement("div");
         lblDateValue.style.gridArea = "5 / 5";
+        lblDateValue.style.fontWeight = "600";
         if (this.status) lblDateValue.innerHTML = this.status.started;
         this.subContent.appendChild(lblDateValue);
 
@@ -1007,6 +1030,7 @@ class Fetch extends Tabs {
                 } else {
                     this.tabTask.style.visibility = "hidden";
                     this.tabTask.style.animation = "none";
+                    this.DeselectAllTabs();
                     this.tabsList[0].className = "v-tab-selected";
                     this.tabsList[0].onclick();
                 }
@@ -1024,6 +1048,7 @@ class Fetch extends Tabs {
                         if (xhr.response == "ok") {
                             this.tabTask.style.visibility = "hidden";
                             this.tabTask.style.animation = "none";
+                            this.DeselectAllTabs();
                             this.tabsList[0].className = "v-tab-selected";
                             this.tabsList[0].onclick();
                         } else {
@@ -1046,6 +1071,7 @@ class Fetch extends Tabs {
         lblName.style.gridArea = "2 / 7 / auto / 2";
         lblName.style.textAlign = "center";
         lblName.style.fontWeight = "600";
+        lblName.style.textDecoration = "underline";
         if (this.status) lblName.innerHTML = json.name;
         this.subContent.appendChild(lblName);
 
@@ -1055,6 +1081,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblStart);
         const lblStartValue = document.createElement("div");
         lblStartValue.style.gridArea = "4 / 5";
+        lblStartValue.style.fontWeight = "600";
         if (this.status) lblStartValue.innerHTML = json.started;
         this.subContent.appendChild(lblStartValue);
 
@@ -1064,6 +1091,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblFinish);
         const lblFinishValue = document.createElement("div");
         lblFinishValue.style.gridArea = "5 / 5";
+        lblFinishValue.style.fontWeight = "600";
         if (this.status) lblFinishValue.innerHTML = json.finished;
         this.subContent.appendChild(lblFinishValue);
 
@@ -1073,6 +1101,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblSuccess);
         const lblSuccessValue = document.createElement("div");
         lblSuccessValue.style.gridArea = "6 / 5";
+        lblSuccessValue.style.fontWeight = "600";
         if (this.status) lblSuccessValue.innerHTML = json.successful;
         this.subContent.appendChild(lblSuccessValue);
 
@@ -1082,6 +1111,7 @@ class Fetch extends Tabs {
         this.subContent.appendChild(lblUnuccess);
         const lblUnuccessValue = document.createElement("div");
         lblUnuccessValue.style.gridArea = "7 / 5";
+        lblUnuccessValue.style.fontWeight = "600";
         if (this.status) lblUnuccessValue.innerHTML = json.unsuccessful;
         this.subContent.appendChild(lblUnuccessValue);
 
@@ -1114,6 +1144,7 @@ class Fetch extends Tabs {
                         if (xhr.response == "ok") {
                             this.tabTask.style.visibility = "hidden";
                             this.tabTask.style.animation = "none";
+                            this.DeselectAllTabs();
                             this.tabsList[0].className = "v-tab-selected";
                             this.tabsList[0].onclick();
                         } else {
@@ -1138,6 +1169,7 @@ class Fetch extends Tabs {
                         if (xhr.response == "ok") {
                             this.tabTask.style.visibility = "hidden";
                             this.tabTask.style.animation = "none";
+                            this.DeselectAllTabs();
                             this.tabsList[0].className = "v-tab-selected";
                             this.tabsList[0].onclick();
                         } else {

@@ -48,6 +48,7 @@ public static class Strings {
     public static readonly ArraySegment<byte> UNR = new ArraySegment<byte>(Encoding.UTF8.GetBytes("host is unreachable"));
     public static readonly ArraySegment<byte> TCP = new ArraySegment<byte>(Encoding.UTF8.GetBytes("tcp connection failure"));
     public static readonly ArraySegment<byte> TSK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("another task is already in progress"));
+    public static readonly ArraySegment<byte> NTK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("this task no longer exists"));
 
     public static readonly ArraySegment<byte> WMI_ACC = new ArraySegment<byte>(Encoding.UTF8.GetBytes("access denied"));
     public static readonly ArraySegment<byte> WMI_PRI = new ArraySegment<byte>(Encoding.UTF8.GetBytes("insufficient privilege"));
