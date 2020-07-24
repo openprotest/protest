@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.Security.Policy;
 using System.Text;
 using System.Threading;
@@ -632,8 +633,11 @@ public static class Fetch {
             if (intFrom > intTo) return Strings.INV.Array;
 
             string[]  hosts = new string[intTo - intFrom + 1];
-            for (uint i = intFrom; i < intTo + 1 && i < UInt32.MaxValue - 1; i++)
-                hosts[i - intFrom] = i.ToString();
+            for (uint i = intFrom; i < intTo + 1 && i < UInt32.MaxValue - 1; i++) {
+                byte[] bytes = BitConverter.GetBytes(i);
+                Array.Reverse(bytes);
+                hosts[i - intFrom] = String.Join(".", bytes);
+            }
 
             return FetchEquipTask(hosts, portscan, conflictcontition, conflictaction, retries, interval , performer);
         }
@@ -671,13 +675,14 @@ public static class Fetch {
         if (!(fetchTask is null)) return Strings.TSK.Array;
         if (!(lastFetch is null)) return Strings.TSK.Array;
 
-        const int WINDOW = 32;
+        const int WINDOW = 4;
 
         Action onComplete = () => {
             fetchTask = null;
         };
 
-        Thread thread = new Thread(() => {
+        Thread thread = new Thread(async() => {
+            Console.WriteLine("start thread");
             fetchTask.status = "fetching";
             DateTime lastBroadcast = DateTime.Now;
             KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
@@ -700,41 +705,67 @@ public static class Fetch {
             Hashtable dataset = Hashtable.Synchronized(new Hashtable());
             List<string> queue = new List<string>();
             List<string> redo = new List<string>();
-            List<string> done = new List<string>();
 
-            queue.AddRange(hosts);
+            queue.AddRange(hosts);         
 
             do {
-                List<Task<Hashtable>> tasks = new List<Task<Hashtable>>();
 
-                for (int i = 0; i <  Math.Min(WINDOW, queue.Count); i++)
-                    tasks.Add(new Task<Hashtable> (()=> {
+                Console.WriteLine("retries: " + retriesCount);
 
-                        PingReply reply = null;
-                        try {
-                            reply = new System.Net.NetworkInformation.Ping().SendPingAsync(hosts[i], 1500).Result;
-                        } catch { }
+                while (queue.Count > 0) {
+                    int SIZE = Math.Min(WINDOW, queue.Count);
+                    Console.WriteLine("SIZE: " + SIZE);
 
-                        if (reply?.Status == IPStatus.Success) {
-                            return SingleFetchEquip(hosts[i]);
+                    List<Task<Hashtable>> tasks = new List<Task<Hashtable>>();
+                    for (int i = 0; i < SIZE; i++) 
+                        tasks.Add(new Task<Hashtable>(() => {
+
+                            KeepAlive.Broadcast($"{{\"action\":\"log\",\"type\":\"equip\",\"text\":\"{i}/{SIZE}\"}}");
+                            Console.WriteLine(i + ": " + queue[i]);
+
+
+                            //PingReply reply = null;
+                            //try {
+                            //    reply = new System.Net.NetworkInformation.Ping().SendPingAsync(queue[i], 1500).Result;
+                            //    if (reply.Status != IPStatus.Success)
+                            //        reply = new System.Net.NetworkInformation.Ping().SendPingAsync(queue[i], 1500).Result;
+                            //} catch { }
+
+                            //if (reply?.Status == IPStatus.Success)
+                            //    return SingleFetchEquip(queue[i], false);
+
+                            return new Hashtable(); //unreachable
+
+                        }));                    
+
+                    Console.WriteLine("start task");
+                    Hashtable[] result = await Task.WhenAll(tasks);
+                    Console.WriteLine("end task");
+
+                    for (int i = 0; i < result.Length; i++)
+                        if (result is null) { //unreachable
+                            redo.Add(queue[i]);
+                            Console.WriteLine(queue[i] + " : " + result[i].Count);
+                        } else {    
+                            Console.WriteLine(queue[i] + " : " + result[i].Count);
                         }
 
-                        return null;
-                    }));
+                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
 
-                Hashtable[] result = Task.WhenAll(tasks).Result;
+                    for (int i = 0; i < SIZE; i++) //remove the 1st [WINDOW] items
+                        queue.RemoveAt(0);
+                }
 
+                queue = redo;
 
-
-                fetchTask.status = "sleeping";
+                fetchTask.status = "idle";
                 Thread.Sleep(idle);
                 fetchTask.status = "fetching";
 
-            } while (retries < retriesCount++ && queue.Count > 0);
+            } while (retries < retriesCount++);
 
 
-
-            for (int i = 0; i < hosts.Length; i++) {
+            /*for (int i = 0; i < hosts.Length; i++) {
                 Hashtable hash = SingleFetchEquip(hosts[i]);
 
                 if (DateTime.Now.Ticks - lastBroadcast.Ticks > 600_000_000) { //after a minute(s)
@@ -745,7 +776,7 @@ public static class Fetch {
                 if (hash is null) continue;
                 fetchTask.SetStepsCompleted(i + 1);
                 dataset.Add(hosts[i], hash);
-            }
+            }*/
 
             lastFetch = new FetchResult() {
                 name = fetchTask.name,
