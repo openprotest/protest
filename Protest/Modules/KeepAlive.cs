@@ -1,4 +1,4 @@
-﻿#define KA_LOGGING
+﻿//#define KA_LOGGING
 
 using System.Linq;
 using System.Net;
@@ -62,6 +62,7 @@ public static class KeepAlive {
 
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
                     ctx.Response.Close();
+                    //TODO: ask for user login
                     return;
                 }
 
@@ -74,7 +75,6 @@ public static class KeepAlive {
                 }
 
                 string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
-
                 //TODO:
             }
 

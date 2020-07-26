@@ -7,6 +7,7 @@
     height: 22px;
     border-radius: 4px 4px 0 0;
     background: linear-gradient(rgb(96,96,96), rgb(80,80,80));
+    background-color: rgb(96,96,96);
 }
 
 .list-title-0, .list-title-1, .list-title-2, .list-title-3 {

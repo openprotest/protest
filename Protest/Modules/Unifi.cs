@@ -25,7 +25,7 @@ public static class Unifi {
         string username = ((string[])equip.hash["USERNAME"])[0];
         string password = ((string[])equip.hash["PASSWORD"])[0];
 
-        //todo:
+        //TODO:
 
         return null;
     }
@@ -45,7 +45,7 @@ public static class Unifi {
         string username = ((string[])equip.hash["USERNAME"])[0];
         string password = ((string[])equip.hash["PASSWORD"])[0];
 
-        //todo:
+        //TODO:
 
         return null;
     }

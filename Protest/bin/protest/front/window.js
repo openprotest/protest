@@ -239,6 +239,8 @@ class Window {
         if (this.isClosed) return;
         this.isClosed = true;
 
+        document.getSelection().removeAllRanges();
+
         this.win.style.transition = ANIM_DURATION/1333 + "s";
         this.win.style.opacity    = "0";
         this.win.style.transform  = "scale(.85)";
@@ -262,6 +264,8 @@ class Window {
     }
 
     Toogle() {
+        document.getSelection().removeAllRanges();
+
         this.win.style.transition = ANIM_DURATION/1000 + "s";
 
         if (this.isMaximized) {
@@ -312,6 +316,8 @@ class Window {
     }
 
     Minimize(force) {
+        document.getSelection().removeAllRanges();
+
         let isFocused = ($w.count == this.win.style.zIndex);
         this.win.style.transition = ".3s";
 
@@ -358,6 +364,8 @@ class Window {
     }
 
     Popout() {
+        document.getSelection().removeAllRanges();
+
         //close any open dialog box
         const dialog = this.win.getElementsByClassName("win-dim")[0];
         if (dialog != null) {
@@ -495,6 +503,7 @@ class Window {
                 return null;
             }
         } else {
+            document.getSelection().removeAllRanges();
             if (this.win.getElementsByClassName("win-dim")[0] != null) {
                 this.messagesQueue.push([message, okOnly]);
                 return null;
@@ -567,6 +576,7 @@ class Window {
         if (this.popoutWindow) {
             if (this.popoutWindow.document.body.getElementsByClassName("win-dim")[0] != null) return null;
         } else {
+            document.getSelection().removeAllRanges();
             if (this.win.getElementsByClassName("win-dim")[0] != null) return null;
         }
 
@@ -709,12 +719,12 @@ class Window {
 }
 
 function body_resize(event) {
+    document.getSelection().removeAllRanges();
     alignIcon(false);
 
     for (let i=0; i<$w.array.length; i++) {
         $w.array[i].AfterResize();
-        if ($w.array[i].InvalidateRecyclerList) 
-            $w.array[i].InvalidateRecyclerList();
+        if ($w.array[i].InvalidateRecyclerList) $w.array[i].InvalidateRecyclerList();
     }
 }
 

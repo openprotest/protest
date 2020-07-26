@@ -106,3 +106,63 @@
     color: var(--theme-color);
     padding-top: 8px;
 }
+
+#punchmenu {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    background-color: var(--theme-color);
+    border-radius: 45% 45% 1px 45%;
+
+    overflow: visible;
+    box-shadow: rgba(0,0,0,.6) 0 2px 4px;
+
+    background-image: url(res/logo.svg);
+    background-repeat: no-repeat;
+    background-size: 18px 18px;
+    background-position: center;
+
+    user-select: none !important;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(600px, 400px) rotate(-45deg);
+
+    transition: .2s;
+    /*transition-delay: .2s;*/
+}
+
+/*#punchmenu::after {
+    position:absolute;
+    content: "";
+   
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 6px solid var(--theme-color);
+
+    transform: rotate(45deg);
+    top: 10px;
+    left: calc(100% - 1px);
+}*/
+
+#punchmenu:active {
+    filter: brightness(.9);
+}
+
+#punchpane {
+    position: absolute;
+    background-color: var(--pane-color);
+    border: 2px solid var(--theme-color);
+    border-radius: 4px;
+    box-shadow: rgba(0,0,0,.6) 0 0 4px;
+
+    min-width: 150px;
+    min-height: 64px;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: .2s;
+}

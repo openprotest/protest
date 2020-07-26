@@ -10,6 +10,8 @@ const favicon   = document.getElementById("favicon");
 const main      = document.getElementById("main");
 const cap       = document.getElementById("cap");
 const container = document.getElementById("container");
+const punchpane = document.getElementById("punchpane");
+const punchmenu = document.getElementById("punchmenu");
 const bottombar = document.getElementById("bottombar");
 const sidemenu  = document.getElementById("sidemenu");
 const searchbox = document.getElementById("searchbox");
@@ -38,6 +40,96 @@ window.addEventListener("mousedown", () => {
 window.addEventListener("keydown", () => {
     last_activity = new Date().getTime();
 });
+
+let punch_toogle = false;
+let punch_left = 0;
+let punch_top = 0;
+
+function punch_PossitionElements(isSelected) {
+    if (isSelected) {
+        punchmenu.style.transform = `translate(${punch_left}px,${punch_top}px)`;
+        punchmenu.style.opacity = "1";
+        punchmenu.style.visibility = "visible";
+    } else {
+        punchmenu.style.transform = `translate(${punch_left}px,${punch_top}px) rotate(-45deg)`;
+        punchmenu.style.opacity = "0";
+        punchmenu.style.visibility = "hidden";
+
+        punchpane.style.opacity = "0";
+        punchpane.style.visibility = "hidden";
+    }
+
+    if (punch_toogle)
+        punchpane.style.transform = `translate(${punch_left+32}px,${punch_top+32}px)`;
+    else
+        punchpane.style.transform = `translate(${punch_left+16}px,${punch_top+32}px)`;    
+}
+
+document.onselectionchange = (event) => {
+    if (localStorage.getItem("punch_menu") != "true") return;
+
+    const s = document.getSelection();
+    let isSelected = s.anchorNode && s.anchorNode === s.focusNode && s.anchorOffset != s.focusOffset;
+
+    if (isSelected) {
+        let pos = s.getRangeAt(0).getBoundingClientRect();
+        punch_left = Math.max(pos.left - 32, 4);
+        punch_top = pos.top - 32;
+        if (punch_left < 40) punch_top = Math.max(punch_top, 56 - punch_left);
+
+    } else {
+        punch_toogle = false;
+    }
+
+    punch_PossitionElements(isSelected);
+};
+
+punchmenu.onclick = () => {
+    const s = document.getSelection();
+    let text = s.anchorNode.textContent.replace("&thinsp", "");
+    text = text.substring(s.anchorOffset, s.focusOffset).trim();
+
+    let isIp = false;
+    let isMac = false;
+    let isUrl = false;
+    let isHostname = false;
+    let isDnsname = false;
+
+    let dotSplit = text.split(".");
+    if (dotSplit.length == 4)
+        if (!isNaN(dotSplit[0]) && !isNaN(dotSplit[1]) && !isNaN(dotSplit[2]) && !isNaN(dotSplit[3]))
+            if (dotSplit[0]<256 && dotSplit[1]<256 && dotSplit[2]<256 && dotSplit[3]<256 && dotSplit[0]>-1 && dotSplit[1]>-1 && dotSplit[2]>-1 && dotSplit[3]>-1)
+                isIp = true;
+
+    let macString = text.toLowerCase();
+    while (macString.indexOf("-")>-1) macString = macString.replace("-","");
+    while (macString.indexOf(":")>-1) macString = macString.replace(":","");
+
+    if (macString.length == 12)
+        isMac = macString.match(/[0-9,a-f]/g).length == 12;
+    
+    isUrl = text.startsWith("http://") || text.startsWith("https://");
+
+    if (text.length < 20 && isNaN(text))
+        isHostname = text.match(/[0-9,a-z,A-Z,^-]/g).length == text.length;
+
+    if (text.length < 50 && isNaN(text))
+        isDnsname = text.match(/[0-9,a-z,A-Z,^-]/g).length == text.length;
+
+    console.log(`isIp:${isIp}`, `isMac:${isMac}`, `isUrl:${isUrl}`, `isHostname:${isHostname}`, `isDnsname:${isDnsname}`);
+
+    punch_toogle = !punch_toogle;
+
+    if (punch_toogle) {
+        punchpane.style.opacity = "1";
+        punchpane.style.visibility = "visible";
+    } else {
+        punchpane.style.opacity = "0";
+        punchpane.style.visibility = "hidden";
+    }
+
+    punch_PossitionElements(true);
+};
 
 //check every minute, if no action for [session_timeout] then auto-logout
 (function checkSession() {

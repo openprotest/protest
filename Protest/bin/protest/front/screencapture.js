@@ -53,6 +53,8 @@ class ScreenCapture extends Window {
         if (element.style.visibility === "hidden") return;
         if (window.getComputedStyle(element).getPropertyValue("opacity") == 0) return;
 
+        if (element.classList.contains("tool-submenu")) return;
+
         //console.log(element, element.tagName);
 
         let rect = element.getBoundingClientRect();
@@ -130,7 +132,7 @@ class ScreenCapture extends Window {
             }
         }
 
-        //TODO:
+        //TODO: clip
 
         for (let i = 0; i < element.childNodes.length; i++) 
             this.CaptureLoop(element.childNodes[i], ctx);

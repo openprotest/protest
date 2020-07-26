@@ -89,6 +89,13 @@ class Settings extends Tabs {
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
 
+        this.chkPunchMenu = document.createElement("input");
+        this.chkPunchMenu.type = "checkbox";
+        this.subContent.appendChild(this.chkPunchMenu);
+        this.AddCheckBoxLabel(this.subContent, this.chkPunchMenu, "Punch menu icon").style.fontWeight = "600";
+        this.subContent.appendChild(document.createElement("br"));
+        this.subContent.appendChild(document.createElement("br"));
+
         this.chkWinMaxxed = document.createElement("input");
         this.chkWinMaxxed.type = "checkbox";
         this.subContent.appendChild(this.chkWinMaxxed);
@@ -301,6 +308,7 @@ class Settings extends Tabs {
         }
 
         this.chkDynamicSearchIcon.checked = localStorage.getItem("dynamic_search_icon") === "true";
+        this.chkPunchMenu.checked         = localStorage.getItem("punch_menu") === "true";
         this.chkWinMaxxed.checked         = localStorage.getItem("w_always_maxed") === "true";
         this.chkHighContrast.checked      = localStorage.getItem("high_contrast") === "true";
         this.chkDisableAnime.checked      = localStorage.getItem("disable_anime") === "true";
@@ -318,6 +326,7 @@ class Settings extends Tabs {
             //document.documentElement.style.setProperty("--global-font-family", txtFontFamily.value);
 
             localStorage.setItem("dynamic_search_icon", this.chkDynamicSearchIcon.checked);
+            localStorage.setItem("punch_menu", this.chkPunchMenu.checked);
             localStorage.setItem("w_always_maxed", this.chkWinMaxxed.checked);
             localStorage.setItem("high_contrast", this.chkHighContrast.checked);
             localStorage.setItem("disable_anime", this.chkDisableAnime.checked);
@@ -328,6 +337,7 @@ class Settings extends Tabs {
 
         //btnFontFamily.onclick             = Apply;
         this.chkDynamicSearchIcon.onchange = Apply;
+        this.chkPunchMenu.onchange         = Apply;
         this.chkWinMaxxed.onchange         = Apply;
         this.chkHighContrast.onchange      = Apply;
         this.chkDisableAnime.onchange      = Apply;
