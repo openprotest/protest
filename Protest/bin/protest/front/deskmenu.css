@@ -153,13 +153,13 @@
 
 #punchpane {
     position: absolute;
-    background-color: var(--pane-color);
-    border: 2px solid var(--theme-color);
+    background-color: rgb(224,224,224);
+    /*border: 2px solid var(--theme-color);*/
     border-radius: 4px;
     box-shadow: rgba(0,0,0,.6) 0 0 4px;
 
     min-width: 150px;
-    min-height: 64px;
+    min-height: 75px;
 
     opacity: 0;
     visibility: hidden;
