@@ -255,23 +255,26 @@ class Database {
                 break;
             }
             
-            case SaveMethod.Append: { 
-            //TODO:
-                lock (entry.write_lock) {
-                    foreach (DictionaryEntry o in hash) {
+            case SaveMethod.Append: { //append only new properties
+                lock (entry.write_lock) 
+                    foreach (DictionaryEntry o in hash)
+                        if (!entry.hash.ContainsKey(o.Key)) 
+                            entry.hash.Add(o.Key, new string[] { ((string[])o.Value)[0], $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
+                
+                Write(entry, in performer); //Write uses its own lock
+                break;
+            }
+
+            case SaveMethod.Merge: { //add all fetched properties and keep old properties that doesn't conflict
+                lock (entry.write_lock) 
+                    foreach (DictionaryEntry o in hash)
                         if (entry.hash.ContainsKey(o.Key)) {
                             string[] old = (string[])entry.hash[o.Key];
                             entry.hash[o.Key] = (old[0] == ((string[])hash[o.Key])[0]) ? old : new string[] { ((string[])o.Value)[0], $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
                         } else
                             entry.hash.Add(o.Key, new string[] { ((string[])o.Value)[0], $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
-                    }
-                }
+                
                 Write(entry, in performer); //Write uses its own lock
-                break;
-            }
-
-            case SaveMethod.Merge: {
-                //TODO:
                 break;
             }
         }

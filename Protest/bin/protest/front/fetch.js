@@ -123,7 +123,7 @@ class Fetch extends Tabs {
                 let json = JSON.parse(xhr.responseText);
                 this.status = json;
 
-                if (json.status == "fetching") {
+                if (json.status == "fetching" || json.status == "idle") {
                     this.tabTask.style.visibility = "visible";
                     this.tabTask.style.animation = "slide-in .4s 1";
 
@@ -474,10 +474,10 @@ class Fetch extends Tabs {
         lblConflictContitionComment.innerHTML = "Trigger a conflict when the condition is met";
         this.subContent.appendChild(lblConflictContitionComment);
 
-        const optSmart = document.createElement("option");
+        /*const optSmart = document.createElement("option");
         optSmart.text = "Smart conflict detection";
         optSmart.value = "0";
-        txtConflictContition.appendChild(optSmart);
+        txtConflictContition.appendChild(optSmart);*/
         const optIP = document.createElement("option");
         optIP.text = "Same IP address";
         optIP.value = "1";
@@ -1019,10 +1019,10 @@ class Fetch extends Tabs {
                 if (json.status == "pending") {
                     this.ShowPending(json);
 
-                } else if (json.status == "fetching") {
+                } else if (json.status == "fetching" || json.status == "idle") {
                     lblName.innerHTML = json.name;
                     lblDateValue.innerHTML = json.started;
-                    this.lblStatusValue.innerHTML = "Fetching";
+                    this.lblStatusValue.innerHTML = json.status;
                     this.lblProgressValue.innerHTML = `${json.completed}/${json.total}`;
                     this.lblEtcValue.innerHTML = json.etc;
                     this.divProgress.style.width = `${(100 * json.completed) / json.total}%`;

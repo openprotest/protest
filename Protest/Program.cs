@@ -26,6 +26,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 
 class Program {
     public static string DB_KEY;
@@ -64,8 +65,10 @@ class Program {
         else SelfElevate();
 
         Console.WriteLine();
-        
-        Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", LoadConfig() ? "Done" : "Failed"));
+
+        bool loadConfig = LoadConfig();
+        Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "Done" : "Failed"));
+        if (!loadConfig) CreateConfig();
 
         ExtractZippedKnowlageFile();
 
@@ -74,7 +77,7 @@ class Program {
 
         StartServices();
 
-        Console.ResetColor();       
+        Console.ResetColor();
 
 #if DEBUG
         Thread.Sleep(1000);
@@ -168,13 +171,13 @@ class Program {
                 case "db_key":
                     DB_KEY = split[1];
                     DB_KEY_A = DB_KEY.Length > 0 ? CryptoAes.KeyToBytes(DB_KEY, 32) : null; //256-bits
-                    DB_KEY_B = CryptoAes.KeyToBytes(DB_KEY, 16); //128-bits
+                    DB_KEY_B = DB_KEY.Length > 0 ? CryptoAes.KeyToBytes(DB_KEY, 16) : null; //128-bits
                     break;
 
                 case "preshared_key":
                     PRESHARED_KEY = split[1];
                     PRESHARED_KEY_A = PRESHARED_KEY.Length > 0 ? CryptoAes.KeyToBytes(PRESHARED_KEY, 32) : null; //256-bits
-                    PRESHARED_KEY_B = CryptoAes.KeyToBytes(PRESHARED_KEY, 16); //128-bits
+                    PRESHARED_KEY_B = PRESHARED_KEY.Length > 0 ? CryptoAes.KeyToBytes(PRESHARED_KEY, 16) : null; //128-bits
                     break;
 
                 case "force_registry_keys":
@@ -213,6 +216,54 @@ class Program {
 
         fileReader.Close();
         return true;
+    }
+
+    private static void CreateConfig() {
+        Console.WriteLine(" - Creating default conficuration file");
+
+        StringBuilder sb = new StringBuilder();
+
+        if (DB_KEY is null || DB_KEY.Length > 0) {
+            Console.WriteLine(" - Generate DB_KEY");
+            DB_KEY = CryptoAes.GenerateHexString(32);
+            DB_KEY_A = CryptoAes.KeyToBytes(DB_KEY, 32); //256-bits
+            DB_KEY_B = CryptoAes.KeyToBytes(DB_KEY, 16) ; //128-bits
+        }
+
+        if (PRESHARED_KEY is null || PRESHARED_KEY.Length > 0) {
+            Console.WriteLine(" - Generate PRESHARED_KEY");
+            PRESHARED_KEY = CryptoAes.GenerateHexString(32);
+            PRESHARED_KEY_A = CryptoAes.KeyToBytes(PRESHARED_KEY, 32); //256-bits
+            PRESHARED_KEY_B = CryptoAes.KeyToBytes(PRESHARED_KEY, 16); //128-bits
+        }
+
+        sb.AppendLine("#version 4.0");
+        sb.AppendLine();
+
+        sb.AppendLine($"db_key        = {DB_KEY}");
+        sb.AppendLine($"preshared_key = {PRESHARED_KEY}");
+        sb.AppendLine();
+
+        sb.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
+        sb.AppendLine();
+
+        sb.AppendLine();
+        sb.AppendLine("ip_access = *");
+        sb.AppendLine("user_access = administrator");
+
+        sb.AppendLine();
+        sb.AppendLine("http_enable = true");
+        sb.AppendLine($"http_ip     = {http_ip}");
+        sb.AppendLine($"http_port   = {http_port}");
+
+        sb.AppendLine();
+        sb.AppendLine("addressbook_enable = false");
+        sb.AppendLine("addressbook_ip     = *");
+        sb.AppendLine("addressbook_port   = 911");
+
+        sb.AppendLine();
+
+        File.WriteAllText(Strings.FILE_CONFIG, sb.ToString());
     }
 
     private static void StartServices() {

@@ -115,7 +115,7 @@ class HttpMainListener : Http {
             ctx.Response.ContentType = "text/plain";
             ctx.Response.AddHeader("Cache-Control", "no-store");
 
-            performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value ?? "");
+            performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value ?? string.Empty);
 
             switch (para[0]) {
                 case "a":

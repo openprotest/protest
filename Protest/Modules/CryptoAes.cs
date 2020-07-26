@@ -8,6 +8,13 @@ public static class CryptoAes {
     private const string SALT = "3pVDs55EbUDHL48qMm4oY13uUw69RQoH"; //you can change this value on your implementation
     private const string PEPPER = "sEhH5EG2sw958Q98";
 
+    public static string GenerateHexString(int len) {
+        Random rnd = new Random((int)DateTime.Now.Ticks);
+        byte[] bytes = new byte[len];
+        rnd.NextBytes(bytes);
+        return BitConverter.ToString(bytes).Replace("-", string.Empty);
+    }
+
     public static byte[] KeyToBytes(string key, byte length) {
         using (SHA512 sha = SHA512.Create()) {
             byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes($"{SALT}{key}{PEPPER}{length}"));
@@ -50,7 +57,7 @@ public static class CryptoAes {
 
 
     public static string EncryptB64(string text, byte[] key, byte[] iv) {
-        if (text.Length == 0) return "";
+        if (text.Length == 0) return string.Empty;
 
         byte[] bytes = Encoding.UTF8.GetBytes(text);
         byte[] cipher = Encrypt(bytes, key, iv);
@@ -58,11 +65,11 @@ public static class CryptoAes {
     }
 
     public static string DecryptB64(string encodedText, byte[] key, byte[] iv) {
-        if (encodedText.Length == 0) return "";
+        if (encodedText.Length == 0) return string.Empty;
 
         byte[] bytes = Convert.FromBase64String(encodedText);
         byte[] plain = Decrypt(bytes, key, iv);
-        if (plain is null || plain.Length == 0) return "";
+        if (plain is null || plain.Length == 0) return string.Empty;
         return Encoding.UTF8.GetString(plain);
     }
 

@@ -233,7 +233,7 @@ function KeepAlive_MessageHandler(msg) {
             for (let i = 0; i < $w.array.length; i++) { //for each equip list
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "visible";
-                $w.array[i].lblStatusValue.innerHTML = "Fetching";
+                $w.array[i].lblStatusValue.innerHTML = msg.task.status;
                 $w.array[i].lblProgressValue.innerHTML = `${msg.task.completed}/${msg.task.total}`;
                 $w.array[i].lblEtcValue.innerHTML = msg.task.etc;
                 $w.array[i].divProgress.style.width = `${(100 * msg.task.completed) / msg.task.total}%`;
