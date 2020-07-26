@@ -44,7 +44,6 @@ document.body.onbeforeunload = () => {
 
 document.body.onunload = () => {
     StoreSession();
-
     for (let i = 0; i < $w.array.length; i++)
         if ($w.array[i].popoutWindow)
             $w.array[i].popoutWindow.close();

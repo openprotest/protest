@@ -62,7 +62,7 @@ function punch_PossitionElements(isSelected) {
     if (punch_toogle)
         punchpane.style.transform = `translate(${punch_left+32}px,${punch_top+32}px)`;
     else
-        punchpane.style.transform = `translate(${punch_left+16}px,${punch_top+32}px)`;    
+        punchpane.style.transform = `translate(${punch_left+8}px,${punch_top+8}px)`;    
 }
 
 document.onselectionchange = (event) => {
