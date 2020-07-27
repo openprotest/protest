@@ -59,17 +59,31 @@ function punch_PossitionElements(isSelected) {
         punchpane.style.visibility = "hidden";
     }
 
-    if (punch_toogle)
-        punchpane.style.transform = `translate(${punch_left+32}px,${punch_top+32}px)`;
-    else
-        punchpane.style.transform = `translate(${punch_left+8}px,${punch_top+8}px)`;    
+    if (punch_toogle) {
+        punchmenu.style.borderRadius = "45% 2px 2px 45%";
+        punchpane.style.transform = `translate(${punch_left + 32}px,${punch_top}px)`;
+    } else {
+        punchmenu.style.borderRadius = "45% 45% 1px 45%";
+        punchpane.style.transform = `translate(${punch_left + 16}px,${punch_top}px)`;
+    }
+}
+
+function punch_CreateIcon(icon, label, punchpane) {
+    const div = document.createElement("div");
+    div.style.backgroundImage = `url(${icon})`;
+    div.setAttribute("tip", label);
+    punchpane.appendChild(div);
+
+    return div;
 }
 
 document.onselectionchange = (event) => {
     if (localStorage.getItem("punch_menu") != "true") return;
 
     const s = document.getSelection();
-    let isSelected = s.anchorNode && s.anchorNode === s.focusNode && s.anchorOffset != s.focusOffset;
+    let offsetMin = Math.min(s.anchorOffset, s.focusOffset);
+    let offsetMax = Math.max(s.anchorOffset, s.focusOffset);
+    let isSelected = s.anchorNode && s.anchorNode === s.focusNode && offsetMax - offsetMin > 0;
 
     if (isSelected) {
         let pos = s.getRangeAt(0).getBoundingClientRect();
@@ -89,11 +103,19 @@ punchmenu.onclick = () => {
     let text = s.anchorNode.textContent.replace("&thinsp", "");
     text = text.substring(s.anchorOffset, s.focusOffset).trim();
 
+    let isEmail = false;
+    let isPhone = false;
     let isIp = false;
     let isMac = false;
     let isUrl = false;
     let isHostname = false;
     let isDnsname = false;
+
+    if (text.length > 1 && !isIp)
+        isPhone = text.match(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s/0-9]*$/g) != null;
+
+    if (text.length > 1)
+        isEmail = text.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) != null;
 
     let dotSplit = text.split(".");
     if (dotSplit.length == 4)
@@ -110,23 +132,75 @@ punchmenu.onclick = () => {
     
     isUrl = text.startsWith("http://") || text.startsWith("https://");
 
-    if (text.length < 20 && isNaN(text))
-        isHostname = text.match(/[0-9,a-z,A-Z,^-]/g).length == text.length;
+    if (text.length > 1 && text.length < 63 && isNaN(text) && !isPhone)
+        isHostname = text.match(/[0-9,A-Z,^-]/g).length == text.length;
 
-    if (text.length < 50 && isNaN(text))
-        isDnsname = text.match(/[0-9,a-z,A-Z,^-]/g).length == text.length;
-
-    console.log(`isIp:${isIp}`, `isMac:${isMac}`, `isUrl:${isUrl}`, `isHostname:${isHostname}`, `isDnsname:${isDnsname}`);
+    if (!isIp && text.length > 1 && text.indexOf(".") > -1) {
+        split = text.split(".");
+        for (let i = 0; i < split.length; i++)
+            if (isNaN(split[i])) {
+                isDnsname = text.match(/[0-9,a-z,A-Z,^.-]/g).length == text.length;
+                break;
+            }
+    }
 
     punch_toogle = !punch_toogle;
+
+    let iconCount = 0;
+    punchpane.innerHTML = "";
 
     if (punch_toogle) {
         punchpane.style.opacity = "1";
         punchpane.style.visibility = "visible";
+
+        if (isHostname || isDnsname) {
+            const dns = punch_CreateIcon("res/dns.svgz", "DNS lookup", punchpane);
+            dns.style.left = `${1 + iconCount++ * 28}px`;
+        }
+
+        if (isIp || isHostname || isDnsname) {
+            const ping = punch_CreateIcon("res/ping.svgz", "Ping", punchpane);
+            ping.style.left = `${1 + iconCount++ * 28}px`;
+
+            const traceroute = punch_CreateIcon("res/traceroute.svgz", "Trace route", punchpane);
+            traceroute.style.left = `${1 + iconCount++ * 28}px`;
+
+            const locate = punch_CreateIcon("res/locate.svgz", "Locate IP", punchpane);
+            locate.style.left = `${1 + iconCount++ * 28}px`;
+
+            //const portscan = punch_CreateIcon("res/portscan.svgz", "Port scan", punchpane);
+            //portscan.style.left = `${1 + iconCount++ * 28}px`;
+        }
+
+        if (isMac) {
+            const mac = punch_CreateIcon("res/maclookup.svgz", "MAC lookup", punchpane);
+            mac.style.left = `${1 + iconCount++ * 28}px`;
+        }
+
+        if (isUrl) {
+            const webcheck = punch_CreateIcon("res/websitecheck.svgz", "Website check", punchpane);
+            webcheck.style.left = `${1 + iconCount++ * 28}px`;
+        }
+
+        if (isEmail) {
+            const email = punch_CreateIcon("res/email.svgz", "E-mail", punchpane);
+            email.style.left = `${1 + iconCount++ * 28}px`;
+        }
+
+        if (isPhone) {
+            const phone = punch_CreateIcon("res/phone.svgz", "Call", punchpane);
+            phone.style.left = `${1 + iconCount++ * 28}px`;
+        }
+
     } else {
         punchpane.style.opacity = "0";
         punchpane.style.visibility = "hidden";
     }
+
+    const search = punch_CreateIcon("res/search.svgz", "Search", punchpane);
+    search.style.left = `${1 + iconCount++ * 28}px`;
+
+    punchpane.style.width = `${iconCount * 28}px`;
 
     punch_PossitionElements(true);
 };

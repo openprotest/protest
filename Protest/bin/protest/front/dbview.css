@@ -133,8 +133,8 @@
 }
 
 .db-property:active {
-    transition-delay: .25s;
-    background-color: var(--select-color);
+    transition-delay: .2s;
+    background-color: var(--highlight-color) !important;
 }
 
 .db-property > div {

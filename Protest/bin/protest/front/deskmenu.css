@@ -153,16 +153,38 @@
 
 #punchpane {
     position: absolute;
-    background-color: rgb(224,224,224);
-    /*border: 2px solid var(--theme-color);*/
-    border-radius: 4px;
-    box-shadow: rgba(0,0,0,.6) 0 0 4px;
+    background-color: var(--theme-color);
+    border-radius: 2px;
+    box-shadow: rgba(0,0,0,.6) 0 2px 4px;
 
-    min-width: 150px;
-    min-height: 75px;
+    min-width: 28px;
+    min-height: 28px;
 
     opacity: 0;
     visibility: hidden;
 
     transition: .2s;
+}
+
+#punchpane > div {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    top: 1px;
+ 
+    border-radius: 2px;
+    background-image: url(res/logo.svg);
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    background-position: center;
+
+    transition: .2s;
+}
+
+#punchpane > div:hover {
+    background-color: rgba(32,32,32,.15);
+}
+
+#punchpane > div:active {
+    background-color: rgba(32,32,32,.2);
 }
