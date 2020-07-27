@@ -253,22 +253,27 @@ document.onselectionchange = (event) => {
     let isSelected = s.anchorNode && s.anchorNode === s.focusNode && offsetMax - offsetMin > 0;
 
     if (isSelected) {
-        let pos = s.getRangeAt(0).getBoundingClientRect();
-        punch_left = Math.max(pos.left - 32, 4);
-        punch_top = pos.top - 32;
-        if (punch_left < 40) punch_top = Math.max(punch_top, 56 - punch_left);
-
         let text;
         if (s.anchorNode != s.focusNode)
             text = s.anchorNode.textContent;
         else
             text = s.anchorNode.textContent.substring(s.anchorOffset, s.focusOffset).trim();
 
+        if (text.length > 64 || text.length == 0) {
+            console.log(text.length);
+            punch_toogle = false;
+            punch_PositionElements(false);
+            return;
+        } 
+
+        let pos = s.getRangeAt(0).getBoundingClientRect();
+        punch_left = Math.max(pos.left - 32, 4);
+        punch_top = pos.top - 32;
+        if (punch_left < 40) punch_top = Math.max(punch_top, 56 - punch_left);
+
         punchpane.innerHTML = "";
-        if (text.length < 100) {
-            const type = punch_GetType(text);
-            punchpane.style.width = `${type.count * 28}px`;
-        }
+        const type = punch_GetType(text);
+        punchpane.style.width = `${type.count * 28}px`;
     } 
 
     punch_toogle = false;
