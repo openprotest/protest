@@ -529,7 +529,6 @@
     <Content Include="bin\protest\front\res\newentry.svg" />
     <Content Include="bin\protest\front\res\new_equip.svg" />
     <Content Include="bin\protest\front\res\new_user.svg" />
-    <Content Include="bin\protest\front\res\noconn.svg" />
     <Content Include="bin\protest\front\res\os.svg" />
     <Content Include="bin\protest\front\res\other.svg" />
     <Content Include="bin\protest\front\res\passgen.svg" />
