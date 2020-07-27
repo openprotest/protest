@@ -45,7 +45,7 @@ let punch_toogle = false;
 let punch_left = 0;
 let punch_top = 0;
 
-function punch_PossitionElements(isSelected) {
+function punch_PositionElements(isSelected) {
     if (isSelected) {
         punchmenu.style.transform = `translate(${punch_left}px,${punch_top}px)`;
         punchmenu.style.opacity = "1";
@@ -65,6 +65,8 @@ function punch_PossitionElements(isSelected) {
     } else {
         punchmenu.style.borderRadius = "45% 45% 1px 45%";
         punchpane.style.transform = `translate(${punch_left + 16}px,${punch_top}px)`;
+        punchpane.style.opacity = "0";
+        punchpane.style.visibility = "hidden";
     }
 }
 
@@ -75,6 +77,163 @@ function punch_CreateIcon(icon, label, punchpane) {
     punchpane.appendChild(div);
 
     return div;
+}
+
+function punch_GetType(text) {
+    let isEmail = false;
+    let isPhone = false;
+    let isIp = false;
+    let isMac = false;
+    let isUrl = false;
+    let isHostname = false;
+    let isDnsname = false;
+    let count = 0;
+
+    if (text.length > 1 && !isIp)
+        isPhone = text.match(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s/0-9]*$/g) != null;
+
+    if (text.length > 1)
+        isEmail = text.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) != null;
+
+    let dotSplit = text.split(".");
+    if (dotSplit.length == 4 && dotSplit.every(o => o.length > 0))
+        if (!isNaN(dotSplit[0]) && !isNaN(dotSplit[1]) && !isNaN(dotSplit[2]) && !isNaN(dotSplit[3]))
+            if (dotSplit[0] < 256 && dotSplit[1] < 256 && dotSplit[2] < 256 && dotSplit[3] < 256 && dotSplit[0] > -1 && dotSplit[1] > -1 && dotSplit[2] > -1 && dotSplit[3] > -1)
+                isIp = true;
+
+    let macString = text.toLowerCase();
+    while (macString.indexOf("-") > -1) macString = macString.replace("-", "");
+    while (macString.indexOf(":") > -1) macString = macString.replace(":", "");
+
+    if (macString.length == 12)
+        isMac = macString.match(/[0-9,a-f]/g).length == 12;
+
+    isUrl = text.startsWith("http://") || text.startsWith("https://");
+
+    if (text.length > 1 && text.length < 63 && isNaN(text) && !isPhone) {
+        let match = text.match(/[0-9,A-Z,^-]/g);
+        if (match != null)
+            isHostname = match.length == text.length;
+    }
+
+    if (!isIp && text.length > 1 && text.indexOf(".") > -1) {
+        split = text.split(".");
+        for (let i = 0; i < split.length; i++)
+            if (isNaN(split[i])) {
+                isDnsname = text.match(/[0-9,a-z,A-Z,^.-]/g).length == text.length;
+                break;
+            }
+    }
+
+
+    if (isHostname || isDnsname) {
+        const dns = punch_CreateIcon("res/dns.svgz", "DNS lookup", punchpane);
+        dns.style.left = `${1 + count++ * 28}px`;
+
+        dns.onclick = () => { };
+    }
+
+    if (isIp || isHostname || isDnsname) {
+        const ping = punch_CreateIcon("res/ping.svgz", "Ping", punchpane);
+        ping.style.left = `${1 + count++ * 28}px`;
+
+        const traceroute = punch_CreateIcon("res/traceroute.svgz", "Trace route", punchpane);
+        traceroute.style.left = `${1 + count++ * 28}px`;
+
+        const locate = punch_CreateIcon("res/locate.svgz", "Locate IP", punchpane);
+        locate.style.left = `${1 + count++ * 28}px`;
+
+        //const portscan = punch_CreateIcon("res/portscan.svgz", "Port scan", punchpane);
+        //portscan.style.left = `${1 + iconCount++ * 28}px`;
+
+        ping.onclick = () => {
+            let win = $w.array.find(o => o instanceof Ping);
+            if (win) {
+                win.Filter(text);
+                win.BringToFront();
+            } else {
+                new Ping().Filter(text);
+            }
+        };
+
+        traceroute.onclick = () => {
+            let win = $w.array.find(o => o instanceof TraceRoute);
+            if (win) {
+                win.Filter(text);
+                win.BringToFront();
+            } else {
+                new TraceRoute().Filter(text);
+            }
+        };
+
+        locate.onclick = () => {
+            let win = $w.array.find(o => o instanceof LocateIp);
+            if (win) {
+                win.Filter(text);
+                win.BringToFront();
+            } else {
+                new LocateIp().Filter(text);
+            }
+        };
+    }
+
+    if (isMac) {
+        const mac = punch_CreateIcon("res/maclookup.svgz", "MAC lookup", punchpane);
+        mac.style.left = `${1 + count++ * 28}px`;
+        mac.onclick = () => {
+            let win = $w.array.find(o => o instanceof MacLookup);
+            if (win) {
+                win.Filter(text);
+                win.BringToFront();
+            } else {
+                new MacLookup().Filter(text);
+            }
+        };
+    }
+
+    if (isUrl) {
+        const webcheck = punch_CreateIcon("res/websitecheck.svgz", "Website check", punchpane);
+        webcheck.style.left = `${1 + count++ * 28}px`;
+        webcheck.onclick = () => {
+            new WebCheck({"value":text});
+        };
+    }
+
+    if (isEmail) {
+        const email = punch_CreateIcon("res/email.svgz", "E-mail", punchpane);
+        email.style.left = `${1 + count++ * 28}px`;
+        email.onclick = () => {
+            window.location.href = `mailto:${text}`;
+        };
+    }
+
+    if (isPhone) {
+        const phone = punch_CreateIcon("res/phone.svgz", "Call", punchpane);
+        phone.style.left = `${1 + count++ * 28}px`;
+        phone.onclick = () => {
+            window.location.href = `tel:${text}`;
+        };
+    }
+
+    const search = punch_CreateIcon("res/search.svgz", "Search", punchpane);
+    search.style.left = `${1 + count++ * 28}px`;
+
+    search.onclick = () => {
+        txtSearch.value = text;
+        SideMenu_Open();
+        SideMenu_Update(text);
+    };
+
+    return {
+        isEmail    : isEmail,
+        isPhone    : isPhone,
+        isIp       : isIp,
+        isMac      : isMac,
+        isUrl      : isUrl,
+        isHostname : isHostname,
+        isDnsname  : isDnsname,
+        count      : count
+    };
 }
 
 document.onselectionchange = (event) => {
@@ -91,118 +250,40 @@ document.onselectionchange = (event) => {
         punch_top = pos.top - 32;
         if (punch_left < 40) punch_top = Math.max(punch_top, 56 - punch_left);
 
-    } else {
-        punch_toogle = false;
-    }
+        let text;
+        if (s.anchorNode != s.focusNode)
+            text = s.anchorNode.textContent;
+        else
+            text = s.anchorNode.textContent.substring(s.anchorOffset, s.focusOffset).trim();
 
-    punch_PossitionElements(isSelected);
+        punchpane.innerHTML = "";
+        if (text.length < 100) {
+            const type = punch_GetType(text);
+            punchpane.style.width = `${type.count * 28}px`;
+        }
+    } 
+
+    punch_toogle = false;
+    punch_PositionElements(isSelected);
 };
 
 punchmenu.onclick = () => {
-    const s = document.getSelection();
-    let text = s.anchorNode.textContent.replace("&thinsp", "");
-    text = text.substring(s.anchorOffset, s.focusOffset).trim();
-
-    let isEmail = false;
-    let isPhone = false;
-    let isIp = false;
-    let isMac = false;
-    let isUrl = false;
-    let isHostname = false;
-    let isDnsname = false;
-
-    if (text.length > 1 && !isIp)
-        isPhone = text.match(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s/0-9]*$/g) != null;
-
-    if (text.length > 1)
-        isEmail = text.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) != null;
-
-    let dotSplit = text.split(".");
-    if (dotSplit.length == 4)
-        if (!isNaN(dotSplit[0]) && !isNaN(dotSplit[1]) && !isNaN(dotSplit[2]) && !isNaN(dotSplit[3]))
-            if (dotSplit[0]<256 && dotSplit[1]<256 && dotSplit[2]<256 && dotSplit[3]<256 && dotSplit[0]>-1 && dotSplit[1]>-1 && dotSplit[2]>-1 && dotSplit[3]>-1)
-                isIp = true;
-
-    let macString = text.toLowerCase();
-    while (macString.indexOf("-")>-1) macString = macString.replace("-","");
-    while (macString.indexOf(":")>-1) macString = macString.replace(":","");
-
-    if (macString.length == 12)
-        isMac = macString.match(/[0-9,a-f]/g).length == 12;
-    
-    isUrl = text.startsWith("http://") || text.startsWith("https://");
-
-    if (text.length > 1 && text.length < 63 && isNaN(text) && !isPhone)
-        isHostname = text.match(/[0-9,A-Z,^-]/g).length == text.length;
-
-    if (!isIp && text.length > 1 && text.indexOf(".") > -1) {
-        split = text.split(".");
-        for (let i = 0; i < split.length; i++)
-            if (isNaN(split[i])) {
-                isDnsname = text.match(/[0-9,a-z,A-Z,^.-]/g).length == text.length;
-                break;
-            }
-    }
-
     punch_toogle = !punch_toogle;
-
-    let iconCount = 0;
-    punchpane.innerHTML = "";
-
+    
     if (punch_toogle) {
         punchpane.style.opacity = "1";
         punchpane.style.visibility = "visible";
-
-        if (isHostname || isDnsname) {
-            const dns = punch_CreateIcon("res/dns.svgz", "DNS lookup", punchpane);
-            dns.style.left = `${1 + iconCount++ * 28}px`;
-        }
-
-        if (isIp || isHostname || isDnsname) {
-            const ping = punch_CreateIcon("res/ping.svgz", "Ping", punchpane);
-            ping.style.left = `${1 + iconCount++ * 28}px`;
-
-            const traceroute = punch_CreateIcon("res/traceroute.svgz", "Trace route", punchpane);
-            traceroute.style.left = `${1 + iconCount++ * 28}px`;
-
-            const locate = punch_CreateIcon("res/locate.svgz", "Locate IP", punchpane);
-            locate.style.left = `${1 + iconCount++ * 28}px`;
-
-            //const portscan = punch_CreateIcon("res/portscan.svgz", "Port scan", punchpane);
-            //portscan.style.left = `${1 + iconCount++ * 28}px`;
-        }
-
-        if (isMac) {
-            const mac = punch_CreateIcon("res/maclookup.svgz", "MAC lookup", punchpane);
-            mac.style.left = `${1 + iconCount++ * 28}px`;
-        }
-
-        if (isUrl) {
-            const webcheck = punch_CreateIcon("res/websitecheck.svgz", "Website check", punchpane);
-            webcheck.style.left = `${1 + iconCount++ * 28}px`;
-        }
-
-        if (isEmail) {
-            const email = punch_CreateIcon("res/email.svgz", "E-mail", punchpane);
-            email.style.left = `${1 + iconCount++ * 28}px`;
-        }
-
-        if (isPhone) {
-            const phone = punch_CreateIcon("res/phone.svgz", "Call", punchpane);
-            phone.style.left = `${1 + iconCount++ * 28}px`;
-        }
 
     } else {
         punchpane.style.opacity = "0";
         punchpane.style.visibility = "hidden";
     }
 
-    const search = punch_CreateIcon("res/search.svgz", "Search", punchpane);
-    search.style.left = `${1 + iconCount++ * 28}px`;
+    punch_PositionElements(true);
+};
 
-    punchpane.style.width = `${iconCount * 28}px`;
-
-    punch_PossitionElements(true);
+punchpane.onclick = () => {
+    //punch_PositionElements(false);
 };
 
 //check every minute, if no action for [session_timeout] then auto-logout

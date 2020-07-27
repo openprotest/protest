@@ -182,7 +182,7 @@
 }
 
 #punchpane > div:hover {
-    background-color: rgba(32,32,32,.15);
+    background-color: rgba(32,32,32,.1);
 }
 
 #punchpane > div:active {

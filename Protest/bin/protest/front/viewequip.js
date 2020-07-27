@@ -754,7 +754,7 @@ class Equip extends Window {
             for (let i = 0; i < values.length; i++) {
                 if (values[i].trim().length == 0) continue;
                 const subvalue = document.createElement("div");
-                subvalue.innerHTML = values[i] + "&thinsp;";;
+                subvalue.innerHTML = values[i] + "&thinsp;";
                 value.appendChild(subvalue);
             }
 
@@ -790,7 +790,11 @@ class Equip extends Window {
 
         } else {
             const value = document.createElement("div");
-            value.innerHTML = v;
+
+            const subvalue = document.createElement("div");
+            subvalue.innerHTML = `${v}&nbsp;`;
+            value.appendChild(subvalue);
+
             newProperty.appendChild(value);
         }
 
