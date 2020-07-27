@@ -466,6 +466,8 @@ class Window {
     }
 
     BringToFront() {
+        document.getSelection().removeAllRanges();
+
         for (let i=0; i<$w.array.length; i++) {
             $w.array[i].task.style.top = "2px";
             $w.array[i].task.style.borderRadius = "12.5%";

@@ -130,7 +130,15 @@ function punch_GetType(text) {
         const dns = punch_CreateIcon("res/dns.svgz", "DNS lookup", punchpane);
         dns.style.left = `${1 + count++ * 28}px`;
 
-        dns.onclick = () => { };
+        dns.onclick = () => {
+            let win = $w.array.find(o => o instanceof DnsLookup);
+            if (win) {
+                win.Filter(text);
+                win.BringToFront();
+            } else {
+                new DnsLookup().Filter(text);
+            }
+        };
     }
 
     if (isIp || isHostname || isDnsname) {
