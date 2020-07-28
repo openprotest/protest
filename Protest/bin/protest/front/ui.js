@@ -104,7 +104,6 @@ function punch_GetType(text) {
     let macString = text.toLowerCase();
     while (macString.indexOf("-") > -1) macString = macString.replace("-", "");
     while (macString.indexOf(":") > -1) macString = macString.replace(":", "");
-
     if (macString.length == 12)
         isMac = macString.match(/[0-9,a-f]/g).length == 12;
 
@@ -250,23 +249,25 @@ document.onselectionchange = (event) => {
     const s = document.getSelection();
     let offsetMin = Math.min(s.anchorOffset, s.focusOffset);
     let offsetMax = Math.max(s.anchorOffset, s.focusOffset);
-    let isSelected = s.anchorNode && s.anchorNode === s.focusNode && offsetMax - offsetMin > 0;
+    let isSelected = s.anchorNode && offsetMax - offsetMin > 0; //&& s.anchorNode === s.focusNode
 
     if (isSelected) {
-        let text;
-        if (s.anchorNode != s.focusNode)
-            text = s.anchorNode.textContent;
-        else
+        let text, pos;
+        if (s.anchorNode === s.focusNode && (s.anchorOffset != 0 && s.focusOffset != 1) ) {
             text = s.anchorNode.textContent.substring(s.anchorOffset, s.focusOffset).trim();
+            pos = s.getRangeAt(0).getBoundingClientRect();
+        } else {
+            text = s.anchorNode.textContent.trim();
+            pos = s.anchorNode.parentNode.getBoundingClientRect();
+        }
+
 
         if (text.length > 64 || text.length == 0) {
-            console.log(text.length);
             punch_toogle = false;
             punch_PositionElements(false);
             return;
-        } 
-
-        let pos = s.getRangeAt(0).getBoundingClientRect();
+        }
+        
         punch_left = Math.max(pos.left - 32, 4);
         punch_top = pos.top - 32;
         if (punch_left < 40) punch_top = Math.max(punch_top, 56 - punch_left);
@@ -293,10 +294,6 @@ punchmenu.onclick = () => {
     }
 
     punch_PositionElements(true);
-};
-
-punchpane.onclick = () => {
-    //punch_PositionElements(false);
 };
 
 //check every minute, if no action for [session_timeout] then auto-logout

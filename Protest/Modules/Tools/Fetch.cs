@@ -563,10 +563,10 @@ public static class Fetch {
         });
 
         Thread tPortscan = new Thread(async()=> {
-            /*bool[] ports = await PortScan.PortsScanAsync(host, PortScan.basic_ports);
+            bool[] ports = await PortScan.PortsScanAsync(host, PortScan.basic_ports);
 
             for (int i = 0; i< PortScan.basic_ports.Length; i++)
-                if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";*/
+                if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";
 
             if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);
         });
