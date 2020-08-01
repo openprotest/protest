@@ -55,7 +55,7 @@ class NtpClient extends Window {
         this.btnSend.style.borderRadius = "4px";
         box.appendChild(this.btnSend);
         
-        this.btnSend.onclick = () => this.Request(new Date().getTime());
+        this.btnSend.onclick = () => this.Request(Date.now());
 
         this.txtServer.onkeydown = event => {
             if (event.keyCode == 13) this.btnSend.onclick();
@@ -75,7 +75,7 @@ class NtpClient extends Window {
                     return;
                 }
 
-                let timestamp = new Date().getTime();
+                let timestamp = Date.now();
                 let json = JSON.parse(xhr.responseText);
 
                 if (json.local && json.transmit) {

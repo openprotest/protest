@@ -101,11 +101,11 @@ container.onclick = event => {
 
 document.body.onkeyup = event => {
     if (event.code == "ShiftLeft") {
-        if (new Date().getTime() - sidemenu_lastShiftPress < 500) {
+        if (Date.now() - sidemenu_lastShiftPress < 500) {
             sidemenu_lastShiftPress = 0;
             Toogle();
         } else {
-            sidemenu_lastShiftPress = new Date().getTime();
+            sidemenu_lastShiftPress = Date.now();
         }
     } else
         sidemenu_lastShiftPress = 0;

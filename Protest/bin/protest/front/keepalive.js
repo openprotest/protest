@@ -17,12 +17,12 @@ function initKeepAlive() {
 
     this.ws.onclose = () => {
         setTimeout(() => {
-            if (new Date().getTime() - KeepAlive_autoreconnectTimeStamp < 1000 * 15) { //15s
+            if (Date.now() - KeepAlive_autoreconnectTimeStamp < 1000 * 15) { //15s
                 KeepAlive_DisconnectNotif();
                 main.style.filter = "grayscale(.8)";
                 bottombar.style.filter = "grayscale(.8)";
             } else {
-                KeepAlive_autoreconnectTimeStamp = new Date().getTime();
+                KeepAlive_autoreconnectTimeStamp = Date.now();
                 initKeepAlive();
             }
         }, 1000);

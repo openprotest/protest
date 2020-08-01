@@ -31,14 +31,14 @@ const date_day   = document.getElementById("date_day");
 main.style.transition = "filter 1s";
 main.style.filter = "none";
 
-let last_activity = new Date().getTime();
+let last_activity = Date.now();
 
 window.addEventListener("mousedown", () => {
-    last_activity = new Date().getTime();
+    last_activity = Date.now();
 });
 
 window.addEventListener("keydown", () => {
-    last_activity = new Date().getTime();
+    last_activity = Date.now();
 });
 
 let punch_toogle = false;
@@ -302,7 +302,7 @@ punchmenu.onclick = () => {
         let timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity};
         let index = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
 
-        if ((new Date().getTime() - last_activity) > 60 * 1000 * timeMapping[index]) {
+        if ((Date.now() - last_activity) > 60 * 1000 * timeMapping[index]) {
             let xhr = new XMLHttpRequest(); //logout
             xhr.onreadystatechange = () => { location.reload(); };
             xhr.open("GET", "logout", true);
@@ -326,7 +326,6 @@ punchmenu.onclick = () => {
 })();
 
 (function updateClock() {
-    const S = 96;
     let now = new Date();
     let m = now.getMinutes();
     let h = (now.getHours() % 12) + m / 60;

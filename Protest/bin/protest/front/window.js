@@ -686,7 +686,7 @@ class Window {
     }
 
     AddCheckBoxLabel(parent, checkbox, label) {
-        let id = new Date().getTime() + Math.random() * 1000;
+        let id = Date.now() + Math.random() * 1000;
         checkbox.id = "id" + id;
 
         let newLabel = document.createElement("label");

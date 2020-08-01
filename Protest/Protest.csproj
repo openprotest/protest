@@ -58,6 +58,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modules\DebitNotes.cs" />
     <Compile Include="Modules\TaskWrapper.cs" />
     <Compile Include="Modules\Tools\ActiveDirectory.cs" />
     <Compile Include="Modules\KeepAlive.cs" />
@@ -137,6 +138,7 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\debitnotes.css" />
     <Content Include="bin\protest\front\debitnotes.js" />
     <Content Include="bin\protest\front\keepalive.js" />
     <Content Include="bin\protest\front\passwordstrength.css" />

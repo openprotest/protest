@@ -239,7 +239,7 @@ class SpeedTest extends Window {
         this.upstream = [];
         this.downpeak = 0;
         this.uppeak = 0;
-        this.lastPlot = new Date().getTime();
+        this.lastPlot = Date.now();
 
         for (let i = 0; i < this.rngConnections.value; i++)
             this.DownstreamTest(i);
@@ -277,11 +277,11 @@ class SpeedTest extends Window {
 
         ws.onopen = () => {
             this.socket.push("d"+index);
-            this.downstarttime = new Date().getTime();
+            this.downstarttime = Date.now();
         };
 
         ws.onmessage = event => {
-            this.downstream.push(new Date().getTime());
+            this.downstream.push(Date.now());
             this.Plot();
         };
 
@@ -316,13 +316,13 @@ class SpeedTest extends Window {
 
         ws.onopen = () => {
             this.socket.push("u"+index);
-            this.upstarttime = new Date().getTime();
+            this.upstarttime = Date.now();
         };
 
         ws.onmessage = event => {
-            if (new Date().getTime() - this.upstarttime < 1000 * this.rngTimeout.value && sendCount < Math.pow(2, this.rngSize.value) * 1024 * 1024) {
+            if (Date.now() - this.upstarttime < 1000 * this.rngTimeout.value && sendCount < Math.pow(2, this.rngSize.value) * 1024 * 1024) {
                 ws.send(buffer);
-                this.upstream.push(new Date().getTime());
+                this.upstream.push(Date.now());
                 sendCount += Math.pow(2, this.rngBuffer.value);
                 this.Plot();
             }
@@ -341,7 +341,7 @@ class SpeedTest extends Window {
     }
 
     Plot(force = false) {
-        if (new Date().getTime() - this.lastPlot < 100 && !force) return;
+        if (Date.now() - this.lastPlot < 100 && !force) return;
 
         if (this.downstream.length > 0) {
             let downSize = this.downstream.length * Math.pow(2, this.rngBuffer.value); //bytes
@@ -364,7 +364,7 @@ class SpeedTest extends Window {
             this.lblUpProgress.innerHTML = "--";
         }
 
-        this.lastPlot = new Date().getTime();
+        this.lastPlot = Date.now();
     }
 
     SizeToString(value) {

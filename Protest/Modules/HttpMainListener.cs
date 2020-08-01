@@ -184,6 +184,12 @@ class HttpMainListener : Http {
                 case "delscript":   buffer = Scripts.DeleteScript(para); break;
                 case "delreport":   buffer = Scripts.DeleteReport(para); break;
                 case "getreport":   buffer = Scripts.GetReport(para); break;
+                        
+                case "getdebitnotes":         buffer = DebitNotes.GetDebitNotes(para); break;
+                case "getdebitnotestemplate": buffer = DebitNotes.GetDebitNoteTemplate(); break;
+                case "createdebitnote":       buffer = DebitNotes.CreateDebitNote(ctx); break;
+                case "markdebitnote":         buffer = DebitNotes.MarkDebitNote(para); break;
+                case "deldebitnote":          buffer = DebitNotes.DeleteDebitNote(para); break;
 
                 case "getequiprop": buffer = Database.GetValue(Database.equip, para); break;
                 case "getuserprop": buffer = Database.GetValue(Database.users, para); break;
