@@ -89,17 +89,17 @@ function punch_GetType(text) {
     let isDnsname = false;
     let count = 0;
 
-    if (text.length > 1 && !isIp)
-        isPhone = text.match(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s/0-9]*$/g) != null;
-
-    if (text.length > 1)
-        isEmail = text.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) != null;
-
     let dotSplit = text.split(".");
     if (dotSplit.length == 4 && dotSplit.every(o => o.length > 0))
         if (!isNaN(dotSplit[0]) && !isNaN(dotSplit[1]) && !isNaN(dotSplit[2]) && !isNaN(dotSplit[3]))
             if (dotSplit[0] < 256 && dotSplit[1] < 256 && dotSplit[2] < 256 && dotSplit[3] < 256 && dotSplit[0] > -1 && dotSplit[1] > -1 && dotSplit[2] > -1 && dotSplit[3] > -1)
                 isIp = true;
+
+    if (text.length > 1 && !isIp)
+        isPhone = text.match(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s/0-9]*$/g) != null;
+
+    if (text.length > 1)
+        isEmail = text.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) != null;
 
     let macString = text.toLowerCase();
     while (macString.indexOf("-") > -1) macString = macString.replace("-", "");

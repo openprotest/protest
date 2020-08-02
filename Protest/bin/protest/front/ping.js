@@ -177,6 +177,7 @@ class Ping extends Console {
                 innerBox.appendChild(pnlLegend);
 
                 let tblLegend = document.createElement("table");
+                tblLegend.style.color = "#202020";
                 tblLegend.style.borderCollapse = "collapse";
                 tblLegend.style.margin = "4px";
                 pnlLegend.appendChild(tblLegend);
