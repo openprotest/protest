@@ -41,7 +41,7 @@ public static class DebitNotes {
             string[] split = to.Split('-');
             if (split.Length == 3) {
                 dateTo = new DateTime(Int32.Parse(split[0]), Int32.Parse(split[1]), Int32.Parse(split[2]));
-                dateTo.AddDays(1);
+                dateTo = dateTo.AddDays(1);
             }
         }
 
@@ -93,14 +93,17 @@ public static class DebitNotes {
                             if (lDate < dateFrom.Ticks || lDate > dateTo.Ticks) continue;
                     }
 
-                    if (sb.Length > 0) sb.Append(((char)127).ToString());
-                    sb.Append($"{files[i].Name}{(char)127}{data}{(char)127}");                    
+                    //if (sb.Length > 0) sb.Append(((char)127).ToString());
+                    sb.Append($"{files[i].Name}{(char)127}{data}");
+
+                    if (data.Length > 0 && data[data.Length-1] != (char)127) sb.Append((char)127);
+                    
                     if (files[i].FullName.StartsWith(Strings.DIR_DEBIT_SHORT))
-                        sb.Append("short");
+                        sb.Append($"short{(char)127}");
                     else if (files[i].FullName.StartsWith(Strings.DIR_DEBIT_LONG))
-                        sb.Append("long");
+                        sb.Append($"long{(char)127}");
                     else 
-                        sb.Append("returned");                    
+                        sb.Append($"returned{(char)127}");
 
                 } catch  { }
 
@@ -140,9 +143,9 @@ public static class DebitNotes {
                 if (para[i].StartsWith("tl=")) title = para[i].Substring(3);
                 if (para[i].StartsWith("dp=")) department = para[i].Substring(3);
                 if (para[i].StartsWith("it=")) it = para[i].Substring(3);
-                if (para[i].StartsWith("tt=")) template = Int32.Parse(para[i].Substring(3));
                 if (para[i].StartsWith("eq=")) equip = para[i].Substring(3);
-                if (para[i].StartsWith("sh=") ) isShortPending = para[i].Substring(3) == "true";
+                if (para[i].StartsWith("sh=")) isShortPending = para[i].Substring(3) == "true";
+                if (para[i].StartsWith("tt=") && para[i].Length > 3) template = Int32.Parse(para[i].Substring(3));
             }
         }
 
@@ -160,7 +163,7 @@ public static class DebitNotes {
         data += $"{it}{(char)127}";
         data += ((template * 2 + 1 > templateList.Length) ? "" : templateList[template * 2 + 1]) + (char)127;
         data += $"{equip}{(char)127}";
-        data += $"{isShortPending.ToString().ToLower()}";
+        //data += $"{isShortPending.ToString().ToLower()}";
 
         try {
 
@@ -188,13 +191,43 @@ public static class DebitNotes {
     }
 
     public static byte[] MarkDebitNote(string[] para) {
+        string code = String.Empty;
+        string type = String.Empty;
+        for (int i = 0; i < para.Length; i++) {
+            if (para[i].StartsWith("code=")) code = para[i].Substring(5);
+            if (para[i].StartsWith("type=")) type = para[i].Substring(5);
+        }
 
-        return null;
+        if (code.Length == 0 || type.Length == 0) return Strings.INF.Array;
+
+        FileInfo file = new FileInfo($"{(type == "short" ? Strings.DIR_DEBIT_SHORT : Strings.DIR_DEBIT_LONG)}\\{code}");
+        if (!file.Exists) return Strings.FLE.Array;
+
+        DirectoryInfo dirReturned = new DirectoryInfo(Strings.DIR_DEBIT_RETURNED);
+        if (!dirReturned.Exists) dirReturned.Create();
+
+        lock (DEBITNOTE_LOCK) {
+            file.MoveTo(dirReturned.FullName + "\\" + code);
+        }
+
+        return Strings.OK.Array;
     }
 
     public static byte[] DeleteDebitNote(string[] para) {
+        string code = String.Empty;
+        string type = String.Empty;
+        for (int i = 0; i < para.Length; i++) {
+            if (para[i].StartsWith("code=")) code = para[i].Substring(5);
+            if (para[i].StartsWith("type=")) type = para[i].Substring(5);
+        }
 
-        return null;
+        if (code.Length == 0 || type.Length == 0) return Strings.INF.Array;
+
+        FileInfo file = new FileInfo($"{(type=="short" ? Strings.DIR_DEBIT_SHORT : Strings.DIR_DEBIT_LONG)}\\{code}");
+        if (!file.Exists) return Strings.FLE.Array;
+        lock (DEBITNOTE_LOCK) file.Delete();
+
+        return Strings.OK.Array;
     }
 
 }

@@ -104,8 +104,10 @@ function punch_GetType(text) {
     let macString = text.toLowerCase();
     while (macString.indexOf("-") > -1) macString = macString.replace("-", "");
     while (macString.indexOf(":") > -1) macString = macString.replace(":", "");
-    if (macString.length == 12)
-        isMac = macString.match(/[0-9,a-f]/g).length == 12;
+    if (macString.length == 12) {
+        const rx = macString.match(/[0-9,a-f]/g);
+        if (rx) isMac = rx.length == 12;
+    }
 
     isUrl = text.startsWith("http://") || text.startsWith("https://");
 

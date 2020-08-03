@@ -125,35 +125,35 @@ class DebitNotes extends Window {
         this.options.className = "debit-options";
         this.content.append(this.options);
 
-        const btnNew = document.createElement("input");
-        btnNew.style.backgroundImage = "url(res/new_user.svgz)";
-        btnNew.type = "button";
-        btnNew.value = "Create new";
-        this.options.appendChild(btnNew);
+        this.btnNew = document.createElement("input");
+        this.btnNew.style.backgroundImage = "url(res/new_user.svgz)";
+        this.btnNew.type = "button";
+        this.btnNew.value = "Create new";
+        this.options.appendChild(this.btnNew);
 
-        const btnPrint = document.createElement("input");
-        btnPrint.style.backgroundImage = "url(res/printer.svgz)";
-        btnPrint.type = "button";
-        btnPrint.value = "Print";
-        this.options.appendChild(btnPrint);
+        this.btnPrint = document.createElement("input");
+        this.btnPrint.style.backgroundImage = "url(res/printer.svgz)";
+        this.btnPrint.type = "button";
+        this.btnPrint.value = "Print";
+        this.options.appendChild(this.btnPrint);
 
-        const btnReturned = document.createElement("input");
-        btnReturned.style.backgroundImage = "url(res/retured.svgz)";
-        btnReturned.type = "button";
-        btnReturned.value = "Mark as returned";
-        this.options.appendChild(btnReturned);
+        this.btnDublicate = document.createElement("input");
+        this.btnDublicate.style.backgroundImage = "url(res/copy.svgz)";
+        this.btnDublicate.type = "button";
+        this.btnDublicate.value = "Dublicate";
+        this.options.appendChild(this.btnDublicate);
 
-        const btnDublicate = document.createElement("input");
-        btnDublicate.style.backgroundImage = "url(res/copy.svgz)";
-        btnDublicate.type = "button";
-        btnDublicate.value = "Dublicate";
-        this.options.appendChild(btnDublicate);
+        this.btnReturned = document.createElement("input");
+        this.btnReturned.style.backgroundImage = "url(res/retured.svgz)";
+        this.btnReturned.type = "button";
+        this.btnReturned.value = "Mark as returned";
+        this.options.appendChild(this.btnReturned);
 
-        const btnDelete = document.createElement("input");
-        btnDelete.style.backgroundImage = "url(res/delete.svgz)";
-        btnDelete.type = "button";
-        btnDelete.value = "Delete";
-        this.options.appendChild(btnDelete);
+        this.btnDelete = document.createElement("input");
+        this.btnDelete.style.backgroundImage = "url(res/delete.svgz)";
+        this.btnDelete.type = "button";
+        this.btnDelete.value = "Delete";
+        this.options.appendChild(this.btnDelete);
 
         this.txtSearch.onchange =   () => this.GetNotes(false);
         this.dateFrom.onchange =    () => this.GetNotes(false);
@@ -162,14 +162,15 @@ class DebitNotes extends Window {
         this.chkLong.onchange =     () => this.GetNotes(false);
         this.chkReturned.onchange = () => this.GetNotes(false);
 
-        btnNew.onclick = () => this.New();
-        btnPrint.onclick = () => this.Print();
-        btnReturned.onclick = () => this.Return();
-        btnDublicate.onclick = () => this.Dublicate();
-        btnDelete.onclick = () => this.Delete();
+        this.btnNew.onclick = () => this.New();
+        this.btnPrint.onclick = () => this.Print();
+        this.btnDublicate.onclick = () => this.Dublicate();
+        this.btnReturned.onclick = () => this.Return();
+        this.btnDelete.onclick = () => this.Delete();
 
         this.GetNotes(false);
         this.GetTemplates();
+        this.AdjustButtons();
     }
 
     GetNotes(append = true) {
@@ -185,7 +186,6 @@ class DebitNotes extends Window {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
-
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 this.UpdateList(split, append);
 
@@ -206,6 +206,7 @@ class DebitNotes extends Window {
             xhr.send();
             this.preview.innerHTML = "";
             this.selected = null;
+            this.AdjustButtons();
         }
     }
 
@@ -215,7 +216,7 @@ class DebitNotes extends Window {
         }
 
         let i = 0;
-        while (i < split.length - 1) {
+        while (i < split.length - 9) {
             let code = split[i++];
             let fn = split[i++];
             let ln = split[i++];
@@ -255,7 +256,8 @@ class DebitNotes extends Window {
             this.lastselected = entry;
 
             this.Preview(code, fn, ln, title, department, date, it, template, equip, status);
-            this.selected = [code, fn, ln, title, department, date, it, template, equip, status];
+            this.selected = [code, fn, ln, title, department, date, it, template, equip, status, entry];
+            this.AdjustButtons();
         };
     }
 
@@ -486,6 +488,24 @@ class DebitNotes extends Window {
         lblEmployeeSign.style.gridArea = "3 / 3";
         lblEmployeeSign.style.borderBottom = "black solid 2px";
         divSignature.appendChild(lblEmployeeSign);
+    }
+
+    AdjustButtons() {
+        if (this.btnPrint.hasAttribute("disabled")) this.btnPrint.removeAttribute("disabled");
+        if (this.btnDublicate.hasAttribute("disabled")) this.btnDublicate.removeAttribute("disabled");
+        if (this.btnReturned.hasAttribute("disabled")) this.btnReturned.removeAttribute("disabled");
+        if (this.btnDelete.hasAttribute("disabled")) this.btnDelete.removeAttribute("disabled");
+
+        if (this.preview.innerHTML === "") {
+            this.btnPrint.setAttribute("disabled", true);
+            this.btnDublicate.setAttribute("disabled", true);
+            this.btnReturned.setAttribute("disabled", true);
+            this.btnDelete.setAttribute("disabled", true);
+
+        } else if (this.selected && this.selected[9] === "returned") {
+            this.btnReturned.setAttribute("disabled", true);
+            this.btnDelete.setAttribute("disabled", true);
+        }
     }
 
 
@@ -912,7 +932,7 @@ class DebitNotes extends Window {
             data += "&it=" + txtBehalfOfIT.value;
             data += "&tt=" + txtTemplate.value;
             data += "&eq=" + eq_string;
-            data += "&sh=" + chkType.checked;
+            data += "&sh=" + chkType.checked.toString().toLowerCase();
 
             xhr.open("POST", "createdebitnote", true);
             xhr.send(data);
@@ -925,6 +945,7 @@ class DebitNotes extends Window {
             txtDep: txtDep,
             txtBehalfOfIT: txtBehalfOfIT,
             txtTemplate: txtTemplate,
+            chkType: chkType,
             lstEquip: lstEquip,
             AddEquip: AddEquip
         };
@@ -942,7 +963,29 @@ class DebitNotes extends Window {
         setTimeout(() => { newPrintWin.close(); }, 50);
     }
 
-    Return() { console.log(3) }
+    Return() {
+        if (this.preview.innerHTML == "") return;
+        if (this.selected == null) return;
+        if (this.selected[9] == "returned") return;
+
+        this.ConfirmBox("Are you sure you want to mark this debit note as returned?").addEventListener("click", () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+
+                    if (xhr.responseText == "ok")
+                        this.GetNotes(false);
+                    else
+                        this.ConfirmBox(xhr.responseText , true);
+
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+
+            xhr.open("GET", `markdebit&code=${this.selected[0]}&type=${this.selected[9]}`, true);
+            xhr.send();
+        });
+    }
 
     Dublicate() {
         if (this.preview.innerHTML == "") return;
@@ -955,6 +998,7 @@ class DebitNotes extends Window {
         const txtDep = obj.txtDep;
         const txtBehalfOfIT = obj.txtBehalfOfIT;
         const txtTemplate = obj.txtTemplate;
+        const chkType = obj.chkType;
         const lstEquip = obj.lstEquip;
         const AddEquip = obj.AddEquip;
 
@@ -963,6 +1007,7 @@ class DebitNotes extends Window {
         txtTitle.value = this.selected[3];
         txtDep.value = this.selected[4];
         txtBehalfOfIT.value = this.selected[6];
+        chkType.checked = this.selected[9] == "short";
 
         const equip = this.selected[8].split(";");
         for (let i = 0; i < equip.length-1; i+=3) {
@@ -973,5 +1018,33 @@ class DebitNotes extends Window {
         }
     }
 
-    Delete() { console.log(5) }
+    Delete() {
+        if (this.preview.innerHTML == "") return;
+        if (this.selected == null) return;
+        if (this.selected[9] == "returned") {
+            this.ConfirmBox("You are not allowed to delete a debit note that is marked as \"returned\"", true);
+            return;
+        }
+
+        this.ConfirmBox("Are you sure you want to delete this debit note?").addEventListener("click", () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+
+                    if (xhr.responseText == "ok") {
+                        this.list.removeChild(this.selected[10]);
+                        this.preview.innerHTML = "";
+                        this.AdjustButtons();
+                    } else {
+                        this.ConfirmBox(xhr.responseText, true);
+                    }
+
+                } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                    this.ConfirmBox("Server is unavailable.", true);
+            };
+
+            xhr.open("GET", `deldebit&code=${this.selected[0]}&type=${this.selected[9]}`, true);
+            xhr.send();
+        });
+    }
 }
