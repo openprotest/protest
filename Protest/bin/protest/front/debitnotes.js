@@ -171,6 +171,20 @@ class DebitNotes extends Window {
         this.GetNotes(false);
         this.GetTemplates();
         this.AdjustButtons();
+
+        setTimeout(() => {
+            this.AfterResize();
+        }, 200);
+    }
+
+    AfterResize() { //override
+        super.AfterResize();
+
+        if (this.content.getBoundingClientRect().width < 900) {
+            this.options.classList.add("debit-options-collapsed");
+        } else {
+            this.options.classList.remove("debit-options-collapsed");
+        }
     }
 
     GetNotes(append = true) {
@@ -512,7 +526,6 @@ class DebitNotes extends Window {
             this.btnDelete.setAttribute("disabled", true);
         }
     }
-
 
     GetTemplates() {
         if (DEBIT_TEMPLATES.length != 0) return;

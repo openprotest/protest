@@ -11,7 +11,7 @@
 
 .debit-options {
     position: absolute;
-    left: 290px;
+    left: 298px;
     right: 0;
     top: 0;
     height: 40px;
@@ -25,7 +25,6 @@
     padding-left: 32px;
     padding-right: 8px;
     height: 28px;
-
     background-repeat: no-repeat;
     background-size: 24px 24px;
     background-position: 4px center;
@@ -34,6 +33,13 @@
 .debit-options > input[type=button]:hover,
 .debit-options > input[type=button]:active {
     background-color: rgb(160,160,160);
+}
+
+.debit-options-collapsed > input[type=button] {
+    color: transparent;
+    width: 32px;
+    min-width: 32px;
+    padding-left: 0;
 }
 
 .debit-preview-outer {
