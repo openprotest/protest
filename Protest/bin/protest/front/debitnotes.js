@@ -187,7 +187,8 @@ class DebitNotes extends Window {
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
-                this.UpdateList(split, append);
+                this.UpdateList(split, append, this.selected);
+                this.selected = null;
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
@@ -205,15 +206,13 @@ class DebitNotes extends Window {
             xhr.open("GET", `getdebitnotes&keywords=${this.txtSearch.value}&from=${this.dateFrom.value}&to=${this.dateTo.value}&filters=${filters}&last=null`, true);
             xhr.send();
             this.preview.innerHTML = "";
-            this.selected = null;
             this.AdjustButtons();
         }
     }
 
-    UpdateList(split, append = false) {
-        if (!append) {
+    UpdateList(split, append = false, lastSelection = null) {
+        if (!append) 
             this.list.innerHTML = "";
-        }
 
         let i = 0;
         while (i < split.length - 9) {
@@ -228,43 +227,49 @@ class DebitNotes extends Window {
             let equip = split[i++];
             let status = split[i++];
 
-            this.AddToList(code, fn, ln, title, department, date, it, template, equip, status);
+            this.AddToList(code, fn, ln, title, department, date, it, template, equip, status, lastSelection);
         }
 
     }
 
-    AddToList(code, fn, ln, title, department, date, it, template, equip, status) {
-        let entry = document.createElement("div");
+    AddToList(code, fn, ln, title, department, date, it, template, equip, status, lastSelection) {
+        const entry = document.createElement("div");
         entry.className = "debit-entry";
         this.list.appendChild(entry);
 
-        let label = document.createElement("div");
+        const label = document.createElement("div");
         label.innerHTML = fn + " " + ln;
         entry.appendChild(label);
 
         if (status == "returned") {
-            let lblRerurned = document.createElement("div");
+            const lblRerurned = document.createElement("div");
             lblRerurned.innerHTML = "Re";
             entry.appendChild(lblRerurned);
         }
 
         entry.onclick = () => {
             if (this.lastselected) 
-                this.lastselected.style.backgroundColor = "";            
+                this.lastselected.style.backgroundColor = "";
 
             entry.style.backgroundColor = "var(--select-color)";
             this.lastselected = entry;
 
             this.Preview(code, fn, ln, title, department, date, it, template, equip, status);
-            this.selected = [code, fn, ln, title, department, date, it, template, equip, status, entry];
-            this.AdjustButtons();
+            setTimeout(() => {
+                this.selected = [code, fn, ln, title, department, date, it, template, equip, status, entry];
+                this.AdjustButtons();
+            }, 0);
         };
+
+        if (lastSelection && lastSelection[0] == code) {
+            entry.onclick();
+        }
     }
 
     Preview(code, fn, ln, title, department, date, it, template, equip, status) {
         this.preview.innerHTML = "";
 
-        let page = document.createElement("div");
+        const page = document.createElement("div");
         page.style.backgroundColor = "rgb(224,224,224)";
         page.style.color = "rgb(32,32,32)";
         page.style.maxWidth = "800px";
@@ -273,15 +278,15 @@ class DebitNotes extends Window {
         page.style.fontFamily = "var(--global-font-family)";
         this.preview.appendChild(page);
 
-        let underline_style = "rgb(32,32,32) solid 2px";
+        const underline_style = "rgb(32,32,32) solid 2px";
 
-        let barcode = document.createElement("div");
+        const barcode = document.createElement("div");
         barcode.innerHTML = code;
         barcode.style.fontSize = "11px";
         barcode.style.textAlign = "right";
         page.appendChild(barcode);
 
-        let grid = document.createElement("div");
+        const grid = document.createElement("div");
         grid.style.margin = "12px 20px 20px 20px";
         grid.style.display = "grid";
         grid.style.gridTemplateColumns = "120px auto 120px auto";
@@ -289,17 +294,17 @@ class DebitNotes extends Window {
         grid.style.alignItems = "center";
         page.appendChild(grid);
 
-        let divLogo = document.createElement("div");
+        const divLogo = document.createElement("div");
         divLogo.style.gridArea = "1 / 1 / span 1 / span 4";
         divLogo.style.textAlign = "center";
         divLogo.style.maxHeight = "100px";
         grid.appendChild(divLogo);
 
-        let imgLogo = document.createElement("img");
+        const imgLogo = document.createElement("img");
         imgLogo.src = "other/logo.svgz";
         divLogo.appendChild(imgLogo);
 
-        let lblDebitNoteTitle = document.createElement("div");
+        const lblDebitNoteTitle = document.createElement("div");
         lblDebitNoteTitle.innerHTML = "Debit note";
         lblDebitNoteTitle.style.textAlign = "center";
         lblDebitNoteTitle.style.fontWeight = "bold";
@@ -307,60 +312,60 @@ class DebitNotes extends Window {
         lblDebitNoteTitle.style.gridArea = "2 / 1 / span 1 / span 4";
         grid.appendChild(lblDebitNoteTitle);
 
-        let lblDateLabel = document.createElement("div");
+        const lblDateLabel = document.createElement("div");
         lblDateLabel.innerHTML = "Issued date:";
         lblDateLabel.style.gridArea = "3 / 1 / span 1 / span 1";
         lblDateLabel.style.fontWeight = "bold";
         grid.append(lblDateLabel);
-        let lblDate = document.createElement("div");
+        const lblDate = document.createElement("div");
         lblDate.innerHTML = date;
         lblDate.style.gridArea = "3 / 2 / span 1 / span 1";
         lblDate.style.borderBottom = underline_style;
         lblDate.style.marginRight = "20px";
         grid.append(lblDate);
 
-        let lblFnLabel = document.createElement("div");
+        const lblFnLabel = document.createElement("div");
         lblFnLabel.innerHTML = "First name:";
         lblFnLabel.style.gridArea = "4 / 1 / span 1 / span 1";
         lblFnLabel.style.fontWeight = "bold";
         grid.append(lblFnLabel);
-        let lblFn = document.createElement("div");
+        const lblFn = document.createElement("div");
         lblFn.innerHTML = fn;
         lblFn.style.gridArea = "4 / 2 / span 1 / span 1";
         lblFn.style.borderBottom = underline_style;
         lblFn.style.marginRight = "20px";
         grid.append(lblFn);
 
-        let lblLnLabel = document.createElement("div");
+        const lblLnLabel = document.createElement("div");
         lblLnLabel.innerHTML = "Last name:";
         lblLnLabel.style.gridArea = "4 / 3 / span 1 / span 1";
         lblLnLabel.style.fontWeight = "bold";
         grid.append(lblLnLabel);
-        let lblLn = document.createElement("div");
+        const lblLn = document.createElement("div");
         lblLn.innerHTML = ln;
         lblLn.style.gridArea = "4 / 4 / span 1 / span 1";
         lblLn.style.borderBottom = underline_style;
         lblLn.style.marginRight = "20px";
         grid.append(lblLn);
 
-        let lblTitleLabel = document.createElement("div");
+        const lblTitleLabel = document.createElement("div");
         lblTitleLabel.innerHTML = "Title:";
         lblTitleLabel.style.gridArea = "5 / 1 / span 1 / span 1";
         lblTitleLabel.style.fontWeight = "bold";
         grid.append(lblTitleLabel);
-        let lblTitle = document.createElement("div");
+        const lblTitle = document.createElement("div");
         lblTitle.innerHTML = title;
         lblTitle.style.gridArea = "5 / 2 / span 1 / span 1";
         lblTitle.style.borderBottom = underline_style;
         lblTitle.style.marginRight = "20px";
         grid.append(lblTitle);
 
-        let lblDepLabel = document.createElement("div");
+        const lblDepLabel = document.createElement("div");
         lblDepLabel.innerHTML = "Department:";
         lblDepLabel.style.gridArea = "5 / 3 / span 1 / span 1";
         lblDepLabel.style.fontWeight = "bold";
         grid.append(lblDepLabel);
-        let lblDep = document.createElement("div");
+        const lblDep = document.createElement("div");
         lblDep.innerHTML = department;
         lblDep.style.gridArea = "5 / 4 / span 1 / span 1";
         lblDep.style.borderBottom = underline_style;
@@ -376,11 +381,11 @@ class DebitNotes extends Window {
 
 
         if (status == "returned") {
-            let divReturned = document.createElement("div");
+            const divReturned = document.createElement("div");
             divReturned.style.textAlign = "center";
             page.appendChild(divReturned);
 
-            let lblReturned = document.createElement("div");
+            const lblReturned = document.createElement("div");
             lblReturned.innerHTML = "Returned";
             lblReturned.style.display = "inline-block";
             lblReturned.style.fontSize = "16px";
@@ -395,29 +400,29 @@ class DebitNotes extends Window {
         }
 
 
-        let tableEquip = document.createElement("table");
+        const tableEquip = document.createElement("table");
         tableEquip.style.margin = "40px 20px";
         tableEquip.style.paddingRight = "40px";
         tableEquip.style.width = "100%";
         tableEquip.style.color = "rgb(32,32,32)";
         page.append(tableEquip);
 
-        let eq_Header = document.createElement("tr");
+        const eq_Header = document.createElement("tr");
         tableEquip.appendChild(eq_Header);
 
-        let eq_h_descr = document.createElement("th");
+        const eq_h_descr = document.createElement("th");
         eq_h_descr.style.minWidth = "40px";
         eq_h_descr.style.border = "1px solid black";
         eq_h_descr.innerHTML = "Description";
         eq_Header.appendChild(eq_h_descr);
 
-        let eq_h_quant = document.createElement("th");
+        const eq_h_quant = document.createElement("th");
         eq_h_quant.style.minWidth = "40px";
         eq_h_quant.style.border = "1px solid black";
         eq_h_quant.innerHTML = "Quantity";
         eq_Header.appendChild(eq_h_quant);
 
-        let eq_h_serial = document.createElement("th");
+        const eq_h_serial = document.createElement("th");
         eq_h_serial.style.minWidth = "40px";
         eq_h_serial.style.border = "1px solid black";
         eq_h_serial.innerHTML = "Serial number";
@@ -425,32 +430,32 @@ class DebitNotes extends Window {
 
         let eq_split = equip.split(";");
         for (let i = 0; i < eq_split.length - 1; i += 3) {
-            let row = document.createElement("tr");
+            const row = document.createElement("tr");
             tableEquip.appendChild(row);
 
-            let eq_name = document.createElement("td");
+            const eq_name = document.createElement("td");
             eq_name.style.border = "1px solid black";
             eq_name.innerHTML = eq_split[i];
             row.appendChild(eq_name);
 
-            let eq_quan = document.createElement("td");
+            const eq_quan = document.createElement("td");
             eq_quan.style.border = "1px solid black";
             eq_quan.innerHTML = eq_split[i + 1];
             row.appendChild(eq_quan);
 
-            let eq_seri = document.createElement("td");
+            const eq_seri = document.createElement("td");
             eq_seri.style.border = "1px solid black";
             eq_seri.innerHTML = eq_split[i + 2];
             row.appendChild(eq_seri);
         }
 
-        let divTemplate = document.createElement("div");
+        const divTemplate = document.createElement("div");
         divTemplate.style.margin = "40px 20px";
         divTemplate.innerHTML = template;
         page.append(divTemplate);
 
 
-        let divSignature = document.createElement("div");
+        const divSignature = document.createElement("div");
         divSignature.style.margin = "20px";
         divSignature.style.display = "grid";
         divSignature.style.gridAutoColumns = "240px auto 240px";
@@ -459,32 +464,32 @@ class DebitNotes extends Window {
         divSignature.style.padding = "40px";
         page.appendChild(divSignature);
 
-        let lblBehalfOfIt = document.createElement("div");
+        const lblBehalfOfIt = document.createElement("div");
         lblBehalfOfIt.innerHTML = "Issued by";
         lblBehalfOfIt.gridArea = "1 / 1";
         divSignature.appendChild(lblBehalfOfIt);
 
-        let lblBehalfOfEmployee = document.createElement("div");
+        const lblBehalfOfEmployee = document.createElement("div");
         lblBehalfOfEmployee.innerHTML = "Employee <i>(or behalf of)</i>";
         lblBehalfOfEmployee.style.gridArea = "1 / 3";
         divSignature.appendChild(lblBehalfOfEmployee);
 
-        let lblItName = document.createElement("div");
+        const lblItName = document.createElement("div");
         lblItName.innerHTML = it;
         lblItName.style.gridArea = "2 / 1";
         divSignature.appendChild(lblItName);
 
-        let lblEmployeeName = document.createElement("div");
+        const lblEmployeeName = document.createElement("div");
         lblEmployeeName.innerHTML = fn + " " + ln;
         lblEmployeeName.style.gridArea = "2 / 3";
         divSignature.appendChild(lblEmployeeName);
 
-        let lblItSign = document.createElement("div");
+        const lblItSign = document.createElement("div");
         lblItSign.style.gridArea = "3 / 1";
         lblItSign.style.borderBottom = "black solid 2px";
         divSignature.appendChild(lblItSign);
 
-        let lblEmployeeSign = document.createElement("div");
+        const lblEmployeeSign = document.createElement("div");
         lblEmployeeSign.style.gridArea = "3 / 3";
         lblEmployeeSign.style.borderBottom = "black solid 2px";
         divSignature.appendChild(lblEmployeeSign);
@@ -512,7 +517,7 @@ class DebitNotes extends Window {
     GetTemplates() {
         if (DEBIT_TEMPLATES.length != 0) return;
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
@@ -546,7 +551,7 @@ class DebitNotes extends Window {
             let serialno = (db_equip[i]["SERIAL NUMBER"] == undefined) ? "" : db_equip[i]["SERIAL NUMBER"][0];
 
             if (!DEBIT_EQUIP_AUTOFILL_SERIAL.hasOwnProperty(description)) {
-                let option = document.createElement("option");
+                const option = document.createElement("option");
                 option.value = description;
                 DEBIT_EQUIP_AUTOFILL.appendChild(option);
 
@@ -626,7 +631,7 @@ class DebitNotes extends Window {
         btnFindUser.style.maxWidth = "72px";
         grid.appendChild(btnFindUser);
 
-        let lblDateL = document.createElement("div");
+        const lblDateL = document.createElement("div");
         lblDateL.innerHTML = "Issued date:";
         lblDateL.style.gridArea = "1 / 4 / span 1 / span 1";
         grid.appendChild(lblDateL);
@@ -653,7 +658,7 @@ class DebitNotes extends Window {
         txtTemplate.style.gridArea = "3 / 5 / span 1 / span 1";
         grid.appendChild(txtTemplate);
 
-        let lblTemplatePreview = document.createElement("div");
+        const lblTemplatePreview = document.createElement("div");
         lblTemplatePreview.style.gridArea = "3 / 6 / span 1 / span 2";
         lblTemplatePreview.style.overflow = "hidden";
         lblTemplatePreview.style.textOverflow = "ellipsis";
@@ -661,6 +666,7 @@ class DebitNotes extends Window {
         lblTemplatePreview.style.paddingTop = "8px";
         lblTemplatePreview.style.paddingLeft = "8px";
         lblTemplatePreview.style.maxWidth = "400px";
+        lblTemplatePreview.style.maxHeight = "150px";
         lblTemplatePreview.style.visibility = "hidden";
         lblTemplatePreview.style.transition = ".2s";
         grid.appendChild(lblTemplatePreview);
@@ -770,7 +776,7 @@ class DebitNotes extends Window {
         };
 
         btnFindUser.onclick = () => {
-            let container = document.createElement("div");
+            const container = document.createElement("div");
             container.style.position = "absolute";
             container.style.left = "0";
             container.style.right = "0";
@@ -781,7 +787,7 @@ class DebitNotes extends Window {
             innerBox.style.filter = "blur(2px)";
             innerBox.parentElement.appendChild(container);
 
-            let dialog = document.createElement("div");
+            const dialog = document.createElement("div");
             dialog.style.backgroundColor = "rgb(203,203,203)";
             dialog.style.position = "absolute";
             dialog.style.top = dialog.style.bottom = "32px";
@@ -792,15 +798,15 @@ class DebitNotes extends Window {
             dialog.style.overflow = "hidden";
             container.appendChild(dialog);
 
-            //let pnlFilter = this.document.createElement("div");
+            //const pnlFilter = this.document.createElement("div");
             //dialog.appendChild(pnlFilter);
 
-            let txtFind = document.createElement("input");
+            const txtFind = document.createElement("input");
             txtFind.type = "text";
             txtFind.placeholder = "Search";
             dialog.appendChild(txtFind);
 
-            let lstUsers = document.createElement("div");
+            const lstUsers = document.createElement("div");
             lstUsers.className = "no-results";
             lstUsers.style.position = "absolute";
             lstUsers.style.left = lstUsers.style.right = "0";
@@ -808,7 +814,7 @@ class DebitNotes extends Window {
             lstUsers.style.overflowY = "auto";
             dialog.appendChild(lstUsers);
 
-            let pnlButtons = document.createElement("div");
+            const pnlButtons = document.createElement("div");
             pnlButtons.style.bottom = "8px";
             pnlButtons.style.width = "100%";
             pnlButtons.style.heigth = "40px";
@@ -816,7 +822,7 @@ class DebitNotes extends Window {
             pnlButtons.style.textAlign = "center";
             dialog.appendChild(pnlButtons);
 
-            let btnCancel = document.createElement("input");
+            const btnCancel = document.createElement("input");
             btnCancel.type = "button";
             btnCancel.value = "Cancel";
             btnCancel.style.bottom = "8px";
@@ -855,11 +861,11 @@ class DebitNotes extends Window {
                         let title = (db_users[i].hasOwnProperty("TITLE")) ? db_users[i]["TITLE"][0] : "";
                         let department = (db_users[i].hasOwnProperty("DEPARTMENT")) ? db_users[i]["DEPARTMENT"][0] : "";
 
-                        let element = document.createElement("div");
+                        const element = document.createElement("div");
                         element.className = "lst-obj-ele";
                         this.content.appendChild(element);
 
-                        let icon = document.createElement("div");
+                        const icon = document.createElement("div");
                         icon.className = "lst-obj-ico";
                         icon.style.backgroundImage = "url(res/user.svgz)";
                         element.appendChild(icon);
@@ -873,7 +879,7 @@ class DebitNotes extends Window {
                         for (let j = 0; j < 6; j++) {
                             if (!db_users[i].hasOwnProperty(USER_LIST_ORDER[j])) continue;
 
-                            let newLabel = document.createElement("div");
+                            const newLabel = document.createElement("div");
                             newLabel.innerHTML = db_users[i][USER_LIST_ORDER[j]][0];
                             newLabel.className = "lst-obj-lbl-" + j;
                             element.appendChild(newLabel);

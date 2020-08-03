@@ -12,6 +12,8 @@ namespace Protest_RA {
         public static Service srv_rdp;
         public static Service srv_pse;
 
+        //public static CheckBox chkOverrideWinRdpClient;
+
         public static string key = "";
         public static byte[] bKey;
         public static byte[] bIv;
@@ -62,6 +64,20 @@ namespace Protest_RA {
                 pnlMain.Controls.Add(array[i]);
                 array[i].Top = 88 + i * 108;
             }
+
+            srv_uvnc.txtPassword.Left = srv_uvnc.txtUsername.Left;
+            srv_uvnc.lblPassword.Left = srv_uvnc.lblUsername.Left;
+            srv_uvnc.lblUsername.Visible = false;
+            srv_uvnc.txtUsername.Visible = false;
+
+            srv_pse.chkEnable.Checked = Settings.Default.pse_enable;
+
+            /*chkOverrideWinRdpClient = new CheckBox();
+            chkOverrideWinRdpClient.Text = "Overrite windows native RDP client";
+            chkOverrideWinRdpClient.Left = srv_rdp.txtPassword.Left + srv_rdp.txtPassword.Width + 16;
+            chkOverrideWinRdpClient.Top = 72;
+            chkOverrideWinRdpClient.AutoSize = true;
+            srv_rdp.Controls.Add(chkOverrideWinRdpClient);*/
         }
 
         public void LoadSettings() {
@@ -78,10 +94,6 @@ namespace Protest_RA {
             srv_uvnc.chkEnable.Checked = Settings.Default.uvnc_enable;
             srv_uvnc.txtExe.Text = Settings.Default.uvnc_exe;
             srv_uvnc.txtParam.Text = Settings.Default.uvnc_para;
-            srv_uvnc.txtPassword.Left = srv_uvnc.txtUsername.Left;
-            srv_uvnc.lblPassword.Left = srv_uvnc.lblUsername.Left;
-            srv_uvnc.lblUsername.Visible = false;
-            srv_uvnc.txtUsername.Visible = false;
             srv_uvnc.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.uvnc_pass, bKey, bIv);
 
             if (srv_uvnc.txtPassword.Text.Length > 0) //remove salt
@@ -94,8 +106,12 @@ namespace Protest_RA {
             srv_rdp.lblPassword.Visible = false;
             srv_rdp.txtUsername.Visible = false;
             srv_rdp.txtPassword.Visible = false;
+            //srv_rdp.txtUsername.Text = Settings.Default.rdp_user;
+            //srv_rdp.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.rdp_pass, bKey, bIv);
 
-            srv_pse.chkEnable.Checked = Settings.Default.pse_enable;
+            /*if (srv_rdp.txtPassword.Text.Length > 0) //remove salt
+                srv_rdp.txtPassword.Text = srv_rdp.txtPassword.Text.Substring(1);*/
+
             srv_pse.txtExe.Text = Settings.Default.pse_exe;
             srv_pse.txtParam.Text = Settings.Default.pse_para;
             srv_pse.txtUsername.Text = Settings.Default.pse_user;
@@ -103,6 +119,8 @@ namespace Protest_RA {
 
             if (srv_pse.txtPassword.Text.Length > 0) //remove salt
                 srv_pse.txtPassword.Text = srv_pse.txtPassword.Text.Substring(1);
+
+            //chkOverrideWinRdpClient.Checked = Settings.Default.rdp_native_client;
         }
 
         public void SaveSettings() {
@@ -123,6 +141,9 @@ namespace Protest_RA {
             Settings.Default.mstsc_enable = srv_rdp.chkEnable.Checked;
             Settings.Default.mstsc_exe = srv_rdp.txtExe.Text;
             Settings.Default.mstsc_para = srv_rdp.txtParam.Text;
+            //Settings.Default.rdp_native_client = chkOverrideWinRdpClient.Checked;
+            //Settings.Default.rdp_user = srv_rdp.txtUsername.Text;
+            //Settings.Default.rdp_pass = CryptoAes.EncryptB64($"9{srv_rdp.txtPassword.Text}", bKey, bIv); //add salt
 
             Settings.Default.pse_enable = srv_pse.chkEnable.Checked;
             Settings.Default.pse_exe = srv_pse.txtExe.Text;
@@ -145,6 +166,20 @@ namespace Protest_RA {
 
         private void tmrAutoHide_Tick(object sender, EventArgs e) {
             tmrAutoHide.Stop();
+
+            string[] args = Environment.GetCommandLineArgs();
+            if (!(args is null) && args.Length > 1)
+                if (args[1] == "-v") {
+                    this.Visible = true;
+                    this.ShowInTaskbar = true;
+
+                    this.Left = Screen.PrimaryScreen.Bounds.Width - this.Width - (Screen.PrimaryScreen.Bounds.Width - Screen.PrimaryScreen.WorkingArea.Right);
+                    this.Top = Screen.PrimaryScreen.Bounds.Height - this.Height - (Screen.PrimaryScreen.Bounds.Height - Screen.PrimaryScreen.WorkingArea.Bottom);
+                    this.Opacity = 1;
+
+                    return;
+                }                
+            
             this.Visible = false;
             this.ShowInTaskbar = true;
             this.Opacity = 1;
@@ -166,7 +201,7 @@ namespace Protest_RA {
             this.TrayIcon.Visible = false;
             Listener.StopListener();
 
-            System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().Location);
+            System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().Location, "-v");
 
             System.Diagnostics.Process.GetCurrentProcess().Kill();
             //Application.Exit();

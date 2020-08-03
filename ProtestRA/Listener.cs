@@ -104,7 +104,15 @@ namespace Protest_RA {
                 case "rdp":
                     if (!Main.srv_rdp.chkEnable.Checked) break;
                     PushToRecents($"RDP: {targer}", cmd);
-                    new Thread(() => {
+
+                    /*FileInfo file1 = new FileInfo("AxInterop.MSTSCLib.dll");
+                    FileInfo file2 = new FileInfo("Interop.MSTSCLib.dll");
+                    if (Main.chkOverrideWinRdpClient.Checked && file1.Exists && file2.Exists) { //pro-test client
+                        //...
+                        break;
+                    }*/
+
+                    new Thread(() => { //native
                         try {
                             Process.Start(
                             Main.srv_rdp.txtExe.Text,
