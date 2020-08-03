@@ -153,6 +153,7 @@
     <Content Include="bin\protest\front\res\desktop.svg" />
     <Content Include="bin\protest\front\res\directory.svg" />
     <Content Include="bin\protest\front\res\encoder.svg" />
+    <Content Include="bin\protest\front\res\watchdog.svg" />
     <Content Include="bin\protest\front\res\websocket.svg" />
     <Content Include="bin\protest\front\documentation.js" />
     <Content Include="bin\protest\front\viewequip.js" />

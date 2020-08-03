@@ -28,6 +28,7 @@ const TOOLS = [
 { lbl:"Scripts",            ico:"res/scripts.svgz",        sqr:true,  f:arg=> new Scripts() },
 { lbl:"Scripts reports",    ico:"res/reportfile.svgz",     sqr:false, f:arg=> new Scripts("reports") },
 { lbl:"Ongoing scripts",    ico:"res/ongoingscript.svgz",  sqr:false, f:arg=> new Scripts("ongoing") },
+{ lbl:"Watchdog",           ico:"res/watchdog.svgz",       sqr:true,  f:arg=> new Watchdog() },
 { lbl:"Network calculator", ico:"res/netcalc.svgz",        sqr:true,  f:arg=> new Netcalc(arg) },
 { lbl:"Password generator", ico:"res/passgen.svgz",        sqr:true,  f:arg=> new Passgen() },
 { lbl:"WMI console",        ico:"res/wmi.svgz",            sqr:true,  f:arg=> new Wmi() },
