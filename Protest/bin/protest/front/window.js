@@ -466,7 +466,7 @@ class Window {
     }
 
     BringToFront() {
-        if (!document.getSelection().isCollapsed)
+        if (this.win.style.zIndex != $w.count && !document.getSelection().isCollapsed)
             document.getSelection().removeAllRanges();
 
         for (let i=0; i<$w.array.length; i++) {

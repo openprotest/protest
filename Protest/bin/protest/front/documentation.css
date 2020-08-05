@@ -23,8 +23,8 @@
     overflow: hidden;
 }
 
-.debit-options-collapsed > input[type=button] {
-    color: transparent;
+.doc-options-collapsed > input[type=button] {
+    color: transparent !important;
     width: 32px;
     min-width: 32px;
     padding-left: 0;
@@ -83,13 +83,43 @@
     overflow-y: auto;
 }
 
+.doc-edit-button {
+    position: absolute;
+    top: 138px;
+    min-width: 32px;
+    width: 32px;
+    background-size: 24px 24px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .doc-body-outer > .divContentContainer {
     left: 0;
     right: 8px;
-    top: 148px;
+    top: 174px;
     bottom: 8px;
     padding: 8px;
     overflow-y: scroll;
     border: 1px solid var(--control-color);
     border-radius: 4px;
+}
+
+.doc-body-outer > .divContentContainer a {
+    color: var(--select-color);
+    text-decoration: underline;
+}
+
+.doc-body-outer > .divContentContainer .doc-code {
+    width: 100%;
+    min-height: 1em;
+    color: #C0C0C0;
+    background-color: #202020;
+    font-family: monospace;
+    box-sizing: border-box;
+    padding: 4px 8px 2px 8px;
+
+}
+
+.doc-body-outer > .divContentContainer .doc-code + .doc-code {
+    padding-top: 2px;
 }

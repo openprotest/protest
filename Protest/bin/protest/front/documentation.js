@@ -128,8 +128,83 @@ class Documentation extends Window {
         this.divContent.style.outline = "none";
         divContentContainer.appendChild(this.divContent);
 
+        this.btnBold = document.createElement("button");
+        this.btnBold.classList.add("light-button");
+        this.btnBold.classList.add("doc-edit-button");
+        this.btnBold.style.backgroundImage = "url(res/bold.svg)";
+        this.btnBold.style.left = "0px";
+        this.body.appendChild(this.btnBold);
+
+        this.btnItalic = document.createElement("button");
+        this.btnItalic.classList.add("light-button");
+        this.btnItalic.classList.add("doc-edit-button");
+        this.btnItalic.style.backgroundImage = "url(res/italic.svg)";
+        this.btnItalic.style.left = "36px";
+        this.body.appendChild(this.btnItalic);
+
+        this.btnUnderline = document.createElement("button");
+        this.btnUnderline.classList.add("light-button");
+        this.btnUnderline.classList.add("doc-edit-button");
+        this.btnUnderline.style.backgroundImage = "url(res/underline.svg)";
+        this.btnUnderline.style.left = "72px";
+        this.body.appendChild(this.btnUnderline);
+
+        this.btnOList = document.createElement("button");
+        this.btnOList.classList.add("light-button");
+        this.btnOList.classList.add("doc-edit-button");
+        this.btnOList.style.backgroundImage = "url(res/orderedlist.svg)";
+        this.btnOList.style.left = "108px";
+        this.body.appendChild(this.btnOList);
+
+        this.btnUList = document.createElement("button");
+        this.btnUList.classList.add("light-button");
+        this.btnUList.classList.add("doc-edit-button");
+        this.btnUList.style.backgroundImage = "url(res/unorderedlist.svg)";
+        this.btnUList.style.left = "144px";
+        this.body.appendChild(this.btnUList);
+
+        this.btnCode = document.createElement("button");
+        this.btnCode.classList.add("light-button");
+        this.btnCode.classList.add("doc-edit-button");
+        this.btnCode.style.backgroundImage = "url(res/code.svg)";
+        this.btnCode.style.left = "180px";
+        this.body.appendChild(this.btnCode);
+
+        this.btnLink = document.createElement("button");
+        this.btnLink.classList.add("light-button");
+        this.btnLink.classList.add("doc-edit-button");
+        this.btnLink.style.backgroundImage = "url(res/link.svg)";
+        this.btnLink.style.left = "216px";
+        this.body.appendChild(this.btnLink);
+
         this.txtSearch.onchange = () => this.UpdateList();
 
+        this.btnBold.onclick = ()      => { document.execCommand("bold", false, null); };
+        this.btnItalic.onclick = ()    => { document.execCommand("italic", false, null); };
+        this.btnUnderline.onclick = () => { document.execCommand("underline", false, null); };
+        this.btnOList.onclick = ()     => { document.execCommand("insertOrderedList", false, null); };
+        this.btnUList.onclick = () => { document.execCommand("insertUnorderedList", false, null); };
+
+        this.btnCode.onclick = () => {
+            let sel, range;
+            if (window.getSelection && (sel = window.getSelection()).rangeCount) {
+                range = sel.getRangeAt(0);
+                if (range.startContainer.className != "") return;
+
+                var div = document.createElement("div");
+                div.className = "doc-code";
+                range.insertNode(div);
+                range.setStart(div, 0);
+
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        };
+
+        this.btnLink.onclick = () => {
+            let link = prompt("Enter a link:", "https://");
+            if (link != null) document.execCommand("createLink", false, link);
+        };
 
         setTimeout(() => { this.AfterResize(); }, 200);
 
@@ -139,9 +214,9 @@ class Documentation extends Window {
     AfterResize() { //override
         super.AfterResize();
         if (this.options.getBoundingClientRect().width < 260)
-            this.options.classList.add("debit-options-collapsed");
+            this.options.classList.add("doc-options-collapsed");
         else
-            this.options.classList.remove("debit-options-collapsed");
+            this.options.classList.remove("doc-options-collapsed");
     }
 
     UpdateList() {
