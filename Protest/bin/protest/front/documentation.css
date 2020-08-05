@@ -1,0 +1,95 @@
+.doc-list-pane {
+    position: absolute;
+    background-color: rgb(64,64,64);
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 282px;
+    padding-top: 8px;
+    padding-left: 8px;
+
+    display: grid;
+    grid-template-columns: 72px 200px auto;
+    grid-template-rows: 32px 8px auto 8px;
+    align-items: baseline;
+}
+
+.doc-options {
+    position: absolute;
+    left: 294px;
+    right: 0;
+    top: 4px;
+    height: 40px;
+    overflow: hidden;
+}
+
+.debit-options-collapsed > input[type=button] {
+    color: transparent;
+    width: 32px;
+    min-width: 32px;
+    padding-left: 0;
+}
+
+.doc-body-outer {
+    position: absolute;
+    left: 298px;
+    right: 0;
+    top: 48px;
+    bottom: 0;
+    font-family: var(--global-font-family);
+}
+
+.doc-body-outer > * {
+    position: absolute;
+}
+
+.doc-body-outer > .lblTitle {
+    left: 4px;
+    top: 8px;
+}
+
+.doc-body-outer > .txtTitle {
+    left: 160px;
+    top: 4px;
+    width: calc(100% - 188px);
+    max-width: 250px;
+}
+
+.doc-body-outer > .lblError {
+    left: 4px;
+    top: 48px;
+}
+
+.doc-body-outer > .txtError {
+    left: 160px;
+    top: 44px;
+    width: calc(100% - 188px);
+    max-width: 250px;
+}
+
+.doc-body-outer > .lblRelated {
+    left: 4px;
+    top: 88px;
+}
+
+.doc-body-outer > .divRelated {
+    left: 160px;
+    right: 40px;
+    top: 84px;
+    height: 48px;
+    margin-left: 4px;
+    border: 1px solid var(--control-color);
+    border-radius: 4px;
+    overflow-y: auto;
+}
+
+.doc-body-outer > .divContentContainer {
+    left: 0;
+    right: 8px;
+    top: 148px;
+    bottom: 8px;
+    padding: 8px;
+    overflow-y: scroll;
+    border: 1px solid var(--control-color);
+    border-radius: 4px;
+}

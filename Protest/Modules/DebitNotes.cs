@@ -77,12 +77,15 @@ public static class DebitNotes {
                     if (data.Length == 0) break;
 
                     bool found = true;
-                    if (!(keywords is null) && keywords.Length > 0)
+                    if (!(keywords is null) && keywords.Length > 0) //search content
                         for (int j = 0; j < keywords.Length; j++)
                             if (data.IndexOf(keywords[j], StringComparison.InvariantCultureIgnoreCase) == -1) {
                                 found = false;
                                 break;
                             }
+
+                    if (!found) //match filename
+                        found = (keywords.Length == 1 && files[i].Name == keywords[0]);
 
                     if (!found) continue;
 

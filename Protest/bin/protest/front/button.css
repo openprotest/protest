@@ -33,6 +33,27 @@ button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, i
 }
 
 
+.light-button {
+    background-color: rgb(192,192,192) !important;
+    color: #202020 !important;
+    font-weight: 600;
+}
+
+.light-button-withicon {
+    padding-left: 32px;
+    padding-right: 8px;
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    background-position: 4px center;
+}
+
+.light-button:hover {
+    background-color: rgb(160,160,160) !important;
+}
+.light-button:active {
+    background-color: rgb(160,160,160) !important;
+}
+
 @keyframes inner-glow {
     0%   { box-shadow: var(--theme-color) 0 0 1px 1px inset, var(--theme-color) 0 0 2px 1px; }
     50%  { box-shadow: var(--theme-color) 0 0 1px 1px inset, transparent 0 0 2px 1px; }

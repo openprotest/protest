@@ -11,28 +11,11 @@
 
 .debit-options {
     position: absolute;
-    left: 298px;
+    left: 294px;
     right: 0;
-    top: 0;
+    top: 4px;
     height: 40px;
     overflow: hidden;
-}
-
-.debit-options > input[type=button] {
-    background-color: rgb(192,192,192);
-    color: #202020;
-    font-weight: 600;
-    padding-left: 32px;
-    padding-right: 8px;
-    height: 28px;
-    background-repeat: no-repeat;
-    background-size: 24px 24px;
-    background-position: 4px center;
-}
-
-.debit-options > input[type=button]:hover,
-.debit-options > input[type=button]:active {
-    background-color: rgb(160,160,160);
 }
 
 .debit-options-collapsed > input[type=button] {
@@ -46,7 +29,7 @@
     position: absolute;
     left: 298px;
     right: 0;
-    top: 40px;
+    top: 44px;
     bottom: 0;
     font-family: var(--global-font-family);
     overflow-y: scroll;

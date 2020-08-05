@@ -84,7 +84,7 @@ class DebitNotes extends Window {
         this.chkShort.type = "checkbox";
         this.chkShort.checked = this.args.short;
         divShort.appendChild(this.chkShort);
-        this.AddCheckBoxLabel(divShort, this.chkShort, "Short-pending");
+        this.AddCheckBoxLabel(divShort, this.chkShort, "Short-term");
 
         const divLong = document.createElement("div");
         divLong.style.gridArea = "6 / 2";
@@ -94,7 +94,7 @@ class DebitNotes extends Window {
         this.chkLong.type = "checkbox";
         this.chkLong.checked = this.args.long;
         divLong.appendChild(this.chkLong);
-        this.AddCheckBoxLabel(divLong, this.chkLong, "Long-pending");
+        this.AddCheckBoxLabel(divLong, this.chkLong, "Long-term");
 
         const divReturned = document.createElement("div");
         divReturned.style.gridArea = "7 / 2";
@@ -127,30 +127,40 @@ class DebitNotes extends Window {
 
         this.btnNew = document.createElement("input");
         this.btnNew.style.backgroundImage = "url(res/new_user.svgz)";
+        this.btnNew.classList.add("light-button");
+        this.btnNew.classList.add("light-button-withicon");
         this.btnNew.type = "button";
-        this.btnNew.value = "Create new";
+        this.btnNew.value = "New";
         this.options.appendChild(this.btnNew);
 
         this.btnPrint = document.createElement("input");
         this.btnPrint.style.backgroundImage = "url(res/printer.svgz)";
+        this.btnPrint.classList.add("light-button");
+        this.btnPrint.classList.add("light-button-withicon");
         this.btnPrint.type = "button";
         this.btnPrint.value = "Print";
         this.options.appendChild(this.btnPrint);
 
         this.btnDublicate = document.createElement("input");
         this.btnDublicate.style.backgroundImage = "url(res/copy.svgz)";
+        this.btnDublicate.classList.add("light-button");
+        this.btnDublicate.classList.add("light-button-withicon");
         this.btnDublicate.type = "button";
         this.btnDublicate.value = "Dublicate";
         this.options.appendChild(this.btnDublicate);
 
         this.btnReturned = document.createElement("input");
         this.btnReturned.style.backgroundImage = "url(res/retured.svgz)";
+        this.btnReturned.classList.add("light-button");
+        this.btnReturned.classList.add("light-button-withicon");
         this.btnReturned.type = "button";
         this.btnReturned.value = "Mark as returned";
         this.options.appendChild(this.btnReturned);
 
         this.btnDelete = document.createElement("input");
         this.btnDelete.style.backgroundImage = "url(res/delete.svgz)";
+        this.btnDelete.classList.add("light-button");
+        this.btnDelete.classList.add("light-button-withicon");
         this.btnDelete.type = "button";
         this.btnDelete.value = "Delete";
         this.options.appendChild(this.btnDelete);
@@ -172,19 +182,15 @@ class DebitNotes extends Window {
         this.GetTemplates();
         this.AdjustButtons();
 
-        setTimeout(() => {
-            this.AfterResize();
-        }, 200);
+        setTimeout(() => { this.AfterResize(); }, 200);
     }
 
     AfterResize() { //override
         super.AfterResize();
-
-        if (this.content.getBoundingClientRect().width < 900) {
+        if (this.options.getBoundingClientRect().width < 550)
             this.options.classList.add("debit-options-collapsed");
-        } else {
+        else
             this.options.classList.remove("debit-options-collapsed");
-        }
     }
 
     GetNotes(append = true) {

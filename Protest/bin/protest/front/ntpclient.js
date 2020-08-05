@@ -112,6 +112,6 @@ class NtpClient extends Window {
         let d = new Date(local + def);
         this.lblLive.innerHTML = `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}:${d.getSeconds().toString().padStart(2,"0")}`;
 
-        setTimeout(() => { this.Update(id, timestamp, local) }, 999);
+        setTimeout(() => { this.Update(id, timestamp, local) }, 1000);
     }
 }

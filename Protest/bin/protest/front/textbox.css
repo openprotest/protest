@@ -15,7 +15,6 @@ select {
     padding: 4px 8px;
     margin: 2px 4px;
     transition: .2s;
-    position: relative;
 }
 
 select {
