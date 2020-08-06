@@ -300,7 +300,7 @@ body {
     background-color: rgba(0,0,0,.33);
     
     filter: none !important;
-    transition:.2s; -webkit-transition:.2s;
+    transition:.2s;
 
     animation-name: fadein;
     animation-duration: .1s;
@@ -321,7 +321,6 @@ body {
     padding: 8px;
 
     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 
     transform: scale(.5);
     transition: .4s;

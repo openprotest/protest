@@ -48,7 +48,7 @@ button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, i
 }
 
 .light-button:hover {
-    background-color: rgb(160,160,160) !important;
+    background-color: rgb(176,176,176) !important;
 }
 .light-button:active {
     background-color: rgb(160,160,160) !important;

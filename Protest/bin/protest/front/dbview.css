@@ -154,7 +154,6 @@
     width: calc(60% - 16px);
     font-weight: 600;
     user-select: text;
-    -webkit-user-select: text;
 }
 
 .db-property > div:nth-child(2) > div { /*multiple value boxes*/
@@ -339,9 +338,7 @@
     overflow: hidden;
     text-overflow: ellipsis;*/
     box-sizing: border-box;
-
     user-select: text;
-    -webkit-user-select: text;
 }
 
 .db-edit-property > input:nth-child(1) {

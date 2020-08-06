@@ -404,12 +404,6 @@
     100% { transform: translateX(175px); }
 }
 
-@keyframes wait-animation {
-    0% { transform: translateX(175px); }
-    50% { transform: translateX(-175px); }
-    100% { transform: translateX(175px); }
-}
-
 @keyframes win-open {
     0%{   transform: scale(1.1); filter: opacity(0); }
     100%{ transform: scale(1);   filter: opacity(1); }

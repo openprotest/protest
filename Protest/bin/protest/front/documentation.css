@@ -12,6 +12,8 @@
     grid-template-columns: 72px 200px auto;
     grid-template-rows: 32px 8px auto 8px;
     align-items: baseline;
+
+    transition: .4s;
 }
 
 .doc-options {
@@ -21,6 +23,8 @@
     top: 4px;
     height: 40px;
     overflow: hidden;
+
+    transition: .4s;
 }
 
 .doc-options-collapsed > input[type=button] {
@@ -36,7 +40,8 @@
     right: 0;
     top: 48px;
     bottom: 0;
-    font-family: var(--global-font-family);
+
+    transition: .4s;
 }
 
 .doc-body-outer > * {
@@ -74,13 +79,15 @@
 
 .doc-body-outer > .divRelated {
     left: 160px;
-    right: 40px;
+    right: 36px;
     top: 84px;
     height: 48px;
     margin-left: 4px;
-    border: 1px solid var(--control-color);
+    background-color: rgb(192,192,192);
     border-radius: 4px;
     overflow-y: auto;
+
+    transition: .4s;
 }
 
 .doc-edit-button {
@@ -94,20 +101,30 @@
 }
 
 .doc-body-outer > .divContentContainer {
-    left: 0;
+    background-color: rgb(192,192,192);
+    color: rgb(32,32,32);
+    left: 4px;
     right: 8px;
-    top: 174px;
+    top: 176px;
     bottom: 8px;
     padding: 8px;
     overflow-y: scroll;
-    border: 1px solid var(--control-color);
+    border: 1px solid rgb(192,192,192);
     border-radius: 4px;
+
+    user-select: text;
+    -webkit-user-drag: text;
+
+    transition: .4s;
 }
 
-.doc-body-outer > .divContentContainer a {
+/*.doc-body-outer > .divContentContainer a {
     color: var(--select-color);
     text-decoration: underline;
-}
+    background-color: rgb(56,56,56);
+    border-radius: 2px;
+    padding: 1px 2px;
+}*/
 
 .doc-body-outer > .divContentContainer .doc-code {
     width: 100%;
