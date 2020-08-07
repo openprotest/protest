@@ -825,13 +825,13 @@ class DebitNotes extends Window {
             txtFind.placeholder = "Search";
             dialog.appendChild(txtFind);
 
-            const lstUsers = document.createElement("div");
-            lstUsers.className = "no-results";
-            lstUsers.style.position = "absolute";
-            lstUsers.style.left = lstUsers.style.right = "0";
-            lstUsers.style.top = lstUsers.style.bottom = "48px";
-            lstUsers.style.overflowY = "auto";
-            dialog.appendChild(lstUsers);
+            const divUsers = document.createElement("div");
+            divUsers.className = "no-results";
+            divUsers.style.position = "absolute";
+            divUsers.style.left = divUsers.style.right = "0";
+            divUsers.style.top = divUsers.style.bottom = "48px";
+            divUsers.style.overflowY = "auto";
+            dialog.appendChild(divUsers);
 
             const pnlButtons = document.createElement("div");
             pnlButtons.style.bottom = "8px";
@@ -848,8 +848,8 @@ class DebitNotes extends Window {
             pnlButtons.appendChild(btnCancel);
 
             txtFind.onchange =
-                txtFind.oninput = () => {
-                    lstUsers.innerHTML = "";
+            txtFind.oninput = () => {
+                    divUsers.innerHTML = "";
 
                     let keywords = [];
                     if (txtFind.value.trim().length > 0)
@@ -913,7 +913,7 @@ class DebitNotes extends Window {
                             btnCancel.onclick();
                         };
 
-                        lstUsers.appendChild(element);
+                        divUsers.appendChild(element);
                     }
                 };
 

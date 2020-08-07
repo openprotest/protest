@@ -7,6 +7,7 @@ class Documentation extends Window {
         };
 
         this.AddCssDependencies("documentation.css");
+        this.AddCssDependencies("list.css");
 
         this.setTitle("Documentation");
         this.setIcon("res/documentation.svgz");
@@ -128,7 +129,7 @@ class Documentation extends Window {
         this.btnAddRelated.classList.add("light-button");
         this.btnAddRelated.style.backgroundImage = "url(res/new_equip.svgz)";
         this.btnAddRelated.style.right = "4px";
-        this.btnAddRelated.style.top = "89px";
+        this.btnAddRelated.style.top = "92px";
         this.btnAddRelated.style.minWidth = "28px";
         this.btnAddRelated.style.width = "28px";
         this.btnAddRelated.style.height = "28px";
@@ -199,7 +200,7 @@ class Documentation extends Window {
         this.btnLink.classList.add("doc-edit-button");
         this.body.appendChild(this.btnLink);
 
-        this.txtSearch.onchange = () => this.UpdateList();
+        this.txtSearch.onchange = () => this.GetDocs();
 
         this.btnNew.onclick = ()=> this.New();
         this.btnEdit.onclick = ()=> this.Edit();
@@ -209,10 +210,10 @@ class Documentation extends Window {
 
         this.btnAddRelated.onclick = () => this.AddRelated();
 
-        this.btnBold.onclick = ()      => { document.execCommand("bold", false, null); };
-        this.btnItalic.onclick = ()    => { document.execCommand("italic", false, null); };
+        this.btnBold.onclick = () => { document.execCommand("bold", false, null); };
+        this.btnItalic.onclick = () => { document.execCommand("italic", false, null); };
         this.btnUnderline.onclick = () => { document.execCommand("underline", false, null); };
-        this.btnOList.onclick = ()     => { document.execCommand("insertOrderedList", false, null); };
+        this.btnOList.onclick = () => { document.execCommand("insertOrderedList", false, null); };
         this.btnUList.onclick = () => { document.execCommand("insertUnorderedList", false, null); };
 
         this.btnCode.onclick = () => {
@@ -232,13 +233,58 @@ class Documentation extends Window {
         };
 
         this.btnLink.onclick = () => {
-            let link = prompt("Enter a link:", "https://");
-            if (link != null) document.execCommand("createLink", false, link);
+            let sel = window.getSelection();
+            let range = sel.getRangeAt(0);
+
+            const dialog = this.DialogBox("125px");
+            const btnOK = dialog.btnOK;
+            const btnCancel = dialog.btnCancel;
+            const buttonBox = dialog.buttonBox;
+            const innerBox = dialog.innerBox;
+
+            innerBox.style.textAlign = "center";
+
+            innerBox.appendChild(document.createElement("br"));
+
+            const lblLink = document.createElement("div");
+            lblLink.innerHTML = "Link:";
+            lblLink.style.display = "inline-block";
+            innerBox.appendChild(lblLink);
+
+            const txtLink = document.createElement("input");
+            txtLink.type = "text";
+            txtLink.placeholder = "https://github.com/veniware";
+            txtLink.style.width = "calc(80% - 64px)";
+            innerBox.appendChild(txtLink);
+
+            const Ok_onclick = btnOK.onclick;
+            btnOK.onclick = () => {
+                if (txtLink.value.length > 0) {
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    document.execCommand("createLink", false, txtLink.value);
+                    document.getSelection().anchorNode.parentElement.target = '_blank';
+                    Ok_onclick();
+                }
+            };
+
+            txtLink.onkeydown = event => {
+                if ((event.keyCode === 13)) {                    
+                    btnOK.focus();
+                    return;
+                }
+
+                if ((event.keyCode === 27)) 
+                    btnCancel.onclick();
+            };
+
+            setTimeout(() => txtLink.focus(), 10);
         };
 
         setTimeout(() => { this.AfterResize(); }, 200);
 
         this.ReadMode();
+        this.GetDocs();
     }
 
     AfterResize() { //override
@@ -249,10 +295,114 @@ class Documentation extends Window {
             this.options.classList.remove("doc-options-collapsed");
     }
 
-    UpdateList() {
+    GetDocs() {
         this.args = {
             keywords: this.txtSearch.value,
         };
+
+        this.UpdateList();
+    }
+
+    UpdateList() {
+
+    }
+
+    AddToList() {
+
+    }
+
+    Preview() {
+
+    }
+
+    AdjustButtons() {
+
+    }
+
+    ReadMode() {
+        this.sidebar.style.transform = "none";
+        this.sidebar.style.filter = "none";
+        this.sidebar.style.visibility = "visible";
+
+        this.options.style.left = "";
+        this.body.style.left = "";
+
+        this.btnNew.style.display = "inline-block";
+        this.btnEdit.style.display = "inline-block";
+        this.btnDelete.style.display = "inline-block";
+        this.btnSave.style.display = "none";
+        this.btnDiscard.style.display = "none";
+
+        this.txtTitle.readOnly = true;
+        this.txtError.readOnly = true;
+
+        this.divRelated.classList.remove("doc-related-editable");
+        this.divRelated.style.right = "8px";
+        this.btnAddRelated.style.opacity = "0";
+        this.btnAddRelated.style.visibility = "hidden";
+        this.divContent.contentEditable = false;
+
+        this.btnBold.style.opacity = "0";
+        this.btnBold.style.visibility = "hidden";
+        this.btnItalic.style.opacity = "0";
+        this.btnItalic.style.visibility = "hidden";
+        this.btnUnderline.style.opacity = "0";
+        this.btnUnderline.style.visibility = "hidden";
+        this.btnOList.style.opacity = "0";
+        this.btnOList.style.visibility = "hidden";
+        this.btnUList.style.opacity = "0";
+        this.btnUList.style.visibility = "hidden";
+        this.btnCode.style.opacity = "0";
+        this.btnCode.style.visibility = "hidden";
+        this.btnLink.style.opacity = "0";
+        this.btnLink.style.visibility = "hidden";
+
+        this.divContentContainer.style.top = "148px";
+
+        setTimeout(() => this.AfterResize(), 400);
+    }
+
+    EditMode() {
+        this.sidebar.style.transform = "translateX(-300px)";
+        this.sidebar.style.filter = "opaciry(0)";
+        this.sidebar.style.visibility = "hidden";
+
+        this.options.style.left = "4px";
+        this.body.style.left = "4px";
+
+        this.btnNew.style.display = "none";
+        this.btnEdit.style.display = "none";
+        this.btnDelete.style.display = "none";
+        this.btnSave.style.display = "inline-block";
+        this.btnDiscard.style.display = "inline-block";
+
+        this.txtTitle.readOnly = false;
+        this.txtError.readOnly = false;
+
+        this.divRelated.classList.add("doc-related-editable");
+        this.divRelated.style.right = "36px";
+        this.btnAddRelated.style.opacity = "1";
+        this.btnAddRelated.style.visibility = "visible";
+        this.divContent.contentEditable = true;
+
+        this.btnBold.style.opacity = "1";
+        this.btnBold.style.visibility = "visible";
+        this.btnItalic.style.opacity = "1";
+        this.btnItalic.style.visibility = "visible";
+        this.btnUnderline.style.opacity = "1";
+        this.btnUnderline.style.visibility = "visible";
+        this.btnOList.style.opacity = "1";
+        this.btnOList.style.visibility = "visible";
+        this.btnUList.style.opacity = "1";
+        this.btnUList.style.visibility = "visible";
+        this.btnCode.style.opacity = "1";
+        this.btnCode.style.visibility = "visible";
+        this.btnLink.style.opacity = "1";
+        this.btnLink.style.visibility = "visible";
+
+        this.divContentContainer.style.top = "184px";
+
+        setTimeout(() => this.AfterResize(), 400);
     }
 
     New() {
@@ -302,92 +452,109 @@ class Documentation extends Window {
         const buttonBox = dialog.buttonBox;
         const innerBox = dialog.innerBox;
 
+        innerBox.style.padding = "8px";
+
         btnOK.style.display = "none";
-        btnCancel.value = "Close";
+
+        const txtFind = document.createElement("input");
+        txtFind.type = "text";
+        txtFind.placeholder = "Search";
+        innerBox.appendChild(txtFind);
+
+        const divEquip = document.createElement("div");
+        divEquip.className = "no-results";
+        divEquip.style.position = "absolute";
+        divEquip.style.left = divEquip.style.right = "0";
+        divEquip.style.top = divEquip.style.bottom = "48px";
+        divEquip.style.overflowY = "auto";
+        innerBox.appendChild(divEquip);
+
+        txtFind.onchange = txtFind.oninput = () => {
+            divEquip.innerHTML = "";
+
+            let keywords = [];
+            if (txtFind.value.trim().length > 0)
+                keywords = txtFind.value.trim().toLowerCase().split(" ");
+
+            for (let i = 0; i < db_equip.length; i++) {
+                let match = true;
+
+                for (let j = 0; j < keywords.length; j++) {
+                    let flag = false;
+                    for (let k in db_equip[i]) {
+                        if (k.startsWith(".")) continue;
+                        if (db_equip[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
+                            flag = true;
+                    }
+                    if (!flag) {
+                        match = false;
+                        continue;
+                    }
+                }
+
+                if (!match) continue;
+
+                const element = document.createElement("div");
+                element.className = "lst-obj-ele";
+                this.content.appendChild(element);
+
+                const icon = document.createElement("div");
+                icon.className = "lst-obj-ico";
+                icon.style.backgroundImage = "url(" + GetEquipIcon(db_equip[i]["TYPE"]) + ")";
+                element.appendChild(icon);
+
+                let EQUIP_LIST_ORDER;
+                if (localStorage.getItem("columns_users"))
+                    EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("columns_equip"));
+                else
+                    EQUIP_LIST_ORDER = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+
+                for (let j = 0; j < 6; j++) {
+                    if (!db_equip[i].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
+
+                    const newLabel = document.createElement("div");
+                    newLabel.innerHTML = db_equip[i][EQUIP_LIST_ORDER[j]][0];
+                    newLabel.className = "lst-obj-lbl-" + j;
+                    element.appendChild(newLabel);
+                }
+
+                let name = db_equip[i][EQUIP_LIST_ORDER[0]][0];
+                let u_id = "";
+                if (db_equip[i].hasOwnProperty("SERIAL NUMBER"))
+                    u_id = db_equip[i]["SERIAL NUMBER"][0];
+                else if (db_equip[i].hasOwnProperty("MAC ADDRESS"))
+                    u_id = db_equip[i]["MAC ADDRESS"][0];
+                else if (db_equip[i].hasOwnProperty("IP"))
+                    u_id = db_equip[i]["IP"][0];                
+                
+                element.ondblclick = () => {
+                    const related = document.createElement("div");
+                    related.setAttribute("file", db_equip[i][".FILENAME"][0]);
+                    related.setAttribute("label1", name);
+                    related.setAttribute("label2", u_id);
+                    related.style.backgroundImage = icon.style.backgroundImage;
+                    this.divRelated.appendChild(related);
+
+                    const divRemove = document.createElement("div");
+                    related.appendChild(divRemove);
+
+                    btnCancel.onclick();
+
+                    related.onclick = () => {
+                        console.log("back");
+                    };
+
+                    divRemove.onclick = event => {
+                        event.stopPropagation();
+                        this.divRelated.removeChild(related);
+                    };
+                };
+
+                divEquip.appendChild(element);
+            }
+        };
+
+        txtFind.focus();
+        txtFind.onchange();
     }
-
-    ReadMode() {
-        this.sidebar.style.transform = "none";
-        this.sidebar.style.filter = "none";
-        this.sidebar.style.visibility = "visible";
-
-        this.options.style.left = "";
-        this.body.style.left = "";
-
-        this.btnNew.style.display = "inline-block";
-        this.btnEdit.style.display = "inline-block";
-        this.btnDelete.style.display = "inline-block";
-        this.btnSave.style.display = "none";
-        this.btnDiscard.style.display = "none";
-
-        this.txtTitle.readOnly = true;
-        this.txtError.readOnly = true;
-
-        this.divRelated.style.right = "8px";
-        this.btnAddRelated.style.opacity = "0";
-        this.btnAddRelated.style.visibility = "hidden";
-        this.divContent.contentEditable = false;
-
-        this.btnBold.style.opacity = "0";
-        this.btnBold.style.visibility = "hidden";
-        this.btnItalic.style.opacity = "0";
-        this.btnItalic.style.visibility = "hidden";
-        this.btnUnderline.style.opacity = "0";
-        this.btnUnderline.style.visibility = "hidden";
-        this.btnOList.style.opacity = "0";
-        this.btnOList.style.visibility = "hidden";
-        this.btnUList.style.opacity = "0";
-        this.btnUList.style.visibility = "hidden";
-        this.btnCode.style.opacity = "0";
-        this.btnCode.style.visibility = "hidden";
-        this.btnLink.style.opacity = "0";
-        this.btnLink.style.visibility = "hidden";
-
-        this.divContentContainer.style.top = "140px";
-
-        setTimeout(() => this.AfterResize(), 400);
-    }
-
-    EditMode() {
-        this.sidebar.style.transform = "translateX(-300px)";
-        this.sidebar.style.filter = "opaciry(0)";
-        this.sidebar.style.visibility = "hidden";
-
-        this.options.style.left = "4px";
-        this.body.style.left = "4px";
-
-        this.btnNew.style.display = "none";
-        this.btnEdit.style.display = "none";
-        this.btnDelete.style.display = "none";
-        this.btnSave.style.display = "inline-block";
-        this.btnDiscard.style.display = "inline-block";
-
-        this.txtTitle.readOnly = false;
-        this.txtError.readOnly = false;
-
-        this.divRelated.style.right = "36px";
-        this.btnAddRelated.style.opacity = "1";
-        this.btnAddRelated.style.visibility = "visible";
-        this.divContent.contentEditable = true;
-
-        this.btnBold.style.opacity = "1";
-        this.btnBold.style.visibility = "visible";
-        this.btnItalic.style.opacity = "1";
-        this.btnItalic.style.visibility = "visible";
-        this.btnUnderline.style.opacity = "1";
-        this.btnUnderline.style.visibility = "visible";
-        this.btnOList.style.opacity = "1";
-        this.btnOList.style.visibility = "visible";
-        this.btnUList.style.opacity = "1";
-        this.btnUList.style.visibility = "visible";
-        this.btnCode.style.opacity = "1";
-        this.btnCode.style.visibility = "visible";
-        this.btnLink.style.opacity = "1";
-        this.btnLink.style.visibility = "visible";
-
-        this.divContentContainer.style.top = "176px";
-
-        setTimeout(() => this.AfterResize(), 400);
-    }
-
 }

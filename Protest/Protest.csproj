@@ -159,6 +159,7 @@
     <Content Include="bin\protest\front\res\italic.svg" />
     <Content Include="bin\protest\front\res\link.svg" />
     <Content Include="bin\protest\front\res\orderedlist.svg" />
+    <Content Include="bin\protest\front\res\save.svg" />
     <Content Include="bin\protest\front\res\underline.svg" />
     <Content Include="bin\protest\front\res\unorderedlist.svg" />
     <Content Include="bin\protest\front\res\watchdog.svg" />
