@@ -465,7 +465,8 @@ class Documentation extends Window {
         divEquip.className = "no-results";
         divEquip.style.position = "absolute";
         divEquip.style.left = divEquip.style.right = "0";
-        divEquip.style.top = divEquip.style.bottom = "48px";
+        divEquip.style.top = "48px";
+        divEquip.style.bottom = "0";
         divEquip.style.overflowY = "auto";
         innerBox.appendChild(divEquip);
 
@@ -475,6 +476,12 @@ class Documentation extends Window {
             let keywords = [];
             if (txtFind.value.trim().length > 0)
                 keywords = txtFind.value.trim().toLowerCase().split(" ");
+
+            let EQUIP_LIST_ORDER;
+            if (localStorage.getItem("columns_users"))
+                EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("columns_equip"));
+            else
+                EQUIP_LIST_ORDER = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
 
             for (let i = 0; i < db_equip.length; i++) {
                 let match = true;
@@ -494,20 +501,32 @@ class Documentation extends Window {
 
                 if (!match) continue;
 
+                let name = "";
+                if (db_equip[i].hasOwnProperty("NAME"))
+                    name = db_equip[i]["NAME"][0];
+                else if (db_equip[i].hasOwnProperty("HOSTNAME"))
+                    name = db_equip[i]["HOSTNAME"][0];
+                else if (db_equip[i].hasOwnProperty("IP"))
+                    name = db_equip[i]["IP"][0];
+
+                let u_id = "";
+                if (db_equip[i].hasOwnProperty("SERIAL NUMBER"))
+                    u_id = db_equip[i]["SERIAL NUMBER"][0];
+                else if (db_equip[i].hasOwnProperty("MAC ADDRESS"))
+                    u_id = db_equip[i]["MAC ADDRESS"][0];
+
+                if (name.length === 0 && u_id.length === 0) continue;
+
                 const element = document.createElement("div");
                 element.className = "lst-obj-ele";
-                this.content.appendChild(element);
+                divEquip.appendChild(element);
 
-                const icon = document.createElement("div");
-                icon.className = "lst-obj-ico";
-                icon.style.backgroundImage = "url(" + GetEquipIcon(db_equip[i]["TYPE"]) + ")";
-                element.appendChild(icon);
-
-                let EQUIP_LIST_ORDER;
-                if (localStorage.getItem("columns_users"))
-                    EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("columns_equip"));
-                else
-                    EQUIP_LIST_ORDER = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+                if (db_equip[i].hasOwnProperty("TYPE")) {
+                    const icon = document.createElement("div");
+                    icon.className = "lst-obj-ico";
+                    icon.style.backgroundImage = `url(${GetEquipIcon(db_equip[i]["TYPE"])})`;
+                    element.appendChild(icon);
+                }
 
                 for (let j = 0; j < 6; j++) {
                     if (!db_equip[i].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
@@ -517,22 +536,13 @@ class Documentation extends Window {
                     newLabel.className = "lst-obj-lbl-" + j;
                     element.appendChild(newLabel);
                 }
-
-                let name = db_equip[i][EQUIP_LIST_ORDER[0]][0];
-                let u_id = "";
-                if (db_equip[i].hasOwnProperty("SERIAL NUMBER"))
-                    u_id = db_equip[i]["SERIAL NUMBER"][0];
-                else if (db_equip[i].hasOwnProperty("MAC ADDRESS"))
-                    u_id = db_equip[i]["MAC ADDRESS"][0];
-                else if (db_equip[i].hasOwnProperty("IP"))
-                    u_id = db_equip[i]["IP"][0];                
                 
                 element.ondblclick = () => {
                     const related = document.createElement("div");
                     related.setAttribute("file", db_equip[i][".FILENAME"][0]);
                     related.setAttribute("label1", name);
                     related.setAttribute("label2", u_id);
-                    related.style.backgroundImage = icon.style.backgroundImage;
+                    related.style.backgroundImage = `url(${GetEquipIcon(db_equip[i]["TYPE"])})`;
                     this.divRelated.appendChild(related);
 
                     const divRemove = document.createElement("div");
@@ -541,7 +551,15 @@ class Documentation extends Window {
                     btnCancel.onclick();
 
                     related.onclick = () => {
-                        console.log("back");
+                        let filename = db_equip[i][".FILENAME"][0];
+                        for (let j = 0; j < $w.array.length; j++)
+                            if ($w.array[j] instanceof Equip && $w.array[j].filename === filename) {
+                                $w.array[j].Minimize(); //minimize/restore
+                                return;
+                            }
+
+                        new Equip(filename);
+                        event.stopPropagation();
                     };
 
                     divRemove.onclick = event => {

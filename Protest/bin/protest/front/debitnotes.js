@@ -851,71 +851,71 @@ class DebitNotes extends Window {
             txtFind.oninput = () => {
                     divUsers.innerHTML = "";
 
-                    let keywords = [];
-                    if (txtFind.value.trim().length > 0)
-                        keywords = txtFind.value.trim().toLowerCase().split(" ");
+                let keywords = [];
+                if (txtFind.value.trim().length > 0)
+                    keywords = txtFind.value.trim().toLowerCase().split(" ");
 
-                    for (let i = 0; i < db_users.length; i++) {
-                        let match = true;
+                let USER_LIST_ORDER;
+                if (localStorage.getItem("columns_users"))
+                    USER_LIST_ORDER = JSON.parse(localStorage.getItem("columns_users"));
+                else
+                    USER_LIST_ORDER = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
 
-                        for (let j = 0; j < keywords.length; j++) {
-                            let flag = false;
-                            for (let k in db_users[i]) {
-                                if (k.startsWith(".")) continue;
-                                if (db_users[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
-                                    flag = true;
-                            }
-                            if (!flag) {
-                                match = false;
-                                continue;
-                            }
+                for (let i = 0; i < db_users.length; i++) {
+                    let match = true;
+
+                    for (let j = 0; j < keywords.length; j++) {
+                        let flag = false;
+                        for (let k in db_users[i]) {
+                            if (k.startsWith(".")) continue;
+                            if (db_users[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
+                                flag = true;
                         }
-
-                        if (!match) continue;
-
-                        let firstname = (db_users[i].hasOwnProperty("FIRST NAME")) ? db_users[i]["FIRST NAME"][0] : "";
-                        let lastname = (db_users[i].hasOwnProperty("LAST NAME")) ? db_users[i]["LAST NAME"][0] : "";
-                        if (firstname.length == 0 || lastname.length == 0) continue;
-
-                        let title = (db_users[i].hasOwnProperty("TITLE")) ? db_users[i]["TITLE"][0] : "";
-                        let department = (db_users[i].hasOwnProperty("DEPARTMENT")) ? db_users[i]["DEPARTMENT"][0] : "";
-
-                        const element = document.createElement("div");
-                        element.className = "lst-obj-ele";
-                        this.content.appendChild(element);
-
-                        const icon = document.createElement("div");
-                        icon.className = "lst-obj-ico";
-                        icon.style.backgroundImage = "url(res/user.svgz)";
-                        element.appendChild(icon);
-
-                        let USER_LIST_ORDER;
-                        if (localStorage.getItem("columns_users"))
-                            USER_LIST_ORDER = JSON.parse(localStorage.getItem("columns_users"));
-                        else
-                            USER_LIST_ORDER = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
-
-                        for (let j = 0; j < 6; j++) {
-                            if (!db_users[i].hasOwnProperty(USER_LIST_ORDER[j])) continue;
-
-                            const newLabel = document.createElement("div");
-                            newLabel.innerHTML = db_users[i][USER_LIST_ORDER[j]][0];
-                            newLabel.className = "lst-obj-lbl-" + j;
-                            element.appendChild(newLabel);
+                        if (!flag) {
+                            match = false;
+                            continue;
                         }
-
-                        element.ondblclick = () => {
-                            txtFirstName.value = firstname;
-                            txtLastName.value = lastname;
-                            txtTitle.value = title;
-                            txtDep.value = department;
-
-                            btnCancel.onclick();
-                        };
-
-                        divUsers.appendChild(element);
                     }
-                };
+
+                    if (!match) continue;
+
+                    let firstname = (db_users[i].hasOwnProperty("FIRST NAME")) ? db_users[i]["FIRST NAME"][0] : "";
+                    let lastname = (db_users[i].hasOwnProperty("LAST NAME")) ? db_users[i]["LAST NAME"][0] : "";
+                    if (firstname.length == 0 || lastname.length == 0) continue;
+
+                    let title = (db_users[i].hasOwnProperty("TITLE")) ? db_users[i]["TITLE"][0] : "";
+                    let department = (db_users[i].hasOwnProperty("DEPARTMENT")) ? db_users[i]["DEPARTMENT"][0] : "";
+
+                    const element = document.createElement("div");
+                    element.className = "lst-obj-ele";
+                    this.content.appendChild(element);
+
+                    const icon = document.createElement("div");
+                    icon.className = "lst-obj-ico";
+                    icon.style.backgroundImage = "url(res/user.svgz)";
+                    element.appendChild(icon);
+
+                    for (let j = 0; j < 6; j++) {
+                        if (!db_users[i].hasOwnProperty(USER_LIST_ORDER[j])) continue;
+
+                        const newLabel = document.createElement("div");
+                        newLabel.innerHTML = db_users[i][USER_LIST_ORDER[j]][0];
+                        newLabel.className = "lst-obj-lbl-" + j;
+                        element.appendChild(newLabel);
+                    }
+
+                    element.ondblclick = () => {
+                        txtFirstName.value = firstname;
+                        txtLastName.value = lastname;
+                        txtTitle.value = title;
+                        txtDep.value = department;
+
+                        btnCancel.onclick();
+                    };
+
+                    divUsers.appendChild(element);
+                }
+            };
 
             btnCancel.onclick = () => {
                 innerBox.style.filter = "none";
