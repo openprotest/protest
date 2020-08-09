@@ -6,9 +6,12 @@ using System.Net;
 using System.Text;
 
 public static class DebitNotes {
-    static readonly object DEBITNOTE_LOCK = new object();
+    static readonly object DEBIT_LOCK = new object();
 
-    public static byte[] GetDebitNotes(string[] para) {
+    public static byte[] GetDebitNotes(in string[] para) {
+        DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DEBIT);
+        if (!dir.Exists) return Strings.FLE.Array;
+
         string from = String.Empty;
         string to = String.Empty;
         string[] keywords = null;
@@ -45,9 +48,6 @@ public static class DebitNotes {
             }
         }
 
-        DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DEBIT);
-        if (!dir.Exists) return Strings.FLE.Array;
-
         List<FileInfo> files = new List<FileInfo>();
 
         if (shortterm) {
@@ -69,9 +69,8 @@ public static class DebitNotes {
 
         StringBuilder sb = new StringBuilder();
 
-        lock (DEBITNOTE_LOCK) {
-            for (int i = 0; i < files.Count; i++) {
-
+        lock (DEBIT_LOCK)
+            for (int i = 0; i < files.Count; i++)
                 try {
                     string data = File.ReadAllText(files[i].FullName);
                     if (data.Length == 0) break;
@@ -109,9 +108,6 @@ public static class DebitNotes {
                         sb.Append($"returned{(char)127}");
 
                 } catch  { }
-
-            }
-        }
 
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
@@ -170,7 +166,7 @@ public static class DebitNotes {
 
         try {
 
-            lock (DEBITNOTE_LOCK) {
+            lock (DEBIT_LOCK) {
                 DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DEBIT);
                 if (!dir.Exists) dir.Create();
 
@@ -193,7 +189,7 @@ public static class DebitNotes {
         return Encoding.UTF8.GetBytes(name);
     }
 
-    public static byte[] MarkDebitNote(string[] para) {
+    public static byte[] MarkDebitNote(in string[] para, in string performer) {
         string code = String.Empty;
         string type = String.Empty;
         for (int i = 0; i < para.Length; i++) {
@@ -209,14 +205,14 @@ public static class DebitNotes {
         DirectoryInfo dirReturned = new DirectoryInfo(Strings.DIR_DEBIT_RETURNED);
         if (!dirReturned.Exists) dirReturned.Create();
 
-        lock (DEBITNOTE_LOCK) {
+        lock (DEBIT_LOCK) {
             file.MoveTo(dirReturned.FullName + "\\" + code);
         }
 
         return Strings.OK.Array;
     }
 
-    public static byte[] DeleteDebitNote(string[] para) {
+    public static byte[] DeleteDebitNote(in string[] para, in string performer) {
         string code = String.Empty;
         string type = String.Empty;
         for (int i = 0; i < para.Length; i++) {
@@ -228,7 +224,7 @@ public static class DebitNotes {
 
         FileInfo file = new FileInfo($"{(type=="short" ? Strings.DIR_DEBIT_SHORT : Strings.DIR_DEBIT_LONG)}\\{code}");
         if (!file.Exists) return Strings.FLE.Array;
-        lock (DEBITNOTE_LOCK) file.Delete();
+        lock (DEBIT_LOCK) file.Delete();
 
         return Strings.OK.Array;
     }

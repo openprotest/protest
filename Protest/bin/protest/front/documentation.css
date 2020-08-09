@@ -54,33 +54,21 @@
 }
 
 .doc-body-outer > .txtTitle {
-    left: 160px;
+    left: 120px;
     top: 4px;
-    width: calc(100% - 188px);
-    max-width: 250px;
-}
-
-.doc-body-outer > .lblError {
-    left: 4px;
-    top: 48px;
-}
-
-.doc-body-outer > .txtError {
-    left: 160px;
-    top: 44px;
     width: calc(100% - 188px);
     max-width: 250px;
 }
 
 .doc-body-outer > .lblRelated {
     left: 4px;
-    top: 88px;
+    top: 44px;
 }
 
 .doc-body-outer > .divRelated {
-    left: 160px;
+    left: 120px;
     right: 36px;
-    top: 84px;
+    top: 42px;
     height: 52px;
     margin-left: 4px;
     background-color: rgb(192,192,192);
@@ -152,7 +140,7 @@
 
 .doc-edit-button {
     position: absolute;
-    top: 146px;
+    top: 106px;
     min-width: 32px;
     width: 32px;
     background-size: 24px 24px;
@@ -197,4 +185,20 @@
 
 .doc-body-outer > .divContentContainer .doc-code + .doc-code {
     padding-top: 2px;
+}
+
+.doc-body-outer > .divContentContainer table tr > td {
+    border: 1px solid black;
+    min-width: 128px;
+}
+
+.doc-entry {
+    color: #202020;
+    font-weight: 600;
+    height: 22px;
+    padding: 6px 0px 4px 8px;
+}
+
+.doc-entry:hover {
+    background-color: var(--highlight-color);
 }

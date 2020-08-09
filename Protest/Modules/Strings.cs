@@ -46,6 +46,8 @@ public static class Strings {
     public static readonly string DIR_LASTSEEN    = $"{Directory.GetCurrentDirectory()}\\protest\\lastseen";
     public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
     
+    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
+
     public static readonly string DIR_DEBIT       = $"{Directory.GetCurrentDirectory()}\\protest\\debit";
     public static readonly string DIR_DEBIT_SHORT = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\short";
     public static readonly string DIR_DEBIT_LONG  = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\long";

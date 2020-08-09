@@ -249,7 +249,6 @@ class DebitNotes extends Window {
 
             this.AddToList(code, fn, ln, title, department, date, it, template, equip, status, lastSelection);
         }
-
     }
 
     AddToList(code, fn, ln, title, department, date, it, template, equip, status, lastSelection) {
@@ -281,9 +280,8 @@ class DebitNotes extends Window {
             }, 0);
         };
 
-        if (lastSelection && lastSelection[0] == code) {
+        if (lastSelection && lastSelection[0] == code)
             entry.onclick();
-        }
     }
 
     Preview(code, fn, ln, title, department, date, it, template, equip, status) {
@@ -416,6 +414,7 @@ class DebitNotes extends Window {
             lblReturned.style.borderRadius = "4px";
             lblReturned.style.transform = "rotate(-20deg) scale(3)";
             lblReturned.style.mixBlendMode = "multiply";
+            lblReturned.style.animation = "stamped .2s 1";
             divReturned.appendChild(lblReturned);
         }
 

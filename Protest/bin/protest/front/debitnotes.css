@@ -123,3 +123,9 @@
     border: #888 1px solid;
     border-radius: 50%;
 }
+
+@keyframes stamped {
+    0%{   transform: rotate(-20deg) scale(4); filter: opacity(0); }
+    20%{  transform: rotate(-20deg) scale(3.8); filter: opacity(.8); }
+    100%{ transform: rotate(-20deg) scale(3); filter: opacity(1); }
+}

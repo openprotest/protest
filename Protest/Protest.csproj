@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Modules\DebitNotes.cs" />
+    <Compile Include="Modules\Documentation.cs" />
     <Compile Include="Modules\TaskWrapper.cs" />
     <Compile Include="Modules\Tools\ActiveDirectory.cs" />
     <Compile Include="Modules\KeepAlive.cs" />

@@ -105,15 +105,6 @@ class Documentation extends Window {
 
         this.body.appendChild(document.createElement("br"));
 
-        this.lblError = document.createElement("div");
-        this.lblError.innerHTML = "Error message/code:";
-        this.lblError.className = "lblError";
-        this.body.appendChild(this.lblError);
-        this.txtError = document.createElement("input");
-        this.txtError.type = "text";
-        this.txtError.className = "txtError";
-        this.body.appendChild(this.txtError);
-
         this.lblRelated = document.createElement("div");
         this.lblRelated.innerHTML = "Related devices:";
         this.lblRelated.className = "lblRelated";
@@ -129,7 +120,7 @@ class Documentation extends Window {
         this.btnAddRelated.classList.add("light-button");
         this.btnAddRelated.style.backgroundImage = "url(res/new_equip.svgz)";
         this.btnAddRelated.style.right = "4px";
-        this.btnAddRelated.style.top = "92px";
+        this.btnAddRelated.style.top = "50px";
         this.btnAddRelated.style.minWidth = "28px";
         this.btnAddRelated.style.width = "28px";
         this.btnAddRelated.style.height = "28px";
@@ -145,7 +136,6 @@ class Documentation extends Window {
         this.body.appendChild(this.divContentContainer);
 
         this.divContent = document.createElement("div");
-        this.divContent.setAttribute("contenteditable", true);
         this.divContent.style.width = "100%";
         this.divContent.style.minHeight = "100%";
         this.divContent.style.outline = "none";
@@ -285,6 +275,7 @@ class Documentation extends Window {
 
         this.ReadMode();
         this.GetDocs();
+        this.AdjustButtons();
     }
 
     AfterResize() { //override
@@ -300,23 +291,79 @@ class Documentation extends Window {
             keywords: this.txtSearch.value,
         };
 
-        this.UpdateList();
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let split = xhr.responseText.split(String.fromCharCode(127));
+                this.UpdateList(split, this.selected);
+                this.selected = null;
+                this.AdjustButtons();
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+
+        if (this.txtSearch.value.length == 0)
+            xhr.open("GET", "getdocs", true);
+        else
+            xhr.open("GET", `getdocs&keywords=${this.txtSearch.value}`, true);
+        xhr.send();
     }
 
-    UpdateList() {
+    UpdateList(split, lastSelection = null) {
+        this.txtTitle.value = "";
+        this.divRelated.innerHTML = "";
+        this.list.innerHTML = "";
 
+        for (let i = 0; i < split.length; i++) {
+
+            const entry = document.createElement("div");
+            entry.className = "doc-entry";
+            entry.innerHTML = split[i];
+            this.list.appendChild(entry);
+
+            entry.onclick = () => {
+                if (this.lastselected)
+                    this.lastselected.style.backgroundColor = "";
+
+                entry.style.backgroundColor = "var(--select-color)";
+                this.lastselected = entry;
+
+                this.Preview(split[i]);
+            };
+
+            if (lastSelection && lastSelection == split[i])
+                entry.onclick();
+        }
+
+        this.AdjustButtons();
     }
 
-    AddToList() {
+    Preview(name) {
+        this.txtTitle.value = name;
+        this.AdjustButtons();
 
-    }
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                this.divContent.innerHTML = xhr.responseText;
 
-    Preview() {
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
 
+        xhr.open("GET", `previewdoc&name=${name}`, true);
+        xhr.send();
     }
 
     AdjustButtons() {
+        if (this.btnEdit.hasAttribute("disabled")) this.btnEdit.removeAttribute("disabled");
+        if (this.btnDelete.hasAttribute("disabled")) this.btnDelete.removeAttribute("disabled");
 
+        if (this.txtTitle.value.length === 0) {
+            this.btnEdit.setAttribute("disabled", true);
+            this.btnDelete.setAttribute("disabled", true);
+        }
     }
 
     ReadMode() {
@@ -334,7 +381,6 @@ class Documentation extends Window {
         this.btnDiscard.style.display = "none";
 
         this.txtTitle.readOnly = true;
-        this.txtError.readOnly = true;
 
         this.divRelated.classList.remove("doc-related-editable");
         this.divRelated.style.right = "8px";
@@ -357,7 +403,7 @@ class Documentation extends Window {
         this.btnLink.style.opacity = "0";
         this.btnLink.style.visibility = "hidden";
 
-        this.divContentContainer.style.top = "148px";
+        this.divContentContainer.style.top = "104px";
 
         setTimeout(() => this.AfterResize(), 400);
     }
@@ -377,7 +423,6 @@ class Documentation extends Window {
         this.btnDiscard.style.display = "inline-block";
 
         this.txtTitle.readOnly = false;
-        this.txtError.readOnly = false;
 
         this.divRelated.classList.add("doc-related-editable");
         this.divRelated.style.right = "36px";
@@ -400,7 +445,7 @@ class Documentation extends Window {
         this.btnLink.style.opacity = "1";
         this.btnLink.style.visibility = "visible";
 
-        this.divContentContainer.style.top = "184px";
+        this.divContentContainer.style.top = "144px";
 
         setTimeout(() => this.AfterResize(), 400);
     }
@@ -409,6 +454,35 @@ class Documentation extends Window {
         this.EditMode();
 
         this.divContent.innerHTML = "";
+
+        const table = document.createElement("table");
+        this.divContent.appendChild(table);
+
+        const tr1 = document.createElement("tr");
+        table.appendChild(tr1);
+        const td1_1 = document.createElement("td");
+        td1_1.innerHTML = "Author:";
+        tr1.appendChild(td1_1);
+        const td1_2 = document.createElement("td");
+        tr1.appendChild(td1_2);
+
+        const tr2 = document.createElement("tr");
+        table.appendChild(tr2);
+        const td2_1 = document.createElement("td");
+        td2_1.innerHTML = "Location:";
+        tr2.appendChild(td2_1);
+        const td2_2 = document.createElement("td");
+        tr2.appendChild(td2_2);
+
+        const tr3 = document.createElement("tr");
+        table.appendChild(tr3);
+        const td3_1 = document.createElement("td");
+        td3_1.innerHTML = "Time spent:";
+        tr3.appendChild(td3_1);
+        const td3_2 = document.createElement("td");
+        tr3.appendChild(td3_2);
+
+        this.divContent.appendChild(document.createElement("br"));
 
         const desc = document.createElement("div");
         desc.innerHTML = "Description:";
@@ -438,7 +512,31 @@ class Documentation extends Window {
             return;
         }
 
-        this.ReadMode();
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                if (xhr.responseText == "ok")
+                    this.ReadMode();
+                else
+                    this.ConfirmBox(xhr.responseText, true);
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+
+        let payload = "";
+        payload += this.txtTitle.value + String.fromCharCode(127);
+        payload += this.divContent.innerHTML + String.fromCharCode(127);
+
+        for (let i = 0; i < this.divRelated.childNodes.length; i++) {
+            payload += this.divRelated.childNodes[i].getAttribute("file") + String.fromCharCode(127);
+            payload += this.divRelated.childNodes[i].style.backgroundImage + String.fromCharCode(127);
+            payload += this.divRelated.childNodes[i].getAttribute("label1") + String.fromCharCode(127);
+            payload += this.divRelated.childNodes[i].getAttribute("label2") + String.fromCharCode(127);
+        }
+
+        xhr.open("POST", "createdoc", true);
+        xhr.send(payload);        
     }
 
     Discard() {
