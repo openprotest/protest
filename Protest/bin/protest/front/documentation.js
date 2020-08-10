@@ -91,7 +91,7 @@ class Documentation extends Window {
 
         this.body = document.createElement("div");
         this.body.className = "doc-body-outer";
-        
+
         this.content.append(this.body);
 
         this.lblTitle = document.createElement("div");
@@ -192,13 +192,13 @@ class Documentation extends Window {
 
         this.txtSearch.onchange = () => this.GetDocs();
 
-        this.btnNew.onclick = ()=> this.New();
-        this.btnEdit.onclick = ()=> this.Edit();
-        this.btnDelete.onclick = ()=> this.Delete();
-        this.btnSave.onclick = ()=> this.Save();
+        this.btnNew.onclick = () => this.New();
+        this.btnEdit.onclick = () => this.Edit();
+        this.btnDelete.onclick = () => this.Delete();
+        this.btnSave.onclick = () => this.Save();
         this.btnDiscard.onclick = () => this.Discard();
 
-        this.btnAddRelated.onclick = () => this.AddRelated();
+        this.btnAddRelated.onclick = () => this.AddRelatedDialog();
 
         this.btnBold.onclick = () => { document.execCommand("bold", false, null); };
         this.btnItalic.onclick = () => { document.execCommand("italic", false, null); };
@@ -259,12 +259,12 @@ class Documentation extends Window {
             };
 
             txtLink.onkeydown = event => {
-                if ((event.keyCode === 13)) {                    
+                if ((event.keyCode === 13)) {
                     btnOK.focus();
                     return;
                 }
 
-                if ((event.keyCode === 27)) 
+                if ((event.keyCode === 27))
                     btnCancel.onclick();
             };
 
@@ -295,7 +295,15 @@ class Documentation extends Window {
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
-                this.UpdateList(split, this.selected);
+
+                if (split.length > 1) {
+                    this.UpdateList(split, this.selected);
+                } else {
+                    this.txtTitle.value = "";
+                    this.divRelated.innerHTML = "";
+                    this.list.innerHTML = "";
+                }
+
                 this.selected = null;
                 this.AdjustButtons();
 
@@ -316,6 +324,7 @@ class Documentation extends Window {
         this.list.innerHTML = "";
 
         for (let i = 0; i < split.length; i++) {
+            if (split[i].length == 0) continue;
 
             const entry = document.createElement("div");
             entry.className = "doc-entry";
@@ -328,11 +337,12 @@ class Documentation extends Window {
 
                 entry.style.backgroundColor = "var(--select-color)";
                 this.lastselected = entry;
+                this.selected = split[i];
 
                 this.Preview(split[i]);
             };
 
-            if (lastSelection && lastSelection == split[i])
+            if (this.selected && this.selected == split[i])
                 entry.onclick();
         }
 
@@ -340,13 +350,32 @@ class Documentation extends Window {
     }
 
     Preview(name) {
+        if (name === null) {
+            this.txtTitle.value = "";
+            this.divRelated.innerHTML = "";
+            this.divContent.innerHTML = "";
+            this.AdjustButtons();
+            this.selected = null;
+            return;
+        }
+
         this.txtTitle.value = name;
         this.AdjustButtons();
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
+                this.divRelated.innerHTML = "";
                 this.divContent.innerHTML = xhr.responseText;
+
+                let commentStop = xhr.responseText.indexOf("-->", 0);
+                if (xhr.responseText.startsWith("<!--") && commentStop > -1) {
+                    let comment = xhr.responseText.substring(4, commentStop);
+                    let related = JSON.parse(comment);
+
+                    for (let i = 0; i < related.length - 3; i+=4)
+                        this.AddRelated(related[i], related[i+1], related[i+2], related[i+3]);
+                }
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
@@ -495,6 +524,9 @@ class Documentation extends Window {
         this.divContent.appendChild(document.createElement("br"));
         this.divContent.appendChild(document.createElement("br"));
 
+
+        this.txtTitle.value = "";
+        this.divRelated.innerHTML = "";
         this.txtTitle.focus();
     }
 
@@ -503,7 +535,24 @@ class Documentation extends Window {
     }
 
     Delete() {
+        if (!this.selected) return;
 
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                if (xhr.responseText == "ok") {
+                    this.GetDocs();
+                    this.Preview(null);
+                } else {
+                    this.ConfirmBox(xhr.responseText);
+                }
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+
+        xhr.open("GET", `deletedoc&name=${this.selected}`, true);
+        xhr.send();
     }
 
     Save() {
@@ -536,14 +585,15 @@ class Documentation extends Window {
         }
 
         xhr.open("POST", "createdoc", true);
-        xhr.send(payload);        
+        xhr.send(payload);
     }
 
     Discard() {
         this.ReadMode();
+        this.Preview(this.selected);
     }
 
-    AddRelated() {
+    AddRelatedDialog() {
         const dialog = this.DialogBox("85%");
         const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
@@ -634,36 +684,16 @@ class Documentation extends Window {
                     newLabel.className = "lst-obj-lbl-" + j;
                     element.appendChild(newLabel);
                 }
-                
-                element.ondblclick = () => {
-                    const related = document.createElement("div");
-                    related.setAttribute("file", db_equip[i][".FILENAME"][0]);
-                    related.setAttribute("label1", name);
-                    related.setAttribute("label2", u_id);
-                    related.style.backgroundImage = `url(${GetEquipIcon(db_equip[i]["TYPE"])})`;
-                    this.divRelated.appendChild(related);
 
-                    const divRemove = document.createElement("div");
-                    related.appendChild(divRemove);
+                element.ondblclick = () => {
+                    this.AddRelated(
+                        db_equip[i][".FILENAME"][0],
+                        `url(${GetEquipIcon(db_equip[i]["TYPE"])})`,
+                        name,
+                        u_id
+                    );
 
                     btnCancel.onclick();
-
-                    related.onclick = () => {
-                        let filename = db_equip[i][".FILENAME"][0];
-                        for (let j = 0; j < $w.array.length; j++)
-                            if ($w.array[j] instanceof Equip && $w.array[j].filename === filename) {
-                                $w.array[j].Minimize(); //minimize/restore
-                                return;
-                            }
-
-                        new Equip(filename);
-                        event.stopPropagation();
-                    };
-
-                    divRemove.onclick = event => {
-                        event.stopPropagation();
-                        this.divRelated.removeChild(related);
-                    };
                 };
 
                 divEquip.appendChild(element);
@@ -672,5 +702,33 @@ class Documentation extends Window {
 
         txtFind.focus();
         txtFind.onchange();
+    }
+
+    AddRelated(filename, icon, label1, label2) {
+        const related = document.createElement("div");
+        related.setAttribute("file", filename);
+        related.setAttribute("label1", label1);
+        related.setAttribute("label2", label2);
+        related.style.backgroundImage = icon;
+        this.divRelated.appendChild(related);
+
+        const divRemove = document.createElement("div");
+        related.appendChild(divRemove);
+
+        related.onclick = () => {
+            for (let j = 0; j < $w.array.length; j++)
+                if ($w.array[j] instanceof Equip && $w.array[j].filename === filename) {
+                    $w.array[j].Minimize(); //minimize/restore
+                    return;
+                }
+
+            new Equip(filename);
+            event.stopPropagation();
+        };
+
+        divRemove.onclick = event => {
+            event.stopPropagation();
+            this.divRelated.removeChild(related);
+        };
     }
 }

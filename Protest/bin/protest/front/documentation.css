@@ -187,9 +187,14 @@
     padding-top: 2px;
 }
 
+.doc-body-outer > .divContentContainer table {
+    border-spacing: 1px;
+}
+
 .doc-body-outer > .divContentContainer table tr > td {
     border: 1px solid black;
     min-width: 128px;
+    padding: 4px;
 }
 
 .doc-entry {

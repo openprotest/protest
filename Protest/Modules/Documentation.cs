@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Renci.SshNet.Security;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,7 @@ class Documentation {
 
     public static byte[] GetDocs(in string[] para) {
         string[] keywords = null;
-        for (int i = 0; i < para.Length; i++) 
+        for (int i = 0; i < para.Length; i++)
             if (para[i].StartsWith("keywords=")) keywords = Strings.EscapeUrl(para[i].Substring(9)).Split(' ');
 
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DOCUMENTATION);
@@ -18,32 +19,33 @@ class Documentation {
 
         List<FileInfo> files = new List<FileInfo>();
         files.AddRange(dir.GetFiles());
-        files.Sort((a, b) => String.Compare(b.Name, a.Name));
+        files.Sort((a, b) => String.Compare(a.Name, b.Name));
 
         StringBuilder sb = new StringBuilder();
 
         lock (DOC_LOCK)
-            for (int i = 0; i < files.Count; i++)    
-                try {
-                    string data = File.ReadAllText(files[i].FullName);
+            for (int i = 0; i < files.Count; i++)
+                if (files[i].Extension != ".html")
+                    try {
+                        Console.WriteLine(files[i].Extension);
+                        string words = File.ReadAllText(files[i].FullName);
 
-                    bool found = true;
-                    if (!(keywords is null) && keywords.Length > 0) //search content
-                        for (int j = 0; j < keywords.Length; j++)
-                            if (data.IndexOf(keywords[j], StringComparison.InvariantCultureIgnoreCase) == -1) {
-                                found = false;
-                                break;
-                            }
+                        bool found = true;
+                        if (!(keywords is null) && keywords.Length > 0) //search content
+                            for (int j = 0; j < keywords.Length; j++)
+                                if (words.IndexOf(keywords[j], StringComparison.InvariantCultureIgnoreCase) == -1) {
+                                    found = false;
+                                    break;
+                                }
 
-                    if (!found) //match filename
-                        found = (keywords.Length == 1 && files[i].Name == keywords[0]);
+                        if (!found) //match filename
+                            found = (keywords.Length == 1 && files[i].Name == keywords[0]);
 
-                    if (!found) continue;
+                        if (!found) continue;                       
+                        
+                        sb.Append(files[i].Name + ((char)127).ToString());
 
-                    if (sb.Length > 0) sb.Append(((char)127).ToString());
-                    sb.Append(files[i].Name);
-
-                } catch { }
+                    } catch { }
 
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
@@ -62,35 +64,83 @@ class Documentation {
         StringBuilder sb = new StringBuilder();
         sb.Append("<!--");
         sb.Append("[");
-        for (int i = 2; i < payload.Length-3; i+=4) {
+        for (int i = 2; i < payload.Length - 3; i += 4) {
             if (i != 2) sb.Append(",");
             sb.Append($"\"{Strings.EscapeJson(payload[i])}\",");
-            sb.Append($"\"{Strings.EscapeJson(payload[i+1])}\",");
-            sb.Append($"\"{Strings.EscapeJson(payload[i+2])}\",");
-            sb.Append($"\"{Strings.EscapeJson(payload[i+3])}\"");
+            sb.Append($"\"{Strings.EscapeJson(payload[i + 1])}\",");
+            sb.Append($"\"{Strings.EscapeJson(payload[i + 2])}\",");
+            sb.Append($"\"{Strings.EscapeJson(payload[i + 3])}\"");
         }
         sb.Append("]");
         sb.AppendLine("-->");
 
-
-        int end = payload[1].IndexOf("-->");
-        if (payload[1].StartsWith("<!--") && end > -1)
-            sb.Append(payload[1].Substring(end+3).Trim());
+        int commentStop = payload[1].IndexOf("-->");
+        if (payload[1].StartsWith("<!--") && commentStop > -1)
+            sb.Append(payload[1].Substring(commentStop + 3).Trim());
         else
             sb.Append(payload[1]);
-       
-        lock (DOC_LOCK) 
+
+
+        List<string> keywords = new List<string>();
+        int idx = 0;
+        string word = "";
+        while (idx < payload[1].Length) {
+
+            if (payload[1][idx] == '<') {
+                if (!keywords.Contains(word)) {
+                    keywords.Add(word);
+                    word = "";
+                }
+
+                int tagStop = payload[1].IndexOf('>', idx);
+                if (tagStop == -1) break;
+                idx = tagStop + 1;
+                continue;
+
+            } else if (payload[1][idx] == ' ') {
+                if (word.Length == 0) {
+                    idx++;
+                    continue;
+                }
+
+                if (!keywords.Contains(word)) {
+                    keywords.Add(word);
+                    word = "";
+                    idx++;
+                    continue;
+                }
+            }
+
+            word += payload[1][idx++].ToString().ToLower();
+        }
+
+        keywords.Sort();
+ 
+        idx = 0;
+        if (keywords.Count > 1)
+            while (idx < keywords.Count - 1)
+                if (keywords[idx+1].StartsWith(keywords[idx]))
+                    keywords.RemoveAt(idx);
+                else
+                    idx++;
+
+        Console.WriteLine(sb.ToString());
+        Console.WriteLine(String.Join("\n", keywords.ToArray()));
+
+        lock (DOC_LOCK)
             try {
                 DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DOCUMENTATION);
                 if (!dir.Exists) dir.Create();
 
-                FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{filename}");
-                File.WriteAllText(file.FullName, sb.ToString());
+                FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{filename}.html");
+                File.WriteAllText(html.FullName, sb.ToString());
+
+                FileInfo words = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{filename}");
+                File.WriteAllText(words.FullName, String.Join("\n", keywords.ToArray()));
 
             } catch {
                 return Strings.FLE.Array;
             }
-        
 
         return Strings.OK.Array;
     }
@@ -103,7 +153,7 @@ class Documentation {
         if (name.Length == 0) return Strings.INF.Array;
 
         try {
-            FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}");
+            FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html");
             if (!file.Exists) return Strings.FLE.Array;
             return File.ReadAllBytes(file.FullName);
         } catch { }
@@ -112,8 +162,21 @@ class Documentation {
     }
 
     public static byte[] DeleteDoc(in string[] para, in string performer) {
+        string name = String.Empty;
+        for (int i = 0; i < para.Length; i++)
+            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
-        return null;
+        lock (DOC_LOCK)
+            try {
+                FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}");
+                if (file.Exists) file.Delete();
+                FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html");
+                if (html.Exists) html.Delete();
+            } catch {
+                return Strings.FAI.Array;
+            }
+
+        return Strings.OK.Array;
     }
 
 }
