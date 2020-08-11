@@ -1,5 +1,4 @@
-﻿using Renci.SshNet.Security;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,7 +26,6 @@ class Documentation {
             for (int i = 0; i < files.Count; i++)
                 if (files[i].Extension != ".html")
                     try {
-                        Console.WriteLine(files[i].Extension);
                         string words = File.ReadAllText(files[i].FullName);
 
                         bool found = true;
@@ -83,35 +81,25 @@ class Documentation {
 
         List<string> keywords = new List<string>();
         int idx = 0;
-        string word = "";
+        string text = "";
         while (idx < payload[1].Length) {
 
             if (payload[1][idx] == '<') {
-                if (!keywords.Contains(word)) {
-                    keywords.Add(word);
-                    word = "";
+                if (text.Length > 0) {
+                    string[] split = text.ToLower().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < split.Length; i++)
+                        if (!keywords.Contains(split[i]))
+                            keywords.Add(split[i]);                    
+                    text = "";
                 }
 
                 int tagStop = payload[1].IndexOf('>', idx);
                 if (tagStop == -1) break;
                 idx = tagStop + 1;
                 continue;
-
-            } else if (payload[1][idx] == ' ') {
-                if (word.Length == 0) {
-                    idx++;
-                    continue;
-                }
-
-                if (!keywords.Contains(word)) {
-                    keywords.Add(word);
-                    word = "";
-                    idx++;
-                    continue;
-                }
             }
 
-            word += payload[1][idx++].ToString().ToLower();
+            text += payload[1][idx++];
         }
 
         keywords.Sort();
@@ -123,9 +111,6 @@ class Documentation {
                     keywords.RemoveAt(idx);
                 else
                     idx++;
-
-        Console.WriteLine(sb.ToString());
-        Console.WriteLine(String.Join("\n", keywords.ToArray()));
 
         lock (DOC_LOCK)
             try {

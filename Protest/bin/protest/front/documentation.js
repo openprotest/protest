@@ -318,35 +318,40 @@ class Documentation extends Window {
         xhr.send();
     }
 
-    UpdateList(split, lastSelection = null) {
+    UpdateList(split) {
         this.txtTitle.value = "";
         this.divRelated.innerHTML = "";
         this.list.innerHTML = "";
 
         for (let i = 0; i < split.length; i++) {
             if (split[i].length == 0) continue;
+            const entry = this.AddToList(split[i]);
 
-            const entry = document.createElement("div");
-            entry.className = "doc-entry";
-            entry.innerHTML = split[i];
-            this.list.appendChild(entry);
-
-            entry.onclick = () => {
-                if (this.lastselected)
-                    this.lastselected.style.backgroundColor = "";
-
-                entry.style.backgroundColor = "var(--select-color)";
-                this.lastselected = entry;
-                this.selected = split[i];
-
-                this.Preview(split[i]);
-            };
-
-            if (this.selected && this.selected == split[i])
+            if (this.selected && this.selected === split[i])
                 entry.onclick();
         }
 
         this.AdjustButtons();
+    }
+
+    AddToList(name) {
+        const entry = document.createElement("div");
+        entry.className = "doc-entry";
+        entry.innerHTML = name;
+        this.list.appendChild(entry);
+
+        entry.onclick = () => {
+            if (this.lastselected)
+                this.lastselected.style.backgroundColor = "";
+
+            entry.style.backgroundColor = "var(--select-color)";
+            this.lastselected = entry;
+            this.selected = name;
+
+            this.Preview(name);
+        };
+
+        return entry;
     }
 
     Preview(name) {
@@ -561,14 +566,28 @@ class Documentation extends Window {
             return;
         }
 
+        let name_lower = this.txtTitle.value.toLowerCase();
+        let exist = false;
+        for (let i = 0; i < this.list.childNodes.length; i++)
+            if (this.list.childNodes[i].innerHTML.toLowerCase() === name_lower) {
+                exist = true;
+                break;
+            }
+        
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
-                if (xhr.responseText == "ok")
-                    this.ReadMode();
-                else
+                if (xhr.responseText == "ok") {
+                    if (exist) {
+                        this.ReadMode();
+                    } else {
+                        const entry = this.AddToList(this.txtTitle.value);
+                        this.ReadMode();
+                        setTimeout(() => entry.onclick(), 0);
+                    }
+                } else {
                     this.ConfirmBox(xhr.responseText, true);
-
+                }
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
@@ -584,8 +603,17 @@ class Documentation extends Window {
             payload += this.divRelated.childNodes[i].getAttribute("label2") + String.fromCharCode(127);
         }
 
-        xhr.open("POST", "createdoc", true);
-        xhr.send(payload);
+        if (exist) {
+            this.ConfirmBox("An entry with this name already exists. Do you want to overwrite it?").addEventListener("click", () => {
+                xhr.open("POST", "createdoc", true);
+                xhr.send(payload);
+            });
+
+        } else {
+            xhr.open("POST", "createdoc", true);
+            xhr.send(payload);
+        }
+
     }
 
     Discard() {
