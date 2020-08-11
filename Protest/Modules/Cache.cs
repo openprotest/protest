@@ -288,8 +288,8 @@ class Cache {
             while (lines[i].IndexOf("  ") > -1)
                 lines[i] = lines[i].Replace("  ", " ");
 
-            //lines[i] = lines[i].Replace(" + ", "+"); because css calc() sux
-            //lines[i] = lines[i].Replace(" - ", "-"); because css calc() sux
+            //lines[i] = lines[i].Replace(" + ", "+"); because css calc()
+            //lines[i] = lines[i].Replace(" - ", "-"); because css calc()
             lines[i] = lines[i].Replace(" = ", "=");
             lines[i] = lines[i].Replace(" == ", "==");
             lines[i] = lines[i].Replace(" === ", "===");
@@ -335,18 +335,31 @@ class Cache {
         return Encoding.UTF8.GetBytes(mini);
     }
 
-    private static byte[] GZip(byte[] bytes) {
+    public static byte[] GZip(string str) {
+        return GZip(Encoding.UTF8.GetBytes(str));
+    }
+    public static byte[] GZip(byte[] bytes) {
         if (bytes is null) return null;
 
-        MemoryStream mem = new MemoryStream();
-        using (GZipStream zip = new GZipStream(mem, System.IO.Compression.CompressionMode.Compress, true)) {
+        MemoryStream ms = new MemoryStream();
+        using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
             zip.Write(bytes, 0, bytes.Length);
         }
 
-        byte[] arary = mem.ToArray();
-        mem.Dispose();
+        byte[] arary = ms.ToArray();
+        ms.Dispose();
 
         return arary;
     }
 
+    public static byte[] UnGZip(byte[] bytes) {
+        if (bytes is null) return null;
+
+        using (MemoryStream zipped = new MemoryStream(bytes))
+        using (GZipStream unzip = new GZipStream(zipped, CompressionMode.Decompress))
+        using (MemoryStream ms = new MemoryStream()) {
+            unzip.CopyTo(ms);
+            return ms.ToArray();
+        }
+    }
 }

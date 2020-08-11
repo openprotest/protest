@@ -24,7 +24,7 @@ class Documentation {
 
         lock (DOC_LOCK)
             for (int i = 0; i < files.Count; i++)
-                if (files[i].Extension != ".html")
+                if (!files[i].Name.EndsWith(".html.gz"))
                     try {
                         string words = File.ReadAllText(files[i].FullName);
 
@@ -117,8 +117,9 @@ class Documentation {
                 DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DOCUMENTATION);
                 if (!dir.Exists) dir.Create();
 
-                FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{filename}.html");
-                File.WriteAllText(html.FullName, sb.ToString());
+                FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{filename}.html.gz");
+
+                File.WriteAllBytes(html.FullName, Cache.GZip(sb.ToString()));
 
                 FileInfo words = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{filename}");
                 File.WriteAllText(words.FullName, String.Join("\n", keywords.ToArray()));
@@ -130,7 +131,7 @@ class Documentation {
         return Strings.OK.Array;
     }
 
-    public static byte[] PreviewDoc(in string[] para) {
+    public static byte[] PreviewDoc(in string[] para, bool serveGZip = false) {
         string name = String.Empty;
         for (int i = 0; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
@@ -138,9 +139,12 @@ class Documentation {
         if (name.Length == 0) return Strings.INF.Array;
 
         try {
-            FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html");
+            FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html.gz");
             if (!file.Exists) return Strings.FLE.Array;
-            return File.ReadAllBytes(file.FullName);
+
+            byte[] bytes = File.ReadAllBytes(file.FullName);
+            if (serveGZip) return bytes;
+            return Cache.UnGZip(bytes);
         } catch { }
 
         return Strings.FAI.Array;
@@ -155,7 +159,7 @@ class Documentation {
             try {
                 FileInfo file = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}");
                 if (file.Exists) file.Delete();
-                FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html");
+                FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html.gz");
                 if (html.Exists) html.Delete();
             } catch {
                 return Strings.FAI.Array;

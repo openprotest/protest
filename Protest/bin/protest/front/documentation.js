@@ -495,7 +495,7 @@ class Documentation extends Window {
         const tr1 = document.createElement("tr");
         table.appendChild(tr1);
         const td1_1 = document.createElement("td");
-        td1_1.innerHTML = "Author:";
+        td1_1.innerHTML = "Author";
         tr1.appendChild(td1_1);
         const td1_2 = document.createElement("td");
         tr1.appendChild(td1_2);
@@ -503,7 +503,7 @@ class Documentation extends Window {
         const tr2 = document.createElement("tr");
         table.appendChild(tr2);
         const td2_1 = document.createElement("td");
-        td2_1.innerHTML = "Location:";
+        td2_1.innerHTML = "Location";
         tr2.appendChild(td2_1);
         const td2_2 = document.createElement("td");
         tr2.appendChild(td2_2);
@@ -511,7 +511,7 @@ class Documentation extends Window {
         const tr3 = document.createElement("tr");
         table.appendChild(tr3);
         const td3_1 = document.createElement("td");
-        td3_1.innerHTML = "Time spent:";
+        td3_1.innerHTML = "Time spent";
         tr3.appendChild(td3_1);
         const td3_2 = document.createElement("td");
         tr3.appendChild(td3_2);

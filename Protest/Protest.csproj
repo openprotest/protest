@@ -139,6 +139,7 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\clients.js" />
     <Content Include="bin\protest\front\documentation.css" />
     <Content Include="bin\protest\front\debitnotes.css" />
     <Content Include="bin\protest\front\debitnotes.js" />

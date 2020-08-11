@@ -71,6 +71,7 @@ let loader_styles = [
         "scripts.js",
         "scripteditor.js",
         "log.js",
+        "clients.js",
         "screencapture.js",
         "settings.js",
         "keepalive.js"
@@ -257,6 +258,7 @@ function RestoreSession() {
             case "Wmi"              : win = new Wmi(session[i].args); break;
             case "Scripts"          : win = new Scripts(session[i].args); break;
             case "ScriptEditor"     : win = new ScriptEditor(session[i].args); break;
+            case "Clients"          : win = new Clients(session[i].args); break;
             case "Log"              : win = new Log(session[i].args); break;
             case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;

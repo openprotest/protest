@@ -78,9 +78,7 @@ public static class KeepAlive {
                 //TODO:
             }
 
-        } catch (Exception ex) {
-            Logging.Err(ex);
-        }
+        } catch { }
     }
 
 
@@ -98,7 +96,6 @@ public static class KeepAlive {
             AliveEntry entry = (AliveEntry)e.Value;
 
             if (entry.ws.State == WebSocketState.Open) {
-
                 new Thread(() => {
                     try {
                         lock(entry.syncLock) {
@@ -116,4 +113,28 @@ public static class KeepAlive {
             connections.Remove(remove[i]);
     }
 
+
+    ///<summary>Destroys alive websocket connections with the sessionId</summary>
+    public static bool SearchAndDestroy(string sessionId) {
+        if (sessionId is null) return false;
+
+        List<WebSocket> remove = new List<WebSocket>();
+        foreach (DictionaryEntry e in connections) {
+            AliveEntry entry = (AliveEntry)e.Value;
+            if (entry.session == sessionId) {
+                remove.Add(entry.ws);
+                if (entry.ws.State == WebSocketState.Open)
+                    try {
+                        entry.ws.Abort();
+                    } catch { }
+            }
+        }
+
+        for (int i = 0; i < remove.Count; i++)
+            connections.Remove(remove[i]);
+
+        remove.Clear();
+
+        return true;
+    }
 }

@@ -187,8 +187,11 @@ class HttpMainListener : Http {
                         
                 case "getdocs":    buffer = Documentation.GetDocs(para); break;
                 case "createdoc":  buffer = Documentation.CreateDoc(ctx, performer); break;
-                case "previewdoc": buffer = Documentation.PreviewDoc(para); break;
                 case "deletedoc":  buffer = Documentation.DeleteDoc(para, performer); break;
+                case "previewdoc":
+                    buffer = Documentation.PreviewDoc(para, acceptGzip);
+                    if (acceptGzip) ctx.Response.AddHeader("Content-Encoding", "gzip");
+                    break;
 
                 case "getdebitnotes":         buffer = DebitNotes.GetDebitNotes(para); break;
                 case "getdebitnotestemplate": buffer = DebitNotes.GetDebitNoteTemplate(); break;
@@ -205,6 +208,9 @@ class HttpMainListener : Http {
                 case "fetch_equip_ip"   : buffer = Fetch.FetchEquip(ctx, performer); break;
                 case "fetch_equip_dc"   : buffer = Fetch.FetchEquip(ctx, performer); break;
                 case "fetch_users_dc"   : buffer = Fetch.FetchUsers(ctx, performer); break;
+
+                case "getclients": buffer = Session.GetClients(); break;
+                case "kickclient": buffer = Session.KickClients(para); break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 

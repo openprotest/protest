@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.IO;
 using System.Threading;
+using System.Collections.Generic;
 
 public static class Session {
     public static Hashtable ip_access = new Hashtable();
@@ -133,6 +134,48 @@ public static class Session {
             return sessions[sessionId].username;
 
         return null;
+    }
+
+    public static byte[] GetClients() {
+        StringBuilder sb = new StringBuilder();
+
+        List<string> remove = new List<string>();
+        foreach (KeyValuePair<string, SessionEntry> o in sessions) {
+            SessionEntry e = o.Value;
+            if (DateTime.Now.Ticks - e.loginTime.Ticks > HOUR * SESSION_TIMEOUT) //expired
+                remove.Add(e.sessionId);
+        }
+
+        foreach (string o in remove)
+            sessions.TryRemove(o, out _);
+
+        foreach (KeyValuePair<string, SessionEntry> o in sessions) {
+            SessionEntry e = o.Value;
+            sb.Append($"{e.ip}{(char)127}{e.loginTime}{(char)127}{e.username}{(char)127}{e.sessionId.Substring(0, 8)}{(char)127}");
+        }
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    public static byte[] KickClients(string[] para) {
+        string ip = "";
+        string hash = "";
+        for (int i = 1; i < para.Length; i++) {
+            if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);
+            if (para[i].StartsWith("hash=")) hash = para[i].Substring(5);
+        }
+
+        foreach (KeyValuePair<string, SessionEntry> o in sessions) {
+            SessionEntry e = o.Value;
+            if (e.ip == ip && e.sessionId.StartsWith(hash)) {
+                bool removed = sessions.TryRemove(e.sessionId, out _);
+                if (!removed) return Strings.FAI.Array;
+                KeepAlive.SearchAndDestroy(e.sessionId);
+                return Strings.OK.Array;
+            }
+        }
+
+        return Strings.NOT.Array;
     }
 
     public static string GetSHA(string value) {

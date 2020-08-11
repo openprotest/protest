@@ -18,6 +18,7 @@ public static class Strings {
     public static readonly ArraySegment<byte> INF = new ArraySegment<byte>(Encoding.UTF8.GetBytes("not enough information"));
     public static readonly ArraySegment<byte> INV = new ArraySegment<byte>(Encoding.UTF8.GetBytes("invalid argument"));
     public static readonly ArraySegment<byte> FAI = new ArraySegment<byte>(Encoding.UTF8.GetBytes("failed"));
+    public static readonly ArraySegment<byte> NOT = new ArraySegment<byte>(Encoding.UTF8.GetBytes("not found"));
     public static readonly ArraySegment<byte> FLE = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such file"));
     public static readonly ArraySegment<byte> EXS = new ArraySegment<byte>(Encoding.UTF8.GetBytes("file already exists"));
     public static readonly ArraySegment<byte> NHO = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such host is known"));

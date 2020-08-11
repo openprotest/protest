@@ -304,3 +304,53 @@
     box-sizing: border-box;
     animation: spin 2s linear infinite;
 }
+
+.generic-list-element {
+    position: relative;
+    margin: 0 0 2px 0;
+    height: 32px;
+}
+.generic-list-element:hover {
+    background-color: var(--highlight-color);
+}
+
+.generic-list-element > .generic-label1 {
+    max-width: calc(45% - 12px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 32px;
+    max-height: 32px;
+    padding-left: 8px; 
+    bottom: 0;        
+    user-select: text;
+}
+
+.generic-list-element > .generic-label2 {
+    position: relative;
+    left: 45%;
+    top: -32px;
+    width: calc(55% - 48px);
+    right: 64px;
+    bottom: 0;
+    height: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 32px;
+    user-select: text;
+}
+
+.generic-list-element > .generic-action {
+    visibility: hidden;
+    opacity: 0;
+    transition: .2s;
+
+    position: absolute;
+    right: 4px;
+    top: 0px;
+    height: 24px;
+}
+
+.generic-list-element:hover > .generic-action {
+    visibility: visible;
+    opacity: 1;
+}
