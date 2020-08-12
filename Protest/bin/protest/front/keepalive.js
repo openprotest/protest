@@ -46,7 +46,7 @@ function KeepAlive_MessageHandler(msg) {
     switch (action) {
         case "log":
             for (let i = 0; i < $w.array.length; i++) { //for each equip list
-                if (!($w.array[i] instanceof Log)) continue;
+                if (!($w.array[i] instanceof Log) && !$w.array[i].isLoading) continue;
                 $w.array[i].Add(msg.msg);
             }
             break;
