@@ -41,7 +41,7 @@ class HttpMainListener : Http {
                 Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
             });
 
-            //Logging.Action($"localhost@{remoteIp}", "Auto-login");
+            //Logging.Action("localhost", $"Auto-login from {remoteIp}");
             performer = "localhost";
         }
 
@@ -195,7 +195,7 @@ class HttpMainListener : Http {
 
                 case "getdebitnotes":         buffer = DebitNotes.GetDebitNotes(para); break;
                 case "getdebitnotestemplate": buffer = DebitNotes.GetDebitNoteTemplate(); break;
-                case "createdebitnote":       buffer = DebitNotes.CreateDebitNote(ctx); break;
+                case "createdebitnote":       buffer = DebitNotes.CreateDebitNote(ctx, performer); break;
                 case "markdebit":             buffer = DebitNotes.MarkDebitNote(para, performer); break;
                 case "deldebit":              buffer = DebitNotes.DeleteDebitNote(para, performer); break;
 
@@ -212,11 +212,11 @@ class HttpMainListener : Http {
                 case "getlog" : buffer = Logging.GetLog(); break;
 
                 case "getclients": buffer = Session.GetClients(); break;
-                case "kickclient": buffer = Session.KickClients(para); break;
+                case "kickclient": buffer = Session.KickClients(para, performer); break;
 
                 case "getbackups": buffer = Backup.GetBackups(); break;
-                case "createbackup": buffer = Backup.CreateBackup(para); break;
-                case "deletebackup": buffer = Backup.DeleteBackup(para); break;
+                case "createbackup": buffer = Backup.CreateBackup(para, performer); break;
+                case "deletebackup": buffer = Backup.DeleteBackup(para, performer); break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 
@@ -244,19 +244,14 @@ class HttpMainListener : Http {
 
     public virtual void WebSocketHandler(in HttpListenerContext ctx, in string[] para, in string remoteIp) {
         switch (para[0]) {
-            //case "ws/publictransportation": Tools.WsPublicTransportationAsync(ctx, remoteIp); break;
             case "ws/ping": Ping.WsPing(ctx, remoteIp); break;
             case "ws/portscan": PortScan.WsPortScan(ctx, remoteIp); break;
             case "ws/traceroute": TraceRoute.WsTraceRoute(ctx, remoteIp); break;
             case "ws/webcheck": WebCheck.WsWebCheck(ctx, remoteIp); break;
             
             case "ws/keepalive": KeepAlive.Connect(ctx, remoteIp); break;
-
             case "ws/liveinfo_equip": LiveInfo.InstantInfoEquip(ctx, remoteIp); break;
             case "ws/liveinfo_user": LiveInfo.InstantInfoUser(ctx, remoteIp); break;
-
-            case "ws/speedtest_down": SpeedTest.WsSpeedtest_down(ctx, remoteIp, para); break;
-            case "ws/speedtest_up": SpeedTest.WsSpeedtest_up(ctx, remoteIp, para); break;
 
             default: ctx.Response.Close(); break;
         }

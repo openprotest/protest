@@ -129,7 +129,7 @@ public static class DebitNotes {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] CreateDebitNote(in HttpListenerContext ctx) {
+    public static byte[] CreateDebitNote(in HttpListenerContext ctx, string performer) {
         string firstname = "", lastname = "", title = "", department = "", it = "", equip = "";
         int template = 0;
         bool isShortPending = false;
@@ -186,6 +186,8 @@ public static class DebitNotes {
             return Strings.FAI.Array;
         }
 
+        Logging.Action(performer, $"Create a debit note: {name}");
+
         return Encoding.UTF8.GetBytes(name);
     }
 
@@ -205,9 +207,9 @@ public static class DebitNotes {
         DirectoryInfo dirReturned = new DirectoryInfo(Strings.DIR_DEBIT_RETURNED);
         if (!dirReturned.Exists) dirReturned.Create();
 
-        lock (DEBIT_LOCK) {
-            file.MoveTo(dirReturned.FullName + "\\" + code);
-        }
+        lock (DEBIT_LOCK) file.MoveTo(dirReturned.FullName + "\\" + code);
+
+        Logging.Action(performer, $"Mark a debit note as returned: {code}");
 
         return Strings.OK.Array;
     }
@@ -225,6 +227,8 @@ public static class DebitNotes {
         FileInfo file = new FileInfo($"{(type=="short" ? Strings.DIR_DEBIT_SHORT : Strings.DIR_DEBIT_LONG)}\\{code}");
         if (!file.Exists) return Strings.FLE.Array;
         lock (DEBIT_LOCK) file.Delete();
+
+        Logging.Action(performer, $"Delete debit note: {code}");
 
         return Strings.OK.Array;
     }

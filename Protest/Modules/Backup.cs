@@ -25,7 +25,7 @@ class Backup {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] CreateBackup(string[] para) {
+    public static byte[] CreateBackup(string[] para, string performer) {
         string name = String.Empty;
         for (int i = 0; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
@@ -73,6 +73,8 @@ class Backup {
 
         } catch { }
 
+        Logging.Action(performer, $"Create backup: {filename}");
+
         return Strings.OK.Array;
     }
 
@@ -88,7 +90,7 @@ class Backup {
             CopyAll(subfolders[i], new DirectoryInfo(subfolders[i].FullName.Replace(source.FullName, destination.FullName)));
     }
 
-    public static byte[] DeleteBackup(string[] para) {
+    public static byte[] DeleteBackup(string[] para, string performer) {
         string name = String.Empty;
         for (int i = 0; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
@@ -96,6 +98,7 @@ class Backup {
         try {
             FileInfo file = new FileInfo($"{Strings.DIR_BACKUPS}\\{name}");
             if (file.Exists) file.Delete();
+            Logging.Action(performer, $"Delete backup: {name}");
         } catch {
             return Strings.FAI.Array;
         }

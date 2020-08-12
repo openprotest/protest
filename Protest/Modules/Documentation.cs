@@ -128,6 +128,8 @@ class Documentation {
                 return Strings.FLE.Array;
             }
 
+        Logging.Action(performer, $"Create documentation: {filename}");
+
         return Strings.OK.Array;
     }
 
@@ -161,6 +163,8 @@ class Documentation {
                 if (file.Exists) file.Delete();
                 FileInfo html = new FileInfo($"{Strings.DIR_DOCUMENTATION}\\{name}.html.gz");
                 if (html.Exists) html.Delete();
+
+                Logging.Action(performer, $"Delete documentation: {name}");
             } catch {
                 return Strings.FAI.Array;
             }

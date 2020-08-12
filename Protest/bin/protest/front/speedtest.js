@@ -18,7 +18,7 @@ class SpeedTest extends Window {
         const options = document.createElement("div");
         options.style.display = "grid";
         options.style.gridTemplateColumns = "auto 64px 100px 100px 100px 100px 64px auto";
-        options.style.gridTemplateRows = "repeat(6, 32px)";
+        options.style.gridTemplateRows = "repeat(5, 32px)";
         this.content.append(options);
 
 
@@ -30,7 +30,7 @@ class SpeedTest extends Window {
         this.rngConnections = document.createElement("input");
         this.rngConnections.type = "range";
         this.rngConnections.min = 1;
-        this.rngConnections.max = 8;
+        this.rngConnections.max = 6;
         this.rngConnections.value = 2;
         this.rngConnections.style.gridArea = "1 / 5 / 2 / 7";
         options.appendChild(this.rngConnections);
@@ -42,14 +42,14 @@ class SpeedTest extends Window {
 
 
         const timeout = document.createElement("div");
-        timeout.innerHTML = "Duration up to: ";
+        timeout.innerHTML = "Duration: ";
         timeout.style.gridArea = "2 / 3 / 3 / 5";
         options.appendChild(timeout);
         
         this.rngTimeout = document.createElement("input");
         this.rngTimeout.type = "range";
         this.rngTimeout.min = 5;
-        this.rngTimeout.max = 60;
+        this.rngTimeout.max = 30;
         this.rngTimeout.value = 10;
         this.rngTimeout.style.gridArea = "2 / 5 / 3 / 7";
         options.appendChild(this.rngTimeout);
@@ -60,51 +60,14 @@ class SpeedTest extends Window {
         options.appendChild(this.lblTimeout);
 
 
-        const size = document.createElement("div");
-        size.innerHTML = "Size up to: ";
-        size.style.gridArea = "3 / 3 / 4 / 5";
-        options.appendChild(size);
-
-        this.rngSize = document.createElement("input");
-        this.rngSize.type = "range";
-        this.rngSize.min = 2;
-        this.rngSize.max = 9;
-        this.rngSize.value = 4;
-        this.rngSize.style.gridArea = "3 / 5 / 4 / 7";
-        options.appendChild(this.rngSize);
-
-        this.lblSize = document.createElement("div");
-        this.lblSize.style.marginLeft = "8px";
-        this.lblSize.style.gridArea = "3 / 7 / 4 / 7";
-        options.appendChild(this.lblSize);
-
-
-        const buffer = document.createElement("div");
-        buffer.innerHTML = "Buffer size: ";
-        buffer.style.gridArea = "4 / 3 / 5 / 5";
-        options.appendChild(buffer);
-
-        this.rngBuffer = document.createElement("input");
-        this.rngBuffer.type = "range";
-        this.rngBuffer.min = 8;
-        this.rngBuffer.max = 24;
-        this.rngBuffer.value = 13;
-        this.rngBuffer.style.gridArea = "4 / 5 / 5 / 7";
-        options.appendChild(this.rngBuffer);
-
-        this.lblBuffer = document.createElement("div");
-        this.lblBuffer.style.marginLeft = "8px";
-        this.lblBuffer.style.gridArea = "4 / 7 / 5 / 7";
-        options.appendChild(this.lblBuffer);
-
-
         const comm = document.createElement("div");
         comm.innerHTML = "Communication: ";
-        comm.style.gridArea = "5 / 3 / 6 / 5";
+        comm.style.gridArea = "3 / 3 / 4 / 5";
         options.appendChild(comm);
 
         this.cmbComm = document.createElement("select");
-        this.cmbComm.style.gridArea = "5 / 5 / 6 / 7";
+        this.cmbComm.setAttribute("disabled", true);
+        this.cmbComm.style.gridArea = "3 / 5 / 4 / 7";
         options.appendChild(this.cmbComm);
 
         let optHalf = document.createElement("option");
@@ -124,7 +87,7 @@ class SpeedTest extends Window {
         this.btnStart.style.height = "40px";
         this.btnStart.style.margin = "16px";
         this.btnStart.style.borderRadius = "4px";
-        this.btnStart.style.gridArea = "6 / 4 / 7 / 6";
+        this.btnStart.style.gridArea = "4 / 4 / 5 / 6";
         options.appendChild(this.btnStart);
 
 
@@ -132,52 +95,30 @@ class SpeedTest extends Window {
             this.lblTimeout.innerHTML = this.rngTimeout.value + " s";
         };
 
-        this.rngConnections.oninput =
-        this.rngSize.oninput = () => {
+        this.rngConnections.oninput = () => {
             this.lblConnections.innerHTML = this.rngConnections.value;
-
-            let totalSize = Math.pow(2, this.rngSize.value) * this.rngConnections.value;
-            this.lblSize.innerHTML = (totalSize < 1024) ? totalSize + " MB" : totalSize/1024 + " GB";
-        };
-
-        this.rngBuffer.oninput = () => {
-            let bufferSize = Math.pow(2, this.rngBuffer.value);
-            this.lblBuffer.innerHTML = this.SizeToString(bufferSize);
         };
 
         this.btnStart.onclick = () => this.StartTest();
 
         this.rngTimeout.oninput();
         this.rngConnections.oninput();
-        this.rngBuffer.oninput();
 
         this.InitGraph();
+
+        this.kilo = "";
+        for (let i = 0; i < 1024; i++)
+            this.kilo += String.fromCharCode(Math.round(Math.random() * 255));
     }
 
     InitGraph() {
         this.graph.style.display = "grid";
-        this.graph.style.gridTemplateColumns = "320px 320px";
-        this.graph.style.gridTemplateRows = "32px 150px repeat(4, 32px)";
+        this.graph.style.gridTemplateColumns = "auto";
+        this.graph.style.gridTemplateRows = "32px 175px repeat(2, 32px)";
         this.graph.style.color = "#202020";
         this.graph.style.fontSize = "large";
         this.graph.style.fontWeight = "600";
         this.graph.style.userSelect = "text";
-
-        let lblDownstream = document.createElement("div");
-        lblDownstream.innerHTML = "Downstream";
-        lblDownstream.style.textDecoration = "underline";
-        lblDownstream.style.textAlign = "center";
-        lblDownstream.style.gridArea = "2 / 0 / 3 / 1";
-        lblDownstream.style.margin = "4px";
-        this.graph.appendChild(lblDownstream);
-
-        let lblUpstream = document.createElement("div");
-        lblUpstream.innerHTML = "Upstream";
-        lblUpstream.style.textDecoration = "underline";
-        lblUpstream.style.textAlign = "center";
-        lblUpstream.style.gridArea = "2 / 0 / 3 / 1";
-        lblUpstream.style.margin = "4px";
-        this.graph.appendChild(lblUpstream);
 
         this.svgDown = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         this.svgDown.setAttribute("width", "300");
@@ -186,149 +127,96 @@ class SpeedTest extends Window {
         this.svgDown.style.marginLeft = "10px";
         this.graph.appendChild(this.svgDown);
 
-        this.svgUp = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svgUp.setAttribute("width", "300");
-        this.svgUp.setAttribute("height", "150");
-        this.svgUp.style.gridArea = "2 / 2 / 3 / 3";
-        this.svgUp.style.marginLeft = "10px";
-        this.graph.appendChild(this.svgUp);
-
         this.lblDownAvg = document.createElement("div");
         this.lblDownAvg.innerHTML = "Average: --";
         this.lblDownAvg.style.textAlign = "center";
         this.lblDownAvg.style.gridArea = "3 / 1 / 4 / 2";
         this.graph.appendChild(this.lblDownAvg);
 
-        this.lblUpAvg = document.createElement("div");
-        this.lblUpAvg.innerHTML = "Average: --";
-        this.lblUpAvg.style.textAlign = "center";
-        this.lblUpAvg.style.gridArea = "3 / 2 / 4 / 3";
-        this.graph.appendChild(this.lblUpAvg);
-
-        this.lblDownPeak = document.createElement("div");
-        this.lblDownPeak.innerHTML = "Peak: --";
-        this.lblDownPeak.style.textAlign = "center";
-        this.lblDownPeak.style.gridArea = "4 / 1 / 5 / 2";
-        this.graph.appendChild(this.lblDownPeak);
-
-        this.lblUpPeak = document.createElement("div");
-        this.lblUpPeak.innerHTML = "Peak: --";
-        this.lblUpPeak.style.textAlign = "center";
-        this.lblUpPeak.style.gridArea = "4 / 2 / 5 / 3";
-        this.graph.appendChild(this.lblUpPeak);
-
-
         this.lblDownProgress = document.createElement("div");
         this.lblDownProgress.innerHTML = "--";
         this.lblDownProgress.style.textAlign = "center";
-        this.lblDownProgress.style.gridArea = "6 / 1 / 7 / 2";
+        this.lblDownProgress.style.gridArea = "4 / 1 / 5 / 2";
         this.graph.appendChild(this.lblDownProgress);
-
-        this.lblUpProgress = document.createElement("div");
-        this.lblUpProgress.innerHTML = "--";
-        this.lblUpProgress.style.textAlign = "center";
-        this.lblUpProgress.style.gridArea = "6 / 2 / 7 / 3";
-        this.graph.appendChild(this.lblUpProgress);
     }
 
     StartTest() {
         this.Freeze();
 
-        this.socket = [];
+        this.startTime = Infinity;
         this.downstream = [];
-        this.upstream = [];
-        this.downpeak = 0;
-        this.uppeak = 0;
-        this.lastPlot = Date.now();
+        for (let i = 0; i < this.rngConnections.value; i++)
+            this.downstream.push(0);
 
         for (let i = 0; i < this.rngConnections.value; i++)
             this.DownstreamTest(i);
 
-        if (this.cmbComm.value == "full")
-            for (let i = 0; i < this.rngConnections.value; i++)
-                this.UpstreamTest(i);
+        //if (this.cmbComm.value == "full")
+        //    for (let i = 0; i < this.rngConnections.value; i++)
+        //        this.UpstreamTest(i);
     }
 
     Freeze() {
         this.btnStart.setAttribute("disabled", true);
         this.rngTimeout.setAttribute("disabled", true);
         this.rngConnections.setAttribute("disabled", true);
-        this.rngSize.setAttribute("disabled", true);
-        this.rngBuffer.setAttribute("disabled", true);
-        this.cmbComm.setAttribute("disabled", true);
+        //this.cmbComm.setAttribute("disabled", true);
     }
 
     Unfreeze() {
         this.btnStart.removeAttribute("disabled");
         this.rngTimeout.removeAttribute("disabled");
         this.rngConnections.removeAttribute("disabled");
-        this.rngSize.removeAttribute("disabled");
-        this.rngBuffer.removeAttribute("disabled");
-        this.cmbComm.removeAttribute("disabled");
+        //this.cmbComm.removeAttribute("disabled");
     }
 
     DownstreamTest(index) {
-        let server = window.location.href;
-        server = server.replace("https://", "");
-        server = server.replace("http://", "");
-        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
 
-        let ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + `/ws/speedtest_down&timeout=${this.rngTimeout.value}&size=${Math.pow(2, this.rngSize.value)}&buffer=${Math.pow(2, this.rngBuffer.value)}`);
+            if (xhr.readyState === 3) {
+                this.downstream[index] = xhr.responseText.length;
 
-        ws.onopen = () => {
-            this.socket.push("d"+index);
-            this.downstarttime = Date.now();
-        };
-
-        ws.onmessage = event => {
-            this.downstream.push(Date.now());
-            this.Plot();
-        };
-
-        ws.onclose = () => {
-            this.socket.splice(this.socket.indexOf("d"+index), 1);
-            if (this.socket.length === 0) {
-                this.Plot(true);
-
-                if (this.cmbComm.value == "full") {
-                    this.Unfreeze();
-                } else {
-                    for (let i = 0; i < this.rngConnections.value; i++)
-                        this.UpstreamTest(i);
+                let d = Date.now - this.startTime;
+                let s = 0;
+                for (let i = 0; i < this.downstream.length; i++) {
+                    s += this.downstream[i];
+                    console.log(this.downstream[i]);
                 }
-            }
+
+                this.lblDownAvg.innerHTML = (s / d) / 1000000 + " Mb/s";
+
+
+            } else if (xhr.readyState === 2) {
+                if (Date.now < this.startTime) this.startTime = Date.now;
+
+            } else if (xhr.readyState === 4 && xhr.status === 200) {
+                //if (this.cmbComm.value != "full")
+                //    this.UpstreamTest(index);                
+                this.Unfreeze();
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
         };
 
-        ws.onerror = error => console.log(error);
+        xhr.open("GET", `speedtest_downstream&timeout=${this.rngTimeout.value}`, true);
+        xhr.send();
     }
 
     UpstreamTest(index) {
-        let server = window.location.href;
-        server = server.replace("https://", "");
-        server = server.replace("http://", "");
-        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
-        const buffer = new ArrayBuffer(Math.pow(2, this.rngBuffer.value));
-
-        let ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + `/ws/speedtest_up&timeout=${this.rngTimeout.value}&size=${Math.pow(2, this.rngSize.value)}&buffer=${Math.pow(2, this.rngBuffer.value)}`);
-
-        let sendCount = 0;
-
-        ws.onopen = () => {
-            this.socket.push("u"+index);
-            this.upstarttime = Date.now();
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
         };
 
-        ws.onmessage = event => {
-            if (Date.now() - this.upstarttime < 1000 * this.rngTimeout.value && sendCount < Math.pow(2, this.rngSize.value) * 1024 * 1024) {
-                ws.send(buffer);
-                this.upstream.push(Date.now());
-                sendCount += Math.pow(2, this.rngBuffer.value);
-                this.Plot();
-            }
-        };
+        xhr.open("POST", `speedtest_upstream&timeout=${this.rngTimeout.value}`, true);
+        xhr.send(this.kilo);
 
-        ws.onclose = () => {
+        /*ws.onclose = () => {
             this.socket.splice(this.socket.indexOf("u"+index),1);
 
             if (this.socket.length === 0) {
@@ -337,35 +225,9 @@ class SpeedTest extends Window {
             }
         };
 
-        ws.onerror = error => console.log(error);
+        ws.onerror = error => console.log(error);*/
     }
 
-    Plot(force = false) {
-        if (Date.now() - this.lastPlot < 100 && !force) return;
-
-        if (this.downstream.length > 0) {
-            let downSize = this.downstream.length * Math.pow(2, this.rngBuffer.value); //bytes
-            let downDuration = (this.downstream[this.downstream.length - 1] - this.downstarttime) / 1000; //s
-            let downAvg = downSize * 8 / downDuration; //bps
-
-            this.lblDownAvg.innerHTML = "Average: " + ((downAvg < 1000000) ? Math.round(downAvg / 1000) + " Kbps" : Math.round(downAvg / 1000000) + " Mbps");
-            this.lblDownProgress.innerHTML = this.SizeToString(downSize) + " / " + Math.round(downDuration * 10) / 10 + "s";
-        }
-
-        if (this.upstream.length > 0) {
-            let upSize = this.upstream.length * Math.pow(2, this.rngBuffer.value); //bytes
-            let upDuration = (this.upstream[this.upstream.length - 1] - this.upstarttime) / 1000; //s
-            let upAvg = upSize * 8 / upDuration; //bps
-
-            this.lblUpAvg.innerHTML = "Average: " + ((upAvg < 1000000) ? Math.round(upAvg / 1000) + " Kbps" : Math.round(upAvg / 1000000) + " Mbps");
-            this.lblUpProgress.innerHTML = this.SizeToString(upSize) + " / " + Math.round(upDuration * 10) / 10 + "s";
-        } else {
-            this.lblUpAvg.innerHTML = "Average: --";
-            this.lblUpProgress.innerHTML = "--";
-        }
-
-        this.lastPlot = Date.now();
-    }
 
     SizeToString(value) {
         let size = parseInt(value);

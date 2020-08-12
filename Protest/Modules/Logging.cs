@@ -30,7 +30,7 @@ public static class Logging {
     }
 
     public static void Action(in string performer, in string action) {
-        string msg = $"{DateTime.Now.ToString(Strings.DATETIME_FORMAT_FILE)}\t{performer}\t{action}";
+        string msg = $"{DateTime.Now.ToString(Strings.DATETIME_FORMAT_FILE)}\t{performer,-16}\t{action}";
         lock (log_lock)
             try {
                 using StreamWriter writer = new StreamWriter($"{Strings.DIR_LOG}\\{DateTime.Now.ToString(Strings.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);

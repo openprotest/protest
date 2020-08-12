@@ -322,6 +322,12 @@
 
     user-select: text;
 }
+
+.generic-list-element-tied {
+    height: 24px;
+    line-height: 24px;
+}
+
 .generic-list-element:hover {
     background-color: var(--highlight-color);
 }

@@ -56,13 +56,13 @@ public static class Session {
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };
 
-                Logging.Action($"{username}@{remoteIp}", "Login successfuly");
+                Logging.Action("username", $"Login successfuly from {remoteIp}");
 
                 ctx.Response.AppendCookie(cookie);
                 return sessionId;
             }
 
-            Logging.Action($"{username}@{remoteIp}", "Unsuccessful login attempt");
+            Logging.Action("username", $"Unsuccessful login attempt from {remoteIp}");
             return null;
 
         } catch (Exception ex) {
@@ -158,7 +158,7 @@ public static class Session {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] KickClients(string[] para) {
+    public static byte[] KickClients(string[] para, string performer) {
         string ip = "";
         string hash = "";
         for (int i = 1; i < para.Length; i++) {
@@ -172,6 +172,7 @@ public static class Session {
                 bool removed = RevokeAccess(e.sessionId);
                 if (!removed) return Strings.FAI.Array;
                 KeepAlive.SearchAndDestroy(e.sessionId);
+                Logging.Action(performer, $"Kick user {e.username} from {e.ip}");
                 return Strings.OK.Array;
             }
         }
