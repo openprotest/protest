@@ -58,6 +58,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modules\Backup.cs" />
     <Compile Include="Modules\DebitNotes.cs" />
     <Compile Include="Modules\Documentation.cs" />
     <Compile Include="Modules\TaskWrapper.cs" />
@@ -144,6 +145,7 @@
     <Content Include="bin\protest\front\debitnotes.css" />
     <Content Include="bin\protest\front\debitnotes.js" />
     <Content Include="bin\protest\front\keepalive.js" />
+    <Content Include="bin\protest\front\backup.js" />
     <Content Include="bin\protest\front\passwordstrength.css" />
     <Content Include="bin\protest\front\passwordstrength.js" />
     <Content Include="bin\protest\front\ntpclient.js" />

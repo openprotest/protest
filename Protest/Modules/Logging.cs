@@ -19,7 +19,7 @@ public static class Logging {
     public static void Err(in string ex) {
         lock (log_lock)
             try {
-                using StreamWriter writer = new StreamWriter(Strings.FILE_ERROR_LOG, true, System.Text.Encoding.UTF8);
+                using StreamWriter writer = new StreamWriter($"{Strings.DIR_LOG}\\error.log", true, System.Text.Encoding.UTF8);
                 writer.Write(DateTime.Now.ToString(Strings.DATETIME_FORMAT_FILE));
                 writer.WriteLine($"\t{ex}");
             } catch { }
@@ -30,11 +30,23 @@ public static class Logging {
     }
 
     public static void Action(in string performer, in string action) {
+        string msg = $"{DateTime.Now.ToString(Strings.DATETIME_FORMAT_FILE)}\t{performer}\t{action}";
         lock (log_lock)
             try {
-                using StreamWriter writer = new StreamWriter(Strings.FILE_ACTION_LOG, true, System.Text.Encoding.UTF8);
-                writer.WriteLine($"{DateTime.Now.ToString(Strings.DATETIME_FORMAT_FILE)}\t{performer}\t{action}");
+                using StreamWriter writer = new StreamWriter($"{Strings.DIR_LOG}\\{DateTime.Now.ToString(Strings.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);
+                writer.WriteLine(msg);
             } catch { }
+
+        KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{msg.Replace("\t", "\\t")}\"}}");
+    }
+
+    public static byte[] GetLog() {
+        lock (log_lock)
+            try {
+                return File.ReadAllBytes($"{Strings.DIR_LOG}\\{DateTime.Now.ToString(Strings.DATE_FORMAT_FILE)}.log");
+            } catch { }
+
+        return null;
     }
 
 }

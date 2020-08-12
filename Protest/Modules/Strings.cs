@@ -9,6 +9,7 @@ public static class Strings {
     public const string Time_FORMAT = "HH:mm:ss";
     public const string TIME_FORMAT_MILLI = "HH:mm:ss:fff";
     public const string DATE_FORMAT = "dd-MM-yyyy";
+    public const string DATE_FORMAT_FILE = "yyyy-MM-dd";
     public const string DATETIME_FORMAT = "ddd, dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_LONG = "dddd dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_FILE = "yyyy-MM-dd HH:mm:ss";
@@ -39,7 +40,7 @@ public static class Strings {
     public static readonly string DIR_PROTEST     = $"{Directory.GetCurrentDirectory()}\\protest";
     public static readonly string DIR_FRONTEND    = $"{Directory.GetCurrentDirectory()}\\protest\\front";
     public static readonly string DIR_ADDRESSBOOK = $"{Directory.GetCurrentDirectory()}\\protest\\addressbook";
-    public static readonly string DIR_DATE        = $"{Directory.GetCurrentDirectory()}\\protest\\data";
+    public static readonly string DIR_DATA        = $"{Directory.GetCurrentDirectory()}\\protest\\data";
     public static readonly string DIR_EQUIP       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\equip";
     public static readonly string DIR_USERS       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\users";
     public static readonly string DIR_KNOWLAGE    = $"{Directory.GetCurrentDirectory()}\\protest\\knowlage";
@@ -47,36 +48,38 @@ public static class Strings {
     public static readonly string DIR_LASTSEEN    = $"{Directory.GetCurrentDirectory()}\\protest\\lastseen";
     public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
     
-    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
-
     public static readonly string DIR_DEBIT       = $"{Directory.GetCurrentDirectory()}\\protest\\debit";
     public static readonly string DIR_DEBIT_SHORT = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\short";
     public static readonly string DIR_DEBIT_LONG  = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\long";
     public static readonly string DIR_DEBIT_RETURNED = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\returned";
     public static readonly string DIR_DEBIT_TEMPLATE = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\templates";
 
-    public static readonly string FILE_CONFIG       = $"{Directory.GetCurrentDirectory()}\\protest\\config.txt";
-    public static readonly string FILE_ACTION_LOG   = $"{Directory.GetCurrentDirectory()}\\protest\\action.log";
-    public static readonly string FILE_ERROR_LOG    = $"{Directory.GetCurrentDirectory()}\\protest\\error.log";
-
-    public static readonly string FILE_CONTENT_TYPE = $"{DIR_KNOWLAGE}\\content_type.txt";
-    public static readonly string FILE_MAC          = $"{DIR_KNOWLAGE}\\mac.bin";
-    public static readonly string DIR_IP_LOCATION   = $"{DIR_KNOWLAGE}\\ip";
-    public static readonly string DIR_PROXY         = $"{DIR_KNOWLAGE}\\proxy";
+    public static readonly string DIR_IP_LOCATION = $"{DIR_KNOWLAGE}\\ip";
+    public static readonly string DIR_PROXY = $"{DIR_KNOWLAGE}\\proxy";
 
     public static readonly string DIR_SCRIPTS_SCRIPTS = $"{DIR_SCRIPTS}\\scripts";
     public static readonly string DIR_SCRIPTS_REPORTS = $"{DIR_SCRIPTS}\\reports";
 
+    public static readonly string DIR_LOG           = $"{Directory.GetCurrentDirectory()}\\protest\\log";
+    public static readonly string DIR_BACKUPS       = $"{Directory.GetCurrentDirectory()}\\protest\\backups";
+    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
+
+    public static readonly string FILE_CONFIG       = $"{Directory.GetCurrentDirectory()}\\protest\\config.txt";
+    public static readonly string FILE_CONTENT_TYPE = $"{DIR_KNOWLAGE}\\content_type.txt";
+    public static readonly string FILE_MAC          = $"{DIR_KNOWLAGE}\\mac.bin";
+
     public static void InitDirs() {
         try {
             DirectoryInfo dirProtest  = new DirectoryInfo(DIR_PROTEST);
+            DirectoryInfo dirLog      = new DirectoryInfo(DIR_LOG);
             DirectoryInfo dirLastSeen = new DirectoryInfo(DIR_LASTSEEN);
             DirectoryInfo dirMetrics  = new DirectoryInfo(DIR_METRICS);
-            DirectoryInfo dirData     = new DirectoryInfo(DIR_DATE);
+            DirectoryInfo dirData     = new DirectoryInfo(DIR_DATA);
             DirectoryInfo dirEquip    = new DirectoryInfo(DIR_EQUIP);
             DirectoryInfo dirUsers    = new DirectoryInfo(DIR_USERS);
 
             if (!dirProtest.Exists)  dirProtest.Create();
+            if (!dirLog.Exists)      dirLog.Create();
             if (!dirLastSeen.Exists) dirLastSeen.Create();
             if (!dirMetrics.Exists)  dirMetrics.Create();
             if (!dirData.Exists)     dirData.Create();
@@ -150,6 +153,19 @@ public static class Strings {
         s = s.Replace("\t", "\\\t");
 
         return s;
+    }
+
+    public static string SizeToString(long size) {
+        if (size < 1024) return $"{size} Bytes";
+        if (size < Math.Pow(1024, 2)) return $"{Math.Round(size / 1024.0)} KB";
+        if (size < Math.Pow(1024, 3)) return $"{Math.Round(size / Math.Pow(1024, 2))} MB";
+        if (size < Math.Pow(1024, 4)) return $"{Math.Round(size / Math.Pow(1024, 3))} GB";
+        if (size < Math.Pow(1024, 5)) return $"{Math.Round(size / Math.Pow(1024, 4))} TB";
+        if (size < Math.Pow(1024, 6)) return $"{Math.Round(size / Math.Pow(1024, 5))} EB"; //Exabyte
+        if (size < Math.Pow(1024, 7)) return $"{Math.Round(size / Math.Pow(1024, 6))} ZB"; //Zettabyte
+        if (size < Math.Pow(1024, 8)) return $"{Math.Round(size / Math.Pow(1024, 7))} YB"; //Yottabyte
+        if (size < Math.Pow(1024, 9)) return $"{Math.Round(size / Math.Pow(1024, 8))} BB"; //Brontobyte
+        return size.ToString();
     }
 
     public static byte[] Version() {

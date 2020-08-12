@@ -29,6 +29,8 @@ function initKeepAlive() {
     };
 
     this.ws.onmessage = event => {
+        console.log(event.data);
+
         let json = JSON.parse(event.data);
         KeepAlive_MessageHandler(json);
     };
@@ -44,6 +46,14 @@ function KeepAlive_MessageHandler(msg) {
     const version = msg.version;
 
     switch (action) {
+        case "log":
+            for (let i = 0; i < $w.array.length; i++) { //for each equip list
+                if (!($w.array[i] instanceof Log)) continue;
+                $w.array[i].Add(msg.msg);
+            }
+            break;
+            break;
+
         case "update":
             if (type == "equip") { //update equip
                 if (db_equip_ver == version) break;
@@ -262,6 +272,9 @@ function KeepAlive_MessageHandler(msg) {
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "hidden";
             }
+            break;
+
+        case "log":
             break;
     }
 }

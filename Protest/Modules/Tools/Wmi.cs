@@ -513,18 +513,7 @@ public static class Wmi {
 
     public static string SizeToString(string value) {
         long size = long.Parse(value);
-
-        if (size < 1024) return $"{size} Bytes";
-        if (size < Math.Pow(1024, 2)) return $"{Math.Round(size / 1024.0)} KB";
-        if (size < Math.Pow(1024, 3)) return $"{Math.Round(size / Math.Pow(1024, 2))} MB";
-        if (size < Math.Pow(1024, 4)) return $"{Math.Round(size / Math.Pow(1024, 3))} GB";
-        if (size < Math.Pow(1024, 5)) return $"{Math.Round(size / Math.Pow(1024, 4))} TB";
-        if (size < Math.Pow(1024, 6)) return $"{Math.Round(size / Math.Pow(1024, 5))} EB"; //Exabyte
-        if (size < Math.Pow(1024, 7)) return $"{Math.Round(size / Math.Pow(1024, 6))} ZB"; //Zettabyte
-        if (size < Math.Pow(1024, 8)) return $"{Math.Round(size / Math.Pow(1024, 7))} YB"; //Yottabyte
-        if (size < Math.Pow(1024, 9)) return $"{Math.Round(size / Math.Pow(1024, 8))} BB"; //Brontobyte
-
-        return size.ToString();
+        return Strings.SizeToString(size);
     }
 
     public static string DateToString(string value) {

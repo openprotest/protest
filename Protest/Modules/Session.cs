@@ -151,6 +151,7 @@ public static class Session {
 
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
             SessionEntry e = o.Value;
+            if (e.username == "localhost" && e.ip.StartsWith("127.")) continue;
             sb.Append($"{e.ip}{(char)127}{e.loginTime}{(char)127}{e.username}{(char)127}{e.sessionId.Substring(0, 8)}{(char)127}");
         }
 
@@ -168,7 +169,7 @@ public static class Session {
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
             SessionEntry e = o.Value;
             if (e.ip == ip && e.sessionId.StartsWith(hash)) {
-                bool removed = sessions.TryRemove(e.sessionId, out _);
+                bool removed = RevokeAccess(e.sessionId);
                 if (!removed) return Strings.FAI.Array;
                 KeepAlive.SearchAndDestroy(e.sessionId);
                 return Strings.OK.Array;

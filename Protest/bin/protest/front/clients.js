@@ -8,18 +8,28 @@ class Clients extends Window {
         this.setTitle("Clients");
         this.setIcon("res/ptclients.svgz");
 
+        this.btnReload = document.createElement("div");
+        this.btnReload.style.backgroundImage = "url(res/l_reload.svgz)";
+        this.btnReload.setAttribute("tip-below", "Reload");
+        this.toolbox.appendChild(this.btnReload);
+
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
+
         this.content.style.display = "grid";
-        this.content.style.gridTemplateColumns = "auto minmax(50px, 800px) auto";
+        this.content.style.gridTemplateColumns = "auto minmax(50px, 900px) auto";
         this.content.style.gridTemplateRows = "auto";
 
         this.list = document.createElement("div");
+        this.list.className = "no-results";
         this.list.style.gridArea = "1 / 2";
         this.list.style.backgroundColor = "var(--pane-color)";
         this.list.style.color = "#202020";
-        this.list.style.margin = "8px";
+        this.list.style.margin = "0 8px 8px 8px";
         this.list.style.borderRadius = "4px";
         this.list.style.overflowY = "auto";
         this.content.appendChild(this.list);
+
+        this.btnReload.onclick = () => this.GetClients();
 
         this.GetClients();
     }
@@ -30,14 +40,14 @@ class Clients extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
-
-            if (xhr.readyState == 4 && xhr.status == 200) { //OK
+            if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split < 2) return;
 
                 for (let i = 0; i < split.length - 2; i += 4) {
                     const element = document.createElement("div");
                     element.className = "generic-list-element";
+                    element.style.backgroundImage = "url(res/user.svgz)";
                     this.list.appendChild(element);
 
                     const label = document.createElement("div");

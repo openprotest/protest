@@ -137,7 +137,7 @@ public static class ActiveDirectory {
     }
 
     public static SearchResult GetWorkstation(string name) {
-        if (name.Length == 0) return null;
+        if (name is null || name.Length == 0) return null;
 
         string domain = null;
         try {

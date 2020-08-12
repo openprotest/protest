@@ -307,39 +307,49 @@
 
 .generic-list-element {
     position: relative;
+
     margin: 0 0 2px 0;
     height: 32px;
+    padding-left: 32px;
+
+    line-height: 32px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    background-size: 24px 24px;
+    background-position: 4px center;
+    background-repeat: no-repeat;
+
+    user-select: text;
 }
 .generic-list-element:hover {
     background-color: var(--highlight-color);
 }
 
 .generic-list-element > .generic-label1 {
-    max-width: calc(45% - 12px);
+    max-width: calc(55% - 12px);
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 32px;
     max-height: 32px;
-    padding-left: 8px; 
-    bottom: 0;        
-    user-select: text;
+    padding-left: 4px;
+    bottom: 0;
 }
 
 .generic-list-element > .generic-label2 {
     position: relative;
-    left: 45%;
+    left: 55%;
     top: -32px;
-    width: calc(55% - 48px);
+    width: calc(45% - 48px);
     right: 64px;
     bottom: 0;
     height: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 32px;
-    user-select: text;
 }
 
 .generic-list-element > .generic-action {
+    position: absolute;
+
     visibility: hidden;
     opacity: 0;
     transition: .2s;

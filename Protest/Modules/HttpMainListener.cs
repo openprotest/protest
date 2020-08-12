@@ -41,7 +41,7 @@ class HttpMainListener : Http {
                 Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
             });
 
-            Logging.Action($"localhost@{remoteIp}", "Auto-login");
+            //Logging.Action($"localhost@{remoteIp}", "Auto-login");
             performer = "localhost";
         }
 
@@ -209,8 +209,14 @@ class HttpMainListener : Http {
                 case "fetch_equip_dc"   : buffer = Fetch.FetchEquip(ctx, performer); break;
                 case "fetch_users_dc"   : buffer = Fetch.FetchUsers(ctx, performer); break;
 
+                case "getlog" : buffer = Logging.GetLog(); break;
+
                 case "getclients": buffer = Session.GetClients(); break;
                 case "kickclient": buffer = Session.KickClients(para); break;
+
+                case "getbackups": buffer = Backup.GetBackups(); break;
+                case "createbackup": buffer = Backup.CreateBackup(para); break;
+                case "deletebackup": buffer = Backup.DeleteBackup(para); break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 

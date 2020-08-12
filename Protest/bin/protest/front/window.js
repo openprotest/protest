@@ -289,7 +289,7 @@ class Window {
             this.isMaximized = false;
 
             this.task.style.top = "2px";
-            this.task.style.borderRadius = "12.5%";
+            this.task.style.borderRadius = "8%";
         } else {
             this.position = [this.win.style.left, this.win.style.top, this.win.style.width, this.win.style.height];
             this.win.style.left          = "0%";
@@ -306,7 +306,7 @@ class Window {
             this.isMaximized = true;
 
             this.task.style.top = "0";
-            this.task.style.borderRadius = "0 0 12.5% 12.5%";
+            this.task.style.borderRadius = "0 0 8% 8%";
         }
         setTimeout(()=> {
             this.win.style.transition = "0s"; 
@@ -343,7 +343,7 @@ class Window {
             this.isMinimized = true;
 
             this.task.style.top = "2px";
-            this.task.style.borderRadius = "12.5%";
+            this.task.style.borderRadius = "8%";
             this.task.className = "bar-icon";
 
             $w.focused = null;
@@ -471,7 +471,7 @@ class Window {
 
         for (let i=0; i<$w.array.length; i++) {
             $w.array[i].task.style.top = "2px";
-            $w.array[i].task.style.borderRadius = "12.5%";
+            $w.array[i].task.style.borderRadius = "8%";
             $w.array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
             $w.array[i].icon.style.filter = "none";
 
@@ -489,7 +489,7 @@ class Window {
 
         if (this.isMaximized) {
             this.task.style.top = "0";
-            this.task.style.borderRadius = "0 0 12.5% 12.5%";
+            this.task.style.borderRadius = "0 0 8% 8%";
         }
 
         if (this.win.style.zIndex < $w.count) this.win.style.zIndex = ++$w.count;

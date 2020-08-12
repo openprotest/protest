@@ -81,7 +81,6 @@ public static class KeepAlive {
         } catch { }
     }
 
-
     public static void Broadcast(string message) {
         Broadcast(Encoding.UTF8.GetBytes(message));
     }
@@ -112,7 +111,6 @@ public static class KeepAlive {
         for (int i = 0; i < remove.Count; i++)
             connections.Remove(remove[i]);
     }
-
 
     ///<summary>Destroys alive websocket connections with the sessionId</summary>
     public static bool SearchAndDestroy(string sessionId) {
