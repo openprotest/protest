@@ -177,18 +177,14 @@ class SpeedTest extends Window {
             if (xhr.readyState === 3) {
                 this.downstream[index] = xhr.responseText.length;
 
-                let d = Date.now - this.startTime;
-                let s = 0;
-                for (let i = 0; i < this.downstream.length; i++) {
-                    s += this.downstream[i];
-                    console.log(this.downstream[i]);
-                }
+                let d = Date.now() - this.startTime;
+                let s = this.downstream.reduce((sum, next)=> sum + next);
 
-                this.lblDownAvg.innerHTML = (s / d) / 1000000 + " Mb/s";
+                this.lblDownAvg.innerHTML = Math.round(8 * (s / d) / 1000) + " Kb/s";
 
 
             } else if (xhr.readyState === 2) {
-                if (Date.now < this.startTime) this.startTime = Date.now;
+                if (Date.now() < this.startTime) this.startTime = Date.now();
 
             } else if (xhr.readyState === 4 && xhr.status === 200) {
                 //if (this.cmbComm.value != "full")

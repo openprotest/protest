@@ -25,7 +25,8 @@ const TOOLS = [
 { lbl:"Locate IP",          ico:"res/locate.svgz",         sqr:true,  f:arg=> new LocateIp(arg) },
 { lbl:"MAC lookup",         ico:"res/maclookup.svgz",      sqr:true,  f:arg=> new MacLookup(arg) },
 { lbl:"Website check",      ico:"res/websitecheck.svgz",   sqr:true,  f:arg=> new WebCheck(arg) },
-{ lbl:"Speed test",         ico:"res/speedtest.svgz",      sqr:true,  f:arg=> new SpeedTest() },
+
+//{ lbl:"Speed test",         ico:"res/speedtest.svgz",      sqr:true,  f:arg=> new SpeedTest() },
 { lbl:"Scripts",            ico:"res/scripts.svgz",        sqr:true,  f:arg=> new Scripts() },
 { lbl:"Scripts reports",    ico:"res/reportfile.svgz",     sqr:false, f:arg=> new Scripts("reports") },
 { lbl:"Ongoing scripts",    ico:"res/ongoingscript.svgz",  sqr:false, f:arg=> new Scripts("ongoing") },
