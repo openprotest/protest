@@ -29,8 +29,6 @@ function initKeepAlive() {
     };
 
     this.ws.onmessage = event => {
-        console.log(event.data);
-
         let json = JSON.parse(event.data);
         KeepAlive_MessageHandler(json);
     };
@@ -51,7 +49,6 @@ function KeepAlive_MessageHandler(msg) {
                 if (!($w.array[i] instanceof Log)) continue;
                 $w.array[i].Add(msg.msg);
             }
-            break;
             break;
 
         case "update":
