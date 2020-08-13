@@ -4,7 +4,8 @@ class Log extends Window {
 
         this.args = args ? args : {
             autoscroll: true,
-            opaque : false
+            opaque: false,
+            ontop: false
         };
 
         this.setTitle("Log");
@@ -26,7 +27,6 @@ class Log extends Window {
         this.list = document.createElement("div");
         this.list.className = "no-results";
         this.list.style.gridArea = "2 / 2";
-        this.list.style.border = "1px solid var(--pane-color)";
         this.list.style.backgroundColor = "var(--pane-color)";
         this.list.style.color = "#202020";
         this.list.style.fontFamily = "monospace";
@@ -57,6 +57,17 @@ class Log extends Window {
         this.divOpaque.appendChild(this.chkOpaque);
         this.AddCheckBoxLabel(this.divOpaque, this.chkOpaque, "Opaque");
 
+        this.divOntop = document.createElement("div");
+        this.divOntop.style.display = "inline-block";
+        this.divOntop.style.paddingRight = "32px";
+        this.divOntop.style.paddingBottom = "8px";
+        options.appendChild(this.divOntop);
+        this.chkOntop = document.createElement("input");
+        this.chkOntop.type = "checkbox";
+        this.chkOntop.checked = this.args.ontop;
+        this.divOntop.appendChild(this.chkOntop);
+        this.AddCheckBoxLabel(this.divOntop, this.chkOntop, "Always on top");
+
         this.chkAutoScroll.onchange = () => { this.args.autoscroll = this.chkAutoScroll.checked; };
 
         this.chkOpaque.onchange = () => {
@@ -64,8 +75,13 @@ class Log extends Window {
             this.SetOpaque(this.chkOpaque.checked);
         };
 
-        this.SetOpaque(this.chkOpaque.checked);
+        this.chkOntop.onchange = () => {
+            this.args.ontop = this.chkOpaque.checked;
+            this.SetOntop(this.chkOntop.checked);
+        };
 
+        this.SetOpaque(this.chkOpaque.checked);
+        this.SetOntop(this.chkOntop.checked);
         this.GetLog();
     }
 
@@ -73,6 +89,7 @@ class Log extends Window {
         const btnUnpop = super.Popout();
 
         this.divOpaque.style.visibility = "hidden";
+        this.divOntop.style.visibility = "hidden";
         this.chkOpaque.checked = false;
 
         if (this.popoutWindow && this.args.opaque)
@@ -80,6 +97,7 @@ class Log extends Window {
 
         btnUnpop.addEventListener("click", () => {
             this.divOpaque.style.visibility = "visible";
+            this.divOntop.style.visibility = "visible";
         });
     }
 
@@ -117,16 +135,48 @@ class Log extends Window {
     SetOpaque(opaque) {
         if (opaque) {
             this.win.style.backgroundColor = "rgba(64,64,64,.7)";
+            //this.win.style.border = "1px solid var(--select-color)";
+            this.win.style.boxShadow = "var(--select-color) 0 0 1px 1px";
+            this.resize.style.borderBottom = "16px solid var(--select-color)";
             this.content.style.backgroundColor = "transparent";
+            this.list.style.border = "1px solid var(--select-color)";
             this.list.style.backgroundColor = "transparent";
             this.list.style.color = "#FFF";
+
+            this.btnClose.style.backgroundColor = "var(--select-color)";
+            this.btnMaximize.style.backgroundColor = "var(--select-color)";
+            this.btnMinimize.style.backgroundColor = "var(--select-color)";
+            this.btnPopout.style.backgroundColor = "var(--select-color)";
+
         } else {
             this.win.style.backgroundColor = "";
+            //this.win.style.border = "";
+            this.win.style.boxShadow = "";
+            this.resize.style.borderBottom = "";
             this.content.style.backgroundColor = "";
+            this.list.style.border = "none";
             this.list.style.backgroundColor = "var(--pane-color)";
             this.list.style.color = "#202020";
+
+            this.btnMaximize.style.backgroundColor = "";
+            this.btnMinimize.style.backgroundColor = "";
+            this.btnPopout.style.backgroundColor = "";
         }
 
     }
 
+    SetOntop(ontop) {
+        if (ontop) {
+            this.BringToFront = () => {
+                super.BringToFront();
+                this.win.style.zIndex = "9999999";
+            };
+
+            this.win.style.zIndex = "9999999";
+
+        } else {
+            this.BringToFront = () => super.BringToFront();
+            this.BringToFront();
+        }
+    }
 }
