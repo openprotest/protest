@@ -178,7 +178,7 @@ class Log extends Window {
             this.BringToFront = () => {
                 super.BringToFront();
             };
-            this.win.style.zIndex = $w.count;
+            this.win.style.zIndex = ++$w.count;
         }
     }
 }
