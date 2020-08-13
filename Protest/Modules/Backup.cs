@@ -73,7 +73,7 @@ class Backup {
 
         } catch { }
 
-        Logging.Action(performer, $"Create backup: {filename}");
+        Logging.Action(performer, $"Create backup: {name}{(count == 1 ? "" : $"_{count}")}.zip");
 
         return Strings.OK.Array;
     }

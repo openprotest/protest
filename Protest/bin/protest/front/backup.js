@@ -72,6 +72,8 @@ class Backup extends Window {
         const Ok_click = btnOK.onclick;
 
         btnOK.onclick = () => {
+            if (txtName.value.length == 0) return;
+
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
@@ -84,6 +86,11 @@ class Backup extends Window {
             xhr.open("GET", `createbackup&name=${txtName.value}`, true);
             xhr.send();
             Ok_click();
+        };
+
+        txtName.onkeydown = event => {
+            if (event.keyCode == 27) btnCancel.onclick();
+            if (event.keyCode == 13) btnOK.onclick();
         };
 
         setTimeout(() => txtName.focus(), 0);

@@ -29,6 +29,7 @@ function initKeepAlive() {
     };
 
     this.ws.onmessage = event => {
+        console.log(event.data);
         let json = JSON.parse(event.data);
         KeepAlive_MessageHandler(json);
     };
