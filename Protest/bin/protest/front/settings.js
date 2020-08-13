@@ -38,7 +38,7 @@ class Settings extends Tabs {
         this.subContent.style.padding = "24px";
         this.subContent.style.overflowY = "auto";
 
-        this.tabGui     = this.AddTab("Appearence", "res/tv.svgz");
+        this.tabGui     = this.AddTab("Appearance", "res/tv.svgz");
         this.tabSession = this.AddTab("Session", "res/hourglass.svgz");
         this.tabUpdate  = this.AddTab("Update", "res/update.svgz");
         this.tabLegal   = this.AddTab("License", "res/gpl.svgz");
@@ -79,7 +79,7 @@ class Settings extends Tabs {
     }
 
     ShowGui() {
-        this.args = "appearence";
+        this.args = "appearance";
         this.subContent.innerHTML = "";
 
         this.chkDynamicSearchIcon = document.createElement("input");

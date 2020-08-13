@@ -56,13 +56,13 @@ public static class Session {
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };
 
-                Logging.Action("username", $"Login successfuly from {remoteIp}");
+                Logging.Action(username, $"Successfully login from {remoteIp}");
 
                 ctx.Response.AppendCookie(cookie);
                 return sessionId;
             }
 
-            Logging.Action("username", $"Unsuccessful login attempt from {remoteIp}");
+            Logging.Action(username, $"Unsuccessful login attempt from {remoteIp}");
             return null;
 
         } catch (Exception ex) {
@@ -171,6 +171,7 @@ public static class Session {
             if (e.ip == ip && e.sessionId.StartsWith(hash)) {
                 bool removed = RevokeAccess(e.sessionId);
                 if (!removed) return Strings.FAI.Array;
+                
                 KeepAlive.SearchAndDestroy(e.sessionId);
                 Logging.Action(performer, $"Kick user {e.username} from {e.ip}");
                 return Strings.OK.Array;

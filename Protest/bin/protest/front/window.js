@@ -463,6 +463,8 @@ class Window {
         };
 
         newWin.onbeforeunload = () => this.Close();
+
+        return btnUnpop;
     }
 
     BringToFront() {

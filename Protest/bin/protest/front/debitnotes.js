@@ -14,7 +14,7 @@ class DebitNotes extends Window {
             from: `${gap.getFullYear()}-${(gap.getMonth() + 1).toString().padStart(2, "0")}-${(gap.getDate().toString().padStart(2, "0"))}`,
             to: `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${(now.getDate().toString().padStart(2, "0"))}`,
             short: true,
-            long: false,
+            long: true,
             returned: false
         };
 

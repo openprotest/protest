@@ -82,7 +82,7 @@ namespace Protest_RA {
 
         private static bool Action(string cmd) {
             string[] split = cmd.Split((char)127);
-            if (split.Length < 2) return false;            
+            if (split.Length < 2) return false;
 
             string method = split[0];
             string targer = split[1];

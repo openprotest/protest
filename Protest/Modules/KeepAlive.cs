@@ -1,6 +1,4 @@
-﻿//#define KA_LOGGING
-
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System;
@@ -10,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public static class KeepAlive {
+    public static ArraySegment<byte> MSG_FORCE_RELOAD = new ArraySegment<byte>(Encoding.UTF8.GetBytes($"{{\"action\":\"forcereload\"}}"));
 
     private static Hashtable connections = Hashtable.Synchronized(new Hashtable());
 
@@ -40,16 +39,12 @@ public static class KeepAlive {
         }
 
         try {
-            if (ws.State == WebSocketState.Open) {
+            if (ws.State == WebSocketState.Open)
                 connections.Add(ws, new AliveEntry() {
                     ws = ws,
                     session = sessionId,
                     syncLock = new object()
                 });
-#if KA_LOGGING
-                Console.WriteLine($"connected: {remoteIp}");
-#endif
-            }
 
             byte[] version = Encoding.UTF8.GetBytes(
                 $"{{\"action\":\"version\",\"userver\":\"{Database.usersVer}\",\"equipver\":\"{Database.equipVer}\"}}"
@@ -61,15 +56,13 @@ public static class KeepAlive {
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                    await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
                     ctx.Response.Close();
                     //TODO: ask for user login
                     return;
                 }
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-#if KA_LOGGING
-                    Console.WriteLine($"closed: {remoteIp}");
-#endif
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                     break;
                 }
@@ -86,9 +79,6 @@ public static class KeepAlive {
     }
 
     public static void Broadcast(byte[] message) {
-#if KA_LOGGING
-        Console.WriteLine($"broadcasting");
-#endif
         List<WebSocket> remove = new List<WebSocket>();
 
         foreach (DictionaryEntry e in connections) { 
@@ -97,9 +87,8 @@ public static class KeepAlive {
             if (entry.ws.State == WebSocketState.Open) {
                 new Thread(() => {
                     try {
-                        lock(entry.syncLock) {
+                        lock(entry.syncLock)
                             entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
                     } catch {}
                 }).Start();
 
@@ -121,10 +110,14 @@ public static class KeepAlive {
             AliveEntry entry = (AliveEntry)e.Value;
             if (entry.session == sessionId) {
                 remove.Add(entry.ws);
-                if (entry.ws.State == WebSocketState.Open)
+                if (entry.ws.State == WebSocketState.Open) {
+                    try {
+                        entry.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                    } catch { }
                     try {
                         entry.ws.Abort();
                     } catch { }
+                }
             }
         }
 

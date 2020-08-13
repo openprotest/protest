@@ -51,6 +51,10 @@ function KeepAlive_MessageHandler(msg) {
             }
             break;
 
+        case "forcereload":
+            location.reload();
+            break;
+
         case "update":
             if (type == "equip") { //update equip
                 if (db_equip_ver == version) break;

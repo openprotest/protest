@@ -12,7 +12,7 @@ label {
     outline: 0;
 }
 
-label:before {
+label::before {
     position: absolute;
     top: 4px;
     left: 0;
@@ -24,7 +24,7 @@ label:before {
     transition: .2s;
 }
 
-label:after {
+label::after {
     content: " ";
     position: absolute;
     top: 3px;
@@ -44,7 +44,7 @@ label:focus::before {
     animation: inner-glow 2s infinite linear;
 }
 
-input[type="checkbox"]:checked + label:after {
+input[type="checkbox"]:checked + label::after {
     transform: translateX(12px);
     background-color: var(--theme-color);
 }

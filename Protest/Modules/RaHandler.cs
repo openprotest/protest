@@ -180,7 +180,7 @@ public static class RaHandler {
         }
 
         try {
-            payload = CryptoAes.Encrypt(payload, Program.DB_KEY_A, Program.DB_KEY_B);
+            payload = CryptoAes.Encrypt(payload, Program.PRESHARED_KEY_A, Program.PRESHARED_KEY_B);
             TcpClient client = new TcpClient(ip, 5810);
             client.GetStream().Write(payload, 0, payload.Length);
             client.Close();
