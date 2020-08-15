@@ -6,8 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
-using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,7 +59,6 @@ public static class Fetch {
 
     public static byte[] AbortFetch(in string performer) {
         if (fetchTask is null) return Strings.NTK.Array;
-        if (!fetchTask.thread.IsAlive) return Strings.NTK.Array;
 
         fetchTask.Abort(performer);
         fetchTask = null;
@@ -114,7 +111,6 @@ public static class Fetch {
             KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"equip\"}}");
             Logging.Action(in performer, "Approve fetched equipment");
             return Strings.OK.Array;
-
 
         } else if (lastFetch?.type == "users") {
             Hashtable keys = new Hashtable();
@@ -483,9 +479,9 @@ public static class Fetch {
         }
 
         if (host is null || host.Length == 0) return Strings.INV.Array;
-        return FetchArrayToBytes(SingleFetchEquip(host));
+        return FetchArrayToBytes(SingleFetchEquip(host, true, PortScan.basic_ports));
     }    
-    public static Hashtable SingleFetchEquip(string host, bool async = true) {
+    public static Hashtable SingleFetchEquip(string host, bool async = true, short[] ports_pool = null) {
         if (host is null) return null;
 
         string ip = null;
@@ -561,14 +557,15 @@ public static class Fetch {
                 if (value.Length > 0) ad.Add("CHANGED ON DC", value);
             }*/
         });
+        
+        Thread tPortscan = new Thread(() => {
+            if (ports_pool is null) return;
+            bool[] ports = PortScan.PortsScanAsync(host, ports_pool).Result;
+            
+            for (int i = 0; i < ports_pool.Length; i++)
+                if (ports[i]) portscan += $"{ports_pool[i]}; ";
 
-        Thread tPortscan = new Thread(async()=> {
-            bool[] ports = await PortScan.PortsScanAsync(host, PortScan.basic_ports);
-
-            for (int i = 0; i < PortScan.basic_ports.Length; i++)
-                if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";
-
-            if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);
+            if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);    
         });
         
         if (async) {
@@ -580,15 +577,16 @@ public static class Fetch {
             tPortscan.Start(); tPortscan.Join();
         }
 
+        Console.WriteLine($"{host} : {tWmi.IsAlive}");
+        Console.WriteLine($"{host} : {tAd.IsAlive}");
+        Console.WriteLine($"{host} : {tPortscan.IsAlive}");
+
         //StringBuilder content = new StringBuilder();
         Hashtable hash = new Hashtable();
-
-        Console.WriteLine("Host: " + host);
 
         foreach (DictionaryEntry o in wmi)
             hash.Add(o.Key,  new string[] { o.Value.ToString(), "WMI", "" });
 
-        Console.WriteLine($"  - wmi: {wmi.Count}");
 
         foreach (DictionaryEntry o in ad) {
             string key = o.Key.ToString();
@@ -601,12 +599,8 @@ public static class Fetch {
             }
         }
 
-        Console.WriteLine($"  - ad:{ad.Count}");
-
         if (portscan.Length > 0)
             hash.Add("PORTS", new string[] { portscan, "Port-scan", "" });
-
-        Console.WriteLine($"  - port:{portscan.Length}");
 
         string mac = "";
         if (wmi.ContainsKey("MAC ADDRESS")) {
@@ -672,7 +666,7 @@ public static class Fetch {
         return hash;
     }
 
-    public static async Task<Hashtable> SingleFetchEquipAsync(string host, bool async = true) {
+    public static async Task<Hashtable> SingleFetchEquipAsync(string host, bool async = true, short[] ports_pool = null) {
         PingReply reply = null;
         try {
             reply = await new System.Net.NetworkInformation.Ping().SendPingAsync(host, 1500);
@@ -681,7 +675,7 @@ public static class Fetch {
         } catch { }
 
         if (reply?.Status == IPStatus.Success) {
-            Hashtable hash = SingleFetchEquip(host, async);
+            Hashtable hash = SingleFetchEquip(host, async, ports_pool);
             if (hash is null) return new Hashtable(); // rechable, but no fetch
             return hash;
         }
@@ -721,16 +715,27 @@ public static class Fetch {
 
             queue.AddRange(hosts);
 
-            while (true) {
+            short[] ports_pool = portscan switch {
+                1=> PortScan.basic_ports,
+                2=> new short[9999],
+                _=> null
+            };
 
+            if (portscan == 2) //full
+                for (int i = 0; i < ports_pool.Length; i++)
+                    ports_pool[i] = (short)(i + 1);
+
+            while (!(fetchTask is null)) {
                 while (queue.Count > 0) {
                     int SIZE = Math.Min(WINDOW, queue.Count);
   
                     List<Task<Hashtable>> tasks = new List<Task<Hashtable>>();
                     for (int i = 0; i < SIZE; i++)
-                        tasks.Add(SingleFetchEquipAsync(queue[i], false));
+                        tasks.Add(SingleFetchEquipAsync(queue[i], false, ports_pool));
 
                     Hashtable[] result = await Task.WhenAll(tasks);
+
+                    if (fetchTask is null) break;
 
                     for (int i = 0; i < SIZE; i++)
                         if (result[i] is null) { //unreachable
@@ -747,19 +752,23 @@ public static class Fetch {
                     KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
                 }
 
+                if (fetchTask is null) break;
+
                 queue.Clear();
                 List<string> temp = queue;
                 queue = redo;
                 redo = temp;
 
-                if (retries > retriesCount++) {
+                if (retries > retriesCount++ && queue.Count > 0) {
                     fetchTask.status = "idle";
                     Thread.Sleep(idle);
                     fetchTask.status = "fetching";
                 } else {
                     break;
                 }
-            };
+            }
+
+            if (fetchTask is null) return;
 
             lastFetch = new FetchResult() {
                 name = fetchTask.name,

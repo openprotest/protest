@@ -252,7 +252,7 @@ public static class PortScan {
     }
     public static async Task<bool[]> PortsScanAsync(string host, int from, int to) {
         int[] q = Netstat(host);
-        if ((!(q is null))) {
+        if (!(q is null)) {
             bool[] p = new bool[to - from];
             for (int i = 0; i < p.Length; i++)
                 p[i] = q.Contains(i + from);
@@ -265,27 +265,34 @@ public static class PortScan {
         return result;
     }
     public static async Task<bool[]> PortsScanAsync(string host, short[] ports) {
-        /*int[] q = Netstat(host);
+        int[] q = Netstat(host);
         if (!(q is null)) {
             bool[] p = new bool[ports.Length];
             for (int i = 0; i < p.Length; i++)
                 p[i] = q.Contains(ports[i]);
             return p;
-        }*/
+        }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
         for (int i = 0; i < ports.Length; i++) tasks.Add(PortScanAsync(host, ports[i]));
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
+
     public static async Task<bool> PortScanAsync(string host, int port) {
         try {
             TcpClient client = new TcpClient();
             await client.ConnectAsync(host, port);
-            bool status = client.Connected;
+            bool result = client.Connected;
             client.Close();
             client.Dispose();
-            return status;
+            return result;
+
+            /*TcpClient client = new TcpClient();
+            IAsyncResult result = client.BeginConnect(host, port, null, null);
+            bool success = result.AsyncWaitHandle.WaitOne(500);            
+            client.EndConnect(result);
+            return success;*/
         } catch {
             return false;
         }
@@ -312,7 +319,6 @@ public static class PortScan {
             StreamReader output = p.StandardOutput;
             List<int> ports = new List<int>();
 
-            int ok_count = 0;
             string line;
             while ((line = output.ReadLine()) != null) {
                 string[] split = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -320,7 +326,6 @@ public static class PortScan {
                 if (split.Length < 4) continue;
                 if (split[3] == "CLOSED" || split[3] == "CLOSE_WAIT" || split[3] == "BOUND") continue;
                 //if (split[0] != "TCP") continue; //only tcp
-                ok_count++;
 
                 if (!int.TryParse(split[1].Split(':').Last(), out int port)) continue;
                 if (port >= 49152) continue; //public ports
@@ -328,8 +333,8 @@ public static class PortScan {
                 if (!ports.Contains(port)) ports.Add(port);
             }
 
+            if (ports.Count == 0) return null;
             ports.Sort();
-            if (ok_count == 0) return null;
             return ports.ToArray();
         } catch {
             return null;
