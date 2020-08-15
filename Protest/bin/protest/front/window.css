@@ -295,6 +295,7 @@
     display: block;
     content: "no results..";
     font-size: 24px;
+    font-family: var(--global-font-family);
     color: #C0C0C0;
     margin-top: 20px;
     height: 100px;
@@ -312,6 +313,7 @@
     display: block;
     content: "no results..";
     font-size: 24px;
+    font-family: var(--global-font-family);
     color: #C0C0C0;
     margin-top: 20px;
     height: 100px;

@@ -314,7 +314,6 @@
 
     line-height: 32px;
     overflow: hidden;
-    text-overflow: ellipsis;
 
     background-size: 24px 24px;
     background-position: 4px center;
@@ -326,6 +325,7 @@
 .generic-list-element-tied {
     height: 24px;
     line-height: 24px;
+    white-space: nowrap;
 }
 
 .generic-list-element:hover {

@@ -30,7 +30,7 @@ class Log extends Window {
         this.list.style.backgroundColor = "var(--pane-color)";
         this.list.style.color = "#202020";
         this.list.style.fontFamily = "monospace";
-        this.list.style.margin = "0 8px 8px 8px";
+        this.list.style.margin = "0px 8px 4px 8px";
         this.list.style.borderRadius = "4px";
         this.list.style.overflowY = "auto";
         this.content.appendChild(this.list);
@@ -122,7 +122,7 @@ class Log extends Window {
             text = text.replace("\t", "&emsp;&emsp;");
 
         while (text.indexOf(" ") > -1)
-            text = text.replace(" ", "&thinsp;");
+            text = text.replace(" ", "&nbsp;");
 
         const element = document.createElement("div");
         element.className = "generic-list-element generic-list-element-tied";

@@ -565,7 +565,7 @@ public static class Fetch {
         Thread tPortscan = new Thread(async()=> {
             bool[] ports = await PortScan.PortsScanAsync(host, PortScan.basic_ports);
 
-            for (int i = 0; i< PortScan.basic_ports.Length; i++)
+            for (int i = 0; i < PortScan.basic_ports.Length; i++)
                 if (ports[i]) portscan += $"{PortScan.basic_ports[i]}; ";
 
             if (portscan.EndsWith("; ")) portscan = portscan.Substring(0, portscan.Length - 2);
@@ -583,13 +583,17 @@ public static class Fetch {
         //StringBuilder content = new StringBuilder();
         Hashtable hash = new Hashtable();
 
+        Console.WriteLine("Host: " + host);
+
         foreach (DictionaryEntry o in wmi)
             hash.Add(o.Key,  new string[] { o.Value.ToString(), "WMI", "" });
+
+        Console.WriteLine($"  - wmi: {wmi.Count}");
 
         foreach (DictionaryEntry o in ad) {
             string key = o.Key.ToString();
 
-            if (key == "OPERATING SYSTEM") {
+            if (key == "OPERATING SYSTEM") { //OS not found in ad use wmi
                 if (!wmi.ContainsKey("OPERATING SYSTEM"))
                     hash.Add(o.Key, new string[] { o.Value.ToString(), "Active directory", "" });
             } else {
@@ -597,9 +601,13 @@ public static class Fetch {
             }
         }
 
+        Console.WriteLine($"  - ad:{ad.Count}");
+
         if (portscan.Length > 0)
             hash.Add("PORTS", new string[] { portscan, "Port-scan", "" });
-        
+
+        Console.WriteLine($"  - port:{portscan.Length}");
+
         string mac = "";
         if (wmi.ContainsKey("MAC ADDRESS")) {
             mac = ((string)wmi["MAC ADDRESS"]).Split(';')[0].Trim();
@@ -612,16 +620,19 @@ public static class Fetch {
         if (!wmi.ContainsKey("MANUFACTURER") && mac.Length > 0) {
             string manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
             if (!(manufacturer is null) && manufacturer.Length > 0)
-                hash.Add("MANUFACTURER", new string[] { mac , "MAC lookup", "" });
+                hash.Add("MANUFACTURER", new string[] { manufacturer, "MAC lookup", "" });
         }
 
-        if (!wmi.ContainsKey("HOSTNAME"))
-            if (!(netbios is null) && netbios.Length > 0) { //use biosnet
+        if (!wmi.ContainsKey("HOSTNAME")) {
+            if (!(netbios is null) && netbios.Length > 0) //use biosnet
                 hash.Add("HOSTNAME", new string[] { netbios, "NetBIOS", "" });
-            } else { //use dns
+            else if (!(hostname is null) && hostname.Length > 0) //use dns
                 hash.Add("HOSTNAME", new string[] { hostname, "DNS", "" });
-            }
-        
+        }
+
+        if (!hash.ContainsKey("IP") && !(ip is null) && ip.Length > 0)
+            hash.Add("IP", new string[] { ip, "IP", "" });
+
         //name and type
 
         return hash;

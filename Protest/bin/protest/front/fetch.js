@@ -221,10 +221,10 @@ class Fetch extends Tabs {
         lblConflictContitionComment.innerHTML = "Trigger a conflict when the condition is met";
         this.subContent.appendChild(lblConflictContitionComment);
 
-        const optSmart = document.createElement("option");
+        /*const optSmart = document.createElement("option");
         optSmart.text = "Smart conflict detection";
         optSmart.value = "0";
-        txtConflictContition.appendChild(optSmart);
+        txtConflictContition.appendChild(optSmart);*/
         const optIP = document.createElement("option");
         optIP.text = "Same IP address";
         optIP.value = "1";

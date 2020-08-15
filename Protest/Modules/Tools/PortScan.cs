@@ -251,7 +251,7 @@ public static class PortScan {
         }*/
     }
     public static async Task<bool[]> PortsScanAsync(string host, int from, int to) {
-        int[] q = QPortScan(host);
+        int[] q = Netstat(host);
         if ((!(q is null))) {
             bool[] p = new bool[to - from];
             for (int i = 0; i < p.Length; i++)
@@ -265,13 +265,13 @@ public static class PortScan {
         return result;
     }
     public static async Task<bool[]> PortsScanAsync(string host, short[] ports) {
-        int[] q = QPortScan(host);
+        /*int[] q = Netstat(host);
         if (!(q is null)) {
             bool[] p = new bool[ports.Length];
             for (int i = 0; i < p.Length; i++)
                 p[i] = q.Contains(ports[i]);
             return p;
-        }
+        }*/
 
         List<Task<bool>> tasks = new List<Task<bool>>();
         for (int i = 0; i < ports.Length; i++) tasks.Add(PortScanAsync(host, ports[i]));
@@ -291,7 +291,7 @@ public static class PortScan {
         }
     }
 
-    public static int[] QPortScan(string host) {
+    public static int[] Netstat(string host) {
         try {
             ProcessStartInfo info = new ProcessStartInfo {
                 FileName = "psexec",

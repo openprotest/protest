@@ -118,7 +118,7 @@ class Database {
             return false;
         }
 
-        if (!(performer is null)) Logging.Action(in performer, $"DB write: {(e.isUser ? "user" : "equip")} {filename}");
+        //if (!(performer is null)) Logging.Action(in performer, $"DB write: {(e.isUser ? "user" : "equip")} {filename}");
 
         return true;
     }
@@ -220,6 +220,7 @@ class Database {
                 entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
 
             Write(entry, in performer);
+            Logging.Action(in performer, $"Create {(entry.isUser ? "user" : "equip")}: {filename}");
             return true;
         }
 
@@ -232,6 +233,7 @@ class Database {
                 filename = new DateTime().Ticks.ToString();
                 entry.hash[".FILENAME"] = new string[] { filename, "", "" };
                 Write(entry, in performer);
+                Logging.Action(in performer, $"Overwrite {(entry.isUser ? "user" : "equip")}: {filename}");
                 break;
             }
 
@@ -250,6 +252,7 @@ class Database {
                             entry.hash.Add(o.Key, new string[] { ((string[])o.Value)[0], $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
                 }
                 Write(entry, in performer); //Write uses its own lock
+                Logging.Action(in performer, $"Overwrite {(entry.isUser ? "user" : "equip")}: {filename}");
 
                 removed.Clear();
                 break;
@@ -262,6 +265,7 @@ class Database {
                             entry.hash.Add(o.Key, new string[] { ((string[])o.Value)[0], $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
                 
                 Write(entry, in performer); //Write uses its own lock
+                Logging.Action(in performer, $"Overwrite {(entry.isUser ? "user" : "equip")}: {filename}");
                 break;
             }
 
@@ -275,6 +279,7 @@ class Database {
                             entry.hash.Add(o.Key, new string[] { ((string[])o.Value)[0], $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
                 
                 Write(entry, in performer); //Write uses its own lock
+                Logging.Action(in performer, $"Overwrite {(entry.isUser ? "user" : "equip")}: {filename}");
                 break;
             }
         }
@@ -343,7 +348,8 @@ class Database {
         if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
 
         DbEntry entry;
-        if (equip.ContainsKey(filename)) { //existing entry
+        bool exists = equip.ContainsKey(filename);
+        if (exists) { //existing entry
             entry = (DbEntry)equip[filename];
 
         } else { //new entry
@@ -382,8 +388,8 @@ class Database {
         if (!entry.hash.ContainsKey(".FILENAME")) entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
 
         Write(entry, in performer); //Write() uses its own lock
-
         equipVer = DateTime.Now.Ticks;
+        Logging.Action(in performer, $"{(exists ? "Overwrite" : "Create")} equip: {filename}");
 
         StringBuilder broadcast = new StringBuilder();
         broadcast.Append("{");
@@ -482,7 +488,9 @@ class Database {
         if (filename.Length == 0) filename = DateTime.Now.Ticks.ToString();
 
         DbEntry entry;
-        if (users.ContainsKey(filename)) { //existing entry
+        bool exists = users.ContainsKey(filename);
+
+        if (exists) { //existing entry
             entry = (DbEntry)users[filename];
 
         } else {
@@ -520,8 +528,8 @@ class Database {
         if (!entry.hash.ContainsKey(".FILENAME")) entry.hash.Add(".FILENAME", new string[] { filename, "", "" });
 
         Write(entry, in performer); //Write() uses its own lock
-
         usersVer = DateTime.Now.Ticks;
+        Logging.Action(in performer, $"{(exists ? "Overwrite" : "Create")} user: {filename}");
 
         StringBuilder broadcast = new StringBuilder();
         broadcast.Append("{");

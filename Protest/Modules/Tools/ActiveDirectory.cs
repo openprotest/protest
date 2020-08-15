@@ -94,10 +94,6 @@ public static class ActiveDirectory {
         return true;
     }
 
-    internal static char[] ActiveDirVerify(string[] para) {
-        throw new NotImplementedException();
-    }
-
     public static byte[] GetCurrentNetworkInfo() {
         foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
             foreach (UnicastIPAddressInformation ip in nic.GetIPProperties().UnicastAddresses) {
@@ -185,6 +181,27 @@ public static class ActiveDirectory {
                 result = searcher.FindOne();
             } catch { }
 
+        if (result is null) {
+            username = username.ToLower();
+            
+            using DirectorySearcher searcher = new DirectorySearcher(dir);
+            searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
+
+            try {
+                SearchResultCollection allUsers = searcher.FindAll();
+                if (allUsers is null || allUsers.Count == 0) return null;
+
+                for (int i = 0; i < allUsers.Count; i++) {
+                    if (allUsers[i].Properties["userPrincipalName"].Count == 0) continue;
+                    string un = allUsers[i].Properties["userPrincipalName"][0].ToString();
+
+                    if (un.Contains("@")) un = un.Substring(0, un.IndexOf("@"));
+                    if (un.ToLower() == username)
+                        return allUsers[i];
+                }
+            } catch { }
+        }
+
         if (result is null) return null;
         return result;
     }
@@ -211,8 +228,8 @@ public static class ActiveDirectory {
     public static Hashtable AdFetch(SearchResult result) {
         Hashtable hash = new Hashtable();
 
-        ContentBuilderAddValue(result, "personalTitle", "TITLE", hash, null);
-        if (hash.Count == 0) ContentBuilderAddValue(result, "title", "TITLE", hash, null);
+        ContentBuilderAddValue(result, "title", "TITLE", hash, null);
+        if (hash.Count == 0) ContentBuilderAddValue(result, "personalTitle", "TITLE", hash, null);
 
         ContentBuilderAddValue(result, "givenName", "FIRST NAME", hash, null);
         ContentBuilderAddValue(result, "middleName", "MIDDLE NAME", hash, null);
