@@ -483,7 +483,7 @@ public static class Fetch {
         if (host is null || host.Length == 0) return Strings.INV.Array;
         return FetchArrayToBytes(SingleFetchEquip(host, true, PortScan.basic_ports));
     }    
-    public static Hashtable SingleFetchEquip(string host, bool async = true, short[] ports_pool = null) {
+    public static Hashtable SingleFetchEquip(string host, bool async = true, short[] ports_pool = null, IPAddress[] gateways = null) {
         if (host is null) return null;
 
         string ip = null;
@@ -625,7 +625,42 @@ public static class Fetch {
         if (!hash.ContainsKey("IP") && !(ip is null) && ip.Length > 0)
             hash.Add("IP", new string[] { ip, "IP", "" });
 
-        //name and type
+        if (!hash.ContainsKey("TYPE")) 
+            if (hash.ContainsKey("OPERATING SYSTEM")) {
+                string os = ((string[])hash["OPERATING SYSTEM"])[0];
+                if (os.ToLower().Contains("server")) { //if os is windows server, set type as server
+                    hash.Add("TYPE", new string[] { "Server", "Active directory", "" });
+                }
+            }
+
+        if (!hash.ContainsKey("TYPE"))
+            for (int i = 0; i < gateways.Length; i++)
+                if (gateways.Count(o => o.ToString() == ip) > 0) {
+                    hash.Add("TYPE", new string[] { "Router", "IP", "" });
+                    break;
+                }
+
+        if (!hash.ContainsKey("TYPE"))
+            if (portscan.Length > 0) {
+                string[] ports = portscan.Split(';');
+                for (int i = 0; i< ports.Length; i++) ports[i] = ports[i].Trim();
+
+                if (ports.Contains("515") || ports.Contains("631") || ports.Contains("9100"))  //LPD, IPP, Printserver
+                    hash.Add("TYPE", new string[] { "Printer", "Port-scan", "" });
+
+                if (ports.Contains("445") && ports.Contains("3389") && (ports.Contains("53") || ports.Contains("67") || ports.Contains("389") || ports.Contains("636") || ports.Contains("853"))) //SMB, RDP, DNS, DHCP, LDAP
+                    hash.Add("TYPE", new string[] { "Server", "Port-scan", "" });
+
+                else if (ports.Contains("445") && ports.Contains("3389")) //SMB, RDP
+                    hash.Add("TYPE", new string[] { "PC tower", "Port-scan", "" });
+
+                else if (ports.Contains("6789") || ports.Contains("10001")) //ubnt ap
+                    hash.Add("TYPE", new string[] { "Access point", "Port-scan", "" });
+
+                else if (ports.Contains("7442") || ports.Contains("7550")) //ubnt cam
+                    hash.Add("TYPE", new string[] { "Camera", "Port-scan", "" });
+                
+            }        
 
         return hash;
     }
@@ -664,7 +699,7 @@ public static class Fetch {
         return hash;
     }
 
-    public static async Task<Hashtable> SingleFetchEquipAsync(string host, bool async = true, short[] ports_pool = null) {
+    public static async Task<Hashtable> SingleFetchEquipAsync(string host, bool async = true, short[] ports_pool = null, IPAddress[] gateways = null) {
         PingReply reply = null;
         try {
             reply = await new System.Net.NetworkInformation.Ping().SendPingAsync(host, 1500);
@@ -673,7 +708,7 @@ public static class Fetch {
         } catch { }
 
         if (reply?.Status == IPStatus.Success) {
-            Hashtable hash = SingleFetchEquip(host, async, ports_pool);
+            Hashtable hash = SingleFetchEquip(host, async, ports_pool, gateways);
             if (hash is null) return new Hashtable(); // rechable, but no fetch
             return hash;
         }
@@ -723,13 +758,15 @@ public static class Fetch {
                 for (int i = 0; i < ports_pool.Length; i++)
                     ports_pool[i] = (short)(i + 1);
 
+            IPAddress[] gateways = IpTools.GetGateway();
+
             while (!(fetchTask is null)) {
                 while (queue.Count > 0) {
                     int SIZE = Math.Min(WINDOW, queue.Count);
   
                     List<Task<Hashtable>> tasks = new List<Task<Hashtable>>();
                     for (int i = 0; i < SIZE; i++)
-                        tasks.Add(SingleFetchEquipAsync(queue[i], false, ports_pool));
+                        tasks.Add(SingleFetchEquipAsync(queue[i], false, ports_pool, gateways));
 
                     Hashtable[] result = await Task.WhenAll(tasks);
 

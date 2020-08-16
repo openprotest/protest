@@ -443,8 +443,7 @@ public static class Wmi {
     }
 
     public static string ChassiToString(short chassiType) {
-        return chassiType switch
-        {
+        return chassiType switch {
             3 => "Desktop;",
             4 => "Low profile desktop",
             5 => "Pizza box",
@@ -485,12 +484,22 @@ public static class Wmi {
     }
 
     public static string ChassiToType(short chassiType) {
-        return chassiType switch
-        {
+        return chassiType switch {
+            //3 => "PC tower",
+            //4 => "PC tower",
+            //5 => "PC tower",
+            //6 => "PC tower",
+            //7 => "PC tower",
+
             8  => "Laptop",
             9  => "Laptop",
             10 => "Laptop",
+            11 => "Laptop",
+
+            //12 => "PC tower",
+            13 => "All in one",
             14 => "Laptop",
+            //15 => "PC tower",
 
             17 => "Server",
             18 => "Server",
@@ -498,16 +507,9 @@ public static class Wmi {
             22 => "Server",
             23 => "Server",
 
-            3  => "PC tower",
-            4  => "PC tower",
-            5  => "PC tower",
-            6  => "PC tower",
-            7  => "PC tower",
-            24 => "PC tower",
+            //24 => "PC tower",
 
-            13 => "All in one",
-
-            _ => ""
+            _ => "PC tower"
         };
     }
 

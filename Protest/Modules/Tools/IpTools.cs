@@ -4,8 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 public static class IpTools {
     public static bool OnSameNetwork(IPAddress host) {
@@ -82,6 +80,18 @@ public static class IpTools {
             bBroadcast[i] = (byte)(bIp[i] | ~bMask[i]);
 
         return new IPAddress(bBroadcast);
+    }
+
+    public static IPAddress[] GetGateway() {
+        NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+        List<IPAddress> list = new List<IPAddress>();
+        foreach (NetworkInterface adapter in adapters) {
+            GatewayIPAddressInformationCollection addresses = adapter.GetIPProperties().GatewayAddresses;
+            if (addresses.Count > 0)
+                foreach (GatewayIPAddressInformation address in addresses)
+                    list.Add(address.Address);
+        }
+        return list.ToArray();
     }
 }
 
