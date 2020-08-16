@@ -110,6 +110,7 @@ public static class Fetch {
             //Database.equipVer = DateTime.Now.Ticks;
             KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"equip\"}}");
             Logging.Action(in performer, "Approve fetched equipment");
+            KeepAlive.Broadcast($"{{\"action\":\"version\",\"userver\":\"{Database.usersVer}\",\"equipver\":\"{Database.equipVer}\"}}");
             return Strings.OK.Array;
 
         } else if (lastFetch?.type == "users") {
@@ -142,6 +143,7 @@ public static class Fetch {
             //Database.usersVer = DateTime.Now.Ticks;
             KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"user\"}}");
             Logging.Action(in performer, "Approve fetched users");
+            KeepAlive.Broadcast($"{{\"action\":\"version\",\"userver\":\"{Database.usersVer}\",\"equipver\":\"{Database.equipVer}\"}}");
             return Strings.OK.Array;
         }
 
@@ -576,10 +578,6 @@ public static class Fetch {
             tAd.Start(); tAd.Join();
             tPortscan.Start(); tPortscan.Join();
         }
-
-        Console.WriteLine($"{host} : {tWmi.IsAlive}");
-        Console.WriteLine($"{host} : {tAd.IsAlive}");
-        Console.WriteLine($"{host} : {tPortscan.IsAlive}");
 
         //StringBuilder content = new StringBuilder();
         Hashtable hash = new Hashtable();

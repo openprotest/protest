@@ -195,17 +195,14 @@ function KeepAlive_MessageHandler(msg) {
                 const onEquipLoad = (status, msg) => {
                     if (status != "done") return;
                     for (let i = 0; i < $w.array.length; i++) {
-
                         if ($w.array[i] instanceof Equip) { //update equip
                             let obj = db_equip.find(o=>o[".FILENAME"] == $w.filename);
                             if (obj) w.array[i].Update(obj);
                         }
-
                         if ($w.array[i] instanceof ListEquip) //update equip list
                             $w.array[i].RefreshList();
                     }
                 };
-
                 LoadEquip(onEquipLoad);
             }
 
@@ -213,17 +210,14 @@ function KeepAlive_MessageHandler(msg) {
                 const onUsersLoad = (status, msg) => {
                     if (status != "done") return;
                     for (let i = 0; i < $w.array.length; i++) {
-
                         if ($w.array[i] instanceof User) { //update users
                             let obj = db_users.find(o => o[".FILENAME"] == $w.filename);
                             if (obj) w.array[i].Update(obj);
                         }
-
                         if ($w.array[i] instanceof ListUsers) //update users list
                             $w.array[i].RefreshList();
                     }
                 };
-
                 LoadUsers(onUsersLoad);
             }
 
@@ -256,7 +250,7 @@ function KeepAlive_MessageHandler(msg) {
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "visible";
 
-                if ($w.array[i].args == "task") 
+                if ($w.array[i].args == "task")
                     $w.array[i].ShowPending(msg.task);
             }
             break;
@@ -273,9 +267,6 @@ function KeepAlive_MessageHandler(msg) {
                 if (!($w.array[i] instanceof Fetch)) continue;
                 $w.array[i].tabTask.style.visibility = "hidden";
             }
-            break;
-
-        case "log":
             break;
     }
 }

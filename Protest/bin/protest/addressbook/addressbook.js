@@ -373,7 +373,4 @@ function Analyze(addressbook) {
         if (a[1] < b[1]) return 1;
         return 0;
     });
-
-    for (let i=0; i<table.length; i++) 
-        console.log(table[i][0], table[i][1]);
 }
