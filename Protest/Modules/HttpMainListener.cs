@@ -212,7 +212,7 @@ class HttpMainListener : Http {
                 case "getlog" : buffer = Logging.GetLog(); break;
 
                 case "getclients": buffer = Session.GetClients(); break;
-                case "kickclient": buffer = Session.KickClients(para, performer); break;
+                case "kickclient": buffer = Session.KickClient(para, performer); break;
 
                 case "getbackups": buffer = Backup.GetBackups(); break;
                 case "createbackup": buffer = Backup.CreateBackup(para, performer); break;

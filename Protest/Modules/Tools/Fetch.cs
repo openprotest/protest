@@ -659,7 +659,6 @@ public static class Fetch {
 
                 else if (ports.Contains("7442") || ports.Contains("7550")) //ubnt cam
                     hash.Add("TYPE", new string[] { "Camera", "Port-scan", "" });
-                
             }        
 
         return hash;
@@ -777,7 +776,7 @@ public static class Fetch {
                             redo.Add(queue[i]);
 
                         } else if (result[i].Count > 0) {
-                            fetchTask.SetStepsCompleted(++totalFetches);
+                            fetchTask?.SetStepsCompleted(++totalFetches);
                             dataset.Add(queue[i], result[i]);
                         }
 
@@ -817,7 +816,7 @@ public static class Fetch {
                 conflictAction = conflictaction
             };
 
-            fetchTask.Complete();
+            fetchTask?.Complete();
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
         });
 

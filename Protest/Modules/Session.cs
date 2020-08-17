@@ -158,7 +158,7 @@ public static class Session {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] KickClients(string[] para, string performer) {
+    public static byte[] KickClient(string[] para, string performer) {
         string ip = "";
         string hash = "";
         for (int i = 1; i < para.Length; i++) {

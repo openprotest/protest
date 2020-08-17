@@ -78,6 +78,8 @@ class Documentation {
         else
             sb.Append(payload[1]);
 
+        if (payload[1].IndexOf("<script") > -1)
+            return Encoding.UTF8.GetBytes("unsafe content. scripts are not allowed.");
 
         List<string> keywords = new List<string>();
         int idx = 0;

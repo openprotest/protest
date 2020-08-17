@@ -69,6 +69,7 @@ let loader_styles = [
         //"speedtest.js",
         "wmi.js",
         "scripts.js",
+        "watchdog.js",
         "scripteditor.js",
         "log.js",
         "backup.js",
