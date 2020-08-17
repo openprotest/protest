@@ -633,7 +633,7 @@ public static class Fetch {
                 }
             }
 
-        if (!hash.ContainsKey("TYPE"))
+        if (!hash.ContainsKey("TYPE") && !(gateways is null))
             for (int i = 0; i < gateways.Length; i++)
                 if (gateways.Count(o => o.ToString() == ip) > 0) {
                     hash.Add("TYPE", new string[] { "Router", "IP", "" });
