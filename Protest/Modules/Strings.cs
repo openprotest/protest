@@ -63,6 +63,8 @@ public static class Strings {
     public static readonly string DIR_LOG           = $"{Directory.GetCurrentDirectory()}\\protest\\log";
     public static readonly string DIR_BACKUPS       = $"{Directory.GetCurrentDirectory()}\\protest\\backups";
     public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
+    public static readonly string DIR_WATCHDOG      = $"{Directory.GetCurrentDirectory()}\\protest\\watchdog";
+    public static readonly string DIR_CONFIG        = $"{Directory.GetCurrentDirectory()}\\protest\\configurations";
 
     public static readonly string FILE_CONFIG       = $"{Directory.GetCurrentDirectory()}\\protest\\config.txt";
     public static readonly string FILE_CONTENT_TYPE = $"{DIR_KNOWLAGE}\\content_type.txt";
@@ -73,6 +75,8 @@ public static class Strings {
             DirectoryInfo dirProtest  = new DirectoryInfo(DIR_PROTEST);
             DirectoryInfo dirLog      = new DirectoryInfo(DIR_LOG);
             DirectoryInfo dirLastSeen = new DirectoryInfo(DIR_LASTSEEN);
+            DirectoryInfo dirWatchdog = new DirectoryInfo(DIR_WATCHDOG);
+            DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
             DirectoryInfo dirMetrics  = new DirectoryInfo(DIR_METRICS);
             DirectoryInfo dirData     = new DirectoryInfo(DIR_DATA);
             DirectoryInfo dirEquip    = new DirectoryInfo(DIR_EQUIP);
@@ -81,6 +85,8 @@ public static class Strings {
             if (!dirProtest.Exists)  dirProtest.Create();
             if (!dirLog.Exists)      dirLog.Create();
             if (!dirLastSeen.Exists) dirLastSeen.Create();
+            if (!dirWatchdog.Exists) dirWatchdog.Create();
+            if (!dirConfig.Exists)   dirConfig.Create();
             if (!dirMetrics.Exists)  dirMetrics.Create();
             if (!dirData.Exists)     dirData.Create();
             if (!dirEquip.Exists)    dirEquip.Create();

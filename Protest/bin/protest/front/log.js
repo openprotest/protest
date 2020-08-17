@@ -16,17 +16,11 @@ class Log extends Window {
         this.content.style.display = "grid";
         this.content.style.margin = "4px 0";
         this.content.style.gridTemplateColumns = "auto minmax(50px, 1200px) auto";
-        this.content.style.gridTemplateRows = "32px auto";
-
-        const options = document.createElement("div");
-        options.style.gridArea = "1 / 2";
-        options.style.padding = "0px 16px";
-        options.style.overflow = "hidden";
-        this.content.appendChild(options);
+        this.content.style.gridTemplateRows = "auto 22px";
 
         this.list = document.createElement("div");
         this.list.className = "no-results";
-        this.list.style.gridArea = "2 / 2";
+        this.list.style.gridArea = "1 / 2";
         this.list.style.backgroundColor = "var(--pane-color)";
         this.list.style.color = "#202020";
         this.list.style.fontFamily = "monospace";
@@ -34,6 +28,12 @@ class Log extends Window {
         this.list.style.borderRadius = "4px";
         this.list.style.overflowY = "auto";
         this.content.appendChild(this.list);
+
+        const options = document.createElement("div");
+        options.style.gridArea = "2 / 2";
+        options.style.padding = "0px 16px";
+        options.style.overflow = "hidden";
+        this.content.appendChild(options);
 
         const divAutoScroll = document.createElement("div");
         divAutoScroll.style.display = "inline-block";
