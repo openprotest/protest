@@ -150,7 +150,7 @@
     color: rgb(32,32,32);
     font-weight: 600;
 
-    min-height: 48px;
+    min-height: 32px;
     border-radius: 4px;
     box-shadow: rgba(64,64,64,.6) 0 0 4px;
     overflow-y: auto;

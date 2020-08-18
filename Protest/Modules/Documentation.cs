@@ -55,9 +55,15 @@ class Documentation {
         if (payload.Length < 3) return Strings.INF.Array;
         if (payload[0].Length == 0) return Strings.INF.Array;
 
+        if (payload[1].IndexOf("<script") > -1)
+            return Encoding.UTF8.GetBytes("unsafe content: scripts are not allowed");
+
         string filename = payload[0];
         foreach (char c in Path.GetInvalidFileNameChars())
             filename = filename.Replace(c, '_');
+
+
+        List<string> keywords = new List<string>();
 
         StringBuilder sb = new StringBuilder();
         sb.Append("<!--");
@@ -68,6 +74,10 @@ class Documentation {
             sb.Append($"\"{Strings.EscapeJson(payload[i + 1])}\",");
             sb.Append($"\"{Strings.EscapeJson(payload[i + 2])}\",");
             sb.Append($"\"{Strings.EscapeJson(payload[i + 3])}\"");
+
+            if (!keywords.Contains(payload[i])) keywords.Add(payload[i]); //filename
+            if (!keywords.Contains(payload[i+2])) keywords.Add(payload[i+2]); //label1
+            if (!keywords.Contains(payload[i+3])) keywords.Add(payload[i+3]); //label2
         }
         sb.Append("]");
         sb.AppendLine("-->");
@@ -81,7 +91,6 @@ class Documentation {
         if (payload[1].IndexOf("<script") > -1)
             return Encoding.UTF8.GetBytes("unsafe content. scripts are not allowed.");
 
-        List<string> keywords = new List<string>();
         int idx = 0;
         string text = "";
         while (idx < payload[1].Length) {

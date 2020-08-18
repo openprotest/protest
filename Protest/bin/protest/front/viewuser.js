@@ -166,17 +166,22 @@ class User extends Window {
         if (isGroupEmpty && this.properties.childNodes[this.properties.childNodes.length - 1].className == "db-property-group")
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
 
-        const btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
-        this.sidetools.appendChild(btnUnlock);
-        btnUnlock.onclick = () => {
-            if (btnUnlock.hasAttribute("busy")) return;
+        this.btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
+        this.sidetools.appendChild(this.btnUnlock);
+        this.btnUnlock.onclick = () => {
+            if (this.btnUnlock.hasAttribute("busy")) return;
             let xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4) btnUnlock.removeAttribute("busy");
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                if (xhr.readyState == 4) this.btnUnlock.removeAttribute("busy");
+
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText == "ok")
+                    this.btnUnlock.style.backgroundColor = "";
+                else if (xhr.readyState == 4 && xhr.status == 200)
+                    this.ConfirmBox(xhr.responseText, true);    
+
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
-            btnUnlock.setAttribute("busy", true);
+            this.btnUnlock.setAttribute("busy", true);
             xhr.open("GET", "unlockuser&file=" + this.filename, true);
             xhr.send();
         };
@@ -247,7 +252,11 @@ class User extends Window {
             let split = event.data.split(String.fromCharCode(127));
 
             if (split[0].startsWith(".")) return; //hidden property
-            if (split[0] == "LOCKOUT TIME" && split[1] == "0") return;
+
+            if (split[0] == "LOCKOUT TIME") {
+                if (split[1] == "0") return;
+                this.btnUnlock.backgroundColor = "red";
+            }
 
             const newProperty = this.AddProperty(split[0], split[1], split[2]);
             this.liveinfo.appendChild(newProperty);

@@ -260,6 +260,7 @@ function RestoreSession() {
             case "Wmi"              : win = new Wmi(session[i].args); break;
             case "Scripts"          : win = new Scripts(session[i].args); break;
             case "ScriptEditor"     : win = new ScriptEditor(session[i].args); break;
+            case "Watchdog"         : win = new Watchdog(session[i].args); break;
             case "Log"              : win = new Log(session[i].args); break;
             case "Backup"           : win = new Backup(session[i].args); break;
             case "Clients"          : win = new Clients(session[i].args); break;

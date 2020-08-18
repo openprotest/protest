@@ -685,28 +685,25 @@ class Documentation extends Window {
                 else if (db_equip[i].hasOwnProperty("IP"))
                     name = db_equip[i]["IP"][0];
 
-                let u_id = "";
+                let unique = "";
                 if (db_equip[i].hasOwnProperty("SERIAL NUMBER"))
-                    u_id = db_equip[i]["SERIAL NUMBER"][0];
+                    unique = db_equip[i]["SERIAL NUMBER"][0];
                 else if (db_equip[i].hasOwnProperty("MAC ADDRESS"))
-                    u_id = db_equip[i]["MAC ADDRESS"][0];
+                    unique = db_equip[i]["MAC ADDRESS"][0];
 
-                if (name.length === 0 && u_id.length === 0) continue;
+                if (name.length === 0 && unique.length === 0) continue;
 
                 const element = document.createElement("div");
                 element.className = "lst-obj-ele";
                 divEquip.appendChild(element);
 
-                if (db_equip[i].hasOwnProperty("TYPE")) {
-                    const icon = document.createElement("div");
-                    icon.className = "lst-obj-ico";
-                    icon.style.backgroundImage = `url(${GetEquipIcon(db_equip[i]["TYPE"])})`;
-                    element.appendChild(icon);
-                }
+                const icon = document.createElement("div");
+                icon.className = "lst-obj-ico";
+                icon.style.backgroundImage = db_equip[i].hasOwnProperty("TYPE") ? `url(${GetEquipIcon(db_equip[i]["TYPE"])})` : "url(res/gear.svgz)";
+                element.appendChild(icon);
 
                 for (let j = 0; j < 6; j++) {
                     if (!db_equip[i].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
-
                     const newLabel = document.createElement("div");
                     newLabel.innerHTML = db_equip[i][EQUIP_LIST_ORDER[j]][0];
                     newLabel.className = "lst-obj-lbl-" + j;
@@ -718,7 +715,7 @@ class Documentation extends Window {
                         db_equip[i][".FILENAME"][0],
                         `url(${GetEquipIcon(db_equip[i]["TYPE"])})`,
                         name,
-                        u_id
+                        unique
                     );
 
                     btnCancel.onclick();
