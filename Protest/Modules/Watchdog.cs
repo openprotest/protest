@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 public static class Watchdog {
@@ -75,10 +78,59 @@ public static class Watchdog {
         if (!dirWatchdog.Exists) return Strings.FAI.Array;
 
 
-
-
-
         return null;
+    }
+
+
+    public static async void WsView(HttpListenerContext ctx, string remoteIp) {
+        WebSocketContext wsc;
+        WebSocket ws;
+        try {
+            wsc = await ctx.AcceptWebSocketAsync(null);
+            ws = wsc.WebSocket;
+        } catch (WebSocketException ex) {
+            ctx.Response.Close();
+            Logging.Err(ex);
+            return;
+        }
+
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+
+        if (sessionId is null) {
+            ctx.Response.Close();
+            return;
+        }
+
+        try {
+            while (ws.State == WebSocketState.Open) {
+                byte[] buff = new byte[2048];
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+
+                if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    break;
+                }
+
+                if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                    ctx.Response.Close();
+                    return;
+                }
+
+                string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
+                if (msg.Length < 2) continue;                
+
+                switch (msg[0]) {
+                    case "list":
+                        break;
+
+                    case "get":
+                        break;
+                }
+            }
+
+        } catch (Exception ex) {
+            Logging.Err(ex);
+        }
     }
 
 }

@@ -62,11 +62,7 @@ public static class Ping {
                 }
 
                 string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
-
-                if (msg.Length < 2) {
-                    await ws.SendAsync(Strings.INV, receiveResult.MessageType, receiveResult.EndOfMessage, CancellationToken.None);
-                    continue;
-                }
+                if (msg.Length < 2) continue;
 
                 switch (msg[0]) {
                     case "add":

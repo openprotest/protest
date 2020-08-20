@@ -44,7 +44,7 @@ class Watchdog extends Window {
 
         const view = document.createElement("div");
         view.style.position = "absolute";
-        view.style.left = "250px";
+        view.style.left = "262px";
         view.style.right = "8px";
         view.style.top = "40px";
         view.style.bottom = "8px";
@@ -133,6 +133,8 @@ class Watchdog extends Window {
             else
                 this.txtPort.setAttribute("disabled", true);
         };
+
+        this.Reload();
     }
 
     Reload() {
@@ -148,14 +150,19 @@ class Watchdog extends Window {
 
         this.ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/watchdog");
 
-        this.ws.onopen = () => { };
+        this.ws.onopen = () => {
+            ws.send("list");
+        };
+        
+        this.ws.onmessage = (event) => {
+            let payload = event.data.split(String.fromCharCode(127));
+            if (payload.length == 0) return;
 
-        this.ws.onclose = () => { };
+        };
 
-        this.ws.onmessage = (event) => { };
+        //this.ws.onclose = () => { };
 
-        this.ws.onerror = (error) => { console.log(error); };
-
+        //this.ws.onerror = (error) => { console.log(error); };
     }
 
     SettingsDialog() {
