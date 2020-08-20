@@ -9,7 +9,7 @@ using System.Threading;
 public static class SpeedTest {
     public static byte[] TestDownstream(in HttpListenerContext ctx, in string[] para) {
         int timeout = 10;
-        int bufferSize = 1004;       //bytes
+        int bufferSize = 1004; //bytes
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("timeout=")) timeout = Math.Min(int.Parse(para[i].Substring(8)), 30);
 

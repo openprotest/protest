@@ -227,6 +227,8 @@ class Documentation extends Window {
             let range = sel.getRangeAt(0);
 
             const dialog = this.DialogBox("125px");
+            if (dialog === null) return;
+
             const btnOK = dialog.btnOK;
             const btnCancel = dialog.btnCancel;
             const buttonBox = dialog.buttonBox;
@@ -312,9 +314,9 @@ class Documentation extends Window {
         };
 
         if (this.txtSearch.value.length == 0)
-            xhr.open("GET", "getdocs", true);
+            xhr.open("GET", "docs/get", true);
         else
-            xhr.open("GET", `getdocs&keywords=${this.txtSearch.value}`, true);
+            xhr.open("GET", `docs/get&keywords=${this.txtSearch.value}`, true);
         xhr.send();
     }
 
@@ -386,7 +388,7 @@ class Documentation extends Window {
                 this.ConfirmBox("Server is unavailable.", true);
         };
 
-        xhr.open("GET", `previewdoc&name=${name}`, true);
+        xhr.open("GET", `docs/view&name=${name}`, true);
         xhr.send();
     }
 
@@ -556,7 +558,7 @@ class Documentation extends Window {
                 this.ConfirmBox("Server is unavailable.", true);
         };
 
-        xhr.open("GET", `deletedoc&name=${this.selected}`, true);
+        xhr.open("GET", `docs/delete&name=${this.selected}`, true);
         xhr.send();
     }
 
@@ -605,12 +607,12 @@ class Documentation extends Window {
 
         if (exist) {
             this.ConfirmBox("An entry with this name already exists. Do you want to overwrite it?").addEventListener("click", () => {
-                xhr.open("POST", "createdoc", true);
+                xhr.open("POST", "docs/create", true);
                 xhr.send(payload);
             });
 
         } else {
-            xhr.open("POST", "createdoc", true);
+            xhr.open("POST", "docs/create", true);
             xhr.send(payload);
         }
 
@@ -623,6 +625,8 @@ class Documentation extends Window {
 
     AddRelatedDialog() {
         const dialog = this.DialogBox("85%");
+        if (dialog === null) return;
+
         const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
         const buttonBox = dialog.buttonBox;

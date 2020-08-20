@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-class Backup {
+public static class Backup {
 
-    public static byte[] GetBackups() {
+    public static byte[] Get() {
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_BACKUPS);
         if (!dir.Exists) return Strings.FLE.Array;
 
@@ -25,9 +25,9 @@ class Backup {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] CreateBackup(string[] para, string performer) {
+    public static byte[] Create(in string[] para, in string performer) {
         string name = String.Empty;
-        for (int i = 0; i < para.Length; i++)
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
         foreach (char c in Path.GetInvalidFileNameChars())
@@ -73,7 +73,7 @@ class Backup {
 
         } catch { }
 
-        Logging.Action(performer, $"Create backup: {name}{(count == 1 ? "" : $"_{count}")}.zip");
+        Logging.Action(performer, $"Create backup: {name}{(count == 1 ? String.Empty : $"_{count}")}.zip");
 
         return Strings.OK.Array;
     }
@@ -90,9 +90,9 @@ class Backup {
             CopyAll(subfolders[i], new DirectoryInfo(subfolders[i].FullName.Replace(source.FullName, destination.FullName)));
     }
 
-    public static byte[] DeleteBackup(string[] para, string performer) {
+    public static byte[] Delete(in string[] para, in string performer) {
         string name = String.Empty;
-        for (int i = 0; i < para.Length; i++)
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
         try {

@@ -112,7 +112,7 @@ class Fetch extends Tabs {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "getcurrentnetworkinfo", true);
+        xhr.open("GET", "mng/getcurrentnetworkinfo", true);
         xhr.send();
     }
 
@@ -411,7 +411,7 @@ class Fetch extends Tabs {
             const strFrom = this.ipFrom.GetIpString();
             const strTo = this.ipTo.GetIpString();
 
-            xhr.open("POST", "fetch_equip_ip", true);
+            xhr.open("POST", "fetch/equip_ip", true);
             xhr.send(`from=${strFrom}&to=${strTo}&portscan=${txtPortscan.value}&conflictcontition=${txtConflictContition.value}&conflictaction=${txtConflict.value}&retries=${rngRetries.value}&interval=${rngInterval.value}`);
         };
     }
@@ -662,7 +662,7 @@ class Fetch extends Tabs {
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
-            xhr.open("POST", "fetch_equip_dc", true);
+            xhr.open("POST", "fetch/equip_dc", true);
             xhr.send(`domain=${this.txtDomain.value}&portscan=${txtPortscan.value}&conflictcontition=${txtConflictContition.value}&conflictaction=${txtConflict.value}&retries=${rngRetries.value}&interval=${rngInterval.value}`);
         };
     }
@@ -796,7 +796,7 @@ class Fetch extends Tabs {
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
-            xhr.open("POST", "fetch_users_dc", true);
+            xhr.open("POST", "fetch/users_dc", true);
             xhr.send(`domain=${this.txtDomain.value}&conflictcontition=${txtConflictContition.value}&conflictaction=${txtConflict.value}`);
         };
     }
@@ -940,7 +940,7 @@ class Fetch extends Tabs {
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
-            xhr.open("POST", "fetch_import", true);
+            xhr.open("POST", "fetch/import", true);
             xhr.send(`ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${txtUsername.value}&password=${txtPassword.value}&equip=${chkEquip.checked}&users=${chkUsers.checked}`);
         };
     }
@@ -1036,7 +1036,7 @@ class Fetch extends Tabs {
                 }
             }
         };
-        xhr.open("GET", "getfetchtaskstatus", true);
+        xhr.open("GET", "fetch/gettaskstatus", true);
         xhr.send();
 
         btnAbort.onclick = () => {
@@ -1057,7 +1057,7 @@ class Fetch extends Tabs {
                     } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                         this.ConfirmBox("Server is unavailable.", true);
                 };
-                xhr.open("GET", "abortfetch", true);
+                xhr.open("GET", "fetch/abort", true);
                 xhr.send();
             });
 
@@ -1154,7 +1154,7 @@ class Fetch extends Tabs {
                     } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                         this.ConfirmBox("Server is unavailable.", true);
                 };
-                xhr.open("GET", "approvelastfetch", true);
+                xhr.open("GET", "fetch/approve", true);
                 xhr.send();
             });
 
@@ -1179,7 +1179,7 @@ class Fetch extends Tabs {
                     } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                         this.ConfirmBox("Server is unavailable.", true);
                 };
-                xhr.open("GET", "discardlastfetch", true);
+                xhr.open("GET", "fetch/discard", true);
                 xhr.send();
             });
 

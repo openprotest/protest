@@ -150,7 +150,7 @@ class DnsLookup extends Console {
 
         this.args.entries.push(hostname);
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));

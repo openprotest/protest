@@ -170,7 +170,7 @@ class User extends Window {
         this.sidetools.appendChild(this.btnUnlock);
         this.btnUnlock.onclick = () => {
             if (this.btnUnlock.hasAttribute("busy")) return;
-            let xhr = new XMLHttpRequest();
+            const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) this.btnUnlock.removeAttribute("busy");
 
@@ -182,7 +182,7 @@ class User extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
             this.btnUnlock.setAttribute("busy", true);
-            xhr.open("GET", "unlockuser&file=" + this.filename, true);
+            xhr.open("GET", "mng/unlockuser&file=" + this.filename, true);
             xhr.send();
         };
 
@@ -190,14 +190,14 @@ class User extends Window {
         this.sidetools.appendChild(btnEnable);
         btnEnable.onclick = () => {
             if (btnEnable.hasAttribute("busy")) return;
-            let xhr = new XMLHttpRequest();
+            const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) btnEnable.removeAttribute("busy");
                 if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
             btnEnable.setAttribute("busy", true);
-            xhr.open("GET", "enableuser&file=" + this.filename, true);
+            xhr.open("GET", "mng/enableuser&file=" + this.filename, true);
             xhr.send();
         };
 
@@ -205,14 +205,14 @@ class User extends Window {
         this.sidetools.appendChild(btnDisable);
         btnDisable.onclick = () => {
             if (btnDisable.hasAttribute("busy")) return;
-            let xhr = new XMLHttpRequest();
+            const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) btnDisable.removeAttribute("busy");
                 if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
             btnDisable.setAttribute("busy", true);
-            xhr.open("GET", "disableuser&file=" + this.filename, true);
+            xhr.open("GET", "mng/disableuser&file=" + this.filename, true);
             xhr.send();
         };
 
@@ -378,12 +378,12 @@ class User extends Window {
                     }
                 };
 
-                xhr.open("GET", "getuserprop&file=" + this.filename + "&property=" + n, true);
+                xhr.open("GET", "db/getuserprop&file=" + this.filename + "&property=" + n, true);
                 xhr.send();
             };
 
             btnStamp.onclick = () => {
-                let xhr = new XMLHttpRequest();
+                const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK                       
                         if (xhr.responseText != "ok")
@@ -399,7 +399,7 @@ class User extends Window {
         } else if (v.includes(";")) {
             const value = document.createElement("div");
 
-            let values = v.split(";");
+            const values = v.split(";");
             for (let i = 0; i < values.length; i++) {
                 if (values[i].trim().length == 0) continue;
                 const subvalue = document.createElement("div");
@@ -635,7 +635,7 @@ class User extends Window {
                 }
             };
 
-            xhr.open("GET", "fetchuser&username=" + txtuser.value, true);
+            xhr.open("GET", "fetch/fetchuser&username=" + txtuser.value, true);
             xhr.send();
         };
 
@@ -656,6 +656,7 @@ class User extends Window {
 
     Edit() {
         const dialog = this.DialogBox("100%");
+        if (dialog === null) return;
         const innerBox = dialog.innerBox;
         const buttonBox = dialog.buttonBox;
         const btnOK = dialog.btnOK;
@@ -728,9 +729,9 @@ class User extends Window {
             };
 
             if (this.filename)
-                xhr.open("POST", "saveuser&" + this.filename, true);
+                xhr.open("POST", "db/saveuser&" + this.filename, true);
             else 
-                xhr.open("POST", "saveuser", true);
+                xhr.open("POST", "db/saveuser", true);
 
             xhr.send(payload);
         });
@@ -807,7 +808,7 @@ class User extends Window {
             }
 
         };
-        xhr.open("GET", `fetchuser&filename=${this.filename}`, true);
+        xhr.open("GET", `fetch/fetchuser&filename=${this.filename}`, true);
         xhr.send();
     }
 
@@ -825,7 +826,7 @@ class User extends Window {
                     }
             };
 
-            xhr.open("GET", "deluser&" + this.filename, true);
+            xhr.open("GET", "db/deluser&" + this.filename, true);
             xhr.send();
         });
     }

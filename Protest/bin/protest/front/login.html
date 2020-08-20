@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <title>Pro-test</title>
@@ -98,7 +98,7 @@
     <script>
     const login = ()=> {
         if (txtPassword.value=="") return;
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = ()=> {
             if (xhr.readyState==4 && xhr.status==200) {
                 let response = xhr.responseText;

@@ -29,7 +29,7 @@ public static class Session {
         public string sessionId;
     }
 
-    public static string TryLogin(in HttpListenerContext ctx, string remoteIp) {
+    public static string TryLogin(in HttpListenerContext ctx, in string remoteIp) {
         try {
             using StreamReader streamReader = new StreamReader(ctx.Request.InputStream);
             string payload = streamReader.ReadToEnd();
@@ -158,14 +158,13 @@ public static class Session {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] KickClient(string[] para, string performer) {
-        string ip = "";
-        string hash = "";
-        for (int i = 1; i < para.Length; i++) {
+    public static byte[] KickClient(in string[] para, in string performer) {
+        string ip = String.Empty;
+        string hash = String.Empty;
+        for (int i = 1; i < para.Length; i++) 
             if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);
-            if (para[i].StartsWith("hash=")) hash = para[i].Substring(5);
-        }
-
+            else if (para[i].StartsWith("hash=")) hash = para[i].Substring(5);
+        
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
             SessionEntry e = o.Value;
             if (e.ip == ip && e.sessionId.StartsWith(hash)) {
@@ -181,10 +180,10 @@ public static class Session {
         return Strings.NOT.Array;
     }
 
-    public static string GetSHA(string value) {
+    public static string GetSHA(in string value) {
         return GetSHA(Encoding.UTF8.GetBytes(value));
     }
-    public static string GetSHA(byte[] value) {
+    public static string GetSHA(in byte[] value) {
         using SHA384 sha = SHA384.Create();
         byte[] bytes = sha.ComputeHash(value);
 

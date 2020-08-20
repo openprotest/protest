@@ -104,7 +104,7 @@ public static class ActiveDirectory {
                     IPAddress subnet = IpTools.GetNetworkAddress(ip.Address, ip.IPv4Mask);
                     IPAddress broadcast = IpTools.GetBroadcastAddress(ip.Address, ip.IPv4Mask);
 
-                    string bits = "";
+                    string bits = String.Empty;
                     int prefix = 0;
                     for (int i = 0; i < 4; i++) {
                         byte b = ip.IPv4Mask.GetAddressBytes()[i];
@@ -263,16 +263,16 @@ public static class ActiveDirectory {
 
     public static string FileTimeString(string value) {
         long ticks = long.Parse(value);
-        if (ticks == 0) return "";
+        if (ticks == 0) return String.Empty;
         return DateTime.FromFileTime(ticks).ToString("dddd dd-MMM-yyyy HH:mm:ss");
     }
 
     public static byte[] UnlockUser(in string[] para) {
-        string filename = "", username = "";
-        for (int i = 1; i < para.Length; i++) {
+        string filename = String.Empty;
+        string username = String.Empty;
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
-        }
+            else if (para[i].StartsWith("username=")) username = para[i].Substring(9);        
 
         if (username.Length == 0 && Database.users.ContainsKey(filename)) {
             Database.DbEntry entry = (Database.DbEntry)Database.users[filename];
@@ -293,11 +293,11 @@ public static class ActiveDirectory {
     }
 
     public static byte[] DisableUser(in string[] para) {
-        string filename = "", username = "";
-        for (int i = 1; i < para.Length; i++) {
+        string filename = String.Empty;
+        string username = String.Empty;
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
-        }
+            else if (para[i].StartsWith("username=")) username = para[i].Substring(9);        
 
         if (username.Length == 0 && Database.users.ContainsKey(filename)) {
             Database.DbEntry entry = (Database.DbEntry)Database.users[filename];
@@ -321,12 +321,11 @@ public static class ActiveDirectory {
     }
 
     public static byte[] EnableUser(in string[] para) {
-        string filename = "";
-        string username = "";
-        for (int i = 1; i < para.Length; i++) {
+        string filename = String.Empty;
+        string username = String.Empty;
+        for (int i = 1; i < para.Length; i++) 
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-            if (para[i].StartsWith("username=")) username = para[i].Substring(9);
-        }
+            else if (para[i].StartsWith("username=")) username = para[i].Substring(9);        
 
         if (username.Length == 0 && Database.users.ContainsKey(filename)) {
             Database.DbEntry entry = (Database.DbEntry)Database.users[filename];

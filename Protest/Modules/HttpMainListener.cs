@@ -117,6 +117,8 @@ class HttpMainListener : Http {
 
             performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value ?? string.Empty);
 
+
+
             switch (para[0]) {
                 case "a":
                     if (!(Session.TryLogin(ctx, remoteIp) is null)) buffer = Strings.OK.Array;
@@ -124,101 +126,106 @@ class HttpMainListener : Http {
 
                 case "logout": buffer = Session.RevokeAccess(ctx) ? Strings.OK.Array : Strings.FAI.Array; break;
                 case "version": buffer = Strings.Version(); break;
-                case "checkforupdate": buffer = Update.CheckGitHubVersion(); break;
 
-                case "getequipver":   buffer = Encoding.UTF8.GetBytes(Database.equipVer.ToString()); break;
-                case "getusersver":   buffer = Encoding.UTF8.GetBytes(Database.usersVer.ToString()); break;
-                case "getequiptable": buffer = Database.GetEquipTable(); break;
-                case "getuserstable": buffer = Database.GetUsersTable(); break;
+                case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 
-                case "fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
-                case "saveequip":  buffer = Database.SaveEquip(ctx, performer); break;
-                case "delequip":   buffer = Database.DeleteEquip(para, performer); break;
-                case "fetchuser":  buffer = Fetch.SingleFetchUserBytes(para); break;
-                case "saveuser":   buffer = Database.SaveUser(ctx, performer); break;
-                case "deluser":    buffer = Database.DeleteUser(para, performer); break;
-
-                case "getfetchtaskstatus": buffer = Encoding.UTF8.GetBytes(Fetch.GetFetchTaskStatus()); break;
-                case "abortfetch": buffer = Fetch.AbortFetch(performer); break;
-                case "approvelastfetch": buffer = Fetch.ApproveLastFetch(performer); break;
-                case "discardlastfetch": buffer = Fetch.DiscardLastFetch(performer); break;
-
-                case "dnslookup":    buffer = Dns.DnsLookup(ctx); break;
-                case "locateip":     buffer = LocateIp.Locate(ctx); break;
-                case "maclookup":    buffer = MacLookup.Lookup(ctx); break;
+                case "ping"        : buffer = Ping.XhrPing(para); break;
+                case "dnslookup"   : buffer = Dns.DnsLookup(ctx); break;
+                case "locateip"    : buffer = LocateIp.Locate(ctx); break;
+                case "maclookup"   : buffer = MacLookup.Lookup(ctx); break;
                 case "dhcpdiscover": buffer = Dhcp.DiscoverDhcp(para); break;
-                case "ntprequest":   buffer = Ntp.NtpRequest(para); break;
-                case "ping":         buffer = Ping.XhrPing(para); break;
+                case "ntprequest"  : buffer = Ntp.NtpRequest(para); break;
 
-                case "speedtest_downstream": buffer = SpeedTest.TestDownstream(ctx, para); break;
-                case "speedtest_upstream":   buffer = SpeedTest.TestUpstream(ctx, para); break;
+                case "db/getequipver"  : buffer = Encoding.UTF8.GetBytes(Database.equipVer.ToString()); break;
+                case "db/getusersver"  : buffer = Encoding.UTF8.GetBytes(Database.usersVer.ToString()); break;
+                case "db/getequiptable": buffer = Database.GetEquipTable(); break;
+                case "db/getuserstable": buffer = Database.GetUsersTable(); break;
+             
+                case "db/getentropy": buffer = PasswordStrength.GetEntropy(); break;
 
-                case "wakeup":   buffer = WoL.Wakeup(para); break;
-                case "shutdown": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 12)); break;
-                case "reboot":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
-                case "logoff":   buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
+                case "db/getequiprop": buffer = Database.GetValue(Database.equip, para); break;
+                case "db/getuserprop": buffer = Database.GetValue(Database.users, para); break;
 
-                case "printtest": buffer = PrintTools.PrintTestPage(para); break;
+                case "db/saveequip": buffer = Database.SaveEquip(ctx, performer); break;
+                case "db/delequip" : buffer = Database.DeleteEquip(para, performer); break;
+                case "db/saveuser" : buffer = Database.SaveUser(ctx, performer); break;
+                case "db/deluser"  : buffer = Database.DeleteUser(para, performer); break;
 
-                case "unlockuser": buffer =  ActiveDirectory.UnlockUser(para); break;
-                case "enableuser": buffer =  ActiveDirectory.EnableUser(para); break;
-                case "disableuser": buffer = ActiveDirectory.DisableUser(para); break;
+                case "fetch/fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
+                case "fetch/fetchuser" :  buffer = Fetch.SingleFetchUserBytes(para); break;
+                case "fetch/import"    : buffer = Fetch.ImportDatabase(ctx, performer); break;
+                case "fetch/equip_ip"  : buffer = Fetch.FetchEquip(ctx, performer); break;
+                case "fetch/equip_dc"  : buffer = Fetch.FetchEquip(ctx, performer); break;
+                case "fetch/users_dc"  : buffer = Fetch.FetchUsers(ctx, performer); break;
 
-                case "wmiquery":    buffer = Wmi.WmiQuery(para); break;
-                case "killprocess": buffer = Wmi.WmiKillProcess(para); break;
+                case "fetch/gettaskstatus": buffer = Encoding.UTF8.GetBytes(Fetch.GetTaskStatus()); break;
+                case "fetch/abort"        : buffer = Fetch.AbortFetch(performer); break;
+                case "fetch/approve"      : buffer = Fetch.ApproveLastFetch(performer); break;
+                case "fetch/discard"      : buffer = Fetch.DiscardLastFetch(performer); break;
 
-                case "getscripttools":          buffer = Scripts.GetScriptTools(); break;
-                case "getusercolumns":          buffer = Scripts.GetUserColumns(); break;
-                case "getequipcolumns":         buffer = Scripts.GetEquipColumns(); break;
-                case "getadusercolumns":        buffer = Scripts.GetAdUserColumns(); break;
-                case "getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
-                case "getadgroupcolumn":        buffer = Scripts.GetAdGroupColumns(); break;
+                //case "speedtest/downstream": buffer = SpeedTest.TestDownstream(ctx, para); break;
+                //case "speedtest/upstream"  : buffer = SpeedTest.TestUpstream(ctx, para); break;
+                
+                case "mng/checkforupdate": buffer = Update.CheckGitHubVersion(); break;
+                case "mng/getcurrentnetworkinfo": buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
-                case "getentropy": buffer = PasswordStrength.GetEntropy(); break;
+                case "mng/wmiquery"   : buffer = Wmi.WmiQuery(para); break;
+                case "mng/killprocess": buffer = Wmi.WmiKillProcess(para); break;
 
-                case "listscripts": buffer = Scripts.ListScripts(); break;
-                case "loadscript":  buffer = Scripts.LoadScript(para); break;
-                case "savescript":  buffer = Scripts.SaveScript(ctx, para); break;
-                case "runscript":   buffer = Scripts.RunScript(para); break;
-                case "newscript":   buffer = Scripts.NewScript(para); break;
-                case "delscript":   buffer = Scripts.DeleteScript(para); break;
-                case "delreport":   buffer = Scripts.DeleteReport(para); break;
-                case "getreport":   buffer = Scripts.GetReport(para); break;
+                case "mng/wakeup"  : buffer = WoL.Wakeup(para); break;
+                case "mng/shutdown": buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 12)); break;
+                case "mng/reboot"  : buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 6)); break;
+                case "mng/logoff"  : buffer = Encoding.UTF8.GetBytes(Wmi.Wmi_Win32Shutdown(para, 4)); break;
+
+                case "mng/unlockuser": buffer =  ActiveDirectory.UnlockUser(para); break;
+                case "mng/enableuser": buffer =  ActiveDirectory.EnableUser(para); break;
+                case "mng/disableuser": buffer = ActiveDirectory.DisableUser(para); break;
+
+                case "mng/printtest": buffer = PrintTools.PrintTestPage(para); break;
+
+                case "mng/getscripttools"         : buffer = Scripts.GetTools(); break;
+                case "mng/getusercolumns"         : buffer = Scripts.GetUserColumns(); break;
+                case "mng/getequipcolumns"        : buffer = Scripts.GetEquipColumns(); break;
+                case "mng/getadusercolumns"       : buffer = Scripts.GetAdUserColumns(); break;
+                case "mng/getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
+                case "mng/getadgroupcolumn"       : buffer = Scripts.GetAdGroupColumns(); break;
+
+                case "scripts/list"   : buffer = Scripts.List(); break;
+                case "scripts/load"   : buffer = Scripts.Load(para); break;
+                case "scripts/save"   : buffer = Scripts.Save(ctx, para); break;
+                case "scripts/run"    : buffer = Scripts.Run(para); break;
+                case "scripts/create" : buffer = Scripts.Create(para); break;
+                case "scripts/delete" : buffer = Scripts.DeleteScript(para); break;
+                case "scripts/getreport" : buffer = Scripts.GetReport(para); break;
+                case "scripts/delreport" : buffer = Scripts.DeleteReport(para); break;
                         
-                case "getdocs":    buffer = Documentation.GetDocs(para); break;
-                case "createdoc":  buffer = Documentation.CreateDoc(ctx, performer); break;
-                case "deletedoc":  buffer = Documentation.DeleteDoc(para, performer); break;
-                case "previewdoc":
+                case "docs/get":    buffer = Documentation.Get(para); break;
+                case "docs/create":  buffer = Documentation.Create(ctx, performer); break;
+                case "docs/delete":  buffer = Documentation.Delete(para, performer); break;
+                case "docs/view":
                     buffer = Documentation.PreviewDoc(para, acceptGzip);
                     if (acceptGzip) ctx.Response.AddHeader("Content-Encoding", "gzip");
                     break;
 
-                case "getdebitnotes":         buffer = DebitNotes.GetDebitNotes(para); break;
-                case "getdebitnotestemplate": buffer = DebitNotes.GetDebitNoteTemplate(); break;
-                case "createdebitnote":       buffer = DebitNotes.CreateDebitNote(ctx, performer); break;
-                case "markdebit":             buffer = DebitNotes.MarkDebitNote(para, performer); break;
-                case "deldebit":              buffer = DebitNotes.DeleteDebitNote(para, performer); break;
+                case "debitnotes/get"     : buffer = DebitNotes.Get(para); break;
+                case "debitnotes/template": buffer = DebitNotes.GetTemplate(); break;
+                case "debitnotes/create"  : buffer = DebitNotes.Create(ctx, performer); break;
+                case "debitnotes/mark"    : buffer = DebitNotes.Mark(para, performer); break;
+                case "debitnotes/delete"  : buffer = DebitNotes.Delete(para, performer); break;
 
-                case "getequiprop": buffer = Database.GetValue(Database.equip, para); break;
-                case "getuserprop": buffer = Database.GetValue(Database.users, para); break;
+                case "watchdog/settings" : buffer = Watchdog.Settings(para, performer); break;
+                case "watchdog/add"      : buffer = Watchdog.Add(para, performer); break;
+                case "watchdog/remove"   : buffer = Watchdog.Remove(para, performer); break;
+                case "watchdog/get"      : buffer = Watchdog.Get(para, performer); break;
 
-                case "getcurrentnetworkinfo" : buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
+                case "backup/get": buffer = Backup.Get(); break;
+                case "backup/create": buffer = Backup.Create(para, performer); break;
+                case "backup/delete": buffer = Backup.Delete(para, performer); break;
 
-                case "fetch_import"     : buffer = Fetch.ImportDatabase(ctx, performer); break;
-                case "fetch_equip_ip"   : buffer = Fetch.FetchEquip(ctx, performer); break;
-                case "fetch_equip_dc"   : buffer = Fetch.FetchEquip(ctx, performer); break;
-                case "fetch_users_dc"   : buffer = Fetch.FetchUsers(ctx, performer); break;
+                case "clients/get": buffer = Session.GetClients(); break;
+                case "clients/kick": buffer = Session.KickClient(para, performer); break;
 
-                case "getlog" : buffer = Logging.GetLog(); break;
-
-                case "getclients": buffer = Session.GetClients(); break;
-                case "kickclient": buffer = Session.KickClient(para, performer); break;
-
-                case "getbackups": buffer = Backup.GetBackups(); break;
-                case "createbackup": buffer = Backup.CreateBackup(para, performer); break;
-                case "deletebackup": buffer = Backup.DeleteBackup(para, performer); break;
-
-                case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
+                case "log/get": buffer = Logging.Get(); break;
 
                 default: //not found
                     ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;

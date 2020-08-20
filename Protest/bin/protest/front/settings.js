@@ -463,7 +463,7 @@ class Settings extends Tabs {
         center.style.textAlign = "center";
         this.subContent.appendChild(center);
 
-        let xhrUpdate = new XMLHttpRequest();
+        const xhrUpdate = new XMLHttpRequest();
         xhrUpdate.onreadystatechange = () => {
             if (xhrUpdate.readyState == 4 && xhrUpdate.status == 200) {
                 if (xhrUpdate.responseText == "failed") {
@@ -480,7 +480,7 @@ class Settings extends Tabs {
                     return;
                 }
 
-                let xhrVersion = new XMLHttpRequest();
+                const xhrVersion = new XMLHttpRequest();
                 xhrVersion.onreadystatechange = () => {
                     if (xhrVersion.readyState == 4 && xhrVersion.status == 200) {
                         let jsonVersion = JSON.parse(xhrVersion.responseText);
@@ -533,7 +533,7 @@ class Settings extends Tabs {
                 xhrVersion.send();
             }
         };
-        xhrUpdate.open("GET", "checkforupdate", true);
+        xhrUpdate.open("GET", "mng/checkforupdate", true);
         xhrUpdate.send();
     }
 
@@ -546,7 +546,7 @@ class Settings extends Tabs {
         box.style.userSelect = "text";
         this.subContent.appendChild(box);
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let license = xhr.responseText;
@@ -702,7 +702,7 @@ class Settings extends Tabs {
             });
         };
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let ver = JSON.parse(xhr.responseText);

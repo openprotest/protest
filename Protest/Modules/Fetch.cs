@@ -27,7 +27,7 @@ public static class Fetch {
     public static TaskWrapper fetchTask = null;
     private static FetchResult? lastFetch = null;
 
-    public static string GetFetchTaskStatus() {
+    public static string GetTaskStatus() {
         string response;
 
         if (!(lastFetch is null)) {
@@ -161,25 +161,24 @@ public static class Fetch {
         string ip = "127.0.0.1";
         int port = 443;
         string protocol = "https";
-        string username = "";
-        string password = "";
+        string username = String.Empty;
+        string password = String.Empty;
         bool importEquip = true;
         bool importUsers = true;
 
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string[] para = reader.ReadToEnd().Split('&');
-            for (int i = 0; i < para.Length; i++) {
-                if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);
-                if (para[i].StartsWith("port=")) port = int.Parse(para[i].Substring(5));
-                if (para[i].StartsWith("protocol=")) protocol = para[i].Substring(9);
-                if (para[i].StartsWith("username=")) username = para[i].Substring(9);
-                if (para[i].StartsWith("password=")) password = para[i].Substring(9);
-                if (para[i].StartsWith("equip=")) importEquip = para[i].Substring(6) == "true";
-                if (para[i].StartsWith("users=")) importUsers = para[i].Substring(6) == "true";
-            }
+            for (int i = 0; i < para.Length; i++)
+                if (para[i].StartsWith("ip=")) ip =       para[i].Substring(3);
+                else if (para[i].StartsWith("port="))     port        = int.Parse(para[i].Substring(5));
+                else if (para[i].StartsWith("protocol=")) protocol    = para[i].Substring(9);
+                else if (para[i].StartsWith("username=")) username    = para[i].Substring(9);
+                else if (para[i].StartsWith("password=")) password    = para[i].Substring(9);
+                else if (para[i].StartsWith("equip="))    importEquip = para[i].Substring(6) == "true";
+                else if (para[i].StartsWith("users="))    importUsers = para[i].Substring(6) == "true";
         }
 
-        string sessionid = "";
+        string sessionid = String.Empty;
         double version = 0.0;
 
         Uri uri = new Uri($"{protocol}://{ip}:{port}");
@@ -230,10 +229,10 @@ public static class Fetch {
                     version = 3.2;
                 } else {
                     string[] ver = res_ver.Result.Content.ReadAsStringAsync().Result
-                        .Replace("{", "")
-                        .Replace("}", "")
-                        .Replace("\"", "")
-                        .Replace(" ", "")
+                        .Replace("{", String.Empty)
+                        .Replace("}", String.Empty)
+                        .Replace("\"", String.Empty)
+                        .Replace(" ", String.Empty)
                         .Split(',');
 
                     string major="0", minor="0";
@@ -341,7 +340,7 @@ public static class Fetch {
                     Thread.Sleep(1);
                     filename = DateTime.Now.Ticks.ToString();
                 }
-                hash[".FILENAME"] = new string[] { filename, "", "" };
+                hash[".FILENAME"] = new string[] { filename, String.Empty, "" };
 
                 Database.DbEntry entry = new Database.DbEntry() {
                     filename = filename,
@@ -404,7 +403,7 @@ public static class Fetch {
                     Thread.Sleep(1);
                     filename = DateTime.Now.Ticks.ToString();
                 }
-                hash[".FILENAME"] = new string[] { filename, "", "" };
+                hash[".FILENAME"] = new string[] { filename, String.Empty, "" };
 
                 Database.DbEntry entry = new Database.DbEntry() {
                     filename = filename,
@@ -424,11 +423,128 @@ public static class Fetch {
     }
 
     public static void ImportEquip_4(Uri uri, CookieContainer cookieContainer) {
-        ImportEquip_3(uri, cookieContainer);
+        using HttpClientHandler handler = new HttpClientHandler();
+        handler.CookieContainer = cookieContainer;
+
+        using HttpClient client = new HttpClient(handler);
+        client.BaseAddress = uri;
+        client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
+        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+
+        Task<HttpResponseMessage> res = client.GetAsync("db/getequiplist");
+        string payload = res.Result.Content.ReadAsStringAsync().Result;
+
+        string[] split = payload.Split((char)127);
+
+        int i = 1;
+        while (i < split.Length) {
+            Program.ProgressBar(i * 100 / split.Length, "Importing equipment");
+
+            if (int.TryParse(split[i], out int len)) {
+
+                Hashtable hash = new Hashtable();
+                for (int j = i + 1; j < i + len * 4; j += 4)
+                    hash.Add(split[j], new string[] { split[j + 1], split[j + 2], "" });
+
+                string filename = hash.ContainsKey(".FILENAME") ? ((string[])hash[".FILENAME"])[0] : DateTime.Now.Ticks.ToString();
+
+                Hashtable passwords = new Hashtable();
+                foreach (DictionaryEntry e in hash) //get passwords
+                    if (((string)e.Key).Contains("PASSWORD")) {
+                        string password = GetHiddenProperty(uri, cookieContainer, $"db/getequiprop&file={filename}&property={(string)e.Key}");
+                        string performer = ((string[])hash[e.Key])[1];
+                        passwords.Add(e.Key, new string[] { password, performer });
+                    }
+                foreach (DictionaryEntry e in passwords) {
+                    string[] value = (string[])passwords[e.Key];
+                    hash[e.Key] = new string[] { value[0], value[1], "" };
+                }
+
+
+                while (Database.equip.ContainsKey(filename)) {
+                    Thread.Sleep(1);
+                    filename = DateTime.Now.Ticks.ToString();
+                }
+                hash[".FILENAME"] = new string[] { filename, String.Empty, "" };
+
+                Database.DbEntry entry = new Database.DbEntry() {
+                    filename = filename,
+                    hash = hash,
+                    isUser = false,
+                    write_lock = new object()
+                };
+
+                Database.equip.Add(filename, entry);
+                Database.Write(entry, null);
+            }
+            i += 1 + len * 4;
+        }
+
+        Program.ProgressBar(100, "Importing equipment", true);
+        Console.WriteLine();
     }
 
     public static void ImportUsers_4(Uri uri, CookieContainer cookieContainer) {
-        ImportUsers_3(uri, cookieContainer);
+        using HttpClientHandler handler = new HttpClientHandler();
+        handler.CookieContainer = cookieContainer;
+
+        using HttpClient client = new HttpClient(handler);
+        client.BaseAddress = uri;
+        client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
+        //client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+
+        Task<HttpResponseMessage> res = client.GetAsync("sb/getuserslist");
+        string payload = res.Result.Content.ReadAsStringAsync().Result;
+
+        string[] split = payload.Split((char)127);
+
+        int i = 1;
+        while (i < split.Length) {
+            Program.ProgressBar(i * 100 / split.Length, "Importing users");
+
+            if (int.TryParse(split[i], out int len)) {
+
+                Hashtable hash = new Hashtable();
+                for (int j = i + 1; j < i + len * 4; j += 4)
+                    hash.Add(split[j], new string[] { split[j + 1], split[j + 2], "" });
+
+                string filename = hash.ContainsKey(".FILENAME") ? ((string[])hash[".FILENAME"])[0] : DateTime.Now.Ticks.ToString();
+
+
+                Hashtable passwords = new Hashtable();
+                foreach (DictionaryEntry e in hash) //get passwords
+                    if (((string)e.Key).Contains("PASSWORD")) {
+                        string password = GetHiddenProperty(uri, cookieContainer, $"db/getuserprop&file={filename}&property={(string)e.Key}");
+                        string performer = ((string[])hash[e.Key])[1];
+                        passwords.Add(e.Key, new string[] { password, performer });
+                    }
+                foreach (DictionaryEntry e in passwords) {
+                    string[] value = (string[])passwords[e.Key];
+                    hash[e.Key] = new string[] { value[0], value[1], "" };
+                }
+
+
+                while (Database.users.ContainsKey(filename)) {
+                    Thread.Sleep(1);
+                    filename = DateTime.Now.Ticks.ToString();
+                }
+                hash[".FILENAME"] = new string[] { filename, String.Empty, "" };
+
+                Database.DbEntry entry = new Database.DbEntry() {
+                    filename = filename,
+                    hash = hash,
+                    isUser = true,
+                    write_lock = new object()
+                };
+
+                Database.users.Add(filename, entry);
+                Database.Write(entry, null);
+            }
+            i += 1 + len * 4;
+        }
+
+        Program.ProgressBar(100, "Importing users", true);
+        Console.WriteLine();
     }
 
     public static string GetHiddenProperty(Uri uri, CookieContainer cookieContainer, string path) {
@@ -457,12 +573,11 @@ public static class Fetch {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] SingleFetchEquipBytes(string[] para) {
+    public static byte[] SingleFetchEquipBytes(in string[] para) {
         string host = null, filename = null;
-        for (int i = 0; i < para.Length; i++) {
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("host=")) host = para[i].Substring(5);
-            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-        }
+            else if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
         if (!(filename is null) && filename.Length > 0) {
             if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
@@ -515,9 +630,9 @@ public static class Fetch {
 
         string netbios = NetBios.GetBiosName(ip?.ToString());
         
-        Hashtable wmi      = new Hashtable();
-        Hashtable ad       = new Hashtable();
-        string portscan = "";
+        Hashtable wmi   = new Hashtable();
+        Hashtable ad    = new Hashtable();
+        string portscan = String.Empty;
 
         Thread tWmi = new Thread(()=> {
             wmi = Wmi.WmiFetch(host);
@@ -600,7 +715,7 @@ public static class Fetch {
         if (portscan.Length > 0)
             hash.Add("PORTS", new string[] { portscan, "Port-scan", "" });
 
-        string mac = "";
+        string mac = String.Empty;
         if (wmi.ContainsKey("MAC ADDRESS")) {
             mac = ((string)wmi["MAC ADDRESS"]).Split(';')[0].Trim();
         } else {
@@ -664,13 +779,12 @@ public static class Fetch {
         return hash;
     }
 
-    public static byte[] SingleFetchUserBytes(string[] para) {
+    public static byte[] SingleFetchUserBytes(in string[] para) {
         string username = null, filename = null;
-        for (int i = 0; i < para.Length; i++) {
+        for (int i = 1; i < para.Length; i++) 
             if (para[i].StartsWith("username=")) username = para[i].Substring(9);
-            if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
-        }
-
+            else if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
+        
         if (!(filename is null) && filename.Length > 0) {
             if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
 
@@ -715,7 +829,7 @@ public static class Fetch {
         return null;
     }
 
-    public static byte[] FetchEquip(string[] hosts, int portscan, int conflictcontition, int conflictaction, int retries, int interval, string performer) {
+    public static byte[] FetchEquip(string[] hosts, int portscan, int conflictcontition, int conflictaction, int retries, int interval, in string performer) {
         if (!(fetchTask is null)) return Strings.TSK.Array;
         if (!(lastFetch is null)) return Strings.TSK.Array;
 
@@ -724,7 +838,7 @@ public static class Fetch {
         Thread thread = new Thread(async() => {
             fetchTask.status = "fetching";
             DateTime lastBroadcast = DateTime.Now;
-            KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
+            KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"equip\",\"task\":{GetTaskStatus()}}}");
 
             int totalFetches = 0;
             int retriesCount = 0;
@@ -783,7 +897,7 @@ public static class Fetch {
                     for (int i = 0; i < SIZE; i++) //remove the 1st [WINDOW] items
                         queue.RemoveAt(0);
 
-                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
+                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"equip\",\"task\":{GetTaskStatus()}}}");
                 }
 
                 if (fetchTask is null) break;
@@ -817,7 +931,7 @@ public static class Fetch {
             };
 
             fetchTask?.Complete();
-            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"equip\",\"task\":{GetFetchTaskStatus()}}}");
+            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"equip\",\"task\":{GetTaskStatus()}}}");
         });
 
         fetchTask = new TaskWrapper("Fetching equipment", performer) {
@@ -828,22 +942,20 @@ public static class Fetch {
 
         return Strings.OK.Array;
     }
-    public static byte[] FetchEquip(in HttpListenerContext ctx, string performer) {
+    public static byte[] FetchEquip(in HttpListenerContext ctx, in string performer) {
         string from = null, to = null, domain = null;
         int portscan=0, conflictcontition = 0, conflictaction = 0, retries = 0, interval = 0;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string[] para = reader.ReadToEnd().Split('&');
-            for (int i = 0; i < para.Length; i++) {
-                if (para[i].StartsWith("from=")) from = para[i].Substring(5);
-                if (para[i].StartsWith("to=")) to = para[i].Substring(3);
-                if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
-
-                if (para[i].StartsWith("portscan=")) portscan = int.Parse(para[i].Substring(9));
-                if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
-                if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
-                if (para[i].StartsWith("retries=")) int.TryParse(para[i].Substring(8), out retries);
-                if (para[i].StartsWith("interval=")) int.TryParse(para[i].Substring(9), out interval);
-            }
+            for (int i = 0; i < para.Length; i++) 
+                if (para[i].StartsWith("from="))           from = para[i].Substring(5);
+                else if (para[i].StartsWith("to="))        to = para[i].Substring(3);
+                else if (para[i].StartsWith("domain="))    domain = para[i].Substring(7);
+                else if (para[i].StartsWith("portscan="))  portscan = int.Parse(para[i].Substring(9));
+                else if (para[i].StartsWith("conflictcontition="))    int.TryParse(para[i].Substring(18), out conflictcontition);
+                else if (para[i].StartsWith("conflictaction="))       int.TryParse(para[i].Substring(15), out conflictaction);
+                else if (para[i].StartsWith("retries="))              int.TryParse(para[i].Substring(8), out retries);
+                else if (para[i].StartsWith("interval="))             int.TryParse(para[i].Substring(9), out interval);
         }
 
         if (!(from is null) && !(to is null)) {
@@ -876,16 +988,15 @@ public static class Fetch {
         return Strings.INF.Array;
     }
     
-    public static byte[] FetchUsers(in HttpListenerContext ctx, string performer) {
+    public static byte[] FetchUsers(in HttpListenerContext ctx, in string performer) {
         string domain = null;
         int conflictcontition = 0, conflictaction = 0;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string[] para = reader.ReadToEnd().Split('&'); 
-            for (int i = 0; i < para.Length; i++) {
+            for (int i = 0; i < para.Length; i++)
                 if (para[i].StartsWith("domain=")) domain = para[i].Substring(7);
-                if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
-                if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
-            }
+                else if (para[i].StartsWith("conflictcontition=")) int.TryParse(para[i].Substring(18), out conflictcontition);
+                else if (para[i].StartsWith("conflictaction=")) int.TryParse(para[i].Substring(15), out conflictaction);
         }
         
         if (domain is null) return Strings.INF.Array;
@@ -895,7 +1006,7 @@ public static class Fetch {
 
         return FetchUsers(users, conflictcontition, conflictaction, performer);
     }
-    public static byte[] FetchUsers(string[] users,  int conflictcontition, int conflictaction, string performer) {
+    public static byte[] FetchUsers(string[] users,  int conflictcontition, int conflictaction, in string performer) {
         if (!(fetchTask is null)) return Strings.TSK.Array;
         if (!(lastFetch is null)) return Strings.TSK.Array;
 
@@ -905,14 +1016,14 @@ public static class Fetch {
             fetchTask.status = "fetching";
 
             DateTime lastBroadcast = new DateTime(0); //DateTime.Now;
-            KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}");
+            KeepAlive.Broadcast($"{{\"action\":\"startfetch\",\"type\":\"users\",\"task\":{GetTaskStatus()}}}");
 
             for (int i = 0; i < users.Length; i++) {
                 Hashtable hash = SingleFetchUser(users[i]);
                 fetchTask.SetStepsCompleted(i + 1);
                 
                 if (DateTime.Now.Ticks - lastBroadcast.Ticks > 50_000_000) { //after 5 seconds
-                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}"); 
+                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"users\",\"task\":{GetTaskStatus()}}}"); 
                     lastBroadcast = DateTime.Now;
                 }
 
@@ -932,7 +1043,7 @@ public static class Fetch {
             };
 
             fetchTask.Complete();
-            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{GetFetchTaskStatus()}}}");
+            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{GetTaskStatus()}}}");
         });
 
         fetchTask = new TaskWrapper("Fetching users", performer) {

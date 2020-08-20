@@ -73,7 +73,7 @@ class Clients extends Window {
                             if (xhrk.readyState == 4 && xhrk.status == 200 && xhrk.responseText == "ok")
                                 this.list.removeChild(element);
                         };
-                        xhrk.open("GET", "kickclient&ip=" + split[i] + "&hash=" + split[i+3], true);
+                        xhrk.open("GET", "clients/kick&ip=" + split[i] + "&hash=" + split[i+3], true);
                         xhrk.send();
                     };
                 }
@@ -81,7 +81,7 @@ class Clients extends Window {
 
         };
 
-        xhr.open("GET", "getclients", true);
+        xhr.open("GET", "clients/get", true);
         xhr.send();
     }
 }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 public static class Ping {
 
-    public static byte[] XhrPing(string[] para) {
+    public static byte[] XhrPing(in string[] para) {
         string ip = null;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);

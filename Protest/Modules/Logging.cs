@@ -40,7 +40,7 @@ public static class Logging {
         KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{msg}\"}}");
     }
 
-    public static byte[] GetLog() {
+    public static byte[] Get() {
         lock (log_lock)
             try {
                 return File.ReadAllBytes($"{Strings.DIR_LOG}\\{DateTime.Now.ToString(Strings.DATE_FORMAT_FILE)}.log");

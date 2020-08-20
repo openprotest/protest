@@ -14,14 +14,14 @@ public static class Dns {
         if (payload.Length == 0) return Strings.INV.Array;
         return DnsLookup(payload);
     }
-    public static byte[] DnsLookup(string[] para) {
+    public static byte[] DnsLookup(in string[] para) {
         if (para.Length < 2) return null;
         return DnsLookup(para[1]);
     }
     
-    public static byte[] DnsLookup(string hostname) {
+    public static byte[] DnsLookup(in string hostname) {
         try {
-            string ips = "";
+            string ips = String.Empty;
             foreach (IPAddress ip in System.Net.Dns.GetHostAddresses(hostname))
                 ips += ip.ToString() + ((char)127).ToString();
 
@@ -35,7 +35,7 @@ public static class Dns {
         try {
             return (await System.Net.Dns.GetHostEntryAsync(ip)).HostName;
         } catch {
-            return "";
+            return String.Empty;
         }
     }
 }

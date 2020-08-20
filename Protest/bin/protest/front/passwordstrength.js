@@ -34,7 +34,7 @@ class PasswordStrength extends ListWindow {
     }
 
     GetEntropy(callback) {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
 
@@ -58,7 +58,7 @@ class PasswordStrength extends ListWindow {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true).addEventListener("click", ()=> this.Close());
         };
-        xhr.open("GET", "getentropy", true);
+        xhr.open("GET", "db/getentropy", true);
         xhr.send();
     }
 

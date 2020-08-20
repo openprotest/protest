@@ -195,7 +195,7 @@ class SpeedTest extends Window {
                 this.ConfirmBox("Server is unavailable.", true);
         };
 
-        xhr.open("GET", `speedtest_downstream&timeout=${this.rngTimeout.value}`, true);
+        xhr.open("GET", `speedtest/downstream&timeout=${this.rngTimeout.value}`, true);
         xhr.send();
     }
 
@@ -209,7 +209,7 @@ class SpeedTest extends Window {
                 this.ConfirmBox("Server is unavailable.", true);
         };
 
-        xhr.open("POST", `speedtest_upstream&timeout=${this.rngTimeout.value}`, true);
+        xhr.open("POST", `speedtest/upstream&timeout=${this.rngTimeout.value}`, true);
         xhr.send(this.kilo);
 
         /*ws.onclose = () => {

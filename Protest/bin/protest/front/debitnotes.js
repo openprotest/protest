@@ -220,10 +220,10 @@ class DebitNotes extends Window {
         filters += this.chkReturned.checked ? "1" : "0";
 
         if (append) {
-            xhr.open("GET", `getdebitnotes&keywords=${this.txtSearch.value}&from=${this.dateFrom.value}&to=${this.dateTo.value}&filters=${filters}&last=${this.last}`, true);
+            xhr.open("GET", `debitnotes/get&keywords=${this.txtSearch.value}&from=${this.dateFrom.value}&to=${this.dateTo.value}&filters=${filters}&last=${this.last}`, true);
             xhr.send();
         } else {
-            xhr.open("GET", `getdebitnotes&keywords=${this.txtSearch.value}&from=${this.dateFrom.value}&to=${this.dateTo.value}&filters=${filters}&last=null`, true);
+            xhr.open("GET", `debitnotes/get&keywords=${this.txtSearch.value}&from=${this.dateFrom.value}&to=${this.dateTo.value}&filters=${filters}&last=null`, true);
             xhr.send();
             this.preview.innerHTML = "";
             this.AdjustButtons();
@@ -546,7 +546,7 @@ class DebitNotes extends Window {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "getdebitnotestemplate", true);
+        xhr.open("GET", "debitnotes/template", true);
         xhr.send();
     }
 
@@ -958,7 +958,7 @@ class DebitNotes extends Window {
             data += "&eq=" + eq_string;
             data += "&sh=" + chkType.checked.toString().toLowerCase();
 
-            xhr.open("POST", "createdebitnote", true);
+            xhr.open("POST", "debitnotes/create", true);
             xhr.send(data);
         });
 
@@ -1006,7 +1006,7 @@ class DebitNotes extends Window {
                     this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", `markdebit&code=${this.selected[0]}&type=${this.selected[9]}`, true);
+            xhr.open("GET", `debitnotes/mark&code=${this.selected[0]}&type=${this.selected[9]}`, true);
             xhr.send();
         });
     }
@@ -1067,7 +1067,7 @@ class DebitNotes extends Window {
                     this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", `deldebit&code=${this.selected[0]}&type=${this.selected[9]}`, true);
+            xhr.open("GET", `debitnotes/delete&code=${this.selected[0]}&type=${this.selected[9]}`, true);
             xhr.send();
         });
     }

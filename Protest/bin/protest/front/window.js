@@ -34,7 +34,7 @@ bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault();
 
 document.body.onbeforeunload = () => {
     if (localStorage.getItem("alive_after_close") != "true") {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.open("GET", "logout", true);
         xhr.send();
 

@@ -201,7 +201,7 @@ btnSettings.onclick = () => {
 };
 
 btnLogout.onclick = () => {
-    let xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
         if (xhr.readyState==4 && xhr.status==200)
             if (xhr.responseText == "ok") location.reload();

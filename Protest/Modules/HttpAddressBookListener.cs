@@ -104,9 +104,9 @@ class HttpAddressBookListener : Http {
             sb.Append(lname + ((char)127).ToString());
             sb.Append(depar + ((char)127).ToString());
             sb.Append(email + ((char)127).ToString());
-            sb.Append(telep.Replace(" ", "") + ((char)127).ToString());
-            sb.Append(mobno.Replace(" ", "") + ((char)127).ToString());
-            sb.Append(mobex.Replace(" ", "") + ((char)127).ToString());
+            sb.Append(telep.Replace(" ", String.Empty) + ((char)127).ToString());
+            sb.Append(mobno.Replace(" ", String.Empty) + ((char)127).ToString());
+            sb.Append(mobex.Replace(" ", String.Empty) + ((char)127).ToString());
         }
 
         lastAddressBookBirthdate = DateTime.Now;

@@ -305,7 +305,7 @@ punchmenu.onclick = () => {
         let index = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
 
         if ((Date.now() - last_activity) > 60 * 1000 * timeMapping[index]) {
-            let xhr = new XMLHttpRequest(); //logout
+            const xhr = new XMLHttpRequest(); //logout
             xhr.onreadystatechange = () => { location.reload(); };
             xhr.open("GET", "logout", true);
             xhr.send();

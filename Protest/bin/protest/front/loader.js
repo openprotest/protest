@@ -150,8 +150,7 @@ function LoadScript(filename, callback) {
 }
 
 function LoadEquip(callback) {
-    let xhr = new XMLHttpRequest();
-
+    const xhr = new XMLHttpRequest();
     xhr.onload = ()=> {
         let split = xhr.responseText.split(String.fromCharCode(127));
         db_equip_ver = parseInt(split[0]);
@@ -173,13 +172,12 @@ function LoadEquip(callback) {
 
     xhr.onerror = ()=> callback("error", "equipment");
 
-    xhr.open("GET", "getequiptable", true);
+    xhr.open("GET", "db/getequiptable", true);
     xhr.send();
 }
 
 function LoadUsers(callback) {
-    let xhr = new XMLHttpRequest();
-
+    const xhr = new XMLHttpRequest();
     xhr.onload = ()=> {
         let split = xhr.responseText.split(String.fromCharCode(127));
         db_users_ver = parseInt(split[0]);
@@ -201,7 +199,7 @@ function LoadUsers(callback) {
 
     xhr.onerror = ()=> callback("error", "users");
 
-    xhr.open("GET", "getuserstable", true);
+    xhr.open("GET", "db/getuserstable", true);
     xhr.send();
 }
 

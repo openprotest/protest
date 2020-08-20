@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 public static class PrintTools {
-    public static byte[] PrintTestPage(string[] para) {
-        string target = "";
+    public static byte[] PrintTestPage(in string[] para) {
+        string target = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("target=")) {
                 target = para[i].Substring(7);

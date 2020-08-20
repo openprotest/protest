@@ -28,7 +28,7 @@ button:active, input[type="button"]:active, input[type="submit"]:active, input[t
 }
 
 button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled, input[type="color"]:disabled {
-    opacity: .6;
+    opacity: .8;
     background-color: rgb(96,96,96) !important;
 }
 

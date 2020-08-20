@@ -142,7 +142,7 @@ class Database {
         foreach (DictionaryEntry o in table) {
             DbEntry entry = (DbEntry)o.Value;
 
-            string line = "";
+            string line = String.Empty;
             int entry_count = 0;
 
             foreach (DictionaryEntry c in entry.hash) {
@@ -292,12 +292,13 @@ class Database {
         return true;
     }
 
-    public static byte[] GetValue(Hashtable table, string[] para) {
-        string filename = "", property = "";
-        for (int i = 1; i < para.Length; i++) {
+    public static byte[] GetValue(Hashtable table, in string[] para) {
+        string filename = String.Empty;
+        string property = String.Empty;
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-            if (para[i].StartsWith("property=")) property = para[i].Substring(9);
-        }
+            else if (para[i].StartsWith("property=")) property = para[i].Substring(9);
+        
         return GetValue(table, filename, property);
     }
     public static byte[] GetValue(Hashtable table, in string filename, string property) {
@@ -311,7 +312,7 @@ class Database {
 
         return GetValue(entry, property);
     }
-    public static byte[] GetValue(DbEntry entry, string property) {
+    public static byte[] GetValue(DbEntry entry, in string property) {
 #if DEBUG
         return Encoding.UTF8.GetBytes("(debug mode)");
 #else
@@ -322,7 +323,7 @@ class Database {
 #endif
     }
 
-    public static byte[] SaveEquip(HttpListenerContext ctx, in string performer) {
+    public static byte[] SaveEquip(in HttpListenerContext ctx, in string performer) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
@@ -334,7 +335,7 @@ class Database {
 
         Hashtable payloadHash = new Hashtable(); //payload as string
 
-        string filename = "";
+        string filename = String.Empty;
         for (int i = 0; i < split.Length - 1; i += 2) {
             split[i] = split[i].ToUpper();
             if (split[i] == ".FILENAME") filename = split[i+1];
@@ -418,7 +419,7 @@ class Database {
         return bytes;
     }
 
-    public static byte[] DeleteEquip(string[] para, in string performer) {
+    public static byte[] DeleteEquip(in string[] para, in string performer) {
         string filename;
         if (para.Length > 1)
             filename = para[1];
@@ -474,7 +475,7 @@ class Database {
 
         Hashtable payloadHash = new Hashtable(); //payload as string
 
-        string filename = "";
+        string filename = String.Empty;
         for (int i = 0; i < split.Length - 1; i += 2) {
             split[i] = split[i].ToUpper();
             if (split[i] == ".FILENAME") filename = split[i+1];
@@ -558,7 +559,7 @@ class Database {
         return bytes;
     }
     
-    public static byte[] DeleteUser(string[] para, in string performer) {
+    public static byte[] DeleteUser(in string[] para, in string performer) {
         string filename;
         if (para.Length > 1)
             filename = para[1];

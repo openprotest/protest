@@ -246,7 +246,7 @@ class Equip extends Window {
                 }, 400);
 
                 div.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -298,7 +298,7 @@ class Equip extends Window {
                         this.ConfirmBox("Server is unavailable.", true);
                 };
                 btnWoL.setAttribute("busy", true);
-                xhr.open("GET", "wakeup&file=" + this.filename, true);
+                xhr.open("GET", "mng/wakeup&file=" + this.filename, true);
                 xhr.send();
             };
         }
@@ -322,7 +322,7 @@ class Equip extends Window {
                                 this.ConfirmBox("Server is unavailable.", true);
                         };
                         btnOff.setAttribute("busy", true);
-                        xhr.open("GET", "shutdown&file=" + this.filename, true);
+                        xhr.open("GET", "mng/shutdown&file=" + this.filename, true);
                         xhr.send();
                     });
                 };
@@ -341,7 +341,7 @@ class Equip extends Window {
                                 this.ConfirmBox("Server is unavailable.", true);
                         };
                         btnReboot.setAttribute("busy", true);
-                        xhr.open("GET", "reboot&file=" + this.filename, true);
+                        xhr.open("GET", "mng/reboot&file=" + this.filename, true);
                         xhr.send();
                     });
                 };
@@ -360,7 +360,7 @@ class Equip extends Window {
                                 this.ConfirmBox("Server is unavailable.", true);
                         };
                         btnLogoff.setAttribute("busy", true);
-                        xhr.open("GET", "logoff&file=" + this.filename, true);
+                        xhr.open("GET", "mng/logoff&file=" + this.filename, true);
                         xhr.send();
                     });
                 };
@@ -392,7 +392,7 @@ class Equip extends Window {
                 const btnMgmt = this.SideButton("res/compmgmt.svgz", "PC Management"); //compmgmt
                 this.sidetools.appendChild(btnMgmt);
                 btnMgmt.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -404,7 +404,7 @@ class Equip extends Window {
                 let btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
                 this.sidetools.appendChild(btnPse);
                 btnPse.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -418,7 +418,7 @@ class Equip extends Window {
                 let btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
                 this.sidetools.appendChild(btnSsh);
                 btnSsh.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -432,7 +432,7 @@ class Equip extends Window {
                 const btnSmb = this.SideButton("res/shared.svgz", "SMB");
                 this.sidetools.appendChild(btnSmb);
                 btnSmb.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -470,7 +470,7 @@ class Equip extends Window {
                 let btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
                 this.sidetools.appendChild(btnRdp);
                 btnRdp.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -484,7 +484,7 @@ class Equip extends Window {
                 let btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
                 this.sidetools.appendChild(btnUvnc);
                 btnUvnc.onclick = () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -499,7 +499,7 @@ class Equip extends Window {
                 this.sidetools.appendChild(btnPrintTest);
                 btnPrintTest.onclick = () => {
                     if (btnPrintTest.hasAttribute("busy")) return;
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4) btnPrintTest.removeAttribute("busy");
                         if (xhr.readyState == 4 && xhr.status == 200)
@@ -511,7 +511,7 @@ class Equip extends Window {
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                     };
                     btnPrintTest.setAttribute("busy", true);
-                    xhr.open("GET", "printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
+                    xhr.open("GET", "mng/printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
                     xhr.send();
                 };
             }
@@ -729,12 +729,12 @@ class Equip extends Window {
                     }
                 };
 
-                xhr.open("GET", "getequiprop&file=" + this.filename + "&property=" + n, true);
+                xhr.open("GET", "db/getequiprop&file=" + this.filename + "&property=" + n, true);
                 xhr.send();
             };
 
             btnStamp.onclick = () => {
-                let xhr = new XMLHttpRequest();
+                const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK                       
                         if (xhr.responseText != "ok")
@@ -1002,7 +1002,7 @@ class Equip extends Window {
                 }
             };
 
-            xhr.open("GET", "fetchequip&host=" + txtFetchHost.value, true);
+            xhr.open("GET", "fetch/fetchequip&host=" + txtFetchHost.value, true);
             xhr.send();
         };
 
@@ -1023,6 +1023,8 @@ class Equip extends Window {
 
     Edit() {
         const dialog = this.DialogBox("100%");
+        if (dialog === null) return;
+
         const innerBox  = dialog.innerBox;
         const buttonBox = dialog.buttonBox;
         const btnOK     = dialog.btnOK;
@@ -1104,9 +1106,9 @@ class Equip extends Window {
             };
 
             if (this.filename)
-                xhr.open("POST", "saveequip&" + this.filename, true);
+                xhr.open("POST", "db/saveequip&" + this.filename, true);
             else
-                xhr.open("POST", "saveequip", true);
+                xhr.open("POST", "db/saveequip", true);
 
             xhr.send(payload);
         });
@@ -1191,7 +1193,7 @@ class Equip extends Window {
 
         };
 
-        xhr.open("GET", `fetchequip&filename=${this.filename}`, true);
+        xhr.open("GET", `fetch/fetchequip&filename=${this.filename}`, true);
         xhr.send();
     }
 
@@ -1209,7 +1211,7 @@ class Equip extends Window {
                     }
             };
 
-            xhr.open("GET", "delequip&" + this.filename, true);
+            xhr.open("GET", "db/delequip&" + this.filename, true);
             xhr.send();
         });
     }

@@ -9,16 +9,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 public static class RaHandler {
-    public static byte[] RaResponse(string[] para, string ip) {
+    public static byte[] RaResponse(in string[] para, in string ip) {
         if (para.Length < 3) return Strings.INF.Array;
         return ip.StartsWith("127.0.0.") ? LocalAgent(para) : RemoteAgent(para, ip);
     }
 
-    public static byte[] LocalAgent(string[] para) {
+    public static byte[] LocalAgent(in string[] para) {
         string method = para[1];
         string filename = para[2];
-        string arg = (para.Length > 3) ? para[3] : "";
-        string property = "";
+        string arg = (para.Length > 3) ? para[3] : String.Empty;
+        string property = String.Empty;
 
         if (filename.Contains(":")) {
             property = filename.Split(':')[1];
@@ -28,7 +28,7 @@ public static class RaHandler {
         if (filename.Length == 0) return Strings.INF.Array;
 
         Database.DbEntry entry;
-        string hostname = "";
+        string hostname = String.Empty;
 
         if (method == "stpu") {
             if (!Database.users.ContainsKey(filename)) return Strings.FLE.Array;
@@ -140,11 +140,11 @@ public static class RaHandler {
         return Strings.OK.Array;
     }
 
-    public static byte[] RemoteAgent(string[] para, string ip) {
+    public static byte[] RemoteAgent(in string[] para, in string ip) {
         string method = para[1];
         string filename = para[2];
-        string arg = (para.Length > 3) ? para[3] : "";
-        string property = "";
+        string arg = (para.Length > 3) ? para[3] : String.Empty;
+        string property = String.Empty;
 
         if (filename.Contains(":")) {
             property = filename.Split(':')[1];
@@ -171,7 +171,7 @@ public static class RaHandler {
 
             Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
 
-            string hostname = "";
+            string hostname = String.Empty;
             if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
             else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
             if (hostname.Length == 0) return Strings.INF.Array;

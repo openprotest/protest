@@ -55,7 +55,7 @@ public static class Scripts {
         FileInfo toolsFile = new FileInfo(FILE_SCRIPT);
         if (!toolsFile.Exists) return;
 
-        string tools_string = "";
+        string tools_string = String.Empty;
 
         try {
             tools_string = File.ReadAllText(FILE_SCRIPT);
@@ -89,7 +89,7 @@ public static class Scripts {
         tools_payload =  Encoding.UTF8.GetBytes(tools_string);
     }
 
-    public static byte[] GetScriptTools() {
+    public static byte[] GetTools() {
         if (tools_payload is null) LoadTools();
         if (!(tools_payload is null)) return tools_payload;
         return null;
@@ -254,7 +254,7 @@ public static class Scripts {
         }
     }
 
-    public static byte[] ListScripts() {
+    public static byte[] List() {
         StringBuilder sb = new StringBuilder();
 
         DirectoryInfo dirScripts = new DirectoryInfo(Strings.DIR_SCRIPTS_SCRIPTS);
@@ -282,8 +282,8 @@ public static class Scripts {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] LoadScript(in string[] para) {
-        string filename = "";
+    public static byte[] Load(in string[] para) {
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -301,8 +301,8 @@ public static class Scripts {
         }
     }
 
-    public static byte[] SaveScript(in HttpListenerContext ctx, in string[] para) {
-        string filename = "";
+    public static byte[] Save(in HttpListenerContext ctx, in string[] para) {
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -333,8 +333,8 @@ public static class Scripts {
         return Strings.OK.Array;
     }
 
-    public static byte[] NewScript(in string[] para) {
-        string filename = "";
+    public static byte[] Create(in string[] para) {
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -348,7 +348,7 @@ public static class Scripts {
             DirectoryInfo dir_scripts = new DirectoryInfo(Strings.DIR_SCRIPTS_SCRIPTS);
             if (!dir_scripts.Exists) dir_scripts.Create();
 
-            File.WriteAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}", "");
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}", String.Empty);
         } catch (Exception ex) {
             Logging.Err(ex);
             return Strings.FAI.Array;
@@ -358,7 +358,7 @@ public static class Scripts {
     }
 
     public static byte[] DeleteScript(in string[] para) {
-        string filename = "";
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -379,7 +379,7 @@ public static class Scripts {
     }
 
     public static byte[] DeleteReport(in string[] para) {
-        string filename = "";
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -400,7 +400,7 @@ public static class Scripts {
     }
 
     public static byte[] GetReport(in string[] para) {
-        string filename = "";
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -436,8 +436,8 @@ public static class Scripts {
         };
     }
 
-    public static byte[] RunScript(in string[] para) {
-        string filename = "";
+    public static byte[] Run(in string[] para) {
+        string filename = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
@@ -450,7 +450,7 @@ public static class Scripts {
         if (filename.Length == 0) return Strings.INV.Array;
         if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Strings.FLE.Array;
 
-        string script = "";
+        string script = String.Empty;
         try {
             script = File.ReadAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}");
         } catch (Exception ex) {
@@ -674,7 +674,7 @@ public static class Scripts {
             foreach (DictionaryEntry c in entry.hash) {
                 int index = header.IndexOf(c.Key.ToString());
                 if (index < 0) continue;
-                row[index] = c.Key.ToString().Contains("PASSWORD") ? "" : ((string[])c.Value)[0];
+                row[index] = c.Key.ToString().Contains("PASSWORD") ? String.Empty : ((string[])c.Value)[0];
             }
             result.array.Add(row);
         }
@@ -705,7 +705,7 @@ public static class Scripts {
             foreach (DictionaryEntry c in entry.hash) {
                 int index = header.IndexOf(c.Key.ToString());
                 if (index < 0) continue;
-                row[index] = c.Key.ToString().Contains("PASSWORD") ? "" : ((string[])c.Value)[0];
+                row[index] = c.Key.ToString().Contains("PASSWORD") ? String.Empty : ((string[])c.Value)[0];
             }
             result.array.Add(row);
         }
@@ -868,7 +868,7 @@ public static class Scripts {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string ip = node.sourceNodes[0].result.array[i][index];
                     string biosName = NetBios.GetBiosNameAsync(ip).Result;
-                    array.Add(new string[] { ip is null ? "" : ip, biosName });
+                    array.Add(new string[] { ip is null ? String.Empty : ip, biosName });
                 }
             }
 
@@ -1078,7 +1078,7 @@ public static class Scripts {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
                     string result = TraceRouteAsync(host, timeout, ttl).Result;
-                    array.Add(new string[] { host is null ? "" : host, result });
+                    array.Add(new string[] { host is null ? String.Empty : host, result });
                 }
             }
         }
@@ -1124,7 +1124,7 @@ public static class Scripts {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
                     string host = node.sourceNodes[0].result.array[i][index];
                     string result = PortScanAsync(host, from, to).Result;
-                    array.Add(new string[] { host is null ? "" : host, result });
+                    array.Add(new string[] { host is null ? String.Empty : host, result });
                 }
             }
         }
@@ -1402,13 +1402,13 @@ public static class Scripts {
                         return false;
                     }
 
-                    if (String.Compare(value, o[index] ?? "") < 0) return true;
+                    if (String.Compare(value, o[index] ?? String.Empty) < 0) return true;
                     return false;
                 }).ToList();
 
             else //is string
                 array = node.sourceNodes[0].result.array.Where(o => {
-                    if (String.Compare(value, o[index] ?? "") < 0) return true;
+                    if (String.Compare(value, o[index] ?? String.Empty) < 0) return true;
                     return false;
                 }).ToList();
         }
@@ -1436,13 +1436,13 @@ public static class Scripts {
                         return false;
                     }
 
-                    if (String.Compare(o[index] ?? "", value) < 0) return true;
+                    if (String.Compare(o[index] ?? String.Empty, value) < 0) return true;
                     return false;
                 }).ToList();
 
             else
                 array = node.sourceNodes[0].result.array.Where(o => {
-                    if (String.Compare(o[index] ?? "", value) < 0) return true;
+                    if (String.Compare(o[index] ?? String.Empty, value) < 0) return true;
                     return false;
                 }).ToList();
         }
@@ -1691,7 +1691,7 @@ public static class Scripts {
 
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
 
-        string mean = "";
+        string mean = String.Empty;
 
         if (index > -1) {
             List<string> sort = new List<string>();
@@ -1721,7 +1721,7 @@ public static class Scripts {
          * [1] column
          * [2] -> */
 
-        string mode = "";
+        string mode = String.Empty;
 
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
 
@@ -1944,7 +1944,7 @@ public static class Scripts {
                     while (k.StartsWith(c.ToString()))
                         k = k.Substring(1);
 
-                string value = "";
+                string value = String.Empty;
                 for (int c = 0; c < v.Length; c++)
                     if (v[c] < 127) value += v[c];
 
@@ -2044,10 +2044,10 @@ public static class Scripts {
     }
 
     private static async Task<string> TraceRouteAsync(string host, int timeout, short ttl) {
-        if (host is null) return "";
+        if (host is null) return String.Empty;
 
-        string route = "";
-        string lastAddress = "";
+        string route = String.Empty;
+        string lastAddress = String.Empty;
 
         using (System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping())
             for (short i = 1; i < ttl; i++)
@@ -2076,11 +2076,11 @@ public static class Scripts {
     }
 
     private static async Task<string> PortScanAsync(string host, int from, int to) {
-        if (host is null) return "";
+        if (host is null) return String.Empty;
 
         bool[] t = await  PortScan.PortsScanAsync(host, from, to);
 
-        string ports = "";
+        string ports = String.Empty;
         for (int i = 0; i < t.Length; i++)
             if (t[i])
                 ports += (from + i).ToString() + ";";

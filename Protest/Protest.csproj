@@ -75,12 +75,12 @@
     <Compile Include="Modules\HttpAddressBookListener.cs" />
     <Compile Include="Modules\HttpMainListener.cs" />
     <Compile Include="Modules\Logging.cs" />
-    <Compile Include="Modules\Tools\LastSeen.cs" />
+    <Compile Include="Modules\LastSeen.cs" />
     <Compile Include="Modules\LiveInfo.cs" />
     <Compile Include="Modules\Tools\Ntp.cs" />
     <Compile Include="Modules\Tools\PasswordStrength.cs" />
     <Compile Include="Modules\Tools\PrintTools.cs" />
-    <Compile Include="Modules\Tools\Fetch.cs" />
+    <Compile Include="Modules\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
     <Compile Include="Modules\Tools\SpeedTest.cs" />
     <Compile Include="Modules\Unifi.cs" />
@@ -97,6 +97,7 @@
     <Compile Include="Modules\Tools\TraceRoute.cs" />
     <Compile Include="Modules\Tools\Wmi.cs" />
     <Compile Include="Modules\Tools\WoL.cs" />
+    <Compile Include="Modules\Watchdog.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -114,7 +114,7 @@ class Scripts extends Tabs {
                 event.stopPropagation();
                 const btnOK = this.ConfirmBox("Are you sure you want to delete " + name);
                 if (btnOK) btnOK.addEventListener("click", () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) {
                             if (xhr.responseText == "ok")
@@ -125,7 +125,7 @@ class Scripts extends Tabs {
                         } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                             this.ConfirmBox("Server is unavailable.", true);
                     };
-                    xhr.open("GET", "delscript&filename=" + name, true);
+                    xhr.open("GET", "scripts/delete&filename=" + name, true);
                     xhr.send();
                 });
             };
@@ -177,7 +177,7 @@ class Scripts extends Tabs {
                 event.stopPropagation();
                 const btnOK = this.ConfirmBox("Are you sure you want to delete " + name);
                 if (btnOK) btnOK.addEventListener("click", () => {
-                    let xhr = new XMLHttpRequest();
+                    const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) {
                             if (xhr.responseText == "ok")
@@ -188,7 +188,7 @@ class Scripts extends Tabs {
                         } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                             this.ConfirmBox("Server is unavailable.", true);
                     };
-                    xhr.open("GET", "delreport&filename=" + name, true);
+                    xhr.open("GET", "scripts/delreport&filename=" + name, true);
                     xhr.send();
                 });
             };
@@ -251,7 +251,7 @@ class Scripts extends Tabs {
         innerBox.appendChild(txtFilename);
 
         const create = () => {
-            let xhr = new XMLHttpRequest();
+            const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText == "ok")
@@ -262,7 +262,7 @@ class Scripts extends Tabs {
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
-            xhr.open("GET", "newscript&filename=" + txtFilename.value, true);
+            xhr.open("GET", "scripts/create&filename=" + txtFilename.value, true);
             xhr.send();
         };
 
@@ -282,7 +282,7 @@ class Scripts extends Tabs {
     }
 
     ListScripts() {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
@@ -313,7 +313,7 @@ class Scripts extends Tabs {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "listscripts", true);
+        xhr.open("GET", "scripts/list", true);
         xhr.send();
     }
 }
@@ -339,7 +339,7 @@ class ScriptReport extends Window {
 
         let text = "";
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 text = xhr.responseText;
@@ -359,7 +359,7 @@ class ScriptReport extends Window {
                 if (btnOK) btnOK.addEventListener("click", () => { this.Close(); });
             }
         };
-        xhr.open("GET", "getreport&filename=" + filename, true);
+        xhr.open("GET", "scripts/getreport&filename=" + filename, true);
         xhr.send();
 
         this.btnDownload = document.createElement("div");

@@ -8,7 +8,7 @@ using System.Text;
 public static class DebitNotes {
     static readonly object DEBIT_LOCK = new object();
 
-    public static byte[] GetDebitNotes(in string[] para) {
+    public static byte[] Get(in string[] para) {
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DEBIT);
         if (!dir.Exists) return Strings.FLE.Array;
 
@@ -17,13 +17,12 @@ public static class DebitNotes {
         string[] keywords = null;
         string filters = String.Empty;
         string last = String.Empty;
-        for (int i = 0; i < para.Length; i++) {
-            if (para[i].StartsWith("from="))         from = para[i].Substring(5);
-            if (para[i].StartsWith("to="))             to = para[i].Substring(3);
-            if (para[i].StartsWith("keywords=")) keywords = Strings.EscapeUrl(para[i].Substring(9)).Split(' ');
-            if (para[i].StartsWith("filters="))   filters = para[i].Substring(8);
-            if (para[i].StartsWith("last="))         last = para[i].Substring(5);
-        }
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("from="))              from = para[i].Substring(5);
+            else if (para[i].StartsWith("to="))             to = para[i].Substring(3);
+            else if (para[i].StartsWith("keywords=")) keywords = Strings.EscapeUrl(para[i].Substring(9)).Split(' ');
+            else if (para[i].StartsWith("filters="))   filters = para[i].Substring(8);
+            else if (para[i].StartsWith("last="))         last = para[i].Substring(5);
 
         bool shortterm = false, longterm = false, returned = false;
         if (filters.Length > 0) {
@@ -112,7 +111,7 @@ public static class DebitNotes {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] GetDebitNoteTemplate() {
+    public static byte[] GetTemplate() {
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DEBIT_TEMPLATE);
         if (!dir.Exists) return Strings.FLE.Array;
 
@@ -129,38 +128,42 @@ public static class DebitNotes {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] CreateDebitNote(in HttpListenerContext ctx, string performer) {
-        string firstname = "", lastname = "", title = "", department = "", it = "", equip = "";
+    public static byte[] Create(in HttpListenerContext ctx, string performer) {
+        string firstname = String.Empty;
+        string lastname = String.Empty;
+        string title = String.Empty;
+        string department = String.Empty;
+        string it = String.Empty; 
+        string equip = String.Empty;
         int template = 0;
         bool isShortPending = false;
 
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string[] para = reader.ReadToEnd().Split('&');
-            for (int i = 0; i < para.Length; i++) {
+            for (int i = 0; i < para.Length; i++)
                 if (para[i].StartsWith("fn=")) firstname = para[i].Substring(3);
-                if (para[i].StartsWith("ln=")) lastname = para[i].Substring(3);
-                if (para[i].StartsWith("tl=")) title = para[i].Substring(3);
-                if (para[i].StartsWith("dp=")) department = para[i].Substring(3);
-                if (para[i].StartsWith("it=")) it = para[i].Substring(3);
-                if (para[i].StartsWith("eq=")) equip = para[i].Substring(3);
-                if (para[i].StartsWith("sh=")) isShortPending = para[i].Substring(3) == "true";
-                if (para[i].StartsWith("tt=") && para[i].Length > 3) template = Int32.Parse(para[i].Substring(3));
-            }
+                else if (para[i].StartsWith("ln=")) lastname = para[i].Substring(3);
+                else if (para[i].StartsWith("tl=")) title = para[i].Substring(3);
+                else if (para[i].StartsWith("dp=")) department = para[i].Substring(3);
+                else if (para[i].StartsWith("it=")) it = para[i].Substring(3);
+                else if (para[i].StartsWith("eq=")) equip = para[i].Substring(3);
+                else if (para[i].StartsWith("sh=")) isShortPending = para[i].Substring(3) == "true";
+                else if (para[i].StartsWith("tt=") && para[i].Length > 3) template = Int32.Parse(para[i].Substring(3));
         }
 
         DateTime now = DateTime.Now;
         string name = DateTime.Now.Ticks.ToString();
 
-        string[] templateList = Encoding.UTF8.GetString(GetDebitNoteTemplate()).Split((char)127);
+        string[] templateList = Encoding.UTF8.GetString(GetTemplate()).Split((char)127);
 
-        string data = "";
+        string data = String.Empty;
         data += $"{firstname}{(char)127}";
         data += $"{lastname}{(char)127}";
         data += $"{title}{(char)127}";
         data += $"{department}{(char)127}";
         data += $"{now:dd-MM-yyyy}{(char)127}";
         data += $"{it}{(char)127}";
-        data += ((template * 2 + 1 > templateList.Length) ? "" : templateList[template * 2 + 1]) + (char)127;
+        data += ((template * 2 + 1 > templateList.Length) ? String.Empty : templateList[template * 2 + 1]) + (char)127;
         data += $"{equip}{(char)127}";
         //data += $"{isShortPending.ToString().ToLower()}";
 
@@ -191,14 +194,13 @@ public static class DebitNotes {
         return Encoding.UTF8.GetBytes(name);
     }
 
-    public static byte[] MarkDebitNote(in string[] para, in string performer) {
+    public static byte[] Mark(in string[] para, in string performer) {
         string code = String.Empty;
         string type = String.Empty;
-        for (int i = 0; i < para.Length; i++) {
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("code=")) code = para[i].Substring(5);
-            if (para[i].StartsWith("type=")) type = para[i].Substring(5);
-        }
-
+            else if (para[i].StartsWith("type=")) type = para[i].Substring(5);
+        
         if (code.Length == 0 || type.Length == 0) return Strings.INF.Array;
 
         FileInfo file = new FileInfo($"{(type == "short" ? Strings.DIR_DEBIT_SHORT : Strings.DIR_DEBIT_LONG)}\\{code}");
@@ -207,20 +209,23 @@ public static class DebitNotes {
         DirectoryInfo dirReturned = new DirectoryInfo(Strings.DIR_DEBIT_RETURNED);
         if (!dirReturned.Exists) dirReturned.Create();
 
-        lock (DEBIT_LOCK) file.MoveTo(dirReturned.FullName + "\\" + code);
+        try {
+            lock (DEBIT_LOCK) file.MoveTo(dirReturned.FullName + "\\" + code);
+        } catch (Exception ex){
+            return Encoding.UTF8.GetBytes(ex.Message);
+        }
 
         Logging.Action(performer, $"Mark a debit note as returned: {code}");
 
         return Strings.OK.Array;
     }
 
-    public static byte[] DeleteDebitNote(in string[] para, in string performer) {
+    public static byte[] Delete(in string[] para, in string performer) {
         string code = String.Empty;
         string type = String.Empty;
-        for (int i = 0; i < para.Length; i++) {
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("code=")) code = para[i].Substring(5);
-            if (para[i].StartsWith("type=")) type = para[i].Substring(5);
-        }
+            else if (para[i].StartsWith("type=")) type = para[i].Substring(5);
 
         if (code.Length == 0 || type.Length == 0) return Strings.INF.Array;
 

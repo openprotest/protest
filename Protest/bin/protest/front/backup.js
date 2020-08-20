@@ -41,6 +41,8 @@ class Backup extends Window {
 
     CreateBackup() {
         const dialog = this.DialogBox("125px");
+        if (dialog === null) return;
+
         const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
         const buttonBox = dialog.buttonBox;
@@ -83,7 +85,7 @@ class Backup extends Window {
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);
             };
-            xhr.open("GET", `createbackup&name=${txtName.value}`, true);
+            xhr.open("GET", `backup/create&name=${txtName.value}`, true);
             xhr.send();
             Ok_click();
         };
@@ -136,7 +138,7 @@ class Backup extends Window {
                                 if (xhrk.readyState == 4 && xhrk.status == 200 && xhrk.responseText == "ok")
                                     this.list.removeChild(element);
                             };
-                            xhrk.open("GET", "deletebackup&name=" + split[i], true);
+                            xhrk.open("GET", "backup/delete&name=" + split[i], true);
                             xhrk.send();
                         }));
                     };
@@ -145,7 +147,7 @@ class Backup extends Window {
 
         };
 
-        xhr.open("GET", "getbackups", true);
+        xhr.open("GET", "backup/get", true);
         xhr.send();
     }
 }

@@ -8,9 +8,9 @@ using System.Text;
 class Documentation {
     static readonly object DOC_LOCK = new object();
 
-    public static byte[] GetDocs(in string[] para) {
+    public static byte[] Get(in string[] para) {
         string[] keywords = null;
-        for (int i = 0; i < para.Length; i++)
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("keywords=")) keywords = Strings.EscapeUrl(para[i].Substring(9)).Split(' ');
 
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DOCUMENTATION);
@@ -48,7 +48,7 @@ class Documentation {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] CreateDoc(in HttpListenerContext ctx, in string performer) {
+    public static byte[] Create(in HttpListenerContext ctx, in string performer) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string[] payload = reader.ReadToEnd().Split((char)127);
 
@@ -92,7 +92,7 @@ class Documentation {
             return Encoding.UTF8.GetBytes("unsafe content. scripts are not allowed.");
 
         int idx = 0;
-        string text = "";
+        string text = String.Empty;
         while (idx < payload[1].Length) {
 
             if (payload[1][idx] == '<') {
@@ -101,7 +101,7 @@ class Documentation {
                     for (int i = 0; i < split.Length; i++)
                         if (!keywords.Contains(split[i]))
                             keywords.Add(split[i]);                    
-                    text = "";
+                    text = String.Empty;
                 }
 
                 int tagStop = payload[1].IndexOf('>', idx);
@@ -146,7 +146,7 @@ class Documentation {
 
     public static byte[] PreviewDoc(in string[] para, bool serveGZip = false) {
         string name = String.Empty;
-        for (int i = 0; i < para.Length; i++)
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
         if (name.Length == 0) return Strings.INF.Array;
@@ -163,9 +163,9 @@ class Documentation {
         return Strings.FAI.Array;
     }
 
-    public static byte[] DeleteDoc(in string[] para, in string performer) {
+    public static byte[] Delete(in string[] para, in string performer) {
         string name = String.Empty;
-        for (int i = 0; i < para.Length; i++)
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
         lock (DOC_LOCK)

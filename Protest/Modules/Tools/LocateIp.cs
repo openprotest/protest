@@ -13,7 +13,7 @@ public static class LocateIp {
         if (payload.Length == 0) return Strings.INV.Array;
         return Locate(payload);
     }
-    public static byte[] Locate(string[] para) {
+    public static byte[] Locate(in string[] para) {
         if (para.Length < 2) return null;
         string ip = para[1];
         return Locate(ip);
@@ -144,10 +144,10 @@ public static class LocateIp {
         }
     }
 
-    public static bool IsProxy(IPAddress ip) {
+    public static bool IsProxy(in IPAddress ip) {
         return IsProxy(ip.ToString());
     }
-    public static bool IsProxy(string ip) {
+    public static bool IsProxy(in string ip) {
         string[] split = ip.Split('.');
         if (split.Length != 4) { //if not an ip, do a dns resolve
 

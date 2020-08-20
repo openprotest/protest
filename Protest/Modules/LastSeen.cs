@@ -6,7 +6,7 @@ using System.Text;
 
 public static class LastSeen {
 
-    public static void Seen(string ip) {
+    public static void Seen(in string ip) {
         try {
             string filename = $"{Strings.DIR_LASTSEEN}\\{ip}.txt";
             File.WriteAllText(filename, DateTime.Now.ToString(Strings.DATETIME_FORMAT_LONG));
@@ -15,7 +15,7 @@ public static class LastSeen {
         }
     }
 
-    public static byte[] HasBeenSeen(string[] para, bool recordOnly = false) {
+    public static byte[] HasBeenSeen(in string[] para, bool recordOnly = false) {
         string ip = null;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);

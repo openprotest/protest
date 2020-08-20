@@ -8,14 +8,14 @@ using System.Text;
 public static class Dhcp {
     //https://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml
 
-    public static byte[] DiscoverDhcp(string[] para) {
+    public static byte[] DiscoverDhcp(in string[] para) {
         int timeout = 2000;
-        string mac = "";
+        string mac = String.Empty;
         bool accept = false;
         for (int i = 0; i < para.Length; i++) {
             if (para[i].StartsWith("timeout=")) int.TryParse(para[i].Substring(8), out timeout);
-            if (para[i].StartsWith("mac=")) mac = para[i].Substring(4);
-            if (para[i].StartsWith("accept=")) accept = para[i].Substring(7) == "true";
+            else if (para[i].StartsWith("mac=")) mac = para[i].Substring(4);
+            else if (para[i].StartsWith("accept=")) accept = para[i].Substring(7) == "true";
         }
 
         StringBuilder sb = new StringBuilder();
@@ -146,8 +146,8 @@ public static class Dhcp {
         dgram[p++] = 0x00;
 
         sb.AppendLine($"client mac address:{mac}");
-        mac = mac.Replace(":", "");
-        mac = mac.Replace("-", "");
+        mac = mac.Replace(":", String.Empty);
+        mac = mac.Replace("-", String.Empty);
         if (mac.Length == 12) {
             dgram[p++] = Convert.ToByte(mac.Substring(0, 2), 16); //client mac address
             dgram[p++] = Convert.ToByte(mac.Substring(2, 2), 16);
@@ -290,8 +290,8 @@ public static class Dhcp {
         dgram[p++] = 0x00;
 
         sb.AppendLine($"client mac address:{mac}");
-        mac = mac.Replace(":", "");
-        mac = mac.Replace("-", "");
+        mac = mac.Replace(":", String.Empty);
+        mac = mac.Replace("-", String.Empty);
         if (mac is null || mac.Length == 12) {
             dgram[p++] = Convert.ToByte(mac.Substring(0, 2), 16); //client mac address
             dgram[p++] = Convert.ToByte(mac.Substring(2, 2), 16);
@@ -397,7 +397,7 @@ public static class Dhcp {
     }
 
     private static void Offer(StringBuilder sb, byte[] buffer, out string offerMac, out byte[] offerIp, out byte[] offerDhcpServer) {
-        offerMac = "";
+        offerMac = String.Empty;
         offerIp = new byte[4];
         offerDhcpServer = new byte[4];
 

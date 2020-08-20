@@ -113,7 +113,7 @@ class Log extends Window {
             }
         };
 
-        xhr.open("GET", "getlog", true);
+        xhr.open("GET", "log/get", true);
         xhr.send();
     }
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 public static class Ntp {
 
-    public static byte[] NtpRequest(string[] para) {
+    public static byte[] NtpRequest(in string[] para) {
         string server = "time.nist.gov";
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("server=")) server = para[i].Substring(7);

@@ -15,7 +15,7 @@ public static class Wmi {
     //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-authenticationlevel
 
     public static ManagementScope WmiScope(in string host) {
-        return WmiScope(host, ImpersonationLevel.Impersonate, "", "");
+        return WmiScope(host, ImpersonationLevel.Impersonate, String.Empty, String.Empty);
     }
     public static ManagementScope WmiScope(in string host, in string impersonation, in string username, in string password) {
         ImpersonationLevel impersonationLevel = ImpersonationLevel.Default;
@@ -66,14 +66,14 @@ public static class Wmi {
             return value;
         } catch { }
 
-        return "";
+        return String.Empty;
     }
 
     private static string FormatProperty(PropertyData property, FormatMethodPtr format = null) {
         if (property.IsArray) {
             object[] array = (object[])property.Value;
 
-            string value = "";
+            string value = String.Empty;
             for (int i = 0; i < array?.Length; i++)
                 if (array[i].ToString().Length > 0)
                     value += (value.Length == 0) ? array[i].ToString() : "; " + array[i].ToString();
@@ -82,18 +82,18 @@ public static class Wmi {
         }
 
         if (property.Type.ToString() == "DateTime") {
-            return DateTimeToString(property.Value?.ToString() ?? "");
+            return DateTimeToString(property.Value?.ToString() ?? String.Empty);
         } else {
             if (format != null && property.Value != null) return format.Invoke(property.Value.ToString());
-            return property.Value?.ToString() ?? "";
+            return property.Value?.ToString() ?? String.Empty;
         }
     }
 
     public static string WmiGet(in string host, in string classname, in string property, in bool isArray, FormatMethodPtr format = null) {
         ManagementScope scope = WmiScope(host);
-        if (scope is null) return "";
+        if (scope is null) return String.Empty;
         WmiGet(scope, classname, property, isArray, format);
-        return "";
+        return String.Empty;
     }
     public static string WmiGet(in ManagementScope scope, in string classname, in string property, in bool isArray, FormatMethodPtr format = null) {
         try {
@@ -101,12 +101,12 @@ public static class Wmi {
             return WmiGet(moc, property, isArray, format);
         } catch { }
 
-        return "";
+        return String.Empty;
     }
     public static string WmiGet(in ManagementObjectCollection moc, in string property, in bool isArray, FormatMethodPtr format = null) {
         if (isArray) {
 
-            string value = "";
+            string value = String.Empty;
             foreach (ManagementObject o in moc) {
                 string v = ManagementObjectToString(o, property, format);
 
@@ -133,7 +133,7 @@ public static class Wmi {
 
         }
 
-        return "";
+        return String.Empty;
     }
 
     private static void ContentBuilderAddValue(in ManagementObjectCollection moc, in string property, in string label, in Hashtable hash, FormatMethodPtr format = null) {
@@ -148,14 +148,14 @@ public static class Wmi {
     public static Hashtable WmiFetch(string host) {
         Hashtable hash = new Hashtable();
 
-        string type = "";
+        string type = String.Empty;
 
         ManagementScope scope = WmiScope(host);
         if (!(scope is null)) {
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure")).Get();
-                string chassi = "";
+                string chassi = String.Empty;
                 foreach (ManagementObject o in moc) {
                     short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
                     chassi = ChassiToString(chassisTypes);
@@ -264,9 +264,9 @@ public static class Wmi {
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
-                string value = "";
+                string value = String.Empty;
                 foreach (ManagementObject o in moc) {
-                    string caption = o.GetPropertyValue("Caption").ToString().Replace(":", "");
+                    string caption = o.GetPropertyValue("Caption").ToString().Replace(":", String.Empty);
                     UInt64 size = UInt64.Parse((string)o.GetPropertyValue("Size"));
                     UInt64 used = size - (UInt64)o.GetPropertyValue("FreeSpace");
                     value += $"{caption}:{Math.Round((double)used / 1024 / 1024 / 1024, 1)}:{Math.Round((double)size / 1024 / 1024 / 1024, 1)}:GB:";
@@ -306,9 +306,9 @@ public static class Wmi {
         return hash;
     }
 
-    public static byte[] WmiQuery(string[] para) {
-        string host = "";
-        string query = "";
+    public static byte[] WmiQuery(in string[] para) {
+        string host = String.Empty;
+        string query = String.Empty;
         for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("target=")) host = Strings.EscapeUrl(para[i].Substring(7));
             if (para[i].StartsWith("q=")) query = Strings.EscapeUrl(para[i].Substring(2));
@@ -353,8 +353,8 @@ public static class Wmi {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] WmiKillProcess(string[] para) {
-        string host = "";
+    public static byte[] WmiKillProcess(in string[] para) {
+        string host = String.Empty;
         int pid = -1;
         for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("target=")) host = Strings.EscapeUrl(para[i].Substring(7));
@@ -423,13 +423,12 @@ public static class Wmi {
     }
 
     public static string Wmi_Win32Shutdown(in string[] para, in int flags) {
-        string host = "";
-        string filename = "";
-
-        for (int i = 1; i < para.Length; i++) {
+        string host = String.Empty;
+        string filename = String.Empty;
+        for (int i = 1; i < para.Length; i++) 
             if (para[i].StartsWith("host=")) host = para[i].Substring(5);
-            if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-        }
+            else if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
+        
 
         if (host.Length == 0 && Database.equip.ContainsKey(filename)) {
             Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
@@ -479,7 +478,7 @@ public static class Wmi {
             35 => "Mini PC",
             36 => "Stick PC",
 
-            _ => ""
+            _ => String.Empty
         };
     }
 
@@ -560,7 +559,7 @@ public static class Wmi {
 
     public static string RamType(string value) {
         return value switch {
-            "0" => "",
+            "0" => String.Empty,
 
             "2" => "DRAM",
             "3" => "Synchronous DRAM",
@@ -586,7 +585,7 @@ public static class Wmi {
             "23" => "",
             "24" => "DDR3",
             "25" => "FBD2",
-            _ => ""
+            _ => String.Empty
         };
     }
 
@@ -616,7 +615,7 @@ public static class Wmi {
             "21" => "BGA",
             "22" => "FPBGA",
             "23" => "LGA",
-            _ => ""
+            _ => String.Empty
         };
     }
 
@@ -631,11 +630,11 @@ public static class Wmi {
     public static string ProcessorString(string value) {
         string v = value;
 
-        v = v.Replace("(R)", "");
-        v = v.Replace("(C)", "");
-        v = v.Replace("(TM)", "");
+        v = v.Replace("(R)", String.Empty);
+        v = v.Replace("(C)", String.Empty);
+        v = v.Replace("(TM)", String.Empty);
 
-        v = v.Replace("CPU", "");
+        v = v.Replace("CPU", String.Empty);
 
         if (v.Contains("@"))
             v = v.Split('@')[0];
@@ -647,12 +646,12 @@ public static class Wmi {
     }
 
     public static string IPv4Filter(string value) {
-        if (!value.Contains(".")) return "";
+        if (!value.Contains(".")) return String.Empty;
         return value;
     }
 
     public static string IPv4MaskFilter(string value) {
-        if (!value.Contains(".")) return "";
+        if (!value.Contains(".")) return String.Empty;
         return value;
     }
 }

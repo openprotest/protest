@@ -81,7 +81,7 @@ class MacLookup extends Console {
 
         this.args.entries.push(macaddr);
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let label = document.createElement("div");

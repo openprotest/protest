@@ -172,7 +172,7 @@ class Wmi extends Window {
     }
 
     GetWmiClasses() {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200)
                 this.wmi_classes = JSON.parse(xhr.responseText);
@@ -332,7 +332,7 @@ class Wmi extends Window {
         waitbox.className = "waitbox";
         waitbox.style.marginTop = "100px";
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 this.divPlot.innerHTML = "";
@@ -362,7 +362,7 @@ class Wmi extends Window {
         this.divPlot.innerHTML = "";
         this.content.appendChild(waitbox);
 
-        xhr.open("GET", "wmiquery&target=" + this.txtTarget.value + "&q=" + q, true);
+        xhr.open("GET", "mng/wmiquery&target=" + this.txtTarget.value + "&q=" + q, true);
         xhr.send();
     }
 
@@ -429,7 +429,7 @@ class Wmi extends Window {
                             btnTerminate.onclick = event => {
                                 btnTerminate.disabled = true;
                                 let pid = event.srcElement.getAttribute("pid");
-                                let xhr = new XMLHttpRequest();
+                                const xhr = new XMLHttpRequest();
                                 xhr.onreadystatechange = () => {
                                     if (xhr.readyState == 4 && xhr.status == 200)
                                         if (xhr.responseText == "ok")
@@ -439,7 +439,7 @@ class Wmi extends Window {
                                             td.innerHTML = xhr.responseText;
                                         }
                                 };
-                                xhr.open("GET", "killprocess&target=" + targetHost + "&pid=" + pid, true);
+                                xhr.open("GET", "mng/killprocess&target=" + targetHost + "&pid=" + pid, true);
                                 xhr.send();
                             };
                             break;

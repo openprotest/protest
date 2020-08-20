@@ -22,8 +22,8 @@ const Script_GetColumns = callback => {
             return;
         }
 
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "getscripttools", true);
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "mng/getscripttools", true);
         xhr.onload = () => {
             Script_ToolsArray = [];
 
@@ -59,8 +59,8 @@ const Script_GetColumns = callback => {
     });
 
     let pPtUser = new Promise((resolve, reject) => {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "getusercolumns", true);
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "mng/getusercolumns", true);
         xhr.onload = () => {
             Script_PtUserColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -70,8 +70,8 @@ const Script_GetColumns = callback => {
     });
 
     let pPtEquip = new Promise((resolve, reject) => {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "getequipcolumns", true);
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "mng/getequipcolumns", true);
         xhr.onload = () => {
             Script_PtEquipColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -81,8 +81,8 @@ const Script_GetColumns = callback => {
     });
 
     let pAdWorkstation = new Promise((resolve, reject) => {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "getadworkstationcolumns", true);
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "mng/getadworkstationcolumns", true);
         xhr.onload = () => {
             Script_AdWorkstationColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -92,8 +92,8 @@ const Script_GetColumns = callback => {
     });
 
     let pAdUser = new Promise((resolve, reject) => {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "getadusercolumns", true);
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "mng/getadusercolumns", true);
         xhr.onload = () => {
             Script_AdUserColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -103,8 +103,8 @@ const Script_GetColumns = callback => {
     });
 
     let pAdGroup = new Promise((resolve, reject) => {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "getadgroupcolumn", true);
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "mng/getadgroupcolumn", true);
         xhr.onload = () => {
             Script_AdGroupsColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -332,7 +332,7 @@ class ScriptEditor extends Window {
     }
 
     LoadScript() {
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let lines = xhr.responseText.split("\n");
@@ -385,7 +385,7 @@ class ScriptEditor extends Window {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "loadscript&filename=" + this.args.file, true);
+        xhr.open("GET", "scripts/load&filename=" + this.args.file, true);
         xhr.send();
     }
 
@@ -445,7 +445,7 @@ class ScriptEditor extends Window {
             payload += "l" + String.fromCharCode(127) + source + String.fromCharCode(127) + destination + "\n";
         }
 
-        let xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 if (callback) callback("ok");
@@ -459,7 +459,7 @@ class ScriptEditor extends Window {
         let now = new Date();
         if (this.args.file === null) this.args.file = now.getFullYear() + "_" + now.getMonth() + "_" + now.getDate() + "_" + now.getHours() + "_" + now.getMinutes() + "_" + now.getTime();
 
-        xhr.open("POST", "savescript&filename=" + this.args.file, true);
+        xhr.open("POST", "scripts/save&filename=" + this.args.file, true);
         xhr.send(payload);
     }
 
@@ -475,7 +475,7 @@ class ScriptEditor extends Window {
                 return;
             }
 
-            let xhr = new XMLHttpRequest();
+            const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText != "ok")
@@ -485,7 +485,7 @@ class ScriptEditor extends Window {
                     this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", "runscript&filename=" + this.args.file, true);
+            xhr.open("GET", "scripts/run&filename=" + this.args.file, true);
             xhr.send();
         });
     }

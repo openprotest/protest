@@ -13,7 +13,7 @@ public static class MacLookup {
         if (payload.Length == 0) return Strings.INV.Array;
         return Lookup(payload);
     }
-    public static byte[] Lookup(string[] para) {
+    public static byte[] Lookup(in string[] para) {
         if (para.Length < 2) return null;
         string mac = para[1];
         return Lookup(mac);

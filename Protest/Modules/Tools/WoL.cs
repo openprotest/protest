@@ -5,15 +5,14 @@ using System.Text;
 
 public static class WoL {
 
-    public static byte[] Wakeup(string[] para) {
-        string filename = "";
-        string mac = "";
-        string ip = "";
+    public static byte[] Wakeup(in string[] para) {
+        string filename = String.Empty;
+        string mac = String.Empty;
+        string ip = String.Empty;
         string mask = "255.255.255.0";
 
-        for (int i = 0; i < para.Length; i++) {
+        for (int i = 1; i < para.Length; i++) {
             if (para[i].StartsWith("file=")) filename = para[i].Substring(5);
-
             if (para[i].StartsWith("mac=")) mac = para[i].Substring(4);
             if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);
             if (para[i].StartsWith("mask=")) mask = para[i].Substring(5);
@@ -32,7 +31,7 @@ public static class WoL {
         return Wakeup(mac, ip, mask);
     }
 
-    public static byte[] Wakeup(string mac, string ip, string mask) {
+    public static byte[] Wakeup(in string mac, string ip, string mask) {
         if (ip.Contains(";")) ip = ip.Substring(0, ip.IndexOf(";")).Trim();
         if (mask.Contains(";")) mask = mask.Substring(0, mask.IndexOf(";")).Trim();
         return Wakeup(mac, IPAddress.Parse(ip), IPAddress.Parse(mask));
