@@ -139,7 +139,7 @@ class Fetch extends Tabs {
                 }
             }
         };
-        xhr.open("GET", "getfetchtaskstatus", true);
+        xhr.open("GET", "fetch/gettaskstatus", true);
         xhr.send();
     }
 

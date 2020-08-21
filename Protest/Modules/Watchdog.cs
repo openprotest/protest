@@ -73,15 +73,6 @@ public static class Watchdog {
         return Strings.OK.Array;
     }
 
-    public static byte[] Get(in string[] para, in string performer) {
-        DirectoryInfo dirWatchdog = new DirectoryInfo(Strings.DIR_WATCHDOG);
-        if (!dirWatchdog.Exists) return Strings.FAI.Array;
-
-
-        return null;
-    }
-
-
     public static async void WsView(HttpListenerContext ctx, string remoteIp) {
         WebSocketContext wsc;
         WebSocket ws;
@@ -116,14 +107,27 @@ public static class Watchdog {
                     return;
                 }
 
-                string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
-                if (msg.Length < 2) continue;                
-
-                switch (msg[0]) {
+                string msg = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+                if (msg.Length == 0) continue;                
+                
+                switch (msg) {
                     case "list":
+                        DirectoryInfo dirWatchdog = new DirectoryInfo(Strings.DIR_WATCHDOG);
+                        if (!dirWatchdog.Exists) break;
+
+                        StringBuilder sb = new StringBuilder();
+                        try {
+                            foreach (DirectoryInfo o in dirWatchdog.GetDirectories())
+                                sb.Append($"{o.Name}{(char)127}");
+                        } catch { }
+
+                        ArraySegment<byte> segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(sb.ToString()));
+                        await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+
                         break;
 
                     case "get":
+
                         break;
                 }
             }

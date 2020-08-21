@@ -216,7 +216,6 @@ class HttpMainListener : Http {
                 case "watchdog/settings" : buffer = Watchdog.Settings(para, performer); break;
                 case "watchdog/add"      : buffer = Watchdog.Add(para, performer); break;
                 case "watchdog/remove"   : buffer = Watchdog.Remove(para, performer); break;
-                case "watchdog/get"      : buffer = Watchdog.Get(para, performer); break;
 
                 case "backup/get": buffer = Backup.Get(); break;
                 case "backup/create": buffer = Backup.Create(para, performer); break;

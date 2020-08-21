@@ -129,6 +129,7 @@ class Equip extends Window {
         this.scroll.appendChild(this.properties);
 
         this.rightside = document.createElement("div");
+        this.rightside.style.display = "none";
         this.rightside.className = "db-rightside";
         this.content.appendChild(this.rightside);
     }
@@ -139,6 +140,7 @@ class Equip extends Window {
             this.sidetools.style.width = "36px";
             this.scroll.style.left = "56px";
             this.buttons.style.left = "56px";
+
         } else {
             this.sidetools.style.width = "";
             this.scroll.style.left = "";
@@ -152,6 +154,7 @@ class Equip extends Window {
 
             this.rightside.appendChild(this.live);
             this.rightside.appendChild(this.liveinfo);
+
         } else {
             if (this.rightside.style.display === "none") return;
             this.rightside.style.display = "none";

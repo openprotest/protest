@@ -431,9 +431,8 @@ public static class Fetch {
         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
-        Task<HttpResponseMessage> res = client.GetAsync("db/getequiplist");
+        Task<HttpResponseMessage> res = client.GetAsync("db/getequiptable");
         string payload = res.Result.Content.ReadAsStringAsync().Result;
-
         string[] split = payload.Split((char)127);
 
         int i = 1;
@@ -493,9 +492,8 @@ public static class Fetch {
         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
         //client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
-        Task<HttpResponseMessage> res = client.GetAsync("sb/getuserslist");
+        Task<HttpResponseMessage> res = client.GetAsync("db/getuserstable");
         string payload = res.Result.Content.ReadAsStringAsync().Result;
-
         string[] split = payload.Split((char)127);
 
         int i = 1;
@@ -634,9 +632,9 @@ public static class Fetch {
         Hashtable ad    = new Hashtable();
         string portscan = String.Empty;
 
-        Thread tWmi = new Thread(()=> {
-            wmi = Wmi.WmiFetch(host);
-        });
+        Thread tWmi = new Thread(()=>
+            wmi = Wmi.WmiFetch(host)
+        );
 
         Thread tAd = new Thread(()=> {
             if (hostname is null) return;
@@ -694,7 +692,6 @@ public static class Fetch {
             tPortscan.Start(); tPortscan.Join();
         }
 
-        //StringBuilder content = new StringBuilder();
         Hashtable hash = new Hashtable();
 
         foreach (DictionaryEntry o in wmi)
@@ -743,9 +740,8 @@ public static class Fetch {
         if (!hash.ContainsKey("TYPE")) 
             if (hash.ContainsKey("OPERATING SYSTEM")) {
                 string os = ((string[])hash["OPERATING SYSTEM"])[0];
-                if (os.ToLower().Contains("server")) { //if os is windows server, set type as server
+                if (os.ToLower().Contains("server"))  //if os is windows server, set type as server
                     hash.Add("TYPE", new string[] { "Server", "Active directory", "" });
-                }
             }
 
         if (!hash.ContainsKey("TYPE") && !(gateways is null))
@@ -760,14 +756,14 @@ public static class Fetch {
                 string[] ports = portscan.Split(';');
                 for (int i = 0; i< ports.Length; i++) ports[i] = ports[i].Trim();
 
-                if (ports.Contains("515") || ports.Contains("631") || ports.Contains("9100"))  //LPD, IPP, Printserver
-                    hash.Add("TYPE", new string[] { "Printer", "Port-scan", "" });
-
                 if (ports.Contains("445") && ports.Contains("3389") && (ports.Contains("53") || ports.Contains("67") || ports.Contains("389") || ports.Contains("636") || ports.Contains("853"))) //SMB, RDP, DNS, DHCP, LDAP
                     hash.Add("TYPE", new string[] { "Server", "Port-scan", "" });
 
                 else if (ports.Contains("445") && ports.Contains("3389")) //SMB, RDP
                     hash.Add("TYPE", new string[] { "PC tower", "Port-scan", "" });
+
+                else if (ports.Contains("515") || ports.Contains("631") || ports.Contains("9100"))  //LPD, IPP, Printserver
+                    hash.Add("TYPE", new string[] { "Printer", "Port-scan", "" });
 
                 else if (ports.Contains("6789") || ports.Contains("10001")) //ubnt ap
                     hash.Add("TYPE", new string[] { "Access point", "Port-scan", "" });
