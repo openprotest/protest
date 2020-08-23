@@ -413,7 +413,7 @@ class Settings extends Tabs {
             localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
             localStorage.setItem("session_timeout", this.sessionTimeout.value);
 
-            let timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
+            const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
             if (timeMapping[this.sessionTimeout.value] == Infinity) {
                 divSessionTimeoutValue.innerHTML = timeMapping[this.sessionTimeout.value];
             } else {

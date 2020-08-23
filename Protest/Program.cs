@@ -76,6 +76,7 @@ class Program {
         Database.LoadUsers();
 
         StartServices();
+        Watchdog.LoadConfig();
 
         Console.ResetColor();
 

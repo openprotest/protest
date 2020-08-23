@@ -173,10 +173,13 @@ public static class Ping {
     }
     public static async Task<string> ArpPingAsync(string name, string id) {
         try {
-            IPAddress[] ip = await System.Net.Dns.GetHostAddressesAsync(name);
-            if (ip.Length == 0) return id + ((char)127).ToString() + "unknown host";
+            IPAddress[] ips = await System.Net.Dns.GetHostAddressesAsync(name);
+            if (ips.Length == 0) return id + ((char)127).ToString() + "unknown host";
 
-            string response = Arp.ArpRequest(ip[0]);
+            IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            if (!IpTools.OnSameNetwork(ips[0])) return id + ((char)127).ToString() + "unknown net.";
+
+            string response = Arp.ArpRequest(ip);
 
             if (!(response is null) && response.Length > 0)
                 return id + ((char)127).ToString() + "0";

@@ -117,7 +117,7 @@ class Watchdog extends Window {
         this.btnAdd.onclick = () => this.Add();
 
         btnReload.onclick = () => this.Reload();
-        btnSettings.onclick = () => this.SettingsDialog();
+        btnSettings.onclick = () => this.Settings();
 
         this.txtHost.onchange =
         this.txtHost.oninput = () => {
@@ -151,13 +151,13 @@ class Watchdog extends Window {
         this.ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/watchdog");
 
         this.ws.onopen = () => {
-            ws.send("list");
+            this.ws.send("list");
+            this.ws.send("get");
         };
         
         this.ws.onmessage = (event) => {
-            let payload = event.data.split(String.fromCharCode(127));
+            let payload = event.data.split("\n");
             if (payload.length == 0) return;
-
         };
 
         //this.ws.onclose = () => { };
@@ -165,8 +165,28 @@ class Watchdog extends Window {
         //this.ws.onerror = (error) => { console.log(error); };
     }
 
-    SettingsDialog() {
-        const dialog = this.DialogBox("250px");
+    Settings() {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let split = xhr.responseText.split(String.fromCharCode(127));
+                if (split.length == 2)
+                    this.SettingsDialog(split[0] === "true", parseInt(split[1]));
+                else 
+                    this.ConfirmBox(xhr.responseText, true);
+            }
+
+            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+        };
+
+        xhr.open("GET", "watchdog/getconfig", true);
+        xhr.send();
+
+        
+    }
+
+    SettingsDialog(enable, interval) {
+        const dialog = this.DialogBox("450px");
         if (dialog === null) return;
 
         const btnOK = dialog.btnOK;
@@ -174,6 +194,141 @@ class Watchdog extends Window {
         const buttonBox = dialog.buttonBox;
         const innerBox = dialog.innerBox;
 
+        innerBox.style.padding = "32px";
+        innerBox.style.display = "grid";
+        innerBox.style.gridTemplateColumns = "120px 225px auto";
+        innerBox.style.gridTemplateRows = "repeat(12, 32px)";
+        innerBox.style.alignItems = "center";
+
+        const divEnable = document.createElement("div");
+        divEnable.style.gridArea = "1 / 1 / 2 / 3";
+        innerBox.appendChild(divEnable);
+        const chkEnable = document.createElement("input");
+        chkEnable.type = "checkbox";
+        divEnable.appendChild(chkEnable);
+        this.AddCheckBoxLabel(divEnable, chkEnable, "Enable watchdog");
+
+        const lblInterval = document.createElement("div");
+        lblInterval.style.gridArea = "2 / 1";
+        lblInterval.style.display = "inline-block";
+        lblInterval.innerHTML = "Interval: ";
+        innerBox.appendChild(lblInterval);
+
+        const rngInterval = document.createElement("input");
+        rngInterval.style.gridArea = "2 / 2";
+        rngInterval.type = "range";
+        rngInterval.min = 0;
+        rngInterval.max = 8;
+        rngInterval.value = 5;
+        innerBox.appendChild(rngInterval);
+
+        const lblIntervalValue = document.createElement("div");
+        lblIntervalValue.style.gridArea = "2 / 3";
+        lblIntervalValue.style.display = "inline-block";
+        lblIntervalValue.style.marginLeft = "8px";
+        lblIntervalValue.innerHTML = "4 hours";
+        innerBox.appendChild(lblIntervalValue);
+
+
+        const divEMail = document.createElement("div");
+        divEMail.style.gridArea = "4 / 1 / 5 / 3";
+        innerBox.appendChild(divEMail);
+        const chkEMail = document.createElement("input");
+        chkEMail.type = "checkbox";
+        divEMail.appendChild(chkEMail);
+        this.AddCheckBoxLabel(divEMail, chkEMail, "Send e-mail notification:");
+
+        const lblSmtpServer = document.createElement("div");
+        lblSmtpServer.style.gridArea = "5 / 1";
+        lblSmtpServer.innerHTML = "SMTP server:";
+        innerBox.appendChild(lblSmtpServer);
+        const txtSmtpServer = document.createElement("input");
+        txtSmtpServer.style.gridArea = "5 / 2";
+        txtSmtpServer.type = "text";
+        txtSmtpServer.placeholder = "smtp.gmail.com";
+        innerBox.appendChild(txtSmtpServer);
+
+        const lblSmtpPort = document.createElement("div");
+        lblSmtpPort.style.gridArea = "6 / 1";
+        lblSmtpPort.innerHTML = "Port:";
+        innerBox.appendChild(lblSmtpPort);
+        const txtSmtpPort = document.createElement("input");
+        txtSmtpPort.style.gridArea = "6 / 2";
+        txtSmtpPort.type = "number";
+        txtSmtpPort.min = 1;
+        txtSmtpPort.max = 49151;
+        txtSmtpPort.value = 587;
+        innerBox.appendChild(txtSmtpPort);
+
+        const lblUsername = document.createElement("div");
+        lblUsername.style.gridArea = "7 / 1";
+        lblUsername.innerHTML = "Username:";
+        innerBox.appendChild(lblUsername);
+        const txtUsername = document.createElement("input");
+        txtUsername.style.gridArea = "7 / 2";
+        txtUsername.type = "text";
+        innerBox.appendChild(txtUsername);
+
+        const lblPassword = document.createElement("div");
+        lblPassword.style.gridArea = "8 / 1";
+        lblPassword.innerHTML = "Password:";
+        innerBox.appendChild(lblPassword);
+        const txtPassword = document.createElement("input");
+        txtPassword.style.gridArea = "8 / 2";
+        txtPassword.type = "password";
+        innerBox.appendChild(txtPassword);
+
+        const lblRecipient = document.createElement("div");
+        lblRecipient.style.gridArea = "9 / 1";
+        lblRecipient.innerHTML = "Recipients:";
+        innerBox.appendChild(lblRecipient);
+        const txtRecipient = document.createElement("input");
+        txtRecipient.style.gridArea = "9 / 2";
+        txtRecipient.type = "text";
+        txtRecipient.placeholder = "user@domain.com";
+        innerBox.appendChild(txtRecipient);
+
+        const lblSSL = document.createElement("div");
+        lblSSL.style.gridArea = "10 / 1";
+        lblSSL.innerHTML = "Enable SSL:";
+        innerBox.appendChild(lblSSL);
+        const divSSL = document.createElement("div");
+        divSSL.style.gridArea = "10 / 2";
+        innerBox.appendChild(divSSL);
+        const chkSSL = document.createElement("input");
+        chkSSL.type = "checkbox";
+        divSSL.appendChild(chkSSL);
+        this.AddCheckBoxLabel(divSSL, chkSSL, "&nbsp;");
+
+
+        const timeMapping = [ 5, 15, 30, 60, 2*60, 4*60, 8*60, 24*60, 48*60 ];
+
+        rngInterval.oninput =
+        rngInterval.onchange = () => {
+            let value = timeMapping[rngInterval.value];
+            lblIntervalValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
+        };
+
+        btnOK.addEventListener("click", () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok")
+                    this.ConfirmBox(xhr.responseText, true);
+
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            };
+
+            xhr.open("GET", `watchdog/settings&enable=${chkEnable.checked}&interval=${timeMapping[rngInterval.value]}`, true);
+            xhr.send();
+        });
+
+        chkEnable.checked = enable;
+
+        for (let i = 0; i < timeMapping.length; i++)
+            if (timeMapping[i] === interval)
+                rngInterval.value = i;
+
+        rngInterval.oninput();
     }
 
     Add() {

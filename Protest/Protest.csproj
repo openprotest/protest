@@ -93,7 +93,7 @@
     <Compile Include="Modules\Tools\LocateIp.cs" />
     <Compile Include="Modules\Tools\MacLookup.cs" />
     <Compile Include="Modules\Tools\Ping.cs" />
-    <Compile Include="Modules\Tools\PortScan.cs" />
+    <Compile Include="Modules\Tools\Portscan.cs" />
     <Compile Include="Modules\Tools\TraceRoute.cs" />
     <Compile Include="Modules\Tools\Wmi.cs" />
     <Compile Include="Modules\Tools\WoL.cs" />

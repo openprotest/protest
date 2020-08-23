@@ -58,7 +58,6 @@ public static class KeepAlive {
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
                     await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
                     ctx.Response.Close();
-                    //TODO: ask for user login
                     return;
                 }
 

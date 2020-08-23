@@ -35,6 +35,7 @@ class Cache {
         {"ico",  "image/x-icon"},
         {"svg",  "image/svg+xml"},
         {"svgz", "image/svg+xml"},
+        {"ttf",  "font/ttf" },
         {"js",   "application/javascript"},
         {"json", "application/json"},
         {"zip",  "application"}

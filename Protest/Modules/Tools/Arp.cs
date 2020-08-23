@@ -40,4 +40,24 @@ public static class Arp {
         }
     }
 
+    public static bool ArpPing(string host) {
+        try {
+            IPAddress[] ips = System.Net.Dns.GetHostAddresses(host);
+            if (ips.Length == 0) return false;
+
+            IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            if (!IpTools.OnSameNetwork(ips[0])) return false;
+
+            int len = 6;
+            byte[] mac = new byte[len];
+            byte[] byte_ip = ips[0].GetAddressBytes();
+            uint long_ip = (uint)(byte_ip[3] * 16777216 + byte_ip[2] * 65536 + byte_ip[1] * 256 + byte_ip[0]);
+            SendARP(long_ip, 0, mac, ref len);
+
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
 }

@@ -298,6 +298,19 @@ public static class PortScan {
         }
     }
 
+    public static bool SinglePortscan(string host, int port) {
+        try {
+            TcpClient client = new TcpClient();
+            client.Connect(host, port);
+            bool result = client.Connected;
+            client.Close();
+            client.Dispose();
+            return result;
+        } catch {
+            return false;
+        }
+    }
+
     public static int[] Netstat(string host) {
         try {
             ProcessStartInfo info = new ProcessStartInfo {
