@@ -41,10 +41,10 @@ public static class NetBios {
         return null;
     }
 
-    public static async Task<string> GetBiosNameAsync(string ip) {
+    public static async Task<string> GetBiosNameAsync(string host) {
         using UdpClient client = new UdpClient();
         try {
-            await client.SendAsync(BIOS_NAME_REQUEST, BIOS_NAME_REQUEST.Length, ip, 137);
+            await client.SendAsync(BIOS_NAME_REQUEST, BIOS_NAME_REQUEST.Length, host, 137);
 
             IAsyncResult asyncResult = client.BeginReceive(null, null);
             asyncResult.AsyncWaitHandle.WaitOne(TimeSpan.FromMilliseconds(2000));

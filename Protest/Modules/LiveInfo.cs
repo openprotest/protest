@@ -44,12 +44,12 @@ public static class LiveInfo {
             
             Database.DbEntry equip = (Database.DbEntry)Database.equip[filename];
 
-            string ip = null;
+            string host = null;
             if (equip.hash.ContainsKey("IP")) { 
-               ip = ((string[])equip.hash["IP"])[0];
+               host = ((string[])equip.hash["IP"])[0];
 
             } else if (equip.hash.ContainsKey("HOSTNAME")) {
-                ip = ((string[])equip.hash["HOSTNAME"])[0];
+                host = ((string[])equip.hash["HOSTNAME"])[0];
 
             } else {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
@@ -57,7 +57,7 @@ public static class LiveInfo {
             }
 
             string lastseen = "";
-            string[] ipArray = ip.Split(';').Select(o => o.Trim()).ToArray();
+            string[] ipArray = host.Split(';').Select(o => o.Trim()).ToArray();
 
             try {
                 using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
@@ -74,7 +74,7 @@ public static class LiveInfo {
                     WsWriteText(ws, $".roundtrip:{ipArray[0]}{(char)127}TimedOut{(char)127}ICMP");
                 }
             } catch {
-                WsWriteText(ws, $".roundtrip:{ip}{(char)127}Error{(char)127}ICMP");
+                WsWriteText(ws, $".roundtrip:{host}{(char)127}Error{(char)127}ICMP");
             }
 
             
@@ -89,19 +89,24 @@ public static class LiveInfo {
                             WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.Status.ToString()}{(char)127}ICMP");
                     } catch {
                         WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}Error{(char)127}ICMP");
-                    }                
-            
+                    }
+
+
+            string wmiHostName = null, adHostName = null, netbios = null, dns = null;
+
             if (lastseen == "Just now") {
-                ManagementScope scope = Wmi.WmiScope(ip);
+                ManagementScope scope = Wmi.WmiScope(host);
                 if (scope != null) {
                     string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
                     if (username.Length > 0) WsWriteText(ws, $"logged in user{(char)127}{username}{(char)127}WMI");
-
+                    
                     string starttime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
                     if (starttime.Length > 0) WsWriteText(ws, $"start time{(char)127}{starttime}{(char)127}WMI");
+
+                    wmiHostName = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
                 }
             }
-
+                        
             if (equip.hash.ContainsKey("HOSTNAME")) {
                 string hostname = ((string[])equip.hash["HOSTNAME"])[0];
                 SearchResult result = ActiveDirectory.GetWorkstation(hostname);
@@ -116,7 +121,40 @@ public static class LiveInfo {
                         string time = ActiveDirectory.FileTimeString(result.Properties["lastLogoff"][0].ToString());
                         if (time.Length > 0) WsWriteText(ws, $"last logoff{(char)127}{time}{(char)127}Active directory");
                     }
+
+                    if (result.Properties["dNSHostName"].Count > 0)
+                        adHostName = result.Properties["dNSHostName"][0].ToString();
                 }
+            }
+
+            try {
+                dns = (await System.Net.Dns.GetHostEntryAsync(host)).HostName;
+            } catch { }
+
+            if (!(dns is null)) {
+                dns = dns?.Split('.')[0].ToUpper();
+
+                if (wmiHostName is null && adHostName is null) 
+                    netbios = await NetBios.GetBiosNameAsync(host);
+
+                if (!(wmiHostName is null) && wmiHostName.Length > 0) {
+                    wmiHostName = wmiHostName?.Split('.')[0].ToUpper();
+                    if (wmiHostName != dns) 
+                        WsWriteText(ws, $"!{(char)127}DNS mismatch: {wmiHostName}{(char)127}WMI");
+                }
+
+                if (!(adHostName is null) && adHostName.Length  > 0) {
+                    adHostName = adHostName?.Split('.')[0].ToUpper();
+                    if (adHostName != dns) WsWriteText(ws, $"!{(char)127}DNS mismatch: {adHostName}{(char)127}Active directory");
+                }
+
+                if (!(netbios is null) && netbios.Length > 0) {
+                    netbios = netbios?.Split('.')[0].ToUpper();
+                    if (netbios != dns) WsWriteText(ws, $"!{(char)127}DNS mismatch: {netbios}{(char)127}NETBIOS");
+                }
+
+
+
             }
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);

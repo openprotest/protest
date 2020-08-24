@@ -9,6 +9,8 @@ class Watchdog extends Window {
 
         this.content.style.overflow = "hidden";
 
+        this.list = [];
+
         const btnReload = document.createElement("div");
         btnReload.style.backgroundImage = "url(res/l_reload.svgz)";
         btnReload.setAttribute("tip-below", "Reload");
@@ -31,7 +33,7 @@ class Watchdog extends Window {
         side.style.top = "40px";
         side.style.bottom = "8px";
         side.style.width = "250px";
-        side.style.overflowY = "scroll";
+        side.style.overflowY = "auto";
         this.content.appendChild(side);
 
         const timeline = document.createElement("div");
@@ -42,16 +44,17 @@ class Watchdog extends Window {
         timeline.style.height = "40px";
         this.content.appendChild(timeline);
 
-        const view = document.createElement("div");
-        view.style.position = "absolute";
-        view.style.left = "262px";
-        view.style.right = "8px";
-        view.style.top = "40px";
-        view.style.bottom = "8px";
-        view.style.borderRadius = "4px";
-        view.style.backgroundColor = "var(--pane-color)";
-        view.style.overflowY = "scroll";
-        this.content.appendChild(view);
+        this.view = document.createElement("div");
+        this.view.style.position = "absolute";
+        this.view.style.left = "262px";
+        this.view.style.right = "8px";
+        this.view.style.top = "40px";
+        this.view.style.bottom = "8px";
+        this.view.style.borderRadius = "4px";
+        this.view.style.backgroundColor = "var(--pane-color)";
+        this.view.style.color = "#202020";
+        this.view.style.overflowY = "scroll";
+        this.content.appendChild(this.view);
 
         const lblHost = document.createElement("div");
         lblHost.style.gridArea = "1 / 1";
@@ -152,12 +155,33 @@ class Watchdog extends Window {
 
         this.ws.onopen = () => {
             this.ws.send("list");
-            this.ws.send("get");
         };
         
         this.ws.onmessage = (event) => {
             let payload = event.data.split("\n");
             if (payload.length == 0) return;
+
+            if (payload[0] == "list") {
+                this.list = [];
+
+                for (let i = 1; i < payload.length; i++)
+                    this.list.push({
+                        name  : payload[i],
+                        div   : document.createElement("div"),
+                        graph : document.createElement("div")
+                    });
+
+                this.list.sort((a, b) => a.name.localeCompare(b.name));
+                
+                for (let i = 0; i < this.list.length; i++) {
+                    this.list[i].div.innerHTML = this.list[i].name;
+                    this.view.appendChild(this.list[i].div);
+                }
+
+                this.ws.send("get");
+            } else {
+
+            }
         };
 
         //this.ws.onclose = () => { };
@@ -182,7 +206,6 @@ class Watchdog extends Window {
         xhr.open("GET", "watchdog/getconfig", true);
         xhr.send();
 
-        
     }
 
     SettingsDialog(enable, interval) {
@@ -349,5 +372,6 @@ class Watchdog extends Window {
         this.txtHost.value = "";
         this.btnAdd.setAttribute("disabled", true);
     }
+
 
 }

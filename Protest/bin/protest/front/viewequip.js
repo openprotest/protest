@@ -577,8 +577,18 @@ class Equip extends Window {
             }
 
             if (split[0].startsWith(".")) return; //hidden property
-            const newProperty = this.AddProperty(split[0], split[1], split[2]);
-            this.liveinfo.appendChild(newProperty);
+
+            if (split[0].startsWith("!")) {
+                const newProperty = this.AddProperty("Warning", split[1], split[2]);
+                newProperty.style.backgroundColor = "rgb(255, 186, 0)";
+                newProperty.style.color = "#101010";
+                this.liveinfo.appendChild(newProperty);
+
+            } else {
+                const newProperty = this.AddProperty(split[0], split[1], split[2]);
+                this.liveinfo.appendChild(newProperty);
+            }
+
         };
     }
 

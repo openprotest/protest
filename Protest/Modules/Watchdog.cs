@@ -186,13 +186,13 @@ public static class Watchdog {
                         DirectoryInfo dirWatchdog = new DirectoryInfo(Strings.DIR_WATCHDOG);
                         if (!dirWatchdog.Exists) break;
 
-                        StringBuilder sb = new StringBuilder($"list{(char)127}");
+                        StringBuilder sb = new StringBuilder($"list\n");
                         try {
                             List<DirectoryInfo> list = new List<DirectoryInfo>();
                             list.AddRange(dirWatchdog.GetDirectories());
                             list.Sort((a, b) => String.Compare(a.Name, b.Name));
                             foreach (DirectoryInfo o in list)
-                                sb.Append($"{o.Name}{(char)127}");
+                                sb.Append($"{o.Name}\n");
                         } catch { }
 
                         ArraySegment<byte> segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(sb.ToString()));
@@ -255,6 +255,8 @@ public static class Watchdog {
                         System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
                         try {
                             PingReply reply = p.Send(host, 1000);
+                            if (reply.Status != IPStatus.Success) reply = p.Send(host, 1000); //retry
+
                             if (reply.Status == IPStatus.Success)
                                 status = reply.RoundtripTime.ToString();
 
