@@ -1,0 +1,75 @@
+.w-dog-side {
+    position: absolute;
+    display: grid;
+    grid-template-columns: 84px 150px;
+    grid-template-rows: repeat(4, 32px);
+    align-items: baseline;
+    left: 8px;
+    top: 40px;
+    bottom: 8px;
+    width: 250px;
+    overflow-y: auto;
+}
+.w-dog-timeline {
+    position: absolute;
+    left: 250px;
+    right: 8px;
+    top: 4px;
+    height: 40px;
+}
+
+.w-dog-view {
+    position: absolute;
+    left: 262px;
+    right: 8px;
+    top: 40px;
+    bottom: 8px;
+    border-radius: 4px;
+    background-color: var(--pane-color);
+    color: #202020;
+    overflow-y: scroll;
+}
+
+.w-dog-view > div {
+    padding: 1px 4px;
+}
+
+.w-dog-view > div:hover {
+    background-color: var(--highlight-color);
+}
+
+.w-dog-view > div > * {
+    display: inline-block;
+    height: 20px;
+}
+
+.w-dog-view > div > div:nth-child(1) {
+    width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.w-dog-view > div > div:nth-child(2) {
+    width: calc(100% - 224px);
+}
+
+.w-dog-view > div > div:nth-child(3) {
+    opacity: 0;
+
+    width: 20px;
+    height: 20px;
+    border: 1px solid #202020;
+    border-radius: 50%;
+    margin-top: 4px;
+
+    background-image: url("res/close.svgz");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-color: rgb(192,192,192);
+
+    transition: .2s;
+}
+
+.w-dog-view > div:hover > div:nth-child(3) {
+     opacity: 1;
+}

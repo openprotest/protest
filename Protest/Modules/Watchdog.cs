@@ -128,13 +128,13 @@ public static class Watchdog {
 
         string name = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("name=")) name = para[i].Substring(5);
+            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
         if (name.Length == 0) return Strings.INF.Array;
 
         try {
             DirectoryInfo dir = new DirectoryInfo($"{Strings.DIR_WATCHDOG}\\{name}");
-            if (dir.Exists) dir.Delete();
+            if (dir.Exists) dir.Delete(true);
         } catch (Exception ex) {
             return Encoding.UTF8.GetBytes(ex.Message);
         }
@@ -206,7 +206,7 @@ public static class Watchdog {
 
                         foreach (DirectoryInfo o in dirWatchdog.GetDirectories())
                             try {
-                                FileInfo file = new FileInfo($"{o.FullName}\\{split[1]}");
+                                FileInfo file = new FileInfo($"{o.FullName}\\{(split.Length > 1 ? split[1] : DateTime.Now.ToString(Strings.DATE_FORMAT_FILE))}.txt");
                                 if (!file.Exists) continue;
 
                                 byte[] content = File.ReadAllBytes(file.FullName);

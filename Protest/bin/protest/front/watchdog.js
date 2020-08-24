@@ -2,6 +2,8 @@ class Watchdog extends Window {
     constructor() {
         super([64,64,64]);
 
+        this.AddCssDependencies("watchdog.css");
+
         this.args = null;
 
         this.setTitle("Watchdog");
@@ -24,36 +26,15 @@ class Watchdog extends Window {
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         const side = document.createElement("div");
-        side.style.position = "absolute";
-        side.style.display = "grid";
-        side.style.gridTemplateColumns = "84px 150px";
-        side.style.gridTemplateRows = "repeat(4, 32px)";
-        side.style.alignItems = "baseline";
-        side.style.left = "8px";
-        side.style.top = "40px";
-        side.style.bottom = "8px";
-        side.style.width = "250px";
-        side.style.overflowY = "auto";
+        side.className = "w-dog-side";
         this.content.appendChild(side);
 
         const timeline = document.createElement("div");
-        timeline.style.position = "absolute";
-        timeline.style.left = "250px";
-        timeline.style.right = "8px";
-        timeline.style.top = "4";
-        timeline.style.height = "40px";
+        timeline.className = "w-dog-timeline";
         this.content.appendChild(timeline);
 
         this.view = document.createElement("div");
-        this.view.style.position = "absolute";
-        this.view.style.left = "262px";
-        this.view.style.right = "8px";
-        this.view.style.top = "40px";
-        this.view.style.bottom = "8px";
-        this.view.style.borderRadius = "4px";
-        this.view.style.backgroundColor = "var(--pane-color)";
-        this.view.style.color = "#202020";
-        this.view.style.overflowY = "scroll";
+        this.view.className = "w-dog-view";
         this.content.appendChild(this.view);
 
         const lblHost = document.createElement("div");
@@ -159,27 +140,74 @@ class Watchdog extends Window {
         
         this.ws.onmessage = (event) => {
             let payload = event.data.split("\n");
+            console.log(payload);
+
             if (payload.length == 0) return;
 
             if (payload[0] == "list") {
                 this.list = [];
+                this.view.innerHTML = "";
 
                 for (let i = 1; i < payload.length; i++)
-                    this.list.push({
-                        name  : payload[i],
-                        div   : document.createElement("div"),
-                        graph : document.createElement("div")
-                    });
+                    if (payload[i].length > 0)
+                        this.list.push({
+                            name  : payload[i],
+                            div   : document.createElement("div"),
+                            graph : document.createElement("div"),
+                            data: {}
+                        });
 
                 this.list.sort((a, b) => a.name.localeCompare(b.name));
-                
+
                 for (let i = 0; i < this.list.length; i++) {
-                    this.list[i].div.innerHTML = this.list[i].name;
+                    const lblName = document.createElement("div");
+                    lblName.innerHTML = this.list[i].name;
+                    this.list[i].div.appendChild(lblName);
+
+                    this.list[i].div.appendChild(this.list[i].graph);
+
+                    const btnRemove = document.createElement("div");
+                    this.list[i].div.appendChild(btnRemove);
+
                     this.view.appendChild(this.list[i].div);
+
+                    btnRemove.onclick = () => {
+                        this.ConfirmBox("Are you sure you want to delete this entry?", false).addEventListener("click", () => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.onreadystatechange = () => {
+                                if (xhr.readyState == 4 && xhr.status == 200)
+                                    if (xhr.responseText === "ok")
+                                        this.view.removeChild(this.list[i].div);
+
+                                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                            };
+                            xhr.open("GET", `watchdog/remove&name=${this.list[i].name}`, true);
+                            xhr.send();
+                        });
+                    };
                 }
 
                 this.ws.send("get");
+
             } else {
+                let name = payload[0];
+                let date = payload[1];
+                let entry = this.list.find(o => o.name === name);
+
+                let dateSplit = date.split("-").map(o => parseInt(o));
+
+                entry.data[date] = [];
+                for (let i = 2; i < payload.length; i++) {
+                    if (payload[i].length == 0) continue;
+
+                    let split = payload[i].split(" ");
+                    let timeSplit = split[0].split(":").map(o => parseInt(o));
+
+                    //console.log(split[i]);
+
+                    let time = new Date(dateSplit[0], dateSplit[1], dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]);
+                    entry.data[date].push([time, split[1]]);
+                }
 
             }
         };
