@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Linq;
 using System.Management;
@@ -92,7 +93,9 @@ public static class LiveInfo {
                     }
 
 
+            List<string> warnings = new List<string>();
             string wmiHostName = null, adHostName = null, netbios = null, dns = null;
+
 
             if (lastseen == "Just now") {
                 ManagementScope scope = Wmi.WmiScope(host);
@@ -105,8 +108,22 @@ public static class LiveInfo {
 
                     wmiHostName = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
                 }
+
+                using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
+                foreach (ManagementObject o in logicalDisk) {
+                    string caption = o.GetPropertyValue("Caption").ToString();
+                    UInt64 size = (UInt64)o.GetPropertyValue("Size");
+                    UInt64 free = (UInt64)o.GetPropertyValue("FreeSpace");
+
+                    if (size == 0) continue;
+                    UInt64 percent = 100 * free / size;
+                    
+                    if (percent < 10)
+                         warnings.Add($"{percent}% free space on disk {caption}");
+
+                }
             }
-                        
+            
             if (equip.hash.ContainsKey("HOSTNAME")) {
                 string hostname = ((string[])equip.hash["HOSTNAME"])[0];
                 SearchResult result = ActiveDirectory.GetWorkstation(hostname);
@@ -133,29 +150,38 @@ public static class LiveInfo {
 
             if (!(dns is null)) {
                 dns = dns?.Split('.')[0].ToUpper();
+                bool mismatch = false;
 
-                if (wmiHostName is null && adHostName is null) 
+                if (!mismatch && !(wmiHostName is null) && wmiHostName.Length > 0) {
+                    wmiHostName = wmiHostName?.Split('.')[0].ToUpper();
+                    if (wmiHostName != dns) { 
+                        warnings.Add($"DNS mismatch: {wmiHostName}");
+                        mismatch = true;
+                    }
+                }
+
+                if (!mismatch && !(adHostName is null) && adHostName.Length  > 0) {
+                    adHostName = adHostName?.Split('.')[0].ToUpper();
+                    if (adHostName != dns) { 
+                        warnings.Add($"DNS mismatch: {adHostName}");
+                        mismatch = true;
+                    }
+                }
+
+                if (!mismatch && wmiHostName is null && adHostName is null)
                     netbios = await NetBios.GetBiosNameAsync(host);
 
-                if (!(wmiHostName is null) && wmiHostName.Length > 0) {
-                    wmiHostName = wmiHostName?.Split('.')[0].ToUpper();
-                    if (wmiHostName != dns) 
-                        WsWriteText(ws, $"!{(char)127}DNS mismatch: {wmiHostName}{(char)127}WMI");
-                }
-
-                if (!(adHostName is null) && adHostName.Length  > 0) {
-                    adHostName = adHostName?.Split('.')[0].ToUpper();
-                    if (adHostName != dns) WsWriteText(ws, $"!{(char)127}DNS mismatch: {adHostName}{(char)127}Active directory");
-                }
-
-                if (!(netbios is null) && netbios.Length > 0) {
+                if (!mismatch && !(netbios is null) && netbios.Length > 0) {
                     netbios = netbios?.Split('.')[0].ToUpper();
-                    if (netbios != dns) WsWriteText(ws, $"!{(char)127}DNS mismatch: {netbios}{(char)127}NETBIOS");
+                    if (netbios != dns) {
+                        warnings.Add($"DNS mismatch: {netbios}");
+                        mismatch = true;
+                    }
                 }
-
-
-
             }
+
+            for (int i = 0; i < warnings.Count; i++)
+                WsWriteText(ws, $"!{(char)127}{warnings[i]}{(char)127}");
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
 
@@ -214,14 +240,15 @@ public static class LiveInfo {
                         if (time.Length > 0) WsWriteText(ws, $"last logoff{(char)127}{time}{(char)127}Active directory");
                     }
 
-                    if (sr.Properties["lockoutTime"].Count > 0) {
-                        string time = ActiveDirectory.FileTimeString(sr.Properties["lockoutTime"][0].ToString());
-                        if (time.Length > 0) WsWriteText(ws, $"lockout time{(char)127}{time}{(char)127}Active directory");
-                    }
-
                     if (sr.Properties["badPasswordTime"].Count > 0) {
                         string time = ActiveDirectory.FileTimeString(sr.Properties["badPasswordTime"][0].ToString());
                         if (time.Length > 0) WsWriteText(ws, $"bad password time{(char)127}{time}{(char)127}Active directory");
+                    }
+
+                    if (sr.Properties["lockoutTime"].Count > 0)
+                    {
+                        string time = ActiveDirectory.FileTimeString(sr.Properties["lockoutTime"][0].ToString());
+                        if (time.Length > 0) WsWriteText(ws, $"lockout time{(char)127}{time}{(char)127}Active directory");
                     }
                 }
 

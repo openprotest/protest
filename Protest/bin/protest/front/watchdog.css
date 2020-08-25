@@ -12,10 +12,15 @@
 }
 .w-dog-timeline {
     position: absolute;
-    left: 250px;
+    left: 262px;
     right: 8px;
     top: 4px;
-    height: 40px;
+    height: 32px;
+    overflow: hidden;
+}
+
+.w-dog-timeline > svg {
+    position: absolute;
 }
 
 .w-dog-view {
@@ -47,6 +52,7 @@
     width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
+    user-select: text;
 }
 
 .w-dog-view > div > div:nth-child(2) {

@@ -579,11 +579,7 @@ class Equip extends Window {
             if (split[0].startsWith(".")) return; //hidden property
 
             if (split[0].startsWith("!")) {
-                const newProperty = this.AddProperty("Warning", split[1], split[2]);
-                newProperty.style.backgroundColor = "rgb(255, 186, 0)";
-                newProperty.style.color = "#101010";
-                this.liveinfo.appendChild(newProperty);
-
+                this.liveinfo.appendChild(this.AddWarning(split[1]));
             } else {
                 const newProperty = this.AddProperty(split[0], split[1], split[2]);
                 this.liveinfo.appendChild(newProperty);
@@ -816,6 +812,27 @@ class Equip extends Window {
             comme.innerHTML = m;
             newProperty.appendChild(comme);
         }
+
+        return newProperty;
+    }
+
+    AddWarning(text) {
+        const newProperty = document.createElement("div");
+        newProperty.style.backgroundColor = "rgb(255,186,0)";
+        newProperty.style.color = "#101010";
+        newProperty.className = "db-property";
+
+        const label = document.createElement("div");
+        label.style.fontWeight = "600";
+        label.style.width = "calc(100% - 16px)";
+        label.style.paddingLeft = "32px";
+        label.style.marginLeft = "4px";
+        label.style.backgroundImage = "url(res/warning.svgz)";
+        label.style.backgroundSize = "22px 22px";
+        label.style.backgroundPosition = "4px center";
+        label.style.backgroundRepeat = "no-repeat";
+        label.innerHTML = text;
+        newProperty.appendChild(label);
 
         return newProperty;
     }

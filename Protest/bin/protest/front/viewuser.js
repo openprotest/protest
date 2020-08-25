@@ -170,6 +170,7 @@ class User extends Window {
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
 
         this.btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
+        this.btnUnlock.firstChild.style.transition = ".8s";
         this.sidetools.appendChild(this.btnUnlock);
         this.btnUnlock.onclick = () => {
             if (this.btnUnlock.hasAttribute("busy")) return;
@@ -177,10 +178,13 @@ class User extends Window {
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) this.btnUnlock.removeAttribute("busy");
 
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText == "ok")
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText == "ok") {
                     this.btnUnlock.style.backgroundColor = "";
-                else if (xhr.readyState == 4 && xhr.status == 200)
-                    this.ConfirmBox(xhr.responseText, true);    
+                    this.btnUnlock.firstChild.style.backgroundImage = "url(res/unlock.svgz)";
+                    this.LiveInfo();
+                } else if (xhr.readyState == 4 && xhr.status == 200) {
+                    this.ConfirmBox(xhr.responseText, true);
+                }
 
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
@@ -256,13 +260,19 @@ class User extends Window {
 
             if (split[0].startsWith(".")) return; //hidden property
 
-            if (split[0] == "LOCKOUT TIME") {
-                if (split[1] == "0") return;
-                this.btnUnlock.backgroundColor = "red";
+            if (split[0].startsWith("!")) {
+                this.liveinfo.appendChild(this.AddWarning(split[1]));
+            } else {
+                const newProperty = this.AddProperty(split[0], split[1], split[2]);
+                this.liveinfo.appendChild(newProperty);
             }
 
-            const newProperty = this.AddProperty(split[0], split[1], split[2]);
-            this.liveinfo.appendChild(newProperty);
+            if (split[0] == "lockout time") {
+                if (split[1] == "0") return;
+                this.btnUnlock.style.backgroundColor = "rgb(255,186,0)";
+                this.btnUnlock.firstChild.style.backgroundImage = "url(res/lock.svgz)";
+                this.liveinfo.appendChild(this.AddWarning("User is locked out"));
+            }
         };
     }
 
@@ -455,6 +465,27 @@ class User extends Window {
             comme.innerHTML = m;
             newProperty.appendChild(comme);
         }
+
+        return newProperty;
+    }
+
+    AddWarning(text) {
+        const newProperty = document.createElement("div");
+        newProperty.style.backgroundColor = "rgb(255,186,0)";
+        newProperty.style.color = "#101010";
+        newProperty.className = "db-property";
+
+        const label = document.createElement("div");
+        label.style.fontWeight = "600";
+        label.style.width = "calc(100% - 16px)";
+        label.style.paddingLeft = "32px";
+        label.style.marginLeft = "4px";
+        label.style.backgroundImage = "url(res/warning.svgz)";
+        label.style.backgroundSize = "22px 22px";
+        label.style.backgroundPosition = "4px center";
+        label.style.backgroundRepeat = "no-repeat";
+        label.innerHTML = text;
+        newProperty.appendChild(label);
 
         return newProperty;
     }
@@ -783,7 +814,7 @@ class User extends Window {
                     }
 
                     let names = new Set(Object.keys(this.entry));
-                    for (let i=0; i < split.length-1; i+=3) {
+                    for (let i = 0; i < split.length-1; i += 3) {
                         const entry = this.EditProperty(split[i], split[i+1], false, innerBox);
                         entry.value.style.paddingRight = "24px";
 

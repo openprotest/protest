@@ -348,6 +348,4 @@ public static class ActiveDirectory {
         return Strings.OK.Array;
     }
 
-
-
 }

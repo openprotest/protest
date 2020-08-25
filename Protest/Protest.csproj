@@ -141,6 +141,7 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\res\warning.svg" />
     <Content Include="bin\protest\front\watchdog.css" />
     <Content Include="bin\protest\front\watchdog.js" />
     <Content Include="bin\protest\front\clients.js" />

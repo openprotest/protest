@@ -12,6 +12,8 @@ class Watchdog extends Window {
         this.content.style.overflow = "hidden";
 
         this.list = [];
+        this.dateOffset = 0;
+        this.dateLast = null;
 
         const btnReload = document.createElement("div");
         btnReload.style.backgroundImage = "url(res/l_reload.svgz)";
@@ -29,9 +31,9 @@ class Watchdog extends Window {
         side.className = "w-dog-side";
         this.content.appendChild(side);
 
-        const timeline = document.createElement("div");
-        timeline.className = "w-dog-timeline";
-        this.content.appendChild(timeline);
+        this.timeline = document.createElement("div");
+        this.timeline.className = "w-dog-timeline";
+        this.content.appendChild(this.timeline);
 
         this.view = document.createElement("div");
         this.view.className = "w-dog-view";
@@ -119,6 +121,7 @@ class Watchdog extends Window {
         };
 
         this.Reload();
+        this.DrawTimeline();
     }
 
     Reload() {
@@ -140,7 +143,6 @@ class Watchdog extends Window {
         
         this.ws.onmessage = (event) => {
             let payload = event.data.split("\n");
-            console.log(payload);
 
             if (payload.length == 0) return;
 
@@ -203,10 +205,8 @@ class Watchdog extends Window {
                     let split = payload[i].split(" ");
                     let timeSplit = split[0].split(":").map(o => parseInt(o));
 
-                    //console.log(split[i]);
-
-                    let time = new Date(dateSplit[0], dateSplit[1], dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]);
-                    entry.data[date].push([time, split[1]]);
+                    let time = new Date(dateSplit[0], dateSplit[1], dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]).getTime();
+                    entry.data[date].push([time, isNaN(split[1]) ? split[1] : parseInt(split[1])]);
                 }
 
             }
@@ -401,5 +401,115 @@ class Watchdog extends Window {
         this.btnAdd.setAttribute("disabled", true);
     }
 
+    Seek() {
 
+    }
+
+    DrawTimeline() {
+        const today = new Date();
+
+        if (this.dateLast === null) {
+            const gradient = document.createElement("div");
+            gradient.style.position = "absolute";
+            gradient.style.background = "linear-gradient(to right,transparent,rgb(64,64,64))";
+            gradient.style.width = "32px";
+            gradient.style.height = "32px";
+            gradient.style.right = "0";
+            gradient.style.top = "0";
+            gradient.style.zIndex = "2";
+            this.timeline.appendChild(gradient);
+
+            const svg = this.GenerateDateSvg(today);
+            svg.style.top = "0";
+            svg.style.right = "0";
+            this.timeline.appendChild(svg);
+        }
+
+        const svg_1 = this.GenerateDateSvg(new Date(2020, 8, 24)); //yesterday
+        svg_1.style.top = "0";
+        svg_1.style.right = "480";
+        this.timeline.appendChild(svg_1);
+
+        const svg_2 = this.GenerateDateSvg(new Date(2020, 8, 23)); //
+        svg_2.style.top = "0";
+        svg_2.style.right = "960";
+        this.timeline.appendChild(svg_2);
+    }
+
+    GenerateDateSvg(date) {
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", 480);
+        svg.setAttribute("height", 32);
+        svg.style.outline = "none";
+
+        for (let i = 0; i < 25; i++) {
+            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dot.setAttribute("cx", i * 20);
+            dot.setAttribute("cy", 28);
+            dot.setAttribute("r", 2);
+            dot.setAttribute("fill", "#C0C0C0");
+            svg.appendChild(dot);
+        }
+
+        for (let i = 2; i < 24; i+=2) {
+            const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lblTime.innerHTML = i.toString().padStart(2, "0") + ":00";
+            lblTime.setAttribute("x", i*20);
+            lblTime.setAttribute("y", 22);
+            lblTime.setAttribute("fill", "#C0C0C0");
+            lblTime.setAttribute("text-anchor", "middle");
+            lblTime.setAttribute("font-size", "9px");
+            svg.appendChild(lblTime);
+        }
+
+        const l0 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        l0.setAttribute("x", -9);
+        l0.setAttribute("y", 2);
+        l0.setAttribute("width", 18);
+        l0.setAttribute("height", 3);
+        l0.setAttribute("fill", "#C0C0C0");
+        svg.appendChild(l0);
+        const d0 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        d0.setAttribute("x", -9);
+        d0.setAttribute("y", 2);
+        d0.setAttribute("width", 18);
+        d0.setAttribute("height", 18);
+        d0.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
+        svg.appendChild(d0);
+        const n0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        n0.innerHTML = date.getDate();
+        n0.setAttribute("x", 0);
+        n0.setAttribute("y", 16);
+        n0.setAttribute("fill", "#C0C0C0");
+        n0.setAttribute("font-size", "12px");
+        n0.setAttribute("text-anchor", "middle");
+        svg.appendChild(n0);
+
+        date.setDate(date.getDate() + 1);
+        const l1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        l1.setAttribute("x", 471);
+        l1.setAttribute("y", 2);
+        l1.setAttribute("width", 18);
+        l1.setAttribute("height", 3);
+        l1.setAttribute("fill", "#C0C0C0");
+        svg.appendChild(l1);
+        const d1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        d1.setAttribute("x", 471);
+        d1.setAttribute("y", 2);
+        d1.setAttribute("width", 18);
+        d1.setAttribute("height", 18);
+        d1.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
+        svg.appendChild(d1);
+        const n1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        n1.innerHTML = date.getDate();
+        n1.setAttribute("x", 480);
+        n1.setAttribute("y", 16);
+        n1.setAttribute("fill", "#C0C0C0");
+        n1.setAttribute("font-size", "12px");
+        n1.setAttribute("text-anchor", "middle");
+        svg.appendChild(n1);
+
+        return svg;
+    }
 }

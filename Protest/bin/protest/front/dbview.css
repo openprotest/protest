@@ -96,6 +96,7 @@
     padding: 4px 0 2px 0;
     border-radius: 2px;
     overflow: hidden;
+    margin-bottom: 1px;
     transition: background-color .2s;
 }
 
@@ -130,11 +131,6 @@
 
 .db-property:hover {
     background-color: var(--highlight-color);
-}
-
-.db-property:active {
-    transition-delay: .2s;
-    background-color: var(--highlight-color) !important;
 }
 
 .db-property > div {
@@ -229,9 +225,6 @@
 }
 .db-liveinfo > div:hover {
     background-color: rgb(72,72,72);
-}
-.db-liveinfo > div:active {
-    background-color: var(--select-color);
 }
 
 .db-rightside {

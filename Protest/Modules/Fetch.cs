@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -632,14 +633,32 @@ public static class Fetch {
         Hashtable ad    = new Hashtable();
         string portscan = String.Empty;
 
-        Thread tWmi = new Thread(()=>
-            wmi = Wmi.WmiFetch(host)
-        );
+        Thread tWmi = new Thread(()=> {
+            wmi = Wmi.WmiFetch(host);
+
+            if (wmi.ContainsKey("OWNER")) {
+                string owner = (string)wmi["OWNER"];
+                if (owner.IndexOf('\\') > -1) owner = owner.Split('\\')[1];
+
+                SearchResult user = ActiveDirectory.GetUser(owner);
+                string fn = String.Empty;
+                string sn = String.Empty;
+
+                if (user.Properties["givenName"].Count > 0) 
+                    fn = user.Properties["givenName"][0].ToString();                
+
+                if (user.Properties["sn"].Count > 0) 
+                    sn = user.Properties["sn"][0].ToString();
+
+                string fullname = $"{fn} {sn}".Trim();
+                wmi.Add("OWNER FULLNAME", fullname);
+            }
+        });
 
         Thread tAd = new Thread(()=> {
             if (hostname is null) return;
 
-            System.DirectoryServices.SearchResult result = ActiveDirectory.GetWorkstation(hostname);
+            SearchResult result = ActiveDirectory.GetWorkstation(hostname);
             if (result is null) return;
 
             if (result.Properties["description"].Count > 0) {

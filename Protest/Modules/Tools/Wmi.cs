@@ -267,7 +267,7 @@ public static class Wmi {
                 string value = String.Empty;
                 foreach (ManagementObject o in moc) {
                     string caption = o.GetPropertyValue("Caption").ToString().Replace(":", String.Empty);
-                    UInt64 size = UInt64.Parse((string)o.GetPropertyValue("Size"));
+                    UInt64 size = (UInt64)o.GetPropertyValue("Size");
                     UInt64 used = size - (UInt64)o.GetPropertyValue("FreeSpace");
                     value += $"{caption}:{Math.Round((double)used / 1024 / 1024 / 1024, 1)}:{Math.Round((double)size / 1024 / 1024 / 1024, 1)}:GB:";
                 }
