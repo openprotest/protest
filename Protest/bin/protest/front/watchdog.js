@@ -12,8 +12,13 @@ class Watchdog extends Window {
         this.content.style.overflow = "hidden";
 
         this.list = [];
-        this.dateOffset = 0;
-        this.dateLast = null;
+
+        this.currentDate = new Date(Date.now() - Date.now() % (1000 * 60 * 60 * 24));
+        this.high = this.currentDate;
+        this.low = null;
+        this.seeking = false;
+        this.timeOffset = 0;
+        this.lastdate = null;
 
         const btnReload = document.createElement("div");
         btnReload.style.backgroundImage = "url(res/l_reload.svgz)";
@@ -120,8 +125,38 @@ class Watchdog extends Window {
                 this.txtPort.setAttribute("disabled", true);
         };
 
+        let mouseX0;
+        let lastOffset = 0;
+        this.timeline.onmousedown = event => {
+            this.seeking = true;
+            mouseX0 = event.clientX;
+            lastOffset = this.timeOffset;
+        };
+
+        this.timeline.onmousemove = event => {
+            if (!this.seeking) return;
+            if (event.buttons != 1) return;
+            let last = this.timeOffset;
+            this.timeOffset = (lastOffset - (mouseX0 - event.clientX));
+            this.timeOffset -= this.timeOffset % 20;
+            if (this.timeOffset < 0) this.timeOffset = 0;
+            if (last === this.timeOffset) return;
+            this.Seek(this.timeOffset);
+        };
+
+        this.timeline.onmouseup = event => {
+            this.seeking = false;
+            lastOffset = this.timeOffset;
+        };
+
+        this.win.addEventListener("mousemove", event => this.timeline.onmousemove(event));
+        this.win.addEventListener("mouseup", event => this.timeline.onmouseup(event));
+
+        this.win.addEventListener("mouseleave", () => {
+            this.seeking = false;
+        });
+
         this.Reload();
-        this.DrawTimeline();
     }
 
     Reload() {
@@ -149,6 +184,14 @@ class Watchdog extends Window {
             if (payload[0] == "list") {
                 this.list = [];
                 this.view.innerHTML = "";
+
+                this.timeline.innerHTML = "";
+                this.currentDate = new Date(Date.now() - Date.now() % (1000 * 60 * 60 * 24));
+                this.high = this.currentDate;
+                this.low = null;
+                this.timeOffset = 0;
+                this.lastdate = null;
+                this.DrawTimeline();
 
                 for (let i = 1; i < payload.length; i++)
                     if (payload[i].length > 0)
@@ -401,23 +444,33 @@ class Watchdog extends Window {
         this.btnAdd.setAttribute("disabled", true);
     }
 
-    Seek() {
+    Seek(offset) {
+        for (let i = 0; i < this.timeline.childNodes.length; i++) {
+            if (this.timeline.childNodes[i].tagName != "svg") continue;
+            this.timeline.childNodes[i].style.transform = `translateX(${offset}px)`;
+        }
 
     }
 
     DrawTimeline() {
         const today = new Date();
 
-        if (this.dateLast === null) {
-            const gradient = document.createElement("div");
-            gradient.style.position = "absolute";
-            gradient.style.background = "linear-gradient(to right,transparent,rgb(64,64,64))";
-            gradient.style.width = "32px";
-            gradient.style.height = "32px";
-            gradient.style.right = "0";
-            gradient.style.top = "0";
-            gradient.style.zIndex = "2";
-            this.timeline.appendChild(gradient);
+        if (this.lastdate === null) {
+            const gradientL = document.createElement("div");
+            gradientL.style.position = "absolute";
+            gradientL.style.background = "linear-gradient(to right,rgb(64,64,64),transparent)";
+            gradientL.style.width = gradientL.style.height = "32px";
+            gradientL.style.left = gradientL.style.top = "0";
+            gradientL.style.zIndex = "2";
+            this.timeline.appendChild(gradientL);
+
+            const gradientR = document.createElement("div");
+            gradientR.style.position = "absolute";
+            gradientR.style.background = "linear-gradient(to right,transparent,rgb(64,64,64))";
+            gradientR.style.width = gradientR.style.height = "32px";
+            gradientR.style.right = gradientR.style.top = "0";
+            gradientR.style.zIndex = "2";
+            this.timeline.appendChild(gradientR);
 
             const svg = this.GenerateDateSvg(today);
             svg.style.top = "0";
@@ -427,17 +480,16 @@ class Watchdog extends Window {
 
         const svg_1 = this.GenerateDateSvg(new Date(2020, 8, 24)); //yesterday
         svg_1.style.top = "0";
-        svg_1.style.right = "480";
+        svg_1.style.right = "480px";
         this.timeline.appendChild(svg_1);
 
         const svg_2 = this.GenerateDateSvg(new Date(2020, 8, 23)); //
         svg_2.style.top = "0";
-        svg_2.style.right = "960";
+        svg_2.style.right = "960px";
         this.timeline.appendChild(svg_2);
     }
 
     GenerateDateSvg(date) {
-
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("width", 480);
         svg.setAttribute("height", 32);
@@ -447,7 +499,7 @@ class Watchdog extends Window {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             dot.setAttribute("cx", i * 20);
             dot.setAttribute("cy", 28);
-            dot.setAttribute("r", 2);
+            dot.setAttribute("r", i%2==0 ? 2 : 1);
             dot.setAttribute("fill", "#C0C0C0");
             svg.appendChild(dot);
         }
@@ -456,23 +508,25 @@ class Watchdog extends Window {
             const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
             lblTime.innerHTML = i.toString().padStart(2, "0") + ":00";
             lblTime.setAttribute("x", i*20);
-            lblTime.setAttribute("y", 22);
+            lblTime.setAttribute("y", 18);
             lblTime.setAttribute("fill", "#C0C0C0");
             lblTime.setAttribute("text-anchor", "middle");
-            lblTime.setAttribute("font-size", "9px");
+            lblTime.setAttribute("font-size", "10px");
+            //lblTime.style.transformOrigin = `${10 + i*20}px 14px`;
+            //lblTime.style.transform = "rotate(-60deg)";
             svg.appendChild(lblTime);
         }
 
         const l0 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         l0.setAttribute("x", -9);
-        l0.setAttribute("y", 2);
+        l0.setAttribute("y", 3);
         l0.setAttribute("width", 18);
         l0.setAttribute("height", 3);
         l0.setAttribute("fill", "#C0C0C0");
         svg.appendChild(l0);
         const d0 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         d0.setAttribute("x", -9);
-        d0.setAttribute("y", 2);
+        d0.setAttribute("y", 3);
         d0.setAttribute("width", 18);
         d0.setAttribute("height", 18);
         d0.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
@@ -480,23 +534,23 @@ class Watchdog extends Window {
         const n0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
         n0.innerHTML = date.getDate();
         n0.setAttribute("x", 0);
-        n0.setAttribute("y", 16);
+        n0.setAttribute("y", 17);
         n0.setAttribute("fill", "#C0C0C0");
-        n0.setAttribute("font-size", "12px");
+        n0.setAttribute("font-size", "11px");
         n0.setAttribute("text-anchor", "middle");
         svg.appendChild(n0);
 
         date.setDate(date.getDate() + 1);
         const l1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         l1.setAttribute("x", 471);
-        l1.setAttribute("y", 2);
+        l1.setAttribute("y", 3);
         l1.setAttribute("width", 18);
         l1.setAttribute("height", 3);
         l1.setAttribute("fill", "#C0C0C0");
         svg.appendChild(l1);
         const d1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         d1.setAttribute("x", 471);
-        d1.setAttribute("y", 2);
+        d1.setAttribute("y", 3);
         d1.setAttribute("width", 18);
         d1.setAttribute("height", 18);
         d1.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
@@ -504,9 +558,9 @@ class Watchdog extends Window {
         const n1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
         n1.innerHTML = date.getDate();
         n1.setAttribute("x", 480);
-        n1.setAttribute("y", 16);
+        n1.setAttribute("y", 17);
         n1.setAttribute("fill", "#C0C0C0");
-        n1.setAttribute("font-size", "12px");
+        n1.setAttribute("font-size", "11px");
         n1.setAttribute("text-anchor", "middle");
         svg.appendChild(n1);
 

@@ -19,6 +19,20 @@
     overflow: hidden;
 }
 
+.w-dog-timeline > div {
+    border-radius: 4px;
+}
+
+.w-dog-timeline:hover > div:nth-child(1) {
+    transition: .4s;
+    box-shadow: var(--theme-color) 12px 0 8px -8px inset;
+}
+
+.w-dog-timeline:hover > div:nth-child(2) {
+    transition: .4s;
+    box-shadow: var(--theme-color) -12px 0 8px -8px inset;
+}
+
 .w-dog-timeline > svg {
     position: absolute;
 }
@@ -71,7 +85,6 @@
     background-image: url("res/close.svgz");
     background-size: 20px 20px;
     background-repeat: no-repeat;
-    background-color: rgb(192,192,192);
 
     transition: .2s;
 }
