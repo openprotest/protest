@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Renci.SshNet.Messages.Connection;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -407,7 +408,12 @@ class Database {
             string key = (string)o.Key;
             string[] current = (string[])entry.hash[key];
             broadcast.Append($"\"{Strings.EscapeJson(key)}\":");
-            broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
+
+            if (key == "PASSWORD")
+                broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"\"]");
+            else
+                broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
+
             fst = false;
         }
         broadcast.Append("}");
@@ -547,7 +553,12 @@ class Database {
             string key = (string)o.Key;
             string[] current = (string[])entry.hash[key];
             broadcast.Append($"\"{Strings.EscapeJson(key)}\":");
-            broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
+
+            if (key == "PASSWORD")
+                broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"\"]");
+            else
+                broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
+
             fst = false;
         }
         broadcast.Append("}");
