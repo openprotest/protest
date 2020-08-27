@@ -14,7 +14,7 @@ class Watchdog extends Window {
         this.list = [];
 
         this.currentDate = new Date(Date.now() - Date.now() % (1000 * 60 * 60 * 24));
-        this.high = this.currentDate;
+        this.high = this.currentDate.getTime();
         this.low = null;
         this.seeking = false;
         this.timeOffset = 0;
@@ -106,7 +106,6 @@ class Watchdog extends Window {
         side.appendChild(this.btnAdd);
 
         this.btnAdd.onclick = () => this.Add();
-
         btnReload.onclick = () => this.Reload();
         btnSettings.onclick = () => this.Settings();
 
@@ -159,6 +158,13 @@ class Watchdog extends Window {
         this.Reload();
     }
 
+    AfterResize() { //override
+        super.AfterResize();
+        setTimeout(() => {
+            this.DrawTimeline();
+        }, 200);
+    }
+
     Reload() {
         let server = window.location.href;
         server = server.replace("https://", "");
@@ -182,12 +188,28 @@ class Watchdog extends Window {
             if (payload.length == 0) return;
 
             if (payload[0] == "list") {
+                
+                this.timeline.innerHTML = "";
+                const gradientL = document.createElement("div");
+                gradientL.style.position = "absolute";
+                gradientL.style.background = "linear-gradient(to right,rgb(64,64,64),transparent)";
+                gradientL.style.width = gradientL.style.height = "32px";
+                gradientL.style.left = gradientL.style.top = "0";
+                gradientL.style.zIndex = "2";
+                this.timeline.appendChild(gradientL);
+                const gradientR = document.createElement("div");
+                gradientR.style.position = "absolute";
+                gradientR.style.background = "linear-gradient(to right,transparent,rgb(64,64,64))";
+                gradientR.style.width = gradientR.style.height = "32px";
+                gradientR.style.right = gradientR.style.top = "0";
+                gradientR.style.zIndex = "2";
+                this.timeline.appendChild(gradientR);
+
                 this.list = [];
                 this.view.innerHTML = "";
 
-                this.timeline.innerHTML = "";
                 this.currentDate = new Date(Date.now() - Date.now() % (1000 * 60 * 60 * 24));
-                this.high = this.currentDate;
+                this.high = this.currentDate.getTime();
                 this.low = null;
                 this.timeOffset = 0;
                 this.lastdate = null;
@@ -449,44 +471,23 @@ class Watchdog extends Window {
             if (this.timeline.childNodes[i].tagName != "svg") continue;
             this.timeline.childNodes[i].style.transform = `translateX(${offset}px)`;
         }
-
+        
+        this.DrawTimeline();
     }
 
     DrawTimeline() {
-        const today = new Date();
+        const DAY = 1000 * 3600 * 24;
+        const VIEWPORT_DAYS = Math.round(this.timeline.offsetWidth / 480) + 1; //480px == a day length
 
-        if (this.lastdate === null) {
-            const gradientL = document.createElement("div");
-            gradientL.style.position = "absolute";
-            gradientL.style.background = "linear-gradient(to right,rgb(64,64,64),transparent)";
-            gradientL.style.width = gradientL.style.height = "32px";
-            gradientL.style.left = gradientL.style.top = "0";
-            gradientL.style.zIndex = "2";
-            this.timeline.appendChild(gradientL);
+        if (this.low === null) this.low = this.high;
 
-            const gradientR = document.createElement("div");
-            gradientR.style.position = "absolute";
-            gradientR.style.background = "linear-gradient(to right,transparent,rgb(64,64,64))";
-            gradientR.style.width = gradientR.style.height = "32px";
-            gradientR.style.right = gradientR.style.top = "0";
-            gradientR.style.zIndex = "2";
-            this.timeline.appendChild(gradientR);
-
-            const svg = this.GenerateDateSvg(today);
+        while (this.low > this.high - VIEWPORT_DAYS * DAY - (this.timeOffset/480) * DAY) {
+            const svg = this.GenerateDateSvg(new Date(this.low));
             svg.style.top = "0";
-            svg.style.right = "0";
+            svg.style.right = `${(this.high - this.low) / DAY * 480}px`;
             this.timeline.appendChild(svg);
+            this.low -= DAY;
         }
-
-        const svg_1 = this.GenerateDateSvg(new Date(2020, 8, 24)); //yesterday
-        svg_1.style.top = "0";
-        svg_1.style.right = "480px";
-        this.timeline.appendChild(svg_1);
-
-        const svg_2 = this.GenerateDateSvg(new Date(2020, 8, 23)); //
-        svg_2.style.top = "0";
-        svg_2.style.right = "960px";
-        this.timeline.appendChild(svg_2);
     }
 
     GenerateDateSvg(date) {
