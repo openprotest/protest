@@ -13,6 +13,7 @@ class Watchdog extends Window {
 
         this.list = [];
 
+        this.busy = false;
         this.currentDate = new Date(Date.now() - Date.now() % (1000 * 60 * 60 * 24));
         this.high = this.currentDate.getTime();
         this.low = null;
@@ -166,23 +167,21 @@ class Watchdog extends Window {
     }
 
     Reload() {
+        if (this.busy) return;
+
         let server = window.location.href;
         server = server.replace("https://", "");
         server = server.replace("http://", "");
         if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
-        if (this.ws != null)
-            try {
-                this.ws.close();
-            } catch (error) { };
+        const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/watchdog");
 
-        this.ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/watchdog");
-
-        this.ws.onopen = () => {
-            this.ws.send("list");
+        ws.onopen = () => {
+            this.busy = true;
+            ws.send("list");
         };
         
-        this.ws.onmessage = (event) => {
+        ws.onmessage = (event) => {
             let payload = event.data.split("\n");
 
             if (payload.length == 0) return;
@@ -254,32 +253,104 @@ class Watchdog extends Window {
                     };
                 }
 
-                this.ws.send("get");
+                ws.send("get");
 
             } else {
-                let name = payload[0];
-                let date = payload[1];
-                let entry = this.list.find(o => o.name === name);
-
-                let dateSplit = date.split("-").map(o => parseInt(o));
-
-                entry.data[date] = [];
-                for (let i = 2; i < payload.length; i++) {
-                    if (payload[i].length == 0) continue;
-
-                    let split = payload[i].split(" ");
-                    let timeSplit = split[0].split(":").map(o => parseInt(o));
-
-                    let time = new Date(dateSplit[0], dateSplit[1], dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]).getTime();
-                    entry.data[date].push([time, isNaN(split[1]) ? split[1] : parseInt(split[1])]);
-                }
-
+                this.ExtractData(payload);
             }
         };
 
-        //this.ws.onclose = () => { };
+        ws.onclose = () => {
+            this.busy = false;
+        };
 
-        //this.ws.onerror = (error) => { console.log(error); };
+        //ws.onerror = error => { console.log(error); };
+    }
+
+    GetData(date) {
+        let server = window.location.href;
+        server = server.replace("https://", "");
+        server = server.replace("http://", "");
+        if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+
+        const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/watchdog");
+
+        ws.onopen = () => {
+            ws.send(`get:${date}`);
+        };
+
+        ws.onmessage = (event) => {
+            let payload = event.data.split("\n");
+            if (payload.length == 0) return;
+            if (payload[0] == "get")  this.ExtractData(payload);
+        };
+    }
+
+    ExtractData(payload) {
+        let name = payload[0];
+        let date = payload[1];
+        let entry = this.list.find(o => o.name === name);
+
+        let dateSplit = date.split("-").map(o => parseInt(o));
+
+        entry.data[date] = [];
+        for (let i = 2; i < payload.length; i++) {
+            if (payload[i].length == 0) continue;
+
+            let split = payload[i].split(" ");
+            let timeSplit = split[0].split(":").map(o => parseInt(o));
+
+            let time = new Date(dateSplit[0], dateSplit[1], dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]).getTime();
+            let status = isNaN(split[1]) ? split[1] : parseInt(split[1]);
+            entry.data[date].push([time, status]);
+        }
+
+        this.Plot(entry);
+    }
+
+    PlotAll() {
+        for (let i = 0; i < this.list.length; i++)
+            this.Plot(this.list[i]);
+    }
+
+    Plot(entry) {
+        const DAY = 1000 * 3600 * 24;
+        const VIEWPORT_DAYS = Math.round(this.timeline.offsetWidth / 480) + 1; //480px == a day length
+        const FROM = this.currentDate.getTime() - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY;
+        const TO = this.currentDate.getTime() - (this.timeOffset / 480) * DAY;
+
+        for (let i = FROM; i <= TO; i += DAY) {
+            let c = new Date(i);
+            let key = `${c.getFullYear()}-${(c.getMonth() + 1).toString().padStart(2, "0")}-${c.getDate().toString().padStart(2, "0")}`;
+
+            if (!entry.data.hasOwnProperty(key)) continue;
+
+            let len = entry.graph.childNodes.length;
+            for (let j = 0; j < entry.data[key].length; j++)
+                if (j < len) { //use old element
+
+                } else { //need to create new
+                    const element = document.createElement("div");
+
+                    //entry.data[key][j][0] - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY
+                    let x = ((this.currentDate.getTime() - entry.data[key][j][0]) / DAY) * 20;
+                    console.log(x);
+
+                    let status = "";
+
+                    if (entry.data[key][j][1] === "true")
+                        status = PingColor(0);
+                    else if (entry.data[key][j][1] === "false")
+                        status = PingColor("TimedOut");
+                    else 
+                        status = PingColor(entry.data[key][j][1]);
+
+                    element.style.transform = `translateX(${x}px)`;
+                    element.style.backgroundColor = status;
+                    entry.graph.appendChild(element);
+                }
+
+        }
     }
 
     Settings() {
@@ -298,7 +369,6 @@ class Watchdog extends Window {
 
         xhr.open("GET", "watchdog/getconfig", true);
         xhr.send();
-
     }
 
     SettingsDialog(enable, interval) {
@@ -565,7 +635,7 @@ class Watchdog extends Window {
         n1.setAttribute("text-anchor", "middle");
         svg.appendChild(n1);
 
-        if (date.getDate() === 1) {
+        /*if (date.getDate() === 1) {
             const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             const lblMonth = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -578,7 +648,7 @@ class Watchdog extends Window {
             lblMonth.style.transformOrigin = "465px 11px";
             lblMonth.style.transform = "rotate(-90deg)";
             svg.appendChild(lblMonth);
-        }
+        }*/
 
         return svg;
     }

@@ -92,3 +92,14 @@
 .w-dog-view > div:hover > div:nth-child(3) {
      opacity: 1;
 }
+
+.w-dog-view > div > div:nth-child(2) > div {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    right: 0;
+    border-radius: 2px;
+    margin-top: 1px;
+
+    filter: brightness(.85);
+}
