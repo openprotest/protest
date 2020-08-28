@@ -37,8 +37,7 @@ document.body.onbeforeunload = () => {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", "logout", true);
         xhr.send();
-
-        document.cookie = "";
+        //document.cookie = "";
     }
 };
 

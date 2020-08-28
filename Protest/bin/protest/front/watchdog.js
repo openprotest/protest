@@ -565,6 +565,21 @@ class Watchdog extends Window {
         n1.setAttribute("text-anchor", "middle");
         svg.appendChild(n1);
 
+        if (date.getDate() === 1) {
+            const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            const lblMonth = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lblMonth.innerHTML = MONTH[date.getMonth()];
+            lblMonth.setAttribute("x", 465);
+            lblMonth.setAttribute("y", 11);
+            lblMonth.setAttribute("fill", "#C0C0C0");
+            lblMonth.setAttribute("text-anchor", "middle");
+            lblMonth.setAttribute("font-size", "10px");
+            lblMonth.style.transformOrigin = "465px 11px";
+            lblMonth.style.transform = "rotate(-90deg)";
+            svg.appendChild(lblMonth);
+        }
+
         return svg;
     }
 }

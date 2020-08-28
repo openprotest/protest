@@ -53,6 +53,7 @@ public static class Session {
                     Value = sessionId,
                     HttpOnly = true,
                     //Domain = ctx.Request.UserHostName, //TODO: brakes reverce proxy
+                    //SameSite = "Lax",
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };
 
