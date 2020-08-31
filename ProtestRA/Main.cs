@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Net;
 using Protest_RA.Properties;
+using System.Threading;
 
 namespace Protest_RA {
     public partial class Main : Form {
@@ -12,7 +13,7 @@ namespace Protest_RA {
         public static Service srv_rdp;
         public static Service srv_pse;
 
-        //public static CheckBox chkOverrideWinRdpClient;
+        public static CheckBox chkOverrideWinRdpClient;
 
         public static string key = "";
         public static byte[] bKey;
@@ -35,7 +36,7 @@ namespace Protest_RA {
 
             self = this;
 
-            System.Threading.Thread.Sleep(1000);
+            Thread.Sleep(1000);
 
             IPAddress[] ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
             for (int i = 0; i < ip.Length; i++)
@@ -72,12 +73,12 @@ namespace Protest_RA {
 
             srv_pse.chkEnable.Checked = Settings.Default.pse_enable;
 
-            /*chkOverrideWinRdpClient = new CheckBox();
+            chkOverrideWinRdpClient = new CheckBox();
             chkOverrideWinRdpClient.Text = "Overrite windows native RDP client";
             chkOverrideWinRdpClient.Left = srv_rdp.txtPassword.Left + srv_rdp.txtPassword.Width + 16;
             chkOverrideWinRdpClient.Top = 72;
             chkOverrideWinRdpClient.AutoSize = true;
-            srv_rdp.Controls.Add(chkOverrideWinRdpClient);*/
+            srv_rdp.Controls.Add(chkOverrideWinRdpClient);
         }
 
         public void LoadSettings() {
@@ -102,15 +103,11 @@ namespace Protest_RA {
             srv_rdp.chkEnable.Checked = Settings.Default.mstsc_enable;
             srv_rdp.txtExe.Text = Settings.Default.mstsc_exe;
             srv_rdp.txtParam.Text = Settings.Default.mstsc_para;
-            srv_rdp.lblUsername.Visible = false;
-            srv_rdp.lblPassword.Visible = false;
-            srv_rdp.txtUsername.Visible = false;
-            srv_rdp.txtPassword.Visible = false;
-            //srv_rdp.txtUsername.Text = Settings.Default.rdp_user;
-            //srv_rdp.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.rdp_pass, bKey, bIv);
+            srv_rdp.txtUsername.Text = Settings.Default.rdp_user;
+            srv_rdp.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.rdp_pass, bKey, bIv);
 
-            /*if (srv_rdp.txtPassword.Text.Length > 0) //remove salt
-                srv_rdp.txtPassword.Text = srv_rdp.txtPassword.Text.Substring(1);*/
+            if (srv_rdp.txtPassword.Text.Length > 0) //remove salt
+                srv_rdp.txtPassword.Text = srv_rdp.txtPassword.Text.Substring(1);
 
             srv_pse.txtExe.Text = Settings.Default.pse_exe;
             srv_pse.txtParam.Text = Settings.Default.pse_para;
@@ -120,7 +117,7 @@ namespace Protest_RA {
             if (srv_pse.txtPassword.Text.Length > 0) //remove salt
                 srv_pse.txtPassword.Text = srv_pse.txtPassword.Text.Substring(1);
 
-            //chkOverrideWinRdpClient.Checked = Settings.Default.rdp_native_client;
+            chkOverrideWinRdpClient.Checked = Settings.Default.rdp_native_client;
         }
 
         public void SaveSettings() {
@@ -141,9 +138,9 @@ namespace Protest_RA {
             Settings.Default.mstsc_enable = srv_rdp.chkEnable.Checked;
             Settings.Default.mstsc_exe = srv_rdp.txtExe.Text;
             Settings.Default.mstsc_para = srv_rdp.txtParam.Text;
-            //Settings.Default.rdp_native_client = chkOverrideWinRdpClient.Checked;
-            //Settings.Default.rdp_user = srv_rdp.txtUsername.Text;
-            //Settings.Default.rdp_pass = CryptoAes.EncryptB64($"9{srv_rdp.txtPassword.Text}", bKey, bIv); //add salt
+            Settings.Default.rdp_native_client = chkOverrideWinRdpClient.Checked;
+            Settings.Default.rdp_user = srv_rdp.txtUsername.Text;
+            Settings.Default.rdp_pass = CryptoAes.EncryptB64($"9{srv_rdp.txtPassword.Text}", bKey, bIv); //add salt
 
             Settings.Default.pse_enable = srv_pse.chkEnable.Checked;
             Settings.Default.pse_exe = srv_pse.txtExe.Text;

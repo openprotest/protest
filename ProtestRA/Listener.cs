@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
+using System.Collections;
 
 namespace Protest_RA {
     static class Listener {
@@ -91,7 +92,6 @@ namespace Protest_RA {
             switch (method) {
                 case "vnc":
                     if (!Main.srv_uvnc.chkEnable.Checked) break;
-                    PushToRecents($"VNC: {targer}", cmd);
                     new Thread(() => {
                         try {
                             Process.Start(
@@ -103,14 +103,19 @@ namespace Protest_RA {
 
                 case "rdp":
                     if (!Main.srv_rdp.chkEnable.Checked) break;
-                    PushToRecents($"RDP: {targer}", cmd);
 
-                    /*FileInfo file1 = new FileInfo("AxInterop.MSTSCLib.dll");
+                    FileInfo file1 = new FileInfo("AxInterop.MSTSCLib.dll");
                     FileInfo file2 = new FileInfo("Interop.MSTSCLib.dll");
                     if (Main.chkOverrideWinRdpClient.Checked && file1.Exists && file2.Exists) { //pro-test client
-                        //...
+                        try
+                        {
+                            Process.Start(
+                            Process.GetCurrentProcess().MainModule.FileName,
+                            " -r " + targer);
+                        }
+                        catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
                         break;
-                    }*/
+                    }
 
                     new Thread(() => { //native
                         try {
@@ -123,7 +128,6 @@ namespace Protest_RA {
 
                 case "pse":
                     if (!Main.srv_pse.chkEnable.Checked) break;
-                    PushToRecents($"PSE: {targer}", cmd);
 
                     new Thread(() => {
                         try {
@@ -150,7 +154,6 @@ namespace Protest_RA {
                     break;
 
                 case "smb":
-                    PushToRecents($"SMB: {targer}", cmd);
                     new Thread(() => {
                         try {
                             using (Process p = new Process()) {
@@ -180,14 +183,6 @@ namespace Protest_RA {
             }
 
             return false;
-        }
-
-        private static void PushToRecents(string name, string cmd) {
-            Main.self.recentsToolStripMenuItem.Enabled = true;
-
-            ToolStripMenuItem recent = new ToolStripMenuItem(name);
-
-            Main.self.recentsToolStripMenuItem.DropDownItems.Add(recent);
         }
 
     }
