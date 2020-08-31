@@ -4,7 +4,7 @@ class DnsLookup extends Console {
 
         this.args = args ? args : { entries: [] };
 
-        this.hashtable = {};      //contains all elements
+        this.hashtable = {}; //contains all elements
 
         this.setTitle("DNS lookup");
         this.setIcon("res/dns.svgz");
