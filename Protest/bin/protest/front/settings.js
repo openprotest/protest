@@ -39,18 +39,25 @@ class Settings extends Tabs {
         this.subContent.style.overflowY = "auto";
 
         this.tabGui     = this.AddTab("Appearance", "res/tv.svgz");
+        //this.tabIcons   = this.AddTab("Icons", "res/desktop.svgz");
         this.tabSession = this.AddTab("Session", "res/hourglass.svgz");
         this.tabUpdate  = this.AddTab("Update", "res/update.svgz");
         this.tabLegal   = this.AddTab("License", "res/gpl.svgz");
         this.tabAbout   = this.AddTab("About", "res/logo.svgz");
 
         this.tabGui.onclick = () => this.ShowGui();
+        //this.tabIcons.onclick = () => this.ShowIcons();
         this.tabSession.onclick = () => this.ShowSession();
         this.tabUpdate.onclick = () => this.ShowUpdate();
         this.tabLegal.onclick = () => this.ShowLegal();
         this.tabAbout.onclick = () => this.ShowAbout();
 
         switch (this.args) {
+            case "icons":
+                this.tabIcons.className = "v-tab-selected";
+                this.ShowIcons();
+                break;
+
             case "session":
                 this.tabSession.className = "v-tab-selected";
                 this.ShowSession();
@@ -346,6 +353,12 @@ class Settings extends Tabs {
         this.zoom.oninput = () => { divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%"; };
 
         Apply();
+    }
+
+    ShowIcons() {
+        this.args = "icons";
+        this.subContent.innerHTML = "";
+
     }
 
     ShowSession() {
