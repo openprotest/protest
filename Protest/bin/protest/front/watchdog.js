@@ -111,12 +111,12 @@ class Watchdog extends Window {
         btnSettings.onclick = () => this.Settings();
 
         this.txtHost.onchange =
-        this.txtHost.oninput = () => {
-            if (this.txtHost.value.length > 0)
-                this.btnAdd.removeAttribute("disabled");
-            else
-                this.btnAdd.setAttribute("disabled", true);
-        };
+            this.txtHost.oninput = () => {
+                if (this.txtHost.value.length > 0)
+                    this.btnAdd.removeAttribute("disabled");
+                else
+                    this.btnAdd.setAttribute("disabled", true);
+            };
 
         this.txtProtocol.onchange = () => {
             if (this.txtProtocol.value == "tcp")
@@ -180,14 +180,14 @@ class Watchdog extends Window {
             this.busy = true;
             ws.send("list");
         };
-        
+
         ws.onmessage = (event) => {
             let payload = event.data.split("\n");
 
             if (payload.length == 0) return;
 
             if (payload[0] == "list") {
-                
+
                 this.timeline.innerHTML = "";
                 const gradientL = document.createElement("div");
                 gradientL.style.position = "absolute";
@@ -217,23 +217,23 @@ class Watchdog extends Window {
                 for (let i = 1; i < payload.length; i++)
                     if (payload[i].length > 0)
                         this.list.push({
-                            name  : payload[i],
-                            div   : document.createElement("div"),
-                            graph : document.createElement("div"),
+                            name: payload[i],
+                            div: document.createElement("div"),
+                            graph: document.createElement("div"),
                             data: {}
                         });
 
                 this.list.sort((a, b) => a.name.localeCompare(b.name));
 
                 for (let i = 0; i < this.list.length; i++) {
-                    const lblName = document.createElement("div");
-                    lblName.innerHTML = this.list[i].name;
-                    this.list[i].div.appendChild(lblName);
-
-                    this.list[i].div.appendChild(this.list[i].graph);
-
                     const btnRemove = document.createElement("div");
                     this.list[i].div.appendChild(btnRemove);
+
+                    const lblHost = document.createElement("div");
+                    lblHost.innerHTML = this.list[i].name;
+                    this.list[i].div.appendChild(lblHost);
+
+                    this.list[i].div.appendChild(this.list[i].graph);
 
                     this.view.appendChild(this.list[i].div);
 
@@ -276,13 +276,16 @@ class Watchdog extends Window {
         const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/watchdog");
 
         ws.onopen = () => {
-            ws.send(`get:${date}`);
+            if (date instanceof Date)
+                ws.send(`get:${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`);
+            else
+                ws.send(`get:${date}`);
         };
 
         ws.onmessage = (event) => {
             let payload = event.data.split("\n");
             if (payload.length == 0) return;
-            if (payload[0] == "get")  this.ExtractData(payload);
+            if (payload[0] != "list") this.ExtractData(payload);
         };
     }
 
@@ -300,7 +303,7 @@ class Watchdog extends Window {
             let split = payload[i].split(" ");
             let timeSplit = split[0].split(":").map(o => parseInt(o));
 
-            let time = new Date(dateSplit[0], dateSplit[1], dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]).getTime();
+            let time = new Date(dateSplit[0], dateSplit[1] - 1, dateSplit[2], timeSplit[0], timeSplit[1], timeSplit[2]).getTime();
             let status = isNaN(split[1]) ? split[1] : parseInt(split[1]);
             entry.data[date].push([time, status]);
         }
@@ -314,41 +317,50 @@ class Watchdog extends Window {
     }
 
     Plot(entry) {
-        const DAY = 1000 * 3600 * 24;
+        const DAY = 3600000 * 24;
         const VIEWPORT_DAYS = Math.round(this.timeline.offsetWidth / 480) + 1; //480px == a day length
         const FROM = this.currentDate.getTime() - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY;
-        const TO = this.currentDate.getTime() - (this.timeOffset / 480) * DAY;
+        const TO = this.currentDate.getTime() - (this.timeOffset / 480) * DAY + DAY;
+
+        let count = 0;
+        let len = entry.graph.childNodes.length;
 
         for (let i = FROM; i <= TO; i += DAY) {
             let c = new Date(i);
             let key = `${c.getFullYear()}-${(c.getMonth() + 1).toString().padStart(2, "0")}-${c.getDate().toString().padStart(2, "0")}`;
 
             if (!entry.data.hasOwnProperty(key)) continue;
+                        
+            let j = 0;
+            for (j = 0; j < entry.data[key].length; j++) {
+                let element = null;
 
-            let len = entry.graph.childNodes.length;
-            for (let j = 0; j < entry.data[key].length; j++)
                 if (j < len) { //use old element
-
+                    element = entry.graph.childNodes[j];
                 } else { //need to create new
-                    const element = document.createElement("div");
-
-                    //entry.data[key][j][0] - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY
-                    let x = ((this.currentDate.getTime() - entry.data[key][j][0]) / DAY) * 20;
-                    console.log(x);
-
-                    let status = "";
-
-                    if (entry.data[key][j][1] === "true")
-                        status = PingColor(0);
-                    else if (entry.data[key][j][1] === "false")
-                        status = PingColor("TimedOut");
-                    else 
-                        status = PingColor(entry.data[key][j][1]);
-
-                    element.style.transform = `translateX(${x}px)`;
-                    element.style.backgroundColor = status;
+                    element = document.createElement("div");
                     entry.graph.appendChild(element);
                 }
+
+                let x = Math.round((this.currentDate.getTime() + DAY - entry.data[key][j][0]) * 480 / DAY - this.timeOffset);
+                element.style.right = `${x - 72}px`;
+
+                let color = "";
+                if (entry.data[key][j][1] === "true")
+                    color = PingColor(0);
+                else if (entry.data[key][j][1] === "false")
+                    color = PingColor("TimedOut");
+                else
+                    color = PingColor(entry.data[key][j][1]);
+                element.style.backgroundColor = color;
+
+                count++;
+            }
+                        
+            while (count < entry.graph.childNodes.length) { //remove unused elements
+                entry.graph.removeChild(entry.graph.childNodes[j]);
+                console.log(j);
+            }
 
         }
     }
@@ -360,10 +372,9 @@ class Watchdog extends Window {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split.length == 2)
                     this.SettingsDialog(split[0] === "true", parseInt(split[1]));
-                else 
+                else
                     this.ConfirmBox(xhr.responseText, true);
             }
-
             if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
         };
 
@@ -403,7 +414,7 @@ class Watchdog extends Window {
         const rngInterval = document.createElement("input");
         rngInterval.style.gridArea = "2 / 2";
         rngInterval.type = "range";
-        rngInterval.min = 0;
+        rngInterval.min = 1;
         rngInterval.max = 8;
         rngInterval.value = 5;
         innerBox.appendChild(rngInterval);
@@ -487,13 +498,13 @@ class Watchdog extends Window {
         this.AddCheckBoxLabel(divSSL, chkSSL, "&nbsp;");
 
 
-        const timeMapping = [ 5, 15, 30, 60, 2*60, 4*60, 8*60, 24*60, 48*60 ];
+        const timeMapping = [5, 15, 30, 60, 2 * 60, 4 * 60, 8 * 60, 24 * 60, 48 * 60];
 
         rngInterval.oninput =
-        rngInterval.onchange = () => {
-            let value = timeMapping[rngInterval.value];
-            lblIntervalValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
-        };
+            rngInterval.onchange = () => {
+                let value = timeMapping[rngInterval.value];
+                lblIntervalValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
+            };
 
         btnOK.addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
@@ -528,7 +539,7 @@ class Watchdog extends Window {
 
         if (this.txtProtocol.value == "tcp")
             xhr.open("GET", `watchdog/add&host=${this.txtHost.value}&proto=${this.txtProtocol.value}&port=${this.txtPort.value}`, true);
-        else 
+        else
             xhr.open("GET", `watchdog/add&host=${this.txtHost.value}&proto=${this.txtProtocol.value}`, true);
         xhr.send();
 
@@ -541,8 +552,9 @@ class Watchdog extends Window {
             if (this.timeline.childNodes[i].tagName != "svg") continue;
             this.timeline.childNodes[i].style.transform = `translateX(${offset}px)`;
         }
-        
+
         this.DrawTimeline();
+        //this.PlotAll();
     }
 
     DrawTimeline() {
@@ -551,7 +563,9 @@ class Watchdog extends Window {
 
         if (this.low === null) this.low = this.high;
 
-        while (this.low > this.high - VIEWPORT_DAYS * DAY - (this.timeOffset/480) * DAY) {
+        while (this.low > this.high - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY) {
+            this.GetData(new Date(this.low))
+
             const svg = this.GenerateDateSvg(new Date(this.low));
             svg.style.top = "0";
             svg.style.right = `${(this.high - this.low) / DAY * 480}px`;
@@ -570,15 +584,15 @@ class Watchdog extends Window {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             dot.setAttribute("cx", i * 20);
             dot.setAttribute("cy", 28);
-            dot.setAttribute("r", i%2==0 ? 2 : 1);
+            dot.setAttribute("r", i % 2 == 0 ? 2 : 1);
             dot.setAttribute("fill", "#C0C0C0");
             svg.appendChild(dot);
         }
 
-        for (let i = 2; i < 24; i+=2) {
+        for (let i = 2; i < 24; i += 2) {
             const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
             lblTime.innerHTML = i.toString().padStart(2, "0") + ":00";
-            lblTime.setAttribute("x", i*20);
+            lblTime.setAttribute("x", i * 20);
             lblTime.setAttribute("y", 18);
             lblTime.setAttribute("fill", "#C0C0C0");
             lblTime.setAttribute("text-anchor", "middle");
