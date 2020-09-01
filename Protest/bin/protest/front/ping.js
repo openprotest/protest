@@ -441,12 +441,12 @@ class Ping extends Console {
 
                     let icon = document.createElement("div");
                     icon.className = "list-icon";
-                    icon.style.backgroundImage = "url(" + GetEquipIcon(db_equip[i].TYPE); +")";
+                    icon.style.backgroundImage = `url(${GetEquipIcon(db_equip[j].TYPE)})`;
                     div.appendChild(icon);
 
                     icon.ondblclick = () => {
                         for (let j = 0; j < db_equip.length; j++) //just in case of modification
-                            if (db_equip[j].hasOwnProperty("IP") && db_equip[j].IP[0] == hostname) {
+                            if (db_equip[j].hasOwnProperty("IP") && db_equip[j].IP[0] === hostname) {
                                 for (let k = 0; k < $w.array.length; k++)
                                     if ($w.array[k] instanceof Equip && $w.array[k].filename == db_equip[j][".FILENAME"][0]) {
                                         $w.array[k].Minimize(); //minimize/restore

@@ -237,6 +237,14 @@ class Watchdog extends Window {
 
                     this.view.appendChild(this.list[i].div);
 
+
+                    for (let j = 0; j < db_equip.length; j++) //db icon
+                        if (db_equip[j].hasOwnProperty("IP"))
+                            if (db_equip[j].IP[0] === this.list[i].name.split(" ")[0]) {
+                                btnRemove.style.backgroundImage = `url(${GetEquipIcon(db_equip[j].TYPE)})`;
+                                break;
+                            }
+
                     btnRemove.onclick = () => {
                         this.ConfirmBox("Are you sure you want to delete this entry?", false).addEventListener("click", () => {
                             const xhr = new XMLHttpRequest();
@@ -318,13 +326,11 @@ class Watchdog extends Window {
 
     Plot(entry) {
         const DAY = 3600000 * 24;
-        const VIEWPORT_DAYS = Math.round(this.timeline.offsetWidth / 480) + 1; //480px == a day length
+        const VIEWPORT_DAYS = Math.round(this.timeline.offsetWidth / 480); //480px == a day length
         const FROM = this.currentDate.getTime() - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY;
         const TO = this.currentDate.getTime() - (this.timeOffset / 480) * DAY + DAY;
 
         let count = 0;
-        let len = entry.graph.childNodes.length;
-
         for (let i = FROM; i <= TO; i += DAY) {
             let c = new Date(i);
             let key = `${c.getFullYear()}-${(c.getMonth() + 1).toString().padStart(2, "0")}-${c.getDate().toString().padStart(2, "0")}`;
@@ -335,9 +341,9 @@ class Watchdog extends Window {
             for (j = 0; j < entry.data[key].length; j++) {
                 let element = null;
 
-                if (j < len) { //use old element
+                if (count < entry.graph.childNodes.length) { //use old element
                     element = entry.graph.childNodes[j];
-                } else { //need to create new
+                } else { //create new
                     element = document.createElement("div");
                     entry.graph.appendChild(element);
                 }
@@ -358,8 +364,7 @@ class Watchdog extends Window {
             }
                         
             while (count < entry.graph.childNodes.length) { //remove unused elements
-                entry.graph.removeChild(entry.graph.childNodes[j]);
-                console.log(j);
+                entry.graph.removeChild(entry.graph.childNodes[count]);
             }
 
         }
@@ -554,7 +559,7 @@ class Watchdog extends Window {
         }
 
         this.DrawTimeline();
-        //this.PlotAll();
+        this.PlotAll();
     }
 
     DrawTimeline() {
@@ -564,7 +569,7 @@ class Watchdog extends Window {
         if (this.low === null) this.low = this.high;
 
         while (this.low > this.high - VIEWPORT_DAYS * DAY - (this.timeOffset / 480) * DAY) {
-            this.GetData(new Date(this.low))
+            this.GetData(new Date(this.low));
 
             const svg = this.GenerateDateSvg(new Date(this.low));
             svg.style.top = "0";

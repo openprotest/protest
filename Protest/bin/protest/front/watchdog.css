@@ -12,7 +12,7 @@
 }
 .w-dog-timeline {
     position: absolute;
-    left: 262px;
+    left: 478px;
     right: 8px;
     top: 4px;
     height: 32px;
@@ -65,14 +65,10 @@
 .w-dog-view > div > div:nth-child(1) {
     width: 20px;
     height: 20px;
-    border: 1px solid #202020;
-    border-radius: 50%;
     margin-top: 4px;
     margin-left: 4px;
+    border: 1px solid transparent;
 
-    opacity: 0;
-
-    background-image: url("res/close.svgz");
     background-size: 20px 20px;
     background-repeat: no-repeat;
 
@@ -80,10 +76,17 @@
 }
 
 .w-dog-view > div:hover > div:nth-child(1) {
-     opacity: 1;
+    background-image: url(res/close.svgz) !important;
+    border: 1px solid #202020;
+    border-radius: 50%;
+}
+
+.w-dog-view > div > div:nth-child(1):active {
+    background-color: rgba(32,32,32,.2);
 }
 
 .w-dog-view > div > div:nth-child(2) {
+    line-height: 16px;
     margin-left: 4px;
     width: 200px;
     overflow: hidden;

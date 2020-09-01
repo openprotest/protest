@@ -214,6 +214,7 @@ public static class Watchdog {
                                 await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
                             } catch { }
 
+                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                         break;
                     }
                 }

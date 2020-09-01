@@ -77,7 +77,6 @@ public static class LiveInfo {
             } catch {
                 WsWriteText(ws, $".roundtrip:{host}{(char)127}Error{(char)127}ICMP");
             }
-
             
             if (ipArray.Length > 1) 
                 for (int i = 1; i < ipArray.Length; i++)
