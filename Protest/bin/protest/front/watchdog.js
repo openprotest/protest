@@ -302,6 +302,8 @@ class Watchdog extends Window {
         let date = payload[1];
         let entry = this.list.find(o => o.name === name);
 
+        if (entry === undefined) return;
+
         let dateSplit = date.split("-").map(o => parseInt(o));
 
         entry.data[date] = [];
@@ -375,8 +377,20 @@ class Watchdog extends Window {
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
-                if (split.length == 2)
-                    this.SettingsDialog(split[0] === "true", parseInt(split[1]));
+                if (split.length > 10)
+                    this.SettingsDialog({
+                        enable    : split[0] === "true",
+                        interval  : parseInt(split[1]),
+                        email     : split[2],
+                        threshold : parseInt(split[3]),
+                        contition : split[4],
+                        server    : split[5],
+                        port      : parseInt(split[6]),
+                        username  : split[7],
+                        password  : split[8],
+                        recipients: split[9],
+                        ssl       : split[10]  === "true"
+                    });
                 else
                     this.ConfirmBox(xhr.responseText, true);
             }
@@ -387,8 +401,8 @@ class Watchdog extends Window {
         xhr.send();
     }
 
-    SettingsDialog(enable, interval) {
-        const dialog = this.DialogBox("450px");
+    SettingsDialog(obj) {
+        const dialog = this.DialogBox("500px");
         if (dialog === null) return;
 
         const btnOK = dialog.btnOK;
@@ -399,7 +413,7 @@ class Watchdog extends Window {
         innerBox.style.padding = "32px";
         innerBox.style.display = "grid";
         innerBox.style.gridTemplateColumns = "120px 225px auto";
-        innerBox.style.gridTemplateRows = "repeat(12, 32px)";
+        innerBox.style.gridTemplateRows = "repeat(2, 36px) 24px repeat(9, 36px)";
         innerBox.style.alignItems = "center";
 
         const divEnable = document.createElement("div");
@@ -415,7 +429,6 @@ class Watchdog extends Window {
         lblInterval.style.display = "inline-block";
         lblInterval.innerHTML = "Interval: ";
         innerBox.appendChild(lblInterval);
-
         const rngInterval = document.createElement("input");
         rngInterval.style.gridArea = "2 / 2";
         rngInterval.type = "range";
@@ -423,14 +436,12 @@ class Watchdog extends Window {
         rngInterval.max = 8;
         rngInterval.value = 5;
         innerBox.appendChild(rngInterval);
-
         const lblIntervalValue = document.createElement("div");
         lblIntervalValue.style.gridArea = "2 / 3";
         lblIntervalValue.style.display = "inline-block";
         lblIntervalValue.style.marginLeft = "8px";
         lblIntervalValue.innerHTML = "4 hours";
         innerBox.appendChild(lblIntervalValue);
-
 
         const divEMail = document.createElement("div");
         divEMail.style.gridArea = "4 / 1 / 5 / 3";
@@ -440,22 +451,65 @@ class Watchdog extends Window {
         divEMail.appendChild(chkEMail);
         this.AddCheckBoxLabel(divEMail, chkEMail, "Send e-mail notification:");
 
+        const lblThreshold = document.createElement("div");
+        lblThreshold.style.gridArea = "5 / 1";
+        lblThreshold.style.display = "inline-block";
+        lblThreshold.innerHTML = "Ping threshold: ";
+        innerBox.appendChild(lblThreshold);
+        const rngThreshold = document.createElement("input");
+        rngThreshold.style.gridArea = "5 / 2";
+        rngThreshold.type = "range";
+        rngThreshold.min = 10;
+        rngThreshold.max = 500;
+        rngThreshold.value = 100;
+        rngThreshold.step = 10;
+        innerBox.appendChild(rngThreshold);
+        const lblThresholdValue = document.createElement("div");
+        lblThresholdValue.style.gridArea = "5 / 3";
+        lblThresholdValue.style.display = "inline-block";
+        lblThresholdValue.style.marginLeft = "8px";
+        lblThresholdValue.innerHTML = "50ms";
+        innerBox.appendChild(lblThresholdValue);
+
+        const lblContition = document.createElement("div");
+        lblContition.style.gridArea = "6 / 1";
+        lblContition.innerHTML = "Contition:";
+        innerBox.appendChild(lblContition);
+        const cmbContition = document.createElement("select");
+        cmbContition.style.gridArea = "6 / 2";
+        innerBox.appendChild(cmbContition);
+
+        const optRise = document.createElement("option");
+        optRise.innerHTML = "On rise";
+        optRise.value = "rise";
+        cmbContition.appendChild(optRise);
+
+        const optFall = document.createElement("option");
+        optFall.innerHTML = "On fall";
+        optFall.value = "fall";
+        cmbContition.appendChild(optFall);
+
+        const optBoth = document.createElement("option");
+        optBoth.innerHTML = "On rise and fall";
+        optBoth.value = "both";
+        cmbContition.appendChild(optBoth);
+
         const lblSmtpServer = document.createElement("div");
-        lblSmtpServer.style.gridArea = "5 / 1";
+        lblSmtpServer.style.gridArea = "7 / 1";
         lblSmtpServer.innerHTML = "SMTP server:";
         innerBox.appendChild(lblSmtpServer);
         const txtSmtpServer = document.createElement("input");
-        txtSmtpServer.style.gridArea = "5 / 2";
+        txtSmtpServer.style.gridArea = "7 / 2";
         txtSmtpServer.type = "text";
         txtSmtpServer.placeholder = "smtp.gmail.com";
         innerBox.appendChild(txtSmtpServer);
 
         const lblSmtpPort = document.createElement("div");
-        lblSmtpPort.style.gridArea = "6 / 1";
+        lblSmtpPort.style.gridArea = "8 / 1";
         lblSmtpPort.innerHTML = "Port:";
         innerBox.appendChild(lblSmtpPort);
         const txtSmtpPort = document.createElement("input");
-        txtSmtpPort.style.gridArea = "6 / 2";
+        txtSmtpPort.style.gridArea = "8 / 2";
         txtSmtpPort.type = "number";
         txtSmtpPort.min = 1;
         txtSmtpPort.max = 49151;
@@ -463,53 +517,64 @@ class Watchdog extends Window {
         innerBox.appendChild(txtSmtpPort);
 
         const lblUsername = document.createElement("div");
-        lblUsername.style.gridArea = "7 / 1";
+        lblUsername.style.gridArea = "9 / 1";
         lblUsername.innerHTML = "Username:";
         innerBox.appendChild(lblUsername);
         const txtUsername = document.createElement("input");
-        txtUsername.style.gridArea = "7 / 2";
+        txtUsername.style.gridArea = "9 / 2";
         txtUsername.type = "text";
         innerBox.appendChild(txtUsername);
 
         const lblPassword = document.createElement("div");
-        lblPassword.style.gridArea = "8 / 1";
+        lblPassword.style.gridArea = "10 / 1";
         lblPassword.innerHTML = "Password:";
         innerBox.appendChild(lblPassword);
         const txtPassword = document.createElement("input");
-        txtPassword.style.gridArea = "8 / 2";
+        txtPassword.style.gridArea = "10 / 2";
         txtPassword.type = "password";
         innerBox.appendChild(txtPassword);
 
         const lblRecipient = document.createElement("div");
-        lblRecipient.style.gridArea = "9 / 1";
+        lblRecipient.style.gridArea = "11 / 1";
         lblRecipient.innerHTML = "Recipients:";
         innerBox.appendChild(lblRecipient);
         const txtRecipient = document.createElement("input");
-        txtRecipient.style.gridArea = "9 / 2";
+        txtRecipient.style.gridArea = "11 / 2";
         txtRecipient.type = "text";
         txtRecipient.placeholder = "user@domain.com";
         innerBox.appendChild(txtRecipient);
 
         const lblSSL = document.createElement("div");
-        lblSSL.style.gridArea = "10 / 1";
+        lblSSL.style.gridArea = "12 / 1";
         lblSSL.innerHTML = "Enable SSL:";
         innerBox.appendChild(lblSSL);
         const divSSL = document.createElement("div");
-        divSSL.style.gridArea = "10 / 2";
+        divSSL.style.gridArea = "12 / 2";
         innerBox.appendChild(divSSL);
         const chkSSL = document.createElement("input");
         chkSSL.type = "checkbox";
         divSSL.appendChild(chkSSL);
         this.AddCheckBoxLabel(divSSL, chkSSL, "&nbsp;");
 
+        const btnTest = document.createElement("input");
+        btnTest.type = "button";
+        btnTest.value = "Test";
+        btnTest.style.position = "absolute";
+        btnTest.style.left = "8px";
+        buttonBox.appendChild(btnTest);
 
         const timeMapping = [5, 15, 30, 60, 2 * 60, 4 * 60, 8 * 60, 24 * 60, 48 * 60];
 
         rngInterval.oninput =
-            rngInterval.onchange = () => {
-                let value = timeMapping[rngInterval.value];
-                lblIntervalValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
-            };
+        rngInterval.onchange = () => {
+            let value = timeMapping[rngInterval.value];
+            lblIntervalValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
+        };
+
+        rngThreshold.oninput =
+        rngThreshold.onchange = () => {
+            lblThresholdValue.innerHTML = rngThreshold.value + "ms";
+        };
 
         btnOK.addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
@@ -520,17 +585,42 @@ class Watchdog extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
 
-            xhr.open("GET", `watchdog/settings&enable=${chkEnable.checked}&interval=${timeMapping[rngInterval.value]}`, true);
-            xhr.send();
+            let payload = "";
+            payload += `enable=${chkEnable.checked}`;
+            payload += `&interval=${timeMapping[rngInterval.value]}`;
+
+            payload += `&email=${chkEMail.checked}`;
+            payload += `&threshold=${rngThreshold.value}`;
+            payload += `&contition=${cmbContition.value}`;
+            payload += `&server=${txtSmtpServer.value}`;
+            payload += `&port=${txtSmtpPort.value}`;
+            payload += `&username=${txtUsername.value}`;
+            payload += `&password=${txtPassword.value}`;
+            payload += `&recipients=${txtRecipient.value}`;
+            payload += `&ssl=${chkSSL.checked}`;
+
+            xhr.open("POST", `watchdog/settings`, true);
+            xhr.send(payload);
         });
 
-        chkEnable.checked = enable;
+        chkEnable.checked = obj.enable;
 
         for (let i = 0; i < timeMapping.length; i++)
-            if (timeMapping[i] === interval)
+            if (timeMapping[i] === obj.interval)
                 rngInterval.value = i;
 
+        chkEMail.checked = obj.email;
+        rngThreshold.value = obj.threshold;
+        cmbContition.value = obj.contition;
+        txtSmtpServer.value = obj.server;
+        txtSmtpPort.value = obj.port;
+        txtUsername.value = obj.username;
+        txtPassword.value = obj.password;
+        txtRecipient.value = obj.recipients;
+        chkSSL.checked = obj.ssl;
+
         rngInterval.oninput();
+        rngThreshold.oninput();
     }
 
     Add() {

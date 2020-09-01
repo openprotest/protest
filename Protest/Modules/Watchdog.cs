@@ -11,31 +11,64 @@ using System.Threading.Tasks;
 
 public static class Watchdog {
 
-    private static bool enable = true;
-    private static int interval = 240;
     private static Thread watchThread = null;
 
-    public static byte[] Settings(in string[] para, in string performer) {
+    private static bool enable = true;
+    private static int interval = 240;
+
+    private static bool email = false;
+    private static int threshold = 50;
+    private static string contition = "fall";
+    private static string server = String.Empty;
+    private static int port = 587;
+    private static string username = String.Empty;
+    private static string password = String.Empty;
+    private static string recipients = String.Empty;
+    private static bool ssl = true;
+
+    public static byte[] Settings(in HttpListenerContext ctx, in string performer) {
         DirectoryInfo dirWatchdog = new DirectoryInfo(Strings.DIR_WATCHDOG);
         if (!dirWatchdog.Exists) dirWatchdog.Create();
 
-        bool enable = true;
-        int interval = 4 * 60;
-        for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("enable=")) enable = para[i].Substring(7) == "true";
-            else if (para[i].StartsWith("interval=")) int.TryParse(para[i].Substring(9), out interval);
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
+            string[] para = reader.ReadToEnd().Split('&');
+
+            for (int i = 0; i < para.Length; i++)
+                if (para[i].StartsWith("enable=")) enable = para[i].Substring(7) == "true";
+                else if (para[i].StartsWith("interval=")) int.TryParse(para[i].Substring(9), out interval);
+
+                else if (para[i].StartsWith("email=")) email = para[i].Substring(6) == "true";
+                else if (para[i].StartsWith("threshold=")) int.TryParse(para[i].Substring(10), out threshold);
+                else if (para[i].StartsWith("contition=")) contition = para[i].Substring(10);
+                else if (para[i].StartsWith("server=")) server = para[i].Substring(7);
+                else if (para[i].StartsWith("port=")) int.TryParse(para[i].Substring(5), out port);
+                else if (para[i].StartsWith("username=")) username = para[i].Substring(9);
+                else if (para[i].StartsWith("password=")) password = para[i].Substring(9);
+                else if (para[i].StartsWith("recipients=")) recipients = para[i].Substring(11);
+                else if (para[i].StartsWith("ssl=")) ssl = para[i].Substring(4) == "true";
+        }
+
 
         FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.txt");
-        string contents = $"enable = {enable.ToString().ToLower()}\ninterval = {interval}\n";
+        string contents = String.Empty;
+        contents += $"enable = {enable.ToString().ToLower()}\n";
+        contents += $"interval = {interval}\n";
+
+        contents += $"email = {email}\n";
+        contents += $"threshold = {threshold}\n";
+        contents += $"contition = {contition}\n";
+        contents += $"server = {server}\n";
+        contents += $"port = {port}\n";
+        contents += $"username = {username}\n";
+        contents += $"password = {password}\n";
+        contents += $"recipients = {recipients}\n";
+        contents += $"ssl = {ssl.ToString().ToLower()}\n";
 
         try {
             File.WriteAllText(file.FullName, contents);
         } catch (Exception ex) {
             return Encoding.UTF8.GetBytes(ex.Message);
         }
-
-        Watchdog.enable = enable;
-        Watchdog.interval = interval;
 
         if (Watchdog.enable && Watchdog.watchThread is null) {
             Watchdog.watchThread = new Thread(BackgroundService);
@@ -54,7 +87,22 @@ public static class Watchdog {
     }
 
     public static byte[] GetConfig() {
-        return Encoding.UTF8.GetBytes($"{enable.ToString().ToLower()}{(char)127}{interval}");
+        string payload = String.Empty;
+
+        payload += $"{enable.ToString().ToLower()}{(char)127}";
+        payload += $"{interval}{(char)127}";
+
+        payload += $"{email}{(char)127}";
+        payload += $"{threshold}{(char)127}";
+        payload += $"{contition}{(char)127}";
+        payload += $"{server}{(char)127}";
+        payload += $"{port}{(char)127}";
+        payload += $"{username}{(char)127}";
+        payload += $"{password}{(char)127}";
+        payload += $"{recipients}{(char)127}";
+        payload += $"{ssl.ToString().ToLower()}{(char)127}";
+
+        return Encoding.UTF8.GetBytes(payload);
     }
 
     public static void LoadConfig() {
@@ -80,6 +128,38 @@ public static class Watchdog {
 
                 case "interval":
                     int.TryParse(split[1], out Watchdog.interval);
+                    break;
+
+                case "email":
+                    Watchdog.email = split[1] == "true";
+                    break;
+
+                case "threshold":
+                    int.TryParse(split[1], out Watchdog.threshold);
+                    break;
+
+                case "contition":
+                    Watchdog.contition = split[1];
+                    break;
+
+                case "port":
+                    int.TryParse(split[1], out Watchdog.port);
+                    break;
+
+                case "username":
+                    Watchdog.username = split[1];
+                    break;
+
+                case "password":
+                    Watchdog.password = split[1];
+                    break;
+
+                case "recipients":
+                    Watchdog.recipients = split[1];
+                    break;
+
+                case "ssl":
+                    Watchdog.ssl = split[1] == "true";
                     break;
             }
         }

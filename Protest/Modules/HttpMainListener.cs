@@ -213,7 +213,7 @@ class HttpMainListener : Http {
                 case "debitnotes/mark"    : buffer = DebitNotes.Mark(para, performer); break;
                 case "debitnotes/delete"  : buffer = DebitNotes.Delete(para, performer); break;
 
-                case "watchdog/settings" : buffer = Watchdog.Settings(para, performer); break;
+                case "watchdog/settings" : buffer = Watchdog.Settings(ctx, performer); break;
                 case "watchdog/getconfig": buffer = Watchdog.GetConfig(); break;
                 case "watchdog/add"      : buffer = Watchdog.Add(para, performer); break;
                 case "watchdog/remove"   : buffer = Watchdog.Remove(para, performer); break;
