@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 public static class Watchdog {
-
     private static Thread watchThread = null;
+    private static Hashtable lastStatus = new Hashtable();
 
     private static bool enable = true;
     private static int interval = 240;
@@ -21,6 +22,7 @@ public static class Watchdog {
     private static string contition = "fall";
     private static string server = String.Empty;
     private static int port = 587;
+    private static string sender = String.Empty;
     private static string username = String.Empty;
     private static string password = String.Empty;
     private static string recipients = String.Empty;
@@ -29,6 +31,8 @@ public static class Watchdog {
     public static byte[] Settings(in HttpListenerContext ctx, in string performer) {
         DirectoryInfo dirWatchdog = new DirectoryInfo(Strings.DIR_WATCHDOG);
         if (!dirWatchdog.Exists) dirWatchdog.Create();
+
+        bool sendtest = false;
 
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string[] para = reader.ReadToEnd().Split('&');
@@ -42,23 +46,25 @@ public static class Watchdog {
                 else if (para[i].StartsWith("contition=")) contition = para[i].Substring(10);
                 else if (para[i].StartsWith("server=")) server = para[i].Substring(7);
                 else if (para[i].StartsWith("port=")) int.TryParse(para[i].Substring(5), out port);
+                else if (para[i].StartsWith("sender=")) sender = para[i].Substring(7);
                 else if (para[i].StartsWith("username=")) username = para[i].Substring(9);
                 else if (para[i].StartsWith("password=")) password = para[i].Substring(9);
                 else if (para[i].StartsWith("recipients=")) recipients = para[i].Substring(11);
                 else if (para[i].StartsWith("ssl=")) ssl = para[i].Substring(4) == "true";
+                else if (para[i].StartsWith("sendtest=")) sendtest = para[i].Substring(9) == "true";
         }
-
 
         FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.txt");
         string contents = String.Empty;
         contents += $"enable = {enable.ToString().ToLower()}\n";
         contents += $"interval = {interval}\n";
 
-        contents += $"email = {email}\n";
+        contents += $"email = {email.ToString().ToLower()}\n";
         contents += $"threshold = {threshold}\n";
         contents += $"contition = {contition}\n";
         contents += $"server = {server}\n";
         contents += $"port = {port}\n";
+        contents += $"sender = {sender}\n";
         contents += $"username = {username}\n";
         contents += $"password = {password}\n";
         contents += $"recipients = {recipients}\n";
@@ -80,7 +86,9 @@ public static class Watchdog {
         if (!Watchdog.enable && !(Watchdog.watchThread is null)) {
             if (Watchdog.watchThread.IsAlive) Watchdog.watchThread.Abort();
             Watchdog.watchThread = null;
-        }        
+        }
+
+        if (sendtest) SendMailTest();
 
         Logging.Action(performer, $"Change watchdog settings");
         return Strings.OK.Array;
@@ -92,11 +100,12 @@ public static class Watchdog {
         payload += $"{enable.ToString().ToLower()}{(char)127}";
         payload += $"{interval}{(char)127}";
 
-        payload += $"{email}{(char)127}";
+        payload += $"{email.ToString().ToLower()}{(char)127}";
         payload += $"{threshold}{(char)127}";
         payload += $"{contition}{(char)127}";
         payload += $"{server}{(char)127}";
         payload += $"{port}{(char)127}";
+        payload += $"{sender}{(char)127}";
         payload += $"{username}{(char)127}";
         payload += $"{password}{(char)127}";
         payload += $"{recipients}{(char)127}";
@@ -142,8 +151,16 @@ public static class Watchdog {
                     Watchdog.contition = split[1];
                     break;
 
+                case "server":
+                    Watchdog.server = split[1];
+                    break;
+
                 case "port":
                     int.TryParse(split[1], out Watchdog.port);
+                    break;
+
+                case "sender":
+                    Watchdog.sender = split[1];
                     break;
 
                 case "username":
@@ -309,6 +326,8 @@ public static class Watchdog {
         DateTime now = DateTime.Now;
         Thread.Sleep((9 - now.Minute % 10) * 60000 + (59 - now.Second) * 1000 + (999 - now.Millisecond));
 
+        Hashtable statusHash = new Hashtable();
+
         while (true) {
             TimeSpan start = new TimeSpan(DateTime.Now.Ticks);
                         
@@ -375,11 +394,85 @@ public static class Watchdog {
 
             } catch { }
 
+
+            foreach (DictionaryEntry o in statusHash) {
+                if (!lastStatus.ContainsKey(o.Key)) continue;
+                
+                bool current = (bool)o.Value;
+                bool last = (bool)lastStatus[o.Key];
+                if (current == last) continue;
+
+                if (current && (contition == "rise" || contition == "both")) { //rise
+
+                }
+                
+                if (last && (contition == "fall" || contition == "both")) { //fall
+
+                }
+            }
+
+            lastStatus = statusHash;
+
             TimeSpan finish = new TimeSpan(DateTime.Now.Ticks);
 
             int d = (int)finish.Subtract(start).TotalMilliseconds;
             int s = interval * 60 * 1000;
             if (d < s) Thread.Sleep(s - d);
+        }
+    }
+
+    private static void SendMailNotification() {
+        try {
+            MailMessage mail = new MailMessage();
+            SmtpClient SmtpServer = new SmtpClient(server);
+
+            mail.From = new MailAddress(sender, "Pro-test");
+
+            string[] addressSplit = recipients.Split(';');
+            for (int i = 0; i < addressSplit.Length; i++)
+                mail.To.Add(addressSplit[i].Trim());
+
+            mail.Subject = $"Pro-test notification {DateTime.Now:Strings.DATETIME_FORMAT}";
+            mail.IsBodyHtml = true;
+
+            //https://stackoverflow.com/questions/18358534/send-inline-image-in-email
+            mail.Body = "Shit to do here";
+
+            SmtpServer.Port = port;
+            SmtpServer.Credentials = new NetworkCredential(username, password);
+            SmtpServer.EnableSsl = ssl;
+
+            SmtpServer.Send(mail);
+
+            Logging.Action("Pro-test notifications", "Successfully sent an email notification");
+
+        } catch (Exception ex) {
+            Logging.Err(ex);
+        }
+    }
+
+    private static void SendMailTest() {
+        try {
+            MailMessage mail = new MailMessage();
+            SmtpClient SmtpServer = new SmtpClient(server);
+
+            mail.From = new MailAddress(sender, "Pro-test");
+
+            string[] addressSplit = recipients.Split(';');
+            for (int i = 0; i< addressSplit.Length; i++) 
+                mail.To.Add(addressSplit[i].Trim());
+                        
+            mail.Subject = "SMTP test from Pro-test";
+            //mail.IsBodyHtml = true;
+            mail.Body = "This is a test";
+
+            SmtpServer.Port = port;
+            SmtpServer.Credentials = new NetworkCredential(username, password);
+            SmtpServer.EnableSsl = ssl;
+
+            SmtpServer.Send(mail);
+        } catch (Exception ex) {
+            Logging.Err(ex);
         }
     }
 

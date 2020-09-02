@@ -381,15 +381,16 @@ class Watchdog extends Window {
                     this.SettingsDialog({
                         enable    : split[0] === "true",
                         interval  : parseInt(split[1]),
-                        email     : split[2],
+                        email     : split[2] === "true",
                         threshold : parseInt(split[3]),
                         contition : split[4],
                         server    : split[5],
                         port      : parseInt(split[6]),
-                        username  : split[7],
-                        password  : split[8],
-                        recipients: split[9],
-                        ssl       : split[10]  === "true"
+                        sender    : split[7],
+                        username  : split[8],
+                        password  : split[9],
+                        recipients: split[10],
+                        ssl       : split[11] === "true"
                     });
                 else
                     this.ConfirmBox(xhr.responseText, true);
@@ -402,7 +403,7 @@ class Watchdog extends Window {
     }
 
     SettingsDialog(obj) {
-        const dialog = this.DialogBox("500px");
+        const dialog = this.DialogBox("550px");
         if (dialog === null) return;
 
         const btnOK = dialog.btnOK;
@@ -410,10 +411,10 @@ class Watchdog extends Window {
         const buttonBox = dialog.buttonBox;
         const innerBox = dialog.innerBox;
 
-        innerBox.style.padding = "32px";
+        innerBox.style.padding = "16px 32px";
         innerBox.style.display = "grid";
-        innerBox.style.gridTemplateColumns = "120px 225px auto";
-        innerBox.style.gridTemplateRows = "repeat(2, 36px) 24px repeat(9, 36px)";
+        innerBox.style.gridTemplateColumns = "120px 275px auto";
+        innerBox.style.gridTemplateRows = "repeat(2, 38px) 20px repeat(9, 38px)";
         innerBox.style.alignItems = "center";
 
         const divEnable = document.createElement("div");
@@ -422,7 +423,7 @@ class Watchdog extends Window {
         const chkEnable = document.createElement("input");
         chkEnable.type = "checkbox";
         divEnable.appendChild(chkEnable);
-        this.AddCheckBoxLabel(divEnable, chkEnable, "Enable watchdog");
+        this.AddCheckBoxLabel(divEnable, chkEnable, "Enable watchdog").style.fontWeight = "600";
 
         const lblInterval = document.createElement("div");
         lblInterval.style.gridArea = "2 / 1";
@@ -449,7 +450,7 @@ class Watchdog extends Window {
         const chkEMail = document.createElement("input");
         chkEMail.type = "checkbox";
         divEMail.appendChild(chkEMail);
-        this.AddCheckBoxLabel(divEMail, chkEMail, "Send e-mail notification:");
+        this.AddCheckBoxLabel(divEMail, chkEMail, "Send e-mail notification").style.fontWeight = "600";
 
         const lblThreshold = document.createElement("div");
         lblThreshold.style.gridArea = "5 / 1";
@@ -516,40 +517,49 @@ class Watchdog extends Window {
         txtSmtpPort.value = 587;
         innerBox.appendChild(txtSmtpPort);
 
+        const lblSender = document.createElement("div");
+        lblSender.style.gridArea = "9 / 1";
+        lblSender.innerHTML = "Sender:";
+        innerBox.appendChild(lblSender);
+        const txtSender = document.createElement("input");
+        txtSender.style.gridArea = "9 / 2";
+        txtSender.type = "text";
+        innerBox.appendChild(txtSender);
+
         const lblUsername = document.createElement("div");
-        lblUsername.style.gridArea = "9 / 1";
+        lblUsername.style.gridArea = "10 / 1";
         lblUsername.innerHTML = "Username:";
         innerBox.appendChild(lblUsername);
         const txtUsername = document.createElement("input");
-        txtUsername.style.gridArea = "9 / 2";
+        txtUsername.style.gridArea = "10 / 2";
         txtUsername.type = "text";
         innerBox.appendChild(txtUsername);
 
         const lblPassword = document.createElement("div");
-        lblPassword.style.gridArea = "10 / 1";
+        lblPassword.style.gridArea = "11 / 1";
         lblPassword.innerHTML = "Password:";
         innerBox.appendChild(lblPassword);
         const txtPassword = document.createElement("input");
-        txtPassword.style.gridArea = "10 / 2";
+        txtPassword.style.gridArea = "11 / 2";
         txtPassword.type = "password";
         innerBox.appendChild(txtPassword);
 
         const lblRecipient = document.createElement("div");
-        lblRecipient.style.gridArea = "11 / 1";
+        lblRecipient.style.gridArea = "12 / 1";
         lblRecipient.innerHTML = "Recipients:";
         innerBox.appendChild(lblRecipient);
         const txtRecipient = document.createElement("input");
-        txtRecipient.style.gridArea = "11 / 2";
+        txtRecipient.style.gridArea = "12 / 2";
         txtRecipient.type = "text";
-        txtRecipient.placeholder = "user@domain.com";
+        txtRecipient.placeholder = "user1@x.com; user2@x.com";
         innerBox.appendChild(txtRecipient);
 
         const lblSSL = document.createElement("div");
-        lblSSL.style.gridArea = "12 / 1";
-        lblSSL.innerHTML = "Enable SSL:";
+        lblSSL.style.gridArea = "13 / 1";
+        lblSSL.innerHTML = "SSL:";
         innerBox.appendChild(lblSSL);
         const divSSL = document.createElement("div");
-        divSSL.style.gridArea = "12 / 2";
+        divSSL.style.gridArea = "13 / 2";
         innerBox.appendChild(divSSL);
         const chkSSL = document.createElement("input");
         chkSSL.type = "checkbox";
@@ -563,6 +573,43 @@ class Watchdog extends Window {
         btnTest.style.left = "8px";
         buttonBox.appendChild(btnTest);
 
+        chkEnable.onchange = () => {
+            if (chkEnable.checked) {
+                rngInterval.removeAttribute("disabled");
+            } else {
+                rngInterval.setAttribute("disabled", true);
+
+                chkEMail.checked = false;
+                chkEMail.onchange();
+            }
+        };
+
+        chkEMail.onchange = () => {
+            if (chkEMail.checked) {                
+                rngThreshold.removeAttribute("disabled");
+                cmbContition.removeAttribute("disabled");
+                txtSmtpServer.removeAttribute("disabled");
+                txtSmtpPort.removeAttribute("disabled");
+                txtSender.removeAttribute("disabled");
+                txtUsername.removeAttribute("disabled");
+                txtPassword.removeAttribute("disabled");
+                txtRecipient.removeAttribute("disabled");
+
+                chkEnable.checked = true;
+                chkEnable.onchange();
+
+            } else {
+                rngThreshold.setAttribute("disabled", true);
+                cmbContition.setAttribute("disabled", true);
+                txtSmtpServer.setAttribute("disabled", true);
+                txtSmtpPort.setAttribute("disabled", true);
+                txtSender.setAttribute("disabled", true);
+                txtUsername.setAttribute("disabled", true);
+                txtPassword.setAttribute("disabled", true);
+                txtRecipient.setAttribute("disabled", true);
+            }
+        };
+
         const timeMapping = [5, 15, 30, 60, 2 * 60, 4 * 60, 8 * 60, 24 * 60, 48 * 60];
 
         rngInterval.oninput =
@@ -574,6 +621,37 @@ class Watchdog extends Window {
         rngThreshold.oninput =
         rngThreshold.onchange = () => {
             lblThresholdValue.innerHTML = rngThreshold.value + "ms";
+        };
+
+        btnTest.onclick = () => {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok")
+                    this.ConfirmBox(xhr.responseText, true);
+
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            };
+
+            let payload = "";
+            payload += `enable=${chkEnable.checked}`;
+            payload += `&interval=${timeMapping[rngInterval.value]}`;
+
+            console.log(txtSmtpServer.value);
+
+            payload += `&email=${chkEMail.checked}`;
+            payload += `&threshold=${rngThreshold.value}`;
+            payload += `&contition=${cmbContition.value}`;
+            payload += `&server=${txtSmtpServer.value}`;
+            payload += `&port=${txtSmtpPort.value}`;
+            payload += `&sender=${txtSender.value}`;
+            payload += `&username=${txtUsername.value}`;
+            payload += `&password=${txtPassword.value}`;
+            payload += `&recipients=${txtRecipient.value}`;
+            payload += `&ssl=${chkSSL.checked}`;
+            payload += `&sendtest=true`;
+
+            xhr.open("POST", `watchdog/settings`, true);
+            xhr.send(payload);
         };
 
         btnOK.addEventListener("click", () => {
@@ -594,6 +672,7 @@ class Watchdog extends Window {
             payload += `&contition=${cmbContition.value}`;
             payload += `&server=${txtSmtpServer.value}`;
             payload += `&port=${txtSmtpPort.value}`;
+            payload += `&sender=${txtSender.value}`;
             payload += `&username=${txtUsername.value}`;
             payload += `&password=${txtPassword.value}`;
             payload += `&recipients=${txtRecipient.value}`;
@@ -614,6 +693,7 @@ class Watchdog extends Window {
         cmbContition.value = obj.contition;
         txtSmtpServer.value = obj.server;
         txtSmtpPort.value = obj.port;
+        txtSender.value = obj.sender;
         txtUsername.value = obj.username;
         txtPassword.value = obj.password;
         txtRecipient.value = obj.recipients;
@@ -621,6 +701,9 @@ class Watchdog extends Window {
 
         rngInterval.oninput();
         rngThreshold.oninput();
+
+        chkEnable.onchange();
+        chkEMail.onchange();
     }
 
     Add() {
