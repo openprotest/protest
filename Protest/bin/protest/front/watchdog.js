@@ -106,6 +106,92 @@ class Watchdog extends Window {
         this.btnAdd.style.marginLeft = "72px";
         side.appendChild(this.btnAdd);
 
+        {
+            const tblLegend = document.createElement("table");
+            tblLegend.style.borderCollapse = "collapse";
+            tblLegend.style.gridArea = "6 / 1 / 7 / 3";
+            tblLegend.style.textAlign = "right";
+            side.appendChild(tblLegend);
+
+            const tr1 = document.createElement("tr");
+            tblLegend.appendChild(tr1);
+            const td1b = document.createElement("td");
+            td1b.style.minWidth = "96px";
+            td1b.style.paddingRight = "8px";
+            td1b.innerHTML = "0ms";
+            tr1.appendChild(td1b);
+            const td1a = document.createElement("td");
+            td1a.style.borderRadius = "8px 8px 0 0";
+            td1a.style.width = "24px";
+            td1a.style.height = "24px";
+            td1a.style.background = "linear-gradient(to bottom, hsl(96,66%,50%)0%, hsl(146,66%,50%)100%)";
+            tr1.appendChild(td1a);
+
+            const tr2 = document.createElement("tr");
+            tblLegend.appendChild(tr2);
+            const td2b = document.createElement("td");
+            td2b.style.paddingRight = "8px";
+            td2b.innerHTML = "250ms";
+            tr2.appendChild(td2b);
+            const td2a = document.createElement("td");
+            td2a.style.width = "24px";
+            td2a.style.height = "24px";
+            td2a.style.background = "linear-gradient(to bottom, hsl(146,66%,50%)0%, hsl(196,66%,50%)100%)";
+            tr2.appendChild(td2a);
+
+            const tr3 = document.createElement("tr");
+            tblLegend.appendChild(tr3);
+            const td3b = document.createElement("td");
+            td3b.style.paddingRight = "8px";
+            td3b.innerHTML = "500ms";
+            tr3.appendChild(td3b);
+            const td3a = document.createElement("td");
+            td3a.style.width = "24px";
+            td3a.style.height = "24px";
+            td3a.style.background = "linear-gradient(to bottom, hsl(196,66%,50%)0%, hsl(246,66%,50%)100%)";
+            tr3.appendChild(td3a);
+
+            const tr4 = document.createElement("tr");
+            tblLegend.appendChild(tr4);
+            const td4b = document.createElement("td");
+            td4b.style.paddingRight = "8px";
+            td4b.innerHTML = "750ms";
+            tr4.appendChild(td4b);
+            const td4a = document.createElement("td");
+            td4a.style.borderRadius = "0 0 8px 8px";
+            td4a.style.width = "24px";
+            td4a.style.height = "24px";
+            td4a.style.background = "linear-gradient(to bottom, hsl(246,66%,50%)0%, hsl(345,66%,50%)100%)";
+            tr4.appendChild(td4a);
+
+            const tr5 = document.createElement("tr");
+            tblLegend.appendChild(tr5);
+            const td5b = document.createElement("td");
+            td5b.style.minWidth = "96px";
+            td5b.style.paddingRight = "8px";
+            td5b.innerHTML = "Timed out";
+            tr5.appendChild(td5b);
+            const td5a = document.createElement("td");
+            td5a.style.borderRadius = "8px";
+            td5a.style.width = "24px";
+            td5a.style.height = "24px";
+            td5a.style.backgroundColor = "rgb(255,0,0)";
+            tr5.appendChild(td5a);
+
+            const tr6 = document.createElement("tr");
+            tblLegend.appendChild(tr6);
+            const td6b = document.createElement("td");
+            td6b.style.paddingRight = "8px";
+            td6b.innerHTML = "Error";
+            tr6.appendChild(td6b);
+            const td6a = document.createElement("td");
+            td6a.style.borderRadius = "8px";
+            td6a.style.width = "24px";
+            td6a.style.height = "24px";
+            td6a.style.backgroundColor = "rgb(255,102,0)";
+            tr6.appendChild(td6a);
+        }
+
         this.btnAdd.onclick = () => this.Add();
         btnReload.onclick = () => this.Reload();
         btnSettings.onclick = () => this.Settings();

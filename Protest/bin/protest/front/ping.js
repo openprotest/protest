@@ -246,7 +246,7 @@ class Ping extends Console {
                 const td5b = document.createElement("td");
                 td5b.style.minWidth = "96px";
                 td5b.style.paddingLeft = "8px";
-                td5b.innerHTML = "Timed Out";
+                td5b.innerHTML = "Timed out";
                 tr1.appendChild(td5b);
 
                 const td6a = document.createElement("td");
