@@ -47,6 +47,7 @@ public static class Watchdog {
         if (!dirWatchdog.Exists) dirWatchdog.Create();
 
         bool sendtest = false;
+        string password = String.Empty;
 
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string[] para = reader.ReadToEnd().Split('&');
@@ -67,6 +68,8 @@ public static class Watchdog {
                 else if (para[i].StartsWith("ssl=")) ssl = para[i].Substring(4) == "true";
                 else if (para[i].StartsWith("sendtest=")) sendtest = para[i].Substring(9) == "true";
         }
+
+        if (password.Length > 0) Watchdog.password = password;
 
         FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.txt");
         string contents = String.Empty;
@@ -121,7 +124,7 @@ public static class Watchdog {
         payload += $"{port}{(char)127}";
         payload += $"{sender}{(char)127}";
         payload += $"{username}{(char)127}";
-        payload += $"{password}{(char)127}";
+        payload += $"{(char)127}"; //payload += $"{password}{(char)127}";
         payload += $"{recipients}{(char)127}";
         payload += $"{ssl.ToString().ToLower()}{(char)127}";
 

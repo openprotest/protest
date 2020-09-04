@@ -630,6 +630,7 @@ class Watchdog extends Window {
         const txtPassword = document.createElement("input");
         txtPassword.style.gridArea = "11 / 2";
         txtPassword.type = "password";
+        txtPassword.placeholder = "unchanged";
         innerBox.appendChild(txtPassword);
 
         const lblRecipient = document.createElement("div");
@@ -682,6 +683,7 @@ class Watchdog extends Window {
                 txtUsername.removeAttribute("disabled");
                 txtPassword.removeAttribute("disabled");
                 txtRecipient.removeAttribute("disabled");
+                btnTest.removeAttribute("disabled");
 
                 chkEnable.checked = true;
                 chkEnable.onchange();
@@ -695,6 +697,7 @@ class Watchdog extends Window {
                 txtUsername.setAttribute("disabled", true);
                 txtPassword.setAttribute("disabled", true);
                 txtRecipient.setAttribute("disabled", true);
+                btnTest.setAttribute("disabled", true);
             }
         };
 
