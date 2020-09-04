@@ -613,7 +613,7 @@ class Settings extends Tabs {
         description.style.fontWeight = "500";
         description.style.textAlign = "center";
         description.style.userSelect = "text";
-        description.innerHTML = "A management base for System Admins and IT professionals.<br> It provides tools for documentation and troubleshooting.";
+        description.innerHTML = "A management base for System Admins and IT professionals.";
         this.subContent.appendChild(description);
 
         const center = document.createElement("div");
@@ -627,7 +627,7 @@ class Settings extends Tabs {
         opensource.style.textAlign = "left";
         opensource.style.maxWidth = "640px";
         opensource.style.userSelect = "text";
-        opensource.innerHTML = "Pro-test is a free and open source tool developed and maintained by Andreas Venizelou.<br>All of the source code to this product is available to you under the GNU General Public License. This means you may use, copy, distribute and modify the source code of Pro-test as you want to meet your needs.";
+        opensource.innerHTML = "Pro-test is a free and open-source tool developed and maintained by Andreas Venizelou.<br>All of the source code to this product is available to you under the GNU General Public License. That means you may use, copy, distribute, and modify the source code to meet your needs.";
         center.appendChild(opensource);
 
         center.appendChild(document.createElement("br"));

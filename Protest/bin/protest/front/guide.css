@@ -1,0 +1,48 @@
+.guide-body {
+    grid-area: 1 / 1;
+    background-color: var(--pane-color);
+    color: #202020;
+    margin: 0 8px 8px 8px;
+    padding: 64px;
+    border-radius: 4px;
+    overflow-y: auto;
+    user-select: text;
+}
+
+.guide-body h1 {
+    display: inline-block;
+    font-size: 26px;
+    border-bottom: 3px solid #202020;
+}
+
+.guide-body p {
+    text-align: justify;
+    max-width: 720px;
+}
+
+.guide-content-table {
+    grid-area: 1 / 2;
+    background-color: var(--pane-color);
+    color: #202020;
+    margin: 0 8px 8px 0;
+    border-radius: 4px;
+    overflow-y: auto;
+}
+
+.guide-content-table > div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 2px;
+    padding: 6px;
+    padding-left: 32px;
+    border-radius: 2px;
+    
+    background-position: 4px 50%;
+    background-size: 24px 24px;
+    background-repeat: no-repeat;
+}
+
+.guide-content-table > div:hover {
+    background-color: var(--highlight-color);
+}

@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-    Pro-test is open source.
+    Pro-test is open-source.
     For more information, visit https://github.com/veniware/OpenProtest
  */
 

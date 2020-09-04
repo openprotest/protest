@@ -73,6 +73,7 @@ let loader_styles = [
         "scripteditor.js",
         "log.js",
         "backup.js",
+        "guide.js",
         "clients.js",
         "screencapture.js",
         "settings.js",
@@ -261,6 +262,7 @@ function RestoreSession() {
             case "Watchdog"         : win = new Watchdog(session[i].args); break;
             case "Log"              : win = new Log(session[i].args); break;
             case "Backup"           : win = new Backup(session[i].args); break;
+            case "Guide"            : win = new Guide(session[i].args); break;
             case "Clients"          : win = new Clients(session[i].args); break;
             case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;
