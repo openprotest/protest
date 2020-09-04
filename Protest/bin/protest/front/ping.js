@@ -95,13 +95,13 @@ class Ping extends Console {
             innerBox.parentElement.style.maxWidth = "600px";
             innerBox.style.padding = "16px 0px 0px 16px";
 
-            let lblTimeout = document.createElement("div");
+            const lblTimeout = document.createElement("div");
             lblTimeout.innerHTML = "Time out (ms):";
             lblTimeout.style.display = "inline-block";
             lblTimeout.style.minWidth = "120px";
             innerBox.appendChild(lblTimeout);
 
-            let txtTimeout = document.createElement("input");
+            const txtTimeout = document.createElement("input");
             txtTimeout.type = "number";
             txtTimeout.min = "1";
             txtTimeout.max = "5000";
@@ -111,22 +111,22 @@ class Ping extends Console {
 
             innerBox.appendChild(document.createElement("br"));
 
-            let lblPingMethod = document.createElement("div");
+            const lblPingMethod = document.createElement("div");
             lblPingMethod.innerHTML = "Ping method:";
             lblPingMethod.style.display = "inline-block";
             lblPingMethod.style.minWidth = "120px";
             innerBox.appendChild(lblPingMethod);
 
-            let selPingMethod = document.createElement("select");
+            const selPingMethod = document.createElement("select");
             selPingMethod.style.minWidth = "100px";
             innerBox.appendChild(selPingMethod);
 
-            let optICMP = document.createElement("option");
+            const optICMP = document.createElement("option");
             optICMP.innerHTML = "ICMP";
             optICMP.value = "icmp";
             selPingMethod.appendChild(optICMP);
 
-            let optARP = document.createElement("option");
+            const optARP = document.createElement("option");
             optARP.innerHTML = "ARP";
             optARP.value = "arp";
             selPingMethod.appendChild(optARP);
@@ -135,22 +135,22 @@ class Ping extends Console {
 
             innerBox.appendChild(document.createElement("br"));
 
-            let lblDisplayMode = document.createElement("div");
+            const lblDisplayMode = document.createElement("div");
             lblDisplayMode.innerHTML = "Display mode:";
             lblDisplayMode.style.display = "inline-block";
             lblDisplayMode.style.minWidth = "120px";
             innerBox.appendChild(lblDisplayMode);
 
-            let selDisplayMode = document.createElement("select");
+            const selDisplayMode = document.createElement("select");
             selDisplayMode.style.minWidth = "100px";
             innerBox.appendChild(selDisplayMode);
 
-            let optNormal = document.createElement("option");
+            const optNormal = document.createElement("option");
             optNormal.innerHTML = "Normal";
             optNormal.value = "normal";
             selDisplayMode.appendChild(optNormal);
 
-            let optTied = document.createElement("option");
+            const optTied = document.createElement("option");
             optTied.innerHTML = "Tied";
             optTied.value = "tied";
             selDisplayMode.appendChild(optTied);
@@ -161,7 +161,7 @@ class Ping extends Console {
             innerBox.appendChild(document.createElement("br"));
             innerBox.appendChild(document.createElement("br"));
 
-            let chkMoveToBottom = document.createElement("input");
+            const chkMoveToBottom = document.createElement("input");
             chkMoveToBottom.type = "checkbox";
             chkMoveToBottom.checked = this.args.moveToBottom;
             innerBox.appendChild(chkMoveToBottom);
@@ -171,91 +171,91 @@ class Ping extends Console {
             innerBox.appendChild(document.createElement("br"));
 
             {
-                let pnlLegend = document.createElement("div");
+                const pnlLegend = document.createElement("div");
                 pnlLegend.style.width = "300px";
                 pnlLegend.style.overflow = "hidden";
                 innerBox.appendChild(pnlLegend);
 
-                let tblLegend = document.createElement("table");
+                const tblLegend = document.createElement("table");
                 tblLegend.style.color = "#202020";
                 tblLegend.style.borderCollapse = "collapse";
                 tblLegend.style.margin = "4px";
                 pnlLegend.appendChild(tblLegend);
 
-                let tr1 = document.createElement("tr");
+                const tr1 = document.createElement("tr");
                 tblLegend.appendChild(tr1);
 
-                let tr2 = document.createElement("tr");
+                const tr2 = document.createElement("tr");
                 tblLegend.appendChild(tr2);
 
-                let tr3 = document.createElement("tr");
+                const tr3 = document.createElement("tr");
                 tblLegend.appendChild(tr3);
 
-                let tr4 = document.createElement("tr");
+                const tr4 = document.createElement("tr");
                 tblLegend.appendChild(tr4);
 
-                let td1a = document.createElement("td");
+                const td1a = document.createElement("td");
                 td1a.style.borderRadius = "8px 8px 0 0";
                 td1a.style.width = "24px";
                 td1a.style.height = "24px";
                 td1a.style.background = "linear-gradient(to bottom, hsl(96,66%,50%)0%, hsl(146,66%,50%)100%)";
                 tr1.appendChild(td1a);
-                let td1b = document.createElement("td");
+                const td1b = document.createElement("td");
                 td1b.style.minWidth = "96px";
                 td1b.style.paddingLeft = "8px";
                 td1b.innerHTML = "0ms";
                 tr1.appendChild(td1b);
 
-                let td2a = document.createElement("td");
+                const td2a = document.createElement("td");
                 td2a.style.width = "24px";
                 td2a.style.height = "24px";
                 td2a.style.background = "linear-gradient(to bottom, hsl(146,66%,50%)0%, hsl(196,66%,50%)100%)";
                 tr2.appendChild(td2a);
-                let td2b = document.createElement("td");
+                const td2b = document.createElement("td");
                 td2b.style.paddingLeft = "8px";
                 td2b.innerHTML = "250ms";
                 tr2.appendChild(td2b);
 
-                let td3a = document.createElement("td");
+                const td3a = document.createElement("td");
                 td3a.style.width = "24px";
                 td3a.style.height = "24px";
                 td3a.style.background = "linear-gradient(to bottom, hsl(196,66%,50%)0%, hsl(246,66%,50%)100%)";
                 tr3.appendChild(td3a);
-                let td3b = document.createElement("td");
+                const td3b = document.createElement("td");
                 td3b.style.paddingLeft = "8px";
                 td3b.innerHTML = "500ms";
                 tr3.appendChild(td3b);
 
-                let td4a = document.createElement("td");
+                const td4a = document.createElement("td");
                 td4a.style.borderRadius = "0 0 8px 8px";
                 td4a.style.width = "24px";
                 td4a.style.height = "24px";
                 td4a.style.background = "linear-gradient(to bottom, hsl(246,66%,50%)0%, hsl(345,66%,50%)100%)";
                 tr4.appendChild(td4a);
-                let td4b = document.createElement("td");
+                const td4b = document.createElement("td");
                 td4b.style.paddingLeft = "8px";
                 td4b.innerHTML = "750ms";
                 tr4.appendChild(td4b);
 
-                let td5a = document.createElement("td");
+                const td5a = document.createElement("td");
                 td5a.style.borderRadius = "8px";
                 td5a.style.width = "24px";
                 td5a.style.height = "24px";
                 td5a.style.backgroundColor = "rgb(255,0,0)";
                 tr1.appendChild(td5a);
-                let td5b = document.createElement("td");
+                const td5b = document.createElement("td");
                 td5b.style.minWidth = "96px";
                 td5b.style.paddingLeft = "8px";
                 td5b.innerHTML = "Timed Out";
                 tr1.appendChild(td5b);
 
-                let td6a = document.createElement("td");
+                const td6a = document.createElement("td");
                 td6a.style.borderRadius = "8px";
                 td6a.style.width = "24px";
                 td6a.style.height = "24px";
                 td6a.style.backgroundColor = "rgb(255,102,0)";
                 tr2.appendChild(td6a);
-                let td6b = document.createElement("td");
+                const td6b = document.createElement("td");
                 td6b.style.paddingLeft = "8px";
                 td6b.innerHTML = "Error";
                 tr2.appendChild(td6b);
@@ -402,24 +402,24 @@ class Ping extends Console {
                 return;
             }
 
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.className = "list-element";
         this.list.appendChild(div);
 
-        let name = document.createElement("div");
+        const name = document.createElement("div");
         name.className = "list-label";
         name.innerHTML = hostname;
         div.appendChild(name);
 
-        let graph = document.createElement("div");
+        const graph = document.createElement("div");
         graph.className = "list-graph";
         div.appendChild(graph);
 
-        let msg = document.createElement("div");
+        const msg = document.createElement("div");
         msg.className = "list-msg";
         div.appendChild(msg);
 
-        let remove = document.createElement("div");
+        const remove = document.createElement("div");
         remove.className = "list-remove";
         div.appendChild(remove);
 
@@ -439,9 +439,9 @@ class Ping extends Console {
             if (db_equip[i].hasOwnProperty("IP"))
                 if (db_equip[i].IP[0] == hostname) {
 
-                    let icon = document.createElement("div");
+                    const icon = document.createElement("div");
                     icon.className = "list-icon";
-                    icon.style.backgroundImage = `url(${GetEquipIcon(db_equip[j].TYPE)})`;
+                    icon.style.backgroundImage = `url(${GetEquipIcon(db_equip[i].TYPE)})`;
                     div.appendChild(icon);
 
                     icon.ondblclick = () => {
@@ -452,7 +452,7 @@ class Ping extends Console {
                                         $w.array[k].Minimize(); //minimize/restore
                                         return;
                                     }
-                                new Equip(db_equip[j]);
+                                new Equip(db_equip[j][".FILENAME"][0]);
                                 return;
                             }
                         div.removeChild(icon);
@@ -550,7 +550,7 @@ class Ping extends Console {
         this.ws.onclose = () => {
             if (this.request.length === 0) return;
 
-            let error_message = document.createElement("div");
+            const error_message = document.createElement("div");
             error_message.id = "self_destruct";
             error_message.innerHTML = "Connection is closed. <u>Click to reconnect</u>";
             error_message.style.color = "var(--theme-color)";

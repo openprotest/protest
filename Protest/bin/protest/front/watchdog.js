@@ -131,6 +131,7 @@ class Watchdog extends Window {
             this.seeking = true;
             mouseX0 = event.clientX;
             lastOffset = this.timeOffset;
+            this.timeline.style.cursor = "grabbing";
         };
 
         this.timeline.onmousemove = event => {
@@ -147,6 +148,7 @@ class Watchdog extends Window {
         this.timeline.onmouseup = event => {
             this.seeking = false;
             lastOffset = this.timeOffset;
+            this.timeline.style.cursor = "grab";
         };
 
         this.win.addEventListener("mousemove", event => this.timeline.onmousemove(event));
@@ -635,8 +637,6 @@ class Watchdog extends Window {
             let payload = "";
             payload += `enable=${chkEnable.checked}`;
             payload += `&interval=${timeMapping[rngInterval.value]}`;
-
-            console.log(txtSmtpServer.value);
 
             payload += `&email=${chkEMail.checked}`;
             payload += `&threshold=${rngThreshold.value}`;

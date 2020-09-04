@@ -11,8 +11,9 @@
     overflow-y: auto;
 }
 .w-dog-timeline {
+    cursor: grab;
     position: absolute;
-    left: 478px;
+    left: 262px;
     right: 8px;
     top: 4px;
     height: 32px;

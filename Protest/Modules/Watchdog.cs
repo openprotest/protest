@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text;
@@ -88,7 +89,7 @@ public static class Watchdog {
             Watchdog.watchThread = null;
         }
 
-        if (sendtest) SendMailTest();
+        if (sendtest) SmtpTest();
 
         Logging.Action(performer, $"Change watchdog settings");
         return Strings.OK.Array;
@@ -326,10 +327,9 @@ public static class Watchdog {
         DateTime now = DateTime.Now;
         Thread.Sleep((9 - now.Minute % 10) * 60000 + (59 - now.Second) * 1000 + (999 - now.Millisecond));
 
-        Hashtable statusHash = new Hashtable();
-
         while (true) {
             TimeSpan start = new TimeSpan(DateTime.Now.Ticks);
+            Hashtable statusHash = new Hashtable();
                         
             try {
                 DirectoryInfo dirWatchdog = new DirectoryInfo(Strings.DIR_WATCHDOG);
@@ -346,10 +346,12 @@ public static class Watchdog {
                     string host = split[0].Trim();
                     string protocol = split[1].Trim();
 
-                    string status = String.Empty;
+                    bool bStatus = false;
+                    string sStatus = String.Empty;
 
                     if (protocol == "arp") {
-                        status = Arp.ArpPing(host).ToString().ToLower();
+                        bStatus = Arp.ArpPing(host);
+                        sStatus = bStatus.ToString().ToLower();
 
                     } else if (protocol == "icmp") {
                         System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
@@ -357,21 +359,26 @@ public static class Watchdog {
                             PingReply reply = p.Send(host, 1000);
                             if (reply.Status != IPStatus.Success) reply = p.Send(host, 1000); //retry
 
-                            if (reply.Status == IPStatus.Success)
-                                status = reply.RoundtripTime.ToString();
+                            if (reply.Status == IPStatus.Success) {
+                                bStatus = reply.RoundtripTime < threshold;
+                                sStatus = reply.RoundtripTime.ToString();
 
-                            else if (reply.Status == IPStatus.DestinationHostUnreachable || reply.Status == IPStatus.DestinationNetworkUnreachable)
-                                status = "Unreachable";
+                            } else if (reply.Status == IPStatus.DestinationHostUnreachable || reply.Status == IPStatus.DestinationNetworkUnreachable) {
+                                bStatus = false;
+                                sStatus = "Unreachable";
 
-                            else {
+                            } else {
                                 if (reply.Status.ToString() == "11050")
-                                    status = "General failure";
+                                    sStatus = "General failure";
                                 else
-                                    status = reply.Status.ToString();
+                                    sStatus = reply.Status.ToString();
+
+                                bStatus = false;
                             }
 
                         } catch {
-                            status = "PingError";
+                            bStatus = false;
+                            sStatus = "PingError";
                         } finally {
                             p.Dispose();
                         }
@@ -379,8 +386,12 @@ public static class Watchdog {
                     } else if (protocol.StartsWith("tcp")) {
                         int.TryParse(protocol.Substring(3), out int port);
                         if (port == 0) continue;                        
-                        status = PortScan.SinglePortscan(host, port).ToString().ToLower();
+                        bStatus = PortScan.SinglePortscan(host, port);
+                        sStatus = bStatus.ToString().ToLower();                        
                     }
+
+                    if (statusHash.ContainsKey(o.Name)) statusHash.Remove(o.Name);
+                        statusHash.Add(o.Name, bStatus);
 
                     try {
                         string date = DateTime.Now.ToString(Strings.DATE_FORMAT_FILE);
@@ -388,12 +399,13 @@ public static class Watchdog {
 
                         FileInfo file = new FileInfo($"{o.FullName}\\{date}.txt");
                         if (!file.Exists) File.AppendAllText(file.FullName, $"{o.Name}\n{date}\n");
-                        File.AppendAllText(file.FullName, $"{time} {status}\n");
+                        File.AppendAllText(file.FullName, $"{time} {sStatus}\n");
                     } catch { }
                 }
 
             } catch { }
 
+            Hashtable notifications = new Hashtable();
 
             foreach (DictionaryEntry o in statusHash) {
                 if (!lastStatus.ContainsKey(o.Key)) continue;
@@ -402,16 +414,26 @@ public static class Watchdog {
                 bool last = (bool)lastStatus[o.Key];
                 if (current == last) continue;
 
-                if (current && (contition == "rise" || contition == "both")) { //rise
+                string[] split = o.Key.ToString().Split(' ');
+                if (split.Length < 2) continue;
 
-                }
+                string host = split[0];
+                string protocol = split[1];
+                string status = null;
+
+                if (current && (contition == "rise" || contition == "both")) //rise
+                    status = "started";
                 
-                if (last && (contition == "fall" || contition == "both")) { //fall
+                if (last && (contition == "fall" || contition == "both")) //fall
+                    status = "stoped";
 
-                }
+                if (!(status is null))
+                    notifications.Add(o.Key, new string[] { host, $"Host {host} {status} responding to {protocol.ToUpper()} request" });
             }
 
             lastStatus = statusHash;
+
+            if (notifications.Count > 0) SendSmtpNotification(notifications);
 
             TimeSpan finish = new TimeSpan(DateTime.Now.Ticks);
 
@@ -421,56 +443,125 @@ public static class Watchdog {
         }
     }
 
-    private static void SendMailNotification() {
+    private static void SendSmtpNotification(Hashtable notifications) {
         try {
-            MailMessage mail = new MailMessage();
-            SmtpClient SmtpServer = new SmtpClient(server);
+            LinkedResource logo = new LinkedResource($"{Strings.DIR_FRONTEND}\\res\\icon96.png", "image/png") {
+                ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                TransferEncoding = TransferEncoding.Base64
+            };
 
-            mail.From = new MailAddress(sender, "Pro-test");
+            StringBuilder body = new StringBuilder();
+            body.Append("<html>");
+            body.Append("<p style=\"text-align:center\">");
+            body.Append("<table style=\"width:640px;text-align:center\">");
+
+            body.Append($"<tr><td><img src=\"cid:{logo.ContentId}\"/></td></tr>");
+            body.Append("<tr><td style=\"height:18px\"></td></tr>"); //seperatator
+            body.Append("<tr><td style=\"height:40px;color:#fff;background:#e67624;font-size:24px\"><b>Watchdog notification</b></td></tr>");
+
+            foreach (DictionaryEntry e in notifications) {
+                string[] value = (string[]) e.Value;
+                body.Append($"<tr style=\"border-bottom:1px solid #888;height:28px;font-size:17;text-align:left\">");
+                body.Append($"<td>{value[1]}</td>");
+                body.Append($"</tr>");
+            }
+
+            body.Append("<tr><td style=\"height:20px\"></td></tr>"); //seperatator
+            body.Append("<tr><td style=\"color:#202020\">Sent from Pro-test.</td></tr>");
+            body.Append("<tr><td style=\"height:16px\"></td></tr>"); //seperatator
+
+            body.Append("<tr>");
+            body.Append("<td style=\"color:#202020\">");
+            body.Append("<a href=\"https://paypal.me/veniware/10\" style=\"color:#202020\">Make a donation</a>");
+            body.Append("&nbsp;or&nbsp;");
+            body.Append("<a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#202020\">get involved</a>");
+            body.Append("</td>");
+            body.Append("</tr>");
+
+            body.Append("</table>");
+            body.Append("</p>");
+            body.Append("</html>");
+
+            using MailMessage mail = new MailMessage {
+                From = new MailAddress(sender, "Pro-test"),
+                Subject = $"Pro-test notification {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}",
+                IsBodyHtml = true
+            };
+
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            view.LinkedResources.Add(logo);
+            mail.AlternateViews.Add(view);
 
             string[] addressSplit = recipients.Split(';');
             for (int i = 0; i < addressSplit.Length; i++)
                 mail.To.Add(addressSplit[i].Trim());
 
-            mail.Subject = $"Pro-test notification {DateTime.Now:Strings.DATETIME_FORMAT}";
-            mail.IsBodyHtml = true;
+            using SmtpClient smtp = new SmtpClient(server) {
+                Port = port,
+                EnableSsl = ssl,
+                Credentials = new NetworkCredential(username, password)
+            };
+            smtp.Send(mail);            
 
-            //https://stackoverflow.com/questions/18358534/send-inline-image-in-email
-            mail.Body = "Shit to do here";
-
-            SmtpServer.Port = port;
-            SmtpServer.Credentials = new NetworkCredential(username, password);
-            SmtpServer.EnableSsl = ssl;
-
-            SmtpServer.Send(mail);
-
-            Logging.Action("Pro-test notifications", "Successfully sent an email notification");
+            Logging.Action("Watchdog notification", "Successfully sent an email notification");
 
         } catch (Exception ex) {
             Logging.Err(ex);
         }
     }
 
-    private static void SendMailTest() {
+    private static void SmtpTest() {
         try {
-            MailMessage mail = new MailMessage();
-            SmtpClient SmtpServer = new SmtpClient(server);
+            LinkedResource logo = new LinkedResource($"{Strings.DIR_FRONTEND}\\res\\icon96.png", "image/png") {
+                ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                TransferEncoding = TransferEncoding.Base64
+            };
 
-            mail.From = new MailAddress(sender, "Pro-test");
+            StringBuilder body = new StringBuilder();
+            body.Append("<html>");
+            body.Append("<p style=\"text-align:center\">");
+            body.Append("<table style=\"width:500px;text-align:center\">");
+
+            body.Append($"<tr><td><img src=\"cid:{logo.ContentId}\"/></td></tr>");
+            body.Append("<tr><td style=\"height:18px\"></td></tr>"); //seperatator
+            body.Append("<tr><td style=\"height:40px;color:#fff;background:#e67624;font-size:24px\">You have successfully configure your SMTP client.</td></tr>");
+            body.Append("<tr><td style=\"height:20px\"></td></tr>"); //seperatator
+            body.Append("<tr><td style=\"color:#202020\">Sent from Pro-test.</td></tr>");
+            body.Append("<tr><td style=\"height:16px\"></td></tr>"); //seperatator
+
+            body.Append("<tr>");
+            body.Append("<td style=\"color:#202020\">");
+            body.Append("<a href=\"https://paypal.me/veniware/10\" style=\"color:#202020\">Make a donation</a>");
+            body.Append("&nbsp;or&nbsp;");
+            body.Append("<a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#202020\">get involved</a>");
+            body.Append("</td>");
+            body.Append("</tr>");
+
+            body.Append("</table>");
+            body.Append("</p>");
+            body.Append("</html>");
+
+            MailMessage mail = new MailMessage {
+                From = new MailAddress(sender, "Pro-test"),
+                Subject = "SMTP test from Pro-test",
+                IsBodyHtml = true,
+            };
+
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            view.LinkedResources.Add(logo);
+            mail.AlternateViews.Add(view);
 
             string[] addressSplit = recipients.Split(';');
-            for (int i = 0; i< addressSplit.Length; i++) 
+            for (int i = 0; i < addressSplit.Length; i++)
                 mail.To.Add(addressSplit[i].Trim());
-                        
-            mail.Subject = "SMTP test from Pro-test";
-            //mail.IsBodyHtml = true;
-            mail.Body = "This is a test";
 
-            SmtpServer.Port = port;
-            SmtpServer.Credentials = new NetworkCredential(username, password);
-            SmtpServer.EnableSsl = ssl;
+            using SmtpClient smtp = new SmtpClient(server) {
+                Port = port,
+                EnableSsl = ssl,
+                Credentials = new NetworkCredential(username, password)
+            };
+            smtp.Send(mail);
 
-            SmtpServer.Send(mail);
         } catch (Exception ex) {
             Logging.Err(ex);
         }
