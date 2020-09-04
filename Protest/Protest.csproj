@@ -143,6 +143,7 @@
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\front\guide.css" />
     <Content Include="bin\protest\front\guide.js" />
+    <Content Include="bin\protest\front\res\remote.svg" />
     <Content Include="bin\protest\front\res\warning.svg" />
     <Content Include="bin\protest\front\watchdog.css" />
     <Content Include="bin\protest\front\watchdog.js" />

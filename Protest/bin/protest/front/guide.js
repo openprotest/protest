@@ -115,8 +115,9 @@ class Guide extends Window {
 
         this.InsertHeading("Fetch", "res/fetch.svgz");
         this.InsertParagraph(
-            ""
+            "..."
         );
+
     }
 
     InsertHeading(text, icon) {
@@ -136,7 +137,7 @@ class Guide extends Window {
         this.table.appendChild(entry);
 
         entry.onclick = () => {
-            h.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+            h.scrollIntoView({ behavior: "smooth", block: "center" });
         };
 
         return h;
