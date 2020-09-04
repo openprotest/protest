@@ -802,9 +802,9 @@ class Watchdog extends Window {
         };
 
         if (this.txtProtocol.value == "tcp")
-            xhr.open("GET", `watchdog/add&host=${this.txtHost.value}&proto=${this.txtProtocol.value}&port=${this.txtPort.value}`, true);
+            xhr.open("GET", `watchdog/add&host=${this.txtHost.value.trim()}&proto=${this.txtProtocol.value}&port=${this.txtPort.value}`, true);
         else
-            xhr.open("GET", `watchdog/add&host=${this.txtHost.value}&proto=${this.txtProtocol.value}`, true);
+            xhr.open("GET", `watchdog/add&host=${this.txtHost.value.trim()}&proto=${this.txtProtocol.value}`, true);
         xhr.send();
 
         this.txtHost.value = "";

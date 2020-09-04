@@ -213,7 +213,7 @@ public static class Watchdog {
         string proto = String.Empty;
         string port  = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("host=")) host = para[i].Substring(5);
+            if (para[i].StartsWith("host=")) host = para[i].Substring(5).Trim();
             else if (para[i].StartsWith("proto=")) proto = para[i].Substring(6);
             else if (para[i].StartsWith("port=")) port = para[i].Substring(5);
 
