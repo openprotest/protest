@@ -23,31 +23,30 @@ class Guide extends Window {
     }
 
     Init() {
-        const title = document.createElement("div");
-        title.innerHTML = "Pro-test user guide";
-        title.style.textAlign= "center";
-        title.style.fontSize = "28px";
-        title.style.textDecoration = "underline";
-        title.style.fontWeight = "800";
-        this.body.appendChild(title);
-
-        this.body.appendChild(document.createElement("br"));
-
         const introAlign = document.createElement("div");
         introAlign.style.textAlign = "center";
         this.body.appendChild(introAlign);
-
-        introAlign.appendChild(document.createElement("br"));
 
         const logo = document.createElement("img");
         logo.style.gridArea = "1 / 2 / 6 / 2";
         logo.style.userSelect = "none";
         logo.style.userDrag = "none";
         logo.style.webkitUserDrag = "none";
-        logo.width = "96";
-        logo.height = "96";
+        logo.width = "128";
+        logo.height = "128";
         logo.src = "res/logo.svgz";
         introAlign.appendChild(logo);
+
+        introAlign.appendChild(document.createElement("br"));
+
+        const title = document.createElement("div");
+        title.innerHTML = "Pro-test user guide";
+        title.style.textAlign= "center";
+        title.style.fontSize = "28px";
+        title.style.textDecoration = "underline";
+        title.style.fontWeight = "800";
+        introAlign.appendChild(title);
+
 
         introAlign.appendChild(document.createElement("br"));
 
