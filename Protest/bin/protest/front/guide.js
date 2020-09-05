@@ -151,6 +151,42 @@ class Guide extends Window {
 
         this.body.appendChild(document.createElement("br"));
 
+        this.InsertHeading("Ping", "res/ping.svgz");
+        this.InsertParagraph(
+            "Ping is a network utility used to test the reachability of a host using ICMP echo request. " +
+            "Pro-test also provides an alternative ping solution that uses ARP request (ARP operates on a lower level but is a non-routable protocol)."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
+        this.InsertHeading("DNS lookup", "res/dns.svgz");
+        this.InsertParagraph(
+            "The DNS lookup utility resolves a domain or a hostname to all its IP addresses."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
+        this.InsertHeading("DHCP discover", "res/dhcp.svgz");
+        this.InsertParagraph(
+            "This utility broadcasts a DHCP-discover message to the local network and list all offers from DHCP servers on the same network."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
+        this.InsertHeading("NTP client", "res/clock.svgz");
+        this.InsertParagraph(
+            "NTP client can send a time request to the server of your choice and displays the response."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
+        this.InsertHeading("Trace route", "res/traceroute.svgz");
+        this.InsertParagraph(
+            "Trace route is a network utility used for calculating the route to the specified address."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
         const creditsAlign = document.createElement("div");
         creditsAlign.style.textAlign = "center";
         this.body.appendChild(creditsAlign);
