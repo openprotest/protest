@@ -124,22 +124,30 @@ class Guide extends Window {
 
         this.InsertHeading("Documentation", "res/documentation.svgz");
         this.InsertParagraph(
-            "Documenting your daily tasks is one crucial but frequently underestimated job in the sys-admin world. " +
-            "Keeping a record can be useful for future reference for you or your teammates. " +
-            "Pro-test provides a documentation tool where you can add solutions and how-tos. " +
-            "You can add relations to a specific machine, paste screen-shots, and format your text to add readability."
+            "Keeping a record of your daily jobs enables you to track your progress, but most importantly, you can use it in the future if you face the same issue, avoiding running into the same troubleshooting twice."
+        );
+        this.InsertParagraph(
+            "Pro-test provides a documentation utility where you can add solutions, how-tos, and built your own knowledge-base. " +
+            "You can add links to related equipment, paste screen-shots, and format your text to add readability."
         );
 
         this.body.appendChild(document.createElement("br"));
 
         this.InsertHeading("Debit notes", "res/charges.svgz");
         this.InsertParagraph(
-            ""
+            "If your business/company requires to give to other teams or departments devices, such as cellphones, laptops, or any other gear, debit notes allows you to manage all that and keep them under control."
+        );
+        this.InsertParagraph(
+            "Fill your debit forms fast and easy by browsing your database for users and devices. " +
+            "Finally, you can search all debit notes and find out who has what, quick and easy."
         );
 
         this.body.appendChild(document.createElement("br"));
 
-
+        this.InsertHeading("Password strength", "res/strength.svgz");
+        this.InsertParagraph(
+            "This utility scans your database for passwords and scores them based on their strength, letting you know which users are variable to passwords attacks."
+        );
 
         this.body.appendChild(document.createElement("br"));
 
