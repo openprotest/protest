@@ -695,8 +695,7 @@ class Settings extends Tabs {
             newIcon.style.background = `url(${icons[i]})`;
             newIcon.style.backgroundSize = "contain";
             center.appendChild(newIcon);
-        }
-        
+        }        
 
         logo.onclick = () => {
             logo.animate([

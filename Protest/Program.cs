@@ -55,8 +55,6 @@ class Program {
         DrawProTest();
         Console.WriteLine();
 
-        Strings.InitDirs();
-
 #if DEBUG
         Console.WriteLine(" - Debug mode");
 #endif
@@ -64,7 +62,11 @@ class Program {
         if (IsElevated()) Console.WriteLine(" - Elevated privileges");
         else SelfElevate();
 
+        Console.WriteLine($" - Run time: {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}");
+
         Console.WriteLine();
+
+        Strings.InitDirs();
 
         bool loadConfig = LoadConfig();
         Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "Done" : "Failed"));

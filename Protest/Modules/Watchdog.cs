@@ -83,7 +83,7 @@ public static class Watchdog {
         contents += $"port = {port}\n";
         contents += $"sender = {sender}\n";
         contents += $"username = {username}\n";
-        contents += $"password = {password}\n";
+        contents += $"password = {Watchdog.password}\n";
         contents += $"recipients = {recipients}\n";
         contents += $"ssl = {ssl.ToString().ToLower()}\n";
 
@@ -476,15 +476,17 @@ public static class Watchdog {
                     TransferEncoding = TransferEncoding.Base64
                 };
 
+            LinkedResource fileGreen = new LinkedResource(pngGreenDot, "image/png") {
+                ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                TransferEncoding = TransferEncoding.Base64
+            };
+
             LinkedResource fileRed = new LinkedResource(pngRedDot, "image/png") {
                 ContentId = Guid.NewGuid().ToString().Replace("-", ""),
                 TransferEncoding = TransferEncoding.Base64
             };
 
-            LinkedResource fileGreen = new LinkedResource(pngGreenDot, "image/png") {
-                ContentId = Guid.NewGuid().ToString().Replace("-", ""),
-                TransferEncoding = TransferEncoding.Base64
-            };
+            bool redFlag = false, greenFlag = false;
 
             StringBuilder body = new StringBuilder();
             body.Append("<html>");
@@ -502,6 +504,11 @@ public static class Watchdog {
                 body.Append($"&nbsp;&nbsp;{notifications[i][3]}");
                 body.Append($"</td>");
                 body.Append($"</tr>");
+
+                if (notifications[i][1] == "started")
+                    greenFlag = true;
+                else
+                    redFlag = true;
             }
 
             body.Append("<tr><td style=\"height:20px\"></td></tr>"); //seperatator
@@ -520,6 +527,8 @@ public static class Watchdog {
             body.Append("</p>");
             body.Append("</html>");
 
+            Console.WriteLine(password);
+
             using MailMessage mail = new MailMessage {
                 From = new MailAddress(sender, "Pro-test"),
                 Subject = $"Pro-test notification {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}",
@@ -528,8 +537,8 @@ public static class Watchdog {
 
             AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
             view.LinkedResources.Add(logo);
-            view.LinkedResources.Add(fileGreen);
-            view.LinkedResources.Add(fileRed);
+            if (greenFlag) view.LinkedResources.Add(fileGreen);
+            if (redFlag) view.LinkedResources.Add(fileRed);
             mail.AlternateViews.Add(view);
 
             string[] addressSplit = recipients.Split(';');
@@ -541,7 +550,7 @@ public static class Watchdog {
                 EnableSsl = ssl,
                 Credentials = new NetworkCredential(username, password)
             };
-            smtp.Send(mail);            
+            smtp.Send(mail);
 
             Logging.Action("Watchdog notification", "Successfully sent an email notification");
 

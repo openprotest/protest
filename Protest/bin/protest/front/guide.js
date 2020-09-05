@@ -70,7 +70,7 @@ class Guide extends Window {
         );
         this.InsertParagraph(
             "Pro-test, by default, listens only on localhost on port 80 for security reasons. " +
-            "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>config.txt</i> file, to the local end-point of your choice."
+            "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>config.txt</i> file to the local end-point of your choice."
         );
         this.InsertParagraph(
             "Requests from IPs other than loopback are rejected and require a username and a password. " +
@@ -107,16 +107,89 @@ class Guide extends Window {
             "Of course, you can modify any field the way you want to."
         );
         this.InsertParagraph(
-            "Additional information is provided in real-time, warning you for low disc space, DNS mismatch, locked out users, etc."
+            "Additional information is provided in real-time, letting you know about the last seen date, logged in user, bad password attempts, etc. " +
+            "Also, Pro-test will warn you for low disk space, DNS mismatches, locked-out users, and more."
         );
 
         this.body.appendChild(document.createElement("br"));
 
         this.InsertHeading("Fetch", "res/fetch.svgz");
         this.InsertParagraph(
-            "..."
+            "You can schedule \"Fetch\" to scan your network and populate the database and update existing entries. " +
+            "If hosts are unreachable, you can set Pro-test to retry again at another time. <br>" +
+            "You can also import data from another Pro-test."
         );
 
+        this.body.appendChild(document.createElement("br"));
+
+        this.InsertHeading("Documentation", "res/documentation.svgz");
+        this.InsertParagraph(
+            "Documenting your daily tasks is one crucial but frequently underestimated job in the sys-admin world. " +
+            "Keeping a record can be useful for future reference for you or your teammates. " +
+            "Pro-test provides a documentation tool where you can add solutions and how-tos. " +
+            "You can add relations to a specific machine, paste screen-shots, and format your text to add readability."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
+        this.InsertHeading("Debit notes", "res/charges.svgz");
+        this.InsertParagraph(
+            ""
+        );
+
+        this.body.appendChild(document.createElement("br"));
+
+
+
+        this.body.appendChild(document.createElement("br"));
+
+        const creditsAlign = document.createElement("div");
+        creditsAlign.style.textAlign = "center";
+        this.body.appendChild(creditsAlign);
+
+        const donate = document.createElement("a");
+        donate.style.display = "inline-block";
+        donate.style.border = "#202020 1px solid";
+        donate.style.borderRadius = "4px";
+        donate.style.padding = "2px 4px";
+        donate.style.margin = "1px";
+        donate.target = "_blank";
+        donate.href = "https://paypal.me/veniware/10";
+        donate.innerHTML = "Make a donation";
+        creditsAlign.appendChild(donate);
+
+        const _or = document.createElement("div");
+        _or.style.display = "inline-block";
+        _or.style.padding = "1px 4px";
+        _or.innerHTML = "or";
+        creditsAlign.appendChild(_or);
+
+        const involve = document.createElement("a");
+        involve.style.display = "inline-block";
+        involve.style.border = "#202020 1px solid";
+        involve.style.borderRadius = "4px";
+        involve.style.padding = "2px 4px";
+        involve.style.margin = "1px";
+        involve.target = "_blank";
+        involve.href = "https://github.com/veniware/OpenProtest";
+        involve.innerHTML = "get involved";
+        creditsAlign.appendChild(involve);
+
+        creditsAlign.appendChild(document.createElement("br"));
+        creditsAlign.appendChild(document.createElement("br"));
+        creditsAlign.appendChild(document.createElement("br"));
+
+        const icons = ["res/logo.svgz", "res/copyleft.svgz", "res/opensource.svgz", "res/gpl.svgz", "res/github.svgz"];
+        for (let i = 0; i < icons.length; i++) {
+            const newIcon = document.createElement("div");
+            newIcon.style.display = "inline-block";
+            newIcon.style.width = "52px";
+            newIcon.style.height = "52px";
+            newIcon.style.margin = "16px";
+            newIcon.style.background = `url(${icons[i]})`;
+            newIcon.style.backgroundSize = "contain";
+            creditsAlign.appendChild(newIcon);
+        }      
     }
 
     InsertHeading(text, icon) {

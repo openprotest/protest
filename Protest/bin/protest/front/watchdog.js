@@ -801,7 +801,7 @@ class Watchdog extends Window {
             if (xhr.readyState == 4 && xhr.status == 200)
                 this.Reload();
 
-            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server unavailable.", true);
         };
 
         if (this.txtProtocol.value == "tcp")
