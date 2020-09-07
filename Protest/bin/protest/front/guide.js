@@ -73,9 +73,8 @@ class Guide extends Window {
             "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>config.txt</i> file to the local end-point of your choice."
         );
         this.InsertParagraph(
-            "Requests from IPs other than loopback are rejected and require a username and a password. " +
-            "The username must be whitelisted in the <i>config.txt</i> file. " +
-            "Your domain controller will handle the authentication."
+            "Requests from IPs other than loopback are rejected and require a username and a password to proceed. " +
+            "The username must be whitelisted in the <i>config.txt</i> file, and then your domain controller will handle the authentication."
         );
         this.InsertParagraph(
             "Also, in the <i>config.txt</i>, you can set your database key and your preshared key."
@@ -87,7 +86,6 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Remote agent", "res/remote.svgz");
         this.InsertParagraph(
             "The Remote Agent is an executable you can run on your remote host. " +
@@ -112,7 +110,6 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Fetch", "res/fetch.svgz");
         this.InsertParagraph(
             "You can schedule \"Fetch\" to scan your network and populate the database and update existing entries. " +
@@ -121,7 +118,6 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Documentation", "res/documentation.svgz");
         this.InsertParagraph(
             "Keeping a record of your daily jobs enables you to track your progress, but most importantly, you can use it in the future if you face the same issue, avoiding running into the same troubleshooting twice."
@@ -132,7 +128,6 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Debit notes", "res/charges.svgz");
         this.InsertParagraph(
             "If your business/company requires to give to other teams or departments devices, such as cellphones, laptops, or any other gear, debit notes allows you to manage all that and keep them under control."
@@ -143,14 +138,12 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Password strength", "res/strength.svgz");
         this.InsertParagraph(
             "This utility scans your database for passwords and scores them based on their strength, letting you know which users are variable to passwords attacks."
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Ping", "res/ping.svgz");
         this.InsertParagraph(
             "Ping is a network utility used to test the reachability of a host using ICMP echo request. " +
@@ -158,31 +151,57 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("DNS lookup", "res/dns.svgz");
         this.InsertParagraph(
             "The DNS lookup utility resolves a domain or a hostname to all its IP addresses."
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("DHCP discover", "res/dhcp.svgz");
         this.InsertParagraph(
             "This utility broadcasts a DHCP-discover message to the local network and list all offers from DHCP servers on the same network."
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("NTP client", "res/clock.svgz");
         this.InsertParagraph(
             "NTP client can send a time request to the server of your choice and displays the response."
         );
 
         this.body.appendChild(document.createElement("br"));
-
         this.InsertHeading("Trace route", "res/traceroute.svgz");
         this.InsertParagraph(
             "Trace route is a network utility used for calculating the route to the specified address."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Port scan", "res/portscan.svgz");
+        this.InsertParagraph(
+            "Port scan utility scans the specified host for ported TCP ports, listing them with their default protocols. You can customize your scans by limiting your ports to a specific range to optimize your workflow."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Locate IP", "res/locate.svgz");
+        this.InsertParagraph(
+            "Find the physical location of an IP address or domain. Also, you're getting informed if that host is proxied or not."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("MAC lookup", "res/maclookup.svgz");
+        this.InsertParagraph(
+            "With this tool, you can do a MAC address lookup and find the manufacturer that registered that MAC address."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Website check", "res/websitecheck.svgz");
+        this.InsertParagraph(
+            "This utility checks if the given website is available and provides additional information about any possible issues."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Scripts", "res/scripts.svgz");
+        this.InsertParagraph(
+            "..."
         );
 
         this.body.appendChild(document.createElement("br"));
