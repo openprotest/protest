@@ -50,7 +50,7 @@ public static class Watchdog {
         string password = String.Empty;
 
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
-            string[] para = reader.ReadToEnd().Split('&');
+            string[] para = reader.ReadToEnd().Split((char)127);
 
             for (int i = 0; i < para.Length; i++)
                 if (para[i].StartsWith("enable=")) enable = para[i].Substring(7) == "true";
@@ -83,7 +83,7 @@ public static class Watchdog {
         contents += $"port = {port}\n";
         contents += $"sender = {sender}\n";
         contents += $"username = {username}\n";
-        contents += $"password = {Watchdog.password}\n";
+        contents += $"password = { CryptoAes.EncryptB64(Watchdog.password, Program.DB_KEY_A, Program.DB_KEY_B) }\n";
         contents += $"recipients = {recipients}\n";
         contents += $"ssl = {ssl.ToString().ToLower()}\n";
 
@@ -94,9 +94,10 @@ public static class Watchdog {
         }
 
         if (Watchdog.enable && Watchdog.watchThread is null) {
-            Watchdog.watchThread = new Thread(BackgroundService);
-            Watchdog.watchThread.Name = "Watchdog";
-            Watchdog.watchThread.Priority = ThreadPriority.BelowNormal;
+            Watchdog.watchThread = new Thread(BackgroundService) {
+                Name = "Watchdog",
+                Priority = ThreadPriority.BelowNormal
+            };
             Watchdog.watchThread.Start();
         }
         
@@ -185,7 +186,12 @@ public static class Watchdog {
                     break;
 
                 case "password":
-                    Watchdog.password = split[1];
+                    if (!split[1].EndsWith("==")) split[1] = $"{split[1]}==";
+                    try {
+                        Watchdog.password = CryptoAes.DecryptB64(split[1], Program.DB_KEY_A, Program.DB_KEY_B);
+                    } catch {
+                        Watchdog.password = "";
+                    }
                     break;
 
                 case "recipients":
@@ -467,7 +473,9 @@ public static class Watchdog {
     }
 
     private static void SendSmtpNotification(List<string[]> notifications) {
+#if !DEBUG
         try {
+#endif
             FileInfo fileLogo = new FileInfo($"{Strings.DIR_FRONTEND}\\res\\icon96.png");
             LinkedResource logo = null;
             if (fileLogo.Exists)
@@ -497,7 +505,7 @@ public static class Watchdog {
             body.Append("<tr><td style=\"height:18px\"></td></tr>"); //seperatator
             body.Append("<tr><td style=\"height:40px;color:#fff;background:#e67624;font-size:24px\"><b>Watchdog notification</b></td></tr>");
 
-            for (int i=0; i< notifications.Count; i++) { //format[key, status, host, message] 
+            for (int i = 0; i < notifications.Count; i++) { //format[key, status, host, message] 
                 body.Append($"<tr>");
                 body.Append($"<td style=\"border-bottom:1px solid #808080;height:28px;font-size:18;text-align:left\">");
                 body.Append($"&nbsp;&nbsp;<img src=\"cid:{(notifications[i][1] == "started" ? fileGreen.ContentId : fileRed.ContentId)}\"/>");
@@ -527,8 +535,6 @@ public static class Watchdog {
             body.Append("</p>");
             body.Append("</html>");
 
-            Console.WriteLine(password);
-
             using MailMessage mail = new MailMessage {
                 From = new MailAddress(sender, "Pro-test"),
                 Subject = $"Pro-test notification {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}",
@@ -552,15 +558,27 @@ public static class Watchdog {
             };
             smtp.Send(mail);
 
+            smtp.Dispose();
+            mail.Dispose();
+            body.Clear();
+            logo.Dispose();
+            fileGreen.Dispose();
+            fileRed.Dispose();
+
             Logging.Action("Watchdog notification", "Successfully sent an email notification");
 
-        } catch (Exception ex) {
-            Logging.Err(ex);
+#if !DEBUG
+        } catch (SmtpFailedRecipientException ex) { Logging.Err(ex);
+        } catch (SmtpException ex)                { Logging.Err(ex);
+        } catch (Exception ex)                    { Logging.Err(ex);
         }
+#endif
     }
 
     private static void SmtpTest() {
+#if !DEBUG
         try {
+#endif
             FileInfo fileLogo = new FileInfo($"{Strings.DIR_FRONTEND}\\res\\icon96.png");
             LinkedResource logo = null;
             if (fileLogo.Exists)
@@ -596,7 +614,7 @@ public static class Watchdog {
             MailMessage mail = new MailMessage {
                 From = new MailAddress(sender, "Pro-test"),
                 Subject = "SMTP test from Pro-test",
-                IsBodyHtml = true,
+                IsBodyHtml = true
             };
 
             AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
@@ -614,9 +632,17 @@ public static class Watchdog {
             };
             smtp.Send(mail);
 
-        } catch (Exception ex) {
-            Logging.Err(ex);
+            smtp.Dispose();
+            mail.Dispose();
+            body.Clear();
+            logo.Dispose();
+
+#if !DEBUG
+        } catch (SmtpFailedRecipientException ex) { Logging.Err(ex);
+        } catch (SmtpException ex)                { Logging.Err(ex);
+        } catch (Exception ex)                    { Logging.Err(ex);
         }
+#endif
     }
 
 }

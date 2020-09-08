@@ -139,7 +139,7 @@ public static class DebitNotes {
         bool isShortPending = false;
 
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
-            string[] para = reader.ReadToEnd().Split('&');
+            string[] para = reader.ReadToEnd().Split((char)127);
             for (int i = 0; i < para.Length; i++)
                 if (para[i].StartsWith("fn=")) firstname = para[i].Substring(3);
                 else if (para[i].StartsWith("ln=")) lastname = para[i].Substring(3);

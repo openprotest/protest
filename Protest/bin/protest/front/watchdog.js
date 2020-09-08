@@ -118,7 +118,7 @@ class Watchdog extends Window {
             const td1b = document.createElement("td");
             td1b.style.minWidth = "96px";
             td1b.style.paddingRight = "8px";
-            td1b.innerHTML = "0ms";
+            td1b.innerHTML = "0&nbsp;<sup>ms</sup>";
             tr1.appendChild(td1b);
             const td1a = document.createElement("td");
             td1a.style.borderRadius = "8px 8px 0 0";
@@ -131,7 +131,7 @@ class Watchdog extends Window {
             tblLegend.appendChild(tr2);
             const td2b = document.createElement("td");
             td2b.style.paddingRight = "8px";
-            td2b.innerHTML = "250ms";
+            td2b.innerHTML = "250&nbsp;<sup>ms</sup>";
             tr2.appendChild(td2b);
             const td2a = document.createElement("td");
             td2a.style.width = "24px";
@@ -143,7 +143,7 @@ class Watchdog extends Window {
             tblLegend.appendChild(tr3);
             const td3b = document.createElement("td");
             td3b.style.paddingRight = "8px";
-            td3b.innerHTML = "500ms";
+            td3b.innerHTML = "500&nbsp;<sup>ms</sup>";
             tr3.appendChild(td3b);
             const td3a = document.createElement("td");
             td3a.style.width = "24px";
@@ -155,7 +155,7 @@ class Watchdog extends Window {
             tblLegend.appendChild(tr4);
             const td4b = document.createElement("td");
             td4b.style.paddingRight = "8px";
-            td4b.innerHTML = "750ms";
+            td4b.innerHTML = "750&nbsp;<sup>ms</sup>";
             tr4.appendChild(td4b);
             const td4a = document.createElement("td");
             td4a.style.borderRadius = "0 0 8px 8px";
@@ -557,7 +557,7 @@ class Watchdog extends Window {
         lblThresholdValue.style.gridArea = "5 / 3";
         lblThresholdValue.style.display = "inline-block";
         lblThresholdValue.style.marginLeft = "8px";
-        lblThresholdValue.innerHTML = "50ms";
+        lblThresholdValue.innerHTML = "50<sup>ms</sup>";
         innerBox.appendChild(lblThresholdValue);
 
         const lblContition = document.createElement("div");
@@ -711,7 +711,7 @@ class Watchdog extends Window {
 
         rngThreshold.oninput =
         rngThreshold.onchange = () => {
-            lblThresholdValue.innerHTML = rngThreshold.value + "ms";
+            lblThresholdValue.innerHTML = rngThreshold.value + "<sup>ms</sup>";
         };
 
         btnTest.onclick = () => {
@@ -725,19 +725,19 @@ class Watchdog extends Window {
 
             let payload = "";
             payload += `enable=${chkEnable.checked}`;
-            payload += `&interval=${timeMapping[rngInterval.value]}`;
-
-            payload += `&email=${chkEMail.checked}`;
-            payload += `&threshold=${rngThreshold.value}`;
-            payload += `&contition=${cmbContition.value}`;
-            payload += `&server=${txtSmtpServer.value}`;
-            payload += `&port=${txtSmtpPort.value}`;
-            payload += `&sender=${txtSender.value}`;
-            payload += `&username=${txtUsername.value}`;
-            payload += `&password=${txtPassword.value}`;
-            payload += `&recipients=${txtRecipient.value}`;
-            payload += `&ssl=${chkSSL.checked}`;
-            payload += `&sendtest=true`;
+            payload += `${String.fromCharCode(127)}interval=${timeMapping[rngInterval.value]}`;
+            
+            payload += `${String.fromCharCode(127)}email=${chkEMail.checked}`;
+            payload += `${String.fromCharCode(127)}threshold=${rngThreshold.value}`;
+            payload += `${String.fromCharCode(127)}contition=${cmbContition.value}`;
+            payload += `${String.fromCharCode(127)}server=${txtSmtpServer.value}`;
+            payload += `${String.fromCharCode(127)}port=${txtSmtpPort.value}`;
+            payload += `${String.fromCharCode(127)}sender=${txtSender.value}`;
+            payload += `${String.fromCharCode(127)}username=${txtUsername.value}`;
+            payload += `${String.fromCharCode(127)}password=${txtPassword.value}`;
+            payload += `${String.fromCharCode(127)}recipients=${txtRecipient.value}`;
+            payload += `${String.fromCharCode(127)}ssl=${chkSSL.checked}`;
+            payload += `${String.fromCharCode(127)}sendtest=true`;
 
             xhr.open("POST", `watchdog/settings`, true);
             xhr.send(payload);
@@ -754,18 +754,18 @@ class Watchdog extends Window {
 
             let payload = "";
             payload += `enable=${chkEnable.checked}`;
-            payload += `&interval=${timeMapping[rngInterval.value]}`;
+            payload += `${String.fromCharCode(127)}interval=${timeMapping[rngInterval.value]}`;
 
-            payload += `&email=${chkEMail.checked}`;
-            payload += `&threshold=${rngThreshold.value}`;
-            payload += `&contition=${cmbContition.value}`;
-            payload += `&server=${txtSmtpServer.value}`;
-            payload += `&port=${txtSmtpPort.value}`;
-            payload += `&sender=${txtSender.value}`;
-            payload += `&username=${txtUsername.value}`;
-            payload += `&password=${txtPassword.value}`;
-            payload += `&recipients=${txtRecipient.value}`;
-            payload += `&ssl=${chkSSL.checked}`;
+            payload += `${String.fromCharCode(127)}email=${chkEMail.checked}`;
+            payload += `${String.fromCharCode(127)}threshold=${rngThreshold.value}`;
+            payload += `${String.fromCharCode(127)}contition=${cmbContition.value}`;
+            payload += `${String.fromCharCode(127)}server=${txtSmtpServer.value}`;
+            payload += `${String.fromCharCode(127)}port=${txtSmtpPort.value}`;
+            payload += `${String.fromCharCode(127)}sender=${txtSender.value}`;
+            payload += `${String.fromCharCode(127)}username=${txtUsername.value}`;
+            payload += `${String.fromCharCode(127)}password=${txtPassword.value}`;
+            payload += `${String.fromCharCode(127)}recipients=${txtRecipient.value}`;
+            payload += `${String.fromCharCode(127)}ssl=${chkSSL.checked}`;
 
             xhr.open("POST", `watchdog/settings`, true);
             xhr.send(payload);

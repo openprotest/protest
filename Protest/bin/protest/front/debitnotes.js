@@ -949,14 +949,14 @@ class DebitNotes extends Window {
             };
 
             let data = "";
-            data += "fn=" +  txtFirstName.value;
-            data += "&ln=" + txtLastName.value;
-            data += "&tl=" + txtTitle.value;
-            data += "&dp=" + txtDep.value;
-            data += "&it=" + txtBehalfOfIT.value;
-            data += "&tt=" + txtTemplate.value;
-            data += "&eq=" + eq_string;
-            data += "&sh=" + chkType.checked.toString().toLowerCase();
+            data += `fn=` + txtFirstName.value;
+            data += `${String.fromCharCode(127)}ln=` + txtLastName.value;
+            data += `${String.fromCharCode(127)}tl=` + txtTitle.value;
+            data += `${String.fromCharCode(127)}dp=` + txtDep.value;
+            data += `${String.fromCharCode(127)}it=` + txtBehalfOfIT.value;
+            data += `${String.fromCharCode(127)}tt=` + txtTemplate.value;
+            data += `${String.fromCharCode(127)}eq=` + eq_string;
+            data += `${String.fromCharCode(127)}sh=` + chkType.checked.toString().toLowerCase();
 
             xhr.open("POST", "debitnotes/create", true);
             xhr.send(data);

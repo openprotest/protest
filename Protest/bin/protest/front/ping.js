@@ -203,7 +203,7 @@ class Ping extends Console {
                 const td1b = document.createElement("td");
                 td1b.style.minWidth = "96px";
                 td1b.style.paddingLeft = "8px";
-                td1b.innerHTML = "0ms";
+                td1b.innerHTML = "0<sup>ms</sup>";
                 tr1.appendChild(td1b);
 
                 const td2a = document.createElement("td");
@@ -213,7 +213,7 @@ class Ping extends Console {
                 tr2.appendChild(td2a);
                 const td2b = document.createElement("td");
                 td2b.style.paddingLeft = "8px";
-                td2b.innerHTML = "250ms";
+                td2b.innerHTML = "250<sup>ms</sup>";
                 tr2.appendChild(td2b);
 
                 const td3a = document.createElement("td");
@@ -223,7 +223,7 @@ class Ping extends Console {
                 tr3.appendChild(td3a);
                 const td3b = document.createElement("td");
                 td3b.style.paddingLeft = "8px";
-                td3b.innerHTML = "500ms";
+                td3b.innerHTML = "500<sup>ms</sup>";
                 tr3.appendChild(td3b);
 
                 const td4a = document.createElement("td");
@@ -234,7 +234,7 @@ class Ping extends Console {
                 tr4.appendChild(td4a);
                 const td4b = document.createElement("td");
                 td4b.style.paddingLeft = "8px";
-                td4b.innerHTML = "750ms";
+                td4b.innerHTML = "750<sup>ms</sup>";
                 tr4.appendChild(td4b);
 
                 const td5a = document.createElement("td");
@@ -600,7 +600,7 @@ class Ping extends Console {
                     this.hashtable[index].msg.innerHTML = value;
                     this.hashtable[index].msg.style.fontSize = "small";
                 } else {
-                    this.hashtable[index].msg.innerHTML = value + "ms";
+                    this.hashtable[index].msg.innerHTML = value + "<sup>ms</sup>";
                     this.hashtable[index].msg.style.fontSize = "medium";
                 }
 
