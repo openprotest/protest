@@ -449,7 +449,7 @@ public static class Watchdog {
                 if (last && (contition == "fall" || contition == "both")) //fall
                     status = "stoped";
 
-                if (!(status is null)) //format[key, status, host, message] 
+                if (!(status is null)) //format[key, status, host, message]
                     notifications.Add(new string[] {
                         o.Key.ToString(),
                         status,
@@ -480,17 +480,17 @@ public static class Watchdog {
             LinkedResource logo = null;
             if (fileLogo.Exists)
                 logo = new LinkedResource(fileLogo.FullName, "image/png") {
-                    ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                    ContentId = Guid.NewGuid().ToString(),
                     TransferEncoding = TransferEncoding.Base64
                 };
 
             LinkedResource fileGreen = new LinkedResource(pngGreenDot, "image/png") {
-                ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                ContentId = Guid.NewGuid().ToString(),
                 TransferEncoding = TransferEncoding.Base64
             };
 
             LinkedResource fileRed = new LinkedResource(pngRedDot, "image/png") {
-                ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                ContentId = Guid.NewGuid().ToString(),
                 TransferEncoding = TransferEncoding.Base64
             };
 

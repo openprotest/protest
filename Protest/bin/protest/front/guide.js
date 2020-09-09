@@ -195,15 +195,34 @@ class Guide extends Window {
         this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Website check", "res/websitecheck.svgz");
         this.InsertParagraph(
-            "This utility checks if the given website is available and provides additional information about any possible issues."
+            "This utility checks if the given website is available and provides additional information to help identify any issues."
         );
 
         this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Scripts", "res/scripts.svgz");
         this.InsertParagraph(
-            "..."
+            "Create your queries and get results in real-time utilizing and combining all of Pro-tests utilities. You write your scripts using a pipe-line based model, by linking entities with each other."
         );
 
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("WMI console", "res/wmi.svgz");
+        this.InsertParagraph(
+            "WMI console is an interface for management that uses Windows Management Instrumentation (WMI). It uses Lite SQL to make queries and get information from the local or a remote host."
+        );
+        this.InsertParagraph(
+            "Pro-test provides a help dialog with all WMI classes to help syntax your queries."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Watchdog", "res/watchdog.svgz");
+        this.InsertParagraph(
+            "Use watchdog to monitor the availability of your network hosts. You can check when a host gets disconnected or a protocol stops responding on a specified port."
+        );
+        this.InsertParagraph(
+            "Enable email notifications to get notified when a host or service unexpected goes offline."
+        );
+
+        this.body.appendChild(document.createElement("br"));
         this.body.appendChild(document.createElement("br"));
 
         const creditsAlign = document.createElement("div");

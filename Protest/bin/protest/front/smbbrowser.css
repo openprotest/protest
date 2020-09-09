@@ -1,0 +1,25 @@
+.smb-content {
+    display: grid;
+    grid-template-rows: 36px auto;
+    grid-template-columns: 250px auto;
+}
+
+.smb-bar {
+    grid-area: 1 / 1 / 1 / 3;
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(rgb(96,96,96), rgb(80,80,80));
+}
+
+.smb-side {
+    grid-area: 2 / 1 / 3 / 2;
+}
+
+.smb-list {
+    grid-area: 2 / 2 / 3 / 3;
+    background-color: var(--pane-color);
+    margin: 8px;
+    padding: 0;
+    border-radius: 4px;
+    overflow-y: scroll;
+}

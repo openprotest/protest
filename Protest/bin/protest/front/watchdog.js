@@ -247,6 +247,11 @@ class Watchdog extends Window {
         this.Reload();
     }
 
+    Close() { //override
+        super.Close();
+        this.list = [];
+    }
+
     AfterResize() { //override
         super.AfterResize();
         setTimeout(() => {
@@ -317,14 +322,19 @@ class Watchdog extends Window {
                     const btnRemove = document.createElement("div");
                     this.list[i].div.appendChild(btnRemove);
 
+                    let label = this.list[i].name.split(" ");
+
                     const lblHost = document.createElement("div");
-                    lblHost.innerHTML = this.list[i].name;
+                    lblHost.innerHTML = label[0];
                     this.list[i].div.appendChild(lblHost);
+
+                    const lblProtocol = document.createElement("div");
+                    lblProtocol.innerHTML = label[1];
+                    this.list[i].div.appendChild(lblProtocol);
 
                     this.list[i].div.appendChild(this.list[i].graph);
 
                     this.view.appendChild(this.list[i].div);
-
 
                     for (let j = 0; j < db_equip.length; j++) //db icon
                         if (db_equip[j].hasOwnProperty("IP"))
@@ -338,8 +348,10 @@ class Watchdog extends Window {
                             const xhr = new XMLHttpRequest();
                             xhr.onreadystatechange = () => {
                                 if (xhr.readyState == 4 && xhr.status == 200)
-                                    if (xhr.responseText === "ok")
+                                    if (xhr.responseText === "ok") {
                                         this.view.removeChild(this.list[i].div);
+                                        this.list.splice(i, 1);
+                                    }
 
                                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                             };
@@ -452,10 +464,9 @@ class Watchdog extends Window {
 
                 count++;
             }
-                        
-            while (count < entry.graph.childNodes.length) { //remove unused elements
+            
+            while (count < entry.graph.childNodes.length) //remove unused elements
                 entry.graph.removeChild(entry.graph.childNodes[count]);
-            }
 
         }
     }
