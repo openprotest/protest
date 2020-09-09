@@ -13,10 +13,18 @@ class PasswordStrength extends ListWindow {
 
         this.columnsOptions.style.display = "none";
         this.toolbox.removeChild(this.btnFilter);
+
+        this.btnGandalf = document.createElement("div");
+        this.btnGandalf.style.backgroundImage = "url(res/l_gandalf.svgz)";
+        this.btnGandalf.setAttribute("tip-below", "Gandalf");
+        this.toolbox.appendChild(this.btnGandalf);
+
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.db = [];
-        this.view = [];       
+        this.view = [];      
+
+        this.btnGandalf.onclick = () => { new Gandalf(); };
 
         this.GetEntropy();
     }

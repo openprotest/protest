@@ -144,6 +144,13 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Gandalf", "res/gandalf.svgz");
+        this.InsertParagraph(
+            "Gandalf is a security tool designed to help you identify users who use weak passwords. " +
+            "Users bellow the strength threshold will get an email notification asking them to change to a more secure password."
+        );
+
+        this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Ping", "res/ping.svgz");
         this.InsertParagraph(
             "Ping is a network utility used to test the reachability of a host using ICMP echo request. " +

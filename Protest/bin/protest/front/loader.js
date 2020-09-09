@@ -57,6 +57,7 @@ let loader_styles = [
         "debitnotes.js",
         "netcalc.js",
         "passwordgen.js",
+        "gandalf.js",
         "ping.js",
         "dnslookup.js",
         "dhcpdiscover.js",
@@ -243,6 +244,7 @@ function RestoreSession() {
             case "User"             : win = new User(session[i].args); break;
             case "Fetch"            : win = new Fetch(session[i].args); break;
             case "PasswordStrength" : win = new PasswordStrength(session[i].args); break;
+            case "Gandalf"          : win = new Gandalf(session[i].args); break;
             case "Documentation"    : win = new Documentation(session[i].args); break;
             case "DebitNotes"       : win = new DebitNotes(session[i].args); break;
             case "Netcalc"          : win = new Netcalc(); break;
