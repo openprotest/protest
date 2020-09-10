@@ -19,8 +19,7 @@ button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type
 }
 
 button:focus, input[type="button"]:focus, input[type="submit"]:focus, input[type="reset"]:focus, input[type="color"]:focus {
-    /*animation: unterline-glow  2s infinite linear;*/
-    box-shadow: var(--theme-color) 0 -2px 0 inset;
+    animation: inner-glow 2s infinite linear;
 }
 
 button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active, input[type="color"]:active {

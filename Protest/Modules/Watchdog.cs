@@ -535,23 +535,23 @@ public static class Watchdog {
             body.Append("</p>");
             body.Append("</html>");
 
-            using MailMessage mail = new MailMessage {
+            MailMessage mail = new MailMessage {
                 From = new MailAddress(sender, "Pro-test"),
                 Subject = $"Pro-test notification {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}",
                 IsBodyHtml = true
             };
 
             AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-            view.LinkedResources.Add(logo);
+            if (!(logo is null)) view.LinkedResources.Add(logo);
             if (greenFlag) view.LinkedResources.Add(fileGreen);
             if (redFlag) view.LinkedResources.Add(fileRed);
             mail.AlternateViews.Add(view);
 
-            string[] addressSplit = recipients.Split(';');
-            for (int i = 0; i < addressSplit.Length; i++)
-                mail.To.Add(addressSplit[i].Trim());
+            string[] recipientSplit = recipients.Split(';');
+            for (int i = 0; i < recipientSplit.Length; i++)
+                mail.To.Add(recipientSplit[i].Trim());
 
-            using SmtpClient smtp = new SmtpClient(server) {
+            SmtpClient smtp = new SmtpClient(server) {
                 Port = port,
                 EnableSsl = ssl,
                 Credentials = new NetworkCredential(username, password)
@@ -618,7 +618,7 @@ public static class Watchdog {
             };
 
             AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-            view.LinkedResources.Add(logo);
+            if (!(logo is null)) view.LinkedResources.Add(logo);
             mail.AlternateViews.Add(view);
 
             string[] addressSplit = recipients.Split(';');

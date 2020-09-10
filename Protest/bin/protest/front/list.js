@@ -59,7 +59,7 @@ class ListWindow extends Window {
         this.txtFind.style.paddingLeft = "26px";
         this.txtFind.style.width = "calc(100% - 26px)";
         this.txtFind.style.background = "none";
-        this.txtFind.style.boxShadow = "none";
+        this.txtFind.style.animation = "none";
         this.btnFind.appendChild(this.txtFind);
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";

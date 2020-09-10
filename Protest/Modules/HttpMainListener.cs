@@ -151,6 +151,8 @@ class HttpMainListener : Http {
                 case "db/saveuser" : buffer = Database.SaveUser(ctx, performer); break;
                 case "db/deluser"  : buffer = Database.DeleteUser(para, performer); break;
 
+                case "db/gandalf"  : buffer = PasswordStrength.GandalfRequest(ctx, performer); ; break;
+
                 case "fetch/fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
                 case "fetch/fetchuser" :  buffer = Fetch.SingleFetchUserBytes(para); break;
                 case "fetch/import"    : buffer = Fetch.ImportDatabase(ctx, performer); break;
@@ -200,8 +202,8 @@ class HttpMainListener : Http {
                 case "scripts/delreport" : buffer = Scripts.DeleteReport(para); break;
                         
                 case "docs/get":    buffer = Documentation.Get(para); break;
-                case "docs/create":  buffer = Documentation.Create(ctx, performer); break;
-                case "docs/delete":  buffer = Documentation.Delete(para, performer); break;
+                case "docs/create": buffer = Documentation.Create(ctx, performer); break;
+                case "docs/delete": buffer = Documentation.Delete(para, performer); break;
                 case "docs/view":
                     buffer = Documentation.PreviewDoc(para, acceptGzip);
                     if (acceptGzip) ctx.Response.AddHeader("Content-Encoding", "gzip");

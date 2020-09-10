@@ -30,8 +30,7 @@ input[type="number"]:focus,
 input[type="date"]:focus,
 textarea:focus,
 select:focus {
-    /*animation: unterline-glow  2s infinite linear;*/
-    box-shadow: var(--theme-color) 0 -2px 0 inset;
+    animation: inner-glow 2s infinite linear;
 }
 
 input[type="password"]{

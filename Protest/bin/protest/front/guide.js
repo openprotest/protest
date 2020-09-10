@@ -142,6 +142,10 @@ class Guide extends Window {
         this.InsertParagraph(
             "This utility scans your database for passwords and scores them based on their strength, letting you know which users are variable to passwords attacks."
         );
+        this.InsertParagraph(
+            "The strength algorithm takes into consideration words related to the account, and the password strength is affected by those words. " +
+            "If your email is <i>info@domain.com</i> and your password is <i>info123456</i>, the score will be calculated as if the password is <i>123456</i>."
+        );
 
         this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Gandalf", "res/gandalf.svgz");

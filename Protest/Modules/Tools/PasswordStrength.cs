@@ -3,6 +3,10 @@ using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Mail;
+using System.DirectoryServices;
 
 public static class PasswordStrength {
     static readonly string[] BLACKLIST = new string[] {
@@ -48,7 +52,7 @@ public static class PasswordStrength {
             "dragon"
     };
 
-    public static double Entropy(string password, string[] related = null) {
+    public static double Entropy(string password, in string[] related = null) {
 
         for (int i = 0; i < BLACKLIST.Length; i++)
             if (password.IndexOf(BLACKLIST[i], StringComparison.InvariantCultureIgnoreCase) > -1) password = password.Replace(BLACKLIST[i], "");
@@ -162,6 +166,117 @@ public static class PasswordStrength {
         }
 
         return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    public static byte[] GandalfRequest(in HttpListenerContext ctx, in string performer) {
+        string payload;
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
+            payload = reader.ReadToEnd();
+
+        string[] split = payload.Split((char)127);
+        if (split.Length < 4) return Strings.INF.Array;
+
+        string threshold = split[0];
+        string server    = split[1];
+        int.TryParse(split[2], out int port);
+        string sender    = split[3];
+        string username  = split[4];
+        string password  = split[5];
+        bool ssl         = split[6] == "true";
+
+        Hashtable include = new Hashtable();
+        include.Add("PASSWORD", null);
+        for (int i = 7; i < split.Length; i++) 
+            include.Add(split[i], null);
+
+
+        SmtpClient smtp = new SmtpClient(server) {
+            Port = port,
+            EnableSsl = ssl,
+            Credentials = new NetworkCredential(username, password)
+        };
+
+        foreach (DictionaryEntry e in Database.users) {
+            Database.DbEntry entry = (Database.DbEntry)e.Value;
+            if (!entry.hash.ContainsKey("E-MAIL")) continue; //no e-mail
+
+            double minEntropy = double.MaxValue;
+
+            foreach (DictionaryEntry p in entry.hash) {
+                if (!include.ContainsKey(p.Key)) continue;
+                double entropy = Entropy(((string[])p.Value)[0]);
+                minEntropy = Math.Min(minEntropy, entropy);
+            }
+
+            if (minEntropy == double.MaxValue) continue;
+
+            string[] mailSplit = ((string[])entry.hash["E-MAIL"])[0].Split(';');
+            SendGandalfMail(smtp, sender, mailSplit, minEntropy);
+        }
+
+        smtp.Dispose();
+
+        return Strings.OK.Array;
+    }
+
+    public static void SendGandalfMail(SmtpClient smtp, string sender, string[] recipients, double entropy) {
+#if !DEBUG
+    try {
+#endif
+
+        StringBuilder body = new StringBuilder();
+        body.Append("<html>");
+        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
+        body.Append("<tr><td>&nbsp;</td></tr>");
+        body.Append("<tr><td>&nbsp;</td></tr>");
+
+        body.Append("<tr><td align=\"center\">");
+
+        body.Append("<table width=\"600\" bgcolor=\"#e0e0e0\" style=\"margin:16px\">");
+        body.Append("<tr><td>");
+
+        body.Append("<p>&nbsp;</p>");
+        body.Append("<p>Dear colleague,</p>");
+        body.Append("<p>This is an automated e-mail.</p>");
+
+        body.Append("<br>");
+
+        body.Append("</td></tr>");
+        body.Append("</table>");
+
+        body.Append("<tr><td>&nbsp;</td></tr>");
+        body.Append("<tr><td align=\"center\" style=\"color:#202020\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+        body.Append("<tr><td>&nbsp;</td></tr>");
+
+        body.Append("</td></tr>");
+        body.Append("</table>");
+        body.Append("</html>");
+
+        MailMessage mail = new MailMessage {
+            From = new MailAddress(sender, "Pro-test"),
+            Subject = "Gandalf",
+            IsBodyHtml = true
+        };
+
+        AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+        //view.LinkedResources.Add(null);
+        mail.AlternateViews.Add(view);
+
+        for (int i = 0; i < recipients.Length; i++)
+            mail.To.Add(recipients[i].Trim());
+
+
+
+        //TODO:
+        smtp.Send(mail);
+        mail.Dispose();
+
+#if !DEBUG
+    } catch (SmtpFailedRecipientException ex) { Logging.Err(ex);
+    } catch (SmtpException ex)                { Logging.Err(ex);
+    } catch (Exception ex)                    { Logging.Err(ex);
+    }
+#endif
     }
 
 }
