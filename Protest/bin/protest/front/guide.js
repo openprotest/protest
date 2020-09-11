@@ -99,11 +99,17 @@ class Guide extends Window {
             "The database is separated into two categories: Equipment and Users."
         );
         this.InsertParagraph(
-            "For increased productivity, you can \"fetch\" equipment and users: " +
+            "To increase productivity, you can \"fetch\" equipment and users: " +
             "Pro-test can gather information from your domain controller, from remote hosts over SSH or WMI and port-scanning for know protocols. " +
             "It can analyze the target host and detect what kind of machine it is. " +
             "Of course, you can modify any field the way you want to."
         );
+
+        const btnFetchThis = document.createElement("input");
+        btnFetchThis.type = "button";
+        btnFetchThis.value = "Fetch demo";
+        this.body.appendChild(btnFetchThis);
+
         this.InsertParagraph(
             "Additional information is provided in real-time, letting you know about the last seen date, logged in user, bad password attempts, etc. " +
             "Also, Pro-test will warn you for low disk space, DNS mismatches, locked-out users, and more."
@@ -282,7 +288,15 @@ class Guide extends Window {
             newIcon.style.background = `url(${icons[i]})`;
             newIcon.style.backgroundSize = "contain";
             creditsAlign.appendChild(newIcon);
-        }      
+        }  
+
+
+        btnFetchThis.onclick = () => {
+            const fetch = new Equip(null);
+            fetch.demo.txtFetchHost.value = "127.0.0.1";
+            fetch.demo.btnFetch.onclick();
+            fetch.demo.btnFetchOk.onclick();
+        };
     }
 
     InsertHeading(text, icon) {

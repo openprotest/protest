@@ -181,7 +181,7 @@ public static class PasswordStrength {
         thread.Priority = ThreadPriority.BelowNormal;
         thread.Start();
 
-        Logging.Action(in performer, $"Send a warning to users with weak passwords");
+        Logging.Action(in performer, $"Send email notification to users with weak passwords");
 
         return Strings.OK.Array;
     }

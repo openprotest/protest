@@ -1049,6 +1049,12 @@ class Equip extends Window {
         btnCancel.addEventListener("click", () => {
             this.Close();
         });
+
+        this.demo = {
+            txtFetchHost: txtFetchHost,
+            btnFetch: btnFetch,
+            btnFetchOk: btnFetchOk
+        };
     }
 
     Edit() {

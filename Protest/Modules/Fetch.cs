@@ -644,10 +644,10 @@ public static class Fetch {
                 string fn = String.Empty;
                 string sn = String.Empty;
 
-                if (user.Properties["givenName"].Count > 0) 
+                if (!(user is null) && user.Properties["givenName"].Count > 0) 
                     fn = user.Properties["givenName"][0].ToString();                
 
-                if (user.Properties["sn"].Count > 0) 
+                if (!(user is null) && user.Properties["sn"].Count > 0) 
                     sn = user.Properties["sn"][0].ToString();
 
                 string fullname = $"{fn} {sn}".Trim();
