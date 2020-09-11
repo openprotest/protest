@@ -288,8 +288,7 @@ class Guide extends Window {
             newIcon.style.background = `url(${icons[i]})`;
             newIcon.style.backgroundSize = "contain";
             creditsAlign.appendChild(newIcon);
-        }  
-
+        }
 
         btnFetchThis.onclick = () => {
             const fetch = new Equip(null);
