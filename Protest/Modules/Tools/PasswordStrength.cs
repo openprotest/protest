@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
-using System.DirectoryServices;
+using System.Threading;
 
 public static class PasswordStrength {
     static readonly string[] BLACKLIST = new string[] {
@@ -168,7 +168,8 @@ public static class PasswordStrength {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static byte[] GandalfRequest(in HttpListenerContext ctx, in string performer) {
+
+    public static byte[] GandalfThreadWrapper(in HttpListenerContext ctx, in string performer) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
@@ -176,7 +177,17 @@ public static class PasswordStrength {
         string[] split = payload.Split((char)127);
         if (split.Length < 4) return Strings.INF.Array;
 
-        string threshold = split[0];
+        Thread thread = new Thread(() =>  GandalfRequest(split));
+        thread.Priority = ThreadPriority.BelowNormal;
+        thread.Start();
+
+        Logging.Action(in performer, $"Send a warning to users with weak passwords");
+
+        return Strings.OK.Array;
+    }
+
+    private static void GandalfRequest(string[] split) {
+        double.TryParse(split[0], out double threshold);
         string server    = split[1];
         int.TryParse(split[2], out int port);
         string sender    = split[3];
@@ -186,9 +197,8 @@ public static class PasswordStrength {
 
         Hashtable include = new Hashtable();
         include.Add("PASSWORD", null);
-        for (int i = 7; i < split.Length; i++) 
+        for (int i = 7; i < split.Length; i++)
             include.Add(split[i], null);
-
 
         SmtpClient smtp = new SmtpClient(server) {
             Port = port,
@@ -210,13 +220,13 @@ public static class PasswordStrength {
 
             if (minEntropy == double.MaxValue) continue;
 
-            string[] mailSplit = ((string[])entry.hash["E-MAIL"])[0].Split(';');
-            SendGandalfMail(smtp, sender, mailSplit, minEntropy);
+            if (minEntropy < threshold) {
+                string[] mailSplit = ((string[])entry.hash["E-MAIL"])[0].Split(';');
+                SendGandalfMail(smtp, sender, mailSplit, minEntropy);
+            }
         }
 
         smtp.Dispose();
-
-        return Strings.OK.Array;
     }
 
     public static void SendGandalfMail(SmtpClient smtp, string sender, string[] recipients, double entropy) {
@@ -228,24 +238,46 @@ public static class PasswordStrength {
         body.Append("<html>");
         body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
         body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
 
         body.Append("<tr><td align=\"center\">");
 
-        body.Append("<table width=\"600\" bgcolor=\"#e0e0e0\" style=\"margin:16px\">");
-        body.Append("<tr><td>");
-
-        body.Append("<p>&nbsp;</p>");
-        body.Append("<p>Dear colleague,</p>");
-        body.Append("<p>This is an automated e-mail.</p>");
-
+        body.Append("<p align=\"center\"0 style=\"color:#808080\">This is an automated e-mail from the IT Department.</p>");
         body.Append("<br>");
+
+        body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\"");
+        body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
+
+        body.Append("<p>Dear colleague,</p>");
+
+        body.Append("<p><b>");
+        body.Append("Our record shows that you're using a weak password. ");
+        body.Append("Please contact your IT team and ask to upgrade to a secure one.");
+        body.Append("</b></p>");
+
+        body.Append("<p>");
+        body.Append("As technology advance and computers are getting faster over time, passwords are getting weaker. ");
+        body.Append("In 1982, it took four years to crack an eight characters password. Today it can be cracked in less than a day.");
+        body.Append("</p>");
+
+        body.Append("<p>");
+        body.Append("<u>How to choose a strong password:</u>");
+        body.Append("<ul>");
+        body.Append("<li><b>Size matters.</b> Choose at least ten characters. Longer passwords are harder to crack.</li>");
+        body.Append("<li><b>Use mixed characters.</b> Use upper-case and lower-case, numbers, and symbols to add complexity.</li>");
+        body.Append("<li><b>Be unpredictable</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password.</li>");
+        body.Append("<li><b>Make it random.</b> Use an online password generator. It can generate a random sequence that is impossible to guess.</li>");
+        body.Append("</ul>");
+        body.Append("</p>");
+
+        body.Append("<p>P.S. <i>Sticky notes are not designed to store a password securely.</i></p>");
+
+        body.Append("<p>Sincerely,<br>The IT Department</p>");
 
         body.Append("</td></tr>");
         body.Append("</table>");
 
         body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td align=\"center\" style=\"color:#202020\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+        body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
         body.Append("<tr><td>&nbsp;</td></tr>");
 
         body.Append("</td></tr>");
@@ -254,7 +286,7 @@ public static class PasswordStrength {
 
         MailMessage mail = new MailMessage {
             From = new MailAddress(sender, "Pro-test"),
-            Subject = "Gandalf",
+            Subject = "Upgrade your password.",
             IsBodyHtml = true
         };
 
@@ -264,8 +296,6 @@ public static class PasswordStrength {
 
         for (int i = 0; i < recipients.Length; i++)
             mail.To.Add(recipients[i].Trim());
-
-
 
         //TODO:
         smtp.Send(mail);

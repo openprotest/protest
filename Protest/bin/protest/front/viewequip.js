@@ -1026,7 +1026,7 @@ class Equip extends Window {
                     dialog.innerBox.parentElement.parentElement.removeChild(waitLabel);
                 }
 
-                if (xhr.readyState == 4 && xhr.status == 0) {//disconnected
+                if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
                     dialog.Abort();
                     this.ConfirmBox("Server is unavailable.", true);
                 }

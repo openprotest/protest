@@ -89,7 +89,7 @@ class Guide extends Window {
         this.InsertHeading("Remote agent", "res/remote.svgz");
         this.InsertParagraph(
             "The Remote Agent is an executable you can run on your remote host. " +
-            "It's responsible for handling \"commands\" from Pro-test, such as opening RDP, SSH, SMB connections, etc."
+            "It's responsible for handling \"commands\" from Pro-test, such as connecting to remote hosts over RDP, SSH, SMB, uVNC, PSExec, etc."
         );
 
         this.body.appendChild(document.createElement("br"));
@@ -221,7 +221,7 @@ class Guide extends Window {
             "WMI console is an interface for management that uses Windows Management Instrumentation (WMI). It uses Lite SQL to make queries and get information from the local or a remote host."
         );
         this.InsertParagraph(
-            "Pro-test provides a help dialog with all WMI classes to help syntax your queries."
+            "Pro-test provides a dialog with all WMI classes to help syntax your queries."
         );
 
         this.body.appendChild(document.createElement("br"));

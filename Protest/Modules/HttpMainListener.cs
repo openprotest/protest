@@ -151,7 +151,7 @@ class HttpMainListener : Http {
                 case "db/saveuser" : buffer = Database.SaveUser(ctx, performer); break;
                 case "db/deluser"  : buffer = Database.DeleteUser(para, performer); break;
 
-                case "db/gandalf"  : buffer = PasswordStrength.GandalfRequest(ctx, performer); ; break;
+                case "db/gandalf"  : buffer = PasswordStrength.GandalfThreadWrapper(ctx, performer); ; break;
 
                 case "fetch/fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
                 case "fetch/fetchuser" :  buffer = Fetch.SingleFetchUserBytes(para); break;

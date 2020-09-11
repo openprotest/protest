@@ -661,9 +661,11 @@ class User extends Window {
                     btnFetch.onclick();
                     dialog.innerBox.parentElement.parentElement.removeChild(waitbox);
                     dialog.innerBox.parentElement.parentElement.removeChild(waitLabel);
+
+                    this.setIcon("res/user.svgz");
                 }
 
-                if (xhr.readyState == 4 && xhr.status == 0) {//disconnected
+                if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
                     dialog.Abort();
                     this.ConfirmBox("Server is unavailable.", true);
                 }

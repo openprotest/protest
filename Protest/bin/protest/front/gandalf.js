@@ -334,7 +334,6 @@ class Gandalf extends Window {
 
         this.menuArray[0].style.opacity = "1";
         this.menuArray[0].style.transform = "none";
-        this.menuArray[0].style.animation = "fromRight .4s 1";
         this.menuArray[0].style.visibility = "visible";
         this.btnPrevious.setAttribute("disabled", true);
     }
@@ -383,7 +382,6 @@ class Gandalf extends Window {
 
         this.menuArray[this.index].style.opacity = "1";
         this.menuArray[this.index].style.transform = "none";
-        this.menuArray[this.index].style.animation = "fromRight .4s 1";
         this.menuArray[this.index].style.visibility = "visible";
         this.menuArray[this.index].style.zIndex = 1;
 
@@ -427,12 +425,10 @@ class Gandalf extends Window {
 
         this.menuArray[this.index].style.opacity = "1";
         this.menuArray[this.index].style.transform = "none";
-        this.menuArray[this.index].style.animation = "fromLeft .4s 1";
         this.menuArray[this.index].style.visibility = "visible";
         this.menuArray[this.index].style.zIndex = 1;
 
         this.btnPrevious.removeAttribute("disabled");
-
         this.btnNext.value = this.index === 2 ? "Send" : "Next";
     }
 
@@ -440,13 +436,11 @@ class Gandalf extends Window {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
-
                 this.btnNext.removeAttribute("disabled");
                 this.btnNext.value = "Close";
 
                 this.menuArray[this.index].style.opacity = "1";
                 this.menuArray[this.index].style.transform = "none";
-                this.menuArray[this.index].style.animation = "fromLeft .4s 1";
                 this.menuArray[this.index].style.visibility = "visible";
                 this.menuArray[this.index].style.zIndex = 1;
 
@@ -469,6 +463,6 @@ class Gandalf extends Window {
 
         xhr.open("POST", "db/gandalf", true);
         xhr.send(payload);
-
     }
+
 }
