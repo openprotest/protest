@@ -49,13 +49,13 @@ class PasswordStrength extends ListWindow {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 let list = [];
 
-                for (let i=0; i<split.length-2; i+=5) {
+                for (let i=0; i<split.length-2; i+=7) {
                     list.push({
                         type: split[i],
                         file: split[i+1],
                         name: split[i+2],
-                        entropy: parseFloat(split[i+3]),
-                        date: split[i+4]
+                        entropy: parseFloat(split[i+4]),
+                        date: split[i+6]
                     });
                 }
 

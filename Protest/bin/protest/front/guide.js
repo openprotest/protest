@@ -92,8 +92,24 @@ class Guide extends Window {
             "It's responsible for handling \"commands\" from Pro-test, such as connecting to remote hosts over RDP, SSH, SMB, uVNC, PSExec, etc."
         );
 
+        const aAgent = document.createElement("a");
+        aAgent.href = "https://github.com/veniware/OpenProtest/releases/latest";
+        aAgent.target = "_blank";
+        aAgent.innerHTML = "Download remote agent";
+        this.body.appendChild(aAgent);
         this.body.appendChild(document.createElement("br"));
 
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Address book", "res/phone.svgz");
+        this.InsertParagraph(
+            "Pro-test provides an address book for your organization. The address book is open for everyone, and it is synchronized with the database."
+        );
+        this.InsertParagraph(
+            "The address book service is disabled by default. It can be enabled and configured from the <i>config.txt</i> file."
+        );
+
+        this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Database", "res/database.svgz");
         this.InsertParagraph(
             "The database is separated into two categories: Equipment and Users."
@@ -296,6 +312,7 @@ class Guide extends Window {
             fetch.demo.btnFetch.onclick();
             fetch.demo.btnFetchOk.onclick();
         };
+
     }
 
     InsertHeading(text, icon) {

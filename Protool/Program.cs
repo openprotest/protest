@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Text;
 class Program {
     static readonly string IPFILE = $"{Directory.GetCurrentDirectory()}\\IP2LOCATION-LITE-DB5.CSV";
     static readonly string PROXYFILE = $"{Directory.GetCurrentDirectory()}\\IP2PROXY-LITE-PX1.CSV";
-    static readonly string MACFILE = $"{Directory.GetCurrentDirectory()}\\mac.txt";
+    static readonly string MACFILE = $"{Directory.GetCurrentDirectory()}\\oui.txt";
 
     static readonly string IPDIR = $"{Directory.GetCurrentDirectory()}\\ip";
     static readonly string PROXYDIR = $"{Directory.GetCurrentDirectory()}\\proxy";
@@ -28,10 +29,15 @@ class Program {
         public byte[] to;
     }
 
+    struct MacEntry {
+        public string mac;
+        public string vendor;
+    }
+
     static void Main(string[] args) {
-        GenIpLocationBin();
+        //GenIpLocationBin();
         //GenProxyBin();
-        //GenMacLookupBin();
+        GenMacLookupBin();
     }
 
     static void GenIpLocationBin() {
@@ -41,8 +47,8 @@ class Program {
         
         Console.WriteLine("Reading...");
 
-        StreamReader temp = new StreamReader(IPFILE);
         string line;
+        StreamReader temp = new StreamReader(IPFILE);
         while ((line = temp.ReadLine()) != null) { //total
 
             string[] split = line.Split(new string[] { "\",\"" }, StringSplitOptions.None);
@@ -104,6 +110,8 @@ class Program {
             }
         }
 
+        DirectoryInfo dirIp = new DirectoryInfo(IPDIR);
+        if (!dirIp.Exists) dirIp.Create();
 
         for (int i=0;i<list.Count; i++) {
             if (list[i].Count == 0) continue;
@@ -190,10 +198,10 @@ class Program {
         for (int i = 0; i < 256; i++)
             list.Add(new List<ProxyEntry>());
 
-        string line;
 
         Console.WriteLine("Reading...");
 
+        string line;
         StreamReader temp = new StreamReader(PROXYFILE);
         while ((line = temp.ReadLine()) != null) { //total
 
@@ -244,6 +252,8 @@ class Program {
             }
         }
 
+        DirectoryInfo dirProxy = new DirectoryInfo(PROXYDIR);
+        if (!dirProxy.Exists) dirProxy.Create();
 
         for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
@@ -273,14 +283,75 @@ class Program {
     }
 
     static void GenMacLookupBin() {
+        //https://regauth.standards.ieee.org/standards-ra-web/pub/view.html#registries
         Console.WriteLine("Reading...");
 
-        StreamReader temp = new StreamReader(MACFILE);
+        List<MacEntry> list = new List<MacEntry>();
+
         string line;
-        while ((line = temp.ReadLine()) != null) { //total
-            //TODO:
+        StreamReader temp = new StreamReader(MACFILE);
+        while ((line = temp.ReadLine()) != null) {
+            if (line.Length < 8) continue;
+            if (line[2] != '-' || line[5] != '-') continue;
+
+            string[] split = line.Split(new char[] {'\t'}, StringSplitOptions.RemoveEmptyEntries);
+            if (split.Length < 2) continue;
+
+            MacEntry entry = new MacEntry() {
+                mac = split[0].Substring(0, 8).Replace("-", ""),
+                vendor = split[1].Trim()
+            };
+
+            list.Add(entry);
         }
 
+        list.Sort((MacEntry a, MacEntry b) => {
+            return string.Compare(a.mac, b.mac);
+        });
+
+        Console.WriteLine("Writing...");
+
+        FileStream s = new FileStream($"mac.bin", FileMode.OpenOrCreate);
+        BinaryWriter w = new BinaryWriter(s);
+
+        uint index = 0;
+        List<string> dictionary = new List<string>();
+        List<uint> position = new List<uint>();
+
+        uint dictStart = (uint)(4 + (3 + 4) * list.Count); //7
+
+        w.Write(dictStart);
+
+        for (int i = 0; i < list.Count; i++) {
+            UInt32 ptr;
+
+            if (dictionary.Contains(list[i].vendor)) {
+                ptr = position[dictionary.IndexOf(list[i].vendor)];
+            } else {
+                ptr = index;
+                dictionary.Add(list[i].vendor);
+                position.Add(index);
+                index += (uint)list[i].vendor.Length + 1;
+            }
+
+            w.Write(byte.Parse(list[i].mac.Substring(0,2), NumberStyles.HexNumber));
+            w.Write(byte.Parse(list[i].mac.Substring(2,2), NumberStyles.HexNumber));
+            w.Write(byte.Parse(list[i].mac.Substring(4,2), NumberStyles.HexNumber));
+            w.Write(ptr);
+        }
+
+        for (int i = 0; i < dictionary.Count; i++) {
+            string v = dictionary[i];
+            for (int j = 0; j < v.Length; j++) {
+                byte b = (byte)v[j];
+
+                w.Write(b);
+            }
+            w.Write((byte)0); //null termination
+        }
+
+        Console.WriteLine("Done!");
+        Console.ReadLine();
     }
 
 }

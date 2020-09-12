@@ -111,12 +111,16 @@ public static class PasswordStrength {
 
                 string password = value[0];
                 if (password.Length == 0) continue;
-                string modified = value[1];
-                int entropy = (int)Entropy(password, words.ToArray());
-                string name = "";
 
-                if (entry.hash.ContainsKey("E-MAIL"))
-                    if (name.Length == 0) name = ((string[])entry.hash["E-MAIL"])[0];
+                int entropy = (int)Entropy(password, words.ToArray());
+                string mail = String.Empty;
+                string name = String.Empty;
+                string modified = value[1];
+
+                if (entry.hash.ContainsKey("E-MAIL")) {
+                    mail = ((string[])entry.hash["E-MAIL"])[0];
+                    if (name.Length == 0) name = mail;
+                }
 
                 if (entry.hash.ContainsKey("USERNAME"))
                     if (name.Length == 0) name = ((string[])entry.hash["USERNAME"])[0];
@@ -124,7 +128,7 @@ public static class PasswordStrength {
                 if (entry.hash.ContainsKey("DISPLAY NAME"))
                     if (name.Length == 0) name = ((string[])entry.hash["DISPLAY NAME"])[0];
 
-                sb.Append($"u{(char)127}{filename}{(char)127}{name}{(char)127}{entropy}{(char)127}{modified}{(char)127}");
+                sb.Append($"u{(char)127}{filename}{(char)127}{name}{(char)127}{mail}{(char)127}{entropy}{(char)127}{p.Key}{(char)127}{modified}{(char)127}");
             }
         }
 
@@ -161,7 +165,7 @@ public static class PasswordStrength {
                 if (entry.hash.ContainsKey("IP"))
                     if (name.Length == 0) name = ((string[])entry.hash["IP"])[0];
 
-                sb.Append($"e{(char)127}{filename}{(char)127}{name}{(char)127}{entropy}{(char)127}{modified}{(char)127}");
+                sb.Append($"e{(char)127}{filename}{(char)127}{name}{(char)127}{(char)127}{entropy}{(char)127}{p.Key}{(char)127}{modified}{(char)127}");
             }
         }
 

@@ -11,7 +11,7 @@ class Gandalf extends Window {
 
         this.index = 0;
         this.menuArray = [];
-        this.includeList = [];
+        this.includeList = {};
         this.content.classList.add("gandalf-content");
 
         const buttons = document.createElement("div");
@@ -125,7 +125,7 @@ class Gandalf extends Window {
             this.menuArray[1].appendChild(lblTotalValue);
 
             const lblAsterisk = document.createElement("div");
-            lblAsterisk.innerHTML = "* Only users with an email will get counted.";
+            lblAsterisk.innerHTML = "* Only users with an email address will be counted.";
             lblAsterisk.style.display = "inline-block";
             lblAsterisk.style.fontStyle = "italic";
             this.menuArray[1].appendChild(lblAsterisk);
@@ -149,6 +149,8 @@ class Gandalf extends Window {
                     if (k.indexOf("PASSWORD") > -1 && !parameters.has(k))
                         parameters.add(k);
 
+            lblInclude.style.visibility = parameters.size === 0 ? "hidden" : "visible";
+
             parameters.forEach((key, value, set) => {
                 if (key === "PASSWORD") return;
 
@@ -162,19 +164,22 @@ class Gandalf extends Window {
                 div.appendChild(chkInclude);
                 this.AddCheckBoxLabel(div, chkInclude, key);
 
-                this.includeList.push([key, chkInclude]);
+                this.includeList[key] = chkInclude;
+
+                chkInclude.onchange = ()=> this.rngThreshold.onchange();
             });
 
             this.rngThreshold.oninput =
             this.rngThreshold.onchange = () => {
                 lblThresholdValue.innerHTML = `${this.rngThreshold.value}-bits`;
 
-                if (this.entropy) 
+                if (this.entropy)
                     lblTotalValue.innerHTML = this.entropy.reduce((sum, c) => {
                         if (c.entropy < this.rngThreshold.value)
-                            return ++sum;
+                            if ((this.includeList[c.param] && this.includeList[c.param].checked == true) || c.param === "PASSWORD")
+                                return ++sum;
                         return sum;
-                    }, 0);                
+                    }, 0);
             };
 
             this.rngThreshold.onchange();
@@ -346,18 +351,20 @@ class Gandalf extends Window {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 this.entropy = [];
 
-                for (let i = 0; i < split.length - 2; i += 5) {
+                for (let i = 0; i < split.length - 2; i+=7) {
                     if (split[i] !== "u") continue;
+                    if (split[i+3].length === 0) continue; //email
 
-                    let dbEntry = db_users.find(e => e[".FILENAME"][0] === split[i + 1]);
+                    let dbEntry = db_users.find(e => e[".FILENAME"][0] === split[i+1]);
                     if (!dbEntry) continue;
-                    if (!dbEntry.hasOwnProperty("E-MAIL")) continue;
 
                     this.entropy.push({
-                        file: split[i+1],
-                        name: split[i+2],
-                        entropy: parseFloat(split[i+3]),
-                        email: dbEntry["E-MAIL"][0]
+                        file    : split[i+1],
+                        name    : split[i+2],
+                        email   : split[i+3],
+                        entropy : parseFloat(split[i+4]),
+                        param   : split[i+5],
+                        dbEntry : dbEntry
                     });
                 }
 
@@ -457,9 +464,9 @@ class Gandalf extends Window {
         payload += `${this.txtPassword.value}${String.fromCharCode(127)}`;
         payload += `${this.chkSSL.checked}${String.fromCharCode(127)}`;
 
-        for (let i = 0; i < this.includeList.length; i++)
-            if (this.includeList[i][1].checked == true)
-                payload += `${this.includeList[i][0]}${String.fromCharCode(127)}`;
+        for (let k in this.includeList)
+            if (this.includeList[k].checked == true)
+                payload += `${k}${String.fromCharCode(127)}`;
 
         xhr.open("POST", "db/gandalf", true);
         xhr.send(payload);
