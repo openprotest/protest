@@ -7,6 +7,7 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Threading;
+using System.Globalization;
 
 public static class PasswordStrength {
     static readonly string[] BLACKLIST = new string[] {
@@ -190,7 +191,7 @@ public static class PasswordStrength {
         return Strings.OK.Array;
     }
 
-    private static void GandalfRequest(string[] split) {
+    private static void GandalfRequest(in string[] split) {
         double.TryParse(split[0], out double threshold);
         string server    = split[1];
         int.TryParse(split[2], out int port);
@@ -224,16 +225,24 @@ public static class PasswordStrength {
 
             if (minEntropy == double.MaxValue) continue;
 
+            string name;
+            if (entry.hash.ContainsKey("FIRST NAME") && ((string[])entry.hash["FIRST NAME"])[0].Length > 0)
+                name = ((string[])entry.hash["FIRST NAME"])[0];
+            else if (entry.hash.ContainsKey("TITLE") && ((string[])entry.hash["TITLE"])[0].Length > 0)
+                name = ((string[])entry.hash["TITLE"])[0];
+            else 
+                name = ((string[])entry.hash["E-MAIL"])[0].Split('@')[0];
+
             if (minEntropy < threshold) {
                 string[] mailSplit = ((string[])entry.hash["E-MAIL"])[0].Split(';');
-                SendGandalfMail(smtp, sender, mailSplit, minEntropy);
+                SendGandalfMail(smtp, sender, mailSplit, name);
             }
         }
 
         smtp.Dispose();
     }
 
-    public static void SendGandalfMail(SmtpClient smtp, string sender, string[] recipients, double entropy) {
+    public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name) {
 #if !DEBUG
     try {
 #endif
@@ -251,7 +260,7 @@ public static class PasswordStrength {
         body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\"");
         body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
 
-        body.Append("<p>Dear colleague,</p>");
+        body.Append($"<p>Dear {(name.Length > 0 ? name.Trim() : "colleague")},</p>");
 
         body.Append("<p><b>");
         body.Append("Our record shows that you're using a weak password. ");
@@ -268,8 +277,8 @@ public static class PasswordStrength {
         body.Append("<ul>");
         body.Append("<li><b>Size matters.</b> Choose at least ten characters. Longer passwords are harder to crack.</li>");
         body.Append("<li><b>Use mixed characters.</b> Use upper-case and lower-case, numbers, and symbols to add complexity.</li>");
-        body.Append("<li><b>Be unpredictable</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password.</li>");
-        body.Append("<li><b>Make it random.</b> Use an online password generator. It can generate a random sequence that is impossible to guess.</li>");
+        body.Append("<li><b>Be unpredictable</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password. Don't use your name, favorite movie, pet name, etc</li>");
+        body.Append("<li><b>Make it random.</b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">Link</a>)</li>");
         body.Append("</ul>");
         body.Append("</p>");
 
@@ -301,7 +310,6 @@ public static class PasswordStrength {
         for (int i = 0; i < recipients.Length; i++)
             mail.To.Add(recipients[i].Trim());
 
-        //TODO:
         smtp.Send(mail);
         mail.Dispose();
 
