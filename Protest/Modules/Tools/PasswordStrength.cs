@@ -7,7 +7,7 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Threading;
-using System.Globalization;
+using System.Numerics;
 
 public static class PasswordStrength {
     static readonly string[] BLACKLIST = new string[] {
@@ -54,7 +54,10 @@ public static class PasswordStrength {
     };
 
     public static double Entropy(string password, in string[] related = null) {
+        return Entropy(password, out _, out _, related);
+    }
 
+    public static double Entropy(string password, out int length, out int pool, in string[] related = null) {
         for (int i = 0; i < BLACKLIST.Length; i++)
             if (password.IndexOf(BLACKLIST[i], StringComparison.InvariantCultureIgnoreCase) > -1) password = password.Replace(BLACKLIST[i], "");
 
@@ -72,22 +75,24 @@ public static class PasswordStrength {
 
         for (int i = 0; i < len; i++) {
             byte b = (byte)password[i];
-
             if (b > 47 && b < 58) hasNumbers = true;
             else if (b > 64 && b < 91) hasUppercase = true;
             else if (b > 96 && b < 123) hasLowercase = true;
             else hasSymbols = true;
         }
 
-        int pool = 0;
+        length = password.Length;
+
+        pool = 0;
         if (hasNumbers) pool += 10;
         if (hasUppercase) pool += 26;
         if (hasLowercase) pool += 26;
-        if (hasSymbols) pool += 32;
+        if (hasSymbols) pool += 30;
 
         double entropy = Math.Log(Math.Pow(pool, len), 2);
         return entropy;
     }
+
 
     public static byte[] GetEntropy() {
         StringBuilder sb = new StringBuilder();
@@ -216,11 +221,54 @@ public static class PasswordStrength {
             if (!entry.hash.ContainsKey("E-MAIL")) continue; //no e-mail
 
             double minEntropy = double.MaxValue;
+            string etc = String.Empty; //Estimated Time to Crack
 
             foreach (DictionaryEntry p in entry.hash) {
                 if (!include.ContainsKey(p.Key)) continue;
-                double entropy = Entropy(((string[])p.Value)[0]);
+
+                double entropy = Entropy(((string[])p.Value)[0], out int length, out int pool);
                 minEntropy = Math.Min(minEntropy, entropy);
+
+                try {
+                    BigInteger combinations = BigInteger.Pow(pool, length);
+                    BigInteger ttc = combinations / 500_000_000_000; //time to crack in seconds
+
+                    BigInteger MILLENNIUM = 365 * 24 * 3600; MILLENNIUM *= 1000;
+
+                    BigInteger millenniums = ttc / MILLENNIUM;
+                    ttc -= millenniums * MILLENNIUM;
+
+                    BigInteger years = ttc / (365 * 24 * 3600);
+                    ttc -= years * (365 * 24 * 3600);
+
+                    BigInteger days = ttc / (24 * 3600);
+                    ttc -= days * (24 * 3600);
+
+                    BigInteger hours = ttc / 3600;
+                    ttc -= hours * 3600;
+
+                    BigInteger minutes = ttc / 60;
+                    ttc -= minutes * 60;
+
+                    BigInteger seconds = ttc;                                     
+
+                    if (millenniums != 0) etc  = millenniums == 1 ? $"1 millennium, ": $"{millenniums} millenniums, ";
+                    if (years != 0)       etc += years == 1       ? $"1 year, "      : $"{years} years, ";
+                    if (days != 0)        etc += days == 1        ? $"1 day, "       : $"{days} days, ";
+                    if (hours != 0)       etc += hours == 1       ? $"1 hour, "      : $"{hours} hours, ";
+                    if (minutes != 0)     etc += minutes == 1     ? $"1 minute, "    : $"{minutes} minutes, ";
+
+                    if (seconds != 0) {
+                        if (etc.Length == 0) {
+                            etc += seconds == 1 ? $"a second" : $"{seconds} seconds";
+                        } else {
+                            etc += seconds == 1 ? $"and 1 second" : $"and {seconds} seconds";
+                        }
+                    }
+
+                    if (etc.Length == 0) etc = "less then a second";
+                
+                } catch {}
             }
 
             if (minEntropy == double.MaxValue) continue;
@@ -235,14 +283,14 @@ public static class PasswordStrength {
 
             if (minEntropy < threshold) {
                 string[] mailSplit = ((string[])entry.hash["E-MAIL"])[0].Split(';');
-                SendGandalfMail(smtp, sender, mailSplit, name);
+                SendGandalfMail(smtp, sender, mailSplit, name, etc);
             }
         }
 
         smtp.Dispose();
     }
 
-    public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name) {
+    public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name, in string etc) {
 #if !DEBUG
     try {
 #endif
@@ -273,14 +321,20 @@ public static class PasswordStrength {
         body.Append("</p>");
 
         body.Append("<p>");
+        body.Append($"Your password can be cracked in {etc}.");
+        body.Append("</b>");
+
+        body.Append("<p>");
         body.Append("<u>How to choose a strong password:</u>");
         body.Append("<ul>");
         body.Append("<li><b>Size matters.</b> Choose at least ten characters. Longer passwords are harder to crack.</li>");
         body.Append("<li><b>Use mixed characters.</b> Use upper-case and lower-case, numbers, and symbols to add complexity.</li>");
         body.Append("<li><b>Be unpredictable</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password. Don't use your name, favorite movie, pet name, etc</li>");
-        body.Append("<li><b>Make it random.</b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">Link</a>)</li>");
+        body.Append("<li><b>Make it random.</b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
         body.Append("</ul>");
         body.Append("</p>");
+
+        body.Append("<br>");
 
         body.Append("<p>P.S. <i>Sticky notes are not designed to store a password securely.</i></p>");
 
@@ -299,7 +353,7 @@ public static class PasswordStrength {
 
         MailMessage mail = new MailMessage {
             From = new MailAddress(sender, "Pro-test"),
-            Subject = "Upgrade your password.",
+            Subject = "Upgrade your password",
             IsBodyHtml = true
         };
 

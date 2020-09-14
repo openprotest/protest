@@ -97,7 +97,7 @@ class Gandalf extends Window {
             this.rngThreshold = document.createElement("input");
             this.rngThreshold.type = "range";
             this.rngThreshold.min = 20;
-            this.rngThreshold.max = 150;
+            this.rngThreshold.max = 128;
             this.rngThreshold.value = 80;
             this.rngThreshold.style.width = "200px";
             this.menuArray[1].appendChild(this.rngThreshold);
@@ -149,7 +149,7 @@ class Gandalf extends Window {
                     if (k.indexOf("PASSWORD") > -1 && !parameters.has(k))
                         parameters.add(k);
 
-            lblInclude.style.visibility = parameters.size === 0 ? "hidden" : "visible";
+            lblInclude.style.visibility = parameters.size === 1 ? "hidden" : "visible";
 
             parameters.forEach((key, value, set) => {
                 if (key === "PASSWORD") return;
@@ -171,7 +171,15 @@ class Gandalf extends Window {
 
             this.rngThreshold.oninput =
             this.rngThreshold.onchange = () => {
-                lblThresholdValue.innerHTML = `${this.rngThreshold.value}-bits`;
+                let strength = "";
+                if      (this.rngThreshold.value < 19)  strength = "Forbidden";
+                else if (this.rngThreshold.value < 28)  strength = "Very weak";
+                else if (this.rngThreshold.value < 36)  strength = "Weak";
+                else if (this.rngThreshold.value < 60)  strength = "Reasonable";
+                else if (this.rngThreshold.value < 128) strength = "Strong";
+                else                                    strength = "Overkill";                
+
+                lblThresholdValue.innerHTML = `${this.rngThreshold.value}-bits <i>(${strength} and bellow)</i>`;
 
                 if (this.entropy)
                     lblTotalValue.innerHTML = this.entropy.reduce((sum, c) => {
@@ -301,8 +309,9 @@ class Gandalf extends Window {
                             this.txtSmtpPort.value = parseInt(split[6]);
                             this.txtSender.value = split[7];
                             this.txtUsername.value = split[8];
-                            this.txtPassword.value = split[9];
-                            this.chkSSL.checked = split[11] === "true"
+                            this.chkSSL.checked = split[11] === "true";
+                            this.txtPassword.value = "";
+                            this.txtPassword.placeholder = "required";
                         }
                     }
                     if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -424,7 +433,7 @@ class Gandalf extends Window {
         this.index++;
 
         if (this.index === 3) {
-            this.btnPrevious.setAttribute("disabled", true);
+            //this.btnPrevious.setAttribute("disabled", true);
             this.btnNext.setAttribute("disabled", true);
             this.Send();
             return;

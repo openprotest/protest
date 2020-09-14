@@ -32,7 +32,7 @@ class Passgen extends Window {
 
         this.lblComment = document.createElement("div");
         this.lblComment.style.display = "inline-block";
-        this.lblComment.style.minWidth = "40px";
+        this.lblComment.style.minWidth = "100px";
         this.lblComment.style.textAlign = "left";
         this.lblComment.style.marginLeft = "8px";
         this.lblComment.style.marginTop = "0px";
@@ -41,7 +41,7 @@ class Passgen extends Window {
         let grid = document.createElement("div");
         grid.style.display = "grid";
         grid.style.width = "424px";
-        grid.style.margin = "40px auto";
+        grid.style.margin = "40px auto 20px auto";
         grid.style.padding = "16px 24px";
         grid.style.backgroundColor = "var(--pane-color)";
         grid.style.color = "rgb(16,16,16)";
@@ -98,7 +98,7 @@ class Passgen extends Window {
         grid.appendChild(this.txtLength);
 
         let divLowercase = document.createElement("div");
-        divLowercase.style.gridArea = "3 / 3";
+        divLowercase.style.gridArea = "2 / 3";
         grid.appendChild(divLowercase);
 
         this.chkLowercase = document.createElement("input");
@@ -109,7 +109,7 @@ class Passgen extends Window {
 
 
         let divUppercase = document.createElement("div");
-        divUppercase.style.gridArea = "4 / 3";
+        divUppercase.style.gridArea = "3 / 3";
         grid.appendChild(divUppercase);
 
         this.chkUppercase = document.createElement("input");
@@ -120,7 +120,7 @@ class Passgen extends Window {
 
 
         let divNumbers = document.createElement("div");
-        divNumbers.style.gridArea = "5 / 3";
+        divNumbers.style.gridArea = "4 / 3";
         grid.appendChild(divNumbers);
 
         this.chkNumbers = document.createElement("input");
@@ -130,7 +130,7 @@ class Passgen extends Window {
         this.AddCheckBoxLabel(divNumbers, this.chkNumbers, "Numbers");
 
         let divSymbols = document.createElement("div");
-        divSymbols.style.gridArea = "6 / 3";
+        divSymbols.style.gridArea = "5 / 3";
         grid.appendChild(divSymbols);
 
         this.chkSymbols = document.createElement("input");
@@ -138,6 +138,20 @@ class Passgen extends Window {
         this.chkSymbols.checked = false;
         divSymbols.appendChild(this.chkSymbols);
         this.AddCheckBoxLabel(divSymbols, this.chkSymbols, "Symbols");
+
+        const lblEntropy = document.createElement("div");
+        lblEntropy.innerHTML = "Entropy (bits):";
+        lblEntropy.style.gridArea = "4 / 1";
+        lblEntropy.style.textAlign = "right";
+        lblEntropy.style.paddingRight = "4px";
+        grid.appendChild(lblEntropy);
+
+        this.lblEntropyValue = document.createElement("div");
+        this.lblEntropyValue.style.gridArea = "4 / 2";
+        this.lblEntropyValue.style.textAlign = "left";
+        this.lblEntropyValue.style.fontWeight = "normal";
+        this.lblEntropyValue.style.paddingLeft = "12px";
+        grid.appendChild(this.lblEntropyValue);
 
         this.rngLength.oninput = () => {
             this.txtLength.value = this.rngLength.value;
@@ -153,7 +167,7 @@ class Passgen extends Window {
         divButtons.style.width = "100%";
         divButtons.style.textAlign = "center";
         divButtons.style.paddingTop = "32px";
-        divButtons.style.gridArea = "5 / 1 / 6 / 3";
+        divButtons.style.gridArea = "5 / 1 / 7 / 3";
         grid.appendChild(divButtons);
 
         const btnGenerate = document.createElement("input");
@@ -172,11 +186,16 @@ class Passgen extends Window {
         btnGenerate.style.borderRadius = "4px 0 0 4px";
         btnCopy.style.borderRadius = "0 4px 4px 0";
 
+        this.lblTtc = document.createElement("div");
+        this.lblTtc.innerHTML = "";
+        this.content.appendChild(this.lblTtc);
+
         this.cmbOptions.onchange = () => {
             switch (this.cmbOptions.value) {
                 case "pin":
                     this.rngLength.min = 4;
                     this.rngLength.value = 4;
+                    this.rngLength.max = 64;
                     this.chkNumbers.checked = true;
                     this.chkLowercase.checked = false;
                     this.chkUppercase.checked = false;
@@ -185,11 +204,13 @@ class Passgen extends Window {
                     this.chkUppercase.setAttribute("disabled", true);
                     this.chkNumbers.setAttribute("disabled", true);
                     this.chkSymbols.setAttribute("disabled", true);
+                    lblLength.innerHTML = "Lenght:";
                     break;
 
                 case "rnd":
                     this.rngLength.value = 16;
                     this.rngLength.min = 6;
+                    this.rngLength.max = 64;
                     this.chkLowercase.checked = true;
                     this.chkUppercase.checked = true;
                     this.chkNumbers.checked = false;
@@ -198,11 +219,13 @@ class Passgen extends Window {
                     this.chkUppercase.removeAttribute("disabled");
                     this.chkNumbers.removeAttribute("disabled");
                     this.chkSymbols.removeAttribute("disabled");
+                    lblLength.innerHTML = "Lenght:";
                     break;
 
                 case "mem":
                     this.rngLength.min = 2;
                     this.rngLength.value = 4;
+                    this.rngLength.max = 32;
                     this.chkLowercase.checked = true;
                     this.chkUppercase.checked = false;
                     this.chkNumbers.checked = false;
@@ -211,6 +234,7 @@ class Passgen extends Window {
                     this.chkUppercase.removeAttribute("disabled");
                     this.chkNumbers.removeAttribute("disabled");
                     this.chkSymbols.setAttribute("disabled", true);
+                    lblLength.innerHTML = "Words:";
                     break;
             }
 
@@ -221,7 +245,6 @@ class Passgen extends Window {
 
             this.Generate();
         };
-
 
         this.chkLowercase.onchange = this.chkUppercase.onchange = this.chkNumbers.onchange = this.chkSymbols.onchange = () => { this.Generate(); };
 
@@ -350,12 +373,7 @@ class Passgen extends Window {
         }
 
         if (this.chkSymbols.checked) {
-            pool.push(" !#$%&()*+-<=>?@^_~");
-            flag.push(false);
-        }
-
-        if (false) {
-            pool.push("\"',./[\\]`{|}");
+            pool.push("!#$%&()*+-<=>?@^_~,./[\\]{|}");
             flag.push(false);
         }
 
@@ -399,9 +417,10 @@ class Passgen extends Window {
         if (this.chkNumbers.checked) pool += 10;
         if (this.chkUppercase.checked) pool += 26;
         if (this.chkLowercase.checked) pool += 26;
-        if (this.chkSymbols.checked) pool += 32;
+        if (this.chkSymbols.checked) pool += 28;
 
-        let entropy = Math.log(Math.pow(pool, this.txtPassword.value.length), 2);
+        let entropy = Math.log(pool, 2) * this.txtPassword.value.length;
+        //same as     Math.log(Math.pow(pool, this.txtPassword.value.length), 2))
 
         let strength = StrengthBar(entropy);
         let color = strength[0];
@@ -410,6 +429,49 @@ class Passgen extends Window {
 
         this.divBar.style.boxShadow = color + " " + fill + "px 0 0 inset";
         this.lblComment.innerHTML = comment;
+        this.lblEntropyValue.innerHTML = Math.round(entropy);
+
+        let combinations = Math.pow(pool, this.txtPassword.value.length);
+        let ttc = combinations / 500000000000; //time to crack in seconds
+
+        let eon = Math.floor(ttc / (1000000000 * 365 * 24 * 3600));
+        ttc -= eon * 1000000000 * 365 * 24 * 3600;
+
+        let years = Math.floor(ttc / (365 * 24 * 3600));
+        ttc -= years * (365 * 24 * 3600);
+
+        let days = Math.floor(ttc / (24 * 3600));
+        ttc -= days * (24 * 3600);
+
+        let hours = Math.floor(ttc / 3600);
+        ttc -= hours * 3600;
+
+        let minutes = Math.floor(ttc / 60);
+        ttc -= minutes * 60;
+
+        let seconds = Math.round(ttc);
+
+        let etc = ""; //Estimated Time to Crack
+        if (eon != 0)         etc  = eon == 1         ? `1 eon, ` : `${eon} eons, `;
+        if (years != 0)       etc += years == 1       ? `1 year, `       : `${years} years, `;
+        if (days != 0)        etc += days == 1        ? `1 day, `        : `${days} days, `;
+        if (hours != 0)       etc += hours == 1       ? `1 hour, `       : `${hours} hours, `;
+        if (minutes != 0)     etc += minutes == 1     ? `1 minute, `     : `${minutes} minutes, `;
+
+        if (seconds != 0) {
+            if (etc.length == 0) {
+                etc += seconds == 1 ? `a second` : `${seconds} seconds`;
+            } else {
+                etc += seconds == 1 ? `and 1 second` : `and ${seconds} seconds`;
+            }
+        }
+
+        if (etc.length == 0) etc = "less then a second";
+
+        if (eon > 1000000000000)
+           this.lblTtc.innerHTML = "Infinity";
+        else
+           this.lblTtc.innerHTML = etc;
     }
 }
 

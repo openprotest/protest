@@ -752,7 +752,7 @@ class User extends Window {
 
                     if (xhr.responseText.startsWith("{")) {
                         let json = JSON.parse(xhr.responseText);
-                        //this.Update(json.obj);
+                        this.Update(json.obj);
 
                         let filename = json.obj[".FILENAME"][0];
                         this.filename = filename;

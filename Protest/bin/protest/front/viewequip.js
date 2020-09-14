@@ -533,15 +533,24 @@ class Equip extends Window {
         const icon = this.task.querySelector(".icon"); //remove old dots
         this.task.innerHTML = "";
         this.task.appendChild(icon);
-        
+
+        if (this.socketBusy) return;
+
         let server = window.location.href;
         server = server.replace("https://", "");
         server = server.replace("http://", "");
         if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
+        this.socketBusy = true;
         const ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/liveinfo_equip");
 
-        ws.onopen = () => { ws.send(this.filename); };
+        ws.onopen = () => {
+            ws.send(this.filename);
+        };
+
+        ws.onclose = () => {
+            this.socketBusy = false;
+        };
 
         ws.onmessage = (event) => {
             let split = event.data.split(String.fromCharCode(127));
@@ -584,7 +593,6 @@ class Equip extends Window {
                 const newProperty = this.AddProperty(split[0], split[1], split[2]);
                 this.liveinfo.appendChild(newProperty);
             }
-
         };
     }
 
@@ -1129,7 +1137,7 @@ class Equip extends Window {
 
                     if (xhr.responseText.startsWith("{")) {
                         let json = JSON.parse(xhr.responseText);
-                        //this.Update(json.obj);
+                        this.Update(json.obj);
 
                         let filename = json.obj[".FILENAME"][0];
                         this.filename = filename;
