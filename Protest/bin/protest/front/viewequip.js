@@ -55,6 +55,7 @@ class Equip extends Window {
         
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
+        this.hasConfigFile = false;
 
         if (!this.entry) {
             this.btnPopout.style.visibility = "hidden";
@@ -100,6 +101,15 @@ class Equip extends Window {
         btnDelete.value = "Delete";
         this.buttons.appendChild(btnDelete);
         btnDelete.onclick = () => this.Delete();
+
+        this.btnConfig = document.createElement("input");
+        this.btnConfig.type = "button";
+        this.btnConfig.value = "Configuration";
+        this.btnConfig.style.marginLeft = "12px";
+        this.btnConfig.style.animation = "soft-slide-in .8s 1";
+        this.btnConfig.style.display = "none";
+        this.buttons.appendChild(this.btnConfig);
+        this.btnConfig.onclick = () => this.Config();
 
         this.sidetools = document.createElement("div");
         this.sidetools.className = "db-sidetools";
@@ -165,7 +175,7 @@ class Equip extends Window {
             this.scroll.appendChild(this.properties);
         }
     }
-
+    
     Plot() {
         let done = [];
         this.properties.innerHTML = "";
@@ -521,6 +531,12 @@ class Equip extends Window {
 
         }
 
+        if (this.entry["TYPE"][0].toUpperCase() == "ROUTER")
+            this.btnConfig.style.display = "initial";
+
+        if (this.entry["TYPE"][0].toUpperCase() == "SWITCH" && this.entry.hasOwnProperty("PORTS"))
+            this.btnConfig.style.display = "initial";
+        
     }
 
     LiveInfo() {
@@ -1258,6 +1274,22 @@ class Equip extends Window {
             xhr.open("GET", "db/delequip&" + this.filename, true);
             xhr.send();
         });
+    }
+
+    Config() {
+        const dialog = this.DialogBox("480px");
+        if (dialog === null) return;
+
+        const btnOK = dialog.btnOK;
+        const btnCancel = dialog.btnCancel;
+        const buttonBox = dialog.buttonBox;
+        const innerBox = dialog.innerBox;
+
+        if (this.hasConfigFile) {
+            //
+            return;
+        }
+
     }
 
     Update(obj) {

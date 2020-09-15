@@ -34,6 +34,8 @@ namespace Protest_RA {
             this.TrayIcon.Text = this.Text;
             this.TrayIcon.Icon = this.Icon;
 
+            this.lblVersion.Text = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
             self = this;
 
             Thread.Sleep(1000);

@@ -22,7 +22,7 @@ class PasswordStrength extends ListWindow {
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.db = [];
-        this.view = [];      
+        this.view = [];
 
         this.btnGandalf.onclick = () => { new Gandalf(); };
 
@@ -35,12 +35,9 @@ class PasswordStrength extends ListWindow {
         let labels = this.titleLabels;
         labels[0].style.left = "28px";
         labels[0].style.maxWidth = "30%";
-
         labels[1].style.left = "30%";
         labels[1].style.maxWidth = "15%";
-
         labels[2].style.left = "50%";
-
         labels[3].style.left = "65%";
     }
 

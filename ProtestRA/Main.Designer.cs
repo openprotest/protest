@@ -40,6 +40,7 @@
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tmrAutoHide = new System.Windows.Forms.Timer(this.components);
             this.btnClose = new System.Windows.Forms.Button();
+            this.lblVersion = new System.Windows.Forms.Label();
             this.pnlMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtListennerPort)).BeginInit();
             this.TrayMenu.SuspendLayout();
@@ -170,7 +171,7 @@
             this.exitToolStripMenuItem});
             this.TrayMenu.Name = "TrayMenu";
             this.TrayMenu.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.TrayMenu.Size = new System.Drawing.Size(185, 104);
+            this.TrayMenu.Size = new System.Drawing.Size(133, 82);
             // 
             // recentsToolStripMenuItem
             // 
@@ -179,7 +180,7 @@
             this.recentsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.recentsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.recent24;
             this.recentsToolStripMenuItem.Name = "recentsToolStripMenuItem";
-            this.recentsToolStripMenuItem.Size = new System.Drawing.Size(184, 26);
+            this.recentsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
             this.recentsToolStripMenuItem.Text = "Recents";
             this.recentsToolStripMenuItem.Visible = false;
             // 
@@ -189,7 +190,7 @@
             this.optionsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.optionsToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.icon24;
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(184, 26);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
             this.optionsToolStripMenuItem.Text = "Options";
             this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
             // 
@@ -199,7 +200,7 @@
             this.exitToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.exitToolStripMenuItem.Image = global::Protest_RA.Properties.Resources.close24;
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(184, 26);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(132, 26);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -225,12 +226,23 @@
             this.btnClose.UseVisualStyleBackColor = false;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
+            // lblVersion
+            // 
+            this.lblVersion.AutoSize = true;
+            this.lblVersion.ForeColor = System.Drawing.Color.Gray;
+            this.lblVersion.Location = new System.Drawing.Point(12, 435);
+            this.lblVersion.Name = "lblVersion";
+            this.lblVersion.Size = new System.Drawing.Size(54, 17);
+            this.lblVersion.TabIndex = 3;
+            this.lblVersion.Text = "Version:";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
             this.ClientSize = new System.Drawing.Size(747, 471);
+            this.Controls.Add(this.lblVersion);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnApply);
             this.Controls.Add(this.pnlMain);
@@ -250,6 +262,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.txtListennerPort)).EndInit();
             this.TrayMenu.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -270,6 +283,7 @@
         private System.Windows.Forms.Label lblKey;
         private System.Windows.Forms.TextBox txtKey;
         public System.Windows.Forms.ToolStripMenuItem recentsToolStripMenuItem;
+        private System.Windows.Forms.Label lblVersion;
     }
 }
 
