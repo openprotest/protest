@@ -98,7 +98,7 @@ class Gandalf extends Window {
             this.rngThreshold.type = "range";
             this.rngThreshold.min = 20;
             this.rngThreshold.max = 128;
-            this.rngThreshold.value = 80;
+            this.rngThreshold.value = 65;
             this.rngThreshold.style.width = "200px";
             this.menuArray[1].appendChild(this.rngThreshold);
 
@@ -360,7 +360,7 @@ class Gandalf extends Window {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 this.entropy = [];
 
-                for (let i = 0; i < split.length - 2; i+=7) {
+                for (let i = 0; i < split.length - 2; i+=8) {
                     if (split[i] !== "u") continue;
                     if (split[i+3].length === 0) continue; //email
 

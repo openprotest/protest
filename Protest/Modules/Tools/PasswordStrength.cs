@@ -66,11 +66,7 @@ public static class PasswordStrength {
                 if (related[i].Length != 0)
                     if (password.IndexOf(related[i], StringComparison.InvariantCultureIgnoreCase) > -1) password = password.Replace(related[i], "");
 
-        bool hasNumbers = false;
-        bool hasUppercase = false;
-        bool hasLowercase = false;
-        bool hasSymbols = false;
-
+        bool hasNumbers = false, hasUppercase = false, hasLowercase = false, hasSymbols = false;
         int len = password.Length;
 
         for (int i = 0; i < len; i++) {
@@ -90,9 +86,10 @@ public static class PasswordStrength {
         if (hasSymbols) pool += 30;
 
         double entropy = Math.Log(Math.Pow(pool, len), 2);
+        //same as:       Math.Log(pool, 2) * len
+
         return entropy;
     }
-
 
     public static byte[] GetEntropy() {
         StringBuilder sb = new StringBuilder();
@@ -118,7 +115,8 @@ public static class PasswordStrength {
                 string password = value[0];
                 if (password.Length == 0) continue;
 
-                int entropy = (int)Entropy(password, words.ToArray());
+                int entropy = (int)Entropy(password, out int length, out int pool, words.ToArray());
+                string ttc = CalcTtc(length, pool);
                 string mail = String.Empty;
                 string name = String.Empty;
                 string modified = value[1];
@@ -134,7 +132,14 @@ public static class PasswordStrength {
                 if (entry.hash.ContainsKey("DISPLAY NAME"))
                     if (name.Length == 0) name = ((string[])entry.hash["DISPLAY NAME"])[0];
 
-                sb.Append($"u{(char)127}{filename}{(char)127}{name}{(char)127}{mail}{(char)127}{entropy}{(char)127}{p.Key}{(char)127}{modified}{(char)127}");
+                sb.Append($"u{(char)127}");
+                sb.Append($"{filename}{(char)127}");
+                sb.Append($"{name}{(char)127}");
+                sb.Append($"{mail}{(char)127}");
+                sb.Append($"{entropy}{(char)127}");
+                sb.Append($"{p.Key}{(char)127}");
+                sb.Append($"{modified}{(char)127}");
+                sb.Append($"{ttc}{(char)127}");
             }
         }
 
@@ -159,7 +164,8 @@ public static class PasswordStrength {
                 string password = value[0];
                 if (password.Length == 0) continue;
                 string modified = value[1];
-                int entropy = (int)Entropy(password, words.ToArray());
+                int entropy = (int)Entropy(password, out int length, out int pool, words.ToArray());
+                string ttc = CalcTtc(length, pool);
                 string name = "";
 
                 if (entry.hash.ContainsKey("NAME"))
@@ -171,13 +177,74 @@ public static class PasswordStrength {
                 if (entry.hash.ContainsKey("IP"))
                     if (name.Length == 0) name = ((string[])entry.hash["IP"])[0];
 
-                sb.Append($"e{(char)127}{filename}{(char)127}{name}{(char)127}{(char)127}{entropy}{(char)127}{p.Key}{(char)127}{modified}{(char)127}");
+                sb.Append($"e{(char)127}");
+                sb.Append($"{filename}{(char)127}");
+                sb.Append($"{name}{(char)127}");
+                sb.Append($"{(char)127}");
+                sb.Append($"{entropy}{(char)127}");
+                sb.Append($"{p.Key}{(char)127}");
+                sb.Append($"{modified}{(char)127}");
+                sb.Append($"{ttc}{(char)127}");
             }
         }
 
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
+    public static string CalcTtc(int length, int pool) {
+        try {
+            BigInteger combinations = BigInteger.Pow(pool, length);
+            BigInteger stc = combinations / 350_000_000_000; //seconds to crack
+
+            BigInteger EON = 365 * 24 * 3600; EON *= 1_000_000_000;
+            BigInteger MILLENNIUM = 365 * 24 * 3600; MILLENNIUM *= 1000;
+
+            BigInteger eons = stc / EON;
+            stc -= eons * EON;
+
+            BigInteger millenniums = stc / MILLENNIUM;
+            stc -= millenniums * MILLENNIUM;
+
+            BigInteger years = stc / (365 * 24 * 3600);
+            stc -= years * (365 * 24 * 3600);
+
+            BigInteger days = stc / (24 * 3600);
+            stc -= days * (24 * 3600);
+
+            BigInteger hours = stc / 3600;
+            stc -= hours * 3600;
+
+            BigInteger minutes = stc / 60;
+            stc -= minutes * 60;
+
+            BigInteger seconds = stc;
+
+            string ttc = String.Empty;
+            if (eons != 0)        ttc = eons == 1         ? $"1 eon, "        : $"{eons} eons, ";
+            if (millenniums != 0) ttc += millenniums == 1 ? $"1 millennium, " : $"{millenniums} millenniums, ";
+            if (years != 0)       ttc += years == 1       ? $"1 year, "       : $"{years} years, ";
+            if (days != 0)        ttc += days == 1        ? $"1 day, "        : $"{days} days, ";
+            if (hours != 0)       ttc += hours == 1       ? $"1 hour, "       : $"{hours} hours, ";
+            if (minutes != 0)     ttc += minutes == 1     ? $"1 minute, "     : $"{minutes} minutes, ";
+
+            if (seconds != 0) {
+                if (ttc.Length == 0) {
+                    ttc += seconds == 1 ? $"a second" : $"{seconds} seconds";
+                } else {
+                    ttc += seconds == 1 ? $"and 1 second" : $"and {seconds} seconds";
+                }
+            }
+
+            if (ttc.EndsWith(", ")) ttc = ttc.Substring(0, ttc.Length - 2);
+
+            if (ttc.Length == 0) ttc = "less then a second";
+
+            return ttc;
+
+        } catch {
+            return null;
+        }
+    }
 
     public static byte[] GandalfThreadWrapper(in HttpListenerContext ctx, in string performer) {
         string payload;
@@ -221,54 +288,14 @@ public static class PasswordStrength {
             if (!entry.hash.ContainsKey("E-MAIL")) continue; //no e-mail
 
             double minEntropy = double.MaxValue;
-            string etc = String.Empty; //Estimated Time to Crack
+            string ttc = String.Empty; //time to crack
 
             foreach (DictionaryEntry p in entry.hash) {
                 if (!include.ContainsKey(p.Key)) continue;
 
                 double entropy = Entropy(((string[])p.Value)[0], out int length, out int pool);
                 minEntropy = Math.Min(minEntropy, entropy);
-
-                try {
-                    BigInteger combinations = BigInteger.Pow(pool, length);
-                    BigInteger ttc = combinations / 500_000_000_000; //time to crack in seconds
-
-                    BigInteger MILLENNIUM = 365 * 24 * 3600; MILLENNIUM *= 1000;
-
-                    BigInteger millenniums = ttc / MILLENNIUM;
-                    ttc -= millenniums * MILLENNIUM;
-
-                    BigInteger years = ttc / (365 * 24 * 3600);
-                    ttc -= years * (365 * 24 * 3600);
-
-                    BigInteger days = ttc / (24 * 3600);
-                    ttc -= days * (24 * 3600);
-
-                    BigInteger hours = ttc / 3600;
-                    ttc -= hours * 3600;
-
-                    BigInteger minutes = ttc / 60;
-                    ttc -= minutes * 60;
-
-                    BigInteger seconds = ttc;                                     
-
-                    if (millenniums != 0) etc  = millenniums == 1 ? $"1 millennium, ": $"{millenniums} millenniums, ";
-                    if (years != 0)       etc += years == 1       ? $"1 year, "      : $"{years} years, ";
-                    if (days != 0)        etc += days == 1        ? $"1 day, "       : $"{days} days, ";
-                    if (hours != 0)       etc += hours == 1       ? $"1 hour, "      : $"{hours} hours, ";
-                    if (minutes != 0)     etc += minutes == 1     ? $"1 minute, "    : $"{minutes} minutes, ";
-
-                    if (seconds != 0) {
-                        if (etc.Length == 0) {
-                            etc += seconds == 1 ? $"a second" : $"{seconds} seconds";
-                        } else {
-                            etc += seconds == 1 ? $"and 1 second" : $"and {seconds} seconds";
-                        }
-                    }
-
-                    if (etc.Length == 0) etc = "less then a second";
-                
-                } catch {}
+                ttc = CalcTtc(length, pool);
             }
 
             if (minEntropy == double.MaxValue) continue;
@@ -283,14 +310,14 @@ public static class PasswordStrength {
 
             if (minEntropy < threshold) {
                 string[] mailSplit = ((string[])entry.hash["E-MAIL"])[0].Split(';');
-                SendGandalfMail(smtp, sender, mailSplit, name, etc);
+                SendGandalfMail(smtp, sender, mailSplit, name, ttc);
             }
         }
 
         smtp.Dispose();
     }
 
-    public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name, in string etc) {
+    public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name, in string ttc) {
 #if !DEBUG
     try {
 #endif
@@ -320,14 +347,16 @@ public static class PasswordStrength {
         body.Append("In 1982, it took four years to crack an eight characters password. Today it can be cracked in less than a day.");
         body.Append("</p>");
 
-        body.Append("<p>");
-        body.Append($"Your password can be cracked in {etc}.");
-        body.Append("</b>");
+        if (!(ttc is null) && ttc.Length > 0) {
+            body.Append("<p>");
+            body.Append($"Your password can be cracked in {ttc}.");
+            body.Append("</b>");
+        }
 
         body.Append("<p>");
         body.Append("<u>How to choose a strong password:</u>");
         body.Append("<ul>");
-        body.Append("<li><b>Size matters.</b> Choose at least ten characters. Longer passwords are harder to crack.</li>");
+        body.Append("<li><b>Size matters.</b> Choose at least twelve characters. Longer passwords are harder to crack.</li>");
         body.Append("<li><b>Use mixed characters.</b> Use upper-case and lower-case, numbers, and symbols to add complexity.</li>");
         body.Append("<li><b>Be unpredictable</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password. Don't use your name, favorite movie, pet name, etc</li>");
         body.Append("<li><b>Make it random.</b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");

@@ -8,7 +8,7 @@ class PasswordStrength extends ListWindow {
 
         this.AddCssDependencies("passwordstrength.css");
 
-        this.columns = ["Name", "", "Entropy", "", "Strength", "", "Modified date", ""];
+        this.columns = ["Name", "", "Strength", "", "Modified date", "", "Time to crack", ""];
         this.UpdateTitlebar();
 
         this.columnsOptions.style.display = "none";
@@ -34,11 +34,14 @@ class PasswordStrength extends ListWindow {
 
         let labels = this.titleLabels;
         labels[0].style.left = "28px";
-        labels[0].style.maxWidth = "calc(35% - 32px)";
-        labels[1].style.left = "35%";
+        labels[0].style.maxWidth = "30%";
+
+        labels[1].style.left = "30%";
         labels[1].style.maxWidth = "15%";
+
         labels[2].style.left = "50%";
-        labels[3].style.left = "75%";
+
+        labels[3].style.left = "65%";
     }
 
     GetEntropy(callback) {
@@ -49,15 +52,15 @@ class PasswordStrength extends ListWindow {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 let list = [];
 
-                for (let i=0; i<split.length-2; i+=7) {
+                for (let i=0; i<split.length-2; i+=8)
                     list.push({
-                        type: split[i],
-                        file: split[i+1],
-                        name: split[i+2],
-                        entropy: parseFloat(split[i+4]),
-                        date: split[i+6]
+                        type    : split[i],
+                        file    : split[i+1],
+                        name    : split[i+2],
+                        entropy : parseFloat(split[i+4]),
+                        date    : split[i+6],
+                        ttc     : split[i+7]
                     });
-                }
 
                 this.db = list;
                 this.RefreshList();
@@ -128,27 +131,27 @@ class PasswordStrength extends ListWindow {
         lblName.className = "lst-strength-lbl-0";
         element.appendChild(lblName);
 
-        const lblEntropy = document.createElement("div");
-        lblEntropy.innerHTML = `${entry.entropy}-bits`;
-        lblEntropy.className = "lst-strength-lbl-2";
-        element.appendChild(lblEntropy);
-
         const bar = StrengthBar(entry.entropy);
 
         const divBar = document.createElement("div");
         divBar.className = "lst-strength-bar";
-        divBar.style.boxShadow = `${bar[0]} ${bar[1]}px 0 0 inset`;
+        divBar.style.boxShadow = `${bar[0]} ${Math.round(bar[1])}px 0 0 inset`;
         element.appendChild(divBar);
 
         const lblStrength = document.createElement("div");
-        lblStrength.innerHTML = bar[2];
-        lblStrength.className = "lst-strength-lbl-4";
+        lblStrength.innerHTML = `${entry.entropy}-bits (${bar[2]})`;
+        lblStrength.className = "lst-strength-lbl-2";
         element.appendChild(lblStrength);
 
-        const lblModidied = document.createElement("div");
-        lblModidied.innerHTML = entry.date;
-        lblModidied.className = "lst-strength-lbl-6";
-        element.appendChild(lblModidied);
+        const lblModified = document.createElement("div");
+        lblModified.innerHTML = entry.date;
+        lblModified.className = "lst-strength-lbl-4";
+        element.appendChild(lblModified);
+
+        const lblTtc = document.createElement("div");
+        lblTtc.innerHTML = entry.ttc;
+        lblTtc.className = "lst-strength-lbl-6";
+        element.appendChild(lblTtc);
 
         if (!element.ondblclick) {
             element.ondblclick = (event) => {

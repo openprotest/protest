@@ -144,6 +144,7 @@ class Passgen extends Window {
         lblEntropy.style.gridArea = "4 / 1";
         lblEntropy.style.textAlign = "right";
         lblEntropy.style.paddingRight = "4px";
+        lblEntropy.style.color = "#808080";
         grid.appendChild(lblEntropy);
 
         this.lblEntropyValue = document.createElement("div");
@@ -151,6 +152,7 @@ class Passgen extends Window {
         this.lblEntropyValue.style.textAlign = "left";
         this.lblEntropyValue.style.fontWeight = "normal";
         this.lblEntropyValue.style.paddingLeft = "12px";
+        this.lblEntropyValue.style.color = "#808080";
         grid.appendChild(this.lblEntropyValue);
 
         this.rngLength.oninput = () => {
@@ -188,6 +190,7 @@ class Passgen extends Window {
 
         this.lblTtc = document.createElement("div");
         this.lblTtc.innerHTML = "";
+        this.lblTtc.style.color = "#808080";
         this.content.appendChild(this.lblTtc);
 
         this.cmbOptions.onchange = () => {
@@ -417,22 +420,22 @@ class Passgen extends Window {
         if (this.chkNumbers.checked) pool += 10;
         if (this.chkUppercase.checked) pool += 26;
         if (this.chkLowercase.checked) pool += 26;
-        if (this.chkSymbols.checked) pool += 28;
+        if (this.chkSymbols.checked) pool += 30;
 
         let entropy = Math.log(pool, 2) * this.txtPassword.value.length;
         //same as     Math.log(Math.pow(pool, this.txtPassword.value.length), 2))
 
         let strength = StrengthBar(entropy);
-        let color = strength[0];
-        let fill = strength[1];
-        let comment = strength[2];
+        let color    = strength[0];
+        let fill     = strength[1];
+        let comment  = strength[2];
 
-        this.divBar.style.boxShadow = color + " " + fill + "px 0 0 inset";
+        this.divBar.style.boxShadow = `${color} ${Math.round(fill)}px 0 0 inset`;
         this.lblComment.innerHTML = comment;
         this.lblEntropyValue.innerHTML = Math.round(entropy);
 
         let combinations = Math.pow(pool, this.txtPassword.value.length);
-        let ttc = combinations / 500000000000; //time to crack in seconds
+        let ttc = combinations / 350000000000; //time to crack in seconds
 
         let eon = Math.floor(ttc / (1000000000 * 365 * 24 * 3600));
         ttc -= eon * 1000000000 * 365 * 24 * 3600;
@@ -452,11 +455,11 @@ class Passgen extends Window {
         let seconds = Math.round(ttc);
 
         let etc = ""; //Estimated Time to Crack
-        if (eon != 0)         etc  = eon == 1         ? `1 eon, ` : `${eon} eons, `;
-        if (years != 0)       etc += years == 1       ? `1 year, `       : `${years} years, `;
-        if (days != 0)        etc += days == 1        ? `1 day, `        : `${days} days, `;
-        if (hours != 0)       etc += hours == 1       ? `1 hour, `       : `${hours} hours, `;
-        if (minutes != 0)     etc += minutes == 1     ? `1 minute, `     : `${minutes} minutes, `;
+        if (eon != 0)     etc  = eon == 1     ? `1 eon, `    : `${eon} eons, `;
+        if (years != 0)   etc += years == 1   ? `1 year, `   : `${years} years, `;
+        if (days != 0)    etc += days == 1    ? `1 day, `    : `${days} days, `;
+        if (hours != 0)   etc += hours == 1   ? `1 hour, `   : `${hours} hours, `;
+        if (minutes != 0) etc += minutes == 1 ? `1 minute, ` : `${minutes} minutes, `;
 
         if (seconds != 0) {
             if (etc.length == 0) {
@@ -468,7 +471,7 @@ class Passgen extends Window {
 
         if (etc.length == 0) etc = "less then a second";
 
-        if (eon > 1000000000000)
+        if (eon > 999999999999999)
            this.lblTtc.innerHTML = "Infinity";
         else
            this.lblTtc.innerHTML = etc;
