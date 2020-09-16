@@ -182,7 +182,9 @@ public static class LiveInfo {
             for (int i = 0; i < warnings.Count; i++)
                 WsWriteText(ws, $"!{(char)127}{warnings[i]}{(char)127}");
 
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            } catch { }
 
         } catch (Exception ex) {
             Logging.Err(ex);
