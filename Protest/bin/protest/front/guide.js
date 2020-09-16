@@ -216,7 +216,7 @@ class Guide extends Window {
         this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Locate IP", "res/locate.svgz");
         this.InsertParagraph(
-            "Find the physical location of an IP address or domain. Also, you're getting informed if that host is proxied or not."
+            "Find the physical location of an IP address or domain. Also, you're can found out if that host is proxied or not."
         );
 
         this.body.appendChild(document.createElement("br"));

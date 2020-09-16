@@ -34,7 +34,12 @@ public static class WoL {
     public static byte[] Wakeup(in string mac, string ip, string mask) {
         if (ip.Contains(";")) ip = ip.Substring(0, ip.IndexOf(";")).Trim();
         if (mask.Contains(";")) mask = mask.Substring(0, mask.IndexOf(";")).Trim();
-        return Wakeup(mac, IPAddress.Parse(ip), IPAddress.Parse(mask));
+        
+        try {
+            return Wakeup(mac, IPAddress.Parse(ip), IPAddress.Parse(mask));
+        } catch (Exception ex) {
+            return Encoding.UTF8.GetBytes(ex.Message);
+        }       
     }
 
     public static byte[] Wakeup(string mac, IPAddress ip, IPAddress mask) {

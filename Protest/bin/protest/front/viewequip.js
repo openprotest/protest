@@ -31,7 +31,7 @@ const EQUIP_ORDER = [
     ["res/directory.svgz", "Active Directory"],
     "DISTINGUISHED NAME", "DNS HOSTNAME", "CREATED ON DC",
 
-    ["res/credencial.svgz", "Credential"],
+    ["res/credencial.svgz", "Credentials"],
     "DOMAIN", "USERNAME", "PASSWORD", "LA PASSWORD", "SSH USERNAME", "SSH PASSWORD"
 ];
 
@@ -101,15 +101,6 @@ class Equip extends Window {
         btnDelete.value = "Delete";
         this.buttons.appendChild(btnDelete);
         btnDelete.onclick = () => this.Delete();
-
-        this.btnConfig = document.createElement("input");
-        this.btnConfig.type = "button";
-        this.btnConfig.value = "Configuration";
-        this.btnConfig.style.marginLeft = "12px";
-        this.btnConfig.style.animation = "soft-slide-in .8s 1";
-        this.btnConfig.style.display = "none";
-        this.buttons.appendChild(this.btnConfig);
-        this.btnConfig.onclick = () => this.Config();
 
         this.sidetools = document.createElement("div");
         this.sidetools.className = "db-sidetools";
@@ -414,7 +405,7 @@ class Equip extends Window {
                     xhr.send();
                 };
 
-                let btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
+                const btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
                 this.sidetools.appendChild(btnPse);
                 btnPse.onclick = () => {
                     const xhr = new XMLHttpRequest();
@@ -428,7 +419,7 @@ class Equip extends Window {
             }
 
             if (ports.includes(22)) { //ssh
-                let btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
+                const btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
                 this.sidetools.appendChild(btnSsh);
                 btnSsh.onclick = () => {
                     const xhr = new XMLHttpRequest();
@@ -480,7 +471,7 @@ class Equip extends Window {
             }
 
             if (ports.includes(3389) && this.entry.hasOwnProperty("IP")) { //rdp
-                let btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
+                const btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
                 this.sidetools.appendChild(btnRdp);
                 btnRdp.onclick = () => {
                     const xhr = new XMLHttpRequest();
@@ -494,7 +485,7 @@ class Equip extends Window {
             }
 
             if (ports.includes(5900) && this.entry.hasOwnProperty("IP")) { //uvnc
-                let btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
+                const btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
                 this.sidetools.appendChild(btnUvnc);
                 btnUvnc.onclick = () => {
                     const xhr = new XMLHttpRequest();
@@ -508,7 +499,7 @@ class Equip extends Window {
             }
 
             if (ports.includes(9100) && this.entry.hasOwnProperty("IP")) { //print test
-                let btnPrintTest = this.SideButton("res/printer.svgz", "Print test page");
+                const btnPrintTest = this.SideButton("res/printer.svgz", "Print test page");
                 this.sidetools.appendChild(btnPrintTest);
                 btnPrintTest.onclick = () => {
                     if (btnPrintTest.hasAttribute("busy")) return;
@@ -528,14 +519,15 @@ class Equip extends Window {
                     xhr.send();
                 };
             }
-
         }
 
-        if (this.entry["TYPE"][0].toUpperCase() == "ROUTER")
-            this.btnConfig.style.display = "initial";
-
-        if (this.entry["TYPE"][0].toUpperCase() == "SWITCH" && this.entry.hasOwnProperty("PORTS"))
-            this.btnConfig.style.display = "initial";
+        /*
+        if (this.entry["TYPE"][0].toUpperCase() == "ROUTER" || this.entry["TYPE"][0].toUpperCase() == "SWITCH" && this.entry.hasOwnProperty("PORTS")) {
+            const btnConfig = this.SideButton(GetEquipIcon(this.entry["TYPE"]), "Configuration");
+            btnConfig.style.marginTop = "12px";
+            this.sidetools.appendChild(btnConfig);
+            btnConfig.onclick = () => this.Config();
+        }*/
         
     }
 
@@ -1289,7 +1281,6 @@ class Equip extends Window {
             //
             return;
         }
-
     }
 
     Update(obj) {

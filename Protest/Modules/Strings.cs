@@ -56,6 +56,7 @@ public static class Strings {
 
     public static readonly string DIR_IP_LOCATION = $"{DIR_KNOWLAGE}\\ip";
     public static readonly string DIR_PROXY = $"{DIR_KNOWLAGE}\\proxy";
+    public static readonly string FILE_TOR = $"{DIR_KNOWLAGE}\\tor.bin";
 
     public static readonly string DIR_SCRIPTS_SCRIPTS = $"{DIR_SCRIPTS}\\scripts";
     public static readonly string DIR_SCRIPTS_REPORTS = $"{DIR_SCRIPTS}\\reports";

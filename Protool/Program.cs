@@ -9,6 +9,7 @@ class Program {
     static readonly string IPFILE = $"{Directory.GetCurrentDirectory()}\\IP2LOCATION-LITE-DB5.CSV";
     static readonly string PROXYFILE = $"{Directory.GetCurrentDirectory()}\\IP2PROXY-LITE-PX1.CSV";
     static readonly string MACFILE = $"{Directory.GetCurrentDirectory()}\\oui.txt";
+    static readonly string TORFILE = $"{Directory.GetCurrentDirectory()}\\tor.txt";
 
     static readonly string IPDIR = $"{Directory.GetCurrentDirectory()}\\ip";
     static readonly string PROXYDIR = $"{Directory.GetCurrentDirectory()}\\proxy";
@@ -37,14 +38,15 @@ class Program {
     static void Main(string[] args) {
         //GenIpLocationBin();
         //GenProxyBin();
-        GenMacLookupBin();
+        //GenMacLookupBin();
+        GenTorServersBin();
     }
 
     static void GenIpLocationBin() {
         List<List<IpEntry>> list = new List<List<IpEntry>>();
-        for (int i=0; i<256; i++) 
+        for (int i = 0; i < 256; i++)
             list.Add(new List<IpEntry>());
-        
+
         Console.WriteLine("Reading...");
 
         string line;
@@ -54,9 +56,9 @@ class Program {
             string[] split = line.Split(new string[] { "\",\"" }, StringSplitOptions.None);
             for (int i = 0; i < split.Length; i++) {
                 if (split[i].StartsWith("\"")) split[i] = split[i].Substring(1);
-                if (split[i].EndsWith("\"")) split[i] = split[i].Substring(0, split[i].Length-1);
+                if (split[i].EndsWith("\"")) split[i] = split[i].Substring(0, split[i].Length - 1);
             }
-                        
+
             uint a = UInt32.Parse(split[0]);
             uint b = UInt32.Parse(split[1]);
             byte[] aBytes = BitConverter.GetBytes(a);
@@ -72,8 +74,8 @@ class Program {
                 entry.country = split[3];
                 entry.region = split[4];
                 entry.city = split[5];
-                entry.lon = (Single) Double.Parse(split[6]);
-                entry.lat = (Single) Double.Parse(split[7]);
+                entry.lon = (Single)Double.Parse(split[6]);
+                entry.lat = (Single)Double.Parse(split[7]);
                 list[aBytes[0]].Add(entry);
             } else {
 
@@ -93,7 +95,7 @@ class Program {
                         from = new byte[] { aBytes[0], aBytes[1], aBytes[2], aBytes[3] };
                         to = new byte[] { bBytes[0], bBytes[1], bBytes[2], bBytes[3] };
                     }
-                    
+
                     IpEntry entry = new IpEntry() {
                         from = from,
                         to = to,
@@ -101,8 +103,8 @@ class Program {
                         country = split[3],
                         region = split[4],
                         city = split[5],
-                        lon = (Single) Double.Parse(split[6]),
-                        lat = (Single) Double.Parse(split[7])
+                        lon = (Single)Double.Parse(split[6]),
+                        lat = (Single)Double.Parse(split[7])
                     };
 
                     list[i].Add(entry);
@@ -113,7 +115,7 @@ class Program {
         DirectoryInfo dirIp = new DirectoryInfo(IPDIR);
         if (!dirIp.Exists) dirIp.Create();
 
-        for (int i=0;i<list.Count; i++) {
+        for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
 
             Console.Write(i);
@@ -158,7 +160,7 @@ class Program {
                     position.Add(index);
                     index += (uint)list[i][j].city.Length + 1;
                 }
-                               
+
                 w.Write(list[i][j].from[2]);
                 w.Write(list[i][j].from[1]);
 
@@ -270,7 +272,7 @@ class Program {
 
                 w.Write(list[i][j].to[3]);
                 w.Write(list[i][j].to[2]);
-                w.Write(list[i][j].to[1]);  
+                w.Write(list[i][j].to[1]);
             }
 
             w.Close();
@@ -334,9 +336,9 @@ class Program {
                 index += (uint)list[i].vendor.Length + 1;
             }
 
-            w.Write(byte.Parse(list[i].mac.Substring(0,2), NumberStyles.HexNumber));
-            w.Write(byte.Parse(list[i].mac.Substring(2,2), NumberStyles.HexNumber));
-            w.Write(byte.Parse(list[i].mac.Substring(4,2), NumberStyles.HexNumber));
+            w.Write(byte.Parse(list[i].mac.Substring(0, 2), NumberStyles.HexNumber));
+            w.Write(byte.Parse(list[i].mac.Substring(2, 2), NumberStyles.HexNumber));
+            w.Write(byte.Parse(list[i].mac.Substring(4, 2), NumberStyles.HexNumber));
             w.Write(ptr);
         }
 
@@ -348,6 +350,35 @@ class Program {
                 w.Write(b);
             }
             w.Write((byte)0); //null termination
+        }
+
+        Console.WriteLine("Done!");
+        Console.ReadLine();
+    }
+
+    static void GenTorServersBin() {
+
+        List<string> list = new List<string>();
+
+        string line;
+        StreamReader temp = new StreamReader(TORFILE);
+        while ((line = temp.ReadLine()) != null) {
+            string[] linesplit = line.Split('.');
+            list.Add(linesplit[0].Trim().PadLeft(3, '0') + linesplit[1].Trim().PadLeft(3, '0') + linesplit[2].Trim().PadLeft(3, '0') + linesplit[3].Trim().PadLeft(3, '0'));
+        }
+
+        list.Sort((string a, string b) => {
+            return string.Compare(a, b);
+        });
+
+        FileStream s = new FileStream($"tor.bin", FileMode.OpenOrCreate);
+        BinaryWriter w = new BinaryWriter(s);
+
+        for (int i = 0; i < list.Count; i++) {
+            w.Write(Byte.Parse(list[i].Substring(9, 3))); //reversed
+            w.Write(Byte.Parse(list[i].Substring(6, 3)));
+            w.Write(Byte.Parse(list[i].Substring(3, 3)));
+            w.Write(Byte.Parse(list[i].Substring(0, 3)));
         }
 
         Console.WriteLine("Done!");

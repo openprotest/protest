@@ -127,13 +127,18 @@ public static class LocateIp {
                 }
 
                 stream.Close();
+
+                bool isTor   = IsTor(String.Join(".", split));
+                bool isProxy = !isTor && IsProxy(String.Join(".", split));
+
                 return Encoding.UTF8.GetBytes(
                     fl + ";" +
                     s1 + ";" +
                     s2 + ";" +
                     s3 + ";" +
                     lon + "," + lat + ";" +
-                    IsProxy(String.Join(".", split)).ToString().ToLower()
+                    isProxy.ToString().ToLower() + ";" +
+                    isTor.ToString().ToLower()
                 );
             } //### end found ###
 
@@ -214,5 +219,66 @@ public static class LocateIp {
         return false;
     }
 
+    public static bool IsTor(in IPAddress ip) {
+        return IsTor(ip.ToString());
+    }
+    public static bool IsTor(in string ip) {
+        string[] split = ip.Split('.');
+        if (split.Length != 4) { //if not an ip, do a dns resolve
+
+            byte[] dnsresponse = Dns.DnsLookup(ip);
+            if (dnsresponse is null) return false;
+            split = Encoding.UTF8.GetString(dnsresponse).Split((char)127)[0].Split('.');
+        }
+
+        if (split.Length != 4) return false;
+
+        try {
+            uint target = BitConverter.ToUInt32(new byte[] {
+                    byte.Parse(split[3]),
+                    byte.Parse(split[2]),
+                    byte.Parse(split[1]),
+                    byte.Parse(split[0]),
+                }, 0);
+
+            FileInfo file = new FileInfo(Strings.FILE_TOR);
+            if (!file.Exists) return false;
+
+            using FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+
+            uint pivot;
+            uint low = 4;
+            uint high = (uint)file.Length - 1;
+            uint current;
+
+            do { //binary search
+                pivot = (low + high) / 2;
+                pivot -= pivot % 4;
+                stream.Position = pivot;
+
+                current = BitConverter.ToUInt32(new byte[] {
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte(),
+                    (byte)stream.ReadByte()
+                }, 0);
+
+                if (target == current) break; //found
+
+                if (target < current) high = pivot;
+                if (target > current) low = pivot;
+            } while (high - low > 6);
+
+            if (target == current) { //### found ###
+                stream.Close();
+                return true;
+            }
+
+        } catch {
+            return false;
+        }
+
+        return false;
+    }
 }
 

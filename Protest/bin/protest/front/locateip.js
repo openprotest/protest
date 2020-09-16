@@ -103,22 +103,22 @@ class LocateIp extends Console {
             return;
         }
 
-        let element = document.createElement("div");
+        const element = document.createElement("div");
         element.className = "list-element collapsible-box";
         this.list.appendChild(element);
 
-        let name = document.createElement("div");
+        const name = document.createElement("div");
         name.className = "list-label";
         name.style.paddingLeft = "24px";
         name.innerHTML = ipaddr;
         element.appendChild(name);
 
-        let result = document.createElement("div");
+        const result = document.createElement("div");
         result.className = "list-result collapsed100";
         result.innerHTML = "";
         element.appendChild(result);
 
-        let remove = document.createElement("div");
+        const remove = document.createElement("div");
         remove.className = "list-remove";
         element.appendChild(remove);
 
@@ -137,13 +137,13 @@ class LocateIp extends Console {
                 let split = xhr.responseText.split(";");
 
                 if (split.length == 1) {
-                    let label = document.createElement("div");
+                    const label = document.createElement("div");
                     label.innerHTML = split[0];
                     result.appendChild(label);
                     return;
                 }
 
-                let divFlag = document.createElement("div");
+                const divFlag = document.createElement("div");
                 divFlag.style.width = "24px";
                 divFlag.style.height = "18px";
                 divFlag.style.margin = "8px 8px 0 0";
@@ -154,7 +154,7 @@ class LocateIp extends Console {
                 result.innerHTML += split[1] + ", " + split[2] + ", " + split[3];
 
                 if (split[4].length > 0 && split[4] != "0,0") {
-                    let divLocation = document.createElement("div");
+                    const divLocation = document.createElement("div");
                     divLocation.style.position = "absolute";
                     divLocation.style.width = "24px";
                     divLocation.style.height = "24px";
@@ -168,8 +168,21 @@ class LocateIp extends Console {
                     divLocation.onclick = () => window.open("http://www.google.com/maps/place/" + split[4]);
                 }
 
-                if (split[5] == "true") {
-                    let divProxy = document.createElement("div");
+                if (split[6] == "true") { //tor
+                    const divTor = document.createElement("div");
+                    divTor.style.position = "absolute";
+                    divTor.style.width = "24px";
+                    divTor.style.height = "24px";
+                    divTor.style.right = "96px";
+                    divTor.style.top = "4px";
+                    divTor.style.backgroundSize = "contain";
+                    divTor.style.backgroundImage = "url(res/l_tor.svgz)";
+                    divTor.setAttribute("tip-below", "Tor");
+                    //divTor.style.zIndex = "5";
+                    element.appendChild(divTor);
+
+                } else if (split[5] == "true") { //proxy
+                    const divProxy = document.createElement("div");
                     divProxy.style.position = "absolute";
                     divProxy.style.width = "24px";
                     divProxy.style.height = "24px";
@@ -178,7 +191,7 @@ class LocateIp extends Console {
                     divProxy.style.backgroundSize = "contain";
                     divProxy.style.backgroundImage = "url(res/l_proxy.svgz)";
                     divProxy.setAttribute("tip-below", "Proxy");
-                    divProxy.style.zIndex = "5";
+                    //divProxy.style.zIndex = "5";
                     element.appendChild(divProxy);
                 }
 

@@ -122,6 +122,7 @@
     <None Include="bin\protest\knowlage\ip.zip" />
     <None Include="bin\protest\knowlage\mac.bin" />
     <None Include="bin\protest\knowlage\proxy.zip" />
+    <None Include="bin\protest\knowlage\tor.bin" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +146,8 @@
     <Content Include="bin\protest\front\gandalf.js" />
     <Content Include="bin\protest\front\res\l_gandalf.svg" />
     <Content Include="bin\protest\front\res\gandalf.svg" />
+    <Content Include="bin\protest\front\res\l_tor.svg" />
+    <Content Include="bin\protest\front\res\tor.svg" />
     <Content Include="bin\protest\front\smbbrowser.css" />
     <Content Include="bin\protest\front\smbbrowser.js" />
     <Content Include="bin\protest\front\guide.css" />
