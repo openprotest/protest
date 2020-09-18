@@ -73,19 +73,19 @@ public static class Watchdog {
 
         FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.txt");
         string contents = String.Empty;
-        contents += $"enable = {enable.ToString().ToLower()}\n";
-        contents += $"interval = {interval}\n";
+        contents += $"enable: {enable.ToString().ToLower()}\r\n";
+        contents += $"interval: {interval}\r\n";
 
-        contents += $"email = {email.ToString().ToLower()}\n";
-        contents += $"threshold = {threshold}\n";
-        contents += $"contition = {contition}\n";
-        contents += $"server = {server}\n";
-        contents += $"port = {port}\n";
-        contents += $"sender = {sender}\n";
-        contents += $"username = {username}\n";
-        contents += $"password = { CryptoAes.EncryptB64(Watchdog.password, Program.DB_KEY_A, Program.DB_KEY_B) }\n";
-        contents += $"recipients = {recipients}\n";
-        contents += $"ssl = {ssl.ToString().ToLower()}\n";
+        contents += $"email: {email.ToString().ToLower()}\r\n";
+        contents += $"threshold: {threshold}\r\n";
+        contents += $"contition: {contition}\r\n";
+        contents += $"server: {server}\r\n";
+        contents += $"port: {port}\r\n";
+        contents += $"sender: {sender}\r\n";
+        contents += $"username: {username}\r\n";
+        contents += $"password: { CryptoAes.EncryptB64(Watchdog.password, Program.DB_KEY_A, Program.DB_KEY_B) }\r\n";
+        contents += $"recipients: {recipients}\r\n";
+        contents += $"ssl: {ssl.ToString().ToLower()}\r\n";
 
         try {
             File.WriteAllText(file.FullName, contents);
@@ -142,7 +142,7 @@ public static class Watchdog {
             line = line.Trim();
             if (line.StartsWith("#")) continue;
 
-            string[] split = line.Split('=');
+            string[] split = line.Split(':');
             if (split.Length < 2) continue;
 
             split[0] = split[0].Trim().ToLower();
@@ -186,7 +186,6 @@ public static class Watchdog {
                     break;
 
                 case "password":
-                    if (!split[1].EndsWith("==")) split[1] = $"{split[1]}==";
                     try {
                         Watchdog.password = CryptoAes.DecryptB64(split[1], Program.DB_KEY_A, Program.DB_KEY_B);
                     } catch {
@@ -202,6 +201,7 @@ public static class Watchdog {
                     Watchdog.ssl = split[1] == "true";
                     break;
             }
+            
         }
 
         if (Watchdog.enable) {

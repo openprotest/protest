@@ -324,8 +324,12 @@ class ScriptReport extends Window {
         this.setTitle("Report - " + filename);
         this.setIcon("res/reportfile.svgz");
 
+        this.args = filename;
+
         let divReport = document.createElement("div");
-        divReport.style.overflow = "auto";
+        divReport.style.overflowX = "scroll";
+        divReport.style.overflowY = "scroll";
+        divReport.style.whiteSpace = "nowrap";
         divReport.style.fontFamily = "monospace";
         divReport.style.userSelect = "text";
         divReport.style.position = "absolute";

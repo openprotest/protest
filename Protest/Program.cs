@@ -27,6 +27,7 @@ using System.Linq;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Reflection;
 
 class Program {
     public static string DB_KEY;
@@ -164,7 +165,7 @@ class Program {
             line = line.Trim();
             if (line.StartsWith("#")) continue;
 
-            string[] split = line.Split('=');
+            string[] split = line.Split(':');
             if (split.Length < 2) continue;
 
             split[0] = split[0].Trim().ToLower();
@@ -240,29 +241,30 @@ class Program {
             PRESHARED_KEY_B = CryptoAes.KeyToBytes(PRESHARED_KEY, 16); //128-bits
         }
 
-        sb.AppendLine("#version 4.0");
+        sb.AppendLine($"# version {Assembly.GetExecutingAssembly().GetName().Version.Major} {Assembly.GetExecutingAssembly().GetName().Version.Minor}");
         sb.AppendLine();
 
-        sb.AppendLine($"db_key        = {DB_KEY}");
-        sb.AppendLine($"preshared_key = {PRESHARED_KEY}");
+        sb.AppendLine($"db_key:        {DB_KEY}");
+        sb.AppendLine($"preshared_key: {PRESHARED_KEY}");
         sb.AppendLine();
 
-        sb.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
+        sb.AppendLine($"force_registry_keys: {force_registry_keys.ToString().ToLower()}");
         sb.AppendLine();
 
         sb.AppendLine();
-        sb.AppendLine("ip_access = *");
-        sb.AppendLine("user_access = administrator");
+        sb.AppendLine("# you can use multiple entries");
+        sb.AppendLine("ip_access:   *");
+        sb.AppendLine("user_access: administrator");
 
         sb.AppendLine();
-        sb.AppendLine("http_enable = true");
-        sb.AppendLine($"http_ip     = {http_ip}");
-        sb.AppendLine($"http_port   = {http_port}");
+        sb.AppendLine( "http_enable: true");
+        sb.AppendLine($"http_ip:     {http_ip}");
+        sb.AppendLine($"http_port:   {http_port}");
 
         sb.AppendLine();
-        sb.AppendLine("addressbook_enable = false");
-        sb.AppendLine("addressbook_ip     = *");
-        sb.AppendLine("addressbook_port   = 911");
+        sb.AppendLine("addressbook_enable: false");
+        sb.AppendLine("addressbook_ip:     *");
+        sb.AppendLine("addressbook_port:   911");
 
         sb.AppendLine();
 

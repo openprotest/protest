@@ -182,16 +182,21 @@ class Wmi extends Window {
     }
 
     SequelAssistant() {
-        let words = this.txtQuery.value.split(" ").map(v => v.toLowerCase());
-        let className = "";
+        let lastQuery = this.txtQuery.value.toLowerCase();
 
+        let words = lastQuery.split(" ");
+        let className = null;
         if (this.wmi_classes.hasOwnProperty("classes"))
             for (let i = 0; i < words.length; i++)
                 if (words[i].startsWith("win32_")) {
                     className = words[i];
-                    console.log(className);
                     break;
                 }
+
+        let select_index = lastQuery.indexOf("select");
+        let from_index = lastQuery.indexOf("from");
+        let lastProperties = lastQuery.substring(select_index + 6, from_index).trim();
+        let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim());
 
         const dialog = this.DialogBox("640px");
         if (dialog === null) return;
@@ -235,7 +240,12 @@ class Wmi extends Window {
             return;
         }
 
-        btnOK.addEventListener("click", () => { this.txtQuery.value = txtPreview.value; });
+        let selected = null;
+
+        btnOK.addEventListener("click", () => {
+            this.txtQuery.value = txtPreview.value;
+            this.args.query = this.txtQuery.value
+        });
 
         txtClassFilter.oninput = () => {
             if (!this.wmi_classes.hasOwnProperty("classes")) return;
@@ -256,7 +266,7 @@ class Wmi extends Window {
                             break;
                         }
 
-                let check_list = [];
+                let check_list = [], input_list = [];
 
                 if (matched) {
                     let newClass = document.createElement("div");
@@ -264,16 +274,23 @@ class Wmi extends Window {
                     lstClasses.appendChild(newClass);
 
                     newClass.onclick = () => {
+                        if (selected != null) selected.style.backgroundColor = "";                        
+
                         check_list = [];
+
                         lstProperties.innerHTML = "";
                         for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
+                            let value = lastProperties == "*" || className == null ||
+                                className.toLowerCase() == this.wmi_classes.classes[i].class.toLowerCase() &&
+                                lastPropertiesArray.includes(this.wmi_classes.classes[i].properties[j].toLowerCase());
+
                             let divProp = document.createElement("div");
                             let chkProp = document.createElement("input");
                             chkProp.type = "checkbox";
-                            chkProp.checked = true;
+                            chkProp.checked = value;
                             divProp.appendChild(chkProp);
 
-                            check_list.push(true);
+                            check_list.push(value);
 
                             chkProp.onchange = () => {
                                 check_list[j] = chkProp.checked;
@@ -291,6 +308,9 @@ class Wmi extends Window {
 
                             this.AddCheckBoxLabel(divProp, chkProp, this.wmi_classes.classes[i].properties[j]);
                             lstProperties.appendChild(divProp);
+
+                            selected = newClass;
+                            selected.style.backgroundColor = "var(--select-color)";
                         }
                         txtPreview.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
                     };
@@ -300,7 +320,10 @@ class Wmi extends Window {
                         btnOK.onclick();
                     };
 
-                    if (className == this.wmi_classes.classes[i].class.toLowerCase()) newClass.onclick();
+                    if (className && className == this.wmi_classes.classes[i].class.toLowerCase()) {
+                        newClass.onclick();
+                        className = null;
+                    }
                 }
             }
 

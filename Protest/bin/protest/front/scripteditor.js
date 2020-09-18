@@ -14,6 +14,7 @@ var Script_PtEquipColumns = null;
 var Script_AdUserColumns = null;
 var Script_AdWorkstationColumns = null;
 var Script_AdGroupsColumns = null;
+var Script_WmiClasses = null;
 
 const Script_GetColumns = callback => {
     let pScriptTools = new Promise((resolve, reject) => {
@@ -113,7 +114,25 @@ const Script_GetColumns = callback => {
         xhr.send();
     });
 
-    let promises = [pScriptTools, pPtUser, pPtEquip, pAdWorkstation, pAdUser, pAdGroup];
+    let pWmiClasses = new Promise((resolve, reject) => {
+        if (Script_WmiClasses != null) {
+            resolve();
+            return;
+        }
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "wmi_classes.json", true);
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                Script_WmiClasses = JSON.parse(xhr.responseText);
+                resolve();
+            }
+        };
+        xhr.onerror = () => reject();
+        xhr.send();
+    });
+
+    let promises = [pScriptTools, pPtUser, pPtEquip, pAdWorkstation, pAdUser, pAdGroup, pWmiClasses];
     Promise.all(promises).then(() => { callback(); });
 };
 
@@ -733,20 +752,22 @@ class ScriptEditor extends Window {
                     let txtQuery = document.createElement("textarea");
                     txtQuery.value = node.values[i] === null ? "" : node.values[i];
                     txtQuery.placeholder = "Query";
-                    txtQuery.style.width = "calc(100% - 24px)";
-                    txtQuery.style.height = "calc(100% - 32px)";
+                    txtQuery.style.width = "calc(100% - 8px)";
+                    txtQuery.style.height = "calc(100% - 12px)";
                     txtQuery.style.fontFamily = "monospace";
                     txtQuery.style.resize = "none";
+                    txtQuery.style.padding = "24px";
+                    txtQuery.style.boxSizing = "border-box";
                     innerBox.appendChild(txtQuery);
 
                     btnOK.addEventListener("click", () => {
-                        console.log("clicked");
                         value.value = txtQuery.value;
                         value.onchange();
                         value.value = "Edit";
+                        node.CalculateColumns();
+                        node.PropagateColumns();
+                        this.ShowParameters(node, true);
                     });
-
-                    //TODO:
                 };
 
             } else {
@@ -1147,7 +1168,43 @@ class ScriptNode {
             case "IPv4 subnet":         columns = ["IP address"]; break;
             case "Single value":        columns = ["Value"]; break;
 
-            case "WMI query":    columns = ["Host", "..."]; break; //TODO:
+            case "WMI query": {
+                let query = this.values[2] ? this.values[2].toLowerCase() : "";
+                let select_idx = query.indexOf("select");
+                let from_idx   = query.indexOf("from");
+
+                if (select_idx < 0 || from_idx < 0) { //invalid query
+                    columns = ["Host"];
+                    break;
+                }
+
+                let words = query.split(" ");
+                let className = null;
+                for (let i = 0; i < words.length; i++)
+                    if (words[i].startsWith("win32_")) {
+                        className = words[i].toLowerCase();
+                        break;
+                    }
+
+                columns = ["Host"];
+                let properties = this.values[2].substring(select_idx + 6, from_idx).split(",").map(o => o.trim());
+
+                if (properties.length == 1 && properties[0] == "*" && className && Script_WmiClasses.hasOwnProperty("classes")) {
+                    let match = Script_WmiClasses.classes.find(o => o.class.toLowerCase() == className);
+                    if (match) {
+                        for (let i = 0; i < match.properties.length; i++)
+                            columns.push(match.properties[i]);
+                        break;
+                    }
+                }
+
+                for (let i = 0; i < properties.length; i++)
+                    if (properties[i] != "*")
+                        columns.push(properties[i]);
+
+                break;
+            }
+
             case "PS exec":      columns = ["Host", "Timestamp", "Input", "Output"]; break;
             case "Secure shell": columns = ["Host", "Timestamp", "Input", "Output"]; break;
 

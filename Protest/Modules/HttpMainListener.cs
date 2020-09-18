@@ -84,15 +84,19 @@ class HttpMainListener : Http {
                     break;
                 }
 
-        if (cache.hash.ContainsKey(para[0])) { //get from cache
+        ctx.Response.AddHeader("Referrer-Policy", "no-referrer");
 
+        if (cache.hash.ContainsKey(para[0])) { //get from cache
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
             ctx.Response.AddHeader("Last-Modified", cache.birthdate);
-            ctx.Response.AddHeader("Referrer-Policy", "no-referrer");
 
-            //ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
+#if DEBUG
+            ctx.Response.AddHeader("Cache-Control", "no-store");
+#else
+            ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
             //ctx.Response.AddHeader("Cache-Control", $"min-fresh={Cache.CACHE_CONTROL_MIN_FRESH}");
-
+#endif
+           
             Cache.CacheEntry entry = (Cache.CacheEntry)cache.hash[para[0]];
 
             if (acceptWebP && entry.webp != null) { //webp
@@ -116,8 +120,6 @@ class HttpMainListener : Http {
             ctx.Response.AddHeader("Cache-Control", "no-store");
 
             performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value ?? string.Empty);
-
-
 
             switch (para[0]) {
                 case "a":

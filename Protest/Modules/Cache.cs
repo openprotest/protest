@@ -245,7 +245,6 @@ class Cache {
         fs.Dispose();
 
         //Console.WriteLine((char)bytes[0] + " " + (char)bytes[1] + " "  + (char)bytes[2] + " " + (char)bytes[3] + " " + (char)bytes[4] + "    " + name);
-
         files.Add(name, bytes);
     }
 

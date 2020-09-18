@@ -51,13 +51,14 @@
     text-overflow: ellipsis;
 }
 
-.wmi-classes-list > div:hover {
-    background-color: var(--select-color);
-}
-
 .wmi-properties-list > div {
     padding: 4px 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.wmi-classes-list > div:hover,
+.wmi-properties-list > div:hover {
+    background-color: var(--highlight-color);
 }

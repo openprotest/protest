@@ -23,7 +23,7 @@ Single value		rgb(32,32,32)	t,Value	o,Value
 Tools
 #Secure shell		hsl(44,100%,45%)	i,Host	c,Column,IP address	m,Command	h,Async,True	t,Username	t,Password	o,Output
 #PS exec				hsl(40,100%,45%)	i,Host	c,Column,IP address	m,Command	h,Async,True	o,Output
-#WMI query			hsl(36,100%,45%)	i,Host	c,Column,IP address	m,Query		h,Async,True	o,Output
+WMI query			hsl(36,100%,45%)	i,Host	c,Column,IP address	m,Query		h,Async,True	o,Output
 NetBIOS request		hsl(32,100%,45%)	i,Host	c,Column,IP address	h,Async,True	o,Output
 DNS lookup			hsl(28,100%,45%)	i,Host	c,Column	h,Async,True	o,Output
 Reverse DNS lookup	hsl(24,100%,45%)	i,Host	c,Column,IP address	h,Async,True	o,Output

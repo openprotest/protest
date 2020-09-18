@@ -38,7 +38,7 @@ Be more productive: with one-click, you can connect to your remote hosts over SS
   * WMI console
 
 
-Pro-test is intended to be used as a portable tool. In that case, the web interface can be accessed via the loopback address without authentication. If you wish to interface from a remote host, you can modify the http_ip and http_port parameters in the *[config.txt](https://github.com/veniware/OpenProtest/blob/master/OpenProtest/bin/config.txt)* file to the local end-point of your choice.
+Pro-test is intended to be used as a portable tool. In that case, the web interface can be accessed via the loopback address without authentication. If you wish to interface from a remote host, you can modify the http_ip and http_port parameters in the config.txt file to the local end-point of your choice.
 Requests from IPs other than loopback are rejected and require a username and a password to proceed. The username must be whitelisted in the config.txt file, and then your domain controller will handle the authentication.
 
 :exclamation: **If you use pro-test as a centralized service, we highly recommend to use a secure reverse proxy, such as [nginx](http://nginx.org/en/download.html) or IIS.**

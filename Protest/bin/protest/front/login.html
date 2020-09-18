@@ -26,15 +26,23 @@
         color: black;
         background-color: rgb(192,192,192);
     }
-        
+    
+    label {
+        display: inline-block;
+        width: 100px;
+        color: #C0C0C0;
+        margin-right: 8px;
+        text-align: right;
+    }
+
     #txtUsername {
         width: 198px;
-        border-radius: 8px;
+        border-radius: 4px;
     }
 
     #txtPassword {
         width: 150px;
-        border-radius: 8px 0 0 8px;
+        border-radius: 4px 0 0 4px;
     }
 
     #btnLogin {
@@ -43,7 +51,7 @@
         padding: 2px 8px;
         margin: 0;
         border: 0;
-        border-radius: 0 8px 8px 0;
+        border-radius: 0 4px 4px 0;
         color: black;
         background-color: rgb(192,192,192);
     }
@@ -126,7 +134,9 @@
                 document.getElementById("message").style.color = "red";
                 document.getElementById("message").innerHTML = "Server is unavailable.";
                 txtUsername.style.visibility = "hidden";
+                lblUsername.style.visibility = "hidden";
                 txtPassword.style.visibility = "hidden";
+                lblPassword.style.visibility = "hidden";
                 btnLogin.style.visibility = "hidden";
             }
         };
@@ -152,9 +162,12 @@
         <br>
         <div style="color:rgb(232,118,0); font-weight:600;" id="message">Sorry, I don't like this password.</div>
         <br>
-        <input type="text" id="txtUsername" placeholder="Username" onkeypress="txtUsername_onkeypress(event)" autocomplete="off">
+        <label id="lblUsername" for="un">Username:</label>
+        <input name="un" type="text" id="txtUsername" onkeypress="txtUsername_onkeypress(event)" autocomplete="off" style="margin-right:108px">
+        
         <br>
-        <input type="password" id="txtPassword" placeholder="Password" onkeypress="txtPassword_onkeypress(event)" autocomplete="off" autofocus><input type="button" id="btnLogin" value="Login" onclick="login();">
+        <label id="lblPassword" for="ps">Password:</label>
+        <input name="ps" type="password" id="txtPassword" onkeypress="txtPassword_onkeypress(event)" autocomplete="off" autofocus><input type="button" id="btnLogin" value="Login" onclick="login();" style="margin-right:108px">
     </div>
 
     <div id="bottombar"></div>
