@@ -761,7 +761,7 @@ class ScriptEditor extends Window {
                     innerBox.appendChild(txtQuery);
 
                     btnOK.addEventListener("click", () => {
-                        value.value = txtQuery.value;
+                        value.value = txtQuery.value.trim();
                         value.onchange();
                         value.value = "Edit";
                         node.CalculateColumns();

@@ -69,7 +69,7 @@ public static class Wmi {
         return String.Empty;
     }
 
-    private static string FormatProperty(PropertyData property, FormatMethodPtr format = null) {
+    public static string FormatProperty(PropertyData property, FormatMethodPtr format = null) {
         if (property.IsArray) {
             object[] array = (object[])property.Value;
 
@@ -314,6 +314,10 @@ public static class Wmi {
             if (para[i].StartsWith("q=")) query = Strings.EscapeUrl(para[i].Substring(2));
         }
 
+        return WmiQuery(host, query);
+    }
+
+    public static byte[] WmiQuery(in string host, in string query) {
         ManagementScope scope = WmiScope(host);
         if (scope is null) return null;
 
@@ -329,10 +333,8 @@ public static class Wmi {
         StringBuilder sb = new StringBuilder();
 
         foreach (ManagementObject o in moc) {
-
-            if (label_once) {
+            if (label_once) { //header
                 label_once = false;
-
                 sb.Append(o.Properties.Count);
                 sb.Append((char)127);
 
@@ -340,7 +342,7 @@ public static class Wmi {
                     sb.Append(p.Name.ToString() + (char)127);
             }
 
-            foreach (PropertyData p in o.Properties) {
+            foreach (PropertyData p in o.Properties) { //values
                 try {
                     string value = FormatProperty(p);
                     sb.Append(value + (char)127);
@@ -441,7 +443,7 @@ public static class Wmi {
         return Wmi_Win32Shutdown(host, flags);
     }
 
-    public static string ChassiToString(short chassiType) {
+    private static string ChassiToString(short chassiType) {
         return chassiType switch {
             3 => "Desktop;",
             4 => "Low profile desktop",
@@ -482,7 +484,7 @@ public static class Wmi {
         };
     }
 
-    public static string ChassiToType(short chassiType) {
+    private static string ChassiToType(short chassiType) {
         return chassiType switch {
             //3 => "PC tower",
             //4 => "PC tower",
@@ -517,7 +519,7 @@ public static class Wmi {
         return Strings.SizeToString(size);
     }
 
-    public static string DateToString(string value) {
+    private static string DateToString(string value) {
         if (value.Length == 25) {
             short year = short.Parse(value.Substring(0, 4));
             short month = short.Parse(value.Substring(4, 2));
@@ -543,7 +545,7 @@ public static class Wmi {
             return value;
     }
 
-    public static string TransferRateToString(string value) {
+    private static string TransferRateToString(string value) {
         UInt64 v = UInt64.Parse(value);
         if (v < 1000) return $"{ v } bps";
         if (v < 1_000_000) return $"{ v / 1000 } Kbps";
@@ -553,11 +555,11 @@ public static class Wmi {
         return $"{ v / 1_000_000_000_000_000 } Pbps";
     }
 
-    public static string ToMHz(string value) {
+    private static string ToMHz(string value) {
         return $"{value} MHz";
     }
 
-    public static string RamType(string value) {
+    private static string RamType(string value) {
         return value switch {
             "0" => String.Empty,
 
@@ -589,7 +591,7 @@ public static class Wmi {
         };
     }
 
-    public static string RamFormFactor(string value) {
+    private static string RamFormFactor(string value) {
         return value switch {
             "0" => "Unknown",
 
@@ -619,7 +621,7 @@ public static class Wmi {
         };
     }
 
-    public static string ArchitechtureString(string value) {
+    private static string ArchitechtureString(string value) {
         return value switch {
             "32" => "32-bit",
             "64" => "64-bit",
@@ -627,7 +629,7 @@ public static class Wmi {
         };
     }
 
-    public static string ProcessorString(string value) {
+    private static string ProcessorString(string value) {
         string v = value;
 
         v = v.Replace("(R)", String.Empty);
@@ -645,12 +647,12 @@ public static class Wmi {
         return v.Trim();
     }
 
-    public static string IPv4Filter(string value) {
+    private static string IPv4Filter(string value) {
         if (!value.Contains(".")) return String.Empty;
         return value;
     }
 
-    public static string IPv4MaskFilter(string value) {
+    private static string IPv4MaskFilter(string value) {
         if (!value.Contains(".")) return String.Empty;
         return value;
     }

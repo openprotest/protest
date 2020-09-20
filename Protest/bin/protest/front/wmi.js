@@ -409,7 +409,7 @@ class Wmi extends Window {
                 }
         }
 
-        let table = document.createElement("table");
+        const table = document.createElement("table");
         table.className = "wmi-table";
 
         let length = parseInt(split[0]);
@@ -424,10 +424,10 @@ class Wmi extends Window {
             }*/
 
         for (let i = 1; i < split.length - 1; i += length) {
-            let tr = document.createElement("tr");
+            const tr = document.createElement("tr");
             table.appendChild(tr);
 
-            let tdn = document.createElement("td");
+            const tdn = document.createElement("td");
             tr.appendChild(tdn);
 
             for (let j = 0; j < length; j++) {
@@ -443,7 +443,7 @@ class Wmi extends Window {
                 if (i > length) {
                     switch (className) {
                         case "win32_process":
-                            let btnTerminate = document.createElement("input");
+                            const btnTerminate = document.createElement("input");
                             btnTerminate.type = "button";
                             btnTerminate.value = "Terminate";
                             btnTerminate.setAttribute("pid", split[i + unique]);

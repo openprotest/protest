@@ -9,6 +9,9 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Security.Cryptography;
+using System.Management.Automation.Runspaces;
 
 public class ScriptNode {
     public string name;
@@ -831,11 +834,56 @@ public static class Scripts {
             array = array
         };
     }
+
     private static async Task<ScriptResult> N_WmiQuery(ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] query
+         * [3] async
+         * [4] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        string query = node.values[2];
+        bool isAsync = node.values[3] == "True";
+
+        string[] header = null;
         List<string[]> array = new List<string[]>();
 
+        if (index > -1)
+            if (isAsync) {
+                List<Task<string[][]>> tasks = new List<Task<string[][]>>();
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    tasks.Add(WmiQueryAsync(host, query));
+                }
+
+                string[][][] result = await Task.WhenAll(tasks);
+
+                for (int i = 0; i < result.Length; i++) {
+                    if (result[i] is null) continue;
+                    if (header is null) header = result[i][0];
+                    for (int j = 1; j < result[i].Length; j++) {
+                        if (result[i][j] is null) continue;
+                        array.Add(result[i][j]);
+                    }
+                }
+
+            } else {
+                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                    string host = node.sourceNodes[0].result.array[i][index];
+                    string[][] result = WmiQueryAsync(host, query).Result;
+
+                    if (result is null) continue;
+                    if (header is null) header = result[0];
+                    for (int j = 1; j < result.Length; j++) {
+                        if (result[j] is null) continue;
+                        array.Add(result[j]);
+                    }
+                }
+            }
+
         return new ScriptResult() {
-            header = new string[] { },
+            header = header ?? new string[] { },
             array = array
         };
     }
@@ -878,7 +926,7 @@ public static class Scripts {
         };
     }
     private static async Task<ScriptResult> N_DnsLookup(ScriptNode node) {
-        /* [0] <-
+        /* [0] <- 
          * [1] column
          * [2] async
          * [3] -> */
@@ -1831,7 +1879,7 @@ public static class Scripts {
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
-            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+            filename = $"{filename}_{DateTime.Now.Ticks}";
 
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
@@ -2011,6 +2059,36 @@ public static class Scripts {
             .Replace("|", "_");
     }
 
+    public static async Task<string[][]> WmiQueryAsync(string host, string query) {
+        if (host is null) return null;
+        System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
+        try {
+            PingReply reply = await p.SendPingAsync(host, 1000);
+            p.Dispose();
+            if (reply.Status != IPStatus.Success) return null;
+
+
+            List<string[]> list = new List<string[]>();
+
+            byte[] bytes = Wmi.WmiQuery(host, query);
+            string[] split = Encoding.UTF8.GetString(bytes).Split((char)127);
+
+            int length = int.Parse(split[0]);
+
+            for (int i = 1; i < split.Length-1; i+=length) {
+                string[] row = new string[length + 1];
+                row[0] = i==1 ? "Host" : host;
+                for (int j = 0; j < length; j++) row[1 + j] = split[i + j];
+                list.Add(row);
+            }           
+
+            return list.ToArray();
+
+        } catch {
+            p.Dispose();
+            return null;
+        }
+    }
 
     private static async Task<IPAddress[]> DnsLookupAsync(string hostname) {
         if (hostname is null) return null;
