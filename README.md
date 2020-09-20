@@ -42,7 +42,6 @@ Pro-test is intended to be used as a portable tool. In that case, the web interf
 Requests from IPs other than loopback are rejected and require a username and a password to proceed. The username must be whitelisted in the config.txt file, and then your domain controller will handle the authentication.
 
 :exclamation: **If you use pro-test as a centralized service, we highly recommend to use a secure reverse proxy, such as [nginx](http://nginx.org/en/download.html) or IIS.**
-You will also need to create your own SSL certificate (*[script example](https://github.com/veniware/OpenProtest/blob/master/Tools%20and%20Docs/generate_ssl.bat)*).
 
 In order to use pro-test to its full capabilities, it must be runned as a network administrator. *(It uses WMI, active directory services and remote-powershell to gather information)*
 
