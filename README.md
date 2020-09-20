@@ -45,7 +45,7 @@ Requests from IPs other than loopback are rejected and require a username and a 
 
 In order to use pro-test to its full capabilities, it must be runned as a network administrator. *(It uses WMI, active directory services and remote-powershell to gather information)*
 
-If you use a reverse proxy, in order for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end *([example](https://github.com/veniware/OpenProtest/blob/master/Tools%20and%20Docs/nginx.conf)).*
+If you use a reverse proxy, in order for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end.
 
 For more informations check the in-app user-guide.
 
