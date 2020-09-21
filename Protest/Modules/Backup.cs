@@ -59,14 +59,17 @@ public static class Backup {
             DirectoryInfo dirSeen = new DirectoryInfo($"{Strings.DIR_LASTSEEN}");
             if (dirSeen.Exists) CopyAll(dirSeen, new DirectoryInfo($"{dirCopy.FullName}\\{dirSeen.Name}"));
 
-            DirectoryInfo dirMetrics = new DirectoryInfo($"{Strings.DIR_METRICS}");
-            if (dirMetrics.Exists) CopyAll(dirMetrics, new DirectoryInfo($"{dirCopy.FullName}\\{dirMetrics.Name}"));
+            //DirectoryInfo dirMetrics = new DirectoryInfo($"{Strings.DIR_METRICS}");
+            //if (dirMetrics.Exists) CopyAll(dirMetrics, new DirectoryInfo($"{dirCopy.FullName}\\{dirMetrics.Name}"));
+
+            //DirectoryInfo dirConfig = new DirectoryInfo($"{Strings.DIR_CONFIG}");
+            //if (dirConfig.Exists) CopyAll(dirConfig, new DirectoryInfo($"{dirCopy.FullName}\\{dirConfig.Name}"));
 
             DirectoryInfo dirWatchdog = new DirectoryInfo($"{Strings.DIR_WATCHDOG}");
-            if (dirWatchdog.Exists) CopyAll(dirWatchdog, new DirectoryInfo($"{dirCopy.FullName}\\{dirMetrics.Name}"));
+            if (dirWatchdog.Exists) CopyAll(dirWatchdog, new DirectoryInfo($"{dirCopy.FullName}\\{dirWatchdog.Name}"));
 
             DirectoryInfo dirScripts = new DirectoryInfo($"{Strings.DIR_SCRIPTS}");
-            if (dirScripts.Exists) CopyAll(dirScripts, new DirectoryInfo($"{dirCopy.FullName}\\{dirWatchdog.Name}"));
+            if (dirScripts.Exists) CopyAll(dirScripts, new DirectoryInfo($"{dirCopy.FullName}\\{dirScripts.Name}"));
 
             DirectoryInfo dirLog = new DirectoryInfo($"{Strings.DIR_LOG}");
             if (dirLog.Exists) CopyAll(dirLog ,new DirectoryInfo($"{dirCopy.FullName}\\{dirLog.Name}"));

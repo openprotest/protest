@@ -160,6 +160,15 @@ class Guide extends Window {
         );
 
         this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Watchdog", "res/watchdog.svgz");
+        this.InsertParagraph(
+            "Use watchdog to monitor the availability of your network hosts. You can check when a host gets disconnected or a protocol stops responding on a specified port."
+        );
+        this.InsertParagraph(
+            "Enable email notifications to get notified when a host or service unexpected goes offline."
+        );
+
+        this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Password strength", "res/strength.svgz");
         this.InsertParagraph(
             "This utility scans your database for passwords and scores them based on their strength, letting you know which users are variable to passwords attacks."
@@ -244,15 +253,6 @@ class Guide extends Window {
         );
         this.InsertParagraph(
             "Pro-test provides a dialog with all WMI classes to help syntax your queries."
-        );
-
-        this.body.appendChild(document.createElement("br"));
-        this.InsertHeading("Watchdog", "res/watchdog.svgz");
-        this.InsertParagraph(
-            "Use watchdog to monitor the availability of your network hosts. You can check when a host gets disconnected or a protocol stops responding on a specified port."
-        );
-        this.InsertParagraph(
-            "Enable email notifications to get notified when a host or service unexpected goes offline."
         );
 
         this.body.appendChild(document.createElement("br"));

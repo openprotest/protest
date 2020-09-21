@@ -46,8 +46,13 @@ public static class Strings {
     public static readonly string DIR_KNOWLAGE    = $"{Directory.GetCurrentDirectory()}\\protest\\knowlage";
     public static readonly string DIR_SCRIPTS     = $"{Directory.GetCurrentDirectory()}\\protest\\scripts";
     public static readonly string DIR_LASTSEEN    = $"{Directory.GetCurrentDirectory()}\\protest\\lastseen";
-    public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
-    
+    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
+    public static readonly string DIR_WATCHDOG    = $"{Directory.GetCurrentDirectory()}\\protest\\watchdog";
+    public static readonly string DIR_LOG         = $"{Directory.GetCurrentDirectory()}\\protest\\log";
+    public static readonly string DIR_BACKUPS     = $"{Directory.GetCurrentDirectory()}\\protest\\backups";
+    //public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
+    //public static readonly string DIR_CONFIG      = $"{Directory.GetCurrentDirectory()}\\protest\\configurations";
+
     public static readonly string DIR_DEBIT       = $"{Directory.GetCurrentDirectory()}\\protest\\debit";
     public static readonly string DIR_DEBIT_SHORT = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\short";
     public static readonly string DIR_DEBIT_LONG  = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\long";
@@ -61,12 +66,6 @@ public static class Strings {
     public static readonly string DIR_SCRIPTS_SCRIPTS = $"{DIR_SCRIPTS}\\scripts";
     public static readonly string DIR_SCRIPTS_REPORTS = $"{DIR_SCRIPTS}\\reports";
 
-    public static readonly string DIR_LOG           = $"{Directory.GetCurrentDirectory()}\\protest\\log";
-    public static readonly string DIR_BACKUPS       = $"{Directory.GetCurrentDirectory()}\\protest\\backups";
-    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
-    public static readonly string DIR_WATCHDOG      = $"{Directory.GetCurrentDirectory()}\\protest\\watchdog";
-    public static readonly string DIR_CONFIG        = $"{Directory.GetCurrentDirectory()}\\protest\\configurations";
-
     public static readonly string FILE_CONFIG       = $"{Directory.GetCurrentDirectory()}\\protest\\config.txt";
     public static readonly string FILE_CONTENT_TYPE = $"{DIR_KNOWLAGE}\\content_type.txt";
     public static readonly string FILE_MAC          = $"{DIR_KNOWLAGE}\\mac.bin";
@@ -77,8 +76,8 @@ public static class Strings {
             DirectoryInfo dirLog      = new DirectoryInfo(DIR_LOG);
             DirectoryInfo dirLastSeen = new DirectoryInfo(DIR_LASTSEEN);
             DirectoryInfo dirWatchdog = new DirectoryInfo(DIR_WATCHDOG);
-            DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
-            DirectoryInfo dirMetrics  = new DirectoryInfo(DIR_METRICS);
+            //DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
+            //DirectoryInfo dirMetrics  = new DirectoryInfo(DIR_METRICS);
             DirectoryInfo dirData     = new DirectoryInfo(DIR_DATA);
             DirectoryInfo dirEquip    = new DirectoryInfo(DIR_EQUIP);
             DirectoryInfo dirUsers    = new DirectoryInfo(DIR_USERS);
@@ -87,8 +86,8 @@ public static class Strings {
             if (!dirLog.Exists)      dirLog.Create();
             if (!dirLastSeen.Exists) dirLastSeen.Create();
             if (!dirWatchdog.Exists) dirWatchdog.Create();
-            if (!dirConfig.Exists)   dirConfig.Create();
-            if (!dirMetrics.Exists)  dirMetrics.Create();
+            //if (!dirConfig.Exists)   dirConfig.Create();
+            //if (!dirMetrics.Exists)  dirMetrics.Create();
             if (!dirData.Exists)     dirData.Create();
             if (!dirEquip.Exists)    dirEquip.Create();
             if (!dirUsers.Exists)    dirUsers.Create();
