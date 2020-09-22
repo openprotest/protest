@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 public static class Telnet {
 
@@ -38,33 +36,71 @@ public static class Telnet {
         }
 
         try {
-            byte[] targetBuff = new byte[512];
+            byte[] targetBuff = new byte[1024];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(targetBuff), CancellationToken.None);
             string target = Encoding.Default.GetString(targetBuff, 0, targetResult.Count);
 
-            IPAddress[] ips = null;
+            string[] split = target.Split(':');
+            string host = split[0];
+            int port = 23;
 
+            if (split.Length > 1)
+                int.TryParse(split[1], out port);
+
+            TcpClient telnet;
             try {
-                ips = System.Net.Dns.GetHostEntry(target).AddressList;
-            } catch { }
-
-            if (ips is null || ips.Length == 0) {
-                WsWriteText(ws, "no such host is known");
+                telnet = new TcpClient(host, port);
+            } catch (Exception ex){
+                WsWriteText(ws, ex.Message);
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                 return;
             }
 
-            Console.WriteLine(ips[0].ToString());
-            
+            WsWriteText(ws, $"connected to {host}:{port}\n");
 
-            TcpClient telnet = new TcpClient();
-            telnet.Connect(new IPEndPoint(ips[0], 23));
+            NetworkStream stream = telnet.GetStream();
 
-            WsWriteText(ws, "connected to " + ips[0].ToString());
+            string lastMessage = "";
 
-            while (ws.State == WebSocketState.Open) {
-                byte[] buff = new byte[2048];
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+
+            Thread wsToServer = new Thread(async () => {
+                Thread.Sleep(3000);
+                while (ws.State == WebSocketState.Open) { //ws to server loop
+
+                    byte[] buff = new byte[2048];
+                    WebSocketReceiveResult receiveResult = null;
+                    try {
+                        receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+
+                        if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                            telnet.Close();
+                            break;
+                        }
+                    } catch { }
+
+                    if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                        ctx.Response.Close();
+                        telnet.Close();
+                        return;
+                    }
+
+                    try {
+                        for (int i = 0; i < receiveResult?.Count; i++)
+                            stream.Write(buff, i, 1);
+                        stream.Write(new byte[] { 13 }, 0, 1); //return
+                    } catch { }
+                }
+            });
+
+            wsToServer.Start();
+
+            while (ws.State == WebSocketState.Open) { //server to ws loop
+                byte[] data = new byte[2048];
+
+                int bytes = stream.Read(data, 0, data.Length);
+
+                string responseData = Encoding.ASCII.GetString(data, 0, bytes);
 
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
                     ctx.Response.Close();
@@ -72,17 +108,9 @@ public static class Telnet {
                     return;
                 }
 
-                if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                    telnet.Close();
-                    break;
-                }
-
-
-
-
-
+                WsWriteText(ws, responseData);
             }
+
 
         } catch (Exception ex) {
             Logging.Err(ex);

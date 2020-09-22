@@ -30,7 +30,7 @@ Be more productive: with one-click, you can connect to your remote hosts over SS
   * NTP client
   * Trace route
   * Port scan
-  * Locate IP, proxy detection and tor detection  *[demo](https://veniware.github.io/#locateip)*
+  * Locate IP, proxy and tor detection  *[demo](https://veniware.github.io/#locateip)*
   * MAC lookup  *[demo](https://veniware.github.io/#maclookup)*
   * Website check
   * Sub-net calculator  *[demo](https://veniware.github.io/#netcalc)*

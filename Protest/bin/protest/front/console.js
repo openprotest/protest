@@ -30,7 +30,7 @@ class Console extends Window {
         let historyIndex = -1;
         this.txtInput.onkeydown = (event) => {
 
-            if (event.keyCode == 13) { //enter
+            if (event.keyCode === 13) { //enter
                 if (this.txtInput.value.length == 0) return;
                 this.Push(this.txtInput.value.trim().toLocaleLowerCase());
                 this.list.scrollTop = this.list.scrollHeight;
