@@ -2168,5 +2168,3 @@ public static class Scripts {
     }
 
 }
-
-public class ScriptWrapper { }

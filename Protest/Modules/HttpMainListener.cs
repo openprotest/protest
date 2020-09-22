@@ -119,7 +119,7 @@ class HttpMainListener : Http {
             ctx.Response.ContentType = "text/plain";
             ctx.Response.AddHeader("Cache-Control", "no-store");
 
-            performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value ?? string.Empty);
+            performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value);
 
             switch (para[0]) {
                 case "a":
@@ -261,11 +261,13 @@ class HttpMainListener : Http {
             case "ws/portscan": PortScan.WsPortScan(ctx, remoteIp); break;
             case "ws/traceroute": TraceRoute.WsTraceRoute(ctx, remoteIp); break;
             case "ws/webcheck": WebCheck.WsWebCheck(ctx, remoteIp); break;
+            case "ws/telnet": Telnet.WsTelnet(ctx, remoteIp); break;
             case "ws/watchdog": Watchdog.WsView(ctx, remoteIp); break;
             
             case "ws/keepalive": KeepAlive.Connect(ctx, remoteIp); break;
             case "ws/liveinfo_equip": LiveInfo.InstantInfoEquip(ctx, remoteIp); break;
             case "ws/liveinfo_user": LiveInfo.InstantInfoUser(ctx, remoteIp); break;
+            
 
             default: ctx.Response.Close(); break;
         }

@@ -11,7 +11,7 @@ using System.Threading;
 
 public static class LiveInfo {
 
-    public static async void WsWriteText(WebSocket ws, string text){
+    private static async void WsWriteText(WebSocket ws, string text){
         await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 

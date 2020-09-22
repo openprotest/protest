@@ -76,6 +76,7 @@ let loader_styles = [
         "backup.js",
         "guide.js",
         "clients.js",
+        "telnet.js",
         "smbbrowser.js",
         "screencapture.js",
         "settings.js",
@@ -279,6 +280,7 @@ function RestoreSession() {
             case "Backup"           : win = new Backup(session[i].args); break;
             case "Guide"            : win = new Guide(session[i].args); break;
             case "Clients"          : win = new Clients(session[i].args); break;
+            case "Telnet"           : win = new Telnet(session[i].args); break;
             case "SmbBrowser"       : win = new SmbBrowser(session[i].args); break;
             case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;

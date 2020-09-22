@@ -42,7 +42,7 @@ class Passgen extends Window {
         grid.style.display = "grid";
         grid.style.width = "424px";
         grid.style.margin = "40px auto 20px auto";
-        grid.style.padding = "16px 24px";
+        grid.style.padding = "40px";
         grid.style.backgroundColor = "var(--pane-color)";
         grid.style.color = "rgb(16,16,16)";
         grid.style.fontWeight = "600";

@@ -81,6 +81,7 @@
     <Compile Include="Modules\LiveInfo.cs" />
     <Compile Include="Modules\Tools\Ntp.cs" />
     <Compile Include="Modules\Tools\PasswordStrength.cs" />
+    <Compile Include="Modules\Tools\Telnet.cs" />
     <Compile Include="Modules\Tools\PrintTools.cs" />
     <Compile Include="Modules\Fetch.cs" />
     <Compile Include="Modules\Tools\NetBios.cs" />
@@ -143,6 +144,7 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\telnet.js" />
     <Content Include="bin\protest\front\gandalf.js" />
     <Content Include="bin\protest\front\res\l_gandalf.svg" />
     <Content Include="bin\protest\front\res\gandalf.svg" />
