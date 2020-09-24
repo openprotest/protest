@@ -17,10 +17,6 @@ class Telnet extends Window {
         this.btnClear.setAttribute("tip-below", "Clear");
         this.toolbox.appendChild(this.btnClear);
 
-        this.btnOptions = document.createElement("div");
-        this.btnOptions.style.backgroundImage = "url(res/l_options.svgz)";
-        this.btnOptions.setAttribute("tip-below", "Options");
-        this.toolbox.appendChild(this.btnOptions);
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
@@ -79,6 +75,11 @@ class Telnet extends Window {
 
         this.txtInput.onfocus = () => { this.BringToFront(); };
         this.escAction = () => { this.txtInput.value = ""; };
+
+        this.btnClear.onclick = () => {
+            this.list.innerHTML = "";
+            this.PushLine();
+        };
 
         this.ConnectDialog(this.args);
     }
@@ -196,9 +197,18 @@ class Telnet extends Window {
 
         this.ws.onclose = () => {
             this.PushLine();
-            this.last.innerHTML = "tcp connection has been terminated";
+            this.last.innerHTML = "tcp connection has been terminated <u>click to reconnect</u>";
             this.last.style.color = "var(--theme-color)";
-            this.PushLine();
+            this.last.style.cursor = "pointer";
+            this.last.onclick = event => {
+                event.srcElement.style.cursor = "";
+                event.srcElement.innerHTML = "tcp connection has been terminated";
+                event.srcElement.onclick = () => { };
+                this.list.appendChild(document.createElement("hr"));
+                this.PushLine();
+                this.Connect(target);
+                this.list.scrollTop = this.list.scrollHeight;
+            };            
             this.list.scrollTop = this.list.scrollHeight;
         };
 
@@ -330,8 +340,6 @@ class Telnet extends Window {
             for (let i = 0; i > payload.length; i++) {
 
                 let byte = payload.charCodeAt(i) & 0xff;
-
-
                 switch (byte) {
                     case 13: //new line
                         if (this.history.length > 0 && this.last.innerHTML.trim() === this.history[this.history.length - 1].trim()) {
