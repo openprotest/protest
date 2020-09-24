@@ -432,6 +432,14 @@ class Equip extends Window {
                 };
             }
 
+            if (ports.includes(23) && this.entry.hasOwnProperty("IP")) { //telnet
+                const btnTelnet = this.SideButton("res/telnet.svgz", "Telnet");
+                this.sidetools.appendChild(btnTelnet);
+                btnTelnet.onclick = () => {
+                    new Telnet(this.entry["IP"][0].split(";")[0].trim());
+                };
+            }
+
             if (ports.includes(445) && this.entry.hasOwnProperty("IP")) { //smb
                 const btnSmb = this.SideButton("res/shared.svgz", "SMB");
                 this.sidetools.appendChild(btnSmb);

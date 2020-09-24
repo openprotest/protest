@@ -17,7 +17,6 @@ class Telnet extends Window {
         this.btnClear.setAttribute("tip-below", "Clear");
         this.toolbox.appendChild(this.btnClear);
 
-
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
         this.list = document.createElement("div");
@@ -73,7 +72,7 @@ class Telnet extends Window {
 
         this.defaultElement = this.txtInput;
 
-        this.txtInput.onfocus = () => { this.BringToFront(); };
+        this.txtInput.onfocus = () =>  this.BringToFront();
         this.escAction = () => { this.txtInput.value = ""; };
 
         this.btnClear.onclick = () => {
@@ -133,6 +132,7 @@ class Telnet extends Window {
         innerBox.style.textAlign = "center";
         innerBox.style.padding = "20px 40px";
 
+        btnOK.value = "Connect";
         if (target.length === 0) btnOK.setAttribute("disabled", true);
 
         const lblHost = document.createElement("div");
@@ -147,7 +147,7 @@ class Telnet extends Window {
         txtHost.placeholder = "10.0.0.1:23";
         innerBox.appendChild(txtHost);
 
-        setTimeout(() => { txtHost.focus() }, 50);
+        setTimeout(()=> { txtHost.focus() }, 50);
 
         txtHost.oninput = txtHost.onchange = () => {
             if (txtHost.value.length === 0)
@@ -180,11 +180,11 @@ class Telnet extends Window {
         server = server.replace("http://", "");
         if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
-        if (this.ws != null)
+        if (this.ws != null) {
             try {
                 this.ws.close();
             } catch (error) { };
-
+        }
         try {
             this.ws = new WebSocket((isSecure ? "wss://" : "ws://") + server + "/ws/telnet");
         } catch { }
@@ -244,60 +244,60 @@ class Telnet extends Window {
 
                         if (e == -1) e = split[j].indexOf(" ");
 
-                        let ansi = split[j].substring(0, e + 1);
+                        let ansi = split[j].substring(0, e+1);
                         switch (ansi) {
-                            case "[0m": //reset
+                            case "[0m":
                                 front = "#ccc";
                                 back = "transparent";
                                 bold = false;
                                 underline = false;
                                 break;
 
-                            case "[30m": front = "#000"; break; //black
-                            case "[31m": front = "#d00"; break; //red
-                            case "[32m": front = "#0d0"; break; //green
-                            case "[33m": front = "#0dd"; break; //yellow
-                            case "[34m": front = "#00d"; break; //blue
-                            case "[35m": front = "#d0d"; break; //magenta
-                            case "[36m": front = "#0dd"; break; //cyan
-                            case "[37m": front = "#ddd"; break; //white
+                            case "[30m": front = "#000"; break;
+                            case "[31m": front = "#d00"; break;
+                            case "[32m": front = "#0d0"; break;
+                            case "[33m": front = "#0dd"; break;
+                            case "[34m": front = "#00d"; break;
+                            case "[35m": front = "#d0d"; break;
+                            case "[36m": front = "#0dd"; break;
+                            case "[37m": front = "#ddd"; break;
 
-                            case "[30;1m": front = "#222"; bold=true; break; //black
-                            case "[31;1m": front = "#f22"; bold=true; break; //red
-                            case "[32;1m": front = "#2f2"; bold=true; break; //green
-                            case "[33;1m": front = "#2ff"; bold=true; break; //yellow
-                            case "[34;1m": front = "#22f"; bold=true; break; //blue
-                            case "[35;1m": front = "#f2f"; bold=true; break; //magenta
-                            case "[36;1m": front = "#2ff"; bold=true; break; //cyan
-                            case "[37;1m": front = "#fff"; bold=true; break; //white
+                            case "[30;1m": front = "#222"; bold = true; break;
+                            case "[31;1m": front = "#f22"; bold = true; break;
+                            case "[32;1m": front = "#2f2"; bold = true; break;
+                            case "[33;1m": front = "#2ff"; bold = true; break;
+                            case "[34;1m": front = "#22f"; bold = true; break;
+                            case "[35;1m": front = "#f2f"; bold = true; break;
+                            case "[36;1m": front = "#2ff"; bold = true; break;
+                            case "[37;1m": front = "#fff"; bold = true; break;
 
-                            case "[40m": back = "#000"; break; //black
-                            case "[41m": back = "#d00"; break; //red
-                            case "[42m": back = "#0d0"; break; //green
-                            case "[43m": back = "#0dd"; break; //yellow
-                            case "[44m": back = "#00d"; break; //blue
-                            case "[45m": back = "#d0d"; break; //magenta
-                            case "[46m": back = "#0dd"; break; //cyan
-                            case "[47m": back = "#ddd"; break; //white
+                            case "[40m": back = "#000"; break;
+                            case "[41m": back = "#d00"; break;
+                            case "[42m": back = "#0d0"; break;
+                            case "[43m": back = "#0dd"; break;
+                            case "[44m": back = "#00d"; break;
+                            case "[45m": back = "#d0d"; break;
+                            case "[46m": back = "#0dd"; break;
+                            case "[47m": back = "#ddd"; break;
 
-                            case "[40;1m": back = "#000"; bold=true; break; //black
-                            case "[41;1m": back = "#d00"; bold=true; break; //red
-                            case "[42;1m": back = "#0d0"; bold=true; break; //green
-                            case "[43;1m": back = "#0dd"; bold=true; break; //yellow
-                            case "[44;1m": back = "#00d"; bold=true; break; //blue
-                            case "[45;1m": back = "#d0d"; bold=true; break; //magenta
-                            case "[46;1m": back = "#0dd"; bold=true; break; //cyan
-                            case "[47;1m": back = "#ddd"; bold=true; break; //white
+                            case "[40;1m": back = "#000"; bold = true; break;
+                            case "[41;1m": back = "#d00"; bold = true; break;
+                            case "[42;1m": back = "#0d0"; bold = true; break;
+                            case "[43;1m": back = "#0dd"; bold = true; break;
+                            case "[44;1m": back = "#00d"; bold = true; break;
+                            case "[45;1m": back = "#d0d"; bold = true; break;
+                            case "[46;1m": back = "#0dd"; bold = true; break;
+                            case "[47;1m": back = "#ddd"; bold = true; break;
 
                             case "[1m": bold = true; break;
                             case "[4m": underline = true; break;
 
-                            case "[7m": //reversed
+                            case "[7m":
                                 front = "#222";
                                 back = "#ccc";
                                 break;
 
-                            case "[0J": //clear screen
+                            case "[0J":
                             case "[1J":
                             case "[2J":
                                 this.PushLine();
@@ -305,7 +305,7 @@ class Telnet extends Window {
                                 this.PushLine();
                                 break;
 
-                            case "[0K": //clear line
+                            case "[0K":
                             case "[1K":
                             case "[2K":
                                 this.last.innerHTML = "";
@@ -331,60 +331,6 @@ class Telnet extends Window {
                     } else {
                         this.PushLine();
                     }
-
-                }
-            }
-
-            let text = "";
-
-            for (let i = 0; i > payload.length; i++) {
-
-                let byte = payload.charCodeAt(i) & 0xff;
-                switch (byte) {
-                    case 13: //new line
-                        if (this.history.length > 0 && this.last.innerHTML.trim() === this.history[this.history.length - 1].trim()) {
-                            text = "";
-                        } else {
-                            this.AddStyledText(text, front, back);
-                            this.PushLine();
-                            text = "";
-                        }
-                        break;
-
-                    case 32: //space
-                        text += "&nbsp;";
-                        break;
-
-                    case 27: { //ANSI escape char
-                        let ansi = "";
-                        while (i < payload.length && payload[i] != "m") { //109=m -> ansi stop char
-                            ansi += payload[i];
-                            console.log(payload[i] + " : " + ansi);
-                            i++;
-                        }
-
-                        front = "#00f";
-                        back = "#f00";
-
-                        if (ansi == "\u001b[0m") { //reset
-                            isMarked = false;
-                            front = "#ccc";
-                            back = "transparent";
-                            console.log("RESET")
-                        }
-
-                        if (front != "#ccc" || back != "transparent") {
-                            isMarked = true;
-                        }
-
-                        console.log("break");
-                        break;
-                    }
-
-                    default:
-                        text += payload[i];
-                        break;
-
                 }
             }
 
