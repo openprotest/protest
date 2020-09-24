@@ -93,7 +93,7 @@ class HttpMainListener : Http {
 #if DEBUG
             ctx.Response.AddHeader("Cache-Control", "no-store");
 #else
-            ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
+            //ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
             //ctx.Response.AddHeader("Cache-Control", $"min-fresh={Cache.CACHE_CONTROL_MIN_FRESH}");
 #endif
            

@@ -9,7 +9,8 @@ using System.Threading;
 public static class Telnet {
 
     private static async void WsWriteText(WebSocket ws, string text) {
-        await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        if (ws.State == WebSocketState.Open)
+            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
     public static async void WsTelnet(HttpListenerContext ctx, string remoteIp) {
@@ -35,6 +36,8 @@ public static class Telnet {
             return;
         }
 
+        Thread wsToServer = null;
+
         try {
             byte[] targetBuff = new byte[1024];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(targetBuff), CancellationToken.None);
@@ -56,15 +59,12 @@ public static class Telnet {
                 return;
             }
 
-            WsWriteText(ws, $"connected to {host}:{port}\n");
+            //WsWriteText(ws, $"connected to {host}:{port}\n\r");
 
             NetworkStream stream = telnet.GetStream();
 
-            string lastMessage = "";
-
-
-            Thread wsToServer = new Thread(async () => {
-                Thread.Sleep(3000);
+            wsToServer = new Thread(async () => {
+                Thread.Sleep(500);
                 while (ws.State == WebSocketState.Open) { //ws to server loop
 
                     byte[] buff = new byte[2048];
@@ -108,12 +108,22 @@ public static class Telnet {
                     return;
                 }
 
-                WsWriteText(ws, responseData);
-            }
+                try {
+                    WsWriteText(ws, responseData);
+                } catch { }
 
+            }
 
         } catch (Exception ex) {
             Logging.Err(ex);
+        
+        } finally {
+            try {
+                await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            } catch { }
+            try {
+                wsToServer?.Abort();
+            } catch { }
         }
     }
 

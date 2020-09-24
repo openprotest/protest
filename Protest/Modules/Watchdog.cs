@@ -558,14 +558,14 @@ public static class Watchdog {
             };
             smtp.Send(mail);
 
+            Logging.Action("Watchdog notification", "Successfully sent an email notification");
+
             smtp.Dispose();
             mail.Dispose();
             body.Clear();
-            logo.Dispose();
-            fileGreen.Dispose();
-            fileRed.Dispose();
-
-            Logging.Action("Watchdog notification", "Successfully sent an email notification");
+            //logo.Dispose();
+            //fileGreen.Dispose();
+            //fileRed.Dispose();
 
 #if !DEBUG
         } catch (SmtpFailedRecipientException ex) { Logging.Err(ex);

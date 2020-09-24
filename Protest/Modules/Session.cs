@@ -131,6 +131,8 @@ public static class Session {
     }
 
     public static string GetUsername(string sessionId) {
+        if (sessionId is null) return null;
+
         if (sessions.ContainsKey(sessionId))
             return sessions[sessionId].username;
 
