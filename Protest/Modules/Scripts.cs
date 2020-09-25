@@ -630,6 +630,7 @@ public static class Scripts {
             case "Contains": return N_Contains(node);
             case "Regex match": return N_RegexMatch(node);
 
+            case "Parse number": return N_ParseNum(node);
             case "Absolute value": return N_AbsValue(node);
             case "Round": return N_Round(node);
             case "Quantization": return N_Quantization(node);
@@ -642,6 +643,7 @@ public static class Scripts {
             case "Mode": return N_Mode(node);
             case "Range": return N_Range(node);
 
+            case "Preview": return N_Preview(node);
             case "Text file": return N_SaveTxt(node);
             case "CSV file": return N_SaveCsv(node);
             case "JSON file": return N_SaveJson(node);
@@ -1490,6 +1492,7 @@ public static class Scripts {
 
             else
                 array = node.sourceNodes[0].result.array.Where(o => {
+
                     if (String.Compare(o[index] ?? String.Empty, value) < 0) return true;
                     return false;
                 }).ToList();
@@ -1533,6 +1536,39 @@ public static class Scripts {
                 Regex regex = new Regex(pattern);
                 array = node.sourceNodes[0].result.array.Where(o => !(o[index] is null) && regex.Match(o[index]).Success).ToList();
             } catch { }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = array
+        };
+    }
+
+    private static ScriptResult N_ParseNum(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        List<string[]> array = new List<string[]>();
+        if (index > -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+                string[] targetRow = node.sourceNodes[0].result.array[i];
+                string[] newRow = new string[targetRow.Length];
+                Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
+
+                if (targetRow[index] is null) { 
+                    newRow[index] = "0";
+                } else {
+                    string value = string.Empty;
+                    for (int j = 0; j < targetRow[index].Length; j++) 
+                        if (char.IsDigit (targetRow[index][j]))
+                            value += targetRow[index][j];
+                    newRow[index] = value;
+                }
+
+                array.Add(newRow);
+            }
 
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
@@ -1606,8 +1642,7 @@ public static class Scripts {
                 string[] newRow = new string[targetRow.Length];
                 Array.Copy(targetRow, 0, newRow, 0, targetRow.Length);
 
-                double n;
-                newRow[index] = double.TryParse(targetRow[index], out n) ? (n - n % step).ToString() : targetRow[index];
+                newRow[index] = double.TryParse(targetRow[index], out double n) ? (n - n % step).ToString() : targetRow[index];
                 array.Add(newRow);
             }
         }
@@ -1651,8 +1686,9 @@ public static class Scripts {
             }
         } catch { }
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { sum.ToString() });
+        List<string[]> array = new List<string[]> {
+            new string[] { sum.ToString() }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Sum" },
@@ -1675,8 +1711,9 @@ public static class Scripts {
             }
         } catch { }
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { max.ToString() });
+        List<string[]> array = new List<string[]> {
+            new string[] { max.ToString() }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Maximium" },
@@ -1693,14 +1730,14 @@ public static class Scripts {
         double min = double.MaxValue;
         try {
             for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                double n;
-                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n))
+                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out double n))
                     if (min > n) min = n;
             }
         } catch { }
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { min.ToString() });
+        List<string[]> array = new List<string[]> {
+            new string[] { min.ToString() }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Minimum" },
@@ -1724,8 +1761,9 @@ public static class Scripts {
 
         double avg = sum / (double)node.sourceNodes[0].result.array.Count;
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { avg.ToString() });
+        List<string[]> array = new List<string[]> {
+            new string[] { avg.ToString() }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Mean" },
@@ -1756,8 +1794,9 @@ public static class Scripts {
             mean = sort[(int)(sort.Count / 2)];
         }
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { mean });
+        List<string[]> array = new List<string[]> {
+            new string[] { mean }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Median" },
@@ -1793,8 +1832,9 @@ public static class Scripts {
                 }
         }
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { mode });
+        List<string[]> array = new List<string[]> {
+            new string[] { mode }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Mode" },
@@ -1815,8 +1855,7 @@ public static class Scripts {
         if (index > -1)
             try {
                 for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                    double n;
-                    if (double.TryParse(node.sourceNodes[0].result.array[i][index], out n)) {
+                    if (double.TryParse(node.sourceNodes[0].result.array[i][index], out double n)) {
                         if (max < n) max = n;
                         if (min > n) min = n;
                     }
@@ -1911,7 +1950,7 @@ public static class Scripts {
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
-            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+            filename = $"{filename}_{DateTime.Now.Ticks}";
 
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
@@ -1961,7 +2000,7 @@ public static class Scripts {
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
-            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+            filename = $"{filename}_{DateTime.Now.Ticks}";
 
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
@@ -2014,7 +2053,7 @@ public static class Scripts {
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
-            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+            filename = $"{filename}_{DateTime.Now.Ticks}";
 
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
@@ -2031,7 +2070,7 @@ public static class Scripts {
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
-            filename = $"{filename}_{DateTime.Now.Ticks.ToString()}";
+            filename = $"{filename}_{DateTime.Now.Ticks}";
 
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();

@@ -246,7 +246,15 @@ public static class Wmi {
 
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory")).Get();
-                ContentBuilderAddArray(moc, "Capacity", "MEMORY", hash, new FormatMethodPtr(SizeToString));
+
+                ulong totalmemory = 0;
+                foreach (ManagementObject o in moc) {
+                    UInt64.TryParse(o.GetPropertyValue("Capacity").ToString(), out ulong capacity);
+                    totalmemory += capacity;
+                }
+                hash.Add("TOTAL MEMORY", SizeToString(totalmemory.ToString()));
+
+                ContentBuilderAddArray(moc, "Capacity", "MEMORY MODULES", hash, new FormatMethodPtr(SizeToString));
                 ContentBuilderAddValue(moc, "Speed", "RAM SPEED", hash, new FormatMethodPtr(ToMHz));
                 ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", hash, new FormatMethodPtr(RamType));
                 ContentBuilderAddValue(moc, "FormFactor", "RAM FORM FACTOR", hash, new FormatMethodPtr(RamFormFactor));

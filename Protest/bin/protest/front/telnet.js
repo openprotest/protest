@@ -226,21 +226,21 @@ class Telnet extends Window {
 
                 if (s > 0) { //styled
 
-                    let split = line[i].split(String.fromCharCode(27));
+                    let split = line[i].split(String.fromCharCode(27)); //esc
                     for (let j = 0; j < split.length; j++) {
 
-                        let          e = split[j].indexOf("m"); //ansi stop char
+                        let          e = split[j].indexOf("m"); //ansi stop
                         if (e == -1) e = split[j].indexOf("J"); //clear screen
                         if (e == -1) e = split[j].indexOf("K"); //clear line
 
                         if (e == -1) e = split[j].indexOf("A"); //move cursor |
-                        if (e == -1) e = split[j].indexOf("B"); //move cursor | cursor navigation
-                        if (e == -1) e = split[j].indexOf("C"); //move cursor | is not supported
-                        if (e == -1) e = split[j].indexOf("D"); //move cursor |
-                        if (e == -1) e = split[j].indexOf("E");
-                        if (e == -1) e = split[j].indexOf("F");
-                        if (e == -1) e = split[j].indexOf("G");
-                        if (e == -1) e = split[j].indexOf("H");
+                        if (e == -1) e = split[j].indexOf("B"); //move cursor |
+                        if (e == -1) e = split[j].indexOf("C"); //move cursor |
+                        if (e == -1) e = split[j].indexOf("D"); //move cursor | cursor navigation
+                        if (e == -1) e = split[j].indexOf("E"); //move cursor | is not supported
+                        if (e == -1) e = split[j].indexOf("F"); //move cursor |
+                        if (e == -1) e = split[j].indexOf("G"); //move cursor |
+                        if (e == -1) e = split[j].indexOf("H"); //move cursor |
 
                         if (e == -1) e = split[j].indexOf(" ");
 
@@ -251,6 +251,14 @@ class Telnet extends Window {
                                 back = "transparent";
                                 bold = false;
                                 underline = false;
+                                break;
+
+                            case "[1m": bold = true; break;
+                            case "[4m": underline = true; break;
+
+                            case "[7m":
+                                front = "#222";
+                                back = "#ccc";
                                 break;
 
                             case "[30m": front = "#000"; break;
@@ -289,28 +297,15 @@ class Telnet extends Window {
                             case "[46;1m": back = "#0dd"; bold = true; break;
                             case "[47;1m": back = "#ddd"; bold = true; break;
 
-                            case "[1m": bold = true; break;
-                            case "[4m": underline = true; break;
-
-                            case "[7m":
-                                front = "#222";
-                                back = "#ccc";
-                                break;
-
-                            case "[0J":
-                            case "[1J":
-                            case "[2J":
+                            case "[0J": case "[1J": case "[2J":
                                 this.PushLine();
                                 this.last.style.height = this.content.clientHeight;
                                 this.PushLine();
                                 break;
 
-                            case "[0K":
-                            case "[1K":
-                            case "[2K":
+                            case "[0K": case "[1K": case "[2K":
                                 this.last.innerHTML = "";
                                 break;
-
                         }
 
                         this.PushText(split[j].replace(ansi, ""), front, back, bold, underline);

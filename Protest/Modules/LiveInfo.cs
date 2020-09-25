@@ -119,7 +119,6 @@ public static class LiveInfo {
                     
                     if (percent < 10)
                          warnings.Add($"{percent}% free space on disk {caption}");
-
                 }
             }
             
