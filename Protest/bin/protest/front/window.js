@@ -30,7 +30,13 @@ document.body.onmousemove = win_mousemove;
 document.body.onmouseup   = win_mouseup;
 document.body.onkeydown   = win_keydown;
 
-bottombar.onmousedown = event=> { if (event.button == 1) event.preventDefault(); }; //prevent mid-mouse scroll
+bottombar.onmousedown = event => {
+    if (event.button == 1) event.preventDefault(); //prevent mid-mouse scroll
+
+    if (event.buttons == 1 && event.layerX > bottombar.clientWidth - 2)
+        for (let i = 0; i < $w.array.length; i++) 
+            $w.array[i].Minimize(true);
+};
 
 document.body.onbeforeunload = () => {
     if (localStorage.getItem("alive_after_close") != "true") {

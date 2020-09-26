@@ -81,9 +81,9 @@ class NtpClient extends Window {
                 if (json.local && json.transmit) {
                     this.id = id;
 
-                    this.lblStuff.innerHTML  = `Roundtrip: <b>${json.roundtrip}ms</b><br>`;
-                    this.lblStuff.innerHTML += `Transmited time: <b>${json.transmit}</b><br>`;
-                    this.lblStuff.innerHTML += `Local time: <b>${json.local}</b>`;
+                    this.lblStuff.innerHTML  = `Roundtrip:&nbsp;<b>${json.roundtrip}ms</b><br>`;
+                    this.lblStuff.innerHTML += `Transmited time:&nbsp;<b>${json.transmit}</b><br>`;
+                    this.lblStuff.innerHTML += `Local time:&nbsp;<b>${json.local}</b>`;
 
                     let split = json.local.split(":").map(o => parseInt(o));
                     setTimeout(() => {

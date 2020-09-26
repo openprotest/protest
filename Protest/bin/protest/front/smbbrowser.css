@@ -5,14 +5,17 @@
 }
 
 .smb-bar {
+    position: relative;
     grid-area: 1 / 1 / 1 / 3;
     padding: 0;
-    margin: 0;
+    margin: 0 2px;
     background: linear-gradient(rgb(96,96,96), rgb(80,80,80));
+    border-radius: 2px;
 }
 
 .smb-side {
     grid-area: 2 / 1 / 3 / 2;
+    overflow-y: scroll;
 }
 
 .smb-list {
@@ -22,4 +25,61 @@
     padding: 0;
     border-radius: 4px;
     overflow-y: scroll;
+}
+
+.smb-nav-button {
+    display: inline-block;
+    width: 40px;
+    height: 32px;
+    border-radius: 4px;
+    margin: 2px 4px;
+
+    background-position: center;
+    background-size: 26px;
+    background-repeat: no-repeat;
+    transition: .2s;
+}
+
+.smb-nav-button:hover {
+    background-color: #444;
+}
+.smb-nav-button:active {
+    background-color: #333;
+}
+
+
+.smb-path {
+    position: absolute;
+    left: 254px;
+    right: 4px;
+    top: 4px;
+    bottom: 4px;
+    color: #C0C0C0;
+    overflow: hidden;
+}
+
+.smb-path > div {
+    display: inline-block;
+    overflow: hidden;
+    padding: 4px;
+    margin-right: 20px;
+    border-radius: 2px;
+}
+
+.smb-path > div:nth-child(n+2)::before {
+    position: absolute;
+    content: " ";
+    width: 20px;
+    height: 20px;
+
+    border-right: 6px solid #C0C0C0;
+    border-top: 6px solid #C0C0C0;
+    transform: translate(-28px, -2px) rotate(45deg) scale(.3);
+}
+
+.smb-path > div:hover {
+    background-color: #444;
+}
+.smb-path > div:active {
+    background-color: #333;
 }

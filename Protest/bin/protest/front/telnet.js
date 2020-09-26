@@ -196,14 +196,14 @@ class Telnet extends Window {
         };
 
         this.ws.onclose = () => {
-            this.PushLine();
-            this.last.innerHTML = "tcp connection has been terminated <u>click to reconnect</u>";
-            this.last.style.color = "var(--theme-color)";
-            this.last.style.cursor = "pointer";
-            this.last.onclick = event => {
-                event.srcElement.style.cursor = "";
-                event.srcElement.innerHTML = "tcp connection has been terminated";
-                event.srcElement.onclick = () => { };
+            let message = this.PushLine();
+            message.innerHTML = "tcp connection has been terminated <u>click to reconnect</u>";
+            message.style.color = "var(--theme-color)";
+            message.style.cursor = "pointer";
+            message.onclick = event => {
+                message.onclick = () => { };
+                message.style.cursor = "";
+                message.innerHTML = "tcp connection has been terminated";
                 this.list.appendChild(document.createElement("hr"));
                 this.PushLine();
                 this.Connect(target);
