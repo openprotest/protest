@@ -12,7 +12,7 @@ public static class FileBrowser {
 
         if (path.Length == 0) return null;
 
-        if (path.StartsWith("smb:")) path = $"\\\\{path.Substring(4)}";
+        if (path.StartsWith("smb:")) path = $"//{path.Substring(4)}";
         path = path.Replace("/", "\\");
 
         StringBuilder sb = new StringBuilder();
@@ -22,7 +22,7 @@ public static class FileBrowser {
 
             DirectoryInfo[] dirs = dir.GetDirectories();
             for (int i = 0; i < dirs.Length; i++) {
-                sb.Append($"f{(char)127}");
+                sb.Append($"d{(char)127}");
                 sb.Append($"{dirs[i].Name}{(char)127}");
                 sb.Append($"{dirs[i].FullName}{(char)127}");
                 sb.Append($"{dirs[i].LastWriteTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}");
@@ -35,10 +35,12 @@ public static class FileBrowser {
                 sb.Append($"{files[i].Name}{(char)127}");
                 sb.Append($"{files[i].FullName}{(char)127}");
                 sb.Append($"{files[i].LastWriteTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}");
-                sb.Append($"{files.Length}{(char)127}");
+                sb.Append($"{Strings.SizeToString(files[i].Length)}{(char)127}");
             }
 
-        } catch { }
+        } catch (Exception ex) {
+            return Encoding.UTF8.GetBytes(ex.Message);
+        }
 
         return Encoding.UTF8.GetBytes(sb.ToString());
     }

@@ -144,6 +144,9 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\res\file.svg" />
+    <Content Include="bin\protest\front\res\g_file.svg" />
+    <Content Include="bin\protest\front\res\g_folder.svg" />
     <Content Include="bin\protest\front\res\l_folder.svg" />
     <Content Include="bin\protest\front\res\l_goback.svg" />
     <Content Include="bin\protest\front\res\l_goforward.svg" />
