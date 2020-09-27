@@ -451,7 +451,7 @@ class Equip extends Window {
                 btnSmb.onclick = () => {
                     if (this.entry.IP) {
                         let ip = this.entry.IP[0].split(";").map(o => o.trim());
-                        new FileBrowser({ path: ip, filename: this.filename });
+                        new FileBrowser({ path: ip[0], filename: this.filename, view: "grid" });
                     }
 
                     /*const xhr = new XMLHttpRequest();

@@ -11,7 +11,8 @@ class FileBrowser extends Window {
 
         this.args = args ? args : {
             path: "127.0.0.1/c$",
-            filename: null
+            filename: null,
+            view: "list"
         };
 
         this.history = [];
@@ -38,7 +39,7 @@ class FileBrowser extends Window {
         this.btnBack.className = "smb-nav-button";
         this.btnBack.style.filter = "contrast(.1)";
         this.btnBack.style.backgroundImage = "url(res/l_goback.svgz)";
-        this.btnBack.style.marginLeft = "16px";
+        this.btnBack.style.marginLeft = "12px";
         bar.appendChild(this.btnBack);
 
         this.btnForward = document.createElement("div");
@@ -85,9 +86,11 @@ class FileBrowser extends Window {
             if (this.btnView.className == "smb-nav-button btnView-list") {
                 this.btnView.className = "smb-nav-button btnView-grid";
                 this.list.className = "smb-list smb-gridview";
+                this.args.view = "grid";
             } else {
                 this.btnView.className = "smb-nav-button btnView-list";
                 this.list.className = "smb-list smb-listview";
+                this.args.view = "list";
             }
         };
 
@@ -108,11 +111,13 @@ class FileBrowser extends Window {
             xhr.send();
         };
 
+        if (this.args.view == "grid") this.btnView.onclick();
+
         this.GoTo(this.args.path);
     }
 
     Load(path) {
-        this.list.innerHTML = "";
+        //this.list.innerHTML = "";
 
         this.btnBack.style.filter = this.historyIndex < 1 ? "contrast(.1)" : "none";
         this.btnForward.style.filter = this.historyIndex >= this.history.length - 1 ? "contrast(.1)" : "none";
@@ -133,8 +138,11 @@ class FileBrowser extends Window {
                 for (let i = 0; i < split.length - 5; i += 5) { //plot
                     const entry = document.createElement("div");
                     entry.className = "smb-entry";
-                    entry.style.backgroundImage = `url(${FILES_ICONS_MAP[split[i]]})`;
                     this.list.appendChild(entry);
+
+                    const icon = document.createElement("div");
+                    icon.style.backgroundImage = `url(${FILES_ICONS_MAP[split[i]]})`;
+                    entry.appendChild(icon);
 
                     const lblName = document.createElement("div");
                     lblName.innerHTML = split[i+1];
@@ -148,10 +156,22 @@ class FileBrowser extends Window {
                     lblDate.innerHTML = split[i+4];
                     entry.appendChild(lblDate);
 
+                    if (split[i] === "f" && split[i+1].indexOf(".") > -1) {
+                        let extention = split[i+1].split(".");
+                        extention = extention[extention.length - 1];
+                        const lblExtention = document.createElement("div");
+                        lblExtention.innerHTML = extention.toUpperCase();
+                        icon.appendChild(lblExtention);
+
+                        lblExtention.style.backgroundColor = "rgb(" + ((extention.charCodeAt(0) * 5) % 192 + 63) + "," +
+                            ((extention.charCodeAt(1 % extention.length) * 5) % 192 + 63) + "," +
+                            ((extention.charCodeAt(2 % extention.length) * 5) % 192 + 63) + ")";
+                    }
+
                     if (split[i] !== "f")
                         entry.ondblclick = () => this.GoTo(path + "/" + split[i+1]);                    
                 }
-                
+
                 let pathSplit = path.split("/");
                 for (let i = 0; i < pathSplit.length; i++) {
                     const entry = document.createElement("div");
@@ -174,6 +194,9 @@ class FileBrowser extends Window {
     }
 
     GoTo(path) {
+        if (this.historyIndex < this.history.length-1) //crop
+            this.history.length = this.historyIndex;
+
         this.history.push(path);
         this.historyIndex = this.history.length - 1;
 

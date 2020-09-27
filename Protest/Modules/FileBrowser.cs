@@ -16,16 +16,23 @@ public static class FileBrowser {
 
         StringBuilder sb = new StringBuilder();
 
-        Console.WriteLine(path);
-
         if (path.IndexOf("/") == -1) {
             try {
                 string[] share = Encoding.UTF8.GetString(Wmi.WmiQuery(path, "SELECT Name FROM Win32_Share")).Split((char)127);
 
                 for (int i = 2; i < share.Length; i++) {
                     if (share[i].Length == 0) continue;
+                    if (share[i] == "IPC$") continue;
 
-                    sb.Append($"{(share[i].Length == 2 && share[i][1] == '$' ? "h" : "s")}{(char)127}");
+                    string type = "";
+                    if (share[i].Length == 2 && share[i][1] == '$')
+                        type = "h";
+                    else if (share[i][share[i].Length - 1] == '$')
+                        type = "d";
+                    else
+                        type = "s";
+
+                    sb.Append($"{type}{(char)127}");
                     sb.Append($"{share[i]}{(char)127}");
                     sb.Append($"{share[i]}{(char)127}");
                     sb.Append((char)127);
