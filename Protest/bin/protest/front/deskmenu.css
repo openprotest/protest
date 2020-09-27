@@ -46,7 +46,7 @@
     background-color: #E87600;
     background: var(--toolbar-bg);
 
-    border-right: 3px dotted rgb(16,16,16) ;
+    border-right: 3px dotted rgba(64,64,64,.4);
 
     transition: .2s;
 }

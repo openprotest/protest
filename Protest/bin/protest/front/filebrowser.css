@@ -27,6 +27,16 @@
     overflow-y: scroll;
 }
 
+.smb-list:empty::after {
+    display: block;
+    content: "directory is empty";
+    color: #808080;
+    margin-top: 20px;
+    text-align: center;
+    animation: fade-in .8s ease-in;
+}
+
+
 .smb-nav-button {
     display: inline-block;
     width: 40px;

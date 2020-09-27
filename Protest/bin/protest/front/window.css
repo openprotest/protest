@@ -293,8 +293,8 @@
 
 .no-results:empty::after {
     display: block;
-    content: "no results..";
-    font-size: 24px;
+    content: "no results";
+    font-size: 20px;
     font-family: var(--global-font-family);
     color: #C0C0C0;
     margin-top: 20px;
@@ -311,8 +311,8 @@
 
 .no-entries:empty::after {
     display: block;
-    content: "no results..";
-    font-size: 24px;
+    content: "no results";
+    font-size: 20px;
     font-family: var(--global-font-family);
     color: #C0C0C0;
     margin-top: 20px;

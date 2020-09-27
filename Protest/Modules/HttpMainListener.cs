@@ -229,7 +229,7 @@ class HttpMainListener : Http {
                 case "clients/get": buffer = Session.GetClients(); break;
                 case "clients/kick": buffer = Session.KickClient(para, performer); break;
 
-                case "smb/get": buffer = SmbBrowser.Get(para); break;
+                case "files/get": buffer = FileBrowser.Get(para); break;
 
                 case "log/get": buffer = Logging.Get(); break;
 

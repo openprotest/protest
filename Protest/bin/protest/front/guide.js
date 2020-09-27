@@ -219,7 +219,7 @@ class Guide extends Window {
         this.body.appendChild(document.createElement("br"));
         this.InsertHeading("Port scan", "res/portscan.svgz");
         this.InsertParagraph(
-            "Port scan utility scans the specified host for ported TCP ports, listing them with their default protocols. You can customize your scans by limiting your ports to a specific range to optimize your workflow."
+            "This utility scans the specified hosts using a full-open scan for TCP ports and then listing them with their default protocols. You can customize your scans by limiting your ports to a specific range and optimize your workflow."
         );
 
         this.body.appendChild(document.createElement("br"));

@@ -62,7 +62,7 @@
     <Compile Include="Modules\Backup.cs" />
     <Compile Include="Modules\DebitNotes.cs" />
     <Compile Include="Modules\Documentation.cs" />
-    <Compile Include="Modules\SmbBrowser.cs" />
+    <Compile Include="Modules\FileBrowser.cs" />
     <Compile Include="Modules\TaskWrapper.cs" />
     <Compile Include="Modules\Tools\ActiveDirectory.cs" />
     <Compile Include="Modules\KeepAlive.cs" />
@@ -144,6 +144,7 @@
     <Content Include="bin\protest\addressbook\phone.svg" />
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
+    <Content Include="bin\protest\front\res\l_folder.svg" />
     <Content Include="bin\protest\front\res\l_goback.svg" />
     <Content Include="bin\protest\front\res\l_goforward.svg" />
     <Content Include="bin\protest\front\res\l_goup.svg" />
@@ -153,8 +154,8 @@
     <Content Include="bin\protest\front\res\gandalf.svg" />
     <Content Include="bin\protest\front\res\l_tor.svg" />
     <Content Include="bin\protest\front\res\tor.svg" />
-    <Content Include="bin\protest\front\smbbrowser.css" />
-    <Content Include="bin\protest\front\smbbrowser.js" />
+    <Content Include="bin\protest\front\filebrowser.css" />
+    <Content Include="bin\protest\front\filebrowser.js" />
     <Content Include="bin\protest\front\guide.css" />
     <Content Include="bin\protest\front\guide.js" />
     <Content Include="bin\protest\front\res\remote.svg" />
