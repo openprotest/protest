@@ -92,7 +92,7 @@ public static class RaHandler {
                 try {
                     using Process p = new Process();
                     p.StartInfo.FileName = "explorer.exe";
-                    p.StartInfo.Arguments = $"\\\\{hostname}\\{arg}";
+                    p.StartInfo.Arguments = $"\\\\{hostname}\\{arg.Replace("/", "\\")}";
                     p.StartInfo.UseShellExecute = true;
                     p.Start();
                 } catch (Exception ex) {

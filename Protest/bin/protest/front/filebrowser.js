@@ -1,9 +1,17 @@
+let FILES_ICONS_MAP = {
+    "d": "res/g_folder.svgz",
+    "s": "res/g_shared.svgz",
+    "h": "res/g_diskdrive.svgz",
+    "f": "res/g_file.svgz",
+};
+
 class FileBrowser extends Window {
     constructor(args) {
         super([64,64,64]);
 
         this.args = args ? args : {
-            path: "127.0.0.1/c$"
+            path: "127.0.0.1/c$",
+            filename: null
         };
 
         this.history = [];
@@ -21,10 +29,6 @@ class FileBrowser extends Window {
         const bar = document.createElement("dir");
         bar.className = "smb-bar";
         this.content.appendChild(bar);
-
-        const side = document.createElement("dir");
-        side.className = "smb-side";
-        this.content.appendChild(side);
 
         this.list = document.createElement("dir");
         this.list.className = "smb-list smb-listview";
@@ -56,6 +60,7 @@ class FileBrowser extends Window {
         this.btnOpen= document.createElement("div");
         this.btnOpen.className = "smb-nav-button";
         this.btnOpen.style.backgroundImage = "url(res/l_folder.svgz)";
+        if (!this.args.filename) this.btnOpen.style.filter = "contrast(.1)";
         bar.appendChild(this.btnOpen);
 
         this.pathContainer = document.createElement("div");
@@ -87,12 +92,19 @@ class FileBrowser extends Window {
         };
 
         this.btnOpen.onclick = () => {
+            if (!this.args.filename) return;
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
-            xhr.open("GET", `ra&smb&&${this.args.path}`, true);
+
+            let pathSplit = this.args.path.split("/");
+            let path = "";
+            for (let i = 1; i < pathSplit.length; i++)
+                path += pathSplit[i] + "/";
+            console.log(path);
+            xhr.open("GET", `ra&smb&${this.args.filename}&${path}`, true);
             xhr.send();
         };
 
@@ -114,14 +126,14 @@ class FileBrowser extends Window {
                     return;
                 }
 
-                this.args = { path: path };
+                this.args.path = path;
                 this.list.innerHTML = "";
                 this.pathContainer.innerHTML = "";
 
                 for (let i = 0; i < split.length - 5; i += 5) { //plot
                     const entry = document.createElement("div");
                     entry.className = "smb-entry";
-                    entry.style.backgroundImage = split[i] === "d" ? "url(res/g_folder.svgz)" : "url(res/g_file.svgz)";
+                    entry.style.backgroundImage = `url(${FILES_ICONS_MAP[split[i]]})`;
                     this.list.appendChild(entry);
 
                     const lblName = document.createElement("div");
@@ -136,7 +148,7 @@ class FileBrowser extends Window {
                     lblDate.innerHTML = split[i+4];
                     entry.appendChild(lblDate);
 
-                    if (split[i] === "d")
+                    if (split[i] !== "f")
                         entry.ondblclick = () => this.GoTo(path + "/" + split[i+1]);                    
                 }
                 
@@ -146,15 +158,11 @@ class FileBrowser extends Window {
                     entry.innerHTML = pathSplit[i];
                     this.pathContainer.appendChild(entry);
 
-                    if (i === 0)
-                        entry.style.backgroundColor = "transparent";
-
-                    if (i > 0)
-                        entry.onclick = () => {
-                            let p = "";
-                            for (let j = 0; j <= i; j++) p += (j > 0 ? "/" : "") + pathSplit[j];
-                            this.GoTo(p);
-                        };
+                    entry.onclick = () => {
+                        let p = "";
+                        for (let j = 0; j <= i; j++) p += (j > 0 ? "/" : "") + pathSplit[j];
+                        this.GoTo(p);
+                    };
                 }
 
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected

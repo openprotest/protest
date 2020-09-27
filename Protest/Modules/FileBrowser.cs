@@ -12,10 +12,32 @@ public static class FileBrowser {
 
         if (path.Length == 0) return null;
 
-        if (path.StartsWith("smb:")) path = $"//{path.Substring(4)}";
-        path = path.Replace("/", "\\");
+        if (path.StartsWith("smb:")) path = path.Substring(4);
 
         StringBuilder sb = new StringBuilder();
+
+        Console.WriteLine(path);
+
+        if (path.IndexOf("/") == -1) {
+            try {
+                string[] share = Encoding.UTF8.GetString(Wmi.WmiQuery(path, "SELECT Name FROM Win32_Share")).Split((char)127);
+
+                for (int i = 2; i < share.Length; i++) {
+                    if (share[i].Length == 0) continue;
+
+                    sb.Append($"{(share[i].Length == 2 && share[i][1] == '$' ? "h" : "s")}{(char)127}");
+                    sb.Append($"{share[i]}{(char)127}");
+                    sb.Append($"{share[i]}{(char)127}");
+                    sb.Append((char)127);
+                    sb.Append((char)127);
+                }
+
+                return Encoding.UTF8.GetBytes(sb.ToString());
+            } catch { }
+            return null;
+        }
+        
+        path = "\\\\" + path.Replace("/", "\\");
 
         try {
             DirectoryInfo dir = new DirectoryInfo(path);
@@ -26,7 +48,7 @@ public static class FileBrowser {
                 sb.Append($"{dirs[i].Name}{(char)127}");
                 sb.Append($"{dirs[i].FullName}{(char)127}");
                 sb.Append($"{dirs[i].LastWriteTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}");
-                sb.Append($"{(char)127}");
+                sb.Append((char)127);
             }
 
             FileInfo[] files = dir.GetFiles();

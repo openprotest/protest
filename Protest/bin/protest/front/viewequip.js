@@ -250,13 +250,18 @@ class Equip extends Window {
                 }, 400);
 
                 div.onclick = () => {
-                    const xhr = new XMLHttpRequest();
+                    if (this.entry.IP) {
+                        let ip = this.entry.IP[0].split(";").map(o=>o.trim());
+                        new FileBrowser({ path: ip + "/" + disks[i] + "$", filename: this.filename });
+                    }
+
+                    /*const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200) if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                     };
                     xhr.open("GET", "ra&smb&" + this.filename + "&" + disks[i] + "$", true);
-                    xhr.send();
+                    xhr.send();*/
                 };
             }
         }
@@ -444,13 +449,18 @@ class Equip extends Window {
                 const btnSmb = this.SideButton("res/shared.svgz", "SMB");
                 this.sidetools.appendChild(btnSmb);
                 btnSmb.onclick = () => {
-                    const xhr = new XMLHttpRequest();
+                    if (this.entry.IP) {
+                        let ip = this.entry.IP[0].split(";").map(o => o.trim());
+                        new FileBrowser({ path: ip, filename: this.filename });
+                    }
+
+                    /*const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
                         if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                     };
                     xhr.open("GET", "ra&smb&" + this.filename, true);
-                    xhr.send();
+                    xhr.send();*/
                 };
             }
 

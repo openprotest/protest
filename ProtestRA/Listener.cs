@@ -158,7 +158,7 @@ namespace Protest_RA {
                         try {
                             using (Process p = new Process()) {
                                 p.StartInfo.FileName = "explorer.exe";
-                                p.StartInfo.Arguments = $"\\\\{targer}\\{arg}";
+                                p.StartInfo.Arguments = $"\\\\{targer}\\{arg.Replace("/", "\\")}";
                                 p.StartInfo.UseShellExecute = true;
                                 p.Start();
                             }
