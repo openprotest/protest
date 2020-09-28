@@ -530,8 +530,8 @@ class Settings extends Tabs {
                                     link.style.paddingLeft = "28px";
                                     link.style.background = "url(res/download.svgz) 1px 2px / 24px 24px no-repeat";     
                                     link.target = "_blank";
-                                    link.href = jsonUpdate.assets[0].browser_download_url;
-                                    link.innerHTML = jsonUpdate.assets[0].name;
+                                    link.href = jsonUpdate.assets[i].browser_download_url;
+                                    link.innerHTML = jsonUpdate.assets[i].name;
                                     center.appendChild(link);
                                 }
 
