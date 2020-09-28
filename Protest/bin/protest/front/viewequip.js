@@ -251,7 +251,7 @@ class Equip extends Window {
 
                 div.onclick = () => {
                     if (this.entry.IP) {
-                        let ip = this.entry.IP[0].split(";").map(o=>o.trim());
+                        let ip = this.entry.IP[0].split(";").map(o=>o.trim())[0];
                         new FileBrowser({ path: ip + "/" + disks[i] + "$", filename: this.filename });
                     }
 
@@ -450,8 +450,8 @@ class Equip extends Window {
                 this.sidetools.appendChild(btnSmb);
                 btnSmb.onclick = () => {
                     if (this.entry.IP) {
-                        let ip = this.entry.IP[0].split(";").map(o => o.trim());
-                        new FileBrowser({ path: ip[0], filename: this.filename, view: "grid" });
+                        let ip = this.entry.IP[0].split(";").map(o => o.trim())[0];
+                        new FileBrowser({ path: ip, filename: this.filename, view: "grid" });
                     }
 
                     /*const xhr = new XMLHttpRequest();

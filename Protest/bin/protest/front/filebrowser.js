@@ -158,14 +158,17 @@ class FileBrowser extends Window {
 
                     if (split[i] === "f" && split[i+1].indexOf(".") > -1) {
                         let extention = split[i+1].split(".");
-                        extention = extention[extention.length - 1];
+                        extention = extention[extention.length - 1].toUpperCase();
                         const lblExtention = document.createElement("div");
-                        lblExtention.innerHTML = extention.toUpperCase();
+                        lblExtention.innerHTML = extention;
                         icon.appendChild(lblExtention);
 
-                        lblExtention.style.backgroundColor = "rgb(" + ((extention.charCodeAt(0) * 5) % 192 + 63) + "," +
-                            ((extention.charCodeAt(1 % extention.length) * 5) % 192 + 63) + "," +
-                            ((extention.charCodeAt(2 % extention.length) * 5) % 192 + 63) + ")";
+                        let r = (extention.charCodeAt(0) * 5) % 192 + 63;
+                        let g = (extention.charCodeAt(1 % extention.length) * 5) % 192 + 63;
+                        let b = (extention.charCodeAt(2 % extention.length) * 5) % 192 + 63;
+
+                        if (r*.3 + g*.59 + b*.11 < 112) lblExtention.style.color = "#ddd";
+                        lblExtention.style.backgroundColor = `rgb(${r},${g},${b})`;
                     }
 
                     if (split[i] !== "f")
@@ -181,6 +184,7 @@ class FileBrowser extends Window {
                     entry.onclick = () => {
                         let p = "";
                         for (let j = 0; j <= i; j++) p += (j > 0 ? "/" : "") + pathSplit[j];
+                        if (p === this.args.path) return;
                         this.GoTo(p);
                     };
                 }
@@ -195,7 +199,7 @@ class FileBrowser extends Window {
 
     GoTo(path) {
         if (this.historyIndex < this.history.length-1) //crop
-            this.history.length = this.historyIndex;
+            this.history.length = this.historyIndex+1;
 
         this.history.push(path);
         this.historyIndex = this.history.length - 1;
@@ -230,8 +234,6 @@ class FileBrowser extends Window {
         let path = "";
         for (let i = 0; i < split.length - 1; i++)
             path += (i > 0 ? "/" : "") + split[i];
-
-        if (path.indexOf("/") === -1) return;
 
         if (path.length > 0) this.GoTo(path);        
     }

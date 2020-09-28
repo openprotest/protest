@@ -56,7 +56,7 @@
 .btnView-list > div {
     position: absolute;
     background-color: #C0C0C0;
-    width: 24px;
+    width: 23px;
     height: 4px;
     border-radius: 2px;
     transition: .4s;
@@ -65,7 +65,7 @@
 .btnView-grid > div {
     position: absolute;
     background-color: #C0C0C0;
-    width: 14px;
+    width: 13px;
     height: 10px;
     border-radius: 2px;
     transition: .4s;
@@ -77,9 +77,9 @@
 .btnView-list > div:nth-child(4) {left:8px; top:25px;}
 
 .btnView-grid > div:nth-child(1) {left:4px;  top:4px;}
-.btnView-grid > div:nth-child(2) {left:22px; top:4px;}
+.btnView-grid > div:nth-child(2) {left:21px; top:4px;}
 .btnView-grid > div:nth-child(3) {left:4px;  top:18px;}
-.btnView-grid > div:nth-child(4) {left:22px; top:18px;}
+.btnView-grid > div:nth-child(4) {left:21px; top:18px;}
 
 .smb-path {
     position: absolute;
@@ -120,7 +120,7 @@
 .smb-entry {
     display: inline-block;
     box-sizing: border-box;
-    background-repeat: no-repeat;
+    content-visibility: auto;
 }
 
 .smb-entry:hover {
@@ -157,7 +157,7 @@
     margin-right: 4px;
     border-radius: 2px;
 
-    max-width: 16px;
+    max-width: 24px;
     white-space: nowrap;
     overflow: hidden;
 }
@@ -169,20 +169,21 @@
 .smb-gridview > div {
     width: 112px;
     height: 112px;
+    border-radius: 4px;
 }
 .smb-gridview > div > div:nth-child(1) > div { /*extention*/
     display: inline-block;
     line-height: initial;
     font-size: 12px;
     font-weight: 700;
-    color: #404040;
+    color: #202020;
     padding: 2px 8px;
     margin-right: 16px;
     transform: translateY(40px);
     border: 2px solid #404040;
     border-radius: 4px;
 
-    max-width: 96px;
+    max-width: 64px;
     white-space: nowrap;
     overflow: hidden;
 }

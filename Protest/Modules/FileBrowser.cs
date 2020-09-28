@@ -18,24 +18,29 @@ public static class FileBrowser {
 
         if (path.IndexOf("/") == -1) {
             try {
-                string[] share = Encoding.UTF8.GetString(Wmi.WmiQuery(path, "SELECT Name FROM Win32_Share")).Split((char)127);
+                string[] share = Encoding.UTF8.GetString(Wmi.WmiQuery(path, "SELECT Caption, Name, Type FROM Win32_Share")).Split((char)127);
 
-                for (int i = 2; i < share.Length; i++) {
+                for (int i = 4; i < share.Length; i+=3) {
                     if (share[i].Length == 0) continue;
-                    if (share[i] == "IPC$") continue;
+
+                    string c = share[i];
+                    string n = share[i+1];
+                    string t = share[i+2];
+
+                    if (n == "IPC$") continue;
 
                     string type = "";
-                    if (share[i].Length == 2 && share[i][1] == '$')
+                    if (n.Length == 2 && n[1] == '$')
                         type = "h";
-                    else if (share[i][share[i].Length - 1] == '$')
+                    else if (n[n.Length - 1] == '$')
                         type = "d";
                     else
                         type = "s";
 
                     sb.Append($"{type}{(char)127}");
-                    sb.Append($"{share[i]}{(char)127}");
-                    sb.Append($"{share[i]}{(char)127}");
-                    sb.Append((char)127);
+                    sb.Append($"{n}{(char)127}");
+                    sb.Append($"{n}{(char)127}");
+                    sb.Append($"{c}{(char)127}");
                     sb.Append((char)127);
                 }
 
