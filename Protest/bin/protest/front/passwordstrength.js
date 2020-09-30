@@ -136,7 +136,7 @@ class PasswordStrength extends ListWindow {
         element.appendChild(divBar);
 
         const lblStrength = document.createElement("div");
-        lblStrength.innerHTML = `${entry.entropy}-bits (${bar[2]})`;
+        lblStrength.innerHTML = `${entry.entropy}-bits <i>${bar[2]}</i>`;
         lblStrength.className = "lst-strength-lbl-2";
         element.appendChild(lblStrength);
 

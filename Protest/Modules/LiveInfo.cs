@@ -245,14 +245,22 @@ public static class LiveInfo {
                         if (time.Length > 0) WsWriteText(ws, $"bad password time{(char)127}{time}{(char)127}Active directory");
                     }
 
-                    if (sr.Properties["lockoutTime"].Count > 0)
-                    {
+                    if (sr.Properties["lockoutTime"].Count > 0) {
                         string time = ActiveDirectory.FileTimeString(sr.Properties["lockoutTime"][0].ToString());
                         if (time.Length > 0) WsWriteText(ws, $"lockout time{(char)127}{time}{(char)127}Active directory");
                     }
                 }
 
             } catch { }
+
+            if (user.hash.ContainsKey("PASSWORD")) {
+                string password = ((string[])user.hash["PASSWORD"])[0];
+                if (password.Length > 0) {
+                    double entropy = PasswordStrength.Entropy(password);
+                    Console.WriteLine(entropy);
+                    if (entropy < 28) WsWriteText(ws, $"!{(char)127}{"Weak password"}{(char)127}");
+                }
+            }
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
 

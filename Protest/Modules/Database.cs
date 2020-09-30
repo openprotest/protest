@@ -375,7 +375,7 @@ class Database {
             if (entry.hash.ContainsKey(o.Key)) { //overwrite property
                 string key = (string)o.Key;
                 string[] current = (string[])entry.hash[key];
-                if (key.Contains("PASSWORD")) {
+                if (key.Contains("PASSWORD")) { //if null, keep old value
                     if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
                 } else
                     entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
@@ -407,8 +407,8 @@ class Database {
             string[] current = (string[])entry.hash[key];
             broadcast.Append($"\"{Strings.EscapeJson(key)}\":");
 
-            if (key == "PASSWORD")
-                broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"\"]");
+            if (key.Contains("PASSWORD"))
+                broadcast.Append($"[\"\",\"{Strings.EscapeJson(current[1])}\"]");
             else
                 broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
 
@@ -521,7 +521,7 @@ class Database {
             if (entry.hash.ContainsKey(o.Key)) { //overwrite property
                 string key = (string)o.Key;
                 string[] current = (string[])entry.hash[key];
-                if (key.Contains("PASSWORD")) {
+                if (key.Contains("PASSWORD")) { //if null, keep old value
                     if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
                 } else
                     entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
@@ -552,8 +552,8 @@ class Database {
             string[] current = (string[])entry.hash[key];
             broadcast.Append($"\"{Strings.EscapeJson(key)}\":");
 
-            if (key == "PASSWORD")
-                broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"\"]");
+            if (key.Contains("PASSWORD"))
+                broadcast.Append($"[\"\",\"{Strings.EscapeJson(current[1])}\"]");
             else
                 broadcast.Append($"[\"{Strings.EscapeJson(current[0])}\",\"{Strings.EscapeJson(current[1])}\"]");
 

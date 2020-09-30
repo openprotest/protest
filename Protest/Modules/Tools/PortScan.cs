@@ -168,7 +168,9 @@ public static class PortScan {
 
         object send_lock = new object();
 
+#if !DEBUG
         try {
+#endif
             while (ws.State == WebSocketState.Open) {
                 byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -244,11 +246,17 @@ public static class PortScan {
                 }).Start();
 
             }
+#if !DEBUG
+        } catch (WebSocketException ex) {
+            Logging.Err(ex);
+
         } catch (Exception ex) {
             Logging.Err(ex);
+
         } /*finally {
             ctx.Response.Close();
         }*/
+#endif
     }
     public static async Task<bool[]> PortsScanAsync(string host, int from, int to) {
         int[] q = Netstat(host);
