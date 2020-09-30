@@ -525,7 +525,7 @@ class Database {
                     if (o.Value.ToString().Length > 0) entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
                 } else
                     entry.hash[o.Key] = (current[0] == (string)payloadHash[o.Key]) ? current : new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" };
-            } else {//new property
+            } else { //new property
                 entry.hash.Add(o.Key, new string[] { o.Value.ToString(), $"{performer}, {DateTime.Now.ToString(Strings.DATE_FORMAT)}", "" });
             }
         
