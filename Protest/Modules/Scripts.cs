@@ -619,7 +619,7 @@ public static class Scripts {
             case "Subtract rows": return N_SubtractRows(node);
             case "Sort": return N_Sort(node);
             case "Reverse order": return N_ReverseOrder(node);
-            case "Trim": return N_Trim(node);
+            case "Trim array": return N_TrimArray(node);
             case "Unique": return N_Unique(node);
             case "Merge columns": return N_MergeColumns(node);
             case "Merge rows": return N_MergeRows(node);
@@ -642,6 +642,12 @@ public static class Scripts {
             case "Median": return N_Median(node);
             case "Mode": return N_Mode(node);
             case "Range": return N_Range(node);
+
+            case "Lower case": return N_LowerCase(node);
+            case "Upper case": return N_UpperCase(node);
+            case "Trim": return N_Trim(node);
+            case "Replace string": return N_Replace(node);
+            case "Prettify dates": return N_PrettifyFileDates(node);
 
             case "Preview": return N_Preview(node);
             case "Text file": return N_SaveTxt(node);
@@ -745,7 +751,6 @@ public static class Scripts {
                 if (header.Contains(e.Key.ToString())) continue;
                 header.Add(e.Key.ToString());
             }
-
 
         ScriptResult result = new ScriptResult();
         result.header = header.ToArray();
@@ -1252,7 +1257,6 @@ public static class Scripts {
 
         for (int i = 0; i < minuend.Count; i++) {
             bool mached = false;
-
             for (int j = 0; j < subtrahend.Count; j++)
                 if (subtrahend[j].SequenceEqual(minuend[i])) {
                     mached = true;
@@ -1276,11 +1280,14 @@ public static class Scripts {
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
 #nullable enable
         List<string[]>? sorted = null;
-#nullable disable
 
         if (index > -1) {
             sorted = node.sourceNodes[0].result.array.ConvertAll(o => o); //semi-deep copy
             sorted.Sort((string[] a, string[] b) => {
+
+                if (index >= a.Length || a[index] is null) return 1;
+                if (index >= b.Length || b[index] is null) return -1;
+
                 if (double.TryParse(a[index], out double da) && double.TryParse(b[index], out double db)) {
                     if (da > db) return 1;
                     if (da < db) return -1;
@@ -1289,6 +1296,8 @@ public static class Scripts {
                 return a[index].CompareTo(b[index]);
             });
         }
+
+#nullable disable
 
         return new ScriptResult() { //sorted
             header = node.sourceNodes[0].result.header,
@@ -1307,7 +1316,7 @@ public static class Scripts {
             array = reversed
         };
     }
-    private static ScriptResult N_Trim(in ScriptNode node) { //remove if empty
+    private static ScriptResult N_TrimArray(in ScriptNode node) { //remove if empty
         /* [0] <-
          * [1] -> */
 
@@ -1870,6 +1879,118 @@ public static class Scripts {
         return new ScriptResult() {
             header = new string[] { "Range" },
             array = array
+        };
+    }
+
+    private static ScriptResult N_LowerCase(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        if (index == -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                for (int j=0; j < node.sourceNodes[0].result.array[i].Length; j++) 
+                    node.sourceNodes[0].result.array[i][j] = node.sourceNodes[0].result.array[i]?[j]?.ToLower();
+        else
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                node.sourceNodes[0].result.array[i][index] = node.sourceNodes[0].result.array[i]?[index]?.ToLower();
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array,
+        };
+    }
+    private static ScriptResult N_UpperCase(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        if (index == -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
+                    node.sourceNodes[0].result.array[i][j] = node.sourceNodes[0].result.array[i]?[j]?.ToUpper();
+        else
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                node.sourceNodes[0].result.array[i][index] = node.sourceNodes[0].result.array[i]?[index]?.ToUpper();
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array,
+        };
+    }
+    private static ScriptResult N_Trim(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        if (index == -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
+                    node.sourceNodes[0].result.array[i][j] = node.sourceNodes[0].result.array[i]?[j]?.Trim();
+        else
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                node.sourceNodes[0].result.array[i][index] = node.sourceNodes[0].result.array[i]?[index]?.Trim();
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array,
+        };
+    }
+    private static ScriptResult N_Replace(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] old
+         * [3] new
+         * [4] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+        string o = node.values[2];
+        string n = node.values[3];
+
+        if (index == -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
+                    node.sourceNodes[0].result.array[i][j] = node.sourceNodes[0].result.array[i]?[j]?.Replace(o, n);
+        else
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                node.sourceNodes[0].result.array[i][index] = node.sourceNodes[0].result.array[i]?[index]?.Replace(o, n);
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array,
+        };
+    }
+    private static ScriptResult N_PrettifyFileDates(in ScriptNode node) {
+        /* [0] <-
+         * [1] -> */
+
+        List<string[]> prettified = new List<string[]>();
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
+                if (node.sourceNodes[0].result.header[j] == "pwdlastset" |
+                    node.sourceNodes[0].result.header[j] == "lastlogontimestamp" |
+                    node.sourceNodes[0].result.header[j] == "lastlogon" |
+                    node.sourceNodes[0].result.header[j] == "accountexpires" |
+                    node.sourceNodes[0].result.header[j] == "badpasswordtime") {
+
+                    try {
+                        node.sourceNodes[0].result.array[i][j] = ActiveDirectory.FileTimeString(node.sourceNodes[0].result.array[i][j]);
+                    } catch { }
+                }
+
+            prettified.Add(node.sourceNodes[0].result.array[i]);
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = prettified
         };
     }
 

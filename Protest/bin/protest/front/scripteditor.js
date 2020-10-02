@@ -544,7 +544,6 @@ class ScriptEditor extends Window {
         filter = filter.toLowerCase();
 
         let label = null;
-
         for (let i = 0; i < Script_ToolsArray.length; i++) {
             if (Script_ToolsArray[i].label) {
                 label = document.createElement("div");

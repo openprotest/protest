@@ -548,7 +548,7 @@ public static class Watchdog {
             };
             smtp.Send(mail);
 
-            Logging.Action("Watchdog notification", "Successfully sent an email notification");
+            Logging.Action("Watchdog", "Successfully sent an email notification");
 
             smtp.Dispose();
             mail.Dispose();
