@@ -11,6 +11,7 @@
 #
 #[name]	[css-color]	[type,label]*X
 
+
 Data source
 Pro-test users		rgb(32,32,32)	o,Users
 Pro-test equipment	rgb(32,32,32)	o,Equipment
@@ -78,6 +79,7 @@ Actions
 #Log off PC	hsl(64,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
 
 Export
+#Preview	rgb(224,224,224)	i,Input
 Text file	rgb(224,224,224)	i,Input	t,Filename
 CSV file	rgb(224,224,224)	i,Input	t,Filename
 JSON file	rgb(224,224,224)	i,Input	t,Filename

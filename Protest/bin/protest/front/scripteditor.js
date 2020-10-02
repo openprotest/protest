@@ -7,14 +7,14 @@
    t: text (preset)
    m: multiline */
 
-var Script_ToolsArray = [];
+let Script_ToolsArray = [];
 
-var Script_PtUserColumns = null;
-var Script_PtEquipColumns = null;
-var Script_AdUserColumns = null;
-var Script_AdWorkstationColumns = null;
-var Script_AdGroupsColumns = null;
-var Script_WmiClasses = null;
+let Script_PtUserColumns = null;
+let Script_PtEquipColumns = null;
+let Script_AdUserColumns = null;
+let Script_AdWorkstationColumns = null;
+let Script_AdGroupsColumns = null;
+let Script_WmiClasses = null;
 
 const Script_GetColumns = callback => {
     let pScriptTools = new Promise((resolve, reject) => {
