@@ -202,6 +202,7 @@ class HttpMainListener : Http {
                 case "scripts/delete" : buffer = Scripts.DeleteScript(para); break;
                 case "scripts/getreport" : buffer = Scripts.GetReport(para); break;
                 case "scripts/delreport" : buffer = Scripts.DeleteReport(para); break;
+                case "scripts/getpreview": buffer = Scripts.GetPreview(para); break;
                         
                 case "docs/get":    buffer = Documentation.Get(para); break;
                 case "docs/create": buffer = Documentation.Create(ctx, performer); break;

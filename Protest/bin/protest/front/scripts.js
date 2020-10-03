@@ -401,3 +401,91 @@ class ScriptReport extends Window {
         zoom.onchange = () => { divReport.style.fontSize = zoom.value + "px"; };
     }
 }
+
+class ScriptPreview extends Window {
+    constructor(id) {
+        super();
+        this.setTitle("Preview");
+        this.setIcon("res/reportfile.svgz");
+
+        this.AddCssDependencies("wmi.css");
+
+        this.previewId = id;
+        this.used = false;
+
+        this.content.style.overflow = "hidden";
+
+        this.preview = document.createElement("div");
+        this.preview.style.overflowX = "scroll";
+        this.preview.style.overflowY = "scroll";
+        this.preview.style.whiteSpace = "nowrap";
+        this.preview.style.fontFamily = "monospace";
+        this.preview.style.userSelect = "text";
+        this.preview.style.position = "absolute";
+        this.preview.style.padding = "16px";
+        this.preview.style.left = "0";
+        this.preview.style.right = "0";
+        this.preview.style.top = "0";
+        this.preview.style.bottom = "32px";
+        this.preview.style.transition = "font-size .2s";
+        //this.content.appendChild(this.preview);
+
+        const waitbox = document.createElement("span");
+        waitbox.className = "waitbox";
+        waitbox.style.top = "0";
+        this.content.appendChild(waitbox);
+
+        waitbox.appendChild(document.createElement("div"));
+
+        const waitLabel = document.createElement("span");
+        waitLabel.innerHTML = "Processing stuff. Please wait.";
+        waitLabel.className = "wait-label";
+        waitLabel.style.top = "0";
+        this.content.appendChild(waitLabel);
+    }
+
+    Load() {
+        if (this.used) return;
+        this.used = true;
+
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                let split = xhr.responseText.split(String.fromCharCode(127));
+                this.Plot(split);
+
+            } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
+                this.ConfirmBox("Server is unavailable.", true);
+        };
+        xhr.open("GET", "scripts/getpreview&id=" + this.previewId, true);
+        xhr.send();
+    }
+
+    Plot(split) {
+        this.content.innerHTML = "";
+        this.content.style.overflow = "auto";
+        this.content.style.transition = ".8s";
+        this.content.style.backgroundColor = "var(--pane-color)";
+
+        const table = document.createElement("table");
+        table.className = "wmi-table";
+        this.content.appendChild(table);
+
+        let length = parseInt(split[0]);
+
+        for (let i = 1; i < split.length - 1; i += length) {
+            const tr = document.createElement("tr");
+            table.appendChild(tr);
+
+            const tdn = document.createElement("td");
+            tr.appendChild(tdn);
+
+            for (let j = 0; j < length; j++) {
+                let td = document.createElement("td");
+                td.innerHTML = split[i+j];
+                tr.appendChild(td);
+            }
+        }
+
+    }
+}

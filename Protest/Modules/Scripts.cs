@@ -52,6 +52,8 @@ public static class Scripts {
     private static byte[] adUserCache = null, adWorkstationCache = null, adGroupCache = null;
     private static long adUserCache_timestamp = 0, adWorkstationCache_timestamp = 0, adGroupCache_timestamp = 0;
 
+    private static Hashtable previewHash = Hashtable.Synchronized(new Hashtable());
+
     public static void LoadTools() {
         string FILE_SCRIPT = $"{Strings.DIR_SCRIPTS}\\tools.txt";
 
@@ -420,9 +422,25 @@ public static class Scripts {
         }
     }
 
+    public static byte[] GetPreview(in string[] para) {
+        long id = 0;
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("id=")) long.TryParse(para[i].Substring(3), out id);
+
+        if (previewHash.ContainsKey(id)) {
+
+            byte[] array = (byte[])previewHash[id];
+            previewHash.Remove(id);
+            return array;
+        }
+
+        return null;
+    }
+
     private static bool IsEndPoint(ScriptNode node) {
         return node.name switch
         {
+            "Preview" => true,
             "Text file" => true,
             "CSV file" => true,
             "JSON file" => true,
@@ -450,15 +468,15 @@ public static class Scripts {
     public static byte[] RunScript(string filename) {
         filename = Strings.EscapeUrl(filename);
 
-        if (filename.Length == 0) return Strings.INV.Array;
-        if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Strings.FLE.Array;
+        if (filename.Length == 0) return Encoding.UTF8.GetBytes("{\"error\":\"invalid argument\"}");
+        if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Encoding.UTF8.GetBytes("{\"error\":\"no such file\"}");
 
         string script = String.Empty;
         try {
             script = File.ReadAllText($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}");
         } catch (Exception ex) {
             Logging.Err(ex);
-            return Strings.FAI.Array;
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
         }
 
         List<ScriptNode> nodes = new List<ScriptNode>();
@@ -540,13 +558,28 @@ public static class Scripts {
         StringBuilder log = new StringBuilder();
 
         List<ScriptNode> endpoints = nodes.FindAll(o => IsEndPoint(o));
-        foreach (ScriptNode node in endpoints)
-            CascadeNode(node, links, log);
+        List<ScriptNode> previewNodes = endpoints.FindAll(o => o.name == "Preview");
 
-        return Strings.OK.Array;
+        string json = String.Empty;
+        long previewId = 0;
+
+        json += "{";
+        json += "\"status\":\"OK\"";
+        if (previewNodes.Count > 0) {
+            previewId = DateTime.Now.Ticks;
+            json += $",\"preview\":\"{previewId}\"";
+        }
+        json += "}";
+
+        new Thread(()=> {
+            foreach (ScriptNode node in endpoints)
+                CascadeNode(node, links, log, previewId);
+        }).Start();
+
+        return Encoding.UTF8.GetBytes(json);
     }
 
-    private static void CascadeNode(in ScriptNode node, in List<ScriptLink> allLinks, in StringBuilder log) {
+    private static void CascadeNode(in ScriptNode node, in List<ScriptLink> allLinks, in StringBuilder log, in long previewId) {
         ScriptSocket[] inputs = node.sockets.Where(o => o.type == 'i').ToArray();
 
         foreach (ScriptSocket input in inputs) {
@@ -555,20 +588,20 @@ public static class Scripts {
             for (int i = 0; i < inputs.Length; i++) {
                 ScriptLink link = allLinks.Find(o => ScriptLink.Equals(o.secondary, inputs[i]));
                 if (link is null) {
+                    log.AppendLine($"Node {node.name} is unlinked.");
                     Console.WriteLine($" ! Node {node.name} is unlinked.");
                     continue;
                 }
-
                 node.sourceNodes[i] = link.primaryNode;
             }
         }
 
         if (!(node.sourceNodes is null))
             for (int i = 0; i < node.sourceNodes.Length; i++) //cascade
-                CascadeNode(node.sourceNodes[i], allLinks, log);
+                CascadeNode(node.sourceNodes[i], allLinks, log, previewId);
 
         if (node.result is null)
-            node.result = InvokeNode(node, log);
+            node.result = InvokeNode(node, log, previewId);
 
         SelectColumns(node);
     }
@@ -593,7 +626,7 @@ public static class Scripts {
         node.result.header = header;
     }
 
-    private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log) {
+    private static ScriptResult InvokeNode(in ScriptNode node, in StringBuilder log, in long id) {
         switch (node.name) {
             case "Pro-test users": return N_ProtestUsers(node);
             case "Pro-test equipment": return N_ProtestEquip(node);
@@ -649,7 +682,7 @@ public static class Scripts {
             case "Replace string": return N_Replace(node);
             case "Prettify dates": return N_PrettifyFileDates(node);
 
-            case "Preview": return N_Preview(node);
+            case "Preview": return N_Preview(node, id);
             case "Text file": return N_SaveTxt(node);
             case "CSV file": return N_SaveCsv(node);
             case "JSON file": return N_SaveJson(node);
@@ -2044,7 +2077,10 @@ public static class Scripts {
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
+        try {
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.txt", text.ToString());
+        } catch { }
+
         return null;
     }
     private static ScriptResult N_SaveCsv(in ScriptNode node) {
@@ -2076,7 +2112,10 @@ public static class Scripts {
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
+        try {
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.csv", text.ToString());
+        } catch { }
+
         return null;
     }
     private static ScriptResult N_SaveJson(in ScriptNode node) {
@@ -2126,7 +2165,10 @@ public static class Scripts {
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
+        try {
+            File.WriteAllText($"{ Strings.DIR_SCRIPTS_REPORTS}\\{filename}.json", text.ToString());
+        } catch { }
+
         return null;
     }
     private static ScriptResult N_SaveXml(in ScriptNode node) {
@@ -2179,7 +2221,10 @@ public static class Scripts {
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
+        try { 
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
+        } catch { }
+
         return null;
     }
     private static ScriptResult N_SaveHtml(in ScriptNode node) {
@@ -2196,12 +2241,37 @@ public static class Scripts {
         DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
         if (!dir_reports.Exists) dir_reports.Create();
 
-        File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.html", text.ToString());
+        try { 
+            File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.html", text.ToString());
+        } catch { }
         return null;
     }
 
-    private static ScriptResult N_Preview(in ScriptNode node) {
-        //TODO:
+    private static ScriptResult N_Preview(in ScriptNode node, long id) {
+        StringBuilder text = new StringBuilder();
+
+        text.Append(node.sourceNodes[0].result.header.Length.ToString());
+        text.Append((char)127);
+
+        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++)
+            text.Append($"{node.sourceNodes[0].result.header[i]}{(char)127}");
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) //rows
+            for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) //cell
+                text.Append($"{node.sourceNodes[0].result.array[i][j] ?? ""}{(char)127}");
+
+
+        if (previewHash.ContainsKey(id)) return null;
+        previewHash.Add(id, Encoding.UTF8.GetBytes(text.ToString()));
+        text.Clear();
+
+        KeepAlive.Broadcast($"{{\"action\":\"scriptpreview\",\"type\":\"scriptpreview\",\"id\":\"{id}\"}}");
+
+        new Thread(()=> {
+            Thread.Sleep(60000);
+            if (previewHash.ContainsKey(id)) previewHash.Remove(id);
+        });
+
         return null;
     }
 

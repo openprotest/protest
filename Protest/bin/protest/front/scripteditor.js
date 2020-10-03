@@ -498,8 +498,9 @@ class ScriptEditor extends Window {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.responseText != "ok")
-                        this.ConfirmBox(xhr.responseText, true);
+                    let json = JSON.parse(xhr.responseText);
+                    if (json.error) this.ConfirmBox(xhr.responseText, true);
+                    if (json.preview) new ScriptPreview(json.preview);                    
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);

@@ -79,7 +79,7 @@ Actions
 #Log off PC	hsl(64,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
 
 Export
-#Preview	rgb(224,224,224)	i,Input
+Preview		rgb(224,224,224)	i,Input
 Text file	rgb(224,224,224)	i,Input	t,Filename
 CSV file	rgb(224,224,224)	i,Input	t,Filename
 JSON file	rgb(224,224,224)	i,Input	t,Filename

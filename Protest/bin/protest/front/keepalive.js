@@ -268,6 +268,15 @@ function KeepAlive_MessageHandler(msg) {
                 $w.array[i].tabTask.style.visibility = "hidden";
             }
             break;
+
+        case "scriptpreview":
+            for (let i = 0; i < $w.array.length; i++) //for each preview window
+                if ($w.array[i] instanceof ScriptPreview && $w.array[i].previewId == msg.id) {
+                    $w.array[i].Load();
+                    break;
+                }
+            break;
+
     }
 }
 
