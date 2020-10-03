@@ -1278,8 +1278,8 @@ class ScriptNode {
     }
 
     PropagateColumns(queue=null, count=0) {
-        if (count > 127) {
-            console.log("Closed loop or a huge diagram error.");
+        if (count > 200) {
+            console.log("Closed loop or huge diagram error.");
             return [];
         }
 
@@ -1381,6 +1381,7 @@ class ScriptNode {
             case "Mean":    columns = ["Mean"]; break;
             case "Median":  columns = ["Median"]; break;
             case "Mode":    columns = ["Mode"]; break;
+            case "Range":   columns = ["Range"]; break;
 
             case "Merge columns":
                 collection.forEach(o => { if (o != null) columns = columns.concat(o); });

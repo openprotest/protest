@@ -572,14 +572,22 @@ public static class Scripts {
         json += "}";
 
         new Thread(()=> {
-            foreach (ScriptNode node in endpoints)
-                CascadeNode(node, links, log, previewId);
+            try {
+                foreach (ScriptNode node in endpoints)
+                    CascadeNode(node, links, log, previewId);
+            } catch { }
         }).Start();
 
         return Encoding.UTF8.GetBytes(json);
     }
 
-    private static void CascadeNode(in ScriptNode node, in List<ScriptLink> allLinks, in StringBuilder log, in long previewId) {
+    private static void CascadeNode(in ScriptNode node, in List<ScriptLink> allLinks, in StringBuilder log, in long previewId, int count = 0) {
+        if (count > 200) {
+            log.AppendLine("Closed loop or huge diagram error.");
+            Logging.Err("Script error: Closed loop or huge diagram error.");
+            return;
+        }
+
         ScriptSocket[] inputs = node.sockets.Where(o => o.type == 'i').ToArray();
 
         foreach (ScriptSocket input in inputs) {
@@ -598,7 +606,7 @@ public static class Scripts {
 
         if (!(node.sourceNodes is null))
             for (int i = 0; i < node.sourceNodes.Length; i++) //cascade
-                CascadeNode(node.sourceNodes[i], allLinks, log, previewId);
+                CascadeNode(node.sourceNodes[i], allLinks, log, previewId, ++count);
 
         if (node.result is null)
             node.result = InvokeNode(node, log, previewId);

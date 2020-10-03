@@ -63,7 +63,7 @@ Minimum		hsl(158,100%,45%)	i,Input	c,Column	o,Minimum
 Mean		hsl(156,100%,45%)	i,Input	c,Column	o,Mean
 Median		hsl(154,100%,45%)	i,Input	c,Column	o,Median
 Mode		hsl(152,100%,45%)	i,Input	c,Column	o,Mode
-Range		hsl(150,100%,45%)	i,Input	c,Column	o,Mode
+Range		hsl(150,100%,45%)	i,Input	c,Column	o,Range
 
 String operators
 Trim		hsl(90,100%,45%)	i,Input	a,Column	o,Trimmed
