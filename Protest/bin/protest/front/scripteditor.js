@@ -745,7 +745,9 @@ class ScriptEditor extends Window {
                 value.onclick = () => {
                     if (node.parameters[i][1] == "Query") { //wmi query
 
-                        let lastQuery = node.values[i].toLowerCase();
+                        let lastQuery = "";
+                        if (node.values[i]) lastQuery = node.values[i].toLowerCase();
+
                         let words = lastQuery.split(" ");
                         let className = null;
                         if (Script_WmiClasses.hasOwnProperty("classes"))
