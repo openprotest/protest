@@ -244,7 +244,7 @@ class Wmi extends Window {
 
         btnOK.addEventListener("click", () => {
             this.txtQuery.value = txtPreview.value;
-            this.args.query = this.txtQuery.value
+            this.args.query = this.txtQuery.value;
         });
 
         txtClassFilter.oninput = () => {
@@ -266,7 +266,7 @@ class Wmi extends Window {
                             break;
                         }
 
-                let check_list = [], input_list = [];
+                let check_list = [];
 
                 if (matched) {
                     let newClass = document.createElement("div");
@@ -322,6 +322,7 @@ class Wmi extends Window {
 
                     if (className && className == this.wmi_classes.classes[i].class.toLowerCase()) {
                         newClass.onclick();
+                        newClass.scrollIntoView();
                         className = null;
                     }
                 }
