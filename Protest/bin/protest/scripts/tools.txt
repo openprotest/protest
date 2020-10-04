@@ -80,9 +80,8 @@ Actions
 
 Export
 Preview		rgb(224,224,224)	i,Input
-Text file	rgb(224,224,224)	i,Input	t,Filename
-CSV file	rgb(224,224,224)	i,Input	t,Filename
+Text file	rgb(224,224,224)	i,Input	h,Header,True	t,Filename
+CSV file	rgb(224,224,224)	i,Input	h,Header,True	t,Filename
 JSON file	rgb(224,224,224)	i,Input	t,Filename
 XML file	rgb(224,224,224)	i,Input	t,Filename
-#HTML file	rgb(224,224,224)	i,Input	t,Filename
 #Send e-mail	rgb(224,224,224)	i,Input	t,Server	n,Port,587,1,65535	t,Username	t,Password	h,SSL,True	t,Recipient

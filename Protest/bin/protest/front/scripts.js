@@ -411,7 +411,6 @@ class ScriptPreview extends Window {
         this.AddCssDependencies("wmi.css");
 
         this.previewId = id;
-        this.used = false;
 
         this.content.style.overflow = "hidden";
 
@@ -445,9 +444,6 @@ class ScriptPreview extends Window {
     }
 
     Load() {
-        if (this.used) return;
-        this.used = true;
-
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {

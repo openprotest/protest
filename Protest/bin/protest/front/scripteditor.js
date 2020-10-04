@@ -150,7 +150,7 @@ class ScriptEditor extends Window {
         if (this.args.file === null) 
             this.setTitle("Script editor");
         else
-            this.setTitle("Script editor - " + this.args.file);
+            this.setTitle(`Script editor - ${this.args.file}`);
 
         let waitbox = document.createElement("span");
         waitbox.className = "waitbox";
@@ -500,7 +500,11 @@ class ScriptEditor extends Window {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     let json = JSON.parse(xhr.responseText);
                     if (json.error) this.ConfirmBox(xhr.responseText, true);
-                    if (json.preview) new ScriptPreview(json.preview);                    
+
+                    if (json.preview) {
+                        const p = new ScriptPreview(json.preview);
+                        p.setTitle(`Preview - ${this.args.file}`);
+                    }
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                     this.ConfirmBox("Server is unavailable.", true);

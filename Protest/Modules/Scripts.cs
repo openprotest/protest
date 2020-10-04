@@ -695,8 +695,7 @@ public static class Scripts {
             case "CSV file": return N_SaveCsv(node);
             case "JSON file": return N_SaveJson(node);
             case "XML file": return N_SaveXml(node);
-            case "HTML file": return N_SaveHtml(node);
-            case "Send e-mail": return N_SendEMail(node);
+            //case "Send e-mail": return N_SendEMail(node);
 
             default: //bypass
                 log.AppendLine($" ! Undefined node: {node.name}.");
@@ -2036,6 +2035,11 @@ public static class Scripts {
     }
 
     private static ScriptResult N_SaveTxt(in ScriptNode node) {
+        /* [0] <-
+         * [1] header
+         * [2] filename
+         * [3] x */
+
         int[] columnsLength = new int[node.sourceNodes[0].result.header.Length];
         for (int i = 0; i < columnsLength.Length; i++)
             columnsLength[i] = node.sourceNodes[0].result.header[i].Length;
@@ -2047,17 +2051,20 @@ public static class Scripts {
 
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) { //header
-            text.Append(node.sourceNodes[0].result.header[i].PadRight(columnsLength[i], ' '));
-            if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
-        }
-        text.Append("\n");
+        bool showHeader = node.values[1] == "True";
+        if (showHeader) {
+            for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) { //header
+                text.Append(node.sourceNodes[0].result.header[i].PadRight(columnsLength[i], ' '));
+                if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
+            }
+            text.Append("\n");
 
-        for (int i = 0; i < columnsLength.Length; i++) { //dash line
-            text.Append(new string('-', columnsLength[i]));
-            if (i < columnsLength.Length - 1) text.Append("\t");
+            for (int i = 0; i < columnsLength.Length; i++) { //dash line
+                text.Append(new string('-', columnsLength[i]));
+                if (i < columnsLength.Length - 1) text.Append("\t");
+            }
+            text.Append("\n");
         }
-        text.Append("\n");
 
         for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //data
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) {
@@ -2075,8 +2082,8 @@ public static class Scripts {
             text.Append("\n");
         }
 
-        node.values[1] = Strings.EscapeUrl(node.values[1]);
-        string filename = EscapeFilename(node.values[1]);
+        node.values[2] = Strings.EscapeUrl(node.values[2]);
+        string filename = EscapeFilename(node.values[2]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -2092,14 +2099,21 @@ public static class Scripts {
         return null;
     }
     private static ScriptResult N_SaveCsv(in ScriptNode node) {
+        /* [0] <-
+         * [1] header
+         * [2] filename
+         * [3] x */
+
         StringBuilder text = new StringBuilder();
 
-        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
-            text.Append($"\"{node.sourceNodes[0].result.header[i].Replace("\"", "\"\"")}\"");
-            if (i < node.sourceNodes[0].result.array.Count - 1) text.Append(",");
+        bool showHeader = node.values[1] == "True";
+        if (showHeader) {
+            for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
+                text.Append($"\"{node.sourceNodes[0].result.header[i].Replace("\"", "\"\"")}\"");
+                if (i < node.sourceNodes[0].result.array.Count - 1) text.Append(",");
+            }
+            text.Append("\n");
         }
-
-        text.Append("\n");
 
         for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) {
@@ -2110,8 +2124,8 @@ public static class Scripts {
             text.Append("\n");
         }
 
-        node.values[1] = Strings.EscapeUrl(node.values[1]);
-        string filename = EscapeFilename(node.values[1]);
+        node.values[2] = Strings.EscapeUrl(node.values[2]);
+        string filename = EscapeFilename(node.values[2]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
         else
@@ -2127,6 +2141,10 @@ public static class Scripts {
         return null;
     }
     private static ScriptResult N_SaveJson(in ScriptNode node) {
+        /* [0] <-
+         * [1] filename
+         * [2] x */
+
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("{\"array\": [");
@@ -2180,6 +2198,10 @@ public static class Scripts {
         return null;
     }
     private static ScriptResult N_SaveXml(in ScriptNode node) {
+        /* [0] <-
+         * [1] filename
+         * [2] x */
+        
         StringBuilder text = new StringBuilder();
 
         text.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -2233,25 +2255,6 @@ public static class Scripts {
             File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.xml", text.ToString());
         } catch { }
 
-        return null;
-    }
-    private static ScriptResult N_SaveHtml(in ScriptNode node) {
-        StringBuilder text = new StringBuilder();
-
-        //TODO:
-        node.values[1] = Strings.EscapeUrl(node.values[1]);
-        string filename = EscapeFilename(node.values[1]);
-        if (filename.Length == 0)
-            filename = DateTime.Now.Ticks.ToString();
-        else
-            filename = $"{filename}_{DateTime.Now.Ticks}";
-
-        DirectoryInfo dir_reports = new DirectoryInfo(Strings.DIR_SCRIPTS_REPORTS);
-        if (!dir_reports.Exists) dir_reports.Create();
-
-        try { 
-            File.WriteAllText($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}.html", text.ToString());
-        } catch { }
         return null;
     }
 
