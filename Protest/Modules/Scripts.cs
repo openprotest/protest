@@ -10,8 +10,6 @@ using System.Net.NetworkInformation;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Security.Cryptography;
-using System.Management.Automation.Runspaces;
 
 public class ScriptNode {
     public string name;
@@ -800,7 +798,17 @@ public static class Scripts {
             foreach (DictionaryEntry e in o.Properties) {
                 int index = header.IndexOf(e.Key.ToString());
                 if (index < 0) continue;
-                row[index] = o.Properties[e.Key.ToString()][0].ToString();
+
+                if (o.Properties[e.Key.ToString()][0] is byte[] value) {
+                    StringBuilder sb = new StringBuilder("0x");
+                    for (int i = 0; i < Math.Min(value.Length, 64); i++)
+                        sb.AppendFormat("{0:x2}", value[i]);                    
+                    if (value.Length > 64) sb.Append("...");
+                    row[index] = sb.ToString();
+
+                } else {
+                    row[index] = o.Properties[e.Key.ToString()][0].ToString();
+                }
             }
             result.array.Add(row);
         }

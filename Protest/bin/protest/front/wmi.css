@@ -1,8 +1,15 @@
 .wmi-table {
+    position: relative;
     color: black;
     border-collapse: collapse;
     margin: 8px;
     user-select: text;
+}
+
+.wmi-table > tr:first-child td {
+    position: sticky;
+    top: -2px;
+    z-index: 1;
 }
 
 .wmi-table > tr:first-child > td:nth-child(n+2) {

@@ -255,11 +255,8 @@ public static class LiveInfo {
 
             if (user.hash.ContainsKey("PASSWORD")) {
                 string password = ((string[])user.hash["PASSWORD"])[0];
-                if (password.Length > 0) {
-                    double entropy = PasswordStrength.Entropy(password);
-                    Console.WriteLine(entropy);
-                    if (entropy < 28) WsWriteText(ws, $"!{(char)127}{"Weak password"}{(char)127}");
-                }
+                if (password.Length > 0 && PasswordStrength.Entropy(password) < 28)
+                    WsWriteText(ws, $"!{(char)127}{"Weak password"}{(char)127}");
             }
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);

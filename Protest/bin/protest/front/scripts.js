@@ -80,9 +80,9 @@ class Scripts extends Tabs {
             if (this.payload[i] != "s") continue;
             if (this.payload[i + 1].toLocaleLowerCase().indexOf(filter, 0) == -1) continue;
 
-            let name = this.payload[i + 1];
-            let date = this.payload[i + 2];
-            let size = this.payload[i + 3];
+            let name = this.payload[i+1];
+            let date = this.payload[i+2];
+            let size = this.payload[i+3];
 
             let script = document.createElement("div");
             script.className = "script-list-item";
@@ -351,8 +351,8 @@ class ScriptReport extends Window {
                 let split = xhr.responseText.split("\n");
                 let report = "";
                 for (let i = 0; i < split.length; i++) {
-                    while (split[i].indexOf("\t") > -1) split[i] = split[i].replace("\t", "&emsp;");
-                    while (split[i].indexOf(" ") > -1) split[i] = split[i].replace(" ", "&nbsp;");
+                    split[i] = split[i].replaceAll("\t", "&emsp;");
+                    split[i] = split[i].replaceAll(" ", "&nbsp;");
                     report += "<br>" + split[i];
                 }
 

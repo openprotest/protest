@@ -30,7 +30,7 @@ const TOOLS = [
 
 //{ lbl:"Speed test",         ico:"res/speedtest.svgz",      sqr:true,  f:arg=> new SpeedTest() },
 { lbl:"Scripts",            ico:"res/scripts.svgz",        sqr:true,  f:arg=> new Scripts() },
-{ lbl:"Scripts reports",    ico:"res/reportfile.svgz",     sqr:false, f:arg=> new Scripts("reports") },
+{ lbl:"Script reports",     ico:"res/reportfile.svgz",     sqr:false, f:arg=> new Scripts("reports") },
 { lbl:"Ongoing scripts",    ico:"res/ongoingscript.svgz",  sqr:false, f:arg=> new Scripts("ongoing") },
 { lbl: "WMI console", ico: "res/wmi.svgz", sqr: true, f: arg => new Wmi() },
 { lbl:"Telnet",             ico:"res/telnet.svgz",         sqr:true,  f:arg=> new Telnet() },
