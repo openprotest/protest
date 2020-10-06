@@ -52,6 +52,7 @@
 
 .w-dog-view > div {
     padding: 1px 0;
+    content-visibility: auto;
 }
 
 .w-dog-view > div:hover {

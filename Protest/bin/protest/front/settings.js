@@ -563,10 +563,10 @@ class Settings extends Tabs {
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let license = xhr.responseText;
-                while (license.indexOf(" ") > -1) license = license.replace(" ", "&nbsp;");
-                while (license.indexOf("<") > -1) license = license.replace("<", "&lt;");
-                while (license.indexOf(">") > -1) license = license.replace(">", "&gt;");
-                while (license.indexOf("\n") > -1) license = license.replace("\n", "<br>");
+                license = license.replaceAll(" ", "&nbsp;");
+                license = license.replaceAll("<", "&lt;");
+                license = license.replaceAll(">", "&gt;");
+                license = license.replaceAll("\n", "<br>");
                 box.innerHTML = license;
             } 
         };

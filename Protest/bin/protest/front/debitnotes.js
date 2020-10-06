@@ -933,8 +933,7 @@ class DebitNotes extends Window {
             let eq_string = "";
             for (let i = 0; i < lstEquip.childNodes.length; i++)
                 for (let j = 0; j < 3; j++) {
-                    while (lstEquip.childNodes[i].childNodes[0].value.indexOf(";") > -1)
-                        lstEquip.childNodes[i].childNodes[j].value = lstEquip.childNodes[i].childNodes[j].value.replace(";", "");
+                    lstEquip.childNodes[i].childNodes[j].value = lstEquip.childNodes[i].childNodes[j].value.replaceAll(";", "");
                     eq_string += lstEquip.childNodes[i].childNodes[j].value + ";";
                 }
 

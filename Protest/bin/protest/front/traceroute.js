@@ -47,7 +47,7 @@ class TraceRoute extends Console {
                 text += NL;
             }
 
-            while (text.indexOf("&thinsp;") > -1) text = text.replace("&thinsp;", " ");
+            text = text.replaceAll("&thinsp;", " ");
 
             if (text.length == 0) return;
 

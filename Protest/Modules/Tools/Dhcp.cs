@@ -27,7 +27,7 @@ public static class Dhcp {
 
             foreach (UnicastIPAddressInformation ipInfo in o.GetIPProperties().UnicastAddresses) {
                 if (ipInfo.Address.AddressFamily != AddressFamily.InterNetwork) continue;
-                string respone = Dhcp4way(ipInfo.Address, mac.Length > 0 ? mac : o.GetPhysicalAddress().ToString(), timeout, accept);
+                string respone = Dhcp4wayHandshake(ipInfo.Address, mac.Length > 0 ? mac : o.GetPhysicalAddress().ToString(), timeout, accept);
                 if (respone is null) continue;
 
                 sb.Append(respone);
@@ -38,7 +38,7 @@ public static class Dhcp {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static string Dhcp4way(IPAddress ip, string mac, int timeout, bool accept = false) {
+    public static string Dhcp4wayHandshake(IPAddress ip, string mac, int timeout, bool accept = false) {
        try {
             IPEndPoint localIp = new IPEndPoint(ip, 68);
             IPEndPoint remoteIp = new IPEndPoint(IPAddress.Broadcast, 67);
@@ -58,25 +58,24 @@ public static class Dhcp {
             byte[] transactionId = new byte[4];
             for (int i = 0; i < 4; i++) transactionId[i] = (byte)rnd.Next(0, 255);
         
-            byte[] discoverRequest = Discover(sb, timestamp, mac, transactionId);
+            byte[] discoverRequest = Discover(sb, timestamp, mac, transactionId); //send discover
             sb.Append((char)127);
             socket.SendTo(discoverRequest, remoteIp);
 
             byte[] offer = new byte[1024];
             socket.Receive(offer);
             string offerMac;
-            byte[] offerIp;
-            byte[] offerDhcpServer;
-            Offer(sb, offer, out offerMac, out offerIp, out offerDhcpServer);
+            byte[] offerIp, offerDhcpServer;
+            Offer(sb, offer, out offerMac, out offerIp, out offerDhcpServer); //receive offer
             sb.Append((char)127);
 
             if (accept) { //accept the offer
-                byte[] request = Request(sb, timestamp, transactionId, offerMac, offerIp, offerDhcpServer);
+                byte[] request = Request(sb, timestamp, transactionId, offerMac, offerIp, offerDhcpServer); // send request
                 sb.Append((char)127);
                 socket.SendTo(request, remoteIp);
 
                 byte[] acknowledge = new byte[1024];
-                socket.Receive(acknowledge);
+                socket.Receive(acknowledge); //receive ack
                 Acknowledge(sb, acknowledge);
                 sb.Append((char)127);
             }
@@ -84,20 +83,17 @@ public static class Dhcp {
             socket.Dispose();
             return sb.ToString();
 
-        } catch (ArgumentNullException ex) {
+        } catch (SocketException ex) {
             Logging.Err(ex);
 
-        } catch (System.Security.SecurityException ex) {
-            Logging.Err(ex);
-
-        } catch (Exception) { }
+        } catch { }
 
         return null;
     }
 
     private static byte[] Discover(StringBuilder sb, long timestamp, string mac, byte[] transactionId) {
         int p = 0;
-        byte[] dgram = new byte[512];
+        byte[] dgram = new byte[352];
 
         dgram[p++] = 0x01; //message type
         dgram[p++] = 0x00; //harware type 0:pseudo
@@ -234,6 +230,7 @@ public static class Dhcp {
 
         dgram[p++] = 0xff; //end
 
+        //dgram[p++] = 0x00;
         for (int i = 0; i < 15; i++) //padding
             dgram[p++] = 0x00;
 
@@ -406,7 +403,7 @@ public static class Dhcp {
 
         byte messageType = buffer[0];  //message type
         //byte hardwareType = buffer[1]; //hardware type
-        //byte maclen = buffer[2];     //hardware address length
+        byte maclen = buffer[2];     //hardware address length
         byte hops = buffer[3];
 
         string id = $"0x{buffer[4]:X2}{buffer[5]:X2}{buffer[6]:X2}{buffer[7]:X2}";
@@ -415,7 +412,11 @@ public static class Dhcp {
         string offeredIp = $"{buffer[16]}.{buffer[17]}.{buffer[18]}.{buffer[19]}";
         //string nextServerIp = $"{buffer[20]}.{buffer[21]}.{buffer[22]}.{buffer[23]}";
         //string relayServerIp = $"{buffer[24]}.{buffer[25]}.{buffer[26]}.{buffer[27]}";
-        offerMac = $"{buffer[28]:X2}{buffer[29]:X2}{buffer[30]:X2}{buffer[31]:X2}{buffer[32]:X2}{buffer[33]:X2}"; //client mac
+
+        //offerMac = $"{buffer[28]:X2}{buffer[29]:X2}{buffer[30]:X2}{buffer[31]:X2}{buffer[32]:X2}{buffer[33]:X2}"; //client mac
+        for (int i = 0; i < maclen; i++) {
+            offerMac += $"{buffer[28+i]:X2}";
+        }
 
         offerIp[0] = buffer[16];
         offerIp[1] = buffer[17];

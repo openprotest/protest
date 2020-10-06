@@ -118,11 +118,8 @@ class Log extends Window {
     }
 
     Add(text) {
-        while (text.indexOf("\t") > -1)
-            text = text.replace("\t", "&emsp;&emsp;");
-
-        while (text.indexOf(" ") > -1)
-            text = text.replace(" ", "&nbsp;");
+         text = text.replaceAll("\t", "&emsp;&emsp;");
+         text = text.replaceAll(" ", "&nbsp;");
 
         const element = document.createElement("div");
         element.className = "generic-list-element generic-list-element-tied";

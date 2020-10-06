@@ -12,6 +12,10 @@
     z-index: 1;
 }
 
+.wmi-table > tr:first-child td:first-child {
+    background:linear-gradient(var(--pane-color), var(--pane-color), transparent);
+}
+
 .wmi-table > tr:first-child > td:nth-child(n+2) {
     color: white;
     background-color: #444;

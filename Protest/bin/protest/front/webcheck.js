@@ -96,8 +96,7 @@ class WebCheck extends Window {
 
         this.ws.onmessage = event => {
             let result = event.data;
-            while (result.indexOf("\n") > -1)
-                result = result.replace("\n", "<br>");
+            result = result.replaceAll("\n", "<br>");
 
             let div = document.createElement("div");
             div.style.backgroundColor = "var(--control-color)";

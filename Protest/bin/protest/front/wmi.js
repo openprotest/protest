@@ -377,7 +377,7 @@ class Wmi extends Window {
         this.txtTarget.value = this.txtTarget.value.trim();
 
         let q = this.txtQuery.value.trim();
-        while (q.indexOf("\n") > -1) q = q.replace("\n", " ");
+        q = q.replaceAll("\n", " ");
 
         this.divPlot.style.display = "none";
 

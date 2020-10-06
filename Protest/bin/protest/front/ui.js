@@ -102,8 +102,8 @@ function punch_GetType(text) {
         isEmail = text.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g) != null;
 
     let macString = text.toLowerCase();
-    while (macString.indexOf("-") > -1) macString = macString.replace("-", "");
-    while (macString.indexOf(":") > -1) macString = macString.replace(":", "");
+    macString = macString.replaceAll("-", "");
+    macString = macString.replaceAll(":", "");
     if (macString.length == 12) {
         const rx = macString.match(/[0-9,a-f]/g);
         if (rx) isMac = rx.length == 12;
