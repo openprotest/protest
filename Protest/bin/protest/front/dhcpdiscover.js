@@ -8,21 +8,21 @@ class DhcpDiscover extends Window {
         this.content.style.overflowY = "auto";
         this.content.style.textAlign = "center";
 
-        let grid = document.createElement("div");
+        const grid = document.createElement("div");
         grid.style.overflow = "auto";
         grid.style.padding = "16px";
         grid.style.display = "grid";
         grid.style.gridTemplateColumns = "auto 200px 150px 150px auto";
-        grid.style.gridTemplateRows = "repeat(3, 32px)";
+        grid.style.gridTemplateRows = "repeat(4, 36px)";
         grid.style.alignItems = "center";
         grid.style.color = "var(--control-color)";
         this.content.appendChild(grid);
 
-        let lblTimeout = document.createElement("div");
+        const lblTimeout = document.createElement("div");
         lblTimeout.innerHTML = "Request timeout (ms):";
         lblTimeout.style.textAlign = "right";
-        lblTimeout.style.gridColumn = "2";
         lblTimeout.style.gridRow = "1";
+        lblTimeout.style.gridColumn = "2";
         grid.appendChild(lblTimeout);
 
         this.txtTimeout = document.createElement("input");
@@ -30,34 +30,50 @@ class DhcpDiscover extends Window {
         this.txtTimeout.min = 500;
         this.txtTimeout.max = 5000;
         this.txtTimeout.value = 2000;
-        this.txtTimeout.style.gridColumn = "3";
         this.txtTimeout.style.gridRow = "1";
+        this.txtTimeout.style.gridColumn = "3";
         grid.appendChild(this.txtTimeout);
 
-        let lblMacAddress = document.createElement("div");
+
+        const lblHostname = document.createElement("div");
+        lblHostname.innerHTML = "Spoof hostname:";
+        lblHostname.style.textAlign = "right";
+        lblHostname.style.gridRow = "2";
+        lblHostname.style.gridColumn = "2";
+        grid.appendChild(lblHostname);
+
+        this.txtHostname = document.createElement("input");
+        this.txtHostname.type = "text";
+        this.txtHostname.placeholder = "unchanged";
+        this.txtHostname.style.gridRow = "2";
+        this.txtHostname.style.gridColumn = "3";
+        grid.appendChild(this.txtHostname);
+
+
+        const lblMacAddress = document.createElement("div");
         lblMacAddress.innerHTML = "Spoof MAC address:";
         lblMacAddress.style.textAlign = "right";
+        lblMacAddress.style.gridRow = "3";
         lblMacAddress.style.gridColumn = "2";
-        lblMacAddress.style.gridRow = "2";
         grid.appendChild(lblMacAddress);
 
         this.txtMacAddress = document.createElement("input");
         this.txtMacAddress.type = "text";
-        this.txtMacAddress.placeholder = "default";
+        this.txtMacAddress.placeholder = "unchanged";
+        this.txtMacAddress.style.gridRow = "3";
         this.txtMacAddress.style.gridColumn = "3";
-        this.txtMacAddress.style.gridRow = "2";
         grid.appendChild(this.txtMacAddress);
 
-        let lblAccept = document.createElement("div");
+        const lblAccept = document.createElement("div");
         lblAccept.innerHTML = "Accept the offer:";
         lblAccept.style.textAlign = "right";
+        lblAccept.style.gridRow = "4";
         lblAccept.style.gridColumn = "2";
-        lblAccept.style.gridRow = "3";
         grid.appendChild(lblAccept);
 
-        let divAccept = document.createElement("div");
+        const divAccept = document.createElement("div");
+        divAccept.style.gridRow = "4";
         divAccept.style.gridColumn = "3";
-        divAccept.style.gridRow = "3";
         grid.appendChild(divAccept);
 
         this.chkAccept = document.createElement("input");
@@ -73,7 +89,7 @@ class DhcpDiscover extends Window {
         this.btnDiscover.style.height = "48px";
         this.btnDiscover.style.margin = "16px";
         this.btnDiscover.style.borderRadius = "4px";
-        this.btnDiscover.style.gridArea = "1 / 4 / span 2 / span 1";
+        this.btnDiscover.style.gridArea = "2 / 4 / span 2 / span 1";
         grid.appendChild(this.btnDiscover);
 
         this.result = document.createElement("div");
@@ -91,7 +107,7 @@ class DhcpDiscover extends Window {
         this.waitbox.style.width = "50%";
         this.content.appendChild(this.waitbox);
 
-        let waitball = document.createElement("div");
+        const waitball = document.createElement("div");
         waitball.style.margin = "16px auto";
         this.waitbox.appendChild(waitball);
 
@@ -165,7 +181,7 @@ class DhcpDiscover extends Window {
                 this.waitbox.style.display = "none";
             }
         };
-        xhr.open("GET", "dhcpdiscover&timeout=" + this.txtTimeout.value + "&mac=" + this.txtMacAddress.value + "&accept=" + this.chkAccept.checked, true);
+        xhr.open("GET", "dhcpdiscover&timeout=" + this.txtTimeout.value + "&mac=" + this.txtMacAddress.value + "&hostname=" + this.txtHostname.value + "&accept=" + this.chkAccept.checked, true);
         xhr.send();
     }
 

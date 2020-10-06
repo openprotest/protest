@@ -11,12 +11,18 @@ public static class Dhcp {
     public static byte[] DiscoverDhcp(in string[] para) {
         int timeout = 2000;
         string mac = String.Empty;
+        string hostname = String.Empty;
         bool accept = false;
         for (int i = 0; i < para.Length; i++) {
             if (para[i].StartsWith("timeout=")) int.TryParse(para[i].Substring(8), out timeout);
             else if (para[i].StartsWith("mac=")) mac = para[i].Substring(4);
+            else if (para[i].StartsWith("hostname=")) hostname = para[i].Substring(9);
             else if (para[i].StartsWith("accept=")) accept = para[i].Substring(7) == "true";
         }
+
+        try {
+            if (hostname.Length == 0) hostname = System.Net.Dns.GetHostName();
+        } catch { }
 
         StringBuilder sb = new StringBuilder();
 
@@ -27,7 +33,13 @@ public static class Dhcp {
 
             foreach (UnicastIPAddressInformation ipInfo in o.GetIPProperties().UnicastAddresses) {
                 if (ipInfo.Address.AddressFamily != AddressFamily.InterNetwork) continue;
-                string respone = Dhcp4wayHandshake(ipInfo.Address, mac.Length > 0 ? mac : o.GetPhysicalAddress().ToString(), timeout, accept);
+                string respone = Dhcp4wayHandshake(
+                    ipInfo.Address,
+                    mac.Length > 0 ? mac : o.GetPhysicalAddress().ToString(),
+                    hostname,
+                    timeout,
+                    accept
+                    );
                 if (respone is null) continue;
 
                 sb.Append(respone);
@@ -38,7 +50,7 @@ public static class Dhcp {
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    public static string Dhcp4wayHandshake(IPAddress ip, string mac, int timeout, bool accept = false) {
+    public static string Dhcp4wayHandshake(IPAddress ip, string mac, string hostname, int timeout, bool accept = false) {
        try {
             IPEndPoint localIp = new IPEndPoint(ip, 68);
             IPEndPoint remoteIp = new IPEndPoint(IPAddress.Broadcast, 67);
@@ -58,7 +70,7 @@ public static class Dhcp {
             byte[] transactionId = new byte[4];
             for (int i = 0; i < 4; i++) transactionId[i] = (byte)rnd.Next(0, 255);
         
-            byte[] discoverRequest = Discover(sb, timestamp, mac, transactionId); //send discover
+            byte[] discoverRequest = Discover(sb, timestamp, mac, hostname, transactionId); //send discover
             sb.Append((char)127);
             socket.SendTo(discoverRequest, remoteIp);
 
@@ -70,7 +82,7 @@ public static class Dhcp {
             sb.Append((char)127);
 
             if (accept) { //accept the offer
-                byte[] request = Request(sb, timestamp, transactionId, offerMac, offerIp, offerDhcpServer); // send request
+                byte[] request = Request(sb, timestamp, transactionId, offerMac, hostname, offerIp, offerDhcpServer); // send request
                 sb.Append((char)127);
                 socket.SendTo(request, remoteIp);
 
@@ -83,7 +95,10 @@ public static class Dhcp {
             socket.Dispose();
             return sb.ToString();
 
-        } catch (SocketException ex) {
+        } catch (ArgumentNullException ex) {
+            Logging.Err(ex);
+
+        } catch (System.Security.SecurityException ex) {
             Logging.Err(ex);
 
         } catch { }
@@ -91,7 +106,7 @@ public static class Dhcp {
         return null;
     }
 
-    private static byte[] Discover(StringBuilder sb, long timestamp, string mac, byte[] transactionId) {
+    private static byte[] Discover(StringBuilder sb, long timestamp, string mac, string hostname, byte[] transactionId) {
         int p = 0;
         byte[] dgram = new byte[352];
 
@@ -200,16 +215,11 @@ public static class Dhcp {
             dgram[p++] = 0x00;
         }
 
-        sb.AppendLine($"hostname:PROTEST");
+        sb.AppendLine($"hostname:{hostname}");
         dgram[p++] = 0x0c; //opt: hostname
-        dgram[p++] = 0x07; //length
-        dgram[p++] = 0x50; //P
-        dgram[p++] = 0x52; //R
-        dgram[p++] = 0x30; //O
-        dgram[p++] = 0x54; //T
-        dgram[p++] = 0x45; //E
-        dgram[p++] = 0x53; //S
-        dgram[p++] = 0x54; //T
+        dgram[p++] = (byte)hostname.Length; //length
+        for (int i = 0; i < hostname.Length; i++)
+            dgram[p++] = (byte)hostname[i];
 
         dgram[p++] = 0x37; //opt: request list
         dgram[p++] = 0x0e; //length
@@ -237,7 +247,7 @@ public static class Dhcp {
         return dgram;
     }
 
-    private static byte[] Request(StringBuilder sb, long timestamp, byte[] transactionId, string mac, byte[] requestedIp, byte[] dhcpServerIp) {
+    private static byte[] Request(StringBuilder sb, long timestamp, byte[] transactionId, string mac, string hostname, byte[] requestedIp, byte[] dhcpServerIp) {
         int p = 0;
         byte[] dgram = new byte[512];
 
@@ -360,16 +370,11 @@ public static class Dhcp {
         dgram[p++] = dhcpServerIp[2];
         dgram[p++] = dhcpServerIp[3];
 
-        sb.AppendLine("hostname:PROTEST");
+        sb.AppendLine($"hostname:{hostname}");
         dgram[p++] = 0x0c; //opt: hostname
-        dgram[p++] = 0x07; //length
-        dgram[p++] = 0x50; //p
-        dgram[p++] = 0x52; //r
-        dgram[p++] = 0x30; //o
-        dgram[p++] = 0x54; //t
-        dgram[p++] = 0x45; //e
-        dgram[p++] = 0x53; //s
-        dgram[p++] = 0x54; //t
+        dgram[p++] = (byte)hostname.Length; //length
+        for (int i = 0; i < hostname.Length; i++)
+            dgram[p++] = (byte)hostname[i];        
 
         dgram[p++] = 0x37; //opt: request list
         dgram[p++] = 0x0e; //length
