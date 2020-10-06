@@ -36,6 +36,7 @@ Be more productive: with one-click, you can connect to your remote hosts over SS
   * Sub-net calculator  *[demo](https://veniware.github.io/#netcalc)*
   * Password generator  *[demo](https://veniware.github.io/#passgen)*
   * WMI console
+  * Telnet client
 
 
 Pro-test is intended to be used as a portable tool. In that case, the web interface can be accessed via the loopback address without authentication. If you wish to interface from a remote host, you can modify the http_ip and http_port parameters in the config.txt file to the local end-point of your choice.

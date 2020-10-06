@@ -95,7 +95,7 @@
     bottom: 0;
     background-color: inherit;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .script-parameters {
@@ -146,7 +146,7 @@
     top: 88px;
     bottom: 0px;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .script-parameters-list > div:hover > *:nth-child(3){
@@ -197,7 +197,7 @@
     max-height: 350px;
     background-color: transparent !important;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .script-edit-box {
