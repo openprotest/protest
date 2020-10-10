@@ -42,6 +42,7 @@
     font-weight: 600;
     height: 22px;
     padding: 6px 0px 4px 8px;
+    content-visibility: auto;
 }
 
 .debit-entry:hover {

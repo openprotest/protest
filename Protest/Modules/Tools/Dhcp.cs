@@ -419,9 +419,8 @@ public static class Dhcp {
         //string relayServerIp = $"{buffer[24]}.{buffer[25]}.{buffer[26]}.{buffer[27]}";
 
         //offerMac = $"{buffer[28]:X2}{buffer[29]:X2}{buffer[30]:X2}{buffer[31]:X2}{buffer[32]:X2}{buffer[33]:X2}"; //client mac
-        for (int i = 0; i < maclen; i++) {
+        for (int i = 0; i < maclen; i++)
             offerMac += $"{buffer[28+i]:X2}";
-        }
 
         offerIp[0] = buffer[16];
         offerIp[1] = buffer[17];

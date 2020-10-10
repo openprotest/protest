@@ -320,6 +320,7 @@
     background-repeat: no-repeat;
 
     user-select: text;
+    content-visibility: auto;
 }
 
 .generic-list-element-tied {

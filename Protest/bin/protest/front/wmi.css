@@ -13,7 +13,7 @@
 }
 
 .wmi-table > tr:first-child td:first-child {
-    background:linear-gradient(var(--pane-color), var(--pane-color), transparent);
+    background: linear-gradient(var(--pane-color), var(--pane-color), transparent);
 }
 
 .wmi-table > tr:first-child > td:nth-child(n+2) {

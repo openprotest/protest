@@ -271,6 +271,12 @@ class ScriptEditor extends Window {
         btnDelete.setAttribute("tip-below", "Delete");
         this.parametersOptions.appendChild(btnDelete);
 
+        const btnToogle = document.createElement("input");
+        btnToogle.type = "button";
+        btnToogle.style.backgroundImage = "url(res/l_toogle.svgz)";
+        btnToogle.setAttribute("tip-below", "Toogle");
+        this.parametersOptions.appendChild(btnToogle);
+
         this.parametersList = document.createElement("div");
         this.parametersList.className = "script-parameters-list";
         this.parameters.appendChild(this.parametersList);
@@ -310,6 +316,17 @@ class ScriptEditor extends Window {
         btnDelete.onclick = () => {
             if (!this.selectedNode) return;
             this.Delete(this.selectedNode);
+        };
+
+        btnToogle.onclick = () => {
+            if (!this.selectedNode) return;
+
+            const list = this.parametersList.querySelector(".columns-list");
+            for (let i = 0; i < list.childNodes.length; i++)
+                if (list.childNodes[i].tagName.toUpperCase() === "INPUT") {
+                    list.childNodes[i].checked = !list.childNodes[i].checked;
+                    list.childNodes[i].onchange();
+                }
         };
         
         this.btnSave.onclick = () => this.SaveScript();
@@ -704,7 +721,7 @@ class ScriptEditor extends Window {
 
                 value = document.createElement("select");
                 if (link) {
-                    let optAll = document.createElement("option");
+                    const optAll = document.createElement("option");
                     optAll.innerHTML = "[ALL]";
                     optAll.value = "[ALL]";
                     value.appendChild(optAll);
@@ -974,20 +991,20 @@ class ScriptEditor extends Window {
             this.parametersList.appendChild(lblColumns);
         }
 
-        let list = document.createElement("div");
+        const list = document.createElement("div");
         list.className = "columns-list";
         this.parametersList.appendChild(list);
 
         //input list
         if (node.columns && node.columns.length > 0 && outputsCount > 0) {
             node.columns.forEach(o => {
-                let newItem = document.createElement("input");
+                const newItem = document.createElement("input");
                 newItem.type = "checkbox";
                 newItem.checked = node.selectedColumns === null || node.selectedColumns.includes(o);
                 //newItem.innerHTML = o;
                 list.appendChild(newItem);
 
-                let label = this.AddCheckBoxLabel(list, newItem, o.length == 0 ? "&nbsp;" : o);
+                const label = this.AddCheckBoxLabel(list, newItem, o.length == 0 ? "&nbsp;" : o);
                 label.style.margin = "4px 2px";
 
                 newItem.onchange = event => {
@@ -1410,6 +1427,30 @@ class ScriptNode {
 
     Link_onchange() {
         this.PropagateColumns();
+
+        for (let i = 0; i < this.parameters.length; i++) 
+            if (this.parameters[i][0] === "a" && !this.values[i]) {
+                this.values[i] = "[ALL]";
+
+            } else if (this.parameters[i][0] === "c" && !this.values[i]) {
+
+                if (this.columns.length === 1) {
+                    this.values[i] = this.columns[0];
+                    continue;
+                }
+
+                let prio = ["ip address", "ip", "hostname", "host", "username"];
+
+                for (let j = 0; j < this.columns.length; j++) {
+                    for (let k = 0; k < prio.length; k++)
+                        if (this.columns[j].toLowerCase() === prio[k]) {
+                            this.values[i] = this.columns[j];
+                            break;
+                        }
+
+                    if (!this.values[i]) break;
+                }
+            }
     }
 
     Socket_onmousedown(event) {

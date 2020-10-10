@@ -10,6 +10,7 @@ using System.Net.NetworkInformation;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Security.Cryptography;
 
 public class ScriptNode {
     public string name;
@@ -642,6 +643,13 @@ public static class Scripts {
             case "IPv4 subnet": return N_IPv4Subnet(node);
             case "Single value": return N_SingleValue(node);
 
+            case "Preview": return N_Preview(node, id);
+            case "Text file": return N_SaveTxt(node);
+            case "CSV file": return N_SaveCsv(node);
+            case "JSON file": return N_SaveJson(node);
+            case "XML file": return N_SaveXml(node);
+            //case "Send e-mail": return N_SendEMail(node);
+
             case "Secure shell": return N_SSh(node).Result;
             case "PS exec": return N_PsExec(node).Result;
             case "WMI query": return N_WmiQuery(node).Result;
@@ -686,14 +694,20 @@ public static class Scripts {
             case "Upper case": return N_UpperCase(node);
             case "Trim": return N_Trim(node);
             case "Replace string": return N_Replace(node);
+            case "String length": return N_StringLen(node);
             case "Prettify dates": return N_PrettifyFileDates(node);
 
-            case "Preview": return N_Preview(node, id);
-            case "Text file": return N_SaveTxt(node);
-            case "CSV file": return N_SaveCsv(node);
-            case "JSON file": return N_SaveJson(node);
-            case "XML file": return N_SaveXml(node);
-            //case "Send e-mail": return N_SendEMail(node);
+            case "Hex encoder": return N_HexEncode(node);
+            case "Hex decoder": return N_HexDecode(node);
+            case "Base64 encoder": return N_Base64Encode(node);
+            case "Base64 decoder": return N_Base64Decode(node);
+
+            case "MD5": return N_Md5Hash(node);
+            case "RIPEMD160": return N_Ripemd160Hash(node);
+            case "SHA-1": return N_Sha1Hash(node);
+            case "SHA-256": return N_Sha256Hash(node);
+            case "SHA-384": return N_Sha384Hash(node);
+            case "SHA-512": return N_Sha512Hash(node);
 
             default: //bypass
                 log.AppendLine($" ! Undefined node: {node.name}.");
@@ -1736,12 +1750,10 @@ public static class Scripts {
         int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
 
         double sum = 0;
-        try {
-            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                if (double.TryParse(node.sourceNodes[0].result.array[i][index], out double n))
-                    sum += n;
-            }
-        } catch { }
+        for (int i = 0; i < node?.sourceNodes?[0]?.result?.array?.Count; i++) {
+            if (double.TryParse(node.sourceNodes[0].result.array[i]?[index], out double n))
+                sum += n;
+        }
 
         List<string[]> array = new List<string[]> {
             new string[] { sum.ToString() }
@@ -1909,17 +1921,15 @@ public static class Scripts {
         double max = double.MinValue;
         double range = 0;
 
-        if (index > -1)
-            try {
-                for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
-                    if (double.TryParse(node.sourceNodes[0].result.array[i][index], out double n)) {
-                        if (max < n) max = n;
-                        if (min > n) min = n;
-                    }
+        if (index > -1) {
+            for (int i = 0; i < node?.sourceNodes?[0]?.result?.array?.Count; i++)
+                if (double.TryParse(node.sourceNodes[0].result.array[i]?[index], out double n)) {
+                    if (max < n) max = n;
+                    if (min > n) min = n;
                 }
-
-                range = max - min;
-            } catch { }
+            
+            range = max - min;
+        }
 
         List<string[]> array = new List<string[]>();
         array.Add(new string[] { range.ToString() });
@@ -1947,7 +1957,7 @@ public static class Scripts {
 
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
-            array = node.sourceNodes[0].result.array,
+            array = node.sourceNodes[0].result.array
         };
     }
     private static ScriptResult N_UpperCase(in ScriptNode node) {
@@ -1967,7 +1977,7 @@ public static class Scripts {
 
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
-            array = node.sourceNodes[0].result.array,
+            array = node.sourceNodes[0].result.array
         };
     }
     private static ScriptResult N_Trim(in ScriptNode node) {
@@ -1987,7 +1997,7 @@ public static class Scripts {
 
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
-            array = node.sourceNodes[0].result.array,
+            array = node.sourceNodes[0].result.array
         };
     }
     private static ScriptResult N_Replace(in ScriptNode node) {
@@ -2011,7 +2021,27 @@ public static class Scripts {
 
         return new ScriptResult() {
             header = node.sourceNodes[0].result.header,
-            array = node.sourceNodes[0].result.array,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_StringLen(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        if (index == -1)
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
+                    node.sourceNodes[0].result.array[i][j] = node.sourceNodes[0].result.array[i]?[j]?.Length.ToString();
+        else
+            for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+                node.sourceNodes[0].result.array[i][index] = node.sourceNodes[0].result.array[i]?[index]?.Length.ToString();
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
         };
     }
     private static ScriptResult N_PrettifyFileDates(in ScriptNode node) {
@@ -2019,7 +2049,7 @@ public static class Scripts {
          * [1] -> */
 
         List<string[]> prettified = new List<string[]>();
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+        for (int i = 0; i < node.sourceNodes[0]?.result?.array.Count; i++) {
 
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
                 if (node.sourceNodes[0].result.header[j] == "pwdlastset" |
@@ -2042,17 +2072,262 @@ public static class Scripts {
         };
     }
 
+    private static ScriptResult N_HexEncode(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            StringBuilder sb = new StringBuilder();
+            for (int j = 0; j < value.Length; j++)
+                sb.AppendFormat("{0:x2}", (byte)value[j]);
+
+            node.sourceNodes[0].result.array[i][index] = sb.ToString();
+        }            
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_HexDecode(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string hex = node.sourceNodes[0].result.array[i][index];
+            if (hex.Length == 0) continue;
+
+            if (hex.Contains("-")) hex = hex.Replace("-", "");
+
+            StringBuilder sb = new StringBuilder();
+            for (int j = hex.StartsWith("0x") ? 2 : 0; j < hex.Length; j+=2)
+                sb.Append((char)Convert.ToByte(hex.Substring(j,2), 16));
+
+            node.sourceNodes[0].result.array[i][index] = sb.ToString();
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_Base64Encode(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+            node.sourceNodes[0].result.array[i][index] = Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_Base64Decode(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string base64 = node.sourceNodes[0].result.array[i][index];
+            if (base64.Length == 0) continue;
+
+            byte[] bytes = Convert.FromBase64String(base64);
+            node.sourceNodes[0].result.array[i][index] = Encoding.UTF8.GetString(bytes);
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+
+    private static ScriptResult N_Md5Hash(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] hash = new MD5CryptoServiceProvider().ComputeHash(bytes);
+
+            string sHash = "";
+            for (int j = 0; j < hash.Length; j++)
+                sHash += hash[j].ToString("X2");
+
+            node.sourceNodes[0].result.array[i][index] = sHash;
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_Ripemd160Hash(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+
+            byte[] hash = RIPEMD160Managed.Create().ComputeHash(bytes);
+
+            string sHash = "";
+            for (int j = 0; j < hash.Length; j++)
+                sHash += hash[j].ToString("X2");
+
+            node.sourceNodes[0].result.array[i][index] = sHash;
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_Sha1Hash(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] hash = new SHA1CryptoServiceProvider().ComputeHash(bytes);
+
+            string sHash = "";
+            for (int j = 0; j < hash.Length; j++)
+                sHash += hash[j].ToString("X2");
+
+            node.sourceNodes[0].result.array[i][index] = sHash;
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }    
+    private static ScriptResult N_Sha256Hash(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] hash = new SHA256CryptoServiceProvider().ComputeHash(bytes);
+
+            string sHash = "";
+            for (int j = 0; j < hash.Length; j++)
+                sHash += hash[j].ToString("X2");
+
+            node.sourceNodes[0].result.array[i][index] = sHash;
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_Sha384Hash(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] hash = new SHA384CryptoServiceProvider().ComputeHash(bytes);
+
+            string sHash = "";
+            for (int j = 0; j < hash.Length; j++)
+                sHash += hash[j].ToString("X2");
+
+            node.sourceNodes[0].result.array[i][index] = sHash;
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+    private static ScriptResult N_Sha512Hash(in ScriptNode node) {
+        /* [0] <-
+         * [1] column
+         * [2] -> */
+
+        int index = Array.IndexOf(node.sourceNodes[0].result.header, node.values[1]);
+
+        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+            string value = node.sourceNodes[0].result.array[i][index];
+            if (value.Length == 0) continue;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] hash = new SHA512CryptoServiceProvider().ComputeHash(bytes);
+
+            string sHash = "";
+            for (int j = 0; j < hash.Length; j++)
+                sHash += hash[j].ToString("X2");
+
+            node.sourceNodes[0].result.array[i][index] = sHash;
+        }
+
+        return new ScriptResult() {
+            header = node.sourceNodes[0].result.header,
+            array = node.sourceNodes[0].result.array
+        };
+    }
+
     private static ScriptResult N_SaveTxt(in ScriptNode node) {
         /* [0] <-
          * [1] header
          * [2] filename
          * [3] x */
 
-        int[] columnsLength = new int[node.sourceNodes[0].result.header.Length];
+        int[] columnsLength = new int[node.sourceNodes?[0]?.result?.header.Length ?? 0];
         for (int i = 0; i < columnsLength.Length; i++)
-            columnsLength[i] = node.sourceNodes[0].result.header[i].Length;
+            columnsLength[i] = node.sourceNodes?[0]?.result?.header[i].Length ?? 0;
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++)
+        for (int i = 0; i < node.sourceNodes?[0]?.result?.array.Count; i++)
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++)
                 if (columnsLength[j] < node.sourceNodes[0].result.array[i][j]?.Length)
                     columnsLength[j] = node.sourceNodes[0].result.array[i][j].Length;
@@ -2061,7 +2336,7 @@ public static class Scripts {
 
         bool showHeader = node.values[1] == "True";
         if (showHeader) {
-            for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) { //header
+            for (int i = 0; i < node.sourceNodes[0]?.result?.header.Length; i++) { //header
                 text.Append(node.sourceNodes[0].result.header[i].PadRight(columnsLength[i], ' '));
                 if (i < node.sourceNodes[0].result.header.Length - 1) text.Append("\t");
             }
@@ -2074,7 +2349,7 @@ public static class Scripts {
             text.Append("\n");
         }
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //data
+        for (int i = 0; i < node.sourceNodes[0]?.result?.array.Count; i++) { //data
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) {
                 if (!(node.sourceNodes[0].result.array[i][j] is null))
                     text.Append(node.sourceNodes[0].result.array[i][j]);
@@ -2116,14 +2391,14 @@ public static class Scripts {
 
         bool showHeader = node.values[1] == "True";
         if (showHeader) {
-            for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++) {
+            for (int i = 0; i < node.sourceNodes?[0]?.result?.header.Length; i++) {
                 text.Append($"\"{node.sourceNodes[0].result.header[i].Replace("\"", "\"\"")}\"");
                 if (i < node.sourceNodes[0].result.array.Count - 1) text.Append(",");
             }
             text.Append("\n");
         }
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) {
+        for (int i = 0; i < node.sourceNodes?[0]?.result?.array.Count; i++) {
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) {
                 string v = node.sourceNodes[0].result.array[i][j];
                 text.Append($"\"{v?.Replace("\"", "\"\"")}\"");
@@ -2157,7 +2432,7 @@ public static class Scripts {
 
         text.AppendLine("{\"array\": [");
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //rows loop
+        for (int i = 0; i < node.sourceNodes?[0]?.result?.array.Count; i++) { //rows loop
             text.AppendLine("{");
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) { //cell loop
                 string k = node.sourceNodes[0].result.header[j];
@@ -2215,7 +2490,7 @@ public static class Scripts {
         text.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         text.AppendLine("<array>");
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) { //rows loop
+        for (int i = 0; i < node.sourceNodes?[0]?.result?.array.Count; i++) { //rows loop
             text.AppendLine("\t<entry>");
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) { //cell loop
                 string k = node.sourceNodes[0].result.header[j];
@@ -2269,13 +2544,13 @@ public static class Scripts {
     private static ScriptResult N_Preview(in ScriptNode node, long id) {
         StringBuilder text = new StringBuilder();
 
-        text.Append(node.sourceNodes[0].result.header.Length.ToString());
+        text.Append(node?.sourceNodes?[0]?.result?.header.Length.ToString());
         text.Append((char)127);
 
-        for (int i = 0; i < node.sourceNodes[0].result.header.Length; i++)
+        for (int i = 0; i < node.sourceNodes?[0]?.result?.header.Length; i++)
             text.Append($"{node.sourceNodes[0].result.header[i]}{(char)127}");
 
-        for (int i = 0; i < node.sourceNodes[0].result.array.Count; i++) //rows
+        for (int i = 0; i < node.sourceNodes?[0]?.result?.array.Count; i++) //rows
             for (int j = 0; j < node.sourceNodes[0].result.array[i].Length; j++) //cell
                 text.Append($"{node.sourceNodes[0].result.array[i][j] ?? ""}{(char)127}");
 
@@ -2284,6 +2559,7 @@ public static class Scripts {
         previewHash.Add(id, Encoding.UTF8.GetBytes(text.ToString()));
         text.Clear();
 
+        Thread.Sleep(1000);
         KeepAlive.Broadcast($"{{\"action\":\"scriptpreview\",\"type\":\"scriptpreview\",\"id\":\"{id}\"}}");
 
         new Thread(()=> {

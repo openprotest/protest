@@ -114,8 +114,7 @@
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 600;
-    text-decoration: underline;
+    font-weight: 800;
 }
 
 .script-parameters-options {
@@ -221,6 +220,7 @@
     height: 28px;
     padding: 4px 2px 4px 8px;
     box-sizing: border-box;
+    content-visibility: auto;
 }
 
 .script-edit-box-item:hover {

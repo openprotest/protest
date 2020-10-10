@@ -12,7 +12,7 @@
 #[name]	[css-color]	[type,label]*X
 
 
-Data source
+Source
 Pro-test users		rgb(32,32,32)	o,Users
 Pro-test equipment	rgb(32,32,32)	o,Equipment
 Domain users		rgb(32,32,32)	o,Users
@@ -20,6 +20,14 @@ Domain workstations	rgb(32,32,32)	o,Workstations
 Domain groups		rgb(32,32,32)	o,Groups
 IPv4 subnet		rgb(32,32,32)	t,Subnet,10.0.0.0	n,CIDR prefix,24,8,30	o,Subnet
 Single value		rgb(32,32,32)	t,Value	o,Value
+
+Export
+Preview		rgb(224,224,224)	i,Input
+Text file	rgb(224,224,224)	i,Input	h,Header,True	t,Filename
+CSV file	rgb(224,224,224)	i,Input	h,Header,True	t,Filename
+JSON file	rgb(224,224,224)	i,Input	t,Filename
+XML file	rgb(224,224,224)	i,Input	t,Filename
+#Send e-mail	rgb(224,224,224)	i,Input	t,Server	n,Port,587,1,65535	t,Username	t,Password	h,SSL,True	t,Recipient
 
 Tools
 #Secure shell		hsl(44,100%,45%)	i,Host	c,Column,IP address	m,Command	h,Async,True	t,Username	t,Password	o,Output
@@ -70,18 +78,25 @@ Trim		hsl(90,100%,45%)	i,Input	a,Column	o,Trimmed
 Lower case	hsl(86,100%,45%)	i,Input	a,Column	o,Output
 Upper case	hsl(82,100%,45%)	i,Input	a,Column	o,Output
 Replace string	hsl(78,100%,45%)	i,Input	a,Column	t,Old	t,New	o,Output
-Prettify dates	hsl(74,100%,45%)	i,Input	o,Output
+String length	hsl(74,100%,45%)	i,Input	a,Column	o,Output
+Prettify dates	hsl(70,100%,45%)	i,Input	o,Output
+
+Encoders/Decoders
+Hex encoder	hsl(64,100%,45%)	i,Input	c,Column	o,Hex
+Hex decoder	hsl(63,100%,45%)	i,Input	c,Column	o,Output
+Base64 encoder	hsl(62,100%,45%)	i,Input	c,Column	o,Base64
+Base64 decoder	hsl(61,100%,45%)	i,Input	c,Column	o,Output
+
+Hash functions
+MD5	hsl(56,100%,45%)	i,Input	c,Column	o,MD5
+RIPEMD160	hsl(55,100%,45%)	i,Input	c,Column	o,RIPEMD160
+SHA-1	hsl(54,100%,45%)	i,Input	c,Column	o,SHA-1
+SHA-256	hsl(53,100%,45%)	i,Input	c,Column	o,SHA-256
+SHA-384	hsl(52,100%,45%)	i,Input	c,Column	o,SHA-384
+SHA-512	hsl(51,100%,45%)	i,Input	c,Column	o,SHA-512
 
 Actions
-#Wake on LAN	hsl(70,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-#Turn off PC	hsl(68,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-#Restart PC	hsl(66,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-#Log off PC	hsl(64,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
-
-Export
-Preview		rgb(224,224,224)	i,Input
-Text file	rgb(224,224,224)	i,Input	h,Header,True	t,Filename
-CSV file	rgb(224,224,224)	i,Input	h,Header,True	t,Filename
-JSON file	rgb(224,224,224)	i,Input	t,Filename
-XML file	rgb(224,224,224)	i,Input	t,Filename
-#Send e-mail	rgb(224,224,224)	i,Input	t,Server	n,Port,587,1,65535	t,Username	t,Password	h,SSL,True	t,Recipient
+#Wake on LAN	hsl(50,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Turn off PC	hsl(48,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Restart PC	hsl(46,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log
+#Log off PC	hsl(44,100%,45%)	i,Input	c,Column,IP address	h,Async	h,Log

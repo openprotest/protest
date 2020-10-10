@@ -205,6 +205,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    content-visibility: auto;
 }
 
 .doc-entry:hover {

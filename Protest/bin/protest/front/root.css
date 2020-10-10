@@ -117,11 +117,18 @@
 }
 
 .disable-animation *,
-.disable-animation *::after,
-.disable-animation *::before {
+.disable-animation *::before,
+.disable-animation *::after {
     transition: 0s !important;
     animation: none !important;
 }
+
+/*@media screen and (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: 0s !important;
+    }
+}*/
 
 body {
     font-size: var(--global-font-size);
