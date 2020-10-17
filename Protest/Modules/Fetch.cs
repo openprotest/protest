@@ -742,7 +742,7 @@ public static class Fetch {
 
         if (!wmi.ContainsKey("MANUFACTURER") && mac.Length > 0) {
             string manufacturer = Encoding.UTF8.GetString(MacLookup.Lookup(mac));
-            if (!(manufacturer is null) && manufacturer.Length > 0)
+            if (!(manufacturer is null) && manufacturer.Length > 0 && manufacturer != "not found")
                 hash.Add("MANUFACTURER", new string[] { manufacturer, "MAC lookup", "" });
         }
 

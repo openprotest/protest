@@ -259,7 +259,7 @@ public static class PortScan {
 #endif
     }
     public static async Task<bool[]> PortsScanAsync(string host, int from, int to) {
-        int[] q = Netstat(host);
+        int[] q = RemoteNetstat(host);
         if (!(q is null)) {
             bool[] p = new bool[to - from];
             for (int i = 0; i < p.Length; i++)
@@ -273,7 +273,7 @@ public static class PortScan {
         return result;
     }
     public static async Task<bool[]> PortsScanAsync(string host, short[] ports) {
-        int[] q = Netstat(host);
+        int[] q = RemoteNetstat(host);
         if (!(q is null)) {
             bool[] p = new bool[ports.Length];
             for (int i = 0; i < p.Length; i++)
@@ -319,7 +319,7 @@ public static class PortScan {
         }
     }
 
-    public static int[] Netstat(string host) {
+    public static int[] RemoteNetstat(string host) {
         try {
             ProcessStartInfo info = new ProcessStartInfo {
                 FileName = "psexec",

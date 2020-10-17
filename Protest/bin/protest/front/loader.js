@@ -230,22 +230,19 @@ function StoreSession() {
 }
 
 function RestoreSession() {
-    if (localStorage.getItem("restore_session") != "true") return;
-
     let session = JSON.parse(localStorage.getItem("session"));
+
+    if (session === null) {
+        const win = new Guide("first");
+        win.win.style.left = "10%";
+        win.win.style.top = "10%";
+        win.win.style.width = "80%";
+        win.win.style.height = "80%";
+    } 
+
+    if (localStorage.getItem("restore_session") != "true") return;
+    if (session == null || session.length == 0) return;
     
-    if (session == null || session.length == 0) {
-
-        if (db_equip.length === 0 && db_users.length === 0) {
-            let win = new Guide();
-            win.win.style.left = "10%";
-            win.win.style.top = "10%";
-            win.win.style.width = "80%";
-            win.win.style.height = "80%";
-        }
-
-        return;
-    }
 
     for (let i = 0; i < session.length; i++) {
         let win;

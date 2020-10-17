@@ -1,6 +1,8 @@
 class Guide extends Window {
-    constructor() {
+    constructor(args) {
         super([64,64,64]);
+
+        this.args = args;
 
         this.AddCssDependencies("guide.css");
 
@@ -26,6 +28,32 @@ class Guide extends Window {
         const introAlign = document.createElement("div");
         introAlign.style.textAlign = "center";
         this.body.appendChild(introAlign);
+
+        if (this.args === "first") { //show a cookie warning the 1st time opened.
+            const cookies = document.createElement("div");
+            cookies.style.fontSize = "18px";
+            cookies.style.fontWeight = "600";
+            cookies.style.backgroundColor = "rgb(255,186,0)";
+            cookies.style.border = "1px solid rgb(134,98,0)";
+            cookies.style.borderRadius = "4px";
+            cookies.style.padding = "8px";
+            cookies.style.marginTop = "8px";
+            cookies.style.marginBottom = "48px";
+            cookies.style.animation = "focus-pop .8s 1 1s";
+            introAlign.appendChild(cookies);
+
+            const cookiesIcon = document.createElement("div");
+            cookiesIcon.style.display = "inline-block";
+            cookiesIcon.style.width = "24px";
+            cookiesIcon.style.height = "24px";
+            cookiesIcon.style.backgroundImage = "url(res/warning.svg)";
+            cookiesIcon.style.backgroundSize = "contain";
+            cookiesIcon.style.marginRight = "8px";
+            cookiesIcon.style.verticalAlign = "top";
+            cookies.appendChild(cookiesIcon);
+
+            cookies.innerHTML += "Pro-test uses cookies. Duuh!";
+        }
 
         const logo = document.createElement("img");
         logo.style.gridArea = "1 / 2 / 6 / 2";
@@ -253,6 +281,12 @@ class Guide extends Window {
         );
         this.InsertParagraph(
             "Pro-test provides a dialog with all WMI classes to help syntax your queries."
+        );
+
+        this.body.appendChild(document.createElement("br"));
+        this.InsertHeading("Telnet", "res/telnet.svgz");
+        this.InsertParagraph(
+            "Pro-test also comes with a basic telnet client. <i>Cursor navigation is not supported.</i>"
         );
 
         this.body.appendChild(document.createElement("br"));

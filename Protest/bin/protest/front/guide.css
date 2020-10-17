@@ -9,6 +9,11 @@
     user-select: text;
 }
 
+/*breaks scrollbar*/
+/*.guide-body * {
+    content-visibility: auto;
+}*/
+
 .guide-body h1 {
     display: inline-block;
     font-size: 26px;
