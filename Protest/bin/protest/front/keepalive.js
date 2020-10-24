@@ -13,6 +13,11 @@ function initKeepAlive() {
     this.ws.onopen = () => {
         main.style.filter = "none";
         bottombar.style.filter = "none";
+
+        setTimeout(() => {
+            if (localStorage.getItem("cookie_lifetime") && parseInt(localStorage.getItem("cookie_lifetime")) != 7)
+                KeepAlive_SendAction(`updatesessiontimeout${String.fromCharCode(127)}${parseInt(localStorage.getItem("cookie_lifetime")) * 36000000000}`);
+        }, 1000);
     };
 
     this.ws.onclose = () => {
@@ -280,6 +285,10 @@ function KeepAlive_MessageHandler(msg) {
     }
 }
 
+function KeepAlive_SendAction(action) {
+    if (this.ws == null || this.ws.readyState !== 1) return;
+    this.ws.send(action);
+}
 
 function KeepAlive_Notification(message) {
     const container = document.createElement("div");

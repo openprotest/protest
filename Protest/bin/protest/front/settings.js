@@ -403,6 +403,31 @@ class Settings extends Tabs {
         divSessionTimeoutValue.style.display = "inline-block";
         this.subContent.appendChild(divSessionTimeoutValue);
 
+
+        this.subContent.appendChild(document.createElement("br"));
+        this.subContent.appendChild(document.createElement("br"));
+
+        const divCookieLife = document.createElement("div");
+        divCookieLife.innerHTML = "Cookie lifetime: ";
+        divCookieLife.style.display = "inline-block";
+        divCookieLife.style.minWidth = "200px";
+        divCookieLife.style.fontWeight = "600";
+        this.subContent.appendChild(divCookieLife);
+
+        this.cookieLife = document.createElement("input");
+        this.cookieLife.type = "range";
+        this.cookieLife.min = "1";
+        this.cookieLife.max = "12";
+        this.cookieLife.style.width = "200px";
+        this.subContent.appendChild(this.cookieLife);
+
+        const divCookieLifeValue = document.createElement("div");
+        divCookieLifeValue.innerHTML = "15 min.";
+        divCookieLifeValue.style.paddingLeft = "8px";
+        divCookieLifeValue.style.display = "inline-block";
+        this.subContent.appendChild(divCookieLifeValue);
+
+
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("hr"));
@@ -418,26 +443,42 @@ class Settings extends Tabs {
         this.chkRestoreSession.checked = localStorage.getItem("restore_session") === "true";
         this.chkAliveOnClose.checked = localStorage.getItem("alive_after_close") === "true";
         this.sessionTimeout.value = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
- 
+        this.cookieLife.value = localStorage.getItem("cookie_lifetime") == null ? 7 : parseInt(localStorage.getItem("cookie_lifetime"));
+
+
         btnClearLocalCache.onclick = () => { this.ClearCache() };
 
+        const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
+        const cookieMapping = { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 };
         const Apply = () => {
             localStorage.setItem("restore_session", this.chkRestoreSession.checked);
             localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
             localStorage.setItem("session_timeout", this.sessionTimeout.value);
-
-            const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
+            localStorage.setItem("cookie_lifetime", this.cookieLife.value);
+            
             if (timeMapping[this.sessionTimeout.value] == Infinity) {
                 divSessionTimeoutValue.innerHTML = timeMapping[this.sessionTimeout.value];
             } else {
                 let value = timeMapping[this.sessionTimeout.value];
                 divSessionTimeoutValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
             }
+            
+            if (cookieMapping[this.cookieLife.value] < 8) 
+                divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 1 ? "1 day" : cookieMapping[this.cookieLife.value] + " days";
+            else if (cookieMapping[this.cookieLife.value] < 29 )
+                divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 7 ? "1 week" : cookieMapping[this.cookieLife.value] / 7 + " weeks";
+            else
+                divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 30 ? "1 month" : cookieMapping[this.cookieLife.value] / 30 + " months";
         };
 
         this.chkRestoreSession.onchange = Apply;
         this.chkAliveOnClose.onchange = Apply;
         this.sessionTimeout.oninput = Apply;
+
+        this.cookieLife.oninput = () => {
+            KeepAlive_SendAction(`updatesessiontimeout${String.fromCharCode(127)}${cookieMapping[this.cookieLife.value] * 36000000000}`);
+            Apply();
+        };
 
         Apply();
     }

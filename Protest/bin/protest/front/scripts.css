@@ -209,10 +209,6 @@
     overflow: scroll;
 }
 
-.script-edit-box > svg > g > path {
-    animation: svg-fade-in .4s;
-}
-
 .script-edit-box-item {
     color: rgb(224,224,224);
     font-weight: 600;

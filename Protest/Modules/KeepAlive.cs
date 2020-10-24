@@ -52,7 +52,7 @@ public static class KeepAlive {
             await ws.SendAsync(new ArraySegment<byte>(version, 0, version.Length), WebSocketMessageType.Text, true, CancellationToken.None);
 
             while (ws.State == WebSocketState.Open) {
-                byte[] buff = new byte[1024]; //<-
+                byte[] buff = new byte[1024];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
@@ -66,8 +66,20 @@ public static class KeepAlive {
                     break;
                 }
 
-                string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split(':');
-                //TODO:
+                string[] action = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split((char)127);
+                switch(action[0]) {
+                    case "updatesessiontimeout": 
+                        Session.UpdateSessionTimeout(sessionId, action?[1]);
+
+                        if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                            await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                            ctx.Response.Close();
+                            return;
+                        }
+
+                        break;
+                }
+
             }
 
         } catch { }

@@ -126,7 +126,7 @@ class HttpMainListener : Http {
                     if (!(Session.TryLogin(ctx, remoteIp) is null)) buffer = Strings.OK.Array;
                     break;
 
-                case "logout": buffer = Session.RevokeAccess(ctx) ? Strings.OK.Array : Strings.FAI.Array; break;
+                case "logout": buffer = Session.RevokeAccess(ctx, performer) ? Strings.OK.Array : Strings.FAI.Array; break;
                 case "version": buffer = Strings.Version(); break;
 
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
@@ -268,7 +268,6 @@ class HttpMainListener : Http {
             case "ws/keepalive": KeepAlive.Connect(ctx, remoteIp); break;
             case "ws/liveinfo_equip": LiveInfo.InstantInfoEquip(ctx, remoteIp); break;
             case "ws/liveinfo_user": LiveInfo.InstantInfoUser(ctx, remoteIp); break;
-            
 
             default: ctx.Response.Close(); break;
         }

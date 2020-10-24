@@ -355,6 +355,8 @@ class User extends Window {
             const btnShow = document.createElement("input");
             btnShow.type = "button";
             btnShow.value = "Show";
+            btnShow.style.color = "rgb(192,192,192)";
+            btnShow.style.fontWeight = "600";
             value.appendChild(btnShow);
 
             const btnStamp = document.createElement("input");

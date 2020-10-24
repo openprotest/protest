@@ -51,7 +51,6 @@ public static class LiveInfo {
 
             } else if (equip.hash.ContainsKey("HOSTNAME")) {
                 host = ((string[])equip.hash["HOSTNAME"])[0];
-
             } else {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                 return;

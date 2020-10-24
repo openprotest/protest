@@ -8,6 +8,7 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 
 public static class Session {
     public static Hashtable ip_access = new Hashtable();
@@ -27,6 +28,7 @@ public static class Session {
         public string username;
         public DateTime loginTime;
         public string sessionId;
+        public long sessionTimeout;
     }
 
     public static string TryLogin(in HttpListenerContext ctx, in string remoteIp) {
@@ -78,7 +80,8 @@ public static class Session {
             ip = remoteIp,
             username = username,
             loginTime = DateTime.Now,
-            sessionId = GetSHA(DateTime.Now.ToString())
+            sessionId = GetSHA(DateTime.Now.ToString()),
+            sessionTimeout = HOUR * SESSION_TIMEOUT
         };
 
         if (sessions.TryAdd(newEntry.sessionId, newEntry)) 
@@ -91,21 +94,25 @@ public static class Session {
         return null;
     }
 
-    public static bool RevokeAccess(in HttpListenerContext ctx) {
+    public static bool RevokeAccess(in HttpListenerContext ctx, in string performer) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
-        return RevokeAccess(sessionId);
+        return RevokeAccess(sessionId, performer);
     }
-    public static bool RevokeAccess(in string sessionId) {
+    public static bool RevokeAccess(in string sessionId, in string performer = null) {
         if (sessionId is null) return false;
         if (!sessions.ContainsKey(sessionId)) return false;
 
-        if (sessions.TryRemove(sessionId, out _)) 
+        if (sessions.TryRemove(sessionId, out _)) {
+            if (performer != null) Logging.Action(performer, $"User actively logged out");
             return true;
+        }
 
         Thread.Sleep(5);
-        if (sessions.TryRemove(sessionId, out _)) //retry
+        if (sessions.TryRemove(sessionId, out _)) { //retry
+            if (performer != null) Logging.Action(performer, $"User actively logged out");
             return true;
+        }
 
         return false;
     }
@@ -119,7 +126,7 @@ public static class Session {
         if (!sessions.ContainsKey(sessionId)) return false;
 
         SessionEntry entry = sessions[sessionId];
-        if (DateTime.Now.Ticks - entry.loginTime.Ticks > HOUR * SESSION_TIMEOUT) { //expired
+        if (DateTime.Now.Ticks - entry.loginTime.Ticks > entry.sessionTimeout) { //expired
             RevokeAccess(sessionId);
             return false;
         }
@@ -144,18 +151,18 @@ public static class Session {
 
         List<string> remove = new List<string>();
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
-            SessionEntry e = o.Value;
-            if (DateTime.Now.Ticks - e.loginTime.Ticks > HOUR * SESSION_TIMEOUT) //expired
-                remove.Add(e.sessionId);
+            SessionEntry entry = o.Value;
+            if (DateTime.Now.Ticks - entry.loginTime.Ticks > entry.sessionTimeout) //expired
+                remove.Add(entry.sessionId);
         }
 
         foreach (string o in remove)
             sessions.TryRemove(o, out _);
 
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
-            SessionEntry e = o.Value;
-            if (e.username == "localhost" && e.ip.StartsWith("127.")) continue;
-            sb.Append($"{e.ip}{(char)127}{e.loginTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}{e.username}{(char)127}{e.sessionId.Substring(0, 8)}{(char)127}");
+            SessionEntry entry = o.Value;
+            if (entry.username == "localhost" && entry.ip.StartsWith("127.")) continue;
+            sb.Append($"{entry.ip}{(char)127}{entry.loginTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}{entry.username}{(char)127}{entry.sessionId.Substring(0, 8)}{(char)127}");
         }
 
         return Encoding.UTF8.GetBytes(sb.ToString());
@@ -169,18 +176,27 @@ public static class Session {
             else if (para[i].StartsWith("hash=")) hash = para[i].Substring(5);
         
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
-            SessionEntry e = o.Value;
-            if (e.ip == ip && e.sessionId.StartsWith(hash)) {
-                bool removed = RevokeAccess(e.sessionId);
+            SessionEntry entry = o.Value;
+            if (entry.ip == ip && entry.sessionId.StartsWith(hash)) {
+                bool removed = RevokeAccess(entry.sessionId, performer);
                 if (!removed) return Strings.FAI.Array;
                 
-                KeepAlive.SearchAndDestroy(e.sessionId);
-                Logging.Action(performer, $"Kick user {e.username} from {e.ip}");
+                KeepAlive.SearchAndDestroy(entry.sessionId);
+                Logging.Action(performer, $"Kick user {entry.username} from {entry.ip}");
                 return Strings.OK.Array;
             }
         }
 
         return Strings.NOT.Array;
+    }
+
+    public static void UpdateSessionTimeout(string sessionId, string timeout) {
+        if (!sessions.ContainsKey(sessionId)) return;
+
+        long.TryParse(timeout, out long lTimeout);
+        SessionEntry entry = sessions[sessionId];
+        entry.sessionTimeout = lTimeout;
+        sessions[sessionId] = entry;   
     }
 
     public static string GetSHA(in string value) {
@@ -192,7 +208,7 @@ public static class Session {
 
         StringBuilder sb = new StringBuilder();
         foreach (byte b in bytes)
-            sb.Append(b.ToString("x2")); //byte to hex
+            sb.Append(b.ToString("x2")); //bytes to hex
 
         return sb.ToString();
     }

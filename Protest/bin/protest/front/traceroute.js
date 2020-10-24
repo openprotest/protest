@@ -112,24 +112,28 @@ class TraceRoute extends Console {
             let start = split[0].trim().split(".");
             let end = split[1].trim().split(".");
 
-            let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
-            let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
+            if (start.length == 4 && end.length == 4 && start.every(o => !isNaN(o)) && end.every(o => !isNaN(o))) {
+                let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
+                let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
 
-            if (istart > iend) iend = istart;
-            if (iend - istart > 255) iend = istart + 255;
+                if (istart > iend) iend = istart;
+                if (iend - istart > 1024) iend = istart + 1024;
 
-            function intToBytes(int) {
-                let b = [0, 0, 0, 0];
-                let i = 4;
-                do {
-                    b[--i] = int & (255);
-                    int = int >> 8;
-                } while (i);
-                return b;
+                function intToBytes(int) {
+                    let b = [0, 0, 0, 0];
+                    let i = 4;
+                    do {
+                        b[--i] = int & (255);
+                        int = int >> 8;
+                    } while (i);
+                    return b;
+                }
+                for (let i = istart; i <= iend; i++)
+                    this.Add(intToBytes(i).join("."));
+
+            } else {
+                this.Add(hostname);
             }
-
-            for (let i = istart; i <= iend; i++)
-                this.Add(intToBytes(i).join("."));
 
         } else if (hostname.indexOf("/", 0) > -1) {
             let cidr = parseInt(hostname.split("/")[1].trim());
