@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 public static class Logging {
     
@@ -41,13 +42,13 @@ public static class Logging {
     }
 
     public static byte[] Get() {
+        byte[] bytes = null;
         lock (log_lock)
             try {
-                return File.ReadAllBytes($"{Strings.DIR_LOG}\\{DateTime.Now.ToString(Strings.DATE_FORMAT_FILE)}.log");
+                bytes = File.ReadAllBytes($"{Strings.DIR_LOG}\\{DateTime.Now.ToString(Strings.DATE_FORMAT_FILE)}.log");
             } catch { }
 
-        return null;
+        return bytes;
     }
 
 }
-

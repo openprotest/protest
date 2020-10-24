@@ -12,11 +12,11 @@
     if (localStorage.getItem("zoom"))
         document.body.style.zoom = 75 + localStorage.getItem("zoom") * 5 + "%";
 
-    if (localStorage.getItem("accent_color")) 
+    if (localStorage.getItem("accent_color"))
         SetAccentColor(localStorage.getItem("accent_color").split(",").map(o => parseInt(o)));
     else
         SetAccentColor([255, 102, 0]);
-
+       
     if (localStorage.getItem("background"))
         main.style.background = localStorage.getItem("background");
 

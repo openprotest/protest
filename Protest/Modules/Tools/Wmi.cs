@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Management;
-using System.Net;
-using System.Security.Policy;
 using System.Text;
-using System.Threading.Tasks;
 
 //http://msdn.microsoft.com/en-us/library/aa394388(v=vs.85).aspx
 

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 public class TaskWrapper {
 
@@ -81,15 +79,12 @@ public class TaskWrapper {
             if (onGoingTasks.Contains(this.name)) onGoingTasks.Remove(this.name);
             status = "Completed";
         }
-
         //Console.WriteLine($"Finish task: \t{name}\t" + DateTime.Now.ToString());
     }
-
 
     public static byte[] GetOnGoing() {
         StringBuilder sb = new StringBuilder();
         
-        //TODO:
         //foreach (TaskWrapper o in onGoingTasks)
         //    sb.Append($"{o.name}{(char)127}{o.status}{(char)127}{o.report}{(char)127}{o.stepsTotal}{(char)127}{o.stepsCompleted}{(char)127}{o.started}{(char)127}");
 

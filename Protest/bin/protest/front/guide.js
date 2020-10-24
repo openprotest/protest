@@ -12,6 +12,7 @@ class Guide extends Window {
         this.content.style.display = "grid";
         this.content.style.gridTemplateColumns = "auto 250px";
         this.content.style.gridTemplateRows = "auto";
+        this.content.style.overflow = "hidden";
 
         this.body = document.createElement("div");
         this.body.className = "guide-body";

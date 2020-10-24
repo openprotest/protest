@@ -8,15 +8,10 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 
 public static class Session {
     public static Hashtable ip_access = new Hashtable();
     public static Hashtable user_access = new Hashtable();
-
-    //private static Hashtable onTimeOut = new Hashtable(); //TODO:
-    //private static readonly Hashtable sessions = new Hashtable();
-    //private static readonly object session_lock = new object();
 
     private static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
 
