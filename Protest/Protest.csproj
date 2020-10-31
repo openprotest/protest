@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Protest</RootNamespace>
     <AssemblyName>protest</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
@@ -63,6 +63,7 @@
     <Compile Include="Modules\DebitNotes.cs" />
     <Compile Include="Modules\Documentation.cs" />
     <Compile Include="Modules\FileBrowser.cs" />
+    <Compile Include="Modules\Ssl.cs" />
     <Compile Include="Modules\TaskWrapper.cs" />
     <Compile Include="Modules\Tools\ActiveDirectory.cs" />
     <Compile Include="Modules\KeepAlive.cs" />
@@ -638,7 +639,6 @@
     <Content Include="bin\protest\front\window.js" />
     <Content Include="bin\protest\front\wordslist.txt" />
     <Content Include="bin\protest\knowlage\content_type.txt" />
-    <Content Include="bin\protest\scripts\tools.txt" />
     <Content Include="pro-test.ico" />
   </ItemGroup>
   <ItemGroup />

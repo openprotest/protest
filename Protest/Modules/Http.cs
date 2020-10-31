@@ -6,21 +6,24 @@ using System.Linq;
 class Http {
     internal readonly string ip;
     internal readonly ushort port;
+    internal readonly ushort sslport;
 
     internal bool isListening = false;
 
     private readonly HttpListener listener;
     public Cache cache;
 
-    public Http(in string ip, in ushort port, in string path) {
+    public Http(in string ip, in ushort port, in string path, ushort sslport = 0) {
         this.ip = ip;
         this.port = port;
+        this.sslport = sslport;
 
         cache = new Cache(path);
 
         if (!HttpListener.IsSupported) throw new Exception("Unsupported OS");
         listener = new HttpListener();
         listener.Prefixes.Add("http://" + ip + ":" + port + "/");
+        if (sslport > 0) listener.Prefixes.Add("https://" + ip + ":" + sslport + "/");
 
         try {
             listener.Start();
@@ -49,7 +52,9 @@ class Http {
     public virtual void Serve(in HttpListenerContext ctx) {}
 
     public override string ToString() {
-        return $"HTTP listening on {ip}:{port}";
+        string s = $"HTTP listening on {ip}:{port}";
+        if (sslport > 0) s += $"\nHTTPS listening on {ip}:{sslport}";
+        return s;
     }
 
     ~Http() {

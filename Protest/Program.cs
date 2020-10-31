@@ -28,6 +28,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 class Program {
     public static string DB_KEY;
@@ -42,6 +43,7 @@ class Program {
     private static bool http_enable = true;
     private static string http_ip = "127.0.0.1";
     private static ushort http_port = 80;
+    private static ushort https_port = 443;
     private static readonly ThreadPriority http_priority = ThreadPriority.AboveNormal;
     private static HttpMainListener mainListener;
 
@@ -64,7 +66,7 @@ class Program {
         else SelfElevate();
 
         Console.WriteLine($" - Run time: {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}");
-
+        GetAppid();
         Console.WriteLine();
 
         Strings.InitDirs();
@@ -82,15 +84,6 @@ class Program {
         Watchdog.LoadConfig();
 
         Console.ResetColor();
-
-#if DEBUG
-        Thread.Sleep(1000);
-        Console.WriteLine();
-        while (true) {
-            Console.Write(">");
-            UserCommand(Console.ReadLine());
-        }
-#endif
     }
 
     private static void DrawProTest() {
@@ -133,6 +126,13 @@ class Program {
         Console.BackgroundColor = ConsoleColor.Black;
         Console.WriteLine(".");
         Console.ResetColor();
+    }
+
+    private static void GetAppid() {
+        var assembly = typeof(Program).Assembly;
+        var attribute = (GuidAttribute)assembly.GetCustomAttributes(typeof(GuidAttribute), true)[0];
+        var id = attribute.Value;
+        Console.WriteLine($" - GUID: {id}");
     }
 
     private static void SelfElevate() {
@@ -197,6 +197,9 @@ class Program {
                 case "http_port":
                     http_port = ushort.Parse(split[1]);
                     break;
+                case "https_port":
+                    https_port = ushort.Parse(split[1]);
+                    break;
 
                 case "addressbook_enable":
                     addressbook_enable = (split[1] == "true");
@@ -260,6 +263,7 @@ class Program {
         sb.AppendLine( "http_enable: true");
         sb.AppendLine($"http_ip:     {http_ip}");
         sb.AppendLine($"http_port:   {http_port}");
+        sb.AppendLine($"https_port:   {https_port}");
 
         sb.AppendLine();
         sb.AppendLine("addressbook_enable: false");
@@ -273,7 +277,7 @@ class Program {
 
     private static void StartServices() {
         if (http_enable) {
-            Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_ip, http_port, Strings.DIR_FRONTEND); });
+            Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_ip, http_port, Strings.DIR_FRONTEND, https_port); });
             thread.Priority = http_priority;
             thread.Start();
         }
@@ -284,41 +288,6 @@ class Program {
             thread.Priority = addressbook_priority;
             thread.Start();
         }
-    }
-
-    private static void UserCommand(in string command) {
-        switch (command.ToLower()) {
-            case "logo":
-            case "version":
-                DrawProTest();
-                break;
-
-            case "reload":
-                mainListener?.cache?.ReloadCache();
-                addressbookListener?.cache?.ReloadCache();
-                break;
-
-            case "restart":
-                try {
-                    new Process {
-                        StartInfo = new ProcessStartInfo(System.Reflection.Assembly.GetEntryAssembly().Location)
-                    }.Start();
-                    Environment.Exit(0);
-                } catch {}
-                break;
-
-            case "elevate":
-                if (IsElevated())
-                    Console.WriteLine("Process is already elevated.");
-                else
-                    SelfElevate();
-                break;
-
-            default:
-                break;
-        }
-
-        Console.WriteLine();
     }
 
     public static void ExtractZippedKnowlageFile() {

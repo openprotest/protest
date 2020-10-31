@@ -44,6 +44,97 @@ public class ScriptResult {
 public static class Scripts {
     private const long QUARTER = 9_000_000_000;
 
+    private static readonly string[][] TOOLS = new string[][] {
+        new string[] { "Source" },
+        new string[] { "Pro-test users",      "rgb(32,32,32)", "o,Users" },
+        new string[] { "Pro-test equipment",  "rgb(32,32,32)", "o,Equipment" },
+        new string[] { "Domain users",        "rgb(32,32,32)", "o,Users" },
+        new string[] { "Domain workstations", "rgb(32,32,32)", "o,Workstations" },
+        new string[] { "Domain groups",       "rgb(32,32,32)", "o,Groups" },
+        new string[] { "IPv4 subnet",         "rgb(32,32,32)", "t,Subnet,10.0.0.0", "n,CIDR prefix,24,8,30", "o,Subnet" },
+        new string[] { "Single value",        "rgb(32,32,32)", "t,Value", "o,Value" },
+
+        new string[] { "Export" },
+        new string[] { "Preview",   "rgb(224,224,224)", "i,Input"},
+        new string[] { "Text file", "rgb(224,224,224)", "i,Input", "h,Header,True", "t,Filename" },
+        new string[] { "CSV file",  "rgb(224,224,224)", "i,Input", "h,Header,True", "t,Filename" },
+        new string[] { "JSON file", "rgb(224,224,224)", "i,Input", "t,Filename" },
+        new string[] { "XML file",  "rgb(224,224,224)", "i,Input", "t,Filename" },
+
+        new string[] { "Tools" },
+        //new string[] { "Secure shell",       "hsl(44,100%,45%)", "i,Host", "c,Column,IP address", "m,Command", "h,Async,True", "t,Username", "t,Password", "p,Output" },
+        //new string[] { "PS exec",            "hsl(40,100%,45%)", "i,Host", "c,Column,IP address", "m,Command", "h,Async,True", "o,Output" },
+        new string[] { "WMI query",          "hsl(36,100%,45%)", "i,Host", "c,Column,IP address", "m,Query", "h,Async,True", "o,Output" },
+        new string[] { "NetBIOS request",    "hsl(32,100%,45%)", "i,Host", "c,Column,IP address", "h,Async,True", "o,Output" },
+        new string[] { "DNS lookup",         "hsl(28,100%,45%)", "i,Host", "c,Column", "h,Async,True", "o,Output" },
+        new string[] { "Reverse DNS lookup", "hsl(24,100%,45%)", "i,Host", "c,Column, IP address", "h,Async,True", "o,Output" },
+        new string[] { "ICMP ping",          "hsl(20,100%,45%)", "i,Host", "c,Column,IP address", "h,Async,True", "n,Time out,1000,1,5000", "o,Output" },
+        new string[] { "ARP ping",           "hsl(16,100%,45%)", "i,Host", "c,Column,IP address", "o,Output" },
+        new string[] { "Trace route",        "hsl(12,100%,45%)", "i,Host", "c,Column,IP address", "h,Async,True", "o,Output" },
+        new string[] { "Port scan",          "hsl(8,100%,45%)",  "i,Host", "c,Column,IP address", "h,Async,True", "n,From,1,1,65535", "n,To,49152,1,65535", "o,Output" },
+        new string[] { "Locate IP",          "hsl(4,100%,45%)",  "i,Host", "c,Column,IP address", "", "o,Output" },
+        new string[] { "MAC lookup",         "hsl(0,100%,45%)",  "i,Host", "c,Column,MAC address", "", "o,Output" },
+
+        new string[] { "Array modifiers" },
+        new string[] { "Subtract rows", "hsl(280,100%,45%)", "i,Minuend", "i,Subtrahend", "o,Difference" },
+        new string[] { "Sort",          "hsl(278,100%,45%)", "i,Input", "c,Sort by", "o,Sorted" },
+        new string[] { "Reverse order", "hsl(276,100%,45%)", "i,Input" , "o,Reversed" },
+        new string[] { "Trim array",    "hsl(274,100%,45%)", "i,Input" , "o,Trimmed" },
+        new string[] { "Unique",        "hsl(272,100%,45%)", "i,Input", "a,Column", "o,Unique" },
+        new string[] { "Merge columns", "hsl(270,100%,45%)", "i,A" , "i,B", "o,Output" },
+        new string[] { "Merge rows",    "hsl(268,100%,45%)", "i,A" , "i,B", "o,Output" },
+
+        new string[] { "Logical operators" },
+        new string[] { "Equal",        "hsl(216,100%,45%)", "i,Input", "t,Value", "c,Column", "o,Equal" },
+        new string[] { "Greater than", "hsl(212,100%,45%)", "i,Input", "n,Value", "c,Column", "o,Greater" },
+        new string[] { "Less than",    "hsl(208,100%,45%)", "i,Input", "n,Value", "c,Column", "o,Less" },
+        new string[] { "Contains",     "hsl(204,100%,45%)", "i,Input", "t,Value", "c,Column", "o,Contain" },
+        new string[] { "Regex match",  "hsl(200,100%,45%)", "i,Input", "t,Regex", "c,Column", "o,Matched" },
+
+        new string[] { "Math operators" },
+        new string[] { "Parse number",   "hsl(174,100%,45%)", "i,Input", "c,Column", "o,Numeric value" },
+        new string[] { "Absolute value", "hsl(172,100%,45%)", "i,Input", "c,Column", "o,Absolute value" },
+        new string[] { "Round",          "hsl(170,100%,45%)", "i,Input", "c,Column", "o,Round" },
+        new string[] { "Quantization",   "hsl(168,100%,45%)", "i,Input", "c,Column", "n,Step,10,1,2147483647	o,Quantized" },
+        new string[] { "Sampling",       "hsl(166,100%,45%)", "i,Input", "n,Percentage,50,1,99", "o,Sample" },
+        new string[] { "Sum",            "hsl(164,100%,45%)", "i,Input", "c,Column", "o,Sum" },
+        new string[] { "Maximum",        "hsl(162,100%,45%)", "i,Input", "c,Column", "o,Maximum" },
+        new string[] { "Minimum",        "hsl(160,100%,45%)", "i,Input", "c,Column", "o,Minimum" },
+        new string[] { "Mean",           "hsl(158,100%,45%)", "i,Input", "c,Column", "o,Mean" },
+        new string[] { "Median",         "hsl(156,100%,45%)", "i,Input", "c,Column", "o,Median" },
+        new string[] { "Mode",           "hsl(154,100%,45%)", "i,Input", "c,Column", "o,Mode" },
+        new string[] { "Range",          "hsl(152,100%,45%)", "i,Input", "c,Column", "o,Range" },
+
+        new string[] { "String operators" },
+        new string[] { "Trim",           "hsl(90,100%,45%)", "i,Input", "a,Column", "o,Trimmed" },
+        new string[] { "Lower case",     "hsl(86,100%,45%)", "i,Input", "a,Column", "o,Output" },
+        new string[] { "Upper case",     "hsl(82,100%,45%)", "i,Input", "a,Column", "o,Output" },
+        new string[] { "Replace string", "hsl(78,100%,45%)", "i,Input", "a,Column", "t,Old", "t,New", "o,Output" },
+        new string[] { "String length",  "hsl(74,100%,45%)", "i,Input", "a,Column", "o,Output" },
+        new string[] { "Prettify dates", "hsl(70,100%,45%)", "i,Input", "o,Output" },
+
+        new string[] { "Encoders/Decoders" },
+        new string[] { "Hex encoder", "hsl(54,100%,45%)", "i,Input", "c,Column","o,Hex" },
+        new string[] { "Hex decoder", "hsl(53,100%,45%)", "i,Input", "c,Column","o,Output" },
+        new string[] { "Base64 encoder", "hsl(52,100%,45%)", "i,Input", "c,Column","o,Base64" },
+        new string[] { "Base64 decoder", "hsl(51,100%,45%)", "i,Input", "c,Column","o,Output" },
+
+        new string[] { "Hash functions" },
+        new string[] { "MD5",       "hsl(46,100%,45%)", "i,Input", "c,Column", "o,MD5" },
+        new string[] { "RIPEMD160", "hsl(45,100%,45%)", "i,Input", "c,Column", "o,RIPEMD160" },
+        new string[] { "SHA-1",     "hsl(44,100%,45%)", "i,Input", "c,Column", "o,SHA-1" },
+        new string[] { "SHA-256",   "hsl(43,100%,45%)", "i,Input", "c,Column", "o,SHA-256" },
+        new string[] { "SHA-384",   "hsl(42,100%,45%)", "i,Input", "c,Column", "o,SHA-384" },
+        new string[] { "SHA-512",   "hsl(41,100%,45%)", "i,Input", "c,Column", "o,SHA-512" }
+
+        //new string[] { "Actions" },
+        //new string[] { "Wake on LAN", "hsl(26,100%,45%)", "i,Input", "c,Column,IP address", "h,Async", "h,Log" },
+        //new string[] { "Turn off PC", "hsl(24,100%,45%)", "i,Input", "c,Column,IP address", "h,Async", "h,Log" },
+        //new string[] { "Restart PC",  "hsl(22,100%,45%)", "i,Input", "c,Column,IP address", "h,Async", "h,Log" },
+        //new string[] { "Log off PC",  "hsl(20,100%,45%)", "i,Input", "c,Column,IP address", "h,Async", "h,Log" }
+    };
+
+
     private static readonly Hashtable tools = new Hashtable();
     private static byte[] tools_payload = null;
 
@@ -54,33 +145,23 @@ public static class Scripts {
     private static Hashtable previewHash = Hashtable.Synchronized(new Hashtable());
 
     public static void LoadTools() {
-        string FILE_SCRIPT = $"{Strings.DIR_SCRIPTS}\\tools.txt";
-
-        FileInfo toolsFile = new FileInfo(FILE_SCRIPT);
-        if (!toolsFile.Exists) return;
-
         string tools_string = String.Empty;
 
-        try {
-            tools_string = File.ReadAllText(FILE_SCRIPT);
-            while (tools_string.IndexOf("\t\t") > -1) tools_string = tools_string.Replace("\t\t", "\t");
-        } catch (Exception ex) {
-            Logging.Err(ex);
-        }
+        for (int i = 0; i < TOOLS.Length; i++) {
+            
+            for (int j = 0; j < TOOLS[i].Length; j++) {
+                tools_string += TOOLS[i][j];
+                if (j < TOOLS[i].Length - 1) tools_string += "\t";
+            }
+            tools_string += "\n";
 
-        string[] lines = tools_string.Split('\n');
-        for (int i = 0; i < lines.Length; i++) {
-            lines[i] = lines[i].Trim();
-            if (lines[i].StartsWith("#")) continue; //skip comments
+            if (TOOLS[i].Length == 1) continue; //label
 
-            string[] split = lines[i].Split('\t');
-            if (split.Length == 1) continue; //label
-
-            string name = split[0].Trim();
+            string name = TOOLS[i][0];
             List<string[]> parameters = new List<string[]>();
 
-            for (int j = 2; j < split.Length; j++) {
-                string[] s = split[j].Split(',');
+            for (int j = 2; j < TOOLS[i].Length; j++) {
+                string[] s = TOOLS[i][j].Split(',');
                 if (s.Length < 2) continue;
                 s = s.Select(o => o.Trim()).ToArray();
                 parameters.Add(s);

@@ -38,10 +38,11 @@ public static class Strings {
     public static readonly string DIR_PROTEST     = $"{Directory.GetCurrentDirectory()}\\protest";
     public static readonly string DIR_FRONTEND    = $"{Directory.GetCurrentDirectory()}\\protest\\front";
     public static readonly string DIR_ADDRESSBOOK = $"{Directory.GetCurrentDirectory()}\\protest\\addressbook";
+    public static readonly string DIR_KNOWLAGE    = $"{Directory.GetCurrentDirectory()}\\protest\\knowlage";
+    public static readonly string DIR_SSL         = $"{Directory.GetCurrentDirectory()}\\protest\\ssl";
     public static readonly string DIR_DATA        = $"{Directory.GetCurrentDirectory()}\\protest\\data";
     public static readonly string DIR_EQUIP       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\equip";
     public static readonly string DIR_USERS       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\users";
-    public static readonly string DIR_KNOWLAGE    = $"{Directory.GetCurrentDirectory()}\\protest\\knowlage";
     public static readonly string DIR_SCRIPTS     = $"{Directory.GetCurrentDirectory()}\\protest\\scripts";
     public static readonly string DIR_LASTSEEN    = $"{Directory.GetCurrentDirectory()}\\protest\\lastseen";
     public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
@@ -72,6 +73,7 @@ public static class Strings {
         try {
             DirectoryInfo dirProtest  = new DirectoryInfo(DIR_PROTEST);
             DirectoryInfo dirLog      = new DirectoryInfo(DIR_LOG);
+            DirectoryInfo dirSsl      = new DirectoryInfo(DIR_SSL);
             DirectoryInfo dirLastSeen = new DirectoryInfo(DIR_LASTSEEN);
             DirectoryInfo dirWatchdog = new DirectoryInfo(DIR_WATCHDOG);
             //DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
@@ -82,6 +84,7 @@ public static class Strings {
 
             if (!dirProtest.Exists)  dirProtest.Create();
             if (!dirLog.Exists)      dirLog.Create();
+            if (!dirSsl.Exists)      dirSsl.Create();
             if (!dirLastSeen.Exists) dirLastSeen.Create();
             if (!dirWatchdog.Exists) dirWatchdog.Create();
             //if (!dirConfig.Exists)   dirConfig.Create();

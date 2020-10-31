@@ -69,7 +69,7 @@ public static class RaHandler {
                     string file = Path.GetTempPath() + DateTime.Now.Ticks + ".bat";
                     File.WriteAllText(
                         file,
-                        $"ECHO OFF\npsexec \\\\{hostname} -u .\\administrator cmd.exe"
+                        $"ECHO OFF\ncls\npsexec \\\\{hostname} -u .\\administrator cmd.exe"
                     );
 
                     using (Process p = new Process()) {
@@ -112,7 +112,7 @@ public static class RaHandler {
                 }
                 break;
 
-            /*case "ssh":
+            case "ssh":
                 try {
                     using (Process p = new Process()) {
                         p.StartInfo.FileName = "ssh";
@@ -123,7 +123,7 @@ public static class RaHandler {
                 } catch (Exception ex) {
                     return Encoding.UTF8.GetBytes(ex.Message);
                 }
-                break;*/
+                break;
 
             case "stpe": //stamp equip?
                 return Strings.TCP.Array;

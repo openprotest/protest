@@ -17,8 +17,8 @@ user_access: dev
 http_enable: true
 http_ip:     *
 http_port:   80
+https_port:  443
 
 addressbook_enable: false
 addressbook_ip:     *
 addressbook_port:   911
-
