@@ -20,15 +20,21 @@
 
         <div id="container">
             <svg id="analog_clock" width="96" height="96">
-                <circle cx="48" cy="48" r="44" stroke="#202020" stroke-width="6" fill="#C0C0C0"/>
+                <circle cx="48" cy="48" r="44" stroke="#202020" stroke-width="6" fill="rgba(224,224,224,.7)"/>
                 <circle cx="48" cy="48" r="4" fill="#202020"/>
                 <line id="analog_clock_h" x1="48" y1="48" x2="48" y2="24" stroke-width="5"/>
                 <line id="analog_clock_m" x1="48" y1="48" x2="48" y2="16" stroke-width="3"/>
             </svg>
 
             <svg id="date_calendar" width="96" height="96">
-                <rect x="2" y="2" width="92" height="92" fill="#C0C0C0"/>
-                <path fill="#202020" d="M93.5,0h-91C1.119,0,0,1.119,0,2.5v91C0,94.881,1.119,96,2.5,96h91c1.381,0,2.5-1.119,2.5-2.5v-91 C96,1.119,94.881,0,93.5,0z M91,88.5c0,1.381-1.117,2.5-2.495,2.5H7.495C6.117,91,5,89.881,5,88.5v-61C5,26.119,6.117,25,7.495,25 h81.01C89.883,25,91,26.119,91,27.5V88.5z"/>
+                <defs>
+                    <mask id="date_month_mask">
+                        <rect width="100%" height="100%" fill="#fff"/>
+                        <text id="date_month" x="50%" y="18px" font-size="16" font-weight="bold" fill="#000" text-anchor="middle"></text>
+                    </mask>
+                </defs>
+                <rect x="2" y="2" width="92" height="92" fill="rgba(224,224,224,.7)"/>
+                <path mask="url(#date_month_mask)" fill="#202020" d="M93.5,0h-91C1.119,0,0,1.119,0,2.5v91C0,94.881,1.119,96,2.5,96h91c1.381,0,2.5-1.119,2.5-2.5v-91 C96,1.119,94.881,0,93.5,0z M91,88.5c0,1.381-1.117,2.5-2.495,2.5H7.495C6.117,91,5,89.881,5,88.5v-61C5,26.119,6.117,25,7.495,25 h81.01C89.883,25,91,26.119,91,27.5V88.5z"/>
                 <text id="date_month" x="50%" y="18px" font-size="16" font-weight="bold" fill="#C0C0C0" text-anchor="middle"></text>
                 <text id="date_date" x="50%" y="64px" font-size="40" font-weight="bold" fill="#202020" text-anchor="middle"></text>
                 <text id="date_day" x="50%" y="80px" font-size="15" fill="#202020" text-anchor="middle"></text>

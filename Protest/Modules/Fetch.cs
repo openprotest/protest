@@ -673,7 +673,7 @@ public static class Fetch {
             
             if (result.Properties["dNSHostName"].Count > 0) {
                 string value = result.Properties["dNSHostName"][0].ToString();
-                if (value.Length > 0) ad.Add("DNS HOSTNAME", value);
+                if (value.Length > 0) ad.Add("FQDN", value);
             }
             
             if (result.Properties["operatingSystem"].Count > 0) {

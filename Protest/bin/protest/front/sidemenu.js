@@ -1,6 +1,7 @@
 const SUBMENU_WIDTH = 360;
 
 const TOOLS = [
+{ isGroup:true, lbl:"Inventory" },
 { lbl:"Equipment",          ico:"res/database_equip.svgz", sqr:true,  f:arg=> new ListEquip({find:"",filter:"",sort:""}) },
 { lbl:"Users",              ico:"res/database_users.svgz", sqr:true,  f:arg=> new ListUsers({find:"",filter:"",sort:""}) },
 //{ lbl:"Query",              ico:"res/databasesearch.svgz", sqr:true,  f:arg=> new Query() },
@@ -12,11 +13,14 @@ const TOOLS = [
 { lbl:"New equipment",      ico:"res/new_equip.svgz",      sqr:true,  f:arg=> new Equip(null) },
 { lbl:"New user",           ico:"res/new_user.svgz",       sqr:true,  f:arg=> new User(null) },
 { lbl:"Password strength",  ico:"res/strength.svgz",       sqr:true,  f:arg=> new PasswordStrength({find:"",sort:""}) },
+{ lbl:"Gandalf",            ico:"res/gandalf.svgz",        sqr:false, f:arg=> new Gandalf() },
+
+{ isGroup:true, lbl:"Documentation" },
 { lbl:"Documentation",      ico:"res/documentation.svgz",  sqr:true,  f:arg=> new Documentation() },
 { lbl:"Debit notes",        ico:"res/charges.svgz",        sqr:true,  f:arg=> new DebitNotes() },
 { lbl:"Watchdog",           ico:"res/watchdog.svgz",       sqr:true,  f:arg=> new Watchdog() },
 
-{ lbl:"Gandalf",            ico:"res/gandalf.svgz",        sqr:false, f:arg=> new Gandalf() },
+{ isGroup:true, lbl:"Tools and utilities" },
 { lbl:"Ping",               ico:"res/ping.svgz",           sqr:true,  f:arg=> new Ping(arg) },
 { lbl:"ARP Ping",           ico:"res/ping.svgz",           sqr:false, f:arg=> new Ping({entries:[], timeout:500, method:"arp", moveToBottom:false}) },
 { lbl:"DNS lookup",         ico:"res/dns.svgz",            sqr:true,  f:arg=> new DnsLookup(arg) },
@@ -35,16 +39,22 @@ const TOOLS = [
 { lbl: "WMI console", ico: "res/wmi.svgz", sqr: true, f: arg => new Wmi() },
 { lbl:"Telnet",             ico:"res/telnet.svgz",         sqr:true,  f:arg=> new Telnet() },
 //{ lbl:"Secure shell",       ico:"res/ssh.svgz",            sqr:true,  f:arg=> new Window() },
-{ lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Guide() },
 { lbl:"Network calculator", ico:"res/netcalc.svgz",        sqr:true,  f:arg=> new Netcalc(arg) },
 { lbl:"Password generator", ico:"res/passgen.svgz",        sqr:true,  f:arg=> new Passgen() },
+//{ lbl:"Encoder",            ico:"res/encoder.svgz",        sqr:true,  f:arg=> new Encoder() },
 //{ lbl:"Tasks",              ico:"res/task.svgz",           sqr:true,  f:arg=> new Tasks() },
 //{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",    sqr:true,  f:arg=> new MappedDrives() },
+
+{ isGroup:true, lbl:"Help and pro-test" },
+{ lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Guide() },
 { lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },
 { lbl:"Backup",             ico:"res/backup.svgz",         sqr:true,  f:arg=> new Backup() },
 { lbl:"Pro-test clients",   ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
 { lbl:"Screen capture",     ico:"res/screencapture.svgz",  sqr:false, f:arg=> btnScreenCapture.onclick() },
 { lbl:"Settings",           ico:"res/tool02.svgz",         sqr:false, f:arg=> new Settings() },
+{ lbl:"Appearrance",        ico:"res/tv.svgz",             sqr:false, f:arg=> new Settings() },
+//{ lbl:"Menu icons",         ico:"res/desktop.svgz",        sqr:false, f:arg=> new Settings("icons") },
+{ lbl:"Session",            ico:"res/hourglass.svgz",      sqr:false, f:arg=> new Settings("session") },
 { lbl:"Update",             ico:"res/update.svgz",         sqr:false, f:arg=> new Settings("update") },
 { lbl:"License",            ico:"res/gpl.svgz",            sqr:false, f:arg=> new Settings("legal") },
 { lbl:"About",              ico:"res/logo.svgz",           sqr:false, f:arg=> new Settings("about") },
@@ -223,28 +233,32 @@ function NewUser() {
     return win;
 }
 
-
 function SideMenu_Update(filter) {
     lstSideMenu.innerHTML = "";
     sidemenu_list = [];
     sidemenu_index = -1;
 
-    if (filter.length == 0)
+    if (filter.length == 0) {
         for (let i = 0; i < TOOLS.length; i++) {
+            if (TOOLS[i].isGroup) {
+                CreateGroupLabel(TOOLS[i].lbl);
+                continue;
+            }
+
             if (!TOOLS[i].sqr) continue;
-            let item = CreateSquareItem(TOOLS[i].lbl, TOOLS[i].ico, TOOLS[i].f);
+            const item = CreateSquareItem(TOOLS[i].lbl, TOOLS[i].ico, TOOLS[i].f);
             sidemenu_list.push(item);
             lstSideMenu.appendChild(item);
         }
-    else
+
+    } else {
         for (let i = 0; i < TOOLS.length; i++)
             if (TOOLS[i].lbl.toLocaleLowerCase().indexOf(filter) > -1) {
-                let item = CreateSideItem(TOOLS[i].lbl, TOOLS[i].ico, "", "", TOOLS[i].f);
+                const item = CreateSideItem(TOOLS[i].lbl, TOOLS[i].ico, "", "", TOOLS[i].f);
                 sidemenu_list.push(item);
                 lstSideMenu.appendChild(item);
             }
-
-    //TODO: recently used
+    }
 
     if (filter.length == 0) return;
 
@@ -352,6 +366,17 @@ function CreateSideItem(label, icon, t1, t2, func) {
     CreateItemEvents(item, func);
 
     return item;
+}
+
+function CreateGroupLabel(name) {
+    const label = document.createElement("div");
+    label.innerHTML = name + ":";
+    label.style.padding = "4px 0px 2px 8px";
+    label.style.fontWeight = "700";
+    label.style.backgroundColor = "rgb(32,32,32)";
+    label.style.position = "sticky";
+    label.style.top = "0";
+    lstSideMenu.appendChild(label);
 }
 
 function CreateSquareItem(label, icon, func) {

@@ -358,7 +358,7 @@ public static class PasswordStrength {
         body.Append("<ul>");
         body.Append("<li><b>Size matters.</b> Choose at least twelve characters. Longer passwords are harder to crack.</li>");
         body.Append("<li><b>Use mixed characters.</b> Use upper-case and lower-case, numbers, and symbols to add complexity.</li>");
-        body.Append("<li><b>Be unpredictable</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password. Don't use your name, favorite movie, pet name, etc</li>");
+        body.Append("<li><b>Be unpredictable.</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password. Don't use your name, favorite movie, pet name, etc</li>");
         body.Append("<li><b>Make it random.</b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
         body.Append("</ul>");
         body.Append("</p>");

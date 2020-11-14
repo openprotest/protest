@@ -81,7 +81,7 @@
     white-space: nowrap;
     user-select: text; /*make the results selectable*/
 }
-.list-element > .expaned { overflow-y: scroll; }
+.list-element > .expaned { overflow-y:auto; }
 .list-element > .expaned > div { width:33%; }
 .list-element > .expaned > div:nth-child(2n) { width:66%; }
 .list-element > .collapsed > div { width:auto;}

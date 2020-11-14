@@ -5,9 +5,9 @@
 
     sidemenu_dynamicicon     = localStorage.getItem("dynamic_search_icon") === "true";
     $w.always_maxxed         = localStorage.getItem("w_always_maxed") === "true";
+    container.className      = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
     document.body.className  = localStorage.getItem("high_contrast") === "true" ? "high-contrast" : "";
     document.body.className += localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
-    container.className      = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
 
     if (localStorage.getItem("zoom"))
         document.body.style.zoom = 75 + localStorage.getItem("zoom") * 5 + "%";
@@ -39,7 +39,7 @@ class Settings extends Tabs {
         this.subContent.style.overflowY = "auto";
 
         this.tabGui     = this.AddTab("Appearance", "res/tv.svgz");
-        //this.tabIcons   = this.AddTab("Icons", "res/desktop.svgz");
+        //this.tabIcons   = this.AddTab("Menu icons", "res/desktop.svgz");
         this.tabSession = this.AddTab("Session", "res/hourglass.svgz");
         this.tabUpdate  = this.AddTab("Update", "res/update.svgz");
         this.tabLegal   = this.AddTab("License", "res/gpl.svgz");
@@ -82,7 +82,6 @@ class Settings extends Tabs {
                 this.tabGui.className = "v-tab-selected";
                 this.ShowGui();
         }
-
     }
 
     ShowGui() {

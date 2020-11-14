@@ -96,7 +96,7 @@ class Gandalf extends Window {
 
             this.rngThreshold = document.createElement("input");
             this.rngThreshold.type = "range";
-            this.rngThreshold.min = 20;
+            this.rngThreshold.min = 18;
             this.rngThreshold.max = 128;
             this.rngThreshold.value = 65;
             this.rngThreshold.style.width = "200px";

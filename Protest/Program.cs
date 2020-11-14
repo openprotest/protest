@@ -17,7 +17,7 @@
 
     Pro-test is open-source.
     For more information, visit https://github.com/veniware/OpenProtest
- */
+*/
 
 using System;
 using System.Threading;
@@ -43,7 +43,7 @@ class Program {
     private static bool http_enable = true;
     private static string http_ip = "127.0.0.1";
     private static ushort http_port = 80;
-    private static ushort https_port = 443;
+    private static ushort https_port = 0; //0 is disabled
     private static readonly ThreadPriority http_priority = ThreadPriority.AboveNormal;
     private static HttpMainListener mainListener;
 
@@ -72,7 +72,7 @@ class Program {
         Strings.InitDirs();
 
         bool loadConfig = LoadConfig();
-        Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "Done" : "Failed"));
+        Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "OK  " : "Failed"));
         if (!loadConfig) CreateConfig();
 
         ExtractZippedKnowlageFile();
@@ -87,7 +87,7 @@ class Program {
     }
 
     private static void DrawProTest() {
-        string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         const string PRO_TEST =
         "                                    \n" +
@@ -234,7 +234,7 @@ class Program {
             Console.WriteLine(" - Generate DB_KEY");
             DB_KEY = CryptoAes.GenerateHexString(32);
             DB_KEY_A = CryptoAes.KeyToBytes(DB_KEY, 32); //256-bits
-            DB_KEY_B = CryptoAes.KeyToBytes(DB_KEY, 16) ; //128-bits
+            DB_KEY_B = CryptoAes.KeyToBytes(DB_KEY, 16); //128-bits
         }
 
         if (PRESHARED_KEY is null || PRESHARED_KEY.Length > 0) {
@@ -297,7 +297,7 @@ class Program {
             try {
                 Console.Write(string.Format("{0, -24}", "Extracting proxy.zip"));
                 ZipFile.ExtractToDirectory(fileIpZip.FullName, dirIp.FullName);
-                Console.WriteLine("Done");
+                Console.WriteLine("OK  ");
             } catch (Exception ex) {
                 Console.WriteLine("Failed");
                 Logging.Err(ex);
@@ -309,7 +309,7 @@ class Program {
             try {
                 Console.Write(string.Format("{0, -24}", "Extracting proxy.zip"));
                 ZipFile.ExtractToDirectory(fileProxyZip.FullName, dirProxy.FullName);
-                Console.WriteLine("Done");
+                Console.WriteLine("OK  ");
             } catch (Exception ex) {
                 Console.WriteLine("Failed");
                 Logging.Err(ex);
@@ -328,14 +328,14 @@ class Program {
 
         if (isDone) {
             lastProgressValue = -1;
-            Console.Write("Done");
+            Console.Write("OK  ");
             for (int i = 0; i < width; i++) Console.Write(" ");
             Console.WriteLine();
             return;
         }
 
         Console.BackgroundColor = ConsoleColor.White;
-         for (int i = 0; i < c; i++) Console.Write(" ");
+        for (int i = 0; i < c; i++) Console.Write(" ");
 
         Console.BackgroundColor = ConsoleColor.DarkGray;
         for (int i = 0; i < r; i++) Console.Write(" ");
