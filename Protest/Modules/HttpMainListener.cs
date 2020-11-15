@@ -4,7 +4,7 @@ using System.Net;
 using System.Text;
 
 class HttpMainListener : Http {
-    public HttpMainListener(string ip, ushort port, string path, ushort sslport) : base(ip, port, path, sslport) { }
+    public HttpMainListener(in string[] uriPrefixes, in string path) : base(uriPrefixes, path) { }
 
     public override void Serve(in HttpListenerContext ctx) {
         string forwarded = ctx.Request.Headers["X-Forwarded-For"];

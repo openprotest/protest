@@ -4,7 +4,7 @@ using System.Net;
 using System.Text;
 
 class HttpAddressBookListener : Http {
-    public HttpAddressBookListener(string ip, ushort port, string path) : base(ip, port, path) { }
+    public HttpAddressBookListener(in string[] uriPrefixes, string path) : base(uriPrefixes, path) { }
 
     public override void Serve(in HttpListenerContext ctx) {
         string url = ctx.Request.Url.AbsolutePath;
@@ -114,6 +114,9 @@ class HttpAddressBookListener : Http {
     }
 
     public override string ToString() {
-        return $"Address book listening on {this.ip}:{this.port}";
+        string s = String.Empty;
+        foreach (string prefix in listener.Prefixes)
+            s += (s.Length == 0 ? "" : "\n") + "Address book listening on  " + prefix;
+        return s;
     }
 }

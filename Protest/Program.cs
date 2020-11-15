@@ -20,11 +20,12 @@
 */
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Security.Principal;
 using System.Diagnostics;
-using System.Linq;
 using System.IO;
+using System.Collections.Generic;
 using System.IO.Compression;
 using System.Text;
 using System.Reflection;
@@ -41,15 +42,12 @@ class Program {
     public static bool force_registry_keys = false;
 
     private static bool http_enable = true;
-    private static string http_ip = "127.0.0.1";
-    private static ushort http_port = 80;
-    private static ushort https_port = 0; //0 is disabled
+    private static string[] http_prefixes = new string[] { "http://127.0.0.1:80/" };
     private static readonly ThreadPriority http_priority = ThreadPriority.AboveNormal;
     private static HttpMainListener mainListener;
 
     private static bool addressbook_enable = false;
-    private static string addressbook_ip = "*";
-    private static ushort addressbook_port = 911;
+    private static string[] addressbook_prefixes = new string[] { "http://*:911/" };
     private static readonly ThreadPriority addressbook_priority = ThreadPriority.Normal;
     private static HttpAddressBookListener addressbookListener;
 
@@ -58,12 +56,12 @@ class Program {
         DrawProTest();
         Console.WriteLine();
 
+        if (IsElevated()) Console.WriteLine(" - Elevated privileges");
+        else SelfElevate();
+
 #if DEBUG
         Console.WriteLine(" - Debug mode");
 #endif
-
-        if (IsElevated()) Console.WriteLine(" - Elevated privileges");
-        else SelfElevate();
 
         Console.WriteLine($" - Run time: {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}");
         GetAppid();
@@ -74,6 +72,11 @@ class Program {
         bool loadConfig = LoadConfig();
         Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "OK  " : "Failed"));
         if (!loadConfig) CreateConfig();
+
+        if (force_registry_keys) {
+            bool disableHeader = DisableServerHeaderRegKey();
+            Console.WriteLine(string.Format("{0, -23} {1, -10}", "Force registry keys", disableHeader ? "OK  " : "Failed"));
+        }
 
         ExtractZippedKnowlageFile();
 
@@ -148,7 +151,7 @@ class Program {
             process.Start();
             Environment.Exit(0);
         } catch (Exception ex) {
-            Logging.Err($"  - Unable to elevate: {ex.Message}");
+            Logging.Err($"Unable to elevate: {ex.Message}");
         }
     }
 
@@ -159,13 +162,16 @@ class Program {
     private static bool LoadConfig() {
         if (!File.Exists(Strings.FILE_CONFIG)) return false;
 
+        List<string> httpPrefixes = new List<string>();
+        List<string> abPrefixes = new List<string>();
+
         StreamReader fileReader = new StreamReader(Strings.FILE_CONFIG);
         string line;
         while ((line = fileReader.ReadLine()) != null) {
             line = line.Trim();
             if (line.StartsWith("#")) continue;
 
-            string[] split = line.Split(':');
+            string[] split = line.Split('=');
             if (split.Length < 2) continue;
 
             split[0] = split[0].Trim().ToLower();
@@ -191,24 +197,15 @@ class Program {
                 case "http_enable":
                     http_enable = (split[1] == "true");
                     break;
-                case "http_ip":
-                    http_ip = split[1];
-                    break;
-                case "http_port":
-                    http_port = ushort.Parse(split[1]);
-                    break;
-                case "https_port":
-                    https_port = ushort.Parse(split[1]);
+                case "http_prefix":
+                    httpPrefixes.Add(split[1].Trim());
                     break;
 
                 case "addressbook_enable":
                     addressbook_enable = (split[1] == "true");
                     break;
-                case "addressbook_ip":
-                    addressbook_ip = split[1];
-                    break;
-                case "addressbook_port":
-                    addressbook_port = ushort.Parse(split[1]);
+                case "addressbook_prefix":
+                    abPrefixes.Add(split[1].Trim());
                     break;
 
                 case "ip_access":
@@ -222,6 +219,10 @@ class Program {
         }
 
         fileReader.Close();
+
+        if (httpPrefixes.Count > 0) http_prefixes = httpPrefixes.ToArray();
+        if (abPrefixes.Count > 0) addressbook_prefixes = abPrefixes.ToArray();
+
         return true;
     }
 
@@ -247,44 +248,71 @@ class Program {
         sb.AppendLine($"# version {Assembly.GetExecutingAssembly().GetName().Version.Major} {Assembly.GetExecutingAssembly().GetName().Version.Minor}");
         sb.AppendLine();
 
-        sb.AppendLine($"db_key:        {DB_KEY}");
-        sb.AppendLine($"preshared_key: {PRESHARED_KEY}");
+        sb.AppendLine($"db_key =        {DB_KEY}");
+        sb.AppendLine($"preshared_key = {PRESHARED_KEY}");
         sb.AppendLine();
 
-        sb.AppendLine($"force_registry_keys: {force_registry_keys.ToString().ToLower()}");
+        sb.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
         sb.AppendLine();
 
         sb.AppendLine();
+
         sb.AppendLine("# you can use multiple entries");
-        sb.AppendLine("ip_access:   *");
-        sb.AppendLine("user_access: administrator");
-
+        sb.AppendLine("ip_access =   *");
+        sb.AppendLine("user_access = administrator");
         sb.AppendLine();
-        sb.AppendLine( "http_enable: true");
-        sb.AppendLine($"http_ip:     {http_ip}");
-        sb.AppendLine($"http_port:   {http_port}");
-        sb.AppendLine($"https_port:   {https_port}");
 
+        sb.AppendLine("http_enable = true");
+        sb.AppendLine("http_prefix = http://127.0.0.1:80/");
+        sb.AppendLine("#http_prefix = http://*:80/");
+        sb.AppendLine("#http_prefix = https://*:443/");
         sb.AppendLine();
-        sb.AppendLine("addressbook_enable: false");
-        sb.AppendLine("addressbook_ip:     *");
-        sb.AppendLine("addressbook_port:   911");
 
+        sb.AppendLine("addressbook_enable = false");
+        sb.AppendLine("addressbook_prefix = http://*:911/");
         sb.AppendLine();
 
         File.WriteAllText(Strings.FILE_CONFIG, sb.ToString());
     }
 
+    static bool DisableServerHeaderRegKey() {
+        string value;
+        try {
+            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\Services\HTTP\Parameters");
+            value = key.GetValue("DisableServerHeader")?.ToString();
+            key.Close();
+        } catch {
+            return false;
+        }
+
+        if (value == "2") return true;
+
+        try {
+            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.LocalMachine.CreateSubKey(@"SYSTEM\CurrentControlSet\Services\HTTP\Parameters");
+            key.SetValue("DisableServerHeader", 2, Microsoft.Win32.RegistryValueKind.DWord);
+            key.Close();
+            Console.BackgroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("!! Reboot your machine !!");
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.WriteLine();
+        } catch {
+            Logging.Err(@"Failed to update Registry Key (HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\HTTP\Parameters)");
+        }
+
+        return true;
+    }
+
     private static void StartServices() {
         if (http_enable) {
-            Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_ip, http_port, Strings.DIR_FRONTEND, https_port); });
+            Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_prefixes, Strings.DIR_FRONTEND); });
             thread.Priority = http_priority;
             thread.Start();
         }
 
         if (addressbook_enable) {
             Thread.Sleep(3000);
-            Thread thread = new Thread(() => { addressbookListener = new HttpAddressBookListener(addressbook_ip, addressbook_port, Strings.DIR_ADDRESSBOOK); });
+            Thread thread = new Thread(() => { addressbookListener = new HttpAddressBookListener(addressbook_prefixes, Strings.DIR_ADDRESSBOOK); });
             thread.Priority = addressbook_priority;
             thread.Start();
         }
