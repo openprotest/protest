@@ -18,35 +18,35 @@ let loader_styles = [
 ];
 
 (function LoadStuff() {
-    let loader = document.createElement("div");
+    const loader = document.createElement("div");
     loader.className = "loader";
     document.body.appendChild(loader);
 
-    let loader_container = document.createElement("div");
+    const loader_container = document.createElement("div");
     loader_container.className = "loader-container";
     loader.appendChild(loader_container);
     
-    let loader_progress = document.createElement("div");
+    const loader_progress = document.createElement("div");
     loader_progress.className = "loader-progress";
     loader_container.appendChild(loader_progress);
 
-    let loader_decr = document.createElement("div");
+    const loader_decr = document.createElement("div");
     loader_decr.className = "loader-description";
     loader.appendChild(loader_decr);
 
-    let primaryScripts = [
+    const primaryScripts = [
         "sidemenu.js",
         "window.js"
     ];
 
-    let secondaryScripts = [
+    const secondaryScripts = [
         "ipbox.js",
         "list.js",
         "console.js",
         "tabs.js"
     ];
 
-    let tertiaryScripts = [
+    const tertiaryScripts = [
         "listequip.js",
         "listusers.js",
         "viewequip.js",
@@ -67,7 +67,6 @@ let loader_styles = [
         "locateip.js",
         "maclookup.js",
         "webcheck.js",
-        //"speedtest.js",
         "wmi.js",
         "scripts.js",
         "watchdog.js",
@@ -267,7 +266,6 @@ function RestoreSession() {
             case "LocateIp"         : win = new LocateIp(session[i].args); break;
             case "MacLookup"        : win = new MacLookup(session[i].args); break;
             case "WebCheck"         : win = new WebCheck(session[i].args); break;
-            //case "SpeedTest"        : win = new SpeedTest(session[i].args); break;
             case "Wmi"              : win = new Wmi(session[i].args); break;
             case "Scripts"          : win = new Scripts(session[i].args); break;
             case "ScriptEditor"     : win = new ScriptEditor(session[i].args); break;
@@ -278,7 +276,7 @@ function RestoreSession() {
             case "Guide"            : win = new Guide(session[i].args); break;
             case "Clients"          : win = new Clients(session[i].args); break;
             case "Telnet"           : win = new Telnet(session[i].args); break;
-            case "FileBrowser"       : win = new FileBrowser(session[i].args); break;
+            case "FileBrowser"      : win = new FileBrowser(session[i].args); break;
             case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;
         }

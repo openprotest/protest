@@ -64,7 +64,7 @@ class Program {
 #endif
 
         Console.WriteLine($" - Run time: {DateTime.Now.ToString(Strings.DATETIME_FORMAT)}");
-        GetAppid();
+        Console.WriteLine($" - GUID: {GetAppid()}");
         Console.WriteLine();
 
         Strings.InitDirs();
@@ -131,11 +131,11 @@ class Program {
         Console.ResetColor();
     }
 
-    private static void GetAppid() {
+    private static string GetAppid() {
         var assembly = typeof(Program).Assembly;
         var attribute = (GuidAttribute)assembly.GetCustomAttributes(typeof(GuidAttribute), true)[0];
         var id = attribute.Value;
-        Console.WriteLine($" - GUID: {id}");
+        return id;
     }
 
     private static void SelfElevate() {
@@ -233,44 +233,45 @@ class Program {
 
         if (DB_KEY is null || DB_KEY.Length > 0) {
             Console.WriteLine(" - Generate DB_KEY");
-            DB_KEY = CryptoAes.GenerateHexString(32);
+            DB_KEY = CryptoAes.GenerateHexString(40);
             DB_KEY_A = CryptoAes.KeyToBytes(DB_KEY, 32); //256-bits
             DB_KEY_B = CryptoAes.KeyToBytes(DB_KEY, 16); //128-bits
         }
 
         if (PRESHARED_KEY is null || PRESHARED_KEY.Length > 0) {
             Console.WriteLine(" - Generate PRESHARED_KEY");
-            PRESHARED_KEY = CryptoAes.GenerateHexString(32);
+            PRESHARED_KEY = CryptoAes.GenerateHexString(40);
             PRESHARED_KEY_A = CryptoAes.KeyToBytes(PRESHARED_KEY, 32); //256-bits
             PRESHARED_KEY_B = CryptoAes.KeyToBytes(PRESHARED_KEY, 16); //128-bits
         }
 
-        sb.AppendLine($"# version {Assembly.GetExecutingAssembly().GetName().Version.Major} {Assembly.GetExecutingAssembly().GetName().Version.Minor}");
+        sb.AppendLine($"# version {Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
         sb.AppendLine();
 
-        sb.AppendLine($"db_key =        {DB_KEY}");
+        sb.AppendLine($"db_key        = {DB_KEY}");
         sb.AppendLine($"preshared_key = {PRESHARED_KEY}");
         sb.AppendLine();
 
         sb.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
         sb.AppendLine();
 
-        sb.AppendLine();
-
         sb.AppendLine("# you can use multiple entries");
-        sb.AppendLine("ip_access =   *");
+        sb.AppendLine("ip_access   = *");
         sb.AppendLine("user_access = administrator");
         sb.AppendLine();
 
         sb.AppendLine("http_enable = true");
+        sb.AppendLine("http_prefix = https://+:443/");
         sb.AppendLine("http_prefix = http://127.0.0.1:80/");
-        sb.AppendLine("#http_prefix = http://*:80/");
-        sb.AppendLine("#http_prefix = https://*:443/");
         sb.AppendLine();
 
         sb.AppendLine("addressbook_enable = false");
         sb.AppendLine("addressbook_prefix = http://*:911/");
         sb.AppendLine();
+        sb.AppendLine();
+
+        sb.AppendLine("## Use NETSH to bind an SSL certificate with your https endpoint:");
+        sb.AppendLine($"## netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{GetAppid()}}}");
 
         File.WriteAllText(Strings.FILE_CONFIG, sb.ToString());
     }

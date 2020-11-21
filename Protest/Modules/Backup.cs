@@ -7,7 +7,7 @@ using System.Text;
 public static class Backup {
 
     public static byte[] Get() {
-        DirectoryInfo dir = new DirectoryInfo(Strings.DIR_BACKUPS);
+        DirectoryInfo dir = new DirectoryInfo(Strings.DIR_BACKUP);
         if (!dir.Exists) return Strings.FLE.Array;
 
         FileInfo[] files = dir.GetFiles();
@@ -30,17 +30,17 @@ public static class Backup {
         foreach (char c in Path.GetInvalidFileNameChars())
             name = name.Replace(c, '_');
 
-        string filename = $"{Strings.DIR_BACKUPS}\\{name}.zip";
+        string filename = $"{Strings.DIR_BACKUP}\\{name}.zip";
         int count = 1;
 
         while (File.Exists(filename))
-            filename = $"{Strings.DIR_BACKUPS}\\{name}_{++count}.zip";
+            filename = $"{Strings.DIR_BACKUP}\\{name}_{++count}.zip";
 
         try {
-            DirectoryInfo dirBackup = new DirectoryInfo(Strings.DIR_BACKUPS);
+            DirectoryInfo dirBackup = new DirectoryInfo(Strings.DIR_BACKUP);
             if (!dirBackup.Exists) dirBackup.Create();
 
-            DirectoryInfo dirCopy = new DirectoryInfo($"{Strings.DIR_BACKUPS}\\{name}_{++count}");
+            DirectoryInfo dirCopy = new DirectoryInfo($"{Strings.DIR_BACKUP}\\{name}_{++count}");
             if (dirCopy.Exists) dirCopy.Delete();
             dirCopy.Create();
 
@@ -99,7 +99,7 @@ public static class Backup {
             if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
 
         try {
-            FileInfo file = new FileInfo($"{Strings.DIR_BACKUPS}\\{name}");
+            FileInfo file = new FileInfo($"{Strings.DIR_BACKUP}\\{name}");
             if (file.Exists) file.Delete();
             Logging.Action(performer, $"Delete backup: {name}");
         } catch {

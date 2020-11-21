@@ -48,9 +48,9 @@ public static class Strings {
     public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
     public static readonly string DIR_WATCHDOG    = $"{Directory.GetCurrentDirectory()}\\protest\\watchdog";
     public static readonly string DIR_LOG         = $"{Directory.GetCurrentDirectory()}\\protest\\log";
-    public static readonly string DIR_BACKUPS     = $"{Directory.GetCurrentDirectory()}\\protest\\backups";
+    public static readonly string DIR_BACKUP      = $"{Directory.GetCurrentDirectory()}\\protest\\backup";
     //public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
-    //public static readonly string DIR_CONFIG      = $"{Directory.GetCurrentDirectory()}\\protest\\configurations";
+    //public static readonly string DIR_CONFIG      = $"{Directory.GetCurrentDirectory()}\\protest\\configuration";
 
     public static readonly string DIR_DEBIT       = $"{Directory.GetCurrentDirectory()}\\protest\\debit";
     public static readonly string DIR_DEBIT_SHORT = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\short";
@@ -73,7 +73,6 @@ public static class Strings {
         try {
             DirectoryInfo dirProtest  = new DirectoryInfo(DIR_PROTEST);
             DirectoryInfo dirLog      = new DirectoryInfo(DIR_LOG);
-            DirectoryInfo dirSsl      = new DirectoryInfo(DIR_SSL);
             DirectoryInfo dirLastSeen = new DirectoryInfo(DIR_LASTSEEN);
             DirectoryInfo dirWatchdog = new DirectoryInfo(DIR_WATCHDOG);
             //DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
@@ -84,7 +83,6 @@ public static class Strings {
 
             if (!dirProtest.Exists)  dirProtest.Create();
             if (!dirLog.Exists)      dirLog.Create();
-            if (!dirSsl.Exists)      dirSsl.Create();
             if (!dirLastSeen.Exists) dirLastSeen.Create();
             if (!dirWatchdog.Exists) dirWatchdog.Create();
             //if (!dirConfig.Exists)   dirConfig.Create();

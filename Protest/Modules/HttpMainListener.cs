@@ -7,11 +7,10 @@ class HttpMainListener : Http {
     public HttpMainListener(in string[] uriPrefixes, in string path) : base(uriPrefixes, path) { }
 
     public override void Serve(in HttpListenerContext ctx) {
-        string forwarded = ctx.Request.Headers["X-Forwarded-For"];
+        string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
+        bool isLoopback = remoteIp.StartsWith("127.") || remoteIp == "::1";
 
-        string remoteIp = forwarded is null ? ctx.Request.RemoteEndPoint.Address.ToString() : forwarded;
-        if (remoteIp != "127.0.0.1" && !(Session.ip_access.ContainsKey(remoteIp) || Session.ip_access.ContainsKey("*"))) { //check ip_access
-            //ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+        if (!isLoopback && !(Session.ip_access.ContainsKey(remoteIp) || Session.ip_access.ContainsKey("*"))) { //check ip_access
             ctx.Response.Close();
             return;
         }
@@ -31,23 +30,23 @@ class HttpMainListener : Http {
         string performer = remoteIp;
         bool validCookie = Session.CheckAccess(ctx, remoteIp);
 
-        if (!validCookie && forwarded == null && remoteIp == "127.0.0.1") { //auto-login if localhost
+        if (!validCookie && isLoopback) { //auto-login if localhost
             string token = Session.GrantAccess(remoteIp, "localhost");
             ctx.Response.AppendCookie(new Cookie() {
                 Name = "sessionid",
                 Value = token,
                 HttpOnly = true,
                 Domain = ctx.Request.UserHostName,
+                //SameSite = "Lax",
                 Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
             });
 
-            //Logging.Action("localhost", $"Auto-login from {remoteIp}");
             performer = "localhost";
         }
 
         byte[] buffer = null;
 
-        if (!(validCookie || para[0] == "a" || para[0] == "res/icon24.png") && remoteIp != "127.0.0.1") {
+        if (!(validCookie || para[0] == "a" || para[0] == "res/icon24.png") && !isLoopback) {
             if (cache.hash.ContainsKey("login")) {
                 buffer = ((Cache.CacheEntry)cache.hash["login"]).bytes;
                 ctx.Response.ContentType = "text/html";
@@ -128,7 +127,7 @@ class HttpMainListener : Http {
 
                 case "logout": buffer = Session.RevokeAccess(ctx, performer) ? Strings.OK.Array : Strings.FAI.Array; break;
                 case "version": buffer = Strings.Version(); break;
-
+                
                 case "ra": buffer = RaHandler.RaResponse(para, remoteIp); break;
 
                 case "ping"        : buffer = Ping.XhrPing(para); break;
@@ -142,8 +141,6 @@ class HttpMainListener : Http {
                 case "db/getusersver"  : buffer = Encoding.UTF8.GetBytes(Database.usersVer.ToString()); break;
                 case "db/getequiptable": buffer = Database.GetEquipTable(); break;
                 case "db/getuserstable": buffer = Database.GetUsersTable(); break;
-             
-                case "db/getentropy": buffer = PasswordStrength.GetEntropy(); break;
 
                 case "db/getequiprop": buffer = Database.GetValue(Database.equip, para); break;
                 case "db/getuserprop": buffer = Database.GetValue(Database.users, para); break;
@@ -153,6 +150,7 @@ class HttpMainListener : Http {
                 case "db/saveuser" : buffer = Database.SaveUser(ctx, performer); break;
                 case "db/deluser"  : buffer = Database.DeleteUser(para, performer); break;
 
+                case "db/getentropy": buffer = PasswordStrength.GetEntropy(); break;
                 case "db/gandalf"  : buffer = PasswordStrength.GandalfThreadWrapper(ctx, performer); ; break;
 
                 case "fetch/fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
@@ -194,12 +192,12 @@ class HttpMainListener : Http {
                 case "mng/getadworkstationcolumns": buffer = Scripts.GetAdWorkstationColumns(); break;
                 case "mng/getadgroupcolumn"       : buffer = Scripts.GetAdGroupColumns(); break;
 
-                case "scripts/list"   : buffer = Scripts.List(); break;
-                case "scripts/load"   : buffer = Scripts.Load(para); break;
-                case "scripts/save"   : buffer = Scripts.Save(ctx, para); break;
-                case "scripts/run"    : buffer = Scripts.Run(para); break;
-                case "scripts/create" : buffer = Scripts.Create(para); break;
-                case "scripts/delete" : buffer = Scripts.DeleteScript(para); break;
+                case "scripts/list"      : buffer = Scripts.List(); break;
+                case "scripts/load"      : buffer = Scripts.Load(para); break;
+                case "scripts/save"      : buffer = Scripts.Save(ctx, para); break;
+                case "scripts/run"       : buffer = Scripts.Run(para); break;
+                case "scripts/create"    : buffer = Scripts.Create(para); break;
+                case "scripts/delete"    : buffer = Scripts.DeleteScript(para); break;
                 case "scripts/getreport" : buffer = Scripts.GetReport(para); break;
                 case "scripts/delreport" : buffer = Scripts.DeleteReport(para); break;
                 case "scripts/getpreview": buffer = Scripts.GetPreview(para); break;

@@ -4,12 +4,7 @@ using System.Net;
 using System.Threading;
 
 class Http {
-    //internal readonly string ip;
-    //internal readonly ushort port;
-    //internal readonly ushort sslport;
-
     internal bool isListening = false;
-
     public HttpListener listener;
     public Cache cache;
 

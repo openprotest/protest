@@ -49,7 +49,7 @@ public static class Session {
                     Name = "sessionid",
                     Value = sessionId,
                     HttpOnly = true,
-                    //Domain = ctx.Request.UserHostName, //TODO: brakes reverce proxy
+                    Domain = ctx.Request.UserHostName,
                     //SameSite = "Lax",
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };
@@ -156,7 +156,7 @@ public static class Session {
 
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
             SessionEntry entry = o.Value;
-            if (entry.username == "localhost" && entry.ip.StartsWith("127.")) continue;
+            if (entry.username == "localhost" && (entry.ip.StartsWith("127.") || entry.ip == "::1")) continue;
             sb.Append($"{entry.ip}{(char)127}{entry.loginTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}{entry.username}{(char)127}{entry.sessionId.Substring(0, 8)}{(char)127}");
         }
 

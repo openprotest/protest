@@ -151,27 +151,27 @@ public static class LiveInfo {
 
                 if (!mismatch && !(wmiHostName is null) && wmiHostName.Length > 0) {
                     wmiHostName = wmiHostName?.Split('.')[0].ToUpper();
-                    if (wmiHostName != dns) { 
-                        warnings.Add($"DNS mismatch: {wmiHostName}");
+                    if (wmiHostName != dns) {
+                        warnings.Add($"DNS mismatch: {wmiHostName} &ne; {dns}");
                         mismatch = true;
                     }
                 }
 
-                if (!mismatch && !(adHostName is null) && adHostName.Length  > 0) {
+                if (!mismatch && !(adHostName is null) && adHostName.Length > 0) {
                     adHostName = adHostName?.Split('.')[0].ToUpper();
-                    if (adHostName != dns) { 
-                        warnings.Add($"DNS mismatch: {adHostName}");
+                    if (adHostName != dns) {
+                        warnings.Add($"DNS mismatch: {adHostName} &ne; {dns}");
                         mismatch = true;
                     }
                 }
 
                 if (!mismatch && wmiHostName is null && adHostName is null)
-                    netbios = await NetBios.GetBiosNameAsync(host);
+                    netbios = await NetBios.GetBiosNameAsync(host);                
 
                 if (!mismatch && !(netbios is null) && netbios.Length > 0) {
                     netbios = netbios?.Split('.')[0].ToUpper();
                     if (netbios != dns) {
-                        warnings.Add($"DNS mismatch: {netbios}");
+                        warnings.Add($"DNS mismatch: {netbios} &ne; {dns}");
                         mismatch = true;
                     }
                 }

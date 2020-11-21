@@ -74,6 +74,7 @@ public static class Fetch {
         Database.SaveMethod saveMethod = (Database.SaveMethod)lastFetch?.conflictAction;
 
         if (lastFetch?.type == "equip") {
+            Logging.Action(in performer, "Approve fetched equipment");
 
             string keyProperty = lastFetch?.conflictContition switch {
                 1 => "IP",
@@ -108,13 +109,14 @@ public static class Fetch {
             keys.Clear();
             fetchTask = null;
             lastFetch = null;
-            //Database.equipVer = DateTime.Now.Ticks;
+            Database.equipVer = DateTime.Now.Ticks;
             KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"equip\"}}");
-            Logging.Action(in performer, "Approve fetched equipment");
             KeepAlive.Broadcast($"{{\"action\":\"version\",\"userver\":\"{Database.usersVer}\",\"equipver\":\"{Database.equipVer}\"}}");
             return Strings.OK.Array;
 
         } else if (lastFetch?.type == "users") {
+            Logging.Action(in performer, "Approve fetched users");
+            
             Hashtable keys = new Hashtable();
             foreach (DictionaryEntry e in Database.users) {
                 Database.DbEntry entry = (Database.DbEntry)e.Value;
@@ -141,9 +143,8 @@ public static class Fetch {
             keys.Clear();
             fetchTask = null;
             lastFetch = null;
-            //Database.usersVer = DateTime.Now.Ticks;
+            Database.usersVer = DateTime.Now.Ticks;
             KeepAlive.Broadcast($"{{\"action\":\"approvedfetch\",\"type\":\"user\"}}");
-            Logging.Action(in performer, "Approve fetched users");
             KeepAlive.Broadcast($"{{\"action\":\"version\",\"userver\":\"{Database.usersVer}\",\"equipver\":\"{Database.equipVer}\"}}");
             return Strings.OK.Array;
         }

@@ -55,6 +55,10 @@ public static class NetBios {
 
                 Encoding enc = new ASCIIEncoding();
                 string biosName = enc.GetString(buffer, 57, 16).Trim();
+
+                int spIdx = biosName.IndexOf(" ");
+                if (spIdx > -1) biosName = biosName.Substring(0, spIdx);
+
                 return biosName;
 
             } else //time out
