@@ -7,7 +7,7 @@ class DebitNotes extends Window {
         super();
 
         const now = new Date();
-        const gap = new Date(now - 86400000 * 365);
+        const gap = new Date(now - 86400000 * 365 * 3);
 
         this.args = args ? args : {
             keywords: "",

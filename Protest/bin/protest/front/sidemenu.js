@@ -46,10 +46,10 @@ const TOOLS = [
 //{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",    sqr:true,  f:arg=> new MappedDrives() },
 
 { isGroup:true, lbl:"Help and pro-test" },
-{ lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Guide() },
-{ lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },
 { lbl:"Backup",             ico:"res/backup.svgz",         sqr:true,  f:arg=> new Backup() },
 { lbl:"Pro-test clients",   ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
+{ lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },
+{ lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Guide() },
 { lbl:"Screen capture",     ico:"res/screencapture.svgz",  sqr:false, f:arg=> btnScreenCapture.onclick() },
 { lbl:"Settings",           ico:"res/tool02.svgz",         sqr:false, f:arg=> new Settings() },
 { lbl:"Appearrance",        ico:"res/tv.svgz",             sqr:false, f:arg=> new Settings() },

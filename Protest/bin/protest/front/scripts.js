@@ -245,12 +245,13 @@ class Scripts extends Tabs {
         innerBox.style.padding = "16px";
         innerBox.style.textAlign = "center";
 
-        let txtFilename = document.createElement("input");
+        const txtFilename = document.createElement("input");
         txtFilename.type = "text";
         txtFilename.placeholder = "File name";
         innerBox.appendChild(txtFilename);
 
         const create = () => {
+            if (txtFilename.value.length == 0) return;
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {

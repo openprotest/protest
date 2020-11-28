@@ -13,6 +13,7 @@ public static class Session {
     public static Hashtable ip_access = new Hashtable();
     public static Hashtable user_access = new Hashtable();
 
+    private static readonly ConcurrentDictionary<string, AccessControl> acl = new ConcurrentDictionary<string, AccessControl>();
     private static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
 
     public static long HOUR = 36_000_000_000;
@@ -82,10 +83,6 @@ public static class Session {
         if (sessions.TryAdd(newEntry.sessionId, newEntry)) 
             return newEntry.sessionId;
 
-        Thread.Sleep(5);
-        if (sessions.TryAdd(newEntry.sessionId, newEntry)) //retry
-            return newEntry.sessionId;
-
         return null;
     }
 
@@ -99,12 +96,6 @@ public static class Session {
         if (!sessions.ContainsKey(sessionId)) return false;
 
         if (sessions.TryRemove(sessionId, out _)) {
-            if (performer != null) Logging.Action(performer, $"User actively logged out");
-            return true;
-        }
-
-        Thread.Sleep(5);
-        if (sessions.TryRemove(sessionId, out _)) { //retry
             if (performer != null) Logging.Action(performer, $"User actively logged out");
             return true;
         }
@@ -194,6 +185,92 @@ public static class Session {
         sessions[sessionId] = entry;   
     }
 
+    public static byte[] GetAcl() {
+        DirectoryInfo dirAcl = new DirectoryInfo(Strings.DIR_ACL);
+        if (!dirAcl.Exists) return Encoding.UTF8.GetBytes("[]");
+
+        StringBuilder sb = new StringBuilder();
+        FileInfo[] files = dirAcl.GetFiles();
+
+        sb.Append("[");
+        for (int i=0; i < files.Length; i++) {
+            string payload = null;
+            try {
+                payload = File.ReadAllText(files[i].FullName).Trim();
+            } catch {
+                continue;
+            }
+
+            sb.Append("{");
+            sb.Append($"\"user\":\"{files[i].Name}\",\"access\":\"{payload}\"");
+            sb.Append("}");
+            if (i < files.Length -1) sb.Append(",");
+        }
+        sb.Append("]");
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    public static byte[] SaveAcl(in string[] para, in HttpListenerContext ctx, in string performer) {
+        string username = String.Empty;
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("username=")) {
+                username = para[i].Substring(9);
+                break;
+            }            
+
+        if (username.Length == 0) return Strings.INV.Array;
+
+        StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd().Trim();
+        
+        try {
+            DirectoryInfo dirAcl = new DirectoryInfo(Strings.DIR_ACL);
+            if (!dirAcl.Exists) dirAcl.Create();
+
+            File.WriteAllText($"{dirAcl.FullName}\\{username}", payload);
+        } catch (Exception ex) {
+            Logging.Err(ex);
+            return Strings.FAI.Array;
+        }
+
+        AccessControl ac = new AccessControl(payload);
+
+        acl.TryRemove(username, out _);        
+
+        if (acl.TryAdd(username, ac)) {
+            Logging.Action(performer, $"Save access control for {username}");
+            return Strings.OK.Array;
+        }
+
+        return Strings.FAI.Array;
+    }
+
+    public static byte[] DeleteAcl(in string[] para, in string performer) {
+        string username = String.Empty;
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("username=")) {
+                username = para[i].Substring(9);
+                break;
+            }
+
+        if (username.Length == 0) return Strings.INV.Array;
+
+        try {
+            File.Delete($"{Strings.DIR_ACL}\\{username}");
+        } catch (Exception ex) {
+            Logging.Err(ex);
+            return Strings.FAI.Array;
+        }
+
+        if (acl.TryRemove(username, out _)) {
+            Logging.Action(performer, $"Delete access control for {username}");
+            return Strings.OK.Array;
+        }
+
+        return Strings.FAI.Array;
+    }
+
     public static string GetSHA(in string value) {
         return GetSHA(Encoding.UTF8.GetBytes(value));
     }
@@ -207,5 +284,113 @@ public static class Session {
 
         return sb.ToString();
     }
+}
 
+public class AccessControl {
+    public static readonly AccessControl FullAccess = new AccessControl("*");
+    public static readonly AccessControl MinimumAccess = new AccessControl(null);
+
+    public enum AccessLevel {
+        Deny = 0,
+        Read = 1,
+        Full = 2
+    }
+
+    public AccessLevel database;
+    public AccessLevel password;
+    public AccessLevel remoteagent;
+    public AccessLevel remotehosts;
+    public AccessLevel domainusers;
+    public AccessLevel documentation;
+    public AccessLevel debitnotes;
+    public AccessLevel watchdog;
+    public AccessLevel scripts;
+    public AccessLevel wmi;
+    public AccessLevel telnet;
+    public AccessLevel backup;
+    public AccessLevel manageusers;
+    public AccessLevel log;
+
+    public AccessControl(string payload) {
+        if (payload is null || payload == String.Empty) {
+            database      = AccessControl.AccessLevel.Deny;
+            password      = AccessControl.AccessLevel.Deny;
+            remoteagent   = AccessControl.AccessLevel.Deny;
+            remotehosts   = AccessControl.AccessLevel.Deny;
+            domainusers   = AccessControl.AccessLevel.Deny;
+            documentation = AccessControl.AccessLevel.Deny;
+            debitnotes    = AccessControl.AccessLevel.Deny;
+            watchdog      = AccessControl.AccessLevel.Deny;
+            scripts       = AccessControl.AccessLevel.Deny;
+            wmi           = AccessControl.AccessLevel.Deny;
+            telnet        = AccessControl.AccessLevel.Deny;
+            backup        = AccessControl.AccessLevel.Deny;
+            manageusers   = AccessControl.AccessLevel.Deny;
+            log           = AccessControl.AccessLevel.Deny;
+
+        } else if (payload == "*") {
+            database      = AccessControl.AccessLevel.Full;
+            password      = AccessControl.AccessLevel.Full;
+            remoteagent   = AccessControl.AccessLevel.Full;
+            remotehosts   = AccessControl.AccessLevel.Full;
+            domainusers   = AccessControl.AccessLevel.Full;
+            documentation = AccessControl.AccessLevel.Full;
+            debitnotes    = AccessControl.AccessLevel.Full;
+            watchdog      = AccessControl.AccessLevel.Full;
+            scripts       = AccessControl.AccessLevel.Full;
+            wmi           = AccessControl.AccessLevel.Full;
+            telnet        = AccessControl.AccessLevel.Full;
+            backup        = AccessControl.AccessLevel.Full;
+            manageusers   = AccessControl.AccessLevel.Full;
+            log           = AccessControl.AccessLevel.Full;
+
+        } else {
+            string[] payloadSplit = payload.Split(',');
+            for (int i = 0; i < payloadSplit.Length; i++) {
+                string[] split = payloadSplit[i].Split(':');
+
+                AccessControl.AccessLevel al;
+                Int32.TryParse(split[1], out int value);
+                if      (value == 2) al = AccessControl.AccessLevel.Full;
+                else if (value == 1) al = AccessControl.AccessLevel.Read;
+                else                 al = AccessControl.AccessLevel.Deny;
+
+                switch (split[0]) {
+                    case "database":      database    = al; break;
+                    case "password":      password    = al; break;
+                    case "remoteagent":   remoteagent = al; break;
+                    case "remotehosts":   remotehosts = al; break;
+                    case "domainusers":   domainusers = al; break;
+                    case "documentation": documentation = al; break;
+                    case "debitnotes":    debitnotes  = al; break;
+                    case "watchdog":      watchdog    = al; break;
+                    case "scripts":       scripts     = al; break;
+                    case "wmi":           wmi         = al; break;
+                    case "telnet":        telnet      = al; break;
+                    case "backup":        backup      = al; break;
+                    case "manageusers":   manageusers = al; break;
+                    case "log":           log         = al; break;
+                }
+            }
+        }
+    }
+
+    public override string ToString() {
+        string s = String.Empty;
+        s += "database:"    + database;
+        s += "password:"    + password + ",";
+        s += "remoteagent:" + remoteagent + ",";
+        s += "remotehosts:" + remotehosts + ",";
+        s += "domainusers:" + domainusers + ",";
+        s += "documentation:" + documentation + ",";
+        s += "debitnotes:"  + debitnotes + ",";
+        s += "watchdog:"    + watchdog + ",";
+        s += "scripts:"     + scripts + ",";
+        s += "wmi:"         + wmi + ",";
+        s += "telnet:"      + telnet + ",";
+        s += "backup:"      + backup + ",";
+        s += "manageusers:" + manageusers + ",";
+        s += "log:"         + log;
+        return s;
+    }
 }

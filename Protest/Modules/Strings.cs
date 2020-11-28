@@ -40,6 +40,7 @@ public static class Strings {
     public static readonly string DIR_ADDRESSBOOK = $"{Directory.GetCurrentDirectory()}\\protest\\addressbook";
     public static readonly string DIR_KNOWLAGE    = $"{Directory.GetCurrentDirectory()}\\protest\\knowlage";
     public static readonly string DIR_SSL         = $"{Directory.GetCurrentDirectory()}\\protest\\ssl";
+    public static readonly string DIR_ACL         = $"{Directory.GetCurrentDirectory()}\\protest\\acl";
     public static readonly string DIR_DATA        = $"{Directory.GetCurrentDirectory()}\\protest\\data";
     public static readonly string DIR_EQUIP       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\equip";
     public static readonly string DIR_USERS       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\users";
@@ -77,6 +78,7 @@ public static class Strings {
             DirectoryInfo dirWatchdog = new DirectoryInfo(DIR_WATCHDOG);
             //DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
             //DirectoryInfo dirMetrics  = new DirectoryInfo(DIR_METRICS);
+            DirectoryInfo dirAcl      = new DirectoryInfo(Strings.DIR_ACL); 
             DirectoryInfo dirData     = new DirectoryInfo(DIR_DATA);
             DirectoryInfo dirEquip    = new DirectoryInfo(DIR_EQUIP);
             DirectoryInfo dirUsers    = new DirectoryInfo(DIR_USERS);
@@ -87,6 +89,7 @@ public static class Strings {
             if (!dirWatchdog.Exists) dirWatchdog.Create();
             //if (!dirConfig.Exists)   dirConfig.Create();
             //if (!dirMetrics.Exists)  dirMetrics.Create();
+            if (!dirAcl.Exists)      dirAcl.Create();
             if (!dirData.Exists)     dirData.Create();
             if (!dirEquip.Exists)    dirEquip.Create();
             if (!dirUsers.Exists)    dirUsers.Create();

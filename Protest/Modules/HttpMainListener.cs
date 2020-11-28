@@ -32,14 +32,15 @@ class HttpMainListener : Http {
 
         if (!validCookie && isLoopback) { //auto-login if localhost
             string token = Session.GrantAccess(remoteIp, "localhost");
-            ctx.Response.AppendCookie(new Cookie() {
-                Name = "sessionid",
-                Value = token,
-                HttpOnly = true,
-                Domain = ctx.Request.UserHostName,
-                //SameSite = "Lax",
-                Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
-            });
+            if (!(token is null))
+                ctx.Response.AppendCookie(new Cookie() {
+                    Name = "sessionid",
+                    Value = token,
+                    HttpOnly = true,
+                    Domain = ctx.Request.UserHostName,
+                    //SameSite = "Lax",
+                    Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
+                });
 
             performer = "localhost";
         }
@@ -151,10 +152,10 @@ class HttpMainListener : Http {
                 case "db/deluser"  : buffer = Database.DeleteUser(para, performer); break;
 
                 case "db/getentropy": buffer = PasswordStrength.GetEntropy(); break;
-                case "db/gandalf"  : buffer = PasswordStrength.GandalfThreadWrapper(ctx, performer); ; break;
+                case "db/gandalf"   : buffer = PasswordStrength.GandalfThreadWrapper(ctx, performer); ; break;
 
                 case "fetch/fetchequip": buffer = Fetch.SingleFetchEquipBytes(para); break;
-                case "fetch/fetchuser" :  buffer = Fetch.SingleFetchUserBytes(para); break;
+                case "fetch/fetchuser" : buffer = Fetch.SingleFetchUserBytes(para); break;
                 case "fetch/import"    : buffer = Fetch.ImportDatabase(ctx, performer); break;
                 case "fetch/equip_ip"  : buffer = Fetch.FetchEquip(ctx, performer); break;
                 case "fetch/equip_dc"  : buffer = Fetch.FetchEquip(ctx, performer); break;
@@ -227,6 +228,10 @@ class HttpMainListener : Http {
 
                 case "clients/get": buffer = Session.GetClients(); break;
                 case "clients/kick": buffer = Session.KickClient(para, performer); break;
+
+                case "acl/get": buffer = Session.GetAcl(); break;
+                case "acl/save": buffer = Session.SaveAcl(para, ctx, performer); break;
+                case "acl/delete": buffer = Session.DeleteAcl(para, performer); break;
 
                 case "files/get": buffer = FileBrowser.Get(para); break;
 
