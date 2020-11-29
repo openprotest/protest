@@ -270,8 +270,10 @@ class Program {
         sb.AppendLine();
         sb.AppendLine();
 
-        sb.AppendLine("## Use NETSH to bind an SSL certificate with your https endpoint:");
-        sb.AppendLine($"## netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{GetAppid()}}}");
+        sb.AppendLine("###");
+        sb.AppendLine("###  Use NETSH to bind an SSL certificate with your https endpoint:");
+        sb.AppendLine($"###  netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{GetAppid()}}}");
+        sb.AppendLine("###");
 
         File.WriteAllText(Strings.FILE_CONFIG, sb.ToString());
     }

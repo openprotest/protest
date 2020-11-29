@@ -66,7 +66,7 @@ public static class Strings {
     public static readonly string DIR_SCRIPTS_SCRIPTS = $"{DIR_SCRIPTS}\\scripts";
     public static readonly string DIR_SCRIPTS_REPORTS = $"{DIR_SCRIPTS}\\reports";
 
-    public static readonly string FILE_CONFIG       = $"{Directory.GetCurrentDirectory()}\\protest\\config.txt";
+    public static readonly string FILE_CONFIG       = $"{Directory.GetCurrentDirectory()}\\protest\\protest.cfg";
     public static readonly string FILE_CONTENT_TYPE = $"{DIR_KNOWLAGE}\\content_type.txt";
     public static readonly string FILE_MAC          = $"{DIR_KNOWLAGE}\\mac.bin";
 
@@ -165,7 +165,7 @@ public static class Strings {
 
     public static string SizeToString(long size) {
         if (size < 1024) return $"{size} Bytes";
-        if (size < Math.Pow(1024, 2)) return $"{Math.Round(size / 1024.0)} KB";
+        if (size < Math.Pow(1024, 2)) return $"{Math.Round(size / 1024f)} KB";
         if (size < Math.Pow(1024, 3)) return $"{Math.Round(size / Math.Pow(1024, 2))} MB";
         if (size < Math.Pow(1024, 4)) return $"{Math.Round(size / Math.Pow(1024, 3))} GB";
         if (size < Math.Pow(1024, 5)) return $"{Math.Round(size / Math.Pow(1024, 4))} TB";
@@ -187,7 +187,6 @@ public static class Strings {
         result += $"\"build\":\"{ver.Build}\",";
         result += $"\"revision\":\"{ver.Revision}\"";
         result += "}";
-
 
         return Encoding.UTF8.GetBytes(result);
     }

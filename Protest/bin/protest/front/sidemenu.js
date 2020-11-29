@@ -45,7 +45,7 @@ const TOOLS = [
 //{ lbl:"Tasks",              ico:"res/task.svgz",           sqr:true,  f:arg=> new Tasks() },
 //{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",    sqr:true,  f:arg=> new MappedDrives() },
 
-{ isGroup:true, lbl:"Help and pro-test" },
+{ isGroup:true, lbl:"Manage Pro-test and help" },
 { lbl:"Backup",             ico:"res/backup.svgz",         sqr:true,  f:arg=> new Backup() },
 { lbl:"Pro-test clients",   ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
 { lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },

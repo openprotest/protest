@@ -98,7 +98,8 @@ class Telnet extends Window {
             return false;
         }
 
-        this.history.push(command);
+        if (command.length > 0 && command !== "\r" && command !== "\n")
+            this.history.push(command);
 
         this.PushLine();
         this.last.innerHTML = "> " + command;

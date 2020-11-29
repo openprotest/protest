@@ -95,18 +95,18 @@ class Guide extends Window {
         this.InsertHeading("Setup", "res/tool01.svgz");
         this.InsertParagraph(
             "If you are reading this, that means you have already configured Pro-test. " +
-            "In that case, the <i>config.txt</i> file is automatically created with the default settings."
+            "In that case, the <i>protest.cfg</i> file is automatically created with the default settings."
         );
         this.InsertParagraph(
             "Pro-test, by default, listens only on localhost on port 80 for security reasons. " +
-            "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>config.txt</i> file to the local end-point of your choice."
+            "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>protest.cfg</i> file to the local end-point of your choice."
         );
         this.InsertParagraph(
             "Requests from IPs other than loopback are rejected and require a username and a password to proceed. " +
-            "The username must be whitelisted in the <i>config.txt</i> file, and then your domain controller will handle the authentication."
+            "The username must be whitelisted in the <i>protest.cfg</i> file, and then your domain controller will handle the authentication."
         );
         this.InsertParagraph(
-            "Also, in the <i>config.txt</i>, you can set your database key and your preshared key."
+            "Also, in the <i>protest.cfg</i>, you can set your database key and your preshared key."
         );
         this.InsertParagraph(
             "The database key is used to encrypt and decrypt your database content. " +
@@ -135,7 +135,7 @@ class Guide extends Window {
             "Pro-test provides an address book for your organization. The address book is open for everyone, and it is synchronized with the database."
         );
         this.InsertParagraph(
-            "The address book service is disabled by default. It can be enabled and configured from the <i>config.txt</i> file."
+            "The address book service is disabled by default. It can be enabled and configured from the <i>protest.cfg</i> file."
         );
 
         this.body.appendChild(document.createElement("br"));

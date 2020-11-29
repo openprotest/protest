@@ -58,21 +58,21 @@ public static class Watchdog {
 
         if (password.Length > 0) Watchdog.password = password;
 
-        FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.txt");
+        FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.cfg");
         string contents = String.Empty;
-        contents += $"enable: {enable.ToString().ToLower()}\r\n";
-        contents += $"interval: {interval}\r\n";
+        contents += $"enable     = {enable.ToString().ToLower()}\r\n";
+        contents += $"interval   = {interval}\r\n";
 
-        contents += $"email: {email.ToString().ToLower()}\r\n";
-        contents += $"threshold: {threshold}\r\n";
-        contents += $"contition: {contition}\r\n";
-        contents += $"server: {server}\r\n";
-        contents += $"port: {port}\r\n";
-        contents += $"sender: {sender}\r\n";
-        contents += $"username: {username}\r\n";
-        contents += $"password: { CryptoAes.EncryptB64(Watchdog.password, Program.DB_KEY_A, Program.DB_KEY_B) }\r\n";
-        contents += $"recipients: {recipients}\r\n";
-        contents += $"ssl: {ssl.ToString().ToLower()}\r\n";
+        contents += $"email      = {email.ToString().ToLower()}\r\n";
+        contents += $"threshold  = {threshold}\r\n";
+        contents += $"contition  = {contition}\r\n";
+        contents += $"server     = {server}\r\n";
+        contents += $"port       = {port}\r\n";
+        contents += $"sender     = {sender}\r\n";
+        contents += $"username   = {username}\r\n";
+        contents += $"password   = { CryptoAes.EncryptB64(Watchdog.password, Program.DB_KEY_A, Program.DB_KEY_B).Replace('=', '-') }\r\n";
+        contents += $"recipients = {recipients}\r\n";
+        contents += $"ssl        = {ssl.ToString().ToLower()}\r\n";
 
         try {
             File.WriteAllText(file.FullName, contents);
@@ -120,7 +120,7 @@ public static class Watchdog {
     }
 
     public static void LoadConfig() {
-        FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.txt");
+        FileInfo file = new FileInfo($"{Strings.DIR_WATCHDOG}\\watchdog.cfg");
         if (!file.Exists) return;
 
         StreamReader fileReader = new StreamReader(file.FullName);
@@ -129,7 +129,7 @@ public static class Watchdog {
             line = line.Trim();
             if (line.StartsWith("#")) continue;
 
-            string[] split = line.Split(':');
+            string[] split = line.Split('=');
             if (split.Length < 2) continue;
 
             split[0] = split[0].Trim().ToLower();
@@ -174,9 +174,9 @@ public static class Watchdog {
 
                 case "password":
                     try {
-                        Watchdog.password = CryptoAes.DecryptB64(split[1], Program.DB_KEY_A, Program.DB_KEY_B);
+                        Watchdog.password = CryptoAes.DecryptB64(split[1].Replace("--", "=="), Program.DB_KEY_A, Program.DB_KEY_B);
                     } catch {
-                        Watchdog.password = "";
+                        Watchdog.password = String.Empty;
                     }
                     break;
 
@@ -188,7 +188,8 @@ public static class Watchdog {
                     Watchdog.ssl = split[1] == "true";
                     break;
             }
-            
+
+
         }
 
         if (Watchdog.enable) {
@@ -275,7 +276,7 @@ public static class Watchdog {
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     break;
                 }
 
@@ -321,7 +322,7 @@ public static class Watchdog {
                                 await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
                             } catch { }
 
-                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                         break;
                     }
                 }
@@ -573,7 +574,7 @@ public static class Watchdog {
             LinkedResource logo = null;
             if (fileLogo.Exists)
                 logo = new LinkedResource(fileLogo.FullName, "image/png") {
-                    ContentId = Guid.NewGuid().ToString().Replace("-", ""),
+                    ContentId = Guid.NewGuid().ToString().Replace("-", String.Empty),
                     TransferEncoding = TransferEncoding.Base64
                 };
 

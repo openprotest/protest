@@ -116,6 +116,7 @@ public static class PortScan {
         {993,  "IMAP over SSL/TSL"},
         {995,  "POP3 over SSL/TSL"},
         {1433, "MS-SQL, Microsoft SQL server"},
+        {3260, "iSCSI"},
         {3269, "LDAP over SSL"},
         {3389, "RDP, Remote Desktop Protocol"},
         {5500, "VNC, Virtual Network Computer"},
