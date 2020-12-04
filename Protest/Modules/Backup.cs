@@ -25,7 +25,7 @@ public static class Backup {
     public static byte[] Create(in string[] para, in string performer) {
         string name = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
+            if (para[i].StartsWith("name=")) name = Strings.DecodeUrl(para[i].Substring(5));
 
         foreach (char c in Path.GetInvalidFileNameChars())
             name = name.Replace(c, '_');
@@ -96,7 +96,7 @@ public static class Backup {
     public static byte[] Delete(in string[] para, in string performer) {
         string name = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
+            if (para[i].StartsWith("name=")) name = Strings.DecodeUrl(para[i].Substring(5));
 
         try {
             FileInfo file = new FileInfo($"{Strings.DIR_BACKUP}\\{name}");

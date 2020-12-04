@@ -2,64 +2,65 @@ const SUBMENU_WIDTH = 360;
 
 const TOOLS = [
 { isGroup:true, lbl:"Inventory" },
-{ lbl:"Equipment",          ico:"res/database_equip.svgz", sqr:true,  f:arg=> new ListEquip({find:"",filter:"",sort:""}) },
-{ lbl:"Users",              ico:"res/database_users.svgz", sqr:true,  f:arg=> new ListUsers({find:"",filter:"",sort:""}) },
-//{ lbl:"Query",              ico:"res/databasesearch.svgz", sqr:true,  f:arg=> new Query() },
-{ lbl:"Fetch",              ico:"res/fetch.svgz",          sqr:true,  f:arg=> new Fetch(arg) },
-{ lbl:"Fetch equipment from IP range",         ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch("equipip")},
-{ lbl:"Fetch equipment from Domain Controler", ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch("equipdc")},
-{ lbl:"Fetch users from Domain Controller",    ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch("usersdc")},
-{ lbl:"Import from another Pro-test",          ico:"res/fetch.svgz", sqr:false, f:arg=> new Fetch("protest")},
-{ lbl:"New equipment",      ico:"res/new_equip.svgz",      sqr:true,  f:arg=> new Equip(null) },
-{ lbl:"New user",           ico:"res/new_user.svgz",       sqr:true,  f:arg=> new User(null) },
-{ lbl:"Password strength",  ico:"res/strength.svgz",       sqr:true,  f:arg=> new PasswordStrength({find:"",sort:""}) },
-{ lbl:"Gandalf",            ico:"res/gandalf.svgz",        sqr:false, f:arg=> new Gandalf() },
+{ lbl:"Equipment",                             ico:"res/database_equip.svgz", grp:"database", sqr:true,  f:arg=> new ListEquip({find:"",filter:"",sort:""}) },
+{ lbl:"Users",                                 ico:"res/database_users.svgz", grp:"database", sqr:true,  f:arg=> new ListUsers({find:"",filter:"",sort:""}) },
+{ lbl:"Fetch",                                 ico:"res/fetch.svgz",          grp:"database", sqr:true,  f:arg=> new Fetch(arg) },
+{ lbl:"Fetch equipment from IP range",         ico:"res/fetch.svgz",          grp:"database", sqr:false, f:arg=> new Fetch("equipip")},
+{ lbl:"Fetch equipment from Domain Controler", ico:"res/fetch.svgz",          grp:"database", sqr:false, f:arg=> new Fetch("equipdc")},
+{ lbl:"Fetch users from Domain Controller",    ico:"res/fetch.svgz",          grp:"database", sqr:false, f:arg=> new Fetch("usersdc")},
+{ lbl:"Import from another Pro-test",          ico:"res/fetch.svgz",          grp:"database", sqr:false, f:arg=> new Fetch("protest")},
+{ lbl:"New equipment",                         ico:"res/new_equip.svgz",      grp:"database", sqr:true,  f:arg=> new Equip(null) },
+{ lbl:"New user",                              ico:"res/new_user.svgz",       grp:"database", sqr:true,  f:arg=> new User(null) },
+{ lbl:"Password strength",                     ico:"res/strength.svgz",       grp:"database", sqr:true,  f:arg=> new PasswordStrength({find:"",sort:""}) },
+{ lbl:"Gandalf",                               ico:"res/gandalf.svgz",        grp:"database", sqr:false, f:arg=> new Gandalf() },
 
 { isGroup:true, lbl:"Documentation" },
-{ lbl:"Documentation",      ico:"res/documentation.svgz",  sqr:true,  f:arg=> new Documentation() },
-{ lbl:"Debit notes",        ico:"res/charges.svgz",        sqr:true,  f:arg=> new DebitNotes() },
-{ lbl:"Watchdog",           ico:"res/watchdog.svgz",       sqr:true,  f:arg=> new Watchdog() },
+{ lbl:"Documentation",      ico:"res/documentation.svgz",  grp:"documentation", sqr:true,  f:arg=> new Documentation() },
+{ lbl:"Debit notes",        ico:"res/charges.svgz",        grp:"debitnotes",    sqr:true,  f:arg=> new DebitNotes() },
+{ lbl:"Watchdog",           ico:"res/watchdog.svgz",       grp:"watchdog",      sqr:true,  f:arg=> new Watchdog() },
 
 { isGroup:true, lbl:"Tools and utilities" },
-{ lbl:"Ping",               ico:"res/ping.svgz",           sqr:true,  f:arg=> new Ping(arg) },
-{ lbl:"ARP Ping",           ico:"res/ping.svgz",           sqr:false, f:arg=> new Ping({entries:[], timeout:500, method:"arp", moveToBottom:false}) },
-{ lbl:"DNS lookup",         ico:"res/dns.svgz",            sqr:true,  f:arg=> new DnsLookup(arg) },
-{ lbl:"DHCP discover",      ico:"res/dhcp.svgz",           sqr:true,  f:arg=> new DhcpDiscover(arg) },
-{ lbl:"NTP client",         ico:"res/clock.svgz",          sqr:true,  f:arg=> new NtpClient(arg) },
-{ lbl:"Trace route",        ico:"res/traceroute.svgz",     sqr:true,  f:arg=> new TraceRoute(arg) },
-{ lbl:"TCP port scan",      ico:"res/portscan.svgz",       sqr:true,  f:arg=> new PortScan(arg) },
-{ lbl:"Locate IP",          ico:"res/locate.svgz",         sqr:true,  f:arg=> new LocateIp(arg) },
-{ lbl:"MAC lookup",         ico:"res/maclookup.svgz",      sqr:true,  f:arg=> new MacLookup(arg) },
-{ lbl:"Website check",      ico:"res/websitecheck.svgz",   sqr:true,  f:arg=> new WebCheck(arg) },
+{ lbl:"Ping",               ico:"res/ping.svgz",           grp:"utilities", sqr:true,  f:arg=> new Ping(arg) },
+{ lbl:"ARP Ping",           ico:"res/ping.svgz",           grp:"utilities", sqr:false, f:arg=> new Ping({entries:[], timeout:500, method:"arp", moveToBottom:false}) },
+{ lbl:"DNS lookup",         ico:"res/dns.svgz",            grp:"utilities", sqr:true,  f:arg=> new DnsLookup(arg) },
+{ lbl:"DHCP discover",      ico:"res/dhcp.svgz",           grp:"utilities", sqr:true,  f:arg=> new DhcpDiscover(arg) },
+{ lbl:"NTP client",         ico:"res/clock.svgz",          grp:"utilities", sqr:true,  f:arg=> new NtpClient(arg) },
+{ lbl:"Trace route",        ico:"res/traceroute.svgz",     grp:"utilities", sqr:true,  f:arg=> new TraceRoute(arg) },
+{ lbl:"TCP port scan",      ico:"res/portscan.svgz",       grp:"utilities", sqr:true,  f:arg=> new PortScan(arg) },
+{ lbl:"Locate IP",          ico:"res/locate.svgz",         grp:"utilities", sqr:true,  f:arg=> new LocateIp(arg) },
+{ lbl:"MAC lookup",         ico:"res/maclookup.svgz",      grp:"utilities", sqr:true,  f:arg=> new MacLookup(arg) },
+{ lbl:"Website check",      ico:"res/websitecheck.svgz",   grp:"*", sqr:true,  f:arg=> new WebCheck(arg) },
+//{ lbl:"Speed test",         ico:"res/speedtest.svgz",      grp:"utilities", sqr:true,  f:arg=> new SpeedTest() },
 
-//{ lbl:"Speed test",         ico:"res/speedtest.svgz",      sqr:true,  f:arg=> new SpeedTest() },
-{ lbl:"Scripts",            ico:"res/scripts.svgz",        sqr:true,  f:arg=> new Scripts() },
-{ lbl:"Script reports",     ico:"res/reportfile.svgz",     sqr:false, f:arg=> new Scripts("reports") },
-{ lbl:"Ongoing scripts",    ico:"res/ongoingscript.svgz",  sqr:false, f:arg=> new Scripts("ongoing") },
-{ lbl: "WMI console", ico: "res/wmi.svgz", sqr: true, f: arg => new Wmi() },
-{ lbl:"Telnet",             ico:"res/telnet.svgz",         sqr:true,  f:arg=> new Telnet() },
-//{ lbl:"Secure shell",       ico:"res/ssh.svgz",            sqr:true,  f:arg=> new Window() },
-{ lbl:"Network calculator", ico:"res/netcalc.svgz",        sqr:true,  f:arg=> new Netcalc(arg) },
-{ lbl:"Password generator", ico:"res/passgen.svgz",        sqr:true,  f:arg=> new Passgen() },
-//{ lbl:"Encoder",            ico:"res/encoder.svgz",        sqr:true,  f:arg=> new Encoder() },
-//{ lbl:"Tasks",              ico:"res/task.svgz",           sqr:true,  f:arg=> new Tasks() },
-//{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",    sqr:true,  f:arg=> new MappedDrives() },
+{ lbl:"Scripts",            ico:"res/scripts.svgz",        grp:"scripts", sqr:true,  f:arg=> new Scripts() },
+{ lbl:"Script reports",     ico:"res/reportfile.svgz",     grp:"scripts", sqr:false, f:arg=> new Scripts("reports") },
+{ lbl:"Ongoing scripts",    ico:"res/ongoingscript.svgz",  grp:"scripts", sqr:false, f:arg=> new Scripts("ongoing") },
+{ lbl:"WMI console",        ico:"res/wmi.svgz",            grp:"wmi",     sqr:true,  f:arg=> new Wmi() },
+{ lbl:"Telnet",             ico:"res/telnet.svgz",         grp:"telnet",  sqr:true,  f:arg=> new Telnet() },
+//{ lbl:"Secure shell",       ico:"res/ssh.svgz",            grp:"telnet",  sqr:true,  f:arg=> new Window() },
+{ lbl:"Network calculator", ico:"res/netcalc.svgz",        grp:"*",       sqr:true,  f:arg=> new Netcalc(arg) },
+{ lbl:"Password generator", ico:"res/passgen.svgz",        grp:"*",       sqr:true,  f:arg=> new Passgen() },
+//{ lbl:"Encoder",            ico:"res/encoder.svgz",        grp:"*",           sqr:true,  f:arg=> new Encoder() },
+//{ lbl:"Tasks",              ico:"res/task.svgz",           grp:"database",    sqr:true,  f:arg=> new Tasks() },
+//{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",    grp:"domainusers", sqr:true,  f:arg=> new MappedDrives() },
 
 { isGroup:true, lbl:"Manage Pro-test and help" },
-{ lbl:"Backup",             ico:"res/backup.svgz",         sqr:true,  f:arg=> new Backup() },
-{ lbl:"Pro-test clients",   ico:"res/ptclients.svgz",      sqr:true,  f:arg=> new Clients() },
-{ lbl:"Log",                ico:"res/log.svgz",            sqr:true,  f:arg=> new Log() },
-{ lbl:"User guide",         ico:"res/userguide.svgz",      sqr:true,  f:arg=> new Guide() },
-{ lbl:"Screen capture",     ico:"res/screencapture.svgz",  sqr:false, f:arg=> btnScreenCapture.onclick() },
-{ lbl:"Settings",           ico:"res/tool02.svgz",         sqr:false, f:arg=> new Settings() },
-{ lbl:"Appearrance",        ico:"res/tv.svgz",             sqr:false, f:arg=> new Settings() },
-//{ lbl:"Menu icons",         ico:"res/desktop.svgz",        sqr:false, f:arg=> new Settings("icons") },
-{ lbl:"Session",            ico:"res/hourglass.svgz",      sqr:false, f:arg=> new Settings("session") },
-{ lbl:"Update",             ico:"res/update.svgz",         sqr:false, f:arg=> new Settings("update") },
-{ lbl:"License",            ico:"res/gpl.svgz",            sqr:false, f:arg=> new Settings("legal") },
-{ lbl:"About",              ico:"res/logo.svgz",           sqr:false, f:arg=> new Settings("about") },
-{ lbl:"Logout",             ico:"res/logoff.svgz",         sqr:false, f:arg=> btnLogout.onclick() },
+{ lbl:"Backup",             ico:"res/backup.svgz",        grp:"backup",      sqr:true,  f:arg=> new Backup() },
+    { lbl: "Pro-test clients", ico: "res/ptclients.svgz", grp:"manageusers", sqr:true,  f:arg=> new Clients() },
+{ lbl:"Log",                ico:"res/log.svgz",           grp:"log",         sqr:true,  f:arg=> new Log() },
+{ lbl:"User guide",         ico:"res/userguide.svgz",     grp:"*", sqr:true,  f:arg=> new Guide() },
+{ lbl:"Screen capture",     ico:"res/screencapture.svgz", grp:"*", sqr:false, f:arg=> btnScreenCapture.onclick() },
+{ lbl:"Settings",           ico:"res/tool02.svgz",        grp:"*", sqr:false, f:arg=> new Settings() },
+{ lbl:"Appearrance",        ico:"res/tv.svgz",            grp:"*", sqr:false, f:arg=> new Settings() },
+//{ lbl:"Menu icons",         ico:"res/desktop.svgz",       grp:"*", sqr:false, f:arg=> new Settings("icons") },
+{ lbl:"Session",            ico:"res/hourglass.svgz",     grp:"*", sqr:false, f:arg=> new Settings("session") },
+{ lbl:"Update",             ico:"res/update.svgz",        grp:"*", sqr:false, f:arg=> new Settings("update") },
+{ lbl:"License",            ico:"res/gpl.svgz",           grp:"*", sqr:false, f:arg=> new Settings("legal") },
+{ lbl:"About",              ico:"res/logo.svgz",          grp:"*", sqr:false, f:arg=> new Settings("about") },
+{ lbl:"Logout",             ico:"res/logoff.svgz",        grp:"*", sqr:false, f:arg=> btnLogout.onclick() },
 ];
+
+let AUTHORIZATION = {};
 
 let sidemenu_dynamicicon = false;
 
@@ -71,7 +72,7 @@ let sidemenu_session = [];
 let sidemenu_lastShiftPress = 0;
 let lastSearchValue = "";
 
-SideMenu_Update("");
+//SideMenu_Update("");
 
 btnSidemenu.onclick = event => { if (event.button == 0) SideMenu_Open(); };
 
@@ -238,14 +239,19 @@ function SideMenu_Update(filter) {
     sidemenu_list = [];
     sidemenu_index = -1;
 
-    if (filter.length == 0) {
+    if (filter.length == 0) { //menu
         for (let i = 0; i < TOOLS.length; i++) {
             if (TOOLS[i].isGroup) {
+                if (lstSideMenu.childNodes.length > 0 && lstSideMenu.childNodes[lstSideMenu.childNodes.length - 1].className === "")
+                    lstSideMenu.removeChild(lstSideMenu.childNodes[lstSideMenu.childNodes.length - 1]);
+
                 CreateGroupLabel(TOOLS[i].lbl);
                 continue;
             }
 
             if (!TOOLS[i].sqr) continue;
+            if (TOOLS[i].grp != "*" && AUTHORIZATION[TOOLS[i].grp] == 0) continue;
+
             const item = CreateSquareItem(TOOLS[i].lbl, TOOLS[i].ico, TOOLS[i].f);
             sidemenu_list.push(item);
             lstSideMenu.appendChild(item);
@@ -254,6 +260,8 @@ function SideMenu_Update(filter) {
     } else {
         for (let i = 0; i < TOOLS.length; i++)
             if (TOOLS[i].lbl.toLocaleLowerCase().indexOf(filter) > -1) {
+                if (TOOLS[i].grp != "*" && AUTHORIZATION[TOOLS[i].grp] == 0) continue;
+
                 const item = CreateSideItem(TOOLS[i].lbl, TOOLS[i].ico, "", "", TOOLS[i].f);
                 sidemenu_list.push(item);
                 lstSideMenu.appendChild(item);
@@ -264,7 +272,7 @@ function SideMenu_Update(filter) {
 
     let keywords = filter.toLowerCase().split(" ");
 
-    for (let i = 0; i < db_equip.length; i++) {
+    for (let i = 0; i < db_equip.length; i++) { //find equip
         let match = true;
 
         for (let j = 0; j < keywords.length; j++) {
@@ -300,7 +308,7 @@ function SideMenu_Update(filter) {
         lstSideMenu.appendChild(item);
     }
 
-    for (let i = 0; i < db_users.length; i++) {
+    for (let i = 0; i < db_users.length; i++) { //find users
         let match = true;
 
         for (let j = 0; j < keywords.length; j++) {

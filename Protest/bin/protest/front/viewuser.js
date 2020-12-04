@@ -189,7 +189,7 @@ class User extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
             this.btnUnlock.setAttribute("busy", true);
-            xhr.open("GET", "mng/unlockuser&file=" + this.filename, true);
+            xhr.open("GET", "mngu/unlockuser&file=" + this.filename, true);
             xhr.send();
         };
 
@@ -204,7 +204,7 @@ class User extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
             btnEnable.setAttribute("busy", true);
-            xhr.open("GET", "mng/enableuser&file=" + this.filename, true);
+            xhr.open("GET", "mngu/enableuser&file=" + this.filename, true);
             xhr.send();
         };
 
@@ -219,7 +219,7 @@ class User extends Window {
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
             btnDisable.setAttribute("busy", true);
-            xhr.open("GET", "mng/disableuser&file=" + this.filename, true);
+            xhr.open("GET", "mngu/disableuser&file=" + this.filename, true);
             xhr.send();
         };
 

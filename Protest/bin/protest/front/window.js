@@ -88,6 +88,9 @@ class Window {
         container.appendChild(this.win);
 
         this.task = document.createElement("div");
+        this.task.setAttribute("role", "button");
+        this.task.setAttribute("aria-label", "Task icon");
+        this.task.tabIndex = "0";
         this.task.className = "bar-icon";
         this.task.style.left = 2 + $w.array.length * 64 + "px";
         bottombar.appendChild(this.task);
@@ -674,6 +677,7 @@ class Window {
 
     setTitle(title="") {
         this.lblTitle.innerHTML = title;
+        this.win.setAttribute("aria-label", title);
         this.task.setAttribute("tip", title);
     }
     

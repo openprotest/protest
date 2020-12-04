@@ -24,7 +24,7 @@ const Script_GetColumns = callback => {
         }
 
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", "mng/getscripttools", true);
+        xhr.open("GET", "scripts/getscripttools", true);
         xhr.onload = () => {
             Script_ToolsArray = [];
 
@@ -61,7 +61,7 @@ const Script_GetColumns = callback => {
 
     let pPtUser = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", "mng/getusercolumns", true);
+        xhr.open("GET", "scripts/getusercolumns", true);
         xhr.onload = () => {
             Script_PtUserColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -72,7 +72,7 @@ const Script_GetColumns = callback => {
 
     let pPtEquip = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", "mng/getequipcolumns", true);
+        xhr.open("GET", "scripts/getequipcolumns", true);
         xhr.onload = () => {
             Script_PtEquipColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -83,7 +83,7 @@ const Script_GetColumns = callback => {
 
     let pAdWorkstation = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", "mng/getadworkstationcolumns", true);
+        xhr.open("GET", "scripts/getadworkstationcolumns", true);
         xhr.onload = () => {
             Script_AdWorkstationColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -94,7 +94,7 @@ const Script_GetColumns = callback => {
 
     let pAdUser = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", "mng/getadusercolumns", true);
+        xhr.open("GET", "scripts/getadusercolumns", true);
         xhr.onload = () => {
             Script_AdUserColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();
@@ -105,7 +105,7 @@ const Script_GetColumns = callback => {
 
     let pAdGroup = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", "mng/getadgroupcolumn", true);
+        xhr.open("GET", "scripts/getadgroupcolumn", true);
         xhr.onload = () => {
             Script_AdGroupsColumns = xhr.responseText.length > 0 ? xhr.responseText.split(String.fromCharCode(127)) : [];
             resolve();

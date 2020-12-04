@@ -147,7 +147,7 @@ public static class PortScan {
         {10001,"UniFi Discovery Service"}
     };
 
-    public static async void WsPortScan(HttpListenerContext ctx, string remoteIp) {
+    public static async void WsPortScan(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -176,7 +176,7 @@ public static class PortScan {
                 byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-                if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                if (!Session.CheckAccess(sessionId)) { //check session
                     ctx.Response.Close();
                     return;
                 }

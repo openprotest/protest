@@ -20,7 +20,7 @@ public static class DebitNotes {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("from="))              from = para[i].Substring(5);
             else if (para[i].StartsWith("to="))             to = para[i].Substring(3);
-            else if (para[i].StartsWith("keywords=")) keywords = Strings.EscapeUrl(para[i].Substring(9)).Split(' ');
+            else if (para[i].StartsWith("keywords=")) keywords = Strings.DecodeUrl(para[i].Substring(9)).Split(' ');
             else if (para[i].StartsWith("filters="))   filters = para[i].Substring(8);
             else if (para[i].StartsWith("last="))         last = para[i].Substring(5);
 

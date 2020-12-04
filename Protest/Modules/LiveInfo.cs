@@ -15,7 +15,7 @@ public static class LiveInfo {
         await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async void InstantInfoEquip(HttpListenerContext ctx, string remoteIp) {
+    public static async void InstantInfoEquip(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {
@@ -85,7 +85,7 @@ public static class LiveInfo {
                         if (reply.Status == IPStatus.Success)
                             WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.RoundtripTime}{(char)127}ICMP");
                         else 
-                            WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.Status.ToString()}{(char)127}ICMP");
+                            WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}{reply.Status}{(char)127}ICMP");
                     } catch {
                         WsWriteText(ws, $".roundtrip:{ipArray[i]}{(char)127}Error{(char)127}ICMP");
                     }
@@ -189,7 +189,7 @@ public static class LiveInfo {
         }
     }
 
-    public static async void InstantInfoUser(HttpListenerContext ctx, string remoteIp) {
+    public static async void InstantInfoUser(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {

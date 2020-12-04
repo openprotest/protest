@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Linq;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Net;
 using System.Text;
 using System.IO;
-using System.Threading;
 using System.Collections.Generic;
 
 public static class Session {
-    public static Hashtable ip_access = new Hashtable();
-    public static Hashtable user_access = new Hashtable();
-
-    private static readonly ConcurrentDictionary<string, AccessControl> acl = new ConcurrentDictionary<string, AccessControl>();
-    private static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
-
     public static long HOUR = 36_000_000_000;
     public static long SESSION_TIMEOUT = 168; //7 days
 
-    struct SessionEntry {
-        public string ip;
-        public string username;
-        public DateTime loginTime;
-        public string sessionId;
-        public long sessionTimeout;
+    public static readonly ConcurrentDictionary<string, AccessControl> acl = new ConcurrentDictionary<string, AccessControl>();
+    public static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
+
+    public struct SessionEntry {
+        public string        ip;
+        public string        username;
+        public DateTime      loginTime;
+        public string        sessionId;
+        public long          sessionTimeout;
+        public AccessControl accessControl;
     }
 
     public static string TryLogin(in HttpListenerContext ctx, in string remoteIp) {
@@ -37,7 +33,7 @@ public static class Session {
             string username = split[0];
             string password = split[1];
 
-            if (!user_access.ContainsKey("*") && !user_access.ContainsKey(username))
+            if (!acl.ContainsKey(username))
                 return null;
 
             bool auth = ActiveDirectory.AuthenticateDomainUser(username, password);
@@ -77,13 +73,31 @@ public static class Session {
             username = username,
             loginTime = DateTime.Now,
             sessionId = GetSHA(DateTime.Now.ToString()),
-            sessionTimeout = HOUR * SESSION_TIMEOUT
+            sessionTimeout = HOUR * SESSION_TIMEOUT,
+            accessControl = acl.ContainsKey(username) ? acl[username] : null
         };
 
         if (sessions.TryAdd(newEntry.sessionId, newEntry)) 
             return newEntry.sessionId;
 
         return null;
+    }
+
+    public static bool CheckAccess(in HttpListenerContext ctx) {
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        if (sessionId is null) return false;
+        return CheckAccess(in sessionId);
+    }
+    public static bool CheckAccess(in string sessionId) {
+        if (!sessions.ContainsKey(sessionId)) return false;
+
+        SessionEntry entry = sessions[sessionId];
+        if (DateTime.Now.Ticks - entry.loginTime.Ticks > entry.sessionTimeout) { //expired
+            RevokeAccess(sessionId);
+            return false;
+        }
+
+        return true;
     }
 
     public static bool RevokeAccess(in HttpListenerContext ctx, in string performer) {
@@ -103,31 +117,20 @@ public static class Session {
         return false;
     }
 
-    public static bool CheckAccess(in HttpListenerContext ctx, in string remoteIp) {
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-        if (sessionId is null) return false;
-        return CheckAccess(in sessionId, in remoteIp);
-    }
-    public static bool CheckAccess(in string sessionId, in string remoteIp) {
-        if (!sessions.ContainsKey(sessionId)) return false;
-
-        SessionEntry entry = sessions[sessionId];
-        if (DateTime.Now.Ticks - entry.loginTime.Ticks > entry.sessionTimeout) { //expired
-            RevokeAccess(sessionId);
-            return false;
-        }
-
-        if (entry.ip == remoteIp) //match ip
-            return true;
-
-        return false;
-    }
-
-    public static string GetUsername(string sessionId) {
+    public static string GetUsername(in string sessionId) {
         if (sessionId is null) return null;
 
         if (sessions.ContainsKey(sessionId))
             return sessions[sessionId].username;
+
+        return null;
+    }
+
+    public static SessionEntry? GetSessionEntry(in string sessionId) {
+        if (sessionId is null) return null;
+
+        if (sessions.ContainsKey(sessionId))
+            return sessions[sessionId];
 
         return null;
     }
@@ -147,7 +150,7 @@ public static class Session {
 
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
             SessionEntry entry = o.Value;
-            if (entry.username == "localhost" && (entry.ip.StartsWith("127.") || entry.ip == "::1")) continue;
+            if (entry.username == "loopback" && (entry.ip.StartsWith("127.") || entry.ip == "::1")) continue;
             sb.Append($"{entry.ip}{(char)127}{entry.loginTime.ToString(Strings.DATETIME_FORMAT)}{(char)127}{entry.username}{(char)127}{entry.sessionId.Substring(0, 8)}{(char)127}");
         }
 
@@ -157,10 +160,10 @@ public static class Session {
     public static byte[] KickClient(in string[] para, in string performer) {
         string ip = String.Empty;
         string hash = String.Empty;
-        for (int i = 1; i < para.Length; i++) 
-            if (para[i].StartsWith("ip=")) ip = para[i].Substring(3);
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("ip=")) ip = Strings.DecodeUrl(para[i].Substring(3));
             else if (para[i].StartsWith("hash=")) hash = para[i].Substring(5);
-        
+
         foreach (KeyValuePair<string, SessionEntry> o in sessions) {
             SessionEntry entry = o.Value;
             if (entry.ip == ip && entry.sessionId.StartsWith(hash)) {
@@ -185,41 +188,61 @@ public static class Session {
         sessions[sessionId] = entry;   
     }
 
-    public static byte[] GetAcl() {
+
+    public static bool LoadAcl() {
         DirectoryInfo dirAcl = new DirectoryInfo(Strings.DIR_ACL);
-        if (!dirAcl.Exists) return Encoding.UTF8.GetBytes("[]");
+        if (!dirAcl.Exists) return false;
 
-        StringBuilder sb = new StringBuilder();
+        acl.Clear();
+        acl.TryAdd("loopback", AccessControl.FullAccess);
+
         FileInfo[] files = dirAcl.GetFiles();
+        for (int i = 0; i < files.Length; i++) {
+            if (files[i].Name.ToLower() == "loopback") continue;
 
-        sb.Append("[");
-        for (int i=0; i < files.Length; i++) {
             string payload = null;
             try {
-                payload = File.ReadAllText(files[i].FullName).Trim();
+                payload = File.ReadAllText(files[i].FullName.ToLower()).Trim();
             } catch {
                 continue;
             }
 
-            sb.Append("{");
-            sb.Append($"\"user\":\"{files[i].Name}\",\"access\":\"{payload}\"");
-            sb.Append("}");
-            if (i < files.Length -1) sb.Append(",");
+            AccessControl ac = new AccessControl(payload);
+            acl.TryAdd(files[i].Name, ac);
         }
-        sb.Append("]");
+        
+        return true;
+    }
 
-        return Encoding.UTF8.GetBytes(sb.ToString());
+    public static byte[] GetAcl() {
+        DirectoryInfo dirAcl = new DirectoryInfo(Strings.DIR_ACL);
+        if (!dirAcl.Exists) return Encoding.UTF8.GetBytes("[]");
+
+        string result = "[";
+
+        foreach (KeyValuePair<string, AccessControl> ac in acl) {
+            if (ac.Key == "loopback") continue;
+            result += "{";
+            result += $"\"user\":\"{ac.Key}\",\"access\":\"{ac.Value}\"";
+            result += "},";
+        }
+
+        if (result.EndsWith(",")) result  = result.Substring(0, result.Length - 1);
+        result += "]";
+
+        return Encoding.UTF8.GetBytes(result);
     }
 
     public static byte[] SaveAcl(in string[] para, in HttpListenerContext ctx, in string performer) {
         string username = String.Empty;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("username=")) {
-                username = para[i].Substring(9);
+                username = para[i].Substring(9).ToLower();
                 break;
-            }            
+            }
 
         if (username.Length == 0) return Strings.INV.Array;
+        if (username == "loopback") return Strings.INV.Array;
 
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
@@ -236,8 +259,15 @@ public static class Session {
 
         AccessControl ac = new AccessControl(payload);
 
-        acl.TryRemove(username, out _);        
+        //update existing sessions
+        IEnumerable<KeyValuePair<string, SessionEntry>> toRevoke = sessions.ToArray().Where(o => o.Value.username == username);
+        foreach (KeyValuePair<string, SessionEntry> v in toRevoke) {
+            SessionEntry session = sessions[v.Key];
+            session.accessControl = ac;
+            sessions[v.Key] = session;
+        }
 
+        acl.TryRemove(username, out _);
         if (acl.TryAdd(username, ac)) {
             Logging.Action(performer, $"Save access control for {username}");
             return Strings.OK.Array;
@@ -262,6 +292,11 @@ public static class Session {
             Logging.Err(ex);
             return Strings.FAI.Array;
         }
+
+        //revoke existing sessions
+        IEnumerable<KeyValuePair<string, SessionEntry>> toRevoke = sessions.ToArray().Where(o => o.Value.username == username);
+        foreach (KeyValuePair<string, SessionEntry> v in toRevoke)
+            RevokeAccess(v.Value.sessionId, performer);
 
         if (acl.TryRemove(username, out _)) {
             Logging.Action(performer, $"Delete access control for {username}");
@@ -304,6 +339,7 @@ public class AccessControl {
     public AccessLevel documentation;
     public AccessLevel debitnotes;
     public AccessLevel watchdog;
+    public AccessLevel utilities; //only ui
     public AccessLevel scripts;
     public AccessLevel wmi;
     public AccessLevel telnet;
@@ -313,41 +349,44 @@ public class AccessControl {
 
     public AccessControl(string payload) {
         if (payload is null || payload == String.Empty) {
-            database      = AccessControl.AccessLevel.Deny;
-            password      = AccessControl.AccessLevel.Deny;
-            remoteagent   = AccessControl.AccessLevel.Deny;
-            remotehosts   = AccessControl.AccessLevel.Deny;
-            domainusers   = AccessControl.AccessLevel.Deny;
-            documentation = AccessControl.AccessLevel.Deny;
-            debitnotes    = AccessControl.AccessLevel.Deny;
-            watchdog      = AccessControl.AccessLevel.Deny;
-            scripts       = AccessControl.AccessLevel.Deny;
-            wmi           = AccessControl.AccessLevel.Deny;
-            telnet        = AccessControl.AccessLevel.Deny;
-            backup        = AccessControl.AccessLevel.Deny;
-            manageusers   = AccessControl.AccessLevel.Deny;
-            log           = AccessControl.AccessLevel.Deny;
+            database      = AccessLevel.Deny;
+            password      = AccessLevel.Deny;
+            remoteagent   = AccessLevel.Deny;
+            remotehosts   = AccessLevel.Deny;
+            domainusers   = AccessLevel.Deny;
+            documentation = AccessLevel.Deny;
+            debitnotes    = AccessLevel.Deny;
+            watchdog      = AccessLevel.Deny;
+            utilities     = AccessLevel.Deny; //only ui
+            scripts       = AccessLevel.Deny;
+            wmi           = AccessLevel.Deny;
+            telnet        = AccessLevel.Deny;
+            backup        = AccessLevel.Deny;
+            manageusers   = AccessLevel.Deny;
+            log           = AccessLevel.Deny;
 
         } else if (payload == "*") {
-            database      = AccessControl.AccessLevel.Full;
-            password      = AccessControl.AccessLevel.Full;
-            remoteagent   = AccessControl.AccessLevel.Full;
-            remotehosts   = AccessControl.AccessLevel.Full;
-            domainusers   = AccessControl.AccessLevel.Full;
-            documentation = AccessControl.AccessLevel.Full;
-            debitnotes    = AccessControl.AccessLevel.Full;
-            watchdog      = AccessControl.AccessLevel.Full;
-            scripts       = AccessControl.AccessLevel.Full;
-            wmi           = AccessControl.AccessLevel.Full;
-            telnet        = AccessControl.AccessLevel.Full;
-            backup        = AccessControl.AccessLevel.Full;
-            manageusers   = AccessControl.AccessLevel.Full;
-            log           = AccessControl.AccessLevel.Full;
+            database      = AccessLevel.Full;
+            password      = AccessLevel.Read;
+            remoteagent   = AccessLevel.Read;
+            remotehosts   = AccessLevel.Read;
+            domainusers   = AccessLevel.Read;
+            documentation = AccessLevel.Full;
+            debitnotes    = AccessLevel.Full;
+            watchdog      = AccessLevel.Full;
+            utilities     = AccessLevel.Read; //only ui
+            scripts       = AccessLevel.Read;
+            wmi           = AccessLevel.Read;
+            telnet        = AccessLevel.Read;
+            backup        = AccessLevel.Read;
+            manageusers   = AccessLevel.Read;
+            log           = AccessLevel.Read;
 
         } else {
             string[] payloadSplit = payload.Split(',');
             for (int i = 0; i < payloadSplit.Length; i++) {
                 string[] split = payloadSplit[i].Split(':');
+                if (split.Length != 2) continue;
 
                 AccessControl.AccessLevel al;
                 Int32.TryParse(split[1], out int value);
@@ -364,6 +403,7 @@ public class AccessControl {
                     case "documentation": documentation = al; break;
                     case "debitnotes":    debitnotes  = al; break;
                     case "watchdog":      watchdog    = al; break;
+                    case "utilities":     utilities   = al; break; //only ui
                     case "scripts":       scripts     = al; break;
                     case "wmi":           wmi         = al; break;
                     case "telnet":        telnet      = al; break;
@@ -377,20 +417,21 @@ public class AccessControl {
 
     public override string ToString() {
         string s = String.Empty;
-        s += "database:"    + database;
-        s += "password:"    + password + ",";
-        s += "remoteagent:" + remoteagent + ",";
-        s += "remotehosts:" + remotehosts + ",";
-        s += "domainusers:" + domainusers + ",";
-        s += "documentation:" + documentation + ",";
-        s += "debitnotes:"  + debitnotes + ",";
-        s += "watchdog:"    + watchdog + ",";
-        s += "scripts:"     + scripts + ",";
-        s += "wmi:"         + wmi + ",";
-        s += "telnet:"      + telnet + ",";
-        s += "backup:"      + backup + ",";
-        s += "manageusers:" + manageusers + ",";
-        s += "log:"         + log;
+        s += "database:"    + (int)database + ",";
+        s += "password:"    + (int)password + ",";
+        s += "remoteagent:" + (int)remoteagent + ",";
+        s += "remotehosts:" + (int)remotehosts + ",";
+        s += "domainusers:" + (int)domainusers + ",";
+        s += "documentation:" + (int)documentation + ",";
+        s += "debitnotes:"  + (int)debitnotes + ",";
+        s += "watchdog:"    + (int)watchdog + ",";
+        s += "utilities:"   + (int)utilities + ","; //only ui
+        s += "scripts:"     + (int)scripts + ",";
+        s += "wmi:"         + (int)wmi + ",";
+        s += "telnet:"      + (int)telnet + ",";
+        s += "backup:"      + (int)backup + ",";
+        s += "manageusers:" + (int)manageusers + ",";
+        s += "log:"         + (int)log;
         return s;
     }
 }

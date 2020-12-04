@@ -1,5 +1,4 @@
 let wsKeepAlive = null;
-
 let KeepAlive_autoreconnectTimeStamp = 0;
 
 function initKeepAlive() {
@@ -45,7 +44,7 @@ function initKeepAlive() {
 function KeepAlive_MessageHandler(msg) {
     const action  = msg.action;
     const type    = msg.type;
-    const target = msg.target;
+    const target  = msg.target;
     const version = msg.version;
 
     switch (action) {
@@ -282,6 +281,14 @@ function KeepAlive_MessageHandler(msg) {
                 }
             break;
 
+        case "authorization":
+            let split = msg.accesslist.split(",");
+            for (let i = 0; i < split.length; i++) {
+                let s = split[i].split(":");
+                AUTHORIZATION[s[0]] = parseInt(s[1]);
+            }
+            SideMenu_Update("");
+            break;
     }
 }
 

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net;
 using System.Text;
 
 //http://msdn.microsoft.com/en-us/library/aa394388(v=vs.85).aspx
@@ -310,13 +312,17 @@ public static class Wmi {
         return hash;
     }
 
-    public static byte[] WmiQuery(in string[] para) {
+    public static byte[] WmiQuery(in HttpListenerContext ctx, in string[] para) {
         string host = String.Empty;
         string query = String.Empty;
-        for (int i = 1; i < para.Length; i++) {
-            if (para[i].StartsWith("target=")) host = Strings.EscapeUrl(para[i].Substring(7));
-            if (para[i].StartsWith("q=")) query = Strings.EscapeUrl(para[i].Substring(2));
-        }
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("target=")) {
+                host = Strings.DecodeUrl(para[i].Substring(7));
+                break;
+            }
+
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
+            query = reader.ReadToEnd().Trim();
 
         return WmiQuery(host, query);
     }
@@ -363,8 +369,8 @@ public static class Wmi {
         string host = String.Empty;
         int pid = -1;
         for (int i = 1; i < para.Length; i++) {
-            if (para[i].StartsWith("target=")) host = Strings.EscapeUrl(para[i].Substring(7));
-            if (para[i].StartsWith("pid=")) pid = Int32.Parse(Strings.EscapeUrl(para[i].Substring(4)));
+            if (para[i].StartsWith("target=")) host = Strings.DecodeUrl(para[i].Substring(7));
+            if (para[i].StartsWith("pid=")) pid = Int32.Parse(Strings.DecodeUrl(para[i].Substring(4)));
         }
 
         if (pid == -1) return Strings.WMI_PAR.Array;

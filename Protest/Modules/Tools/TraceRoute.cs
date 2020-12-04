@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 public static class TraceRoute {
 
     public static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
-    public static async void WsTraceRoute(HttpListenerContext ctx, string remoteIp) {
+    public static async void WsTraceRoute(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {
@@ -37,7 +37,7 @@ public static class TraceRoute {
                 byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-                if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                if (!Session.CheckAccess(sessionId)) { //check session
                     ctx.Response.Close();
                     return;
                 }

@@ -112,7 +112,7 @@ class Fetch extends Tabs {
             } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                 this.ConfirmBox("Server is unavailable.", true);
         };
-        xhr.open("GET", "mng/getcurrentnetworkinfo", true);
+        xhr.open("GET", "getcurrentnetworkinfo", true);
         xhr.send();
     }
 

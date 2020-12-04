@@ -21,7 +21,7 @@ public static class Ping {
         Task<string> t = PingAsync(ip, "", 1001);
         return Encoding.UTF8.GetBytes(t.Result.Replace(((char)127).ToString(), ""));
     }
-    public static async void WsPing(HttpListenerContext ctx, string remoteIp) {
+    public static async void WsPing(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {
@@ -51,7 +51,7 @@ public static class Ping {
                 byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-                if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                if (!Session.CheckAccess(sessionId)) { //check session
                     ctx.Response.Close();
                     return;
                 }

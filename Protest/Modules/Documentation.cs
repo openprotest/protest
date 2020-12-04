@@ -11,7 +11,7 @@ class Documentation {
     public static byte[] Get(in string[] para) {
         string[] keywords = null;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("keywords=")) keywords = Strings.EscapeUrl(para[i].Substring(9)).Split(' ');
+            if (para[i].StartsWith("keywords=")) keywords = Strings.DecodeUrl(para[i].Substring(9)).Split(' ');
 
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_DOCUMENTATION);
         if (!dir.Exists) return Strings.FLE.Array;
@@ -147,7 +147,7 @@ class Documentation {
     public static byte[] PreviewDoc(in string[] para, bool serveGZip = false) {
         string name = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
+            if (para[i].StartsWith("name=")) name = Strings.DecodeUrl(para[i].Substring(5));
 
         if (name.Length == 0) return Strings.INF.Array;
 
@@ -166,7 +166,7 @@ class Documentation {
     public static byte[] Delete(in string[] para, in string performer) {
         string name = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
+            if (para[i].StartsWith("name=")) name = Strings.DecodeUrl(para[i].Substring(5));
 
         lock (DOC_LOCK)
             try {

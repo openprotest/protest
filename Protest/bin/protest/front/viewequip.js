@@ -307,7 +307,7 @@ class Equip extends Window {
                         this.ConfirmBox("Server is unavailable.", true);
                 };
                 btnWoL.setAttribute("busy", true);
-                xhr.open("GET", "mng/wakeup&file=" + this.filename, true);
+                xhr.open("GET", "mngh/wakeup&file=" + this.filename, true);
                 xhr.send();
             };
         }
@@ -331,7 +331,7 @@ class Equip extends Window {
                                 this.ConfirmBox("Server is unavailable.", true);
                         };
                         btnOff.setAttribute("busy", true);
-                        xhr.open("GET", "mng/shutdown&file=" + this.filename, true);
+                        xhr.open("GET", "mngh/shutdown&file=" + this.filename, true);
                         xhr.send();
                     });
                 };
@@ -350,7 +350,7 @@ class Equip extends Window {
                                 this.ConfirmBox("Server is unavailable.", true);
                         };
                         btnReboot.setAttribute("busy", true);
-                        xhr.open("GET", "mng/reboot&file=" + this.filename, true);
+                        xhr.open("GET", "mngh/reboot&file=" + this.filename, true);
                         xhr.send();
                     });
                 };
@@ -369,7 +369,7 @@ class Equip extends Window {
                                 this.ConfirmBox("Server is unavailable.", true);
                         };
                         btnLogoff.setAttribute("busy", true);
-                        xhr.open("GET", "mng/logoff&file=" + this.filename, true);
+                        xhr.open("GET", "mngh/logoff&file=" + this.filename, true);
                         xhr.send();
                     });
                 };
@@ -533,7 +533,7 @@ class Equip extends Window {
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                     };
                     btnPrintTest.setAttribute("busy", true);
-                    xhr.open("GET", "mng/printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
+                    xhr.open("GET", "mngh/printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
                     xhr.send();
                 };
             }

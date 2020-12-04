@@ -78,6 +78,10 @@ class Program {
             Console.WriteLine(string.Format("{0, -23} {1, -10}", "Force registry keys", disableHeader ? "OK  " : "Failed"));
         }
 
+
+        bool loadAcl = Session.LoadAcl();
+        Console.WriteLine(string.Format("{0, -23} {1, -10}", "Loading ACL", loadAcl ? "OK  " : "Failed"));
+
         ExtractZippedKnowlageFile();
 
         Database.LoadEquip();
@@ -208,13 +212,9 @@ class Program {
                     abPrefixes.Add(split[1].Trim());
                     break;
 
-                case "ip_access":
-                    Session.ip_access.Add(split[1], null);
-                    break;
-
-                case "user_access":
-                    Session.user_access.Add(split[1], null);
-                    break;
+                //case "ip_access":
+                //    Session.ip_access.Add(split[1], null);
+                //    break;
             }
         }
 
@@ -257,7 +257,6 @@ class Program {
 
         sb.AppendLine("# you can use multiple entries");
         sb.AppendLine("ip_access   = *");
-        sb.AppendLine("user_access = administrator");
         sb.AppendLine();
 
         sb.AppendLine("http_enable = true");

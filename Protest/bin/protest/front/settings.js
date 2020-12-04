@@ -586,7 +586,7 @@ class Settings extends Tabs {
                 xhrVersion.send();
             }
         };
-        xhrUpdate.open("GET", "mng/checkforupdate", true);
+        xhrUpdate.open("GET", "checkforupdate", true);
         xhrUpdate.send();
     }
 

@@ -152,26 +152,26 @@ class Clients extends Tabs {
         accesslist.style.overflowY = "auto";
         this.subContent.appendChild(accesslist);
 
-        const db = this.AddAccessCategory(accesslist, "res/database.svgz", "Inventory database", 2);
-        const pw = this.AddAccessCategory(accesslist, "res/passgen.svgz", "Read passwords", 1);
-        const ra = this.AddAccessCategory(accesslist, "res/remote.svgz", "Remote agent commands", 1);
-        const rh = this.AddAccessCategory(accesslist, "res/gear.svgz", "Manage remote hosts", 1);
-        const du = this.AddAccessCategory(accesslist, "res/user.svgz", "Manage domain users", 1);
+        const db = this.AddAccessCategory(accesslist, "res/database.svgz", "Inventory database",    "database", 2);
+        const pw = this.AddAccessCategory(accesslist, "res/passgen.svgz",  "Read passwords",        "password", 1);
+        const ra = this.AddAccessCategory(accesslist, "res/remote.svgz",   "Remote agent commands", "remoteagent", 1);
+        const rh = this.AddAccessCategory(accesslist, "res/gear.svgz",     "Manage remote hosts",   "remotehosts", 1);
+        const du = this.AddAccessCategory(accesslist, "res/user.svgz",     "Manage domain users",   "domainusers", 1);
 
-        const dc = this.AddAccessCategory(accesslist, "res/documentation.svgz", "Documentation", 2);
-        const dn = this.AddAccessCategory(accesslist, "res/charges.svgz", "Debit notes", 2);
-        const wd = this.AddAccessCategory(accesslist, "res/watchdog.svgz", "Watchdog", 2);
+        const dc = this.AddAccessCategory(accesslist, "res/documentation.svgz", "Documentation", "documentation", 2);
+        const dn = this.AddAccessCategory(accesslist, "res/charges.svgz",       "Debit notes",   "debitnotes", 2);
+        const wd = this.AddAccessCategory(accesslist, "res/watchdog.svgz",      "Watchdog",      "watchdog", 2);
 
-        this.AddAccessCategory(accesslist, "res/toolbox.svgz", "Utilities", 1, false);
+        const ut = this.AddAccessCategory(accesslist, "res/toolbox.svgz", "Tools and utilities", "utilities", 1);
 
-        const sc = this.AddAccessCategory(accesslist, "res/scripts.svgz", "Scripts", 1);
-        const mi = this.AddAccessCategory(accesslist, "res/wmi.svgz", "WMI console", 1);
-        const tn = this.AddAccessCategory(accesslist, "res/telnet.svgz", "Telnet", 1);
-        const bu = this.AddAccessCategory(accesslist, "res/backup.svgz", "Backup", 1);
-        const mu = this.AddAccessCategory(accesslist, "res/ptclients.svgz", "Manage users", 1);
-        const lg = this.AddAccessCategory(accesslist, "res/log.svgz", "View log", 1);
+        const sc = this.AddAccessCategory(accesslist, "res/scripts.svgz",   "Scripts",     "scripts", 1);
+        const mi = this.AddAccessCategory(accesslist, "res/wmi.svgz",       "WMI console", "wmi", 1);
+        const tn = this.AddAccessCategory(accesslist, "res/telnet.svgz",    "Telnet",      "telnet", 1);
+        const bu = this.AddAccessCategory(accesslist, "res/backup.svgz",    "Backup",      "backup", 1);
+        const mu = this.AddAccessCategory(accesslist, "res/ptclients.svgz", "Manage users", "manageusers", 1);
+        const lg = this.AddAccessCategory(accesslist, "res/log.svgz",       "View log",     "log", 1);
 
-        this.accessvalue = [db, pw, ra, rh, du, dc, dn, wd, sc, mi, tn, bu, mu, lg];
+        this.accessvalue = [db, pw, ra, rh, du, dc, dn, wd, ut, sc, mi, tn, bu, mu, lg];
 
         const buttons = document.createElement("div");
         buttons.style.textAlign = "center";
@@ -239,40 +239,18 @@ class Clients extends Tabs {
             if (this.selected == null) return;
 
             let payload = "";
-            payload += "database:"      + this.accessvalue[0].value + ",";
-            payload += "password:"      + this.accessvalue[1].value + ",";
-            payload += "remoteagent:"   + this.accessvalue[2].value + ",";
-            payload += "remotehosts:"   + this.accessvalue[3].value + ",";
-            payload += "domainusers:"   + this.accessvalue[4].value + ",";
-            payload += "documentation:" + this.accessvalue[5].value + ",";
-            payload += "debitnotes:"    + this.accessvalue[6].value + ",";
-            payload += "watchdog:"      + this.accessvalue[7].value + ",";
-            payload += "scripts:"       + this.accessvalue[8].value + ",";
-            payload += "wmi:"           + this.accessvalue[9].value + ",";
-            payload += "telnet:"        + this.accessvalue[10].value + ",";
-            payload += "backup:"        + this.accessvalue[11].value + ",";
-            payload += "manageusers:"   + this.accessvalue[12].value + ",";
-            payload += "log:"           + this.accessvalue[13].value;
+            for (let i = 0; i < this.accessvalue.length; i++)
+                if (this.accessvalue[i].value > 0)
+                    payload += this.accessvalue[i].getAttribute("keyword") + ":" + this.accessvalue[i].value + ",";
+            if (payload.endsWith(",")) payload = payload.substring(0, payload.length - 1);
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText == "ok") {
-                        this.acl[this.selected]["database"]      = this.accessvalue[0].value;
-                        this.acl[this.selected]["password"]      = this.accessvalue[1].value;
-                        this.acl[this.selected]["remoteagent"]   = this.accessvalue[2].value;
-                        this.acl[this.selected]["remotehosts"]   = this.accessvalue[3].value;
-                        this.acl[this.selected]["domainusers"]   = this.accessvalue[4].value;
-                        this.acl[this.selected]["documentation"] = this.accessvalue[5].value;
-                        this.acl[this.selected]["debitnotes"]    = this.accessvalue[6].value;
-                        this.acl[this.selected]["watchdog"]      = this.accessvalue[7].value;
-                        this.acl[this.selected]["scripts"]       = this.accessvalue[8].value;
-                        this.acl[this.selected]["wmi"]           = this.accessvalue[9].value;
-                        this.acl[this.selected]["telnet"]        = this.accessvalue[10].value;
-                        this.acl[this.selected]["backup"]        = this.accessvalue[11].value;
-                        this.acl[this.selected]["manageusers"]   = this.accessvalue[12].value;
-                        this.acl[this.selected]["log"]           = this.accessvalue[13].value;
-
+                        for (let i = 0; i < this.accessvalue.length; i++) 
+                            this.acl[this.selected][this.accessvalue[i].getAttribute("keyword")] = this.accessvalue[i].value;
+                        
                     } else {
                         this.ConfirmBox(xhr.responseText, true);
                     }
@@ -313,7 +291,7 @@ class Clients extends Tabs {
         xhr.send();
     }
 
-    AddAccessCategory(parent, icon, name, higheraccess, enable = true) {
+    AddAccessCategory(parent, icon, name, keyword, higheraccess, enable = true) {
         const container = document.createElement("div");
         container.className = "clients-accessitem";
 
@@ -330,6 +308,7 @@ class Clients extends Tabs {
         rngAccess.min = 0;
         rngAccess.max = higheraccess;
         rngAccess.value = higheraccess;
+        rngAccess.setAttribute("keyword", keyword);
         if (!enable) rngAccess.setAttribute("disabled", true);
         container.appendChild(rngAccess);
 
@@ -370,7 +349,7 @@ class Clients extends Tabs {
             this.selected = username;
 
             for (let i = 0; i < parent.childNodes.length; i++)
-                parent.childNodes[i].style.backgroundColor = "";            
+                parent.childNodes[i].style.backgroundColor = "";
 
             user.style.backgroundColor = "var(--select-color)";
 
@@ -379,24 +358,12 @@ class Clients extends Tabs {
                 this.accessvalue[i].value = 0;
             }
 
-            if (this.acl[username]) 
-                for (var p in this.acl[username]) {
-                    switch (p) {
-                        case "database"      : this.accessvalue[0].value  = this.acl[username][p]; break;
-                        case "password"      : this.accessvalue[1].value  = this.acl[username][p]; break;
-                        case "remoteagent"   : this.accessvalue[2].value  = this.acl[username][p]; break;
-                        case "remotehosts"   : this.accessvalue[3].value  = this.acl[username][p]; break;
-                        case "domainusers"   : this.accessvalue[4].value  = this.acl[username][p]; break;
-                        case "documentation" : this.accessvalue[5].value  = this.acl[username][p]; break;
-                        case "debitnotes"    : this.accessvalue[6].value  = this.acl[username][p]; break;
-                        case "watchdog"      : this.accessvalue[7].value  = this.acl[username][p]; break;
-                        case "scripts"       : this.accessvalue[8].value  = this.acl[username][p]; break;
-                        case "wmi"           : this.accessvalue[9].value  = this.acl[username][p]; break;
-                        case "telnet"        : this.accessvalue[10].value = this.acl[username][p]; break;
-                        case "backup"        : this.accessvalue[11].value = this.acl[username][p]; break;
-                        case "manageusers"   : this.accessvalue[12].value = this.acl[username][p]; break;
-                        case "log"           : this.accessvalue[13].value = this.acl[username][p]; break;
-                    }
+            if (this.acl[username]) //update range value
+                for (let i = 0; i < this.accessvalue.length; i++) {
+                    let keyword = this.accessvalue[i].getAttribute("keyword");
+                    let range = this.accessvalue.find(o => o.getAttribute("keyword") === keyword);
+                    range.value = this.acl[username][keyword] ? this.acl[username][keyword] : 0;
+                    range.onchange();
                 }
         };
 
@@ -415,7 +382,7 @@ class Clients extends Tabs {
                     } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected
                         this.ConfirmBox("Server is unavailable.", true);
                 };
-                xhr.open("GET", "acl/delete&username=" + this.selected, true);
+                xhr.open("GET", "acl/delete&username=" + username, true);
                 xhr.send();
             });
         };

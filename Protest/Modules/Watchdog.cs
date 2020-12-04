@@ -236,7 +236,7 @@ public static class Watchdog {
 
         string name = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("name=")) name = Strings.EscapeUrl(para[i].Substring(5));
+            if (para[i].StartsWith("name=")) name = Strings.DecodeUrl(para[i].Substring(5));
 
         if (name.Length == 0) return Strings.INF.Array;
 
@@ -251,7 +251,7 @@ public static class Watchdog {
         return Strings.OK.Array;
     }
 
-    public static async void WsView(HttpListenerContext ctx, string remoteIp) {
+    public static async void WsView(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {
@@ -280,7 +280,7 @@ public static class Watchdog {
                     break;
                 }
 
-                if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                if (!Session.CheckAccess(sessionId)) { //check session
                     ctx.Response.Close();
                     return;
                 }

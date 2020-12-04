@@ -372,7 +372,7 @@ public static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
 
         FileInfo scriptfile = new FileInfo($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}");
 
@@ -391,7 +391,7 @@ public static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
 
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_SCRIPTS);
         if (!dir.Exists) dir.Create();
@@ -423,7 +423,7 @@ public static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
         filename = EscapeFilename(filename);
 
         if (filename.Length == 0) return Strings.INV.Array;
@@ -448,7 +448,7 @@ public static class Scripts {
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
         if (filename.Length == 0) return Strings.INV.Array;
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
         filename = EscapeFilename(filename);
 
         if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Strings.FLE.Array;
@@ -469,7 +469,7 @@ public static class Scripts {
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
         if (filename.Length == 0) return Strings.INV.Array;
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
         filename = EscapeFilename(filename);
 
         if (!File.Exists($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}")) return Strings.FLE.Array;
@@ -490,7 +490,7 @@ public static class Scripts {
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
         if (filename.Length == 0) return null;
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
 
         if (!File.Exists($"{Strings.DIR_SCRIPTS_REPORTS}\\{filename}")) return null;
 
@@ -542,11 +542,11 @@ public static class Scripts {
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
         return RunScript(filename);
     }
     public static byte[] RunScript(string filename) {
-        filename = Strings.EscapeUrl(filename);
+        filename = Strings.DecodeUrl(filename);
 
         if (filename.Length == 0) return Encoding.UTF8.GetBytes("{\"error\":\"invalid argument\"}");
         if (!File.Exists($"{Strings.DIR_SCRIPTS_SCRIPTS}\\{filename}")) return Encoding.UTF8.GetBytes("{\"error\":\"no such file\"}");
@@ -2446,7 +2446,7 @@ public static class Scripts {
             text.Append("\n");
         }
 
-        node.values[2] = Strings.EscapeUrl(node.values[2]);
+        node.values[2] = Strings.DecodeUrl(node.values[2]);
         string filename = EscapeFilename(node.values[2]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
@@ -2488,7 +2488,7 @@ public static class Scripts {
             text.Append("\n");
         }
 
-        node.values[2] = Strings.EscapeUrl(node.values[2]);
+        node.values[2] = Strings.DecodeUrl(node.values[2]);
         string filename = EscapeFilename(node.values[2]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
@@ -2545,7 +2545,7 @@ public static class Scripts {
         text.AppendLine();
         text.Append("]}");
 
-        node.values[1] = Strings.EscapeUrl(node.values[1]);
+        node.values[1] = Strings.DecodeUrl(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();
@@ -2605,7 +2605,7 @@ public static class Scripts {
 
         text.AppendLine("</array>");
 
-        node.values[1] = Strings.EscapeUrl(node.values[1]);
+        node.values[1] = Strings.DecodeUrl(node.values[1]);
         string filename = EscapeFilename(node.values[1]);
         if (filename.Length == 0)
             filename = DateTime.Now.Ticks.ToString();

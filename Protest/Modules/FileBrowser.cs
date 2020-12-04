@@ -8,7 +8,7 @@ public static class FileBrowser {
     public static byte[] Get(in string[] para) {
         string path = String.Empty;
         for (int i = 1; i < para.Length; i++)
-            if (para[i].StartsWith("path=")) path = Strings.EscapeUrl(para[i].Substring(5));
+            if (para[i].StartsWith("path=")) path = Strings.DecodeUrl(para[i].Substring(5));
 
         if (path.Length == 0) return null;
 

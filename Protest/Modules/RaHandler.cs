@@ -114,12 +114,11 @@ public static class RaHandler {
 
             case "ssh":
                 try {
-                    using (Process p = new Process()) {
-                        p.StartInfo.FileName = "ssh";
-                        p.StartInfo.Arguments = $"{hostname}";
-                        p.StartInfo.UseShellExecute = true;
-                        p.Start();
-                    }
+                    using Process p = new Process();
+                    p.StartInfo.FileName = "ssh";
+                    p.StartInfo.Arguments = $"{hostname}";
+                    p.StartInfo.UseShellExecute = true;
+                    p.Start();
                 } catch (Exception ex) {
                     return Encoding.UTF8.GetBytes(ex.Message);
                 }

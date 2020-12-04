@@ -193,7 +193,7 @@ class FileBrowser extends Window {
                 this.ConfirmBox("Server is unavailable.", true);
         };
 
-        xhr.open("GET", `files/get&path=smb:${path}`, true);
+        xhr.open("GET", `mngh/getfiles"&path=smb:${path}`, true);
         xhr.send();
     }
 

@@ -114,10 +114,10 @@ let loader_styles = [
         }
     };
 
-    for (let i=0; i< loader_styles.length; i++)
+    for (let i=0; i<loader_styles.length; i++)
         LoadStyle(loader_styles[i], callbackHandle);
 
-    for (let i=0; i< primaryScripts.length; i++)
+    for (let i=0; i<primaryScripts.length; i++)
         LoadScript(primaryScripts[i], callbackHandle);
 
 })();

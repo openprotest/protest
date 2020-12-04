@@ -33,6 +33,8 @@ class Database {
     public static long lastCachedUsersTimestamp = 0;
     public static byte[] lastCachedEquip = null;
     public static byte[] lastCachedUsers = null;
+    public static byte[] lastCachedEquipGzip = null;
+    public static byte[] lastCachedUsersGzip = null;
 
     public static void LoadEquip() {
         DirectoryInfo dir = new DirectoryInfo(Strings.DIR_EQUIP);
@@ -161,21 +163,29 @@ class Database {
         return Encoding.Default.GetBytes(sb.ToString());
     }
 
-    public static byte[] GetEquipTable() {
+    public static byte[] GetEquipTable(bool gzip = false) {
         if (lastCachedEquipVer < equipVer) {
             lastCachedEquip = GetTable(equip, equipVer);
+            lastCachedEquipGzip = Cache.GZip(lastCachedEquip);
             lastCachedEquipVer = equipVer;
         }
 
-        return lastCachedEquip;
+        if (gzip)
+            return lastCachedEquipGzip;
+        else
+            return lastCachedEquip;
     }
-    public static byte[] GetUsersTable() {
+    public static byte[] GetUsersTable(bool gzip = false) {
         if (lastCachedUsersVer < usersVer) {
             lastCachedUsers = GetTable(users, usersVer);
+            lastCachedUsersGzip = Cache.GZip(lastCachedUsers);
             lastCachedUsersVer = usersVer;
         }
 
-        return lastCachedUsers;
+        if (gzip)
+            return lastCachedUsersGzip;
+        else 
+            return lastCachedUsers;
     }
 
     public static bool SaveEntry(string[] array, string filename, SaveMethod method, in string performer, bool isUser) {
@@ -304,7 +314,7 @@ class Database {
         if (filename.Length == 0) return null;
         if (property.Length == 0) return null;
 
-        property = Strings.EscapeUrl(property);
+        property = Strings.DecodeUrl(property);
 
         if (!table.ContainsKey(filename)) return null;
         DbEntry entry = (DbEntry)table[filename];

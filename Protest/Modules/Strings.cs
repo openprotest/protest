@@ -14,12 +14,13 @@ public static class Strings {
 
     public static readonly ArraySegment<byte> OK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("ok"));
     public static readonly ArraySegment<byte> ACK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("acknowledge"));
-    public static readonly ArraySegment<byte> INF = new ArraySegment<byte>(Encoding.UTF8.GetBytes("not enough information"));
-    public static readonly ArraySegment<byte> INV = new ArraySegment<byte>(Encoding.UTF8.GetBytes("invalid argument"));
+    public static readonly ArraySegment<byte> UNT = new ArraySegment<byte>(Encoding.UTF8.GetBytes("unauthorized"));
     public static readonly ArraySegment<byte> FAI = new ArraySegment<byte>(Encoding.UTF8.GetBytes("failed"));
+    public static readonly ArraySegment<byte> INV = new ArraySegment<byte>(Encoding.UTF8.GetBytes("invalid argument"));
     public static readonly ArraySegment<byte> NOT = new ArraySegment<byte>(Encoding.UTF8.GetBytes("not found"));
     public static readonly ArraySegment<byte> FLE = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such file"));
     public static readonly ArraySegment<byte> EXS = new ArraySegment<byte>(Encoding.UTF8.GetBytes("file already exists"));
+    public static readonly ArraySegment<byte> INF = new ArraySegment<byte>(Encoding.UTF8.GetBytes("not enough information"));
     public static readonly ArraySegment<byte> NHO = new ArraySegment<byte>(Encoding.UTF8.GetBytes("no such host is known"));
     public static readonly ArraySegment<byte> UNA = new ArraySegment<byte>(Encoding.UTF8.GetBytes("service is unavailable"));
     public static readonly ArraySegment<byte> UNR = new ArraySegment<byte>(Encoding.UTF8.GetBytes("host is unreachable"));
@@ -32,7 +33,6 @@ public static class Strings {
     public static readonly ArraySegment<byte> WMI_UNK = new ArraySegment<byte>(Encoding.UTF8.GetBytes("unknown failure"));
     public static readonly ArraySegment<byte> WMI_PAT = new ArraySegment<byte>(Encoding.UTF8.GetBytes("path not found"));
     public static readonly ArraySegment<byte> WMI_PAR = new ArraySegment<byte>(Encoding.UTF8.GetBytes("invalid parameter"));
-    public static readonly ArraySegment<byte> WMI_RES = new ArraySegment<byte>(Encoding.UTF8.GetBytes("invalid parameter"));
 
 
     public static readonly string DIR_PROTEST     = $"{Directory.GetCurrentDirectory()}\\protest";
@@ -99,7 +99,7 @@ public static class Strings {
         }
     }
 
-    public static string EscapeUrl(string url) {
+    public static string DecodeUrl(string url) {
         string s = url;
 
         //s = s.Replace("+", " ");

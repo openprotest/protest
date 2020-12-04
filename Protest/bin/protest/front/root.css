@@ -148,9 +148,14 @@ a {
     color: #fff;
 }
 
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
 ::-webkit-scrollbar {
-    width: 14px;
-    height: 14px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {

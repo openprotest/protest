@@ -15,18 +15,18 @@
 </head>
 
 <body>
-    <div id="main">
+    <div id="main" aria-label="Work area">
         <div id="cap" style="visibility:hidden;"></div>
 
         <div id="container">
-            <svg id="analog_clock" width="96" height="96">
+            <svg id="analog_clock" aria-label="Time" width="96" height="96">
                 <circle cx="48" cy="48" r="44" stroke="#202020" stroke-width="6" fill="rgba(224,224,224,.7)"/>
                 <circle cx="48" cy="48" r="4" fill="#202020"/>
                 <line id="analog_clock_h" x1="48" y1="48" x2="48" y2="24" stroke-width="5"/>
                 <line id="analog_clock_m" x1="48" y1="48" x2="48" y2="16" stroke-width="3"/>
             </svg>
 
-            <svg id="date_calendar" width="96" height="96">
+            <svg id="date_calendar" aria-label="Date" width="96" height="96">
                 <defs>
                     <mask id="date_month_mask">
                         <rect width="100%" height="100%" fill="#fff"/>
@@ -60,7 +60,7 @@
         </div>
     </div>
 
-    <div id="bottombar"></div>
+    <div id="bottombar" aria-label="Task bar"></div>
 
     <noscript>
         <div style="position:sticky; text-align:center; background-color:rgb(32,32,32); padding:16px; color:white;">

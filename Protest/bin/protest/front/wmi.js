@@ -386,8 +386,8 @@ class Wmi extends Window {
         this.divPlot.innerHTML = "";
         this.content.appendChild(waitbox);
 
-        xhr.open("GET", "mng/wmiquery&target=" + this.txtTarget.value + "&q=" + q, true);
-        xhr.send();
+        xhr.open("POST", "wmi/wmiquery&target=" + this.txtTarget.value, true);
+        xhr.send(q);
     }
 
     Plot(split) {
@@ -463,7 +463,7 @@ class Wmi extends Window {
                                             td.innerHTML = xhr.responseText;
                                         }
                                 };
-                                xhr.open("GET", "mng/killprocess&target=" + targetHost + "&pid=" + pid, true);
+                                xhr.open("GET", "wmi/killprocess&target=" + targetHost + "&pid=" + pid, true);
                                 xhr.send();
                             };
                             break;

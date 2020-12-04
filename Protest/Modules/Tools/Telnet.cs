@@ -13,7 +13,8 @@ public static class Telnet {
             await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async void WsTelnet(HttpListenerContext ctx, string remoteIp) {
+    public static async void WsTelnet(HttpListenerContext ctx) {
+        Session.SessionEntry? session = Session.GetSessionEntry(ctx.Request.Cookies["sessionid"]?.Value);
 
         string performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value);
         Logging.Action(performer, "telnet");
@@ -79,7 +80,7 @@ public static class Telnet {
                         }
                     } catch { }
 
-                    if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                    if (!Session.CheckAccess(sessionId)) { //check session
                         ctx.Response.Close();
                         telnet.Close();
                         return;
@@ -102,7 +103,7 @@ public static class Telnet {
 
                 string responseData = Encoding.ASCII.GetString(data, 0, bytes);
 
-                if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+                if (!Session.CheckAccess(sessionId)) { //check session
                     ctx.Response.Close();
                     telnet.Close();
                     return;

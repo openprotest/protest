@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 
 public static class WebCheck {
-    public static async void WsWebCheck(HttpListenerContext ctx, string remoteIp) {
+    public static async void WsWebCheck(HttpListenerContext ctx) {
         WebSocketContext wsc; WebSocket ws;
 
         try {
@@ -27,7 +27,7 @@ public static class WebCheck {
             return;
         }
 
-        if (!Session.CheckAccess(sessionId, remoteIp)) { //check session
+        if (!Session.CheckAccess(sessionId)) { //check session
             ctx.Response.Close();
             return;
         }
