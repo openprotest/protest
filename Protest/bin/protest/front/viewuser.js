@@ -76,6 +76,12 @@ class User extends Window {
         this.buttons.appendChild(btnDelete);
         btnDelete.onclick = () => this.Delete();
 
+        if (AUTHORIZATION.database < 2) {
+            btnEdit.setAttribute("disabled", true);
+            btnFetch.setAttribute("disabled", true);
+            btnDelete.setAttribute("disabled", true);
+        }
+
         this.sidetools = document.createElement("div");
         this.sidetools.className = "db-sidetools";
         this.content.appendChild(this.sidetools);
@@ -169,60 +175,62 @@ class User extends Window {
         if (isGroupEmpty && this.properties.childNodes[this.properties.childNodes.length - 1].className == "db-property-group")
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
 
-        this.btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
-        this.btnUnlock.firstChild.style.transition = ".8s";
-        this.sidetools.appendChild(this.btnUnlock);
-        this.btnUnlock.onclick = () => {
-            if (this.btnUnlock.hasAttribute("busy")) return;
-            const xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4) this.btnUnlock.removeAttribute("busy");
 
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText == "ok") {
-                    this.btnUnlock.style.backgroundColor = "";
-                    this.btnUnlock.firstChild.style.backgroundImage = "url(res/unlock.svgz)";
-                    this.LiveInfo();
-                } else if (xhr.readyState == 4 && xhr.status == 200) {
-                    this.ConfirmBox(xhr.responseText, true);
-                }
+        if (AUTHORIZATION.domainusers === 1) {
+            this.btnUnlock = this.SideButton("res/unlock.svgz", "Unlock");
+            this.btnUnlock.firstChild.style.transition = ".8s";
+            this.sidetools.appendChild(this.btnUnlock);
+            this.btnUnlock.onclick = () => {
+                if (this.btnUnlock.hasAttribute("busy")) return;
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4) this.btnUnlock.removeAttribute("busy");
 
-                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                    if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText == "ok") {
+                        this.btnUnlock.style.backgroundColor = "";
+                        this.btnUnlock.firstChild.style.backgroundImage = "url(res/unlock.svgz)";
+                        this.LiveInfo();
+                    } else if (xhr.readyState == 4 && xhr.status == 200) {
+                        this.ConfirmBox(xhr.responseText, true);
+                    }
+
+                    if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                };
+                this.btnUnlock.setAttribute("busy", true);
+                xhr.open("GET", "mngu/unlockuser&file=" + this.filename, true);
+                xhr.send();
             };
-            this.btnUnlock.setAttribute("busy", true);
-            xhr.open("GET", "mngu/unlockuser&file=" + this.filename, true);
-            xhr.send();
-        };
 
-        const btnEnable = this.SideButton("res/enable.svgz", "Enable");
-        this.sidetools.appendChild(btnEnable);
-        btnEnable.onclick = () => {
-            if (btnEnable.hasAttribute("busy")) return;
-            const xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4) btnEnable.removeAttribute("busy");
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            const btnEnable = this.SideButton("res/enable.svgz", "Enable");
+            this.sidetools.appendChild(btnEnable);
+            btnEnable.onclick = () => {
+                if (btnEnable.hasAttribute("busy")) return;
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4) btnEnable.removeAttribute("busy");
+                    if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                    if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                };
+                btnEnable.setAttribute("busy", true);
+                xhr.open("GET", "mngu/enableuser&file=" + this.filename, true);
+                xhr.send();
             };
-            btnEnable.setAttribute("busy", true);
-            xhr.open("GET", "mngu/enableuser&file=" + this.filename, true);
-            xhr.send();
-        };
 
-        const btnDisable = this.SideButton("res/disable.svgz", "Disable");
-        this.sidetools.appendChild(btnDisable);
-        btnDisable.onclick = () => {
-            if (btnDisable.hasAttribute("busy")) return;
-            const xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4) btnDisable.removeAttribute("busy");
-                if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+            const btnDisable = this.SideButton("res/disable.svgz", "Disable");
+            this.sidetools.appendChild(btnDisable);
+            btnDisable.onclick = () => {
+                if (btnDisable.hasAttribute("busy")) return;
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState == 4) btnDisable.removeAttribute("busy");
+                    if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                    if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                };
+                btnDisable.setAttribute("busy", true);
+                xhr.open("GET", "mngu/disableuser&file=" + this.filename, true);
+                xhr.send();
             };
-            btnDisable.setAttribute("busy", true);
-            xhr.open("GET", "mngu/disableuser&file=" + this.filename, true);
-            xhr.send();
-        };
-
+        }
 
         if (this.entry.hasOwnProperty("E-MAIL"))
             this.LiveButton("res/email.svgz", "E-mail").div.onclick = () => {
@@ -238,10 +246,10 @@ class User extends Window {
             this.LiveButton("res/mobilephone.svgz", "Mobile phone").div.onclick = () => {
                 window.location.href = "tel:" + this.entry["MOBILE NUMBER"][0];
             };
-
     }
 
     LiveInfo() {
+        if (AUTHORIZATION.domainusers === 0) return;
         if (!this.entry.hasOwnProperty("USERNAME")) return;
 
         this.liveinfo.innerHTML = "";
@@ -369,6 +377,11 @@ class User extends Window {
             btnStamp.style.backgroundPosition = "center";
             btnStamp.style.backgroundRepeat = "no-repeat";
             value.appendChild(btnStamp);
+
+            if (AUTHORIZATION.password === 0) {
+                btnShow.setAttribute("disabled", true);
+                btnStamp.setAttribute("disabled", true);
+            }
 
             btnShow.onclick = () => {
                 const xhr = new XMLHttpRequest();

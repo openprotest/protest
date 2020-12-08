@@ -98,20 +98,21 @@ class Guide extends Window {
             "In that case, the <i>protest.cfg</i> file is automatically created with the default settings."
         );
         this.InsertParagraph(
-            "Pro-test, by default, listens only on localhost on port 80 for security reasons. " +
-            "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>protest.cfg</i> file to the local end-point of your choice."
-        );
-        this.InsertParagraph(
-            "Requests from IPs other than loopback are rejected and require a username and a password to proceed. " +
-            "The username must be whitelisted in the <i>protest.cfg</i> file, and then your domain controller will handle the authentication."
-        );
-        this.InsertParagraph(
             "Also, in the <i>protest.cfg</i>, you can set your database key and your preshared key."
         );
         this.InsertParagraph(
             "The database key is used to encrypt and decrypt your database content. " +
             "If you copied-and-pasted from another database, you would need to replace the database key with the key from your copping database. " +
             "The preshared key is used to establish a secure connection between Pro-test and the Remote agent."
+        );
+        this.InsertParagraph(
+            "Pro-test, by default, listens only on localhost on port 80 for security reasons. " +
+            "If you wish to interface from a remote host, you can modify the <i>http_ip</i> and <i>http_port</i> parameters in the <i>protest.cfg</i> file to the local end-point of your choice."
+        );
+        this.InsertParagraph(
+            "Requests from IPs other than loopback are rejected and require a username and a password to proceed. " +
+            "In order to allow users to access Pro-test, you must add them in <u>Pro-test clients</u>, under Access Control List. " +
+            "Then your domain controller will handle the authentication."
         );
 
         this.body.appendChild(document.createElement("br"));

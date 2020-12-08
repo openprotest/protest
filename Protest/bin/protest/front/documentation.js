@@ -393,6 +393,15 @@ class Documentation extends Window {
     }
 
     AdjustButtons() {
+        if (AUTHORIZATION.documentation < 2) {
+            this.btnNew.setAttribute("disabled", true);
+            this.btnEdit.setAttribute("disabled", true);
+            this.btnDelete.setAttribute("disabled", true);
+            this.btnSave.setAttribute("disabled", true);
+            this.btnDiscard.setAttribute("disabled", true);
+            return;
+        }
+
         if (this.btnEdit.hasAttribute("disabled")) this.btnEdit.removeAttribute("disabled");
         if (this.btnDelete.hasAttribute("disabled")) this.btnDelete.removeAttribute("disabled");
 

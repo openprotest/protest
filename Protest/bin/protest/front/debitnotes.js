@@ -515,6 +515,15 @@ class DebitNotes extends Window {
     }
 
     AdjustButtons() {
+        if (AUTHORIZATION.debitnotes < 2) {
+            this.btnNew.setAttribute("disabled", true);
+            this.btnPrint.setAttribute("disabled", true);
+            this.btnDublicate.setAttribute("disabled", true);
+            this.btnReturned.setAttribute("disabled", true);
+            this.btnDelete.setAttribute("disabled", true);
+            return;
+        }
+
         if (this.btnPrint.hasAttribute("disabled")) this.btnPrint.removeAttribute("disabled");
         if (this.btnDublicate.hasAttribute("disabled")) this.btnDublicate.removeAttribute("disabled");
         if (this.btnReturned.hasAttribute("disabled")) this.btnReturned.removeAttribute("disabled");

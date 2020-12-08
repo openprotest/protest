@@ -405,12 +405,50 @@ class HttpMainListener : Http {
                         case "version"       : buffer = Strings.Version(); break;
                         case "checkforupdate": buffer = Update.CheckGitHubVersion(); break;
                         case "getcurrentnetworkinfo": buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
-                        case "ping"         : buffer = Ping.XhrPing(para); break;
-                        case "dnslookup"    : buffer = Dns.DnsLookup(ctx); break;
-                        case "locateip"     : buffer = LocateIp.Locate(ctx); break;
-                        case "maclookup"    : buffer = MacLookup.Lookup(ctx); break;
-                        case "dhcpdiscover" : buffer = Dhcp.DiscoverDhcp(para); break;
-                        case "ntprequest"   : buffer = Ntp.NtpRequest(para); break;
+
+                        case "ping":
+                            if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny)
+                                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            else
+                                buffer = Ping.XhrPing(para);
+                            break;
+
+                        case "dnslookup":
+                            if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny)
+                                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            else
+                                buffer = Dns.DnsLookup(ctx);
+                            break;
+
+                        case "locateip":
+                            if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny)
+                                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            else
+                                buffer = LocateIp.Locate(ctx);
+                            break;
+
+                        case "maclookup":
+                            if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny)
+                                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            else
+                                buffer = MacLookup.Lookup(ctx);
+                            break;
+
+
+                        case "dhcpdiscover":
+                            if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny)
+                                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            else
+                                buffer = Dhcp.DiscoverDhcp(para);
+                            break;
+
+
+                        case "ntprequest":
+                            if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny)
+                                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                            else
+                                buffer = Ntp.NtpRequest(para);
+                            break;
 
                         //case "speedtest/downstream": buffer = SpeedTest.TestDownstream(ctx, para); break;
                         //case "speedtest/upstream"  : buffer = SpeedTest.TestUpstream(ctx, para); break;
@@ -439,10 +477,32 @@ class HttpMainListener : Http {
     public virtual void WebSocketHandler(in HttpListenerContext ctx, in string[] para, AccessControl authorization) {
         switch (para[0]) {
             case "ws/keepalive" : KeepAlive.Connect(ctx); break;
-            case "ws/ping"      : Ping.WsPing(ctx); break;
-            case "ws/portscan"  : PortScan.WsPortScan(ctx); break;
-            case "ws/traceroute": TraceRoute.WsTraceRoute(ctx); break;
             case "ws/webcheck"  : WebCheck.WsWebCheck(ctx); break;
+
+
+            case "ws/ping":
+                if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny) {
+                    ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    ctx.Response.Close();
+                } else
+                    Ping.WsPing(ctx);
+                break;
+
+            case "ws/portscan":
+                if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny) {
+                    ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    ctx.Response.Close();
+                } else
+                    PortScan.WsPortScan(ctx);
+                break;
+
+            case "ws/traceroute":
+                if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny) {
+                    ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    ctx.Response.Close();
+                } else
+                    TraceRoute.WsTraceRoute(ctx);
+                break;
 
             case "ws/telnet":
                 if (authorization is null || authorization.telnet == AccessControl.AccessLevel.Deny) {
@@ -453,7 +513,7 @@ class HttpMainListener : Http {
                 break;
 
             case "ws/watchdog":
-                if (authorization is null || authorization.remotehosts == AccessControl.AccessLevel.Deny) {
+                if (authorization is null || authorization.watchdog == AccessControl.AccessLevel.Deny) {
                     ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     ctx.Response.Close();
                 } else
@@ -474,7 +534,10 @@ class HttpMainListener : Http {
                 } else
                     LiveInfo.InstantInfoUser(ctx); break;
 
-            default: ctx.Response.Close(); break;
+            default:
+                ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                ctx.Response.Close();
+                break;
         }
     }
 }

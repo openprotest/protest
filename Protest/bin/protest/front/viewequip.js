@@ -102,6 +102,12 @@ class Equip extends Window {
         this.buttons.appendChild(btnDelete);
         btnDelete.onclick = () => this.Delete();
 
+        if (AUTHORIZATION.database < 2) {
+            btnEdit.setAttribute("disabled", true);
+            btnFetch.setAttribute("disabled", true);
+            btnDelete.setAttribute("disabled", true);
+        }
+
         this.sidetools = document.createElement("div");
         this.sidetools.className = "db-sidetools";
         this.content.appendChild(this.sidetools);
@@ -196,7 +202,7 @@ class Equip extends Window {
         if (isGroupEmpty && this.properties.childNodes[this.properties.childNodes.length - 1].className == "db-property-group")
             this.properties.removeChild(this.properties.childNodes[this.properties.childNodes.length - 1]);
 
-        if (this.entry.IP) { //IPs
+        if (AUTHORIZATION.utilities === 1 && this.entry.IP) { //IPs
             let ips = this.entry.IP[0].split(";").map(o=>o.trim());
             for (let i = 0; i < ips.length; i++) {
                 if (ips[i].length === 0) continue;
@@ -292,7 +298,7 @@ class Equip extends Window {
             }
         }
 
-        if (this.entry.hasOwnProperty("MAC ADDRESS")) {
+        if (this.entry.hasOwnProperty("MAC ADDRESS") && AUTHORIZATION.remotehosts === 1) {
             const btnWoL = this.SideButton("res/wol.svgz", "Wake on LAN");
             this.sidetools.appendChild(btnWoL);
             btnWoL.onclick = () => {
@@ -317,64 +323,70 @@ class Equip extends Window {
 
             if (ports.includes(445) && this.entry.hasOwnProperty("OPERATING SYSTEM")) { //wmi service 445
 
-                const btnOff = this.SideButton("res/turnoff.svgz", "Power off");
-                this.sidetools.appendChild(btnOff);
-                btnOff.onclick = () => {
-                    if (btnOff.hasAttribute("busy")) return;
-                    this.ConfirmBox("Are you sure you want to power off this device?").addEventListener("click", () => {
-                        const xhr = new XMLHttpRequest();
-                        xhr.onreadystatechange = () => {
-                            if (xhr.readyState == 4) btnOff.removeAttribute("busy");
-                            if (xhr.readyState == 4 && xhr.status == 200)
-                                if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                            if (xhr.readyState == 4 && xhr.status == 0)
-                                this.ConfirmBox("Server is unavailable.", true);
-                        };
-                        btnOff.setAttribute("busy", true);
-                        xhr.open("GET", "mngh/shutdown&file=" + this.filename, true);
-                        xhr.send();
-                    });
-                };
+                if (AUTHORIZATION.remotehosts === 1) {
+                    const btnOff = this.SideButton("res/turnoff.svgz", "Power off");
+                    this.sidetools.appendChild(btnOff);
+                    btnOff.onclick = () => {
+                        if (btnOff.hasAttribute("busy")) return;
+                        this.ConfirmBox("Are you sure you want to power off this device?").addEventListener("click", () => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.onreadystatechange = () => {
+                                if (xhr.readyState == 4) btnOff.removeAttribute("busy");
+                                if (xhr.readyState == 4 && xhr.status == 200)
+                                    if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                                if (xhr.readyState == 4 && xhr.status == 0)
+                                    this.ConfirmBox("Server is unavailable.", true);
+                            };
+                            btnOff.setAttribute("busy", true);
+                            xhr.open("GET", "mngh/shutdown&file=" + this.filename, true);
+                            xhr.send();
+                        });
+                    };
+                }
 
-                const btnReboot = this.SideButton("res/restart.svgz", "Reboot");
-                this.sidetools.appendChild(btnReboot);
-                btnReboot.onclick = () => {
-                    if (btnReboot.hasAttribute("busy")) return;
-                    this.ConfirmBox("Are you sure you want to reboot this device?").addEventListener("click", () => {
-                        const xhr = new XMLHttpRequest();
-                        xhr.onreadystatechange = () => {
-                            if (xhr.readyState == 4) btnReboot.removeAttribute("busy");
-                            if (xhr.readyState == 4 && xhr.status == 200)
-                                if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                            if (xhr.readyState == 4 && xhr.status == 0)
-                                this.ConfirmBox("Server is unavailable.", true);
-                        };
-                        btnReboot.setAttribute("busy", true);
-                        xhr.open("GET", "mngh/reboot&file=" + this.filename, true);
-                        xhr.send();
-                    });
-                };
+                if (AUTHORIZATION.remotehosts === 1) {
+                    const btnReboot = this.SideButton("res/restart.svgz", "Reboot");
+                    this.sidetools.appendChild(btnReboot);
+                    btnReboot.onclick = () => {
+                        if (btnReboot.hasAttribute("busy")) return;
+                        this.ConfirmBox("Are you sure you want to reboot this device?").addEventListener("click", () => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.onreadystatechange = () => {
+                                if (xhr.readyState == 4) btnReboot.removeAttribute("busy");
+                                if (xhr.readyState == 4 && xhr.status == 200)
+                                    if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                                if (xhr.readyState == 4 && xhr.status == 0)
+                                    this.ConfirmBox("Server is unavailable.", true);
+                            };
+                            btnReboot.setAttribute("busy", true);
+                            xhr.open("GET", "mngh/reboot&file=" + this.filename, true);
+                            xhr.send();
+                        });
+                    };
+                }
 
-                const btnLogoff = this.SideButton("res/logoff.svgz", "Log off");
-                this.sidetools.appendChild(btnLogoff);
-                btnLogoff.onclick = () => {
-                    if (btnLogoff.hasAttribute("busy")) return;
-                    this.ConfirmBox("Are you sure you want to log off this device?").addEventListener("click", () => {
-                        const xhr = new XMLHttpRequest();
-                        xhr.onreadystatechange = () => {
-                            if (xhr.readyState == 4) btnLogoff.removeAttribute("busy");
-                            if (xhr.readyState == 4 && xhr.status == 200)
-                                if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                            if (xhr.readyState == 4 && xhr.status == 0)
-                                this.ConfirmBox("Server is unavailable.", true);
-                        };
-                        btnLogoff.setAttribute("busy", true);
-                        xhr.open("GET", "mngh/logoff&file=" + this.filename, true);
-                        xhr.send();
-                    });
-                };
+                if (AUTHORIZATION.remotehosts === 1) {
+                    const btnLogoff = this.SideButton("res/logoff.svgz", "Log off");
+                    this.sidetools.appendChild(btnLogoff);
+                    btnLogoff.onclick = () => {
+                        if (btnLogoff.hasAttribute("busy")) return;
+                        this.ConfirmBox("Are you sure you want to log off this device?").addEventListener("click", () => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.onreadystatechange = () => {
+                                if (xhr.readyState == 4) btnLogoff.removeAttribute("busy");
+                                if (xhr.readyState == 4 && xhr.status == 200)
+                                    if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                                if (xhr.readyState == 4 && xhr.status == 0)
+                                    this.ConfirmBox("Server is unavailable.", true);
+                            };
+                            btnLogoff.setAttribute("busy", true);
+                            xhr.open("GET", "mngh/logoff&file=" + this.filename, true);
+                            xhr.send();
+                        });
+                    };
+                }
                 
-                if (this.entry.hasOwnProperty("IP")) {
+                if (this.entry.hasOwnProperty("IP") && AUTHORIZATION.wmi === 1) {
                     const btnProcesses = this.SideButton("res/console.svgz", "Processes");
                     this.sidetools.appendChild(btnProcesses);
                     btnProcesses.onclick = () => {
@@ -398,32 +410,36 @@ class Equip extends Window {
                     };
                 }
 
-                const btnMgmt = this.SideButton("res/compmgmt.svgz", "PC Management"); //compmgmt
-                this.sidetools.appendChild(btnMgmt);
-                btnMgmt.onclick = () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                if (AUTHORIZATION.remoteagent === 1) {
+                    const btnMgmt = this.SideButton("res/compmgmt.svgz", "PC Management"); //compmgmt
+                    this.sidetools.appendChild(btnMgmt);
+                    btnMgmt.onclick = () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&cmg&" + this.filename, true);
+                        xhr.send();
                     };
-                    xhr.open("GET", "ra&cmg&" + this.filename, true);
-                    xhr.send();
-                };
+                }
 
-                const btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
-                this.sidetools.appendChild(btnPse);
-                btnPse.onclick = () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                if (AUTHORIZATION.remoteagent === 1) {
+                    const btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
+                    this.sidetools.appendChild(btnPse);
+                    btnPse.onclick = () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&pse&" + this.filename, true);
+                        xhr.send();
                     };
-                    xhr.open("GET", "ra&pse&" + this.filename, true);
-                    xhr.send();
-                };
+                }
             }
 
-            if (ports.includes(22)) { //ssh
+            if (ports.includes(22) && AUTHORIZATION.remoteagent === 1) { //ssh
                 const btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
                 this.sidetools.appendChild(btnSsh);
                 btnSsh.onclick = () => {
@@ -437,7 +453,7 @@ class Equip extends Window {
                 };
             }
 
-            if (ports.includes(23) && this.entry.hasOwnProperty("IP")) { //telnet
+            if (ports.includes(23) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.telnet === 1) { //telnet
                 const btnTelnet = this.SideButton("res/telnet.svgz", "Telnet");
                 this.sidetools.appendChild(btnTelnet);
                 btnTelnet.onclick = () => {
@@ -445,7 +461,7 @@ class Equip extends Window {
                 };
             }
 
-            if (ports.includes(445) && this.entry.hasOwnProperty("IP")) { //smb
+            if (ports.includes(445) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remotehosts === 1) { //smb
                 const btnSmb = this.SideButton("res/shared.svgz", "SMB");
                 this.sidetools.appendChild(btnSmb);
                 btnSmb.onclick = () => {
@@ -488,7 +504,7 @@ class Equip extends Window {
                 btnAction.onclick = () => window.open("ftps://" + this.entry["IP"][0].split(";")[0].trim());
             }
 
-            if (ports.includes(3389) && this.entry.hasOwnProperty("IP")) { //rdp
+            if (ports.includes(3389) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remoteagent === 1) { //rdp
                 const btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
                 this.sidetools.appendChild(btnRdp);
                 btnRdp.onclick = () => {
@@ -502,7 +518,7 @@ class Equip extends Window {
                 };
             }
 
-            if (ports.includes(5900) && this.entry.hasOwnProperty("IP")) { //uvnc
+            if (ports.includes(5900) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remoteagent === 1) { //uvnc
                 const btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
                 this.sidetools.appendChild(btnUvnc);
                 btnUvnc.onclick = () => {
@@ -516,7 +532,7 @@ class Equip extends Window {
                 };
             }
 
-            if (ports.includes(9100) && this.entry.hasOwnProperty("IP")) { //print test
+            if (ports.includes(9100) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remotehosts === 1) { //print test
                 const btnPrintTest = this.SideButton("res/printer.svgz", "Print test page");
                 this.sidetools.appendChild(btnPrintTest);
                 btnPrintTest.onclick = () => {
@@ -545,11 +561,13 @@ class Equip extends Window {
             btnConfig.style.marginTop = "12px";
             this.sidetools.appendChild(btnConfig);
             btnConfig.onclick = () => this.Config();
-        }*/
+        }
+        */
         
     }
 
     LiveInfo() {
+        if (AUTHORIZATION.remotehosts === 0) return;
         if (!this.entry.hasOwnProperty("IP") && !this.entry.hasOwnProperty("HOSTNAME")) return;
 
         this.liveinfo.innerHTML = "";
@@ -750,6 +768,11 @@ class Equip extends Window {
             btnStamp.style.backgroundPosition = "center";
             btnStamp.style.backgroundRepeat = "no-repeat";
             value.appendChild(btnStamp);
+
+            if (AUTHORIZATION.password === 0) {
+                btnShow.setAttribute("disabled", true);
+                btnStamp.setAttribute("disabled", true);
+            }
 
             btnShow.onclick = () => {
                 const xhr = new XMLHttpRequest();

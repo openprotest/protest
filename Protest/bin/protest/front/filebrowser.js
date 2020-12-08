@@ -58,11 +58,13 @@ class FileBrowser extends Window {
         this.btnReload.style.backgroundImage = "url(res/l_reload.svgz)";
         bar.appendChild(this.btnReload);
 
-        this.btnOpen= document.createElement("div");
-        this.btnOpen.className = "smb-nav-button";
-        this.btnOpen.style.backgroundImage = "url(res/l_folder.svgz)";
-        if (!this.args.filename) this.btnOpen.style.filter = "contrast(.1)";
-        bar.appendChild(this.btnOpen);
+        if (AUTHORIZATION.remotehosts === 1) {
+            this.btnOpen = document.createElement("div");
+            this.btnOpen.className = "smb-nav-button";
+            this.btnOpen.style.backgroundImage = "url(res/l_folder.svgz)";
+            if (!this.args.filename) this.btnOpen.style.filter = "contrast(.1)";
+            bar.appendChild(this.btnOpen);
+        }
 
         this.pathContainer = document.createElement("div");
         this.pathContainer.className = "smb-path";
@@ -106,7 +108,7 @@ class FileBrowser extends Window {
             let path = "";
             for (let i = 1; i < pathSplit.length; i++)
                 path += pathSplit[i] + "/";
-            console.log(path);
+
             xhr.open("GET", `ra&smb&${this.args.filename}&${path}`, true);
             xhr.send();
         };

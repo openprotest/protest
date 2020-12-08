@@ -7,7 +7,7 @@ class Clients extends Tabs {
 
         this.AddCssDependencies("clients.css");
 
-        this.setTitle("Clients");
+        this.setTitle("Pro-test clients");
         this.setIcon("res/ptclients.svgz");
 
         this.selected = null;
@@ -173,6 +173,33 @@ class Clients extends Tabs {
 
         this.accessvalue = [db, pw, ra, rh, du, dc, dn, wd, ut, sc, mi, tn, bu, mu, lg];
 
+        const lblWarning = document.createElement("div");
+        lblWarning.style.marginTop = "16px";
+        lblWarning.style.visibility = "hidden";
+        accesslist.appendChild(lblWarning);
+
+        const onChange = () => {
+            lblWarning.innerHTML = "";
+
+            if (db.value == 0 && pw.value > 0)
+                lblWarning.appendChild(this.AddWarning("It's pointless to allow <u>Reading passwords</u> while the <u>Inventory database</u> is denied."));
+
+            if (db.value > 0 && ut.value == 0) 
+                lblWarning.appendChild(this.AddWarning("It is recommended to allow <u>Tools and utilities</u> with <u>Inventory database</u>."));
+
+            if (mu.value == 1 && this.accessvalue.filter(o => o.value < o.max).length > 0)
+                lblWarning.appendChild(this.AddWarning("Having users with limited access, and then allowing them to <u>Manage user's permissions</u>, is counterintuitive."));
+
+            lblWarning.style.visibility = lblWarning.childNodes.length > 0 ? "visible" : "hidden";
+        };
+
+        for (let i = 0; i < this.accessvalue.length; i++) {
+            this.accessvalue[i].setAttribute("disabled", true);
+
+            this.accessvalue[i].addEventListener("input", onChange);
+            this.accessvalue[i].addEventListener("change", onChange);
+        }
+
         const buttons = document.createElement("div");
         buttons.style.textAlign = "center";
         buttons.style.maxWidth = "480px";
@@ -184,10 +211,7 @@ class Clients extends Tabs {
         btnApply.value = "Apply";
         btnApply.style.height = "32px";
         buttons.appendChild(btnApply);
-
-        for (let i = 0; i < this.accessvalue.length; i++)
-            this.accessvalue[i].setAttribute("disabled", true);
-
+                
         btnAdd.onclick = () => {
             const dialog = this.DialogBox("128px");
             if (dialog === null) return;
@@ -291,48 +315,6 @@ class Clients extends Tabs {
         xhr.send();
     }
 
-    AddAccessCategory(parent, icon, name, keyword, higheraccess, enable = true) {
-        const container = document.createElement("div");
-        container.className = "clients-accessitem";
-
-        const divIcon = document.createElement("div");
-        divIcon.style.backgroundImage = `url(${icon})`;
-        container.appendChild(divIcon);
-
-        const divLabel = document.createElement("div");
-        divLabel.innerHTML = name;
-        container.appendChild(divLabel);
-
-        const rngAccess = document.createElement("input");
-        rngAccess.type = "range";
-        rngAccess.min = 0;
-        rngAccess.max = higheraccess;
-        rngAccess.value = higheraccess;
-        rngAccess.setAttribute("keyword", keyword);
-        if (!enable) rngAccess.setAttribute("disabled", true);
-        container.appendChild(rngAccess);
-
-        const lblAccess = document.createElement("div");
-        container.appendChild(lblAccess);
-
-        rngAccess.oninput = rngAccess.onchange = event => {
-            if (rngAccess.value == 0)
-                lblAccess.innerHTML = "Deny";
-
-            else if (rngAccess.value == 1)
-                lblAccess.innerHTML = higheraccess == 1 ? "Allow" : "Read only";
-
-            else
-                lblAccess.innerHTML = "Full access";
-        };
-
-        rngAccess.onchange();
-
-        parent.appendChild(container);
-
-        return rngAccess;
-    }
-
     AddUser(parent, username) {
         const user = document.createElement("div");
         user.className = "clients-useritem";
@@ -388,4 +370,70 @@ class Clients extends Tabs {
         };
     }
 
+    AddAccessCategory(parent, icon, name, keyword, higheraccess, lblWarning) {
+        const container = document.createElement("div");
+        container.className = "clients-accessitem";
+
+        const divIcon = document.createElement("div");
+        divIcon.style.backgroundImage = `url(${icon})`;
+        container.appendChild(divIcon);
+
+        const divLabel = document.createElement("div");
+        divLabel.innerHTML = name;
+        container.appendChild(divLabel);
+
+        const rngAccess = document.createElement("input");
+        rngAccess.type = "range";
+        rngAccess.min = 0;
+        rngAccess.max = higheraccess;
+        rngAccess.value = higheraccess;
+        rngAccess.setAttribute("keyword", keyword);
+        container.appendChild(rngAccess);
+
+        const lblAccess = document.createElement("div");
+        container.appendChild(lblAccess);
+
+        rngAccess.oninput = rngAccess.onchange = event => {
+            if (rngAccess.value == 0)
+                lblAccess.innerHTML = "Deny";
+
+            else if (rngAccess.value == 1)
+                lblAccess.innerHTML = higheraccess == 1 ? "Allow" : "Read only";
+
+            else
+                lblAccess.innerHTML = "Full access";
+        };
+
+        rngAccess.onchange();
+
+        parent.appendChild(container);
+
+        return rngAccess;
+    }
+
+    AddWarning(text) {
+        const newProperty = document.createElement("div");
+        newProperty.style.backgroundColor = "rgb(255,186,0)";
+        newProperty.style.color = "#101010";
+        newProperty.style.maxWidth = "640px";
+        newProperty.style.minHeight = "22px";
+        newProperty.style.padding = "4px 0 2px 0";
+        newProperty.style.borderRadius = "2px";
+        newProperty.style.overflow = "hidden";
+        newProperty.style.marginBottom = "2px";
+
+        const label = document.createElement("div");
+        label.style.fontWeight = "600";
+        label.style.width = "calc(100% - 16px)";
+        label.style.paddingLeft = "32px";
+        label.style.marginLeft = "4px";
+        label.style.backgroundImage = "url(res/warning.svgz)";
+        label.style.backgroundSize = "22px 22px";
+        label.style.backgroundPosition = "4px center";
+        label.style.backgroundRepeat = "no-repeat";
+        label.innerHTML = text;
+        newProperty.appendChild(label);
+
+        return newProperty;
+    }
 }

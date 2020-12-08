@@ -26,10 +26,12 @@ class Watchdog extends Window {
         btnReload.setAttribute("tip-below", "Reload");
         this.toolbox.appendChild(btnReload);
 
-        const btnSettings = document.createElement("div");
-        btnSettings.style.backgroundImage = "url(res/l_tool02.svgz)";
-        btnSettings.setAttribute("tip-below", "Settings");
-        this.toolbox.appendChild(btnSettings);
+        if (AUTHORIZATION.watchdog === 2) {
+            const btnSettings = document.createElement("div");
+            btnSettings.style.backgroundImage = "url(res/l_tool02.svgz)";
+            btnSettings.setAttribute("tip-below", "Settings");
+            this.toolbox.appendChild(btnSettings);
+        }
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 
@@ -105,6 +107,13 @@ class Watchdog extends Window {
         this.btnAdd.style.gridArea = "4 / 2";
         this.btnAdd.style.marginLeft = "72px";
         side.appendChild(this.btnAdd);
+
+        if (AUTHORIZATION.watchdog < 2) {
+            this.txtHost.setAttribute("disabled", true);
+            this.txtProtocol.setAttribute("disabled", true);
+            this.txtPort.setAttribute("disabled", true);
+            this.btnAdd.setAttribute("disabled", true);
+        }
 
         {
             const tblLegend = document.createElement("table");
@@ -194,7 +203,7 @@ class Watchdog extends Window {
 
         this.btnAdd.onclick = () => this.Add();
         btnReload.onclick = () => this.Reload();
-        btnSettings.onclick = () => this.Settings();
+        if (AUTHORIZATION.watchdog === 2) btnSettings.onclick = () => this.Settings();
 
         this.txtHost.onchange =
             this.txtHost.oninput = () => {
@@ -344,6 +353,8 @@ class Watchdog extends Window {
                             }
 
                     btnRemove.onclick = () => {
+                        if (AUTHORIZATION.watchdog < 2) return;
+
                         this.ConfirmBox("Are you sure you want to delete this entry?", false).addEventListener("click", () => {
                             const xhr = new XMLHttpRequest();
                             xhr.onreadystatechange = () => {
@@ -438,7 +449,7 @@ class Watchdog extends Window {
             let key = `${c.getFullYear()}-${(c.getMonth() + 1).toString().padStart(2, "0")}-${c.getDate().toString().padStart(2, "0")}`;
 
             if (!entry.data.hasOwnProperty(key)) continue;
-                        
+            
             let j = 0;
             for (j = 0; j < entry.data[key].length; j++) {
                 let element = null;

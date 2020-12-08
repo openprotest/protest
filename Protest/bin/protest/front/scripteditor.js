@@ -1273,6 +1273,16 @@ class ScriptNode {
             }
         }
 
+        if (this.sockets.length === 1 && this.sockets[0][0] === "i") {
+            this.container.setAttribute("width", 84);
+            this.titleBox.setAttribute("width", 80);
+            this.titleText.setAttribute("x", 44);
+
+            this.sockets[0][1].setAttribute("cy", 46);
+            this.sockets[0][2].setAttribute("y", 47);
+            this.sockets[0][4] = 46;
+        }
+
         this.container.setAttribute("height", Math.max(top-10, 75));
 
         this.g.onmousedown = event => editor.Node_onmousedown(event, this);
