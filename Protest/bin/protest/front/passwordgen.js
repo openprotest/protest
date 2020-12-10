@@ -38,7 +38,7 @@ class Passgen extends Window {
         this.lblComment.style.marginTop = "0px";
         this.divStrength.appendChild(this.lblComment);
 
-        let grid = document.createElement("div");
+        const grid = document.createElement("div");
         grid.style.display = "grid";
         grid.style.width = "424px";
         grid.style.margin = "40px auto 20px auto";

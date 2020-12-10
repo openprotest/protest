@@ -212,9 +212,9 @@ class Program {
                     abPrefixes.Add(split[1].Trim());
                     break;
 
-                //case "ip_access":
-                //    Session.ip_access.Add(split[1], null);
-                //    break;
+                case "ip_access":
+                    Session.ip_access.Add(split[1], null);
+                    break;
             }
         }
 

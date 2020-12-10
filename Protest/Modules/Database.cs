@@ -323,11 +323,10 @@ class Database {
     }
     public static byte[] GetValue(DbEntry entry, in string property) {
 #if DEBUG
-        return Encoding.UTF8.GetBytes("(debug mode)");
+        return Encoding.UTF8.GetBytes("[debug-mode]");
 #else
         if (!entry.hash.ContainsKey(property)) return new byte[] { };
         string[] value = (string[])entry.hash[property];
-
         return Encoding.UTF8.GetBytes(value[0]);
 #endif
     }

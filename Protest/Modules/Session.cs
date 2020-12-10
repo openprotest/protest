@@ -6,11 +6,13 @@ using System.Net;
 using System.Text;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
 
 public static class Session {
     public static long HOUR = 36_000_000_000;
     public static long SESSION_TIMEOUT = 168; //7 days
 
+    public static readonly Hashtable ip_access = new Hashtable();
     public static readonly ConcurrentDictionary<string, AccessControl> acl = new ConcurrentDictionary<string, AccessControl>();
     public static readonly ConcurrentDictionary<string, SessionEntry> sessions = new ConcurrentDictionary<string, SessionEntry>();
 
@@ -46,7 +48,7 @@ public static class Session {
                     Name = "sessionid",
                     Value = sessionId,
                     HttpOnly = true,
-                    Domain = ctx.Request.UserHostName,
+                    Domain = ctx.Request.UserHostName.Split(':')[0],
                     //SameSite = "Lax",
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)
                 };

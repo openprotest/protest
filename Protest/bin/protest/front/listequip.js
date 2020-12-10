@@ -38,7 +38,6 @@ function GetEquipIcon(type) {
             return "res/gear.svgz";
         else
             return filename;
-
     } else
         return "res/gear.svgz";;
 }

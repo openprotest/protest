@@ -8,15 +8,19 @@ class HttpMainListener : Http {
 
     public override void Serve(in HttpListenerContext ctx) {
         string remoteIp = ctx.Request.RemoteEndPoint.Address.ToString();
-        bool isLoopback = remoteIp.StartsWith("127.") || remoteIp == "::1";
+        bool isLoopback = ctx.Request.Url.IsLoopback; //remoteIp.StartsWith("127.") || remoteIp == "::1";
 
-        if (ctx.Request.UrlReferrer != null && !ctx.Request.UrlReferrer.IsLoopback)  //CSRF protection
-            if (ctx.Request.UrlReferrer.Host != ctx.Request.UserHostName.Split(':')[0]) {
-                ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                ctx.Response.OutputStream.Write(Encoding.UTF8.GetBytes("403 Forbidden"), 0, 13);
-                ctx.Response.Close();
-                return;
-            }
+        if (!isLoopback && !(Session.ip_access.ContainsKey(remoteIp) || Session.ip_access.ContainsKey("*"))) { //check ip_access
+            ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden; 
+            ctx.Response.Close();
+            return;
+        }
+
+        if (ctx.Request.UrlReferrer != null && ctx.Request.UrlReferrer.Host != ctx.Request.UserHostName.Split(':')[0]) { //CSRF protection
+            ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            ctx.Response.Close();
+            return;
+        }
 
         string url = ctx.Request.Url.AbsolutePath;
         string[] para = url.Split('&');
@@ -32,7 +36,7 @@ class HttpMainListener : Http {
                     Name = "sessionid",
                     Value = token,
                     HttpOnly = true,
-                    Domain = ctx.Request.UserHostName,
+                    Domain = ctx.Request.UserHostName.Split(':')[0],
                     //SameSite = "Lax",
                     Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
                 });

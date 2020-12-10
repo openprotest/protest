@@ -10,7 +10,7 @@ const $w = {
     array: [],
     active:  null,
     focused: null,
-    iconSize: onMobile ? 48 : 64,
+    iconSize: onMobile ? 48 : 56,
     isMoving:         false,
     isResizing:       false,
     isIcoMoving:      false,
@@ -63,8 +63,8 @@ class Window {
         this.position        = null;
         this.escAction       = null;
         this.defaultElement  = null;
-        this.messagesQueue   = [];
         this.args            = {};
+        this.messagesQueue   = [];
         this.cssDependencies = [];
 
         $w.startX += 2;
@@ -92,7 +92,7 @@ class Window {
         this.task.setAttribute("aria-label", "Task icon");
         //this.task.tabIndex = "0";
         this.task.className = "bar-icon";
-        this.task.style.left = 2 + $w.array.length * 64 + "px";
+        this.task.style.left = 2 + $w.array.length * (onMobile ? 48 : 56) + "px";
         bottombar.appendChild(this.task);
 
         this.icon = document.createElement("div");
@@ -809,7 +809,7 @@ function win_keydown(event) {
 }
 
 function alignIcon(ignoreActive) {
-    let max = onMobile ? 48 : 64;
+    let max = onMobile ? 48 : 56;
     $w.iconSize = (container.clientWidth / ($w.array.length) > max) ? max : container.clientWidth / $w.array.length;
 
     for (let i = 0; i < $w.array.length; i++) {

@@ -3,10 +3,9 @@
     left: 0;
     right: 0;
     top: 0;
-    bottom: 64px;
-    background-color: #DFE6EA;
+    bottom: 56px;
+    background-color: #202020;
     background: var(--bg);
-
     filter: contrast(0) brightness(.5);
 }
 
@@ -42,7 +41,7 @@
     left: 0px;
     right: 0px;
     bottom: 0;
-    height: 64px;
+    height: 56px;
     background-color: #E87600;
     background: var(--toolbar-bg);
 

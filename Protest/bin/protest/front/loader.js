@@ -47,17 +47,17 @@ let loader_styles = [
     ];
 
     const tertiaryScripts = [
+        "keepalive.js",
         "listequip.js",
         "listusers.js",
         "viewequip.js",
         "viewuser.js",
         "fetch.js",
         "passwordstrength.js",
+        "gandalf.js",
         "documentation.js",
         "debitnotes.js",
-        "netcalc.js",
-        "passwordgen.js",
-        "gandalf.js",
+        "watchdog.js",
         "ping.js",
         "dnslookup.js",
         "dhcpdiscover.js",
@@ -67,19 +67,20 @@ let loader_styles = [
         "locateip.js",
         "maclookup.js",
         "webcheck.js",
-        "wmi.js",
         "scripts.js",
-        "watchdog.js",
         "scripteditor.js",
-        "log.js",
-        "backup.js",
-        "guide.js",
-        "clients.js",
+        "wmi.js",
         "telnet.js",
+        "encoder.js",
+        "netcalc.js",
+        "passwordgen.js",
+        "backup.js",
+        "clients.js",
+        "log.js",
+        "guide.js",
         "filebrowser.js",
         "screencapture.js",
-        "settings.js",
-        "keepalive.js"
+        "settings.js"
     ];
 
     let count = 0;
@@ -255,8 +256,7 @@ function RestoreSession() {
             case "Gandalf"          : win = new Gandalf(session[i].args); break;
             case "Documentation"    : win = new Documentation(session[i].args); break;
             case "DebitNotes"       : win = new DebitNotes(session[i].args); break;
-            case "Netcalc"          : win = new Netcalc(); break;
-            case "Passgen"          : win = new Passgen(); break;
+            case "Watchdog"         : win = new Watchdog(session[i].args); break;
             case "Ping"             : win = new Ping(session[i].args); break;
             case "DnsLookup"        : win = new DnsLookup(session[i].args); break;
             case "DhcpDiscover"     : win = new DhcpDiscover(); break;
@@ -266,16 +266,18 @@ function RestoreSession() {
             case "LocateIp"         : win = new LocateIp(session[i].args); break;
             case "MacLookup"        : win = new MacLookup(session[i].args); break;
             case "WebCheck"         : win = new WebCheck(session[i].args); break;
-            case "Wmi"              : win = new Wmi(session[i].args); break;
             case "Scripts"          : win = new Scripts(session[i].args); break;
             case "ScriptEditor"     : win = new ScriptEditor(session[i].args); break;
             case "ScriptReport"     : win = new ScriptReport(session[i].args); break;
-            case "Watchdog"         : win = new Watchdog(session[i].args); break;
-            case "Log"              : win = new Log(session[i].args); break;
-            case "Backup"           : win = new Backup(session[i].args); break;
-            case "Guide"            : win = new Guide(session[i].args); break;
-            case "Clients"          : win = new Clients(session[i].args); break;
+            case "Wmi"              : win = new Wmi(session[i].args); break;
             case "Telnet"           : win = new Telnet(session[i].args); break;
+            case "Encoder"          : win = new Encoder(session[i].args); break;
+            case "Netcalc"          : win = new Netcalc(); break;
+            case "Passgen"          : win = new Passgen(); break;
+            case "Backup"           : win = new Backup(session[i].args); break;
+            case "Clients"          : win = new Clients(session[i].args); break;
+            case "Log"              : win = new Log(session[i].args); break;
+            case "Guide"            : win = new Guide(session[i].args); break;
             case "FileBrowser"      : win = new FileBrowser(session[i].args); break;
             case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;

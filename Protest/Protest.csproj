@@ -159,6 +159,7 @@
     <Content Include="bin\protest\front\res\l_goup.svg" />
     <Content Include="bin\protest\front\res\l_toogle.svg" />
     <Content Include="bin\protest\front\res\pin.svg" />
+    <Content Include="bin\protest\front\encoder.js" />
     <Content Include="bin\protest\front\telnet.js" />
     <Content Include="bin\protest\front\gandalf.js" />
     <Content Include="bin\protest\front\res\l_gandalf.svg" />
