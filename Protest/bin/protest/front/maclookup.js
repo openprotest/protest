@@ -83,6 +83,8 @@ class MacLookup extends Console {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let label = document.createElement("div");
                 label.innerHTML = xhr.responseText;

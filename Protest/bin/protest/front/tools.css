@@ -99,7 +99,7 @@
     content: counter(enumeration) ". ";
     display: inline-block;
     min-width: 32px;
-    font-weight: 300;
+    font-weight: 400;
 }
 
 .list-element > .enumerated > div[roundrtip]:nth-child(2n)::before { /* rount-trip */
@@ -370,4 +370,30 @@
 .generic-list-element:hover > .generic-action {
     visibility: visible;
     opacity: 1;
+}
+
+.code-box {
+    color: #202020;
+    font-family: monospace;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: text;
+    counter-reset: code-enumeration;
+}
+
+.code-box > div {
+    display: flex;
+}
+
+.code-box > div:before {
+    color: #808080;
+    counter-increment: code-enumeration;
+    content: counter(code-enumeration);
+    display: inline-block;
+    min-width: 48px;
+    font-weight: 400;
+}
+
+.code-box > div > span {
+    display: contents;
 }

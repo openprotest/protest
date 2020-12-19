@@ -174,6 +174,7 @@ class Wmi extends Window {
     GetWmiClasses() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
             if (xhr.readyState == 4 && xhr.status == 200)
                 this.wmi_classes = JSON.parse(xhr.responseText);
         };
@@ -358,6 +359,8 @@ class Wmi extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 this.divPlot.innerHTML = "";
 
@@ -455,6 +458,8 @@ class Wmi extends Window {
                                 let pid = event.srcElement.getAttribute("pid");
                                 const xhr = new XMLHttpRequest();
                                 xhr.onreadystatechange = () => {
+                                    if (xhr.status == 403) location.reload(); //authorization
+
                                     if (xhr.readyState == 4 && xhr.status == 200)
                                         if (xhr.responseText == "ok")
                                             table.removeChild(tr);

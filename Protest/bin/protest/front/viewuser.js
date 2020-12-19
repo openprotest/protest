@@ -184,6 +184,8 @@ class User extends Window {
                 if (this.btnUnlock.hasAttribute("busy")) return;
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4) this.btnUnlock.removeAttribute("busy");
 
                     if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText == "ok") {
@@ -207,6 +209,7 @@ class User extends Window {
                 if (btnEnable.hasAttribute("busy")) return;
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
                     if (xhr.readyState == 4) btnEnable.removeAttribute("busy");
                     if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                     if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -222,6 +225,7 @@ class User extends Window {
                 if (btnDisable.hasAttribute("busy")) return;
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
                     if (xhr.readyState == 4) btnDisable.removeAttribute("busy");
                     if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                     if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
@@ -386,6 +390,8 @@ class User extends Window {
             btnShow.onclick = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK
                         preview.innerHTML = xhr.responseText;
                         countdown.style.display = "inline-block";
@@ -413,6 +419,8 @@ class User extends Window {
             btnStamp.onclick = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK                       
                         if (xhr.responseText != "ok")
                             this.ConfirmBox(xhr.responseText, true);
@@ -666,6 +674,8 @@ class User extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) { //OK
                     dialog.innerBox.innerHTML = "";
 
@@ -761,6 +771,8 @@ class User extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
                 if (xhr.readyState == 4 && xhr.status == 200) {
@@ -815,6 +827,8 @@ class User extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4) {
                 if (xhr.status == 0) {
                     dialog.Abort();
@@ -867,6 +881,8 @@ class User extends Window {
         this.ConfirmBox("Are you sure you want to delete this entry?").addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
                 if (xhr.readyState == 4 && xhr.status == 200)

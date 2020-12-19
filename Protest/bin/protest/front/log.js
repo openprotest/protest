@@ -104,6 +104,8 @@ class Log extends Window {
     GetLog() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split("\n");
                 for (let i = 0; i < split.length-1; i++)

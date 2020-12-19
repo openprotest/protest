@@ -129,7 +129,7 @@ function LoadStyle(filename, callback) {
         return;
     }
 
-    let csslink = document.createElement("link");
+    const csslink = document.createElement("link");
     csslink.rel = "stylesheet";
     csslink.href = filename;
     document.head.appendChild(csslink);
@@ -144,7 +144,7 @@ function LoadScript(filename, callback) {
         return;
     }
 
-    let script = document.createElement("script");
+    const script = document.createElement("script");
     script.setAttribute("defer", true);
     script.src = filename;
     document.body.appendChild(script);

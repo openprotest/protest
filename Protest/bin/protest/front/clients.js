@@ -66,6 +66,8 @@ class Clients extends Tabs {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split < 2) return;
@@ -96,6 +98,7 @@ class Clients extends Tabs {
                     btnKick.onclick = () => {
                         const xhrk = new XMLHttpRequest();
                         xhrk.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
                             if (xhrk.readyState == 4 && xhrk.status == 200 && xhrk.responseText == "ok")
                                 this.list.removeChild(element);
                         };
@@ -231,6 +234,8 @@ class Clients extends Tabs {
                 if (txtUsername.value.length == 0) return;
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         if (xhr.responseText == "ok")
                             this.AddUser(userslist, txtUsername.value);
@@ -270,6 +275,8 @@ class Clients extends Tabs {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText == "ok") {
                         for (let i = 0; i < this.accessvalue.length; i++) 
@@ -288,6 +295,8 @@ class Clients extends Tabs {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let json = JSON.parse(xhr.responseText);
                 if (!Array.isArray(json)) return;
@@ -355,6 +364,8 @@ class Clients extends Tabs {
             this.ConfirmBox("Are you sure you want to delete this access control?").addEventListener("click", () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         if (xhr.responseText == "ok")
                             parent.removeChild(user);

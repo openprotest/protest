@@ -518,6 +518,8 @@ class Settings extends Tabs {
 
         const xhrUpdate = new XMLHttpRequest();
         xhrUpdate.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhrUpdate.readyState == 4 && xhrUpdate.status == 200) {
                 if (xhrUpdate.responseText == "failed") {
                     status.innerHTML = "Unable to reach the server.";
@@ -535,6 +537,8 @@ class Settings extends Tabs {
 
                 const xhrVersion = new XMLHttpRequest();
                 xhrVersion.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhrVersion.readyState == 4 && xhrVersion.status == 200) {
                         let jsonVersion = JSON.parse(xhrVersion.responseText);
 
@@ -601,6 +605,8 @@ class Settings extends Tabs {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let license = xhr.responseText;
                 license = license.replaceAll(" ", "&nbsp;");
@@ -756,6 +762,7 @@ class Settings extends Tabs {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let ver = JSON.parse(xhr.responseText);
                 if (ver.string) version.innerHTML = "Version " + ver.string;

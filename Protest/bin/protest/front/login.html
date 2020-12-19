@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <title>Pro-test</title>
@@ -14,7 +14,7 @@
         display: block;
     }
 
-    #message {visibility: hidden;}
+    #message {visibility:hidden}
 
     input[type="text"],
     input[type="password"] {
@@ -112,10 +112,10 @@
                 let response = xhr.responseText;
                 if (response!="") {
                     localStorage.setItem("lastUsername", txtUsername.value);
-                    let container = document.getElementById("container");
-                    container.style.transition = ".1s";
-                    container.style.opacity = "0";
-                    container.style.transform = "scale(.8)";
+                    const protest_login_box = document.getElementById("protest_login_box");
+                    protest_login_box.style.transition = ".1s";
+                    protest_login_box.style.opacity = "0";
+                    protest_login_box.style.transform = "scale(.8)";
                     location.reload();
 
                 } else {
@@ -153,7 +153,7 @@
 
 </head>
 <body>
-    <div id="container" style="text-align:center;">
+    <div id="protest_login_box" style="text-align:center;">
         <svg width="250" height="250">
             <path id="lock-latch" fill="#E87600" d="M177.904,26.714C163.172,12.238,145.535,5,125.005,5C104.469,5,86.831,12.238,72.1,26.714 C57.367,41.188,50,58.52,50,78.7V135h32.133V78.7c0-11.627,4.183-21.55,12.558-29.779c8.368-8.225,18.47-12.336,30.295-12.336 c11.83,0,21.939,4.111,30.312,12.336c8.369,8.229,12.558,18.152,12.558,29.779v28.346H200V78.7 C200,58.52,192.634,41.188,177.904,26.714z" />
             <path id="lock-body" fill="#E87600" d="M202.167,129H47.833C37.984,129,30,136.211,30,145.104v87.792c0,8.893,7.984,16.104,17.833,16.104h154.334 c9.849,0,17.833-7.211,17.833-16.104v-87.791C220,136.212,212.016,129,202.167,129z" />
@@ -173,8 +173,11 @@
     <div id="bottombar"></div>
     
     <script>
-        let txtPassword = document.getElementById("txtPassword");
-        let txtUsername = document.getElementById("txtUsername");        
+        if (protest_login_box.parentElement.tagName !== "BODY")
+            location.reload();
+
+        const txtPassword = document.getElementById("txtPassword");
+        const txtUsername = document.getElementById("txtUsername");        
         txtUsername.value = localStorage.getItem("lastUsername", "");
     </script>
 </body>

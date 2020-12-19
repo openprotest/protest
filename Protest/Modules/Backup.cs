@@ -59,8 +59,8 @@ public static class Backup {
             //DirectoryInfo dirMetrics = new DirectoryInfo($"{Strings.DIR_METRICS}");
             //if (dirMetrics.Exists) CopyAll(dirMetrics, new DirectoryInfo($"{dirCopy.FullName}\\{dirMetrics.Name}"));
 
-            //DirectoryInfo dirConfig = new DirectoryInfo($"{Strings.DIR_CONFIG}");
-            //if (dirConfig.Exists) CopyAll(dirConfig, new DirectoryInfo($"{dirCopy.FullName}\\{dirConfig.Name}"));
+            DirectoryInfo dirConfig = new DirectoryInfo($"{Strings.DIR_CONFIG}");
+            if (dirConfig.Exists) CopyAll(dirConfig, new DirectoryInfo($"{dirCopy.FullName}\\{dirConfig.Name}"));
 
             DirectoryInfo dirWatchdog = new DirectoryInfo($"{Strings.DIR_WATCHDOG}");
             if (dirWatchdog.Exists) CopyAll(dirWatchdog, new DirectoryInfo($"{dirCopy.FullName}\\{dirWatchdog.Name}"));

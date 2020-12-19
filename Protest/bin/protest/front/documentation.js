@@ -295,6 +295,8 @@ class Documentation extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
 
@@ -371,6 +373,8 @@ class Documentation extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 this.divRelated.innerHTML = "";
                 this.divContent.innerHTML = xhr.responseText;
@@ -555,6 +559,8 @@ class Documentation extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 if (xhr.responseText == "ok") {
                     this.GetDocs();
@@ -587,6 +593,8 @@ class Documentation extends Window {
         
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 if (xhr.responseText == "ok") {
                     if (exist) {

@@ -133,6 +133,8 @@ class LocateIp extends Console {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(";");
 

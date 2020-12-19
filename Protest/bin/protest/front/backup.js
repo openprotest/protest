@@ -78,6 +78,8 @@ class Backup extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText == "ok")
                         this.GetBackup();
@@ -103,6 +105,7 @@ class Backup extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
 
             if (xhr.readyState == 4 && xhr.status == 200) { //OK
                 let split = xhr.responseText.split(String.fromCharCode(127));
@@ -135,6 +138,7 @@ class Backup extends Window {
                         if (this.ConfirmBox("Are you sure you want to delete this backup?").addEventListener("click", () => {
                             const xhrk = new XMLHttpRequest();
                             xhrk.onreadystatechange = () => {
+                                if (xhr.status == 403) location.reload(); //authorization
                                 if (xhrk.readyState == 4 && xhrk.status == 200 && xhrk.responseText == "ok")
                                     this.list.removeChild(element);
                             };

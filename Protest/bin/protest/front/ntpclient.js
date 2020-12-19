@@ -67,6 +67,8 @@ class NtpClient extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4) this.btnSend.removeAttribute("disabled");
 
             if (xhr.readyState == 4 && xhr.status == 200) {
@@ -81,7 +83,8 @@ class NtpClient extends Window {
                 if (json.local && json.transmit) {
                     this.id = id;
 
-                    this.lblStuff.innerHTML  = `Roundtrip:&nbsp;<b>${json.roundtrip}ms</b><br>`;
+                    this.lblStuff.innerHTML  = `Server:&nbsp;<b>${this.txtServer.value.length == 0 ? "time.nist.gov" : this.txtServer.value}</b><br>`;
+                    this.lblStuff.innerHTML += `Roundtrip:&nbsp;<b>${json.roundtrip}ms</b><br>`;
                     this.lblStuff.innerHTML += `Transmited time:&nbsp;<b>${json.transmit}</b><br>`;
                     this.lblStuff.innerHTML += `Local time:&nbsp;<b>${json.local}</b>`;
 

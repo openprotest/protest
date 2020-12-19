@@ -126,6 +126,8 @@ class DhcpDiscover extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 this.btnDiscover.removeAttribute("disabled", true);
                 this.waitbox.style.display = "none";

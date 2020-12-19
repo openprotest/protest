@@ -371,6 +371,8 @@ class ScriptEditor extends Window {
     LoadScript() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let lines = xhr.responseText.split("\n");
                 lines.forEach(line => {
@@ -484,6 +486,8 @@ class ScriptEditor extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 if (callback) callback("ok");
 
@@ -514,6 +518,8 @@ class ScriptEditor extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     let json = JSON.parse(xhr.responseText);
                     if (json.error) this.ConfirmBox(xhr.responseText, true);

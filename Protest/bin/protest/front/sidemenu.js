@@ -216,6 +216,7 @@ btnSettings.onclick = () => {
 btnLogout.onclick = () => {
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
+        if (xhr.status == 403) location.reload(); //authorization
         if (xhr.readyState==4 && xhr.status==200)
             if (xhr.responseText == "ok") location.reload();
     };

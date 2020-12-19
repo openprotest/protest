@@ -579,23 +579,22 @@ public static class Fetch {
             if (para[i].StartsWith("host=")) host = para[i].Substring(5);
             else if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        if (!(filename is null) && filename.Length > 0) {
-            if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
-
-            Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
-            if (!entry.hash.ContainsKey("IP")) return Strings.INF.Array;
-
-            host = ((string[])entry.hash["IP"])[0];
-            if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
-
-            if (host.Length == 0) {
-                host = ((string[])entry.hash["HOSTNAME"])[0];
-                if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
-                host = System.Net.Dns.GetHostAddresses(host)[0].ToString();
-            }
-        }
-
         if (host is null || host.Length == 0) return Strings.INV.Array;
+
+        if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
+
+        Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
+        if (!entry.hash.ContainsKey("IP")) return Strings.INF.Array;
+
+        host = ((string[])entry.hash["IP"])[0];
+        if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
+
+        if (host.Length == 0) {
+            host = ((string[])entry.hash["HOSTNAME"])[0];
+            if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
+            host = System.Net.Dns.GetHostAddresses(host)[0].ToString();
+        }
+        
         return FetchArrayToBytes(SingleFetchEquip(host, true, PortScan.basic_ports));
     }    
     public static Hashtable SingleFetchEquip(string host, bool async = true, short[] ports_pool = null, IPAddress[] gateways = null) {

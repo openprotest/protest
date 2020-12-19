@@ -50,6 +50,7 @@ class HttpMainListener : Http {
             if (cache.hash.ContainsKey("login")) {
                 buffer = ((Cache.CacheEntry)cache.hash["login"]).bytes;
                 ctx.Response.ContentType = "text/html";
+                ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 try {
                     if (buffer != null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
                 } catch { }
@@ -222,6 +223,19 @@ class HttpMainListener : Http {
                             case "fetch/abort": buffer = Fetch.AbortFetch(performer); break;
                             case "fetch/approve": buffer = Fetch.ApproveLastFetch(performer); break;
                             case "fetch/discard": buffer = Fetch.DiscardLastFetch(performer); break;
+   
+                            default: ctx.Response.StatusCode = (int)HttpStatusCode.NotFound; break;
+                        }
+                    }
+
+                } else if (para[0].StartsWith("config/")) {
+                    if (authorization is null || authorization.database == AccessControl.AccessLevel.Deny) {
+                        ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    } else {
+                        switch (para[0]) {
+                            case "config/get": buffer   = Configuration.GetConfig(para); break;
+                            case "config/fetch": buffer = Configuration.FetchConfiguration(para, performer); break;
+
                             default: ctx.Response.StatusCode = (int)HttpStatusCode.NotFound; break;
                         }
                     }
@@ -482,7 +496,6 @@ class HttpMainListener : Http {
         switch (para[0]) {
             case "ws/keepalive" : KeepAlive.Connect(ctx); break;
             case "ws/webcheck"  : WebCheck.WsWebCheck(ctx); break;
-
 
             case "ws/ping":
                 if (authorization is null || authorization.utilities == AccessControl.AccessLevel.Deny) {

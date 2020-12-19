@@ -26,6 +26,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.pnlMain = new System.Windows.Forms.Panel();
+            this.lstProto = new System.Windows.Forms.ListBox();
             this.lblKey = new System.Windows.Forms.Label();
             this.txtKey = new System.Windows.Forms.TextBox();
             this.txtListennerPort = new System.Windows.Forms.NumericUpDown();
@@ -51,7 +52,8 @@
             this.pnlMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.pnlMain.AutoScroll = true;
+            this.pnlMain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            this.pnlMain.Controls.Add(this.lstProto);
             this.pnlMain.Controls.Add(this.lblKey);
             this.pnlMain.Controls.Add(this.txtKey);
             this.pnlMain.Controls.Add(this.txtListennerPort);
@@ -61,8 +63,25 @@
             this.pnlMain.Location = new System.Drawing.Point(12, 13);
             this.pnlMain.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pnlMain.Name = "pnlMain";
-            this.pnlMain.Size = new System.Drawing.Size(723, 407);
+            this.pnlMain.Size = new System.Drawing.Size(741, 318);
             this.pnlMain.TabIndex = 0;
+            // 
+            // lstProto
+            // 
+            this.lstProto.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.lstProto.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.lstProto.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lstProto.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.lstProto.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.lstProto.FormattingEnabled = true;
+            this.lstProto.ItemHeight = 22;
+            this.lstProto.Location = new System.Drawing.Point(3, 96);
+            this.lstProto.Name = "lstProto";
+            this.lstProto.Size = new System.Drawing.Size(150, 219);
+            this.lstProto.TabIndex = 6;
+            this.lstProto.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.lstProto_Draw);
+            this.lstProto.SelectedIndexChanged += new System.EventHandler(this.lstProto_SelectedIndexChanged);
             // 
             // lblKey
             // 
@@ -75,19 +94,15 @@
             // 
             // txtKey
             // 
-            this.txtKey.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.txtKey.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.txtKey.Location = new System.Drawing.Point(107, 41);
             this.txtKey.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtKey.Name = "txtKey";
-            this.txtKey.Size = new System.Drawing.Size(286, 25);
+            this.txtKey.Size = new System.Drawing.Size(554, 25);
             this.txtKey.TabIndex = 5;
             this.txtKey.UseSystemPasswordChar = true;
             // 
             // txtListennerPort
             // 
-            this.txtListennerPort.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.txtListennerPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.txtListennerPort.Location = new System.Drawing.Point(314, 4);
             this.txtListennerPort.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.txtListennerPort.Maximum = new decimal(new int[] {
@@ -120,9 +135,7 @@
             // 
             // cmbListennerIp
             // 
-            this.cmbListennerIp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.cmbListennerIp.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbListennerIp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.cmbListennerIp.FormattingEnabled = true;
             this.cmbListennerIp.Location = new System.Drawing.Point(107, 4);
             this.cmbListennerIp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -141,12 +154,10 @@
             // 
             // btnApply
             // 
-            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnApply.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnApply.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.btnApply.Location = new System.Drawing.Point(576, 428);
+            this.btnApply.Location = new System.Drawing.Point(594, 339);
             this.btnApply.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(75, 30);
@@ -212,12 +223,10 @@
             // 
             // btnClose
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.btnClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.btnClose.Location = new System.Drawing.Point(657, 428);
+            this.btnClose.Location = new System.Drawing.Point(675, 339);
             this.btnClose.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(78, 30);
@@ -228,9 +237,10 @@
             // 
             // lblVersion
             // 
+            this.lblVersion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblVersion.AutoSize = true;
-            this.lblVersion.ForeColor = System.Drawing.Color.Gray;
-            this.lblVersion.Location = new System.Drawing.Point(12, 435);
+            this.lblVersion.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.lblVersion.Location = new System.Drawing.Point(12, 346);
             this.lblVersion.Name = "lblVersion";
             this.lblVersion.Size = new System.Drawing.Size(54, 17);
             this.lblVersion.TabIndex = 3;
@@ -241,7 +251,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.ClientSize = new System.Drawing.Size(747, 471);
+            this.ClientSize = new System.Drawing.Size(765, 382);
             this.Controls.Add(this.lblVersion);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnApply);
@@ -284,6 +294,7 @@
         private System.Windows.Forms.TextBox txtKey;
         public System.Windows.Forms.ToolStripMenuItem recentsToolStripMenuItem;
         private System.Windows.Forms.Label lblVersion;
+        private System.Windows.Forms.ListBox lstProto;
     }
 }
 

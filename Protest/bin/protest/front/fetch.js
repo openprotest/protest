@@ -98,6 +98,8 @@ class Fetch extends Tabs {
     GetCurrentNetworkInfo() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let json = JSON.parse(xhr.responseText);
 
@@ -119,6 +121,8 @@ class Fetch extends Tabs {
     CheckFetchTaskStatus() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let json = JSON.parse(xhr.responseText);
                 this.status = json;
@@ -391,6 +395,8 @@ class Fetch extends Tabs {
         btnOK.onclick = () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
@@ -646,6 +652,8 @@ class Fetch extends Tabs {
         btnOK.onclick = () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
@@ -780,6 +788,8 @@ class Fetch extends Tabs {
         btnOK.onclick = () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.response == "ok") {
                         this.tabTask.style.visibility = "visible";
@@ -934,6 +944,8 @@ class Fetch extends Tabs {
         btnOK.onclick = () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.response == "ok") this.CheckFetchTaskStatus();
 
@@ -1013,6 +1025,8 @@ class Fetch extends Tabs {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let json = JSON.parse(xhr.responseText);
 
@@ -1044,6 +1058,8 @@ class Fetch extends Tabs {
             this.ConfirmBox("Are you sure you want to abort this task?").addEventListener("click", () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         if (xhr.response == "ok") {
                             this.tabTask.style.visibility = "hidden";
@@ -1140,6 +1156,8 @@ class Fetch extends Tabs {
             this.ConfirmBox("Are you sure you want to approve the fetched dataset?").addEventListener("click", () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         if (xhr.response == "ok") {
                             this.tabTask.style.visibility = "hidden";
@@ -1165,6 +1183,8 @@ class Fetch extends Tabs {
             this.ConfirmBox("Are you sure you want to discard the fetched dataset?").addEventListener("click", () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         if (xhr.response == "ok") {
                             this.tabTask.style.visibility = "hidden";

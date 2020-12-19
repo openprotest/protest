@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -8,11 +9,17 @@ using System.Threading;
 
 namespace Protest_RA {
     public partial class Main : Form {
+        private Control[] array;
 
+        private readonly Brush brsGray = new SolidBrush(Color.FromArgb(255,64,64,64));
+        private readonly Brush brsAccent = new SolidBrush(Color.FromArgb(255,232,118,0));
+        private readonly Brush brsWhite = new SolidBrush(Color.FromArgb(255,224,224,224));
+
+        public static Service srv_stamp;
         public static Service srv_uvnc;
         public static Service srv_rdp;
         public static Service srv_pse;
-
+        public static Service srv_winbox;
         public static CheckBox chkOverrideWinRdpClient;
 
         public static string key = "";
@@ -49,36 +56,54 @@ namespace Protest_RA {
             InitServicesList();
             LoadSettings();
 
-            IPAddress listennerIp;
-            bool parseIp = IPAddress.TryParse(cmbListennerIp.Items[cmbListennerIp.SelectedIndex].ToString(), out listennerIp);
+            bool parseIp = IPAddress.TryParse(cmbListennerIp.Items[cmbListennerIp.SelectedIndex].ToString(), out IPAddress listennerIp);
             if (!parseIp) listennerIp = IPAddress.Parse("127.0.0.1");
-            int listennerPort = (int) txtListennerPort.Value;
+            int listennerPort = (int)txtListennerPort.Value;
 
             Listener.StartListener(new IPEndPoint(listennerIp, listennerPort));
         }
 
         public void InitServicesList() {
-            srv_pse = new Service("PS excec");
-            srv_uvnc = new Service("Ultra VNC");
+            srv_stamp = new Service("Password stamp");
             srv_rdp = new Service("RDP");
+            srv_uvnc = new Service("Ultra VNC");
+            srv_pse = new Service("Psexcec");
+            srv_winbox = new Service("Winbox");
 
-            Service[] array = { srv_pse, srv_uvnc, srv_rdp };
+            this.array = new Control[] { srv_stamp, srv_rdp, srv_uvnc, srv_pse, srv_winbox };
             for (int i = 0; i < array.Length; i++) {
+                lstProto.Items.Add(array[i].Text);
                 pnlMain.Controls.Add(array[i]);
-                array[i].Top = 88 + i * 108;
+                array[i].Left = 166;
+                array[i].Top = 96;
             }
 
-            srv_uvnc.txtPassword.Left = srv_uvnc.txtUsername.Left;
-            srv_uvnc.lblPassword.Left = srv_uvnc.lblUsername.Left;
+            srv_stamp.lblExe.Visible = false;
+            srv_stamp.txtExe.Visible = false;
+            srv_stamp.btnExe.Visible = false;
+            srv_stamp.lblParam.Visible = false;
+            srv_stamp.txtParam.Visible = false;
+            srv_stamp.lblPassword.Visible = false;
+            srv_stamp.txtPassword.Visible = false;
+            srv_stamp.lblUsername.Visible = false;
+            srv_stamp.txtUsername.Visible = false;
+
+            srv_uvnc.lblPassword.Top = srv_uvnc.lblUsername.Top;
+            srv_uvnc.txtPassword.Top = srv_uvnc.txtUsername.Top;
             srv_uvnc.lblUsername.Visible = false;
             srv_uvnc.txtUsername.Visible = false;
 
             srv_pse.chkEnable.Checked = Settings.Default.pse_enable;
 
+            srv_winbox.lblUsername.Visible = false;
+            srv_winbox.txtUsername.Visible = false;
+            srv_winbox.lblPassword.Visible = false;
+            srv_winbox.txtPassword.Visible = false;
+
             chkOverrideWinRdpClient = new CheckBox();
-            chkOverrideWinRdpClient.Text = "Overrite windows native RDP client";
-            chkOverrideWinRdpClient.Left = srv_rdp.txtPassword.Left + srv_rdp.txtPassword.Width + 16;
-            chkOverrideWinRdpClient.Top = 72;
+            chkOverrideWinRdpClient.Text = "Override windows native RDP client";
+            chkOverrideWinRdpClient.Left = 4;
+            chkOverrideWinRdpClient.Top = 158;
             chkOverrideWinRdpClient.AutoSize = true;
             srv_rdp.Controls.Add(chkOverrideWinRdpClient);
         }
@@ -94,6 +119,8 @@ namespace Protest_RA {
             bKey = key.Length > 0 ? CryptoAes.KeyToBytes(key, 32) : null; //256-bits
             bIv = CryptoAes.KeyToBytes(key, 16); //128-bits
 
+            srv_stamp.chkEnable.Checked = Settings.Default.stamp_enable;
+
             srv_uvnc.chkEnable.Checked = Settings.Default.uvnc_enable;
             srv_uvnc.txtExe.Text = Settings.Default.uvnc_exe;
             srv_uvnc.txtParam.Text = Settings.Default.uvnc_para;
@@ -101,6 +128,7 @@ namespace Protest_RA {
 
             if (srv_uvnc.txtPassword.Text.Length > 0) //remove salt
                 srv_uvnc.txtPassword.Text = srv_uvnc.txtPassword.Text.Substring(1);
+
 
             srv_rdp.chkEnable.Checked = Settings.Default.mstsc_enable;
             srv_rdp.txtExe.Text = Settings.Default.mstsc_exe;
@@ -119,6 +147,16 @@ namespace Protest_RA {
             if (srv_pse.txtPassword.Text.Length > 0) //remove salt
                 srv_pse.txtPassword.Text = srv_pse.txtPassword.Text.Substring(1);
 
+
+            srv_winbox.txtExe.Text = Settings.Default.winbox_exe;
+            srv_winbox.txtParam.Text = Settings.Default.winbox_para;
+            srv_winbox.txtUsername.Text = Settings.Default.winbox_user;
+            srv_winbox.txtPassword.Text = CryptoAes.DecryptB64(Settings.Default.winbox_pass, bKey, bIv);
+
+            if (srv_winbox.txtPassword.Text.Length > 0) //remove salt
+                srv_winbox.txtPassword.Text = srv_winbox.txtPassword.Text.Substring(1);
+
+
             chkOverrideWinRdpClient.Checked = Settings.Default.rdp_native_client;
         }
 
@@ -131,6 +169,8 @@ namespace Protest_RA {
             key = txtKey.Text;
             bKey = key.Length > 0 ? CryptoAes.KeyToBytes(key, 32) : null; //256-bits
             bIv = CryptoAes.KeyToBytes(key, 16); //128-bits
+
+            Settings.Default.stamp_enable = srv_stamp.chkEnable.Checked;
 
             Settings.Default.uvnc_enable = srv_uvnc.chkEnable.Checked;
             Settings.Default.uvnc_exe = srv_uvnc.txtExe.Text;
@@ -149,6 +189,12 @@ namespace Protest_RA {
             Settings.Default.pse_para = srv_pse.txtParam.Text;
             Settings.Default.pse_user = srv_pse.txtUsername.Text;
             Settings.Default.pse_pass = CryptoAes.EncryptB64($"6{srv_pse.txtPassword.Text}", bKey, bIv); //add salt
+
+            Settings.Default.winbox_enable = srv_winbox.chkEnable.Checked;
+            Settings.Default.winbox_exe = srv_winbox.txtExe.Text;
+            Settings.Default.winbox_para = srv_winbox.txtParam.Text;
+            Settings.Default.winbox_user = srv_winbox.txtUsername.Text;
+            Settings.Default.winbox_pass = CryptoAes.EncryptB64($"8{srv_winbox.txtPassword.Text}", bKey, bIv); //add salt
 
             Settings.Default.Save();
         }
@@ -214,6 +260,22 @@ namespace Protest_RA {
         }
         private void TrayIcon_MouseDoubleClick(object sender, MouseEventArgs e) {
             Toogle();
+        }
+
+        private void lstProto_SelectedIndexChanged(object sender, EventArgs e) {
+            for (int i = 0; i < this.array.Length; i++)
+                this.array[i].Visible = lstProto.SelectedIndex == i;
+        }
+
+        private void lstProto_Draw(object sender, DrawItemEventArgs e) {
+            if (e.Index < 0) return;
+
+            if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
+                e.Graphics.FillRectangle(brsAccent, e.Bounds.X, e.Bounds.Y, e.Bounds.Width, e.Bounds.Height);
+            else 
+                e.Graphics.FillRectangle(brsGray, e.Bounds.X, e.Bounds.Y, e.Bounds.Width, e.Bounds.Height);
+
+            e.Graphics.DrawString(lstProto.Items[e.Index].ToString(), this.Font, brsWhite, e.Bounds.X + 2, e.Bounds.Y + 2);
         }
     }
 }

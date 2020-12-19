@@ -302,6 +302,8 @@ class Passgen extends Window {
     LoadWords() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let words = xhr.responseText.split("\n");
                 if (words.length > 2) this.words = words;

@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
-using System.Collections;
 
 namespace Protest_RA {
     static class Listener {
@@ -101,14 +100,25 @@ namespace Protest_RA {
                     }).Start();
                     break;
 
+
+                case "winbox":
+                    if (!Main.srv_winbox.chkEnable.Checked) break;
+                    new Thread(() => {
+                        try {
+                            Process.Start(
+                            Main.srv_winbox.txtExe.Text,
+                            targer + " " + Main.srv_winbox.txtParam.Text);
+                        } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    }).Start();
+                    break;
+
                 case "rdp":
                     if (!Main.srv_rdp.chkEnable.Checked) break;
 
                     FileInfo file1 = new FileInfo("AxInterop.MSTSCLib.dll");
                     FileInfo file2 = new FileInfo("Interop.MSTSCLib.dll");
                     if (Main.chkOverrideWinRdpClient.Checked && file1.Exists && file2.Exists) { //pro-test client
-                        try
-                        {
+                        try {
                             Process.Start(
                             Process.GetCurrentProcess().MainModule.FileName,
                             " -r " + targer);
@@ -153,6 +163,19 @@ namespace Protest_RA {
                     }).Start();
                     break;
 
+                case "ssh":
+                    new Thread(() => {
+                        try {
+                            using (Process p = new Process()) {
+                                p.StartInfo.FileName = "ssh";
+                                p.StartInfo.Arguments = targer;
+                                p.StartInfo.UseShellExecute = false;
+                                p.Start();
+                            }
+                        } catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                    }).Start();
+                    break;
+
                 case "smb":
                     new Thread(() => {
                         try {
@@ -167,6 +190,7 @@ namespace Protest_RA {
                     break;
 
                 case "stp":
+                    if (!Main.srv_stamp.chkEnable.Checked) break;
                     Main.ShowStamp(arg); //invoke
                     break;
 
@@ -180,6 +204,7 @@ namespace Protest_RA {
                         }
                     } catch { }
                     break;
+
             }
 
             return false;

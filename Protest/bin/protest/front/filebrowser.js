@@ -100,6 +100,7 @@ class FileBrowser extends Window {
             if (!this.args.filename) return;
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
                 if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
             };
@@ -126,6 +127,8 @@ class FileBrowser extends Window {
         
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split.length == 1 && split[0].length > 0) {
@@ -195,7 +198,7 @@ class FileBrowser extends Window {
                 this.ConfirmBox("Server is unavailable.", true);
         };
 
-        xhr.open("GET", `mngh/getfiles"&path=smb:${path}`, true);
+        xhr.open("GET", `mngh/getfiles&path=smb:${path}`, true);
         xhr.send();
     }
 

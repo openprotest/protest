@@ -17,8 +17,7 @@ public static class Telnet {
         Session.SessionEntry? session = Session.GetSessionEntry(ctx.Request.Cookies["sessionid"]?.Value);
 
         string performer = Session.GetUsername(ctx.Request.Cookies["sessionid"]?.Value);
-        Logging.Action(performer, "telnet");
-
+        
         WebSocketContext wsc;
         WebSocket ws;
         try {
@@ -59,6 +58,8 @@ public static class Telnet {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                 return;
             }
+
+            Logging.Action(performer, $"Establish telnet connection to {host}:{port}");
 
             //WsWriteText(ws, $"connected to {host}:{port}\n\r");
 

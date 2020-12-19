@@ -9,10 +9,10 @@ using System.Threading;
 public static class RaHandler {
     public static byte[] RaResponse(in string[] para, in string ip) {
         if (para.Length < 3) return Strings.INF.Array;
-        return ip.StartsWith("127.0.0.") ? LocalAgent(para) : RemoteAgent(para, ip);
+        return ip.StartsWith("127.") || ip == "::1" ? LocalAgent(para, ip) : RemoteAgent(para, ip);
     }
 
-    public static byte[] LocalAgent(in string[] para) {
+    public static byte[] LocalAgent(in string[] para, in string ip) {
         string method = para[1];
         string filename = para[2];
         string arg = (para.Length > 3) ? para[3] : String.Empty;
@@ -40,7 +40,6 @@ public static class RaHandler {
             else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
             if (hostname.Length == 0) return Strings.INF.Array;
         }
-
 
         switch (method) {
 
@@ -124,14 +123,17 @@ public static class RaHandler {
                 }
                 break;
 
+            case "winbox":
+                return RemoteAgent(para, ip);
+
             case "stpe": //stamp equip?
-                return Strings.TCP.Array;
+                return RemoteAgent(para, ip);
 
             case "stpu": //stamp user?
-                return Strings.TCP.Array;
+                return RemoteAgent(para, ip);
 
             case "stp": //stamp
-                return Strings.TCP.Array;
+                return RemoteAgent(para, ip);
         }
 
         return Strings.OK.Array;
@@ -162,18 +164,66 @@ public static class RaHandler {
                 Encoding.UTF8.GetString(Database.GetValue(Database.users, filename, property))
             );
 
-        else {
+        else if (method == "winbox") { //winbox
             if (filename.Length == 0) return Strings.INF.Array;
             if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
 
             Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
 
-            string hostname = String.Empty;
-            if (entry.hash.ContainsKey("IP")) hostname = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
-            else if (entry.hash.ContainsKey("HOSTNAME")) hostname = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
-            if (hostname.Length == 0) return Strings.INF.Array;
+            string host = String.Empty;
+            if (entry.hash.ContainsKey("IP")) host = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
+            else if (entry.hash.ContainsKey("HOSTNAME")) host = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
+            if (host.Length == 0) return Strings.INF.Array;
 
-            payload = Encoding.UTF8.GetBytes($"{method}{(char)127}{hostname}{(char)127}{arg}");
+            string[] overwriteProto = null;
+            if (entry.hash.ContainsKey(".OVERWRITEPROTOCOL"))
+                overwriteProto = ((string[])entry.hash[".OVERWRITEPROTOCOL"])[0].Trim().Split(';');
+            else if (entry.hash.ContainsKey("OVERWRITEPROTOCOL"))
+                overwriteProto = ((string[])entry.hash["OVERWRITEPROTOCOL"])[0].Trim().Split(';');
+
+            int overwritePort = 0;
+            for (int i = 0; i< overwriteProto?.Length; i++) {
+                overwriteProto[i] = overwriteProto[i].Trim();
+                if (!overwriteProto[i].StartsWith("winbox:")) continue;
+                Int32.TryParse(overwriteProto[i].Substring(7).Trim(), out overwritePort);
+                break;
+            }
+
+            if (overwritePort != 0) host += $":{overwritePort}";
+
+            string username = entry.hash.ContainsKey("USERNAME") ? ((string[])entry.hash["USERNAME"])[0].Split(';')[0].Trim() : "admin";
+            string password = entry.hash.ContainsKey("PASSWORD") ? ((string[])entry.hash["PASSWORD"])[0].Split(';')[0].Trim() : "";
+
+            payload = Encoding.UTF8.GetBytes($"winbox{(char)127}{host + " " + username + " \"" + password + "\""}{(char)127}");
+
+        } else {
+            if (filename.Length == 0) return Strings.INF.Array;
+            if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
+
+            Database.DbEntry entry = (Database.DbEntry)Database.equip[filename];
+
+            string host = String.Empty;
+            if (entry.hash.ContainsKey("IP")) host = ((string[])entry.hash["IP"])[0].Split(';')[0].Trim();
+            else if (entry.hash.ContainsKey("HOSTNAME")) host = ((string[])entry.hash["HOSTNAME"])[0].Split(';')[0].Trim();
+            if (host.Length == 0) return Strings.INF.Array;
+
+            string[] overwriteProto = null;
+            if (entry.hash.ContainsKey(".OVERWRITEPROTOCOL"))
+                overwriteProto = ((string[])entry.hash[".OVERWRITEPROTOCOL"])[0].Trim().Split(';');
+            else if (entry.hash.ContainsKey("OVERWRITEPROTOCOL"))
+                overwriteProto = ((string[])entry.hash["OVERWRITEPROTOCOL"])[0].Trim().Split(';');
+
+            int overwritePort = 0;
+            for (int i = 0; i < overwriteProto?.Length; i++) {
+                overwriteProto[i] = overwriteProto[i].Trim();
+                if (!overwriteProto[i].StartsWith($"{method}:")) continue;
+                Int32.TryParse(overwriteProto[i].Substring(method.Length+1), out overwritePort);
+                break;
+            }
+
+            if (overwritePort != 0) host += $":{overwritePort}";
+
+            payload = Encoding.UTF8.GetBytes($"{method}{(char)127}{host}{(char)127}{arg}");
         }
 
         try {

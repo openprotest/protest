@@ -205,6 +205,8 @@ class DebitNotes extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 this.UpdateList(split, append, this.selected);
@@ -546,6 +548,8 @@ class DebitNotes extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split.length > 1)
@@ -948,6 +952,8 @@ class DebitNotes extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.response != "failed")
                         this.GetNotes(false);
@@ -1003,6 +1009,8 @@ class DebitNotes extends Window {
         this.ConfirmBox("Are you sure you want to mark this debit note as returned?").addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
 
                     if (xhr.responseText == "ok")
@@ -1061,8 +1069,9 @@ class DebitNotes extends Window {
         this.ConfirmBox("Are you sure you want to delete this debit note?").addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
-                if (xhr.readyState == 4 && xhr.status == 200) {
+                if (xhr.status == 403) location.reload(); //authorization
 
+                if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText == "ok") {
                         this.list.removeChild(this.selected[10]);
                         this.preview.innerHTML = "";

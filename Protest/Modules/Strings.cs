@@ -50,8 +50,8 @@ public static class Strings {
     public static readonly string DIR_WATCHDOG    = $"{Directory.GetCurrentDirectory()}\\protest\\watchdog";
     public static readonly string DIR_LOG         = $"{Directory.GetCurrentDirectory()}\\protest\\log";
     public static readonly string DIR_BACKUP      = $"{Directory.GetCurrentDirectory()}\\protest\\backup";
+    public static readonly string DIR_CONFIG      = $"{Directory.GetCurrentDirectory()}\\protest\\configuration";
     //public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
-    //public static readonly string DIR_CONFIG      = $"{Directory.GetCurrentDirectory()}\\protest\\configuration";
 
     public static readonly string DIR_DEBIT       = $"{Directory.GetCurrentDirectory()}\\protest\\debit";
     public static readonly string DIR_DEBIT_SHORT = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\short";
@@ -76,7 +76,7 @@ public static class Strings {
             DirectoryInfo dirLog      = new DirectoryInfo(DIR_LOG);
             DirectoryInfo dirLastSeen = new DirectoryInfo(DIR_LASTSEEN);
             DirectoryInfo dirWatchdog = new DirectoryInfo(DIR_WATCHDOG);
-            //DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
+            DirectoryInfo dirConfig   = new DirectoryInfo(DIR_CONFIG);
             //DirectoryInfo dirMetrics  = new DirectoryInfo(DIR_METRICS);
             DirectoryInfo dirAcl      = new DirectoryInfo(Strings.DIR_ACL); 
             DirectoryInfo dirData     = new DirectoryInfo(DIR_DATA);
@@ -87,7 +87,7 @@ public static class Strings {
             if (!dirLog.Exists)      dirLog.Create();
             if (!dirLastSeen.Exists) dirLastSeen.Create();
             if (!dirWatchdog.Exists) dirWatchdog.Create();
-            //if (!dirConfig.Exists)   dirConfig.Create();
+            if (!dirConfig.Exists)   dirConfig.Create();
             //if (!dirMetrics.Exists)  dirMetrics.Create();
             if (!dirAcl.Exists)      dirAcl.Create();
             if (!dirData.Exists)     dirData.Create();

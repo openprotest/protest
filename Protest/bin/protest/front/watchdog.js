@@ -26,8 +26,8 @@ class Watchdog extends Window {
         btnReload.setAttribute("tip-below", "Reload");
         this.toolbox.appendChild(btnReload);
 
+        const btnSettings = document.createElement("div");
         if (AUTHORIZATION.watchdog === 2) {
-            const btnSettings = document.createElement("div");
             btnSettings.style.backgroundImage = "url(res/l_tool02.svgz)";
             btnSettings.setAttribute("tip-below", "Settings");
             this.toolbox.appendChild(btnSettings);
@@ -358,6 +358,8 @@ class Watchdog extends Window {
                         this.ConfirmBox("Are you sure you want to delete this entry?", false).addEventListener("click", () => {
                             const xhr = new XMLHttpRequest();
                             xhr.onreadystatechange = () => {
+                                if (xhr.status == 403) location.reload(); //authorization
+
                                 if (xhr.readyState == 4 && xhr.status == 200)
                                     if (xhr.responseText === "ok") {
                                         this.view.removeChild(this.list[i].div);
@@ -485,6 +487,8 @@ class Watchdog extends Window {
     Settings() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split.length > 10)
@@ -739,6 +743,8 @@ class Watchdog extends Window {
         btnTest.onclick = () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok")
                     this.ConfirmBox(xhr.responseText, true);
 
@@ -768,6 +774,8 @@ class Watchdog extends Window {
         btnOK.addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok")
                     this.ConfirmBox(xhr.responseText, true);
 
@@ -820,9 +828,8 @@ class Watchdog extends Window {
     Add() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
-            if (xhr.readyState == 4 && xhr.status == 200)
-                this.Reload();
-
+            if (xhr.status == 403) location.reload(); //authorization
+            if (xhr.readyState == 4 && xhr.status == 200) this.Reload();
             if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server unavailable.", true);
         };
 

@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Protest_RA {
@@ -18,8 +11,9 @@ namespace Protest_RA {
         }
 
         public Service(string name) {
+            this.Text = name;
+            this.name = name;
             InitializeComponent();
-            this.chkEnable.Text = name;
         }
 
         public void UpdateUi() {
@@ -28,7 +22,7 @@ namespace Protest_RA {
             txtParam.Enabled = chkEnable.Checked;
             txtUsername.Enabled = chkEnable.Checked;
             txtPassword.Enabled = chkEnable.Checked;
-            this.BackColor = (chkEnable.Checked) ? Color.FromArgb(255, 64,64,64) : Color.FromArgb(255, 48,48,48);
+            //this.BackColor = chkEnable.Checked ? Color.FromArgb(255, 64,64,64) : Color.FromArgb(255, 48,48,48);
         }
         
         public void UpdateUi(string name, bool enable, string exe, string args, string username, string password) {

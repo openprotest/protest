@@ -62,6 +62,7 @@
     <Compile Include="Modules\Backup.cs" />
     <Compile Include="Modules\DebitNotes.cs" />
     <Compile Include="Modules\Documentation.cs" />
+    <Compile Include="Modules\Configuration.cs" />
     <Compile Include="Modules\FileBrowser.cs" />
     <Compile Include="Modules\Ssl.cs" />
     <Compile Include="Modules\TaskWrapper.cs" />

@@ -77,9 +77,8 @@
     position: relative;
     height: 44px;
     border-bottom: rgb(128,128,128) 1px solid;
-    /*content-visibility:auto; /*not good enough*/
-
-    transition: background-color .2s;
+    /*content-visibility:auto;*/ /*not good enough*/
+    /*contain-intrinsic-size: 44px;*/
 }
 
 .lst-obj-ele:hover{

@@ -302,6 +302,8 @@ class Gandalf extends Window {
             btnCopy.onclick = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         let split = xhr.responseText.split(String.fromCharCode(127));
                         if (split.length > 10) {
@@ -355,6 +357,8 @@ class Gandalf extends Window {
     GetEntropy() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
 
                 let split = xhr.responseText.split(String.fromCharCode(127));
@@ -451,6 +455,8 @@ class Gandalf extends Window {
     Send() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 this.btnNext.removeAttribute("disabled");
                 this.btnNext.value = "Close";

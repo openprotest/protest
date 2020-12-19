@@ -174,7 +174,7 @@ public static class Watchdog {
 
                 case "password":
                     try {
-                        Watchdog.password = CryptoAes.DecryptB64(split[1].Replace("--", "=="), Program.DB_KEY_A, Program.DB_KEY_B);
+                        Watchdog.password = CryptoAes.DecryptB64(split[1].Replace("-", "="), Program.DB_KEY_A, Program.DB_KEY_B);
                     } catch {
                         Watchdog.password = String.Empty;
                     }
@@ -188,7 +188,6 @@ public static class Watchdog {
                     Watchdog.ssl = split[1] == "true";
                     break;
             }
-
 
         }
 

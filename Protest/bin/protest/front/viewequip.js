@@ -187,6 +187,18 @@ class Equip extends Window {
                 this.properties.appendChild(newProperty);
             }
 
+        const overwriteProto = {};
+        if (this.entry.hasOwnProperty(".OVERWRITEPROTOCOL"))
+            this.entry[".OVERWRITEPROTOCOL"][0].split(";").map(o => o.trim()).forEach(o => {
+                let s = o.split(":");
+                if (s.length === 2) overwriteProto[s[0]] = s[1];
+            });
+        else if (this.entry.hasOwnProperty("OVERWRITEPROTOCOL"))
+            this.entry["OVERWRITEPROTOCOL"][0].split(";").map(o => o.trim()).forEach(o => {
+                let s = o.split(":");
+                if (s.length === 2) overwriteProto[s[0]] = s[1];
+            });
+
         this.AddGroup("res/other.svgz", "Other");
         let isGroupEmpty = true;
         for (let k in this.entry)
@@ -195,7 +207,6 @@ class Equip extends Window {
                 const newProperty = this.AddProperty(k, this.entry[k][0], this.entry[k][1]);
                 if (done != null) done.push(k);
                 this.properties.appendChild(newProperty);
-
                 isGroupEmpty = false;
             }
 
@@ -209,7 +220,7 @@ class Equip extends Window {
 
                 const button = this.LiveButton("res/ping.svgz", ips[i]);
                 const div = button.div;
-                const roundtrip = button.sub;
+                //const roundtrip = button.sub;
 
                 this.live.appendChild(div);
 
@@ -252,7 +263,7 @@ class Equip extends Window {
                 setTimeout(() => {
                     let used = parseInt(disks[i+1]);
                     let total = parseInt(disks[i+2]);
-                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${72*used/total}px 0 0  inset`;
+                    usage.style.boxShadow = `#202020 0 0 0 1px inset, #404040 ${72*used/total}px 0 0 inset`;
                 }, 400);
 
                 div.onclick = () => {
@@ -263,6 +274,7 @@ class Equip extends Window {
 
                     /*const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
+                        if (xhr.status == 403) location.reload(); //authorization
                         if (xhr.readyState == 4 && xhr.status == 200) if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                         if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                     };
@@ -305,6 +317,7 @@ class Equip extends Window {
                 if (btnWoL.hasAttribute("busy")) return;
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
                     if (xhr.readyState == 4) btnWoL.removeAttribute("busy");
                     if (xhr.readyState == 4 && xhr.status == 200) //OK
                         if (xhr.responseText == "ok") this.ConfirmBox("Magic package has been sent successfully.", true);
@@ -331,6 +344,7 @@ class Equip extends Window {
                         this.ConfirmBox("Are you sure you want to power off this device?").addEventListener("click", () => {
                             const xhr = new XMLHttpRequest();
                             xhr.onreadystatechange = () => {
+                                if (xhr.status == 403) location.reload(); //authorization
                                 if (xhr.readyState == 4) btnOff.removeAttribute("busy");
                                 if (xhr.readyState == 4 && xhr.status == 200)
                                     if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
@@ -342,9 +356,7 @@ class Equip extends Window {
                             xhr.send();
                         });
                     };
-                }
 
-                if (AUTHORIZATION.remotehosts === 1) {
                     const btnReboot = this.SideButton("res/restart.svgz", "Reboot");
                     this.sidetools.appendChild(btnReboot);
                     btnReboot.onclick = () => {
@@ -352,6 +364,7 @@ class Equip extends Window {
                         this.ConfirmBox("Are you sure you want to reboot this device?").addEventListener("click", () => {
                             const xhr = new XMLHttpRequest();
                             xhr.onreadystatechange = () => {
+                                if (xhr.status == 403) location.reload(); //authorization
                                 if (xhr.readyState == 4) btnReboot.removeAttribute("busy");
                                 if (xhr.readyState == 4 && xhr.status == 200)
                                     if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
@@ -362,10 +375,8 @@ class Equip extends Window {
                             xhr.open("GET", "mngh/reboot&file=" + this.filename, true);
                             xhr.send();
                         });
-                    };
-                }
+                    };                
 
-                if (AUTHORIZATION.remotehosts === 1) {
                     const btnLogoff = this.SideButton("res/logoff.svgz", "Log off");
                     this.sidetools.appendChild(btnLogoff);
                     btnLogoff.onclick = () => {
@@ -373,6 +384,7 @@ class Equip extends Window {
                         this.ConfirmBox("Are you sure you want to log off this device?").addEventListener("click", () => {
                             const xhr = new XMLHttpRequest();
                             xhr.onreadystatechange = () => {
+                                if (xhr.status == 403) location.reload(); //authorization
                                 if (xhr.readyState == 4) btnLogoff.removeAttribute("busy");
                                 if (xhr.readyState == 4 && xhr.status == 200)
                                     if (xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
@@ -386,7 +398,7 @@ class Equip extends Window {
                     };
                 }
                 
-                if (this.entry.hasOwnProperty("IP") && AUTHORIZATION.wmi === 1) {
+                if (AUTHORIZATION.wmi === 1 && this.entryIP) {
                     const btnProcesses = this.SideButton("res/console.svgz", "Processes");
                     this.sidetools.appendChild(btnProcesses);
                     btnProcesses.onclick = () => {
@@ -410,12 +422,13 @@ class Equip extends Window {
                     };
                 }
 
-                if (AUTHORIZATION.remoteagent === 1) {
+                if (AUTHORIZATION.remoteagent === 1 && this.entryIP) {
                     const btnMgmt = this.SideButton("res/compmgmt.svgz", "PC Management"); //compmgmt
                     this.sidetools.appendChild(btnMgmt);
                     btnMgmt.onclick = () => {
                         const xhr = new XMLHttpRequest();
                         xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
                             if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                             if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                         };
@@ -424,12 +437,13 @@ class Equip extends Window {
                     };
                 }
 
-                if (AUTHORIZATION.remoteagent === 1) {
+                if (AUTHORIZATION.remoteagent === 1 && this.entryIP) {
                     const btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
                     this.sidetools.appendChild(btnPse);
                     btnPse.onclick = () => {
                         const xhr = new XMLHttpRequest();
                         xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
                             if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
                             if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
                         };
@@ -439,131 +453,172 @@ class Equip extends Window {
                 }
             }
 
-            if (ports.includes(22) && AUTHORIZATION.remoteagent === 1) { //ssh
-                const btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
-                this.sidetools.appendChild(btnSsh);
-                btnSsh.onclick = () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
-                    };
-                    xhr.open("GET", "ra&ssh&" + this.filename, true);
-                    xhr.send();
-                };
-            }
+            if (this.entry.IP) {
 
-            if (ports.includes(23) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.telnet === 1) { //telnet
-                const btnTelnet = this.SideButton("res/telnet.svgz", "Telnet");
-                this.sidetools.appendChild(btnTelnet);
-                btnTelnet.onclick = () => {
-                    new Telnet(this.entry["IP"][0].split(";")[0].trim());
-                };
-            }
-
-            if (ports.includes(445) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remotehosts === 1) { //smb
-                const btnSmb = this.SideButton("res/shared.svgz", "SMB");
-                this.sidetools.appendChild(btnSmb);
-                btnSmb.onclick = () => {
-                    if (this.entry.IP) {
-                        let ip = this.entry.IP[0].split(";").map(o => o.trim())[0];
-                        new FileBrowser({ path: ip, filename: this.filename, view: "grid" });
+                if (AUTHORIZATION.telnet === 1) //telnet
+                    if (overwriteProto.telnet) {
+                        const btnTelnet = this.SideButton("res/telnet.svgz", "Telnet");
+                        this.sidetools.appendChild(btnTelnet);
+                        btnTelnet.onclick = () => new Telnet(this.entry["IP"][0].split(";")[0].trim() + ":" + overwriteProto.telnet);
+                        
+                    } else if (ports.includes(23)) {
+                        const btnTelnet = this.SideButton("res/telnet.svgz", "Telnet");
+                        this.sidetools.appendChild(btnTelnet);
+                        btnTelnet.onclick = () => new Telnet(this.entry["IP"][0].split(";")[0].trim());
                     }
 
-                    /*const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                if (AUTHORIZATION.remoteagent === 1 && (ports.includes(22) || overwriteProto.ssh)) { //ssh
+                    const btnSsh = this.SideButton("res/ssh.svgz", "Secure shell");
+                    this.sidetools.appendChild(btnSsh);
+                    btnSsh.onclick = () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&ssh&" + this.filename, true);
+                        xhr.send();
                     };
-                    xhr.open("GET", "ra&smb&" + this.filename, true);
-                    xhr.send();*/
-                };
-            }
+                }
 
-            if (ports.includes(80) && this.entry.hasOwnProperty("IP")) { //http
-                const btnAction = this.SideButton("res/earth.svgz", "HTTP");
-                this.sidetools.appendChild(btnAction);
-                btnAction.onclick = () => window.open("http://" + this.entry["IP"][0].split(";")[0].trim());
-            }
+                if (AUTHORIZATION.remotehosts === 1 && ports.includes(445)) { //smb
+                    const btnSmb = this.SideButton("res/shared.svgz", "SMB");
+                    this.sidetools.appendChild(btnSmb);
+                    btnSmb.onclick = () => {
+                        if (this.entry.IP) {
+                            let ip = this.entry.IP[0].split(";").map(o => o.trim())[0];
+                            new FileBrowser({ path: ip, filename: this.filename, view: "grid" });
+                        }
 
-            if (ports.includes(443) && this.entry.hasOwnProperty("IP")) { //https
-                const btnAction = this.SideButton("res/earth.svgz", "HTTPs");
-                this.sidetools.appendChild(btnAction);
-                btnAction.onclick = () => window.open("https://" + this.entry["IP"][0].split(";")[0].trim());
-            }
-
-            if (ports.includes(21) && this.entry.hasOwnProperty("IP")) { //ftp
-                const btnAction = this.SideButton("res/shared.svgz", "FTP");
-                this.sidetools.appendChild(btnAction);
-                btnAction.onclick = () => window.open("ftp://" + this.entry["IP"][0].split(";")[0].trim());
-            }
-
-            if (ports.includes(989) && this.entry.hasOwnProperty("IP")) { //ftps
-                const btnAction = this.SideButton("res/shared.svgz", "FTPs");
-                this.sidetools.appendChild(btnAction);
-                btnAction.onclick = () => window.open("ftps://" + this.entry["IP"][0].split(";")[0].trim());
-            }
-
-            if (ports.includes(3389) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remoteagent === 1) { //rdp
-                const btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
-                this.sidetools.appendChild(btnRdp);
-                btnRdp.onclick = () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        /*const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&smb&" + this.filename, true);
+                        xhr.send();*/
                     };
-                    xhr.open("GET", "ra&rdp&" + this.filename, true);
-                    xhr.send();
-                };
-            }
+                }
 
-            if (ports.includes(5900) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remoteagent === 1) { //uvnc
-                const btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
-                this.sidetools.appendChild(btnUvnc);
-                btnUvnc.onclick = () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                if (overwriteProto.http) { //http
+                    const btnAction = this.SideButton("res/earth.svgz", "HTTP");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("http://" + this.entry["IP"][0].split(";")[0].trim() + ":" + overwriteProto.http);
+                } else if (ports.includes(80)) {
+                    const btnAction = this.SideButton("res/earth.svgz", "HTTP");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("http://" + this.entry["IP"][0].split(";")[0].trim());
+                }
+
+                if (overwriteProto.https) { //https
+                    const btnAction = this.SideButton("res/earth.svgz", "HTTPs");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("https://" + this.entry["IP"][0].split(";")[0].trim() + ":" + overwriteProto.https);
+                } else if (ports.includes(443)) { //https
+                    const btnAction = this.SideButton("res/earth.svgz", "HTTPs");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("https://" + this.entry["IP"][0].split(";")[0].trim());
+                }
+
+                if (overwriteProto.ftp) { //ftp
+                    const btnAction = this.SideButton("res/shared.svgz", "FTP");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("ftp://" + this.entry["IP"][0].split(";")[0].trim() + ":" + overwriteProto.ftp);
+                } else if (ports.includes(21)) {
+                    const btnAction = this.SideButton("res/shared.svgz", "FTP");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("ftp://" + this.entry["IP"][0].split(";")[0].trim());
+                }
+
+                if (overwriteProto.ftps) {
+                    const btnAction = this.SideButton("res/shared.svgz", "FTP");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("ftps://" + this.entry["IP"][0].split(";")[0].trim() + ":" + overwriteProto.ftps);
+
+                } else if (ports.includes(989)) { //ftps
+                    const btnAction = this.SideButton("res/shared.svgz", "FTPs");
+                    this.sidetools.appendChild(btnAction);
+                    btnAction.onclick = () => window.open("ftps://" + this.entry["IP"][0].split(";")[0].trim());
+                }
+
+                if (AUTHORIZATION.remoteagent === 1 && (ports.includes(3389) || overwriteProto.rdp)) { //rdp
+                    const btnRdp = this.SideButton("res/rdp.svgz", "Remote desktop");
+                    this.sidetools.appendChild(btnRdp);
+                    btnRdp.onclick = () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&rdp&" + this.filename, true);
+                        xhr.send();
                     };
-                    xhr.open("GET", "ra&vnc&" + this.filename, true);
-                    xhr.send();
-                };
-            }
+                }
 
-            if (ports.includes(9100) && this.entry.hasOwnProperty("IP") && AUTHORIZATION.remotehosts === 1) { //print test
-                const btnPrintTest = this.SideButton("res/printer.svgz", "Print test page");
-                this.sidetools.appendChild(btnPrintTest);
-                btnPrintTest.onclick = () => {
-                    if (btnPrintTest.hasAttribute("busy")) return;
-                    const xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = () => {
-                        if (xhr.readyState == 4) btnPrintTest.removeAttribute("busy");
-                        if (xhr.readyState == 4 && xhr.status == 200)
-                            if (xhr.responseText != "ok")
-                                this.ConfirmBox(xhr.responseText, true);
-                            else
-                                this.ConfirmBox("Test sent successfully.", true);
-
-                        if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                if (AUTHORIZATION.remoteagent === 1 && (ports.includes(5900) || overwriteProto.uvnc)) { //uvnc
+                    const btnUvnc = this.SideButton("res/uvnc.svgz", "UltraVNC");
+                    this.sidetools.appendChild(btnUvnc);
+                    btnUvnc.onclick = () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&vnc&" + this.filename, true);
+                        xhr.send();
                     };
-                    btnPrintTest.setAttribute("busy", true);
-                    xhr.open("GET", "mngh/printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
-                    xhr.send();
-                };
+                }
+
+                if (AUTHORIZATION.remoteagent === 1 && (ports.includes(8291) || overwriteProto.winbox)) { //winbox
+                    const btnWinbox = this.SideButton("res/mikrotik.svgz", "Winbox");
+                    this.sidetools.appendChild(btnWinbox);
+                    btnWinbox.onclick = () => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhr.readyState == 4 && xhr.status == 200 && xhr.responseText != "ok") this.ConfirmBox(xhr.responseText, true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        xhr.open("GET", "ra&winbox&" + this.filename, true);
+                        xhr.send();
+                    };
+                }
+
+                if (AUTHORIZATION.remotehosts === 1 && ports.includes(9100)) { //print test
+                    const btnPrintTest = this.SideButton("res/printer.svgz", "Print test page");
+                    this.sidetools.appendChild(btnPrintTest);
+                    btnPrintTest.onclick = () => {
+                        if (btnPrintTest.hasAttribute("busy")) return;
+                        const xhr = new XMLHttpRequest();
+                        xhr.onreadystatechange = () => {
+                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhr.readyState == 4) btnPrintTest.removeAttribute("busy");
+                            if (xhr.readyState == 4 && xhr.status == 200)
+                                if (xhr.responseText != "ok")
+                                    this.ConfirmBox(xhr.responseText, true);
+                                else
+                                    this.ConfirmBox("Test sent successfully.", true);
+                            if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+                        };
+                        btnPrintTest.setAttribute("busy", true);
+                        xhr.open("GET", "mngh/printtest&target=" + this.entry["IP"][0].split(";")[0].trim(), true);
+                        xhr.send();
+                    };
+                }
+
             }
         }
 
-        /*
-        if (this.entry["TYPE"][0].toUpperCase() == "ROUTER" || this.entry["TYPE"][0].toUpperCase() == "SWITCH" && this.entry.hasOwnProperty("PORTS")) {
+        if (this.entry["TYPE"][0].toUpperCase() == "ROUTER" || this.entry["TYPE"][0].toUpperCase() == "SWITCH" && this.entry.hasOwnProperty("PORTS")) {//conficuration
             const btnConfig = this.SideButton(GetEquipIcon(this.entry["TYPE"]), "Configuration");
             btnConfig.style.marginTop = "12px";
             this.sidetools.appendChild(btnConfig);
             btnConfig.onclick = () => this.Config();
         }
-        */
-        
     }
 
     LiveInfo() {
@@ -777,6 +832,8 @@ class Equip extends Window {
             btnShow.onclick = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK
                         preview.innerHTML = xhr.responseText;
                         countdown.style.display = "inline-block";
@@ -804,6 +861,8 @@ class Equip extends Window {
             btnStamp.onclick = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
+                    if (xhr.status == 403) location.reload(); //authorization
+
                     if (xhr.readyState == 4 && xhr.status == 200) { //OK                       
                         if (xhr.responseText != "ok")
                             this.ConfirmBox(xhr.responseText, true);
@@ -1066,6 +1125,8 @@ class Equip extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) { //OK
                     dialog.innerBox.innerHTML = "";
 
@@ -1182,6 +1243,8 @@ class Equip extends Window {
 
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
                 if (xhr.readyState == 4 && xhr.status == 200) {
@@ -1237,13 +1300,17 @@ class Equip extends Window {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
             if (xhr.readyState == 4) {
+
                 if (xhr.status == 0) {
                     dialog.Abort();
                     this.ConfirmBox("Server is unavailable.", true);
                     return;
                 }
 
+                if (xhr.status == 403) location.reload(); //authorization                    
+
                 if (xhr.status == 200) {
+
                     let split = xhr.responseText.split(String.fromCharCode(127));
                     if (split.length == 1) {
                         dialog.Abort();
@@ -1296,6 +1363,8 @@ class Equip extends Window {
         this.ConfirmBox("Are you sure you want to delete this entry?").addEventListener("click", () => {
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
                 if (xhr.readyState == 4 && xhr.status == 200)
@@ -1312,18 +1381,231 @@ class Equip extends Window {
     }
 
     Config() {
-        const dialog = this.DialogBox("480px");
+        const dialog = this.DialogBox("calc(100% - 2px)");
         if (dialog === null) return;
 
-        const btnOK = dialog.btnOK;
+        const btnOK     = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
         const buttonBox = dialog.buttonBox;
         const innerBox = dialog.innerBox;
 
-        if (this.hasConfigFile) {
-            //
-            return;
-        }
+        buttonBox.removeChild(btnCancel);
+
+        innerBox.classList.add("code-box");
+        innerBox.style.padding = "20px";
+
+        const btnFetch = document.createElement("div");
+        btnFetch.setAttribute("tip-below", "Fetch");
+        btnFetch.style.position = "absolute";
+        btnFetch.style.left = "0px";
+        btnFetch.style.top = "32px";
+        btnFetch.style.width = "56px";
+        btnFetch.style.height = "56px";
+        btnFetch.style.paddingLeft = "4px";
+        btnFetch.style.borderRadius = "0 8px 8px 0";
+        btnFetch.style.backgroundColor = "rgb(208,208,208)";
+        btnFetch.style.backgroundImage = "url(res/fetch.svgz)";
+        btnFetch.style.backgroundPosition = "center";
+        btnFetch.style.backgroundSize = "48px 48px";
+        btnFetch.style.backgroundRepeat = "no-repeat";
+        btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        btnFetch.style.transition = ".2s";
+        dialog.innerBox.parentNode.parentNode.appendChild(btnFetch);
+
+        const divFetch = document.createElement("div");
+        divFetch.style.position = "absolute";
+        divFetch.style.visibility = "hidden";
+        divFetch.style.left = "30%";
+        divFetch.style.top = "28px";
+        divFetch.style.width = "40%";
+        divFetch.style.maxWidth = "400px";
+        divFetch.style.minWidth = "220px";
+        divFetch.style.borderRadius = "8px";
+        divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        divFetch.style.backgroundColor = "rgb(208,208,208)";
+        divFetch.style.padding = "16px 8px";
+        divFetch.style.overflow = "hidden";
+        divFetch.style.textAlign = "center";
+        dialog.innerBox.parentElement.parentElement.appendChild(divFetch);
+
+
+        const lblFetchUsername = document.createElement("div");
+        lblFetchUsername.style.display = "inline-block";
+        lblFetchUsername.style.minWidth = "96px";
+        lblFetchUsername.innerHTML = "Username:";
+        divFetch.appendChild(lblFetchUsername);
+
+        const txtFetchUsername = document.createElement("input");
+        txtFetchUsername.type = "text";
+        txtFetchUsername.value = this.entry.hasOwnProperty("USERNAME") ? this.entry["USERNAME"][0].split(";")[0].trim() : "";
+        divFetch.appendChild(txtFetchUsername);
+
+        const lblFetchPassword = document.createElement("div");
+        lblFetchPassword.style.display = "inline-block";
+        lblFetchPassword.style.minWidth = "96px";
+        lblFetchPassword.innerHTML = "Password:";
+        divFetch.appendChild(lblFetchPassword);
+
+        const txtFetchPassword = document.createElement("input");
+        txtFetchPassword.type = "password";
+        txtFetchPassword.placeholder = "unchanged";
+        divFetch.appendChild(txtFetchPassword);
+
+        divFetch.appendChild(document.createElement("br"));
+        divFetch.appendChild(document.createElement("br"));
+
+        const chkFetchRemember = document.createElement("input");
+        chkFetchRemember.type = "checkbox";
+        divFetch.appendChild(chkFetchRemember);
+        this.AddCheckBoxLabel(divFetch, chkFetchRemember, "Remember");
+
+        divFetch.appendChild(document.createElement("br"));
+        divFetch.appendChild(document.createElement("br"));
+
+        const btnFetchOk = document.createElement("input");
+        btnFetchOk.type = "button";
+        btnFetchOk.value = "Fetch";
+        divFetch.appendChild(btnFetchOk);
+
+        const btnFetchCancel = document.createElement("input");
+        btnFetchCancel.type = "button";
+        btnFetchCancel.value = "Cancel";
+        divFetch.appendChild(btnFetchCancel);
+
+        const DisplayScript = lines => {
+            innerBox.innerHTML = "";            
+            for (let i = 0; i < lines.length; i++) {
+                const divLine = document.createElement("div");
+                
+                if (lines[i].startsWith("#") || lines[i].startsWith("!")) {
+                    divLine.innerHTML = lines[i];
+                    divLine.style.color = "#008000";
+                    divLine.style.fontStyle = "italic";
+                    innerBox.appendChild(divLine);
+
+                } else if (lines[i].startsWith("/")) {
+                    divLine.innerHTML = lines[i];
+                    divLine.style.color = "#008060";
+                    divLine.style.paddingTop = "8px";
+                    innerBox.appendChild(divLine);
+
+                } else {
+                    let line = [];
+
+                    let temp = lines[i].split("\"");
+                    for (let i = 0; i < temp.length; i++)
+                        if (i%2===0)
+                            line.push(temp[i]);
+                        else 
+                            line.push(`\"${temp[i]}\"`);
+                   
+                    for (let j = 0; j < line.length; j++) {
+                        if (line[j].length === 0) continue;
+
+                        let equalPos = line[j].indexOf("=");
+
+                        if (line[j].startsWith(" ")) line[j] = "&nbsp;" + line[j].substring(1);
+                        if (line[j].endsWith(" ")) line[j] = line[j].substring(0, line[j].length - 1) + "&nbsp;";
+
+                        if (line[j].startsWith("\"")) {
+                            let newSpan = document.createElement("span");
+                            newSpan.innerHTML = line[j];
+                            newSpan.style.color = "#804010";
+                            divLine.appendChild(newSpan);
+
+                        } else {
+
+                            //while (line[j].indexOf("=") > -1) {
+                            //}
+
+                            let newSpan = document.createElement("span");
+                            newSpan.innerHTML = line[j];
+                            divLine.appendChild(newSpan);
+                        }
+                    }
+
+                    innerBox.appendChild(divLine);
+                }
+
+            }
+        };
+
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
+            if (xhr.readyState == 4 && xhr.status == 200) { //OK
+                DisplayScript(xhr.responseText.split("\n"));
+            }
+        };
+        xhr.open("GET", "config/get&file=" + this.filename, true);
+        xhr.send();
+
+
+        let fetchToogle = false;
+        btnFetch.onclick = () => {
+            dialog.innerBox.parentElement.style.transition = ".2s";
+            dialog.innerBox.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+            dialog.innerBox.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+            dialog.innerBox.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+
+            divFetch.style.transition = ".2s";
+            divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
+            divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
+            divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
+
+            btnFetch.style.backgroundImage = fetchToogle ? "url(res/fetch.svgz)" : "url(res/close.svgz)";
+            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+
+            fetchToogle = !fetchToogle;
+        };
+
+        btnFetchOk.onclick = () => {
+            if (txtFetchUsername.value.length == 0) return;
+
+            btnFetch.style.filter = "opacity(0)";
+            btnFetch.style.visibility = "hidden";
+            divFetch.style.filter = "opacity(0)";
+            divFetch.style.transform = "translateY(-25%)";
+            divFetch.style.visibility = "hidden";
+
+            const waitbox = document.createElement("span");
+            waitbox.className = "waitbox";
+            waitbox.style.top = "0";
+            dialog.innerBox.parentElement.parentElement.appendChild(waitbox);
+
+            waitbox.appendChild(document.createElement("div"));
+
+            const waitLabel = document.createElement("span");
+            waitLabel.innerHTML = "Doing stuff. Please wait.";
+            waitLabel.className = "wait-label";
+            waitLabel.style.top = "0";
+            dialog.innerBox.parentElement.parentElement.appendChild(waitLabel);
+
+            const xhrFetch = new XMLHttpRequest();
+            xhrFetch.onreadystatechange = () => {
+                if (xhrFetch.status == 403) location.reload(); //authorization
+
+                if (xhrFetch.readyState == 4 && xhrFetch.status == 200) { //OK
+                    DisplayScript(xhrFetch.responseText.split("\n"));
+
+                    btnFetch.onclick();
+                    dialog.innerBox.parentElement.parentElement.removeChild(waitbox);
+                    dialog.innerBox.parentElement.parentElement.removeChild(waitLabel);
+                }
+
+                if (xhrFetch.readyState == 4 && xhrFetch.status == 0) { //disconnected
+                    dialog.Abort();
+                    this.ConfirmBox("Server is unavailable.", true);
+                }
+            };
+
+            xhrFetch.open("GET", "config/fetch&file=" + this.filename, true);
+            xhrFetch.send();
+        };
+
+        btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+
     }
 
     Update(obj) {

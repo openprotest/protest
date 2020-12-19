@@ -116,6 +116,8 @@ class Scripts extends Tabs {
                 if (btnOK) btnOK.addEventListener("click", () => {
                     const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
+                        if (xhr.status == 403) location.reload(); //authorization
+
                         if (xhr.readyState == 4 && xhr.status == 200) {
                             if (xhr.responseText == "ok")
                                 this.ListScripts();
@@ -179,6 +181,8 @@ class Scripts extends Tabs {
                 if (btnOK) btnOK.addEventListener("click", () => {
                     const xhr = new XMLHttpRequest();
                     xhr.onreadystatechange = () => {
+                        if (xhr.status == 403) location.reload(); //authorization
+
                         if (xhr.readyState == 4 && xhr.status == 200) {
                             if (xhr.responseText == "ok")
                                 this.ListScripts();
@@ -254,6 +258,8 @@ class Scripts extends Tabs {
             if (txtFilename.value.length == 0) return;
             const xhr = new XMLHttpRequest();
             xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText == "ok")
                         this.ListScripts();
@@ -285,6 +291,8 @@ class Scripts extends Tabs {
     ListScripts() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 if (split.length < 1) return;
@@ -346,6 +354,8 @@ class ScriptReport extends Window {
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 text = xhr.responseText;
 
@@ -447,6 +457,8 @@ class ScriptPreview extends Window {
     Load() {
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {
+            if (xhr.status == 403) location.reload(); //authorization
+
             if (xhr.readyState == 4 && xhr.status == 200) {
                 let split = xhr.responseText.split(String.fromCharCode(127));
                 this.Plot(split);
