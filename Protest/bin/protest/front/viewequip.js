@@ -1381,7 +1381,7 @@ class Equip extends Window {
     }
 
     Config() {
-        const dialog = this.DialogBox("calc(100% - 2px)");
+        const dialog = this.DialogBox("calc(100% - 34px)");
         if (dialog === null) return;
 
         const btnOK     = dialog.btnOK;
@@ -1392,7 +1392,10 @@ class Equip extends Window {
         buttonBox.removeChild(btnCancel);
 
         innerBox.classList.add("code-box");
-        innerBox.style.padding = "20px";
+        innerBox.style.margin = "8px";
+
+        innerBox.parentElement.style.maxWidth = "100%";
+        innerBox.parentElement.style.backgroundColor = "#202020";
 
         const btnFetch = document.createElement("div");
         btnFetch.setAttribute("tip-below", "Fetch");
@@ -1475,17 +1478,19 @@ class Equip extends Window {
         const DisplayScript = lines => {
             innerBox.innerHTML = "";            
             for (let i = 0; i < lines.length; i++) {
+                //lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
+
                 const divLine = document.createElement("div");
                 
-                if (lines[i].startsWith("#") || lines[i].startsWith("!")) {
+                if (lines[i].startsWith("#") || lines[i].startsWith("!")) { //comment
                     divLine.innerHTML = lines[i];
-                    divLine.style.color = "#008000";
+                    divLine.style.color = "#9C6";
                     divLine.style.fontStyle = "italic";
                     innerBox.appendChild(divLine);
 
-                } else if (lines[i].startsWith("/")) {
+                } else if (lines[i].startsWith("/")) { //location
                     divLine.innerHTML = lines[i];
-                    divLine.style.color = "#008060";
+                    divLine.style.color = "#8FD";
                     divLine.style.paddingTop = "8px";
                     innerBox.appendChild(divLine);
 
@@ -1493,34 +1498,51 @@ class Equip extends Window {
                     let line = [];
 
                     let temp = lines[i].split("\"");
-                    for (let i = 0; i < temp.length; i++)
-                        if (i%2===0)
-                            line.push(temp[i]);
+                    for (let j = 0; j < temp.length; j++)
+                        if (j%2===0)
+                            line.push(temp[j]);
                         else 
-                            line.push(`\"${temp[i]}\"`);
+                            line.push(`\"${temp[j]}\"`);
                    
                     for (let j = 0; j < line.length; j++) {
                         if (line[j].length === 0) continue;
 
                         let equalPos = line[j].indexOf("=");
 
-                        if (line[j].startsWith(" ")) line[j] = "&nbsp;" + line[j].substring(1);
-                        if (line[j].endsWith(" ")) line[j] = line[j].substring(0, line[j].length - 1) + "&nbsp;";
-
-                        if (line[j].startsWith("\"")) {
-                            let newSpan = document.createElement("span");
+                        if (line[j].startsWith("\"") && line[j].length > 2) { //quot
+                            const newSpan = document.createElement("span");
                             newSpan.innerHTML = line[j];
-                            newSpan.style.color = "#804010";
+                            newSpan.style.color = "#D98"; //"#C99";
                             divLine.appendChild(newSpan);
 
                         } else {
+                            let p = 0;
+                            while (p < line[j].length) {
+                                let ep = line[j].indexOf("=", p); //equal pos
+                                if (ep < 0) break;
 
-                            //while (line[j].indexOf("=") > -1) {
-                            //}
+                                let sp = line[j].lastIndexOf(" ", ep); //space pos
+                                if (sp < 0) break;
 
-                            let newSpan = document.createElement("span");
-                            newSpan.innerHTML = line[j];
-                            divLine.appendChild(newSpan);
+                                if (p != sp) {
+                                    const spanA = document.createElement("span");
+                                    spanA.innerHTML = line[j].substring(p, sp);
+                                    divLine.appendChild(spanA);
+                                }
+                                
+                                const spanB = document.createElement("span");
+                                spanB.innerHTML = line[j].substring(sp, ep+1);
+                                spanB.style.color = "#5BE";
+                                divLine.appendChild(spanB);
+
+                                p = ep+1;
+                            }
+
+                            if (p < line[j].length) {
+                                const span = document.createElement("span");
+                                span.innerHTML = line[j].substring(p);
+                                divLine.appendChild(span);
+                            }
                         }
                     }
 
@@ -1605,7 +1627,6 @@ class Equip extends Window {
         };
 
         btnFetchCancel.onclick = () => { btnFetch.onclick(); };
-
     }
 
     Update(obj) {

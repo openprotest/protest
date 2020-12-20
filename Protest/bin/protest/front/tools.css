@@ -373,7 +373,9 @@
 }
 
 .code-box {
-    color: #202020;
+    padding: 20px;
+    color: #E0E0E0;
+    background-color: #282828;
     font-family: monospace;
     overflow-x: hidden;
     overflow-y: auto;
