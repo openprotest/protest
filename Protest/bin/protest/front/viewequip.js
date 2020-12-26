@@ -1813,8 +1813,8 @@ class Equip extends Window {
             if (list.length < 16) {
                 rows = 1;
                 columns = list.length;
-
-            } else if (list.length <= 24) {
+                
+            } else if (list.length <= 52) {
                 rows = 2;
                 columns = Math.ceil(list.length / 2);
 
@@ -1842,8 +1842,6 @@ class Equip extends Window {
         }
 
         ArrangePorts(frontview, list, txtNumbering.value);
-
     }
 
-    
 }
