@@ -233,8 +233,8 @@ class HttpMainListener : Http {
                         ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     } else {
                         switch (para[0]) {
-                            case "config/get": buffer   = Configuration.GetConfig(para); break;
-                            case "config/fetch": buffer = Configuration.FetchConfiguration(para, performer); break;
+                            case "config/get": buffer = Configuration.GetConfig(para); break;
+                            case "config/fetch": buffer = Configuration.FetchConfiguration(ctx, para, performer); break;
 
                             default: ctx.Response.StatusCode = (int)HttpStatusCode.NotFound; break;
                         }

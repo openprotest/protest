@@ -371,31 +371,3 @@
     visibility: visible;
     opacity: 1;
 }
-
-.code-box {
-    padding: 20px;
-    color: #E0E0E0;
-    background-color: #282828;
-    font-family: monospace;
-    overflow-x: hidden;
-    overflow-y: auto;
-    user-select: text;
-    counter-reset: code-enumeration;
-}
-
-.code-box > div {
-    display: flex;
-}
-
-.code-box > div:before {
-    color: #808080;
-    counter-increment: code-enumeration;
-    content: counter(code-enumeration);
-    display: inline-block;
-    min-width: 48px;
-    font-weight: 400;
-}
-
-.code-box > div > span {
-    display: contents;
-}

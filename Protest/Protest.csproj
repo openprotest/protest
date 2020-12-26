@@ -147,13 +147,16 @@
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\front\clients.css" />
+    <Content Include="bin\protest\front\res\configfile.svg" />
     <Content Include="bin\protest\front\res\cookie.svg" />
     <Content Include="bin\protest\front\res\error.svg" />
+    <Content Include="bin\protest\front\res\ethernetport.svg" />
     <Content Include="bin\protest\front\res\file.svg" />
     <Content Include="bin\protest\front\res\g_diskdrive.svg" />
     <Content Include="bin\protest\front\res\g_file.svg" />
     <Content Include="bin\protest\front\res\g_folder.svg" />
     <Content Include="bin\protest\front\res\g_shared.svg" />
+    <Content Include="bin\protest\front\res\interfaces.svg" />
     <Content Include="bin\protest\front\res\l_folder.svg" />
     <Content Include="bin\protest\front\res\l_goback.svg" />
     <Content Include="bin\protest\front\res\l_goforward.svg" />
@@ -161,6 +164,9 @@
     <Content Include="bin\protest\front\res\l_toogle.svg" />
     <Content Include="bin\protest\front\res\pin.svg" />
     <Content Include="bin\protest\front\encoder.js" />
+    <Content Include="bin\protest\front\res\serialport.svg" />
+    <Content Include="bin\protest\front\res\sfpport.svg" />
+    <Content Include="bin\protest\front\res\usbport.svg" />
     <Content Include="bin\protest\front\telnet.js" />
     <Content Include="bin\protest\front\gandalf.js" />
     <Content Include="bin\protest\front\res\l_gandalf.svg" />
