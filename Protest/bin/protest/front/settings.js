@@ -475,7 +475,7 @@ class Settings extends Tabs {
         this.sessionTimeout.oninput = Apply;
 
         this.cookieLife.oninput = () => {
-            KeepAlive_SendAction(`updatesessiontimeout${String.fromCharCode(127)}${cookieMapping[this.cookieLife.value] * 36000000000}`);
+            KeepAlive_SendAction(`updatesessiontimeout${String.fromCharCode(127)}${cookieMapping[this.cookieLife.value]}`);
             Apply();
         };
 

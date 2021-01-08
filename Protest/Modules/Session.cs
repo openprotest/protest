@@ -75,7 +75,7 @@ public static class Session {
             username = username,
             loginTime = DateTime.Now,
             sessionId = GetSHA(DateTime.Now.ToString()),
-            sessionTimeout = HOUR * SESSION_TIMEOUT,
+            sessionTimeout = SESSION_TIMEOUT * HOUR,
             accessControl = acl.ContainsKey(username) ? acl[username] : null
         };
 
@@ -184,10 +184,10 @@ public static class Session {
     public static void UpdateSessionTimeout(string sessionId, string timeout) {
         if (!sessions.ContainsKey(sessionId)) return;
 
-        long.TryParse(timeout, out long lTimeout);
+        long.TryParse(timeout, out long lTimeout); //in days
         SessionEntry entry = sessions[sessionId];
-        entry.sessionTimeout = lTimeout;
-        sessions[sessionId] = entry;   
+        entry.sessionTimeout = lTimeout * 24 * HOUR; //in ticks
+        sessions[sessionId] = entry;
     }
 
 

@@ -81,16 +81,17 @@ public static class KeepAlive {
                 }
 
                 string[] action = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split((char)127);
-                switch (action[0]) {
-                    case "updatesessiontimeout":
-                        Session.UpdateSessionTimeout(sessionId, action?[1]);
-                        if (!Session.CheckAccess(sessionId)) { //check session
-                            await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
-                            ctx.Response.Close();
-                            return;
-                        }
-                        break;
-                }
+                if (action.Length > 1)
+                    switch (action[0]) {
+                        case "updatesessiontimeout":
+                            Session.UpdateSessionTimeout(sessionId, action?[1]);
+                            if (!Session.CheckAccess(sessionId)) { //check session
+                                await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                                ctx.Response.Close();
+                                return;
+                            }
+                            break;
+                    }
             }
 
         } catch { }
