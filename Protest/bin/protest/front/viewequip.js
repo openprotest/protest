@@ -72,6 +72,7 @@ class Equip extends Window {
 
         this.InitializeComponent();
         this.Plot();
+        this.ShowInterfaces();
         this.LiveInfo();
         setTimeout(() => { this.AfterResize(); }, 200);
     }
@@ -115,16 +116,14 @@ class Equip extends Window {
         this.scroll.className = "db-scroll";
         this.content.appendChild(this.scroll);
 
-        /*const fade = document.createElement("div");
-        fade.style.position = "sticky";
-        fade.style.top = "0";
-        fade.style.height = "16px";
-        fade.style.background = "linear-gradient(rgb(56, 56, 56), transparent)";
-        this.scroll.appendChild(fade);*/
-
         this.live = document.createElement("div");
         this.live.className = "db-live";
         this.scroll.appendChild(this.live);
+
+        this.interfaces = document.createElement("div");
+        this.interfaces.className = "db-interfaces";
+        this.interfaces.style.display = this.entry.hasOwnProperty(".INTERFACES") ? "block" : "none";
+        this.scroll.appendChild(this.interfaces);
 
         this.liveinfo = document.createElement("div");
         this.liveinfo.className = "db-liveinfo";
@@ -141,7 +140,6 @@ class Equip extends Window {
     }
 
     AfterResize() { //override
-
         if (this.content.getBoundingClientRect().width < 800) {
             this.sidetools.style.width = "36px";
             this.scroll.style.left = "56px";
@@ -159,6 +157,7 @@ class Equip extends Window {
             this.rightside.classList.add("db-rightside");
 
             this.rightside.appendChild(this.live);
+            this.rightside.appendChild(this.interfaces);
             this.rightside.appendChild(this.liveinfo);
 
         } else {
@@ -167,6 +166,7 @@ class Equip extends Window {
             this.rightside.classList.remove("db-rightside");
 
             this.scroll.appendChild(this.live);
+            this.scroll.appendChild(this.interfaces);
             this.scroll.appendChild(this.liveinfo);
             this.scroll.appendChild(this.properties);
         }
@@ -631,6 +631,172 @@ class Equip extends Window {
         }
     }
 
+    ShowInterfaces() {
+        this.interfaces.style.display = this.entry.hasOwnProperty(".INTERFACES") ? "block" : "none";
+        this.interfaces.innerHTML = "";
+
+        if (!this.entry.hasOwnProperty(".INTERFACES")) return;
+
+        let obj = JSON.parse(this.entry[".INTERFACES"][0]);
+
+        if (!obj.hasOwnProperty("i")) return;
+        if (obj.i.length === 0) return;
+
+        if (!this.floading) {
+            this.floading = document.createElement("div");
+            this.floading.style.position = "absolute";
+            this.floading.style.minWidth = "150px";
+            this.floading.style.minHeight = "50px";
+            this.floading.style.padding = "4px 8px";
+            this.floading.style.borderRadius = "4px";
+            this.floading.style.backgroundColor = "rgba(32,32,32,1)";
+            this.floading.style.fontSize = "small";
+            this.floading.style.boxShadow = "rgba(0,0,0,.5) 0 4px 4px";
+            this.floading.style.transition = ".1s";
+            this.floading.style.opacity = "0";
+            this.floading.style.visibility = "hidden";
+            this.content.appendChild(this.floading);
+        }
+
+        const frame = document.createElement("div");
+        frame.className = "db-int-frame";
+        this.interfaces.appendChild(frame);
+
+        let numbering = obj.n ? obj.n : "vertical";
+        let list = [];
+
+        for (let i = 0; i < obj.i.length; i++) {
+            const front = document.createElement("div");
+            front.className = "int-port";
+            frame.appendChild(front);
+
+            const icon = document.createElement("div");
+            switch (obj.i[i].i) {
+                case "Ethernet": icon.style.backgroundImage = "url(res/ethernetport.svgz)"; break;
+                case "SFP"     : icon.style.backgroundImage = "url(res/sfpport.svgz)"; break;
+                case "USB"     : icon.style.backgroundImage = "url(res/usbport.svgz)"; break;
+                case "Serial"  : icon.style.backgroundImage = "url(res/serialport.svgz)"; break;
+            }
+            front.appendChild(icon);
+
+            if (obj.i[i].i === "Ethernet" || obj.i[i].i === "SFP") {
+                icon.appendChild(document.createElement("div")); //led1
+                icon.appendChild(document.createElement("div")); //led2
+            }
+
+            const num = document.createElement("div");
+            num.innerHTML = frame.childNodes.length;
+            front.appendChild(num);
+
+            list.push({
+                frontElement: front,
+                number: num,
+                port: obj.i[i].i,
+                speed: obj.i[i].s,
+                vlan: obj.i[i].v,
+                comment: obj.i[i].c,
+                link: obj.i[i].l === null ? null : db_equip.find(o => o[".FILENAME"][0] === obj.i[i].l)
+            });
+
+            front.onmouseenter = () => {
+                this.floading.innerHTML = "";
+
+                const divSpeedColor = document.createElement("div");
+                divSpeedColor.style.display = "inline-block";
+                divSpeedColor.style.width =  "8px";
+                divSpeedColor.style.height = "8px";
+                divSpeedColor.style.borderRadius = "2px";
+                divSpeedColor.style.marginRight = "4px";
+                divSpeedColor.style.backgroundColor = list[i].speedColor;
+                divSpeedColor.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+                this.floading.appendChild(divSpeedColor);
+
+                if (obj.i[i].s !== "N/A") this.floading.innerHTML += obj.i[i].s + " ";
+                this.floading.innerHTML += obj.i[i].i + "<br>";
+
+                const divVlanColor = document.createElement("div");
+                divVlanColor.style.display = "inline-block";
+                divVlanColor.style.width = "8px";
+                divVlanColor.style.height = "8px";
+                divVlanColor.style.borderRadius = "2px";
+                divVlanColor.style.marginRight = "4px";
+                divVlanColor.style.backgroundColor = list[i].vlanColor ? list[i].vlanColor : "transparent";
+                divVlanColor.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+                this.floading.appendChild(divVlanColor);
+
+                this.floading.innerHTML += "VLAN: " + obj.i[i].v + "<br>";
+
+                if (obj.i[i].c.length > 0) this.floading.innerHTML += obj.i[i].c;
+
+                if (list[i].link) {
+                    const divLink = document.createElement("div");
+                    divLink.style.padding = "4px";
+                    divLink.style.marginTop = "8px";
+                    divLink.style.border = "1px solid #C0C0C0";
+                    divLink.style.borderRadius = "4px";
+                    this.floading.appendChild(divLink);
+
+                    const linkIcon = document.createElement("div");
+                    
+                    linkIcon.style.backgroundImage = `url(${GetEquipIcon(list[i].link["TYPE"])})`;
+                    linkIcon.style.backgroundRepeat = "no-repeat";
+                    linkIcon.style.backgroundPosition = "center";
+                    linkIcon.style.backgroundSize = "contain";
+                    linkIcon.style.width = "100%";
+                    linkIcon.style.height = "36px";
+                    linkIcon.style.filter = "invert(1)";
+                    divLink.appendChild(linkIcon);
+
+                    if (list[i].link.hasOwnProperty("NAME")) {
+                        const linkName = document.createElement("div");
+                        linkName.innerHTML = list[i].link["NAME"][0];
+                        divLink.appendChild(linkName);
+                    }
+
+                    if (list[i].link.hasOwnProperty("HOSTNAME")) {
+                        const linkHostname = document.createElement("div");
+                        linkHostname.innerHTML = list[i].link["HOSTNAME"][0];
+                        divLink.appendChild(linkHostname);
+                    }
+
+                    if (list[i].link.hasOwnProperty("IP")) {
+                        const linkIp = document.createElement("div");
+                        linkIp.innerHTML = list[i].link["IP"][0];
+                        divLink.appendChild(linkIp);
+                    }
+
+                    list[i].frontElement.ondblclick = () => {
+                        let filename = list[i].link[".FILENAME"][0];
+                        for (let i = 0; i < $w.array.length; i++)
+                            if ($w.array[i] instanceof Equip && $w.array[i].filename === filename) {
+                                $w.array[i].Minimize(); //minimize/restore
+                                return;
+                            }
+
+                        new Equip(filename);
+                    };
+                }
+
+                let xpos = front.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
+                if (xpos > this.content.getBoundingClientRect().width - this.floading.getBoundingClientRect().width - 8)
+                    xpos = this.content.getBoundingClientRect().width - this.floading.getBoundingClientRect().width - 8;
+
+                this.floading.style.left = `${xpos}px`;
+                this.floading.style.top = `${front.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
+                this.floading.style.opacity = "1";
+                this.floading.style.visibility = "visible";
+            };
+
+            front.onmouseleave = () => {
+                this.floading.style.opacity = "0";
+                this.floading.style.visibility = "hidden";
+            };
+
+        }
+
+        this.InitInterfaceComponents(frame, numbering, list, false);
+    }
+
     LiveInfo() {
         if (AUTHORIZATION.remotehosts === 0) return;
         if (!this.entry.hasOwnProperty("IP") && !this.entry.hasOwnProperty("HOSTNAME")) return;
@@ -991,7 +1157,7 @@ class Equip extends Window {
         };
         txtName.oninput();
 
-        let remove = document.createElement("div");
+        const remove = document.createElement("div");
         if (!readonly) newProperty.appendChild(remove);
         remove.onclick = () => {
             if (newProperty.style.filter == "opacity(0)") return; //once
@@ -1257,8 +1423,7 @@ class Equip extends Window {
 
                 if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
 
-                if (xhr.readyState == 4 && xhr.status == 200) {
-
+                if (xhr.readyState == 4 && xhr.status == 200)
                     if (xhr.responseText.startsWith("{")) {
                         let json = JSON.parse(xhr.responseText);
                         this.Update(json.obj);
@@ -1270,7 +1435,6 @@ class Equip extends Window {
                     } else {
                         this.ConfirmBox(xhr.responseText, true);
                     }
-                }
             };
 
             if (this.filename)
@@ -1402,6 +1566,7 @@ class Equip extends Window {
         this.sidetools.innerHTML = "";
         this.live.innerHTML = "";
         this.Plot();
+        this.ShowInterfaces();
         this.LiveInfo();
     }
 
@@ -1685,12 +1850,12 @@ class Equip extends Window {
         innerBox.parentElement.style.maxWidth = "80%";
         innerBox.style.padding = "20px";
 
-        const frontview = document.createElement("div");
-        frontview.className = "int-front";
-        innerBox.appendChild(frontview);
+        const frame = document.createElement("div");
+        frame.className = "int-frame";
+        innerBox.appendChild(frame);
 
         const divNumbering = document.createElement("div");
-        divNumbering.style.marginTop = "40px";
+        divNumbering.style.marginTop = "24px";
         innerBox.appendChild(divNumbering);
 
         const lblNumbering = document.createElement("div");
@@ -1700,6 +1865,7 @@ class Equip extends Window {
         divNumbering.appendChild(lblNumbering);
 
         const txtNumbering = document.createElement("select");
+        txtNumbering.style.width = "120px";
         divNumbering.appendChild(txtNumbering);
         let numbering = ["Vertical", "Horizontal"];
         for (let i = 0; i < numbering.length; i++) {
@@ -1708,43 +1874,43 @@ class Equip extends Window {
             optNumbering.innerHTML = numbering[i];
             txtNumbering.appendChild(optNumbering);
         }
-        txtNumbering.value = "horizontal";
 
         const divAdd = document.createElement("div");
-        divAdd.style.marginTop = "16px";
+        divAdd.style.marginTop = "8px";
         innerBox.appendChild(divAdd);
 
         const lblAdd = document.createElement("div");
-        lblAdd.innerHTML = "New interface: ";
+        lblAdd.innerHTML = "Add interface: ";
         lblAdd.style.display = "inline-block";
         lblAdd.style.width = "120px";
         divAdd.appendChild(lblAdd);
 
         const txtPort = document.createElement("select");
+        txtPort.style.minWidth = "120px";
         divAdd.appendChild(txtPort);
-        let ports = ["Ethernet", "SFP", "Serial", "USB"];
-        for (let i = 0; i < ports.length; i++) {
+        let portsArray = ["Ethernet", "SFP", "USB", "Serial"];
+        for (let i = 0; i < portsArray.length; i++) {
             const optPort = document.createElement("option");
-            optPort.value = ports[i].replaceAll(" ", "").toLowerCase();
-            optPort.innerHTML = ports[i];
+            optPort.value = portsArray[i];
+            optPort.innerHTML = portsArray[i];
             txtPort.appendChild(optPort);
         }
 
         const txtSpeed = document.createElement("select");
+        txtSpeed.style.minWidth = "120px";
         divAdd.appendChild(txtSpeed);
-        let speed = [
-            "7200 bps", "9600 bps", "14400 bps", "19200 bps",
-            "56 Kbps", "128 Kbps", "256 Kbps",
+        let speedArray = [
+            "N/A",
             "10 Mbps", "100 Mbps", "1 Gbps", "2.5 Gbps","5 Gbps", "10 Gbps",
             "25 Gbps", "40 Gbps", "100 Gbps", "200 Gbps", "400 Gbps", "800 Gbps"
         ];
-        for (let i = 0; i < speed.length; i++) {
+        for (let i = 0; i < speedArray.length; i++) {
             const optSpeed = document.createElement("option");
-            optSpeed.value = speed[i].replaceAll(" ", "").toLowerCase();
-            optSpeed.innerHTML = speed[i];
+            optSpeed.value = speedArray[i];
+            optSpeed.innerHTML = speedArray[i];
             txtSpeed.appendChild(optSpeed);
         }
-        txtSpeed.value = "1gbps";
+        txtSpeed.value = "1 Gbps";
 
         const lblX = document.createElement("div");
         lblX.innerHTML = " x ";
@@ -1757,7 +1923,7 @@ class Equip extends Window {
         txtMulti.min = 1;
         txtMulti.max = 48;
         txtMulti.value = 1;
-        txtMulti.style.width = "48px";
+        txtMulti.style.width = "50px";
         divAdd.appendChild(txtMulti);
 
         const btnAdd = document.createElement("input");
@@ -1765,83 +1931,500 @@ class Equip extends Window {
         btnAdd.value = "Add";
         divAdd.appendChild(btnAdd);
 
-        const divList = document.createElement("div");
-        innerBox.appendChild(divList);
 
+        const divTitle = document.createElement("div");
+        divTitle.style.position = "absolute";
+        divTitle.style.whiteSpace = "nowrap";
+        divTitle.style.overflow = "hidden";
+        divTitle.style.left = "16px";
+        divTitle.style.right = "16px";
+        divTitle.style.top = "280px";
+        divTitle.style.height = "20px";
+        divTitle.className = "int-title";
+        innerBox.appendChild(divTitle);
+
+        let titleArray = ["Interface", "Speed", "VLAN", "Link"];
+        for (let i = 0; i < titleArray.length; i++) {
+            const newLabel = document.createElement("div");
+            newLabel.innerHTML = titleArray[i];
+            divTitle.appendChild(newLabel);
+        }
+
+        const divList = document.createElement("div");
+        divList.style.position = "absolute";
+        divList.style.left = "16px";
+        divList.style.right = "0";
+        divList.style.top = "304px";
+        divList.style.bottom = "16px";
+        divList.style.overflowX = "hidden";
+        divList.style.overflowY = "scroll";
+        innerBox.appendChild(divList);
+ 
         let list = [];
 
-        txtNumbering.onchange = () => { ArrangePorts(frontview, list, txtNumbering.value) };
+        txtNumbering.onchange = () => this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 
         btnAdd.onclick = () => {
-            for (let i = 0; i < txtMulti.value; i++) 
-                AddInterface(txtPort.value, txtSpeed.value);
+            if (list.length + parseInt(txtMulti.value) > 52) return;
+            for (let i = 0; i < txtMulti.value; i++)
+                AddInterface(txtPort.value, txtSpeed.value, 1, null, "");
         };
 
-        const AddInterface = (port, speed) => {
+        let lastSelect = null;
+        let lastMouseY = 0;
+        let lastElementY = 0;
+
+        const AddInterface = (port, speed, vlan, link, comment) => {
             const front = document.createElement("div");
             front.className = "int-port";
-            front.style.gridArea = `1 / ${frontview.childNodes.length+1}`;
-            frontview.appendChild(front);
+            front.style.gridArea = `1 / ${frame.childNodes.length+1}`;
+            frame.appendChild(front);
 
             const icon = document.createElement("div");
             front.appendChild(icon);
 
             const num = document.createElement("div");
-            num.innerHTML = frontview.childNodes.length;
+            num.innerHTML = frame.childNodes.length;
             front.appendChild(num);
 
-            switch (port) {
-                case "ethernet": icon.style.backgroundImage = "url(res/ethernetport.svgz)"; break;
-                case "sfp":      icon.style.backgroundImage = "url(res/sfpport.svgz)"; break;
-                case "serial":   icon.style.backgroundImage = "url(res/serialport.svgz)"; break;
-                case "usb":      icon.style.backgroundImage = "url(res/usbport.svgz)"; break;
+            icon.appendChild(document.createElement("div")); //led1
+            icon.appendChild(document.createElement("div")); //led2
+
+            const listElement = document.createElement("div");
+            listElement.className = "int-list-element";
+            listElement.style.top = `${divList.childNodes.length * 36}px`;
+            divList.appendChild(listElement);
+
+            const divMove = document.createElement("div");
+            divMove.style.display = "inline-block";
+            listElement.appendChild(divMove);
+
+            const txtP = document.createElement("select");
+            listElement.appendChild(txtP);
+            for (let i = 0; i < portsArray.length; i++) {
+                const optPort = document.createElement("option");
+                optPort.value = portsArray[i];
+                optPort.innerHTML = portsArray[i];
+                txtP.appendChild(optPort);
             }
 
-            const divList = document.createElement("div");
+            const txtS = document.createElement("select");
+            listElement.appendChild(txtS);
+            for (let i = 0; i < speedArray.length; i++) {
+                const optSpeed = document.createElement("option");
+                optSpeed.value = speedArray[i];
+                optSpeed.innerHTML = speedArray[i];
+                txtS.appendChild(optSpeed);
+            }
 
-            list.push({
+            const txtV = document.createElement("input");
+            txtV.type = "number";
+            txtV.min = 0;
+            txtV.max = 4095;
+            txtV.value = vlan;
+            listElement.appendChild(txtV);
+
+            const txtL = document.createElement("input");
+            txtL.type = "text";
+            txtL.setAttribute("readonly", true);
+            listElement.appendChild(txtL);
+
+            if (link && link.length > 0) {
+                let linkedEquip = db_equip.find(o => o[".FILENAME"][0] === link);
+                if (linkedEquip) {
+                    let value;
+                    if (linkedEquip.hasOwnProperty("HOSTNAME") && linkedEquip["HOSTNAME"][0].length > 0)
+                        value = linkedEquip["HOSTNAME"][0];
+                    else if (linkedEquip.hasOwnProperty("NAME") && linkedEquip["NAME"][0].length > 0)
+                        value = linkedEquip["NAME"][0];
+                    else if (linkedEquip.hasOwnProperty("IP") && linkedEquip["IP"][0].length > 0)
+                        value = linkedEquip["IP"][0];
+                    else if (linkedEquip.hasOwnProperty("TYPE") && linkedEquip["TYPE"][0].length > 0)
+                        value = linkedEquip["TYPE"][0];
+
+                    txtL.value = value;
+                    txtL.style.backgroundImage = `url(${GetEquipIcon(linkedEquip["TYPE"])})`;
+                }
+            }
+
+            const txtC = document.createElement("input");
+            txtC.type = "text";
+            txtC.placeholder = "comment";
+            txtC.value= comment;
+            listElement.appendChild(txtC);
+
+            const remove = document.createElement("input");
+            remove.type = "button";
+            remove.setAttribute("aria-label", "Remove interface");
+            listElement.appendChild(remove);
+
+            let obj = {
                 frontElement: front,
-                listElement:  list
-            });
+                listElement   : listElement,
+                numberElement : num,
+                txtPort  : txtP,
+                txtSpeed : txtS,
+                txtVlan  : txtV,
+                txtComm  : txtC,
+                link: link
+            };
+            list.push(obj);
 
-            ArrangePorts(frontview, list, txtNumbering.value);
+            front.onclick = () => listElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            front.onmouseover = () => divMove.style.backgroundColor = "var(--select-color)";
+            front.onmouseleave = () => divMove.style.backgroundColor = "";
+
+            divMove.onmousedown = event => {
+                if (event.buttons !== 1) return;
+                lastSelect = obj;
+                lastMouseY = event.clientY;
+                lastElementY = parseInt(lastSelect.listElement.style.top.replace("px", ""));
+
+                lastSelect.listElement.style.zIndex = "1";
+                lastSelect.listElement.style.backgroundColor = "var(--pane-color)";
+                lastSelect.listElement.style.transition = "transition .2s";
+                lastSelect.frontElement.style.backgroundColor = "var(--select-color)";
+                lastSelect.frontElement.style.boxShadow = "0 -3px 0px 3px var(--select-color)";
+                lastSelect.listElement.childNodes[0].style.backgroundColor = "var(--select-color)";
+            };
+
+            innerBox.parentElement.onmouseup = event => {
+                if (lastSelect === null) return;
+                lastSelect.listElement.style.zIndex = "0";
+                lastSelect.listElement.style.transform = "none";
+                lastSelect.listElement.style.boxShadow = "none";
+                lastSelect.listElement.style.transition = ".2s";
+                lastSelect.frontElement.style.backgroundColor = "";
+                lastSelect.frontElement.style.boxShadow = "";
+                lastSelect.listElement.childNodes[0].style.backgroundColor = "";
+
+                lastSelect = null;
+                SortList();
+                this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+            };
+
+            innerBox.parentElement.onmousemove = event => {
+                if (lastSelect === null) return;
+                if (event.buttons !== 1) return;
+                let pos = lastElementY - (lastMouseY - event.clientY);
+                if (pos < 0) pos = 0;
+                lastSelect.listElement.style.transform = "scale(1.05)";
+                lastSelect.listElement.style.boxShadow = "0 0 4px rgba(0,0,0,.5)";
+                lastSelect.listElement.style.top = `${pos}px`;
+                SortList();
+                this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+            };
+
+            txtP.onchange = () => {
+                switch (txtP.value) {
+                    case "Ethernet": icon.style.backgroundImage = "url(res/ethernetport.svgz)"; break;
+                    case "SFP"     : icon.style.backgroundImage = "url(res/sfpport.svgz)"; break;
+                    case "USB"     : icon.style.backgroundImage = "url(res/usbport.svgz)"; break;
+                    case "Serial"  : icon.style.backgroundImage = "url(res/serialport.svgz)"; break;
+                }
+                this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+            };
+
+            txtS.onchange =
+            txtV.onchange = () => {
+                this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+            };
+
+            txtL.onclick = () => {
+                const dim = document.createElement("div");
+                dim.style.top = "0";
+                dim.className = "win-dim";
+                innerBox.parentElement.appendChild(dim);
+
+                const frame = document.createElement("div");
+                frame.style.position = "absolute";
+                frame.style.overflow = "hidden";
+                frame.style.width = "100%";
+                frame.style.maxWidth = "1000px";
+                frame.style.height = "calc(100% - 80px)";
+                frame.style.left = " max(calc(50% - 516px), 0px)";
+                frame.style.top = "40px";
+                frame.style.padding = "8px";
+                frame.style.boxSizing = "border-box";
+                frame.style.borderRadius = "8px";
+                frame.style.backgroundColor = "var(--pane-color)";
+                frame.style.boxShadow = "rgba(0,0,0,.2) 0 12px 16px";
+                dim.appendChild(frame);
+
+                const txtFind = document.createElement("input");
+                txtFind.type = "text";
+                txtFind.placeholder = "Search";
+                frame.appendChild(txtFind);
+
+                const divEquip = document.createElement("div");
+                divEquip.className = "no-results";
+                divEquip.style.position = "absolute";
+                divEquip.style.left = divEquip.style.right = "0";
+                divEquip.style.top = "48px";
+                divEquip.style.bottom = "52px";
+                divEquip.style.overflowY = "auto";
+                frame.appendChild(divEquip);
+
+                const btnCloseLink = document.createElement("input");
+                btnCloseLink.type = "button";
+                btnCloseLink.value = "Close";
+                btnCloseLink.style.position = "absolute";
+                btnCloseLink.style.width = "72px";
+                btnCloseLink.style.left = "calc(50% - 30px)";
+                btnCloseLink.style.bottom = "8px";
+                frame.appendChild(btnCloseLink);
+
+                btnCloseLink.onclick = () => {
+                    btnCloseLink.onclick = () => { };
+                    dim.style.filter = "opacity(0)";
+                    setTimeout(() => { innerBox.parentElement.removeChild(dim); }, 200);
+                };
+
+                txtFind.onchange = txtFind.oninput = () => {
+                    divEquip.innerHTML = "";
+
+                    let keywords = [];
+                    if (txtFind.value.trim().length > 0)
+                        keywords = txtFind.value.trim().toLowerCase().split(" ");
+
+                    let EQUIP_LIST_ORDER;
+                    if (localStorage.getItem("columns_users"))
+                        EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("columns_equip"));
+                    else
+                        EQUIP_LIST_ORDER = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
+
+                    for (let i = 0; i < db_equip.length; i++) {
+                        let match = true;
+
+                        for (let j = 0; j < keywords.length; j++) {
+                            let flag = false;
+                            for (let k in db_equip[i]) {
+                                if (k.startsWith(".")) continue;
+                                if (db_equip[i][k][0].toLowerCase().indexOf(keywords[j]) > -1)
+                                    flag = true;
+                            }
+                            if (!flag) {
+                                match = false;
+                                continue;
+                            }
+                        }
+
+                        if (!match) continue;
+
+                        const element = document.createElement("div");
+                        element.className = "lst-obj-ele";
+                        divEquip.appendChild(element);
+
+                        const icon = document.createElement("div");
+                        icon.className = "lst-obj-ico";
+                        icon.style.backgroundImage = db_equip[i].hasOwnProperty("TYPE") ? `url(${GetEquipIcon(db_equip[i]["TYPE"])})` : "url(res/gear.svgz)";
+                        element.appendChild(icon);
+
+                        let filename = db_equip[i][".FILENAME"][0];
+
+                        let value;
+                        if (db_equip[i].hasOwnProperty("HOSTNAME") && db_equip[i]["HOSTNAME"][0].length > 0)
+                            value = db_equip[i]["HOSTNAME"][0];
+                         else if (db_equip[i].hasOwnProperty("NAME") && db_equip[i]["NAME"][0].length > 0)
+                            value = db_equip[i]["NAME"][0];
+                         else if (db_equip[i].hasOwnProperty("IP") && db_equip[i]["IP"][0].length > 0)
+                            value = db_equip[i]["IP"][0];
+                         else if (db_equip[i].hasOwnProperty("TYPE") && db_equip[i]["TYPE"][0].length > 0)
+                            value = db_equip[i]["TYPE"][0];                        
+
+                        for (let j = 0; j < 6; j++) {
+                            if (!db_equip[i].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
+                            if (db_equip[i][EQUIP_LIST_ORDER[j]][0].length === 0) continue;
+                            const newLabel = document.createElement("div");
+                            newLabel.innerHTML = db_equip[i][EQUIP_LIST_ORDER[j]][0];
+                            newLabel.className = "lst-obj-lbl-" + j;
+                            element.appendChild(newLabel);
+                        }
+
+                        element.ondblclick = () => {
+                            obj.link = filename;
+                            txtL.value = value;
+                            txtL.style.backgroundImage = icon.style.backgroundImage;
+                            btnCloseLink.onclick();
+                        };
+                    }
+
+                };
+
+                txtFind.focus();
+
+                setTimeout(() => { txtFind.onchange(); }, 1);
+            };
+            
+            remove.onclick = () => {
+                divList.removeChild(listElement);
+                frame.removeChild(front);
+                list.splice(list.indexOf(obj), 1);
+                SortList();
+                this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+            };
+
+            txtP.value = port;
+            txtS.value = speed;
+            txtP.onchange();
+
+            SortList();
+            this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
         };
 
-        const ArrangePorts = (frontview, list, numbering) => {
-            let rows = 1, columns = 4;
+        const SortList = () => {
+            list.sort((a, b) => {
+                return a.listElement.getBoundingClientRect().top - b.listElement.getBoundingClientRect().top;
+            });
 
-            if (list.length < 16) {
+            for (let i = 0; i < list.length; i++) {
+                list[i].numberElement.innerHTML = i+1;
+                if (lastSelect === null || list[i].listElement !== lastSelect.listElement)
+                    list[i].listElement.style.top = `${i * 36}px`;
+            }
+        };
+
+        this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+
+        btnOK.addEventListener("click", () => {
+
+            let payload = "";
+            for (const p in this.entry) {
+                if (p === ".INTERFACES") continue;
+                payload += `${p}${String.fromCharCode(127)}${this.entry[p][0]}${String.fromCharCode(127)}`;
+            }
+
+            let interfaces = {
+                i: [],
+                n: txtNumbering.value
+            };
+
+            for (let i = 0; i < list.length; i++) {
+                interfaces.i.push({
+                    i: list[i].txtPort.value,
+                    s: list[i].txtSpeed.value,
+                    v: parseInt(list[i].txtVlan.value),
+                    c: list[i].txtComm.value,
+                    l: list[i].link
+                });
+            }
+
+            payload += `.INTERFACES${String.fromCharCode(127)}${JSON.stringify(interfaces)}${String.fromCharCode(127)}`;
+
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = () => {
+                if (xhr.status == 403) location.reload(); //authorization
+
+                if (xhr.readyState == 4 && xhr.status == 0) this.ConfirmBox("Server is unavailable.", true);
+
+                if (xhr.readyState == 4 && xhr.status == 200)
+                    if (xhr.responseText.startsWith("{"))
+                        this.Update(JSON.parse(xhr.responseText).obj);
+                    else
+                        this.ConfirmBox(xhr.responseText, true);
+            };
+
+            xhr.open("POST", "db/saveequip&" + this.filename, true);
+            xhr.send(payload);
+        });
+
+        if (this.entry.hasOwnProperty(".INTERFACES")) {
+            let obj = JSON.parse(this.entry[".INTERFACES"][0]);
+            for (let i = 0; i < obj.i.length; i++)
+                AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
+        }
+    }
+
+    InitInterfaceComponents(frame, numbering, list, editMode) {
+        let isMixedInterface = editMode ?
+            !list.every(o => o.txtPort.value === list[0].txtPort.value) :
+            !list.every(o => o.port === list[0].port);
+
+        let rows = 1, columns = 4;
+        if (list.length > 0)
+            if (list.length < 16 || list.length < 20 && isMixedInterface) {
                 rows = 1;
                 columns = list.length;
-                
             } else if (list.length <= 52) {
                 rows = 2;
                 columns = Math.ceil(list.length / 2);
-
             } else {
                 rows = Math.ceil(list.length / 24);
                 columns = Math.ceil(list.length / rows);
             }
 
-            if (numbering === "vertical")
-                for (let i = 0; i < list.length; i++)
-                    list[i].frontElement.style.gridArea = `${i % rows + 1} / ${Math.floor(i / rows) + 1}`;
-            else 
-                for (let i = 0; i < list.length; i++)
-                    list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
-
-            let size = columns < 20 ? 50 : 40;
-
+        if (numbering === "vertical")
             for (let i = 0; i < list.length; i++)
-                list[i].frontElement.style.width = `${size-2}px`;
+                list[i].frontElement.style.gridArea = `${i % rows + 1} / ${Math.floor(i / rows) + 1}`;
+        else
+            for (let i = 0; i < list.length; i++)
+                list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
 
-            frontview.style.width = `${columns * size + 28}px`;
-            frontview.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
-            frontview.style.gridTemplateRows = `repeat(${rows}, $50px)`;
+        let size = columns <= 12 ? 50 : 40;
 
+        if (size === 50)
+            for (let i = 0; i < list.length; i++) {
+                list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 7px auto 7px 8%";
+                list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 4px 16%";
+            }
+        else 
+            for (let i = 0; i < list.length; i++) {
+                list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 5px auto 5px 8%";
+                list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 3px 24%";
+            }
+
+        let vlans = [];
+        for (let i = 0; i < list.length; i++) {
+            let v = editMode ? list[i].txtVlan.value : list[i].vlan;
+            if (!vlans.includes(v)) vlans.push(v);
         }
 
-        ArrangePorts(frontview, list, txtNumbering.value);
+        for (let i = 0; i < list.length; i++) {
+            let led1 = list[i].frontElement.childNodes[0].childNodes[0];
+            let led2 = list[i].frontElement.childNodes[0].childNodes[1];
+
+            if (led1) {
+                list[i].speedColor = this.GetSpeedColor(editMode ? list[i].txtSpeed.value : list[i].speed);
+                led1.style.backgroundColor = list[i].speedColor;
+                led1.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+            }
+
+            if (led2) {
+                list[i].vlanColor = this.GetVlanColor(editMode ? list[i].txtVlan.value : list[i].vlan, vlans);
+                led2.style.backgroundColor = list[i].vlanColor;
+                led2.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+            }
+
+            list[i].frontElement.style.width = `${size - 2}px`;
+        }
+
+        frame.style.width = `${columns * size + 28}px`;
+        frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
+        frame.style.gridTemplateRows = `repeat(${rows}, $50px)`;
     }
 
+    GetSpeedColor(speed) {
+        switch (speed) {
+            case "10 Mbps" : return "hsl(20,95%,60%)";
+            case "100 Mbps": return "hsl(40,95%,60%)";
+            case "1 Gbps"  : return "hsl(60,95%,60%)";
+            case "2.5 Gbps": return "hsl(70,95%,60%)";
+            case "5 Gbps"  : return "hsl(80,95%,60%)";
+            case "10 Gbps" : return "hsl(130,95%,60%)";
+            case "25 Gbps" : return "hsl(150,95%,60%)";
+            case "40 Gbps" : return "hsl(170,95%,60%)";
+            case "100 Gbps": return "hsl(190,95%,60%)";
+            case "200 Gbps": return "hsl(210,95%,60%)";
+            case "400 Gbps": return "hsl(275,95%,60%)";
+            case "800 Gbps": return "hsl(295,95%,60%)";
+            default: return "transparent";
+        }
+    }
+
+    GetVlanColor(vlan, array) {
+        if (array.length < 2) return "transparent";
+        let index = array.indexOf(vlan);
+        if (index === -1) return "transparent";
+        return `hsl(${(240 + index * 1.61803398875 * 360) % 360},95%,60%)`;
+    }
 }

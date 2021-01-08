@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Protools")]
-[assembly: AssemblyCopyright("Copyright ©  2020")]
+[assembly: AssemblyCopyright("© 2021 veniware. Released into the public domain.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

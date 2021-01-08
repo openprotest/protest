@@ -725,6 +725,7 @@ class Documentation extends Window {
 
                 for (let j = 0; j < 6; j++) {
                     if (!db_equip[i].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
+                    if (db_equip[i][EQUIP_LIST_ORDER[j]][0].length === 0) continue;
                     const newLabel = document.createElement("div");
                     newLabel.innerHTML = db_equip[i][EQUIP_LIST_ORDER[j]][0];
                     newLabel.className = "lst-obj-lbl-" + j;

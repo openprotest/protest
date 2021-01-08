@@ -39,7 +39,7 @@ function GetEquipIcon(type) {
         else
             return filename;
     } else
-        return "res/gear.svgz";;
+        return "res/gear.svgz";
 }
 
 class ListEquip extends ListWindow {

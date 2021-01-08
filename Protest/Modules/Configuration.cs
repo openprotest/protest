@@ -14,21 +14,27 @@ public static class Configuration {
         mikrotik = 4
     }
 
-    public static byte[] GetConfig(in string[] para) {
+    public static byte[] GetConfig(in string[] para, bool serveGZip = false) {
         string file = null;
         for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("file=")) file = Strings.DecodeUrl(para[i].Substring(5));
         
         try {
-            return File.ReadAllBytes($"{Strings.DIR_CONFIG}\\{file}");
+            byte[] bytes = File.ReadAllBytes($"{Strings.DIR_CONFIG}\\{file}");
+
+            byte[] gzip = CryptoAes.Decrypt(bytes, Program.DB_KEY_A, Program.DB_KEY_B);
+            if (serveGZip) return gzip;
+
+            byte[] plain = Cache.UnGZip(gzip);
+            return plain;
         } catch { }
 
         return null;
     }
 
-    public static byte[] FetchConfiguration(in HttpListenerContext ctx, in string[] para, in string performer) {
+    public static byte[] FetchConfiguration(in HttpListenerContext ctx, in string[] para, in string performer, bool serveGZip = false) {
         string file = null, username = null, password = null;
-        for (int i = 1; i < para.Length; i++) 
+        for (int i = 1; i < para.Length; i++)
             if (para[i].StartsWith("file=")) file = Strings.DecodeUrl(para[i].Substring(5));
 
         if (file is null || file.Length == 0) return Strings.INV.Array;
@@ -98,25 +104,31 @@ public static class Configuration {
             payload = ssh.RunCommand("show running-config").Execute();
             firstLine = payload.Split('\n')[0];
             if (firstLine.Trim() != "^" && firstLine.IndexOf("bad command name") == -1) { //cisco
-                byte[] result = Encoding.UTF8.GetBytes(payload);
-                File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", result);
-                return result;
+                byte[] plain = Encoding.UTF8.GetBytes(payload);
+                byte[] gzip = Cache.GZip(plain);
+                byte[] cipher = CryptoAes.Encrypt(gzip, Program.DB_KEY_A, Program.DB_KEY_B);
+                File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", cipher);
+                return serveGZip ? gzip : plain;
             }
 
             payload = ssh.RunCommand("display current-configuration").Execute();
             firstLine = payload.Split('\n')[0];
             if (firstLine.Trim() != "^" && firstLine.IndexOf("bad command name") == -1) { //hpe
-                byte[] result = Encoding.UTF8.GetBytes(payload);
-                File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", result);
-                return result;
+                byte[] plain = Encoding.UTF8.GetBytes(payload);
+                byte[] gzip = Cache.GZip(plain);
+                byte[] cipher = CryptoAes.Encrypt(gzip, Program.DB_KEY_A, Program.DB_KEY_B);
+                File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", cipher);
+                return serveGZip ? gzip : plain;
             }
 
             payload = ssh.RunCommand("/ export").Execute();
             firstLine = payload.Split('\n')[0];
             if (firstLine.Trim() != "^") { //mikrotik
-                byte[] result = Encoding.UTF8.GetBytes(FormatRouterOs(payload));
-                File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", result);
-                return result;
+                byte[] plain = Encoding.UTF8.GetBytes(FormatRouterOs(payload));
+                byte[] gzip = Cache.GZip(plain);
+                byte[] cipher = CryptoAes.Encrypt(gzip, Program.DB_KEY_A, Program.DB_KEY_B);
+                File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", cipher);
+                return serveGZip ? gzip : plain;
             }
 
         } catch { }
@@ -124,7 +136,7 @@ public static class Configuration {
         return null;
     }
 
-    private static string FormatRouterOs(string payload) {
+    private static string FormatRouterOs(in string payload) {
         StringBuilder sb = new StringBuilder();
 
         string[] split = payload.Split('\n');
@@ -141,11 +153,4 @@ public static class Configuration {
         return sb.ToString();
     }
 
-    private static string FormatCisco(string payload) {
-        return payload;
-    }
-
-    private static string FormatHPE(string payload) {
-        return payload;
-    }
 }

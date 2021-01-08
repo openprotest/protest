@@ -234,8 +234,10 @@ class HttpMainListener : Http {
                     } else {
                         switch (para[0]) {
                             case "config/get": buffer = Configuration.GetConfig(para); break;
-                            case "config/fetch": buffer = Configuration.FetchConfiguration(ctx, para, performer); break;
-
+                            case "config/fetch":
+                                buffer = Configuration.FetchConfiguration(ctx, para, performer, acceptGzip);
+                                if (acceptGzip) ctx.Response.AddHeader("Content-Encoding", "gzip");
+                                break;
                             default: ctx.Response.StatusCode = (int)HttpStatusCode.NotFound; break;
                         }
                     }

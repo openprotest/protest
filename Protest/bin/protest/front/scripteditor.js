@@ -291,7 +291,7 @@ class ScriptEditor extends Window {
         btnDuplicate.onclick = () => {
             if (!this.selectedNode) return;
 
-            let t = Script_ToolsArray.find(o => o.name === this.selectedNode.name);;
+            let t = Script_ToolsArray.find(o => o.name === this.selectedNode.name);
 
             if (!t) return;
 
