@@ -518,7 +518,7 @@ class Settings extends Tabs {
 
         const xhrUpdate = new XMLHttpRequest();
         xhrUpdate.onreadystatechange = () => {
-            if (xhr.status == 403) location.reload(); //authorization
+            if (xhrUpdate.status == 403) location.reload(); //authorization
 
             if (xhrUpdate.readyState == 4 && xhrUpdate.status == 200) {
                 if (xhrUpdate.responseText == "failed") {
@@ -537,7 +537,7 @@ class Settings extends Tabs {
 
                 const xhrVersion = new XMLHttpRequest();
                 xhrVersion.onreadystatechange = () => {
-                    if (xhr.status == 403) location.reload(); //authorization
+                    if (xhrVersion.status == 403) location.reload(); //authorization
 
                     if (xhrVersion.readyState == 4 && xhrVersion.status == 200) {
                         let jsonVersion = JSON.parse(xhrVersion.responseText);
@@ -746,15 +746,15 @@ class Settings extends Tabs {
         logo.onclick = () => {
             logo.animate([
                 {transform:"translateX(-1px) rotate(0deg)"},
-                {transform:"translateX(6px)  rotate(2deg)"},
+                {transform:"translateX(6px) rotate(2deg)"},
                 {transform:"translateX(-8px) rotate(-3deg)"},
-                {transform:"translateX(8px)  rotate(3deg)"},
+                {transform:"translateX(8px) rotate(3deg)"},
                 {transform:"translateX(-8px) rotate(-3deg)"},
-                {transform:"translateX(8px)  rotate(3deg)"},
+                {transform:"translateX(8px) rotate(3deg)"},
                 {transform:"translateX(-6px) rotate(-2deg)"},
-                {transform:"translateX(6px)  rotate(2deg)"},
+                {transform:"translateX(6px) rotate(2deg)"},
                 {transform:"translateX(-2px) rotate(-1deg)"},
-                {transform:"translateX(0)    rotate(0deg)"}
+                {transform:"translateX(0) rotate(0deg)"}
             ], {
                 duration:1200, iterations:1
             });

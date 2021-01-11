@@ -138,7 +138,7 @@ class Backup extends Window {
                         if (this.ConfirmBox("Are you sure you want to delete this backup?").addEventListener("click", () => {
                             const xhrk = new XMLHttpRequest();
                             xhrk.onreadystatechange = () => {
-                                if (xhr.status == 403) location.reload(); //authorization
+                                if (xhrk.status == 403) location.reload(); //authorization
                                 if (xhrk.readyState == 4 && xhrk.status == 200 && xhrk.responseText == "ok")
                                     this.list.removeChild(element);
                             };

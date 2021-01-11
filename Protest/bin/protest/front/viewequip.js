@@ -1581,6 +1581,12 @@ class Equip extends Window {
 
         buttonBox.removeChild(btnCancel);
 
+        const btnEdit = document.createElement("input");
+        btnEdit.type = "button";
+        btnEdit.value = "Edit";
+        btnEdit.style.float = "left";
+        buttonBox.appendChild(btnEdit);
+
         innerBox.classList.add("config-code-box");
         innerBox.style.margin = "8px";
 
@@ -1765,7 +1771,7 @@ class Equip extends Window {
         xhr.onreadystatechange = () => {
             if (xhr.status == 403) location.reload(); //authorization
 
-            if (xhr.readyState == 4 && xhr.status == 200)  //OK
+            if (xhr.readyState == 4 && xhr.status == 200) //OK
                 DisplayScript(xhr.responseText.split("\n"));
         };
         xhr.open("GET", "config/get&file=" + this.filename, true);
@@ -1836,6 +1842,44 @@ class Equip extends Window {
         };
 
         btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+
+        btnEdit.onclick = () => {
+            innerBox.contentEditable = true;
+
+            const btnSave = document.createElement("input");
+            btnSave.type = "button";
+            btnSave.value = "Save";
+
+            buttonBox.removeChild(btnEdit);
+            buttonBox.removeChild(btnOK);
+
+            buttonBox.appendChild(btnSave);
+            buttonBox.appendChild(btnCancel);
+
+            btnSave.onclick = ()=> {
+                const xhrSave = new XMLHttpRequest();
+                xhrSave.onreadystatechange = () => {
+                    if (xhrSave.status == 403) location.reload(); //authorization
+                    
+                    if (xhrSave.readyState == 4 && xhrSave.status == 200) //OK
+                        if (xhrSave.responseText == "ok") {
+                            innerBox.contentEditable = false;                            
+                            buttonBox.appendChild(btnEdit);
+                            buttonBox.appendChild(btnOK);
+                            buttonBox.removeChild(btnSave);
+                            buttonBox.removeChild(btnCancel);
+
+                            DisplayScript(innerBox.innerText.split("\n"));
+                        } else {
+                            btnCancel.onclick();
+                            this.ConfirmBox(xhrSave.responseText, true);
+                        }
+                };
+                xhrSave.open("POST", "config/set&file=" + this.filename, true);
+                xhrSave.send(innerBox.innerText);
+            };
+        };
+
     }
 
     Interfaces() {
@@ -2041,6 +2085,8 @@ class Equip extends Window {
                         value = linkedEquip["IP"][0];
                     else if (linkedEquip.hasOwnProperty("TYPE") && linkedEquip["TYPE"][0].length > 0)
                         value = linkedEquip["TYPE"][0];
+                    else if (linkedEquip.hasOwnProperty(".FILENAME") && linkedEquip[".FILENAME"][0].length > 0)
+                        value = linkedEquip[".FILENAME"][0];
 
                     txtL.value = value;
                     txtL.style.backgroundImage = `url(${GetEquipIcon(linkedEquip["TYPE"])})`;
@@ -2130,7 +2176,17 @@ class Equip extends Window {
                 this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
             };
 
+            txtL.ondblclick = () => {
+                if (obj.link.length > 0) {
+                    obj.link = "";
+                    txtL.value = "";
+                    txtL.style.backgroundImage = "url(res/gear.svgz)";
+                }
+            };
+
             txtL.onclick = () => {
+                if (obj.link !== null && obj.link.length > 0) return;
+
                 const dim = document.createElement("div");
                 dim.style.top = "0";
                 dim.className = "win-dim";
@@ -2230,7 +2286,9 @@ class Equip extends Window {
                          else if (db_equip[i].hasOwnProperty("IP") && db_equip[i]["IP"][0].length > 0)
                             value = db_equip[i]["IP"][0];
                          else if (db_equip[i].hasOwnProperty("TYPE") && db_equip[i]["TYPE"][0].length > 0)
-                            value = db_equip[i]["TYPE"][0];                        
+                            value = db_equip[i]["TYPE"][0];
+                         else if (db_equip[i].hasOwnProperty(".FILENAME") && db_equip[i][".FILENAME"][0].length > 0)
+                            value = db_equip[i][".FILENAME"][0];
 
                         for (let j = 0; j < 6; j++) {
                             if (!db_equip[i].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;

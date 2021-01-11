@@ -32,6 +32,25 @@ public static class Configuration {
         return null;
     }
 
+    public static byte[] SetConfig(in HttpListenerContext ctx, in string[] para) {
+        string file = null;
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("file=")) file = Strings.DecodeUrl(para[i].Substring(5));
+
+        if (file is null || file.Length == 0)
+            return Strings.INF.Array;
+
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
+
+        byte[] plain = Encoding.UTF8.GetBytes(FormatRouterOs(payload));
+        byte[] gzip = Cache.GZip(plain);
+        byte[] cipher = CryptoAes.Encrypt(gzip, Program.DB_KEY_A, Program.DB_KEY_B);
+        File.WriteAllBytes($"{Strings.DIR_CONFIG}\\{file}", cipher);
+
+        return Strings.OK.Array;
+    }
+
     public static byte[] FetchConfiguration(in HttpListenerContext ctx, in string[] para, in string performer, bool serveGZip = false) {
         string file = null, username = null, password = null;
         for (int i = 1; i < para.Length; i++)
@@ -99,7 +118,7 @@ public static class Configuration {
             ssh.Connect();
 
             string payload;
-            string firstLine;                
+            string firstLine;
 
             payload = ssh.RunCommand("show running-config").Execute();
             firstLine = payload.Split('\n')[0];

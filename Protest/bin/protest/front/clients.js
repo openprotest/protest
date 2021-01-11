@@ -98,7 +98,7 @@ class Clients extends Tabs {
                     btnKick.onclick = () => {
                         const xhrk = new XMLHttpRequest();
                         xhrk.onreadystatechange = () => {
-                            if (xhr.status == 403) location.reload(); //authorization
+                            if (xhrk.status == 403) location.reload(); //authorization
                             if (xhrk.readyState == 4 && xhrk.status == 200 && xhrk.responseText == "ok")
                                 this.list.removeChild(element);
                         };
