@@ -47,6 +47,7 @@ let loader_styles = [
     ];
 
     const tertiaryScripts = [
+        "settings.js",
         "keepalive.js",
         "listequip.js",
         "listusers.js",
@@ -79,8 +80,7 @@ let loader_styles = [
         "log.js",
         "guide.js",
         "filebrowser.js",
-        "screencapture.js",
-        "settings.js"
+        "screencapture.js"
     ];
 
     let count = 0;
@@ -89,21 +89,21 @@ let loader_styles = [
         loader_progress.style.width = 100 * ++count / total + "%";
         loader_decr.innerHTML = filename;
 
-        if (loader_styles.length + primaryScripts.length == count) { //load secondary
+        if (loader_styles.length + primaryScripts.length === count) { //load secondary
             for (let i = 0; i < secondaryScripts.length; i++)
                 LoadScript(secondaryScripts[i], callbackHandle);
 
-        } else if (loader_styles.length + primaryScripts.length + secondaryScripts.length == count) { //load tertiary
+        } else if (loader_styles.length + primaryScripts.length + secondaryScripts.length === count) { //load tertiary
             for (let i = 0; i < tertiaryScripts.length; i++)
                 LoadScript(tertiaryScripts[i], callbackHandle);
 
-        } else if (count == total - 2) { //js is done, load db
+        } else if (count === total - 2) { //js is done, load db
             btnSidemenu.style.filter = "none";
 
             LoadEquip(callbackHandle);
             LoadUsers(callbackHandle);
 
-        } else if (count == total) { //all done
+        } else if (count === total) { //all done
             initKeepAlive();
 
             loader.style.filter = "opacity(0)";
@@ -241,8 +241,7 @@ function RestoreSession() {
     } 
 
     if (localStorage.getItem("restore_session") != "true") return;
-    if (session == null || session.length == 0) return;
-    
+    if (session == null || session.length == 0) return;    
 
     for (let i = 0; i < session.length; i++) {
         let win;

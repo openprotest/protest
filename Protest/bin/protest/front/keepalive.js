@@ -15,7 +15,7 @@ function initKeepAlive() {
 
         setTimeout(() => {
             if (localStorage.getItem("cookie_lifetime") && parseInt(localStorage.getItem("cookie_lifetime")) != 7)
-                KeepAlive_SendAction(`updatesessiontimeout${String.fromCharCode(127)}${parseInt(localStorage.getItem("cookie_lifetime")) * 36000000000}`);
+                KeepAlive_SendAction(`updatesessiontimeout${String.fromCharCode(127)}${parseInt(localStorage.getItem("cookie_lifetime"))}`);
         }, 1000);
     };
 

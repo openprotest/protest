@@ -235,6 +235,7 @@ class HttpMainListener : Http {
                         switch (para[0]) {
                             case "config/get": buffer = Configuration.GetConfig(para); break;
                             case "config/set": buffer = Configuration.SetConfig(ctx, para); break;
+                            case "config/getint": buffer = Configuration.GetInterfaces(para); break;
                             case "config/fetch":
                                 buffer = Configuration.FetchConfiguration(ctx, para, performer, acceptGzip);
                                 if (acceptGzip) ctx.Response.AddHeader("Content-Encoding", "gzip");

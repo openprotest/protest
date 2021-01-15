@@ -434,6 +434,10 @@ class User extends Window {
                 const subvalue = document.createElement("div");
                 subvalue.innerHTML = values[i] + "&thinsp;";
                 value.appendChild(subvalue);
+
+                const thinsp = document.createElement("div");
+                thinsp.innerHTML = "&thinsp;";
+                value.appendChild(subvalue);
             }
 
             newProperty.appendChild(value);
@@ -470,7 +474,8 @@ class User extends Window {
             const value = document.createElement("div");
 
             const subvalue = document.createElement("div");
-            subvalue.innerHTML = `${v}&nbsp;`;
+            //subvalue.innerHTML = `${v}&nbsp;`;
+            subvalue.innerHTML = v;
             value.appendChild(subvalue);
 
             newProperty.appendChild(value);

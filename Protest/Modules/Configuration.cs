@@ -51,6 +51,32 @@ public static class Configuration {
         return Strings.OK.Array;
     }
 
+    public static byte[] GetInterfaces(in string[] para) {
+        string file = null;
+        for (int i = 1; i < para.Length; i++)
+            if (para[i].StartsWith("file=")) file = Strings.DecodeUrl(para[i].Substring(5));
+
+        if (file is null || file.Length == 0)
+            return Strings.INF.Array;
+
+        if (!File.Exists(file)) return Strings.FLE.Array;
+
+        string[] lines;
+        try {
+            byte[] bytes = File.ReadAllBytes($"{Strings.DIR_CONFIG}\\{file}");
+            byte[] gzip = CryptoAes.Decrypt(bytes, Program.DB_KEY_A, Program.DB_KEY_B);
+            byte[] plain = Cache.UnGZip(gzip);
+            lines = Encoding.UTF8.GetString(bytes).Split('\n');
+        } catch {
+            return Strings.FAI.Array;
+        }
+
+        //z
+
+
+        return null;
+    }
+
     public static byte[] FetchConfiguration(in HttpListenerContext ctx, in string[] para, in string performer, bool serveGZip = false) {
         string file = null, username = null, password = null;
         for (int i = 1; i < para.Length; i++)

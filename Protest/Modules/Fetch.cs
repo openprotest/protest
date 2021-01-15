@@ -579,7 +579,8 @@ public static class Fetch {
             if (para[i].StartsWith("host=")) host = para[i].Substring(5);
             else if (para[i].StartsWith("filename=")) filename = para[i].Substring(9);
 
-        if (host is null || host.Length == 0) return Strings.INV.Array;
+        if (!(host is null))
+            return FetchArrayToBytes(SingleFetchEquip(host, true, PortScan.basic_ports));
 
         if (!Database.equip.ContainsKey(filename)) return Strings.FLE.Array;
 
@@ -594,7 +595,9 @@ public static class Fetch {
             if (host.IndexOf(";") > -1) host = host.Split(';')[0].Trim();
             host = System.Net.Dns.GetHostAddresses(host)[0].ToString();
         }
-        
+
+        if (host is null || host.Length == 0) return Strings.INV.Array;
+
         return FetchArrayToBytes(SingleFetchEquip(host, true, PortScan.basic_ports));
     }    
     public static Hashtable SingleFetchEquip(string host, bool async = true, short[] ports_pool = null, IPAddress[] gateways = null) {

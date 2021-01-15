@@ -79,7 +79,7 @@ public static class Session {
             accessControl = acl.ContainsKey(username) ? acl[username] : null
         };
 
-        if (sessions.TryAdd(newEntry.sessionId, newEntry)) 
+        if (sessions.TryAdd(newEntry.sessionId, newEntry))
             return newEntry.sessionId;
 
         return null;

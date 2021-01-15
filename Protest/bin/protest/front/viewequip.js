@@ -122,7 +122,7 @@ class Equip extends Window {
 
         this.interfaces = document.createElement("div");
         this.interfaces.className = "db-interfaces";
-        this.interfaces.style.display = this.entry.hasOwnProperty(".INTERFACES") ? "block" : "none";
+        this.interfaces.style.display = this.entry && this.entry.hasOwnProperty(".INTERFACES") ? "block" : "none";
         this.scroll.appendChild(this.interfaces);
 
         this.liveinfo = document.createElement("div");
@@ -397,7 +397,7 @@ class Equip extends Window {
                     };
                 }
                 
-                if (AUTHORIZATION.wmi === 1 && this.entryIP) {
+                if (AUTHORIZATION.wmi === 1 && this.entry.IP) {
                     const btnProcesses = this.SideButton("res/console.svgz", "Processes");
                     this.sidetools.appendChild(btnProcesses);
                     btnProcesses.onclick = () => {
@@ -421,7 +421,7 @@ class Equip extends Window {
                     };
                 }
 
-                if (AUTHORIZATION.remoteagent === 1 && this.entryIP) {
+                if (AUTHORIZATION.remoteagent === 1 && this.entry.IP) {
                     const btnMgmt = this.SideButton("res/compmgmt.svgz", "PC Management"); //compmgmt
                     this.sidetools.appendChild(btnMgmt);
                     btnMgmt.onclick = () => {
@@ -436,7 +436,7 @@ class Equip extends Window {
                     };
                 }
 
-                if (AUTHORIZATION.remoteagent === 1 && this.entryIP) {
+                if (AUTHORIZATION.remoteagent === 1 && this.entry.IP) {
                     const btnPse = this.SideButton("res/psremote.svgz", "PS Remoting"); //psexec
                     this.sidetools.appendChild(btnPse);
                     btnPse.onclick = () => {
@@ -618,7 +618,12 @@ class Equip extends Window {
                     btnConfig.style.marginTop = "16px";
                     this.sidetools.appendChild(btnConfig);
                     btnConfig.onclick = () => this.Configuration();
-
+                    marginFlag = true;
+                } else if (ports.includes(23)) {
+                    const btnConfig = this.SideButton("res/configfile.svgz", "Configuration");
+                    btnConfig.style.marginTop = "16px";
+                    this.sidetools.appendChild(btnConfig);
+                    btnConfig.onclick = () => this.Configuration(23);
                     marginFlag = true;
                 }
 
@@ -747,13 +752,15 @@ class Equip extends Window {
                     linkIcon.style.filter = "invert(1)";
                     divLink.appendChild(linkIcon);
 
+                    let name = null;
                     if (list[i].link.hasOwnProperty("NAME")) {
+                        name = list[i].link["NAME"][0];
                         const linkName = document.createElement("div");
-                        linkName.innerHTML = list[i].link["NAME"][0];
+                        linkName.innerHTML = name;
                         divLink.appendChild(linkName);
                     }
 
-                    if (list[i].link.hasOwnProperty("HOSTNAME")) {
+                    if (list[i].link.hasOwnProperty("HOSTNAME") && list[i].link["HOSTNAME"][0] !== name) {
                         const linkHostname = document.createElement("div");
                         linkHostname.innerHTML = list[i].link["HOSTNAME"][0];
                         divLink.appendChild(linkHostname);
@@ -1057,7 +1064,11 @@ class Equip extends Window {
             for (let i = 0; i < values.length; i++) {
                 if (values[i].trim().length == 0) continue;
                 const subvalue = document.createElement("div");
-                subvalue.innerHTML = values[i] + "&thinsp;";
+                subvalue.innerHTML = values[i];
+                value.appendChild(subvalue);
+
+                const thinsp = document.createElement("div");
+                thinsp.innerHTML = "&thinsp;";
                 value.appendChild(subvalue);
             }
 
@@ -1095,7 +1106,8 @@ class Equip extends Window {
             const value = document.createElement("div");
 
             const subvalue = document.createElement("div");
-            subvalue.innerHTML = `${v}&nbsp;`;
+            //subvalue.innerHTML = `${v}&nbsp;`;
+            subvalue.innerHTML = v;
             value.appendChild(subvalue);
 
             newProperty.appendChild(value);
@@ -1570,7 +1582,7 @@ class Equip extends Window {
         this.LiveInfo();
     }
 
-    Configuration() {
+    Configuration(fetchprotocol = 22) {
         const dialog = this.DialogBox("calc(100% - 34px)");
         if (dialog === null) return;
 
@@ -1609,7 +1621,7 @@ class Equip extends Window {
         btnFetch.style.backgroundRepeat = "no-repeat";
         btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
         btnFetch.style.transition = ".2s";
-        dialog.innerBox.parentNode.parentNode.appendChild(btnFetch);
+        if (fetchprotocol === 22) dialog.innerBox.parentNode.parentNode.appendChild(btnFetch);
 
         const divFetch = document.createElement("div");
         divFetch.style.position = "absolute";
@@ -1893,6 +1905,40 @@ class Equip extends Window {
 
         innerBox.parentElement.style.maxWidth = "80%";
         innerBox.style.padding = "20px";
+
+        const btnFetch = document.createElement("div");
+        btnFetch.setAttribute("tip-below", "Auto-populate");
+        btnFetch.style.position = "absolute";
+        btnFetch.style.left = "0px";
+        btnFetch.style.top = "32px";
+        btnFetch.style.width = "56px";
+        btnFetch.style.height = "56px";
+        btnFetch.style.paddingLeft = "4px";
+        btnFetch.style.borderRadius = "0 8px 8px 0";
+        btnFetch.style.backgroundColor = "rgb(208,208,208)";
+        btnFetch.style.backgroundImage = "url(res/configfile.svgz)";
+        btnFetch.style.backgroundPosition = "center";
+        btnFetch.style.backgroundSize = "48px 48px";
+        btnFetch.style.backgroundRepeat = "no-repeat";
+        btnFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        btnFetch.style.transition = ".2s";
+        dialog.innerBox.parentNode.parentNode.appendChild(btnFetch);
+
+        const divFetch = document.createElement("div");
+        divFetch.style.position = "absolute";
+        divFetch.style.visibility = "hidden";
+        divFetch.style.left = "30%";
+        divFetch.style.top = "28px";
+        divFetch.style.width = "40%";
+        divFetch.style.maxWidth = "400px";
+        divFetch.style.minWidth = "220px";
+        divFetch.style.borderRadius = "8px";
+        divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+        divFetch.style.backgroundColor = "rgb(208,208,208)";
+        divFetch.style.padding = "16px 8px";
+        divFetch.style.overflow = "hidden";
+        divFetch.style.textAlign = "center";
+        dialog.innerBox.parentElement.parentElement.appendChild(divFetch);
 
         const frame = document.createElement("div");
         frame.className = "int-frame";
@@ -2187,6 +2233,8 @@ class Equip extends Window {
             txtL.onclick = () => {
                 if (obj.link !== null && obj.link.length > 0) return;
 
+                this.AddCssDependencies("list.css");
+
                 const dim = document.createElement("div");
                 dim.style.top = "0";
                 dim.className = "win-dim";
@@ -2386,10 +2434,82 @@ class Equip extends Window {
             xhr.send(payload);
         });
 
+        let fetchToogle = false;
+        btnFetch.onclick = () => {
+            dialog.innerBox.parentElement.style.transition = ".2s";
+            dialog.innerBox.parentElement.style.transform = fetchToogle ? "none" : "translateY(-25%)";
+            dialog.innerBox.parentElement.style.filter = fetchToogle ? "none" : "opacity(0)";
+            dialog.innerBox.parentElement.style.visibility = fetchToogle ? "visible" : "hidden";
+
+            divFetch.style.transition = ".2s";
+            divFetch.style.filter = fetchToogle ? "opacity(0)" : "none";
+            divFetch.style.transform = fetchToogle ? "translateY(-25%)" : "none";
+            divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
+
+            btnFetch.style.backgroundImage = fetchToogle ? "url(res/configfile.svgz)" : "url(res/close.svgz)";
+            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+
+            fetchToogle = !fetchToogle;
+
+
+            if (fetchToogle) {
+                divFetch.innerHTML = "";
+
+                const iconsContainer = document.createElement("div");
+                iconsContainer.style.textAlign = "center";
+                divFetch.appendChild(iconsContainer);
+
+                let iconslist = ["res/configfile.svgz", "res/arrow.svgz", "res/interfaces.svgz"];
+                for (let i = 0; i < iconslist.length; i++) {
+                    const icon = document.createElement("div");
+                    icon.style.display = "inline-block";
+                    icon.style.width = "48px";
+                    icon.style.height = "48px";
+                    icon.style.backgroundImage = `url(${iconslist[i]})`;
+                    icon.style.backgroundSize = "contain";
+                    iconsContainer.appendChild(icon);
+                }
+
+                const message = document.createElement("div");
+                message.innerHTML = "Are you sure you want to automatically populate the device interfaces from the configuration file? All previous configurations will be lost.";
+                //message.style.textAlign = "left";
+                message.style.padding = "16px";
+                divFetch.appendChild(message);
+
+                const btnFetchOk = document.createElement("input");
+                btnFetchOk.type = "button";
+                btnFetchOk.value = "Fetch";
+                divFetch.appendChild(btnFetchOk);
+
+                const btnFetchCancel = document.createElement("input");
+                btnFetchCancel.type = "button";
+                btnFetchCancel.value = "Cancel";
+                divFetch.appendChild(btnFetchCancel);
+
+                btnFetchOk.onclick = () => {
+                    const xhrFetchFromConfig = new XMLHttpRequest();
+                    xhrFetchFromConfig.onreadystatechange = () => {
+                        if (xhrFetchFromConfig.status == 403) location.reload(); //authorization
+
+                        if (xhrFetchFromConfig.readyState == 4 && xhrFetchFromConfig.status == 200) {
+                            //
+                        }
+                    };
+                    xhrFetchFromConfig.open("GET", "config/getint=" + this.filename, true);
+                    xhrFetchFromConfig.send();
+                };
+
+                btnFetchCancel.onclick = () => { btnFetch.onclick(); };
+            }
+        };
+
         if (this.entry.hasOwnProperty(".INTERFACES")) {
             let obj = JSON.parse(this.entry[".INTERFACES"][0]);
             for (let i = 0; i < obj.i.length; i++)
                 AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
+        } else {
+            for (let i = 0; i < 4; i++)
+                AddInterface("Ethernet", "1 Gbps", 1, null, "");
         }
     }
 

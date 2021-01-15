@@ -147,6 +147,7 @@
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\front\clients.css" />
+    <Content Include="bin\protest\front\res\arrow.svg" />
     <Content Include="bin\protest\front\res\configfile.svg" />
     <Content Include="bin\protest\front\res\cookie.svg" />
     <Content Include="bin\protest\front\res\error.svg" />
