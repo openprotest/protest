@@ -2471,7 +2471,7 @@ class Equip extends Window {
                 }
 
                 const message = document.createElement("div");
-                message.innerHTML = "Are you sure you want to automatically populate the device interfaces from the configuration file? All previous configurations will be lost.";
+                message.innerHTML = "Are you sure you want to populate the interfaces from the device configuration?";
                 //message.style.textAlign = "left";
                 message.style.padding = "16px";
                 divFetch.appendChild(message);
