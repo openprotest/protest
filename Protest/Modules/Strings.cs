@@ -181,7 +181,7 @@ public static class Strings {
 
         string result = "{";
         result += $"\"name\":\"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}\",";
-        result += $"\"string\":\"{ver.ToString()}\",";
+        result += $"\"string\":\"{ver}\",";
         result += $"\"major\":\"{ver.Major}\",";
         result += $"\"minor\":\"{ver.Minor}\",";
         result += $"\"build\":\"{ver.Build}\",";

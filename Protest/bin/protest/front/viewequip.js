@@ -729,9 +729,11 @@ class Equip extends Window {
                 divVlanColor.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
                 this.floading.appendChild(divVlanColor);
 
-                this.floading.innerHTML += "VLAN: " + obj.i[i].v + "<br>";
+                if (obj.i[i].v && obj.i[i].v.toString().length)
+                    this.floading.innerHTML += "VLAN: " + obj.i[i].v + "<br>";
 
-                if (obj.i[i].c.length > 0) this.floading.innerHTML += obj.i[i].c;
+                if (obj.i[i].c.length > 0)
+                    this.floading.innerHTML += obj.i[i].c;
 
                 if (list[i].link) {
                     const divLink = document.createElement("div");
@@ -1586,7 +1588,7 @@ class Equip extends Window {
         const dialog = this.DialogBox("calc(100% - 34px)");
         if (dialog === null) return;
 
-        const btnOK     = dialog.btnOK;
+        const btnOK = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
         const buttonBox = dialog.buttonBox;
         const innerBox = dialog.innerBox;
@@ -1657,7 +1659,7 @@ class Equip extends Window {
 
         const txtFetchPassword = document.createElement("input");
         txtFetchPassword.type = "password";
-        
+
         if (!hasCred) {
             divFetch.appendChild(lblFetchUsername);
             divFetch.appendChild(txtFetchUsername);
@@ -1698,7 +1700,7 @@ class Equip extends Window {
                 lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
 
                 const divLine = document.createElement("div");
-                
+
                 if (lines[i].startsWith("#") || lines[i].startsWith("!")) { //comment
                     divLine.innerHTML = lines[i];
                     divLine.style.color = "#9C6";
@@ -1716,11 +1718,11 @@ class Equip extends Window {
 
                     let temp = lines[i].split("\"");
                     for (let j = 0; j < temp.length; j++)
-                        if (j%2===0)
+                        if (j % 2 === 0)
                             line.push(temp[j]);
-                        else 
+                        else
                             line.push(`\"${temp[j]}\"`);
-                   
+
                     for (let j = 0; j < line.length; j++) {
                         if (line[j].length === 0) continue;
 
@@ -1753,21 +1755,21 @@ class Equip extends Window {
 
                                 if (p != sp) {
                                     const spanA = document.createElement("span");
-                                    spanA.innerHTML = j==0 ? line[j].substring(p, sp).replaceAll(" ", "&ensp;") : line[j].substring(p, sp);
+                                    spanA.innerHTML = j == 0 ? line[j].substring(p, sp).replaceAll(" ", "&ensp;") : line[j].substring(p, sp);
                                     divLine.appendChild(spanA);
                                 }
-                                
+
                                 const spanB = document.createElement("span");
-                                spanB.innerHTML = j==0 ? line[j].substring(sp, ep+1).replaceAll(" ", "&ensp;") : line[j].substring(sp, ep+1);
+                                spanB.innerHTML = j == 0 ? line[j].substring(sp, ep + 1).replaceAll(" ", "&ensp;") : line[j].substring(sp, ep + 1);
                                 spanB.style.color = "#5BE";
                                 divLine.appendChild(spanB);
 
-                                p = ep+1;
+                                p = ep + 1;
                             }
 
                             if (p < line[j].length) {
                                 const spanC = document.createElement("span");
-                                spanC.innerHTML = j==0 ? line[j].substring(p).replaceAll(" ", "&ensp;") : line[j].substring(p);
+                                spanC.innerHTML = j == 0 ? line[j].substring(p).replaceAll(" ", "&ensp;") : line[j].substring(p);
                                 divLine.appendChild(spanC);
                             }
                         }
@@ -1789,6 +1791,11 @@ class Equip extends Window {
         xhr.open("GET", "config/get&file=" + this.filename, true);
         xhr.send();
 
+        const btnOK_onclick = btnOK.onclick;
+        btnOK.onclick = () => {
+            innerBox.innerHTML = "";
+            setTimeout(() => { btnOK_onclick() }, 0);
+        };
 
         let fetchToogle = false;
         btnFetch.onclick = () => {
@@ -1907,7 +1914,7 @@ class Equip extends Window {
         innerBox.style.padding = "20px";
 
         const btnFetch = document.createElement("div");
-        btnFetch.setAttribute("tip-below", "Auto-populate");
+        btnFetch.setAttribute("tip-below", "Populate");
         btnFetch.style.position = "absolute";
         btnFetch.style.left = "0px";
         btnFetch.style.top = "32px";
@@ -2108,9 +2115,9 @@ class Equip extends Window {
             }
 
             const txtV = document.createElement("input");
-            txtV.type = "number";
-            txtV.min = 0;
-            txtV.max = 4095;
+            txtV.type = "text";
+            //txtV.min = 0;
+            //txtV.max = 4095;
             txtV.value = vlan;
             listElement.appendChild(txtV);
 
@@ -2141,7 +2148,7 @@ class Equip extends Window {
 
             const txtC = document.createElement("input");
             txtC.type = "text";
-            txtC.placeholder = "comment";
+            txtC.placeholder = "description";
             txtC.value= comment;
             listElement.appendChild(txtC);
 
@@ -2409,7 +2416,7 @@ class Equip extends Window {
                 interfaces.i.push({
                     i: list[i].txtPort.value,
                     s: list[i].txtSpeed.value,
-                    v: parseInt(list[i].txtVlan.value),
+                    v: list[i].txtVlan.value,
                     c: list[i].txtComm.value,
                     l: list[i].link
                 });
@@ -2447,10 +2454,9 @@ class Equip extends Window {
             divFetch.style.visibility = fetchToogle ? "hidden" : "visible";
 
             btnFetch.style.backgroundImage = fetchToogle ? "url(res/configfile.svgz)" : "url(res/close.svgz)";
-            btnFetch.setAttribute("tip-below", fetchToogle ? "Fetch" : "Cancel");
+            btnFetch.setAttribute("tip-below", fetchToogle ? "Populate" : "Cancel");
 
             fetchToogle = !fetchToogle;
-
 
             if (fetchToogle) {
                 divFetch.innerHTML = "";
@@ -2472,13 +2478,12 @@ class Equip extends Window {
 
                 const message = document.createElement("div");
                 message.innerHTML = "Are you sure you want to populate the interfaces from the device configuration?";
-                //message.style.textAlign = "left";
                 message.style.padding = "16px";
                 divFetch.appendChild(message);
 
                 const btnFetchOk = document.createElement("input");
                 btnFetchOk.type = "button";
-                btnFetchOk.value = "Fetch";
+                btnFetchOk.value = "Populate";
                 divFetch.appendChild(btnFetchOk);
 
                 const btnFetchCancel = document.createElement("input");
@@ -2492,10 +2497,30 @@ class Equip extends Window {
                         if (xhrFetchFromConfig.status == 403) location.reload(); //authorization
 
                         if (xhrFetchFromConfig.readyState == 4 && xhrFetchFromConfig.status == 200) {
-                            //
+                            let json = JSON.parse(xhrFetchFromConfig.responseText);
+
+                            if (json.error) {
+                                message.innerHTML = json.error;
+                                divFetch.removeChild(iconsContainer);
+                                divFetch.removeChild(btnFetchOk);
+                                btnFetchCancel.value = "Close";
+
+                            } else if (json instanceof Array) {
+                                divList.innerHTML = "";
+                                frame.innerHTML = "";
+                                list = [];
+
+                                for (let i = 0; i < json.length; i++)
+                                    AddInterface(json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
+
+                                SortList();
+                                this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+
+                                btnFetch.onclick();
+                            }
                         }
                     };
-                    xhrFetchFromConfig.open("GET", "config/getint=" + this.filename, true);
+                    xhrFetchFromConfig.open("GET", `config/getint&file=${this.filename}`, true);
                     xhrFetchFromConfig.send();
                 };
 
@@ -2554,6 +2579,7 @@ class Equip extends Window {
         let vlans = [];
         for (let i = 0; i < list.length; i++) {
             let v = editMode ? list[i].txtVlan.value : list[i].vlan;
+            if (v === "TRUNK") continue;
             if (!vlans.includes(v)) vlans.push(v);
         }
 
@@ -2600,6 +2626,8 @@ class Equip extends Window {
     }
 
     GetVlanColor(vlan, array) {
+        if (vlan === null || vlan.length === 0) return "transparent";
+        if (vlan === "TRUNK") return "#FFFFFF";
         if (array.length < 2) return "transparent";
         let index = array.indexOf(vlan);
         if (index === -1) return "transparent";

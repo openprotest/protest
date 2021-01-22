@@ -158,6 +158,7 @@
     <Content Include="bin\protest\front\res\g_folder.svg" />
     <Content Include="bin\protest\front\res\g_shared.svg" />
     <Content Include="bin\protest\front\res\interfaces.svg" />
+    <Content Include="bin\protest\front\res\l_dropdown.svg" />
     <Content Include="bin\protest\front\res\l_folder.svg" />
     <Content Include="bin\protest\front\res\l_goback.svg" />
     <Content Include="bin\protest\front\res\l_goforward.svg" />

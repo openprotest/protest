@@ -61,10 +61,155 @@ class ListEquip extends ListWindow {
         this.typeslist = [];
         this.hasTypes = true;
 
+        this.InitDropdown();
+        this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
+
         this.UpdateTitlebar();
         this.RefreshList();
         this.OnUiReady();
         this.UpdateFilters();
+    }
+
+    InitDropdown() {
+        this.btnDropdown = document.createElement("div");
+        this.btnDropdown.className = "tool-with-submenu";
+        this.btnDropdown.style.backgroundImage = "url(res/l_dropdown.svgz)";
+        this.btnDropdown.style.boxShadow = "none";
+        this.btnDropdown.tabIndex = 0;
+        this.toolbox.appendChild(this.btnDropdown);
+
+        this.dropdownSubmenu = document.createElement("div");
+        this.dropdownSubmenu.className = "tool-submenu";
+        this.btnDropdown.appendChild(this.dropdownSubmenu);
+
+        const itmPing = document.createElement("div");
+        itmPing.innerHTML = "Ping";
+        itmPing.style.paddingLeft = "32px";
+        itmPing.style.backgroundImage = "url(res/ping.svgz)";
+        itmPing.style.backgroundSize = "24px 24px ";
+        itmPing.style.backgroundPosition = "4px 50%";
+        itmPing.style.backgroundRepeat = "no-repeat";
+        this.dropdownSubmenu.appendChild(itmPing);
+
+        const itmDns = document.createElement("div");
+        itmDns.innerHTML = "DNS lookup";
+        itmDns.style.paddingLeft = "32px";
+        itmDns.style.backgroundImage = "url(res/dns.svgz)";
+        itmDns.style.backgroundSize = "24px 24px ";
+        itmDns.style.backgroundPosition = "4px 50%";
+        itmDns.style.backgroundRepeat = "no-repeat";
+        this.dropdownSubmenu.appendChild(itmDns);
+
+        const itmTrace = document.createElement("div");
+        itmTrace.innerHTML = "Trace route";
+        itmTrace.style.paddingLeft = "32px";
+        itmTrace.style.backgroundImage = "url(res/traceroute.svgz)";
+        itmTrace.style.backgroundSize = "24px 24px ";
+        itmTrace.style.backgroundPosition = "4px 50%";
+        itmTrace.style.backgroundRepeat = "no-repeat";
+        this.dropdownSubmenu.appendChild(itmTrace);
+
+        const itmPortScan = document.createElement("div");
+        itmPortScan.innerHTML = "Port scan";
+        itmPortScan.style.paddingLeft = "32px";
+        itmPortScan.style.backgroundImage = "url(res/portscan.svgz)";
+        itmPortScan.style.backgroundSize = "24px 24px ";
+        itmPortScan.style.backgroundPosition = "4px 50%";
+        itmPortScan.style.backgroundRepeat = "no-repeat";
+        //this.dropdownSubmenu.appendChild(itmPortScan);
+
+        const itmLocate = document.createElement("div");
+        itmLocate.innerHTML = "Locate IP";
+        itmLocate.style.paddingLeft = "32px";
+        itmLocate.style.backgroundImage = "url(res/locate.svgz)";
+        itmLocate.style.backgroundSize = "24px 24px ";
+        itmLocate.style.backgroundPosition = "4px 50%";
+        itmLocate.style.backgroundRepeat = "no-repeat";
+        this.dropdownSubmenu.appendChild(itmLocate);
+
+        const itmMacResolve = document.createElement("div");
+        itmMacResolve.innerHTML = "MAC lookup";
+        itmMacResolve.style.paddingLeft = "32px";
+        itmMacResolve.style.backgroundImage = "url(res/maclookup.svgz)";
+        itmMacResolve.style.backgroundSize = "24px 24px ";
+        itmMacResolve.style.backgroundPosition = "4px 50%";
+        itmMacResolve.style.backgroundRepeat = "no-repeat";
+        this.dropdownSubmenu.appendChild(itmMacResolve);
+
+        this.btnDropdown.onfocus = () => {
+            if (this.popoutWindow)
+                this.dropdownSubmenu.style.maxHeight = this.content.clientHeight - 64 + "px";
+            else
+                this.dropdownSubmenu.style.maxHeight = container.clientHeight - this.win.offsetTop - 64 + "px";
+
+            this.BringToFront();
+        };
+
+        itmPing.onclick = () => {
+            let entries = [];
+            for (let i = 0; i < this.view.length; i++)
+                if (this.view[i].hasOwnProperty("IP") && this.view[i].IP[0].length > 0)
+                    this.view[i].IP[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+                else if (this.view[i].hasOwnProperty("HOSTNAME") && this.view[i].HOSTNAME[0].length > 0)
+                    this.view[i].HOSTNAME[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+
+            if (entries.length > 0)
+                new Ping({ entries: entries, timeout: 1000, method: "icmp", moveToBottom: false });
+        };
+
+        itmDns.onclick = () => {
+            let entries = [];
+            for (let i = 0; i < this.view.length; i++)
+                if (this.view[i].hasOwnProperty("HOSTNAME") && this.view[i].HOSTNAME[0].length > 0)
+                    this.view[i].HOSTNAME[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+
+            if (entries.length > 0)
+                new DnsLookup({ entries: entries });
+        };
+
+        itmTrace.onclick = () => {
+            let entries = [];
+            for (let i = 0; i < this.view.length; i++)
+                if (this.view[i].hasOwnProperty("IP") && this.view[i].IP[0].length > 0)
+                    this.view[i].IP[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+                else if (this.view[i].hasOwnProperty("HOSTNAME") && this.view[i].HOSTNAME[0].length > 0)
+                    this.view[i].HOSTNAME[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+
+            if (entries.length > 0)
+                new TraceRoute({ entries: entries });
+        };
+
+        itmPortScan.onclick = () => {
+            let entries = [];
+            for (let i = 0; i < this.view.length; i++)
+                if (this.view[i].hasOwnProperty("IP") && this.view[i].IP[0].length > 0)
+                    this.view[i].IP[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+                else if (this.view[i].hasOwnProperty("HOSTNAME") && this.view[i].HOSTNAME[0].length > 0)
+                    this.view[i].HOSTNAME[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+
+            if (entries.length > 0)
+                new PortScan({ entries: entries, rangeFrom: 1, rangeTo: 1023 });
+        };
+
+        itmLocate.onclick = () => {
+            let entries = [];
+            for (let i = 0; i < this.view.length; i++)
+                if (this.view[i].hasOwnProperty("IP") && this.view[i].IP[0].length > 0)
+                    this.view[i].IP[0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+
+            if (entries.length > 0)
+                new LocateIp({ entries: entries });
+        };
+
+        itmMacResolve.onclick = () => {
+            let entries = [];
+            for (let i = 0; i < this.view.length; i++)
+                if (this.view[i].hasOwnProperty("MAC ADDRESS") && this.view[i]["MAC ADDRESS"][0].length > 0)
+                    this.view[i]["MAC ADDRESS"][0].split(";").map(o => o.trim()).forEach(o => entries.push(o));
+
+            if (entries.length > 0)
+                new MacLookup({ entries: entries });
+        };
     }
 
     InflateElement(element, entry, type) { //override

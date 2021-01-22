@@ -44,12 +44,10 @@ class Program {
     private static bool http_enable = true;
     private static string[] http_prefixes = new string[] { "http://127.0.0.1:80/" };
     private static readonly ThreadPriority http_priority = ThreadPriority.AboveNormal;
-    private static HttpMainListener mainListener;
 
     private static bool addressbook_enable = false;
     private static string[] addressbook_prefixes = new string[] { "http://*:911/" };
     private static readonly ThreadPriority addressbook_priority = ThreadPriority.Normal;
-    private static HttpAddressBookListener addressbookListener;
 
     static void Main(string[] args) {
         Console.Title = "Pro-test";
@@ -136,10 +134,9 @@ class Program {
     }
 
     private static string GetAppid() {
-        var assembly = typeof(Program).Assembly;
-        var attribute = (GuidAttribute)assembly.GetCustomAttributes(typeof(GuidAttribute), true)[0];
-        var id = attribute.Value;
-        return id;
+        Assembly assembly = typeof(Program).Assembly;
+        GuidAttribute attribute = (GuidAttribute)assembly.GetCustomAttributes(typeof(GuidAttribute), true)[0];
+        return attribute.Value;
     }
 
     private static void SelfElevate() {
@@ -307,14 +304,14 @@ class Program {
 
     private static void StartServices() {
         if (http_enable) {
-            Thread thread = new Thread(() => { mainListener = new HttpMainListener(http_prefixes, Strings.DIR_FRONTEND); });
+            Thread thread = new Thread(() => { new HttpMainListener(http_prefixes, Strings.DIR_FRONTEND); });
             thread.Priority = http_priority;
             thread.Start();
         }
 
         if (addressbook_enable) {
             Thread.Sleep(3000);
-            Thread thread = new Thread(() => { addressbookListener = new HttpAddressBookListener(addressbook_prefixes, Strings.DIR_ADDRESSBOOK); });
+            Thread thread = new Thread(() => { new HttpAddressBookListener(addressbook_prefixes, Strings.DIR_ADDRESSBOOK); });
             thread.Priority = addressbook_priority;
             thread.Start();
         }

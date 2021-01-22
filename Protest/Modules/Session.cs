@@ -202,7 +202,7 @@ public static class Session {
         for (int i = 0; i < files.Length; i++) {
             if (files[i].Name.ToLower() == "loopback") continue;
 
-            string payload = null;
+            string payload;
             try {
                 payload = File.ReadAllText(files[i].FullName.ToLower()).Trim();
             } catch {

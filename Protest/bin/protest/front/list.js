@@ -78,11 +78,11 @@ class ListWindow extends Window {
         this.titleLabels = [];
 
         this.btnFilter.onfocus = () => {
-            if (this.popoutWindow) {
+            if (this.popoutWindow)
                 this.filterSubmenu.style.maxHeight = this.content.clientHeight - 64 + "px";
-            } else {
+            else
                 this.filterSubmenu.style.maxHeight = container.clientHeight - this.win.offsetTop - 64 + "px";
-            }
+
             this.BringToFront();
         };
 
@@ -96,11 +96,11 @@ class ListWindow extends Window {
         };
 
         this.btnSort.onfocus = () => {
-            if (this.popoutWindow) {
+            if (this.popoutWindow)
                 this.sortSubmenu.style.maxHeight = this.content.clientHeight - 64 + "px";
-            } else {
+            else
                 this.sortSubmenu.style.maxHeight = container.clientHeight - this.win.offsetTop - 64 + "px";
-            }
+            
             this.BringToFront();
         };
 
@@ -176,7 +176,7 @@ class ListWindow extends Window {
         for (let i=0; i<this.columns.length; i++) {
             if (this.columns[i].length === 0) continue;
 
-            let newItem = document.createElement("div");
+            const newItem = document.createElement("div");
             newItem.innerHTML = this.columns[i].toLowerCase();
             this.sortSubmenu.appendChild(newItem);
 

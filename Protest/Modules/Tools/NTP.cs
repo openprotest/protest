@@ -24,19 +24,18 @@ public static class Ntp {
 
         try {
             IPAddress address = System.Net.Dns.GetHostEntry(server).AddressList[0];
-            var remoteEndPoint = new IPEndPoint(address, 123);
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)) {
-                start = DateTime.Now;
+            IPEndPoint remoteEndPoint = new IPEndPoint(address, 123);
+            using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            start = DateTime.Now;
 
-                socket.Connect(remoteEndPoint);
-                socket.ReceiveTimeout = timeout;
-                socket.Send(data);
-                socket.Receive(data);
+            socket.Connect(remoteEndPoint);
+            socket.ReceiveTimeout = timeout;
+            socket.Send(data);
+            socket.Receive(data);
 
-                end = DateTime.Now;
+            end = DateTime.Now;
 
-                socket.Close();
-            }
+            socket.Close();
         } catch {
             return null;
         }

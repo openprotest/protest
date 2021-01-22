@@ -355,11 +355,10 @@ class Cache {
     public static byte[] UnGZip(byte[] bytes) {
         if (bytes is null) return null;
 
-        using (MemoryStream zipped = new MemoryStream(bytes))
-        using (GZipStream unzip = new GZipStream(zipped, CompressionMode.Decompress))
-        using (MemoryStream ms = new MemoryStream()) {
-            unzip.CopyTo(ms);
-            return ms.ToArray();
-        }
+        using MemoryStream zipped = new MemoryStream(bytes);
+        using GZipStream unzip = new GZipStream(zipped, CompressionMode.Decompress);
+        using MemoryStream ms = new MemoryStream();
+        unzip.CopyTo(ms);
+        return ms.ToArray();
     }
 }

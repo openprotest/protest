@@ -142,7 +142,7 @@ public static class Scripts {
     private static byte[] adUserCache = null, adWorkstationCache = null, adGroupCache = null;
     private static long adUserCache_timestamp = 0, adWorkstationCache_timestamp = 0, adGroupCache_timestamp = 0;
 
-    private static Hashtable previewHash = Hashtable.Synchronized(new Hashtable());
+    private static readonly Hashtable previewHash = Hashtable.Synchronized(new Hashtable());
 
     public static void LoadTools() {
         string tools_string = String.Empty;
@@ -2012,8 +2012,9 @@ public static class Scripts {
             range = max - min;
         }
 
-        List<string[]> array = new List<string[]>();
-        array.Add(new string[] { range.ToString() });
+        List<string[]> array = new List<string[]> {
+            new string[] { range.ToString() }
+        };
 
         return new ScriptResult() {
             header = new string[] { "Range" },

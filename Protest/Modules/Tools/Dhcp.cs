@@ -77,8 +77,7 @@ public static class Dhcp {
             byte[] offer = new byte[1024];
             socket.Receive(offer);
             string offerMac;
-            byte[] offerIp, offerDhcpServer;
-            Offer(sb, offer, out offerMac, out offerIp, out offerDhcpServer); //receive offer
+            Offer(sb, offer, out offerMac, out byte[] offerIp, out byte[] offerDhcpServer); //receive offer
             sb.Append((char)127);
 
             if (accept) { //accept the offer
