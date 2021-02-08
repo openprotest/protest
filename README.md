@@ -15,9 +15,9 @@
   * **Protest remote agent**
 
 
-With Protest you can create an inventory database of your network environment. It gathers data by communicating with Active Directory or by scanning your local network. Protest will automatically populate a database if you target your domain controller, or you specify an IP range to scan. Keep a record of Hardware specification, model and serial number, network information, user information, devices up-time, and more.
+With Pro-test you can create an inventory database of your network environment. It gathers data by communicating with Active Directory or by scanning your local network. Pro-test will automatically populate a database by targeting your domain controller, or a specified IP range. It can also fetch information from CISCO router and switches, MikroTik, and HPE. Keep a record of Hardware specification, model and serial number, network information, user information, devices up-time, and more.
 
-Be more productive: with one-click, you can connect to your remote hosts over SSH, RDP, SMB, uVNC or PSExec. Send a Wake On Lan packets or turn off, restart, or log off your network hosts. Also, you can manage processes and services and enable, disable, or unlock users.
+Be more productive: with one-click, you can connect to your remote hosts over SSH, RDP, SMB, uVNC or PSExec. send a Wake On Lan packets or turn off, restart, or log off your network hosts. Also, you can manage processes and services and enable, disable, or unlock users.
 
 
 **Additional tools can help you manage and troubleshoot:**
@@ -39,12 +39,13 @@ Be more productive: with one-click, you can connect to your remote hosts over SS
   * Telnet client
 
 
-Pro-test is intended to be used as a portable tool. In that case, the web interface can be accessed via the loopback address without authentication. If you wish to interface from a remote host, you can modify the http_ip and http_port parameters in the config.txt file to the local end-point of your choice.
+
+Pro-test is portable and self-contained. You can access a web interface via the loopback address without authentication. If you wish to interface from a remote host, you can modify the http_ip and http_port parameters in the protest.cfg file to the local end-point of your choice. 
 Requests from IPs other than loopback are rejected and require a username and a password to proceed. The username must be whitelisted in the config.txt file, and then your domain controller will handle the authentication.
 
-In order to use pro-test to its full capabilities, it must be runned as a network administrator. *(It uses WMI, active directory services and remote-powershell to gather information)*
+To use pro-test to its full capabilities, it must be run with network administrator privileges. *(It uses WMI, active directory services, and remote-powershell to gather information)*
 
-If you use a reverse proxy, in order for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end.
+If you use a reverse proxy, for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end.
 
 For more informations check the in-app user-guide.
 
