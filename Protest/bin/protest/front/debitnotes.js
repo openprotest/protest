@@ -409,7 +409,7 @@ class DebitNotes extends Window {
             lblReturned.innerHTML = "Returned";
             lblReturned.style.display = "inline-block";
             lblReturned.style.fontSize = "16px";
-            lblReturned.style.fontWeight = "800";
+            lblReturned.style.fontWeight = "700";
             lblReturned.style.color = "red";
             lblReturned.style.padding = "2px";
             lblReturned.style.border = "red 2px solid";

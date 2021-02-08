@@ -204,12 +204,20 @@ public static class Session {
 
             string payload;
             try {
-                payload = File.ReadAllText(files[i].FullName.ToLower()).Trim();
+                payload = File.ReadAllText(files[i].FullName.ToLower());
             } catch {
                 continue;
             }
 
-            AccessControl ac = new AccessControl(payload);
+            string[] split = payload.Split(new char[] {'\n'}, StringSplitOptions.None);
+            string sha256 = CryptoAes.ComputeSha256String(files[i].Name.ToLower() + split[0] + Program.DB_KEY);
+
+            if (split.Length != 2 || split[1] != sha256) {
+                Logging.Err($"Checksum mismatch for user {files[i].Name.ToLower()}");
+                continue;
+            }
+
+            AccessControl ac = new AccessControl(split[0]);
             acl.TryAdd(files[i].Name, ac);
         }
         
@@ -248,12 +256,15 @@ public static class Session {
 
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
-        
+        payload = payload.Split('\n')[0];
+
         try {
             DirectoryInfo dirAcl = new DirectoryInfo(Strings.DIR_ACL);
             if (!dirAcl.Exists) dirAcl.Create();
 
-            File.WriteAllText($"{dirAcl.FullName}\\{username}", payload);
+            string sha256 = CryptoAes.ComputeSha256String(username.ToLower() + payload + Program.DB_KEY);
+
+            File.WriteAllText($"{dirAcl.FullName}\\{username}", payload + "\n" + sha256);
         } catch (Exception ex) {
             Logging.Err(ex);
             return Strings.FAI.Array;

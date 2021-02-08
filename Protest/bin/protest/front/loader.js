@@ -1,7 +1,5 @@
-let db_equip = [];
-let db_users = [];
-let db_equip_ver = 0;
-let db_users_ver = 0;
+let db_equip = [], db_users = [];
+let db_equip_ver = 0, db_users_ver = 0;
 
 let loader_styles = [
     "sidemenu.css",
@@ -40,6 +38,7 @@ let loader_styles = [
     ];
 
     const secondaryScripts = [
+        "keepalive.js",
         "ipbox.js",
         "list.js",
         "console.js",
@@ -48,7 +47,6 @@ let loader_styles = [
 
     const tertiaryScripts = [
         "settings.js",
-        "keepalive.js",
         "listequip.js",
         "listusers.js",
         "viewequip.js",
@@ -59,6 +57,7 @@ let loader_styles = [
         "documentation.js",
         "debitnotes.js",
         "watchdog.js",
+        "topology.js",
         "ping.js",
         "dnslookup.js",
         "dhcpdiscover.js",
@@ -256,10 +255,11 @@ function RestoreSession() {
             case "Documentation"    : win = new Documentation(session[i].args); break;
             case "DebitNotes"       : win = new DebitNotes(session[i].args); break;
             case "Watchdog"         : win = new Watchdog(session[i].args); break;
+            case "Topology"         : win = new Topology(session[i].args); break;
             case "Ping"             : win = new Ping(session[i].args); break;
             case "DnsLookup"        : win = new DnsLookup(session[i].args); break;
             case "DhcpDiscover"     : win = new DhcpDiscover(); break;
-            case "NtpClient"        : win = new NtpClient(); break;
+            case "NtpClient"        : win = new NtpClient(session[i].args); break;
             case "TraceRoute"       : win = new TraceRoute(session[i].args); break;
             case "PortScan"         : win = new PortScan(session[i].args); break;
             case "LocateIp"         : win = new LocateIp(session[i].args); break;

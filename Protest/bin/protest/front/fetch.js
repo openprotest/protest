@@ -1179,7 +1179,6 @@ class Fetch extends Tabs {
         };
 
         btnDiscard.onclick = () => {
-
             this.ConfirmBox("Are you sure you want to discard the fetched dataset?").addEventListener("click", () => {
                 const xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
@@ -1202,7 +1201,6 @@ class Fetch extends Tabs {
                 xhr.open("GET", "fetch/discard", true);
                 xhr.send();
             });
-
         };
     }
 

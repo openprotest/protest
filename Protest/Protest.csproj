@@ -147,6 +147,10 @@
     <Content Include="bin\protest\addressbook\search.svg" />
     <Content Include="bin\protest\addressbook\user.svg" />
     <Content Include="bin\protest\front\clients.css" />
+    <Content Include="bin\protest\front\res\accesspoint.svg" />
+    <Content Include="bin\protest\front\res\firewall.svg" />
+    <Content Include="bin\protest\front\res\lamp.svg" />
+    <Content Include="bin\protest\front\topology.js" />
     <Content Include="bin\protest\front\res\arrow.svg" />
     <Content Include="bin\protest\front\res\configfile.svg" />
     <Content Include="bin\protest\front\res\cookie.svg" />
@@ -168,6 +172,7 @@
     <Content Include="bin\protest\front\encoder.js" />
     <Content Include="bin\protest\front\res\serialport.svg" />
     <Content Include="bin\protest\front\res\sfpport.svg" />
+    <Content Include="bin\protest\front\res\topology.svg" />
     <Content Include="bin\protest\front\res\usbport.svg" />
     <Content Include="bin\protest\front\telnet.js" />
     <Content Include="bin\protest\front\gandalf.js" />

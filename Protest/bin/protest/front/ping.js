@@ -106,7 +106,7 @@ class Ping extends Console {
             txtTimeout.min = "1";
             txtTimeout.max = "5000";
             txtTimeout.value = this.args.timeout;
-            txtTimeout.style.minWidth = "100px";
+            txtTimeout.style.width = "100px";
             innerBox.appendChild(txtTimeout);
 
             innerBox.appendChild(document.createElement("br"));

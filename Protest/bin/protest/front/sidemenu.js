@@ -18,6 +18,7 @@ const TOOLS = [
 { lbl:"Documentation",      ico:"res/documentation.svgz",  grp:"documentation", sqr:true,  f:arg=> new Documentation() },
 { lbl:"Debit notes",        ico:"res/charges.svgz",        grp:"debitnotes",    sqr:true,  f:arg=> new DebitNotes() },
 { lbl:"Watchdog",           ico:"res/watchdog.svgz",       grp:"watchdog",      sqr:true,  f:arg=> new Watchdog() },
+{ lbl:"Topology",           ico:"res/topology.svgz",       grp:"topology",      sqr:true,  f:arg=> new Topology() },
 
 { isGroup:true, lbl:"Tools and utilities" },
 { lbl:"Ping",               ico:"res/ping.svgz",           grp:"utilities", sqr:true,  f:arg=> new Ping(arg) },
@@ -117,7 +118,7 @@ container.onclick = event => {
 
 document.body.onkeyup = event => {
     if (event.code == "ShiftLeft") {
-        if (Date.now() - sidemenu_lastShiftPress < 500) {
+        if (Date.now() - sidemenu_lastShiftPress < 400) {
             sidemenu_lastShiftPress = 0;
             Toogle();
         } else {
@@ -263,6 +264,7 @@ function SideMenu_Update(filter) {
         for (let i = 0; i < TOOLS.length; i++)
             if (TOOLS[i].lbl.toLocaleLowerCase().indexOf(filter) > -1) {
                 if (TOOLS[i].grp != "*" && AUTHORIZATION[TOOLS[i].grp] == 0) continue;
+                if (!TOOLS[i].ico) continue;
 
                 const item = CreateSideItem(TOOLS[i].lbl, TOOLS[i].ico, "", "", TOOLS[i].f);
                 sidemenu_list.push(item);

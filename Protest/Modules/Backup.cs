@@ -40,36 +40,19 @@ public static class Backup {
             DirectoryInfo dirBackup = new DirectoryInfo(Strings.DIR_BACKUP);
             if (!dirBackup.Exists) dirBackup.Create();
 
-            DirectoryInfo dirCopy = new DirectoryInfo($"{Strings.DIR_BACKUP}\\{name}_{++count}");
+            DirectoryInfo dirCopy = new DirectoryInfo($"{filename}.tmp");
             if (dirCopy.Exists) dirCopy.Delete();
             dirCopy.Create();
 
             DirectoryInfo dirData = new DirectoryInfo($"{Strings.DIR_DATA}");
             if (dirData.Exists) CopyAll(dirData, new DirectoryInfo($"{dirCopy.FullName}\\{dirData.Name}"));
 
-            DirectoryInfo dirDebit = new DirectoryInfo($"{Strings.DIR_DEBIT}");
-            if (dirDebit.Exists) CopyAll(dirDebit, new DirectoryInfo($"{dirCopy.FullName}\\{dirDebit.Name}"));
-
-            DirectoryInfo dirDoc = new DirectoryInfo($"{Strings.DIR_DOCUMENTATION}");
-            if (dirDoc.Exists) CopyAll(dirDoc, new DirectoryInfo($"{dirCopy.FullName}\\{dirDoc.Name}"));
-
-            DirectoryInfo dirSeen = new DirectoryInfo($"{Strings.DIR_LASTSEEN}");
-            if (dirSeen.Exists) CopyAll(dirSeen, new DirectoryInfo($"{dirCopy.FullName}\\{dirSeen.Name}"));
-
-            //DirectoryInfo dirMetrics = new DirectoryInfo($"{Strings.DIR_METRICS}");
-            //if (dirMetrics.Exists) CopyAll(dirMetrics, new DirectoryInfo($"{dirCopy.FullName}\\{dirMetrics.Name}"));
-
-            DirectoryInfo dirConfig = new DirectoryInfo($"{Strings.DIR_CONFIG}");
-            if (dirConfig.Exists) CopyAll(dirConfig, new DirectoryInfo($"{dirCopy.FullName}\\{dirConfig.Name}"));
-
-            DirectoryInfo dirWatchdog = new DirectoryInfo($"{Strings.DIR_WATCHDOG}");
-            if (dirWatchdog.Exists) CopyAll(dirWatchdog, new DirectoryInfo($"{dirCopy.FullName}\\{dirWatchdog.Name}"));
-
-            DirectoryInfo dirScripts = new DirectoryInfo($"{Strings.DIR_SCRIPTS}");
-            if (dirScripts.Exists) CopyAll(dirScripts, new DirectoryInfo($"{dirCopy.FullName}\\{dirScripts.Name}"));
-
             DirectoryInfo dirLog = new DirectoryInfo($"{Strings.DIR_LOG}");
             if (dirLog.Exists) CopyAll(dirLog ,new DirectoryInfo($"{dirCopy.FullName}\\{dirLog.Name}"));
+
+            DirectoryInfo dirAcl = new DirectoryInfo($"{Strings.DIR_ACL}");
+            if (dirAcl.Exists) CopyAll(dirAcl, new DirectoryInfo($"{dirCopy.FullName}\\{dirAcl.Name}"));
+
 
             ZipFile.CreateFromDirectory(dirCopy.FullName, filename);
             dirCopy.Delete(true);

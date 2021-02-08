@@ -84,7 +84,7 @@ class Documentation extends Window {
         this.btnDiscard.value = "Discard";
         this.btnDiscard.classList.add("light-button");
         this.btnDiscard.classList.add("light-button-withicon");
-        this.btnDiscard.style.backgroundImage = "url(res/delete.svgz)";
+        this.btnDiscard.style.backgroundImage = "url(res/disable.svgz)";
         this.btnDiscard.style.animation = "fade-in .4s 1";
         this.options.appendChild(this.btnDiscard);
 

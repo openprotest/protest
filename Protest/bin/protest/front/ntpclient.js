@@ -1,6 +1,9 @@
 class NtpClient extends Window {
-    constructor() {
+    constructor(args) {
         super();
+
+        this.args = args ? args : "";
+
         this.setTitle("NTP client");
         this.setIcon("res/clock.svgz");
 
@@ -20,6 +23,7 @@ class NtpClient extends Window {
         this.txtServer.style.width = "60%";
         this.txtServer.style.maxWidth = "480px";
         this.txtServer.placeholder = "time.nist.gov";
+        this.txtServer.value = args ? args : "";
         this.content.appendChild(this.txtServer);
 
         const box = document.createElement("div");
@@ -37,7 +41,7 @@ class NtpClient extends Window {
         this.lblLive.style.color = "#202020";
         this.lblLive.style.fontFamily = "monospace";
         this.lblLive.style.fontSize = "72px";
-        this.lblLive.style.fontWeight = "800";
+        this.lblLive.style.fontWeight = "700";
         this.lblLive.innerHTML = "00:00:00";
         box.appendChild(this.lblLive);
 
@@ -60,10 +64,13 @@ class NtpClient extends Window {
         this.txtServer.onkeydown = event => {
             if (event.keyCode == 13) this.btnSend.onclick();
         };
+
+        if (args) this.Request(Date.now());
     }
 
     Request(id) {
         this.btnSend.setAttribute("disabled", true);
+        this.args = this.txtServer.value;
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = () => {

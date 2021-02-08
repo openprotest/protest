@@ -188,7 +188,7 @@ class Clients extends Tabs {
                 lblWarning.appendChild(this.AddWarning("It's pointless to allow <u>Reading passwords</u> while the <u>Inventory database</u> is denied."));
 
             if (db.value > 0 && ut.value == 0) 
-                lblWarning.appendChild(this.AddWarning("It is recommended to allow <u>Tools and utilities</u> with <u>Inventory database</u>."));
+                lblWarning.appendChild(this.AddWarning("It is recommended to allow access to <u>Tools and utilities</u> along with <u>Inventory database</u>."));
 
             if (mu.value == 1 && this.accessvalue.filter(o => o.value < o.max).length > 0)
                 lblWarning.appendChild(this.AddWarning("Having users with limited access, and then allowing them to <u>Manage user's permissions</u>, is counterintuitive."));
@@ -198,9 +198,8 @@ class Clients extends Tabs {
 
         for (let i = 0; i < this.accessvalue.length; i++) {
             this.accessvalue[i].setAttribute("disabled", true);
-
-            this.accessvalue[i].addEventListener("input", onChange);
-            this.accessvalue[i].addEventListener("change", onChange);
+            this.accessvalue[i].onchange = onChange;
+            this.accessvalue[i].oninput = onChange;
         }
 
         const buttons = document.createElement("div");
@@ -354,8 +353,9 @@ class Clients extends Tabs {
                     let keyword = this.accessvalue[i].getAttribute("keyword");
                     let range = this.accessvalue.find(o => o.getAttribute("keyword") === keyword);
                     range.value = this.acl[username][keyword] ? this.acl[username][keyword] : 0;
-                    range.onchange();
                 }
+
+            this.accessvalue[0].onchange();
         };
 
         btnDelete.onclick = event => {

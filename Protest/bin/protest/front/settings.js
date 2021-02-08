@@ -275,7 +275,7 @@ class Settings extends Tabs {
             previewBox.innerHTML = background_list[i][0];
             previewBox.style.textAlign = "center";
             previewBox.style.lineHeight = "72px";
-            previewBox.style.fontWeight = "800";
+            previewBox.style.fontWeight = "700";
             previewBox.style.textShadow = "#fff 0px 0px 2px";
             previewBox.style.width = "96px";
             previewBox.style.height = "80px";

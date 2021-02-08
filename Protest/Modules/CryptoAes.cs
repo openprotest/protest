@@ -6,7 +6,7 @@ using System.IO;
 
 public static class CryptoAes {
     private const string SALT = "3pVDs55EbUDHL48qMm4oY13uUw69RQoH"; //you can change this value on your implementation
-    private const string PEPPER = "sEhH5EG2sw958Q98";
+    private const string PEPPER = "sEhH5EG2sw958Q98";               //you can change this value on your implementation
 
     public static string GenerateHexString(int len) {
         Random rnd = new Random((int)DateTime.Now.Ticks);
@@ -25,6 +25,22 @@ public static class CryptoAes {
 
             return result;
         }
+    }
+
+    public static byte[] ComputeSha256(string data) {
+        using SHA256 sha256Hash = SHA256.Create();
+        byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(data));
+        return bytes;
+    }
+
+    public static string ComputeSha256String(string data) {
+        byte[] bytes = ComputeSha256(data);
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < bytes.Length; i++)
+            sb.Append(bytes[i].ToString("x2"));
+        
+        return sb.ToString();
     }
 
     public static byte[] Encrypt(byte[] plain, byte[] key, byte[] initVector) {

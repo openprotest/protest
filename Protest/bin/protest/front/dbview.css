@@ -435,7 +435,7 @@
     display: grid;
     grid-template-columns: repeat(8, 50px);
     grid-template-rows: 50px;
-    background-color: #A0A0A0;
+    background-color: var(--control-color);
     padding: 12px;
     margin: 16px;
     min-width: 228px;

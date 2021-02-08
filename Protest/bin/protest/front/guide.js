@@ -73,7 +73,7 @@ class Guide extends Window {
         title.style.textAlign= "center";
         title.style.fontSize = "28px";
         title.style.textDecoration = "underline";
-        title.style.fontWeight = "800";
+        title.style.fontWeight = "700";
         introAlign.appendChild(title);
 
 

@@ -41,23 +41,25 @@ public static class Strings {
     public static readonly string DIR_KNOWLAGE    = $"{Directory.GetCurrentDirectory()}\\protest\\knowlage";
     public static readonly string DIR_SSL         = $"{Directory.GetCurrentDirectory()}\\protest\\ssl";
     public static readonly string DIR_ACL         = $"{Directory.GetCurrentDirectory()}\\protest\\acl";
+    public static readonly string DIR_LOG         = $"{Directory.GetCurrentDirectory()}\\protest\\log";
+    public static readonly string DIR_BACKUP      = $"{Directory.GetCurrentDirectory()}\\protest\\backup";
+
     public static readonly string DIR_DATA        = $"{Directory.GetCurrentDirectory()}\\protest\\data";
     public static readonly string DIR_EQUIP       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\equip";
     public static readonly string DIR_USERS       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\users";
-    public static readonly string DIR_SCRIPTS     = $"{Directory.GetCurrentDirectory()}\\protest\\scripts";
-    public static readonly string DIR_LASTSEEN    = $"{Directory.GetCurrentDirectory()}\\protest\\lastseen";
-    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\documentation";
-    public static readonly string DIR_WATCHDOG    = $"{Directory.GetCurrentDirectory()}\\protest\\watchdog";
-    public static readonly string DIR_LOG         = $"{Directory.GetCurrentDirectory()}\\protest\\log";
-    public static readonly string DIR_BACKUP      = $"{Directory.GetCurrentDirectory()}\\protest\\backup";
-    public static readonly string DIR_CONFIG      = $"{Directory.GetCurrentDirectory()}\\protest\\configuration";
-    //public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\metrics";
 
-    public static readonly string DIR_DEBIT       = $"{Directory.GetCurrentDirectory()}\\protest\\debit";
-    public static readonly string DIR_DEBIT_SHORT = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\short";
-    public static readonly string DIR_DEBIT_LONG  = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\long";
-    public static readonly string DIR_DEBIT_RETURNED = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\returned";
-    public static readonly string DIR_DEBIT_TEMPLATE = $"{Directory.GetCurrentDirectory()}\\protest\\debit\\templates";
+    public static readonly string DIR_SCRIPTS       = $"{Directory.GetCurrentDirectory()}\\protest\\data\\scripts";
+    public static readonly string DIR_LASTSEEN      = $"{Directory.GetCurrentDirectory()}\\protest\\data\\lastseen";
+    public static readonly string DIR_DOCUMENTATION = $"{Directory.GetCurrentDirectory()}\\protest\\data\\documentation";
+    public static readonly string DIR_WATCHDOG      = $"{Directory.GetCurrentDirectory()}\\protest\\data\\watchdog";
+    public static readonly string DIR_CONFIG        = $"{Directory.GetCurrentDirectory()}\\protest\\data\\configuration";
+    //public static readonly string DIR_METRICS     = $"{Directory.GetCurrentDirectory()}\\protest\\data\\metrics";
+
+    public static readonly string DIR_DEBIT          = $"{Directory.GetCurrentDirectory()}\\protest\\data\\debit";
+    public static readonly string DIR_DEBIT_SHORT    = $"{Directory.GetCurrentDirectory()}\\protest\\data\\debit\\short";
+    public static readonly string DIR_DEBIT_LONG     = $"{Directory.GetCurrentDirectory()}\\protest\\data\\debit\\long";
+    public static readonly string DIR_DEBIT_RETURNED = $"{Directory.GetCurrentDirectory()}\\protest\\data\\debit\\returned";
+    public static readonly string DIR_DEBIT_TEMPLATE = $"{Directory.GetCurrentDirectory()}\\protest\\data\\debit\\templates";
 
     public static readonly string DIR_IP_LOCATION = $"{DIR_KNOWLAGE}\\ip";
     public static readonly string DIR_PROXY = $"{DIR_KNOWLAGE}\\proxy";

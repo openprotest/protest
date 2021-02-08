@@ -1394,7 +1394,12 @@ class Equip extends Window {
         innerBox.appendChild(autofill_type);
         for (let o in EQUIP_ICON) {
             const opt = document.createElement("option");
-            opt.value = o.toUpperCase();
+
+            let split = o.split(" ");
+            for (let i = 0; i < split.length; i++)
+                split[i] = split[i].charAt(0).toUpperCase() + split[i].substring(1);
+
+            opt.value = split.join(" ");
             autofill_type.appendChild(opt);
         }
 
@@ -1588,10 +1593,10 @@ class Equip extends Window {
         const dialog = this.DialogBox("calc(100% - 34px)");
         if (dialog === null) return;
 
-        const btnOK = dialog.btnOK;
+        const btnOK     = dialog.btnOK;
         const btnCancel = dialog.btnCancel;
         const buttonBox = dialog.buttonBox;
-        const innerBox = dialog.innerBox;
+        const innerBox  = dialog.innerBox;
 
         buttonBox.removeChild(btnCancel);
 
@@ -1660,17 +1665,17 @@ class Equip extends Window {
         const txtFetchPassword = document.createElement("input");
         txtFetchPassword.type = "password";
 
-        if (!hasCred) {
+        if (hasCred) {
+            const lblMessage = document.createElement("div");
+            lblMessage.style.display = "inline-block";
+            lblMessage.innerHTML = "Are you sure you want to fetch data from this device using SSH?";
+            divFetch.appendChild(lblMessage);
+        } else {
             divFetch.appendChild(lblFetchUsername);
             divFetch.appendChild(txtFetchUsername);
             divFetch.appendChild(document.createElement("br"));
             divFetch.appendChild(lblFetchPassword);
             divFetch.appendChild(txtFetchPassword);
-        } else {
-            const lblMessage = document.createElement("div");
-            lblMessage.style.display = "inline-block";
-            lblMessage.innerHTML = "Are you sure you want to fetch data from this device using SSH?";
-            divFetch.appendChild(lblMessage);
         }
 
         divFetch.appendChild(document.createElement("br"));
@@ -1898,7 +1903,6 @@ class Equip extends Window {
                 xhrSave.send(innerBox.innerText);
             };
         };
-
     }
 
     Interfaces() {
@@ -2116,8 +2120,6 @@ class Equip extends Window {
 
             const txtV = document.createElement("input");
             txtV.type = "text";
-            //txtV.min = 0;
-            //txtV.max = 4095;
             txtV.value = vlan;
             listElement.appendChild(txtV);
 
@@ -2579,6 +2581,7 @@ class Equip extends Window {
         let vlans = [];
         for (let i = 0; i < list.length; i++) {
             let v = editMode ? list[i].txtVlan.value : list[i].vlan;
+            if (v.length === 0) continue;
             if (v === "TRUNK") continue;
             if (!vlans.includes(v)) vlans.push(v);
         }

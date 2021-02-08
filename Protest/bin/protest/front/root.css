@@ -18,11 +18,6 @@
     src: local("Open Sans"), url("opensans700.ttf") format("truetype");
     font-weight: 700;
 }
-@font-face { /*extra-bold*/
-    font-family: "Open Sans";
-    src: local("Open Sans"), url("opensans800.ttf") format("truetype");
-    font-weight: 800;
-}
 
 :root {
     --sidemenu-width: 360px;

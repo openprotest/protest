@@ -246,6 +246,7 @@ class PortScan extends Console {
             txtFrom.max = 65534;
             txtFrom.value = this.args.rangeFrom;
             txtFrom.style.display = "inline";
+            txtFrom.style.width = "100px";
             innerBox.appendChild(txtFrom);
 
             let lblTo = document.createElement("div");
@@ -259,6 +260,7 @@ class PortScan extends Console {
             txtTo.max = 65535;
             txtTo.value = this.args.rangeTo;
             txtTo.style.display = "inline";
+            txtTo.style.width = "100px";
             innerBox.appendChild(txtTo);
 
             txtFrom.onchange = () => {
