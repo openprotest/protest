@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 class Program {
     static readonly string IPFILE = $"{Directory.GetCurrentDirectory()}\\IP2LOCATION-LITE-DB5.CSV";
@@ -36,10 +35,11 @@ class Program {
     }
 
     static void Main(string[] args) {
-        //GenIpLocationBin();
-        //GenProxyBin();
-        //GenMacLookupBin();
+        GenIpLocationBin();
+        GenProxyBin();
+        GenMacLookupBin();
         GenTorServersBin();
+        Console.ReadLine();
     }
 
     static void GenIpLocationBin() {
@@ -191,8 +191,6 @@ class Program {
 
             Console.WriteLine(": done");
         }
-
-        Console.ReadLine();
     }
 
     static void GenProxyBin() {
@@ -280,8 +278,6 @@ class Program {
 
             Console.WriteLine(": done");
         }
-
-        Console.ReadLine();
     }
 
     static void GenMacLookupBin() {
@@ -353,7 +349,6 @@ class Program {
         }
 
         Console.WriteLine("Done!");
-        Console.ReadLine();
     }
 
     static void GenTorServersBin() {
@@ -382,7 +377,6 @@ class Program {
         }
 
         Console.WriteLine("Done!");
-        Console.ReadLine();
     }
 
 }

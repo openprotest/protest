@@ -18,7 +18,9 @@ const TOOLS = [
 { lbl:"Documentation",      ico:"res/documentation.svgz",  grp:"documentation", sqr:true,  f:arg=> new Documentation() },
 { lbl:"Debit notes",        ico:"res/charges.svgz",        grp:"debitnotes",    sqr:true,  f:arg=> new DebitNotes() },
 { lbl:"Watchdog",           ico:"res/watchdog.svgz",       grp:"watchdog",      sqr:true,  f:arg=> new Watchdog() },
-{ lbl:"Topology",           ico:"res/topology.svgz",       grp:"topology",      sqr:true,  f:arg=> new Topology() },
+//{ lbl:"Topology",           ico:"res/topology.svgz",       grp:"topology",      sqr:true,  f:arg=> new Topology() },
+//{ lbl:"Physical topology",  ico:"res/topology.svgz",       grp:"topology",      sqr:false,  f:arg=> new Topology("physical") },
+//{ lbl:"Logical topology",   ico:"res/topology.svgz",       grp:"topology",      sqr:false,  f:arg=> new Topology("logical") },
 
 { isGroup:true, lbl:"Tools and utilities" },
 { lbl:"Ping",               ico:"res/ping.svgz",           grp:"utilities", sqr:true,  f:arg=> new Ping(arg) },

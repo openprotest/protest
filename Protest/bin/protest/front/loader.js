@@ -57,7 +57,7 @@ let loader_styles = [
         "documentation.js",
         "debitnotes.js",
         "watchdog.js",
-        "topology.js",
+        //"topology.js",
         "ping.js",
         "dnslookup.js",
         "dhcpdiscover.js",
@@ -133,7 +133,7 @@ function LoadStyle(filename, callback) {
     csslink.href = filename;
     document.head.appendChild(csslink);
     
-    csslink.onload = ()=> callback("done", filename);
+    csslink.onload = ()=> callback("ok", filename);
     csslink.onerror = ()=> callback("error", filename);
 }
 
@@ -148,7 +148,7 @@ function LoadScript(filename, callback) {
     script.src = filename;
     document.body.appendChild(script);
 
-    script.onload = ()=> callback("done", filename);
+    script.onload = ()=> callback("ok", filename);
     script.onerror = ()=> callback("error", filename);
 }
 
@@ -170,7 +170,7 @@ function LoadEquip(callback) {
             i += 1 + len * 4;
         }
 
-        callback("done", "equipment");
+        callback("ok", "equipment");
     };
 
     xhr.onerror = ()=> callback("error", "equipment");
@@ -197,7 +197,7 @@ function LoadUsers(callback) {
             i += 1 + len * 4;
         }
 
-        callback("done", "users");
+        callback("ok", "users");
     };
 
     xhr.onerror = ()=> callback("error", "users");
@@ -255,7 +255,7 @@ function RestoreSession() {
             case "Documentation"    : win = new Documentation(session[i].args); break;
             case "DebitNotes"       : win = new DebitNotes(session[i].args); break;
             case "Watchdog"         : win = new Watchdog(session[i].args); break;
-            case "Topology"         : win = new Topology(session[i].args); break;
+            //case "Topology"         : win = new Topology(session[i].args); break;
             case "Ping"             : win = new Ping(session[i].args); break;
             case "DnsLookup"        : win = new DnsLookup(session[i].args); break;
             case "DhcpDiscover"     : win = new DhcpDiscover(); break;

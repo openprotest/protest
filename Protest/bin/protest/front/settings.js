@@ -145,11 +145,11 @@ class Settings extends Tabs {
         this.zoom.style.width = "200px";
         this.subContent.appendChild(this.zoom);
 
-        const divZoomValue = document.createElement("div");
-        divZoomValue.innerHTML = "100%";
-        divZoomValue.style.paddingLeft = "8px";
-        divZoomValue.style.display = "inline-block";
-        this.subContent.appendChild(divZoomValue);
+        this.divZoomValue = document.createElement("div");
+        this.divZoomValue.innerHTML = "100%";
+        this.divZoomValue.style.paddingLeft = "8px";
+        this.divZoomValue.style.display = "inline-block";
+        this.subContent.appendChild(this.divZoomValue);
 
         /*this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
@@ -182,7 +182,7 @@ class Settings extends Tabs {
         divColor.style.paddingBottom = "8px";
         this.subContent.appendChild(divColor);
 
-        let accentIndicators = [];
+        this.accentIndicators = [];
         let selected_accent = [255, 102, 0];
         if (localStorage.getItem("accent_color"))
             selected_accent = localStorage.getItem("accent_color").split(",").map(o => parseInt(o));
@@ -224,19 +224,21 @@ class Settings extends Tabs {
             indicator.style.transition = ".4s";
             themeBox.appendChild(indicator);
 
-            accentIndicators.push(indicator);
+            this.accentIndicators.push(indicator);
 
             themeBox.onclick = () => {
                 localStorage.setItem("accent_color", `${accentColors[i][0]},${accentColors[i][1]},${accentColors[i][2]}`);
-
                 SetAccentColor(accentColors[i]);
-                for (let j = 0; j < accentIndicators.length; j++) {
-                    accentIndicators[j].style.width = "8px";
-                    accentIndicators[j].style.marginLeft = "20px";
-                }
 
-                accentIndicators[i].style.width = "48px";
-                accentIndicators[i].style.marginLeft = "0px";
+                for (let j = 0; j < $w.array.length; j++) //update other setting windows
+                    if ($w.array[j] instanceof Settings && $w.array[j].args === "appearance") {
+                        for (let k = 0; k < this.accentIndicators.length; k++) {
+                            $w.array[j].accentIndicators[k].style.width = "8px";
+                            $w.array[j].accentIndicators[k].style.marginLeft = "20px";
+                        }
+                        $w.array[j].accentIndicators[i].style.width = "48px";
+                        $w.array[j].accentIndicators[i].style.marginLeft = "0px";
+                    }
             };
         }
 
@@ -249,7 +251,7 @@ class Settings extends Tabs {
         this.subContent.appendChild(divBackground);
 
 
-        let bgIndicators = [];
+        this.bgIndicators = [];
         let selected_bg = "";
         if (localStorage.getItem("background"))
             selected_bg = localStorage.getItem("background");
@@ -297,19 +299,21 @@ class Settings extends Tabs {
             indicator.style.transition = ".4s";
             bgBox.appendChild(indicator);
 
-            bgIndicators.push(indicator);
+            this.bgIndicators.push(indicator);
 
             bgBox.onclick = () => {
                 localStorage.setItem("background", background_list[i][1]);
                 main.style.background = background_list[i][1];
 
-                for (let j = 0; j < bgIndicators.length; j++) {
-                    bgIndicators[j].style.width = "8px";
-                    bgIndicators[j].style.marginLeft = "44px";
-                }
-
-                bgIndicators[i].style.width = "96px";
-                bgIndicators[i].style.marginLeft = "0px";
+                for (let j = 0; j < $w.array.length; j++) //update other setting windows
+                    if ($w.array[j] instanceof Settings && $w.array[j].args === "appearance") {
+                        for (let k = 0; k < this.bgIndicators.length; k++) {
+                            $w.array[j].bgIndicators[k].style.width = "8px";
+                            $w.array[j].bgIndicators[k].style.marginLeft = "44px";
+                        }
+                        $w.array[j].bgIndicators[i].style.width = "96px";
+                        $w.array[j].bgIndicators[i].style.marginLeft = "0px";
+                    }
             };
         }
 
@@ -327,7 +331,7 @@ class Settings extends Tabs {
             document.body.className = this.chkHighContrast.checked ? "high-contrast" : "";
             document.body.className += this.chkDisableAnime.checked ? " disable-animation" : "";
             document.body.style.zoom = 75 + this.zoom.value * 5 + "%";
-            divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%";
+            this.divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%";
             container.className = this.chkWindowShadows.checked ? "disable-window-dropshadows" : "";
             //document.documentElement.style.setProperty("--global-font-family", txtFontFamily.value);
 
@@ -339,6 +343,18 @@ class Settings extends Tabs {
             localStorage.setItem("w_disable_dropshadow", this.chkWindowShadows.checked);
             localStorage.setItem("zoom", this.zoom.value);
             //localStorage.setItem("font", txtFontFamily.value);
+
+            for (let i = 0; i < $w.array.length; i++) //update other setting windows
+                if ($w.array[i] instanceof Settings && $w.array[i].args === "appearance") {
+                    $w.array[i].chkDynamicSearchIcon.checked = this.chkDynamicSearchIcon.checked;
+                    $w.array[i].chkPunchMenu.checked         = this.chkPunchMenu.checked;
+                    $w.array[i].chkWinMaxxed.checked         = this.chkWinMaxxed.checked;
+                    $w.array[i].chkHighContrast.checked      = this.chkHighContrast.checked;
+                    $w.array[i].chkDisableAnime.checked      = this.chkDisableAnime.checked;
+                    $w.array[i].chkWindowShadows.checked     = this.chkWindowShadows.checked;
+                    $w.array[i].zoom.value                   = this.zoom.value;
+                    $w.array[i].divZoomValue.innerHTML       = 75 + this.zoom.value * 5 + "%";
+                }
         };
 
         //btnFontFamily.onclick             = Apply;
@@ -349,7 +365,7 @@ class Settings extends Tabs {
         this.chkDisableAnime.onchange      = Apply;
         this.chkWindowShadows.onchange     = Apply;
         this.zoom.onchange                 = Apply;
-        this.zoom.oninput = () => { divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%"; };
+        this.zoom.oninput = () => { this.divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%"; };
 
         Apply();
     }
@@ -396,11 +412,11 @@ class Settings extends Tabs {
         this.sessionTimeout.style.width = "200px";
         this.subContent.appendChild(this.sessionTimeout);
 
-        const divSessionTimeoutValue = document.createElement("div");
-        divSessionTimeoutValue.innerHTML = "15 min.";
-        divSessionTimeoutValue.style.paddingLeft = "8px";
-        divSessionTimeoutValue.style.display = "inline-block";
-        this.subContent.appendChild(divSessionTimeoutValue);
+        this.divSessionTimeoutValue = document.createElement("div");
+        this.divSessionTimeoutValue.innerHTML = "15 min.";
+        this.divSessionTimeoutValue.style.paddingLeft = "8px";
+        this.divSessionTimeoutValue.style.display = "inline-block";
+        this.subContent.appendChild(this.divSessionTimeoutValue);
 
 
         this.subContent.appendChild(document.createElement("br"));
@@ -420,11 +436,11 @@ class Settings extends Tabs {
         this.cookieLife.style.width = "200px";
         this.subContent.appendChild(this.cookieLife);
 
-        const divCookieLifeValue = document.createElement("div");
-        divCookieLifeValue.innerHTML = "15 min.";
-        divCookieLifeValue.style.paddingLeft = "8px";
-        divCookieLifeValue.style.display = "inline-block";
-        this.subContent.appendChild(divCookieLifeValue);
+        this.divCookieLifeValue = document.createElement("div");
+        this.divCookieLifeValue.innerHTML = "15 min.";
+        this.divCookieLifeValue.style.paddingLeft = "8px";
+        this.divCookieLifeValue.style.display = "inline-block";
+        this.subContent.appendChild(this.divCookieLifeValue);
 
 
         this.subContent.appendChild(document.createElement("br"));
@@ -453,21 +469,30 @@ class Settings extends Tabs {
             localStorage.setItem("restore_session", this.chkRestoreSession.checked);
             localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
             localStorage.setItem("session_timeout", this.sessionTimeout.value);
-            localStorage.setItem("cookie_lifetime", this.cookieLife.value);
+            localStorage.setItem("cookie_lifetime", this.cookieLife.value);           
             
-            if (timeMapping[this.sessionTimeout.value] == Infinity) {
-                divSessionTimeoutValue.innerHTML = timeMapping[this.sessionTimeout.value];
-            } else {
-                let value = timeMapping[this.sessionTimeout.value];
-                divSessionTimeoutValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
-            }
-            
-            if (cookieMapping[this.cookieLife.value] < 8) 
-                divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 1 ? "1 day" : cookieMapping[this.cookieLife.value] + " days";
-            else if (cookieMapping[this.cookieLife.value] < 29 )
-                divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 7 ? "1 week" : cookieMapping[this.cookieLife.value] / 7 + " weeks";
-            else
-                divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 30 ? "1 month" : cookieMapping[this.cookieLife.value] / 30 + " months";
+            for (let i = 0; i < $w.array.length; i++) //update other setting windows
+                if ($w.array[i] instanceof Settings && $w.array[i].args === "session") {
+                    $w.array[i].chkRestoreSession.checked = this.chkRestoreSession.checked;
+                    $w.array[i].chkAliveOnClose.checked   = this.chkAliveOnClose.checked;
+                    $w.array[i].sessionTimeout.value      = this.sessionTimeout.value;
+                    $w.array[i].cookieLife.value = this.cookieLife.value;
+
+                    if (timeMapping[this.sessionTimeout.value] == Infinity) {
+                        $w.array[i].divSessionTimeoutValue.innerHTML = timeMapping[this.sessionTimeout.value];
+                    } else {
+                        let value = timeMapping[this.sessionTimeout.value];
+                        $w.array[i].divSessionTimeoutValue.innerHTML = value > 60 ? value / 60 + " hours" : value + " minutes";
+                    }
+
+                    if (cookieMapping[this.cookieLife.value] < 8)
+                        $w.array[i].divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 1 ? "1 day" : cookieMapping[this.cookieLife.value] + " days";
+                    else if (cookieMapping[this.cookieLife.value] < 29)
+                        $w.array[i].divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 7 ? "1 week" : cookieMapping[this.cookieLife.value] / 7 + " weeks";
+                    else
+                        $w.array[i].divCookieLifeValue.innerHTML = cookieMapping[this.cookieLife.value] == 30 ? "1 month" : cookieMapping[this.cookieLife.value] / 30 + " months";
+
+                }
         };
 
         this.chkRestoreSession.onchange = Apply;

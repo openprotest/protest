@@ -153,7 +153,10 @@ class LocateIp extends Console {
                 divFlag.style.animation = "fade-in .2s";
                 result.appendChild(divFlag);
 
-                result.innerHTML += split[1] + ", " + split[2] + ", " + split[3];
+                if (split[1] === "Private address" || split[1] === "Local host")
+                    result.innerHTML += split[1];
+                else
+                    result.innerHTML += split[1] + ", " + split[2] + ", " + split[3];
 
                 if (split[4].length > 0 && split[4] != "0,0") {
                     const divLocation = document.createElement("div");

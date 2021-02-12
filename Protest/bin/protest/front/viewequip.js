@@ -610,7 +610,7 @@ class Equip extends Window {
                 }
             }
 
-            if (this.entry["TYPE"][0].toUpperCase() == "ROUTER" || this.entry["TYPE"][0].toUpperCase() == "SWITCH") { //conficuration and interfacecs
+            if (this.entry["TYPE"][0].toUpperCase() == "ROUTER" || this.entry["TYPE"][0].toUpperCase() == "SWITCH" || this.entry["TYPE"][0].toUpperCase() == "MULTILAYER SWITCH") { //configuration and interfacecs
                 let marginFlag = false;
 
                 if (ports.includes(22)) {

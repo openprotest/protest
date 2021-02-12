@@ -474,9 +474,9 @@ class Passgen extends Window {
         if (etc.length == 0) etc = "less then a second";
 
         if (eon > 999999999999999)
-           this.lblTtc.innerHTML = "Infinity";
+            this.lblTtc.innerHTML = "<u>TTC:</u>&nbsp;Infinity";
         else
-           this.lblTtc.innerHTML = etc;
+            this.lblTtc.innerHTML = `<u>TTC:</u>&nbsp;${etc}`;
     }
 }
 
