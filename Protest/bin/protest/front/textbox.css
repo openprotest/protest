@@ -34,7 +34,7 @@ select:focus {
 }
 
 input[type="password"]{
-    background-image: url(res/credencial.svg);
+    background-image: url(res/credencial.svgz);
     background-repeat: no-repeat;
     background-size: 18px 18px;
     background-position: calc(100% + 18px) center;

@@ -36,6 +36,7 @@ class HttpMainListener : Http {
                     Name = "sessionid",
                     Value = token,
                     HttpOnly = true,
+                    Secure = true,
                     Domain = ctx.Request.UserHostName.Split(':')[0],
                     //SameSite = "Lax",
                     Expires = new DateTime(DateTime.Now.Ticks + Session.HOUR * Session.SESSION_TIMEOUT)
@@ -49,8 +50,8 @@ class HttpMainListener : Http {
         if (!(validCookie || para[0] == "a" || para[0] == "res/icon24.png") && !isLoopback) {
             if (cache.hash.ContainsKey("login")) {
                 buffer = ((Cache.CacheEntry)cache.hash["login"]).bytes;
-                ctx.Response.ContentType = "text/html";
                 ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                ctx.Response.ContentType = "text/html; charset=utf-8";
                 try {
                     if (buffer != null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
                 } catch { }
@@ -81,17 +82,12 @@ class HttpMainListener : Http {
                     return;
                 }
 
+                Cache.CacheEntry entry = (Cache.CacheEntry)cache.hash[para[0]];
+
                 ctx.Response.StatusCode = (int)HttpStatusCode.OK;
                 ctx.Response.AddHeader("Last-Modified", cache.birthdate);
-
-#if DEBUG
-                ctx.Response.AddHeader("Cache-Control", "no-store");
-#else
-                ctx.Response.AddHeader("Cache-Control", $"max-age={Cache.CACHE_CONTROL_MAX_AGE}");
-                //ctx.Response.AddHeader("Cache-Control", $"min-fresh={Cache.CACHE_CONTROL_MIN_FRESH}");
-#endif
-
-                Cache.CacheEntry entry = (Cache.CacheEntry)cache.hash[para[0]];
+                ctx.Response.AddHeader("Cache-Control", entry.cacheControl);
+                ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
 
                 if (acceptWebP && entry.webp != null) { //webp
                     buffer = entry.webp;
@@ -119,8 +115,9 @@ class HttpMainListener : Http {
                 }
 
                 ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-                ctx.Response.ContentType = "text/plain";
-                ctx.Response.AddHeader("Cache-Control", "no-store");
+                ctx.Response.ContentType = "text/plain; charset=utf-8";
+                ctx.Response.AddHeader("Cache-Control", "no-cache");
+                ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
 
                 if (para[0] == "a") {
                     if (!(Session.TryLogin(ctx, remoteIp) is null)) buffer = Strings.OK.Array;

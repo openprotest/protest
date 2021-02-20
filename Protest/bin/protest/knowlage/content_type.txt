@@ -1,14 +1,14 @@
 ## text ##
-htm	text/html
-html	text/html
-css	text/css
-txt	text/plain
-text	text/plain
-log	text/plain
-csv	text/csv
-xml	text/xml
-vcf	text/vcard
-vcard	text/vcard
+htm	text/html; charset=utf-8
+html	text/html; charset=utf-8
+css	text/css; charset=utf-8
+txt	text/plain; charset=utf-8
+text	text/plain; charset=utf-8
+log	text/plain; charset=utf-8
+csv	text/csv; charset=utf-8
+xml	text/xml; charset=utf-8
+vcf	text/vcard; charset=utf-8
+vcard	text/vcard; charset=utf-8
 
 ## image ##
 ico	image/x-icon
@@ -22,8 +22,8 @@ jpg	image/jpeg
 jpe	image/jpeg
 jpeg	image/jpeg
 webp	image/webp
-svg	image/svg+xml
-svgz	image/svg+xml
+svg	image/svg+xml; charset=utf-8
+svgz	image/svg+xml; charset=utf-8
 
 ## audio ##
 aac	audio/x-aac
@@ -49,10 +49,9 @@ otf	font/otf
 ttf	font/ttf
 
 ## application ##
-js	application/javascript
-json	application/json
+js	application/javascript; charset=utf-8
+json	application/json; charset=utf-8
 pdf	application/pdf
-swf	application/x-shockwave-flash
 jar	application/java-archive
 zip	application/zip
 7z	application/x-7z-compressed

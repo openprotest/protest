@@ -78,8 +78,7 @@ let loader_styles = [
         "clients.js",
         "log.js",
         "guide.js",
-        "filebrowser.js",
-        "screencapture.js"
+        "filebrowser.js"
     ];
 
     let count = 0;
@@ -278,7 +277,6 @@ function RestoreSession() {
             case "Log"              : win = new Log(session[i].args); break;
             case "Guide"            : win = new Guide(session[i].args); break;
             case "FileBrowser"      : win = new FileBrowser(session[i].args); break;
-            case "ScreenCapture"    : win = new ScreenCapture(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;
         }
 

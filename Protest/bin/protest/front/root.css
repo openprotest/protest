@@ -123,6 +123,7 @@ body {
     font-family: var(--global-font-family);
     background-color: #F5F5F5;
     overflow: hidden;
+    -webkit-user-select: none;
     user-select: none;
 }
 

@@ -47,13 +47,12 @@ const TOOLS = [
 //{ lbl:"Tasks",              ico:"res/task.svgz",          grp:"database",    sqr:true,  f:arg=> new Tasks() },
 //{ lbl:"Mapped drives",      ico:"res/mappeddrive.svgz",   grp:"domainusers", sqr:true,  f:arg=> new MappedDrives() },
 
-{ isGroup:true, lbl:"Manage Pro-test and help" },
+{ isGroup:true, lbl:"Manage and help" },
 { lbl:"Backup",             ico:"res/backup.svgz",        grp:"backup",      sqr:true,  f:arg=> new Backup() },
 { lbl: "Pro-test clients",  ico: "res/ptclients.svgz",    grp:"manageusers", sqr:true,  f:arg=> new Clients() },
 { lbl: "Pro-test access control", ico: "res/unlock.svgz", grp:"manageusers", sqr:false, f:arg=> new Clients("acl") },
 { lbl:"Log",                ico:"res/log.svgz",           grp:"log",         sqr:true,  f:arg=> new Log() },
 { lbl:"User guide",         ico:"res/userguide.svgz",     grp:"*", sqr:true,  f:arg=> new Guide() },
-{ lbl:"Screen capture",     ico:"res/screencapture.svgz", grp:"*", sqr:false, f:arg=> btnScreenCapture.onclick() },
 { lbl:"Settings",           ico:"res/tool02.svgz",        grp:"*", sqr:false, f:arg=> new Settings() },
 { lbl:"Appearrance",        ico:"res/tv.svgz",            grp:"*", sqr:false, f:arg=> new Settings() },
 //{ lbl:"Menu icons",         ico:"res/desktop.svgz",       grp:"*", sqr:false, f:arg=> new Settings("icons") },
@@ -61,7 +60,7 @@ const TOOLS = [
 { lbl:"Update",             ico:"res/update.svgz",        grp:"*", sqr:false, f:arg=> new Settings("update") },
 { lbl:"License",            ico:"res/gpl.svgz",           grp:"*", sqr:false, f:arg=> new Settings("legal") },
 { lbl:"About",              ico:"res/logo.svgz",          grp:"*", sqr:false, f:arg=> new Settings("about") },
-{ lbl:"Logout",             ico:"res/logoff.svgz",        grp:"*", sqr:false, f:arg=> btnLogout.onclick() },
+{ lbl:"Logout",             ico:"res/logoff.svgz",        grp:"*", sqr:false, f:arg=> btnLogout.onclick() }
 ];
 
 let AUTHORIZATION = {};
@@ -204,11 +203,6 @@ btnCloseSidemenu.onclick = event => {
         SideMenu_Update("");
     } else
         SideMenu_Close();
-};
-
-btnScreenCapture.onclick = () => {
-    SideMenu_Close();
-    new ScreenCapture();
 };
 
 btnSettings.onclick = () => {

@@ -121,6 +121,8 @@ const PROTOCOL = {
     8080: "HTTP alternate	Hypertext Transfer Protocol",
     8291: "Mikrotik RouterOS Winbox",
     8443: "HTTP over SSL/TSL alternate",
+    8530: "WSUS	Windows Server Update Services",
+    8531: "WSUS	Windows Server Update Services over SSL/TSL",
     8728: "Mikrotik RouterOS API",
     8729: "Mikrotik RouterOS API over SSL/TSL",
     9100: "Print Server",

@@ -142,49 +142,49 @@ class Documentation extends Window {
         this.divContentContainer.appendChild(this.divContent);
 
         this.btnBold = document.createElement("button");
-        this.btnBold.style.backgroundImage = "url(res/bold.svg)";
+        this.btnBold.style.backgroundImage = "url(res/bold.svgz)";
         this.btnBold.style.left = "0px";
         this.btnBold.classList.add("light-button");
         this.btnBold.classList.add("doc-edit-button");
         this.body.appendChild(this.btnBold);
 
         this.btnItalic = document.createElement("button");
-        this.btnItalic.style.backgroundImage = "url(res/italic.svg)";
+        this.btnItalic.style.backgroundImage = "url(res/italic.svgz)";
         this.btnItalic.style.left = "36px";
         this.btnItalic.classList.add("light-button");
         this.btnItalic.classList.add("doc-edit-button");
         this.body.appendChild(this.btnItalic);
 
         this.btnUnderline = document.createElement("button");
-        this.btnUnderline.style.backgroundImage = "url(res/underline.svg)";
+        this.btnUnderline.style.backgroundImage = "url(res/underline.svgz)";
         this.btnUnderline.style.left = "72px";
         this.btnUnderline.classList.add("light-button");
         this.btnUnderline.classList.add("doc-edit-button");
         this.body.appendChild(this.btnUnderline);
 
         this.btnOList = document.createElement("button");
-        this.btnOList.style.backgroundImage = "url(res/orderedlist.svg)";
+        this.btnOList.style.backgroundImage = "url(res/orderedlist.svgz)";
         this.btnOList.style.left = "108px";
         this.btnOList.classList.add("light-button");
         this.btnOList.classList.add("doc-edit-button");
         this.body.appendChild(this.btnOList);
 
         this.btnUList = document.createElement("button");
-        this.btnUList.style.backgroundImage = "url(res/unorderedlist.svg)";
+        this.btnUList.style.backgroundImage = "url(res/unorderedlist.svgz)";
         this.btnUList.style.left = "144px";
         this.btnUList.classList.add("light-button");
         this.btnUList.classList.add("doc-edit-button");
         this.body.appendChild(this.btnUList);
 
         this.btnCode = document.createElement("button");
-        this.btnCode.style.backgroundImage = "url(res/code.svg)";
+        this.btnCode.style.backgroundImage = "url(res/code.svgz)";
         this.btnCode.style.left = "180px";
         this.btnCode.classList.add("light-button");
         this.btnCode.classList.add("doc-edit-button");
         this.body.appendChild(this.btnCode);
 
         this.btnLink = document.createElement("button");
-        this.btnLink.style.backgroundImage = "url(res/link.svg)";
+        this.btnLink.style.backgroundImage = "url(res/link.svgz)";
         this.btnLink.style.left = "216px";
         this.btnLink.classList.add("light-button");
         this.btnLink.classList.add("doc-edit-button");

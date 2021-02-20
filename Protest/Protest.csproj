@@ -246,7 +246,6 @@
     <Content Include="bin\protest\front\scripteditor.js" />
     <Content Include="bin\protest\front\scripts.css" />
     <Content Include="bin\protest\front\scripts.js" />
-    <Content Include="bin\protest\front\screencapture.js" />
     <Content Include="bin\protest\front\wmi.css" />
     <Content Include="bin\protest\front\wmi.js" />
     <Content Include="bin\protest\front\webcheck.js" />

@@ -48,6 +48,7 @@ public static class Session {
                     Name = "sessionid",
                     Value = sessionId,
                     HttpOnly = true,
+                    Secure = true,
                     Domain = ctx.Request.UserHostName.Split(':')[0],
                     //SameSite = "Lax",
                     Expires = new DateTime(DateTime.Now.Ticks + HOUR * SESSION_TIMEOUT)

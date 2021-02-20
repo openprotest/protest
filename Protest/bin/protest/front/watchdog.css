@@ -83,6 +83,7 @@
     width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
+    -webkit-user-select: text;
     user-select: text;
 }
 
@@ -91,6 +92,7 @@
     width: 60px;
     overflow: hidden;
     text-overflow: ellipsis;
+    -webkit-user-select: text;
     user-select: text;
 }
 

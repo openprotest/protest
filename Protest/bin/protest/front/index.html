@@ -1,22 +1,36 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 
 <head>
+    <meta charset="utf-8">
     <title>Pro-test</title>
-    <link rel="icon" id="favicon" />
+    <link rel="icon" id="favicon">
 
-    <meta charset="utf-8"/>
     <meta name="theme-color" content="#E87600">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="A management base for System Admins and IT professionals. It provides tools for documentation and troubleshooting.">  
+    <meta name="description" content="A management base for System Admins and IT professionals.">  
 
-    <link rel="stylesheet" href="root.css" />
-    <link rel="stylesheet" href="deskmenu.css" />
+    <link rel="stylesheet" href="root.css">
+    <link rel="stylesheet" href="deskmenu.css">
+
+    <style>
+        #cap {visibility:hidden}
+        #btnSidemenu {filter:opacity(0)}
+        #sidemenu {transform:translateX(calc(-100% - 8px))}
+        #txtSearch {visibility:hidden}
+        noscript > div {
+            position:sticky;
+            padding:16px;
+            text-align:center;
+            background-color:rgb(32,32,32);
+            color:white
+        }
+    </style>
 </head>
 
 <body>
     <div id="main" aria-label="Work area">
-        <div id="cap" style="visibility:hidden;"></div>
+        <div id="cap"></div>
 
         <div id="container">
             <svg id="analog_clock" aria-label="Time" width="96" height="96">
@@ -35,26 +49,24 @@
                 </defs>
                 <rect x="2" y="2" width="92" height="92" fill="rgba(224,224,224,.7)"/>
                 <path mask="url(#date_month_mask)" fill="#202020" d="M93.5,0h-91C1.119,0,0,1.119,0,2.5v91C0,94.881,1.119,96,2.5,96h91c1.381,0,2.5-1.119,2.5-2.5v-91 C96,1.119,94.881,0,93.5,0z M91,88.5c0,1.381-1.117,2.5-2.495,2.5H7.495C6.117,91,5,89.881,5,88.5v-61C5,26.119,6.117,25,7.495,25 h81.01C89.883,25,91,26.119,91,27.5V88.5z"/>
-                <text id="date_month" x="50%" y="18px" font-size="16" font-weight="bold" fill="#C0C0C0" text-anchor="middle"></text>
                 <text id="date_date" x="50%" y="64px" font-size="40" font-weight="bold" fill="#202020" text-anchor="middle"></text>
                 <text id="date_day" x="50%" y="80px" font-size="14" fill="#202020" text-anchor="middle"></text>
             </svg>
         </div>
 
-        <div id="btnSidemenu" role="button" aria-label="Menu" style="filter:opacity(0)">
+        <div id="btnSidemenu" role="button" aria-label="Menu">
             <div id="imgSearch"></div>
         </div>
 
         <div id="punchpane"></div>
         <div id="punchmenu"></div>
 
-        <div id="sidemenu" style="transform:translateX(calc(-100% - 8px));">
+        <div id="sidemenu">
             <div id="searchbox">
-                <input id="txtSearch" type="text" autocomplete="off" autocorrect="off" style="visibility:hidden;"/>
+                <input id="txtSearch" type="text" autocomplete="off" autocorrect="off"/>
                 <div id="btnCloseSidemenu"></div>
             </div>
             <div id="lstSideMenu" class="no-results"></div>
-            <div id="btnScreenCapture"></div>
             <div id="btnSettings"></div>
             <div id="btnLogout"></div>
         </div>
@@ -63,9 +75,7 @@
     <div id="bottombar" aria-label="Task bar"></div>
 
     <noscript>
-        <div style="position:sticky; text-align:center; background-color:rgb(32,32,32); padding:16px; color:white;">
-            Javascript is either disabled or not supported by your browser.
-        </div>
+        <div>Javascript is either disabled or not supported by your browser.</div>
     </noscript>
     <script src="ui.js"></script>
     <script src="loader.js"></script>

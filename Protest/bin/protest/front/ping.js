@@ -39,7 +39,7 @@ class Ping extends Console {
         if (this.args.entries) { //restore entries from previous session
             let temp = this.args.entries;
             this.args.entries = [];
-            for (let i = 0; i < temp.length; i++) 
+            for (let i = 0; i < temp.length; i++)
                 this.Push(temp[i]);
         }
 

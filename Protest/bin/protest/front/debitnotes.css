@@ -33,6 +33,7 @@
     bottom: 0;
     font-family: var(--global-font-family);
     overflow-y: scroll;
+    -webkit-user-select: text;
     user-select: text;
     -webkit-user-drag: text;
 }

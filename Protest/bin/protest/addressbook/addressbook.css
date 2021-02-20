@@ -22,6 +22,7 @@ body {
     font-family: "Segoe UI";
     background-color: #F5F5F5;
     overflow: hidden;
+    webkit-user-select: none;
     user-select: none;
 }
 
@@ -219,12 +220,12 @@ body {
     background-position: 1px 2px;
 }
 
-#container div div:nth-child(2) { background-image: url(user.svg); }
-#container div div:nth-child(3) { background-image: url(department.svg); }
-#container div div:nth-child(4) { background-image: url(email.svg); }
-#container div div:nth-child(5) { background-image: url(phone.svg); }
-#container div div:nth-child(6) { background-image: url(mobile.svg); }
-#container div div:nth-child(7) { background-image: url(mobile.svg); }
+#container div div:nth-child(2) { background-image: url(user.svgz); }
+#container div div:nth-child(3) { background-image: url(department.svgz); }
+#container div div:nth-child(4) { background-image: url(email.svgz); }
+#container div div:nth-child(5) { background-image: url(phone.svgz); }
+#container div div:nth-child(6) { background-image: url(mobile.svgz); }
+#container div div:nth-child(7) { background-image: url(mobile.svgz); }
 
 .card {
     float: left;
@@ -341,6 +342,7 @@ body {
 
     cursor: default;
 
+    -webkit-user-select: text !important;
     user-select: text !important;
 }
 
@@ -353,12 +355,12 @@ body {
     font-size: 20px;
 }
 
-.dialog > *:nth-child(2) { background-image: url(l_user.svg); }
-.dialog > *:nth-child(3) { background-image: url(l_department.svg); }
-.dialog > *:nth-child(4) { background-image: url(l_email.svg); }
-.dialog > *:nth-child(5) { background-image: url(l_phone.svg); }
-.dialog > *:nth-child(6) { background-image: url(l_mobile.svg); }
-.dialog > *:nth-child(7) { background-image: url(l_mobile.svg); }
+.dialog > *:nth-child(2) { background-image: url(l_user.svgz); }
+.dialog > *:nth-child(3) { background-image: url(l_department.svgz); }
+.dialog > *:nth-child(4) { background-image: url(l_email.svgz); }
+.dialog > *:nth-child(5) { background-image: url(l_phone.svgz); }
+.dialog > *:nth-child(6) { background-image: url(l_mobile.svgz); }
+.dialog > *:nth-child(7) { background-image: url(l_mobile.svgz); }
 
 .dialog a {
     display: block;
@@ -369,6 +371,7 @@ body {
 .dialog > * {
     color: #eee;
     height: 32px;
+    -webkit-user-select: text;
     user-select: text;
 }
 

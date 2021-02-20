@@ -369,7 +369,7 @@ class User extends Window {
             btnStamp.value = " ";
             btnStamp.style.minWidth = "40px";
             btnStamp.style.height = "32px";
-            btnStamp.style.backgroundImage = "url(res/l_stamp.svg)";
+            btnStamp.style.backgroundImage = "url(res/l_stamp.svgz)";
             btnStamp.style.backgroundSize = "28px 28px";
             btnStamp.style.backgroundPosition = "center";
             btnStamp.style.backgroundRepeat = "no-repeat";

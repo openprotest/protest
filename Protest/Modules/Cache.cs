@@ -23,26 +23,26 @@ class Cache {
         public byte[] gzip;
         public byte[] webp;
         public string contentType;
+        public string cacheControl;
     }
 
     public static Hashtable CONTENT_TYPE = new Hashtable() {
-        {"htm",  "text/html"},
-        {"html", "text/html"},
-        {"css",  "text/css"},
+        {"htm",  "text/html; charset=utf-8"},
+        {"html", "text/html; charset=utf-8"},
+        {"css",  "text/css; charset=utf-8"},
         {"png",  "image/png"},
         {"jpg",  "image/jpeg"},
         {"webp", "image/webp"},
         {"ico",  "image/x-icon"},
-        {"svg",  "image/svg+xml"},
-        {"svgz", "image/svg+xml"},
+        {"svg",  "image/svg+xml; charset=utf-8"},
+        {"svgz", "image/svg+xml; charset=utf-8"},
         {"ttf",  "font/ttf" },
-        {"js",   "application/javascript"},
-        {"json", "application/json"},
+        {"js",   "application/javascript; charset=utf-8"},
+        {"json", "application/json; charset=utf-8"},
         {"zip",  "application"}
     };
 
-    public const int CACHE_CONTROL_MIN_FRESH = 28_800; //8h
-    public const int CACHE_CONTROL_MAX_AGE = 86_400; //24h
+    public const uint CACHE_CONTROL_MAX_AGE = 86_400; //24h
 
     public readonly string birthdate;
     private readonly string path;
@@ -54,13 +54,6 @@ class Cache {
         this.path = path;
         LoadExternalContentType();
         LoadCache();
-    }
-
-    public void ReloadCache() {
-        LoadExternalContentType();
-        hash.Clear();
-        LoadCache();
-        GC.Collect();
     }
 
     private bool LoadExternalContentType() {
@@ -164,7 +157,13 @@ class Cache {
                 }
             }
 
-            entry.contentType = CONTENT_TYPE.ContainsKey(extention) ? (string)CONTENT_TYPE[extention] : "text/html";
+            entry.contentType = CONTENT_TYPE.ContainsKey(extention) ? (string)CONTENT_TYPE[extention] : "text/html; charset=utf-8";
+
+#if DEBUG
+            entry.cacheControl = "no-store";
+#else
+            entry.cacheControl = name == "" ? "max-age=60" : $"max-age={CACHE_CONTROL_MAX_AGE}";
+#endif
 
             entry.bytes = bytes;
             hash.Add(name, entry);
@@ -207,7 +206,8 @@ class Cache {
 
             CacheEntry entry = new CacheEntry() {
                 bytes = (byte[])o.Value,
-                contentType = "image/svg+xml"
+                contentType = "image/svg+xml; charset=utf-8",
+                cacheControl = $"max-age={CACHE_CONTROL_MAX_AGE}"
             };
 
             hash.Add(name, entry);

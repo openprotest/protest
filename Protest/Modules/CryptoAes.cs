@@ -28,8 +28,9 @@ public static class CryptoAes {
     }
 
     public static byte[] ComputeSha256(string data) {
-        using SHA256 sha256Hash = SHA256.Create();
+        SHA256 sha256Hash = SHA256.Create();
         byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(data));
+        sha256Hash.Dispose();
         return bytes;
     }
 

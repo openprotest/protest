@@ -16,9 +16,12 @@ class Passgen extends Window {
         this.txtPassword.style.width = "60%";
         this.txtPassword.style.maxWidth = "720px";
         this.txtPassword.style.margin = "2px calc(20% - 32px)";
+        this.txtPassword.style.fontFamily = "monospace";
         this.content.appendChild(this.txtPassword);
 
         this.divStrength = document.createElement("div");
+        this.divStrength.style.marginTop = "4px";
+        this.divStrength.style.marginTop = "4px";
         this.divStrength.style.marginTop = "4px";
         this.content.appendChild(this.divStrength);
 
@@ -28,6 +31,8 @@ class Passgen extends Window {
         this.divBar.style.width = "40px";
         this.divBar.style.height = "12px";
         this.divBar.style.transition = "box-shadow .2s";
+        this.divBar.style.border = "1px solid rgb(127,127,127)";
+        this.divBar.style.borderRadius = "2px";
         this.divStrength.appendChild(this.divBar);
 
         this.lblComment = document.createElement("div");

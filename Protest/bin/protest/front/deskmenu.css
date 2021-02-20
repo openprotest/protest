@@ -120,11 +120,12 @@
     overflow: visible;
     box-shadow: rgba(0,0,0,.6) 0 2px 4px;
 
-    background-image: url(res/logo.svg);
+    background-image: url(res/logo.svgz);
     background-repeat: no-repeat;
     background-size: 18px 18px;
     background-position: center;
 
+    -webkit-user-select: none !important;
     user-select: none !important;
 
     opacity: 0;
@@ -174,7 +175,7 @@
     top: 1px;
  
     border-radius: 2px;
-    background-image: url(res/logo.svg);
+    background-image: url(res/logo.svgz);
     background-repeat: no-repeat;
     background-size: 24px 24px;
     background-position: center;

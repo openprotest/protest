@@ -47,7 +47,7 @@ class Guide extends Window {
             cookiesIcon.style.display = "inline-block";
             cookiesIcon.style.width = "24px";
             cookiesIcon.style.height = "24px";
-            cookiesIcon.style.backgroundImage = "url(res/warning.svg)";
+            cookiesIcon.style.backgroundImage = "url(res/warning.svgz)";
             cookiesIcon.style.backgroundSize = "contain";
             cookiesIcon.style.marginRight = "8px";
             cookiesIcon.style.verticalAlign = "top";

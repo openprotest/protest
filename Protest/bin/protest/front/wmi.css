@@ -3,6 +3,7 @@
     color: black;
     border-collapse: collapse;
     margin: 8px;
+    -webkit-user-select: text;
     user-select: text;
 }
 

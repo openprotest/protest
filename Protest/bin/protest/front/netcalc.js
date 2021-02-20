@@ -185,9 +185,17 @@ class Netcalc extends Window {
             newBit.style.borderRadius = "1px";
             newBit.style.transition = ".4s";
             if (i % 8 == 0 && 1 > 0) newBit.style.margin = "0 1px 0 4px";
-
             this.divMap.appendChild(newBit);
         }
+
+        this.divMap.childNodes[0].style.borderRadius = "2px 1px 1px 2px";
+        this.divMap.childNodes[7].style.borderRadius = "1px 2px 2px 1px";
+        this.divMap.childNodes[8].style.borderRadius = "2px 1px 1px 2px";
+        this.divMap.childNodes[15].style.borderRadius = "1px 2px 2px 1px";
+        this.divMap.childNodes[16].style.borderRadius = "2px 1px 1px 2px";
+        this.divMap.childNodes[23].style.borderRadius = "1px 2px 2px 1px";
+        this.divMap.childNodes[24].style.borderRadius = "2px 1px 1px 2px";
+        this.divMap.childNodes[31].style.borderRadius = "1px 2px 2px 1px";
 
         this.ipAddress.textBoxes[0].onkeyup = this.ipAddress.textBoxes[0].oninput =
         this.ipAddress.textBoxes[1].onkeyup = this.ipAddress.textBoxes[1].oninput =

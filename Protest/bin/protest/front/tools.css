@@ -48,14 +48,13 @@
     text-overflow: ellipsis;
     line-height: 32px;
     max-height: 32px;
-    padding-left: 32px; 
+    padding-left: 32px;
     bottom: 0;
-
     background-repeat: no-repeat;
     background-size: 24px 24px;
     background-position: 4px 4px;
-        
-    user-select: text; /*make the results selectable*/
+    -webkit-user-select: text; /*make the results selectable*/
+    user-select: text;
 }
 
 .list-element > .list-result {
@@ -69,7 +68,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 32px;
-    user-select: text; /*make the results selectable*/
+    -webkit-user-select: text; /*make the results selectable*/
+    user-select: text;
 }
 
 .list-element > .list-result > div {
@@ -79,7 +79,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    user-select: text; /*make the results selectable*/
+    -webkit-user-select: text; /*make the results selectable*/
+    user-select: text;
 }
 .list-element > .expaned { overflow-y:auto; }
 .list-element > .expaned > div { width:33%; }
@@ -245,6 +246,7 @@
     padding-left: 8px;
     font-size: large;
     font-weight: 600;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -319,6 +321,7 @@
     background-position: 4px center;
     background-repeat: no-repeat;
 
+    -webkit-user-select: text;
     user-select: text;
     content-visibility: auto;
 }

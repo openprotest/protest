@@ -149,6 +149,7 @@
 .db-property > div:nth-child(2) {
     width: calc(60% - 16px);
     font-weight: 600;
+    -webkit-user-select: text;
     user-select: text;
 }
 
@@ -158,6 +159,7 @@
     border-radius: 2px;
     padding: 0 1px;
     margin: -1px 2px 0 2px;
+    /*-webkit-user-select: all;*/
     /*user-select: all;*/
 }
 
@@ -349,6 +351,7 @@
     overflow: hidden;
     text-overflow: ellipsis;*/
     box-sizing: border-box;
+    -webkit-user-select: text;
     user-select: text;
 }
 
@@ -403,6 +406,7 @@
     font-family: monospace;
     overflow-x: hidden;
     overflow-y: auto;
+    -webkit-user-select: text;
     user-select: text;
     counter-reset: code-enumeration;
 }
