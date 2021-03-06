@@ -1,5 +1,6 @@
 const EQUIP_ORDER = [
     "NAME", "TYPE",
+    "OVERWRITEPROTOCOL", ".OVERWRITEPROTOCOL",
 
     ["res/portscan.svgz", "Network"],
     "IP", "IPV6", "MASK", "HOSTNAME", "MAC ADDRESS", "DHCP ENABLED", "PORTS", "NETWORK ADAPTER SPEED",

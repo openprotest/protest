@@ -246,16 +246,25 @@ public static class Wmi {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory")).Get();
 
                 ulong totalmemory = 0;
+                string memorytype = String.Empty, smbiostype = String.Empty;
                 foreach (ManagementObject o in moc) {
                     UInt64.TryParse(o.GetPropertyValue("Capacity").ToString(), out ulong capacity);
                     totalmemory += capacity;
+                    memorytype = o.GetPropertyValue("MemoryType").ToString();
+                    smbiostype = o.GetPropertyValue("SMBIOSMemoryType").ToString();
                 }
                 hash.Add("TOTAL MEMORY", SizeToString(totalmemory.ToString()));
 
                 ContentBuilderAddArray(moc, "Capacity", "MEMORY MODULES", hash, new FormatMethodPtr(SizeToString));
                 ContentBuilderAddValue(moc, "Speed", "RAM SPEED", hash, new FormatMethodPtr(ToMHz));
-                ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", hash, new FormatMethodPtr(RamType));
+                //ContentBuilderAddValue(moc, "MemoryType", "RAM TYPE", hash, new FormatMethodPtr(RamType));
                 ContentBuilderAddValue(moc, "FormFactor", "RAM FORM FACTOR", hash, new FormatMethodPtr(RamFormFactor));
+
+                if (smbiostype == "20" || smbiostype == "21" || smbiostype == "22" || smbiostype == "23" || smbiostype == "24" || smbiostype == "25" || smbiostype == "26")
+                    hash.Add("RAM TYPE", SMBIOSMemoryType(smbiostype));
+                else 
+                    hash.Add("RAM TYPE", RamType(memorytype));
+
             } catch { }
 
             try {
@@ -571,7 +580,7 @@ public static class Wmi {
 
     private static string RamType(string value) {
         return value switch {
-            "0" => String.Empty,
+            "0" => "Unknown",
 
             "2" => "DRAM",
             "3" => "Synchronous DRAM",
@@ -594,9 +603,10 @@ public static class Wmi {
             "20" => "DDR",
             "21" => "DDR2",
             "22" => "DDR2 FB-DIMM",
-            "23" => "",
+            //"23" => String.Empty,
             "24" => "DDR3",
             "25" => "FBD2",
+            "26" => "DDR4",
             _ => String.Empty
         };
     }
@@ -627,6 +637,39 @@ public static class Wmi {
             "21" => "BGA",
             "22" => "FPBGA",
             "23" => "LGA",
+            _ => String.Empty
+        };
+    }
+
+    private static string SMBIOSMemoryType(string value) {
+        return value switch {
+            "0" => "Unknown",
+
+            "2" => "DRAM",
+            "3" => "Synchronous DRAM",
+            "4" => "Cache DRAM",
+            "5" => "EDO",
+            "6" => "EDRAM",
+            "7" => "EDRAM ",
+            "8" => "SRAM",
+            "9" => "RAM",
+            "10" => "ROM",
+            "11" => "Flash",
+            "12" => "EEPROM",
+            "13" => "FEPROM",
+            "14" => "EPROM",
+            "15" => "CDRAM",
+            "16" => "3DRAM",
+            "17" => "SDRAM",
+            "18" => "SGRAM",
+            "19" => "RDRAM",
+            "20" => "DDR",
+            "21" => "DDR2",
+            "22" => "DDR2 FB-DIMM",
+            //"23" => String.Empty,
+            "24" => "DDR3",
+            "25" => "FBD2",
+            "26" => "DDR4",
             _ => String.Empty
         };
     }
