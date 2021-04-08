@@ -154,7 +154,6 @@ txtSearch.onkeydown = event => {
 
     if (event.keyCode == 38) { //up
         event.preventDefault();
-
         if (sidemenu_list.length > 0) {
             if (sidemenu_index > -1) sidemenu_list[sidemenu_index].style.backgroundColor = "rgb(208,208,208)";
             sidemenu_index--;
@@ -165,7 +164,6 @@ txtSearch.onkeydown = event => {
 
     if (event.keyCode == 40) { //down
         event.preventDefault();
-
         if (sidemenu_list.length > 0) {
             if (sidemenu_index > -1) sidemenu_list[sidemenu_index].style.backgroundColor = "rgb(208,208,208)";
             sidemenu_index++;
@@ -174,12 +172,8 @@ txtSearch.onkeydown = event => {
         }
     }
 
-    if (sidemenu_list.length > 0 && (event.keyCode == 38 || event.keyCode == 40)) { //scroll into view
-        if (sidemenu_list[sidemenu_index].offsetTop - lstSideMenu.scrollTop > lstSideMenu.clientHeight - sidemenu_list[sidemenu_index].clientHeight)
-            lstSideMenu.scrollTop = -lstSideMenu.clientHeight + sidemenu_list[sidemenu_index].clientHeight + sidemenu_list[sidemenu_index].offsetTop;
-        if (sidemenu_list[sidemenu_index].offsetTop - lstSideMenu.scrollTop < 0)
-            lstSideMenu.scrollTop = sidemenu_list[sidemenu_index].offsetTop;
-    }
+    if (sidemenu_list.length > 0 && (event.keyCode == 38 || event.keyCode == 40)) //scroll into view
+        sidemenu_list[sidemenu_index].scrollIntoView({ behavior: "smooth", block: "center" });
 
 };
 
