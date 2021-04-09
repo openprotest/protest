@@ -149,6 +149,7 @@
     <Content Include="bin\protest\front\clients.css" />
     <Content Include="bin\protest\front\res\accesspoint.svg" />
     <Content Include="bin\protest\front\res\firewall.svg" />
+    <Content Include="bin\protest\front\res\l3switch.svg" />
     <Content Include="bin\protest\front\res\lamp.svg" />
     <Content Include="bin\protest\front\topology.js" />
     <Content Include="bin\protest\front\res\arrow.svg" />

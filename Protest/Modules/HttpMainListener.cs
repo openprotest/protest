@@ -87,7 +87,7 @@ class HttpMainListener : Http {
                 ctx.Response.StatusCode = (int)HttpStatusCode.OK;
                 ctx.Response.AddHeader("Last-Modified", cache.birthdate);
                 ctx.Response.AddHeader("Cache-Control", entry.cacheControl);
-                ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
+                ctx.Response.AddHeader("x-Content-Type-Options", "nosniff");
 
                 if (acceptWebP && entry.webp != null) { //webp
                     buffer = entry.webp;
