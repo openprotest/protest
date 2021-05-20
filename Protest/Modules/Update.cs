@@ -7,7 +7,7 @@ public static class Update {
     public static byte[] CheckGitHubVersion() {
         try {
             string uri = "https://api.github.com";
-            string token = "2b549bee4b_cbe116a68d_22eb4d604a_fd075af4f9".Replace("_", "");
+            string token = "ghp_8ps4IL.kHP3auTSrt.6oeMtwm1Wt.rcLV0k0gB7".Replace(".", "");
 
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri(uri);
