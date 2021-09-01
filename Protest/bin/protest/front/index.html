@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -15,9 +15,8 @@
 
     <style>
         #cap {visibility:hidden}
-        #btnSidemenu {filter:opacity(0)}
+        #btnMenu {filter:opacity(0)}
         #sidemenu {transform:translateX(calc(-100% - 8px))}
-        #txtSearch {visibility:hidden}
         noscript > div {
             position:sticky;
             padding:16px;
@@ -54,19 +53,21 @@
             </svg>
         </div>
 
-        <div id="btnSidemenu" role="button" aria-label="Menu">
-            <div id="imgSearch"></div>
+        <div id="btnMenu" role="button" aria-label="Menu">
+            <div id="divIcon"></div>
         </div>
 
         <div id="punchpane"></div>
         <div id="punchmenu"></div>
 
-        <div id="sidemenu">
+        <div id="menu">
             <div id="searchbox">
-                <input id="txtSearch" type="text" autocomplete="off" autocorrect="off"/>
-                <div id="btnCloseSidemenu"></div>
+                <div id="imgSearch"></div>
+                <input id="txtSearch" type="text" autocomplete="off" autocorrect="off" />
+                <div id="btnSearchClear"></div>
             </div>
-            <div id="lstSideMenu" class="no-results"></div>
+
+            <div id="menulist"></div>
             <div id="btnSettings"></div>
             <div id="btnLogout"></div>
         </div>

@@ -1,108 +1,141 @@
-#btnSidemenu {
+#btnMenu {
     position: absolute;
     left: 0px;
     top: 0px;
     width: 48px;
     height: 48px;
-    z-index: 4;
-    
+    z-index: 16777271;
     overflow: hidden;
     border-radius: 4px 8px 48px 8px;
     background: var(--toolbar-bg-rev);
     box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
-    
-    transition:
-        filter .4s,
-        border-radius .4s,
-        height .2s;
+    transition: filter .4s, border-radius .4s, width .2s, height .2s;
 }
 
-#btnSidemenu > #imgSearch {
+#divIcon {
+    position: relative;
+    left: 8px;
+    top: 6px;
+    width: 26px;
+    height: 26px;
+    transform-origin: 0 0;
+    background-image: url(res/logo.svg);
+    background-size: cover;
+    transition: .2s;
+    transition-delay: .08s;
+}
+
+#menu {
+    background: var(--bg-light);
+    background: #202020;
+    position: absolute;
+    border-radius: 4px;
+    left: 16px;
+    top: 16px;
+    bottom: 16px;
+    z-index: 16777270;
+    width: var(--sidemenu-width);
+    overflow: hidden;
+    visibility: hidden;
+    transition: .2s;
+}
+
+@media only screen and (max-width: 460px) {
+    #menu {
+        left: 0 !important;
+        right: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+#searchbox {    
+    position: absolute;
+    left: 32px;
+    right: 32px;
+    top: 32px;
+    height: 36px;
+
+    cursor: text;
+    border: #c0c0c0 1px solid;
+    border-radius: 4px;
+}
+
+#searchbox > #imgSearch {
     position: absolute;
     left: 4px;
     top: 4px;
-    width: 32px;
-    height: 32px;
-    transform-origin: 0 0;
-
-    background-image: url(res/search.svgz);
-    background-size: cover;
-
-    transition: .2s;
-}
-
-#sidemenu {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    width: var(--sidemenu-width);
-    height: 100%;
-    z-index: 3;
-    transform: translateX(calc(-100% - 8px));
-    background-color: rgb(32,32,32);
-    box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
-    overflow: hidden;
-    transition: transform .2s;
-}
-
-@media only screen and (max-width: 480px) {
-    #sidemenu { width: 100%; }
-}
-
-#sidemenu > #searchbox {
-    width: 100%;
-    height: 48px;
-    overflow: hidden;
-    background: var(--toolbar-bg-rev);
-}
-
-#sidemenu > #searchbox > #txtSearch {
-    position: absolute;
-    left: 52px;
-    top: 6px;
-    width: calc(100% - 88px);
-    background-color: transparent; 
-    outline: none; border: none;
-    padding: 2px 0;
-    margin: 2px 0;
-    font-size: 22px;
-    text-shadow: rgba(255,255,255,.5) 0 0 4px;
-    box-shadow: none !important;
-}
-
-#sidemenu > #searchbox > #txtSearch::selection {
-    background: rgb(64,64,64);
-    color: #fff;
-    text-shadow: black 0 0 8px;
-}
-
-#btnCloseSidemenu {
-    position: absolute;
     width: 28px;
     height: 28px;
-    right: 2px;
-    top: 10px;
-    background-image: url(res/close.svgz);
+    background-image: url(res/search.svg);
     background-size: cover;
-    border-radius: 50%;
-    visibility: hidden;
-
-    transition: .2s;
+    filter: invert(1);
 }
 
-#btnCloseSidemenu:hover { background-color: rgba(64,64,64,.2); }
-#btnCloseSidemenu:active { background-color: rgba(96,96,96,.2); }
 
-#lstSideMenu {
+#searchbox > input[type=text] {
     position: absolute;
-    width: 100%;
-    top: 48px;
-    bottom: 48px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    left: 40px;
+    top: 0px;
+    width: calc(100% - 80px);
+    background-color: transparent;
+    font-size: 22px;
+    color: #c0c0c0;
 
-    color: rgb(224,224,224);
+    outline: none;
+    border-width: initial;
+    border-style: none;
+    border-color: initial;
+    border-image: initial;
+    padding: 1px 0px 2px 0px !important;
+    margin: 2px 0px !important;
+
+    animation: none;
 }
+
+#searchbox > input[type=text]::selection {
+    background: #444;
+    color: #fff;
+}
+
+#searchbox > #btnSearchClear {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: default;
+    background-image: url(res/delete.svg);
+    background-size: 20px 20px;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    filter: invert(1);
+
+    transition: .1s;
+}
+
+#searchbox > #btnSearchClear:hover {
+    background-color: #bbb;
+}
+
+#searchbox > #btnSearchClear:active {
+    background-color: #ccc;
+}
+
+#menulist {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 48px;
+    top: 80px;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
 
 .sidemenu-item {
     position: relative;
@@ -202,16 +235,3 @@
 #btnSettings:active, #btnLogout:active {
     background-color: rgb(56,56,56);
 } 
-
-@media screen and (-ms-high-contrast: active) {
-    .sidemenu-square-item,
-    .sidemenu-item {
-        filter: brightness(4);
-    }
-
-    .sidemenu-item:hover,
-    .sidemenu-square-item:hover {
-        box-sizing: border-box;
-        border: 2px solid #ff0;
-    }
-}

@@ -96,7 +96,7 @@ let loader_styles = [
                 LoadScript(tertiaryScripts[i], callbackHandle);
 
         } else if (count === total - 2) { //js is done, load db
-            btnSidemenu.style.filter = "none";
+            btnMenu.style.filter = "none";
 
             LoadEquip(callbackHandle);
             LoadUsers(callbackHandle);

@@ -3,14 +3,9 @@
     if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("disable_anime") === null)
         localStorage.setItem("disable_anime", "true");
 
-    sidemenu_dynamicicon     = localStorage.getItem("dynamic_search_icon") === "true";
     $w.always_maxxed         = localStorage.getItem("w_always_maxed") === "true";
     container.className      = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
-    document.body.className  = localStorage.getItem("high_contrast") === "true" ? "high-contrast" : "";
     document.body.className += localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
-
-    if (localStorage.getItem("zoom"))
-        document.body.style.zoom = 75 + localStorage.getItem("zoom") * 5 + "%";
 
     if (localStorage.getItem("accent_color"))
         SetAccentColor(localStorage.getItem("accent_color").split(",").map(o => parseInt(o)));
@@ -39,16 +34,12 @@ class Settings extends Tabs {
         this.subContent.style.overflowY = "auto";
 
         this.tabGui     = this.AddTab("Appearance", "res/tv.svgz");
-        //this.tabIcons   = this.AddTab("Menu icons", "res/desktop.svgz");
         this.tabSession = this.AddTab("Session", "res/hourglass.svgz");
-        this.tabUpdate  = this.AddTab("Update", "res/update.svgz");
         this.tabLegal   = this.AddTab("License", "res/gpl.svgz");
         this.tabAbout   = this.AddTab("About", "res/logo.svgz");
 
         this.tabGui.onclick = () => this.ShowGui();
-        //this.tabIcons.onclick = () => this.ShowIcons();
         this.tabSession.onclick = () => this.ShowSession();
-        this.tabUpdate.onclick = () => this.ShowUpdate();
         this.tabLegal.onclick = () => this.ShowLegal();
         this.tabAbout.onclick = () => this.ShowAbout();
 
@@ -61,11 +52,6 @@ class Settings extends Tabs {
             case "session":
                 this.tabSession.className = "v-tab-selected";
                 this.ShowSession();
-                break;
-
-            case "update":
-                this.tabUpdate.className = "v-tab-selected";
-                this.ShowUpdate();
                 break;
 
             case "legal":
@@ -88,13 +74,6 @@ class Settings extends Tabs {
         this.args = "appearance";
         this.subContent.innerHTML = "";
 
-        this.chkDynamicSearchIcon = document.createElement("input");
-        this.chkDynamicSearchIcon.type = "checkbox";
-        this.subContent.appendChild(this.chkDynamicSearchIcon);
-        this.AddCheckBoxLabel(this.subContent, this.chkDynamicSearchIcon, "Dynamic search icon").style.fontWeight = "600";
-        this.subContent.appendChild(document.createElement("br"));
-        this.subContent.appendChild(document.createElement("br"));
-
         this.chkPunchMenu = document.createElement("input");
         this.chkPunchMenu.type = "checkbox";
         this.subContent.appendChild(this.chkPunchMenu);
@@ -106,13 +85,6 @@ class Settings extends Tabs {
         this.chkWinMaxxed.type = "checkbox";
         this.subContent.appendChild(this.chkWinMaxxed);
         this.AddCheckBoxLabel(this.subContent, this.chkWinMaxxed, "Always maximize windows").style.fontWeight = "600";
-        this.subContent.appendChild(document.createElement("br"));
-        this.subContent.appendChild(document.createElement("br"));
-
-        this.chkHighContrast = document.createElement("input");
-        this.chkHighContrast.type = "checkbox";
-        this.subContent.appendChild(this.chkHighContrast);
-        this.AddCheckBoxLabel(this.subContent, this.chkHighContrast, "High contrast").style.fontWeight = "600";
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
 
@@ -128,51 +100,7 @@ class Settings extends Tabs {
         this.subContent.appendChild(this.chkWindowShadows);
         this.AddCheckBoxLabel(this.subContent, this.chkWindowShadows, "Disable window drop-shadows").style.fontWeight = "600";
         this.subContent.appendChild(document.createElement("br"));
-        this.subContent.appendChild(document.createElement("br"));
 
-        const divZoom = document.createElement("div");
-        divZoom.innerHTML = "Zoom: ";
-        divZoom.style.display = "inline-block";
-        divZoom.style.minWidth = "200px";
-        divZoom.style.fontWeight = "600";
-        this.subContent.appendChild(divZoom);
-
-        this.zoom = document.createElement("input");
-        this.zoom.type = "range";
-        this.zoom.min = "1";
-        this.zoom.max = "15";
-        this.zoom.value = "5";
-        this.zoom.style.width = "200px";
-        this.subContent.appendChild(this.zoom);
-
-        this.divZoomValue = document.createElement("div");
-        this.divZoomValue.innerHTML = "100%";
-        this.divZoomValue.style.paddingLeft = "8px";
-        this.divZoomValue.style.display = "inline-block";
-        this.subContent.appendChild(this.divZoomValue);
-
-        /*this.subContent.appendChild(document.createElement("br"));
-        this.subContent.appendChild(document.createElement("br"));
-
-        const divFontFamily = document.createElement("div");
-        divFontFamily.innerHTML = "Font: ";
-        divFontFamily.style.display = "inline-block";
-        divFontFamily.style.fontWeight = "600";
-        divFontFamily.style.minWidth = "200px";
-        this.subContent.appendChild(divFontFamily);
-
-        const txtFontFamily = document.createElement("input");
-        txtFontFamily.type = "text";
-        txtFontFamily.placeholder = "Open Sans";
-        txtFontFamily.value = localStorage.getItem("font") ? localStorage.getItem("font") : "";
-        this.subContent.appendChild(txtFontFamily);
-
-        const btnFontFamily = document.createElement("input");
-        btnFontFamily.type = "button";
-        btnFontFamily.value = "Set";
-        this.subContent.appendChild(btnFontFamily);*/
-
-        this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("br"));
         this.subContent.appendChild(document.createElement("hr"));
 
@@ -250,7 +178,6 @@ class Settings extends Tabs {
         divBackground.style.paddingBottom = "8px";
         this.subContent.appendChild(divBackground);
 
-
         this.bgIndicators = [];
         let selected_bg = "";
         if (localStorage.getItem("background"))
@@ -317,63 +244,36 @@ class Settings extends Tabs {
             };
         }
 
-        this.chkDynamicSearchIcon.checked = localStorage.getItem("dynamic_search_icon") === "true";
         this.chkPunchMenu.checked         = localStorage.getItem("punch_menu") === "true";
         this.chkWinMaxxed.checked         = localStorage.getItem("w_always_maxed") === "true";
-        this.chkHighContrast.checked      = localStorage.getItem("high_contrast") === "true";
         this.chkDisableAnime.checked      = localStorage.getItem("disable_anime") === "true";
         this.chkWindowShadows.checked     = localStorage.getItem("w_disable_dropshadow") === "true";
-        this.zoom.value                   = localStorage.getItem("zoom") == null ? 5 : parseInt(localStorage.getItem("zoom"));
 
         const Apply = ()=> {
-            sidemenu_dynamicicon = this.chkDynamicSearchIcon.checked;
             $w.always_maxxed = this.chkWinMaxxed.checked;
-            document.body.className = this.chkHighContrast.checked ? "high-contrast" : "";
             document.body.className += this.chkDisableAnime.checked ? " disable-animation" : "";
-            document.body.style.zoom = 75 + this.zoom.value * 5 + "%";
-            this.divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%";
             container.className = this.chkWindowShadows.checked ? "disable-window-dropshadows" : "";
-            //document.documentElement.style.setProperty("--global-font-family", txtFontFamily.value);
 
-            localStorage.setItem("dynamic_search_icon", this.chkDynamicSearchIcon.checked);
             localStorage.setItem("punch_menu", this.chkPunchMenu.checked);
             localStorage.setItem("w_always_maxed", this.chkWinMaxxed.checked);
-            localStorage.setItem("high_contrast", this.chkHighContrast.checked);
             localStorage.setItem("disable_anime", this.chkDisableAnime.checked);
             localStorage.setItem("w_disable_dropshadow", this.chkWindowShadows.checked);
-            localStorage.setItem("zoom", this.zoom.value);
-            //localStorage.setItem("font", txtFontFamily.value);
 
             for (let i = 0; i < $w.array.length; i++) //update other setting windows
                 if ($w.array[i] instanceof Settings && $w.array[i].args === "appearance") {
-                    $w.array[i].chkDynamicSearchIcon.checked = this.chkDynamicSearchIcon.checked;
                     $w.array[i].chkPunchMenu.checked         = this.chkPunchMenu.checked;
                     $w.array[i].chkWinMaxxed.checked         = this.chkWinMaxxed.checked;
-                    $w.array[i].chkHighContrast.checked      = this.chkHighContrast.checked;
                     $w.array[i].chkDisableAnime.checked      = this.chkDisableAnime.checked;
                     $w.array[i].chkWindowShadows.checked     = this.chkWindowShadows.checked;
-                    $w.array[i].zoom.value                   = this.zoom.value;
-                    $w.array[i].divZoomValue.innerHTML       = 75 + this.zoom.value * 5 + "%";
                 }
         };
 
-        //btnFontFamily.onclick             = Apply;
-        this.chkDynamicSearchIcon.onchange = Apply;
         this.chkPunchMenu.onchange         = Apply;
         this.chkWinMaxxed.onchange         = Apply;
-        this.chkHighContrast.onchange      = Apply;
         this.chkDisableAnime.onchange      = Apply;
         this.chkWindowShadows.onchange     = Apply;
-        this.zoom.onchange                 = Apply;
-        this.zoom.oninput = () => { this.divZoomValue.innerHTML = 75 + this.zoom.value * 5 + "%"; };
 
         Apply();
-    }
-
-    ShowIcons() {
-        this.args = "icons";
-        this.subContent.innerHTML = "";
-
     }
 
     ShowSession() {
@@ -505,118 +405,6 @@ class Settings extends Tabs {
         };
 
         Apply();
-    }
-
-    ShowUpdate() {
-        this.args = "update";
-        this.subContent.innerHTML = "";
-
-        const animationBox = document.createElement("div");
-        animationBox.style.backgroundColor = "#202020";
-        animationBox.style.width = "144px";
-        animationBox.style.height = "144px";
-        animationBox.style.borderRadius = "72px";
-        animationBox.style.margin = "16px auto";
-        this.subContent.appendChild(animationBox);
-
-        const animation = document.createElement("div");
-        animation.style.background = "url(res/update.svgz)";
-        animation.style.backgroundSize = "contain";
-        animation.style.width = "96px";
-        animation.style.height = "96px";
-        animation.style.filter = "brightness(6)";
-        animation.style.position = "absolute";
-        animation.style.margin = "24px";
-        animation.style.animation = "spin 2s linear infinite";
-        animationBox.appendChild(animation);
-
-        const status = document.createElement("div");
-        status.innerHTML = "Checking for updates...";
-        status.style.textAlign = "center";
-        status.style.fontSize = "large";
-        status.style.fontWeight = "500";
-        this.subContent.appendChild(status);
-
-        const center = document.createElement("div");
-        center.style.textAlign = "center";
-        this.subContent.appendChild(center);
-
-        const xhrUpdate = new XMLHttpRequest();
-        xhrUpdate.onreadystatechange = () => {
-            if (xhrUpdate.status == 403) location.reload(); //authorization
-
-            if (xhrUpdate.readyState == 4 && xhrUpdate.status == 200) {
-                if (xhrUpdate.responseText == "failed") {
-                    status.innerHTML = "Unable to reach the server.";
-                    animation.style.animation = "none";
-                    return;
-                }
-
-                let jsonUpdate = JSON.parse(xhrUpdate.responseText);
-
-                if (!jsonUpdate.tag_name) {
-                    status.innerHTML = "Failed to check updates.";
-                    animation.style.animation = "none";
-                    return;
-                }
-
-                const xhrVersion = new XMLHttpRequest();
-                xhrVersion.onreadystatechange = () => {
-                    if (xhrVersion.status == 403) location.reload(); //authorization
-
-                    if (xhrVersion.readyState == 4 && xhrVersion.status == 200) {
-                        let jsonVersion = JSON.parse(xhrVersion.responseText);
-
-                        const info = document.createElement("div");
-                        info.style.display = "inline-block";
-                        info.style.maxWidth = "640px";
-                        info.style.marginTop = "32px";
-                        info.style.marginBottom = "32px";
-                        info.style.textAlign = "left";
-                        info.style.userSelect = "text";
-                        info.innerHTML = "Version:&nbsp;" + jsonUpdate.tag_name + "<br>Published at:&nbsp;" + jsonUpdate.published_at.split("T")[0];
-                        center.appendChild(info);
-
-                        let curent = jsonVersion.string.split(".").map(o=>parseInt(o));
-                        let github = jsonUpdate.tag_name.split(".").map(o => parseInt(o));
-
-                        if (curent[0] < github[0] ||
-                            curent[0] === github[0] && curent[1] < github[1] ||
-                            curent[0] === github[0] && curent[1] === github[1] && curent[2] < github[2]) {
-
-                            status.innerHTML = "A new version is available.";
-
-                            center.appendChild(document.createElement("br"));
-
-                            if (jsonUpdate.assets)
-                                for (let i = 0; i < jsonUpdate.assets.length; i++) {
-                                    const link = document.createElement("a");
-                                    link.style.display = "inline-block";
-                                    link.style.border = "#202020 1px solid";
-                                    link.style.borderRadius = "4px";
-                                    link.style.margin = "4px";
-                                    link.style.padding = "4px";
-                                    link.style.paddingLeft = "28px";
-                                    link.style.background = "url(res/download.svgz) 1px 2px / 24px 24px no-repeat";     
-                                    link.target = "_blank";
-                                    link.href = jsonUpdate.assets[i].browser_download_url;
-                                    link.innerHTML = jsonUpdate.assets[i].name;
-                                    center.appendChild(link);
-                                }
-
-                        } else {
-                            status.innerHTML = "Pro-test is up to date.";
-                        }
-
-                        animation.style.animation = "none";
-                    }
-                };
-                xhrVersion.open("GET", "version", true);
-                xhrVersion.send();
-            }
-        };
-        xhrUpdate.open("GET", "checkforupdate", true);
-        xhrUpdate.send();
     }
 
     ShowLegal() {

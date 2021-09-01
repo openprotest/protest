@@ -65,68 +65,188 @@ const TOOLS = [
 
 let AUTHORIZATION = {};
 
-let sidemenu_dynamicicon = false;
+let menu_isopen = false;
+let menu_button_drag = false;
+let menu_button_moved = false;
+let menu_startPos = [0, 0];
+let menu_lastAltPress = 0;
+let menu_index = -1;
+let menu_list = [];
 
-let sidemenu_isopen = false;
-let sidemenu_index = -1;
-let sidemenu_list = [];
-let sidemenu_session = [];
+let menu_session = [];
 
-let sidemenu_lastShiftPress = 0;
+let menu_lastShiftPress = 0;
 let lastSearchValue = "";
 
-//SideMenu_Update("");
-
-btnSidemenu.onclick = event => { if (event.button == 0) SideMenu_Open(); };
+btnMenu.onclick = event => {
+    if (menu_button_moved) return;
+    if (event.button == 0) Menu_Toogle();
+};
 
 document.body.addEventListener("mousemove", event => {
-    if (!sidemenu_dynamicicon) return;
-    if (onMobile) return;
-    if (sidemenu_isopen) return;
+    if (event.buttons != 1) menu_button_drag = false;
 
-    let y = 0;
-    if (event.x < 128) y = event.y - 32;
-    if (event.x > 96) y *= (192 - event.x) / 96;
+    if (!menu_button_drag) return;
 
-    if (y < 8) {
-        y = 0;
-        btnSidemenu.style.borderRadius = "4px 8px 48px 8px";
-        btnSidemenu.style.height = "48px";
-        imgSearch.style.transform = "none";
-
-    } else if (y > container.clientHeight - 72) {
-        y = container.clientHeight - 49;
-        btnSidemenu.style.borderRadius = "8px 48px 8px 6px";
-        btnSidemenu.style.height = "48px";
-        imgSearch.style.transform = "translate(31px,6px) rotate(90deg)";
-
-    } else {
-        btnSidemenu.style.height = "64px";
-        btnSidemenu.style.borderRadius = "14px 40px 40px 14px";
-        imgSearch.style.transform = "translate(14px,4px) rotate(40deg)";
+    if (Math.abs(menu_startPos[0] - event.clientX) > 2 || Math.abs(menu_startPos[1] - event.clientY) > 2) {
+        menu_button_moved = true;
     }
 
-    btnSidemenu.style.transform = "translateY(" + y + "px)";
+    let px = event.x / container.clientWidth;
+    let py = event.y / container.clientHeight;
+
+    if (event.x < 56 && event.y < 56) {
+        btnMenu.style.borderRadius = "4px 8px 48px 8px";
+        btnMenu.style.left = "0px";
+        btnMenu.style.top = "0px";
+        btnMenu.style.width = "48px";
+        btnMenu.style.height = "48px";
+
+        divIcon.style.left = "8px";
+        divIcon.style.top = "6px";
+        divIcon.style.width = "26px";
+        divIcon.style.height = "26px";
+
+    } else if (event.x < 56 && event.y > container.clientHeight - 48) {
+        btnMenu.style.borderRadius = "8px 48px 8px 4px";
+        btnMenu.style.left = "0px";
+        btnMenu.style.top = "calc(100% - 48px)";
+        btnMenu.style.width = "48px";
+        btnMenu.style.height = "48px";
+
+        divIcon.style.left = "8px";
+        divIcon.style.top = "16px";
+        divIcon.style.width = "26px";
+        divIcon.style.height = "26px";
+
+    } else if (event.x > container.clientWidth - 48 && event.y < 56) {
+        btnMenu.style.borderRadius = "8px 4px 8px 64px";
+        btnMenu.style.left = "calc(100% - 48px)";
+        btnMenu.style.top = "0px";
+        btnMenu.style.width = "48px";
+        btnMenu.style.height = "48px";
+
+        divIcon.style.left = "16px";
+        divIcon.style.top = "6px";
+        divIcon.style.width = "26px";
+        divIcon.style.height = "26px";
+
+    } else if (event.x > container.clientWidth - 48 && event.y > container.clientHeight - 48) {
+        btnMenu.style.borderRadius = "64px 8px 4px 8px";
+        btnMenu.style.left = "calc(100% - 48px)";
+        btnMenu.style.top = "calc(100% - 48px)";
+        btnMenu.style.width = "48px";
+        btnMenu.style.height = "48px";
+
+        divIcon.style.left = "16px";
+        divIcon.style.top = "16px";
+        divIcon.style.width = "26px";
+        divIcon.style.height = "26px";
+
+    } else if (px < py && 1 - px > py) { //left
+        let y = 100 * (event.y - 32) / container.clientHeight;
+
+        btnMenu.style.borderRadius = "14px 40px 40px 14px";
+        btnMenu.style.left = "0px";
+        btnMenu.style.top = `${y}%`;
+        btnMenu.style.width = "48px";
+        btnMenu.style.height = "64px";
+
+        divIcon.style.left = "8px";
+        divIcon.style.top = "18px";
+        divIcon.style.width = "28px";
+        divIcon.style.height = "28px";
+
+    } else if (px > py && 1 - px > py) { //top
+        let x = 100 * (event.x - 32) / container.clientWidth;
+
+        btnMenu.style.borderRadius = "14px 14px 40px 40px";
+        btnMenu.style.left = `${x}%`;
+        btnMenu.style.top = "0px";
+        btnMenu.style.width = "64px";
+        btnMenu.style.height = "48px";
+
+        divIcon.style.left = "19px";
+        divIcon.style.top = "6px";
+        divIcon.style.width = "28px";
+        divIcon.style.height = "28px";
+
+    } else if (px < py && 1 - px < py) { //bottom
+        let x = 100 * (event.x - 32) / container.clientWidth;
+
+        btnMenu.style.borderRadius = "40px 40px 14px 14px";
+        btnMenu.style.left = `${x}%`;
+        btnMenu.style.top = "calc(100% - 48px)";
+        btnMenu.style.width = "64px";
+        btnMenu.style.height = "48px";
+
+        divIcon.style.left = "19px";
+        divIcon.style.top = "16px";
+        divIcon.style.width = "28px";
+        divIcon.style.height = "28px";
+
+    } else if (px > py && 1 - px < py) { //right
+        let y = 100 * (event.y - 32) / container.clientHeight;
+
+        btnMenu.style.borderRadius = "40px 14px 14px 40px";
+        btnMenu.style.left = "calc(100% - 48px)";
+        btnMenu.style.top = `${y}%`;
+        btnMenu.style.width = "48px";
+        btnMenu.style.height = "64px";
+
+        divIcon.style.left = "14px";
+        divIcon.style.top = "18px";
+        divIcon.style.width = "28px";
+        divIcon.style.height = "28px";
+    }
+
+    Menu_UpdatePosition();
 });
+
+document.body.addEventListener("mouseup", event => {
+    if (menu_button_moved) {
+        localStorage.setItem("menu_button_pos", JSON.stringify({
+            borderRadius: btnMenu.style.borderRadius,
+            left: btnMenu.style.left,
+            top: btnMenu.style.top,
+            width: btnMenu.style.width,
+            height: btnMenu.style.height,
+            l_left: divIcon.style.left,
+            l_top: divIcon.style.top,
+            l_width: divIcon.style.width,
+            l_height: divIcon.style.height
+        }));
+    }
+
+    menu_button_drag = false;
+    setTimeout(() => {
+        menu_button_moved = false;
+    }, 0);
+});
+
+btnMenu.onmousedown = event => {
+    menu_startPos = [event.clientX, event.clientY];
+    menu_button_drag = true;
+};
+
 
 container.onclick = event => {
     if (event == null) return;
     if (event.clientX > 2) return;
 
-    if (sidemenu_dynamicicon) SideMenu_Open();
-    else if (event.clientY < window.innerHeight / 4 && event.clientY > 0) SideMenu_Open();
+    else if (event.clientY < window.innerHeight / 4 && event.clientY > 0) Menu_Open();
 };
 
 document.body.onkeyup = event => {
     if (event.code == "ShiftLeft") {
-        if (Date.now() - sidemenu_lastShiftPress < 400) {
-            sidemenu_lastShiftPress = 0;
+        if (Date.now() - menu_lastShiftPress < 400) {
+            menu_lastShiftPress = 0;
             Toogle();
         } else {
-            sidemenu_lastShiftPress = Date.now();
+            menu_lastShiftPress = Date.now();
         }
     } else
-        sidemenu_lastShiftPress = 0;
+        menu_lastShiftPress = 0;
 };
 
 txtSearch.onkeydown = event => {
@@ -134,46 +254,46 @@ txtSearch.onkeydown = event => {
         event.stopPropagation();
         if (txtSearch.value.length > 0) {
             txtSearch.value = "";
-            SideMenu_Update("");
+           Menu_Update("");
         } else {
-            SideMenu_Close();
+            Menu_Close();
         }
         return;
     }
 
     if (event.keyCode == 13) { //enter
         if (event.ctrlKey) {
-            sidemenu_list[sidemenu_index].onmousedown(null);
+            menu_list[menu_index].onmousedown(null);
             txtSearch.focus();
             setTimeout(txtSearch.focus(), 10);
         } else {
-            if (sidemenu_index > -1)
-                sidemenu_list[sidemenu_index].onclick(event);
+            if (menu_index > -1)
+                menu_list[menu_index].onclick(event);
         }
     }
 
     if (event.keyCode == 38) { //up
         event.preventDefault();
-        if (sidemenu_list.length > 0) {
-            if (sidemenu_index > -1) sidemenu_list[sidemenu_index].style.backgroundColor = "rgb(208,208,208)";
-            sidemenu_index--;
-            if (sidemenu_index < 0) sidemenu_index = sidemenu_list.length - 1;
-            if (sidemenu_index > -1) sidemenu_list[sidemenu_index].style.backgroundColor = "var(--select-color)";
+        if (menu_list.length > 0) {
+            if (menu_index > -1) menu_list[menu_index].style.backgroundColor = "rgb(208,208,208)";
+            menu_index--;
+            if (menu_index < 0) menu_index = menu_list.length - 1;
+            if (menu_index > -1) menu_list[menu_index].style.backgroundColor = "var(--select-color)";
         }
     }
 
     if (event.keyCode == 40) { //down
         event.preventDefault();
-        if (sidemenu_list.length > 0) {
-            if (sidemenu_index > -1) sidemenu_list[sidemenu_index].style.backgroundColor = "rgb(208,208,208)";
-            sidemenu_index++;
-            if (sidemenu_index >= sidemenu_list.length) sidemenu_index = 0;
-            sidemenu_list[sidemenu_index].style.backgroundColor = "var(--select-color)";
+        if (menu_list.length > 0) {
+            if (menu_index > -1) menu_list[menu_index].style.backgroundColor = "rgb(208,208,208)";
+            menu_index++;
+            if (menu_index >= menu_list.length) menu_index = 0;
+            menu_list[menu_index].style.backgroundColor = "var(--select-color)";
         }
     }
 
-    if (sidemenu_list.length > 0 && (event.keyCode == 38 || event.keyCode == 40)) //scroll into view
-        sidemenu_list[sidemenu_index].scrollIntoView({ behavior: "smooth", block: "center" });
+    if (menu_list.length > 0 && (event.keyCode == 38 || event.keyCode == 40)) //scroll into view
+        menu_list[menu_index].scrollIntoView({ behavior: "smooth", block: "center" });
 
 };
 
@@ -185,22 +305,25 @@ txtSearch.oninput = event => {
     let current = txtSearch.value;
     setTimeout(() => {
         if (current != txtSearch.value) return;
-        SideMenu_Update(txtSearch.value.toLocaleLowerCase());
+        Menu_Update(txtSearch.value.toLocaleLowerCase());
     }, 200);
 };
 
-btnCloseSidemenu.onclick = event => {
+txtSearch.onclick = event => { event.stopPropagation(); };
+searchbox.onclick = event => { txtSearch.focus(); };
+
+btnSearchClear.onclick = event => {
     event.stopPropagation();
 
     if (txtSearch.value.length > 0) {
         txtSearch.value = "";
-        SideMenu_Update("");
+        Menu_Update("");
     } else
-        SideMenu_Close();
+        Menu_Close();
 };
 
 btnSettings.onclick = () => {
-    SideMenu_Close();
+    Menu_Close();
     new Settings();
 };
 
@@ -215,7 +338,7 @@ btnLogout.onclick = () => {
     xhr.send();
 };
 
-cap.onclick = () => { SideMenu_Close(); };
+cap.onclick = () => { Menu_Close(); };
 
 function NewEquip() {
     let win = new Equip();
@@ -227,16 +350,122 @@ function NewUser() {
     return win;
 }
 
-function SideMenu_Update(filter) {
-    lstSideMenu.innerHTML = "";
-    sidemenu_list = [];
-    sidemenu_index = -1;
+
+function CreateSideItem(label, icon, t1, t2, func) {
+    let item = document.createElement("div");
+    item.style.backgroundImage = "url(" + icon + ")";
+    item.className = "sidemenu-item";
+
+    let divLabel = document.createElement("div");
+    divLabel.innerHTML = label;
+    item.appendChild(divLabel);
+
+    if (t1.length > 0) {
+        let divDescription = document.createElement("div");
+        divDescription.innerHTML = t1;
+        item.appendChild(divDescription);
+    }
+
+    if (t2.length > 0) {
+        let divMore = document.createElement("div");
+        divMore.innerHTML = t2;
+        item.appendChild(divMore);
+    }
+
+    CreateItemEvents(item, func);
+
+    return item;
+}
+
+function CreateGroupLabel(name) {
+    const label = document.createElement("div");
+    label.innerHTML = name + ":";
+    label.style.padding = "4px 0px 2px 8px";
+    label.style.fontWeight = "700";
+    label.style.color = "rgb(224,224,224)";
+    label.style.backgroundColor = "rgb(32,32,32)";
+    label.style.position = "sticky";
+    label.style.top = "0";
+    menulist.appendChild(label);
+}
+
+function CreateSquareItem(label, icon, func) {
+    let item = document.createElement("div");
+    item.style.backgroundImage = "url(" + icon + ")";
+    item.className = "sidemenu-square-item";
+
+    let divLabel = document.createElement("div");
+    divLabel.innerHTML = label;
+    item.appendChild(divLabel);
+
+    CreateItemEvents(item, func);
+
+    return item;
+}
+
+function CreateItemEvents(item, func) {
+    item.onclick = event => {
+        event.stopPropagation();
+        Menu_Close();
+        txtSearch.value = "";
+        Menu_Update("");
+        func();
+    };
+
+    item.onmousedown = event => {
+        if (event !== null && event.button != 1) return;
+        if (event !== null) event.preventDefault();
+
+        //minimize other windows
+        if (menu_session.length == 0)
+            for (let i = 0; i < $w.array.length; i++)
+                if (!$w.array[i].isMinimized) $w.array[i].Minimize(true);
+
+        //check if listed already
+        let listed = false;
+        let win = func();
+        if (!menu_session.includes(win))
+            menu_session.push(win);
+
+        //reposition
+        let w = Math.ceil(Math.sqrt(menu_session.length));
+        let h;
+        for (h = w; h > 0; h--)
+            if (w * h < menu_session.length) break;
+        h++;
+
+        for (let i = 0; i < menu_session.length; i++)
+            menu_session[i].win.style.transition = ".2s";
+
+        if (menu_session.length > 1)
+            for (let y = 0; y < h; y++)
+                for (let x = 0; x < w; x++) {
+                    let index = y * w + x;
+                    if (index >= menu_session.length) break;
+                    menu_session[index].win.style.left = 100 * x / w + "%";
+                    menu_session[index].win.style.top = 100 * y / h + "%";
+                    menu_session[index].win.style.width = (100 / w) + "%";
+                    menu_session[index].win.style.height = (100 / h) + "%";
+                    menu_session[index].isMaximized = false;
+                }
+
+        setTimeout(() => {
+            for (let i = 0; i < menu_session.length; i++)
+                menu_session[i].AfterResize();
+        }, 400);
+    };
+}
+
+function Menu_Update(filter) {
+    menulist.innerHTML = "";
+    menu_list = [];
+    menu_index = -1;
 
     if (filter.length == 0) { //menu
         for (let i = 0; i < TOOLS.length; i++) {
             if (TOOLS[i].isGroup) {
-                if (lstSideMenu.childNodes.length > 0 && lstSideMenu.childNodes[lstSideMenu.childNodes.length - 1].className === "")
-                    lstSideMenu.removeChild(lstSideMenu.childNodes[lstSideMenu.childNodes.length - 1]);
+                if (menulist.childNodes.length > 0 && menulist.childNodes[menulist.childNodes.length - 1].className === "")
+                    menulist.removeChild(menulist.childNodes[menulist.childNodes.length - 1]);
 
                 CreateGroupLabel(TOOLS[i].lbl);
                 continue;
@@ -246,8 +475,8 @@ function SideMenu_Update(filter) {
             if (TOOLS[i].grp != "*" && AUTHORIZATION[TOOLS[i].grp] == 0) continue;
 
             const item = CreateSquareItem(TOOLS[i].lbl, TOOLS[i].ico, TOOLS[i].f);
-            sidemenu_list.push(item);
-            lstSideMenu.appendChild(item);
+            menu_list.push(item);
+            menulist.appendChild(item);
         }
 
     } else {
@@ -257,8 +486,8 @@ function SideMenu_Update(filter) {
                 if (!TOOLS[i].ico) continue;
 
                 const item = CreateSideItem(TOOLS[i].lbl, TOOLS[i].ico, "", "", TOOLS[i].f);
-                sidemenu_list.push(item);
-                lstSideMenu.appendChild(item);
+                menu_list.push(item);
+                menulist.appendChild(item);
             }
     }
 
@@ -298,8 +527,8 @@ function SideMenu_Update(filter) {
         let ip = current.hasOwnProperty("IP") ? current["IP"][0] : "";
 
         let item = CreateSideItem(label, GetEquipIcon([type]), type, ip, f);
-        sidemenu_list.push(item);
-        lstSideMenu.appendChild(item);
+        menu_list.push(item);
+        menulist.appendChild(item);
     }
 
     for (let i = 0; i < db_users.length; i++) { //find users
@@ -334,168 +563,68 @@ function SideMenu_Update(filter) {
         let contact = current.hasOwnProperty("TELEPHONE NUMBER") ? current["TELEPHONE NUMBER"][0] : "";
 
         let item = CreateSideItem(label, "res/user.svgz", department, contact, f);
-        sidemenu_list.push(item);
-        lstSideMenu.appendChild(item);
+        menu_list.push(item);
+        menulist.appendChild(item);
     }
 
-    if (sidemenu_list.length > 0) {
-        sidemenu_index = 0;
-        sidemenu_list[0].style.backgroundColor = "var(--select-color)";
+    if (menu_list.length > 0) {
+        menu_index = 0;
+        menu_list[0].style.backgroundColor = "var(--select-color)";
     }
 }
 
-function CreateSideItem(label, icon, t1, t2, func) {
-    let item = document.createElement("div");
-    item.style.backgroundImage = "url(" + icon + ")";
-    item.className = "sidemenu-item";
+function Menu_UpdatePosition() {
+    menu.style.visibility = menu_isopen ? "visible" : "hidden";
+    cap.style.visibility = menu_isopen ? "visible" : "hidden";
 
-    let divLabel = document.createElement("div");
-    divLabel.innerHTML = label;
-    item.appendChild(divLabel);
+    let left = parseInt(btnMenu.style.left);
 
-    if (t1.length > 0) {
-        let divDescription = document.createElement("div");
-        divDescription.innerHTML = t1;
-        item.appendChild(divDescription);
+    if (btnMenu.style.left == "0px" || left < 10 || btnMenu.style.top == "") {
+        menu.style.left = "20px";
+        menu.style.top = "20px";
+        menu.style.bottom = "20px";
+        menu.style.transform = menu_isopen ? "none" : "translateX(calc(-100% - 24px))";
+
+    } else if (btnMenu.style.left == "calc(100% - 48px)" || left > 90) {
+        menu.style.left = "calc(100% - var(--sidemenu-width) - 20px)";
+        menu.style.top = "20px";
+        menu.style.bottom = "20px";
+        menu.style.transform = menu_isopen ? "none" : "translateX(100%)";
+
+    } else {
+        menu.style.left = `max(20px, min(calc(${left}% - var(--sidemenu-width) / 2) + 32px, calc(100% - var(--sidemenu-width) - 20px)))`;
+
+        if (btnMenu.style.top == "0px") {
+            menu.style.top = "20px";
+            menu.style.bottom = "min(200px, 20%)";
+            menu.style.transform = menu_isopen ? "none" : "translateY(-100%)";
+        } else {
+            menu.style.top = "min(200px, 20%)";
+            menu.style.bottom = "20px";
+            menu.style.transform = menu_isopen ? "none" : "translateY(+100%)";
+        }
     }
+};
 
-    if (t2.length > 0) {
-        let divMore = document.createElement("div");
-        divMore.innerHTML = t2;
-        item.appendChild(divMore);
+function Menu_Open() {
+    menu_isopen = true;
+    Menu_UpdatePosition();
+
+    if (menu_isopen) {
+        setTimeout(() => { txtSearch.focus(); }, 150);
     }
+};
+function Menu_Close() {
+    menu_isopen = false;
+    Menu_UpdatePosition();
+};
+function Menu_Toogle() {
+    menu_isopen = !menu_isopen;
+    Menu_UpdatePosition();
 
-    CreateItemEvents(item, func);
+    if (menu_isopen) {
+        setTimeout(() => { txtSearch.focus(); }, 150);
+    }
+};
 
-    return item;
-}
-
-function CreateGroupLabel(name) {
-    const label = document.createElement("div");
-    label.innerHTML = name + ":";
-    label.style.padding = "4px 0px 2px 8px";
-    label.style.fontWeight = "700";
-    label.style.backgroundColor = "rgb(32,32,32)";
-    label.style.position = "sticky";
-    label.style.top = "0";
-    lstSideMenu.appendChild(label);
-}
-
-function CreateSquareItem(label, icon, func) {
-    let item = document.createElement("div");
-    item.style.backgroundImage = "url(" + icon + ")";
-    item.className = "sidemenu-square-item";
-
-    let divLabel = document.createElement("div");
-    divLabel.innerHTML = label;
-    item.appendChild(divLabel);
-
-    CreateItemEvents(item, func);
-
-    return item;
-}
-
-function CreateItemEvents(item, func) {
-    item.onclick = event => {
-        event.stopPropagation();
-        SideMenu_Close();
-        txtSearch.value = "";
-        SideMenu_Update("");
-        func();
-    };
-
-    item.onmousedown = event => {
-        if (event !== null && event.button != 1) return;
-        if (event !== null) event.preventDefault();
-
-        //minimize other windows
-        if (sidemenu_session.length == 0)
-            for (let i = 0; i < $w.array.length; i++)
-                if (!$w.array[i].isMinimized) $w.array[i].Minimize(true);
-
-        //check if listed already
-        let listed = false;
-        let win = func();
-        if (!sidemenu_session.includes(win))
-            sidemenu_session.push(win);
-
-        //reposition
-        let w = Math.ceil(Math.sqrt(sidemenu_session.length));
-        let h;
-        for (h = w; h > 0; h--)
-            if (w * h < sidemenu_session.length) break;
-        h++;
-
-        for (let i = 0; i < sidemenu_session.length; i++)
-            sidemenu_session[i].win.style.transition = ".2s";
-
-        if (sidemenu_session.length > 1)
-            for (let y = 0; y < h; y++)
-                for (let x = 0; x < w; x++) {
-                    let index = y * w + x;
-                    if (index >= sidemenu_session.length) break;
-                    sidemenu_session[index].win.style.left = 100 * x / w + "%";
-                    sidemenu_session[index].win.style.top = 100 * y / h + "%";
-                    sidemenu_session[index].win.style.width = (100 / w) + "%";
-                    sidemenu_session[index].win.style.height = (100 / h) + "%";
-                    sidemenu_session[index].isMaximized = false;
-                }
-
-        setTimeout(() => {
-            for (let i = 0; i < sidemenu_session.length; i++)
-                sidemenu_session[i].AfterResize();
-        }, 400);
-    };
-}
-
-function SideMenu_Open() {
-    cap.style.visibility = "visible";
-    sidemenu.style.transform = "translateX(0)";
-
-    btnSidemenu.style.borderRadius = "0";
-    btnSidemenu.style.boxShadow = "none";
-
-    btnSidemenu.style.transform = "none";
-    btnSidemenu.style.height = "48px";
-
-    imgSearch.style.transform = "scale(1.25)";
-    txtSearch.style.visibility = "visible";
-    btnCloseSidemenu.style.visibility = "visible";
-
-    txtSearch.focus();
-    setTimeout(() => txtSearch.focus(), 40);
-    setTimeout(() => txtSearch.focus(), 80);
-
-    sidemenu_isopen = true;
-}
-
-function SideMenu_Close() {
-    for (let i = 0; i < sidemenu_session.length; i++)
-        sidemenu_session[i].win.style.transition = "none";
-
-    sidemenu_session = [];
-    lastSearchValue = "";
-
-    cap.style.visibility = "hidden";
-    sidemenu.style.transform = "translateX(calc(-100% - 8px))";
-
-    btnSidemenu.style.borderRadius = "4px 8px 48px 8px";
-    btnSidemenu.style.boxShadow = "rgba(0,0,0,.2) 2px 2px 2px";
-    imgSearch.style.transform = "none";
-    txtSearch.style.visibility = "hidden";
-    btnCloseSidemenu.style.visibility = "hidden";
-
-    sidemenu_isopen = false;
-
-    setTimeout(() => {
-        txtSearch.value = "";
-        SideMenu_Update("");
-    }, 100);
-}
-
-function Toogle() {
-    if (sidemenu_isopen)
-        SideMenu_Close();
-    else
-        SideMenu_Open();
-}
+Menu_UpdatePosition();

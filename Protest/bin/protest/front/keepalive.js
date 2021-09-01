@@ -287,7 +287,7 @@ function KeepAlive_MessageHandler(msg) {
                 let s = split[i].split(":");
                 AUTHORIZATION[s[0]] = parseInt(s[1]);
             }
-            SideMenu_Update("");
+            Menu_Update("");
             break;
     }
 }

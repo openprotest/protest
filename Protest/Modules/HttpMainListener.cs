@@ -422,7 +422,6 @@ class HttpMainListener : Http {
                     switch (para[0]) {
                         case "logout"        : buffer = Session.RevokeAccess(ctx, performer) ? Strings.OK.Array : Strings.FAI.Array; break;
                         case "version"       : buffer = Strings.Version(); break;
-                        case "checkforupdate": buffer = Update.CheckGitHubVersion(); break;
                         case "getcurrentnetworkinfo": buffer = ActiveDirectory.GetCurrentNetworkInfo(); break;
 
                         case "ping":

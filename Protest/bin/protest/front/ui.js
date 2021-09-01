@@ -13,14 +13,15 @@ const container = document.getElementById("container");
 const punchpane = document.getElementById("punchpane");
 const punchmenu = document.getElementById("punchmenu");
 const bottombar = document.getElementById("bottombar");
-const sidemenu  = document.getElementById("sidemenu");
-const searchbox = document.getElementById("searchbox");
-const imgSearch = document.getElementById("imgSearch");
+const sidemenu  = document.getElementById("menu");
+const menulist = document.getElementById("menulist");
 
-const btnSidemenu      = document.getElementById("btnSidemenu");
-const txtSearch        = document.getElementById("txtSearch");
-const btnCloseSidemenu = document.getElementById("btnCloseSidemenu");
-const lstSideMenu      = document.getElementById("lstSideMenu");
+const btnMenu   = document.getElementById("btnMenu");
+const divIcon   = document.getElementById("divIcon");
+
+const searchbox = document.getElementById("searchbox");
+const txtSearch      = document.getElementById("txtSearch");
+const btnSearchClear = document.getElementById("btnSearchClear");
 
 const analog_h   = document.getElementById("analog_clock_h");
 const analog_m   = document.getElementById("analog_clock_m");
@@ -394,5 +395,4 @@ function SetAccentColor(accent) {
         "</g></svg>";
 
     favicon.href = "data:image/svg+xml;base64," + btoa(ico);
-
 }

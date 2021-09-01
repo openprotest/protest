@@ -354,26 +354,6 @@
     animation: delayed-fade-in 2s ease-in 1;
 }
 
-.high-contrast > #main > #container > .window {
-    background-color: rgb(20,20,20);
-    color: #fff;
-    /*backdrop-filter: blur(8px);*/
-    box-shadow: #fff 0 0 1px;
-}
-
-.high-contrast > #main > #container > .window > .win-content {
-    background-color: inherit !important;
-    color: #fff;
-}
-
-.high-contrast > #bottombar > .bar-icon-focused {
-    background-color: rgb(20,20,20) !important;
-}
-
-.high-contrast > #bottombar > .bar-icon-focused > .icon {
-    filter: brightness(6);
-}
-
 .waitbox {
     position: absolute;
     width: 100%;

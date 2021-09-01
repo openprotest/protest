@@ -92,44 +92,20 @@ class Program {
     }
 
     private static void DrawProTest() {
-        string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        Version v = Assembly.GetExecutingAssembly().GetName().Version;
+        string version = $"{v.Major}.{v.Minor}.{v.Build}";
 
         const string PRO_TEST =
-        "                                    \n" +
-        " #### #### ###    #### ### ### #### \n" +
-        " ## # ## # # #     ##  #   ##   ##  \n" +
-        " ## # ## # # # ### ##  ##  ###  ## \n" +
-        " #### ###  ###     ##  #     #  ## \n" +
-        " ##   ## # ###     ##  ### ###  ## \n";
+        "  ______\n" +
+        "  | ___ \\            _            _\n" +
+        "  | |_/ / __ ___ ___| |_ ___  ___| |_\n" +
+        "  |  __/ '__/ _ \\___| __/ _ \\/ __| __|\n" +
+        "  | |  | | | (_) |  | ||  __/\\__ \\ |_\n" +
+        "  \\_|  |_|  \\___/    \\__\\___||___/\\__|";
 
-        Console.WriteLine();
-        Console.Write("  ");
-        for (int i = 0; i < PRO_TEST.Length; i++)
-            if (PRO_TEST[i] == ' ') {
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.BackgroundColor = ConsoleColor.Gray;
-                Console.Write(" ");
+        Console.WriteLine(PRO_TEST);
+        Console.WriteLine($"{version,38}");
 
-            } else if (PRO_TEST[i] == '#') {
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write("#");
-
-            } else if (PRO_TEST[i] == '\n') {
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.WriteLine(".");
-                Console.Write("  ");
-            }
-
-        Console.ForegroundColor = ConsoleColor.Black;
-        Console.BackgroundColor = ConsoleColor.Gray;
-        for (int i = 0; i < 35 - version.Length - 2; i++)
-            Console.Write(" ");
-        Console.Write($"v{version} ");
-        Console.ForegroundColor = ConsoleColor.Black;
-        Console.BackgroundColor = ConsoleColor.Black;
-        Console.WriteLine(".");
         Console.ResetColor();
     }
 
