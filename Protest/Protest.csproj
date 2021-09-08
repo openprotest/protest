@@ -659,6 +659,8 @@
     <Content Include="bin\protest\knowlage\content_type.txt" />
     <Content Include="pro-test.ico" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="bin\protest\acl\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
