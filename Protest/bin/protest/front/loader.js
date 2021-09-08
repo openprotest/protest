@@ -228,7 +228,7 @@ function StoreSession() {
 }
 
 function RestoreSession() {
-    let session = JSON.parse(localStorage.getItem("session"));
+    let session = JSON.parse(localStorage.getItem("session") ?? {});
 
     if (session === null) {
         const win = new Guide("first");

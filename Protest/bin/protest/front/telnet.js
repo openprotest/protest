@@ -9,8 +9,8 @@ class Telnet extends Window {
 
         let historyIndex = -1;
 
-        this.setTitle("Telnet");
-        this.setIcon("res/telnet.svgz");
+        this.SetTitle("Telnet");
+        this.SetIcon("res/telnet.svgz");
 
         this.btnClear = document.createElement("div");
         this.btnClear.style.backgroundImage = "url(res/l_clear.svgz)";

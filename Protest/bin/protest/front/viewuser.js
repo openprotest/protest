@@ -27,8 +27,8 @@ class User extends Window {
             return;
         }
 
-        this.setTitle("User");
-        this.setIcon("res/user.svgz");
+        this.SetTitle("User");
+        this.SetIcon("res/user.svgz");
         
         this.entry = db_users.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
@@ -41,9 +41,9 @@ class User extends Window {
         }
 
         if (this.entry["TITLE"] == undefined || this.entry["TITLE"][0].length === 0)
-            this.setTitle("[untitled]");
+            this.SetTitle("[untitled]");
         else
-            this.setTitle(this.entry["TITLE"][0]);
+            this.SetTitle(this.entry["TITLE"][0]);
 
         this.InitializeComponent();
         this.Plot();
@@ -558,8 +558,8 @@ class User extends Window {
 
         this.btnPopout.style.display = "none";
 
-        this.setTitle("New user");
-        this.setIcon("res/new_user.svgz");
+        this.SetTitle("New user");
+        this.SetIcon("res/new_user.svgz");
 
         this.entry = {
             "TITLE": ["", ""],
@@ -685,7 +685,7 @@ class User extends Window {
                     dialog.innerBox.parentElement.parentElement.removeChild(waitbox);
                     dialog.innerBox.parentElement.parentElement.removeChild(waitLabel);
 
-                    this.setIcon("res/user.svgz");
+                    this.SetIcon("res/user.svgz");
                 }
 
                 if (xhr.readyState == 4 && xhr.status == 0) { //disconnected
@@ -900,9 +900,9 @@ class User extends Window {
         this.entry = obj;
 
         if (!this.entry.hasOwnProperty("TITLE") || this.entry["TITLE"][0].length == 0)
-            this.setTitle("[untitled]");
+            this.SetTitle("[untitled]");
         else
-            this.setTitle(this.entry["TITLE"][0]);
+            this.SetTitle(this.entry["TITLE"][0]);
 
         this.sidetools.innerHTML = "";
         this.live.innerHTML = "";

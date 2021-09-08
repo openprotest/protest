@@ -24,8 +24,8 @@ class DebitNotes extends Window {
         this.AddCssDependencies("debitnotes.css");
         this.AddCssDependencies("list.css");
 
-        this.setTitle("Debit notes");
-        this.setIcon("res/charges.svgz");
+        this.SetTitle("Debit notes");
+        this.SetIcon("res/charges.svgz");
 
         this.content.style.overflow = "auto";
 

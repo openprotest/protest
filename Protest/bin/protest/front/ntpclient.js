@@ -4,8 +4,8 @@ class NtpClient extends Window {
 
         this.args = args ? args : "";
 
-        this.setTitle("NTP client");
-        this.setIcon("res/clock.svgz");
+        this.SetTitle("NTP client");
+        this.SetIcon("res/clock.svgz");
 
         this.id = null;
 

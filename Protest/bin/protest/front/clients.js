@@ -7,8 +7,8 @@ class Clients extends Tabs {
 
         this.AddCssDependencies("clients.css");
 
-        this.setTitle("Pro-test clients");
-        this.setIcon("res/ptclients.svgz");
+        this.SetTitle("Pro-test clients");
+        this.SetIcon("res/ptclients.svgz");
 
         this.selected = null;
 

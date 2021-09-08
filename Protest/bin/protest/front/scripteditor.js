@@ -143,14 +143,14 @@ class ScriptEditor extends Window {
         this.AddCssDependencies("scripts.css");
         this.AddCssDependencies("wmi.css");
 
-        this.setIcon("res/scriptfile.svgz");
+        this.SetIcon("res/scriptfile.svgz");
 
         this.args = args ? args : { file: null };
 
         if (this.args.file === null) 
-            this.setTitle("Script editor");
+            this.SetTitle("Script editor");
         else
-            this.setTitle(`Script editor - ${this.args.file}`);
+            this.SetTitle(`Script editor - ${this.args.file}`);
 
         let waitbox = document.createElement("span");
         waitbox.className = "waitbox";
@@ -526,7 +526,7 @@ class ScriptEditor extends Window {
 
                     if (json.preview) {
                         const p = new ScriptPreview(json.preview);
-                        p.setTitle(`Preview - ${this.args.file}`);
+                        p.SetTitle(`Preview - ${this.args.file}`);
                     }
 
                 } else if (xhr.readyState == 4 && xhr.status == 0) //disconnected

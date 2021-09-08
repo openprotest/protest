@@ -51,8 +51,8 @@ class Equip extends Window {
             return;
         }
 
-        this.setTitle("Equipment");
-        this.setIcon("res/gear.svgz");
+        this.SetTitle("Equipment");
+        this.SetIcon("res/gear.svgz");
         
         this.entry = db_equip.find(e => e[".FILENAME"][0] === filename);
         this.filename = filename;
@@ -65,11 +65,11 @@ class Equip extends Window {
         }
 
         if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
-            this.setTitle("[untitled]");
+            this.SetTitle("[untitled]");
         else
-            this.setTitle(this.entry["NAME"][0]);
+            this.SetTitle(this.entry["NAME"][0]);
 
-        this.setIcon(GetEquipIcon(this.entry["TYPE"]));
+        this.SetIcon(GetEquipIcon(this.entry["TYPE"]));
 
         this.InitializeComponent();
         this.Plot();
@@ -403,22 +403,22 @@ class Equip extends Window {
                     this.sidetools.appendChild(btnProcesses);
                     btnProcesses.onclick = () => {
                         let win = new Wmi({ target:this.entry["IP"][0].split(";")[0].trim(), query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
-                        win.setIcon("res/console.svgz");
+                        win.SetIcon("res/console.svgz");
                         if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
-                            win.setTitle("[untitled] - Processes");
+                            win.SetTitle("[untitled] - Processes");
                         else
-                            win.setTitle(this.entry["NAME"][0] + " - Processes");
+                            win.SetTitle(this.entry["NAME"][0] + " - Processes");
                     };
 
                     const btnServices = this.SideButton("res/service.svgz", "Services");
                     this.sidetools.appendChild(btnServices);
                     btnServices.onclick = () => {
                         let win = new Wmi({target: this.entry["IP"][0].split(";")[0].trim(), query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
-                        win.setIcon("res/service.svgz");
+                        win.SetIcon("res/service.svgz");
                         if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
-                            win.setTitle("[untitled] - Services");
+                            win.SetTitle("[untitled] - Services");
                         else
-                            win.setTitle(this.entry["NAME"][0] + " - Services");
+                            win.SetTitle(this.entry["NAME"][0] + " - Services");
                     };
                 }
 
@@ -1202,8 +1202,8 @@ class Equip extends Window {
 
         this.btnPopout.style.display = "none";
 
-        this.setTitle("New equipment");
-        this.setIcon("res/new_equip.svgz");
+        this.SetTitle("New equipment");
+        this.SetIcon("res/new_equip.svgz");
 
         this.entry = {
             "NAME": ["", ""],
@@ -1577,11 +1577,11 @@ class Equip extends Window {
     Update(obj) {
         this.entry = obj;
 
-        this.setIcon(GetEquipIcon(this.entry["TYPE"]));
+        this.SetIcon(GetEquipIcon(this.entry["TYPE"]));
         if (!this.entry.hasOwnProperty("NAME") || this.entry["NAME"][0].length == 0)
-            this.setTitle("[untitled]");
+            this.SetTitle("[untitled]");
         else
-            this.setTitle(this.entry["NAME"][0]);
+            this.SetTitle(this.entry["NAME"][0]);
 
         this.sidetools.innerHTML = "";
         this.live.innerHTML = "";

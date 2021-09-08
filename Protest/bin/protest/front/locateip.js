@@ -6,8 +6,8 @@ class LocateIp extends Console {
 
         this.hashtable = {}; //contains all elements
 
-        this.setTitle("Locate IP");
-        this.setIcon("res/locate.svgz");
+        this.SetTitle("Locate IP");
+        this.SetIcon("res/locate.svgz");
 
         this.lblTitle.style.left = TOOLBAR_GAP + this.toolbox.childNodes.length * 29 + "px";
 

@@ -4,8 +4,8 @@ class Encoder extends Window {
 
         this.args = args ? args : "";
 
-        this.setTitle("Encoder");
-        this.setIcon("res/encoder.svgz");
+        this.SetTitle("Encoder");
+        this.SetIcon("res/encoder.svgz");
 
         this.content.style.padding = "16px 16px 0 16px";
 

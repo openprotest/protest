@@ -2,8 +2,8 @@ class Netcalc extends Window {
     constructor() {
         super();
 
-        this.setTitle("Network calculator");
-        this.setIcon("res/netcalc.svgz");
+        this.SetTitle("Network calculator");
+        this.SetIcon("res/netcalc.svgz");
 
         this.content.style.overflow = "auto";
         this.content.style.padding = "16px";

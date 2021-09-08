@@ -21,8 +21,8 @@ class FileBrowser extends Window {
 
         this.AddCssDependencies("filebrowser.css");
 
-        this.setTitle("File browser");
-        this.setIcon("res/shared.svgz");
+        this.SetTitle("File browser");
+        this.SetIcon("res/shared.svgz");
 
         this.content.classList.add("smb-content");
         this.content.style.overflow = "hidden";

@@ -4,8 +4,8 @@ class Fetch extends Tabs {
 
         this.args = args ? args : "";
 
-        this.setTitle("Fetch");
-        this.setIcon("res/fetch.svgz");
+        this.SetTitle("Fetch");
+        this.SetIcon("res/fetch.svgz");
 
         this.txtDomain = document.createElement("input");
         this.ipFrom = new IpBox();

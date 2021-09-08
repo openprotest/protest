@@ -4,8 +4,8 @@ class Topology extends Window {
 
         this.args = args ? args : "";
 
-        this.setTitle("Topology");
-        this.setIcon("res/topology.svgz");
+        this.SetTitle("Topology");
+        this.SetIcon("res/topology.svgz");
 
     }
 }

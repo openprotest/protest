@@ -25,10 +25,10 @@ const $w = {
     always_maxxed: false
 };
 
-document.body.onresize    = body_resize;
-document.body.onmousemove = win_mousemove;
-document.body.onmouseup   = win_mouseup;
-document.body.onkeydown   = win_keydown;
+document.body.onresize    = Body_resize;
+document.body.onmousemove = Win_mousemove;
+document.body.onmouseup   = Win_mouseup;
+document.body.onkeydown   = Win_keydown;
 
 bottombar.onmousedown = event => {
     if (event.button == 1) event.preventDefault(); //prevent mid-mouse scroll
@@ -231,13 +231,13 @@ class Window {
         this.btnMinimize.onmouseup = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Minimize();} };
         this.btnPopout.onmouseup   = (event)=> { if (event.button==0 && $w.control_pressed==this) {$w.control_pressed=null; this.Popout();} };
     
-        this.setTitle("Title");
+        this.SetTitle("[untitled]");
         $w.array.push(this);
 
-        this.setThemeColor(this.themeColor);
+        this.SetThemeColor(this.themeColor);
         this.BringToFront();
 
-        alignIcon(false);
+        AlignIcon(false);
 
         if (onMobile || $w.always_maxxed) this.Toogle();
     }
@@ -264,7 +264,7 @@ class Window {
 
             bottombar.removeChild(this.task);
             $w.array.splice($w.array.indexOf(this), 1);
-            alignIcon(false);
+            AlignIcon(false);
         }, ANIM_DURATION/2);
 
         $w.focused = null;
@@ -675,18 +675,18 @@ class Window {
 
     AfterResize() { } //overridable
 
-    setTitle(title="") {
+    SetTitle(title="") {
         this.lblTitle.innerHTML = title;
         this.win.setAttribute("aria-label", title);
         this.task.setAttribute("tip", title);
     }
     
-    setIcon(icon) {
+    SetIcon(icon) {
         this.icon.style.backgroundImage = "url(" + icon + ")";
         this.titleicon.style.backgroundImage = "url(" + icon + ")";
     }
 
-    setThemeColor(color) {
+    SetThemeColor(color) {
         this.themeColor = color;
         this.content.style.backgroundColor = `rgb(${color[0]},${color[1]},${color[2]})`;
 
@@ -731,9 +731,9 @@ class Window {
     }
 }
 
-function body_resize(event) {
+function Body_resize(event) {
     document.getSelection().removeAllRanges();
-    alignIcon(false);
+    AlignIcon(false);
 
     for (let i=0; i<$w.array.length; i++) {
         $w.array[i].AfterResize();
@@ -741,10 +741,10 @@ function body_resize(event) {
     }
 }
 
-function win_mousemove(event) {
+function Win_mousemove(event) {
     if ($w.active === null) return;
 
-    if (event.buttons != 1) win_mouseup(event);
+    if (event.buttons != 1) Win_mouseup(event);
 
     document.getSelection().removeAllRanges(); //remove all selections
 
@@ -753,11 +753,6 @@ function win_mousemove(event) {
 
         if ($w.active.isMaximized) {
             $w.active.Toogle();
-            if ($w.active.position != null) {
-                let w = parseFloat($w.active.position[2].replace("%", ""));
-                $w.x0 = (w * container.clientWidth / 100) / 2;
-                if (sidemenu_isopen) $w.x0 += SUBMENU_WIDTH;
-            }
         }
 
         let x = ($w.offsetX - ($w.x0 - event.clientX)) * 100 / container.clientWidth;
@@ -780,17 +775,17 @@ function win_mousemove(event) {
         x = Math.max(0, x);
         x = Math.min(bottombar.clientWidth - $w.active.task.clientWidth, x);
         $w.active.task.style.left = x + "px";
-        alignIcon(true);
+        AlignIcon(true);
     }
 }
 
-function win_mouseup(event) {
+function Win_mouseup(event) {
     //if (!$w.isMoving && !$w.isResizing) return;
 
     if ($w.active != null) {
         $w.active.task.style.transition = ANIM_DURATION/1000 + "s";
         $w.active.task.style.zIndex = "3";
-        alignIcon(false);
+        AlignIcon(false);
     }
 
     $w.isMoving = false;
@@ -800,7 +795,7 @@ function win_mouseup(event) {
     //event.stopPropagation();
 }
 
-function win_keydown(event) {
+function Win_keydown(event) {
     if (event.keyCode == 27) { //esc
         if ($w.focused === null) return;
         if ($w.focused.escAction === null) return;
@@ -808,7 +803,7 @@ function win_keydown(event) {
     }
 }
 
-function alignIcon(ignoreActive) {
+function AlignIcon(ignoreActive) {
     let max = onMobile ? 48 : 56;
     $w.iconSize = (container.clientWidth / ($w.array.length) > max) ? max : container.clientWidth / $w.array.length;
 

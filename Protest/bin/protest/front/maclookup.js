@@ -6,8 +6,8 @@ class MacLookup extends Console {
 
         this.hashtable = {}; //contains all elements
 
-        this.setTitle("MAC lookup");
-        this.setIcon("res/maclookup.svgz");
+        this.SetTitle("MAC lookup");
+        this.SetIcon("res/maclookup.svgz");
 
         this.txtInput.placeholder = "mac address";
 
