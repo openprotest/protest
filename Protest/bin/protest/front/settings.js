@@ -3,9 +3,9 @@
     if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("disable_anime") === null)
         localStorage.setItem("disable_anime", "true");
 
-    $w.always_maxxed         = localStorage.getItem("w_always_maxed") === "true";
-    container.className      = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
-    document.body.className += localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
+    $w.always_maxxed        = localStorage.getItem("w_always_maxed") === "true";
+    container.className     = localStorage.getItem("w_disable_dropshadow") === "true" ? "disable-window-dropshadows" : "";
+    document.body.className = localStorage.getItem("disable_anime") === "true" ? " disable-animation" : "";
 
     if (localStorage.getItem("accent_color"))
         SetAccentColor(localStorage.getItem("accent_color").split(",").map(o => parseInt(o)));
@@ -25,8 +25,8 @@ class Settings extends Tabs {
 
         this.args = args ? args : "";
 
-        this.setTitle("Settings");
-        this.setIcon("res/tool02.svgz");
+        this.SetTitle("Settings");
+        this.SetIcon("res/tool02.svgz");
 
         this.tabsContainer.style.width = "150px";
         this.subContent.style.left = "175px";
@@ -244,15 +244,15 @@ class Settings extends Tabs {
             };
         }
 
-        this.chkPunchMenu.checked         = localStorage.getItem("punch_menu") === "true";
-        this.chkWinMaxxed.checked         = localStorage.getItem("w_always_maxed") === "true";
-        this.chkDisableAnime.checked      = localStorage.getItem("disable_anime") === "true";
-        this.chkWindowShadows.checked     = localStorage.getItem("w_disable_dropshadow") === "true";
+        this.chkPunchMenu.checked     = localStorage.getItem("punch_menu") === "true";
+        this.chkWinMaxxed.checked     = localStorage.getItem("w_always_maxed") === "true";
+        this.chkDisableAnime.checked  = localStorage.getItem("disable_anime") === "true";
+        this.chkWindowShadows.checked = localStorage.getItem("w_disable_dropshadow") === "true";
 
         const Apply = ()=> {
             $w.always_maxxed = this.chkWinMaxxed.checked;
-            document.body.className += this.chkDisableAnime.checked ? " disable-animation" : "";
             container.className = this.chkWindowShadows.checked ? "disable-window-dropshadows" : "";
+            document.body.className = this.chkDisableAnime.checked ? " disable-animation" : "";
 
             localStorage.setItem("punch_menu", this.chkPunchMenu.checked);
             localStorage.setItem("w_always_maxed", this.chkWinMaxxed.checked);

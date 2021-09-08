@@ -9,8 +9,8 @@ class Wmi extends Window {
             query: ""
         };
 
-        this.setTitle("WMI console");
-        this.setIcon("res/wmi.svgz");
+        this.SetTitle("WMI console");
+        this.SetIcon("res/wmi.svgz");
 
         this.wmi_classes = {};
         this.GetWmiClasses();
@@ -349,8 +349,8 @@ class Wmi extends Window {
             return;
         }
 
-        this.setIcon("res/wmi.svgz");
-        this.setTitle("WMI console");
+        this.SetIcon("res/wmi.svgz");
+        this.SetTitle("WMI console");
 
         let waitbox = document.createElement("div");
         waitbox.appendChild(document.createElement("div"));

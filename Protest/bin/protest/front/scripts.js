@@ -6,8 +6,8 @@ class Scripts extends Tabs {
 
         this.AddCssDependencies("scripts.css");
 
-        this.setTitle("Scripts");
-        this.setIcon("res/scripts.svgz");
+        this.SetTitle("Scripts");
+        this.SetIcon("res/scripts.svgz");
 
         this.tabsContainer.style.width = "150px";
         this.subContent.style.left = "175px";
@@ -330,8 +330,8 @@ class Scripts extends Tabs {
 class ScriptReport extends Window {
     constructor(filename) {
         super();
-        this.setTitle("Report - " + filename);
-        this.setIcon("res/reportfile.svgz");
+        this.SetTitle("Report - " + filename);
+        this.SetIcon("res/reportfile.svgz");
 
         this.args = filename;
 
@@ -416,8 +416,8 @@ class ScriptReport extends Window {
 class ScriptPreview extends Window {
     constructor(id) {
         super();
-        this.setTitle("Preview");
-        this.setIcon("res/reportfile.svgz");
+        this.SetTitle("Preview");
+        this.SetIcon("res/reportfile.svgz");
 
         this.AddCssDependencies("wmi.css");
 

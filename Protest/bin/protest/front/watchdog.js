@@ -6,8 +6,8 @@ class Watchdog extends Window {
 
         this.args = null;
 
-        this.setTitle("Watchdog");
-        this.setIcon("res/watchdog.svgz");
+        this.SetTitle("Watchdog");
+        this.SetIcon("res/watchdog.svgz");
 
         this.content.style.overflow = "hidden";
 

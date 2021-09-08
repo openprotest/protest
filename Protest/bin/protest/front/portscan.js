@@ -145,8 +145,8 @@ class PortScan extends Console {
         this.ws = null;           //websocket
         this.taskIconSpin = null; //spinner on icon task-bar
 
-        this.setTitle("TCP port scan");
-        this.setIcon("res/portscan.svgz");
+        this.SetTitle("TCP port scan");
+        this.SetIcon("res/portscan.svgz");
 
         this.taskIconSpin = document.createElement("div");
         this.taskIconSpin.className = "task-icon-spin";

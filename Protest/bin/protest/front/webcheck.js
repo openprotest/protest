@@ -4,8 +4,8 @@ class WebCheck extends Window {
 
         this.args = args ? args : { value: "" };
 
-        this.setTitle("Website check");
-        this.setIcon("res/websitecheck.svgz");
+        this.SetTitle("Website check");
+        this.SetIcon("res/websitecheck.svgz");
 
         this.content.style.padding = "32px 32px 0 32px";
         this.content.style.overflowY = "auto";

@@ -2,8 +2,8 @@ class ListUsers extends ListWindow {
     constructor(args) {
         super(args);
 
-        this.setTitle("Users");
-        this.setIcon("res/database_users.svgz");
+        this.SetTitle("Users");
+        this.SetIcon("res/database_users.svgz");
 
         this.defaultColumns = ["TITLE", "DEPARTMENT", "FIRST NAME", "LAST NAME", "USERNAME", "E-MAIL", "TELEPHONE NUMBER", "MOBILE NUMBER"];
 

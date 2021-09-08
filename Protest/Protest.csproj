@@ -108,11 +108,11 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
     <None Include="bin\protest\addressbook\icon.png.webp" />
-    <None Include="bin\protest\front\opensans300.ttf" />
-    <None Include="bin\protest\front\opensans400.ttf" />
-    <None Include="bin\protest\front\opensans600.ttf" />
-    <None Include="bin\protest\front\opensans700.ttf" />
-    <None Include="bin\protest\front\opensans800.ttf" />
+    <None Include="bin\protest\front\fonts\opensans300.ttf" />
+    <None Include="bin\protest\front\fonts\opensans400.ttf" />
+    <None Include="bin\protest\front\fonts\opensans600.ttf" />
+    <None Include="bin\protest\front\fonts\opensans700.ttf" />
+    <None Include="bin\protest\front\fonts\opensans800.ttf" />
     <None Include="bin\protest\front\res\icon144.png.webp" />
     <None Include="bin\protest\front\res\icon192.png.webp" />
     <None Include="bin\protest\front\res\icon24.png.webp" />
@@ -659,6 +659,8 @@
     <Content Include="bin\protest\knowlage\content_type.txt" />
     <Content Include="pro-test.ico" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="bin\protest\acl\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

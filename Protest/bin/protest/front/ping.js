@@ -16,8 +16,8 @@ class Ping extends Console {
         this.request = "";
         this.ws = null;
 
-        this.setTitle(this.args.method == "icmp" ? "Ping" : "ARP ping");
-        this.setIcon("res/ping.svgz");
+        this.SetTitle(this.args.method == "icmp" ? "Ping" : "ARP ping");
+        this.SetIcon("res/ping.svgz");
 
         this.btnDownload = document.createElement("div");
         this.btnDownload.style.backgroundImage = "url(res/l_download.svgz)";
@@ -284,7 +284,7 @@ class Ping extends Console {
                 else if (selDisplayMode.selectedIndex == 1) //tied
                     this.list.className = "tied-list  no-entries";
 
-                this.setTitle(selPingMethod.value == "arp" ? "ARP ping" : "Ping");
+                this.SetTitle(selPingMethod.value == "arp" ? "ARP ping" : "Ping");
                 this.InvalidateRecyclerList();
             });
         });

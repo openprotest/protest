@@ -6,8 +6,8 @@ class Guide extends Window {
 
         this.AddCssDependencies("guide.css");
 
-        this.setTitle("User guide");
-        this.setIcon("res/userguide.svgz");
+        this.SetTitle("User guide");
+        this.SetIcon("res/userguide.svgz");
 
         this.content.style.display = "grid";
         this.content.style.gridTemplateColumns = "auto 250px";

@@ -9,8 +9,8 @@ class TraceRoute extends Console {
         this.ws = null;           //websocket
         this.taskIconSpin = null; //spinner on icon task-bar
 
-        this.setTitle("Trace route");
-        this.setIcon("res/traceroute.svgz");
+        this.SetTitle("Trace route");
+        this.SetIcon("res/traceroute.svgz");
 
         this.taskIconSpin = document.createElement("div");
         this.taskIconSpin.className = "task-icon-spin";

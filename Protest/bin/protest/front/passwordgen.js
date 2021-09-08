@@ -2,8 +2,8 @@ class Passgen extends Window {
     constructor() {
         super();
 
-        this.setTitle("Password generator");
-        this.setIcon("res/passgen.svgz");
+        this.SetTitle("Password generator");
+        this.SetIcon("res/passgen.svgz");
 
         this.content.style.padding = "32px 16px 0 16px";
         this.content.style.overflowY = "auto";

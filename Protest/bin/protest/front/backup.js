@@ -4,8 +4,8 @@ class Backup extends Window {
 
         this.args = null;
 
-        this.setTitle("Backup");
-        this.setIcon("res/backup.svgz");
+        this.SetTitle("Backup");
+        this.SetIcon("res/backup.svgz");
 
         this.btnNew = document.createElement("div");
         this.btnNew.style.backgroundImage = "url(res/l_new.svgz)";

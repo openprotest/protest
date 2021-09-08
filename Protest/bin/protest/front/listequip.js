@@ -49,8 +49,8 @@ class ListEquip extends ListWindow {
     constructor(args) {
         super(args);
 
-        this.setTitle("Equipment");
-        this.setIcon("res/database_equip.svgz");
+        this.SetTitle("Equipment");
+        this.SetIcon("res/database_equip.svgz");
 
         this.defaultColumns = ["NAME", "TYPE", "HOSTNAME", "IP", "MANUFACTURER", "MODEL", "OWNER", "LOCATION"];
 

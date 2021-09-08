@@ -2,8 +2,8 @@ class SpeedTest extends Window {
     constructor() {
         super();
 
-        this.setTitle("Speed test");
-        this.setIcon("res/speedtest.svgz");
+        this.SetTitle("Speed test");
+        this.SetIcon("res/speedtest.svgz");
 
         this.content.style.overflowY = "auto";
 

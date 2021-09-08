@@ -1,21 +1,21 @@
 @font-face { /*light*/
     font-family: "Open Sans";
-    src: local("Open Sans"), url("opensans300.ttf") format("truetype");
+    src: local("Open Sans"), url("fonts/opensans300.ttf") format("truetype");
     font-weight: 300;
 }
 @font-face { /*normal*/
     font-family: "Open Sans";
-    src: local("Open Sans"), url("opensans400.ttf") format("truetype");
+    src: local("Open Sans"), url("fonts/opensans400.ttf") format("truetype");
     font-weight: 400;
 }
 @font-face { /*semi-bold*/
     font-family: "Open Sans";
-    src: local("Open Sans"), url("opensans600.ttf") format("truetype");
+    src: local("Open Sans"), url("fonts/opensans600.ttf") format("truetype");
     font-weight: 600;
 }
 @font-face { /*bold*/
     font-family: "Open Sans";
-    src: local("Open Sans"), url("opensans700.ttf") format("truetype");
+    src: local("Open Sans"), url("fonts/opensans700.ttf") format("truetype");
     font-weight: 700;
 }
 
@@ -24,7 +24,7 @@
     --theme-color: rgb(255,102,0);
     --select-color: rgb(232,118,0);
     --pane-color: rgb(224,224,224);
-    --highlight-color : rgb(192,192,192);
+    --highlight-color: rgb(192,192,192);
     --control-color: rgb(176,176,176);
     --global-font-size: 15px;
     --global-font-family: "Open Sans";
@@ -127,6 +127,12 @@ body {
     user-select: none;
 }
 
+hr {
+    background: var(--control-color);
+    border: 1px solid var(--control-color);
+    border-radius: 2px;
+}
+
 a {
     color: #202020;
     font-weight: 600;
@@ -137,9 +143,11 @@ a {
     color: #fff;
 }
 
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
+@-moz-document url-prefix() {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #888 transparent;
+    }
 }
 
 ::-webkit-scrollbar {

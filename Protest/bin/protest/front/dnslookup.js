@@ -6,8 +6,8 @@ class DnsLookup extends Console {
 
         this.hashtable = {}; //contains all elements
 
-        this.setTitle("DNS lookup");
-        this.setIcon("res/dns.svgz");
+        this.SetTitle("DNS lookup");
+        this.SetIcon("res/dns.svgz");
 
         this.btnDownload = document.createElement("div");
         this.btnDownload.style.backgroundImage = "url(res/l_download.svgz)";

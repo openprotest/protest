@@ -8,8 +8,8 @@ class Log extends Window {
             ontop: false
         };
 
-        this.setTitle("Log");
-        this.setIcon("res/log.svgz");
+        this.SetTitle("Log");
+        this.SetIcon("res/log.svgz");
 
         this.isLoading = true;
 

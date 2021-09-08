@@ -1,8 +1,8 @@
 class DhcpDiscover extends Window {
     constructor() {
         super();
-        this.setTitle("DHCP discover");
-        this.setIcon("res/dhcp.svgz");
+        this.SetTitle("DHCP discover");
+        this.SetIcon("res/dhcp.svgz");
 
         this.content.style.padding = "32px 32px 0 32px";
         this.content.style.overflowY = "auto";

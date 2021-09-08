@@ -3,8 +3,8 @@ class PasswordStrength extends ListWindow {
     constructor(args) {
         super(args);
 
-        this.setTitle("Password strength");
-        this.setIcon("res/strength.svgz");
+        this.SetTitle("Password strength");
+        this.SetIcon("res/strength.svgz");
 
         this.AddCssDependencies("passwordstrength.css");
 

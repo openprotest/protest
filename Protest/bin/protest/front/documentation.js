@@ -9,8 +9,8 @@ class Documentation extends Window {
         this.AddCssDependencies("documentation.css");
         this.AddCssDependencies("list.css");
 
-        this.setTitle("Documentation");
-        this.setIcon("res/documentation.svgz");
+        this.SetTitle("Documentation");
+        this.SetIcon("res/documentation.svgz");
 
         this.content.style.overflow = "auto";
 

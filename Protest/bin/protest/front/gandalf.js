@@ -6,8 +6,8 @@ class Gandalf extends Window {
 
         this.args = null;
 
-        this.setTitle("Gandalf");
-        this.setIcon("res/gandalf.svgz");
+        this.SetTitle("Gandalf");
+        this.SetIcon("res/gandalf.svgz");
 
         this.index = 0;
         this.menuArray = [];
