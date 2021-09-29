@@ -50,7 +50,7 @@ class Console extends Window {
 
                 event.preventDefault();
 
-            } else if (event.keyCode != 37 && event.keyCode != 39) { // not left nor rigth
+            } else if (event.keyCode != 37 && event.keyCode != 39) { // not left nor right
                 historyIndex = -1;
             }
 

@@ -13,6 +13,7 @@ const EQUIP_ICON = {
 "multiprinter"        : "res/multiprinter.svgz",
 "mobile phone"        : "res/mobilephone.svgz",
 "pc tower"            : "res/pc.svgz",
+"telephone"           : "res/phone.svgz",
 "printer"             : "res/printer.svgz",
 "point of sale"       : "res/pos.svgz",
 "pos"                 : "res/pos.svgz",

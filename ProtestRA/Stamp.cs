@@ -39,7 +39,7 @@ public partial class Stamp : Form {
             System.Threading.Thread.Sleep(1);
             mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
 
-            System.Threading.Thread.Sleep(1);
+            System.Threading.Thread.Sleep(200);
 
             string escaped = "";
             for (int i = 0; i < strokes.Length; i++)
