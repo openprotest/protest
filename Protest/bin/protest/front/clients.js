@@ -342,6 +342,7 @@ class Clients extends Tabs {
 
             this.accessvalue[0].onchange();
             this.CheckForWarnings();
+            this.CheckForWarnings();
         };
 
         btnDelete.onclick = event => {
