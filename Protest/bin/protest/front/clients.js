@@ -176,30 +176,15 @@ class Clients extends Tabs {
 
         this.accessvalue = [db, pw, ra, rh, du, dc, dn, wd, ut, sc, mi, tn, bu, mu, lg];
 
-        const lblWarning = document.createElement("div");
-        lblWarning.style.marginTop = "16px";
-        lblWarning.style.visibility = "hidden";
-        accesslist.appendChild(lblWarning);
-
-        const onChange = () => {
-            lblWarning.innerHTML = "";
-
-            if (db.value == 0 && pw.value > 0)
-                lblWarning.appendChild(this.AddWarning("It's pointless to allow <u>Reading passwords</u> while the <u>Inventory database</u> is denied."));
-
-            if (db.value > 0 && ut.value == 0) 
-                lblWarning.appendChild(this.AddWarning("It is recommended to allow access to <u>Tools and utilities</u> along with <u>Inventory database</u>."));
-
-            if (mu.value == 1 && this.accessvalue.filter(o => o.value < o.max).length > 0)
-                lblWarning.appendChild(this.AddWarning("Having users with limited access, and then allowing them to <u>Manage user's permissions</u>, is counterintuitive."));
-
-            lblWarning.style.visibility = lblWarning.childNodes.length > 0 ? "visible" : "hidden";
-        };
+        this.lblWarning = document.createElement("div");
+        this.lblWarning.style.marginTop = "16px";
+        this.lblWarning.style.visibility = "hidden";
+        accesslist.appendChild(this.lblWarning);
 
         for (let i = 0; i < this.accessvalue.length; i++) {
             this.accessvalue[i].setAttribute("disabled", true);
-            this.accessvalue[i].onchange = onChange;
-            this.accessvalue[i].oninput = onChange;
+            this.accessvalue[i].addEventListener("change", () => { this.CheckForWarnings });
+            this.accessvalue[i].addEventListener("input", () => { this.CheckForWarnings });
         }
 
         const buttons = document.createElement("div");
@@ -356,6 +341,7 @@ class Clients extends Tabs {
                 }
 
             this.accessvalue[0].onchange();
+            this.CheckForWarnings();
         };
 
         btnDelete.onclick = event => {
@@ -407,19 +393,37 @@ class Clients extends Tabs {
         rngAccess.oninput = rngAccess.onchange = event => {
             if (rngAccess.value == 0)
                 lblAccess.innerHTML = "Deny";
-
             else if (rngAccess.value == 1)
                 lblAccess.innerHTML = higheraccess == 1 ? "Allow" : "Read only";
-
             else
                 lblAccess.innerHTML = "Full access";
+
+            this.CheckForWarnings();
         };
 
         rngAccess.onchange();
+        this.CheckForWarnings();
 
         parent.appendChild(container);
 
         return rngAccess;
+    }
+
+    CheckForWarnings() {
+        if (!this.lblWarning) return;
+
+        this.lblWarning.innerHTML = "";
+
+        if (this.accessvalue[0].value == 0 && this.accessvalue[1].value > 0)
+            this.lblWarning.appendChild(this.AddWarning("It's pointless to allow <u>Reading passwords</u> while the <u>Inventory database</u> is denied."));
+
+        if (this.accessvalue[0].value > 0 && this.accessvalue[8].value == 0)
+            this.lblWarning.appendChild(this.AddWarning("It is recommended to allow access to <u>Tools and utilities</u> along with <u>Inventory database</u>."));
+
+        if (this.accessvalue[13].value == 1 && this.accessvalue.filter(o => o.value < o.max).length > 0)
+            this.lblWarning.appendChild(this.AddWarning("Having users with limited access, and then allowing them to <u>Manage user's permissions</u>, is counterintuitive."));
+
+        this.lblWarning.style.visibility = this.lblWarning.childNodes.length > 0 ? "visible" : "hidden";
     }
 
     AddWarning(text) {
