@@ -601,7 +601,7 @@ function Menu_UpdatePosition() {
         } else {
             menu.style.top = "min(200px, 20%)";
             menu.style.bottom = "20px";
-            menu.style.transform = menu_isopen ? "none" : "translateY(+100%)";
+            menu.style.transform = menu_isopen ? "none" : "translateY(100%)";
         }
     }
 };
@@ -617,6 +617,7 @@ function Menu_Open() {
 function Menu_Close() {
     menu_isopen = false;
     Menu_UpdatePosition();
+    menu_session = [];
 };
 function Menu_Toogle() {
     menu_isopen = !menu_isopen;
