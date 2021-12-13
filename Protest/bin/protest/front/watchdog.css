@@ -83,8 +83,8 @@
     width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
-    -webkit-user-select: text;
-    user-select: text;
+    -webkit-user-select: all;
+    user-select: all;
 }
 
 .w-dog-view > div > div:nth-child(3) {
@@ -92,8 +92,8 @@
     width: 60px;
     overflow: hidden;
     text-overflow: ellipsis;
-    -webkit-user-select: text;
-    user-select: text;
+    -webkit-user-select: all;
+    user-select: all;
 }
 
 .w-dog-view > div > div:nth-child(4) {

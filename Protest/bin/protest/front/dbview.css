@@ -149,8 +149,8 @@
 .db-property > div:nth-child(2) {
     width: calc(60% - 16px);
     font-weight: 600;
-    -webkit-user-select: text;
-    user-select: text;
+    /*-webkit-user-select: text;*/
+    /*user-select: text;*/
 }
 
 .db-property > div:nth-child(2) > div { /*multiple value boxes*/
@@ -159,8 +159,8 @@
     border-radius: 2px;
     padding: 0 1px;
     margin: -1px 2px 0 2px;
-    /*-webkit-user-select: all;*/
-    /*user-select: all;*/
+    -webkit-user-select: all;
+    user-select: all;
 }
 
 .db-property > div:nth-child(2) > div:only-child {
@@ -264,6 +264,8 @@
 .db-progress-bar {
     display: block !important;
     border: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
 }
 
 .db-progress-bar  > div {

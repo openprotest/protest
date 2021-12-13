@@ -342,6 +342,8 @@ class User extends Window {
             newProperty.appendChild(value);
 
             const preview = document.createElement("span");
+            preview.style.webkitUserSelect = "all";
+            preview.style.userSelect = "all";
             value.appendChild(preview);
 
             const countdown = document.createElement("span");
