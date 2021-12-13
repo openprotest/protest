@@ -233,7 +233,6 @@ btnMenu.onmousedown = event => {
 container.onclick = event => {
     if (event == null) return;
     if (event.clientX > 2) return;
-
     else if (event.clientY < window.innerHeight / 4 && event.clientY > 0) Menu_Open();
 };
 
@@ -294,7 +293,6 @@ txtSearch.onkeydown = event => {
 
     if (menu_list.length > 0 && (event.keyCode == 38 || event.keyCode == 40)) //scroll into view
         menu_list[menu_index].scrollIntoView({ behavior: "smooth", block: "center" });
-
 };
 
 txtSearch.oninput = event => {
@@ -604,7 +602,7 @@ function Menu_UpdatePosition() {
             menu.style.transform = menu_isopen ? "none" : "translateY(100%)";
         }
     }
-};
+}
 
 function Menu_Open() {
     menu_isopen = true;
@@ -613,12 +611,12 @@ function Menu_Open() {
     if (menu_isopen) {
         setTimeout(() => { txtSearch.focus(); }, 150);
     }
-};
+}
 function Menu_Close() {
     menu_isopen = false;
     Menu_UpdatePosition();
     menu_session = [];
-};
+}
 function Menu_Toogle() {
     menu_isopen = !menu_isopen;
     Menu_UpdatePosition();
@@ -626,6 +624,6 @@ function Menu_Toogle() {
     if (menu_isopen) {
         setTimeout(() => { txtSearch.focus(); }, 150);
     }
-};
+}
 
 Menu_UpdatePosition();

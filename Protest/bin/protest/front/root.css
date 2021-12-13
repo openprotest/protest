@@ -140,13 +140,13 @@ a {
 
 ::selection {
     background: #222;
-    color: #fff;
+    color: #fff;s
 }
 
 @-moz-document url-prefix() {
     * {
         scrollbar-width: thin;
-        scrollbar-color: #888 transparent;
+        scrollbar-color: #888 transparent !important;
     }
 }
 
