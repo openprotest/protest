@@ -58,7 +58,7 @@ class Database {
 
         FileInfo[] files = dir.GetFiles();
         for (int i = 0; i < files.Length; i++) {
-            Program.ProgressBar(i * 100 / files.Length, "Loading user");
+            Program.ProgressBar(i * 100 / files.Length, "Loading users");
             DbEntry entry = Read(files[i], true);
             if (entry.hash == null) continue;            
             users.Add(files[i].Name, entry);
