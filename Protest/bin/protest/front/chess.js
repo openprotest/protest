@@ -14,6 +14,7 @@ class Chess extends Window {
         this.board.className = "chess-board";
         this.board.onmousemove = event => this.Board_mousemove(event);
         this.board.onmouseup = event => this.Board_mouseup(event);
+        this.board.onmouseleave = event => this.Board_mouseleave(event);
         this.content.appendChild(this.board);
 
         for (let y = 0; y < 8; y++)
@@ -143,6 +144,11 @@ class Chess extends Window {
     }
         
     Piece_mousedown(event) {
+        if (event.buttons !== 1) {
+            this.Board_mouseleave();
+            return;
+        }
+
         this.x0 = event.x;
         this.y0 = event.y;
         this.selected = event.srcElement;
@@ -154,22 +160,26 @@ class Chess extends Window {
         this.selected.style.left = parseFloat(event.srcElement.style.left) * this.board.getBoundingClientRect().width / 100 + "px";
         this.selected.style.top = parseFloat(event.srcElement.style.top) * this.board.getBoundingClientRect().height / 100 + "px";
         this.selected.style.zIndex = "1";
-        this.selected.transition = "none";
+        this.selected.style.cursor = "none";
+        this.selected.style.transition = "none";
     }
 
     Board_mousemove(event) {
         if (event.buttons !== 1) {
-            if (this.selected) {
-                //TODO: undo move
-                this.Board_mouseup(event);
-            }
-
             return;
         }
 
         if (this.selected) {
-            this.selected.style.left = this.selectedPos[0] + event.x - this.x0 + "px";
-            this.selected.style.top = this.selectedPos[1] + event.y - this.y0 + "px";
+            let x = this.selectedPos[0] + event.x - this.x0;
+            let y = this.selectedPos[1] + event.y - this.y0;
+
+            x = Math.max(x, -this.board.getBoundingClientRect().width / 16);
+            x = Math.min(x, this.board.getBoundingClientRect().width - this.board.getBoundingClientRect().height / 16);
+            y = Math.max(y, -this.board.getBoundingClientRect().height / 16);
+            y = Math.min(y, this.board.getBoundingClientRect().height - this.board.getBoundingClientRect().height / 16);
+
+            this.selected.style.left = x + "px";
+            this.selected.style.top = y + "px";
         }
     }
 
@@ -177,12 +187,27 @@ class Chess extends Window {
         if (this.selected) {
             let x = parseFloat(event.srcElement.style.left) * 100 / this.board.getBoundingClientRect().width;
             let y = parseFloat(event.srcElement.style.top) * 100 / this.board.getBoundingClientRect().height;
+            x = Math.min(Math.max(x, 0), 87.5);
+            y = Math.min(Math.max(y, 0), 87.5);
+
             this.selected.style.left = parseInt((x + 6.25) / 12.5) * 12.5 + "%";
             this.selected.style.top = parseInt((y + 6.25) / 12.5) * 12.5 + "%";
             this.selected.style.zIndex = "0";
-            this.selected.transition = "1s";
+            this.selected.style.cursor = "inherit";
+            this.selected.style.transition = ".2s";
         }
 
         this.selected = null;
+    }
+
+    Board_mouseleave(event) {
+        if (this.selected) { //undo move
+            this.selected.style.transition = ".2s";
+            this.selected.style.left = this.selectedPos[0] * 100 / this.board.getBoundingClientRect().width + "%";
+            this.selected.style.top = this.selectedPos[1] * 100 / this.board.getBoundingClientRect().height + "%";
+            this.selected.style.zIndex = "0";
+            this.selected.style.cursor = "inherit";
+            this.selected = null;
+        }
     }
 }

@@ -2,7 +2,6 @@
     position: absolute;
     z-index: 1;
     border-radius: .5%;
-    overflow: hidden;
     transition: left .1s;
 }
 
