@@ -78,7 +78,8 @@ let loader_styles = [
         "clients.js",
         "log.js",
         "guide.js",
-        "filebrowser.js"
+        "filebrowser.js",
+        "chess.js"
     ];
 
     let count = 0;
@@ -278,6 +279,7 @@ function RestoreSession() {
             case "Guide"            : win = new Guide(session[i].args); break;
             case "FileBrowser"      : win = new FileBrowser(session[i].args); break;
             case "Settings"         : win = new Settings(session[i].args); break;
+            case "Chess"            : win = new Chess(session[i].args); break;
         }
 
         if (win) {

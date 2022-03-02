@@ -140,7 +140,7 @@ a {
 
 ::selection {
     background: #222;
-    color: #fff;s
+    color: #fff;
 }
 
 @-moz-document url-prefix() {

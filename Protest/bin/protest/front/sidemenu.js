@@ -60,7 +60,9 @@ const TOOLS = [
 { lbl:"Update",             ico:"res/update.svgz",        grp:"*", sqr:false, f:arg=> new Settings("update") },
 { lbl:"License",            ico:"res/gpl.svgz",           grp:"*", sqr:false, f:arg=> new Settings("legal") },
 { lbl:"About",              ico:"res/logo.svgz",          grp:"*", sqr:false, f:arg=> new Settings("about") },
-{ lbl:"Logout",             ico:"res/logoff.svgz",        grp:"*", sqr:false, f:arg=> btnLogout.onclick() }
+{ lbl:"Logout",             ico:"res/logoff.svgz",        grp:"*", sqr:false, f:arg=> btnLogout.onclick() },
+
+{ lbl:"Chess",              ico:"res/knight.svgz",          grp:"*", sqr:false, f:arg=> new Chess()}
 ];
 
 let AUTHORIZATION = {};

@@ -317,7 +317,7 @@ class Window {
             this.task.style.borderRadius = "0 0 8% 8%";
         }
         setTimeout(()=> {
-            this.win.style.transition = "0s"; 
+            this.win.style.transition = "0s";
             this.AfterResize();
         }, ANIM_DURATION);
     }
