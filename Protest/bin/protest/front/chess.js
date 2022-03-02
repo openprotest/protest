@@ -194,7 +194,7 @@ class Chess extends Window {
             this.selected.style.top = parseInt((y + 6.25) / 12.5) * 12.5 + "%";
             this.selected.style.zIndex = "0";
             this.selected.style.cursor = "inherit";
-            this.selected.style.transition = ".2s";
+            this.selected.style.transition = ".15s";
         }
 
         this.selected = null;

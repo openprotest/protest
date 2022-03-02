@@ -1,7 +1,6 @@
 .chess-board {
     position: absolute;
     z-index: 1;
-    border-radius: .5%;
     transition: left .1s;
 }
 
@@ -17,6 +16,7 @@
     height: 12.5%;
     background-size: contain;
     background-repeat: no-repeat;
+    transition: 1.5s;
 }
 
 .chess-coord {
