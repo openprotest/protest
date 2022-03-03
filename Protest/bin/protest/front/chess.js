@@ -1,4 +1,7 @@
+const FEN_START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 class Chess extends Window {
+
     constructor() {
         super([64,64,64]);
 
@@ -42,42 +45,11 @@ class Chess extends Window {
             coord_r.style.color = i % 2 === 0 ? "rgb(108,108,108)" : "rgb(84,84,84)";
             coord_r.style.left = `calc(${(i+1) * 12.5}% - 20px)`;
             coord_r.style.bottom = "0";
+            coord_r.style.verticalAlign = "bottom";
             this.board.appendChild(coord_r);
         }
 
-        this.AddPiece("r", [0,0]);
-        this.AddPiece("n", [1,0]);
-        this.AddPiece("b", [2,0]);
-        this.AddPiece("q", [3,0]);
-        this.AddPiece("k", [4,0]);
-        this.AddPiece("b", [5,0]);
-        this.AddPiece("n", [6,0]);
-        this.AddPiece("r", [7,0]);
-        this.AddPiece("p", [0,1]);
-        this.AddPiece("p", [1,1]);
-        this.AddPiece("p", [2,1]);
-        this.AddPiece("p", [3,1]);
-        this.AddPiece("p", [4,1]);
-        this.AddPiece("p", [5,1]);
-        this.AddPiece("p", [6,1]);
-        this.AddPiece("p", [7,1]);
-
-        this.AddPiece("P", [0,6]);
-        this.AddPiece("P", [1,6]);
-        this.AddPiece("P", [2,6]);
-        this.AddPiece("P", [3,6]);
-        this.AddPiece("P", [4,6]);
-        this.AddPiece("P", [5,6]);
-        this.AddPiece("P", [6,6]);
-        this.AddPiece("P", [7,6]);
-        this.AddPiece("R", [0,7]);
-        this.AddPiece("N", [1,7]);
-        this.AddPiece("B", [2,7]);
-        this.AddPiece("Q", [3,7]);
-        this.AddPiece("K", [4,7]);
-        this.AddPiece("B", [5,7]);
-        this.AddPiece("N", [6,7]);
-        this.AddPiece("R", [7,7]);
+        this.LoadFen(FEN_START);
 
         this.sidepanel = document.createElement("div");
         this.sidepanel.className = "chess-sidepanel";
@@ -119,6 +91,29 @@ class Chess extends Window {
         this.board.style.top = (h - min) / 2 + "px";
     }
 
+    LoadFen(position) {
+        let array = position.split(" ");        
+        if (array.length < 4) return;
+        let placement = array[0];
+
+        let pos = {x:0, y:0};
+        for (let i = 0; i < placement.length; i++) {
+            if (placement[i] == "/") {
+                pos.x = 0;
+                pos.y += 1;
+                continue;
+            }
+
+            if (!isNaN(placement[i])) {
+                pos.x += parseInt(placement[i]);
+                continue;
+            }
+
+            this.AddPiece(placement[i], [pos.x, pos.y]);
+            pos.x += 1;
+        }
+    }
+
     AddPiece(type, position) {
         const piece = document.createElement("div");
         piece.className = "chess-piece";
@@ -142,7 +137,7 @@ class Chess extends Window {
 
         this.board.appendChild(piece);
     }
-        
+
     Piece_mousedown(event) {
         if (event.buttons !== 1) {
             this.Board_mouseleave();
@@ -210,4 +205,5 @@ class Chess extends Window {
             this.selected = null;
         }
     }
+
 }

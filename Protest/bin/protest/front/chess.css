@@ -16,17 +16,16 @@
     height: 12.5%;
     background-size: contain;
     background-repeat: no-repeat;
-    transition: 1.5s;
+    transition: .15s;
 }
 
 .chess-coord {
     position: absolute;
     width: 20px;
-    height: 22px;
-    font-size: 16px;
+    height: 24px;
+    font-size: 18px;
     font-weight: 600;
     text-align: center;
-    vertical-align: middle;
     transition: .4s;
 }
 
