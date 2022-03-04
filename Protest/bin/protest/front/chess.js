@@ -20,6 +20,16 @@ class Chess extends Window {
         this.board.onmouseleave = event => this.Board_mouseleave(event);
         this.content.appendChild(this.board);
 
+        this.game = {
+            fen: null,
+            placement: [],
+            activecolor: "w",
+            castling: "",
+            enpassant: "-"
+            //halfmove: 0
+            //fullmove: 1
+        };
+
         for (let y = 0; y < 8; y++)
             for (let x = 0; x < 8; x++) {
                 const sqr = document.createElement("div");
@@ -91,30 +101,10 @@ class Chess extends Window {
         this.board.style.top = (h - min) / 2 + "px";
     }
 
-    LoadFen(position) {
-        let array = position.split(" ");        
-        if (array.length < 4) return;
-        let placement = array[0];
-
-        let pos = {x:0, y:0};
-        for (let i = 0; i < placement.length; i++) {
-            if (placement[i] == "/") {
-                pos.x = 0;
-                pos.y += 1;
-                continue;
-            }
-
-            if (!isNaN(placement[i])) {
-                pos.x += parseInt(placement[i]);
-                continue;
-            }
-
-            this.AddPiece(placement[i], [pos.x, pos.y]);
-            pos.x += 1;
-        }
-    }
-
     AddPiece(type, position) {
+        this.game.placement[position.x][position.y] = type;
+        console.log(this.game.placement);
+
         const piece = document.createElement("div");
         piece.className = "chess-piece";
 
@@ -127,8 +117,8 @@ class Chess extends Window {
             case "p": piece.style.backgroundImage = "url(res/pawn.svg)"; break;
         }
 
-        piece.style.left = position[0] * 12.5 + "%";
-        piece.style.top = position[1] * 12.5 + "%";
+        piece.style.left = position.x * 12.5 + "%";
+        piece.style.top = position.y * 12.5 + "%";
 
         if (type === type.toUpperCase())
             piece.style.filter = "invert(1) brightness(.9)";
@@ -136,6 +126,53 @@ class Chess extends Window {
         piece.onmousedown = event => this.Piece_mousedown(event);
 
         this.board.appendChild(piece);
+    }
+
+    LoadFen(notation) {
+        //clear all pieces
+        const pieces = this.board.querySelectorAll(".chess-piece");
+        for (const element of pieces)
+            this.board.removeChild(element);
+
+        this.game.placement = [];
+        for (let i = 0; i < 8; i++)
+            this.game.placement[i] = [null, null, null, null, null, null, null, null];
+
+
+        let array = notation.split(" ");
+        if (array.length < 4) return;
+        let placement = array[0];
+
+        let position = { x: 0, y: 0 };
+        for (let i = 0; i < placement.length; i++) {
+            if (placement[i] == "/") {
+                position.x = 0;
+                position.y += 1;
+                continue;
+            }
+
+            if (!isNaN(placement[i])) {
+                position.x += parseInt(placement[i]);
+                continue;
+            }
+
+            this.AddPiece(placement[i], position);
+            this.game.placement[position.x][position.y] = placement[i];
+            position.x += 1;
+        }
+
+        this.game.fen = notation;
+        this.game.activecolor = array[1];
+        this.game.castling = array[2];
+        this.game.enpassant = array[3];
+    }
+
+    GetCurrentFen() {
+
+    }
+
+    MovePiece(move) {
+
     }
 
     Piece_mousedown(event) {
