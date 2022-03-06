@@ -62,7 +62,7 @@ const TOOLS = [
 { lbl:"About",              ico:"res/logo.svgz",          grp:"*", sqr:false, f:arg=> new Settings("about") },
 { lbl:"Logout",             ico:"res/logoff.svgz",        grp:"*", sqr:false, f:arg=> btnLogout.onclick() },
 
-{ lbl:"Chess",              ico:"res/knight.svgz",          grp:"*", sqr:false, f:arg=> new Chess()}
+{ lbl:"Chess",              ico:"res/king.svgz",          grp:"*", sqr:false, f:arg=> new Chess()}
 ];
 
 let AUTHORIZATION = {};

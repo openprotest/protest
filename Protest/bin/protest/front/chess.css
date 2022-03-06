@@ -8,6 +8,7 @@
     position: absolute;
     width: 12.5%;
     height: 12.5%;
+    transition: .2s
 }
 
 .chess-piece {
@@ -16,7 +17,18 @@
     height: 12.5%;
     background-size: contain;
     background-repeat: no-repeat;
-    transition: .15s;
+    transition: .2s;
+}
+
+.chess-move-indicator {
+    width: 30%;
+    height: 30%;
+    margin: 35%;
+    background-color: var(--theme-color);
+    border-radius: 50%;
+    opacity: 60%;
+
+    animation: chess-fadein .4s;
 }
 
 .chess-coord {
@@ -36,5 +48,17 @@
     bottom: 0;
     width: 250px;
     background-color: rgb(72,72,72);
-    transition: .2s
+    transition: .2s;
+}
+
+@keyframes chess-fadein {
+    0% {
+        transform: scale(.9);
+        filter: opacity(0)
+    }
+
+    100% {
+        transform: none;
+        filter: none
+    }
 }
