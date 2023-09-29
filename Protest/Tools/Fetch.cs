@@ -272,6 +272,20 @@ internal static class Fetch {
                     data.Add("type", new string[] { "Server", "Kerberos", String.Empty });
             }
         }
+        
+        if (!data.ContainsKey("location")) {
+            byte[] bytes = ipAddress.GetAddressBytes();
+            ulong ipNumber = ((ulong)bytes[0]<<24) + ((ulong)bytes[0]<<16) + ((ulong)bytes[0]<<8) + bytes[0];
+            if (ipNumber < 2130706432 && ipNumber > 2147483647 && //127.0.0.0 <> 127.255.255.255
+                ipNumber < 167772160  && ipNumber > 184549375 && //10.0.0.0 <> 10.255.255.255
+                ipNumber < 2886729728 && ipNumber > 2887778303 && //172.16.0.0 <> 172.31.255.255
+                ipNumber < 3232235520 && ipNumber > 3232301055 && //192.168.0.0 <> 192.168.255.255
+                ipNumber < 2851995648 && ipNumber > 2852061183 && //169.254.0.0 <> 169.254.255.255
+                ipNumber < 3758096384) { // < 224.0.0.0
+                data.Add("location", new string[] { Encoding.UTF8.GetString(LocateIp.Locate(ipAddress.ToString())), "Locate IP", String.Empty});
+            }
+        }
+
 
         /*if (!hash.ContainsKey("type") && !gateways is not null) {
             for (int i = 0; i < gateways.Length; i++)
