@@ -1,0 +1,76 @@
+input[type="checkbox"] {
+	display: none;
+}
+
+input[type="checkbox"] + label {
+	display: inline-block;
+	text-align: left;
+	min-width: 64px;
+	position: relative;
+	border: 0;
+	border-radius: 4px;
+	outline: 0;
+	padding: 1px 4px 1px 42px;
+}
+
+input[type="checkbox"] + label::before {
+	content: " ";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 32px;
+	height: 18px;
+	border-radius: 4px;
+	background-color: var(--clr-control);
+	transition: .2s;
+}
+
+input[type="checkbox"] + label::after {
+	content: " ";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 16px;
+	height: 14px;
+	margin: 2px 2px;
+	border-radius: 4px;
+	background-color: rgb(88,88,88);
+	box-shadow: rgba(0,0,0,.5) 0 1px 1px;
+	transition: transform .2s, background-color .4s;
+}
+
+input[type="checkbox"] + label:focus::before {
+	animation: outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0 0 0 3px;
+}
+
+input[type="checkbox"]:checked + label::after {
+	transform: translateX(12px);
+	background-color: var(--clr-accent);
+}
+
+input[type="checkbox"]:disabled + label::before {
+	background-color: transparent;
+	box-shadow: var(--clr-control) 0 0 0 2px !important;
+}
+input[type="checkbox"]:disabled + label::after {
+	background-color: var(--clr-control);
+	box-shadow: none !important;
+}
+
+.check-list {
+	border: var(--clr-control) solid 1.5px;
+	overflow-y: scroll;
+}
+
+.check-list > div {
+	padding: 4px 8px;
+}
+
+.check-list > div > label {
+	text-transform: capitalize;
+}
+
+.check-list > div:hover {
+	background-color: var(--clr-highlight);
+}

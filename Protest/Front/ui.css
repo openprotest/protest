@@ -1,0 +1,539 @@
+#cap {
+	position: absolute;
+	/*background-color: rgba(16,16,16,.05);*/
+	visibility: hidden;
+	z-index: 16777264;
+	width: 100%;
+	height: 100%;
+}
+
+#container {
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 56px;
+}
+
+#taskbar {
+	position: fixed;
+	z-index: 16777269;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 56px;
+	background: var(--grd-taskbar);
+}
+
+#menubutton {
+	all: unset;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 48px;
+	height: 48px;
+	z-index: 16777266;
+	overflow: hidden;
+	border-radius: 4px 8px 48px 8px;
+	background: var(--grd-taskbar-rev);
+	box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
+	transition: border-radius .4s, width .2s, height .2s;
+}
+
+#menubutton > div {
+	position: relative;
+	left: 8px;
+	top: 6px;
+	width: 26px;
+	height: 26px;
+	transform-origin: 0 0;
+	background-image: url(mono/logo.svg);
+	background-size: cover;
+	transition-duration: .2s;
+	transition-delay: .1s;
+}
+
+#menubox {
+	position: absolute;
+	z-index: 16777265;
+	border-radius: 4px;
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
+	width: var(--sidemenu-width);
+	overflow: hidden;
+	transition-duration: .2s;
+	transition-timing-function: cubic-bezier(.2,.6,.36,1);
+
+	visibility: hidden;
+	transform: translateX(calc(-100% - 24px));
+}
+
+#searchbox {
+	position: absolute;
+	left: 32px;
+	right: 32px;
+	top: 32px;
+	height: 36px;
+
+	cursor: text;
+	border: #808080 1px solid;
+	border-radius: 4px;
+}
+
+#searchbox > #searchicon {
+	position: absolute;
+	left: 4px;
+	top: 4px;
+	width: 28px;
+	height: 28px;
+	background-image: url(mono/search.svg?light);
+	background-size: cover;
+}
+
+#searchbox > input[type=text] {
+	all: unset;
+	position: absolute;
+	left: 40px;
+	top: 0px;
+	width: calc(100% - 80px);
+	background-color: transparent;
+	font-size: 22px;
+
+	outline: 0;
+	border-width: initial;
+	border-style: none;
+	border-color: initial;
+	border-image: initial;
+	padding: 1px 0px 2px 0px !important;
+	margin: 2px 0px !important;
+
+	animation: none;
+}
+
+#searchbox > input[type=text]::selection {
+	background: #444;
+	color: #fff;
+}
+
+#searchbox > #clearmenusearch {
+	position: absolute;
+	right: 4px;
+	top: 4px;
+	width: 28px;
+	height: 28px;
+	border-radius: 4px;
+	cursor: default;
+	background-image: url(mono/delete.svg?light);
+	background-size: 20px 20px;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+
+	transition-duration: .2s;
+}
+
+#searchbox > #clearmenusearch:hover {
+	background-color: rgb(72,72,72);
+}
+
+#searchbox > #clearmenusearch:active {
+	background-color: rgb(64,64,64);
+}
+
+#menufilter {
+	position: absolute;
+	left: 140px;
+	top: 76px;
+	width: 200px;
+	height: 34px;
+}
+
+.menufilter-option {
+	position: absolute;
+	width: 32px;
+	height: 32px;
+	border: #404040 1px solid;
+	border-radius: 4px;
+	background-size: 26px 26px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transition: .2s;
+}
+.menufilter-option:hover {
+	background-color: rgba(128,128,128,.5);
+}
+.menufilter-option:active {
+	background-color: rgb(56,56,56);
+}
+
+#menufilterdot {
+	position: absolute;
+	left: 112px;
+	top: 112px;
+	background-color: var(--clr-accent);
+	width: 8px;
+	height: 8px;
+	border-radius: 8px;
+
+	transform: scale(0);
+	transition: transform .4s, left .6s, width .8s;
+	transition-timing-function:  cubic-bezier(.2,.8,.3,1.2);
+}
+
+#menulist {
+	position: absolute;
+	left: 8px;
+	right: 8px;
+	top: 120px;
+	bottom: 56px;
+
+	color: #c0c0c0;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+	outline: 0;
+}
+
+.menu-group {
+	display: block;
+	text-transform: uppercase;
+	font-weight: 600;
+	/*background-color: #00000020;*/
+	padding: 12px 0 4px 8px;
+}
+
+.menu-grid-item {
+	display: inline-block;
+	width: 100px;
+	height: 96px;
+	padding: 2px 2px;
+	margin: 2px 4px;
+	border-radius: 2px;
+	
+	font-weight: 600;
+	text-align: center;
+	line-height: 168px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	background-size: 64px 64px;
+	background-position: center 8px;
+	background-repeat: no-repeat;
+	background-color: #80808020;
+
+	transition: .2s;
+}
+
+.menu-list-item {
+	display: block;
+	height: 48px;
+	padding-left: 56px;
+	margin: 2px 4px;
+	border-radius: 2px;
+	
+	font-weight: 600;
+	line-height: 48px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	background-size: 40px 40px;
+	background-position: 4px 4px;
+	background-repeat: no-repeat;
+	background-color: #80808020;
+
+	transition: .2s;
+}
+
+.menu-grid-item:hover, .menu-list-item:hover {
+	background-color: #80808040;
+}
+
+.menu-grid-item:active, .menu-list-item:active {
+	background-color: var(--clr-transparent) !important;
+}
+
+#btnPersonalize, #btnLogout {
+	position: absolute;
+	width: 40px;
+	height: 36px;
+
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-size: 32px 32px;
+	background-position: 4px 2px;
+	border: #808080 1px solid;
+	border-radius: 4px;
+
+	transition-duration: .2s;
+}
+
+#btnPersonalize {
+	position: absolute;
+	left: 8px;
+	bottom: 8px;
+	background-image: url("mono/personalize.svg?light");
+}
+
+#username {
+	color: #c0c0c0;
+	position: absolute;
+	right: 8px;
+	bottom: 8px;
+	width: 300px;
+	height: 36px;
+	outline: 0;
+}
+
+#lblUsername {
+	position: absolute;
+	right: 0px;
+
+	font-size: large;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding: 0 8px 0 36px;
+	line-height: 36px;
+	background-color: transparent;
+	background-image: url(mono/user.svg?light);
+	background-position: 2px 1px;
+	background-size: 32px 32px;
+	background-repeat: no-repeat;
+
+	outline: 0;
+	border: #808080 1px solid;
+	border-radius: 4px;
+
+	transition-duration: .4s;
+}
+
+#btnLogout {
+	position: absolute;
+	right: 0px;
+	background-image: url("mono/logoff.svg?light");
+	visibility: hidden;
+	opacity: 0;
+}
+
+
+#username:focus-within > #btnLogout {
+	visibility: visible;
+	opacity: 1;
+}
+#username:focus-within > #lblUsername {
+	right: 48px;
+}
+
+#lblUsername:focus {
+	background-color: rgba(128,128,128,.5);
+}
+#lblUsername:hover, #btnPersonalize:hover, #btnLogout:hover {
+	background-color: rgba(128,128,128,.5);
+}
+#lblUsername:active, #btnPersonalize:active #btnLogout:active {
+	background-color: rgb(56,56,56);
+}
+
+
+#contextmenu {
+	display: none;
+	position: absolute;
+	z-index: 16777270;
+	bottom: 8px;
+	min-width: 150px;
+	min-height: 28px;
+	overflow: hidden;
+	outline: 0;
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	box-shadow: var(--clr-dark) 0 0 4px;
+	animation: rise-in 1 .2s;
+}
+
+#contextmenu > div {
+	color: var(--clr-dark);
+	padding: 4px 4px 4px 32px;
+	border-radius: 2px;
+
+	background-position: 2px center;
+	background-size: 28px 28px;
+	background-repeat: no-repeat;
+
+	transition: .2s;
+}
+
+#contextmenu > div:hover {
+	background-color: var(--clr-select);
+}
+
+#loadingcontainer {
+	position: absolute;
+	left: 16px;
+	bottom: 16px;
+	width: calc(100% - 32px);
+	height: 2px;
+}
+
+#loadingbar {
+	background-color: var(--clr-accent);
+	left: 0;
+	top: 0;
+	width: 0;
+	height: 100%;
+	border-radius: 2px;
+	transition: .2s;
+	animation: glow 1.2s infinite;
+}
+
+#analog_clock {
+	position: absolute;
+	right: 32px;
+	bottom: 32px;
+}
+
+#date_calendar {
+	position: absolute;
+	right: 152px;
+	bottom: 32px;
+}
+
+#analog_clock_h,
+#analog_clock_m {
+	transform-origin: 50% 50%;
+	transition-duration: transform .8s;
+}
+
+.glass > #menubox {
+	background-color: #202020C0 !important;
+	backdrop-filter: blur(12px);
+	box-shadow: black 0 0 4px;
+}
+
+.glass > #contextmenu,
+.glass > .window > .win-content > .floating-menu {
+	background-color: #C0C0C080 !important;
+	backdrop-filter: blur(12px);
+}
+
+.glass > .window {
+	background-color: #20202080 !important;
+	backdrop-filter: blur(12px);
+}
+
+.glass > .window .win-dim {
+	background-color: rgba(32,32,32,.2);
+}
+
+.glass > .window header.title {
+	text-shadow: #000 0 0 4px;
+	
+	background: radial-gradient(circle, rgb(96,96,96) 0%, rgba(96,96,96,0) 100%);
+	background-position: 50% 100%;
+	background-repeat: no-repeat;
+	background-size: 80% 1px;
+}
+
+.glass > .window .win-toolbar {
+	background-color: transparent !important;
+}
+
+.glass > .window > .win-content > .list-listbox {
+	background-color: #c0c0c0C0 !important;
+}
+
+.spinner {
+	margin: 8px auto;
+	width: 48px;
+	height: 48px;
+	perspective: 150px;
+}
+
+.spinner > div {
+	position: relative;
+	margin: auto;
+	width: 48px;
+	height: 48px;
+	transform-style: preserve-3d;
+	animation: spin-spinner 2s infinite ease-in;
+}
+
+/*.spinner::after {
+	content: attr("loading-text");
+	padding-top: 16px;
+	font-size: large;
+}*/
+
+.spinner > div::before, .spinner > div::after {
+	position: absolute;
+	content: "";
+	width: 48px;
+	height: 48px;
+	border: 1px solid var(--clr-dark);
+	border-radius: 2px;
+}
+
+.spinner > div::before { /*front*/
+	transform: translateZ(24px);
+	background-color: var(--clr-accent);
+	animation: light-spinner 2s infinite ease-in;
+}
+.spinner > div::after { /*left*/
+	transform: rotateY(-90deg) translateZ(24px);
+	background-color: var(--clr-pane);
+	animation: fill-spinner 2s infinite ease-in;
+}
+
+@keyframes spin-spinner {
+	0%   { transform: rotateY( 0deg); }
+	20%  { transform: rotateY( 90deg); }
+	100% { transform: rotateY( 90deg); }
+}
+@keyframes light-spinner {
+	0%   { filter: brightness(100%) }
+	20%  { filter: brightness(140%) }
+	100% { filter: brightness(140%) }
+}
+@keyframes fill-spinner {
+	0%   { filter: brightness(40%) }
+	20%  { filter: brightness(100%);}
+	20.1%{ box-shadow: var(--clr-accent) 0 0 0 inset; }
+	95%  { box-shadow: var(--clr-accent) 64px 0 0 inset; }
+	100% { box-shadow: var(--clr-accent) 64px 0 0 inset; }
+}
+
+@media only screen and (max-width: 540px) {
+	#menubox {
+		left: 0 !important;
+		right: 0 !important;
+		top: 0 !important;
+		bottom: 0 !important;
+		width: 100% !important;
+		height: 100% !important;
+	}
+}
+
+@media only screen and (max-height: 400px) {
+	#menufilter {
+		opacity: 0 !important;
+		visibility: hidden !important;
+		transition-duration: .2s;
+	}
+
+	#menufilterdot {
+		opacity: 0 !important;
+		visibility: hidden !important;
+		transition-duration: .2s;
+	}
+
+	#menulist {
+		top: 80px;
+		bottom: 16px;
+		transition-duration:.2s;
+	}
+
+	#lblUsername, #btnPersonalize, #btnLogout {
+		opacity: 0 !important;
+		visibility: hidden !important;
+	}
+}

@@ -1,0 +1,51 @@
+button, input[type="button"], input[type="submit"], input[type="reset"], input[type="color"] {
+	font-size: var(--global-font-size);
+	font-family: var(--global-font-family);
+	font-weight: 600;
+	
+	background-color: rgb(96,96,96);
+	color: var(--clr-light);
+	outline: 0;
+	border: 0;
+	min-width: 72px;
+	height: 30px;
+	margin: 4px;
+	padding-left: 8px;
+	padding-right: 8px;
+	border-radius: 4px;
+	
+	transition: .15s;
+}
+
+button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover, input[type="color"]:hover {
+	background-color: rgb(112,112,112);
+}
+
+button:focus, input[type="button"]:focus, input[type="submit"]:focus, input[type="reset"]:focus, input[type="color"]:focus {
+	animation: outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0 0 0 2px;
+}
+
+button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active, input[type="color"]:active {
+	background-color: rgb(128,128,128);
+}
+
+button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled, input[type="color"]:disabled {
+	color: rgb(176,176,176);
+	background-color: rgb(96,96,96) !important;
+	filter: contrast(60%) brightness(80%);
+}
+
+button.with-icon,
+input[type="button"].with-icon,
+input[type="submit"].with-icon,
+input[type="reset"].with-icon,
+input[type="color"].with-icon{
+	min-width: 72px;
+	text-align: left;
+	padding-left: 32px;
+	padding-right: 8px;
+	background-repeat: no-repeat;
+	background-size: 22px 22px;
+	background-position: 4px center;
+}

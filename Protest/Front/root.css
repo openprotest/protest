@@ -1,0 +1,152 @@
+@font-face { /*light*/
+	font-family: "Open Sans";
+	src: local("Open Sans"), url("fonts/opensans300.ttf") format("truetype");
+	font-weight: 300;
+	font-display: swap;
+}
+@font-face { /*normal*/
+	font-family: "Open Sans";
+	src: local("Open Sans"), url("fonts/opensans400.ttf") format("truetype");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face { /*semi-bold*/
+	font-family: "Open Sans";
+	src: local("Open Sans"), url("fonts/opensans600.ttf") format("truetype");
+	font-weight: 600;
+	font-display: swap;
+}
+@font-face { /*bold*/
+	font-family: "Open Sans";
+	src: local("Open Sans"), url("fonts/opensans700.ttf") format("truetype");
+	font-weight: 700;
+	font-display: swap;
+}
+
+:root {
+	--global-font-size: 15px;
+	--global-font-family: "Open Sans";
+	--sidemenu-width: 480px;
+
+	--clr-accent: rgb(255,102,0);
+	--clr-select: rgb(232,118,0);
+	--clr-transparent: rgba(255,102,0,.6);
+	--clr-error: rgb(240,16,16);
+	--clr-warning: rgb(255,186,0);
+	--clr-light: rgb(224,224,224);
+	--clr-dark: rgb(32,32,32);
+	--clr-control: rgb(160,160,160);
+	--clr-highlight: rgb(204,204,204);
+	--clr-pane: rgb(192,192,192);
+	--clr-contrast: rgb(32,32,32);
+	
+	--grd-taskbar: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)92%, rgb(199,64,0)100%);
+	--grd-taskbar-rev: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)2%, rgb(199,64,0)100%);
+
+	--grd-toolbar: linear-gradient(rgb(96,96,96), rgb(80,80,80));
+ 
+	--bg:
+	linear-gradient(158deg,rgba(84,84,84,.02) 0%,rgba(84,84,84,.02) 20%,rgba(219,219,219,.02) 20%,rgba(219,219,219,.02) 40%,rgba(54,54,54,.02) 40%,rgba(54,54,54,.02) 60%,rgba(99,99,99,.02) 60%,rgba(99,99,99,.02) 80%,rgba(92,92,92,.02) 80%,rgba(92,92,92,.02) 100%),
+	linear-gradient(45deg,rgba(221,221,221,.01) 0%,rgba(221,221,221,.01) 14%,rgba(8,8,8,.01) 14%,rgba(8,8,8,.01) 28.5%,rgba(52,52,52,.01) 28.5%,rgba(52,52,52,.01) 42.858%,rgba(234,234,234,.01) 42.858%,rgba(234,234,234,.01) 57.144%,rgba(81,81,81,.01) 57.144%,rgba(81,81,81,.01) 71.43%,rgba(239,239,239,.01) 71.43%,rgba(239,239,239,.01) 85%,rgba(187,187,187,.01) 85%,rgba(187,187,187,.01) 100.1%),
+	linear-gradient(109deg,rgba(33,33,33,.02) 0%,rgba(33,33,33,.02) 12.5%,rgba(147,147,147,.02) 12.5%,rgba(147,147,147,.02) 25%,rgba(131,131,131,.02) 25%,rgba(131,131,131,.02) 37.5%,rgba(151,151,151,.02) 37.5%,rgba(151,151,151,.02) 50%,rgba(211,211,211,.02) 50%,rgba(211,211,211,.02) 62.5%,rgba(39,39,39,.02) 62.5%,rgba(39,39,39,.02) 75%,rgba(55,55,55,.02) 75%,rgba(55,55,55,.02) 87.5%,rgba(82,82,82,.02) 87.5%,rgba(82,82,82,.02) 100%),
+	linear-gradient(348deg,rgba(42,42,42,.01) 0%,rgba(42,42,42,.01) 20%,rgba(8,8,8,.01) 20%,rgba(8,8,8,.01) 40%,rgba(242,242,242,.01) 40%,rgba(242,242,242,.01) 60%,rgba(42,42,42,.01) 60%,rgba(42,42,42,.01) 80%,rgba(80,80,80,.01) 80%,rgba(80,80,80,.01) 100%),
+	linear-gradient(120deg,rgba(106,106,106,.02) 0%,rgba(106,106,106,.02) 14%,rgba(67,67,67,.02) 14%,rgba(67,67,67,.02) 28.5%,rgba(134,134,134,.02) 28.5%,rgba(134,134,134,.02) 42.858%,rgba(19,19,19,.02) 42.858%,rgba(19,19,19,.02) 57.144%,rgba(101,101,101,.02) 57.144%,rgba(101,101,101,.02) 71.43%,rgba(205,205,205,.02) 71.43%,rgba(205,205,205,.02) 85%,rgba(53,53,53,.02) 85%,rgba(53,53,53,.02) 100.1%),
+	linear-gradient(45deg,rgba(214,214,214,.02) 0%,rgba(214,214,214,.02) 16.6%,rgba(255,255,255,.02) 16.6%,rgba(255,255,255,.02) 33%,rgba(250,250,250,.02) 33%,rgba(250,250,250,.02) 50.001%,rgba(231,231,231,.02) 50.001%,rgba(231,231,231,.02) 66.668%,rgba(241,241,241,.02) 66.668%,rgba(241,241,241,.02) 83%,rgba(31,31,31,.02) 83%,rgba(31,31,31,.02) 100.1%),
+	linear-gradient(59deg,rgba(224,224,224,.02) 0%,rgba(224,224,224,.02) 12.5%,rgba(97,97,97,.02) 12.5%,rgba(97,97,97,.02) 25%,rgba(143,143,143,.02) 25%,rgba(143,143,143,.02) 37.5%,rgba(110,110,110,.02) 37.5%,rgba(110,110,110,.02) 50%,rgba(34,34,34,.02) 50%,rgba(34,34,34,.02) 62.5%,rgba(155,155,155,.02) 62.5%,rgba(155,155,155,.02) 75%,rgba(249,249,249,.02) 75%,rgba(249,249,249,.02) 87.5%,rgba(179,179,179,.02) 87.5%,rgba(179,179,179,.02) 100%);
+}
+
+body {
+	border: 0;
+	margin: 0;
+	overflow: hidden;
+	
+	font-family: var(--global-font-family);
+	font-size: var(--global-font-size);
+
+	user-select: none;
+
+	background: var(--bg);
+	background-size: 100vw 200vh;
+	background-color: rgb(200,215,220);
+}
+
+a {
+	color: var(--clr-dark);
+}
+
+hr {
+	border: 1px solid var(--clr-control);
+}
+
+.disable-animations *,
+.disable-animations *::before,
+.disable-animations *::after {
+	transition-duration: 0s !important;
+	animation: none !important;
+}
+
+::selection {
+	color: var(--clr-light);
+	background: var(--clr-dark);
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #888;
+	border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: #777;
+}
+
+::-webkit-scrollbar-corner {
+	background-color: transparent;
+}
+
+@-moz-document url-prefix() {
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: #888 transparent !important;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--clr-control: rgb(128,128,128);
+		--clr-highlight: rgb(176,176,176);
+		--clr-pane: rgb(160,160,160);
+		--clr-contrast: rgb(224,224,224);
+	}
+
+	body {
+		background-color: rgb(64,64,64);
+	}
+}
+
+@media print {
+	body {
+		display: none;
+	}
+}
+
+@keyframes glow {
+	0%{ box-shadow: var(--clr-accent) 0 0 6px 1px }
+	50%{ box-shadow: var(--clr-accent) 0 0 2px 0px }
+	100%{ box-shadow: var(--clr-accent) 0 0 6px 1px }
+}
+
+@keyframes outline {
+	0%   { box-shadow: var(--clr-accent) 0px 0px 0px 0px; }
+	30%  { box-shadow: var(--clr-accent) 0px 4px 0px 0px; }
+	100% { box-shadow: var(--clr-accent) 0px 0px 0px 3px; }
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}

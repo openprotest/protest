@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>Pro-test</title>
+	<meta name="theme-color" content="#E87600"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<meta name="description" content="A management base for System Admins."/>
+	<style>
+		body {
+			border: 0;
+			margin: 0;
+			background-color: #404040;
+			font-family: "Segoe UI";
+			color: #c0c0c0;
+			text-align: center;
+			overflow: auto;
+			user-select: none;
+			display: block;
+		}
+
+		#locklatch {
+			transform: translateY(22px);
+			transition-duration: 1s;
+			animation: lock 1.5s 1;
+		}
+
+		img {
+			padding: 0px 8px;
+			margin-bottom: -8px;
+			transition: .2s;
+		}
+
+		#lblMessage {
+			display: inline-block;
+			color: #E87600;
+			font-weight: bold;
+			visibility: hidden;
+			margin-bottom: 12px;
+		}
+
+		input {
+			border: 0;
+			outline: 0;
+			background-color: #c0c0c0;
+			color: #404040;
+			font-size: 14px;
+			transition: .2s;
+		}
+
+		input[type="text"],
+		input[type="password"] {
+			width: 180px;
+			height: 34px;
+			border-radius: 4px;
+			padding: 0px 8px;
+			margin-top: 4px;
+			margin-bottom: 4px;
+			margin-right: 40px;
+		}
+
+		input[type="button"] {
+			border-radius: 12px;
+			margin-top: 12px;
+			width: 100px;
+			height: 36px;	
+			transition-duration: filter .2s, box-shadow .2s, opacity .4s;
+			opacity: 0;
+			font-weight: bold;
+			transition: .4s;
+		}
+
+		input[type="button"]:hover{
+			filter: brightness(110%);
+		}
+		.auth-glow > *,
+		input[type="button"]:focus {
+			filter: brightness(125%) drop-shadow(0 0 2px rgba(255,255,255,.8));
+		}
+		input[type="button"]:active {
+			filter: brightness(150%) drop-shadow(0 0 4px rgba(255,255,255,.8));
+		}
+
+		@keyframes lock {
+			0%   { transform: translateY(0px); }
+			50%   { transform: translateY(0px); }
+			90%  { transform: translateY(27px); }
+			100% { transform: translateY(22px); }
+		}
+
+		@keyframes shake {
+			10%, 90% { transform: translateX(-1px); }
+			20%, 80% { transform: translateX(2px); }
+			30%, 50%, 70% { transform: translateX(-4px); }
+			40%, 60% { transform: translateX(4px); }
+		}
+
+		@keyframes fail {
+			0%   { transform: translateY(22px); }
+			50%  { transform: translateY(26px); }
+			100% { transform: translateY(22px); }
+		}
+	</style>
+</head>
+
+<body>
+	<br>
+	<svg width="250" height="250" aria-hidden="true">
+		<path id="locklatch" fill="#E87600" d="M177.904,26.714C163.172,12.238,145.535,5,125.005,5C104.469,5,86.831,12.238,72.1,26.714 C57.367,41.188,50,58.52,50,78.7V135h32.133V78.7c0-11.627,4.183-21.55,12.558-29.779c8.368-8.225,18.47-12.336,30.295-12.336 c11.83,0,21.939,4.111,30.312,12.336c8.369,8.229,12.558,18.152,12.558,29.779v28.346H200V78.7 C200,58.52,192.634,41.188,177.904,26.714z" />
+		<path id="lockbody" fill="#E87600" d="M202.167,129H47.833C37.984,129,30,136.211,30,145.104v87.792c0,8.893,7.984,16.104,17.833,16.104h154.334 c9.849,0,17.833-7.211,17.833-16.104v-87.791C220,136.212,212.016,129,202.167,129z" />
+	</svg>
+	<br>
+	<div id="lblMessage">Sorry, I don't like this password.</div>
+	<br>
+	<div>
+		<img src="mono/user.svg?light" title="username" width="28" height="28">
+		<input type="text" id="txtUsername" aria-label="Username" autocomplete="off" autofocus>
+	</div>
+	<div>
+		<img src="mono/lock.svg?light" title="password" width="28" height="28">
+		<input type="password" id="txtPassword" aria-label="Password" autocomplete="off">
+	</div>
+	<input id="btnLogin" type="button" value="Login"/>
+
+	<noscript>
+		<div style="position:sticky;padding:16px;text-align:center;background-color:#202020;color:#c0c0c0">Javascript is either disabled or not supported by your browser.</div>
+	</noscript>
+
+	<script>
+		txtUsername.value = localStorage.getItem("last_username");
+		txtUsername.onkeyup = (event)=> {
+			if (event.key==="Enter") txtPassword.focus();
+		};
+
+		txtPassword.onkeyup = (event)=> {
+			if (event.key==="Enter") btnLogin.onclick(event);
+		};
+		
+		txtUsername.oninput = txtUsername.onchange = txtPassword.oninput = txtPassword.onchange = (event)=> {
+			btnLogin.style.opacity = txtUsername.value === "" || txtPassword.value === "" ? "0" : "1";
+		};
+
+		txtUsername.onblur = txtPassword.onblur = (event)=> {
+			txtUsername.parentElement.classList.remove("auth-glow");
+			txtPassword.parentElement.classList.remove("auth-glow");
+		};
+
+		txtUsername.onfocus = txtPassword.onfocus = (event)=> {
+			txtPassword.onblur();
+			event.target.parentElement.classList.add("auth-glow");
+		};
+
+		if (txtUsername.value.length == 0) {
+			txtUsername.focus();
+		}
+		else {
+			txtPassword.focus();
+		}
+
+		let busy = false;
+		btnLogin.onclick = async (event)=> {
+			if (busy) return;
+
+			if (txtUsername.value === "" || txtPassword.value === "") return;
+			busy = true;
+
+			try {
+				const response = await fetch("auth", {
+					method: "POST",
+					credentials: "same-origin",
+					body: `${txtUsername.value}${String.fromCharCode(127)}${txtPassword.value}`
+				});
+
+				if (response.status === 202) {
+					localStorage.setItem("last_username", txtUsername.value);
+					location.reload();
+				}
+				else {
+					txtPassword.value="";
+					lblMessage.style.visibility="visible";
+					lblMessage.style.animation="shake 1s 1";
+					locklatch.style.animation="fail .4s 1";
+					setTimeout(()=> {
+						lblMessage.style.animation="none";
+						locklatch.style.animation="none";
+					}, 1000);
+				}
+				busy = false;
+			}
+			catch (ex) {
+				lblMessage.style.visibility = "visible";
+				lblMessage.style.color = "red";
+				lblMessage.textContent = "Server is unreachable.";
+				console.error(ex);
+				busy = false;
+			}
+		};
+	</script>
+</body></html>

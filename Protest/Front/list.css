@@ -1,0 +1,135 @@
+.list-listbox {
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	outline: 0;
+
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 25px;
+	bottom: 28px;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+.list-title {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0px; 
+	height: 25px;
+	
+	border-radius: 4px 4px 0 0;
+	background: var(--grd-toolbar);
+}
+
+.list-title > div:not(:last-child) {
+	position: absolute;
+	top: 1px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-transform: capitalize;
+	line-height: 23px;
+	border-radius: 4px;
+
+	box-sizing: border-box;
+	padding-left: 4px;
+}
+
+.list-title > div:hover {
+	transition: .2s;
+	background-color: rgb(72,72,72);
+}
+
+.list-title > div:active {
+	transition: .2s;
+	background-color: rgb(64,64,64);
+}
+
+.list-title > .list-sort-ascend::before,
+.list-title > .list-sort-descend::before {
+	position: absolute;
+	left: calc(100% - 16px);
+	transform: translateY(8px);
+	content: "";
+	border: solid;
+	border-color: #C0C0C0 transparent;
+	transition: .2s;
+}
+.list-title > .list-sort-ascend::before {
+	border-width: 6px 6px 0 6px;
+}
+.list-title > .list-sort-descend::before {
+	border-width: 0 6px 6px 6px;
+}
+
+/*make room for the options button*/
+.list-title:hover > .list-sort-ascend:nth-last-child(2)::before,
+.list-title:hover > .list-sort-descend:nth-last-child(2)::before {
+	left: calc(100% - 36px);
+}
+
+.list-columns-options {
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	width: 20px;
+	height: 20px;
+	border-radius: 2px;
+	opacity: 0;
+
+	background-image: url(mono/wrench.svg?light);
+	background-size: 18px 18px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.list-title:hover > .list-columns-options {
+	opacity: 1;
+}
+
+.list-element {
+	position: relative;
+	height: 32px;
+	border-bottom: rgb(128,128,128) 1px solid;
+	content-visibility: auto;
+	contain-intrinsic-size: 33px;
+}
+
+.list-element:hover{
+	background-color: var(--clr-highlight);
+}
+
+.list-element > * {
+	position: absolute;
+}
+
+.list-element-icon {
+	left: 2px;
+	top: 2px;
+	width: 28px;
+	height: 28px;
+	background-size: contain;
+}
+
+.list-element > div:not(:first-child) {
+	top: 5px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	box-sizing: border-box;
+	padding-left: 6px;
+}
+
+.list-counter {
+	position: absolute;
+	left: 2px;
+	bottom: 2px;
+	color: var(--clr-pane);
+	font-weight: 600;
+	padding: 0px 8px;
+	border: 1px solid var(--clr-pane);
+	border-radius: 2px;
+}

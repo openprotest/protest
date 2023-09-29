@@ -1,0 +1,67 @@
+input[type="text"],
+input[type="search"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+	font-size: var(--global-font-size);
+	font-family: var(--global-font-family);
+	outline: 0;
+	border: none;
+	border-radius: 4px;
+	background-color: var(--clr-control);
+	padding: 4px 8px;
+	margin: 2px 4px;
+	transition: .2s;
+}
+
+select {
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+	animation: outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0 0 0 2px;
+}
+
+input[type="text"]:disabled,
+input[type="search"]:disabled,
+input[type="password"]:disabled,
+input[type="email"]:disabled,
+input[type="number"]:disabled,
+input[type="date"]:disabled,
+textarea:disabled,
+select:disabled {
+	background-color: transparent;
+	box-shadow: var(--clr-control) 0 0 0 2px inset;
+}
+
+input[type="text"]::placeholder,
+input[type="search"]::placeholder,
+input[type="password"]::placeholder,
+input[type="email"]::placeholder,
+input[type="number"]::placeholder,
+input[type="date"]::placeholder,
+textarea::placeholder,
+select::placeholder {
+	color: rgb(64,64,64);
+}
+
+input[type=number]:not(:focus) {
+	-moz-appearance: textfield;
+}
+
+select > option {
+	font-size: var(--global-font-size);
+	font-family: var(--global-font-family);
+}

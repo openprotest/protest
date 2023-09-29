@@ -1,0 +1,123 @@
+.debit-list-pane {
+	position: absolute;
+	align-items: center;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 282px;
+	padding-top: 8px;
+	padding-left: 8px;
+}
+
+.debit-options {
+	position: absolute;
+	left: 294px;
+	right: 0;
+	top: 4px;
+	height: 40px;
+	overflow: hidden;
+}
+
+.debit-options-collapsed > input[type=button] {
+	color: transparent !important;
+	width: 30px;
+	min-width: 30px;
+	padding-left: 0;
+}
+
+.debit-preview-outer {
+	position: absolute;
+	left: 298px;
+	right: 0;
+	top: 44px;
+	bottom: 0;
+	font-family: var(--global-font-family);
+	overflow-y: scroll;
+	-webkit-user-select: text;
+	user-select: text;
+	-webkit-user-drag: text;
+}
+
+.debit-entry {
+	color: #202020;
+	font-weight: 600;
+	height: 22px;
+	padding: 6px 0px 4px 8px;
+	content-visibility: auto;
+}
+
+.debit-entry:hover {
+	background-color: var(--highlight-color);
+}
+
+.debit-entry > * {
+	display: inline-block;
+}
+
+.debit-entry > *:nth-child(1) {
+	width: calc(100% - 32px);
+}
+
+.debit-entry > *:nth-child(2) {
+	right: 4px;
+	width: 18px;
+	height: 18px;
+	color: #202020;
+	border: 2px solid #202020;
+	border-radius: 4px;
+	font-size: small;
+	text-align: center;
+}
+
+.debit-create-dialog {
+	padding: 20px 50px 4px 50px;
+	display: grid;
+	grid-template-columns: 100px 250px 100px 100px 250px auto 40px;
+	grid-template-rows: repeat(5, 32px) auto;
+	align-items: center;
+}
+
+.debit-equip-list {
+	position: absolute;
+	border: rgb(128,128,128) 1px solid;
+	overflow-y: auto;
+	min-width: 800px;
+	max-width: 1200px;
+	min-height: 64px;
+	left: 40px;
+	right: 40px;
+	top: 220px;
+	bottom: 8px;
+}
+
+.debit-equip-entry {
+	width: 100%;
+	height: 32px;
+	text-align: center;
+}
+
+.debit-equip-entry > input {
+	margin: 4px 2px;
+}
+
+.debit-equip-entry > *:nth-child(1) { width: calc(50% - 100px); }
+.debit-equip-entry > *:nth-child(2) { width: 20%; }
+.debit-equip-entry > *:nth-child(3) { width: 20%; }
+.debit-equip-entry > *:nth-child(4) { width: 80px; }
+
+.debit-equip-entry > *:nth-child(5) {
+	width: 28px;
+	min-width: 28px;
+	height: 28px;
+	background-color: var(--clr-control) !important;
+	background-image: url("mono/delete.svg");
+	background-size: 20px 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+@keyframes stamped {
+	0%  { transform: rotate(-20deg) scale(4); filter: opacity(0); }
+	20% { transform: rotate(-20deg) scale(3.8); filter: opacity(.8); }
+	100%{ transform: rotate(-20deg) scale(3); filter: opacity(1); }
+}

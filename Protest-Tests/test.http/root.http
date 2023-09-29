@@ -1,0 +1,10 @@
+@ip=127.0.0.1
+@port=8080
+
+GET http://{{ip}}:{{port}}/
+Accept-Encoding: br, gzip
+
+###
+
+GET http://{{ip}}:{{port}}/mono/timeline.svg?light
+

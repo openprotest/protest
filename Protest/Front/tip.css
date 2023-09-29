@@ -1,0 +1,114 @@
+*[tip]::before, *[tip]::after {
+	pointer-events: none;
+	position: absolute;
+	filter: opacity(0);
+	visibility: hidden;
+	transform: translateY(8px);
+	z-index: 5;
+	transition: .1s;
+}
+
+*[tip]::after {
+	border: solid;
+	border-color: var(--clr-dark) transparent;
+	border-width: 6px 6px 0 6px;
+	top: -12px;
+	content: "";
+	left: calc(50% - 6px);
+	transform-origin: 50% 0%;
+}
+
+*[tip]::before {
+	content: attr(tip);
+	white-space: nowrap;
+	background-color: var(--clr-dark);
+	color: var(--clr-light);
+	text-align: center;
+	line-height: normal;
+	border-radius: 4px;
+	min-width: 44px;
+	max-width: 192px;
+	height: 20px;
+	max-height: 20px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	top: -35px;
+	padding: 2px 8px;
+	box-shadow: rgba(127,127,127,.8) 0 0 1px;
+	transform-origin: 50% 100%;
+}
+
+*[tip]:hover::before, *[tip]:hover::after {
+	transition-delay: .2s;
+	visibility: visible;
+	filter: opacity(1);
+	transform: translateY(0);
+}
+
+*[tip=""]:hover::before, *[tip=""]:hover::after {
+	visibility: hidden;
+}
+
+*[tip]:active::before, *[tip]:active::after {
+	transition-delay: .25s;
+	transform: translateY(-8px);
+}
+
+*[tip]:disabled::before, *[tip]:disabled:after {
+	visibility: hidden;
+}
+
+*[tip-below]::before, *[tip-below]::after {
+	pointer-events: none;
+	position: absolute;
+	filter: opacity(0);
+	visibility: hidden;
+	transform: translateY(-8px);
+	z-index: 5;
+	transition: .1s;
+}
+
+*[tip-below]::after {
+	content: "";
+	border: solid;
+	border-color: var(--clr-dark) transparent;
+	border-width: 0 6px 6px 6px;
+	transform-origin: 50% 100%;
+	left: calc(50% - 6px);
+	top: 100%;
+}
+
+*[tip-below]::before {
+	content: attr(tip-below);
+	white-space: nowrap;
+	background-color: var(--clr-dark);
+	color: var(--clr-light);
+	text-align: center;
+	border-radius: 4px;
+	min-width: 44px;
+	max-width: 192px;
+	max-height: 20px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	left: calc(50% - 24px);
+	top: calc(100% + 6px);
+	padding: 2px 8px;
+	box-shadow: rgba(64,64,64,.6) 0 0 2px;
+	transform-origin: 50% 100%;
+}
+
+*[tip-below]:focus-visible::before, *[tip-below]:focus-visible::after,
+*[tip-below]:hover::before, *[tip-below]:hover::after {
+	transition-delay: .4s;
+	visibility: visible;
+	filter: opacity(1);
+	transform: translateY(0);
+}
+
+*[tip-below=""]:hover::before, *[tip-below=""]:hover::after {
+	visibility: hidden;
+}
+
+*[tip-below]:disabled::before, *[tip-below]:disabled:after {
+	visibility: hidden;
+}

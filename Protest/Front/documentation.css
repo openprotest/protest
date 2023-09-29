@@ -1,0 +1,212 @@
+.doc-list-pane {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 282px;
+	padding-top: 8px;
+	padding-left: 8px;
+
+	display: grid;
+	align-items: center;
+	grid-template-columns: 72px 200px auto;
+	grid-template-rows: 32px 8px auto 8px;
+
+	transition: .4s;
+}
+
+.doc-options {
+	position: absolute;
+	left: 294px;
+	right: 0;
+	top: 4px;
+	height: 40px;
+	overflow: hidden;
+
+	transition: .4s;
+}
+
+.doc-options-collapsed > input[type=button] {
+	color: transparent !important;
+	width: 30px;
+	min-width: 30px;
+	padding-left: 0;
+}
+
+.doc-body-outer {
+	position: absolute;
+	left: 298px;
+	right: 0;
+	top: 48px;
+	bottom: 0;
+
+	transition: .4s;
+}
+
+.doc-body-outer > * {
+	position: absolute;
+}
+
+.doc-body-outer > .lblTitle {
+	left: 4px;
+	top: 8px;
+}
+
+.doc-body-outer > .txtTitle {
+	left: 120px;
+	top: 4px;
+	width: calc(100% - 148px);
+	max-width: 500px;
+}
+
+.doc-body-outer > .lblRelated {
+	left: 4px;
+	top: 44px;
+}
+
+.doc-body-outer > .divRelated {
+	left: 120px;
+	right: 36px;
+	z-index: 1;
+	top: 42px;
+	height: 52px;
+	margin-left: 4px;
+	background-color: var(--clr-control);
+	border-radius: 4px;
+	overflow-y: auto;
+
+	transition: .4s;
+}
+
+.doc-body-outer > .divRelated > div {
+	display: inline-block;
+	color: var(--clr-dark);
+	border: 1px solid var(--clr-dark);
+	border-radius: 4px;
+	margin: 4px 0 0 4px;
+	width: 150px;
+	height: 42px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	background-size: 36px 36px;
+	background-position: 4px center;
+	background-repeat: no-repeat;
+	padding-left: 44px;
+}
+
+.doc-body-outer > .divRelated > div::before {
+	display: block;
+	content: attr(label1);
+}
+.doc-body-outer > .divRelated > div::after {
+	display: block;
+	content: attr(label2);
+}
+
+.doc-body-outer > .divRelated > div {
+	transition: .2s;
+}
+
+.doc-body-outer > .divRelated > div:hover {
+	background-color: var(--highlight-color);
+}
+
+.doc-related-editable > div > div {
+	display: none;
+
+	position: relative;
+	top: 0;
+	left: -50px;
+	width: 200px;
+	height: 100%;
+	background-color: rgba(32,32,32,.5);
+	transition: .2s;
+}
+
+.doc-related-editable > div > div::after {
+	display: block;
+	content: "Remove";
+	color: var(--clr-light);
+	text-shadow: rgba(16,16,16,.8) 0 0 4px;
+	position: relative;
+	left: calc(50% - 16px);
+	top: 10px;
+}
+
+.doc-related-editable > div:hover > div {
+	display: block;
+}
+
+.doc-edit-button {
+	position: absolute;
+	top: 106px;
+	min-width: 32px;
+	width: 32px;
+	background-color: transparent;
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.doc-content {
+	background-color: var(--clr-pane);
+	color: var(--clr-dark);
+	left: 0;
+	right: 8px;
+	top: 184px;
+	bottom: 8px;
+	padding: 8px;
+	overflow-y: auto;
+	border-radius: 4px;
+
+	user-select: text;
+	-webkit-user-drag: text;
+
+	transition: .4s;
+}
+
+.doc-related-editable > div:hover::before,
+.doc-related-editable > div:hover::after {
+	display: none;
+}
+
+.doc-content .doc-code {
+	width: 100%;
+	min-height: 18px;
+	color: #C0C0C0;
+	background-color: #202020;
+	font-size: 13px;
+	font-family: monospace;
+	box-sizing: border-box;
+	padding: 4px 8px 2px 8px;
+}
+
+.doc-content .doc-code + .doc-code {
+	padding-top: 2px;
+}
+
+.doc-content table {
+	border-spacing: 1px;
+}
+
+.doc-content table tr > td {
+	border: 1px solid black;
+	min-width: 128px;
+	padding: 4px;
+}
+
+.doc-entry {
+	color: #202020;
+	font-weight: 600;
+	height: 22px;
+	padding: 6px 0px 4px 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	content-visibility: auto;
+}
+
+.doc-entry:hover {
+	background-color: var(--highlight-color);
+}

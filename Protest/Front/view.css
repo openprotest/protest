@@ -1,0 +1,485 @@
+.view-toolbar {
+	position: absolute;
+	top: 0;
+	left: 48px;
+	right: 0px;
+	max-width: 800px;
+	z-index: 1;
+	transition: .2s;
+	white-space: nowrap;
+}
+
+.view-timeline {
+	position: absolute;
+	top: 48px;
+	height: 40px;
+	left: 48px;
+	right: 0px;
+	max-width: 800px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	overflow: hidden;
+
+	transition: .2s;
+}
+
+.view-timeline > div {
+	position: relative;
+	left: 12px;
+	width: calc(100% - 24px);
+	height: 100%;
+}
+
+.view-timeline .timeline-con {
+	position: absolute;
+	top: 0;
+	width: min(1.6%, 12px);
+	height: 100%;
+}
+.view-timeline .timeline-con:hover {
+	background-color: var(--clr-highlight);
+}
+
+.view-timeline .timeline-dot {
+	position: absolute;
+	top: 14px;
+	width: 100%;
+	height: 12px;
+	background-color: #404040;
+	border-radius: 6px;
+	box-sizing: border-box;
+
+	transition: background-color .4s;
+}
+
+.view-scroll {
+	position: absolute;
+	top: 48px;
+	bottom: 8px;
+	left: 48px;
+	right: 0px;
+	max-width: 800px;
+	outline: 0;
+	overflow-y: auto;
+
+	transition: .2s;
+}
+
+.view-scroll > div:not(:last-child) {
+	margin-bottom: 8px;
+}
+
+.view-scroll > div:empty {
+	display: none;
+}
+
+.view-attributes-list {
+	top: 0px;
+	width: 100%;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	padding: 2px 0;
+	overflow: hidden;
+
+	transition: .2s;
+}
+
+.view-attributes-list > div {
+	min-height: 33px;
+	transition: height .2s;
+
+	background-position: calc(100% - 4px) center;
+	background-size: 16px 16px;
+	background-repeat: no-repeat;
+	animation: zoom-in-background 1 .4s;
+}
+
+.view-attributes-list > div:first-child {
+	border-radius: 4px 4px 0 0;
+}
+.view-attributes-list > div:last-child {
+	border-radius: 0 0 4px 4px;
+}
+.view-attributes-list > div:only-child {
+	border-radius: 4px 4px 4px 4px;
+}
+
+.view-attributes-freeze:empty {
+	background-color: transparent;
+}
+
+.view-attributes-freeze > div:hover {
+	background-color: var(--clr-highlight);
+}
+
+.view-attributes-freeze > div input[type="text"] {
+	all: unset;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.view-attributes-freeze > div > input[type="text"]:nth-child(1) {
+	text-transform: capitalize;
+}
+
+.view-attributes-freeze > div div:nth-child(2) > input[type="text"] {
+	padding-left: 0;
+}
+
+.view-attributes-list > div[source]::after { /*source*/
+	position: absolute;
+	content: attr(source);
+	right: 38px;
+	transform: translateY(5px);
+	color: var(--clr-dark);
+	background-color: var(--clr-control);
+	border: 1px solid var(--clr-dark);
+	border-radius: 4px;
+	padding: 0px 4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.view-attributes-list > div input[type="text"] {
+	box-sizing: border-box;
+	margin: 2px 0px 2px 4px;
+	padding: 4px 8px;
+
+	background-repeat: no-repeat;
+	background-size: 20px 20px;
+	background-position: 4px center;
+}
+
+.view-attributes-list > div > input[type="text"]:nth-child(1) {
+	width: max(100px, 25%);
+}
+
+.view-attributes-list > div > div:nth-child(2) { /*value container*/
+	display: inline-block;
+	width: calc(100% - max(100px, 25%) - 44px);
+}
+
+.view-attributes-list > div > div:nth-child(2)[previous]:focus-within {
+	height: 56px;
+}
+.view-attributes-list > div > div:nth-child(2)[previous]:focus-within::after { /*fetch previous value*/
+	position: absolute;
+	display: block;
+	content: attr(previous);
+	left: calc(max(100px, 25%) + 40px);
+	text-decoration: line-through;
+	white-space: nowrap;
+	animation: previous-fall-in .2s 1;
+}
+
+.view-attributes-list > div div:nth-child(2) > input[type="text"] { /*value text box*/
+	width: 100%;
+}
+
+.view-attributes-list > div div:nth-child(2) > div { /*value div*/
+	display: inline-block;
+	border: 1px var(--clr-dark) solid;
+	border-radius: 2px;
+	padding: 0 4px;
+	margin: 2px;
+	user-select: text;
+}
+
+.view-attributes-list > div > input[type="button"]:nth-child(3) { /*remove button*/
+	position: absolute;
+	right: 4px;
+	
+	width: 28px;
+	min-width: 28px;
+	height: 28px;
+	background-color: var(--clr-control) !important;
+	background-image: url(mono/delete.svg);
+	background-size: 20px 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+	margin: 2px 0px 2px 4px;
+	transition: .2s;
+}
+
+.view-attributes-list > div > div:nth-child(4) {
+	position: absolute;
+	right: 0px;
+	transform: translateY(-26px);
+	text-align: right;
+	width: auto;
+	max-width: auto;
+	overflow: hidden;
+
+	visibility: hidden;
+	opacity: 0;
+	transition: opacity .2s, right .2s;
+	transition-delay: .4s;
+}
+
+.view-attributes-list > div > div:nth-child(4) > div {
+	display: inline-block;
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
+	border-radius: 4px;
+	padding: 0 4px;
+	margin-left: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	box-sizing: border-box;
+}
+
+.view-attributes-list > div > div:nth-child(4) > div:nth-child(1) {
+	max-width: 150px;
+}
+.view-attributes-list > div > div:nth-child(4) > div:nth-child(2) {
+	max-width: 100px;
+}
+
+.view-attributes-list > .view-attributes-group {
+	min-height: 0 !important;
+	margin: 16px 8px 0 8px;
+	padding-left: 40px;
+	border-radius: 2px;
+	line-height: 32px;
+	text-transform: capitalize;
+	font-weight: 600;
+	background-repeat: no-repeat;
+	background-size: 28px 28px;
+	background-position: 4px 50%;
+	background-color: #80808040 !important;
+	animation: none !important;
+
+	transition: .2s;
+}
+
+.view-attributes-freeze > div input[type="text"]:nth-child(2) {
+	width: calc(100% - max(100px, 25%) - 12px);
+}
+
+.view-attributes-freeze > div > input[type="button"]:nth-child(3) {
+	display: none;
+}
+
+.view-attributes-freeze > div:hover > div:nth-child(4) {
+	visibility: visible;
+	opacity: 1;
+	right: 6px;
+	transition-delay: .8s;
+}
+
+
+.view-attributes-freeze > div > div:nth-child(4):hover > div {
+	max-width: initial;
+}
+
+.view-attributes-with-info > div > div:nth-child(4) {
+	visibility: visible;
+	opacity: 1;
+	right: 6px;
+	transition-delay: 0s !important;
+}
+
+.view-attributes-with-info > div > div:nth-child(4) > div {
+	max-width: initial !important;
+}
+
+.view-password-preview {
+	padding: 2px 8px !important;
+	border: none !important;
+	user-select: all !important;
+
+	background: linear-gradient(0deg, var(--clr-accent) 0%, var(--clr-accent) 100%);
+	background-size: 0px 0px;
+	background-position: 50% 100%;
+	background-repeat: no-repeat;
+	animation: password-countdown 15s 1 linear;
+}
+
+.view-info-pane {
+	position: absolute;
+	display: none;
+	top: 48px;
+	left: 1000px;
+	right: 0;
+	max-width: 800px;
+	outline: 0;
+	overflow-y: auto;
+	
+	animation: slide-right .2s ease-out 1;
+}
+
+button.view-live-button {
+	display: inline-block;
+	height: 48px;
+	text-align: left;
+
+	padding: 4px 8px 4px 40px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	background-size: 32px 32px;
+	background-position: 4px center;
+	background-repeat: no-repeat;
+}
+
+button.view-live-button:hover,
+button.view-live-button:focus-visible {
+	filter: brightness(1.2);
+}
+
+button.view-live-button:active {
+	filter: brightness(1.1);
+}
+
+.view-info-pane > div {
+	background-color: color-mix(in srgb, rgb(64,64,64) 50%, transparent);
+	margin: 0 8px 8px 8px;
+	padding: 8px;
+	border: var(--clr-pane) solid 2px;
+	border-radius: 4px;
+}
+
+.view-info-pane > div:empty {
+	display: none !important;
+}
+
+.view-info-box,
+.view-warning-box {
+	font-weight: 600;
+	margin: 0 0 4px 0;
+	padding: 6px 0px 6px 36px;
+	border-radius: 4px;
+	background-position: 4px center;
+	background-size: 24px 24px;
+	background-repeat: no-repeat;
+	user-select: text;
+}
+
+.view-info-box {
+	color: var(--clr-light);
+	background-color: transparent;
+	background-image: url(mono/info.svg?light);
+}
+
+.view-warning-box {
+	color: var(--clr-dark);
+	background-color: var(--clr-warning);
+	background-image: url(mono/warning.svg);
+}
+
+.view-side-tools {
+	position: absolute;
+	left: 2px;
+	top: 48px;
+	width: 40px;
+	min-height: 40px;
+	transition: .2s;
+}
+
+.view-side-tools > button {
+	margin: 0;
+	padding: 0;
+	margin-bottom: 4px;
+	width: 100%;
+	min-width: 24px !important;
+	height: 32px;
+	line-height: 32px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: left;
+	padding-left: 40px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	background-size: 26px 26px;
+	background-position: 6px center;
+	background-repeat: no-repeat;
+}
+
+.view-side-tools > button:hover,
+.view-side-tools > button:focus-visible {
+	width: 192px !important;
+	filter: brightness(1.2);
+}
+
+.view-side-tools > button:active {
+	filter: brightness(1.1);
+}
+
+.view-side-tools > button[busy]:after {
+	content: "";
+	position: absolute;
+	right: 0px;
+	width: 14px;
+	height: 14px;
+	margin: 18px 0px;
+	box-sizing: border-box;
+
+	border-style: solid;
+	border-radius: 50%;
+	border-width: 2px 3px 4px 0px;
+	border-color: var(--clr-accent) var(--clr-accent) transparent transparent;
+
+	animation: spin 2s linear infinite;
+	transition: .2s;
+}
+
+.view-fetch-floating-button {
+	position: absolute;
+	left: 2px;
+	width: 36px !important;
+	min-width: 36px !important;
+	height: 36px !important;
+	margin: 7px 4px !important;
+	background-image: url(mono/ball.svg?light);
+	background-size: 34px 34px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transition: .2s !important;
+}
+
+@container (min-width: 800px) {
+	.view-timeline,
+	.view-toolbar,
+	.view-scroll {
+		left: 200px;
+	}
+
+	.view-side-tools {
+		width: 192px;
+	}
+	.view-side-tools > button[busy]:after {
+		width: 20px;
+		height: 20px;
+		margin: 7px 4px !important;
+		border-width: 3px 4px 5px 0px;
+	}
+
+	.view-fetch-floating-button {
+		left: 154px;
+	}
+}
+
+@keyframes zoom-in-background {
+	0%   { background-position: calc(100% - 12px) center; background-size: 0px 0px; }
+	80%  { background-position: calc(100% - 2px) center; background-size: 20px 20px; }
+	100% { background-position: calc(100% - 4px) center; background-size: 16px 16px; }
+}
+
+@keyframes password-countdown {
+	0%   { background-size: 100% 4px;}
+	100% { background-size: 0% 4px; }
+}
+
+@keyframes previous-fall-in {
+	0%{   opacity:0; transform:translateY(-12px); }
+	100%{ opacity:1; transform:translateY(0); }
+}
+
+@keyframes slide-right {
+	0% { opacity:0; transform:translateX(-150px); }
+	100% { opacity:1; transform: none; }
+}
+

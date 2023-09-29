@@ -1,0 +1,219 @@
+.grid-find-box {
+	position: absolute;
+	left: 2px;
+	top: 2px;
+	width: 228px;
+
+	transition: opacity .2s;
+}
+
+.grid-none-button, .grid-all-button {
+	position: absolute;
+	top: 32px;
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	background-color: transparent !important;
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+
+	transition: opacity .2s;
+}
+
+.grid-none-button {
+	background-image: url(/mono/selectnone.svg?light);
+	left: 152px;
+}
+
+.grid-all-button {
+	background-image: url(/mono/selectall.svg?light);
+	left: 184px;
+}
+
+.grid-side-list {
+	position: absolute;
+	left: 0px;
+	top: 72px;
+	bottom: 0px;
+	width: 250px;
+	outline: 0;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+	transition: opacity .2s;
+}
+
+.grid-side-list > div {
+	text-transform: capitalize;
+	border-radius: 4px;
+	padding: 2px;
+}
+.grid-side-list > div:hover {
+	background-color: rgba(16,16,16,.2);
+}
+
+.grid-toggle-button {
+	all: unset;
+	position: absolute;
+	left: 216px;
+	top: 32px;
+	z-index: 2;
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	background-color: transparent !important;
+	background-image: url(/mono/guitarpick.svg?light);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transform: rotate(90deg);
+	transition: .2s !important;
+}
+.grid-toggle-button:active {
+	background-size: 24px 24px;
+}
+
+.grid-heading {
+	position: sticky;
+	z-index: 1;
+	width: fit-content;
+	min-width: 250px;
+	height: 28px;
+	top: 4px;
+	margin-left: 50px;
+	margin-bottom: 4px;
+	line-height: 28px;
+	color: var(--clr-light);
+	background: var(--grd-toolbar);
+	border-radius: 4px 4px 0 0;
+	white-space: nowrap;
+}
+
+.grid-heading > div {
+	position: relative;
+	display: inline-block;
+	width: 250px;
+	font-weight: 600;
+	white-space: nowrap;
+	border-radius: 4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
+	text-transform: capitalize;
+}
+.grid-heading > div:hover {
+	transition: .2s;
+	background-color: rgb(72,72,72);
+}
+
+.grid-heading-overflow {
+	position: absolute;
+	right: 4px;
+	top: 4px;
+	width: 20px;
+	height: 20px;
+	border-radius: 2px;
+	background-image: url(/mono/overflow.svg?light);
+	background-position: center;
+	background-size: 18px 18px;
+	background-repeat: no-repeat;
+}
+.grid-heading-overflow:hover {
+	background-color: rgb(56,56,56);
+	transition: .2s;
+}
+.grid-heading-overflow:active {
+	background-color: var(--clr-dark);
+	transition: .2s;
+}
+
+.grid-heading-filters {
+	position: absolute;
+	right: 28px;
+	top: 3px;
+	width: fit-content;
+	height: 16px;
+}
+
+.grid-heading-filters > div {
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	background-position: center;
+	background-size: 16px 16px;
+	background-repeat: no-repeat;
+}
+
+.grid-table {
+	position: absolute;
+	left: 258px;
+	right: 0;
+	top: 0px;
+	bottom: 0;
+	outline: 0;
+	background-color: var(--clr-pane);
+	overflow-x: scroll;
+
+	transition: .2s;
+}
+
+.grid-entry {
+	width: fit-content;
+	min-width: 300px;
+	height: 32px;
+	margin-left: 50px;
+	
+	white-space: nowrap;
+	overflow: hidden;
+
+	content-visibility: auto;
+	contain-intrinsic-size: 33px;
+}
+
+.grid-entry > input {
+	display: inline-block;
+	box-sizing: content-box;
+	width: 230px;
+	margin: 2px !important;
+	transition: 0s;
+
+	background-repeat: no-repeat;
+	background-size: 22px 22px;
+}
+
+.grid-menu-option {
+	border-radius: 2px;
+	padding: 2px;
+	margin: 2px;
+	padding-left: 28px;
+	height: 24px;
+	line-height: 24px;
+	transition: .2s;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	background-position: 2px center;
+	background-size: 20px 20px;
+	background-repeat: no-repeat;
+}
+.grid-menu-option[checked]::after {
+	position: absolute;
+	content: "";
+	width: 16px;
+	height: 16px;
+	right: 4px;
+	transform: translateY(4px);
+
+	background-image: url(/mono/checked.svg);
+	background-size: cover;
+}
+.grid-menu-option:hover {
+	background-color: var(--clr-highlight);
+}
+.grid-menu-option:active {
+	background-color: var(--clr-select);
+}

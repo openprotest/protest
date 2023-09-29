@@ -1,0 +1,113 @@
+.tabs-box {
+	position: absolute;
+	width: 175px;
+	left: 25px;
+	top: 16px;
+	bottom: 16px;
+	outline: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	z-index: 1;
+	transition: .2s;
+}
+
+.tabs-box > button {
+	all: unset;
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	height: 40px;
+	min-height: 32px;
+	margin: 2px 0 2px 0;
+	padding: 4px;
+	color: var(--clr-dark);
+	background: linear-gradient(90deg, rgba(16,16,16,.15) 90%, rgba(16,16,16,.25) 100%);
+	background-color: rgb(160,160,160);
+	border-radius: 8px 0 0 8px;
+	transform-origin: 100%;
+	transform: scaleX(.98);
+	transition: .2s;
+}
+
+.tabs-box > .v-tab-selected {
+	background: unset;
+	background: linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%);
+	background-color: var(--clr-pane);
+	transform: scaleX(1);
+}
+
+.tabs-box > button:not(:disabled):hover {
+	background-color: rgb(172,172,172) !important;
+}
+
+.tabs-box > button:not(:disabled):active {
+	background-color: rgb(208,208,208) !important;
+}
+
+.tabs-box > button:focus {
+	animation: tabs-outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0px -2px 0px 0px inset, var(--clr-accent) 2px 0px 0px 0px inset, var(--clr-accent) 0px 2px 0px 0px inset;
+}
+
+.tabs-box > button > div:nth-child(1) { /*icon*/
+	position: absolute;
+	left: 4px;
+	top: calc(50% - 16px);
+	width: 32px;
+	height: 32px;
+	background-size: contain;
+}
+
+.tabs-box > button > div:nth-child(2) { /*text*/
+	position: absolute;
+	left: 44px;
+	right: 4px;
+	top: 10px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.tabs-box > button > div:nth-child(n+2) {
+	transition: .2s;
+}
+
+.tabs-panel {
+	position: absolute;
+	left: 200px;
+	right: 8px;
+	top: 8px;
+	bottom: 8px;
+	z-index: 2;
+	background-color: var(--clr-pane);
+	color: var(--clr-dark);
+	outline: 0;
+	border-radius: 4px;
+	padding: 4px;
+	overflow: hidden;
+	transition: .2s;
+}
+
+.tabs-content {
+	container-name: tabs-container;
+	container-type: inline-size;
+}
+
+@container tabs-container (max-width: 720px) {
+	.tabs-box {
+		width: 45px;
+	}
+	.tabs-box > button > div:nth-child(n+2) {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.tabs-panel {
+		left: 70px;
+	}
+}
+
+@keyframes tabs-outline {
+	0%   { box-shadow: var(--clr-accent) 0px -4px 0px 0px inset; }
+	30%  { box-shadow: var(--clr-accent) 0px -5px 0px 0px inset, var(--clr-accent) 0px 0px 0px 0px inset, var(--clr-accent) 0px 0px 0px 0px inset; }
+	65%  { box-shadow: var(--clr-accent) 0px -3px 0px 0px inset, var(--clr-accent) 2px 0px 0px 0px inset, var(--clr-accent) 0px 0px 0px 0px inset; }
+	100% { box-shadow: var(--clr-accent) 0px -2px 0px 0px inset, var(--clr-accent) 2px 0px 0px 0px inset, var(--clr-accent) 0px 2px 0px 0px inset; }
+}

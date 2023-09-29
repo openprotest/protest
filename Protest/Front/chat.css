@@ -1,0 +1,13 @@
+.chat-box {
+	position: absolute;
+	left: 8px;
+	right: 8px;
+	top: 8px;
+	bottom: 64px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	padding: 4px;
+	margin: 8px;
+	border-radius: 4px;
+	overflow-y: auto;
+}

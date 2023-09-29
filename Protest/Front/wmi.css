@@ -1,0 +1,121 @@
+.wmi-input {
+	position: absolute;
+	left: 8px;
+	right: 40px;
+	max-width: 800px;
+	top: 8px;
+	height: 122px;
+	display: grid;
+	grid-template-columns: 72px auto 80px;
+	grid-template-rows: 32px 32px 56px auto;
+	transition: .2s;
+}
+
+.wmi-toggle-button {
+	all: unset;
+	position: absolute;
+	right: 8px;
+	top: 96px;
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px!important;
+	min-height: 28px !important;
+	background-color: transparent !important;
+	background-image: url(/mono/guitarpick.svg?light);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transform: rotate(-180deg);
+	transition: .4s;
+}
+.wmi-toggle-button:active {
+	background-size: 22px 22px;
+}
+
+.wmi-plot {
+	background-color: var(--clr-pane);
+	border-radius: 2px;
+	overflow: auto;
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	top: 136px;
+	bottom: 4px;
+	transition: .4s;
+}
+
+.wmi-table {
+	position: relative;
+	color: var(--clr-dark);
+	border-collapse: collapse;
+	margin: 8px;
+	user-select: text;
+}
+
+.wmi-table > tr:first-child td {
+	position: sticky;
+	top: -2px;
+	z-index: 1;
+}
+
+.wmi-table > tr:first-child td:first-child {
+	background: linear-gradient(var(--clr-pane), var(--clr-pane), transparent);
+}
+
+.wmi-table > tr:first-child > td:nth-child(n+2) {
+	color: white;
+	background-color: #444;
+	font-weight: bold;
+}
+
+.wmi-table > tr:nth-child(n+2):hover td:nth-child(n+2) {
+	background-color: var(--clr-highlight);
+}
+
+.wmi-table > tr > td {
+	border: #444 2px solid;
+	max-width: 500px;
+	padding: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wmi-table > tr > td:nth-child(1) {
+	text-align: right;
+	border-left: none;
+	border-bottom: none;
+	border-top: none;
+	padding-right: 4px;
+}
+
+.wmi-table > tr > td:nth-child(n+2) {
+	min-width: 50px;
+}
+
+.wmi-table {
+	counter-reset: eq-wmi-table-count;
+}
+
+.wmi-table > tr:nth-child(n+2) > td:nth-child(1):after {
+	counter-increment: eq-wmi-table-count;
+	content: counter(eq-wmi-table-count);
+}
+
+.wmi-classes-list > div {
+	padding: 4px 8px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wmi-properties-list > div {
+	padding: 4px 8px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.wmi-classes-list > div:hover,
+.wmi-properties-list > div:hover {
+	background-color: var(--clr-highlight);
+}

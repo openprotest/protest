@@ -1,0 +1,193 @@
+.tool-element {
+	position: relative;
+	margin: 0 0 2px 0;
+	height: 32px;
+}
+.tool-element:hover {
+	background-color: rgb(96,96,96) !important;
+}
+
+.tool-element > .tool-icon {
+	position: absolute;
+	left: 4px;
+	top: 4px;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+
+	background-repeat: no-repeat;
+	background-size: 24px 24px;
+}
+
+.tool-element > .tool-label {
+	max-width: 30%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 32px;
+	max-height: 32px;
+	padding-left: 32px;
+	bottom: 0;
+	background-repeat: no-repeat;
+	background-size: 24px 24px;
+	background-position: 4px 4px;
+	user-select: text;
+}
+
+.tool-element > .tool-button-expanded {
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	left: 4px;
+	top: 6px;
+
+	transform: rotate(-90deg);
+	transition: .2s;
+}
+
+.tool-element > .tool-button-expanded::after {
+	position: absolute;
+	content: "";
+	border: solid;
+	border-color: rgb(192,192,192) transparent;
+	border-width: 12px 8px 0 8px;
+	top: 2px;
+	left: 2px;
+	border-radius: 2px;
+}
+
+.tool-element > .tool-result {
+	position: relative;
+	left: calc(30% + 24px);
+
+	top: -32px;
+	width: calc(70% - 24px);
+
+	right: 64px;
+	bottom: 0;
+	height: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 33px;
+	user-select: text;
+}
+
+.tool-element > .tool-result > div {
+	float: left;
+	height: 26px;
+	max-height: 26px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	user-select: text;
+}
+
+.tool-element > .tool-label[label]::before {
+	content: attr(label);
+	color: #c0c0c0;
+	background-color: #222;
+	font-family: monospace;
+	font-weight: 600;
+	margin-right: 4px;
+	padding: 1px 4px;
+	border-radius: 4px;
+}
+
+.tool-element > .expanded .tool-after-label[after-label]::after {
+	position: sticky;
+	left: 180px;
+	content: attr(after-label);
+	color: #c0c0c0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tool-element > .expanded { overflow-y:auto; }
+.tool-element > .expanded > div { width:33%; }
+.tool-element > .collapsed > div { width:auto;}
+.tool-element > .collapsed > div::after {
+	padding-right: 8px;
+	content: ", ";
+}
+
+.tool-element > .expanded { counter-reset: enumeration; }
+.tool-element > .enumerated > div::before { /* enumeration */
+	counter-increment: enumeration;
+	content: counter(enumeration) ". ";
+	display: inline-block;
+	min-width: 32px;
+	font-weight: 400;
+}
+
+.tool-element > .expanded { overflow-y: scroll; }
+.tool-element > .expanded > div { width:100%; }
+.tool-element > .collapsed > div { width: auto; }
+.tool-element > .collapsed > div:nth-last-child(1):after { content: ""; }
+.tool-element > .collapsed > div::after {
+	padding-right: 8px;
+	content: ", ";
+}
+
+.tool-element > .tool-status {
+	position: absolute;
+	right: 36px;
+	top: 6px;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	border-style: solid;
+	border-color: var(--clr-accent) var(--clr-accent) transparent transparent;
+	border-width: 2px 3px 3px 0px;
+	box-sizing: border-box;
+	animation: spin 2s linear infinite;
+}
+
+.tool-element > .tool-graph {
+	position: absolute;
+	left: calc(30% + 34px);
+	right: 100px;
+	top: 0;
+	height: 100%;
+}
+
+.tool-element > .tool-graph > div {
+	position: absolute;
+
+	max-width: 16px;
+	width: 4%;
+	height: 16px;
+	top: 8px;
+	border-radius: 2px;
+}
+
+.tool-element > .tool-msg {
+	position: absolute;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 28px;
+	max-height: 32px;
+	bottom: 0;
+	right: 32px;
+	width: 96px;
+	text-align: right;
+}
+
+.tool-element:hover > .tool-remove {
+	visibility: visible;
+	opacity: 1;
+}
+
+.tool-element > .tool-remove {
+	visibility: hidden;
+	opacity: 0;
+	transition: .2s;
+	position: absolute;
+	right: 4px;
+	top: 6px;
+	width: 20px;
+	height: 20px;
+	background-image: url("controls/close.svg");
+	background-size: 20px 20px;
+	background-repeat: no-repeat;
+	background-color: rgb(192,192,192);
+	border-radius: 50%;
+}
