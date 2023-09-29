@@ -432,7 +432,7 @@ button.view-live-button:active {
 	width: 36px !important;
 	min-width: 36px !important;
 	height: 36px !important;
-	margin: 7px 4px !important;
+	margin: 2px 4px !important;
 	background-image: url(mono/ball.svg?light);
 	background-size: 34px 34px;
 	background-position: center;
