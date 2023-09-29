@@ -496,6 +496,17 @@ class Window {
 		}, WIN.ANIME_DURATION / 2);
 
 		WIN.focused = null;
+
+		MENU.history.push({
+			title: this.header.textContent,
+			icon: this.icon.style.backgroundImage,
+			class: this.constructor.name,
+			params: this.params
+		});
+
+		if (MENU.isOpen && MENU.filterIndex === 1) {
+			setTimeout(()=>MENU.Update(), WIN.ANIME_DURATION);
+		}
 	}
 
 	Toggle() {

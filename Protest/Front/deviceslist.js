@@ -51,7 +51,7 @@ class DevicesList extends List {
 						return;
 					}
 
-				new DeviceView({ file: element.getAttribute("id") });
+				new DeviceView({ file: file });
 			};
 		}
 	}

@@ -249,9 +249,14 @@ const MENU = {
 	},
 
 	Open: ()=> {
+		if (MENU.filterIndex === 1) { //recent
+			searchboxinput.value = "";
+			MENU.Update();
+		}
+
 		MENU.isOpen = true;
 		MENU.UpdatePosition();
-
+		
 		setTimeout(()=> searchboxinput.focus(), 150);
 	},
 
@@ -264,6 +269,11 @@ const MENU = {
 	},
 
 	Toggle: ()=> {
+		if (MENU.filterIndex === 1) { //recent
+			searchboxinput.value = "";
+			MENU.Update("");
+		}
+
 		MENU.isOpen = !MENU.isOpen;
 		MENU.UpdatePosition();
 
@@ -278,12 +288,91 @@ const MENU = {
 		MENU.index = -1;
 
 		const normalizedFilter = filter ? filter.trim() : "";
-		const keywords = normalizedFilter.toLocaleLowerCase().split(" ").filter(o=> o.length > 0);
+		const keywords = normalizedFilter.toLowerCase().split(" ").filter(o=> o.length > 0);
 
 		const isGrid = normalizedFilter.length === 0;
 		const showHidden = MENU.filterIndex > -1 || keywords.length > 0;
 
 		if (MENU.filterIndex === 1) { //recent
+
+			if (WIN.array.length > 0) {
+				const groupOpen = document.createElement("div");
+				groupOpen.className = "menu-group";
+				groupOpen.textContent = "Open";
+				menulist.appendChild(groupOpen);
+			}
+
+			for (let i = 0; i < WIN.array.length; i++) {
+				const match = keywords.every(keyword=> WIN.array[i].header.textContent.toLowerCase().includes(keyword));
+				if (!match) continue;
+
+				const newItem = document.createElement("div");
+				newItem.className = "menu-grid-item";
+				newItem.style.backgroundImage = WIN.array[i].icon.style.backgroundImage.replace(".svg", ".svg?light");
+				newItem.textContent = WIN.array[i].header.textContent;
+				MENU.list.push(newItem);
+				menulist.appendChild(newItem);
+
+				newItem.onmouseenter = ()=> {
+					if (!WIN.array[i].isMaximized) WIN.array[i].win.style.animation = "focus-pop .2s";
+					if (!WIN.array[i].isMaximized) WIN.array[i].icon.style.animation = "focus-pop .2s";
+					setTimeout(()=> {
+						WIN.array[i].win.style.animation = "none";
+						WIN.array[i].icon.style.animation = "none";
+					}, 200);
+				};
+				
+				MENU.ItemEvent(newItem, ()=>{
+					if (!WIN.array[i].isMaximized) WIN.array[i].win.style.animation = "focus-pop .2s";
+					WIN.array[i].BringToFront();
+					setTimeout(()=> { WIN.array[i].win.style.animation = "none" }, 200);
+				});
+			}
+
+			if (MENU.history.length > 0) {
+				const groupClosed = document.createElement("div");
+				groupClosed.className = "menu-group";
+				groupClosed.textContent = "Recently closed";
+				menulist.appendChild(groupClosed);
+			}
+
+			for (let i = MENU.history.length-1; i >= 0 ; i--) {
+				const match = keywords.every(keyword=> MENU.history[i].title.toLowerCase().includes(keyword));
+				if (!match) continue;
+
+				const newItem = document.createElement("div");
+				newItem.className = "menu-list-item";
+				newItem.textContent = MENU.history[i].title;
+				newItem.style.backgroundImage = MENU.history[i].icon.replace(".svg", ".svg?light");
+				menulist.appendChild(newItem);
+
+				MENU.ItemEvent(newItem, ()=>{
+					if (MENU.history[i].class === "DeviceView") {
+						let file = MENU.history[i].params.file;
+						for (let i = 0; i < WIN.array.length; i++) {
+							if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
+								WIN.array[i].Minimize(); //minimize/restore
+								return;
+							}
+						}
+						new DeviceView({ file: file });
+					}
+					else if (MENU.history[i].class === "UserView") {
+						let file = MENU.history[i].params.file;
+						for (let i = 0; i < WIN.array.length; i++) {
+							if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
+								WIN.array[i].Minimize(); //minimize/restore
+								return;
+							}
+						}
+						new DeviceView({ file: file });
+					}
+					else {
+						LOADER.Invoke(MENU.history[i]);
+					}
+				});
+			}
+
 			return;
 		}
 

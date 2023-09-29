@@ -285,13 +285,13 @@ internal static class Fetch {
                 if (ipNumber >= 3758096384) continue; // > 224.0.0.0
 
                 string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress.ToString()));
-                string[] split = ipLocation.Split(';');
-                if (split.Length > 5) split = new string[] { split[0], split[1], split[2], split[3], split[4] };
+                if (ipLocation is null) continue;
 
+                string[] split = ipLocation.Split(';');
+                if (split.Length > 5) split = split.Take(5).ToArray();
                 data.Add("location", new string[] { String.Join(';', split), "Locate IP", String.Empty });
             }
         }
-
 
         /*if (!hash.ContainsKey("type") && !gateways is not null) {
             for (int i = 0; i < gateways.Length; i++)

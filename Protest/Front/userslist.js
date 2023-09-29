@@ -51,7 +51,7 @@ class UsersList extends List {
 						return;
 					}
 
-				new UserView({ file: element.getAttribute("id") });
+				new UserView({ file: file });
 			};
 		}
 	}
