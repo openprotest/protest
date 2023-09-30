@@ -817,6 +817,7 @@ internal static class Fetch {
         float version = 0f;
 
         Uri uri = new Uri($"{protocol}://{ip}:{port}");
+        HttpContent payload = new StringContent($"{username}{(char)127}{password}", Encoding.UTF8, "text/plain");
 
         ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => { return true; };
 
@@ -828,7 +829,7 @@ internal static class Fetch {
 
             HttpResponseMessage versionResponse;
             try {
-                versionResponse = versionClient.GetAsync("/version").Result;
+                versionResponse = versionClient.PostAsync("/version", payload).Result; //ver. 5
 
                 if (versionResponse.StatusCode == HttpStatusCode.NotFound) {
                     version = 3.2f;
@@ -864,6 +865,7 @@ internal static class Fetch {
                         }
                     }
                 }
+
             }
             catch (HttpRequestException ex) {
                 Logger.Error(ex);
@@ -881,6 +883,7 @@ internal static class Fetch {
                 Logger.Error(ex);
                 return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             }
+
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
