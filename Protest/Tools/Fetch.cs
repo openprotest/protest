@@ -817,7 +817,6 @@ internal static class Fetch {
         float version = 0f;
 
         Uri uri = new Uri($"{protocol}://{ip}:{port}");
-        HttpContent payload = new StringContent($"{username}{(char)127}{password}", Encoding.UTF8, "text/plain");
 
         ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => { return true; };
 
@@ -829,7 +828,7 @@ internal static class Fetch {
 
             HttpResponseMessage versionResponse;
             try {
-                versionResponse = versionClient.PostAsync("/version", payload).Result; //ver. 5
+                versionResponse = versionClient.GetAsync("/version").Result; //ver. 5
 
                 if (versionResponse.StatusCode == HttpStatusCode.NotFound) {
                     version = 3.2f;
