@@ -79,6 +79,7 @@ const LOADER = {
 		"chat.js",
 		"documentation.js",
 		"debitnotes.js",
+		"watchdog.js",
 		"personalize.js",
 		"settings.js",
 		"acl.js",
@@ -294,6 +295,7 @@ const LOADER = {
 			case "Chat"          : win = new Chat(session.params); break;
 			case "Documentation" : win = new Documentation(session.params); break;
 			case "DebitNotes"    : win = new DebitNotes(session.params); break;
+			case "Watchdog"      : win = new Watchdog(session.params); break;
 
 			case "HexViewer" : win = new HexViewer(session.params); break;
 			

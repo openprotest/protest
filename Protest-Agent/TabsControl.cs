@@ -17,10 +17,10 @@ namespace ProtestAgent {
             );
 
         private static readonly LinearGradientBrush shadowGradient = new LinearGradientBrush(
-                new Point(120, 0),
+                new Point(140, 0),
                 new Point(160, 0),
-                Color.FromArgb(0, 0, 0, 0),
-                Color.FromArgb(32, 0, 0, 0)
+                Color.FromArgb(0, 16, 16, 16),
+                Color.FromArgb(32, 16, 16, 16)
             );
 
         private static readonly StringFormat verticallyCenter = new StringFormat {
@@ -105,7 +105,7 @@ namespace ProtestAgent {
             } 
             else {
                 e.Graphics.FillPath(backgroundDeselectBrush, path);
-                e.Graphics.FillRectangle(shadowGradient, 121, 0, this.Width-40, this.Height);
+                e.Graphics.FillRectangle(shadowGradient, 141, 0, this.Width-20, this.Height);
             }
 
             if (isMouseOver) {

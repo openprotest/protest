@@ -30,7 +30,9 @@ const KEEP = {
 		};
 
 		KEEP.socket.onclose = ()=> {
-			KEEP.DisconnectNotification();
+			setTimeout(()=>{
+				KEEP.DisconnectNotification();
+			},500);
 		};
 
 		KEEP.socket.onmessage = event=> {
@@ -192,33 +194,18 @@ const KEEP = {
 
 	PushNotification: msg=> {
 		const notificationBox = document.createElement("div");
-		notificationBox.style.position = "absolute";
-		notificationBox.style.width = "250px";
-		notificationBox.style.minHeight = "120px";
-		notificationBox.style.right = "8px";
-		notificationBox.style.bottom = "8px";
-		notificationBox.style.zIndex = "9999998";
-		notificationBox.style.color = "var(--clr-dark)";
-		notificationBox.style.backgroundColor = "var(--clr-transparent)";
-		notificationBox.style.backdropFilter = "blur(8px)";
-		notificationBox.style.padding = "16px 8px";
-		notificationBox.style.border = "var(--clr-accent) solid 1.5px";
-		notificationBox.style.borderRadius = "4px";
-		notificationBox.style.animation = "slide-in .4s 1";
-		notificationBox.style.transition = ".4s";
+		notificationBox.className = "notification-box";
 		container.appendChild(notificationBox);
-
+		
 		const message = document.createElement("div");
+		message.textContent = msg;
 		message.style.height = "64px";
-		message.style.textAlign = "center";
 		message.style.fontSize = "16px";
 		message.style.fontWeight = "600";
 		message.style.textShadow = "rgba(255,255,255,.5) 0 0 2px";
-		message.textContent = msg;
 		notificationBox.appendChild(message);
 	
 		const buttonsBox = document.createElement("div");
-		buttonsBox.style.textAlign = "center";
 		buttonsBox.style.paddingTop = "16px";
 		notificationBox.appendChild(buttonsBox);
 	

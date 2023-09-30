@@ -284,12 +284,9 @@ internal static class Fetch {
                 if (ipNumber >= 2851995648 && ipNumber >= 184549375) continue;  //169.254.0.0 <> 169.254.255.255
                 if (ipNumber >= 3758096384) continue; // > 224.0.0.0
 
-                string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress.ToString()));
+                string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress.ToString(), true));
                 if (ipLocation is null) continue;
-
-                string[] split = ipLocation.Split(';');
-                if (split.Length > 5) split = split.Take(5).ToArray();
-                data.Add("location", new string[] { String.Join(';', split), "Locate IP", String.Empty });
+                data.Add("location", new string[] { ipLocation, "Locate IP", String.Empty });
             }
         }
 
@@ -808,6 +805,11 @@ internal static class Fetch {
         parameters.TryGetValue("devices",   out string importDevices);
         parameters.TryGetValue("users",     out string importUsers);
 
+        IPAddress ipAddress = IPAddress.Parse(ip);
+        if (!IPAddress.IsLoopback(ipAddress)) {
+            return "{\"error\":\"Please prefer to import data on the same host, via the loopback address, to avoid information exposure.\"}"u8.ToArray();
+        }
+
         bool fetchDevices     = importDevices?.Equals("true") ?? false;
         bool fetchUsers       = importUsers?.Equals("true") ?? false;
 
@@ -820,40 +822,66 @@ internal static class Fetch {
         ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => { return true; };
 
         try {
-            using HttpClient clientAuth = new HttpClient();
-            clientAuth.BaseAddress = uri;
-            clientAuth.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
-            clientAuth.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+            using HttpClient versionClient = new HttpClient();
+            versionClient.BaseAddress = uri;
+            versionClient.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
+            versionClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
-            HttpResponseMessage res_auth;
+            HttpResponseMessage versionResponse;
             try {
-                res_auth = clientAuth.PostAsync("/auth", payload).Result;
-            }
-            catch (HttpRequestException ex) {
-                if (ex.StatusCode == HttpStatusCode.NotFound || ex.StatusCode == HttpStatusCode.Unauthorized || ex.StatusCode == HttpStatusCode.Forbidden) {
-                    res_auth = clientAuth.PostAsync("/a", payload).Result;
-                } else {
-                    throw;
+                versionResponse = versionClient.PostAsync("/version", payload).Result; //ver. 5
+
+                if (versionResponse.StatusCode == HttpStatusCode.NotFound) {
+                    version = 3.2f;
                 }
-            }
-            catch {
-                throw;
-            }
+                else {
+                    string[] ver = versionResponse.Content.ReadAsStringAsync().Result
+                                    .Replace("{", String.Empty)
+                                    .Replace("}", String.Empty)
+                                    .Replace("\"", String.Empty)
+                                    .Replace(" ", String.Empty)
+                                    .Split(',');
 
-            Thread.Sleep(1000);
+                    string major="0", minor="0";
+                    for (int i = 0; i < ver.Length; i++) {
+                        if (ver[i].StartsWith("major:"))
+                            major = ver[i][6..];
+                        if (ver[i].StartsWith("minor:"))
+                            minor = ver[i][6..];
+                    }
+                    version = float.Parse($"{major}.{minor}");
+                }
 
-            res_auth.Headers.TryGetValues("Set-Cookie", out IEnumerable<string> cookies);
+                versionResponse.Headers.TryGetValues("Set-Cookie", out IEnumerable<string> cookies);
 
-            if (cookies is not null) {
-                foreach (string cookie in cookies) {
-                    string[] cookieSplit = cookie.Split(';');
-                    for (int i = 0; i < cookieSplit.Length; i++) {
-                        if (cookieSplit[i].StartsWith("sessionid=")) {
-                            sessionid = cookieSplit[i][10..];
-                            break;
+                if (cookies is not null) {
+                    foreach (string cookie in cookies) {
+                        string[] cookieSplit = cookie.Split(';');
+                        for (int i = 0; i < cookieSplit.Length; i++) {
+                            if (cookieSplit[i].StartsWith("sessionid=")) {
+                                sessionid = cookieSplit[i][10..];
+                                break;
+                            }
                         }
                     }
                 }
+
+            }
+            catch (HttpRequestException ex) {
+                Logger.Error(ex);
+                return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+            }
+            catch (ArgumentNullException ex) {
+                Logger.Error(ex);
+                return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+            }
+            catch (InvalidOperationException ex) {
+                Logger.Error(ex);
+                return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+                return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             }
 
         }
@@ -868,55 +896,6 @@ internal static class Fetch {
                 Value = sessionid,
                 Domain = ip
             });
-        }
-
-        try {
-            using HttpClientHandler handler = new HttpClientHandler();
-            handler.CookieContainer = cookieContainer;
-            using (HttpClient client_ver = new HttpClient(handler)) {
-                client_ver.BaseAddress = uri;
-                client_ver.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
-                client_ver.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
-
-                Task<HttpResponseMessage> res_ver = client_ver.GetAsync("version");
-
-                if (res_ver.Result.StatusCode == HttpStatusCode.NotFound) {
-                    version = 3.2f;
-                }
-                else {
-                    string[] ver = res_ver.Result.Content.ReadAsStringAsync().Result
-                        .Replace("{", String.Empty)
-                        .Replace("}", String.Empty)
-                        .Replace("\"", String.Empty)
-                        .Replace(" ", String.Empty)
-                        .Split(',');
-
-                    string major="0", minor="0";
-                    for (int i = 0; i < ver.Length; i++) {
-                        if (ver[i].StartsWith("major:"))
-                            major = ver[i][6..];
-                        if (ver[i].StartsWith("minor:"))
-                            minor = ver[i][6..];
-                    }
-                    version = float.Parse($"{major}.{minor}");
-                }
-            };
-        }
-        catch (HttpRequestException ex) {
-            Logger.Error(ex);
-            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
-        }
-        catch (ArgumentNullException ex) {
-            Logger.Error(ex);
-            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
-        }
-        catch (InvalidOperationException ex) {
-            Logger.Error(ex);
-            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
-            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
         }
 
         if (version < 4f || version > 6f) {
@@ -1113,7 +1092,7 @@ internal static class Fetch {
         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
-        Task<HttpResponseMessage> res = client.GetAsync("/db/device/get");
+        Task<HttpResponseMessage> res = client.GetAsync("/db/device/list");
         byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().Result;
         
         JsonSerializerOptions options = new JsonSerializerOptions();
@@ -1124,8 +1103,6 @@ internal static class Fetch {
             Console.WriteLine(entry.filename);
             DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Pro-test");
         }
-
-        //TODO: update ui
     }
 
     public static void ImportUsersV5(Uri uri, CookieContainer cookieContainer) {
@@ -1137,7 +1114,7 @@ internal static class Fetch {
         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
-        Task<HttpResponseMessage> res = client.GetAsync("/db/user/get");
+        Task<HttpResponseMessage> res = client.GetAsync("/db/user/list");
         byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().Result;
 
         JsonSerializerOptions options = new JsonSerializerOptions();
@@ -1145,11 +1122,8 @@ internal static class Fetch {
         Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
         foreach (Database.Entry entry in import.dictionary.Values) {
-            Console.WriteLine(entry.filename);
             DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Pro-test");
         }
-
-        //TODO: update ui
     }
 
     public static string GetHiddenAttribute(Uri uri, CookieContainer cookieContainer, string path) {

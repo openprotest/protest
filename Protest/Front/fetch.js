@@ -613,6 +613,7 @@ class Fetch extends Tabs {
 		const txtUsername = document.createElement("input");
 		txtUsername.type = "text";
 		txtUsername.placeholder = ".\\administrator";
+		txtUsername.disabled = true;
 		txtUsername.style.gridArea = "4 / 5";
 		txtUsername.style.marginLeft = "0";
 		txtUsername.style.width = "180px";
@@ -624,7 +625,7 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(lblPassword);
 		const txtPassword = document.createElement("input");
 		txtPassword.type = "password";
-		txtPassword.placeholder = " ";
+		txtPassword.disabled = true;
 		txtPassword.style.gridArea = "5 / 5";
 		txtPassword.style.marginLeft = "0";
 		txtPassword.style.width = "180px";

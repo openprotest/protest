@@ -13,7 +13,7 @@ internal static class LocateIp {
         if (string.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
         return Locate(payload);
     }
-    public static byte[] Locate(string ip) {
+    public static byte[] Locate(string ip, bool onlyLocation = false) {
         string[] split = ip.Split('.');
         if (split.Length != 4) { //if not an ip, do a dns resolve
             IPAddress[] response = Protocols.Dns.NativeDnsLookup(ip);
@@ -122,18 +122,31 @@ internal static class LocateIp {
 
                 stream.Close();
 
-                bool isTor = IsTor(String.Join(".", split));
-                bool isProxy = !isTor && IsProxy(String.Join(".", split));
+                if (onlyLocation) {
+                    return Encoding.UTF8.GetBytes(
+                        fl + ";" +
+                        s1 + ";" +
+                        s2 + ";" +
+                        s3 + ";" +
+                        lon + "," + lat
+                    );
+                }
+                else {
+                    bool isTor = IsTor(String.Join(".", split));
+                    bool isProxy = !isTor && IsProxy(String.Join(".", split));
 
-                return Encoding.UTF8.GetBytes(
-                    fl + ";" +
-                    s1 + ";" +
-                    s2 + ";" +
-                    s3 + ";" +
-                    lon + "," + lat + ";" +
-                    isProxy.ToString().ToLower() + ";" +
-                    isTor.ToString().ToLower()
-                );
+                    return Encoding.UTF8.GetBytes(
+                        fl + ";" +
+                        s1 + ";" +
+                        s2 + ";" +
+                        s3 + ";" +
+                        lon + "," + lat + ";" +
+                        isProxy.ToString().ToLower() + ";" +
+                        isTor.ToString().ToLower()
+                    );
+                }
+
+
             } //### end found ###
 
             stream.Close();
