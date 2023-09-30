@@ -864,7 +864,6 @@ internal static class Fetch {
                         }
                     }
                 }
-
             }
             catch (HttpRequestException ex) {
                 Logger.Error(ex);
@@ -882,7 +881,6 @@ internal static class Fetch {
                 Logger.Error(ex);
                 return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             }
-
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
