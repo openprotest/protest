@@ -445,126 +445,76 @@
 	filter: brightness(300%);
 }
 
+.notification-box {
+	position: absolute;
+	width: 250px;
+	min-height: 120px;
+	right: 8px;
+	bottom: 8px;
+	z-index: 9999998;
+	text-align: center;
+	color: var(--clr-dark);
+	background-color: var(--clr-transparent);
+	backdrop-filter: blur(8px) brightness(80%);
+	padding: 16px 8px;
+	border: var(--clr-accent) solid 1.5px;
+	border-radius: 4px;
+	animation: slide-in .4s 1;
+	transition: .4s;
+}
+
 @keyframes wait-animation {
-	0% {
-		transform: translateX(175px);
-	}
-
-	50% {
-		transform: translateX(-175px);
-	}
-
-	100% {
-		transform: translateX(175px);
-	}
+	0%   { transform: translateX(175px) }
+	50%  { transform: translateX(-175px) }
+	100% { transform: translateX(175px) }
 }
 
 @keyframes win-open {
-	0% {
-		transform: scale(1.1);
-		filter: opacity(0);
-	}
-
-	100% {
-		transform: scale(1);
-		filter: opacity(1);
-	}
+	0%   { transform: scale(1.1); filter: opacity(0); }
+	100% { transform: scale(1); filter: opacity(1); }
 }
 
 @keyframes task-icon-open {
-	0% {
-		transform: scale(.8);
-	}
-
-	60% {
-		transform: scale(1.1);
-	}
-
-	100% {
-		transform: scale(1);
-	}
+	0%   { transform: scale(.8) }
+	60%  { transform: scale(1.1) }
+	100% { transform: scale(1) }
 }
 
 @keyframes focus-pop {
-	0% {
-		transform: scale(1);
-	}
-
-	50% {
-		transform: scale(1.05);
-	}
-
-	100% {
-		transform: scale(1);
-	}
+	0%   { transform: scale(1) }
+	50%  { transform: scale(1.05) }
+	100% { transform: scale(1) }
 }
 
 @keyframes fade-in {
-	0% {
-		opacity: 0
-	}
-
-	100% {
-		opacity: 1
-	}
+	0%   { opacity: 0 }
+	100% { opacity: 1 }
 }
 
 @keyframes delayed-fade-in {
-	0% {
-		filter: opacity(0);
-	}
-
-	60% {
-		filter: opacity(0);
-	}
-
-	100% {
-		filter: opacity(1);
-	}
+	0%   { filter: opacity(0) }
+	60%  { filter: opacity(0) }
+	100% { filter: opacity(1) }
 }
 
 @keyframes roll-in {
-	0% {
-		transform: translateY(-100%);
-	}
-
-	100% {
-		transform: none;
-	}
+	0%   { transform: translateY(-100%) }
+	100% { transform: none }
 }
 
 @keyframes slide-in {
-	0% {
-		transform: translateX(100%);
-	}
-
-	100% {
-		transform: none;
-	}
+	0%   { transform: translateX(100%) }
+	100% { transform: none }
 }
 
 @keyframes fall-in {
-	0% {
-		opacity: 0;
-		transform: translateY(-24px);
-	}
-
-	100% {
-		opacity: 1;
-		transform: none;
-	}
+	0%   { opacity: 0; transform: translateY(-24px);}
+	100% { opacity: 1; transform: none; }
 }
 
 @keyframes rise-in {
-	0% {
-		opacity: 0;
-		transform: translateY(24px);
-	}
-
-	100% {
-		opacity: 1;
-		transform: none;
-	}
+	0%   { opacity: 0; transform: translateY(24px); }
+	100% { opacity: 1; transform: none; }
 }
 
 @keyframes highlight {
@@ -573,13 +523,11 @@
 		background-repeat: no-repeat;
 		background-position-x: -400px;
 	}
-
 	50% {
 		background: radial-gradient(circle, var(--clr-accent) 0%, transparent 100%);
 		background-repeat: no-repeat;
 		background-position-x: 0px;
 	}
-
 	100% {
 		background: radial-gradient(circle, var(--clr-accent) 0%, transparent 100%);
 		background-repeat: no-repeat;

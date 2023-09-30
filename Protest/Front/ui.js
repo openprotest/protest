@@ -177,7 +177,7 @@ const MENU = {
 		//{ t: "Team chat",     i: "mono/chat.svg?light",          g: "documentation", h: false, f: params=> new Chat() },
 		{ t: "Documentation", i: "mono/documentation.svg?light", g: "documentation", h: false, f: params=> new Documentation() },
 		{ t: "Debit notes",   i: "mono/notes.svg?light",         g: "documentation", h: false, f: params=> new DebitNotes() },
-		//{ t: "Watchdog",      i: "mono/watchdog.svg?light",      g: "documentation", h: false, f: params=> {} },
+		//{ t: "Watchdog",      i: "mono/watchdog.svg?light",      g: "documentation", h: false, f: params=> new Watchdog(params) },
 
 		{ t: "Ping",          i: "mono/ping.svg?light",         g: "utilities", h: false, f: params=> new Ping(params) },
 		{ t: "ARP ping",      i: "mono/ping.svg?light",         g: "utilities", h: true,  f: params=> new Ping({ entries: [], timeout: 500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },

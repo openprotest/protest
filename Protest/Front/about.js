@@ -260,7 +260,6 @@ class About extends Tabs {
 			else {
 				status.textContent = "Pro-test is up to date.";
 			}
-
 		}
 		catch (ex) {
 			status.textContent = "Failed to fetch the latest version.";
