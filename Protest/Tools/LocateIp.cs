@@ -1,28 +1,37 @@
 ﻿using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Net.Http;
 
 namespace Protest.Tools;
 
 internal static class LocateIp {
+
     public static byte[] Locate(HttpListenerContext ctx) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
 
-        if (string.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
-        return Locate(payload);
+        if (string.IsNullOrEmpty(payload)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        return Locate(payload, false);
     }
     public static byte[] Locate(string ip, bool onlyLocation = false) {
         string[] split = ip.Split('.');
         if (split.Length != 4) { //if not an ip, do a dns resolve
-            IPAddress[] response = Protocols.Dns.NativeDnsLookup(ip);
-            if (response is null) return null;
-            split = response.Select(x => x.ToString()).ToArray();
-            split = response.Length > 0 ? response[0].ToString().Split(".") : null;
+            IPAddress[] dnsResponse = Protocols.Dns.NativeDnsLookup(ip);
+            if (dnsResponse is null) return null;
+            split = dnsResponse.Select(x => x.ToString()).ToArray();
+            split = dnsResponse.Length > 0 ? dnsResponse[0].ToString().Split(".") : null;
         }
 
-        if (split.Length != 4) return null;
+        if (split.Length != 4) {
+            return null;
+        }
 
         try {
             byte msb = byte.Parse(split[0]); //most significant bit
@@ -35,7 +44,9 @@ internal static class LocateIp {
 
             FileInfo file = new FileInfo($"{Data.DIR_IP_LOCATION}\\{split[0]}.bin");
 
-            if (!file.Exists) return "not found"u8.ToArray();
+            if (!file.Exists) {
+                return LocateViaOnlineApi(String.Join(".", split), onlyLocation);
+            }
 
             FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
 
@@ -148,12 +159,31 @@ internal static class LocateIp {
 
 
             } //### end found ###
-
             stream.Close();
-            return "not found"u8.ToArray();
+        }
+        catch {}
+
+        return LocateViaOnlineApi(String.Join(".", split), onlyLocation);
+    }
+
+    public static byte[] LocateViaOnlineApi(string ip, bool onlyLocation = false) {
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new IP2LApiJsonConverter(onlyLocation));
+
+        try {
+            string url = $"https://api.ip2location.io/?key={Configuration.IP2LOCATION_API_KEY}&ip={ip}";
+            using HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/dns-json");
+
+            HttpResponseMessage responseMessage = client.GetAsync(url).Result;
+            responseMessage.EnsureSuccessStatusCode();
+
+            string data = responseMessage.Content.ReadAsStringAsync().Result;
+            string access = JsonSerializer.Deserialize<string>(data, options);
+            return Encoding.UTF8.GetBytes(access);
         }
         catch {
-            return null;
+            return "not found"u8.ToArray();
         }
     }
 
@@ -289,5 +319,86 @@ internal static class LocateIp {
         }
 
         return false;
+    }
+}
+
+file sealed class IP2LApiJsonConverter : JsonConverter<string> {
+    private readonly bool onlyLocation;
+    public IP2LApiJsonConverter(bool onlyLocation) {
+        this.onlyLocation = onlyLocation;
+    }
+
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        string countryCode = String.Empty;
+        string countryName = String.Empty;
+        string regionName = String.Empty;
+        string cityName = String.Empty;
+        double latitude = 0, longitude = 0;
+        bool isProxy = false;
+
+        while (reader.Read()) {
+            if (reader.TokenType == JsonTokenType.EndObject)
+                break;
+
+            if (reader.TokenType == JsonTokenType.PropertyName) {
+                string propertyName = reader.GetString();
+                reader.Read();
+
+                if (propertyName == "ip") {
+                    reader.Skip();
+                }
+                else if (propertyName == "country_code") {
+                    countryCode = reader.GetString();
+                }
+                else if (propertyName == "country_name") {
+                    countryName = reader.GetString();
+                }
+                else if (propertyName == "region_name") {
+                    regionName = reader.GetString();
+                }
+                else if (propertyName == "city_name") {
+                    cityName = reader.GetString();
+                }
+                else if (propertyName == "latitude") {
+                    latitude = reader.GetDouble();
+                }
+                else if (propertyName == "longitude") {
+                    longitude = reader.GetDouble();
+                }
+                else if (propertyName == "is_proxy") {
+                    isProxy = reader.GetBoolean();
+                }
+                else {
+                    reader.Skip();
+                }
+            }
+        }
+
+        StringBuilder builder = new StringBuilder();
+        
+        builder.Append(countryCode);
+        builder.Append(';');
+        builder.Append(countryName);
+        builder.Append(';');
+        builder.Append(regionName);
+        builder.Append(';');
+        builder.Append(cityName);
+        builder.Append(';');
+
+        builder.Append(latitude);
+        builder.Append(',');
+        builder.Append(longitude);
+
+        if (!onlyLocation) {
+            builder.Append(';');
+            builder.Append(isProxy);
+            builder.Append(";false");
+        }
+
+        return builder.ToString();
+    }
+
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options) {
+        throw new JsonException();
     }
 }

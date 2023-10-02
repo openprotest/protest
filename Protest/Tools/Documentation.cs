@@ -6,9 +6,13 @@ using System.Text;
 namespace Protest.Tools;
 
 class Documentation {
-    static readonly object syncLock = new object();
+    private static readonly object syncLock = new object();
 
     public static byte[] List(Dictionary<string, string> parameters) {
+        if (parameters == null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
         string keywords = null;
         parameters?.TryGetValue("keywords", out keywords);
         keywords ??= String.Empty;
@@ -124,7 +128,7 @@ class Documentation {
             builder.Append(payload[1]);
 
         if (payload[1].IndexOf("<script") > -1)
-            return Encoding.UTF8.GetBytes("unsafe content. scripts are not allowed.");
+            return "{\"error\":\"Unsafe content. Scripts are not allowed.\"}"u8.ToArray();
 
         int idx = 0;
         string text = String.Empty;
@@ -171,7 +175,6 @@ class Documentation {
 
                 FileInfo words = new FileInfo($"{Data.DIR_DOCUMENTATION}\\{filename}");
                 File.WriteAllText(words.FullName, String.Join("\n", keywords.ToArray()));
-
             }
             catch {
                 return Data.CODE_FILE_NOT_FOUND.Array;
@@ -183,6 +186,10 @@ class Documentation {
     }
 
     public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
+        if (parameters == null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
         parameters.TryGetValue("name", out string name);
         if (string.IsNullOrEmpty(name)) {
             return Data.CODE_INVALID_ARGUMENT.Array;

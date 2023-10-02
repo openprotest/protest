@@ -16,8 +16,10 @@ internal static class Configuration {
 
     internal static bool force_registry_keys = false;
 
-    internal static string front_path = $"{Data.DIR_ROOT}{Data.DIRECTORY_SEPARATOR}front";
+    internal static string front_path = $"{Data.DIR_ROOT}{Data.DIRECTORY_DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
+
+    internal static string IP2LOCATION_API_KEY = null;
 
     internal static bool Load() {
         if (!File.Exists(Data.FILE_CONFIG)) return false;
@@ -67,6 +69,10 @@ internal static class Configuration {
             case "front_path":
                 front_path = value.ToString();
                 break;
+
+            case "ip2location_api_key":
+                IP2LOCATION_API_KEY = value.ToString();
+                break;
             }
         }
 
@@ -74,23 +80,29 @@ internal static class Configuration {
 
         if (httpPrefixes.Count > 0) http_prefixes = httpPrefixes.ToArray();
 
+        if (IP2LOCATION_API_KEY is null) {
+            try {
+                IP2LOCATION_API_KEY = File.ReadAllText($"{Data.DIR_KNOWLADGE}{Data.DIRECTORY_DELIMITER}ip2location-api-key.txt").Trim();
+            }
+            catch { }
+        }
+
         return true;
     }
 
-    internal static void LocationFrontEnd() {
+    internal static void LocateFrontEnd() {
         DirectoryInfo frontDirectory = new DirectoryInfo(front_path);
         int upCount = 5;
         while (!frontDirectory.Exists && upCount-- > 0) {
             string path = frontDirectory.FullName;
-            if (path.EndsWith($"{Data.DIRECTORY_SEPARATOR}front")) {
+            if (path.EndsWith($"{Data.DIRECTORY_DELIMITER}front")) {
                 path = path[..^6];
             }
 
-            int separatorIndex = path.LastIndexOf(Data.DIRECTORY_SEPARATOR);
+            int separatorIndex = path.LastIndexOf(Data.DIRECTORY_DELIMITER);
             if (separatorIndex > 0) {
-                frontDirectory = new DirectoryInfo($"{path[..separatorIndex]}{Data.DIRECTORY_SEPARATOR}front");
+                frontDirectory = new DirectoryInfo($"{path[..separatorIndex]}{Data.DIRECTORY_DELIMITER}front");
             }
-            Console.WriteLine($"{frontDirectory.FullName}");
         }
 
         if (frontDirectory.Exists && frontDirectory.FullName != front_path) {
@@ -99,7 +111,7 @@ internal static class Configuration {
     }
 
     internal static void CreateDefault() {
-        LocationFrontEnd();
+        LocateFrontEnd();
 
         StringBuilder builder = new StringBuilder();
 

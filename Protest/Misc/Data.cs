@@ -8,9 +8,9 @@ public static class Data {
     public const string GUID = "72f5bca3-7752-45e8-8027-2060ebbda456"; //from Protest.csproj
 
 #if OS_LINUX || OS_MAC
-    public const char DIRECTORY_SEPARATOR = "/";
+    public const char DIRECTORY_DELIMITER = "/";
 #else //OS_WINDOWS
-    public const string DIRECTORY_SEPARATOR = "\\";
+    public const string DIRECTORY_DELIMITER = "\\";
 #endif
 
     public const string TIME_FORMAT = "HH:mm:ss";
@@ -39,35 +39,35 @@ public static class Data {
     public static readonly ArraySegment<byte> CODE_TASK_DONT_EXITSTS      = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
     public static readonly string DIR_ROOT      = Directory.GetCurrentDirectory();
-    public static readonly string DIR_KNOWLADGE = $"{DIR_ROOT}{DIRECTORY_SEPARATOR}knowledge";
-    public static readonly string DIR_ACL       = $"{DIR_ROOT}{DIRECTORY_SEPARATOR}acl";
-    public static readonly string DIR_LOG       = $"{DIR_ROOT}{DIRECTORY_SEPARATOR}log";
-    public static readonly string DIR_BACKUP    = $"{DIR_ROOT}{DIRECTORY_SEPARATOR}backup";
+    public static readonly string DIR_KNOWLADGE = $"{DIR_ROOT}{DIRECTORY_DELIMITER}knowledge";
+    public static readonly string DIR_ACL       = $"{DIR_ROOT}{DIRECTORY_DELIMITER}acl";
+    public static readonly string DIR_LOG       = $"{DIR_ROOT}{DIRECTORY_DELIMITER}log";
+    public static readonly string DIR_BACKUP    = $"{DIR_ROOT}{DIRECTORY_DELIMITER}backup";
 
-    public static readonly string DIR_DATA    = $"{DIR_ROOT}{DIRECTORY_SEPARATOR}data";
-    public static readonly string DIR_DEVICES = $"{DIR_DATA}{DIRECTORY_SEPARATOR}devices";
-    public static readonly string DIR_USERS   = $"{DIR_DATA}{DIRECTORY_SEPARATOR}users";
+    public static readonly string DIR_DATA    = $"{DIR_ROOT}{DIRECTORY_DELIMITER}data";
+    public static readonly string DIR_DEVICES = $"{DIR_DATA}{DIRECTORY_DELIMITER}devices";
+    public static readonly string DIR_USERS   = $"{DIR_DATA}{DIRECTORY_DELIMITER}users";
 
-    public static readonly string DIR_CONFIG         = $"{DIR_DATA}{DIRECTORY_SEPARATOR}configuration";
-    public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DIRECTORY_SEPARATOR}lastseen";
-    public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DIRECTORY_SEPARATOR}documentation";
-    public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DIRECTORY_SEPARATOR}watchdog";
-    public static readonly string DIR_SCRIPTS        = $"{DIR_DATA}{DIRECTORY_SEPARATOR}scripts";
-    public static readonly string DIR_DEBIT          = $"{DIR_DATA}{DIRECTORY_SEPARATOR}debit";
-    public static readonly string DIR_DEBIT_SHORT    = $"{DIR_DATA}{DIRECTORY_SEPARATOR}debit{DIRECTORY_SEPARATOR}short";
-    public static readonly string DIR_DEBIT_LONG     = $"{DIR_DATA}{DIRECTORY_SEPARATOR}debit{DIRECTORY_SEPARATOR}long";
-    public static readonly string DIR_DEBIT_RETURNED = $"{DIR_DATA}{DIRECTORY_SEPARATOR}debit{DIRECTORY_SEPARATOR}returned";
-    public static readonly string DIR_DEBIT_TEMPLATE = $"{DIR_DATA}{DIRECTORY_SEPARATOR}debit{DIRECTORY_SEPARATOR}templates";
+    public static readonly string DIR_CONFIG         = $"{DIR_DATA}{DIRECTORY_DELIMITER}configuration";
+    public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DIRECTORY_DELIMITER}lastseen";
+    public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DIRECTORY_DELIMITER}documentation";
+    public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DIRECTORY_DELIMITER}watchdog";
+    public static readonly string DIR_SCRIPTS        = $"{DIR_DATA}{DIRECTORY_DELIMITER}scripts";
+    public static readonly string DIR_DEBIT          = $"{DIR_DATA}{DIRECTORY_DELIMITER}debit";
+    public static readonly string DIR_DEBIT_SHORT    = $"{DIR_DATA}{DIRECTORY_DELIMITER}debit{DIRECTORY_DELIMITER}short";
+    public static readonly string DIR_DEBIT_LONG     = $"{DIR_DATA}{DIRECTORY_DELIMITER}debit{DIRECTORY_DELIMITER}long";
+    public static readonly string DIR_DEBIT_RETURNED = $"{DIR_DATA}{DIRECTORY_DELIMITER}debit{DIRECTORY_DELIMITER}returned";
+    public static readonly string DIR_DEBIT_TEMPLATE = $"{DIR_DATA}{DIRECTORY_DELIMITER}debit{DIRECTORY_DELIMITER}templates";
 
     public static readonly string DIR_IP_LOCATION   = $"{DIR_KNOWLADGE}\\ip";
     public static readonly string DIR_PROXY         = $"{DIR_KNOWLADGE}\\proxy";
     public static readonly string FILE_TOR          = $"{DIR_KNOWLADGE}\\tor.bin";
     public static readonly string FILE_MAC          = $"{DIR_KNOWLADGE}\\mac.bin";
 
-    public static readonly string FILE_ZONES = $"{DIR_DATA}{DIRECTORY_SEPARATOR}zones.json";
-    public static readonly string FILE_EMAIL_PROFILES = $"{DIR_DATA}{DIRECTORY_SEPARATOR}smtpprofiles.json";
+    public static readonly string FILE_ZONES = $"{DIR_DATA}{DIRECTORY_DELIMITER}zones.json";
+    public static readonly string FILE_EMAIL_PROFILES = $"{DIR_DATA}{DIRECTORY_DELIMITER}smtpprofiles.json";
 
-    public static readonly string FILE_CONFIG = $"{DIR_ROOT}{DIRECTORY_SEPARATOR}protest.cfg";
+    public static readonly string FILE_CONFIG = $"{DIR_ROOT}{DIRECTORY_DELIMITER}protest.cfg";
 
     public static void InitializeDirectories() {
         DirectoryInfo[] dirs = new DirectoryInfo[] {

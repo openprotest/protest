@@ -7,7 +7,7 @@
     <ProjectGuid>{07935B51-01B3-42FF-89C1-D8E9DFC28366}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>ProtestAgent</RootNamespace>
-    <AssemblyName>Protest-Agent</AssemblyName>
+    <AssemblyName>protest-agent</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -709,10 +709,6 @@ internal static class Fetch {
             _   => Database.SaveMethod.createnew
         };
 
-        Console.WriteLine(action);
-        Console.WriteLine(saveMethod);
-        Console.WriteLine(targetAttribute);
-
         Database database;
 
         if (result?.type == Type.devices) {
@@ -1071,7 +1067,6 @@ internal static class Fetch {
                     if (attr.Key.Contains("password") && filename is not null) {
                         string password = GetHiddenAttribute(uri, cookieContainer, $"db/getuserprop&file={filename}&property={attr.Key.ToUpper()}");
                         attributes[attr.Key].value = password;
-                        Console.WriteLine(password);
                     }
                 }
 
@@ -1099,7 +1094,6 @@ internal static class Fetch {
         Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
         foreach (Database.Entry entry in import.dictionary.Values) {
-            Console.WriteLine(entry.filename);
             DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Pro-test");
         }
     }

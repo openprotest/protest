@@ -290,8 +290,8 @@ public sealed class Listener {
         case "/manage/device/printtest": buffer = Proprietary.Printers.Generic.PrintTestPage(parameters); break;
         //case "/manage/device/getfiles" : buffer = FileBrowser.Get(parameters); break;
 
-        case "/manage/user/unlock" :  buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.UnlockUser(parameters) : null; break;
-        case "/manage/user/enable" :  buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.EnableUser(parameters) : null; break;
+        case "/manage/user/unlock" : buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.UnlockUser(parameters) : null; break;
+        case "/manage/user/enable" : buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.EnableUser(parameters) : null; break;
         case "/manage/user/disable": buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.DisableUser(parameters) : null; break;
 
         case "/docs/list"   : buffer = Tools.Documentation.List(parameters); break;
@@ -305,13 +305,17 @@ public sealed class Listener {
                 ctx.Response.AddHeader("Content-Encoding", "gzip");
             break;
 
-        case "/debit/list": buffer = Tools.DebitNotes.List(parameters); break;
-        case "/debit/view": buffer = Tools.DebitNotes.View(parameters); break;
-        case "/debit/create": buffer = Tools.DebitNotes.Create(ctx, username); break;
-        case "/debit/delete": buffer = Tools.DebitNotes.Delete(parameters, username); break;
-        case "/debit/return": buffer = Tools.DebitNotes.Return(parameters, username); break;
-        case "/debit/templates": buffer = Tools.DebitNotes.ListTemplate(); break;
-        case "/debit/banners": buffer = Tools.DebitNotes.ListBanners(); break;
+        case "/debit/list"      : buffer = Tools.DebitNotes.List(parameters); break;
+        case "/debit/view"      : buffer = Tools.DebitNotes.View(parameters); break;
+        case "/debit/create"    : buffer = Tools.DebitNotes.Create(ctx, username); break;
+        case "/debit/delete"    : buffer = Tools.DebitNotes.Delete(parameters, username); break;
+        case "/debit/return"    : buffer = Tools.DebitNotes.Return(parameters, username); break;
+        case "/debit/templates" : buffer = Tools.DebitNotes.ListTemplate(); break;
+        case "/debit/banners"   : buffer = Tools.DebitNotes.ListBanners(); break;
+
+        case "/watchdog/list"   : buffer = Tools.Watchdog.List(parameters); break;
+        case "/watchdog/create" : buffer = Tools.Watchdog.Create(parameters, username); break;
+        case "/watchdog/delete" : buffer = Tools.Watchdog.Delete(parameters, username); break;
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;

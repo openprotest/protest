@@ -173,9 +173,9 @@ internal static class DebitNotes {
         if (string.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
         
         string filename = status switch  {
-            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_SEPARATOR}{file}",
-            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DIRECTORY_SEPARATOR}{file}",
-            "returned" => $"{Data.DIR_DEBIT_RETURNED}{Data.DIRECTORY_SEPARATOR}{file}",
+            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_DELIMITER}{file}",
+            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DIRECTORY_DELIMITER}{file}",
+            "returned" => $"{Data.DIR_DEBIT_RETURNED}{Data.DIRECTORY_DELIMITER}{file}",
             _ => null
         };
 
@@ -237,8 +237,8 @@ internal static class DebitNotes {
         if (string.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
-            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_SEPARATOR}{file}",
-            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DIRECTORY_SEPARATOR}{file}",
+            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_DELIMITER}{file}",
+            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DIRECTORY_DELIMITER}{file}",
             _ => null
         };
 
@@ -262,8 +262,8 @@ internal static class DebitNotes {
         if (string.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
-            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_SEPARATOR}{file}",
-            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DIRECTORY_SEPARATOR}{file}",
+            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_DELIMITER}{file}",
+            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DIRECTORY_DELIMITER}{file}",
             _ => null
         };
 
@@ -279,7 +279,7 @@ internal static class DebitNotes {
             record.returnedDate = DateTime.UtcNow.Ticks;
 
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, options);
-            File.WriteAllBytes($"{Data.DIR_DEBIT_RETURNED}{Data.DIRECTORY_SEPARATOR}{file}", json);
+            File.WriteAllBytes($"{Data.DIR_DEBIT_RETURNED}{Data.DIRECTORY_DELIMITER}{file}", json);
 
             File.Delete(filename);
 
@@ -318,7 +318,7 @@ internal static class DebitNotes {
     }
 
     public static byte[] ListBanners() {
-        DirectoryInfo dir = new DirectoryInfo($"{Configuration.front_path}{Data.DIRECTORY_SEPARATOR}custom");
+        DirectoryInfo dir = new DirectoryInfo($"{Configuration.front_path}{Data.DIRECTORY_DELIMITER}custom");
         if (!dir.Exists) return "[]"u8.ToArray();
 
         StringBuilder builder = new StringBuilder();

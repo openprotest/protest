@@ -8,7 +8,7 @@ public class DatabaseTests {
     private string noahFilename;
     private string lilyFilename;
 
-    private readonly DirectoryInfo directory = new DirectoryInfo($"{Data.DIR_DATA}{Data.DIRECTORY_SEPARATOR}database_test");
+    private readonly DirectoryInfo directory = new DirectoryInfo($"{Data.DIR_DATA}{Data.DIRECTORY_DELIMITER}database_test");
     private readonly string initiator = "unit test";
 
     public DatabaseTests() {

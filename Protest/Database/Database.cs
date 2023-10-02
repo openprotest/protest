@@ -90,7 +90,7 @@ public sealed class Database {
     }
 
     private bool Write(Entry entry) {
-        string filename = $"{location}{Data.DIRECTORY_SEPARATOR}{entry.filename}";
+        string filename = $"{location}{Data.DIRECTORY_DELIMITER}{entry.filename}";
 
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new AttributesJsonConverter(false));
@@ -120,7 +120,7 @@ public sealed class Database {
         }
 
         try {
-            File.Delete($"{location}{Data.DIRECTORY_SEPARATOR}{file}");
+            File.Delete($"{location}{Data.DIRECTORY_DELIMITER}{file}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -186,7 +186,7 @@ public sealed class Database {
                         oldEntry.attributes.Remove(toRemove[i]);
                     }
 
-                    DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DIRECTORY_SEPARATOR}{file}_");
+                    DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DIRECTORY_DELIMITER}{file}_");
                     if (!timelineDir.Exists) timelineDir.Create();
 
                     JsonSerializerOptions options = new JsonSerializerOptions();
@@ -194,7 +194,7 @@ public sealed class Database {
 
                     byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, options);
                     byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-                    File.WriteAllBytes($"{timelineDir.FullName}{Data.DIRECTORY_SEPARATOR}{lastModTimestamp}", cipher);
+                    File.WriteAllBytes($"{timelineDir.FullName}{Data.DIRECTORY_DELIMITER}{lastModTimestamp}", cipher);
 
                 }
                 catch (Exception ex) {
@@ -380,7 +380,7 @@ public sealed class Database {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        string fullname = $"{location}{Data.DIRECTORY_SEPARATOR}{file}";
+        string fullname = $"{location}{Data.DIRECTORY_DELIMITER}{file}";
         StringBuilder builder = new StringBuilder();
 
         try {
