@@ -148,8 +148,11 @@ internal static class Configuration {
         builder.AppendLine("#http_prefix = http://[::1]:8080/");
         builder.AppendLine("#http_prefix = https://+:443/");
         builder.AppendLine();
+
+        builder.AppendLine("#ip2location_api_key = PASTE-API-KEY-HERE");
         builder.AppendLine();
 
+        builder.AppendLine();
         builder.AppendLine("###");
         builder.AppendLine("###  Use NETSH to bind an SSL certificate with your https endpoint:");
         builder.AppendLine($"###  netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{Data.GUID}}}");

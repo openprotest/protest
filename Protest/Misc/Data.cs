@@ -71,6 +71,7 @@ public static class Data {
 
     public static void InitializeDirectories() {
         DirectoryInfo[] dirs = new DirectoryInfo[] {
+            new DirectoryInfo(DIR_KNOWLADGE),
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
             new DirectoryInfo(DIR_WATCHDOG),
