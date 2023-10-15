@@ -4,7 +4,6 @@ using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace Protest.Tools;
 
@@ -85,7 +84,7 @@ internal static class DebitNotes {
         lock (syncLock) {
             for (int i = 0; i < files.Count; i++) {
                 string data = File.ReadAllText(files[i].FullName);
-                if (string.IsNullOrEmpty(data)) continue;
+                if (String.IsNullOrEmpty(data)) continue;
 
                 Record record = JsonSerializer.Deserialize<Record>(data, options);
 
@@ -170,7 +169,7 @@ internal static class DebitNotes {
         string status = null;
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
-        if (string.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
         
         string filename = status switch  {
             "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_DELIMITER}{file}",
@@ -234,7 +233,7 @@ internal static class DebitNotes {
         string status = null;
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
-        if (string.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
             "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_DELIMITER}{file}",
@@ -259,7 +258,7 @@ internal static class DebitNotes {
         string status = null;
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
-        if (string.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
             "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DIRECTORY_DELIMITER}{file}",

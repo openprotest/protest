@@ -15,21 +15,28 @@ class UsersList extends List {
 		this.SetupToolbar();
 		this.LinkData(LOADER.users);
 
-		const addButton	   = this.AddToolbarButton("Add", "mono/add.svg?light");
-		const removeButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.addButton	   = this.AddToolbarButton("Add", "mono/add.svg?light");
+		this.deleteButton  = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		const filterButton = this.SetupFilter();
-		const findTextBox  = this.SetupFind();
+		const findInput    = this.SetupFind();
 
 		if (this.params.find && this.params.find.length > 0) {
-			findTextBox.value = this.params.find;
-			findTextBox.parentElement.style.borderBottom = findTextBox.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
-			findTextBox.parentElement.style.width = "200px";
+			findInput.value = this.params.find;
+			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
+			findInput.parentElement.style.width = "200px";
 		}
 
 		this.RefreshList();
 
-		addButton.onclick = ()=> this.Add();
-		removeButton.onclick = ()=> this.Delete();
+		this.addButton.onclick = ()=> this.Add();
+		this.deleteButton.onclick = ()=> this.Delete();
+	
+		this.UpdateAuthorization();
+	}
+
+	UpdateAuthorization() { //override
+		this.addButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
+		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
 	}
 
 	InflateElement(element, entry, type) { //override
@@ -41,7 +48,7 @@ class UsersList extends List {
 		super.InflateElement(element, entry, type);
 
 		if (!element.ondblclick) {
-			element.ondblclick = (event)=> {
+			element.ondblclick = event=> {
 				event.stopPropagation();
 				
 				const file = element.getAttribute("id");
@@ -61,7 +68,7 @@ class UsersList extends List {
 	}
 
 	Delete() {
-		this.ConfirmBox("Are you sure you want to delete this user?").addEventListener("click", async()=> {
+		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async()=> {
 			if (this.params.select === null) return;
 			
 			let file = this.params.select;

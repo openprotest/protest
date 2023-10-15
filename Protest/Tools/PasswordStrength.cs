@@ -126,13 +126,13 @@ public static class PasswordStrength {
                     continue;
 
                 string password = pair.Value.value;
-                if (string.IsNullOrEmpty(password)) continue;
+                if (String.IsNullOrEmpty(password)) continue;
 
                 int entropy   = (int)Entropy(password, out int length, out int pool, words.ToArray());
                 string ttc    = CalculateTtc(length, pool);
                 long modified = pair.Value.date;
-                string name   = string.Empty;
-                string mail   = string.Empty;
+                string name   = String.Empty;
+                string mail   = String.Empty;
 
                 if (entry.attributes.TryGetValue("username", out Database.Attribute _username)) {
                     name = _username.value;
@@ -180,13 +180,13 @@ public static class PasswordStrength {
                     continue;
 
                 string password = pair.Value.value;
-                if (string.IsNullOrEmpty(password))
+                if (String.IsNullOrEmpty(password))
                     continue;
 
                 int entropy = (int)Entropy(password, out int length, out int pool, words.ToArray());
                 string ttc = CalculateTtc(length, pool);
                 long modified = pair.Value.date;
-                string name = string.Empty;
+                string name = String.Empty;
 
                 if (entry.attributes.TryGetValue("name", out Database.Attribute _name)) {
                     if (name.Length == 0)
@@ -256,7 +256,7 @@ public static class PasswordStrength {
 
             BigInteger seconds = stc;
 
-            string ttc = string.Empty;
+            string ttc = String.Empty;
             if (eons != 0)
                 ttc = eons == 1 ? $"1 eon, " : $"{eons} eons, ";
             if (millenniums != 0)
@@ -370,7 +370,7 @@ public static class PasswordStrength {
             }
 
             double minEntropy = double.MaxValue;
-            string ttc = string.Empty; //time to crack
+            string ttc = String.Empty; //time to crack
 
             foreach (KeyValuePair<string, Database.Attribute> attribute in entry.Value.attributes) {
                 if (!include.Contains(attribute.Key)) {

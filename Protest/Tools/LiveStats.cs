@@ -236,7 +236,9 @@ internal static class LiveStats {
             Logger.Error(ex);
         }
         finally {
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            if (ws.State == WebSocketState.Open) {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
         }
     }
 
@@ -304,7 +306,9 @@ internal static class LiveStats {
         catch (Exception ex) {
             Logger.Error(ex);
         } finally {
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            if (ws.State == WebSocketState.Open) {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
         }
     }
 

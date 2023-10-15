@@ -244,8 +244,6 @@ class Documentation extends Window {
 					btnOK.focus();
 					return;
 				}
-				if (event.key === "Escape")
-					btnCancel.onclick();
 			};
 
 			setTimeout(()=> txtLink.focus(), 10);
@@ -263,7 +261,7 @@ class Documentation extends Window {
 		if (this.content.clientWidth === 0 && count < 200)
 			setTimeout(()=> this.OnUiReady(++count), 50);
 		else
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 	}
 
 	AfterResize() { //override
@@ -274,12 +272,31 @@ class Documentation extends Window {
 			this.options.classList.remove("doc-options-collapsed");
 	}
 
+	UpdateAuthorization() { //override
+		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("documentation:write")) {
+			this.btnNew.disabled = true;
+			this.btnEdit.disabled = true;
+			this.btnDelete.disabled = true;
+			this.btnSave.disabled = true;
+			this.btnDiscard.disabled = true;
+			return;
+		}
+
+		this.btnEdit.disabled = false;
+		this.btnDelete.disabled = false;
+
+		if (this.txtTitle.value.length === 0) {
+			this.btnEdit.disabled = true;
+			this.btnDelete.disabled = true;
+		}
+	}
+
 	async ListDocs() {
 		this.params = { keywords: this.txtSearch.value };
 		try {
 			let uri = this.txtSearch.value.length === 0 ?
 				"docs/list" :
-				`docs/list?keywords=${this.txtSearch.value}`;
+				`docs/list?keywords=${encodeURIComponent(this.txtSearch.value)}`;
 
 			const response = await fetch(uri);
 
@@ -298,7 +315,7 @@ class Documentation extends Window {
 			}
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -315,7 +332,7 @@ class Documentation extends Window {
 				entry.onclick();
 		}
 
-		this.AdjustButtons();
+		this.UpdateAuthorization();
 	}
 
 	AddToList(name) {
@@ -343,16 +360,16 @@ class Documentation extends Window {
 			this.txtTitle.value = "";
 			this.divRelated.textContent = "";
 			this.divContent.textContent = "";
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 			this.selected = null;
 			return;
 		}
 
 		this.txtTitle.value = name;
-		this.AdjustButtons();
+		this.UpdateAuthorization();
 
 		try {
-			const response = await fetch(`docs/view?name=${name}`);
+			const response = await fetch(`docs/view?name=${encodeURIComponent(name)}`);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 			
@@ -370,26 +387,7 @@ class Documentation extends Window {
 			}
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
-		}
-	}
-
-	AdjustButtons() {
-		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("documentation:write")) {
-			this.btnNew.disabled = true;
-			this.btnEdit.disabled = true;
-			this.btnDelete.disabled = true;
-			this.btnSave.disabled = true;
-			this.btnDiscard.disabled = true;
-			return;
-		}
-
-		this.btnEdit.disabled = false;
-		this.btnDelete.disabled = false;
-
-		if (this.txtTitle.value.length === 0) {
-			this.btnEdit.disabled = true;
-			this.btnDelete.disabled = true;
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -548,7 +546,7 @@ class Documentation extends Window {
 			this.ListDocs();
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -600,9 +598,8 @@ class Documentation extends Window {
 
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
-
 	}
 
 	Discard() {
@@ -719,7 +716,6 @@ class Documentation extends Window {
 
 				divDevices.appendChild(element);
 			}
-
 		};
 
 		txtFind.focus();

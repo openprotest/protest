@@ -35,8 +35,8 @@ internal static class SiteCheck {
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
             string uri = Encoding.Default.GetString(buff, 0, receiveResult.Count);
 
-            string protocol = string.Empty;
-            string domain = string.Empty;
+            string protocol = String.Empty;
+            string domain = String.Empty;
             int port = 0;
 
             int colon = uri.IndexOf("://");

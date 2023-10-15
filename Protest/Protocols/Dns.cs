@@ -5,33 +5,35 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Collections.Generic;
-using System;
+using System.Net.Security;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace Protest.Protocols;
 
 internal static class Dns {
 
     public enum TransportMethod {
-        auto = 0,
-        udp = 1,
-        tcp = 2,
-        mdns = 4,
-        tls = 5,
+        auto  = 0,
+        udp   = 1,
+        tcp   = 2,
+        tls   = 5,
         https = 6,
-        quic = 7,
+        quic  = 7,
     }
 
     public enum RecordType {
-        A = 1,
-        NS = 2,
+        A     = 1,
+        NS    = 2,
         CNAME = 5,
-        SOA = 6,
-        PTR = 12,
-        MX = 15,
-        TXT = 16,
-        AAAA = 28,
-        SRV = 33,
-        ANY = 255
+        SOA   = 6,
+        PTR   = 12,
+        MX    = 15,
+        TXT   = 16,
+        AAAA  = 28,
+        SRV   = 33,
+        ANY   = 255
     }
 
     enum Class {
@@ -88,42 +90,45 @@ internal static class Dns {
         timeout = int.Parse(Uri.UnescapeDataString(timeoutString));
 
         transport = transportString switch {
-            "auto" => TransportMethod.auto,
-            "udp" => TransportMethod.udp,
-            "tcp" => TransportMethod.tcp,
-            //"tls" => TransportMethod.tls,
+            //"auto"  => TransportMethod.auto,
+            "udp"   => TransportMethod.udp,
+            "tcp"   => TransportMethod.tcp,
+            "tls"   => TransportMethod.tls,
             "https" => TransportMethod.https,
-            //"quic" => TransportMethod.quic,
-            _ => TransportMethod.udp
+            "quic"  => TransportMethod.quic,
+            _       => TransportMethod.auto
         };
 
         type = Uri.UnescapeDataString(typeString) switch {
-            "A" => RecordType.A,
-            "NS" => RecordType.NS,
+            "A"     => RecordType.A,
+            "NS"    => RecordType.NS,
             "CNAME" => RecordType.CNAME,
-            "SOA" => RecordType.SOA,
-            "PTR" => RecordType.PTR,
-            "MX" => RecordType.MX,
-            "TXT" => RecordType.TXT,
-            "AAAA" => RecordType.AAAA,
-            "SRV" => RecordType.SRV,
-            "ANY" => RecordType.ANY,
-            _ => RecordType.A,
+            "SOA"   => RecordType.SOA,
+            "PTR"   => RecordType.PTR,
+            "MX"    => RecordType.MX,
+            "TXT"   => RecordType.TXT,
+            "AAAA"  => RecordType.AAAA,
+            "SRV"   => RecordType.SRV,
+            "ANY"   => RecordType.ANY,
+            _       => RecordType.A,
         };
 
-        isStandard = standardString is not null && standardString.Equals("true", StringComparison.OrdinalIgnoreCase);
-        isInverse = inverseString is not null && inverseString.Equals("true", StringComparison.OrdinalIgnoreCase);
-        showServerStatus = statusString is not null && statusString.Equals("true", StringComparison.OrdinalIgnoreCase);
-        isTruncated = truncatedString is not null && truncatedString.Equals("true", StringComparison.OrdinalIgnoreCase);
-        isRecursive = recursiveString is null || recursiveString.Equals("true", StringComparison.OrdinalIgnoreCase);
+        isStandard       = standardString is not null  && standardString.Equals("true", StringComparison.OrdinalIgnoreCase);
+        isInverse        = inverseString is not null   && inverseString.Equals("true", StringComparison.OrdinalIgnoreCase);
+        showServerStatus = statusString is not null    && statusString.Equals("true", StringComparison.OrdinalIgnoreCase);
+        isTruncated      = truncatedString is not null && truncatedString.Equals("true", StringComparison.OrdinalIgnoreCase);
+        isRecursive      = recursiveString is null     || recursiveString.Equals("true", StringComparison.OrdinalIgnoreCase);
 
-        return Resolve(domainNames, dnsServer, timeout, transport, type, isStandard, isInverse, showServerStatus, isTruncated, isRecursive);
+        return Resolve(domainNames, dnsServer, timeout, out _, out _, out _, transport, type, isStandard, isInverse, showServerStatus, isTruncated, isRecursive);
     }
 
     public static byte[] Resolve(
         string[] domainNames,
         string dnsServer,
         int timeout,
+        out ushort answerCount,
+        out ushort authorityCount,
+        out ushort additionalCount,
         TransportMethod transport = TransportMethod.udp,
         RecordType type = RecordType.A,
         bool isStandard = false,
@@ -132,7 +137,6 @@ internal static class Dns {
         bool isTruncated = false,
         bool isRecursive = true
     ) {
-
         try {
             if (transport == TransportMethod.https) {
                 if (type == RecordType.PTR) {
@@ -149,6 +153,10 @@ internal static class Dns {
                 HttpResponseMessage responseMessage = client.GetAsync(url).Result;
                 responseMessage.EnsureSuccessStatusCode();
 
+                answerCount = 1;
+                authorityCount = 0;
+                additionalCount = 0;
+
                 string data = responseMessage.Content.ReadAsStringAsync().Result;
                 return Encoding.UTF8.GetBytes(data);
             }
@@ -163,13 +171,50 @@ internal static class Dns {
                 serverIp = GetLocalDnsAddress();
             }
 
-            IPEndPoint remoteEndPoint = new IPEndPoint(serverIp, 53);
             byte[] response;
 
-            if (transport == TransportMethod.tcp) {
-                using Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            if (transport == TransportMethod.tls) {
+                IPEndPoint remoteEndPoint = new IPEndPoint(serverIp, 853);
 
+                using Socket socket = new Socket(remoteEndPoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(remoteEndPoint);
+
+                using Stream stream = new NetworkStream(socket, ownsSocket: true);
+
+                using SslStream secureStream = new SslStream(
+                    stream,
+                    false,
+                    (sender, certificate, chain, errors) => errors == SslPolicyErrors.None,
+                    null,
+                    EncryptionPolicy.RequireEncryption
+                );
+
+                secureStream.ReadTimeout = timeout;
+                secureStream.AuthenticateAsClient(serverIp.ToString());
+
+                secureStream.Write(new byte[] { (byte)(query.Length >> 8), (byte)query.Length }); //length
+                secureStream.Flush();
+
+                secureStream.Write(query);
+                secureStream.Flush();
+
+                byte[] responseLengthBytes = new byte[2];
+                secureStream.Read(responseLengthBytes, 0, 2);
+                if (BitConverter.IsLittleEndian) Array.Reverse(responseLengthBytes);
+
+                short responseLength = BitConverter.ToInt16(responseLengthBytes, 0);
+                response = new byte[responseLength];
+                secureStream.Read(response, 0, responseLength);
+
+                secureStream.Close();
+                socket.Close();
+            }
+            else if (transport == TransportMethod.tcp) {
+                IPEndPoint remoteEndPoint = new IPEndPoint(serverIp, 53);
+
+                using Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                socket.Connect(remoteEndPoint);
+                //socket.ReceiveTimeout = timeout;
 
                 byte[] lengthBytes = BitConverter.GetBytes((short)query.Length);
                 if (BitConverter.IsLittleEndian) Array.Reverse(lengthBytes);
@@ -188,9 +233,9 @@ internal static class Dns {
                 socket.Receive(response, responseLength, SocketFlags.None);
 
                 socket.Close();
-
             }
             else { //udp
+                IPEndPoint remoteEndPoint = new IPEndPoint(serverIp, 53);
                 using Socket socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
 
                 socket.Connect(remoteEndPoint);
@@ -204,7 +249,7 @@ internal static class Dns {
                 socket.Close();
             }
 
-            Answer[] deconstructed = DeconstructResponse(response);
+            Answer[] deconstructed = DeconstructResponse(response, out answerCount, out authorityCount, out additionalCount);
             StringBuilder builder = new StringBuilder();
 
             builder.Append('{');
@@ -253,7 +298,6 @@ internal static class Dns {
 
                 builder.Append('{');
                 switch (deconstructed[i].type) {
-
                 case RecordType.A:
                     builder.Append("\"type\":\"A\",");
                     builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
@@ -267,19 +311,16 @@ internal static class Dns {
                 case RecordType.CNAME:
                     builder.Append("\"type\":\"CNAME\",");
                     builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    //TODO:
                     break;
 
                 case RecordType.SOA:
                     builder.Append("\"type\":\"SOA\",");
                     builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    //TODO:
                     break;
 
                 case RecordType.PTR:
                     builder.Append("\"type\":\"PTR\",");
                     builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    //TODO:
                     break;
 
                 case RecordType.MX:
@@ -329,13 +370,22 @@ internal static class Dns {
         }
         catch (SocketException ex) {
             if (ex.ErrorCode == 10060) {
+                answerCount = 0;
+                authorityCount = 0;
+                additionalCount = 0;
                 return "{\"error\":\"Connection timed out\",\"errorcode\":\"0\"}"u8.ToArray();
             }
             else {
+                answerCount = 0;
+                authorityCount = 0;
+                additionalCount = 0;
                 return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
             }
         }
         catch {
+            answerCount = 0;
+            authorityCount = 0;
+            additionalCount = 0;
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
         }
     }
@@ -354,9 +404,6 @@ internal static class Dns {
         replaced = null;
 
         ushort questions = (ushort)domainNames.Length;
-        ushort answers = 0;
-        ushort authority = 0;
-        ushort additional = 0;
 
         int len = 12;
         string[][] labels = new string[domainNames.Length][];
@@ -401,14 +448,17 @@ internal static class Dns {
         query[5] = (byte)questions;
 
         //answer RRs
+        ushort answers = 0;
         query[6] = (byte)(answers << 8);
         query[7] = (byte)answers;
 
         //authority RRs
+        ushort authority = 0;
         query[8] = (byte)(authority << 8);
         query[9] = (byte)authority;
 
         //additional RRs
+        ushort additional = 0;
         query[10] = (byte)(additional << 8);
         query[11] = (byte)additional;
 
@@ -434,13 +484,13 @@ internal static class Dns {
         return query;
     }
 
-    private static Answer[] DeconstructResponse(byte[] response) {
+    private static Answer[] DeconstructResponse(byte[] response, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
         //ushort transactionId = BitConverter.ToUInt16(response, 0);
         //ushort query = (ushort)((response[2] << 8) | response[3]);
         ushort questionCount = (ushort)((response[4] << 8) | response[5]);
-        ushort answerCount = (ushort)((response[6] << 8) | response[7]);
-        ushort authorityCount = (ushort)((response[8] << 8) | response[9]);
-        ushort additionalCount = (ushort)((response[10] << 8) | response[11]);
+        answerCount = (ushort)((response[6] << 8) | response[7]);
+        authorityCount = (ushort)((response[8] << 8) | response[9]);
+        additionalCount = (ushort)((response[10] << 8) | response[11]);
 
         //bool isResponse = (response[2] & 0b10000000) == 0b10000000;
 

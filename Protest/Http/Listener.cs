@@ -65,7 +65,7 @@ public sealed class Listener {
 
         //Cross Site Request Forgery protection
         if (ctx.Request.UrlReferrer != null) {
-            if (!string.Equals(ctx.Request.UrlReferrer.Host, ctx.Request.UserHostName.Split(':')[0], StringComparison.Ordinal)) {
+            if (!String.Equals(ctx.Request.UrlReferrer.Host, ctx.Request.UserHostName.Split(':')[0], StringComparison.Ordinal)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
                 return;
@@ -85,8 +85,8 @@ public sealed class Listener {
 
         string path = ctx.Request.Url.PathAndQuery;
 
-        if (string.Equals(path, "/auth", StringComparison.Ordinal)) {
-            if (!string.Equals(ctx.Request.HttpMethod, "POST", StringComparison.Ordinal)) {
+        if (String.Equals(path, "/auth", StringComparison.Ordinal)) {
+            if (!String.Equals(ctx.Request.HttpMethod, "POST", StringComparison.Ordinal)) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 ctx.Response.Close();
                 return;
@@ -130,7 +130,7 @@ public sealed class Listener {
     }
 
     public static Dictionary<string, string> ParseQuery(string queryString) {
-        if (string.IsNullOrEmpty(queryString)) return null;
+        if (String.IsNullOrEmpty(queryString)) return null;
 
         Dictionary<string, string> parameters = new Dictionary<string, string>();
 
@@ -139,7 +139,7 @@ public sealed class Listener {
 
         while (!span.IsEmpty) {
             int equalsIndex = span.IndexOf('=');
-            if (equalsIndex < 0) continue;
+            if (equalsIndex < 0) break;
 
             ReadOnlySpan<char> key = span[..equalsIndex];
             span = span[(equalsIndex + 1)..];
@@ -166,7 +166,7 @@ public sealed class Listener {
         if (!cache.cache.ContainsKey(path)) return false;
 
         Cache.Entry entry;
-        if (string.Equals(path, "/", StringComparison.Ordinal)) {
+        if (String.Equals(path, "/", StringComparison.Ordinal)) {
             if (!Auth.IsAuthenticated(ctx)) {
                 entry = cache.cache.TryGetValue("/login", out Cache.Entry value) ? value : default;
             }
@@ -195,7 +195,8 @@ public sealed class Listener {
         if (acceptDeflate && entry.deflate is not null) { //deflate
             buffer = entry.deflate;
             ctx.Response.AddHeader("Content-Encoding", "deflate");
-        } else
+        }
+        else
 #endif
         if (acceptGZip && entry.gzip is not null) { //gzip
             buffer = entry.gzip;
@@ -313,8 +314,8 @@ public sealed class Listener {
         case "/debit/templates" : buffer = Tools.DebitNotes.ListTemplate(); break;
         case "/debit/banners"   : buffer = Tools.DebitNotes.ListBanners(); break;
 
-        case "/watchdog/list"   : buffer = Tools.Watchdog.List(parameters); break;
-        case "/watchdog/create" : buffer = Tools.Watchdog.Create(parameters, username); break;
+        case "/watchdog/list"   : buffer = Tools.Watchdog.List(); break;
+        case "/watchdog/create" : buffer = Tools.Watchdog.Create(parameters, ctx, username); break;
         case "/watchdog/delete" : buffer = Tools.Watchdog.Delete(parameters, username); break;
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
@@ -342,6 +343,7 @@ public sealed class Listener {
         case "/config/upload/iplocation" : buffer = Update.LocationFormDataHandler(ctx); break;
         case "/config/upload/proxy"      : buffer = Update.ProxyFormDataHandler(ctx); break;
         case "/config/upload/macresolve" : buffer = Update.MacResolverFormDataHandler(ctx); break;
+        case "/config/upload/tor"        : buffer = Update.TorFormDataHandler(ctx); break;
 
         case "/log/list": buffer = Logger.List(); break;
         default: return false;
@@ -410,7 +412,7 @@ public sealed class Listener {
     }
 
     public override string ToString() {
-        string s = string.Empty;
+        string s = String.Empty;
         foreach (string prefix in listener.Prefixes)
             s += (s.Length == 0 ? String.Empty : "\n") + "Listening on " + prefix;
         return s;

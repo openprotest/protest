@@ -442,9 +442,6 @@ class Grid extends Window {
 			if (event.key === "Enter") {
 				dialog.btnOK.click();
 			}
-			else if (event.key === "Escape") {
-				dialog.btnCancel.click();
-			}
 		}
 	}
 
@@ -519,9 +516,6 @@ class Grid extends Window {
 			if (event.key === "Enter") {
 				dialog.btnOK.click();
 			}
-			else if (event.key === "Escape") {
-				dialog.btnCancel.click();
-			}
 		}
 	}
 
@@ -559,9 +553,6 @@ class Grid extends Window {
 			if (event.key === "Enter") {
 				dialog.btnOK.click();
 			}
-			else if (event.key === "Escape") {
-				dialog.btnCancel.click();
-			}
 		}
 	}
 
@@ -581,7 +572,6 @@ class Grid extends Window {
 
 	ColumnOptions_RevertAll() {
 		if (!this.selectedColumn) return;
-
 
 		for (let file in this.mods) {
 			if (this.mods[file].hasOwnProperty(this.selectedColumn)) {

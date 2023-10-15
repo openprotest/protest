@@ -213,7 +213,7 @@ document.body.onmouseup = ()=> {
 };
 
 document.body.onkeydown = event=> {
-	if (event.key === "Escape") { //esc
+	if (event.key === "Escape") {
 		if (WIN.focused === null) return;
 		if (WIN.focused.escAction === null) return;
 		WIN.focused.escAction();
@@ -476,11 +476,11 @@ class Window {
 
 		document.getSelection().removeAllRanges();
 
-		this.win.style.transition = WIN.ANIME_DURATION / 1333 + "s";
+		this.win.style.transition = `${WIN.ANIME_DURATION / 1333}s`;
 		this.win.style.opacity = "0";
 		this.win.style.transform = "scale(.85)";
 
-		this.task.style.transition = WIN.ANIME_DURATION / 2000 + "s";
+		this.task.style.transition = `${WIN.ANIME_DURATION / 2000}s`;
 		this.task.style.opacity = "0";
 		this.task.style.transform = "scale(.85)";
 
@@ -543,7 +543,6 @@ class Window {
 			if (this.toolbar && !this.popOutWindow) {
 				this.toolbar.style.top = "32px";
 			}
-
 		}
 		else {
 			this.position = [this.win.style.left, this.win.style.top, this.win.style.width, this.win.style.height];
@@ -579,7 +578,7 @@ class Window {
 		document.getSelection().removeAllRanges();
 
 		let isFocused = (WIN.count == this.win.style.zIndex);
-		this.win.style.transition = ".3s";
+		this.win.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
 
 		if (this.isMinimized && !force) { //restore
 			this.win.style.opacity = "1";
@@ -766,7 +765,7 @@ class Window {
 		WIN.focused = this;
 	}
 
-	ConfirmBox(message, okOnly = false) {
+	ConfirmBox(message, okOnly=false, icon=null) {
 		//if a dialog is already opened, queue
 		if (this.popOutWindow) {
 			if (this.popOutWindow.document.body.getElementsByClassName("win-dim")[0] != null) {
@@ -797,13 +796,13 @@ class Window {
 		confirmBox.className = "win-confirm";
 		dim.appendChild(confirmBox);
 
-		const lblMessage = document.createElement("div");
-		lblMessage.textContent = message;
-		lblMessage.style.whiteSpace = "break-spaces";
-		confirmBox.appendChild(lblMessage);
+		const messageBox = document.createElement("div");
+		messageBox.textContent = message;
+		messageBox.style.whiteSpace = "break-spaces";
+		confirmBox.appendChild(messageBox);
 
 		const buttonBox = document.createElement("div");
-		buttonBox.style.paddingTop = "24px";
+		buttonBox.style.paddingTop = "16px";
 		confirmBox.appendChild(buttonBox);
 
 		const btnOK = document.createElement("input");
@@ -815,6 +814,15 @@ class Window {
 		btnCancel.type = "button";
 		btnCancel.value = "Cancel";
 		if (!okOnly) buttonBox.appendChild(btnCancel);
+
+		if (icon) {
+			messageBox.style.paddingLeft = "64px";
+			buttonBox.style.paddingLeft = "64px";
+			confirmBox.style.backgroundImage = `url(${icon})`;
+			confirmBox.style.backgroundSize = "48px 48px";
+			confirmBox.style.backgroundPosition = "16px calc(50% - 16px)";
+			confirmBox.style.backgroundRepeat = "no-repeat";
+		}
 
 		this.content.style.filter = "blur(4px)";
 
@@ -889,6 +897,7 @@ class Window {
 		innerBox.style.right = "0";
 		innerBox.style.top = "0";
 		innerBox.style.bottom = "52px";
+		innerBox.style.outline = "0";
 		innerBox.style.overflowY = "auto";
 		dialogBox.appendChild(innerBox);
 
@@ -925,7 +934,7 @@ class Window {
 		};
 
 		let once = false;
-		btnCancel.onclick = ()=> {
+		const Close = ()=> {
 			if (once) return;
 			once = true;
 			dim.style.filter = "opacity(0)";
@@ -934,6 +943,13 @@ class Window {
 			setTimeout(()=> Abort(), WIN.ANIME_DURATION);
 		};
 
+		innerBox.onkeydown = event=>{
+			if (event.key === "Escape") {
+				btnCancel.onclick();
+			}
+		};
+
+		btnCancel.onclick = ()=> Close();
 		btnOK.onclick = event=> btnCancel.onclick(event);
 
 		return {
@@ -941,7 +957,7 @@ class Window {
 			buttonBox: buttonBox,
 			btnOK: btnOK,
 			btnCancel: btnCancel,
-			Abort: Abort
+			Close: Close
 		};
 	}
 
@@ -1043,6 +1059,8 @@ class Window {
 	}
 
 	AfterResize() { } //overridable
+
+	UpdateAuthorization() { } //overridable
 
 	AddCheckBoxLabel(parent, checkbox, label) {
 		let id = Date.now() + Math.random() * 1000;

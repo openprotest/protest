@@ -216,7 +216,7 @@ internal static class Auth {
                 path.Add("/db/gandalf");
                 break;
 
-            case "fetch":
+            case "fetch:write":
                 path.Add("/fetch/networkinfo");
                 path.Add("/fetch/singledevice");
                 path.Add("/fetch/singleuser");
@@ -347,6 +347,7 @@ internal static class Auth {
                 path.Add("/config/upload/iplocation");
                 path.Add("/config/upload/proxy");
                 path.Add("/config/upload/macresolve");
+                path.Add("/config/upload/tor");
                 break;
 
             case "log:write":
@@ -458,11 +459,12 @@ internal static class Auth {
             access = exists;
             access.username = username;
             access.domain = domain;
-            access.hash = string.IsNullOrEmpty(password) ? access.hash : Cryptography.HashUsernameAndPassword(username, password);
+            access.hash = String.IsNullOrEmpty(password) ? access.hash : Cryptography.HashUsernameAndPassword(username, password);
             access.alias = alias;
             access.isDomainUser = isDomainUser;
-        } else {
-            if (string.IsNullOrEmpty(password)) {
+        }
+        else {
+            if (String.IsNullOrEmpty(password)) {
                 return "{\"error\":\"please enter password\"}"u8.ToArray();
             }
             access = new AccessControl {
@@ -473,7 +475,7 @@ internal static class Auth {
                 isDomainUser = isDomainUser
             };
         }
-        if (permissionsString == "[]") permissionsString = string.Empty;
+        if (permissionsString == "[]") permissionsString = String.Empty;
         if (permissionsString.Length >= 1 && permissionsString.StartsWith('[')) permissionsString = permissionsString[1..];
         if (permissionsString.Length >= 1 && permissionsString.EndsWith(']')) permissionsString = permissionsString[..^1];
 

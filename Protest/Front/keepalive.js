@@ -1,15 +1,3 @@
-const AUTH = {
-	//TODO:
-	database: 2,
-	passwords: 2,
-	documentation: 2,
-	debitNotes: 2,
-	remoteHosts: 2,
-	remoteAgent: 2,
-	utilities: 2,
-	watchdog: 2
-};
-
 const KEEP = {
 	isSecure: window.location.href.toLowerCase().startsWith("https://"),
 	socket: null,
@@ -63,6 +51,9 @@ const KEEP = {
 
 		case "updateacl":
 			KEEP.authorization = message.authorization;
+			for (let i=0; i<WIN.array.length; i++) {
+				WIN.array[i].UpdateAuthorization();
+			}
 			break;
 
 		case "update":
@@ -184,7 +175,6 @@ const KEEP = {
 			console.log("none register action: " + message.action);
 			break;
 		}
-
 	},
 
 	SendAction: action=> {
@@ -251,7 +241,7 @@ const KEEP = {
 	
 		btnIgnore.onclick = ()=> {
 			notification.notificationBox.style.opacity = "0";
-			setTimeout(() => {
+			setTimeout(()=> {
 				container.removeChild(notification.notificationBox);
 			}, 400);
 		};

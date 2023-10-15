@@ -1,0 +1,86 @@
+.watchdog-timeline {
+	cursor: grab;
+	position: absolute;
+	left: 4px;
+	right: 200px;
+	top: 4px;
+	height: 40px;
+	background-color: rgba(64,64,64,.8);
+	border-radius: 4px;
+	overflow: hidden;
+	transition: .2s;
+}
+
+.watchdog-timeline > svg {
+	position: absolute;
+}
+
+.watchdog-list {
+	position: absolute;
+	left: 4px;
+	right: 200px;
+	top: 48px;
+	bottom: 4px;
+	border-radius: 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	overflow-y: auto;
+	transition: .2s;
+}
+
+.watchdog-list > div {
+	overflow: hidden;
+}
+
+.watchdog-list > div:hover {
+	background-color: var(--clr-highlight) !important;
+  }
+
+.watchdog-list > div > * {
+	position: absolute;
+}
+
+.watchdog-list > div > div:nth-child(1) { /*label*/
+	top: 0;
+	width: 224px;
+	height: 32px;
+	line-height: 32px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding-left: 8px;
+}
+
+.watchdog-list > div > div:nth-child(2) { /*protocol*/
+	left: 240px;
+	top: 7px;
+	min-width: 40px;
+	text-align: center;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
+	border-radius: 4px;
+	padding: 1px;
+	margin: 0px;
+}
+
+.watchdog-list > div > div:nth-child(3) {/*graph*/
+	left: 300px;
+	top: 0px;
+	right: 0px;
+	height: 32px;
+}
+
+.watchdog-list > div > div:nth-child(3) > div {
+	position: absolute;
+}
+
+.watchdog-details {
+	position: absolute;
+	right: 4px;
+	width: 192px;
+	top: 4px;
+	bottom: 4px;
+	overflow-y: auto;
+}

@@ -210,20 +210,19 @@ internal sealed class Cache {
         using BinaryReader br = new BinaryReader(fs);
 
         byte[] bytes = br.ReadBytes((int)f.Length);
-        /*
-        if (string.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(f.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(f.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(f.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
+        
+        /*if (String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(f.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(f.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(f.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
             long _preMinify = 0;
             long _postMinify = 0;
             _preMinify += bytes.LongLength;
             bytes = Minify(bytes);
             _postMinify += bytes.LongLength;
             Console.WriteLine(_postMinify * 100 / _preMinify + "%");
-        }
-        */
+        }*/
 
         files.Add(name, bytes);
     }

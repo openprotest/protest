@@ -49,7 +49,7 @@ class Gandalf extends Window {
 			this.rngThreshold.oninput();
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true).addEventListener("click", ()=> this.Close());
+			this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=> this.Close());
 		}
 	}
 
@@ -433,7 +433,6 @@ class Gandalf extends Window {
 		this.btnNext.value = this.index === 2 ? "Send" : "Next";
 	}
 
-	
 	async GetSmtpProfiles() {
 		try {
 			const response = await fetch("config/smtpprofiles/list");
@@ -463,7 +462,7 @@ class Gandalf extends Window {
 			this.txtSmtpProfile.onchange();
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -493,8 +492,7 @@ class Gandalf extends Window {
 			this.menuArray[this.index].style.zIndex = 1;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
-
 	}
 }

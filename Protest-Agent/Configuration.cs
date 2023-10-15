@@ -63,7 +63,7 @@ namespace ProtestAgent {
         }
 
         public static string EncryptB64(string text, byte[] key, byte[] iv) {
-            if (text.Length == 0) return string.Empty;
+            if (text.Length == 0) return String.Empty;
 
             byte[] bytes = Encoding.UTF8.GetBytes(text);
             byte[] cipher = Encrypt(bytes, key, iv);
@@ -71,11 +71,11 @@ namespace ProtestAgent {
         }
 
         public static string DecryptB64(string encodedText, byte[] key, byte[] iv) {
-            if (encodedText.Length == 0) return string.Empty;
+            if (encodedText.Length == 0) return String.Empty;
 
             byte[] bytes = Convert.FromBase64String(encodedText);
             byte[] plain = Decrypt(bytes, key, iv);
-            if (plain is null || plain.Length == 0) return string.Empty;
+            if (plain is null || plain.Length == 0) return String.Empty;
             return Encoding.UTF8.GetString(plain);
         }
 

@@ -21,7 +21,7 @@ internal static class Ntp {
         }
         int timeout = int.Parse(Uri.UnescapeDataString(timeoutString.ToString()));
 
-        if (string.IsNullOrEmpty(server)) return "Invalid address"u8.ToArray();
+        if (String.IsNullOrEmpty(server)) return "Invalid address"u8.ToArray();
 
         return Request(server, timeout);
     }

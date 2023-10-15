@@ -143,7 +143,7 @@ const UI = {
 		let key = localStorage.getItem("agent_key");
 
 		if (!key) {
-			const okButton = parent.ConfirmBox("Again is not configured");
+			const okButton = parent.ConfirmBox("Agent is not configured", false, "mono/agent.svg");
 			okButton.value = "Configure";
 			okButton.addEventListener("click", ()=>{new Personalize("agent")});
 			return;
@@ -177,46 +177,50 @@ const MENU = {
 		//{ t: "Team chat",     i: "mono/chat.svg?light",          g: "documentation", h: false, f: params=> new Chat() },
 		{ t: "Documentation", i: "mono/documentation.svg?light", g: "documentation", h: false, f: params=> new Documentation() },
 		{ t: "Debit notes",   i: "mono/notes.svg?light",         g: "documentation", h: false, f: params=> new DebitNotes() },
-		//{ t: "Watchdog",      i: "mono/watchdog.svg?light",      g: "documentation", h: false, f: params=> new Watchdog(params) },
+		{ t: "Watchdog",      i: "mono/watchdog.svg?light",      g: "documentation", h: false, f: params=> new Watchdog(params) },
 
-		{ t: "Ping",          i: "mono/ping.svg?light",         g: "utilities", h: false, f: params=> new Ping(params) },
-		{ t: "ARP ping",      i: "mono/ping.svg?light",         g: "utilities", h: true,  f: params=> new Ping({ entries: [], timeout: 500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },
-		{ t: "DNS lookup",    i: "mono/dns.svg?light",          g: "utilities", h: false, f: params=> new DnsLookup(params) },
-		{ t: "Trace route",   i: "mono/traceroute.svg?light",   g: "utilities", h: false, f: params=> new TraceRoute(params) },
-		{ t: "TCP port scan", i: "mono/portscan.svg?light",     g: "utilities", h: false, f: params=> new PortScan(params) },
-		{ t: "Locate IP",     i: "mono/locate.svg?light",       g: "utilities", h: false, f: params=> new LocateIp(params) },
-		{ t: "MAC lookup",    i: "mono/maclookup.svg?light",    g: "utilities", h: false, f: params=> new MacLookup(params) },
-		{ t: "DHCP client",   i: "mono/dhcp.svg?light",         g: "utilities", h: false, f: params=> new DhcpDiscover(params) },
-		{ t: "NTP client",    i: "mono/clock.svg?light",        g: "utilities", h: false, f: params=> new NtpClient(params) },
-		{ t: "Site check",    i: "mono/websitecheck.svg?light", g: "utilities", h: false, f: params=> new SiteCheck(params) },
-		//{ t:"Speed test",     i:"mono/speedtest.svg?light",    g:"utilities",   h:false, f:params=>new SpeedTest(params) },
-
-		{ t: "Telnet",             i: "mono/telnet.svg?light",        g: "tools", h: false, f: params=> new Telnet(params) },
-		//{ t: "Secure shell",       i: "mono/ssh.svg?light",           g: "tools", h: false, f: params=> {} },
+		{ t: "Telnet",             i: "mono/telnet.svg?light",        g: "tools", h: true,  f: params=> new Telnet(params) },
+		{ t: "Secure shell",       i: "mono/ssh.svg?light",           g: "tools", h: true,  f: params=> {} },
 		{ t: "WMI client",         i: "mono/wmi.svg?light",           g: "tools", h: false, f: params=> new Wmi(params) },
-		//{ t: "SNMP polling",       i: "mono/snmp.svg?light",          g: "tools", h: false, f: params=> new Snmp(params) },
-		//{ t: "SNMP traps",         i: "mono/trap.svg?light",          g: "tools", h: false, f: params=> new Snmp(params) },
-		//{ t: "Automation",         i: "mono/automation.svg?light",    g: "tools", h: false, f: params=> {} },
-		//{ t: "Scripts",            i: "mono/scripts.svg?light",       g: "tools", h: false, f: params=> {} },
-		//{ t: "Script reports",     i: "mono/reportfile.svg?light",    g: "tools", h: true,  f: params=> {} },
-		//{ t: "Ongoing scripts",    i: "mono/ongoingscript.svg?light", g: "tools", h: true,  f: params=> {} },
-		{ t: "Encoder",            i: "mono/encoder.svg?light",       g: "tools", h: false, f: params=> new Encoder(params) },
-		{ t: "Network calculator", i: "mono/netcalc.svg?light",       g: "tools", h: false, f: params=> new NetCalc(params) },
-		{ t: "Password generator", i: "mono/passgen.svg?light",       g: "tools", h: false, f: params=> new PassGen(params) },
-		{ t: "Keyboard tester",    i: "mono/keyboard.svg?light",      g: "tools", h: true,  f: params=> new KeyboardTester() },
-		{ t: "Gamepad tester",     i: "mono/gamepad.svg?light",       g: "tools", h: true,  f: params=> new KeyboardTester("gamepad") },
+		{ t: "SNMP polling",       i: "mono/snmp.svg?light",          g: "tools", h: false, f: params=> new Snmp(params) },
+		{ t: "SNMP traps",         i: "mono/trap.svg?light",          g: "tools", h: false, f: params=> new Snmp(params) },
+		{ t: "Scripts",            i: "mono/scripts.svg?light",       g: "tools", h: false, f: params=> {} },
+		{ t: "Script reports",     i: "mono/reportfile.svg?light",    g: "tools", h: true,  f: params=> {} },
+		{ t: "Ongoing scripts",    i: "mono/ongoingscript.svg?light", g: "tools", h: true,  f: params=> {} },
 
+		{ t: "Ping",          i: "mono/ping.svg?light",          g: "utilities", h: false, f: params=> new Ping(params) },
+		{ t: "ARP ping",      i: "mono/ping.svg?light",          g: "utilities", h: true,  f: params=> new Ping({ entries: [], timeout: 500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },
+		{ t: "DNS lookup",    i: "mono/dns.svg?light",           g: "utilities", h: false, f: params=> new DnsLookup(params) },
+		{ t: "Trace route",   i: "mono/traceroute.svg?light",    g: "utilities", h: false, f: params=> new TraceRoute(params) },
+		{ t: "TCP port scan", i: "mono/portscan.svg?light",      g: "utilities", h: false, f: params=> new PortScan(params) },
+		{ t: "Locate IP",     i: "mono/locate.svg?light",        g: "utilities", h: false, f: params=> new LocateIp(params) },
+		{ t: "MAC lookup",    i: "mono/maclookup.svg?light",     g: "utilities", h: false, f: params=> new MacLookup(params) },
+		{ t: "DHCP client",   i: "mono/dhcp.svg?light",          g: "utilities", h: false, f: params=> new DhcpDiscover(params) },
+		{ t: "NTP client",    i: "mono/clock.svg?light",         g: "utilities", h: false, f: params=> new NtpClient(params) },
+		{ t: "Site check",    i: "mono/websitecheck.svg?light",  g: "utilities", h: false, f: params=> new SiteCheck(params) },
+		//{ t:"Speed test",     i:"mono/speedtest.svg?light",      g:"utilities",  h: false, f: params=> new SpeedTest(params) },
+		{ t: "Encoder",            i: "mono/encoder.svg?light",  g: "utilities", h: true, f: params=> new Encoder(params) },
+		{ t: "Network calculator", i: "mono/netcalc.svg?light",  g: "utilities", h: true, f: params=> new NetCalc(params) },
+		{ t: "Password generator", i: "mono/passgen.svg?light",  g: "utilities", h: false, f: params=> new PassGen(params) },
+		{ t: "Keyboard tester",    i: "mono/keyboard.svg?light", g: "utilities", h: true,  f: params=> new KeyboardTester() },
+		{ t: "Gamepad tester",     i: "mono/gamepad.svg?light",  g: "utilities", h: true,  f: params=> new KeyboardTester("gamepad") },
+				
+		{ t: "Settings",       i: "mono/wrench.svg?light",      g: "manage", h: false, f: params=> new Settings() },
+		{ t: "Zones",          i: "mono/router.svg?light",      g: "manage", h: true,  f: params=> new Settings("zones") },
+		{ t: "SMTP profiles",  i: "mono/email.svg?light",       g: "manage", h: true,  f: params=> new Settings("smtpprofiles") },
+
+		{ t: "ACL",            i: "mono/acl.svg?light",         g: "manage", h: false, f: params=> new Acl("acl") },
+		{ t: "Open sessions",  i: "mono/hourglass.svg?light",   g: "manage", h: true,  f: params=> new Acl("sessions") },
+		
 		{ t: "Personalize",    i: "mono/personalize.svg?light", g: "manage", h: false, f: params=> new Personalize() },
 		{ t: "Appearance",     i: "mono/tv.svg?light",          g: "manage", h: true,  f: params=> new Personalize("appearance") },
 		{ t: "Reginal format", i: "mono/earth.svg?light",       g: "manage", h: true,  f: params=> new Personalize("region") },
 		{ t: "Session",        i: "mono/hourglass.svg?light",   g: "manage", h: true,  f: params=> new Personalize("session") },
 		{ t: "Agent",          i: "mono/agent.svg?light",       g: "manage", h: true,  f: params=> new Personalize("agent") },
-		{ t: "Settings",       i: "mono/wrench.svg?light",      g: "manage", h: false, f: params=> new Settings() },
-		{ t: "Zones",          i: "mono/router.svg?light",      g: "manage", h: true,  f: params=> new Settings("zones") },
-		{ t: "SMTP profiles",  i: "mono/email.svg?light",       g: "manage", h: true,  f: params=> new Settings("smtpprofiles") },
-		{ t: "ACL",            i: "mono/acl.svg?light",         g: "manage", h: false, f: params=> new Acl("acl") },
-		{ t: "Open sessions",  i: "mono/hourglass.svg?light",   g: "manage", h: true,  f: params=> new Acl("sessions") },
-		//{ t: "Backup",         i: "mono/backup.svg?light",      g: "manage", h: false, f: params=> {} },
+		
+		{ t: "Automation",     i: "mono/automation.svg?light",  g: "manage", h: false, f: params=> new Automation() },
+		
+		{ t: "Backup",         i: "mono/backup.svg?light",      g: "manage", h: false, f: params=> {} },
 		{ t: "Log",            i: "mono/log.svg?light",         g: "manage", h: false, f: params=> new Log(params) },
 		{ t: "About",          i: "mono/logo.svg?light",        g: "manage", h: false, f: params=> new About("about") },
 		{ t: "Update",         i: "mono/update.svg?light",      g: "manage", h: true, f: params=> new About("update") },
@@ -312,15 +316,6 @@ const MENU = {
 				newItem.textContent = WIN.array[i].header.textContent;
 				MENU.list.push(newItem);
 				menulist.appendChild(newItem);
-
-				newItem.onmouseenter = ()=> {
-					if (!WIN.array[i].isMaximized) WIN.array[i].win.style.animation = "focus-pop .2s";
-					if (!WIN.array[i].isMaximized) WIN.array[i].icon.style.animation = "focus-pop .2s";
-					setTimeout(()=> {
-						WIN.array[i].win.style.animation = "none";
-						WIN.array[i].icon.style.animation = "none";
-					}, 200);
-				};
 				
 				MENU.ItemEvent(newItem, ()=>{
 					if (!WIN.array[i].isMaximized) WIN.array[i].win.style.animation = "focus-pop .2s";
@@ -336,7 +331,7 @@ const MENU = {
 				menulist.appendChild(groupClosed);
 			}
 
-			for (let i = MENU.history.length-1; i >= 0 ; i--) {
+			for (let i = MENU.history.length-1; i >= Math.max(MENU.history.length-32, 0) ; i--) {
 				const match = keywords.every(keyword=> MENU.history[i].title.toLowerCase().includes(keyword));
 				if (!match) continue;
 
@@ -420,13 +415,15 @@ const MENU = {
 				);
 				if (!match) continue;
 
+				let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : null;
+
 				let title = LOADER.devices.data[file].name ? LOADER.devices.data[file].name.v : null;
 				title ??= LOADER.devices.data[file].hostname ? LOADER.devices.data[file].hostname.v : null;
 				title ??= LOADER.devices.data[file].fqdn ? LOADER.devices.data[file].fqdn.v : null;
 
 				const newItem = document.createElement("div");
 				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
-				newItem.style.backgroundImage = `url(mono/gear.svg?light)`;
+				newItem.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
 				newItem.textContent = title;
 
 				if (LOADER.devices.data[file].ip && LOADER.devices.data[file].ip.v.length > 0) {
@@ -461,6 +458,8 @@ const MENU = {
 				);
 				if (!match) continue;
 
+				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v : null;
+
 				let title = LOADER.users.data[file].title ? LOADER.users.data[file].title.v : null;
 				title ??= LOADER.users.data[file]["e-mail"] ? LOADER.users.data[file]["e-mail"].v : null;
 				title ??= LOADER.users.data[file]["display name"] ? LOADER.users.data[file]["display name"].v : null;
@@ -468,6 +467,7 @@ const MENU = {
 				const newItem = document.createElement("div");
 				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
 				newItem.style.backgroundImage = `url(mono/user.svg?light)`;
+				newItem.style.backgroundImage = `url(${LOADER.userIcons.hasOwnProperty(type) ? LOADER.userIcons[type] : "mono/user.svg"}?light)`;
 				newItem.textContent = title;
 
 				if (LOADER.users.data[file].username && LOADER.users.data[file].username.v.length > 0) {
@@ -792,42 +792,42 @@ searchboxinput.onclick = event=> event.stopPropagation();
 
 searchboxinput.onkeydown = event=> {
 	switch (event.key) {
-		case "Escape":
-			event.stopPropagation();
-			MENU.Clear();
-			break;
+	case "Escape":
+		event.stopPropagation();
+		MENU.Clear();
+		break;
 
-		case "Enter":
-			if (event.ctrlKey) {
-				MENU.list[MENU.index].onmousedown({ button: 1 });
-				searchboxinput.focus();
-				setTimeout(searchboxinput.focus(), 10);
-			}
-			else {
-				if (MENU.index > -1)
-					MENU.list[MENU.index].onclick(event);
-			}
-			break;
+	case "Enter":
+		if (event.ctrlKey) {
+			MENU.list[MENU.index].onmousedown({ button: 1 });
+			searchboxinput.focus();
+			setTimeout(searchboxinput.focus(), 10);
+		}
+		else {
+			if (MENU.index > -1)
+				MENU.list[MENU.index].onclick(event);
+		}
+		break;
 
-		case "ArrowUp":
-			event.preventDefault();
-			if (MENU.list.length > 0) {
-				if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
-				MENU.index--;
-				if (MENU.index < 0) MENU.index = MENU.list.length - 1;
-				if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "#80808060";
+	case "ArrowUp":
+		event.preventDefault();
+		if (MENU.list.length > 0) {
+			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
+			MENU.index--;
+			if (MENU.index < 0) MENU.index = MENU.list.length - 1;
+			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "#80808060";
 			}
-			break;
+		break;
 
-		case "ArrowDown":
-			event.preventDefault();
-			if (MENU.list.length > 0) {
-				if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
-				MENU.index++;
-				if (MENU.index >= MENU.list.length) MENU.index = 0;
-				MENU.list[MENU.index].style.backgroundColor = "#80808060";
-			}
-			break;
+	case "ArrowDown":
+		event.preventDefault();
+		if (MENU.list.length > 0) {
+			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
+			MENU.index++;
+			if (MENU.index >= MENU.list.length) MENU.index = 0;
+			MENU.list[MENU.index].style.backgroundColor = "#80808060";
+		}
+		break;
 	}
 
 	if (MENU.list.length > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown")) { //scroll into view

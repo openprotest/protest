@@ -128,7 +128,7 @@ namespace ProtestAgent {
             Random rnd = new Random();
             byte[] bytes = new byte[16];
             rnd.NextBytes(bytes);
-            Configuration.presharedKey = BitConverter.ToString(bytes).Replace("-", string.Empty);
+            Configuration.presharedKey = BitConverter.ToString(bytes).Replace("-", String.Empty);
             txtKey.box.Text = Configuration.presharedKey;
             Configuration.Save();
         }

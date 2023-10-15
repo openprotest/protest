@@ -29,8 +29,8 @@ class Ping extends Console {
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 
 		this.playButton.disabled = this.params.status === "play";
 		this.pauseButton.disabled = this.params.status === "pause";
@@ -76,10 +76,6 @@ class Ping extends Console {
 			});
 		});
 
-		this.optionsButton.addEventListener("click", ()=> {
-			this.Options();
-		});
-
 		this.cloneButton.addEventListener("click", ()=> {
 			let paramsCopy = structuredClone(this.params);
 			paramsCopy.status = "pause";
@@ -87,14 +83,20 @@ class Ping extends Console {
 			if (this.popOutWindow) clone.PopOut();
 			const dialog = clone.Options();
 
-			dialog.btnOK.addEventListener("click", ()=> {
+			const OriginalCancelClickHandler = dialog.btnCancel.onclick;
+			dialog.btnOK.onclick = ()=> {
 				clone.params.status = "play";
 				clone.Connect();
-			});
+				OriginalCancelClickHandler();
+			};
 
-			dialog.btnCancel.addEventListener("click", ()=> {
+			dialog.btnCancel.onclick = ()=> {
 				clone.Close();
-			});
+			};
+		});
+
+		this.optionsButton.addEventListener("click", ()=> {
+			this.Options();
 		});
 
 		this.list.onscroll = ()=> this.InvalidateRecyclerList();
@@ -123,6 +125,7 @@ class Ping extends Console {
 		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 		const btnOK = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
 
 		innerBox.parentElement.style.maxWidth = "600px";
@@ -303,6 +306,35 @@ class Ping extends Console {
 			tr2.appendChild(td6b);
 		}
 
+		const Apply = ()=> {
+			this.params.timeout = txtTimeout.value;
+			this.params.interval = txtInterval.value;
+			this.params.method = selPingMethod.value;
+			this.params.rolling = chkRollingPing.checked;
+			this.params.moveToTop = chkMoveToTop.checked;
+
+			if (!this.isClosed && this.ws != null && this.ws.readyState === 1) { //ready
+				this.ws.send(`timeout:${this.params.timeout}`);
+				this.ws.send(`interval:${this.params.interval}`);
+				this.ws.send(`method:${this.params.method}`);
+				this.ws.send(`rolling:${this.params.rolling}`);
+			}
+
+			this.SetTitle(selPingMethod.value === "arp" ? "ARP ping" : "Ping");
+			this.InvalidateRecyclerList();
+		};
+
+		const OnKeydown = event=>{
+			if (event.key === "Enter") {
+				Apply();
+				dialog.btnOK.onclick();
+			}
+		};
+
+		txtTimeout.addEventListener("keydown", OnKeydown);
+		txtInterval.addEventListener("keydown", OnKeydown);
+		selPingMethod.addEventListener("keydown", OnKeydown);
+
 		txtTimeout.onchange = txtTimeout.oninput = ()=> {
 			txtInterval.min = txtTimeout.value;
 			if (txtInterval.value < txtTimeout.value) txtInterval.value = txtTimeout.value;
@@ -324,22 +356,10 @@ class Ping extends Console {
 		};
 
 		btnOK.addEventListener("click", ()=> {
-			this.params.timeout = txtTimeout.value;
-			this.params.interval = txtInterval.value;
-			this.params.method = selPingMethod.value;
-			this.params.rolling = chkRollingPing.checked;
-			this.params.moveToTop = chkMoveToTop.checked;
-
-			if (!this.isClosed && this.ws != null && this.ws.readyState === 1) { //ready
-				this.ws.send(`timeout:${this.params.timeout}`);
-				this.ws.send(`interval:${this.params.interval}`);
-				this.ws.send(`method:${this.params.method}`);
-				this.ws.send(`rolling:${this.params.rolling}`);
-			}
-
-			this.SetTitle(selPingMethod.value === "arp" ? "ARP ping" : "Ping");
-			this.InvalidateRecyclerList();
+			Apply();
 		});
+
+		txtTimeout.focus();
 
 		return dialog;
 	}
@@ -683,10 +703,8 @@ class Ping extends Console {
 						this.hashtable[index].graph.style.display = "initial";
 					}
 				}
-
 			}
 		}
-
 	}
 
 	InvalidateRecyclerList() { //override

@@ -204,52 +204,51 @@ class PassGen extends Window {
 
 		this.cmbOptions.onchange = ()=> {
 			switch (this.cmbOptions.value) {
-				case "pin":
-					this.rngLength.min = 4;
-					this.rngLength.value = 4;
-					this.rngLength.max = 64;
-					this.chkNumbers.checked = true;
-					this.chkLowercase.checked = false;
-					this.chkUppercase.checked = false;
-					this.chkSymbols.checked = false;
-					this.chkLowercase.disabled = true;
-					this.chkUppercase.disabled = true;
-					this.chkNumbers.disabled = true;
-					this.chkSymbols.disabled = true;
-					lblLength.textContent = "Length:";
-					break;
+			case "pin":
+				this.rngLength.min = 4;
+				this.rngLength.value = 4;
+				this.rngLength.max = 64;
+				this.chkNumbers.checked = true;
+				this.chkLowercase.checked = false;
+				this.chkUppercase.checked = false;
+				this.chkSymbols.checked = false;
+				this.chkLowercase.disabled = true;
+				this.chkUppercase.disabled = true;
+				this.chkNumbers.disabled = true;
+				this.chkSymbols.disabled = true;
+				lblLength.textContent = "Length:";
+				break;
 
-				case "rnd":
-					this.rngLength.value = 16;
-					this.rngLength.min = 6;
-					this.rngLength.max = 64;
-					this.chkLowercase.checked = true;
-					this.chkUppercase.checked = true;
-					this.chkNumbers.checked = false;
-					this.chkSymbols.checked = false;
-					this.chkLowercase.disabled = false;
-					this.chkUppercase.disabled = false;
-					this.chkNumbers.disabled = false;
-					this.chkSymbols.disabled = false;
-					lblLength.textContent = "Length:";
-					break;
+			case "rnd":
+				this.rngLength.value = 16;
+				this.rngLength.min = 6;
+				this.rngLength.max = 64;
+				this.chkLowercase.checked = true;
+				this.chkUppercase.checked = true;
+				this.chkNumbers.checked = false;
+				this.chkSymbols.checked = false;
+				this.chkLowercase.disabled = false;
+				this.chkUppercase.disabled = false;
+				this.chkNumbers.disabled = false;
+				this.chkSymbols.disabled = false;
+				lblLength.textContent = "Length:";
+				break;
 
-				case "mem":
-					this.rngLength.min = 2;
-					this.rngLength.value = 4;
-					this.rngLength.max = 32;
-					this.chkLowercase.checked = true;
-					this.chkUppercase.checked = false;
-					this.chkNumbers.checked = false;
-					this.chkSymbols.checked = false;
-					this.chkLowercase.disabled = false;
-					this.chkUppercase.disabled = false;
-					this.chkNumbers.disabled = false;
-					this.chkSymbols.disabled = true;
-					lblLength.textContent = "Words:";
-					break;
+			case "mem":
+				this.rngLength.min = 2;
+				this.rngLength.value = 4;
+				this.rngLength.max = 32;
+				this.chkLowercase.checked = true;
+				this.chkUppercase.checked = false;
+				this.chkNumbers.checked = false;
+				this.chkSymbols.checked = false;
+				this.chkLowercase.disabled = false;
+				this.chkUppercase.disabled = false;
+				this.chkNumbers.disabled = false;
+				this.chkSymbols.disabled = true;
+				lblLength.textContent = "Words:";
+				break;
 			}
-
 
 
 			this.txtLength.min = this.rngLength.min;

@@ -28,7 +28,7 @@ class TraceRoute extends Console {
 				this.Push(temp[i]);
 		}
 
-		this.clearButton.addEventListener("click", (event)=> {
+		this.clearButton.addEventListener("click", event=> {
 			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
 			if (btnOK) btnOK.addEventListener("click", ()=> {
 				this.params.entries = [];
@@ -295,5 +295,4 @@ class TraceRoute extends Console {
 	UpdateTaskSpinner() {
 		this.taskSpinner.style.display = (this.pending.length === 0) ? "none" : "initial";
 	}
-
 }

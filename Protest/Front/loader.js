@@ -109,6 +109,7 @@ const LOADER = {
 		"encoder.js",
 		"netcalc.js",
 		"keyboardtester.js",
+		"automation.js",
 		"log.js"
 	],
 
@@ -276,49 +277,50 @@ const LOADER = {
 		let win;
 
 		switch (session.class) {
-			case "About"       : win = new About(session.params); break;
-			case "Settings"    : win = new Settings(session.params); break;
-			case "Personalize" : win = new Personalize(session.params); break;
-			case "Acl"         : win = new Acl(session.params); break;
+		case "About"       : win = new About(session.params); break;
+		case "Settings"    : win = new Settings(session.params); break;
+		case "Personalize" : win = new Personalize(session.params); break;
+		case "Acl"         : win = new Acl(session.params); break;
 			
-			case "DevicesList"      : win = new DevicesList(session.params); break;
-			case "UsersList"        : win = new UsersList(session.params); break;
-			case "DeviceView"       : win = new DeviceView(session.params); break;
-			case "UserView"         : win = new UserView(session.params); break;
-			case "DevicesGrid"      : win = new DevicesGrid(session.params); break;
-			case "UsersGrid"        : win = new UsersGrid(session.params); break;
-			case "PasswordStrength" : win = new PasswordStrength(session.params); break;
-			case "Gandalf"          : win = new Gandalf(session.params); break;
-			case "Fetch"            : win = new Fetch(session.params); break;
+		case "DevicesList"      : win = new DevicesList(session.params); break;
+		case "UsersList"        : win = new UsersList(session.params); break;
+		case "DeviceView"       : win = new DeviceView(session.params); break;
+		case "UserView"         : win = new UserView(session.params); break;
+		case "DevicesGrid"      : win = new DevicesGrid(session.params); break;
+		case "UsersGrid"        : win = new UsersGrid(session.params); break;
+		case "PasswordStrength" : win = new PasswordStrength(session.params); break;
+		case "Gandalf"          : win = new Gandalf(session.params); break;
+		case "Fetch"            : win = new Fetch(session.params); break;
 
-			case "AddressBook"   : win = new AddressBook(session.params); break;
-			case "Chat"          : win = new Chat(session.params); break;
-			case "Documentation" : win = new Documentation(session.params); break;
-			case "DebitNotes"    : win = new DebitNotes(session.params); break;
-			case "Watchdog"      : win = new Watchdog(session.params); break;
+		case "AddressBook"   : win = new AddressBook(session.params); break;
+		case "Chat"          : win = new Chat(session.params); break;
+		case "Documentation" : win = new Documentation(session.params); break;
+		case "DebitNotes"    : win = new DebitNotes(session.params); break;
+		case "Watchdog"      : win = new Watchdog(session.params); break;
 
-			case "HexViewer" : win = new HexViewer(session.params); break;
+		case "HexViewer" : win = new HexViewer(session.params); break;
 			
-			case "Ping"         : win = new Ping(session.params); break;
-			case "DnsLookup"    : win = new DnsLookup(session.params); break;
-			case "TraceRoute"   : win = new TraceRoute(session.params); break;
-			case "SpeedTest"    : win = new SpeedTest(session.params); break;
-			case "PortScan"     : win = new PortScan(session.params); break;
-			case "MacLookup"    : win = new MacLookup(session.params); break;
-			case "LocateIp"     : win = new LocateIp(session.params); break;
-			case "DhcpDiscover" : win = new DhcpDiscover(session.params); break;
-			case "NtpClient"    : win = new NtpClient(session.params); break;
-			case "SiteCheck"     : win = new SiteCheck(session.params); break;
+		case "Ping"         : win = new Ping(session.params); break;
+		case "DnsLookup"    : win = new DnsLookup(session.params); break;
+		case "TraceRoute"   : win = new TraceRoute(session.params); break;
+		case "SpeedTest"    : win = new SpeedTest(session.params); break;
+		case "PortScan"     : win = new PortScan(session.params); break;
+		case "MacLookup"    : win = new MacLookup(session.params); break;
+		case "LocateIp"     : win = new LocateIp(session.params); break;
+		case "DhcpDiscover" : win = new DhcpDiscover(session.params); break;
+		case "NtpClient"    : win = new NtpClient(session.params); break;
+		case "SiteCheck"     : win = new SiteCheck(session.params); break;
 
-			case "Telnet" : win = new Telnet(session.params); break;
-			case "Wmi"    : win = new Wmi(session.params); break;
+		case "Telnet" : win = new Telnet(session.params); break;
+		case "Wmi"    : win = new Wmi(session.params); break;
 
-			case "PassGen"        : win = new PassGen(session.params); break;
-			case "Encoder"        : win = new Encoder(session.params); break;
-			case "NetCalc"        : win = new NetCalc(session.params); break;
-			case "KeyboardTester" : win = new KeyboardTester(session.params); break;
+		case "PassGen"        : win = new PassGen(session.params); break;
+		case "Encoder"        : win = new Encoder(session.params); break;
+		case "NetCalc"        : win = new NetCalc(session.params); break;
+		case "KeyboardTester" : win = new KeyboardTester(session.params); break;
 
-			case "Log" : win = new Log(session.params); break;
+		case "Automation" : win = new Automation(session.params); break;
+		case "Log"        : win = new Log(session.params); break;
 		}
 
 		return win;
@@ -326,13 +328,11 @@ const LOADER = {
 
 	HttpErrorHandler: statusCode=> {
 		switch (statusCode) {
-			case 401: throw new Error("Unauthorized user or authorization expired");
-			case 403: throw new Error("Insufficient permissions");
-
-			default: throw new Error(`Server responded with: ${statusCode}`);
+		case 401: throw new Error("Unauthorized user or authorization expired");
+		case 403: throw new Error("Insufficient permissions");
+		default: throw new Error(`Server responded with: ${statusCode}`);
 		}
 	}
-
 };
 
 LOADER.Initialize();

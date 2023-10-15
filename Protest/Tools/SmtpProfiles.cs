@@ -54,37 +54,39 @@ internal class SmtpProfiles {
             oldProfiles = Array.Empty<SmtpProfile>();
         }
 
-        SmtpProfile[] newProfiles = JsonSerializer.Deserialize<SmtpProfile[]>(payload, options);
+        try {
+            SmtpProfile[] newProfiles = JsonSerializer.Deserialize<SmtpProfile[]>(payload, options);
 
-        for (int i = 0; i < newProfiles.Length; i++) {
-            if (newProfiles[i].guid == default) {
+            for (int i = 0; i < newProfiles.Length; i++) {
+                if (newProfiles[i].guid == default) {
 
-                newProfiles[i].guid = Guid.NewGuid();
-            }
+                    newProfiles[i].guid = Guid.NewGuid();
+                }
 
-            if (newProfiles[i].password?.Length > 0) continue;
+                if (newProfiles[i].password?.Length > 0) continue;
 
-            SmtpProfile old = null;
-            for (int j = 0; j < oldProfiles.Length; j++) {
-                if (newProfiles[i].guid == oldProfiles[j].guid) {
-                    old = oldProfiles[j];
-                    break;
+                SmtpProfile old = null;
+                for (int j = 0; j < oldProfiles.Length; j++) {
+                    if (newProfiles[i].guid == oldProfiles[j].guid) {
+                        old = oldProfiles[j];
+                        break;
+                    }
+                }
+
+                if (old is not null) {
+                    newProfiles[i].password = old.password;
                 }
             }
 
-            if (old is not null) {
-                newProfiles[i].password = old.password;
-            }
-        }
-
-        try {
             byte[] file = JsonSerializer.SerializeToUtf8Bytes(newProfiles, options);
             File.WriteAllBytes(Data.FILE_EMAIL_PROFILES, file);
         }
-        catch {
+        catch (JsonException) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+        catch (Exception) {
             return Data.CODE_FAILED.Array;
         }
-
 
         return Data.CODE_OK.Array;
     }
@@ -92,7 +94,7 @@ internal class SmtpProfiles {
 }
 
 internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.SmtpProfile[]> {
-    private bool hidePasswords;
+    private readonly bool hidePasswords;
     public EmailProfilesJsonConverter(bool hidePasswords) {
         this.hidePasswords = hidePasswords;
     }
@@ -126,7 +128,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
                         case "port": profile.port = reader.GetInt32(); break;
                         case "sender": profile.sender = reader.GetString(); break;
                         case "username": profile.username = reader.GetString(); break;
-                        case "password": profile.password = hidePasswords ? string.Empty : reader.GetString(); break;
+                        case "password": profile.password = hidePasswords ? String.Empty : reader.GetString(); break;
                         case "recipients": profile.recipients = reader.GetString(); break;
                         case "ssl": profile.ssl = reader.GetBoolean(); break;
                         case "guid": profile.guid = reader.GetGuid(); break;
@@ -160,7 +162,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
             writer.WriteNumber(_port, value[i].port);
             writer.WriteString(_sender, value[i].sender);
             writer.WriteString(_username, value[i].username);
-            writer.WriteString(_password, hidePasswords ? string.Empty : value[i].password);
+            writer.WriteString(_password, hidePasswords ? String.Empty : value[i].password);
             writer.WriteString(_recipients, value[i].recipients);
             writer.WriteBoolean(_ssl, value[i].ssl);
             writer.WriteString(_guid, value[i].guid);

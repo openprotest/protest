@@ -148,8 +148,10 @@ class LocateIp extends Console {
 				return;
 			}
 
-			result.style.backgroundImage = `url(flags/${split[0].toLowerCase()}.svg)`;
-
+			if (split[0] !== "--") {
+				result.style.backgroundImage = `url(flags/${split[0].toLowerCase()}.svg)`;
+			}
+			
 			if (split[1] === "Private address" || split[1] === "Local host")
 				result.textContent += split[1];
 			else
@@ -195,12 +197,10 @@ class LocateIp extends Console {
 				divProxy.setAttribute("tip-below", "Proxy");
 				element.appendChild(divProxy);
 			}
-
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
-
 	}
 
 	Remove(ipaddr) {
@@ -212,5 +212,4 @@ class LocateIp extends Console {
 		if (index > -1)
 			this.params.entries.splice(index, 1);
 	}
-
 }

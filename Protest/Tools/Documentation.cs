@@ -9,10 +9,6 @@ class Documentation {
     private static readonly object syncLock = new object();
 
     public static byte[] List(Dictionary<string, string> parameters) {
-        if (parameters == null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-
         string keywords = null;
         parameters?.TryGetValue("keywords", out keywords);
         keywords ??= String.Empty;
@@ -63,7 +59,7 @@ class Documentation {
 
     public static byte[] View(Dictionary<string, string> parameters, bool serveGZip = false) {
         parameters.TryGetValue("name", out string name);
-        if (string.IsNullOrEmpty(name)) {
+        if (String.IsNullOrEmpty(name)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -104,8 +100,10 @@ class Documentation {
         builder.Append("<!--");
         builder.Append('[');
         for (int i = 2; i < payload.Length - 3; i += 4) {
-            if (i != 2)
+            if (i != 2) {
                 builder.Append(',');
+            }
+
             builder.Append($"\"{Data.EscapeJsonText(payload[i])}\",");
             builder.Append($"\"{Data.EscapeJsonText(payload[i+1])}\",");
             builder.Append($"\"{Data.EscapeJsonText(payload[i+2])}\",");
@@ -113,8 +111,10 @@ class Documentation {
 
             if (!keywords.Contains(payload[i]))
                 keywords.Add(payload[i]); //filename
+
             if (!keywords.Contains(payload[i + 2]))
                 keywords.Add(payload[i + 2]); //label1
+
             if (!keywords.Contains(payload[i + 3]))
                 keywords.Add(payload[i + 3]); //label2
         }
@@ -191,7 +191,7 @@ class Documentation {
         }
 
         parameters.TryGetValue("name", out string name);
-        if (string.IsNullOrEmpty(name)) {
+        if (String.IsNullOrEmpty(name)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

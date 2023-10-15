@@ -246,7 +246,7 @@ class DhcpDiscover extends Window {
 			if (json.over) return;
 
 			if (json.error) {
-				this.ConfirmBox(json.error, true);
+				this.ConfirmBox(json.error, true, "mono/error.svg");
 				return;
 			}
 
@@ -315,5 +315,4 @@ class DhcpDiscover extends Window {
 			this.ConfirmBox("Server is unreachable", true);
 		};
 	}
-
 }

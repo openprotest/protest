@@ -10,7 +10,7 @@ internal static class MacLookup {
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
 
-        if (string.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
         return Lookup(payload);
     }
 

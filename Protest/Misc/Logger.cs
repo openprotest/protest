@@ -54,7 +54,7 @@ internal static class Logger {
                 }
                 catch { }
 
-            Http.KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":{{\"date\":\"{date}\",\"user\":\"{initiator}\",\"text\":\"{action}\"}}}}", "/log");
+            Http.KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{Data.EscapeJsonText(message)}\"}}", "/log");
         }).Start();
     }
 

@@ -21,9 +21,8 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <Deterministic>false</Deterministic>
-        <Version>5.0.0.0</Version>
+        <Version>5.0.0</Version>
         <AssemblyVersion>5.0.*</AssemblyVersion>
-        <FileVersion>5.0.*</FileVersion>
 
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -71,7 +70,7 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
-      <PackageReference Include="SSH.NET" Version="2020.0.2" />
+      <PackageReference Include="SSH.NET" Version="2023.0.0" />
       <PackageReference Include="System.DirectoryServices" Version="7.0.1" />
       <PackageReference Include="System.Management" Version="7.0.2" />
     </ItemGroup>

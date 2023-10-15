@@ -144,7 +144,7 @@ public static class Data {
     }
 
     public static string EscapeJsonText(string text) {
-        if (string.IsNullOrEmpty(text)) return string.Empty;
+        if (String.IsNullOrEmpty(text)) return String.Empty;
 
         if (text.Length <= 256) {
             int count = 0;
@@ -227,7 +227,7 @@ public static class Data {
     }
 
     public static string EscapeJsonTextWithUnicodeCharacters(string text) {
-        if (string.IsNullOrEmpty(text)) return string.Empty;
+        if (String.IsNullOrEmpty(text)) return String.Empty;
 
         StringBuilder builder = new StringBuilder();
         foreach (char c in text) {

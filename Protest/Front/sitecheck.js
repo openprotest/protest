@@ -144,7 +144,7 @@ class SiteCheck extends Window {
 
 		this.ws.onerror = err=> {
 			if (err.eventPhase === 2) {
-				this.ConfirmBox("Connection refused", true);
+				this.ConfirmBox("Connection refused", true, "mono/error.svg");
 			}
 		};
 	}

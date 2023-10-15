@@ -129,24 +129,24 @@
 
 	<script>
 		txtUsername.value = localStorage.getItem("last_username");
-		txtUsername.onkeyup = (event)=> {
+		txtUsername.onkeyup = event=> {
 			if (event.key==="Enter") txtPassword.focus();
 		};
 
-		txtPassword.onkeyup = (event)=> {
+		txtPassword.onkeyup = event=> {
 			if (event.key==="Enter") btnLogin.onclick(event);
 		};
 		
-		txtUsername.oninput = txtUsername.onchange = txtPassword.oninput = txtPassword.onchange = (event)=> {
+		txtUsername.oninput = txtUsername.onchange = txtPassword.oninput = txtPassword.onchange = event=> {
 			btnLogin.style.opacity = txtUsername.value === "" || txtPassword.value === "" ? "0" : "1";
 		};
 
-		txtUsername.onblur = txtPassword.onblur = (event)=> {
+		txtUsername.onblur = txtPassword.onblur = event=> {
 			txtUsername.parentElement.classList.remove("auth-glow");
 			txtPassword.parentElement.classList.remove("auth-glow");
 		};
 
-		txtUsername.onfocus = txtPassword.onfocus = (event)=> {
+		txtUsername.onfocus = txtPassword.onfocus = event=> {
 			txtPassword.onblur();
 			event.target.parentElement.classList.add("auth-glow");
 		};
@@ -159,7 +159,7 @@
 		}
 
 		let busy = false;
-		btnLogin.onclick = async (event)=> {
+		btnLogin.onclick = async event=> {
 			if (busy) return;
 
 			if (txtUsername.value === "" || txtPassword.value === "") return;

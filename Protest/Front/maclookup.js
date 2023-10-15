@@ -91,9 +91,8 @@ class MacLookup extends Console {
 			result.appendChild(label);
 		}
 		catch {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
-
 	}
 
 	Remove(macaddr) {
@@ -105,5 +104,4 @@ class MacLookup extends Console {
 		if (index > -1)
 			this.params.entries.splice(index, 1);
 	}
-
 }

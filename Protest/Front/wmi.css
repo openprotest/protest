@@ -20,6 +20,8 @@
 	min-width: 28px !important;
 	height: 28px!important;
 	min-height: 28px !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
 	background-color: transparent !important;
 	background-image: url(/mono/guitarpick.svg?light);
 	background-size: 24px 24px;

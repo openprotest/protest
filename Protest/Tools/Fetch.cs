@@ -31,7 +31,7 @@ internal static class Fetch {
         public int unsuccessful;
     }
 
-    private static ThreadWrapper wrapper;
+    public static TaskWrapper task;
     private static Result? result;
 
     public static byte[] SingleDeviceSerialize(Dictionary<string, string> parameters, bool asynchronous = false) {
@@ -445,7 +445,7 @@ internal static class Fetch {
             initiator);
     }
     public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, string snmp, string portscan, int retries, float interval, string initiator) {
-        if (wrapper is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
+        if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
         int totalFetched = 0;
@@ -455,23 +455,23 @@ internal static class Fetch {
             const int WINDOW = 32;
             SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>> dataset = new SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>>();
 
-            wrapper.status = "fetching";
+            task.status = TaskWrapper.TaskStatus.running;
 
             List<string> queue = new List<string>(hosts);
             List<string> redo = new List<string>();
 
-            while (!wrapper.cancellationToken.IsCancellationRequested) {
+            while (!task.cancellationToken.IsCancellationRequested) {
 
                 while (queue.Count > 0) {
                     int size = Math.Min(WINDOW, queue.Count);
 
                     List<Task<SynchronizedDictionary<string, string[]>>> tasks = new List<Task<SynchronizedDictionary<string, string[]>>>();
                     for (int i = 0; i < size; i++)
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmp, portscan, false, wrapper.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmp, portscan, false, task.cancellationToken));
 
                     SynchronizedDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
 
-                    if (wrapper.cancellationToken.IsCancellationRequested) {
+                    if (task.cancellationToken.IsCancellationRequested) {
                         break;
                     }
 
@@ -480,7 +480,7 @@ internal static class Fetch {
                             redo.Add(queue[i]);
                         }
                         else if (result[i].Count > 0) {
-                            wrapper.CompletedSteps = ++totalFetched;
+                            task.CompletedSteps = ++totalFetched;
                             if (dataset.ContainsKey(queue[i])) {
                                 continue;
                             }
@@ -491,7 +491,7 @@ internal static class Fetch {
                     queue.RemoveRange(0, size);
                 }
 
-                if (wrapper.cancellationToken.IsCancellationRequested) {
+                if (task.cancellationToken.IsCancellationRequested) {
                     break;
                 }
 
@@ -499,18 +499,18 @@ internal static class Fetch {
 
                 if (retries > totalRetries++ && queue.Count > 0) {
                     long wait0 = DateTime.UtcNow.Ticks;
-                    wrapper.status = "idle";
+                    task.status = TaskWrapper.TaskStatus.idle;
 
                     KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
 
                     do {
                         Thread.Sleep(15_000); //15 sec
-                        if (wrapper.cancellationToken.IsCancellationRequested) {
+                        if (task.cancellationToken.IsCancellationRequested) {
                             break;
                         }
                     } while (DateTime.UtcNow.Ticks - wait0 < (long)(interval * 36_000_000_000f));
 
-                    wrapper.status = "fetching";
+                    task.status = TaskWrapper.TaskStatus.running;
 
                     KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
                 }
@@ -519,23 +519,23 @@ internal static class Fetch {
                 }
             }
 
-            if (wrapper.cancellationToken.IsCancellationRequested) {
+            if (task.cancellationToken.IsCancellationRequested) {
                 KeepAlive.Broadcast("{\"action\":\"abortfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
                 Logger.Action(initiator, "Fetch task aborted");
 
-                wrapper.Dispose();
-                wrapper = null;
+                task.Dispose();
+                task = null;
                 return;
             }
 
             result = new Result() {
-                name         = wrapper.name,
+                name         = task.name,
                 type         = Type.devices,
-                started      = wrapper.started,
+                started      = task.started,
                 finished     = DateTime.UtcNow.Ticks,
                 dataset      = dataset,
-                successful   = wrapper.CompletedSteps,
-                unsuccessful = wrapper.TotalSteps - wrapper.CompletedSteps,
+                successful   = task.CompletedSteps,
+                unsuccessful = task.TotalSteps - task.CompletedSteps,
             };
 
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
@@ -545,13 +545,13 @@ internal static class Fetch {
         KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
         Logger.Action(initiator, "Start fetch task");
 
-        wrapper = new ThreadWrapper("Fetching devices") {
+        task = new TaskWrapper("Fetching devices") {
             thread         = thread,
             initiator      = initiator,
             TotalSteps     = hosts.Length,
             CompletedSteps = 0
         };
-        wrapper.thread.Start();
+        task.thread.Start();
 
         return Data.CODE_OK.Array;
     }
@@ -585,22 +585,22 @@ internal static class Fetch {
         return Data.CODE_INVALID_ARGUMENT.ToArray();
     }
     public static byte[] UsersTask(string[] users, string initiator) {
-        if (wrapper is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
+        if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
         Thread thread = new Thread(()=> {
             long lastBroadcast = DateTime.UtcNow.Ticks;
             SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>> dataset = new SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>>();
 
-            wrapper.status = "fetching";
+            task.status = TaskWrapper.TaskStatus.running;
 
             for (int i = 0; i < users.Length; i++) {
                 SynchronizedDictionary<string, string[]> hash = SingleUser(users[i]);
-                wrapper.CompletedSteps++;
+                task.CompletedSteps++;
 
                 dataset.Add(users[i], hash);
 
-                if (wrapper.cancellationToken.IsCancellationRequested) {
+                if (task.cancellationToken.IsCancellationRequested) {
                     break;
                 }
 
@@ -611,13 +611,13 @@ internal static class Fetch {
             }
 
             result = new Result() {
-                name         = wrapper.name,
+                name         = task.name,
                 type         = Type.users,
-                started      = wrapper.started,
+                started      = task.started,
                 finished     = DateTime.UtcNow.Ticks,
                 dataset      = dataset,
-                successful   = wrapper.CompletedSteps,
-                unsuccessful = wrapper.TotalSteps - wrapper.CompletedSteps,
+                successful   = task.CompletedSteps,
+                unsuccessful = task.TotalSteps - task.CompletedSteps,
             };
 
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
@@ -627,13 +627,13 @@ internal static class Fetch {
         KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
         Logger.Action(initiator, "Start fetch task");
 
-        wrapper = new ThreadWrapper("Fetching users") {
+        task = new TaskWrapper("Fetching users") {
             thread         = thread,
             initiator      = initiator,
             TotalSteps     = users.Length,
             CompletedSteps = 0
         };
-        wrapper.thread.Start();
+        task.thread.Start();
 
         return Data.CODE_OK.Array;
     }
@@ -655,28 +655,28 @@ internal static class Fetch {
             return Encoding.UTF8.GetBytes(response.ToString());
         }
 
-        if (wrapper is not null) {
+        if (task is not null) {
             StringBuilder response = new StringBuilder();
 
-            if (wrapper.cancellationToken.IsCancellationRequested) {
+            if (task.cancellationToken.IsCancellationRequested) {
                 response.Append('{');
-                response.Append($"\"name\":\"{Data.EscapeJsonText(wrapper.name)}\",");
+                response.Append($"\"name\":\"{Data.EscapeJsonText(task.name)}\",");
                 response.Append($"\"status\":\"canceling\",");
-                response.Append($"\"started\":\"{wrapper.started}\",");
-                response.Append($"\"completed\":\"{Data.EscapeJsonText(wrapper.CompletedSteps.ToString())}\",");
-                response.Append($"\"total\":\"{Data.EscapeJsonText(wrapper.TotalSteps.ToString())}\",");
-                response.Append($"\"etc\":\"{Data.EscapeJsonText(wrapper.CalculateEtc())}\"");
+                response.Append($"\"started\":\"{task.started}\",");
+                response.Append($"\"completed\":\"{Data.EscapeJsonText(task.CompletedSteps.ToString())}\",");
+                response.Append($"\"total\":\"{Data.EscapeJsonText(task.TotalSteps.ToString())}\",");
+                response.Append($"\"etc\":\"{Data.EscapeJsonText(task.CalculateEtc())}\"");
                 response.Append('}');
                 return Encoding.UTF8.GetBytes(response.ToString());
             }
 
             response.Append('{');
-            response.Append($"\"name\":\"{Data.EscapeJsonText(wrapper.name)}\",");
-            response.Append($"\"status\":\"{Data.EscapeJsonText(wrapper.status)}\",");
-            response.Append($"\"started\":\"{wrapper.started}\",");
-            response.Append($"\"completed\":\"{Data.EscapeJsonText(wrapper.CompletedSteps.ToString())}\",");
-            response.Append($"\"total\":\"{Data.EscapeJsonText(wrapper.TotalSteps.ToString())}\",");
-            response.Append($"\"etc\":\"{Data.EscapeJsonText(wrapper.CalculateEtc())}\"");
+            response.Append($"\"name\":\"{Data.EscapeJsonText(task.name)}\",");
+            response.Append($"\"status\":\"{Data.EscapeJsonText(task.status.ToString())}\",");
+            response.Append($"\"started\":\"{task.started}\",");
+            response.Append($"\"completed\":\"{Data.EscapeJsonText(task.CompletedSteps.ToString())}\",");
+            response.Append($"\"total\":\"{Data.EscapeJsonText(task.TotalSteps.ToString())}\",");
+            response.Append($"\"etc\":\"{Data.EscapeJsonText(task.CalculateEtc())}\"");
             response.Append('}');
             return Encoding.UTF8.GetBytes(response.ToString());
         }
@@ -685,11 +685,10 @@ internal static class Fetch {
     }
 
     public static byte[] CancelTask(string initiator) {
-        if (wrapper is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
+        if (task is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
 
         KeepAlive.Broadcast("{\"action\":\"cancelfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-        Logger.Action(initiator, "Canceling fetch task");
-        wrapper.RequestCancel(initiator);
+        task.RequestCancel(initiator);
         //wrapper = null;
 
         return Data.CODE_OK.Array;
@@ -775,7 +774,7 @@ internal static class Fetch {
         Logger.Action(initiator, "Fetched data approved");
 
         result = null;
-        wrapper = null;
+        task = null;
         return Data.CODE_OK.Array;
     }
 
@@ -784,7 +783,7 @@ internal static class Fetch {
         Logger.Action(initiator, "Discard fetched data");
 
         result = null;
-        wrapper = null;
+        task = null;
         return Data.CODE_OK.Array;
     }
 
@@ -793,21 +792,21 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
         
-        parameters.TryGetValue("ip",        out string ip);
-        parameters.TryGetValue("port",      out string port);
-        parameters.TryGetValue("protocol",  out string protocol);
-        parameters.TryGetValue("username",  out string username);
-        parameters.TryGetValue("password",  out string password);
-        parameters.TryGetValue("devices",   out string importDevices);
-        parameters.TryGetValue("users",     out string importUsers);
+        parameters.TryGetValue("ip",       out string ip);
+        parameters.TryGetValue("port",     out string port);
+        parameters.TryGetValue("protocol", out string protocol);
+        parameters.TryGetValue("username", out string username);
+        parameters.TryGetValue("password", out string password);
+        parameters.TryGetValue("devices",  out string importDevices);
+        parameters.TryGetValue("users",    out string importUsers);
 
         IPAddress ipAddress = IPAddress.Parse(ip);
         if (!IPAddress.IsLoopback(ipAddress)) {
             return "{\"error\":\"Please prefer to import data on the same host, via the loopback address, to avoid information exposure.\"}"u8.ToArray();
         }
 
-        bool fetchDevices     = importDevices?.Equals("true") ?? false;
-        bool fetchUsers       = importUsers?.Equals("true") ?? false;
+        bool fetchDevices = importDevices?.Equals("true") ?? false;
+        bool fetchUsers   = importUsers?.Equals("true") ?? false;
 
         string sessionid = null;
         float version = 0f;

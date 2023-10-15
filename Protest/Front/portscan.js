@@ -307,7 +307,6 @@ class PortScan extends Console {
 			else {
 				this.Add(hostname);
 			}
-
 		}
 		else if (hostname.indexOf("/", 0) > -1) {
 			let cidr = parseInt(hostname.split("/")[1].trim());
@@ -480,7 +479,7 @@ class PortScan extends Console {
 
 		this.ws.onerror = (error)=> { console.log(error); };
 
-		this.ws.onmessage = (event)=> {
+		this.ws.onmessage = event=> {
 			let split = event.data.split(String.fromCharCode(127));
 			let name = split[0];
 

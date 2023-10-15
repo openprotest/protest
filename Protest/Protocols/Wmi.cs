@@ -116,7 +116,7 @@ internal static class Wmi {
                     }
                 }
                 else {
-                    if (!string.IsNullOrEmpty(v)) value += (value.Length == 0) ? $"{v}" : $"; {v}";
+                    if (!String.IsNullOrEmpty(v)) value += (value.Length == 0) ? $"{v}" : $"; {v}";
                 }
 
             }

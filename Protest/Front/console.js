@@ -53,7 +53,6 @@ class Console extends Window {
 			else if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
 				historyIndex = -1;
 			}
-
 		};
 
 		this.defaultElement = this.txtInput;

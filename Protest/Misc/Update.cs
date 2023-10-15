@@ -138,8 +138,8 @@ internal static class Update {
         for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
 
-            FileStream stream = new FileStream($"{Data.DIR_IP_LOCATION}{Data.DIRECTORY_DELIMITER}{i}.bin", FileMode.OpenOrCreate);
-            BinaryWriter writer = new BinaryWriter(stream);
+            using FileStream stream = new FileStream($"{Data.DIR_IP_LOCATION}{Data.DIRECTORY_DELIMITER}{i}.bin", FileMode.OpenOrCreate);
+            using BinaryWriter writer = new BinaryWriter(stream);
 
             uint index = 0;
             List<string> dictionary = new List<string>();
@@ -207,6 +207,7 @@ internal static class Update {
                 writer.Write((byte)0); //null termination
             }
 
+            writer.Flush();
             writer.Close();
             stream.Close();
         }
@@ -289,8 +290,8 @@ internal static class Update {
         for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
 
-            FileStream stream = new FileStream($"{Data.DIR_PROXY}\\{i}.bin", FileMode.OpenOrCreate);
-            BinaryWriter writer = new BinaryWriter(stream);
+            using FileStream stream = new FileStream($"{Data.DIR_PROXY}\\{i}.bin", FileMode.OpenOrCreate);
+            using BinaryWriter writer = new BinaryWriter(stream);
 
             for (int j = 0; j < list[i].Count; j++) {
                 writer.Write(list[i][j].from[3]);
@@ -302,6 +303,7 @@ internal static class Update {
                 writer.Write(list[i][j].to[1]);
             }
 
+            writer.Flush();
             writer.Close();
             stream.Close();
         }
@@ -345,11 +347,11 @@ internal static class Update {
         }
 
         list.Sort((MacEntry a, MacEntry b) => {
-            return string.Compare(a.mac, b.mac);
+            return String.Compare(a.mac, b.mac);
         });
 
-        FileStream stream = new FileStream(Data.FILE_MAC, FileMode.OpenOrCreate);
-        BinaryWriter writer = new BinaryWriter(stream);
+        using FileStream stream = new FileStream(Data.FILE_MAC, FileMode.OpenOrCreate);
+        using BinaryWriter writer = new BinaryWriter(stream);
 
 
         uint index = 0;
@@ -389,7 +391,60 @@ internal static class Update {
             writer.Write((byte)0); //null termination
         }
 
+        writer.Flush();
         writer.Close();
+
+        return Data.CODE_OK.Array;
+    }
+
+    public static byte[] TorFormDataHandler(HttpListenerContext ctx) {
+        HttpListenerRequest request = ctx.Request;
+
+        string boundary = request.ContentType.Split('=')[1]; //boundary value
+        Stream body = request.InputStream;
+        Encoding encoding = request.ContentEncoding;
+        StreamReader reader = new StreamReader(body, encoding);
+
+        string formData = reader.ReadToEnd();
+
+        string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
+
+        List<string> list = new List<string>();
+        
+        foreach (string part in parts) {
+            if (!part.Contains("Content-Disposition")) {
+                continue;
+            }
+
+            //string file = GetFieldName(part);
+            string value = GetFieldValue(part);
+            string[] split = value.Split('\n');
+
+            for (int i = 0; i < split.Length; i++) {
+                string[] linesplit = split[i].Split('.');
+                list.Add(linesplit[0].Trim().PadLeft(3, '0') + linesplit[1].Trim().PadLeft(3, '0') + linesplit[2].Trim().PadLeft(3, '0') + linesplit[3].Trim().PadLeft(3, '0'));
+            }
+        }
+
+        list.Sort();
+
+        Console.WriteLine(Data.FILE_TOR);
+
+        using FileStream stream = new FileStream(Data.FILE_TOR, FileMode.OpenOrCreate);
+        using BinaryWriter writer = new BinaryWriter(stream);
+
+        for (int i = 0; i < list.Count; i++) {
+            writer.Write(Byte.Parse(list[i][9..12])); //reversed
+            writer.Write(Byte.Parse(list[i][6..9]));
+            writer.Write(Byte.Parse(list[i][3..6]));
+            writer.Write(Byte.Parse(list[i][0..3]));
+        }
+
+        writer.Flush();
+        stream.Flush();
+
+        writer.Close();
+        stream.Close();
 
         return Data.CODE_OK.Array;
     }

@@ -30,10 +30,10 @@ public sealed class AttributesJsonConverter : JsonConverter<SynchronizedDictiona
                 reader.Read(); //start of attribute
 
                 if (propertyName == "v") {
-                    attr.value = removeValue ? string.Empty : reader.GetString();
+                    attr.value = removeValue ? String.Empty : reader.GetString();
                 }
                 else if (propertyName == "i") {
-                    attr.initiator = removeValue ? string.Empty : reader.GetString();
+                    attr.initiator = removeValue ? String.Empty : reader.GetString();
                 }
                 else if (propertyName == "d") {
                     try {

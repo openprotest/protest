@@ -64,6 +64,10 @@ internal class Program {
         bool loadAcl = Http.Auth.LoadAcl();
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading ACL", loadAcl ? "OK  " : "Failed"));
 
+        Tools.Watchdog.Initialize();
+        Console.Write("Initialize watchdog");
+        Console.WriteLine("     OK");
+
         try {
             Http.Listener listener = new Http.Listener(Configuration.http_prefixes, Configuration.front_path);
             Console.WriteLine(listener.ToString());

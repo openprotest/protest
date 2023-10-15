@@ -95,7 +95,7 @@ class UserView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 				btnUnlock.removeAttribute("busy");
 			};
 
@@ -108,7 +108,7 @@ class UserView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 				btnEnable.removeAttribute("busy");
 			};
 
@@ -121,7 +121,7 @@ class UserView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 				btnDisable.removeAttribute("busy");
 			};
 
@@ -157,7 +157,6 @@ class UserView extends View {
 			else if (json.lockedOut) {
 				this.CreateWarning(`User is locked out (${json.lockedOut})`);
 			}
-
 		};
 
 		this.liveStatsWebSockets.onclose = event=> {
@@ -198,9 +197,6 @@ class UserView extends View {
 					if (event.key === "Enter") {
 						dialog.btnOK.click();
 					}
-					else if (event.key === "Escape") {
-						dialog.btnCancel.click();
-					}
 				}
 			};
 		}
@@ -215,10 +211,8 @@ class UserView extends View {
 				obj[name] = { v: value };
 			}
 
-			let path = this.params.file ? `db/user/save?file=${this.params.file}` : "db/user/save";
-
 			try {
-				const response = await fetch(path, {
+				const response = await fetch(this.params.file ? `db/user/save?file=${this.params.file}` : "db/user/save", {
 					method: "POST",
 					body: JSON.stringify(obj)
 				});
@@ -247,7 +241,7 @@ class UserView extends View {
 				}
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true).addEventListener("click", ()=>{
+				this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{
 					this.Close();
 				});
 			}
@@ -388,7 +382,7 @@ class UserView extends View {
 	}
 
 	Delete() { //override
-		this.ConfirmBox("Are you sure you want to delete this user?").addEventListener("click", async ()=> {
+		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
 				const response = await fetch(`db/user/delete?file=${this.params.file}`);
 

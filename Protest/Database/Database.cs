@@ -150,7 +150,7 @@ public sealed class Database {
     }
 
     public bool Save(string file, SynchronizedDictionary<string, Attribute> modifications, SaveMethod method, string initiator) {
-        if (string.IsNullOrEmpty(file)) {
+        if (String.IsNullOrEmpty(file)) {
             file = GenerateFilename();
         }
 
@@ -330,7 +330,7 @@ public sealed class Database {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         payload = reader.ReadToEnd();
 
-        if (string.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new AttributesJsonConverter(false));
@@ -444,8 +444,8 @@ public sealed class Database {
         return GetAttributeValue(file, attribute);
     }
     public byte[] GetAttributeValue(string file, string attributeName) {
-        if (string.IsNullOrEmpty(file)) return null;
-        if (string.IsNullOrEmpty(attributeName)) return null;
+        if (String.IsNullOrEmpty(file)) return null;
+        if (String.IsNullOrEmpty(attributeName)) return null;
 
         file = Uri.UnescapeDataString(file);
         attributeName = Uri.UnescapeDataString(attributeName);

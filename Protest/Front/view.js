@@ -8,16 +8,28 @@ class View extends Window {
 		this.content.style.containerType = "inline-size";
 
 		this.InitializeComponent();
+
+		setTimeout(()=>this.UpdateAuthorization(), 1);
 	}
 
 	AfterResize() { //override
 		if (this.content.clientWidth >= 1400) {
 			this.infoPane.style.display = "initial";
 			this.infoPane.append(this.liveA, this.liveB, this.liveC);
-		} else {
+		}
+		else {
 			this.infoPane.style.display = "none";
 			this.scroll.append(this.liveA, this.liveB, this.attributes, this.liveC);
 		}
+	}
+	
+	UpdateAuthorization() { //override
+		this.editButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
+		this.fetchButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("fetch:write");
+		this.cloneButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
+		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
+
+		//this.InitializeAttributesList(this.link);
 	}
 
 	InitializeComponent() {
@@ -61,21 +73,21 @@ class View extends Window {
 
 		this.bar.appendChild(this.AddToolbarSeparator());
 
-		const editButton = this.AddToolbarButton("Edit", "mono/edit.svg?light");
-		editButton.onclick = ()=> this.Edit();
-		this.bar.appendChild(editButton);
+		this.editButton = this.AddToolbarButton("Edit", "mono/edit.svg?light");
+		this.editButton.onclick = ()=> this.Edit();
+		this.bar.appendChild(this.editButton);
 
-		const fetchButton = this.AddToolbarButton("Fetch", "mono/ball.svg?light");
-		fetchButton.onclick = ()=> this.Fetch();
-		this.bar.appendChild(fetchButton);
+		this.fetchButton = this.AddToolbarButton("Fetch", "mono/ball.svg?light");
+		this.fetchButton.onclick = ()=> this.Fetch();
+		this.bar.appendChild(this.fetchButton);
 
-		const cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
-		cloneButton.onclick = ()=> this.Clone();
-		this.bar.appendChild(cloneButton);
+		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.cloneButton.onclick = ()=> this.Clone();
+		this.bar.appendChild(this.cloneButton);
 
-		const deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
-		deleteButton.onclick = ()=> this.Delete();
-		this.bar.appendChild(deleteButton);
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.deleteButton.onclick = ()=> this.Delete();
+		this.bar.appendChild(this.deleteButton);
 
 		this.sideTools = document.createElement("div");
 		this.sideTools.className = "view-side-tools";
@@ -229,7 +241,7 @@ class View extends Window {
 					}, 15000);
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true);
+					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 			};
 
@@ -241,7 +253,7 @@ class View extends Window {
 					UI.PromptAgent(this, "stamp", password);
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true);
+					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 			};
 		}
@@ -306,7 +318,7 @@ class View extends Window {
 			}
 
 			if (!editMode) {
-				nextGroup = this.CreateGroupTitle("mono/other.svg", "other");
+				nextGroup = this.CreateGroupTitle("mono/info.svg", "other");
 			}
 
 			for (let key in hash) {
@@ -514,7 +526,6 @@ class View extends Window {
 					for (let key in sorted[i].obj) {
 						added++;
 					}
-
 				}
 				else {
 					for (let key in sorted[i].obj) {
@@ -611,7 +622,6 @@ class View extends Window {
 						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) continue;
 						this.attributes.childNodes[j].style.backgroundImage = "url(mono/add.svg)";
 					}
-
 				}
 				else {
 					for (let j = 0; j < this.attributes.childNodes.length; j++) {
@@ -629,7 +639,6 @@ class View extends Window {
 						}
 					}
 				}
-
 			};
 		}
 
@@ -658,6 +667,10 @@ class View extends Window {
 		for (let i = 0; i < this.bar.childNodes.length; i++) {
 			this.bar.childNodes[i].style.display = "none";
 		}
+
+		this.liveA.style.display = "none";
+		this.liveB.style.display = "none";
+		this.liveC.style.display = "none";
 
 		for (let i = 0; i < this.attributes.childNodes.length; i++) {
 			this.attributes.childNodes[i].style.display = "inherit";
@@ -734,6 +747,10 @@ class View extends Window {
 			for (let i = 0; i < this.bar.childNodes.length; i++) {
 				this.bar.childNodes[i].style.display = "initial";
 			}
+
+			this.liveA.style.display = "block";
+			this.liveB.style.display = "block";
+			this.liveC.style.display = "block";
 
 			this.scroll.removeChild(addAttribute);
 

@@ -17,12 +17,12 @@ class PasswordStrength extends List {
 		const btnGandalf = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.filterButton = this.SetupFilter();
-		this.findTextBox = this.SetupFind();
+		this.findInput = this.SetupFind();
 
 		if (this.params.find && this.params.find.length > 0) {
-			this.findTextBox.value = this.params.find;
-			this.findTextBox.parentElement.style.borderBottom = this.findTextBox.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
-			this.findTextBox.parentElement.style.width = "200px";
+			this.findInput.value = this.params.find;
+			this.findInput.parentElement.style.borderBottom = this.findInput.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
+			this.findInput.parentElement.style.width = "200px";
 		}
 
 		btnGandalf.onclick = ()=> { new Gandalf(); };
@@ -131,7 +131,7 @@ class PasswordStrength extends List {
 			this.RefreshList();
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true).addEventListener("click", ()=> this.Close());
+			this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=> this.Close());
 		}
 	}
 
@@ -323,7 +323,6 @@ class PasswordStrength extends List {
 					}
 				new UserView({ file: entry.file });
 			}
-
 		};
 
 	}

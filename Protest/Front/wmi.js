@@ -109,7 +109,7 @@ class Wmi extends Window {
 			this.wmi_classes = json;	
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -309,7 +309,6 @@ class Wmi extends Window {
 					}
 				}
 			}
-
 		};
 		txtClassFilter.oninput();
 
@@ -370,7 +369,7 @@ class Wmi extends Window {
 		this.divPlot.textContent = "";
 
 		try {
-			const response = await fetch(`wmi/query?target=${this.txtTarget.value}`, {
+			const response = await fetch(`wmi/query?target=${encodeURIComponent(this.txtTarget.value)}`, {
 				method: "POST",
 				body: this.txtQuery.value.trim().replaceAll("\n", " ")
 			});
@@ -382,7 +381,7 @@ class Wmi extends Window {
 			if (split.length > 1) this.Plot(split);
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 		finally {
 			this.btnExecute.disabled = false;
@@ -445,37 +444,37 @@ class Wmi extends Window {
 
 				if (i > length) {
 					switch (className) {
-						case "win32_process":
-							const btnTerminate = document.createElement("input");
-							btnTerminate.type = "button";
-							btnTerminate.value = "Terminate";
-							btnTerminate.setAttribute("pid", split[i + unique]);
-							td.appendChild(btnTerminate);
+					case "win32_process":
+						const btnTerminate = document.createElement("input");
+						btnTerminate.type = "button";
+						btnTerminate.value = "Terminate";
+						btnTerminate.setAttribute("pid", split[i + unique]);
+						td.appendChild(btnTerminate);
 
-							btnTerminate.onclick = async event=> {
-								btnTerminate.disabled = true;
-								let pid = event.target.getAttribute("pid");
+						btnTerminate.onclick = async event=> {
+							btnTerminate.disabled = true;
+							let pid = event.target.getAttribute("pid");
 							
-								try {
-									const response = await fetch(`wmi/killprocess?target=${targetHost}&pid=${pid}`);
-									if (response.status !== 200) return;
-									const text = await response.text();
+							try {
+								const response = await fetch(`wmi/killprocess?target=${encodeURIComponent(targetHost)}&pid=${pid}`);
+								if (response.status !== 200) return;
+								const text = await response.text();
 
-									if (text === "ok")
-										table.removeChild(tr);
-									else {
-										td.removeChild(btnTerminate);
-										td.textContent = text;
-									}
+								if (text === "ok")
+									table.removeChild(tr);
+								else {
+									td.removeChild(btnTerminate);
+									td.textContent = text;
 								}
-								catch (ex) {
-									this.ConfirmBox(ex, true);
-								}
-							};
-							break;
+							}
+							catch (ex) {
+								this.ConfirmBox(ex, true, "mono/error.svg");
+							}
+						};
+						break;
 
-						default:
-						/*let btnMethod = document.createElement("input");
+					/*default:
+						let btnMethod = document.createElement("input");
 						btnMethod.type  = "button";
 						btnMethod.value = "Method";
 						td.appendChild(btnMethod);
@@ -483,7 +482,6 @@ class Wmi extends Window {
 							this.CallMethodDialog();
 						};*/
 					}
-
 				}
 			}
 		}

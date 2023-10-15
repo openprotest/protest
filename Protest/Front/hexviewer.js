@@ -329,9 +329,9 @@ class HexViewer extends Window {
 			}
 
 			switch (protocol) {
-				case "dns" : this.PopulateDnsLabels(hexContainer, charContainer, exchange[i].data); break;
-				case "ntp" : this.PopulateNtpLabels(hexContainer, charContainer, exchange[i].data); break;
-				case "dhcp": this.PopulateDhcpLabels(hexContainer, charContainer, exchange[i].data); break;
+			case "dns" : this.PopulateDnsLabels(hexContainer, charContainer, exchange[i].data); break;
+			case "ntp" : this.PopulateNtpLabels(hexContainer, charContainer, exchange[i].data); break;
+			case "dhcp": this.PopulateDhcpLabels(hexContainer, charContainer, exchange[i].data); break;
 			}
 		}
 	}
@@ -713,16 +713,16 @@ class HexViewer extends Window {
 			case 53:
 				let type;
 				switch (stream[index]) {
-					case 1: type = "Discover"; break;
-					case 2: type = "Offer"; break;
-					case 3: type = "Request"; break;
-					case 4: type = "Decline"; break;
-					case 5: type = "Acknowledge"; break;
-					case 6: type = "Negative acknowledgment"; break;
-					case 7: type = "Release"; break;
-					case 8: type = "Informational"; break;
-					case 9: type = "Force renew"; break;
-					default: type = "Unknown type"; break;
+				case 1: type = "Discover"; break;
+				case 2: type = "Offer"; break;
+				case 3: type = "Request"; break;
+				case 4: type = "Decline"; break;
+				case 5: type = "Acknowledge"; break;
+				case 6: type = "Negative acknowledgment"; break;
+				case 7: type = "Release"; break;
+				case 8: type = "Informational"; break;
+				case 9: type = "Force renew"; break;
+				default: type = "Unknown type"; break;
 				}
 				this.PopulateLabel(`DHCP Message type: ${type}`, 1, hexContainer, charContainer, index, len);
 				break;
@@ -742,7 +742,6 @@ class HexViewer extends Window {
 						this.PopulateLabel(`(${stream[index+i]})`, 2, hexContainer, charContainer, index+i, 1);
 					}
 				}
-
 				break;
 
 			case 58:

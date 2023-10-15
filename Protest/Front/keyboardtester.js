@@ -303,7 +303,6 @@ class KeyboardTester extends Window {
 
 			this.CheckLed(event);
 		};
-		
 	}
 
 	InitializeGamepad(forced = false) {
@@ -792,7 +791,6 @@ class KeyboardTester extends Window {
 					strongMagnitude: strong
 				});
 			}
-		
 		}
 
 		setTimeout(()=> this.GamepadLoop(elements), 33);

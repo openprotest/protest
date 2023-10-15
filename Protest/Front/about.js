@@ -95,7 +95,7 @@ class About extends Tabs {
 		opensource.style.textAlign = "left";
 		opensource.style.maxWidth = "640px";
 		opensource.style.userSelect = "text";
-		opensource.textContent = "Pro-test is a free and open-source tool developed and maintained by Andreas Venizelou. All of the source code to this product is available to you under the GNU General Public License.";
+		opensource.textContent = "Pro-test is a free and open-source tool developed and maintained by Andreas Venizelou. The entire source code for this product is accessible to you under the GNU General Public License.";
 		center.appendChild(opensource);
 
 		const gpl = document.createElement("div");
@@ -113,18 +113,18 @@ class About extends Tabs {
 		center.appendChild(document.createElement("br"));
 
 		const credits = document.createElement("div");
-        credits.style.display = "inline-block";
-        credits.style.paddingTop = "32px";
-        credits.style.maxWidth = "640px";
-        credits.style.textAlign = "left";
-        credits.style.userSelect = "text";
-        credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
-        credits.innerHTML += "<b>-</b> MAC addresses lookup table          <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
-        credits.innerHTML += "<b>-</b> IP2Location LITE                    <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-        credits.innerHTML += "<b>-</b> IP2Proxy LITE                       <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-        credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
-        credits.innerHTML += "<b>-</b> Open Sans typeface                  <a>by Steve Matteson</a><br>";
-        center.appendChild(credits);
+		credits.style.display = "inline-block";
+		credits.style.paddingTop = "32px";
+		credits.style.maxWidth = "640px";
+		credits.style.textAlign = "left";
+		credits.style.userSelect = "text";
+		credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
+		credits.innerHTML += "<b>-</b> MAC addresses lookup table          <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
+		credits.innerHTML += "<b>-</b> IP2Location LITE                    <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
+		credits.innerHTML += "<b>-</b> IP2Proxy LITE                       <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
+		credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
+		credits.innerHTML += "<b>-</b> Open Sans typeface                  <a>by Steve Matteson</a><br>";
+		center.appendChild(credits);
 
 		center.appendChild(document.createElement("br"));
 		center.appendChild(document.createElement("br"));
@@ -263,23 +263,23 @@ class About extends Tabs {
 		}
 		catch (ex) {
 			status.textContent = "Failed to fetch the latest version.";
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 		finally {
 			animation.style.animation = "none";
 		}
-		
 	}
 
 	async ShowUpdateModules() {
 		this.params = "updatemod";
 		this.tabsPanel.textContent = "";
 
-		const location    = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["text/csv"]);
-		const proxy       = this.CreateDropArea("Drop a file here to update proxy servers knowledge base", "/config/upload/proxy", ["text/csv"]);
-		const macResolver = this.CreateDropArea("Drop a file here to update MAC address-vendors knowledge base", "/config/upload/macresolve", ["text/csv"]);
+		const location    = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["csv"]);
+		const proxy       = this.CreateDropArea("Drop a file here to update proxy servers knowledge base", "/config/upload/proxy", ["csv"]);
+		const macResolver = this.CreateDropArea("Drop a file here to update MAC address-vendors knowledge base", "/config/upload/macresolve", ["csv"]);
+		const macTor      = this.CreateDropArea("Drop a file here to update TOR servers knowledge base", "/config/upload/tor", ["txt"]); 
 
-		this.tabsPanel.append(location, proxy, macResolver);
+		this.tabsPanel.append(location, proxy, macResolver, macTor);
 
 		const resources = document.createElement("div");
 		resources.style.paddingTop = "100px";
@@ -335,9 +335,9 @@ class About extends Tabs {
 
 	CreateDropArea(text, uploadUrl, filter) {
 		const dropArea = document.createElement("div");
-		dropArea.style.minHeight    = "40px";
+		dropArea.style.minHeight    = "20px";
 		dropArea.style.margin       = "16px";
-		dropArea.style.padding      = "16px";
+		dropArea.style.padding      = "20px";
 		dropArea.style.border       = "2px dashed var(--clr-dark)";
 		dropArea.style.borderRadius = "8px";
 		dropArea.style.transition   = ".4s";
@@ -377,8 +377,10 @@ class About extends Tabs {
 			}
 
 			let file = event.dataTransfer.files[0];
+			let extension = file.name.split(".");
+			extension = extension[extension.length-1].toLowerCase();
 
-			if (!filter.includes(file.type)) {
+			if (!filter.includes(extension)) {
 				this.ConfirmBox("Unsupported file", true);
 				return;
 			}
@@ -410,7 +412,7 @@ class About extends Tabs {
 				if (json.error) throw (json.error);
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 			finally {
 				isBusy = false;

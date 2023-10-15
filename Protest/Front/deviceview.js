@@ -136,7 +136,7 @@ class DeviceView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 				btnWoL.removeAttribute("busy");
 			};
 		}
@@ -156,7 +156,7 @@ class DeviceView extends View {
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
-						catch (ex) { this.ConfirmBox(ex, true); }
+						catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 						btnPowerOff.removeAttribute("busy");
 					});
 				};
@@ -171,7 +171,7 @@ class DeviceView extends View {
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
-						catch (ex) { this.ConfirmBox(ex, true); }
+						catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 						btnReboot.removeAttribute("busy");
 					});
 				};
@@ -186,7 +186,7 @@ class DeviceView extends View {
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
-						catch (ex) { this.ConfirmBox(ex, true); }
+						catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 						btnLogOff.removeAttribute("busy");
 					});
 				};
@@ -251,11 +251,11 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.https) { //https
-				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPs");
+				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				btnAction.onclick = ()=> window.open("https://" + host.split(";")[0].trim() + ":" + overwriteProtocol.https);
 			}
 			else if (ports.includes(443)) { //https
-				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPs");
+				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				btnAction.onclick = ()=> window.open("https://" + host.split(";")[0].trim());
 			}
 
@@ -315,7 +315,7 @@ class DeviceView extends View {
 						const json = await response.json();
 						if (json.error) throw (json.error);
 					}
-					catch (ex) { this.ConfirmBox(ex, true); }
+					catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 					btnPrintTest.removeAttribute("busy");
 				};
 			}
@@ -362,7 +362,7 @@ class DeviceView extends View {
 
 				const pingButton = this.CreateInfoButton(json.for, "/mono/ping.svg");
 				pingButton.secondary.textContent = isNaN(json.echoReply) ? json.echoReply : `${json.echoReply}ms`;
-				pingButton.secondary.style.display = "inline-block"
+				pingButton.secondary.style.display = "inline-block";
 				pingButton.secondary.style.color = UI.PingColor(json.echoReply);
 				pingButton.secondary.style.backgroundColor = "var(--clr-dark)";
 				pingButton.secondary.style.padding = "0 4px";
@@ -380,9 +380,9 @@ class DeviceView extends View {
 			}
 			else if (json.drive) {
 				const driveButton = this.CreateInfoButton(json.drive, "/mono/hdd.svg");
-				driveButton.secondary.style.display = "inline-block"
-				driveButton.secondary.style.width = "64px"
-				driveButton.secondary.style.height = "10px"
+				driveButton.secondary.style.display = "inline-block";
+				driveButton.secondary.style.width = "64px";
+				driveButton.secondary.style.height = "10px";
 				driveButton.secondary.style.border = "2px solid var(--clr-dark)";
 				driveButton.secondary.style.borderRadius = "2px";
 				driveButton.secondary.style.boxShadow = `var(--clr-dark) ${json.used * 64 / json.total}px 0 0 inset`;
@@ -392,7 +392,7 @@ class DeviceView extends View {
 			}
 			else if (json.activeUser) {
 				const userButton = this.CreateInfoButton(json.activeUser, "/mono/user.svg");
-				userButton.secondary.style.display = "inline-block"
+				userButton.secondary.style.display = "inline-block";
 				userButton.button.onclick = ()=> {
 					let usersList = [json.activeUser];
 					if (json.activeUser.indexOf("\\") > 0) usersList.push(json.activeUser.split("\\")[1]);
@@ -457,9 +457,6 @@ class DeviceView extends View {
 					if (event.key === "Enter") {
 						dialog.btnOK.click();
 					}
-					else if (event.key === "Escape") {
-						dialog.btnCancel.click();
-					}
 				};
 			};
 		}
@@ -474,10 +471,8 @@ class DeviceView extends View {
 				obj[name] = {v:value};
 			}
 
-			let path = this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save";
-
 			try {
-				const response = await fetch(path, {
+				const response = await fetch(this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save", {
 					method: "POST",
 					body: JSON.stringify(obj)
 				});
@@ -507,7 +502,7 @@ class DeviceView extends View {
 
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true).addEventListener("click", ()=>{
+				this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{
 					this.Close();
 				});
 			}
@@ -755,7 +750,7 @@ class DeviceView extends View {
 	}
 	
 	Delete() { //override
-		this.ConfirmBox("Are you sure you want to delete this device?").addEventListener("click", async ()=> {
+		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
 				const response = await fetch(`db/device/delete?file=${this.params.file}`);
 

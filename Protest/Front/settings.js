@@ -22,15 +22,15 @@ class Settings extends Tabs {
 		this.tabEmailProfiles.onclick = ()=> this.ShowEmailProfiles();
 
 		switch (this.params) {
-			case "smtpprofiles":
-				this.tabEmailProfiles.className = "v-tab-selected";
-				this.ShowEmailProfiles();
-				break;
+		case "smtpprofiles":
+			this.tabEmailProfiles.className = "v-tab-selected";
+			this.ShowEmailProfiles();
+			break;
 
-			default:
-				this.tabZones.className = "v-tab-selected";
-				this.ShowZones();
-				break;
+		default:
+			this.tabZones.className = "v-tab-selected";
+			this.ShowZones();
+			break;
 		}
 
 		setTimeout(()=> { this.AfterResize(); }, 250);
@@ -139,16 +139,18 @@ class Settings extends Tabs {
 			this.PreviewZone(null);
 		};
 
-		this.zonesRemoveButton.onclick = ()=>{
+		this.zonesRemoveButton.onclick = ()=> {
 			if (!this.selectedZone) return;
 
 			let index = this.zones.indexOf(this.selectedZone);
 			if (index === -1) return;
 
-			this.zones.splice(index, 1);
-			this.SaveZones();
-
-			this.zonesList.removeChild(this.zonesList.childNodes[index]);
+			this.ConfirmBox("Are you sure you want to remove this zone?", false, "mono/delete.svg").addEventListener("click", ()=>{
+				this.zones.splice(index, 1);
+				this.SaveZones();
+	
+				this.zonesList.removeChild(this.zonesList.childNodes[index]);
+			});
 		};
 
 		this.GetZones();
@@ -246,10 +248,12 @@ class Settings extends Tabs {
 			let index = this.profiles.indexOf(this.selectedProfile);
 			if (index === -1) return;
 
-			this.profiles.splice(index, 1);
-			this.SaveProfiles();
-
-			this.profilesList.removeChild(this.profilesList.childNodes[index]);
+			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
+				this.profiles.splice(index, 1);
+				this.SaveProfiles();
+	
+				this.profilesList.removeChild(this.profilesList.childNodes[index]);
+			});
 		};
 
 		this.GetSmtpProfiles();
@@ -279,6 +283,7 @@ class Settings extends Tabs {
 				nameLabel.style.left = "0";
 				nameLabel.style.width = "33%";
 				nameLabel.style.lineHeight = "32px";
+				nameLabel.style.paddingLeft = "4px";
 				nameLabel.textContent = json[i].name;
 
 				const networkLabel = document.createElement("div");
@@ -295,6 +300,7 @@ class Settings extends Tabs {
 				colorBox.style.left = "66%";
 				colorBox.style.width = "32px";
 				colorBox.style.height = "24px";
+				colorBox.style.marginLeft = "8px";
 				colorBox.style.borderRadius = "2px";
 				colorBox.style.backgroundColor = json[i].color;
 
@@ -314,7 +320,7 @@ class Settings extends Tabs {
 			}
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -382,7 +388,7 @@ class Settings extends Tabs {
 			}
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -591,7 +597,7 @@ class Settings extends Tabs {
 
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -610,7 +616,7 @@ class Settings extends Tabs {
 			
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 }

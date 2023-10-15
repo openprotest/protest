@@ -15,7 +15,7 @@ internal static class Cryptography {
 
     public static string RandomStringGenerator(int length) {
         byte[] bytes = RandomNumberGenerator.GetBytes(length);
-        return BitConverter.ToString(bytes).Replace("-", string.Empty);
+        return BitConverter.ToString(bytes).Replace("-", String.Empty);
     }
 
     public static byte[] HashStringToBytes(string key, byte length) {
@@ -61,7 +61,7 @@ internal static class Cryptography {
     }
 
     public static string EncryptB64(string text, byte[] key, byte[] iv) {
-        if (string.IsNullOrEmpty(text)) return string.Empty;
+        if (String.IsNullOrEmpty(text)) return String.Empty;
 
         byte[] bytes = Encoding.UTF8.GetBytes(text);
         byte[] cipher = Encrypt(bytes, key, iv);
@@ -69,11 +69,11 @@ internal static class Cryptography {
     }
 
     public static string DecryptB64(string encodedText, byte[] key, byte[] iv) {
-        if (string.IsNullOrEmpty(encodedText)) return string.Empty;
+        if (String.IsNullOrEmpty(encodedText)) return String.Empty;
 
         byte[] bytes = Convert.FromBase64String(encodedText);
         byte[] plain = Decrypt(bytes, key, iv);
-        if (plain is null || plain.Length == 0) return string.Empty;
+        if (plain is null || plain.Length == 0) return String.Empty;
         return Encoding.UTF8.GetString(plain);
     }
 

@@ -37,19 +37,19 @@ class Telnet extends Window {
 		this.txtInput.style.boxSizing = "border-box";
 		this.content.appendChild(this.txtInput);
 
-		this.txtInput.onkeydown = (event)=> {
-			if (event.keyCode === 13) { //enter
+		this.txtInput.onkeydown = event=> {
+			if (event.code === "Enter") {
 				this.Push(this.txtInput.value);
 				this.list.scrollTop = this.list.scrollHeight;
 				this.txtInput.value = "";
 				event.preventDefault();
 			}
 
-			if (event.keyCode == 38 || event.keyCode == 40) { //up or down
+			if (event.code === "ArrowUp" || event.code === "ArrowDown") {
 				if (this.history.length == 0) return;
 
-				if (event.keyCode == 38) historyIndex--; //up
-				if (event.keyCode == 40) historyIndex++; //down
+				if (event.code === "ArrowUp") historyIndex--; //up
+				if (event.code === "ArrowDown") historyIndex++; //down
 
 				if (historyIndex < 0) historyIndex = this.history.length - 1;
 				historyIndex %= this.history.length;
@@ -57,7 +57,7 @@ class Telnet extends Window {
 
 				event.preventDefault();
 			}
-			else if (event.keyCode != 37 && event.keyCode != 39) { // not left nor rigth
+			else if (event.code !== "ArrowLeft" && event.code !== "ArrowRight") { // not left nor rigth
 				historyIndex = -1;
 			}
 		};
@@ -148,7 +148,7 @@ class Telnet extends Window {
 
 		txtHost.onkeydown = event=> {
 			if (txtHost.value.length === 0) return;
-			if (event.keyCode === 13) {
+			if (event.code === "Enter") {
 				this.Connect(txtHost.value);
 				btnCancel.onclick();
 			}
@@ -247,71 +247,70 @@ class Telnet extends Window {
 
 						let ansi = split[j].substring(0, e+1);
 						switch (ansi) {
-							case "[0m":
-								front = "#ccc";
-								back = "transparent";
-								bold = false;
-								underline = false;
-								break;
+						case "[0m":
+							front = "#ccc";
+							back = "transparent";
+							bold = false;
+							underline = false;
+							break;
 
-							case "[1m": bold = true; break;
-							case "[4m": underline = true; break;
+						case "[1m": bold = true; break;
+						case "[4m": underline = true; break;
 
-							case "[7m":
-								front = "#222";
-								back = "#ccc";
-								break;
+						case "[7m":
+							front = "#222";
+							back = "#ccc";
+							break;
 
-							case "[30m": front = "#000"; break;
-							case "[31m": front = "#d00"; break;
-							case "[32m": front = "#0d0"; break;
-							case "[33m": front = "#0dd"; break;
-							case "[34m": front = "#00d"; break;
-							case "[35m": front = "#d0d"; break;
-							case "[36m": front = "#0dd"; break;
-							case "[37m": front = "#ddd"; break;
+						case "[30m": front = "#000"; break;
+						case "[31m": front = "#d00"; break;
+						case "[32m": front = "#0d0"; break;
+						case "[33m": front = "#0dd"; break;
+						case "[34m": front = "#00d"; break;
+						case "[35m": front = "#d0d"; break;
+						case "[36m": front = "#0dd"; break;
+						case "[37m": front = "#ddd"; break;
 
-							case "[30;1m": front = "#222"; bold = true; break;
-							case "[31;1m": front = "#f22"; bold = true; break;
-							case "[32;1m": front = "#2f2"; bold = true; break;
-							case "[33;1m": front = "#2ff"; bold = true; break;
-							case "[34;1m": front = "#22f"; bold = true; break;
-							case "[35;1m": front = "#f2f"; bold = true; break;
-							case "[36;1m": front = "#2ff"; bold = true; break;
-							case "[37;1m": front = "#fff"; bold = true; break;
+						case "[30;1m": front = "#222"; bold = true; break;
+						case "[31;1m": front = "#f22"; bold = true; break;
+						case "[32;1m": front = "#2f2"; bold = true; break;
+						case "[33;1m": front = "#2ff"; bold = true; break;
+						case "[34;1m": front = "#22f"; bold = true; break;
+						case "[35;1m": front = "#f2f"; bold = true; break;
+						case "[36;1m": front = "#2ff"; bold = true; break;
+						case "[37;1m": front = "#fff"; bold = true; break;
 
-							case "[40m": back = "#000"; break;
-							case "[41m": back = "#d00"; break;
-							case "[42m": back = "#0d0"; break;
-							case "[43m": back = "#0dd"; break;
-							case "[44m": back = "#00d"; break;
-							case "[45m": back = "#d0d"; break;
-							case "[46m": back = "#0dd"; break;
-							case "[47m": back = "#ddd"; break;
+						case "[40m": back = "#000"; break;
+						case "[41m": back = "#d00"; break;
+						case "[42m": back = "#0d0"; break;
+						case "[43m": back = "#0dd"; break;
+						case "[44m": back = "#00d"; break;
+						case "[45m": back = "#d0d"; break;
+						case "[46m": back = "#0dd"; break;
+						case "[47m": back = "#ddd"; break;
 
-							case "[40;1m": back = "#000"; bold = true; break;
-							case "[41;1m": back = "#d00"; bold = true; break;
-							case "[42;1m": back = "#0d0"; bold = true; break;
-							case "[43;1m": back = "#0dd"; bold = true; break;
-							case "[44;1m": back = "#00d"; bold = true; break;
-							case "[45;1m": back = "#d0d"; bold = true; break;
-							case "[46;1m": back = "#0dd"; bold = true; break;
-							case "[47;1m": back = "#ddd"; bold = true; break;
+						case "[40;1m": back = "#000"; bold = true; break;
+						case "[41;1m": back = "#d00"; bold = true; break;
+						case "[42;1m": back = "#0d0"; bold = true; break;
+						case "[43;1m": back = "#0dd"; bold = true; break;
+						case "[44;1m": back = "#00d"; bold = true; break;
+						case "[45;1m": back = "#d0d"; bold = true; break;
+						case "[46;1m": back = "#0dd"; bold = true; break;
+						case "[47;1m": back = "#ddd"; bold = true; break;
 
-							case "[0J": case "[1J": case "[2J":
-								this.PushLine();
-								this.last.style.height = this.content.clientHeight;
-								this.PushLine();
-								break;
+						case "[0J": case "[1J": case "[2J":
+							this.PushLine();
+							this.last.style.height = this.content.clientHeight;
+							this.PushLine();
+							break;
 
-							case "[0K": case "[1K": case "[2K":
-								this.last.textContent = "";
-								break;
+						case "[0K": case "[1K": case "[2K":
+							this.last.textContent = "";
+							break;
 						}
 
 						this.PushText(split[j].replace(ansi, ""), front, back, bold, underline);
 					}
-
 				}
 				else { //plain
 					if (front == "#ccc" && back == "transparent")
@@ -356,5 +355,4 @@ class Telnet extends Window {
 		this.last = div;
 		return div;
 	}
-
 }

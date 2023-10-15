@@ -33,24 +33,24 @@ class Fetch extends Tabs {
 		this.InitializeComponents();
 
 		switch (this.params) {
-			case "users":
-				tabUsers.className = "v-tab-selected";
-				this.ShowUsers();
-				break;
+		case "users":
+			tabUsers.className = "v-tab-selected";
+			this.ShowUsers();
+			break;
 
-			case "protest":
-				tabProtest.className = "v-tab-selected";
-				this.ShowImport();
-				break;
+		case "protest":
+			tabProtest.className = "v-tab-selected";
+			this.ShowImport();
+			break;
 
-			case "fetching":
-				this.tabTask.className = "v-tab-selected";
-				this.ShowFetching();
-				break;
+		case "fetching":
+			this.tabTask.className = "v-tab-selected";
+			this.ShowFetching();
+			break;
 
-			default:
-				tabDevice.className = "v-tab-selected";
-				this.ShowDevices();
+		default:
+			tabDevice.className = "v-tab-selected";
+			this.ShowDevices();
 		}
 	}
 
@@ -282,12 +282,12 @@ class Fetch extends Tabs {
 
 		this.txtPortScan.onchange = ()=> {
 			switch (this.txtPortScan.value) {
-				case "basic"     : this.lblPortScanComment.textContent = "Scan only common protocols"; break;
-				case "wellknown" : this.lblPortScanComment.textContent = "Scan ports 1 to 1023"; break;
-				case "extended"  : this.lblPortScanComment.textContent = "Scan ports 1 to 8191"; break;
-				case "registered": this.lblPortScanComment.textContent = "Scan ports 1024 to 49151 (slow)"; break;
-				case "full"      : this.lblPortScanComment.textContent = "Scan ports 1 to 49151 (slow)"; break;
-				case "dynamic"   : this.lblPortScanComment.textContent = "Scan ports 49152 to 65535 (slow)"; break;
+			case "basic"     : this.lblPortScanComment.textContent = "Scan only common protocols"; break;
+			case "wellknown" : this.lblPortScanComment.textContent = "Scan ports 1 to 1023"; break;
+			case "extended"  : this.lblPortScanComment.textContent = "Scan ports 1 to 8191"; break;
+			case "registered": this.lblPortScanComment.textContent = "Scan ports 1024 to 49151 (slow)"; break;
+			case "full"      : this.lblPortScanComment.textContent = "Scan ports 1 to 49151 (slow)"; break;
+			case "dynamic"   : this.lblPortScanComment.textContent = "Scan ports 49152 to 65535 (slow)"; break;
 			}
 		};
 
@@ -311,15 +311,15 @@ class Fetch extends Tabs {
 
 		this.rngInterval.oninput = ()=> {
 			switch (parseInt(this.rngInterval.value)) {
-				case 0: this.lblIntervalComment.textContent = "If unreachable, retry after half an hour"; break;
-				case 1: this.lblIntervalComment.textContent = "If unreachable, retry after an hour"; break;
-				case 2: this.lblIntervalComment.textContent = "If unreachable, retry after 2 hours"; break;
-				case 3: this.lblIntervalComment.textContent = "If unreachable, retry after 4 hours"; break;
-				case 4: this.lblIntervalComment.textContent = "If unreachable, retry after 6 hours"; break;
-				case 5: this.lblIntervalComment.textContent = "If unreachable, retry after 8 hours"; break;
-				case 6: this.lblIntervalComment.textContent = "If unreachable, retry after 12 hours"; break;
-				case 7: this.lblIntervalComment.textContent = "If unreachable, retry after 24 hours"; break;
-				case 8: this.lblIntervalComment.textContent = "If unreachable, retry after 48 hours"; break;
+			case 0: this.lblIntervalComment.textContent = "If unreachable, retry after half an hour"; break;
+			case 1: this.lblIntervalComment.textContent = "If unreachable, retry after an hour"; break;
+			case 2: this.lblIntervalComment.textContent = "If unreachable, retry after 2 hours"; break;
+			case 3: this.lblIntervalComment.textContent = "If unreachable, retry after 4 hours"; break;
+			case 4: this.lblIntervalComment.textContent = "If unreachable, retry after 6 hours"; break;
+			case 5: this.lblIntervalComment.textContent = "If unreachable, retry after 8 hours"; break;
+			case 6: this.lblIntervalComment.textContent = "If unreachable, retry after 12 hours"; break;
+			case 7: this.lblIntervalComment.textContent = "If unreachable, retry after 24 hours"; break;
+			case 8: this.lblIntervalComment.textContent = "If unreachable, retry after 48 hours"; break;
 			}
 		};
 
@@ -343,7 +343,7 @@ class Fetch extends Tabs {
 					this.ConfirmBox("Please enter a domain", true);
 					return;
 				}
-				uri += `?domain=${this.txtDomain.value}`;
+				uri += `?domain=${encodeURIComponent(this.txtDomain.value)}`;
 			}
 
 			if (this.params === "devices") {
@@ -380,7 +380,7 @@ class Fetch extends Tabs {
 				}
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 			finally {
 				btnFetch.disabled = btnCancel.disabled = false;
@@ -599,7 +599,7 @@ class Fetch extends Tabs {
 		optHttp.value = "http";
 		txtProtocol.appendChild(optHttp);
 		const optHttps = document.createElement("option");
-		optHttps.text = "HTTPs";
+		optHttps.text = "HTTPS";
 		optHttps.value = "https";
 		txtProtocol.appendChild(optHttps);
 
@@ -684,7 +684,7 @@ class Fetch extends Tabs {
 			try {
 				btnImport.disabled = btnCancel.disabled = true;
 
-				let uri = `fetch/import?ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${txtUsername.value}&password=${txtPassword.value}&devices=${chkDevice.checked}&users=${chkUsers.checked}`;
+				let uri = `fetch/import?ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${encodeURIComponent(txtUsername.value)}&password=${encodeURIComponent(txtPassword.value)}&devices=${chkDevice.checked}&users=${chkUsers.checked}`;
 				const response = await fetch(uri);
 	
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -697,7 +697,7 @@ class Fetch extends Tabs {
 				}
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 			finally {
 				btnImport.disabled = btnCancel.disabled = false;
@@ -821,7 +821,7 @@ class Fetch extends Tabs {
 					}
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true);
+					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 			});
 		};
@@ -987,11 +987,11 @@ class Fetch extends Tabs {
 
 		txtConflict.onchange = ()=> {
 			switch (parseInt(txtConflict.value)) {
-				case 0: lblConflictComment.textContent = "Do nothing, keep original record"; break;
-				case 1: lblConflictComment.textContent = "Create a new record"; break;
-				case 2: lblConflictComment.textContent = "Replace original record"; break;
-				case 3: lblConflictComment.textContent = "Append only new properties"; break;
-				case 4: lblConflictComment.textContent = "Merge with original record"; break;
+			case 0: lblConflictComment.textContent = "Do nothing, keep original record"; break;
+			case 1: lblConflictComment.textContent = "Create a new record"; break;
+			case 2: lblConflictComment.textContent = "Replace original record"; break;
+			case 3: lblConflictComment.textContent = "Append only new properties"; break;
+			case 4: lblConflictComment.textContent = "Merge with original record"; break;
 			}
 		};
 
@@ -1016,7 +1016,7 @@ class Fetch extends Tabs {
 					}
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true);
+					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 			});
 		};
@@ -1040,7 +1040,7 @@ class Fetch extends Tabs {
 					}
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true);
+					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 			});
 		};

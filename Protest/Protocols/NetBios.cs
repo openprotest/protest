@@ -34,7 +34,8 @@ internal static class NetBios {
 
                 if (receiveBuffer[72] == 0) {
                     return enc.GetString(receiveBuffer, 57, 15).Trim();
-                } else {
+                }
+                else {
                     return enc.GetString(receiveBuffer, 57, 16).Trim();
                 }
             }

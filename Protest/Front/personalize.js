@@ -219,7 +219,6 @@ class Personalize extends Tabs {
 			};
 		}
 
-
 		const Apply = ()=> {
 			WIN.always_maxed = this.chkWinMaxed.checked;
 			taskbar.className = this.chkTaskTooltip.checked ? "" : "no-tooltip";
@@ -612,7 +611,6 @@ class Personalize extends Tabs {
 		};
 
 		settingsButton.onclick = ()=> UI.PromptAgent(this, "settings", "--");
-
 	}
 
 	ClearCache() {

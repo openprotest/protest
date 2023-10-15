@@ -98,7 +98,6 @@ class SpeedTest extends Window {
 				received[index] = value;
 				let total = received.reduce((sum, val)=> sum + val, 0);
 				this.progressBar.style.width = `${(Date.now() - startTime) / 100}%`;
-
 				break;
 
 			case "finish":

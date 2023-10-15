@@ -12,5 +12,4 @@ class Chat extends Window {
 		this.content.appendChild(this.chatBox);
 
 	}
-
 }

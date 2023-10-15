@@ -288,52 +288,52 @@ class List extends Window {
 		findButton.style.overflow = "hidden";
 		findButton.style.backgroundPosition = "2px center";
 
-		const findTextbox = document.createElement("input");
-		findTextbox.type = "text";
-		findButton.appendChild(findTextbox);
+		const findInput = document.createElement("input");
+		findInput.type = "text";
+		findButton.appendChild(findInput);
 
 		findButton.onfocus = ()=> {
-			findTextbox.focus();
+			findInput.focus();
 		};
-		findTextbox.onfocus = ()=> {
+		findInput.onfocus = ()=> {
 			findButton.style.width = "200px";
 		};
 
-		findTextbox.onblur = ()=> {
-			if (findTextbox.value.length === 0) findButton.style.width = "36px";
+		findInput.onblur = ()=> {
+			if (findInput.value.length === 0) findButton.style.width = "36px";
 		};
 
-		findTextbox.onchange = ()=> {
-			findTextbox.parentElement.style.borderBottom = findTextbox.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
-			this.params.find = findTextbox.value;
+		findInput.onchange = ()=> {
+			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
+			this.params.find = findInput.value;
 			this.RefreshList();
 		};
 
-		findTextbox.ondblclick = event=> {
+		findInput.ondblclick = event=> {
 			if (event.layerX > 36) return;
-			findTextbox.value = "";
-			findTextbox.onchange();
+			findInput.value = "";
+			findInput.onchange();
 		};
 
-		findTextbox.onkeydown = event=> {
+		findInput.onkeydown = event=> {
 			if (event.key === "Escape") {
-				findTextbox.value = "";
-				findTextbox.onchange();
+				findInput.value = "";
+				findInput.onchange();
 			}
 		};
 
-		findTextbox.onkeydown = event=> {
+		findInput.onkeydown = event=> {
 			if (event.code === "KeyF" && event.ctrlKey) event.preventDefault();
 		};
 
 		this.content.addEventListener("keydown", event=> {
 			if (event.code === "KeyF" && event.ctrlKey) {
 				event.preventDefault();
-				findTextbox.focus();
+				findInput.focus();
 			}
 		});
 
-		return findTextbox;
+		return findInput;
 	}
 
 	PopOut() { //override

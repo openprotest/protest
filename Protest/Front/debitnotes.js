@@ -176,7 +176,7 @@ class DebitNotes extends Window {
 		if (this.content.clientWidth === 0 && count < 200)
 			setTimeout(()=> this.OnUiReady(++count), 50);
 		else
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 	}
 
 	AfterResize() { //override
@@ -185,6 +185,33 @@ class DebitNotes extends Window {
 			this.options.classList.add("debit-options-collapsed");
 		else
 			this.options.classList.remove("debit-options-collapsed");
+	}
+
+	UpdateAuthorization() { //override
+		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("debit notes:write")) {
+			this.btnNew.disabled = true;
+			this.btnDuplicate.disabled = true;
+			this.btnReturned.disabled = true;
+			this.btnDelete.disabled = true;
+			this.btnPrint.disabled = true;
+			return;
+		}
+
+		this.btnDuplicate.disabled = false;
+		this.btnReturned.disabled = false;
+		this.btnDelete.disabled = false;
+		this.btnPrint.disabled = false;
+
+		if (this.params.selected === null) {
+			this.btnDuplicate.disabled = true;
+			this.btnReturned.disabled = true;
+			this.btnDelete.disabled = true;
+			this.btnPrint.disabled = true;
+		}
+		else if (this.selectedDebit !== null && this.selectedDebit.status === "returned") {
+			this.btnReturned.disabled = true;
+			this.btnDelete.disabled = true;
+		}
 	}
 
 	async ListDebitNotes() {
@@ -197,7 +224,7 @@ class DebitNotes extends Window {
 		try {
 			let uri = this.params.keywords.length === 0 ?
 				`debit/list?upto=${this.params.upto}&short=${this.params.short}&long=${this.params.long}&returned=${this.params.returned}` :
-				`debit/list?upto=${this.params.upto}&short=${this.params.short}&long=${this.params.long}&returned=${this.params.returned}&keywords=${this.params.keywords}`;
+				`debit/list?upto=${this.params.upto}&short=${this.params.short}&long=${this.params.long}&returned=${this.params.returned}&keywords=${encodeURIComponent(this.params.keywords)}`;
 
 			const response = await fetch(uri);
 
@@ -210,7 +237,7 @@ class DebitNotes extends Window {
 			this.UpdateList(json);
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -280,7 +307,6 @@ class DebitNotes extends Window {
 				DebitNotes.SERIAL_NUMBERS[model].push(serial);
 			}
 		}
-
 	}
 
 	UpdateList(array, append = false) {
@@ -314,11 +340,11 @@ class DebitNotes extends Window {
 
 			element.style.backgroundColor = "var(--clr-select)";
 			this.params.selected = debit.file;
-			//this.selectedDebit = debit;
+			this.selectedDebit = debit;
 			this.selectedElement = element;
 			
 			this.Preview(debit);
-			this.AdjustButtons(debit.status === "returned");
+			this.UpdateAuthorization();
 		};
 
 		if (this.params.selected && this.params.selected === debit.file)
@@ -340,7 +366,7 @@ class DebitNotes extends Window {
 			this.selectedDebit = json;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 			return;
 		}
 
@@ -597,33 +623,6 @@ class DebitNotes extends Window {
 		lblEmployeeSign.style.gridArea = "3 / 3";
 		lblEmployeeSign.style.borderBottom = "black solid 2px";
 		divSignature.appendChild(lblEmployeeSign);
-	}
-
-	AdjustButtons(isReturned = false) {
-		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("debit notes:write")) {
-			this.btnNew.disabled = true;
-			this.btnDuplicate.disabled = true;
-			this.btnReturned.disabled = true;
-			this.btnDelete.disabled = true;
-			this.btnPrint.disabled = true;
-			return;
-		}
-
-		this.btnDuplicate.disabled = false;
-		this.btnReturned.disabled = false;
-		this.btnDelete.disabled = false;
-		this.btnPrint.disabled = false;
-
-		if (this.params.selected === null) {
-			this.btnDuplicate.disabled = true;
-			this.btnReturned.disabled = true;
-			this.btnDelete.disabled = true;
-			this.btnPrint.disabled = true;
-		}
-		else if (isReturned) {
-			this.btnReturned.disabled = true;
-			this.btnDelete.disabled = true;
-		}
 	}
 
 	New() {
@@ -1026,7 +1025,7 @@ class DebitNotes extends Window {
 				newElement.click();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 
@@ -1045,7 +1044,7 @@ class DebitNotes extends Window {
 
 	Duplicate() {
 		if (this.selectedDebit === null) {
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 			return;
 		}
 
@@ -1079,7 +1078,7 @@ class DebitNotes extends Window {
 
 	Return() {
 		if (this.selectedDebit === null) {
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 			return;
 		}
 		
@@ -1105,14 +1104,14 @@ class DebitNotes extends Window {
 
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}
 
 	Delete() {
 		if (this.selectedDebit === null) {
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 			return;
 		}
 
@@ -1132,17 +1131,17 @@ class DebitNotes extends Window {
 				this.selectedElement = null;
 				this.selectedDebit = null;
 
-				this.AdjustButtons();
+				this.UpdateAuthorization();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}
 
 	Print() {
 		if (this.selectedDebit === null) {
-			this.AdjustButtons();
+			this.UpdateAuthorization();
 			return;
 		}
 

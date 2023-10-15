@@ -36,10 +36,12 @@ class DnsLookup extends Console {
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
-		this.clearButton    = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.optionsButton  = this.AddToolbarButton("Options", "mono/wrench.svg?light");
-		this.recordType     = this.AddToolbarDropdown(this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=>o[0]===this.params.type)[2]));
-		this.cloneButton     = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.reloadButton  = this.AddToolbarButton("Reload", "mono/restart.svg?light");
+		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.cloneButton   = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.AddToolbarSeparator();
+		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=>o[0]===this.params.type)[2]));
+		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;
@@ -51,6 +53,20 @@ class DnsLookup extends Console {
 			}
 		}
 
+		this.reloadButton.addEventListener("click", ()=> {
+			if (this.params.entries.length === 0) return;
+			let entries = this.params.entries;
+			this.list.textContent = "";
+			this.hashtable = {};
+			this.params.entries = [];
+
+			for (let i = 0; i < entries.length; i++) {
+				let split = entries[i].split(",");
+				if (split.length < 2) continue;
+				this.Push(split[1], split[0]);
+			}
+		});
+
 		this.clearButton.addEventListener("click", ()=> {
 			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
 			if (btnOK) btnOK.addEventListener("click", ()=> {
@@ -60,27 +76,30 @@ class DnsLookup extends Console {
 			});
 		});
 
-		this.optionsButton.addEventListener("click", ()=> {
-			this.Options();
-		});
-
 		this.cloneButton.addEventListener("click", ()=>{
 			const paramsCopy = structuredClone(this.params);
 			paramsCopy.entries = [];
 			const clone = new DnsLookup(paramsCopy);
 			const dialog = clone.Options();
 
-			dialog.btnOK.addEventListener("click", ()=>{
+			const OriginalCancelClickHandler = dialog.btnCancel.onclick;
+			dialog.btnOK.onclick = ()=> {
 				for (let i = 0; i < this.params.entries.length; i++) {
 					let split = this.params.entries[i].split(",");
 					if (split.length === 1) continue;
 					clone.Add(split[1], null);
 				}
-			});
+
+				OriginalCancelClickHandler();
+			};
 			
-			dialog.btnCancel.addEventListener("click", ()=>{
+			dialog.btnCancel.onclick = ()=> {
 				clone.Close();
-			});
+			};
+		});
+
+		this.optionsButton.addEventListener("click", ()=> {
+			this.Options();
 		});
 
 		for (let i = 0; i < DnsLookup.recordTypes.length; i++) {
@@ -127,6 +146,7 @@ class DnsLookup extends Console {
 		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
 		const btnOK = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
 
 		innerBox.parentElement.style.maxWidth = "600px";
@@ -194,7 +214,7 @@ class DnsLookup extends Console {
 		txtTransportMethod.style.width = "200px";
 		innerBox.appendChild(txtTransportMethod);
 
-		const transportOptions = ["Auto", "UDP", "TCP", "HTTPS"];
+		const transportOptions = ["Auto", "UDP", "TCP", "TLS", "HTTPS"];
 		for (let i = 0; i < transportOptions.length; i++) {
 			const opt = document.createElement("option");
 			opt.value = transportOptions[i];
@@ -244,40 +264,58 @@ class DnsLookup extends Console {
 		innerBox.appendChild(chkRecursive);
 		this.AddCheckBoxLabel(innerBox, chkRecursive, "Recursive");
 
+		const Apply = ()=> {
+			this.params.server       = txtDnsServer.value;
+			this.params.type         = txtRecordType.value;
+			this.params.timeout      = txtTimeout.value;
+			this.params.transport    = txtTransportMethod.value;
+			this.params.isStandard   = chkStandard.checked;
+			this.params.isInverse    = chkInverse.checked;
+			this.params.serverStatus = chkServerStatus.checked;
+			this.params.isTruncated  = chkTruncated.checked;
+			this.params.isRecursive  = chkRecursive.checked;
+
+			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=> o[0] === this.params.type)[2])}`;
+			this.SetTitle(this.params.server === "" ? "DNS lookup" : `DNS lookup: ${this.params.server}`);
+		};
+
+		const OnKeydown = event=>{
+			if (event.key === "Enter") {
+				Apply();
+				dialog.btnOK.onclick();
+			}
+		};
+
+		txtDnsServer.addEventListener("keydown", OnKeydown);
+		txtRecordType.addEventListener("keydown", OnKeydown);
+		txtTimeout.addEventListener("keydown", OnKeydown);
+		txtTransportMethod.addEventListener("keydown", OnKeydown);
+
 		txtTransportMethod.onchange = ()=> {
 			if (txtTransportMethod.value === "HTTPS") {
-				txtTimeout.disabled = true;
-				chkStandard.disabled = true;
-				chkInverse.disabled = true;
+				txtTimeout.disabled      = true;
+				chkStandard.disabled     = true;
+				chkInverse.disabled      = true;
 				chkServerStatus.disabled = true;
-				chkTruncated.disabled = true;
-				chkRecursive.disabled = true;
+				chkTruncated.disabled    = true;
+				chkRecursive.disabled    = true;
 			}
 			else {
-				txtTimeout.disabled = false;
-				chkStandard.disabled = false;
-				chkInverse.disabled = false;
+				txtTimeout.disabled      = false;
+				chkStandard.disabled     = false;
+				chkInverse.disabled      = false;
 				chkServerStatus.disabled = false;
-				chkTruncated.disabled = false;
-				chkRecursive.disabled = false;
+				chkTruncated.disabled    = false;
+				chkRecursive.disabled    = false;
 			}
 		};
 
 		btnOK.addEventListener("click", ()=> {
-			this.params.server = txtDnsServer.value;
-			this.params.type = txtRecordType.value;
-			this.params.timeout = txtTimeout.value;
-			this.params.transport = txtTransportMethod.value;
-			this.params.isStandard = chkStandard.checked;
-			this.params.isInverse = chkInverse.checked;
-			this.params.serverStatus = chkServerStatus.checked;
-			this.params.isTruncated = chkTruncated.checked;
-			this.params.isRecursive = chkRecursive.checked;
-
-			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=> o[0] === this.params.type)[2])}`;
-			this.SetTitle(this.params.server === "" ? "DNS lookup" : `DNS lookup: ${this.params.server}`);
+			Apply();
 		});
 
+		txtDnsServer.focus();
+		
 		return dialog;
 	}
 
@@ -361,8 +399,8 @@ class DnsLookup extends Console {
 		this.params.entries.push(entryKey);
 
 		try {
-			let url = `tools/dnslookup?domain=${domain}&type=${type ?? this.params.type}&timeout=${this.params.timeout}`;
-			if (this.params.server.length > 0) url += `&server=${this.params.server}`;
+			let url = `tools/dnslookup?domain=${encodeURIComponent(domain)}&type=${type ?? this.params.type}&timeout=${this.params.timeout}`;
+			if (this.params.server.length > 0) url += `&server=${encodeURIComponent(this.params.server)}`;
 			if (this.params.transport != "Auto") url += `&transport=${this.params.transport.toLowerCase()}`;
 			if (this.params.isStandard)   url += "&standard=true";
 			if (this.params.isInverse)    url += "&inverse=true";
@@ -482,5 +520,4 @@ class DnsLookup extends Console {
 		if (index > -1)
 			this.params.entries.splice(index, 1);
 	}
-
 }

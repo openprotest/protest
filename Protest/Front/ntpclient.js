@@ -103,7 +103,7 @@ class NtpClient extends Window {
 		this.spinner.style.display = "inherit";
 
 		try {
-			const response = await fetch(`tools/ntp?server=${this.txtServer.value.length === 0 ? "time.nist.gov" : this.txtServer.value}`);
+			const response = await fetch(`tools/ntp?server=${this.txtServer.value.length === 0 ? "time.nist.gov" : encodeURIComponent(this.txtServer.value)}`);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -112,7 +112,7 @@ class NtpClient extends Window {
 			const json = await response.json();
 
 			if (json.error) {
-				this.ConfirmBox(json.error, true);
+				this.ConfirmBox(json.error, true, "mono/error.svg");
 				return;
 			}
 
@@ -140,7 +140,7 @@ class NtpClient extends Window {
 					if (response[i][0] === "Roundtrip") {
 						value.textContent = `${response[i][1]}ms`;
 					}
-					else{
+					else {
 						value.textContent = response[i][1];
 					}
 

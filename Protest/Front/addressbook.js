@@ -80,7 +80,7 @@ class AddressBook extends Window {
 			this.contacts = json;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 
 		this.RefreshList();
@@ -240,7 +240,7 @@ class AddressBook extends Window {
 		let words = this.searchBox.value.toLowerCase().split(" ").filter(o=>o.length > 0);
 		let wordsCounter = {};
 
-		const CountWords = (string)=> {
+		const CountWords = string=> {
 			const split = string.split(" ").filter(o=>o.length > 0);
 			for (let i=0; i<split.length; i++) {
 				if (split[i].length < 3) return;

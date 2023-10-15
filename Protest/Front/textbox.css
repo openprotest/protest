@@ -12,6 +12,7 @@ select {
 	border: none;
 	border-radius: 4px;
 	background-color: var(--clr-control);
+	background-position: calc(100%);
 	padding: 4px 8px;
 	margin: 2px 4px;
 	transition: .2s;
@@ -55,6 +56,17 @@ input[type="date"]::placeholder,
 textarea::placeholder,
 select::placeholder {
 	color: rgb(64,64,64);
+}
+
+input[type="text"]:required,
+input[type="search"]:required,
+input[type="password"]:required,
+input[type="email"]:required,
+input[type="number"]:required,
+input[type="date"]:required {
+	background-image: url(mono/required.svg);
+	background-size: 24px 24px;
+	background-repeat: no-repeat;
 }
 
 input[type=number]:not(:focus) {

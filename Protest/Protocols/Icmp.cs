@@ -43,7 +43,7 @@ internal static class Icmp {
                 }
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     break;
                 }
 
@@ -63,7 +63,6 @@ internal static class Icmp {
                                 await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                         await ws.SendAsync(Data.CODE_ACK, WebSocketMessageType.Text, true, CancellationToken.None);
-
                     }
                     else {
                         await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -130,42 +129,32 @@ internal static class Icmp {
         List<Task<string>> tasks = new List<Task<string>>();
         for (int i = 0; i < name.Length; i++) tasks.Add(PingAsync(name[i], id[i], timeout));
         string[] result = await Task.WhenAll(tasks);
-        return string.Join(((char)127).ToString(), result);
+        return String.Join((char)127, result);
     }
     public static async Task<string> PingAsync(string hostname, string id, int timeout) {
         Ping p = new Ping();
 
         try {
             PingReply reply = await p.SendPingAsync(hostname, timeout);
-            if (reply.Status == IPStatus.Success) {
-                return id + ((char)127).ToString() + reply.RoundtripTime.ToString();
-            }
-            else if (reply.Status == IPStatus.DestinationHostUnreachable || reply.Status == IPStatus.DestinationNetworkUnreachable) {
-                return id + ((char)127).ToString() + "Unreachable";
-            }
-            else {
-                //https://docs.microsoft.com/en-us/windows/desktop/api/ipexport/ns-ipexport-icmp_echo_reply32
-                string r = reply.Status.ToString();
-                if (r == "11050") {
-                    return id + ((char)127).ToString() + "General failure";
-                }
-                else {
-                    return id + ((char)127).ToString() + reply.Status.ToString();
-                }
-            }
 
+            return (int)reply.Status switch {
+                (int)IPStatus.DestinationUnreachable or
+                (int)IPStatus.DestinationHostUnreachable or
+                (int)IPStatus.DestinationNetworkUnreachable => id + ((char)127).ToString() + "Unreachable",
+
+                (int)IPStatus.Success => id + ((char)127).ToString() + reply.RoundtripTime.ToString(),
+                11050                 => id + ((char)127).ToString() + "General failure",
+                _                     => id + ((char)127).ToString() + reply.Status.ToString(),
+            };
         }
         catch (ArgumentException) {
             return id + ((char)127).ToString() + "Invalid address";
-
         }
         catch (PingException) {
             return id + ((char)127).ToString() + "Ping error";
-
         }
         catch (Exception) {
             return id + ((char)127).ToString() + "Unknown error";
-
         }
         finally {
             p.Dispose();
@@ -176,7 +165,7 @@ internal static class Icmp {
         List<Task<string>> tasks = new List<Task<string>>();
         for (int i = 0; i < name.Length; i++) tasks.Add(ArpPingAsync(name[i], id[i]));
         string[] result = await Task.WhenAll(tasks);
-        return string.Join(((char)127).ToString(), result);
+        return String.Join(((char)127).ToString(), result);
     }
 
     public static async Task<string> ArpPingAsync(string name, string id) {

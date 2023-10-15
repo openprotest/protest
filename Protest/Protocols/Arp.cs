@@ -17,7 +17,7 @@ internal static partial class Arp {
 
     public static string ArpRequest(string ip) {
         string[] split = ip.Split('.');
-        if (split.Length < 4) return string.Empty;
+        if (split.Length < 4) return String.Empty;
 
         try {
             IPAddress ipAddress = new IPAddress(new byte[] {
@@ -33,19 +33,19 @@ internal static partial class Arp {
                 return ArpRequest_Linux(ipAddress);
             }
             else {
-                return string.Empty;
+                return String.Empty;
             }
 
         }
         catch {
-            return string.Empty;
+            return String.Empty;
         }
     }
 
     [SupportedOSPlatform("windows")]
     private static string ArpRequest_Windows(IPAddress ip) {
         try {
-            if (!IpTools.OnSameNetwork(ip)) return string.Empty;
+            if (!IpTools.OnSameNetwork(ip)) return String.Empty;
 
             int len = 6;
             byte[] mac = new byte[len];
@@ -56,14 +56,14 @@ internal static partial class Arp {
             return BitConverter.ToString(mac, 0, len).Replace("-", ":");
         }
         catch {
-            return string.Empty;
+            return String.Empty;
         }
     }
 
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("osx")]
     private static string ArpRequest_Linux(IPAddress ip) {
-        if (!IpTools.OnSameNetwork(ip)) return string.Empty;
+        if (!IpTools.OnSameNetwork(ip)) return String.Empty;
 
         try {
             using FileStream arpFile = new FileStream("/proc/net/arp", FileMode.Open, FileAccess.Read);
@@ -76,22 +76,22 @@ internal static partial class Arp {
             while (!reader.EndOfStream) {
                 string line = reader.ReadLine();
 
-                if (string.IsNullOrWhiteSpace(line))
+                if (String.IsNullOrWhiteSpace(line))
                     return null;
 
                 Match match = regex.Match(line);
                 if (!match.Success || match.Groups.Count != 3)
-                    return string.Empty;
+                    return String.Empty;
 
                 string mac = match.Groups[2].Value.Replace("-", ":");
             }
 
-            return string.Empty;
+            return String.Empty;
 
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            return string.Empty;
+            return String.Empty;
         }
     }
 

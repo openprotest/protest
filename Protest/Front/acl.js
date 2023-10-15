@@ -18,14 +18,14 @@ class Acl extends Tabs {
 		this.tabSessions.onclick = ()=> this.ShowSessions();
 
 		switch (this.params) {
-			case "sessions":
-				this.tabSessions.className = "v-tab-selected";
-				this.ShowSessions();
-				break;
+		case "sessions":
+			this.tabSessions.className = "v-tab-selected";
+			this.ShowSessions();
+			break;
 
-			default:
-				this.tabAcl.className = "v-tab-selected";
-				this.ShowAcl();
+		default:
+			this.tabAcl.className = "v-tab-selected";
+			this.ShowAcl();
 		}
 
 		setTimeout(()=> { this.AfterResize(); }, 250);
@@ -234,7 +234,7 @@ class Acl extends Tabs {
 			this.username.setAttribute("readonly", true);
 
 			try {
-				let url = `acl/create?username=${this.username.value}&domain=${this.domain.value}&password=${this.password.value}&alias=${this.alias.value}&isdomain=${this.chkDomainUser.checked}`;
+				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&isdomain=${this.chkDomainUser.checked}`;
 				let authorization = [];
 				
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -267,14 +267,14 @@ class Acl extends Tabs {
 				newUser.onclick();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true);
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		};
 
 		this.removeButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to remove this user?").addEventListener("click", async()=>{
 				try {
-					const response = await fetch(`acl/delete?username=${this.username.value}`);
+					const response = await fetch(`acl/delete?username=${encodeURIComponent(this.username.value)}`);
 					
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -288,12 +288,11 @@ class Acl extends Tabs {
 								break;
 							}
 						}
-						
 						this.newButton.onclick();
 					}
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true);
+					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 			});
 		};
@@ -449,7 +448,7 @@ class Acl extends Tabs {
 			}
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -507,7 +506,6 @@ class Acl extends Tabs {
 				else if (split[1] === "write") {
 					permission.write.checked = true;
 				}
-
 			}
 		};
 
@@ -636,7 +634,7 @@ class Acl extends Tabs {
 				kickButton.onclick = ()=> {
 					this.ConfirmBox(`Are you sure you want to kick ${json[i].username}?`).addEventListener("click", async ()=>{
 						try {
-							const response = await fetch(`acl/kickuser?username=${json[i].username}&ip=${json[i].ip}&id=${json[i].id}`);
+							const response = await fetch(`acl/kickuser?username=${encodeURIComponent(json[i].username)}&ip=${json[i].ip}&id=${json[i].id}`);
 				
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 							
@@ -646,7 +644,7 @@ class Acl extends Tabs {
 							sessionsList.removeChild(element);
 						}
 						catch (ex) {
-							this.ConfirmBox(ex, true);
+							this.ConfirmBox(ex, true, "mono/error.svg");
 						}
 					});
 				};
@@ -656,10 +654,7 @@ class Acl extends Tabs {
 			
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true);
+			this.ConfirmBox(ex, true, "mono/error.svg", "mono/error.svg");
 		}
-
-
 	}
-
 }

@@ -12,7 +12,7 @@ internal static class Kerberos {
 
     [SupportedOSPlatform("windows")]
     public static string[] GetAllWorkstations(string domain) {
-        if (string.IsNullOrEmpty(domain)) return null;
+        if (String.IsNullOrEmpty(domain)) return null;
 
         SearchResultCollection result = null;
 
@@ -33,7 +33,7 @@ internal static class Kerberos {
 
         string[] array = new string[result.Count];
         for (int i = 0; i < result.Count; i++) {
-            array[i] = result[i].Properties.Contains("name") ? result[i].Properties["name"][0].ToString() : string.Empty;
+            array[i] = result[i].Properties.Contains("name") ? result[i].Properties["name"][0].ToString() : String.Empty;
         }
 
         return array;
@@ -109,7 +109,7 @@ internal static class Kerberos {
                     IPAddress subnet = IpTools.GetNetworkAddress(ip.Address, ip.IPv4Mask);
                     IPAddress broadcast = IpTools.GetBroadcastAddress(ip.Address, ip.IPv4Mask);
 
-                    string bits = string.Empty;
+                    string bits = String.Empty;
                     int prefix = 0;
                     for (int i = 0; i < 4; i++) {
                         byte b = ip.IPv4Mask.GetAddressBytes()[i];
@@ -140,7 +140,7 @@ internal static class Kerberos {
 
     [SupportedOSPlatform("windows")]
     public static SearchResult GetWorkstation(string name) {
-        if (string.IsNullOrEmpty(name)) return null;
+        if (String.IsNullOrEmpty(name)) return null;
 
         string domain = null;
         try {
@@ -168,7 +168,7 @@ internal static class Kerberos {
 
     [SupportedOSPlatform("windows")]
     public static SearchResult GetUser(string username) {
-        if (string.IsNullOrEmpty(username)) return null;
+        if (String.IsNullOrEmpty(username)) return null;
 
         string domain = null;
         try {
@@ -228,7 +228,7 @@ internal static class Kerberos {
             string value = sr.Properties[property][i].ToString();
             if (value.Length > 0) {
                 if (format != null) value = format.Invoke(value);
-                if (string.IsNullOrEmpty(value)) continue;
+                if (String.IsNullOrEmpty(value)) continue;
                 date.Add(label, value);
                 break;
             }
@@ -302,7 +302,7 @@ internal static class Kerberos {
 
     public static string FileTimeString(string value) {
         long ticks = long.Parse(value);
-        if (ticks == 0) return string.Empty;
+        if (ticks == 0) return String.Empty;
         return DateTime.FromFileTime(ticks).ToString("dddd dd-MMM-yyyy HH:mm:ss");
     }
 
