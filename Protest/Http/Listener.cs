@@ -315,6 +315,7 @@ public sealed class Listener {
         case "/debit/banners"   : buffer = Tools.DebitNotes.ListBanners(); break;
 
         case "/watchdog/list"   : buffer = Tools.Watchdog.List(); break;
+        case "/watchdog/view"   : buffer = Tools.Watchdog.View(parameters); break;
         case "/watchdog/create" : buffer = Tools.Watchdog.Create(parameters, ctx, username); break;
         case "/watchdog/delete" : buffer = Tools.Watchdog.Delete(parameters, username); break;
 

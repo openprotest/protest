@@ -400,7 +400,16 @@ internal static class Watchdog {
     }
 
     public static byte[] View(Dictionary<string, string> parameters) {
-        //TODO:
+        if (parameters == null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        parameters.TryGetValue("file", out string file);
+        parameters.TryGetValue("date", out string date);
+        parameters.TryGetValue("lenght", out string lenght);
+        
+
+
         return null;
     }
 
@@ -460,6 +469,7 @@ internal static class Watchdog {
 
             lock(watcher.sync) {
                 File.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}");
+                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_");
             }
 
             if (task?.status == TaskWrapper.TaskStatus.running) {
