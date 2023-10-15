@@ -409,7 +409,7 @@ internal static class Update {
 
         string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
 
-        List<string> list = new List<string>();
+        List<byte[]> list = new List<byte[]>();
         
         foreach (string part in parts) {
             if (!part.Contains("Content-Disposition")) {
@@ -418,26 +418,30 @@ internal static class Update {
 
             //string file = GetFieldName(part);
             string value = GetFieldValue(part);
-            string[] split = value.Split('\n');
+            string[] lines = value.Split('\n');
 
-            for (int i = 0; i < split.Length; i++) {
-                string[] linesplit = split[i].Split('.');
-                list.Add(linesplit[0].Trim().PadLeft(3, '0') + linesplit[1].Trim().PadLeft(3, '0') + linesplit[2].Trim().PadLeft(3, '0') + linesplit[3].Trim().PadLeft(3, '0'));
+            for (int i = 0; i < lines.Length; i++) {
+                lines[i] = lines[i].Trim();
+                if (!IPAddress.TryParse(lines[i], out IPAddress ip)) continue;
+                list.Add(ip.GetAddressBytes());
             }
         }
 
-        list.Sort();
-
-        Console.WriteLine(Data.FILE_TOR);
+        list.Sort((byte[] a, byte[] b)=> {
+            if (a[0] != b[0]) return Comparer<byte>.Default.Compare(a[0], b[0]);
+            if (a[1] != b[1]) return Comparer<byte>.Default.Compare(a[1], b[1]);
+            if (a[2] != b[2]) return Comparer<byte>.Default.Compare(a[2], b[2]);
+            if (a[3] != b[3]) return Comparer<byte>.Default.Compare(a[3], b[3]);
+            return 0;
+        });
 
         using FileStream stream = new FileStream(Data.FILE_TOR, FileMode.OpenOrCreate);
         using BinaryWriter writer = new BinaryWriter(stream);
-
         for (int i = 0; i < list.Count; i++) {
-            writer.Write(Byte.Parse(list[i][9..12])); //reversed
-            writer.Write(Byte.Parse(list[i][6..9]));
-            writer.Write(Byte.Parse(list[i][3..6]));
-            writer.Write(Byte.Parse(list[i][0..3]));
+            writer.Write(list[i][3]); //reversed
+            writer.Write(list[i][2]);
+            writer.Write(list[i][1]);
+            writer.Write(list[i][0]);
         }
 
         writer.Flush();
