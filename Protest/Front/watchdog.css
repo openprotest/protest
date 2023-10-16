@@ -61,7 +61,7 @@
 	color: var(--clr-light);
 	background-color: var(--clr-dark);
 	border-radius: 4px;
-	padding: 1px;
+	padding: 1px 4px;
 	margin: 0px;
 }
 

@@ -107,8 +107,10 @@ class SiteCheck extends Window {
 			dot.style.display = "inline-block";
 			dot.style.width = "12px";
 			dot.style.height = "12px";
-			dot.style.borderRadius = "14px";
 			dot.style.backgroundColor = json.status === "pass" ? "rgb(128,224,0)" : "var(--clr-error)";
+			dot.style.border = json.status === "pass" ? "1px solid color-mix(in hsl, rgb(128,224,0), black)" : "1px solid color-mix(in hsl, var(--clr-error), black)";
+			dot.style.borderRadius = "14px";
+			dot.style.boxSizing = "border-box";
 			container.appendChild(dot);
 
 			const title = document.createElement("div");

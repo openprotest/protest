@@ -155,7 +155,7 @@ internal static class SiteCheck {
 
                     using  HttpClient client = new HttpClient(handler);
                     using  HttpResponseMessage response = await client.GetAsync(uri);
-                    response.EnsureSuccessStatusCode();
+                    //response.EnsureSuccessStatusCode();
 
                     if (result.Length > 0) {
                         await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result.ToString()), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -164,7 +164,7 @@ internal static class SiteCheck {
 
             }
             catch (Exception ex) {
-                string fail = $"{{\"title\":\"TLS validation\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.InnerException.Message)}\"}}";
+                string fail = $"{{\"title\":\"TLS validation\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex?.InnerException?.Message ?? "Unknown error")}\"}}";
                 await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(fail), 0, fail.Length), WebSocketMessageType.Text, true, CancellationToken.None);
             }
 

@@ -16,9 +16,9 @@ class Watchdog extends Window {
 
 		this.SetupToolbar();
 
-		this.newButton          = this.AddToolbarButton("Create watcher", "mono/add.svg?light");
-		this.editButton         = this.AddToolbarButton("Edit", "mono/edit.svg?light");
-		this.deleteButton       = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.newButton    = this.AddToolbarButton("Create watcher", "mono/add.svg?light");
+		this.editButton   = this.AddToolbarButton("Edit", "mono/edit.svg?light");
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		
 		this.AddToolbarSeparator();
 
@@ -46,9 +46,9 @@ class Watchdog extends Window {
 
 		this.selected = null;
 		this.selectedElement = null;
-
 		this.high = new Date(Date.now() - Date.now() % (3_600_000 * 24)).getTime();
 		this.offset = 0;
+		this.cache = {};
 
 		let seeking = false;
 		let mouseX0;
@@ -100,6 +100,8 @@ class Watchdog extends Window {
 	}
 	
 	AfterResize() { //override
+		if (this.lastWidth && this.lastWidth === this.content.getBoundingClientRect().width) return;
+
 		if (this.content.getBoundingClientRect().width < 720) {
 			this.timeline.style.right = "4px";
 			this.list.style.right = "4px";
@@ -110,8 +112,10 @@ class Watchdog extends Window {
 			this.list.style.right = "200px";
 			this.details.style.display = "initial";
 		}
-
+		
 		this.Seek();
+
+		this.lastWidth = this.content.getBoundingClientRect().width;
 	}
 
 	UpdateAuthorization() {
@@ -463,7 +467,7 @@ class Watchdog extends Window {
 					rrtype     : rrTypeInput.value,
 					httpstatus : [statusCodes[0].checked, statusCodes[1].checked, statusCodes[2].checked, statusCodes[3].checked, statusCodes[4].checked],
 					interval   : Math.max(parseInt(intervalInput.value), 5),
-					retries    : parseInt(retriesInput.value)
+					retries    : Math.max(parseInt(retriesInput.value), 0)
 				};
 
 				let url = isNew ? "watchdog/create" : `watchdog/create?file=${this.selected.file}`;
@@ -573,16 +577,24 @@ class Watchdog extends Window {
 			if (this.timeline.childNodes[i].tagName != "svg") continue;
 			this.timeline.childNodes[i].style.transform = `translateX(${this.offset}px)`;
 		}
+
+		let daysInViewport = Math.floor(this.timeline.offsetWidth / 480); //480px == a day length
+
+		let low = this.high - (daysInViewport + this.offset / 480) * Watchdog.DAY_TICKS;
+		console.log(new Date(low).getDate(), new Date(this.high).getDate());
+	}
+
+	DrawWatcher(date) {
+		console.log(date);
 	}
 
 	DrawTimeline() {
 		this.timeline.textContent = "";
 
-		let daysInViewport = Math.round(this.timeline.offsetWidth / 480) + 1; //480px == a day length
+		let daysInViewport = Math.ceil(this.timeline.offsetWidth / 480) //480px == a day length
 		
 		let low = this.high;
-		let count = 0;
-		while (low > this.high - (daysInViewport) * Watchdog.DAY_TICKS - (this.offset / 480) * Watchdog.DAY_TICKS) {
+		while (low > this.high - (daysInViewport + this.offset / 480) * Watchdog.DAY_TICKS) {
 			//this.GetData(new Date(low));
 
 			let right = (this.high - low) / Watchdog.DAY_TICKS * 480;
@@ -596,9 +608,8 @@ class Watchdog extends Window {
 			svg.style.top = "0";
 			svg.style.right = `${right}px`;
 			this.timeline.appendChild(svg);
-			low -= Watchdog.DAY_TICKS;
 
-			count++;
+			low -= Watchdog.DAY_TICKS;
 		}
 
 		const gradientL = document.createElement("div");
@@ -670,7 +681,7 @@ class Watchdog extends Window {
 
 		if (date.getDate() === 1) {
 			const m0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			m0.innerHTML = Watchdog.MONTH[date.getMonth()];
+			m0.textContent = date.toLocaleString(UI.regionalFormat, { month: "short" });
 			m0.setAttribute("x", 0);
 			m0.setAttribute("y", 7);
 			m0.setAttribute("fill", "#C0C0C0");
@@ -706,7 +717,7 @@ class Watchdog extends Window {
 
 		if (date.getDate() === 1) {
 			const m1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			m1.innerHTML = Watchdog.MONTH[date.getMonth()];
+			m1.textContent = date.toLocaleString(UI.regionalFormat, { month: "short" });
 			m1.setAttribute("x", 480);
 			m1.setAttribute("y", 7);
 			m1.setAttribute("fill", "#C0C0C0");

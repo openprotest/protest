@@ -6,7 +6,7 @@ internal sealed class ThreadWrapper : IDisposable {
     private readonly CancellationTokenSource cancellationTokenSource;
     public readonly CancellationToken cancellationToken;
 
-    private readonly object syncLock;
+    //private readonly object syncLock;
     public readonly long started;
 
     private long _lastSet = 0;
@@ -28,7 +28,7 @@ internal sealed class ThreadWrapper : IDisposable {
     public int CompletedSteps { get; set; }
 
     public ThreadWrapper(string name) {
-        syncLock = new object();
+        //syncLock = new object();
         cancellationTokenSource = new CancellationTokenSource();
         cancellationToken = cancellationTokenSource.Token;
         started = DateTime.UtcNow.Ticks;
@@ -57,6 +57,7 @@ internal sealed class ThreadWrapper : IDisposable {
     }
 
     public void RequestCancel(string initiator) {
+        Logger.Action(initiator, $"Canceling task: {this.name}");
         cancellationTokenSource.Cancel();
     }
 
