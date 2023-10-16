@@ -578,7 +578,7 @@ class Watchdog extends Window {
 			this.timeline.childNodes[i].style.transform = `translateX(${this.offset}px)`;
 		}
 
-		let daysInViewport = Math.floor(this.timeline.offsetWidth / 480); //480px == a day length
+		let daysInViewport = Math.trunc(this.timeline.offsetWidth / 480); //480px == a day length
 
 		let low = this.high - (daysInViewport + this.offset / 480) * Watchdog.DAY_TICKS;
 		console.log(new Date(low).getDate(), new Date(this.high).getDate());
