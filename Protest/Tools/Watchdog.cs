@@ -18,7 +18,7 @@ internal static class Watchdog {
     private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
     private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
     private const long MINUTE_IN_TICKS      = 600_000_000L;
-    private const int FIVE_MINUTE_IN_MILLI  = 300_000;
+    private const int  FIVE_MINUTE_IN_MILLI = 300_000;
 
     public enum WatcherType {
         icmp,
@@ -81,14 +81,12 @@ internal static class Watchdog {
         if (task is not null) return false;
 
         Thread thread = new Thread(()=> {
-
             //align time to the next 5-min interval
             long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
             Thread.Sleep((int)gap);
 
             while (true) {
                 long startTimeStamp = DateTime.UtcNow.Ticks;
-
                 int nextSleep = FIVE_MINUTE_IN_MILLI;
 
                 foreach (Watcher watcher in watchers.Values) {
@@ -98,18 +96,16 @@ internal static class Watchdog {
                     if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
 
                         watcher.lastCheck = DateTime.UtcNow.Ticks;
-
                         new Thread(()=> {
                             switch (watcher.type) {
                             case WatcherType.icmp        : CheckIcmp(watcher);        break;
-                            case WatcherType.tls         : CheckTcp(watcher);         break;
+                            case WatcherType.tcp         : CheckTcp(watcher);         break;
                             case WatcherType.dns         : CheckDns(watcher);         break;
                             case WatcherType.http        : CheckHttp(watcher);        break;
                             case WatcherType.httpKeyword : CheckHttpKeyword(watcher); break;
-                            case WatcherType.tcp         : CheckTls(watcher);         break;
+                            case WatcherType.tls         : CheckTls(watcher);         break;
                             }
                         }).Start();
-
                     }
                     else {
                         int millisRemain = (int)(ticksElapsed / 10_000);
@@ -151,27 +147,18 @@ internal static class Watchdog {
         short result = -1;
 
         for (int i = 0; i < watcher.retries; i++) {
-            PingReply reply = ping.Send(watcher.target, watcher.timeout);
-
-            if (reply.Status != IPStatus.Success) continue;
-
-            result = (short)reply.RoundtripTime;
-            break;
-        }
-
-        DateTime now = DateTime.Now;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string file = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
-        lock (watcher.sync) {
             try {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.AppendAllText(file, $"{now.Ticks}\t{result}\n");
+                PingReply reply = ping.Send(watcher.target, watcher.timeout);
+
+                if (reply.Status != IPStatus.Success) continue;
+
+                result = (short)reply.RoundtripTime;
+                break;
             }
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
+            catch (Exception ex) when (ex is not PlatformNotSupportedException) { }
         }
 
+        WriteResult(watcher, result);
         return result;
     }
 
@@ -194,19 +181,7 @@ internal static class Watchdog {
             catch {}
         }
 
-        DateTime now = DateTime.Now;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string file = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
-        lock (watcher.sync) {
-            try {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.AppendAllText(file, $"{now.Ticks}\t{result}\n");
-            }
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
-        }
-
+        WriteResult(watcher, result);
         return result;
     }
 
@@ -229,20 +204,7 @@ internal static class Watchdog {
             break;
         }
 
-        DateTime now = DateTime.Now;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string file = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
-        lock (watcher.sync) {
-            try {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.AppendAllText(file, $"{now.Ticks}\t{result} \n");
-
-            }
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
-        }
-
+        WriteResult(watcher, result);
         return result;
     }
 
@@ -272,19 +234,7 @@ internal static class Watchdog {
             catch { }
         }
 
-        DateTime now = DateTime.Now;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string file = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
-        lock (watcher.sync) {
-            try {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.AppendAllText(file, $"{now.Ticks}\t{result}\n");
-            }
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
-        }
-
+        WriteResult(watcher, result);
         return result;
     }
 
@@ -316,36 +266,24 @@ internal static class Watchdog {
             catch { }
         }
 
-        DateTime now = DateTime.Now;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string file = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
-        lock (watcher.sync) {
-            try {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.AppendAllText(file, $"{now.Ticks}\t{result} \n");
-            }
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
-        }
-
+        WriteResult(watcher, result);
         return result;
     }
 
     private static short CheckTls(Watcher watcher) {
-        short result = short.MaxValue;
+        short result = -1;
 
         using HttpClientHandler handler = new HttpClientHandler();
         handler.ServerCertificateCustomValidationCallback = (HttpRequestMessage request, X509Certificate2 cert, X509Chain chain, SslPolicyErrors errors) => {
             long now = DateTime.UtcNow.Ticks;
             if (cert.NotBefore.Ticks > now) { //not yet valid
-                result = -3;
+                result = -4;
             }
             else if (cert.NotAfter.Ticks < now) { //expired
-                result = -1;
+                result = -2;
             }
             else if (cert.NotAfter.Ticks < now + WEEK_IN_TICKS) { //7 days warning
-                result = -2;
+                result = -3;
             }
             else { //valid
                 result = 0;
@@ -364,20 +302,31 @@ internal static class Watchdog {
             break;
         }
 
+        WriteResult(watcher, result);
+        return result;
+    }
+
+    private static bool WriteResult(Watcher watcher, short result) {
         DateTime now = DateTime.Now;
         string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string file = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
+        string path = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
         lock (watcher.sync) {
             try {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.AppendAllText(file, $"{now.Ticks}\t{result}");
+
+                using FileStream stream = new FileStream(path, FileMode.Append);
+                using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                writer.Write(now.Ticks); //8 bytes
+                writer.Write(result); //2 bytes
+                stream.Close();
+
+                return true;
             }
             catch (Exception ex) {
                 Logger.Error(ex);
+                return false;
             }
         }
-
-        return result;
     }
 
     public static byte[] List() {
@@ -406,11 +355,15 @@ internal static class Watchdog {
 
         parameters.TryGetValue("file", out string file);
         parameters.TryGetValue("date", out string date);
-        parameters.TryGetValue("lenght", out string lenght);
-        
+        parameters.TryGetValue("count", out string count);
 
+        return "[]"u8.ToArray();
 
-        return null;
+        try {
+            return File.ReadAllBytes(file);
+        } catch {
+            return null;
+        }
     }
 
     public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string initiator) {
@@ -462,27 +415,27 @@ internal static class Watchdog {
 
         parameters.TryGetValue("file", out string file);
 
-        try {
+        /*try*/ {
             if (!watchers.Remove(file, out Watcher watcher)) {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
 
             lock(watcher.sync) {
+                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_", true);
                 File.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}");
-                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_");
             }
 
             if (task?.status == TaskWrapper.TaskStatus.running) {
                 StopTask(initiator);
             }
         }
-        catch (Exception ex) {
+        /*catch (Exception ex) {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
         finally {
             Logger.Action(initiator, $"Delete watcher: {file}");
-        }
+        }*/
 
         return Data.CODE_OK.Array;
     }
