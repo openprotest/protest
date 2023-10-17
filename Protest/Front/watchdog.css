@@ -58,7 +58,7 @@
 	text-align: center;
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--clr-light);
+	color: rgb(192,192,192);
 	background-color: var(--clr-dark);
 	border-radius: 4px;
 	padding: 1px;

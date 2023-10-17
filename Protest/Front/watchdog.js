@@ -1,7 +1,7 @@
 class Watchdog extends Window {
+	static DAY_PIXELS = 480;
 	static HOUR_TICKS = 3_600_000;
 	static DAY_TICKS  = 3_600_000 * 24;
-	static MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 	constructor() {
 		super();
@@ -12,16 +12,11 @@ class Watchdog extends Window {
 		this.SetTitle("Watchdog");
 		this.SetIcon("mono/watchdog.svg");
 
-		this.currentDate = new Date(Date.now() - Date.now() % (360_000 * 24));
-
 		this.SetupToolbar();
-
 		this.newButton          = this.AddToolbarButton("Create watcher", "mono/add.svg?light");
 		this.editButton         = this.AddToolbarButton("Edit", "mono/edit.svg?light");
 		this.deleteButton       = this.AddToolbarButton("Delete", "mono/delete.svg?light");
-		
 		this.AddToolbarSeparator();
-
 		this.notificationButton = this.AddToolbarButton("Notifications", "mono/notifications.svg?light");
 		this.reloadButton       = this.AddToolbarButton("Reload", "mono/restart.svg?light");
 		this.gotoButton         = this.AddToolbarButton("Go to", "mono/timeline.svg?light");
@@ -47,7 +42,7 @@ class Watchdog extends Window {
 		this.selected = null;
 		this.selectedElement = null;
 
-		this.high = new Date(Date.now() - Date.now() % (3_600_000 * 24)).getTime();
+		this.today = new Date(Date.now() - Date.now() % (3_600_000 * 24)).getTime();
 		this.offset = 0;
 
 		let seeking = false;
@@ -92,8 +87,6 @@ class Watchdog extends Window {
 		this.win.addEventListener("mouseup", event=> this.timeline.onmouseup(event));
 	
 		this.UpdateAuthorization();
-		setTimeout(()=>this.DrawTimeline(), 200);
-
 		this.GetWatchers();
 
 		setTimeout(()=> { this.AfterResize(); }, 250);
@@ -569,36 +562,28 @@ class Watchdog extends Window {
 
 	Seek() {
 		this.DrawTimeline();
-		for (let i = 0; i < this.timeline.childNodes.length; i++) {
-			if (this.timeline.childNodes[i].tagName != "svg") continue;
-			this.timeline.childNodes[i].style.transform = `translateX(${this.offset}px)`;
-		}
+
 	}
 
 	DrawTimeline() {
 		this.timeline.textContent = "";
 
-		let daysInViewport = Math.round(this.timeline.offsetWidth / 480) + 1; //480px == a day length
+		let daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS) + 1;		
+		let high = this.today;
+		let low = this.today - this.offset / Watchdog.DAY_PIXELS * Watchdog.DAY_TICKS - (daysInViewport) * Watchdog.DAY_TICKS;
 		
-		let low = this.high;
-		let count = 0;
-		while (low > this.high - (daysInViewport) * Watchdog.DAY_TICKS - (this.offset / 480) * Watchdog.DAY_TICKS) {
-			//this.GetData(new Date(low));
-
-			let right = (this.high - low) / Watchdog.DAY_TICKS * 480;
-
-			if (right - this.offset <= -480) {
-				low -= Watchdog.DAY_TICKS;
+		while (high > low) {
+			let right = (this.today - high) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
+			if (right <= -Watchdog.DAY_PIXELS) {
+				high -= Watchdog.DAY_TICKS;
 				continue;
 			}
 
-			const svg = this.GenerateDateSvg(new Date(low));
+			const svg = this.GenerateDateSvg(new Date(high));
 			svg.style.top = "0";
 			svg.style.right = `${right}px`;
 			this.timeline.appendChild(svg);
-			low -= Watchdog.DAY_TICKS;
-
-			count++;
+			high -= Watchdog.DAY_TICKS;
 		}
 
 		const gradientL = document.createElement("div");
@@ -619,7 +604,7 @@ class Watchdog extends Window {
 
 	GenerateDateSvg(date) {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		svg.setAttribute("width", 480);
+		svg.setAttribute("width", Watchdog.DAY_PIXELS);
 		svg.setAttribute("height", 40);
 		svg.style.outline = "none";
 
@@ -634,7 +619,7 @@ class Watchdog extends Window {
 
 		for (let i = 2; i < 24; i += 2) {
 			const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			lblTime.innerHTML = i.toString().padStart(2, "0") + ":00";
+			lblTime.textContent = `${i.toString().padStart(2, "0")}:00`;
 			lblTime.setAttribute("x", i * 20);
 			lblTime.setAttribute("y", 26);
 			lblTime.setAttribute("fill", "#C0C0C0");
@@ -660,7 +645,7 @@ class Watchdog extends Window {
 		d0.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
 		svg.appendChild(d0);
 		const n0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		n0.innerHTML = date.getDate();
+		n0.textContent = date.getDate();
 		n0.setAttribute("x", 0);
 		n0.setAttribute("y", 25);
 		n0.setAttribute("fill", "#C0C0C0");
@@ -670,7 +655,7 @@ class Watchdog extends Window {
 
 		if (date.getDate() === 1) {
 			const m0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			m0.innerHTML = Watchdog.MONTH[date.getMonth()];
+			m0.textContent = date.toLocaleDateString(regionalFormat, { month: "short" }).toUpperCase();
 			m0.setAttribute("x", 0);
 			m0.setAttribute("y", 7);
 			m0.setAttribute("fill", "#C0C0C0");
@@ -696,8 +681,8 @@ class Watchdog extends Window {
 		d1.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
 		svg.appendChild(d1);
 		const n1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		n1.innerHTML = date.getDate();
-		n1.setAttribute("x", 480);
+		n1.textContent = date.getDate();
+		n1.setAttribute("x", Watchdog.DAY_PIXELS);
 		n1.setAttribute("y", 25);
 		n1.setAttribute("fill", "#C0C0C0");
 		n1.setAttribute("font-size", "11px");
@@ -706,8 +691,8 @@ class Watchdog extends Window {
 
 		if (date.getDate() === 1) {
 			const m1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			m1.innerHTML = Watchdog.MONTH[date.getMonth()];
-			m1.setAttribute("x", 480);
+			m1.textContent = date.toLocaleDateString(regionalFormat, { month: "short" }).toUpperCase();
+			m1.setAttribute("x", Watchdog.DAY_PIXELS);
 			m1.setAttribute("y", 7);
 			m1.setAttribute("fill", "#C0C0C0");
 			m1.setAttribute("font-size", "10px");
