@@ -568,7 +568,7 @@ class Watchdog extends Window {
 	DrawTimeline() {
 		this.timeline.textContent = "";
 
-		let daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS) + 1;		
+		let daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS) + 1;
 		let high = this.today;
 		let low = this.today - this.offset / Watchdog.DAY_PIXELS * Watchdog.DAY_TICKS - (daysInViewport) * Watchdog.DAY_TICKS;
 		
