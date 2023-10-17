@@ -18,7 +18,7 @@ internal static class Watchdog {
     private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
     private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
     private const long MINUTE_IN_TICKS      = 600_000_000L;
-    private const int FIVE_MINUTE_IN_MILLI  = 300_000;
+    private const int  FIVE_MINUTE_IN_MILLI = 300_000;
 
     public enum WatcherType {
         icmp,
@@ -356,7 +356,9 @@ internal static class Watchdog {
         parameters.TryGetValue("file", out string file);
         parameters.TryGetValue("date", out string date);
         parameters.TryGetValue("count", out string count);
-        
+
+        return "[]"u8.ToArray();
+
         try {
             return File.ReadAllBytes(file);
         } catch {
@@ -413,27 +415,27 @@ internal static class Watchdog {
 
         parameters.TryGetValue("file", out string file);
 
-        try {
+        /*try*/ {
             if (!watchers.Remove(file, out Watcher watcher)) {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
 
             lock(watcher.sync) {
+                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_", true);
                 File.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}");
-                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_");
             }
 
             if (task?.status == TaskWrapper.TaskStatus.running) {
                 StopTask(initiator);
             }
         }
-        catch (Exception ex) {
+        /*catch (Exception ex) {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
         finally {
             Logger.Action(initiator, $"Delete watcher: {file}");
-        }
+        }*/
 
         return Data.CODE_OK.Array;
     }

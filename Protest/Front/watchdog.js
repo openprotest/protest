@@ -1,7 +1,7 @@
 class Watchdog extends Window {
+	static DAY_PIXELS = 480;
 	static HOUR_TICKS = 3_600_000;
 	static DAY_TICKS  = 3_600_000 * 24;
-	static MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 	constructor() {
 		super();
@@ -11,8 +11,6 @@ class Watchdog extends Window {
 
 		this.SetTitle("Watchdog");
 		this.SetIcon("mono/watchdog.svg");
-
-		this.currentDate = new Date(Date.now() - Date.now() % (360_000 * 24));
 
 		this.SetupToolbar();
 
@@ -46,8 +44,9 @@ class Watchdog extends Window {
 
 		this.selected = null;
 		this.selectedElement = null;
-		this.high = new Date(Date.now() - Date.now() % (3_600_000 * 24)).getTime();
+		this.high = new Date(Date.now() - Date.now() % (Watchdog.DAY_TICKS)).getTime();
 		this.offset = 0;
+		this.watchers = {};
 		this.cache = {};
 
 		let seeking = false;
@@ -76,6 +75,8 @@ class Watchdog extends Window {
 			this.offset = lastOffset - (mouseX0 - event.clientX);
 			this.offset -= this.offset % 20;
 			if (this.offset < 0) this.offset = 0;
+
+			//this.high = new Date(Date.now() - Date.now() % Watchdog.DAY_TICKS).getTime() - this.offset * Watchdog.DAY_TICKS / Watchdog.DAY_PIXELS;
 
 			if (last === this.offset) return;
 			this.Seek();
@@ -137,6 +138,7 @@ class Watchdog extends Window {
 			this.list.textContent = "";
 			for (let i=0; i<json.length; i++) {
 				this.CreateWatcherElement(json[i]);
+				this.watchers[json[i].file] = json[i];
 			}
 		}
 		catch (ex) {
@@ -482,13 +484,12 @@ class Watchdog extends Window {
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
-				if (isNew) {
-					this.CreateWatcherElement(obj);
-				}
-				else {
+				if (!isNew) {
 					this.list.removeChild(this.selectedElement);
-					this.CreateWatcherElement(json);
 				}
+				
+				this.CreateWatcherElement(json);
+				this.watchers[json.file] = json;
 			}
 			catch (ex) {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
@@ -562,6 +563,7 @@ class Watchdog extends Window {
 				if (json.error) throw(json.error);
 				
 				this.list.removeChild(this.selectedElement);
+				delete this.watchers[this.selected.file];
 				this.selected = null;
 				this.selectedElement = null;
 			}
@@ -571,28 +573,36 @@ class Watchdog extends Window {
 		});
 	}
 
-	Seek() {
+	async Seek() {
 		this.DrawTimeline();
 		for (let i = 0; i < this.timeline.childNodes.length; i++) {
 			if (this.timeline.childNodes[i].tagName != "svg") continue;
 			this.timeline.childNodes[i].style.transform = `translateX(${this.offset}px)`;
 		}
 
-		let daysInViewport = Math.trunc(this.timeline.offsetWidth / 480); //480px == a day length
+		let daysInViewport = Math.trunc(this.timeline.offsetWidth / Watchdog.DAY_PIXELS);
 
-		let low = this.high - (daysInViewport + this.offset / 480) * Watchdog.DAY_TICKS;
-		console.log(new Date(low).getDate(), new Date(this.high).getDate());
-	}
+		for (let file in this.watchers) {
+			let date = this.high;
+			if (!this.cache.hasOwnProperty(file)) this.cache[file] = {};
+			if (this.cache[file].hasOwnProperty(date)) continue;
 
-	DrawWatcher(date) {
-		console.log(date);
+			this.cache[file][date] = [];
+
+			let response = await fetch(`watchdog/view?file=${file}&date=${date}`);
+			this.cache[file][date] = await response.json();
+		}
+
+		const low = this.high - (daysInViewport + this.offset / Watchdog.DAY_PIXELS) * Watchdog.DAY_TICKS;
+		//console.log(new Date(low).getDate(), new Date(this.high).getDate());
+
 	}
 
 	DrawTimeline() {
 		this.timeline.textContent = "";
 
 		let daysInViewport = Math.ceil(this.timeline.offsetWidth / 480) //480px == a day length
-		
+
 		let low = this.high;
 		while (low > this.high - (daysInViewport + this.offset / 480) * Watchdog.DAY_TICKS) {
 			//this.GetData(new Date(low));
@@ -628,9 +638,13 @@ class Watchdog extends Window {
 		this.timeline.appendChild(gradientR);
 	}
 
+	DrawWatcher(date) {
+		//console.log(date);
+	}
+
 	GenerateDateSvg(date) {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		svg.setAttribute("width", 480);
+		svg.setAttribute("width", Watchdog.DAY_PIXELS);
 		svg.setAttribute("height", 40);
 		svg.style.outline = "none";
 
@@ -645,7 +659,7 @@ class Watchdog extends Window {
 
 		for (let i = 2; i < 24; i += 2) {
 			const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			lblTime.innerHTML = i.toString().padStart(2, "0") + ":00";
+			lblTime.textContent = `${i.toString().padStart(2, "0")}:00`;
 			lblTime.setAttribute("x", i * 20);
 			lblTime.setAttribute("y", 26);
 			lblTime.setAttribute("fill", "#C0C0C0");
@@ -671,7 +685,7 @@ class Watchdog extends Window {
 		d0.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
 		svg.appendChild(d0);
 		const n0 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		n0.innerHTML = date.getDate();
+		n0.textContent = date.getDate();
 		n0.setAttribute("x", 0);
 		n0.setAttribute("y", 25);
 		n0.setAttribute("fill", "#C0C0C0");
@@ -707,8 +721,8 @@ class Watchdog extends Window {
 		d1.style = "stroke:#C0C0C0;stroke-width:2;fill:rgba(0,0,0,0)";
 		svg.appendChild(d1);
 		const n1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		n1.innerHTML = date.getDate();
-		n1.setAttribute("x", 480);
+		n1.textContent = date.getDate();
+		n1.setAttribute("x", Watchdog.DAY_PIXELS);
 		n1.setAttribute("y", 25);
 		n1.setAttribute("fill", "#C0C0C0");
 		n1.setAttribute("font-size", "11px");
@@ -718,7 +732,7 @@ class Watchdog extends Window {
 		if (date.getDate() === 1) {
 			const m1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			m1.textContent = date.toLocaleString(UI.regionalFormat, { month: "short" });
-			m1.setAttribute("x", 480);
+			m1.setAttribute("x", Watchdog.DAY_PIXELS);
 			m1.setAttribute("y", 7);
 			m1.setAttribute("fill", "#C0C0C0");
 			m1.setAttribute("font-size", "10px");
