@@ -26,7 +26,7 @@ class Watchdog extends Window {
 		this.deleteButton.onclick       = ()=> this.DeleteWatcher();
 		this.notificationButton.onclick = ()=> this.NotificationsDialog();
 		this.reloadButton.onclick       = ()=> this.GetWatchers();
-		this.gotoButton.onclick         = ()=> {};
+		this.gotoButton.onclick         = ()=> this.Goto();
 
 		this.timeline = document.createElement("div");
 		this.timeline.className = "watchdog-timeline";
@@ -113,6 +113,28 @@ class Watchdog extends Window {
 		this.lastWidth = this.content.getBoundingClientRect().width;
 	}
 
+	Goto() {
+		const dialog = this.DialogBox("150px");
+		if (dialog === null) return;
+
+		const innerBox = dialog.innerBox;
+		const btnOK = dialog.btnOK;
+
+		innerBox.style.textAlign = "center";
+		innerBox.style.margin = "20px";
+
+		const dateInput = document.createElement("input");
+		dateInput.type = "date";
+		dateInput.style.gridArea = "1 / 3";
+
+		innerBox.appendChild(dateInput)
+
+		btnOK.addEventListener("click", ()=>{
+			//TODO:
+		});
+
+	}
+
 	UpdateAuthorization() {
 		this.newButton.disabled          = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
 		this.editButton.disabled         = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
@@ -137,6 +159,8 @@ class Watchdog extends Window {
 
 				this.watchers[json[i].file] = json[i];
 			}
+	
+			this.Seek();
 		}
 		catch (ex) {
 			setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
@@ -490,6 +514,8 @@ class Watchdog extends Window {
 				json.element = element;
 
 				this.watchers[json.file] = json;
+
+				this.Seek();
 			}
 			catch (ex) {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
