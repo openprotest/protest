@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using static Protest.Tools.Watchdog;
 
 namespace Protest.Tools;
 
@@ -308,8 +309,8 @@ internal static class Watchdog {
 
     private static bool WriteResult(Watcher watcher, short result) {
         DateTime now = DateTime.Now;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{watcher.file}_";
-        string path = $"{dir}{Data.DIRECTORY_DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
+        string dir = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_";
+        string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
         lock (watcher.sync) {
             try {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
@@ -353,16 +354,70 @@ internal static class Watchdog {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        parameters.TryGetValue("file", out string file);
-        parameters.TryGetValue("date", out string date);
-        parameters.TryGetValue("count", out string count);
+        if (!parameters.TryGetValue("date", out string date)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
 
-        return "[]"u8.ToArray();
+        if (parameters.TryGetValue("file", out string file)) { //single file
+            try {
+                string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
+                if (!File.Exists(filename)) {
+                    return Encoding.UTF8.GetBytes($"{{\"{file}\":null}}");
+                }
 
-        try {
-            return File.ReadAllBytes(file);
-        } catch {
-            return null;
+                StringBuilder builder = new StringBuilder();
+                builder.Append($"\"{file}\":");
+
+                builder.Append('{');
+                //TODO:
+                builder.Append('}');
+
+                File.ReadAllBytes(file);
+                return Encoding.UTF8.GetBytes(builder.ToString());
+            }
+            catch {
+                return "{}"u8.ToArray();
+            }
+        }
+        else { //if no file, send all files
+            try {
+                StringBuilder builder = new StringBuilder();
+
+                builder.Append('{');
+
+                bool first = true;
+                foreach (Watcher watcher in watchers.Values) {
+                    if (!first) builder.Append(',');
+
+                    builder.Append($"\"{watcher.file}\":");
+
+                    try {
+                        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_{Data.DELIMITER}{date}";
+                        if (!File.Exists(filename)) {
+                            builder.Append("{}");
+                            first = false;
+                            continue;
+                        }
+
+                        byte[] bytes = File.ReadAllBytes(filename);
+                        builder.Append('{');
+                        //TODO:
+                        builder.Append('}');
+
+                        first = false;
+                    }
+                    catch {
+                        builder.Append("{}");
+                    }
+                }
+
+                builder.Append('}');
+
+                return Encoding.UTF8.GetBytes(builder.ToString());
+            }
+            catch {
+                return "{}"u8.ToArray();
+            }
         }
     }
 
@@ -378,15 +433,15 @@ internal static class Watchdog {
         options.Converters.Add(new WatcherJsonConverter());
 
         try {
-            bool exists = File.Exists($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}");
+            bool exists = File.Exists($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
             Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, options);
             watcher.file = file;
 
             byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, options);
 
-            File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}", content);
+            File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}", content);
 
-            DirectoryInfo dirInfo = new DirectoryInfo($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_");
+            DirectoryInfo dirInfo = new DirectoryInfo($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_");
             if (!dirInfo.Exists) {
                 dirInfo.Create();
             }
@@ -415,27 +470,27 @@ internal static class Watchdog {
 
         parameters.TryGetValue("file", out string file);
 
-        /*try*/ {
+        try {
             if (!watchers.Remove(file, out Watcher watcher)) {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
 
             lock(watcher.sync) {
-                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}_", true);
-                File.Delete($"{Data.DIR_WATCHDOG}{Data.DIRECTORY_DELIMITER}{file}");
+                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_", true);
+                File.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
             }
 
             if (task?.status == TaskWrapper.TaskStatus.running) {
                 StopTask(initiator);
             }
         }
-        /*catch (Exception ex) {
+        catch (Exception ex) {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
         finally {
             Logger.Action(initiator, $"Delete watcher: {file}");
-        }*/
+        }
 
         return Data.CODE_OK.Array;
     }

@@ -31,7 +31,7 @@ internal static class Logger {
     public static void Error(string ex) {
         lock (syncError)
             try {
-                using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DIRECTORY_DELIMITER}error.log", true, System.Text.Encoding.UTF8);
+                using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
                 writer.Write(DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE));
                 writer.WriteLine($"\t{ex}");
             }
@@ -49,7 +49,7 @@ internal static class Logger {
             string message = $"{date,-24}{initiator,-32}{action}";
             lock (syncAction)
                 try {
-                    using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DIRECTORY_DELIMITER}{dateTime.ToString(Data.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);
+                    using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}{dateTime.ToString(Data.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);
                     writer.WriteLine(message);
                 }
                 catch { }
@@ -62,7 +62,7 @@ internal static class Logger {
         byte[] bytes = null;
         lock (syncAction) {
             try {
-                bytes = File.ReadAllBytes($"{Data.DIR_LOG}{Data.DIRECTORY_DELIMITER}{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log");
+                bytes = File.ReadAllBytes($"{Data.DIR_LOG}{Data.DELIMITER}{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log");
             }
             catch {}
         }

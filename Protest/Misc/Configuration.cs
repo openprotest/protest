@@ -16,7 +16,7 @@ internal static class Configuration {
 
     internal static bool force_registry_keys = false;
 
-    internal static string front_path = $"{Data.DIR_ROOT}{Data.DIRECTORY_DELIMITER}front";
+    internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
 
     internal static string IP2LOCATION_API_KEY = null;
@@ -82,7 +82,7 @@ internal static class Configuration {
 
         if (IP2LOCATION_API_KEY is null) {
             try {
-                IP2LOCATION_API_KEY = File.ReadAllText($"{Data.DIR_KNOWLADGE}{Data.DIRECTORY_DELIMITER}ip2location-api-key.txt").Trim();
+                IP2LOCATION_API_KEY = File.ReadAllText($"{Data.DIR_KNOWLADGE}{Data.DELIMITER}ip2location-api-key.txt").Trim();
             }
             catch { }
         }
@@ -95,13 +95,13 @@ internal static class Configuration {
         int upCount = 5;
         while (!frontDirectory.Exists && upCount-- > 0) {
             string path = frontDirectory.FullName;
-            if (path.EndsWith($"{Data.DIRECTORY_DELIMITER}front")) {
+            if (path.EndsWith($"{Data.DELIMITER}front")) {
                 path = path[..^6];
             }
 
-            int separatorIndex = path.LastIndexOf(Data.DIRECTORY_DELIMITER);
+            int separatorIndex = path.LastIndexOf(Data.DELIMITER);
             if (separatorIndex > 0) {
-                frontDirectory = new DirectoryInfo($"{path[..separatorIndex]}{Data.DIRECTORY_DELIMITER}front");
+                frontDirectory = new DirectoryInfo($"{path[..separatorIndex]}{Data.DELIMITER}front");
             }
         }
 

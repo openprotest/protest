@@ -138,7 +138,7 @@ internal static class Update {
         for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
 
-            using FileStream stream = new FileStream($"{Data.DIR_IP_LOCATION}{Data.DIRECTORY_DELIMITER}{i}.bin", FileMode.OpenOrCreate);
+            using FileStream stream = new FileStream($"{Data.DIR_IP_LOCATION}{Data.DELIMITER}{i}.bin", FileMode.OpenOrCreate);
             using BinaryWriter writer = new BinaryWriter(stream);
 
             uint index = 0;

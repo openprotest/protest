@@ -494,7 +494,7 @@ internal static class Auth {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
-            File.WriteAllBytes($"{Data.DIR_ACL}{Data.DIRECTORY_DELIMITER}{access.username}", cipher);
+            File.WriteAllBytes($"{Data.DIR_ACL}{Data.DELIMITER}{access.username}", cipher);
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -524,7 +524,7 @@ internal static class Auth {
         acl.TryRemove(username, out _);
 
         try {
-            File.Delete($"{Data.DIR_ACL}{Data.DIRECTORY_DELIMITER}{username}");
+            File.Delete($"{Data.DIR_ACL}{Data.DELIMITER}{username}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
