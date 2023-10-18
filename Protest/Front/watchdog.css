@@ -72,7 +72,7 @@
 	height: 32px;
 }
 
-.watchdog-list > div > div:nth-child(3) > div {
+.watchdog-list > div > div:nth-child(3) > svg {
 	position: absolute;
 }
 

@@ -131,7 +131,10 @@ class Watchdog extends Window {
 			
 			this.list.textContent = "";
 			for (let i=0; i<json.length; i++) {
-				this.CreateWatcherElement(json[i]);
+				const element = this.CreateWatcherElement(json[i]);
+				this.list.appendChild(element);
+				json[i].element = element;
+
 				this.watchers[json[i].file] = json[i];
 			}
 		}
@@ -482,7 +485,10 @@ class Watchdog extends Window {
 					this.list.removeChild(this.selectedElement);
 				}
 				
-				this.CreateWatcherElement(json);
+				const element = this.CreateWatcherElement(json);
+				this.list.appendChild(element);
+				json.element = element;
+
 				this.watchers[json.file] = json;
 			}
 			catch (ex) {
@@ -507,7 +513,6 @@ class Watchdog extends Window {
 	CreateWatcherElement(watcher) {
 		const element = document.createElement("div");
 		element.className = "list-element";
-		this.list.appendChild(element);
 
 		const nameLabel = document.createElement("div");
 		nameLabel.style.color = watcher.enable ? "var(--clr-dark)" : "color-mix(in hsl, var(--clr-dark), transparent)";
@@ -584,21 +589,45 @@ class Watchdog extends Window {
 				let json = await response.json();
 
 				this.cache[date] = json;
-				for (let f in json) {
-					//TODO: draw
+				for (let file in json) {
+					this.DrawWatcher(this.watchers[file]);
 				}
+
 				continue;
 			}
 
 			for (let file in this.watchers) {
-				if (this.cache[date].hasOwnProperty(file)) continue;
+				if (this.cache[date].hasOwnProperty(file)) {
+					this.DrawWatcher(this.watchers[file]);
+					continue;
+				}
+
 				this.cache[date][file] = {};
 				let response = await fetch(`watchdog/view?date=${date}&file=${file}`);
 				let json = await response.json();
 
 				this.cache[date][file] = json[file];
-				//TODO: draw
+
+				this.DrawWatcher(this.watchers[file]);
 			}
+		}
+	}
+
+	DrawWatcher(watcher) {
+		watcher.element.childNodes[2].textContent = "";
+
+		const daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS);
+		const high = this.today + Watchdog.DAY_TICKS;
+		const low = this.today - (this.offset - this.offset % Watchdog.DAY_PIXELS) / Watchdog.DAY_PIXELS * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
+		
+		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
+			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
+			if (right <= -Watchdog.DAY_PIXELS) break;
+
+			const svg = this.GenerateWatcherSvg(new Date(date));
+			svg.style.top = "0";
+			svg.style.right = `${right}px`;
+			watcher.element.childNodes[2].appendChild(svg);
 		}
 	}
 
@@ -611,9 +640,9 @@ class Watchdog extends Window {
 		
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
 			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
-			if (right < -Watchdog.DAY_PIXELS) break;
+			if (right <= -Watchdog.DAY_PIXELS) break;
 
-			const svg = this.GenerateDateSvg(new Date(date));
+			const svg = this.GenerateTimelineSvg(new Date(date));
 			svg.style.top = "0";
 			svg.style.right = `${right}px`;
 			this.timeline.appendChild(svg);
@@ -636,11 +665,32 @@ class Watchdog extends Window {
 		this.timeline.appendChild(gradientR);
 	}
 
-	DrawWatcher(date) {
-		//console.log(date);
+	GenerateWatcherSvg(date) {
+		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("width", Watchdog.DAY_PIXELS);
+		svg.setAttribute("height", 32);
+		svg.style.outline = "none";
+
+		const rect2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		rect2.setAttribute("x", 0);
+		rect2.setAttribute("y", 0);
+		rect2.setAttribute("width", 1);
+		rect2.setAttribute("height", 32);
+		rect2.setAttribute("fill", "rgb(64,64,64)");
+		svg.appendChild(rect2);
+
+		const rect3 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		rect3.setAttribute("x", 479);
+		rect3.setAttribute("y", 0);
+		rect3.setAttribute("width", 1);
+		rect3.setAttribute("height", 32);
+		rect3.setAttribute("fill", "rgb(64,64,64)");
+		svg.appendChild(rect3);
+
+		return svg;
 	}
 
-	GenerateDateSvg(date) {
+	GenerateTimelineSvg(date) {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		svg.setAttribute("width", Watchdog.DAY_PIXELS);
 		svg.setAttribute("height", 40);
