@@ -661,7 +661,7 @@ class Watchdog extends Window {
 				watcher.element.childNodes[2].appendChild(svg);
 			}
 			else {
-				const svg = this.GenerateWatcherSvg(new Date(date));
+				const svg = this.GenerateWatcherSvg(date, watcher.file);
 				svg.setAttribute("date", date);
 				svg.style.top = "0";
 				svg.style.right = `${right}px`;
@@ -704,13 +704,24 @@ class Watchdog extends Window {
 		this.timeline.appendChild(gradientR);
 	}
 
-	GenerateWatcherSvg(date) {
+	GenerateWatcherSvg(date, file) {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		svg.setAttribute("width", Watchdog.DAY_PIXELS);
 		svg.setAttribute("height", 32);
 		svg.style.outline = "none";
 
-		for (let i=0; i<480; i+=4) {
+		if (!this.cache.hasOwnProperty(date) || !this.cache[date].hasOwnProperty(file)) {
+			const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+			text.setAttribute("x", 16);
+			text.setAttribute("y", 16);
+			text.setAttribute("fill", "rgb(64,64,64)");
+			text.textContent = "NULL";
+			svg.appendChild(text);
+
+			return svg;
+		}
+
+		for (let i=0; i<480; i+=16) {
 			const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 			dot.setAttribute("x", i);
 			dot.setAttribute("y", 4);
@@ -725,7 +736,7 @@ class Watchdog extends Window {
 		text.setAttribute("x", 16);
 		text.setAttribute("y", 16);
 		text.setAttribute("fill", "rgb(64,64,64)");
-		text.textContent = date;
+		text.textContent = new Date(date);
 		svg.appendChild(text);
 
 		const rect2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
