@@ -26,7 +26,7 @@ class Watchdog extends Window {
 		this.deleteButton.onclick       = ()=> this.DeleteWatcher();
 		this.notificationButton.onclick = ()=> this.NotificationsDialog();
 		this.reloadButton.onclick       = ()=> this.GetWatchers();
-		this.gotoButton.onclick         = ()=> this.Goto();
+		this.gotoButton.onclick         = ()=> this.GoTo();
 
 		this.timeline = document.createElement("div");
 		this.timeline.className = "watchdog-timeline";
@@ -95,37 +95,37 @@ class Watchdog extends Window {
 	}
 	
 	AfterResize() { //override
-		if (this.lastWidth && this.lastWidth === this.content.getBoundingClientRect().width) return;
-
 		if (this.content.getBoundingClientRect().width < 720) {
-			this.timeline.style.right = "4px";
+			this.timeline.style.right = `${4 + this.list.offsetWidth - this.list.clientWidth}px`;
 			this.list.style.right = "4px";
 			this.details.style.display = "none";
 		}
 		else {
-			this.timeline.style.right = "200px";
+			this.timeline.style.right = `${200 + this.list.offsetWidth - this.list.clientWidth}px`;
 			this.list.style.right = "200px";
 			this.details.style.display = "initial";
 		}
 
+		if (this.lastWidth && this.lastWidth === this.content.getBoundingClientRect().width) return;
 		this.Seek();
-
 		this.lastWidth = this.content.getBoundingClientRect().width;
 	}
 
-	Goto() {
-		const dialog = this.DialogBox("150px");
+	GoTo() {
+		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
 		const innerBox = dialog.innerBox;
 		const btnOK = dialog.btnOK;
 
+		innerBox.parentElement.style.width = "240px";
+
 		innerBox.style.textAlign = "center";
-		innerBox.style.margin = "20px";
+		innerBox.style.marginTop = "20px";
 
 		const dateInput = document.createElement("input");
 		dateInput.type = "date";
-		dateInput.style.gridArea = "1 / 3";
+		dateInput.style.width = "200px";
 
 		innerBox.appendChild(dateInput)
 
@@ -640,6 +640,11 @@ class Watchdog extends Window {
 	}
 
 	DrawWatcher(watcher) {
+		let previous = {};
+		for (let i = 0; i < watcher.element.childNodes[2].childNodes.length; i++) {
+			previous[watcher.element.childNodes[2].childNodes[i].getAttribute("date")] = watcher.element.childNodes[2].childNodes[i];
+		}
+
 		watcher.element.childNodes[2].textContent = "";
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS);
@@ -650,10 +655,18 @@ class Watchdog extends Window {
 			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
 			if (right <= -Watchdog.DAY_PIXELS) break;
 
-			const svg = this.GenerateWatcherSvg(new Date(date));
-			svg.style.top = "0";
-			svg.style.right = `${right}px`;
-			watcher.element.childNodes[2].appendChild(svg);
+			if (previous.hasOwnProperty(date)) {
+				const svg = previous[date];
+				svg.style.right = `${right}px`;
+				watcher.element.childNodes[2].appendChild(svg);
+			}
+			else {
+				const svg = this.GenerateWatcherSvg(new Date(date));
+				svg.setAttribute("date", date);
+				svg.style.top = "0";
+				svg.style.right = `${right}px`;
+				watcher.element.childNodes[2].appendChild(svg);
+			}
 		}
 	}
 
@@ -696,6 +709,24 @@ class Watchdog extends Window {
 		svg.setAttribute("width", Watchdog.DAY_PIXELS);
 		svg.setAttribute("height", 32);
 		svg.style.outline = "none";
+
+		for (let i=0; i<480; i+=4) {
+			const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			dot.setAttribute("x", i);
+			dot.setAttribute("y", 4);
+			dot.setAttribute("width", 6);
+			dot.setAttribute("height", 24);
+			dot.setAttribute("rx", 4);
+			dot.setAttribute("fill", "rgb(32,128,0)");
+			svg.appendChild(dot);
+		}
+
+		const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+		text.setAttribute("x", 16);
+		text.setAttribute("y", 16);
+		text.setAttribute("fill", "rgb(64,64,64)");
+		text.textContent = date;
+		svg.appendChild(text);
 
 		const rect2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 		rect2.setAttribute("x", 0);
