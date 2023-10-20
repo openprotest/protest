@@ -8,7 +8,7 @@ public static class Data {
     public const string GUID = "72f5bca3-7752-45e8-8027-2060ebbda456"; //from Protest.csproj
 
 #if OS_LINUX || OS_MAC
-    public const char DIRECTORY_DELIMITER = "/";
+    public const char DELIMITER = "/";
 #else //OS_WINDOWS
     public const string DELIMITER = "\\";
 #endif

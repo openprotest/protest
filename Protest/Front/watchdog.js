@@ -118,21 +118,35 @@ class Watchdog extends Window {
 		const innerBox = dialog.innerBox;
 		const btnOK = dialog.btnOK;
 
-		innerBox.parentElement.style.width = "240px";
+		innerBox.parentElement.style.maxWidth = "300px";
 
 		innerBox.style.textAlign = "center";
 		innerBox.style.marginTop = "20px";
 
+		let maxDate = new Date(this.today);
+
 		const dateInput = document.createElement("input");
+		dateInput.style.width = "calc(100% - 40px)";
 		dateInput.type = "date";
-		dateInput.style.width = "200px";
+		dateInput.max = `${maxDate.getFullYear()}-${`${maxDate.getMonth()+1}`.padStart(2,"0")}-${`${maxDate.getDate()}`.padStart(2,"0")}`;
+		innerBox.appendChild(dateInput);
 
-		innerBox.appendChild(dateInput)
+		dateInput.valueAsDate = new Date(this.today - this.offset * Watchdog.DAY_TICKS / Watchdog.DAY_PIXELS);
+		
+		dateInput.onkeydown = event=> {
+			if (event.key === "Enter") {
+				btnOK.onclick();
+			}
+		};
 
-		btnOK.addEventListener("click", ()=>{
-			//TODO:
-		});
+		btnOK.onclick = ()=> {
+			this.offset = (this.today - dateInput.valueAsDate) * Watchdog.DAY_PIXELS / Watchdog.DAY_TICKS;
+			if (this.offset < 0) this.offset = 0;
+			this.Seek();
+			dialog.Close();
+		};
 
+		dateInput.focus();
 	}
 
 	UpdateAuthorization() {
@@ -710,11 +724,11 @@ class Watchdog extends Window {
 		svg.setAttribute("height", 32);
 		svg.style.outline = "none";
 
-		for (let i=0; i<480; i+=4) {
+		for (let i=0; i<480; i+=14) {
 			const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 			dot.setAttribute("x", i);
 			dot.setAttribute("y", 4);
-			dot.setAttribute("width", 6);
+			dot.setAttribute("width", 12);
 			dot.setAttribute("height", 24);
 			dot.setAttribute("rx", 4);
 			dot.setAttribute("fill", "rgb(32,128,0)");

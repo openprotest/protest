@@ -11,7 +11,6 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using static Protest.Tools.Watchdog;
 
 namespace Protest.Tools;
 
