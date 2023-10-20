@@ -111,7 +111,7 @@ public static class Data {
     }
 
     /*
-    private const long UNIX_BASE_TICKS = 621355968000000000L; //January 1, 1970
+    private const long UNIX_BASE_TICKS = 621_355_968_000_000_000L; //January 1, 1970
     public static long DateTimeToUnixTicks(DateTime date) {
         return DateTimeToUnixTicks(date.Ticks);
     }
