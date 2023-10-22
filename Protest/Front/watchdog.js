@@ -623,9 +623,12 @@ class Watchdog extends Window {
 			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
 			if (right < -Watchdog.DAY_PIXELS) break;
 
+			let day = new Date(date);
+			let dayString = `${day.getFullYear()}-${`${day.getMonth()+1}`.padStart(2,"0")}-${`${day.getDate()}`.padStart(2,"0")}`;
+
 			if (!this.cache.hasOwnProperty(date)) {
 				this.cache[date] = {};
-				let response = await fetch(`watchdog/view?date=${date}`);
+				let response = await fetch(`watchdog/view?date=${dayString}`);
 				let json = await response.json();
 
 				this.cache[date] = json;
@@ -643,7 +646,8 @@ class Watchdog extends Window {
 				}
 
 				this.cache[date][file] = {};
-				let response = await fetch(`watchdog/view?date=${date}&file=${file}`);
+				
+				let response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
 				let json = await response.json();
 
 				this.cache[date][file] = json[file];

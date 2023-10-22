@@ -192,7 +192,6 @@ const KEEP = {
 		message.style.height = "64px";
 		message.style.fontSize = "16px";
 		message.style.fontWeight = "600";
-		message.style.textShadow = "rgba(255,255,255,.5) 0 0 2px";
 		notificationBox.appendChild(message);
 	
 		const buttonsBox = document.createElement("div");

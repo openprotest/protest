@@ -15,6 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 namespace Protest.Tools;
 
 internal static class Watchdog {
+    private const long UNIX_BASE_TICKS      = 621_355_968_000_000_000L;
     private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
     private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
     private const long MINUTE_IN_TICKS      = 600_000_000L;
@@ -358,65 +359,69 @@ internal static class Watchdog {
         }
 
         if (parameters.TryGetValue("file", out string file)) { //single file
-            try {
-                string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
-                if (!File.Exists(filename)) {
-                    return Encoding.UTF8.GetBytes($"{{\"{file}\":null}}");
-                }
+            StringBuilder builder = new StringBuilder();
+            
+            builder.Append('{');
+            builder.Append($"\"{file}\":");
+            ViewFile(date, file, builder);
+            builder.Append('}');
 
-                StringBuilder builder = new StringBuilder();
-                builder.Append($"\"{file}\":");
-
-                builder.Append('{');
-                //TODO:
-                builder.Append('}');
-
-                File.ReadAllBytes(file);
-                return Encoding.UTF8.GetBytes(builder.ToString());
-            }
-            catch {
-                return "{}"u8.ToArray();
-            }
+            return Encoding.UTF8.GetBytes(builder.ToString());
         }
-        else { //if no file, send all files
-            try {
-                StringBuilder builder = new StringBuilder();
+        else { //if no file, send all files for that day
+            StringBuilder builder = new StringBuilder();
 
-                builder.Append('{');
+            builder.Append('{');
 
-                bool first = true;
-                foreach (Watcher watcher in watchers.Values) {
-                    if (!first) builder.Append(',');
+            bool first = true;
+            foreach (Watcher watcher in watchers.Values) {
+                if (!first) { builder.Append(','); }
 
-                    builder.Append($"\"{watcher.file}\":");
+                builder.Append($"\"{watcher.file}\":");
+                ViewFile(date, watcher.file, builder);
 
-                    try {
-                        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_{Data.DELIMITER}{date}";
-                        if (!File.Exists(filename)) {
-                            builder.Append("{}");
-                            first = false;
-                            continue;
-                        }
-
-                        byte[] bytes = File.ReadAllBytes(filename);
-                        builder.Append('{');
-                        //TODO:
-                        builder.Append('}');
-
-                        first = false;
-                    }
-                    catch {
-                        builder.Append("{}");
-                    }
-                }
-
-                builder.Append('}');
-
-                return Encoding.UTF8.GetBytes(builder.ToString());
+                first = false;
             }
-            catch {
-                return "{}"u8.ToArray();
+
+            builder.Append('}');
+
+            return Encoding.UTF8.GetBytes(builder.ToString());
+        }
+    }
+
+    private static void ViewFile(string date, string file, StringBuilder builder) {
+        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
+        
+        if (!File.Exists(filename)) {
+            builder.Append($"{{\"{file}\":null}}");
+            return;
+        }
+
+        try {
+            byte[] bytes = File.ReadAllBytes(filename);
+
+            using FileStream stream = File.Open(filename, FileMode.Open);
+            using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false);
+
+
+            builder.Append('{');
+
+            bool first = true;
+            while (reader.BaseStream.Position < reader.BaseStream.Length) {
+                long ticks = reader.ReadInt64();
+                long unixDate = (ticks - UNIX_BASE_TICKS) / 10_000;
+                short result = reader.ReadInt16();
+
+                if (!first) builder.Append(',');
+                builder.Append($"\"{unixDate}\":{result}");
+
+                first = false;
             }
+
+            builder.Append('}');
+        }
+        catch {
+            builder.Append("{}");
         }
     }
 

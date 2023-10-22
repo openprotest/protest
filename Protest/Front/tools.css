@@ -153,7 +153,8 @@
 	position: absolute;
 
 	max-width: 16px;
-	width: 4%;
+	min-width: 2px;
+	width: calc(100%/32 - 4px);
 	height: 16px;
 	top: 8px;
 	border-radius: 2px;

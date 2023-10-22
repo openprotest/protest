@@ -1,5 +1,5 @@
 class Ping extends Console {
-	static HISTORY_LIMIT = 24;
+	static HISTORY_LIMIT = 32;
 
 	constructor(params) {
 		super();
@@ -476,7 +476,7 @@ class Ping extends Console {
 		let ping_e = [];
 		for (let i = 0; i < Ping.HISTORY_LIMIT; i++) {
 			let p = document.createElement("div");
-			p.style.left = 4 * i + "%";
+			p.style.left = 3 * i + "%";
 			graph.appendChild(p);
 			ping_e.push(p);
 			ping.push(-1);
