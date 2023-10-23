@@ -186,7 +186,7 @@ class Documentation {
     }
 
     public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
-        if (parameters == null) {
+        if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

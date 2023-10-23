@@ -170,7 +170,7 @@ internal static class DebitNotes {
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
         if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
-        
+
         string filename = status switch  {
             "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
             "long" => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",

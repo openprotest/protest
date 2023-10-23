@@ -183,6 +183,7 @@ class Watchdog extends Window {
 	}
 
 	async GetWatchers() {
+		this.today = new Date(Date.now() - Date.now() % (Watchdog.DAY_TICKS)).getTime();
 		this.cache = {};
 
 		try {
@@ -575,6 +576,127 @@ class Watchdog extends Window {
 
 		const innerBox = dialog.innerBox;
 		const btnOK = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
+
+		btnOK.style.display = "none";
+		btnCancel.value = "Close";
+
+		const buttonsBox = document.createElement("div");
+		buttonsBox.style.position = "absolute";
+		buttonsBox.style.left = "266px";
+		buttonsBox.style.top = "8px";
+
+		const newButton = document.createElement("input");
+		newButton.className = "with-icon";
+		newButton.type = "button";
+		newButton.value = "New";
+		newButton.style.backgroundImage = "url(mono/add.svg?light)";
+
+		const saveButton = document.createElement("input");
+		saveButton.className = "with-icon";
+		saveButton.type = "button";
+		saveButton.value = "Save";
+		saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
+
+		const deleteButton = document.createElement("input");
+		deleteButton.className = "with-icon";
+		deleteButton.type = "button";
+		deleteButton.value = "Delete";
+		deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
+		
+		buttonsBox.append(newButton, saveButton, deleteButton);
+
+		const notificationsList = document.createElement("div");
+		notificationsList.style.position = "absolute";
+		notificationsList.style.left = "8px";
+		notificationsList.style.top = "8px";
+		notificationsList.style.bottom = "8px";
+		notificationsList.style.width = "250px";
+		notificationsList.style.border = "2px solid var(--clr-control)";
+		notificationsList.style.borderRadius = "4px";
+		notificationsList.style.overflowY = "auto";
+
+		innerBox.append(buttonsBox, notificationsList);
+
+		const nameLabel = document.createElement("div");
+		nameLabel.textContent = "Name: ";
+		nameLabel.style.position = "absolute";
+		nameLabel.style.left = "270px";
+		nameLabel.style.top = "64px";
+
+		const nameInput = document.createElement("input");
+		nameInput.type = "text";
+		nameInput.style.position = "absolute";
+		nameInput.style.left = "380px";
+		nameInput.style.top = "58px";
+		nameInput.style.width = "300px";
+
+		innerBox.append(nameLabel, nameInput);
+
+
+		const smtpLabel = document.createElement("div");
+		smtpLabel.textContent = "SMTP profile: ";
+		smtpLabel.style.position = "absolute";
+		smtpLabel.style.left = "270px";
+		smtpLabel.style.top = "100px";
+
+		const smtpInput = document.createElement("select");
+		smtpInput.style.position = "absolute";
+		smtpInput.style.left = "380px";
+		smtpInput.style.top = "94px";
+		smtpInput.style.width = "300px";
+
+		innerBox.append(smtpLabel, smtpInput);
+
+
+		const recipientsLabel = document.createElement("div");
+		recipientsLabel.textContent = "Recipients: ";
+		recipientsLabel.style.position = "absolute";
+		recipientsLabel.style.left = "270px";
+		recipientsLabel.style.top = "136px";
+
+		const recipientsInput = document.createElement("input");
+		recipientsInput.type = "text";
+		recipientsInput.style.position = "absolute";
+		recipientsInput.style.left = "380px";
+		recipientsInput.style.top = "130px";
+		recipientsInput.style.width = "300px";
+
+		innerBox.append(recipientsLabel, recipientsInput);
+
+
+		const watchersLabel = document.createElement("div");
+		watchersLabel.textContent = "Watchers: ";
+		watchersLabel.style.position = "absolute";
+		watchersLabel.style.left = "270px";
+		watchersLabel.style.top = "172px";
+
+		const watchersList = document.createElement("div");
+		watchersList.style.position = "absolute";
+		watchersList.style.left = "380px";
+		watchersList.style.top = "168px";
+		watchersList.style.bottom = "8px";
+		watchersList.style.width = "300px";
+		watchersList.style.margin = "2px";
+		watchersList.style.border = "2px solid var(--clr-control)";
+		watchersList.style.borderRadius = "4px";
+		watchersList.style.boxSizing = "border-box";
+		watchersList.style.overflowY = "auto";
+
+		innerBox.append(watchersLabel, watchersList);
+
+
+		newButton.onclick = ()=> {
+
+		};
+
+		saveButton.onclick = ()=> {
+
+		};
+
+		deleteButton.onclick = ()=> {
+
+		};
 
 	}
 

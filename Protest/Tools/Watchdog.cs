@@ -353,7 +353,7 @@ internal static class Watchdog {
     }
 
     public static byte[] View(Dictionary<string, string> parameters) {
-        if (parameters == null) {
+        if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -470,7 +470,7 @@ internal static class Watchdog {
     }
 
     public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
-        if (parameters == null) {
+        if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -496,6 +496,26 @@ internal static class Watchdog {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
+
+        return Data.CODE_OK.Array;
+    }
+
+    public static byte[] ViewNotifications() {
+
+        return null;
+    }
+
+    public static byte[] CreateNotifications(Dictionary<string, string> parameters, string initiator) {
+
+        return null;
+    }
+
+    public static byte[] DeleteNotifications(Dictionary<string, string> parameters, string initiator) {
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        parameters.TryGetValue("file", out string file);
 
         return Data.CODE_OK.Array;
     }

@@ -322,8 +322,11 @@ public sealed class Database {
     }
 
     public byte[] SaveHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, string initiator) {
-        string file = null;
-        parameters?.TryGetValue("file", out file);
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        parameters!.TryGetValue("file", out string file);
         file ??= GenerateFilename();
 
         string payload;
@@ -355,8 +358,7 @@ public sealed class Database {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        string file = null;
-        parameters?.TryGetValue("file", out file);
+        parameters!.TryGetValue("file", out string file);
         if (file is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -451,7 +453,7 @@ public sealed class Database {
         attributeName = Uri.UnescapeDataString(attributeName);
 
         dictionary.TryGetValue(file, out Entry entry);
-        if (entry == null) return null;
+        if (entry is null) return null;
 
         if (entry.attributes.TryGetValue(attributeName, out Attribute value)) return Encoding.UTF8.GetBytes(value.value);
 
