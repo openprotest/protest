@@ -210,14 +210,10 @@ class Settings extends Tabs {
 		usernameLabel.textContent = "Username";
 		labels.push(usernameLabel);
 
-		const recipientsLabel = document.createElement("div");
-		recipientsLabel.textContent = "Recipients";
-		labels.push(recipientsLabel);
-
 		for (let i = 0; i < labels.length; i++) {
 			labels[i].style.display = "inline-block";
 			labels[i].style.textAlign = "left";
-			labels[i].style.width = "25%";
+			labels[i].style.width = "33%";
 			labels[i].style.lineHeight = "24px";
 			labels[i].style.whiteSpace = "nowrap";
 			labels[i].style.overflow = "hidden";
@@ -226,7 +222,7 @@ class Settings extends Tabs {
 			labels[i].style.paddingLeft = "4px";
 		}
 		
-		titleBar.append(serverLabel, portLabel, usernameLabel, recipientsLabel);
+		titleBar.append(serverLabel, portLabel, usernameLabel);
 
 		this.profilesList = document.createElement("div");
 		this.profilesList.className = "no-results";
@@ -355,10 +351,6 @@ class Settings extends Tabs {
 				usernameLabel.textContent = json[i].username;
 				labels.push(usernameLabel);
 		
-				const recipientsLabel = document.createElement("div");
-				recipientsLabel.textContent = json[i].recipients;
-				labels.push(recipientsLabel);
-
 				for (let j = 0; j < labels.length; j++) {
 					labels[j].style.display = "inline-block";
 					labels[j].style.top = "0";
@@ -372,7 +364,7 @@ class Settings extends Tabs {
 					labels[j].style.paddingLeft = "4px";
 				}
 				
-				element.append(serverLabel, portLabel, usernameLabel, recipientsLabel);
+				element.append(serverLabel, portLabel, usernameLabel);
 
 				element.onclick = ()=> {
 					for (let i=0; i<this.profilesList.childNodes.length; i++) {
@@ -464,7 +456,7 @@ class Settings extends Tabs {
 	}
 
 	async PreviewProfile(object=null) {
-		const dialog = this.DialogBox("350px");
+		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
 		const btnOK = dialog.btnOK;
@@ -473,7 +465,7 @@ class Settings extends Tabs {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "120px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(7, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(6, 38px)";
 		innerBox.style.alignItems = "center";
 
 		const serverLabel = document.createElement("div");
@@ -521,16 +513,8 @@ class Settings extends Tabs {
 		passwordInput.placeholder = "unchanged";
 		innerBox.append(passwordLabel, passwordInput);
 
-		const recipientsLabel = document.createElement("div");
-		recipientsLabel.style.gridArea = "6 / 1";
-		recipientsLabel.textContent = "Recipients:";
-		const recipientsInput = document.createElement("input");
-		recipientsInput.style.gridArea = "6 / 2";
-		recipientsInput.type = "text";
-		innerBox.append(recipientsLabel, recipientsInput);
-
 		const sslBox = document.createElement("div");
-		sslBox.style.gridArea = "7 / 1";
+		sslBox.style.gridArea = "6 / 1";
 		innerBox.appendChild(sslBox);
 		const chkSsl = document.createElement("input");
 		chkSsl.type = "checkbox";
@@ -544,7 +528,6 @@ class Settings extends Tabs {
 			senderInput.value = object.sender;
 			usernameInput.value = object.username;
 			passwordInput.value = object.password;
-			recipientsInput.value = object.recipients;
 			chkSsl.checked = object.ssl;
 		}
 
@@ -562,7 +545,6 @@ class Settings extends Tabs {
 				sender     : senderInput.value,
 				username   : usernameInput.value,
 				password   : passwordInput.value,
-				recipients : recipientsInput.value,
 				ssl        : chkSsl.checked,
 			};
 

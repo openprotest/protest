@@ -12,7 +12,7 @@ internal class SmtpProfiles {
         public string sender;
         public string username;
         public string password;
-        public string recipients;
+        //public string recipients;
         public bool ssl;
         public Guid guid;
     }
@@ -129,7 +129,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
                         case "sender": profile.sender = reader.GetString(); break;
                         case "username": profile.username = reader.GetString(); break;
                         case "password": profile.password = hidePasswords ? String.Empty : reader.GetString(); break;
-                        case "recipients": profile.recipients = reader.GetString(); break;
+                        //case "recipients": profile.recipients = reader.GetString(); break;
                         case "ssl": profile.ssl = reader.GetBoolean(); break;
                         case "guid": profile.guid = reader.GetGuid(); break;
                         default: reader.Skip(); break;
@@ -150,7 +150,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
         ReadOnlySpan<byte> _sender = "sender"u8;
         ReadOnlySpan<byte> _username = "username"u8;
         ReadOnlySpan<byte> _password = "password"u8;
-        ReadOnlySpan<byte> _recipients = "recipients"u8;
+        //ReadOnlySpan<byte> _recipients = "recipients"u8;
         ReadOnlySpan<byte> _ssl = "ssl"u8;
         ReadOnlySpan<byte> _guid = "guid"u8;
 
@@ -163,7 +163,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
             writer.WriteString(_sender, value[i].sender);
             writer.WriteString(_username, value[i].username);
             writer.WriteString(_password, hidePasswords ? String.Empty : value[i].password);
-            writer.WriteString(_recipients, value[i].recipients);
+            //writer.WriteString(_recipients, value[i].recipients);
             writer.WriteBoolean(_ssl, value[i].ssl);
             writer.WriteString(_guid, value[i].guid);
             writer.WriteEndObject();

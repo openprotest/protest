@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using static Protest.Tools.Watchdog;
 
 namespace Protest.Tools;
 
@@ -48,6 +49,8 @@ internal static class Watchdog {
         public int retries;
 
         public long lastCheck;
+        public short lastResult = short.MinValue;
+
         public object sync;
     }
 
@@ -99,12 +102,12 @@ internal static class Watchdog {
                         watcher.lastCheck = DateTime.UtcNow.Ticks;
                         new Thread(()=> {
                             switch (watcher.type) {
-                            case WatcherType.icmp        : CheckIcmp(watcher);        break;
-                            case WatcherType.tcp         : CheckTcp(watcher);         break;
-                            case WatcherType.dns         : CheckDns(watcher);         break;
-                            case WatcherType.http        : CheckHttp(watcher);        break;
-                            case WatcherType.httpKeyword : CheckHttpKeyword(watcher); break;
-                            case WatcherType.tls         : CheckTls(watcher);         break;
+                            case WatcherType.icmp        : watcher.lastResult = CheckIcmp(watcher);        break;
+                            case WatcherType.tcp         : watcher.lastResult = CheckTcp(watcher);         break;
+                            case WatcherType.dns         : watcher.lastResult = CheckDns(watcher);         break;
+                            case WatcherType.http        : watcher.lastResult = CheckHttp(watcher);        break;
+                            case WatcherType.httpKeyword : watcher.lastResult = CheckHttpKeyword(watcher); break;
+                            case WatcherType.tls         : watcher.lastResult = CheckTls(watcher);         break;
                             }
                         }).Start();
                     }
@@ -329,7 +332,7 @@ internal static class Watchdog {
             }
         }
     }
-
+     
     public static byte[] List() {
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
@@ -393,36 +396,35 @@ internal static class Watchdog {
         string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
         
         if (!File.Exists(filename)) {
-            builder.Append($"{{\"{file}\":null}}");
+            builder.Append("null");
             return;
         }
 
+        watchers.TryGetValue(file, out Watcher watcher);
+
+        builder.Append('{');
+
         try {
-            byte[] bytes = File.ReadAllBytes(filename);
+            lock (watcher?.sync) {
+                using FileStream stream = File.Open(filename, FileMode.Open);
+                using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false);
 
-            using FileStream stream = File.Open(filename, FileMode.Open);
-            using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false);
+                bool first = true;
+                while (reader.BaseStream.Position < reader.BaseStream.Length) {
+                    long ticks = reader.ReadInt64();
+                    long unixDate = (ticks - UNIX_BASE_TICKS) / 10_000;
+                    short result = reader.ReadInt16();
 
+                    if (!first) builder.Append(',');
+                    builder.Append($"\"{unixDate}\":{result}");
 
-            builder.Append('{');
-
-            bool first = true;
-            while (reader.BaseStream.Position < reader.BaseStream.Length) {
-                long ticks = reader.ReadInt64();
-                long unixDate = (ticks - UNIX_BASE_TICKS) / 10_000;
-                short result = reader.ReadInt16();
-
-                if (!first) builder.Append(',');
-                builder.Append($"\"{unixDate}\":{result}");
-
-                first = false;
+                    first = false;
+                }
             }
+        }
+        catch {}
 
-            builder.Append('}');
-        }
-        catch {
-            builder.Append("{}");
-        }
+        builder.Append('}');
     }
 
     public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string initiator) {
@@ -453,10 +455,10 @@ internal static class Watchdog {
             watchers[file] = watcher;
 
             if (exists) {
-                Logger.Action(initiator, $"Modify a watcher: {file}");
+                Logger.Action(initiator, $"Modify a watcher: {watcher.name}");
             }
             else {
-                Logger.Action(initiator, $"Create a new watcher: {file}");
+                Logger.Action(initiator, $"Create a new watcher: {watcher.name}");
             }
 
             return content;
@@ -487,13 +489,12 @@ internal static class Watchdog {
             if (task?.status == TaskWrapper.TaskStatus.running) {
                 StopTask(initiator);
             }
+
+            Logger.Action(initiator, $"Delete watcher: {watcher.name}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
-        }
-        finally {
-            Logger.Action(initiator, $"Delete watcher: {file}");
         }
 
         return Data.CODE_OK.Array;

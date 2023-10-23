@@ -119,14 +119,14 @@ const UI = {
 		return [h, s, l];
 	},
 
-	PingColor(pingResult) {
+	PingColor(pingResult, lightness=50) {
 		if (isNaN(pingResult))
 			return (pingResult === "TimedOut") ? "var(--clr-error)" : "rgb(255,102,0)";
 		
 		if (pingResult === -1)
 			return "rgb(192,192,192)";
 
-		return `hsl(${Math.round(96 + pingResult * 250 / 1000)},66%,50%)`;
+		return `hsl(${Math.round(96 + pingResult * 250 / 1000)},66%,${lightness}%)`;
 	},
 
 	TicksToUnixDate: ticks=> {

@@ -1,5 +1,4 @@
 class Watchdog extends Window {
-	static DAY_PIXELS = 480;
 	static HOUR_TICKS = 3_600_000;
 	static DAY_TICKS  = 3_600_000 * 24;
 
@@ -16,16 +15,20 @@ class Watchdog extends Window {
 		this.newButton          = this.AddToolbarButton("Create watcher", "mono/add.svg?light");
 		this.editButton         = this.AddToolbarButton("Edit", "mono/edit.svg?light");
 		this.deleteButton       = this.AddToolbarButton("Delete", "mono/delete.svg?light");
-		this.AddToolbarSeparator();
 		this.notificationButton = this.AddToolbarButton("Notifications", "mono/notifications.svg?light");
+		this.AddToolbarSeparator();
 		this.reloadButton       = this.AddToolbarButton("Reload", "mono/restart.svg?light");
 		this.gotoButton         = this.AddToolbarButton("Go to", "mono/timeline.svg?light");
+		this.zoomOutButton      = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
+		this.zoomInButton       = this.AddToolbarButton("Zoom in", "mono/zoomin.svg?light");
 
 		this.newButton.onclick          = ()=> this.WatcherDialog(true);
 		this.editButton.onclick         = ()=> this.EditWatcher();
 		this.deleteButton.onclick       = ()=> this.DeleteWatcher();
 		this.notificationButton.onclick = ()=> this.NotificationsDialog();
 		this.reloadButton.onclick       = ()=> this.GetWatchers();
+		this.zoomOutButton.onclick      = ()=> this.ZoomOut();
+		this.zoomInButton.onclick       = ()=> this.ZoomIn();
 		this.gotoButton.onclick         = ()=> this.GoTo();
 
 		this.timeline = document.createElement("div");
@@ -34,10 +37,10 @@ class Watchdog extends Window {
 		this.list = document.createElement("div");
 		this.list.className = "watchdog-list";
 
-		this.details = document.createElement("div");
-		this.details.className = "watchdog-details";
+		this.stats = document.createElement("div");
+		this.stats.className = "watchdog-stats";
 
-		this.content.append(this.timeline, this.list, this.details);
+		this.content.append(this.timeline, this.list, this.stats);
 
 		this.watchers = {};
 		this.cache = {};
@@ -46,6 +49,7 @@ class Watchdog extends Window {
 
 		this.today = new Date(Date.now() - Date.now() % (Watchdog.DAY_TICKS)).getTime();
 		this.offset = 0;
+		this.dayPixels = 480;
 
 		let seeking = false;
 		let mouseX0;
@@ -98,12 +102,12 @@ class Watchdog extends Window {
 		if (this.content.getBoundingClientRect().width < 720) {
 			this.timeline.style.right = `${4 + this.list.offsetWidth - this.list.clientWidth}px`;
 			this.list.style.right = "4px";
-			this.details.style.display = "none";
+			this.stats.style.display = "none";
 		}
 		else {
 			this.timeline.style.right = `${200 + this.list.offsetWidth - this.list.clientWidth}px`;
 			this.list.style.right = "200px";
-			this.details.style.display = "initial";
+			this.stats.style.display = "initial";
 		}
 
 		if (this.lastWidth && this.lastWidth === this.content.getBoundingClientRect().width) return;
@@ -131,7 +135,7 @@ class Watchdog extends Window {
 		dateInput.max = `${maxDate.getFullYear()}-${`${maxDate.getMonth()+1}`.padStart(2,"0")}-${`${maxDate.getDate()}`.padStart(2,"0")}`;
 		innerBox.appendChild(dateInput);
 
-		dateInput.valueAsDate = new Date(this.today - this.offset * Watchdog.DAY_TICKS / Watchdog.DAY_PIXELS);
+		dateInput.valueAsDate = new Date(this.today - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
 		
 		dateInput.onkeydown = event=> {
 			if (event.key === "Enter") {
@@ -140,13 +144,35 @@ class Watchdog extends Window {
 		};
 
 		btnOK.onclick = ()=> {
-			this.offset = (this.today - dateInput.valueAsDate) * Watchdog.DAY_PIXELS / Watchdog.DAY_TICKS;
+			this.offset = (this.today - dateInput.valueAsDate) * this.dayPixels / Watchdog.DAY_TICKS;
 			if (this.offset < 0) this.offset = 0;
 			this.Seek();
 			dialog.Close();
 		};
 
 		dateInput.focus();
+	}
+	
+	ZoomOut() {
+		if (this.dayPixels <= 30) return;
+
+		for (let key in this.watchers) {
+			this.watchers[key].element.childNodes[2].textContent = "";
+		}
+
+		this.dayPixels /= 2;
+		this.Seek();
+	}
+
+	ZoomIn() {
+		if (this.dayPixels >= 1920) return;
+
+		for (let key in this.watchers) {
+			this.watchers[key].element.childNodes[2].textContent = "";
+		}
+
+		this.dayPixels *= 2;
+		this.Seek();
 	}
 
 	UpdateAuthorization() {
@@ -157,6 +183,8 @@ class Watchdog extends Window {
 	}
 
 	async GetWatchers() {
+		this.cache = {};
+
 		try {
 			const response = await fetch("watchdog/list");
 
@@ -555,11 +583,12 @@ class Watchdog extends Window {
 		element.className = "list-element";
 
 		const nameLabel = document.createElement("div");
-		nameLabel.style.color = watcher.enable ? "var(--clr-dark)" : "color-mix(in hsl, var(--clr-dark), transparent)";
+		nameLabel.style.color = watcher.enable ? "var(--clr-light)" : "color-mix(in hsl, var(--clr-light), transparent)";
 		nameLabel.textContent = watcher.name;
 
 		const protocol = document.createElement("div");
 		protocol.style.backgroundColor = watcher.enable ? "var(--clr-dark)" : "color-mix(in hsl, var(--clr-dark), transparent)";
+		protocol.style.color = watcher.enable ? "var(--clr-light)" : "color-mix(in hsl, var(--clr-light), transparent)";
 		protocol.textContent = watcher.type === "TCP" ? `TCP${watcher.port}` : watcher.type;
 
 		const timeline = document.createElement("div");
@@ -570,9 +599,11 @@ class Watchdog extends Window {
 			for (let i=0; i<this.list.childNodes.length; i++) {
 				this.list.childNodes[i].style.background = "";
 			}
-			element.style.background = "linear-gradient(90deg, var(--clr-select) 0, var(--clr-select) 240px, transparent 300px)";
+			element.style.backgroundColor = "rgb(80,80,80)";
 			this.selected = watcher;
 			this.selectedElement = element;
+
+			this.Stats(watcher);
 		};
 
 		element.ondblclick = ()=> {
@@ -612,16 +643,80 @@ class Watchdog extends Window {
 		});
 	}
 
+	Stats(watcher) {
+		this.stats.textContent = "";
+		if (watcher === null) return;
+
+		const uptimeLabel = document.createElement("div");
+		uptimeLabel.textContent = "Uptime";
+		uptimeLabel.style.fontSize = "larger";
+		uptimeLabel.style.fontWeight = "bold";
+		this.stats.appendChild(uptimeLabel);
+
+		const uptimeLabel2 = document.createElement("div");
+		uptimeLabel2.textContent = "(24-hour)";
+		uptimeLabel2.style.fontSize = "smaller";
+		this.stats.appendChild(uptimeLabel2);
+
+		const uptimeValue = document.createElement("div");
+		uptimeValue.style.fontSize = "xx-large";
+		this.stats.appendChild(uptimeValue);
+
+		let today = this.cache[this.today][watcher.file] ?? {};
+		let yesterday = this.cache[this.today-Watchdog.DAY_TICKS][watcher.file] ?? {};
+		let uptime24 = {...today, ...yesterday};
+		let total = 0;
+		let uptimeCount = 0;
+		let totalRoundtrip = 0;
+		for (let time in uptime24) {
+			if (time < Date.now() - Watchdog.DAY_TICKS) continue;
+			total++;
+			if (uptime24[time] >= 0) {
+				uptimeCount++;
+				totalRoundtrip += uptime24[time];
+			}
+		}
+
+		uptimeValue.textContent = `${Math.round(uptimeCount * 1000 / total)/10}%`;
+
+		if (watcher.type === "ICMP") {
+			this.stats.appendChild(document.createElement("hr"));
+
+			const roundtripLabel = document.createElement("div");
+			roundtripLabel.textContent = "Average roundtrip";
+			roundtripLabel.style.fontSize = "larger";
+			roundtripLabel.style.fontWeight = "bold";
+			this.stats.appendChild(roundtripLabel);
+	
+			const roundtripLabel2 = document.createElement("div");
+			roundtripLabel2.textContent = "(24-hour)";
+			roundtripLabel2.style.fontSize = "smaller";
+			this.stats.appendChild(roundtripLabel2);
+	
+			const roundtripValue = document.createElement("div");
+			roundtripValue.style.fontSize = "xx-large";
+			this.stats.appendChild(roundtripValue);
+
+			if (uptimeCount === 0) {
+				roundtripValue.textContent = "--";
+			}
+			else {
+				roundtripValue.textContent = `${Math.round(totalRoundtrip / uptimeCount)} ms`;
+			}
+
+		}
+	}
+
 	async Seek() {
 		this.DrawTimeline();
 
-		const daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS);
+		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.today + Watchdog.DAY_TICKS;
-		const low = this.today - (this.offset - this.offset % Watchdog.DAY_PIXELS) / Watchdog.DAY_PIXELS * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
+		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
 		
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
-			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
-			if (right < -Watchdog.DAY_PIXELS) break;
+			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
+			if (right < -this.dayPixels) break;
 
 			let day = new Date(date);
 			let dayString = `${day.getFullYear()}-${`${day.getMonth()+1}`.padStart(2,"0")}-${`${day.getDate()}`.padStart(2,"0")}`;
@@ -665,22 +760,21 @@ class Watchdog extends Window {
 
 		watcher.element.childNodes[2].textContent = "";
 
-		const daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS);
+		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.today + Watchdog.DAY_TICKS;
-		const low = this.today - (this.offset - this.offset % Watchdog.DAY_PIXELS) / Watchdog.DAY_PIXELS * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
+		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
 		
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
-			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
-			if (right <= -Watchdog.DAY_PIXELS) break;
+			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
+			if (right <= -this.dayPixels) break;
 
-			if (previous.hasOwnProperty(date)) {
+			if (previous.hasOwnProperty(date) && date) {
 				const svg = previous[date];
 				svg.style.right = `${right}px`;
 				watcher.element.childNodes[2].appendChild(svg);
 			}
 			else {
 				const svg = this.GenerateWatcherSvg(date, watcher.file);
-				svg.setAttribute("date", date);
 				svg.style.top = "0";
 				svg.style.right = `${right}px`;
 				watcher.element.childNodes[2].appendChild(svg);
@@ -688,16 +782,85 @@ class Watchdog extends Window {
 		}
 	}
 
+	GenerateWatcherSvg(date, file) {
+		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		svg.setAttribute("width", this.dayPixels);
+		svg.setAttribute("height", 32);
+		svg.style.outline = "none";
+
+		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
+			svg.setAttribute("date", date);
+
+			let lastX = -20;
+			let lastV = -20;
+
+			for (let key in this.cache[date][file]) {
+				let x = (key - date) * this.dayPixels / Watchdog.DAY_TICKS - 3;
+				let value = this.cache[date][file][key];
+				
+				if (x - lastX < 6 && lastV === value) continue;
+				
+				lastX = x;
+				lastV = value;
+
+				const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				dot.setAttribute("x", x);
+				dot.setAttribute("y", 4);
+				dot.setAttribute("width", 6);
+				dot.setAttribute("height", 24);
+				dot.setAttribute("rx", 2);
+				svg.appendChild(dot);
+
+				if (value === -1) { //dead
+					dot.setAttribute("fill", "var(--clr-error)");
+				}
+				else if (value === -2) { //expired
+					dot.setAttribute("fill", "var(--clr-error)");
+				}
+				else if (value === -3) { //warning
+					dot.setAttribute("fill", "var(--clr-warning)");
+				}
+				else if (value === -4) { //tls not yet valid
+					dot.setAttribute("fill", "rgb(0,162,232)");
+				}
+				else if (value >=0) { //alive
+					dot.setAttribute("fill", UI.PingColor(value));
+				}
+				else { //other
+					dot.setAttribute("fill", "rgb(128,128,128)");
+				}
+			}
+		}
+
+		const s1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		s1.setAttribute("x", 0);
+		s1.setAttribute("y", 1);
+		s1.setAttribute("width", 1);
+		s1.setAttribute("height", 30);
+		s1.setAttribute("fill", "rgb(128,128,128)");
+		svg.appendChild(s1);
+
+		const s2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		s2.setAttribute("x", this.dayPixels-1);
+		s2.setAttribute("y", 1);
+		s2.setAttribute("width", 1);
+		s2.setAttribute("height", 30);
+		s2.setAttribute("fill", "rgb(128,128,128)");
+		svg.appendChild(s2);
+
+		return svg;
+	}
+
 	DrawTimeline() {
 		this.timeline.textContent = "";
 
-		const daysInViewport = Math.round(this.timeline.offsetWidth / Watchdog.DAY_PIXELS);
+		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.today + Watchdog.DAY_TICKS;
-		const low = this.today - (this.offset - this.offset % Watchdog.DAY_PIXELS) / Watchdog.DAY_PIXELS * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
+		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
 		
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
-			let right = (this.today - date) / Watchdog.DAY_TICKS * Watchdog.DAY_PIXELS - this.offset;
-			if (right <= -Watchdog.DAY_PIXELS) break;
+			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
+			if (right <= -this.dayPixels) break;
 
 			const svg = this.GenerateTimelineSvg(new Date(date));
 			svg.style.top = "0";
@@ -722,88 +885,41 @@ class Watchdog extends Window {
 		this.timeline.appendChild(gradientR);
 	}
 
-	GenerateWatcherSvg(date, file) {
-		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		svg.setAttribute("width", Watchdog.DAY_PIXELS);
-		svg.setAttribute("height", 32);
-		svg.style.outline = "none";
-
-		/*
-		if (!this.cache.hasOwnProperty(date) || !this.cache[date].hasOwnProperty(file)) {
-			const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			text.setAttribute("x", 16);
-			text.setAttribute("y", 16);
-			text.setAttribute("fill", "rgb(64,64,64)");
-			text.textContent = "NULL";
-			svg.appendChild(text);
-
-			return svg;
-		}
-		*/
-
-		for (let i=0; i<480; i+=14) {
-			const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-			dot.setAttribute("x", i);
-			dot.setAttribute("y", 4);
-			dot.setAttribute("width", 12);
-			dot.setAttribute("height", 24);
-			dot.setAttribute("rx", 4);
-			dot.setAttribute("fill", "rgb(32,128,0)");
-			svg.appendChild(dot);
-		}
-
-		const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		text.setAttribute("x", 16);
-		text.setAttribute("y", 16);
-		text.setAttribute("fill", "rgb(64,64,64)");
-		text.textContent = new Date(date);
-		svg.appendChild(text);
-
-		const rect2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		rect2.setAttribute("x", 0);
-		rect2.setAttribute("y", 0);
-		rect2.setAttribute("width", 1);
-		rect2.setAttribute("height", 32);
-		rect2.setAttribute("fill", "rgb(64,64,64)");
-		svg.appendChild(rect2);
-
-		const rect3 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		rect3.setAttribute("x", 479);
-		rect3.setAttribute("y", 0);
-		rect3.setAttribute("width", 1);
-		rect3.setAttribute("height", 32);
-		rect3.setAttribute("fill", "rgb(64,64,64)");
-		svg.appendChild(rect3);
-
-		return svg;
-	}
-
 	GenerateTimelineSvg(date) {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		svg.setAttribute("width", Watchdog.DAY_PIXELS);
+		svg.setAttribute("width", this.dayPixels);
 		svg.setAttribute("height", 40);
 		svg.style.outline = "none";
 
 		for (let i = 0; i < 25; i++) {
 			const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-			dot.setAttribute("cx", i * 20);
+			dot.setAttribute("cx", i * this.dayPixels / 24);
 			dot.setAttribute("cy", 36);
 			dot.setAttribute("r", i % 2 === 0 ? 2 : 1);
 			dot.setAttribute("fill", "#C0C0C0");
 			svg.appendChild(dot);
 		}
 
-		for (let i = 2; i < 24; i += 2) {
-			const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			lblTime.textContent = `${i.toString().padStart(2, "0")}:00`;
-			lblTime.setAttribute("x", i * 20);
-			lblTime.setAttribute("y", 26);
-			lblTime.setAttribute("fill", "#C0C0C0");
-			lblTime.setAttribute("text-anchor", "middle");
-			lblTime.setAttribute("font-size", "10px");
-			//lblTime.style.transformOrigin = `${10 + i*20}px 14px`;
-			//lblTime.style.transform = "rotate(-60deg)";
-			svg.appendChild(lblTime);
+		if (this.dayPixels >= 120) {
+			let lastX = 0;
+
+			for (let i = 2; i < 24; i++) {
+				let x = i * this.dayPixels / 24;
+				
+				if (x - lastX < 40) continue;
+				lastX = x;
+				
+				const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				lblTime.textContent = `${i.toString().padStart(2, "0")}:00`;
+				lblTime.setAttribute("x", x);
+				lblTime.setAttribute("y", 26);
+				lblTime.setAttribute("fill", "#C0C0C0");
+				lblTime.setAttribute("text-anchor", "middle");
+				lblTime.setAttribute("font-size", "10px");
+				//lblTime.style.transform = "rotate(-60deg)";
+				//lblTime.style.transformOrigin = `${10 + i*this.dayPixels / 24}px 14px`;
+				svg.appendChild(lblTime);
+			}
 		}
 
 		const l0 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -843,14 +959,14 @@ class Watchdog extends Window {
 		date.setDate(date.getDate() + 1);
 
 		const l1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		l1.setAttribute("x", 471);
+		l1.setAttribute("x", this.dayPixels - 9);
 		l1.setAttribute("y", 11);
 		l1.setAttribute("width", 18);
 		l1.setAttribute("height", 3);
 		l1.setAttribute("fill", "#C0C0C0");
 		svg.appendChild(l1);
 		const d1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		d1.setAttribute("x", 471);
+		d1.setAttribute("x", this.dayPixels - 9);
 		d1.setAttribute("y", 11);
 		d1.setAttribute("width", 18);
 		d1.setAttribute("height", 18);
@@ -858,7 +974,7 @@ class Watchdog extends Window {
 		svg.appendChild(d1);
 		const n1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 		n1.textContent = date.getDate();
-		n1.setAttribute("x", Watchdog.DAY_PIXELS);
+		n1.setAttribute("x", this.dayPixels);
 		n1.setAttribute("y", 25);
 		n1.setAttribute("fill", "#C0C0C0");
 		n1.setAttribute("font-size", "11px");
@@ -868,7 +984,7 @@ class Watchdog extends Window {
 		if (date.getDate() === 1) {
 			const m1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			m1.textContent = date.toLocaleString(UI.regionalFormat, {month:"short"}).toUpperCase();
-			m1.setAttribute("x", Watchdog.DAY_PIXELS);
+			m1.setAttribute("x", this.dayPixels);
 			m1.setAttribute("y", 7);
 			m1.setAttribute("fill", "#C0C0C0");
 			m1.setAttribute("font-size", "10px");

@@ -23,7 +23,6 @@
 	bottom: 4px;
 	border-radius: 4px;
 	color: var(--clr-dark);
-	background-color: var(--clr-pane);
 	overflow-y: auto;
 	transition: .2s;
 }
@@ -33,8 +32,8 @@
 }
 
 .watchdog-list > div:hover {
-	background-color: var(--clr-highlight) !important;
-  }
+	background-color: rgba(80,80,80,.8) !important;
+}
 
 .watchdog-list > div > * {
 	position: absolute;
@@ -76,11 +75,12 @@
 	position: absolute;
 }
 
-.watchdog-details {
+.watchdog-stats {
 	position: absolute;
 	right: 4px;
 	width: 192px;
 	top: 4px;
 	bottom: 4px;
+	text-align: center;
 	overflow-y: auto;
 }
