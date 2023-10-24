@@ -11,9 +11,6 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using static Protest.Tools.SmtpProfiles;
-using static Protest.Tools.Watchdog;
-using System.Runtime.CompilerServices;
 
 namespace Protest.Tools;
 
@@ -57,7 +54,6 @@ internal static class Watchdog {
     }
 
     public record Notification {
-        public string file;
         public string name;
         public SmtpProfiles.Profile smtpProfile;
         public string[] recipients;
@@ -66,7 +62,7 @@ internal static class Watchdog {
 
     public static TaskWrapper task;
     private static readonly ConcurrentDictionary<string, Watcher> watchers = new ConcurrentDictionary<string, Watcher>();
-    private static ConcurrentDictionary<string, Notification> notifications = new ConcurrentDictionary<string, Notification>();
+    private static ConcurrentBag<Notification> notifications = new ConcurrentBag<Notification>();
 
     public static void Initialize() {
         DirectoryInfo dirWatchers = new DirectoryInfo(Data.DIR_WATCHDOG);
@@ -92,7 +88,7 @@ internal static class Watchdog {
             
             try {
                 string plain = File.ReadAllText(fileNotifications.FullName);
-                notifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Notification>>(plain, options);
+                notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(plain, options);
             }
             catch (Exception ex){
                 Logger.Error(ex);
@@ -555,7 +551,7 @@ internal static class Watchdog {
         try {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.Converters.Add(new NotificationJsonConverter());
-            notifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Notification>>(payload, options);
+            notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, options);
 
             File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
             
@@ -694,13 +690,13 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
     }
 }
 
-file sealed class NotificationJsonConverter : JsonConverter<ConcurrentDictionary<string, Watchdog.Notification>> {
-    public override ConcurrentDictionary<string, Watchdog.Notification> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchdog.Notification>> {
+    public override ConcurrentBag<Watchdog.Notification> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType != JsonTokenType.StartArray) {
             throw new JsonException("Expected StartArray token");
         }
 
-        ConcurrentDictionary<string, Watchdog.Notification> collection = new ConcurrentDictionary<string, Watchdog.Notification>();
+        ConcurrentBag<Watchdog.Notification> bag = new ConcurrentBag<Watchdog.Notification>();
 
         while (reader.Read()) {
             if (reader.TokenType == JsonTokenType.EndArray) {
@@ -712,10 +708,10 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentDictionary
             }
 
             Watchdog.Notification notification = ReadNotification(ref reader, options);
-            collection.TryAdd(notification.file, notification);
+            bag.Add(notification);
         }
 
-        return collection;
+        return bag;
     }
 
     private static Watchdog.Notification ReadNotification(ref Utf8JsonReader reader, JsonSerializerOptions options) {
@@ -736,7 +732,6 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentDictionary
             reader.Read();
 
             switch (propertyName) {
-            case "file"       : notification.file       = reader.GetString(); break;
             case "name"       : notification.name       = reader.GetString(); break;
             case "recipients" : notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
             case "watchers"   : notification.watchers   = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
@@ -760,13 +755,12 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentDictionary
         return notification;
     }
 
-    public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, Watchdog.Notification> value, JsonSerializerOptions options) {
+    public override void Write(Utf8JsonWriter writer, ConcurrentBag<Watchdog.Notification> value, JsonSerializerOptions options) {
         writer.WriteStartArray();
 
-        foreach (Watchdog.Notification notification in value.Values) {
+        foreach (Watchdog.Notification notification in value) {
             writer.WriteStartObject();
 
-            writer.WriteString("file"u8, notification.file);
             writer.WriteString("name"u8, notification.name);
             writer.WriteString("smtpprofile"u8, notification.smtpProfile?.guid ?? Guid.Empty);
 

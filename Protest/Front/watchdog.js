@@ -581,38 +581,26 @@ class Watchdog extends Window {
 		if (dialog === null) return;
 
 		const innerBox = dialog.innerBox;
+		const buttonBox = dialog.buttonBox;
 		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
 
 		btnOK.style.display = "none";
-		btnCancel.value = "Close";
-
-		const buttonsBox = document.createElement("div");
-		buttonsBox.style.position = "absolute";
-		buttonsBox.style.left = "266px";
-		buttonsBox.style.top = "8px";
-		buttonsBox.style.height = "40px";
-		buttonsBox.style.overflow = "hidden";
-
-		const newButton = document.createElement("input");
-		newButton.className = "with-icon";
-		newButton.type = "button";
-		newButton.value = "New";
-		newButton.style.backgroundImage = "url(mono/add.svg?light)";
 
 		const saveButton = document.createElement("input");
 		saveButton.className = "with-icon";
 		saveButton.type = "button";
 		saveButton.value = "Save";
 		saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
+		buttonBox.prepend(saveButton);
 
-		const deleteButton = document.createElement("input");
-		deleteButton.className = "with-icon";
-		deleteButton.type = "button";
-		deleteButton.value = "Delete";
-		deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
-		
-		buttonsBox.append(newButton, saveButton, deleteButton);
+		const newButton = document.createElement("input");
+		newButton.className = "with-icon";
+		newButton.type = "button";
+		newButton.value = "New";
+		newButton.style.position = "absolute";
+		newButton.style.left = "8px";
+		newButton.style.backgroundImage = "url(mono/add.svg?light)";
+		buttonBox.prepend(newButton);
 
 		const notificationsList = document.createElement("div");
 		notificationsList.style.position = "absolute";
@@ -624,19 +612,19 @@ class Watchdog extends Window {
 		notificationsList.style.borderRadius = "4px";
 		notificationsList.style.overflowY = "auto";
 
-		innerBox.append(buttonsBox, notificationsList);
+		innerBox.appendChild(notificationsList);
 
 		const nameLabel = document.createElement("div");
 		nameLabel.textContent = "Name: ";
 		nameLabel.style.position = "absolute";
 		nameLabel.style.left = "270px";
-		nameLabel.style.top = "64px";
+		nameLabel.style.top = "25px";
 
 		const nameInput = document.createElement("input");
 		nameInput.type = "text";
 		nameInput.style.position = "absolute";
 		nameInput.style.left = "380px";
-		nameInput.style.top = "58px";
+		nameInput.style.top = "20px";
 		nameInput.style.width = "calc(100% - 396px)";
 		nameInput.style.maxWidth = "300px";
 
@@ -647,12 +635,12 @@ class Watchdog extends Window {
 		smtpLabel.textContent = "SMTP profile: ";
 		smtpLabel.style.position = "absolute";
 		smtpLabel.style.left = "270px";
-		smtpLabel.style.top = "100px";
+		smtpLabel.style.top = "65px";
 
 		const smtpInput = document.createElement("select");
 		smtpInput.style.position = "absolute";
 		smtpInput.style.left = "380px";
-		smtpInput.style.top = "94px";
+		smtpInput.style.top = "60px";
 		smtpInput.style.width = "calc(100% - 396px)";
 		smtpInput.style.maxWidth = "300px";
 
@@ -663,13 +651,13 @@ class Watchdog extends Window {
 		recipientsLabel.textContent = "Recipients: ";
 		recipientsLabel.style.position = "absolute";
 		recipientsLabel.style.left = "270px";
-		recipientsLabel.style.top = "136px";
+		recipientsLabel.style.top = "105px";
 
 		const recipientsInput = document.createElement("input");
 		recipientsInput.type = "text";
 		recipientsInput.style.position = "absolute";
 		recipientsInput.style.left = "380px";
-		recipientsInput.style.top = "130px";
+		recipientsInput.style.top = "100px";
 		recipientsInput.style.width = "calc(100% - 396px)";
 		recipientsInput.style.maxWidth = "300px";
 		
@@ -680,12 +668,12 @@ class Watchdog extends Window {
 		watchersLabel.textContent = "Watchers: ";
 		watchersLabel.style.position = "absolute";
 		watchersLabel.style.left = "270px";
-		watchersLabel.style.top = "172px";
+		watchersLabel.style.top = "145px";
 
 		const watchersList = document.createElement("div");
 		watchersList.style.position = "absolute";
 		watchersList.style.left = "380px";
-		watchersList.style.top = "168px";
+		watchersList.style.top = "140px";
 		watchersList.style.bottom = "8px";
 		watchersList.style.width = "calc(100% - 396px)";
 		watchersList.style.maxWidth = "300px";
@@ -695,19 +683,115 @@ class Watchdog extends Window {
 		watchersList.style.overflowY = "auto";
 
 		innerBox.append(watchersLabel, watchersList);
+		
+		
+		let notificationsArray = [];
+		let selected = null;
+		
+		const AddNotification = ()=> {
+			const element = document.createElement("div");
+			element.className = "list-element";
+			notificationsList.appendChild(element);
+
+			const label =  document.createElement("div");
+			label.textContent = "unnamed notification";
+			label.style.color = "rgb(128,128,128)";
+			label.style.fontStyle = "oblique";
+			label.style.lineHeight = "32px";
+			label.style.paddingLeft = "4px";
+			element.appendChild(label);
+
+			let obj = {
+				file: null,
+				element: element,
+				name: "",
+				smtp: null,
+				recipients: [],
+				watchers: []
+			};
+
+			notificationsArray.push(obj);
+			
+			element.onclick = ()=> {
+				if (selected) {
+					selected.element.style.backgroundColor = "";
+					nameInput.value = obj.name;
+					smtpInput.value = obj.smtp;
+					recipientsInput.value = obj.recipients.join("; ");
+					//TODO: watchers
+				}
+
+				selected = obj;
+				element.style.backgroundColor = "var(--clr-select)";
+			};
+
+			return element;
+		};
+
+		nameInput.oninput = nameInput.onchange = ()=>{
+			if (!selected) return;
+
+			if (nameInput.value.length === 0) {
+				selected.element.childNodes[0].textContent = "unnamed notification";
+				selected.element.childNodes[0].style.color = "rgb(128,128,128)";
+				selected.element.childNodes[0].style.fontStyle = "oblique";
+			}
+			else {
+				selected.element.childNodes[0].textContent = nameInput.value;
+				selected.element.childNodes[0].style.color = "var(--clr-dark)";
+				selected.element.childNodes[0].style.fontStyle = "normal";
+			}
+
+			selected.name = nameInput.value;
+		};
+
+		smtpInput.onchange = ()=>{
+			if (!selected) return;
+			selected.smtp = smtpInput.value;
+		};
+
+		recipientsInput.onchange = ()=> {
+			if (!selected) return;
+			selected.recipients = recipientsInput.value.split(";").map(o=> o.trim());
+		};
+		
 
 		newButton.onclick = ()=> {
-
+			const newElement = AddNotification();
+			newElement.onclick();
 		};
 
-		saveButton.onclick = ()=> {
+		saveButton.onclick = async ()=> {
+			let array = [];
+			for (let i=0; i<notificationsArray.length; i++) {
+				array.push({
+					name        : notificationsArray[i].name,
+					smtpprofile : notificationsArray[i].smtp,
+					recipients  : notificationsArray[i].recipients,
+					watchers    : notificationsArray[i].watchers,
+				})
+			}
+
+			try {
+				const response = await fetch("notifications/save", {
+					method: "POST",
+					body: JSON.stringify(array)
+				});
+	
+				if (response.status !== 200) return;
+
+				const json = await response.json();
+				if (json.error) throw(json.error);
+
+				//TODO:
+
+			}
+			catch (ex){
+				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
+			}
 
 		};
-
-		deleteButton.onclick = ()=> {
-
-		};
-
+		
 		const responses = await Promise.all([
 			fetch("config/smtpprofiles/list"),
 			fetch("notifications/list")
