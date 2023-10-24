@@ -317,6 +317,9 @@ public sealed class Listener {
         case "/watchdog/view"   : buffer = Tools.Watchdog.View(parameters); break;
         case "/watchdog/create" : buffer = Tools.Watchdog.Create(parameters, ctx, username); break;
         case "/watchdog/delete" : buffer = Tools.Watchdog.Delete(parameters, username); break;
+        
+        case "/notifications/list"   : buffer = Tools.Watchdog.ListNotifications(); break;
+        case "/notifications/save"   : buffer = Tools.Watchdog.SaveNotifications(parameters, username); break;
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;
@@ -336,8 +339,8 @@ public sealed class Listener {
 
         case "/config/zones/list"        : buffer = Tools.Zones.ListZones(); break;
         case "/config/zones/save"        : buffer = Tools.Zones.SaveZones(ctx); break;
-        case "/config/smtpprofiles/list" : buffer = Tools.SmtpProfiles.ListEmailProfiles(); break;
-        case "/config/smtpprofiles/save" : buffer = Tools.SmtpProfiles.SaveEmailProfile(ctx); break;
+        case "/config/smtpprofiles/list" : buffer = Tools.SmtpProfiles.List(); break;
+        case "/config/smtpprofiles/save" : buffer = Tools.SmtpProfiles.Save(ctx); break;
 
         case "/config/checkupdate"       : buffer = Update.CheckLatestRelease(); break;
         case "/config/upload/iplocation" : buffer = Update.LocationFormDataHandler(ctx); break;

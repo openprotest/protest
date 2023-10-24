@@ -328,7 +328,7 @@ public static class PasswordStrength {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.Converters.Add(new EmailProfilesJsonConverter(false));
 
-            SmtpProfiles.SmtpProfile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.SmtpProfile[]>(json, options);
+            SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, options);
 
             for (int i=0; i<profiles.Length; i++) {
                 if (profiles[i].guid == smtpGuid) {

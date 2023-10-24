@@ -249,6 +249,7 @@ class Watchdog extends Window {
 
 		const typeInput = document.createElement("select");
 		typeInput.style.gridArea = "2 / 3";
+		typeInput.disabled = !isNew;
 		for (let i = 0; i < types.length; i++) {
 			const newType = document.createElement("option");
 			newType.text = types[i];
@@ -406,7 +407,12 @@ class Watchdog extends Window {
 			innerBox.append(targetLabel, targetInput);
 			innerBox.append(timeoutLabel, timeoutInput);
 
-			typeInput.focus();
+			if (isNew) {
+				typeInput.focus();
+			}
+			else {
+				nameInput.focus();
+			}
 
 			counter = 6;
 
@@ -570,7 +576,7 @@ class Watchdog extends Window {
 		return dialog;
 	}
 
-	NotificationsDialog() {
+	async NotificationsDialog() {
 		const dialog = this.DialogBox("520px");
 		if (dialog === null) return;
 
@@ -585,6 +591,8 @@ class Watchdog extends Window {
 		buttonsBox.style.position = "absolute";
 		buttonsBox.style.left = "266px";
 		buttonsBox.style.top = "8px";
+		buttonsBox.style.height = "40px";
+		buttonsBox.style.overflow = "hidden";
 
 		const newButton = document.createElement("input");
 		newButton.className = "with-icon";
@@ -629,7 +637,8 @@ class Watchdog extends Window {
 		nameInput.style.position = "absolute";
 		nameInput.style.left = "380px";
 		nameInput.style.top = "58px";
-		nameInput.style.width = "300px";
+		nameInput.style.width = "calc(100% - 396px)";
+		nameInput.style.maxWidth = "300px";
 
 		innerBox.append(nameLabel, nameInput);
 
@@ -644,7 +653,8 @@ class Watchdog extends Window {
 		smtpInput.style.position = "absolute";
 		smtpInput.style.left = "380px";
 		smtpInput.style.top = "94px";
-		smtpInput.style.width = "300px";
+		smtpInput.style.width = "calc(100% - 396px)";
+		smtpInput.style.maxWidth = "300px";
 
 		innerBox.append(smtpLabel, smtpInput);
 
@@ -660,8 +670,9 @@ class Watchdog extends Window {
 		recipientsInput.style.position = "absolute";
 		recipientsInput.style.left = "380px";
 		recipientsInput.style.top = "130px";
-		recipientsInput.style.width = "300px";
-
+		recipientsInput.style.width = "calc(100% - 396px)";
+		recipientsInput.style.maxWidth = "300px";
+		
 		innerBox.append(recipientsLabel, recipientsInput);
 
 
@@ -676,15 +687,14 @@ class Watchdog extends Window {
 		watchersList.style.left = "380px";
 		watchersList.style.top = "168px";
 		watchersList.style.bottom = "8px";
-		watchersList.style.width = "300px";
+		watchersList.style.width = "calc(100% - 396px)";
+		watchersList.style.maxWidth = "300px";
 		watchersList.style.margin = "2px";
 		watchersList.style.border = "2px solid var(--clr-control)";
 		watchersList.style.borderRadius = "4px";
-		watchersList.style.boxSizing = "border-box";
 		watchersList.style.overflowY = "auto";
 
 		innerBox.append(watchersLabel, watchersList);
-
 
 		newButton.onclick = ()=> {
 
@@ -697,6 +707,26 @@ class Watchdog extends Window {
 		deleteButton.onclick = ()=> {
 
 		};
+
+		const responses = await Promise.all([
+			fetch("config/smtpprofiles/list"),
+			fetch("notifications/list")
+		]);
+
+		const smtpJson = await responses[0].json();
+		const notificationJson = await responses[1].json();
+
+		for (let i = 0; i < smtpJson.length; i++) {
+			const option = document.createElement("option");
+			option.value = smtpJson[i].guid;
+			option.text = smtpJson[i].username;
+			smtpInput.appendChild(option);
+		}
+
+		for (let i = 0; i < notificationJson.length; i++) {
+
+		}
+
 
 	}
 
@@ -769,23 +799,26 @@ class Watchdog extends Window {
 		this.stats.textContent = "";
 		if (watcher === null) return;
 
+		const uptimeBox = document.createElement("div");
+		this.stats.appendChild(uptimeBox);
+
 		const uptimeLabel = document.createElement("div");
 		uptimeLabel.textContent = "Uptime";
 		uptimeLabel.style.fontSize = "larger";
 		uptimeLabel.style.fontWeight = "bold";
-		this.stats.appendChild(uptimeLabel);
 
 		const uptimeLabel2 = document.createElement("div");
 		uptimeLabel2.textContent = "(24-hour)";
 		uptimeLabel2.style.fontSize = "smaller";
-		this.stats.appendChild(uptimeLabel2);
 
 		const uptimeValue = document.createElement("div");
 		uptimeValue.style.fontSize = "xx-large";
-		this.stats.appendChild(uptimeValue);
 
-		let today = this.cache[this.today][watcher.file] ?? {};
-		let yesterday = this.cache[this.today-Watchdog.DAY_TICKS][watcher.file] ?? {};
+		uptimeBox.append(uptimeLabel, uptimeLabel2, uptimeValue);
+
+		let today = this.cache[this.today] ? this.cache[this.today][watcher.file] ?? {} : {};
+		let yesterday = this.cache[this.today-Watchdog.DAY_TICKS] ? this.cache[this.today-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
+
 		let uptime24 = {...today, ...yesterday};
 		let total = 0;
 		let uptimeCount = 0;
@@ -799,25 +832,30 @@ class Watchdog extends Window {
 			}
 		}
 
-		uptimeValue.textContent = `${Math.round(uptimeCount * 1000 / total)/10}%`;
+		if (total === 0) {
+			uptimeValue.textContent = "--";
+		}
+		else {
+			uptimeValue.textContent = `${Math.round(uptimeCount * 1000 / total) / 10}%`;
+		}
 
-		if (watcher.type === "ICMP") {
-			this.stats.appendChild(document.createElement("hr"));
+		if (watcher.type === "ICMP" || watcher.type === "TCP") {
+			const roundtripBox = document.createElement("div");
+			this.stats.appendChild(roundtripBox);
 
 			const roundtripLabel = document.createElement("div");
-			roundtripLabel.textContent = "Average roundtrip";
+			roundtripLabel.textContent = watcher.type === "ICMP" ? "Average roundtrip" : "Average response";
 			roundtripLabel.style.fontSize = "larger";
 			roundtripLabel.style.fontWeight = "bold";
-			this.stats.appendChild(roundtripLabel);
 	
 			const roundtripLabel2 = document.createElement("div");
 			roundtripLabel2.textContent = "(24-hour)";
 			roundtripLabel2.style.fontSize = "smaller";
-			this.stats.appendChild(roundtripLabel2);
 	
 			const roundtripValue = document.createElement("div");
 			roundtripValue.style.fontSize = "xx-large";
-			this.stats.appendChild(roundtripValue);
+
+			roundtripBox.append(roundtripLabel, roundtripLabel2, roundtripValue);
 
 			if (uptimeCount === 0) {
 				roundtripValue.textContent = "--";
@@ -825,7 +863,6 @@ class Watchdog extends Window {
 			else {
 				roundtripValue.textContent = `${Math.round(totalRoundtrip / uptimeCount)} ms`;
 			}
-
 		}
 	}
 
@@ -933,11 +970,11 @@ class Watchdog extends Window {
 				dot.setAttribute("rx", 2);
 				svg.appendChild(dot);
 
-				if (value === -1) { //dead
+				if (value === -1) { //unreachable
 					dot.setAttribute("fill", "var(--clr-error)");
 				}
 				else if (value === -2) { //expired
-					dot.setAttribute("fill", "var(--clr-error)");
+					dot.setAttribute("fill", "var(--clr-orange)");
 				}
 				else if (value === -3) { //warning
 					dot.setAttribute("fill", "var(--clr-warning)");

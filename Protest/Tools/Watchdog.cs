@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using static Protest.Tools.SmtpProfiles;
 using static Protest.Tools.Watchdog;
 
 namespace Protest.Tools;
@@ -54,26 +55,47 @@ internal static class Watchdog {
         public object sync;
     }
 
+    public record Notification {
+        public string file;
+        public string name;
+        public SmtpProfiles.Profile smtpProfile;
+        public string[] recipients;
+        public string[] watchers;
+    }
+
     public static TaskWrapper task;
     private static readonly ConcurrentDictionary<string, Watcher> watchers = new ConcurrentDictionary<string, Watcher>();
+    private static ConcurrentDictionary<string, Notification> notifications = new ConcurrentDictionary<string, Notification>();
 
     public static void Initialize() {
-        DirectoryInfo dir = new DirectoryInfo(Data.DIR_WATCHDOG);
-        if (!dir.Exists) {
-            return;
+        DirectoryInfo dirWatchers = new DirectoryInfo(Data.DIR_WATCHDOG);
+        if (dirWatchers.Exists) {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new WatcherJsonConverter());
+
+            FileInfo[] files = dirWatchers.GetFiles();
+            for (int i = 0; i < files.Length; i++) {
+                try {
+                    string plain = File.ReadAllText(files[i].FullName);
+                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, options);
+                    watchers.TryAdd(files[i].Name, watcher);
+                }
+                catch { }
+            }
         }
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new WatcherJsonConverter());
-
-        FileInfo[] files = dir.GetFiles();
-        for (int i = 0; i < files.Length; i++) {
+        FileInfo fileNotifications = new FileInfo(Data.FILE_NOTIFICATIONS);
+        if (fileNotifications.Exists) {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new NotificationJsonConverter());
+            
             try {
-                string plain = File.ReadAllText(files[i].FullName);
-                Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, options);
-                watchers.TryAdd(files[i].Name, watcher);
+                string plain = File.ReadAllText(fileNotifications.FullName);
+                notifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Notification>>(plain, options);
             }
-            catch { }
+            catch (Exception ex){
+                Logger.Error(ex);
+            }
         }
 
         if (!watchers.IsEmpty) {
@@ -171,7 +193,13 @@ internal static class Watchdog {
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 using TcpClient client = new TcpClient();
+                client.ReceiveTimeout = watcher.timeout;
+
+                long before = DateTime.Now.Ticks;
                 client.Connect(watcher.target, watcher.port);
+                long after = DateTime.Now.Ticks;
+
+                Console.WriteLine();
 
                 if (!client.Connected) {
                     client.Close();
@@ -179,7 +207,7 @@ internal static class Watchdog {
                 }
 
                 client.Close();
-                result = 0;
+                result = (short)((after - before) / 10_000);
                 break;
             }
             catch {}
@@ -332,7 +360,7 @@ internal static class Watchdog {
             }
         }
     }
-     
+
     public static byte[] List() {
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
@@ -500,24 +528,24 @@ internal static class Watchdog {
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] ViewNotifications() {
+    public static byte[] ListNotifications() {
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new NotificationJsonConverter());
 
-        return null;
-    }
-
-    public static byte[] CreateNotifications(Dictionary<string, string> parameters, string initiator) {
-
-        return null;
-    }
-
-    public static byte[] DeleteNotifications(Dictionary<string, string> parameters, string initiator) {
-        if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+        try {
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, options);
+            return json;
         }
+        catch {
+            return Data.CODE_FAILED.Array;
+        }
+    }
 
-        parameters.TryGetValue("file", out string file);
+    public static byte[] SaveNotifications(Dictionary<string, string> parameters, string initiator) {
 
-        return Data.CODE_OK.Array;
+        Logger.Action(initiator, $"Modified watchdog notifications");
+
+        return "[]"u8.ToArray();
     }
 }
 
@@ -642,5 +670,102 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
         writer.WriteNumber("retries"u8, value.retries);
 
         writer.WriteEndObject();
+    }
+}
+
+file sealed class NotificationJsonConverter : JsonConverter<ConcurrentDictionary<string, Watchdog.Notification>> {
+    public override ConcurrentDictionary<string, Watchdog.Notification> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        if (reader.TokenType != JsonTokenType.StartArray) {
+            throw new JsonException("Expected StartArray token");
+        }
+
+        ConcurrentDictionary<string, Watchdog.Notification> collection = new ConcurrentDictionary<string, Watchdog.Notification>();
+
+        while (reader.Read()) {
+            if (reader.TokenType == JsonTokenType.EndArray) {
+                break;
+            }
+
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                throw new JsonException($"Unexpected token type: {reader.TokenType}");
+            }
+
+            Watchdog.Notification notification = ReadNotification(ref reader, options);
+            collection.TryAdd(notification.file, notification);
+        }
+
+        return collection;
+    }
+
+    private static Watchdog.Notification ReadNotification(ref Utf8JsonReader reader, JsonSerializerOptions options) {
+        Watchdog.Notification notification = new Watchdog.Notification();
+        SmtpProfiles.Profile[] profiles = SmtpProfiles.Load();
+
+        while (reader.Read()) {
+            if (reader.TokenType == JsonTokenType.EndObject) {
+                break;
+            }
+
+            if (reader.TokenType != JsonTokenType.PropertyName) {
+                throw new JsonException($"Unexpected token type: {reader.TokenType}");
+            }
+
+            string propertyName = reader.GetString();
+
+            reader.Read();
+
+            switch (propertyName) {
+            case "file"       : notification.file       = reader.GetString(); break;
+            case "name"       : notification.name       = reader.GetString(); break;
+            case "recipients" : notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
+            case "watchers"   : notification.watchers   = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
+
+            case "smtpprofile":
+                if (reader.TokenType != JsonTokenType.String) {
+                    break;
+                }
+
+                Guid guid = reader.GetGuid();
+                SmtpProfiles.Profile profile = Array.Find(profiles, o=>o.guid == guid);
+                if (profile is not null) {
+                    notification.smtpProfile = profile;
+                }
+                break;
+
+            default: reader.Skip(); break;
+            }
+        }
+
+        return notification;
+    }
+
+    public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, Watchdog.Notification> value, JsonSerializerOptions options) {
+        writer.WriteStartArray();
+
+        foreach (Watchdog.Notification notification in value.Values) {
+            writer.WriteStartObject();
+
+            writer.WriteString("file"u8, notification.file);
+            writer.WriteString("name"u8, notification.name);
+            writer.WriteString("smtpprofile"u8, notification.smtpProfile?.guid ?? Guid.Empty);
+
+            writer.WritePropertyName("recipients"u8);
+            writer.WriteStartArray();
+            for (int j = 0; j < notification.recipients.Length; j++) {
+                writer.WriteStringValue(notification.recipients[j]);
+            }
+            writer.WriteEndArray();
+
+            writer.WritePropertyName("watchers"u8);
+            writer.WriteStartArray();
+            for (int j = 0; j < notification.watchers.Length; j++) {
+                writer.WriteStringValue(notification.watchers[j]);
+            }
+            writer.WriteEndArray();
+
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
     }
 }

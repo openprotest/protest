@@ -282,6 +282,8 @@ internal static class Auth {
                 path.Add("/watchdog/view");
                 path.Add("/watchdog/create");
                 path.Add("/watchdog/delete");
+                path.Add("/notifications/list");
+                path.Add("/notifications/save");
                 break;
 
             case "watchdog:write":

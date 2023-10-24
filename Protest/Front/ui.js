@@ -121,7 +121,7 @@ const UI = {
 
 	PingColor(pingResult, lightness=50) {
 		if (isNaN(pingResult))
-			return (pingResult === "TimedOut") ? "var(--clr-error)" : "rgb(255,102,0)";
+			return (pingResult === "TimedOut") ? "var(--clr-error)" : "var(--clr-orange)";
 		
 		if (pingResult === -1)
 			return "rgb(192,192,192)";

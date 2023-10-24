@@ -52,7 +52,6 @@ public static class Data {
     public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
     public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DELIMITER}documentation";
     public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DELIMITER}watchdog";
-    public static readonly string DIR_NOTIFICATIONS  = $"{DIR_DATA}{DELIMITER}notifications";
     public static readonly string DIR_SCRIPTS        = $"{DIR_DATA}{DELIMITER}scripts";
     public static readonly string DIR_DEBIT          = $"{DIR_DATA}{DELIMITER}debit";
     public static readonly string DIR_DEBIT_SHORT    = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}short";
@@ -65,8 +64,9 @@ public static class Data {
     public static readonly string FILE_TOR          = $"{DIR_KNOWLADGE}\\tor.bin";
     public static readonly string FILE_MAC          = $"{DIR_KNOWLADGE}\\mac.bin";
 
-    public static readonly string FILE_ZONES = $"{DIR_DATA}{DELIMITER}zones.json";
+    public static readonly string FILE_ZONES          = $"{DIR_DATA}{DELIMITER}zones.json";
     public static readonly string FILE_EMAIL_PROFILES = $"{DIR_DATA}{DELIMITER}smtpprofiles.json";
+    public static readonly string FILE_NOTIFICATIONS  = $"{DIR_DATA}{DELIMITER}notifications.json";
 
     public static readonly string FILE_CONFIG = $"{DIR_ROOT}{DELIMITER}protest.cfg";
 
@@ -76,7 +76,6 @@ public static class Data {
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
             new DirectoryInfo(DIR_WATCHDOG),
-            new DirectoryInfo(DIR_NOTIFICATIONS),
             new DirectoryInfo(DIR_DOCUMENTATION),
             new DirectoryInfo(DIR_DEBIT),
             new DirectoryInfo(DIR_DEBIT_SHORT),

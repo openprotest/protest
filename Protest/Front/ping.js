@@ -286,7 +286,7 @@ class Ping extends Console {
 			td5a.style.borderRadius = "8px";
 			td5a.style.width = "24px";
 			td5a.style.height = "24px";
-			td5a.style.backgroundColor = "rgb(255,0,0)";
+			td5a.style.backgroundColor = "var(--clr-error)";
 			tr1.appendChild(td5a);
 			const td5b = document.createElement("td");
 			td5b.style.minWidth = "96px";
@@ -298,7 +298,7 @@ class Ping extends Console {
 			td6a.style.borderRadius = "8px";
 			td6a.style.width = "24px";
 			td6a.style.height = "24px";
-			td6a.style.backgroundColor = "rgb(255,102,0)";
+			td6a.style.backgroundColor = "var(--clr-orange)";
 			tr2.appendChild(td6a);
 			const td6b = document.createElement("td");
 			td6b.style.paddingLeft = "8px";

@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Protest.Tools;
 internal class SmtpProfiles {
-    public record SmtpProfile {
+    public record Profile {
         public string server;
         public int port;
         public string sender;
@@ -17,19 +17,31 @@ internal class SmtpProfiles {
         public Guid guid;
     }
 
+    public static Profile[] Load() {
+        if (!File.Exists(Data.FILE_EMAIL_PROFILES)) {
+            return Array.Empty<Profile>();
+        }
 
-    public static byte[] ListEmailProfiles() {
-        if (!File.Exists(Data.FILE_EMAIL_PROFILES)) return "[]"u8.ToArray();
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new EmailProfilesJsonConverter(true));
 
         try {
-            byte[] json = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
+            byte[] plain = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
+            Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, options);
+            return profiles;
+        }
+        catch {
+            return Array.Empty<Profile>();
+        }
+    }
 
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new EmailProfilesJsonConverter(true));
+    public static byte[] List() {
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new EmailProfilesJsonConverter(true));
 
-            SmtpProfile[] profiles = JsonSerializer.Deserialize<SmtpProfile[]>(json, options);
-            json = JsonSerializer.SerializeToUtf8Bytes(profiles, options);
-
+        try {
+            Profile[] profiles = Load();
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, options);
             return json;
         }
         catch {
@@ -37,7 +49,7 @@ internal class SmtpProfiles {
         }
     }
 
-    public static byte[] SaveEmailProfile(HttpListenerContext ctx) {
+    public static byte[] Save(HttpListenerContext ctx) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
@@ -45,17 +57,17 @@ internal class SmtpProfiles {
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new EmailProfilesJsonConverter(false));
 
-        SmtpProfile[] oldProfiles;
+        Profile[] oldProfiles;
         try {
             byte[] bytes = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
-            oldProfiles = JsonSerializer.Deserialize<SmtpProfile[]>(bytes, options);
+            oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, options);
         }
         catch {
-            oldProfiles = Array.Empty<SmtpProfile>();
+            oldProfiles = Array.Empty<Profile>();
         }
 
         try {
-            SmtpProfile[] newProfiles = JsonSerializer.Deserialize<SmtpProfile[]>(payload, options);
+            Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, options);
 
             for (int i = 0; i < newProfiles.Length; i++) {
                 if (newProfiles[i].guid == default) {
@@ -65,7 +77,7 @@ internal class SmtpProfiles {
 
                 if (newProfiles[i].password?.Length > 0) continue;
 
-                SmtpProfile old = null;
+                Profile old = null;
                 for (int j = 0; j < oldProfiles.Length; j++) {
                     if (newProfiles[i].guid == oldProfiles[j].guid) {
                         old = oldProfiles[j];
@@ -93,14 +105,14 @@ internal class SmtpProfiles {
 
 }
 
-internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.SmtpProfile[]> {
+internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Profile[]> {
     private readonly bool hidePasswords;
     public EmailProfilesJsonConverter(bool hidePasswords) {
         this.hidePasswords = hidePasswords;
     }
 
-    public override SmtpProfiles.SmtpProfile[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-        List<SmtpProfiles.SmtpProfile> profiles = new List<SmtpProfiles.SmtpProfile>();
+    public override SmtpProfiles.Profile[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        List<SmtpProfiles.Profile> profiles = new List<SmtpProfiles.Profile>();
 
         if (reader.TokenType != JsonTokenType.StartArray) {
             throw new JsonException("Expected start of an array.");
@@ -112,7 +124,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
             }
 
             if (reader.TokenType == JsonTokenType.StartObject) {
-                SmtpProfiles.SmtpProfile profile = new SmtpProfiles.SmtpProfile();
+                SmtpProfiles.Profile profile = new SmtpProfiles.Profile();
 
                 while (reader.Read()) {
                     if (reader.TokenType == JsonTokenType.EndObject) {
@@ -144,7 +156,7 @@ internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Sm
         return profiles.ToArray();
     }
 
-    public override void Write(Utf8JsonWriter writer, SmtpProfiles.SmtpProfile[] value, JsonSerializerOptions options) {
+    public override void Write(Utf8JsonWriter writer, SmtpProfiles.Profile[] value, JsonSerializerOptions options) {
         ReadOnlySpan<byte> _server = "server"u8;
         ReadOnlySpan<byte> _port = "port"u8;
         ReadOnlySpan<byte> _sender = "sender"u8;
