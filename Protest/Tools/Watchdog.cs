@@ -13,6 +13,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using static Protest.Tools.SmtpProfiles;
 using static Protest.Tools.Watchdog;
+using System.Runtime.CompilerServices;
 
 namespace Protest.Tools;
 
@@ -535,17 +536,37 @@ internal static class Watchdog {
         try {
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, options);
             return json;
-        }
+        }   
         catch {
             return Data.CODE_FAILED.Array;
         }
     }
 
-    public static byte[] SaveNotifications(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] SaveNotifications(HttpListenerContext ctx, string initiator) {
+        string payload;
+        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
+            payload = reader.ReadToEnd();
+        }
 
-        Logger.Action(initiator, $"Modified watchdog notifications");
+        if (String.IsNullOrEmpty(payload)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
 
-        return "[]"u8.ToArray();
+        try {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new NotificationJsonConverter());
+            notifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Notification>>(payload, options);
+
+            File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
+            
+            Logger.Action(initiator, $"Modified watchdog notifications");
+
+            return Data.CODE_OK.Array;
+
+        } catch (Exception ex) {
+            Logger.Error(ex);
+            return Data.CODE_FAILED.Array;
+        }
     }
 }
 

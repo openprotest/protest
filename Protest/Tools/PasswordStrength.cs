@@ -301,8 +301,9 @@ public static class PasswordStrength {
         if (split.Length < 4)
             return Data.CODE_INVALID_ARGUMENT.Array;
 
-        Thread thread = new Thread(() =>  GandalfRequest(split));
-        thread.Priority = ThreadPriority.BelowNormal;
+        Thread thread = new Thread(() => GandalfRequest(split)) {
+            Priority = ThreadPriority.BelowNormal
+        };
         thread.Start();
 
         Logger.Action(initiator, $"Send email notification to users with weak passwords");
@@ -403,84 +404,101 @@ public static class PasswordStrength {
     }
 
     public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name, in string ttc) {
-    try {
-        StringBuilder body = new StringBuilder();
-        body.Append("<html>");
-        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-        body.Append("<tr><td>&nbsp;</td></tr>");
+        try {
+            StringBuilder body = new StringBuilder();
+            body.Append("<html>");
+            body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
+            body.Append("<tr><td>&nbsp;</td></tr>");
 
-        body.Append("<tr><td align=\"center\">");
+            body.Append("<tr><td align=\"center\">");
 
-        body.Append("<p align=\"center\"0 style=\"color:#808080\">This is an automated e-mail from the IT Department.</p>");
-        body.Append("<br>");
+            body.Append("<p align=\"center\"0 style=\"color:#808080\">This is an automated e-mail from the IT Department.</p>");
+            body.Append("<br>");
 
-        body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\"");
-        body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
+            body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\"");
+            body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
 
-        body.Append($"<p>Dear {(name.Length > 0 ? name.Trim() : "colleague")},</p>");
+            body.Append($"<p>Dear {(name.Length > 0 ? name.Trim() : "colleague")},</p>");
 
-        body.Append("<p><b>");
-        body.Append("Our record shows that you're using a weak password. ");
-        body.Append("Please contact your IT team and ask to upgrade to a secure one.");
-        body.Append("</b></p>");
+            body.Append("<p><b>");
+            body.Append("Our records indicate that you're using a weak password. ");
+            body.Append("To enhance the security of your account, please reach out to your IT team and upgrade to a more robust and secure password.");
+            body.Append("</b></p>");
 
-        body.Append("<p>");
-        body.Append("As technology advance and computers are getting faster over time, passwords are getting weaker. ");
-        body.Append("In 1982, it took four years to crack an eight characters password. Today it can be cracked in less than a day.");
-        body.Append("</p>");
-
-        if (ttc is not null && ttc.Length > 0) {
             body.Append("<p>");
-            body.Append($"Your password can be cracked in {ttc}.");
-            body.Append("</b>");
+            body.Append("As technology advance and computers are getting faster over time, passwords are getting weaker. ");
+            body.Append("In 1982, it took four years to crack an eight characters password. Today, such passwords can be compromised in less than a day.");
+            body.Append("</p>");
+
+            if (ttc is not null && ttc.Length > 0) {
+                body.Append("<p>");
+                body.Append($"Your password can be cracked in {ttc}.");
+                body.Append("</b>");
+            }
+
+            body.Append("<p>");
+            body.Append("<u>Here are some guidelines on selecting a strong password:</u>");
+            body.Append("<ul>");
+            body.Append("<li><b>Go Big or Go Home: </b> Opt for a minimum of twelve characters. Longer passwords significantly enhance resistance to cracking attempts.</li>");
+            body.Append("<li><b>Mix Things Up: </b> Combine upper-case and lower-case letters, numbers, and symbols to add complexity.</li>");
+            body.Append("<li><b>Be unpredictable: </b> Avoid easily guessable elements such as common words, your name, favorite movie, or pet names. For example, if your email address is info@domain.com, refrain from including the term \"info\" in your password.</li>");
+          
+            body.Append("<li><b>Make it random: </b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
+            body.Append("</ul>");
+            body.Append("</p>");
+
+            body.Append("<br>");
+
+            string[] quotes = new string[] {
+                "Sticky notes are not a secure means of storing passwords.",
+                "Sticky notes aren't exactly the Fort Knox of password storage.",
+                "Sticking your password on a note is like leaving the front door wide open.",
+                "Using sticky notes for your password is like sharing your secrets on a bulletin board.",
+                "Sticky notes are for grocery lists, not for guarding the keys to your digital kingdom. Upgrade your security game!",
+                "Posting passwords on sticky notes is like leaving your house key under the welcome mat – convenient, but not the smartest move for security",
+                "Sticky notes are great for reminders, terrible for passwords. Let's trade convenience for cybersecurity, shall we?",
+                "Your passwords deserve better than the sticky note treatment. Think of them as VIPs – keep them exclusive, hidden, and away from prying eyes!",
+
+                "In the game of passwords, predictability is the opponent, and randomness is your secret weapon. Keep 'em guessing!",
+                "A password is like a toothbrush – choose a good one, change it regularly, and never share it with strangers!",
+                "Passwords are like spices in a digital kitchen – the right blend adds flavor, but too little or too much can ruin the dish. Find your perfect recipe!",
+            };
+
+            Random rnd = new Random((int)DateTime.Now.Ticks);
+            body.Append($"<p>P.S. <i>{rnd.Next(0, quotes.Length-1)}</i></p>");
+
+            body.Append("<p>Sincerely,<br>The IT Department</p>");
+
+            body.Append("</td></tr>");
+            body.Append("</table>");
+
+            body.Append("<tr><td>&nbsp;</td></tr>");
+            body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+            body.Append("<tr><td>&nbsp;</td></tr>");
+
+            body.Append("</td></tr>");
+            body.Append("</table>");
+            body.Append("</html>");
+
+            MailMessage mail = new MailMessage {
+                From = new MailAddress(sender, "Pro-test"),
+                Subject = "Upgrade your password",
+                IsBodyHtml = true
+            };
+
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            //view.LinkedResources.Add(null);
+            mail.AlternateViews.Add(view);
+
+            for (int i = 0; i < recipients.Length; i++)
+                mail.To.Add(recipients[i].Trim());
+
+            smtp.Send(mail);
+            mail.Dispose();
         }
 
-        body.Append("<p>");
-        body.Append("<u>How to choose a strong password:</u>");
-        body.Append("<ul>");
-        body.Append("<li><b>Size matters.</b> Choose at least twelve characters. Longer passwords are harder to crack.</li>");
-        body.Append("<li><b>Use mixed characters.</b> Use upper-case and lower-case, numbers, and symbols to add complexity.</li>");
-        body.Append("<li><b>Be unpredictable.</b> Avoid words that can be guessed. If your email address is info@domain.com, don't include the word \"info\" in your password. Don't use your name, favorite movie, pet name, etc</li>");
-        body.Append("<li><b>Make it random.</b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
-        body.Append("</ul>");
-        body.Append("</p>");
-
-        body.Append("<br>");
-
-        body.Append("<p>P.S. <i>Sticky notes are not designed to store a password securely.</i></p>");
-
-        body.Append("<p>Sincerely,<br>The IT Department</p>");
-
-        body.Append("</td></tr>");
-        body.Append("</table>");
-
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-
-        body.Append("</td></tr>");
-        body.Append("</table>");
-        body.Append("</html>");
-
-        MailMessage mail = new MailMessage {
-            From = new MailAddress(sender, "Pro-test"),
-            Subject = "Upgrade your password",
-            IsBodyHtml = true
-        };
-
-        AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-        //view.LinkedResources.Add(null);
-        mail.AlternateViews.Add(view);
-
-        for (int i = 0; i < recipients.Length; i++)
-            mail.To.Add(recipients[i].Trim());
-
-        smtp.Send(mail);
-        mail.Dispose();
-    }
-
-    catch (SmtpFailedRecipientException ex) { Logger.Error(ex);}
-    catch (SmtpException ex)                { Logger.Error(ex);}
-    catch (Exception ex)                    { Logger.Error(ex);}
+        catch (SmtpFailedRecipientException ex) { Logger.Error(ex);}
+        catch (SmtpException ex)                { Logger.Error(ex);}
+        catch (Exception ex)                    { Logger.Error(ex);}
     }
 }

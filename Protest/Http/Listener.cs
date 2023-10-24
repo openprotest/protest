@@ -319,7 +319,7 @@ public sealed class Listener {
         case "/watchdog/delete" : buffer = Tools.Watchdog.Delete(parameters, username); break;
         
         case "/notifications/list"   : buffer = Tools.Watchdog.ListNotifications(); break;
-        case "/notifications/save"   : buffer = Tools.Watchdog.SaveNotifications(parameters, username); break;
+        case "/notifications/save"   : buffer = Tools.Watchdog.SaveNotifications(ctx, username); break;
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;
