@@ -10,6 +10,8 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
+using System.Net.Mail;
+using System.Net.Mime;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Protest.Tools;
@@ -28,6 +30,12 @@ internal static class Watchdog {
         http,
         httpKeyword,
         tls
+    }
+
+    public enum NotifyOn {
+        rise = 0,
+        fall = 1,
+        both = 2
     }
 
     public record Watcher {
@@ -56,6 +64,7 @@ internal static class Watchdog {
     public record Notification {
         public string name;
         public SmtpProfiles.Profile smtpProfile;
+        public NotifyOn notify;
         public string[] recipients;
         public string[] watchers;
     }
@@ -119,15 +128,24 @@ internal static class Watchdog {
                     if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
 
                         watcher.lastCheck = DateTime.UtcNow.Ticks;
+
                         new Thread(()=> {
-                            switch (watcher.type) {
-                            case WatcherType.icmp        : watcher.lastResult = CheckIcmp(watcher);        break;
-                            case WatcherType.tcp         : watcher.lastResult = CheckTcp(watcher);         break;
-                            case WatcherType.dns         : watcher.lastResult = CheckDns(watcher);         break;
-                            case WatcherType.http        : watcher.lastResult = CheckHttp(watcher);        break;
-                            case WatcherType.httpKeyword : watcher.lastResult = CheckHttpKeyword(watcher); break;
-                            case WatcherType.tls         : watcher.lastResult = CheckTls(watcher);         break;
+                            short result = watcher.type switch {
+                                WatcherType.icmp        => CheckIcmp(watcher),
+                                WatcherType.tcp         => CheckTcp(watcher),
+                                WatcherType.dns         => CheckDns(watcher),
+                                WatcherType.http        => CheckHttp(watcher),
+                                WatcherType.httpKeyword => CheckHttpKeyword(watcher),
+                                WatcherType.tls         => CheckTls(watcher),
+                                _                       => CheckIcmp(watcher)
+                            };
+
+                            if (watcher.lastResult != result && watcher.lastResult != short.MinValue) {
+                                //TODO:
                             }
+
+                            watcher.lastResult = result;
+
                         }).Start();
                     }
                     else {
@@ -562,6 +580,82 @@ internal static class Watchdog {
             return Data.CODE_FAILED.Array;
         }
     }
+
+    public static void SendSmtpNotification(string sender) {
+        Stream pngGreenDot = new MemoryStream(Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAEr2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS41LjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iCiAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyIKICAgIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIKICAgIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgZXhpZjpQaXhlbFhEaW1lbnNpb249IjE2IgogICBleGlmOlBpeGVsWURpbWVuc2lvbj0iMTYiCiAgIGV4aWY6Q29sb3JTcGFjZT0iMSIKICAgdGlmZjpJbWFnZVdpZHRoPSIxNiIKICAgdGlmZjpJbWFnZUxlbmd0aD0iMTYiCiAgIHRpZmY6UmVzb2x1dGlvblVuaXQ9IjIiCiAgIHRpZmY6WFJlc29sdXRpb249IjcyLjAiCiAgIHRpZmY6WVJlc29sdXRpb249IjcyLjAiCiAgIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiCiAgIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIKICAgeG1wOk1vZGlmeURhdGU9IjIwMjAtMDktMDRUMTY6Mzk6NDgrMDM6MDAiCiAgIHhtcDpNZXRhZGF0YURhdGU9IjIwMjAtMDktMDRUMTY6Mzk6NDgrMDM6MDAiPgogICA8eG1wTU06SGlzdG9yeT4KICAgIDxyZGY6U2VxPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJwcm9kdWNlZCIKICAgICAgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWZmaW5pdHkgUGhvdG8gMS43LjMiCiAgICAgIHN0RXZ0OndoZW49IjIwMjAtMDktMDRUMTY6Mzk6NDgrMDM6MDAiLz4KICAgIDwvcmRmOlNlcT4KICAgPC94bXBNTTpIaXN0b3J5PgogIDwvcmRmOkRlc2NyaXB0aW9uPgogPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KPD94cGFja2V0IGVuZD0iciI/Pgb4TjUAAAGBaUNDUHNSR0IgSUVDNjE5NjYtMi4xAAAokXWRuUsDQRSHvxzijYIWFhaLRqsoHiDaWCR4gVokK3g1yZpDyMZld4MEW8FWUBBtvAr9C7QVrAVBUQSxsrBWtFFZ3xohIuYNb943v5n3mHkDXjWj6Za/C/SsbUZGQsr0zKxS/kglfmppJRjTLGMiOqxS0t5u8LjxqsOtVfrcv1a9kLA08FQID2qGaQuPCo8v24bLm8KNWjq2IHwsHDTlgsLXrh4v8JPLqQJ/uGyqkTB464WV1C+O/2ItberC8nICeian/dzHfUlNIjsVldgi3oxFhBFCKIwxRJg+uhmQuY8OeuiUFSXyu77zJ1mSXE1mgzwmi6RIYxMUNSfVExKToidkZMi7/f/bVyvZ21OoXhOCsgfHeWmD8g34XHec933H+TwA3z2cZYv5S3vQ/yr6elEL7ELdKpycF7X4FpyuQdOdETNj35JP3JtMwvMR1M5AwyVUzRV69rPP4S2oK/JVF7C9A+1yvm7+C3ZYZ+1REzlHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAzklEQVQ4ja3TvW0CQRDF8d9t5EZw6oQmjNY5TtyBv8JrgAJwB5dAAQg3QULKFQIRcnCDfToB0p35S5Os9j3tzM4rdHhZje7xjHEUbKIWVa537ftFS5jwjhnuusbBASXmVa6PvwYhXuHxgrDLGk9Vro8pDt56iGGCVyii5+2VZ1/igIekGVhfsdBMk79JD2F8E4N/kTQLMpTNTQwWmi/pyx7LFLtdDjAoq1zvTkOc47uHeI0vmiGKYGR8ut7OHh8iB7TSeCJWe+p8nJfdOP8Ag505pxTxKn4AAAAASUVORK5CYII="));
+        Stream pngRedDot = new MemoryStream(Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAEr2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNS41LjAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIgogICAgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iCiAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyIKICAgIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIKICAgIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIKICAgIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIgogICAgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIKICAgZXhpZjpQaXhlbFhEaW1lbnNpb249IjE2IgogICBleGlmOlBpeGVsWURpbWVuc2lvbj0iMTYiCiAgIGV4aWY6Q29sb3JTcGFjZT0iMSIKICAgdGlmZjpJbWFnZVdpZHRoPSIxNiIKICAgdGlmZjpJbWFnZUxlbmd0aD0iMTYiCiAgIHRpZmY6UmVzb2x1dGlvblVuaXQ9IjIiCiAgIHRpZmY6WFJlc29sdXRpb249IjcyLjAiCiAgIHRpZmY6WVJlc29sdXRpb249IjcyLjAiCiAgIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiCiAgIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIKICAgeG1wOk1vZGlmeURhdGU9IjIwMjAtMDktMDRUMTY6Mzk6MTgrMDM6MDAiCiAgIHhtcDpNZXRhZGF0YURhdGU9IjIwMjAtMDktMDRUMTY6Mzk6MTgrMDM6MDAiPgogICA8eG1wTU06SGlzdG9yeT4KICAgIDxyZGY6U2VxPgogICAgIDxyZGY6bGkKICAgICAgc3RFdnQ6YWN0aW9uPSJwcm9kdWNlZCIKICAgICAgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWZmaW5pdHkgUGhvdG8gMS43LjMiCiAgICAgIHN0RXZ0OndoZW49IjIwMjAtMDktMDRUMTY6Mzk6MTgrMDM6MDAiLz4KICAgIDwvcmRmOlNlcT4KICAgPC94bXBNTTpIaXN0b3J5PgogIDwvcmRmOkRlc2NyaXB0aW9uPgogPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KPD94cGFja2V0IGVuZD0iciI/PtSPkUEAAAGBaUNDUHNSR0IgSUVDNjE5NjYtMi4xAAAokXWRuUsDQRSHvxzijYIWFhaLRqsoHiDaWCR4gVokK3g1yZpDyMZld4MEW8FWUBBtvAr9C7QVrAVBUQSxsrBWtFFZ3xohIuYNb943v5n3mHkDXjWj6Za/C/SsbUZGQsr0zKxS/kglfmppJRjTLGMiOqxS0t5u8LjxqsOtVfrcv1a9kLA08FQID2qGaQuPCo8v24bLm8KNWjq2IHwsHDTlgsLXrh4v8JPLqQJ/uGyqkTB464WV1C+O/2ItberC8nICeian/dzHfUlNIjsVldgi3oxFhBFCKIwxRJg+uhmQuY8OeuiUFSXyu77zJ1mSXE1mgzwmi6RIYxMUNSfVExKToidkZMi7/f/bVyvZ21OoXhOCsgfHeWmD8g34XHec933H+TwA3z2cZYv5S3vQ/yr6elEL7ELdKpycF7X4FpyuQdOdETNj35JP3JtMwvMR1M5AwyVUzRV69rPP4S2oK/JVF7C9A+1yvm7+C3ZYZ+1REzlHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAyUlEQVQ4ja3TvW0CQRDF8d9t5EbMhSQ0YWTnuAg+HF4DLgAXAQVY0ASJQ7hCIEIEN8DpBEh35i9Nstr3tDM7L9Ng67WHTwyiYBO1yJW7+v2sJkyY4hsvTePggALzXHm8GIT4F293hE1W+MiVxxQHkxZiGGIMWfT89+DZ9zign1QDaysWmlFynXQXBk8x+BdJtSBd2TzFYKH6krbssUyx20UHgyJX7s5DnGPdQrzCD9UQRTDe8eVxO3vMRA6opfFMrPbI7Tgvm3E+AeHkMlJ6DSfvAAAAAElFTkSuQmCC"));
+
+#if !DEBUG
+        try
+#endif
+        {
+            FileInfo fileLogo = new FileInfo($"{Data.DIR_DATA}{Data.DELIMITER}logo.png");
+            LinkedResource logo = null;
+
+            if (fileLogo.Exists) {
+                logo = new LinkedResource(fileLogo.FullName, "image/png") {
+                    ContentId = Guid.NewGuid().ToString(),
+                    TransferEncoding = TransferEncoding.Base64
+                };
+            }
+
+            LinkedResource fileGreen = new LinkedResource(pngGreenDot, "image/png") {
+                ContentId = Guid.NewGuid().ToString(),
+                TransferEncoding = TransferEncoding.Base64
+            };
+
+            LinkedResource fileRed = new LinkedResource(pngRedDot, "image/png") {
+                ContentId = Guid.NewGuid().ToString(),
+                TransferEncoding = TransferEncoding.Base64
+            };
+
+            bool redFlag = false, greenFlag = false;
+
+            StringBuilder body = new StringBuilder();
+            body.Append("<html>");
+            body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
+            body.Append("<tr><td>&nbsp;</td></tr>");
+
+            body.Append("<tr><td align=\"center\">");
+
+            body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\"");
+            body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
+
+
+            body.Append("<tr><td style=\"height:40px;text-align:center;color:#202020;font-size:20px\"><b>Watchdog notification</b></td></tr>");
+            if (logo is not null) body.Append($"<tr><td><img src=\"cid:{logo.ContentId}\"/></td></tr>");
+            body.Append("<tr><td style=\"height:18px\"></td></tr>"); //seperatator
+
+            body.Append("</td></tr>");
+            body.Append("</table>");
+
+            body.Append("<tr><td>&nbsp;</td></tr>");
+            body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+            body.Append("<tr><td>&nbsp;</td></tr>");
+
+            body.Append("</td></tr>");
+            body.Append("</table>");
+            body.Append("</html>");
+
+            MailMessage mail = new MailMessage {
+                From = new MailAddress(sender, "Pro-test"),
+                Subject = $"Watchdog notification {DateTime.Now.ToString(Data.DATETIME_FORMAT)}",
+                IsBodyHtml = true
+            };
+
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            if (logo is not null) view.LinkedResources.Add(logo);
+            if (greenFlag) view.LinkedResources.Add(fileGreen);
+            if (redFlag) view.LinkedResources.Add(fileRed);
+            mail.AlternateViews.Add(view);
+
+        }
+#if !DEBUG
+        catch (SmtpFailedRecipientException ex) { Logger.Error(ex); }
+        catch (SmtpException ex)                { Logger.Error(ex); }
+        catch (Exception ex)                    { Logger.Error(ex); }
+#endif
+    }
 }
 
 file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
@@ -731,6 +825,7 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
 
             switch (propertyName) {
             case "name"       : notification.name       = reader.GetString(); break;
+            case "notify"     : notification.notify     = (Watchdog.NotifyOn)reader.GetInt32(); break;
             case "recipients" : notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
             case "watchers"   : notification.watchers   = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
 
@@ -761,6 +856,7 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
 
             writer.WriteString("name"u8, notification.name);
             writer.WriteString("smtpprofile"u8, notification.smtpProfile?.guid ?? Guid.Empty);
+            writer.WriteNumber("notify"u8, (int)notification.notify);
 
             writer.WritePropertyName("recipients"u8);
             writer.WriteStartArray();

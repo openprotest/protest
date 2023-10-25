@@ -664,16 +664,40 @@ class Watchdog extends Window {
 		innerBox.append(recipientsLabel, recipientsInput);
 
 
+		const notifyLabel = document.createElement("div");
+		notifyLabel.textContent = "Notify on: ";
+		notifyLabel.style.position = "absolute";
+		notifyLabel.style.left = "270px";
+		notifyLabel.style.top = "145px";
+
+		const notifyInput = document.createElement("select");
+		notifyInput.style.position = "absolute";
+		notifyInput.style.left = "380px";
+		notifyInput.style.top = "140px";
+		notifyInput.style.width = "calc(100% - 396px)";
+		notifyInput.style.maxWidth = "300px";
+
+		innerBox.append(notifyLabel, notifyInput);
+
+		let notifyArray = ["Rise", "Fall", "Rise and fall"];
+		for (let i = 0; i < notifyArray.length; i++) {
+			const option = document.createElement("option");
+			option.value = i;
+			option.text = notifyArray[i];
+			notifyInput.appendChild(option);
+		}
+
+
 		const watchersLabel = document.createElement("div");
 		watchersLabel.textContent = "Watchers: ";
 		watchersLabel.style.position = "absolute";
 		watchersLabel.style.left = "270px";
-		watchersLabel.style.top = "145px";
+		watchersLabel.style.top = "185px";
 
 		const watchersList = document.createElement("div");
 		watchersList.style.position = "absolute";
 		watchersList.style.left = "380px";
-		watchersList.style.top = "140px";
+		watchersList.style.top = "180px";
 		watchersList.style.bottom = "8px";
 		watchersList.style.width = "calc(100% - 396px)";
 		watchersList.style.maxWidth = "300px";
@@ -727,6 +751,7 @@ class Watchdog extends Window {
 				name: name,
 				smtpprofile: smtpInput.childNodes.length === 0 ? null : smtpInput.childNodes[0].value,
 				recipients: [],
+				notify: 2,
 				watchers: Object.values(this.watchers).map(o=>o.file)
 			};
 
@@ -742,9 +767,10 @@ class Watchdog extends Window {
 				element.style.backgroundColor = "var(--clr-select)";
 				removeButton.style.display = "initial";
 
-				nameInput.value = notifications[id].name;
-				smtpInput.value = notifications[id].smtpprofile;
+				nameInput.value       = notifications[id].name;
+				smtpInput.value       = notifications[id].smtpprofile;
 				recipientsInput.value = notifications[id].recipients.join("; ");
+				notifyInput.value     = notifications[id].notify;
 
 				for (let file in watchersCheckboxes) {
 					watchersCheckboxes[file].checked = false;
@@ -787,14 +813,16 @@ class Watchdog extends Window {
 		smtpInput.onchange = ()=>{
 			if (selected === null) return;
 			notifications[selected].smtpprofile = smtpInput.value;
-			console.log(notifications);
 		};
 
 		recipientsInput.onchange = ()=> {
 			if (selected === null) return;
 			notifications[selected].recipients = recipientsInput.value.split(";").map(o=> o.trim());
-			console.log(notifications);
+		};
 
+		notifyInput.onchange = ()=> {
+			if (selected === null) return;
+			notifications[selected].notify = notifyInput.value;
 		};
 		
 		newButton.onclick = ()=> {
@@ -809,6 +837,7 @@ class Watchdog extends Window {
 					name        : notifications[id].name,
 					smtpprofile : notifications[id].smtpprofile,
 					recipients  : notifications[id].recipients,
+					notify      : parseInt(notifications[id].notify),
 					watchers    : notifications[id].watchers,
 				});
 			}
