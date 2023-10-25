@@ -439,11 +439,10 @@ public static class PasswordStrength {
             body.Append("<p>");
             body.Append("<u>Here are some guidelines on selecting a strong password:</u>");
             body.Append("<ul>");
-            body.Append("<li><b>Go Big or Go Home: </b> Opt for a minimum of twelve characters. Longer passwords significantly enhance resistance to cracking attempts.</li>");
+            body.Append("<li><b>Go Big: </b> Opt for a minimum of twelve characters. Longer passwords significantly enhance resistance to cracking attempts.</li>");
             body.Append("<li><b>Mix Things Up: </b> Combine upper-case and lower-case letters, numbers, and symbols to add complexity.</li>");
-            body.Append("<li><b>Be unpredictable: </b> Avoid easily guessable elements such as common words, your name, favorite movie, or pet names. For example, if your email address is info@domain.com, refrain from including the term \"info\" in your password.</li>");
-          
-            body.Append("<li><b>Make it random: </b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
+            body.Append("<li><b>Be Unpredictable: </b> Avoid easily guessable elements such as common words, your name, favorite movie, or pet names. For example, if your email address is info@domain.com, refrain from including the term \"info\" in your password.</li>");
+            body.Append("<li><b>Make It Random: </b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
             body.Append("</ul>");
             body.Append("</p>");
 
@@ -455,7 +454,7 @@ public static class PasswordStrength {
                 "Sticking your password on a note is like leaving the front door wide open.",
                 "Using sticky notes for your password is like sharing your secrets on a bulletin board.",
                 "Sticky notes are for grocery lists, not for guarding the keys to your digital kingdom. Upgrade your security game!",
-                "Posting passwords on sticky notes is like leaving your house key under the welcome mat – convenient, but not the smartest move for security",
+                "Posting passwords on sticky notes is like leaving your house key under the welcome mat – convenient, but not the smartest move for security.",
                 "Sticky notes are great for reminders, terrible for passwords. Let's trade convenience for cybersecurity, shall we?",
                 "Your passwords deserve better than the sticky note treatment. Think of them as VIPs – keep them exclusive, hidden, and away from prying eyes!",
 

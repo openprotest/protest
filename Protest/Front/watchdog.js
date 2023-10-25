@@ -680,96 +680,137 @@ class Watchdog extends Window {
 		watchersList.style.margin = "2px";
 		watchersList.style.border = "2px solid var(--clr-control)";
 		watchersList.style.borderRadius = "4px";
+		watchersList.style.overflowX = "hidden";
 		watchersList.style.overflowY = "auto";
 
 		innerBox.append(watchersLabel, watchersList);
 		
-		
-		let notificationsArray = [];
+		let notifications = {};
+		let watchersCheckboxes = {};
 		let selected = null;
 		
-		const AddNotification = ()=> {
+		const AddNotification = name=> {
 			const element = document.createElement("div");
 			element.className = "list-element";
 			notificationsList.appendChild(element);
 
 			const label =  document.createElement("div");
-			label.textContent = "unnamed notification";
-			label.style.color = "rgb(128,128,128)";
-			label.style.fontStyle = "oblique";
+			label.textContent = name.length===0 ? "unnamed notification" : name;
+			label.style.color = name.length===0 ? "rgb(96,96,96)" : "var(--clr-dark)";
+			label.style.fontStyle = name.length===0 ? "oblique" : "normal";
 			label.style.lineHeight = "32px";
 			label.style.paddingLeft = "4px";
-			element.appendChild(label);
+			label.style.width = "calc(100% - 32px)";
+			label.style.overflow = "hidden";
+			label.style.textOverflow = "ellipsis";
+			label.style.whiteSpace = "nowrap";
+			
+			const removeButton = document.createElement("div");
+			removeButton.style.display = "none";
+			removeButton.style.position = "absolute";
+			removeButton.style.right = "2px";
+			removeButton.style.top = "2px";
+			removeButton.style.width = "28px";
+			removeButton.style.height = "28px";
+			removeButton.style.backgroundImage = "url(mono/delete.svg)";
+			removeButton.style.backgroundSize = "24px 24px";
+			removeButton.style.backgroundPosition = "center";
+			removeButton.style.backgroundRepeat = "no-repeat";
+
+			element.append(label, removeButton);
+
+			const id = Math.random();
 
 			let obj = {
-				file: null,
+				id: id,
 				element: element,
-				name: "",
-				smtp: null,
+				name: name,
+				smtpprofile: smtpInput.childNodes.length === 0 ? null : smtpInput.childNodes[0].value,
 				recipients: [],
-				watchers: []
+				watchers: Object.values(this.watchers).map(o=>o.file)
 			};
 
-			notificationsArray.push(obj);
+			notifications[id] = obj;
 			
 			element.onclick = ()=> {
-				if (selected) {
-					selected.element.style.backgroundColor = "";
-					nameInput.value = obj.name;
-					smtpInput.value = obj.smtp;
-					recipientsInput.value = obj.recipients.join("; ");
-					//TODO: watchers
+				if (selected !== null && notifications[selected]) {
+					notifications[selected].element.style.backgroundColor = "";
+					notifications[selected].element.childNodes[1].style.display = "none";
 				}
 
-				selected = obj;
+				selected = id;
 				element.style.backgroundColor = "var(--clr-select)";
+				removeButton.style.display = "initial";
+
+				nameInput.value = notifications[id].name;
+				smtpInput.value = notifications[id].smtpprofile;
+				recipientsInput.value = notifications[id].recipients.join("; ");
+
+				for (let file in watchersCheckboxes) {
+					watchersCheckboxes[file].checked = false;
+				}
+				for (let i=0; i<notifications[id].watchers.length; i++) {
+					watchersCheckboxes[notifications[id].watchers[i]].checked = true;
+				}
 			};
 
-			return element;
+			removeButton.onclick = event=> {
+				event.stopPropagation();
+				delete notifications[id];
+				selected = null;
+				notificationsList.removeChild(element);
+			};
+
+			return {
+				element: element,
+				id: id
+			};
 		};
 
 		nameInput.oninput = nameInput.onchange = ()=>{
-			if (!selected) return;
+			if (selected === null) return;
+
+			notifications[selected].name = nameInput.value;
 
 			if (nameInput.value.length === 0) {
-				selected.element.childNodes[0].textContent = "unnamed notification";
-				selected.element.childNodes[0].style.color = "rgb(128,128,128)";
-				selected.element.childNodes[0].style.fontStyle = "oblique";
+				notifications[selected].element.childNodes[0].textContent = "unnamed notification";
+				notifications[selected].element.childNodes[0].style.color = "rgb(96,96,96)";
+				notifications[selected].element.childNodes[0].style.fontStyle = "oblique";
 			}
 			else {
-				selected.element.childNodes[0].textContent = nameInput.value;
-				selected.element.childNodes[0].style.color = "var(--clr-dark)";
-				selected.element.childNodes[0].style.fontStyle = "normal";
+				notifications[selected].element.childNodes[0].textContent = nameInput.value;
+				notifications[selected].element.childNodes[0].style.color = "var(--clr-dark)";
+				notifications[selected].element.childNodes[0].style.fontStyle = "normal";
 			}
-
-			selected.name = nameInput.value;
 		};
 
 		smtpInput.onchange = ()=>{
-			if (!selected) return;
-			selected.smtp = smtpInput.value;
+			if (selected === null) return;
+			notifications[selected].smtpprofile = smtpInput.value;
+			console.log(notifications);
 		};
 
 		recipientsInput.onchange = ()=> {
-			if (!selected) return;
-			selected.recipients = recipientsInput.value.split(";").map(o=> o.trim());
+			if (selected === null) return;
+			notifications[selected].recipients = recipientsInput.value.split(";").map(o=> o.trim());
+			console.log(notifications);
+
 		};
 		
-
 		newButton.onclick = ()=> {
-			const newElement = AddNotification();
+			const newElement = AddNotification("").element;
 			newElement.onclick();
 		};
 
 		saveButton.onclick = async ()=> {
 			let array = [];
-			for (let i=0; i<notificationsArray.length; i++) {
+			for (let id in notifications) {
 				array.push({
-					name        : notificationsArray[i].name,
-					smtpprofile : notificationsArray[i].smtp,
-					recipients  : notificationsArray[i].recipients,
-					watchers    : notificationsArray[i].watchers,
-				})
+					name        : notifications[id].name,
+					smtpprofile : notifications[id].smtpprofile,
+					recipients  : notifications[id].recipients,
+					watchers    : notifications[id].watchers,
+				});
 			}
 
 			try {
@@ -782,14 +823,12 @@ class Watchdog extends Window {
 
 				const json = await response.json();
 				if (json.error) throw(json.error);
-
-				//TODO:
-
 			}
 			catch (ex){
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
 			}
-
+			
+			dialog.Close();
 		};
 		
 		const responses = await Promise.all([
@@ -807,10 +846,38 @@ class Watchdog extends Window {
 			smtpInput.appendChild(option);
 		}
 
-		for (let i = 0; i < notificationJson.length; i++) {
+		for (let file in this.watchers) {
+			const watcher = document.createElement("div");
+			watcher.className = "list-element";
+			watchersList.appendChild(watcher);
 
+			const check = document.createElement("input");
+			check.type = "checkbox";
+			check.checked = true;
+			watcher.appendChild(check);
+			const toggle = this.AddCheckBoxLabel(watcher, check, this.watchers[file].name);
+			toggle.style.left = "8px";
+			toggle.style.top = "5px";
+
+			watchersCheckboxes[file] = check;
+
+			check.onchange = ()=> {
+				if (selected === null) return;
+				
+				notifications[selected].watchers = [];
+				for (let file2 in watchersCheckboxes) {
+					if (!watchersCheckboxes[file2].checked) continue;
+					notifications[selected].watchers.push(file2);
+				}
+			};
 		}
 
+		for (let i = 0; i < notificationJson.length; i++) {
+			let obj = AddNotification(notificationJson[i].name);
+			notifications[obj.id] = notificationJson[i];
+			notifications[obj.id].element = obj.element;
+			notifications[obj.id].id = obj.id;
+		}
 
 	}
 

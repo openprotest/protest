@@ -196,8 +196,6 @@ internal static class Watchdog {
                 client.Connect(watcher.target, watcher.port);
                 long after = DateTime.Now.Ticks;
 
-                Console.WriteLine();
-
                 if (!client.Connected) {
                     client.Close();
                     continue;
@@ -532,7 +530,7 @@ internal static class Watchdog {
         try {
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, options);
             return json;
-        }   
+        }
         catch {
             return Data.CODE_FAILED.Array;
         }
