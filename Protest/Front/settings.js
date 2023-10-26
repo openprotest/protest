@@ -183,7 +183,14 @@ class Settings extends Tabs {
 		this.profilesRemoveButton.className = "with-icon";
 		this.profilesRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
 
-		this.options.append(this.profilesNewButton, this.profilesRemoveButton);
+		this.profilesTestButton = document.createElement("input");
+		this.profilesTestButton.type = "button";
+		this.profilesTestButton.value = "Send a test";
+		this.profilesTestButton.disabled = true;
+		this.profilesTestButton.className = "with-icon";
+		this.profilesTestButton.style.backgroundImage = "url(mono/checked.svg?light)";
+		
+		this.options.append(this.profilesNewButton, this.profilesRemoveButton, this.profilesTestButton);
 
 		const titleBar = document.createElement("div");
 		titleBar.style.position = "absolute";
@@ -249,7 +256,56 @@ class Settings extends Tabs {
 				this.SaveProfiles();
 	
 				this.profilesList.removeChild(this.profilesList.childNodes[index]);
+				this.profilesTestButton.disabled = true;
 			});
+		};
+
+		this.profilesTestButton.onclick = ()=>{
+			const dialog = this.DialogBox("108px");
+			dialog.innerBox.parentElement.style.maxWidth = "400px";
+			dialog.innerBox.style.textAlign = "center";
+
+			const recipientInput = document.createElement("input");
+			recipientInput.type = "text";
+			recipientInput.placeholder = "recipient";
+			recipientInput.style.marginTop = "20px";
+			recipientInput.style.width = "min(calc(100% - 8px), 300px)";
+			dialog.innerBox.appendChild(recipientInput);
+
+			recipientInput.focus();
+
+			dialog.btnOK.onclick = async ()=> {
+				if (recipientInput.value.length === 0) return;
+				dialog.btnOK.disabled = true;
+				dialog.innerBox.removeChild(recipientInput);
+				dialog.innerBox.parentElement.style.maxHeight = "160px";
+
+				const spinner = document.createElement("div");
+				spinner.className = "spinner";
+				spinner.style.textAlign = "left";
+				spinner.style.marginTop = "32px";
+				spinner.style.marginBottom = "16px";
+				spinner.appendChild(document.createElement("div"));
+				dialog.innerBox.appendChild(spinner);
+
+				try {
+					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedProfile.guid}&recipient=${recipientInput.value}`);
+					const json = await response.json();
+					if (json.error) throw (json.error);
+				}
+				catch (ex) {
+					dialog.Close();
+					setTimeout(()=>{
+						this.ConfirmBox(ex, true, "mono/error.svg");
+					},250);
+				}
+			};
+	
+			recipientInput.onkeydown = event=> {
+				if (event.key === "Enter") {
+					dialog.btnOK.click();
+				}
+			}
 		};
 
 		this.GetSmtpProfiles();
@@ -367,6 +423,7 @@ class Settings extends Tabs {
 				element.append(serverLabel, portLabel, usernameLabel);
 
 				element.onclick = ()=> {
+					this.profilesTestButton.disabled = false;
 					for (let i=0; i<this.profilesList.childNodes.length; i++) {
 						this.profilesList.childNodes[i].style.backgroundColor = "";
 					}
@@ -385,7 +442,7 @@ class Settings extends Tabs {
 	}
 
 	PreviewZone(object=null) {
-		const dialog = this.DialogBox("200px");
+		const dialog = this.DialogBox("210px");
 		if (dialog === null) return;
 
 		const btnOK = dialog.btnOK;
@@ -393,31 +450,31 @@ class Settings extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "120px 275px auto";
+		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
 		innerBox.style.gridTemplateRows = "repeat(3, 38px)";
 		innerBox.style.alignItems = "center";
 
 		const nameLabel = document.createElement("div");
-		nameLabel.style.gridArea = "1 / 1";
+		nameLabel.style.gridArea = "1 / 2";
 		nameLabel.textContent = "Name:";
 		const nameInput = document.createElement("input");
-		nameInput.style.gridArea = "1 / 2";
+		nameInput.style.gridArea = "1 / 3";
 		nameInput.type = "text";
 		innerBox.append(nameLabel, nameInput);
 
 		const networkLabel = document.createElement("div");
-		networkLabel.style.gridArea = "2 / 1";
+		networkLabel.style.gridArea = "2 / 2";
 		networkLabel.textContent = "Network zone:";
 		const networkInput = document.createElement("input");
-		networkInput.style.gridArea = "2 / 2";
+		networkInput.style.gridArea = "2 / 3";
 		networkInput.type = "text";
 		innerBox.append(networkLabel, networkInput);
 
 		const colorLabel = document.createElement("div");
-		colorLabel.style.gridArea = "3 / 1";
+		colorLabel.style.gridArea = "3 / 2";
 		colorLabel.textContent = "Color:";
 		const colorInput = document.createElement("input");
-		colorInput.style.gridArea = "3 / 2";
+		colorInput.style.gridArea = "3 / 3";
 		colorInput.type = "color";
 		innerBox.append(colorLabel, colorInput);
 
@@ -464,24 +521,24 @@ class Settings extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "120px 275px auto";
+		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
 		innerBox.style.gridTemplateRows = "repeat(6, 38px)";
 		innerBox.style.alignItems = "center";
 
 		const serverLabel = document.createElement("div");
-		serverLabel.style.gridArea = "1 / 1";
+		serverLabel.style.gridArea = "1 / 2";
 		serverLabel.textContent = "SMTP server:";
 		const serverInput = document.createElement("input");
-		serverInput.style.gridArea = "1 / 2";
+		serverInput.style.gridArea = "1 / 3";
 		serverInput.type = "text";
 		serverInput.placeholder = "smtp.gmail.com";
 		innerBox.append(serverLabel, serverInput);
 
 		const portLabel = document.createElement("div");
-		portLabel.style.gridArea = "2 / 1";
+		portLabel.style.gridArea = "2 / 2";
 		portLabel.textContent = "Port:";
 		const portInput = document.createElement("input");
-		portInput.style.gridArea = "2 / 2";
+		portInput.style.gridArea = "2 / 3";
 		portInput.type = "number";
 		portInput.min = 1;
 		portInput.max = 65535;
@@ -489,32 +546,32 @@ class Settings extends Tabs {
 		innerBox.append(portLabel, portInput);
 
 		const senderLabel = document.createElement("div");
-		senderLabel.style.gridArea = "3 / 1";
+		senderLabel.style.gridArea = "3 / 2";
 		senderLabel.textContent = "Sender:";
 		const senderInput = document.createElement("input");
-		senderInput.style.gridArea = "3 / 2";
+		senderInput.style.gridArea = "3 / 3";
 		senderInput.type = "text";
 		innerBox.append(senderLabel, senderInput);
 
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "4 / 1";
+		usernameLabel.style.gridArea = "4 / 2";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "4 / 2";
+		usernameInput.style.gridArea = "4 / 3";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 
 		const passwordLabel = document.createElement("div");
-		passwordLabel.style.gridArea = "5 / 1";
+		passwordLabel.style.gridArea = "5 / 2";
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
-		passwordInput.style.gridArea = "5 / 2";
+		passwordInput.style.gridArea = "5 / 3";
 		passwordInput.type = "password";
 		passwordInput.placeholder = "unchanged";
 		innerBox.append(passwordLabel, passwordInput);
 
 		const sslBox = document.createElement("div");
-		sslBox.style.gridArea = "6 / 1";
+		sslBox.style.gridArea = "6 / 2";
 		innerBox.appendChild(sslBox);
 		const chkSsl = document.createElement("input");
 		chkSsl.type = "checkbox";

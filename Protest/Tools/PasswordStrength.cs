@@ -53,11 +53,11 @@ public static class PasswordStrength {
             "dragon"
     };
 
-    public static double Entropy(string password, in string[] related = null) {
+    public static double Entropy(string password, string[] related = null) {
         return Entropy(password, out _, out _, related);
     }
 
-    public static double Entropy(string password, out int length, out int pool, in string[] related = null) {
+    public static double Entropy(string password, out int length, out int pool, string[] related = null) {
         for (int i = 0; i < COMMON.Length; i++)
             if (password.IndexOf(COMMON[i], StringComparison.InvariantCultureIgnoreCase) > -1)
                 password = password.Replace(COMMON[i], "");
@@ -292,7 +292,7 @@ public static class PasswordStrength {
         }
     }
 
-    public static byte[] GandalfThreadWrapper(in HttpListenerContext ctx, in string initiator) {
+    public static byte[] GandalfThreadWrapper(HttpListenerContext ctx, string initiator) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
@@ -311,7 +311,7 @@ public static class PasswordStrength {
         return Data.CODE_OK.Array;
     }
 
-    private static void GandalfRequest(in string[] split) {
+    private static void GandalfRequest(string[] split) {
         _ = double.TryParse(split[0], out double threshold);
         Guid smtpGuid = new Guid(split[1]);
 
@@ -403,7 +403,7 @@ public static class PasswordStrength {
         }
     }
 
-    public static void SendGandalfMail(in SmtpClient smtp, in string sender, in string[] recipients, in string name, in string ttc) {
+    public static void SendGandalfMail(SmtpClient smtp, string sender, string[] recipients, string name, string ttc) {
         try {
             StringBuilder body = new StringBuilder();
             body.Append("<html>");
@@ -479,21 +479,20 @@ public static class PasswordStrength {
             body.Append("</table>");
             body.Append("</html>");
 
-            MailMessage mail = new MailMessage {
+            using MailMessage mail = new MailMessage {
                 From = new MailAddress(sender, "Pro-test"),
                 Subject = "Upgrade your password",
                 IsBodyHtml = true
             };
 
             AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-            //view.LinkedResources.Add(null);
             mail.AlternateViews.Add(view);
 
-            for (int i = 0; i < recipients.Length; i++)
+            for (int i = 0; i < recipients.Length; i++) {
                 mail.To.Add(recipients[i].Trim());
+            }
 
             smtp.Send(mail);
-            mail.Dispose();
         }
 
         catch (SmtpFailedRecipientException ex) { Logger.Error(ex);}

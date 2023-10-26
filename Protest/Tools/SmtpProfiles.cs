@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Mail;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -23,14 +25,13 @@ internal class SmtpProfiles {
         }
 
         JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new EmailProfilesJsonConverter(true));
+        options.Converters.Add(new EmailProfilesJsonConverter(false));
 
         try {
             byte[] plain = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
             Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, options);
             return profiles;
-        }
-        catch {
+        } catch {
             return Array.Empty<Profile>();
         }
     }
@@ -43,8 +44,7 @@ internal class SmtpProfiles {
             Profile[] profiles = Load();
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, options);
             return json;
-        }
-        catch {
+        } catch {
             return Data.CODE_FAILED.Array;
         }
     }
@@ -61,8 +61,7 @@ internal class SmtpProfiles {
         try {
             byte[] bytes = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
             oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, options);
-        }
-        catch {
+        } catch {
             oldProfiles = Array.Empty<Profile>();
         }
 
@@ -92,17 +91,94 @@ internal class SmtpProfiles {
 
             byte[] file = JsonSerializer.SerializeToUtf8Bytes(newProfiles, options);
             File.WriteAllBytes(Data.FILE_EMAIL_PROFILES, file);
-        }
-        catch (JsonException) {
+        } catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-        catch (Exception) {
+        } catch (Exception) {
             return Data.CODE_FAILED.Array;
         }
 
         return Data.CODE_OK.Array;
     }
 
+
+    public static byte[] SendTest(Dictionary<string, string> parameters) {
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (!parameters.TryGetValue("guid", out string guid)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+        if (!parameters.TryGetValue("recipient", out string recipient)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        try {
+            Profile[] smtpProfiles =  SmtpProfiles.Load();
+            Profile profile = smtpProfiles.First(o => o.guid.ToString() == guid);
+            return SendTest(recipient, profile);
+        }
+        catch (Exception ex) {
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
+    }
+
+    public static byte[] SendTest(string recipient, SmtpProfiles.Profile profile) {
+        StringBuilder body = new StringBuilder();
+        body.Append("<html>");
+        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
+        body.Append("<tr><td>&nbsp;</td></tr>");
+
+        body.Append("<tr><td align=\"center\">");
+
+
+        body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\">");
+        body.Append("<tr><td style=\"padding:10px\">");
+        body.Append("<tr><td style=\"height:28px;font-size:18;text-align:center\">");
+        body.Append("You have successfully configure this SMTP profile.");
+        body.Append("</td></tr>");
+        body.Append("</td></tr>");
+
+        body.Append("<tr><td style=\"padding:10px\">");
+
+        body.Append("</table>");
+
+
+        body.Append("<tr><td>&nbsp;</td></tr>");
+        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+        body.Append("<tr><td>&nbsp;</td></tr>");
+
+        body.Append("</td></tr>");
+        body.Append("</table>");
+        body.Append("</html>");
+
+        try {
+            using MailMessage mail = new MailMessage {
+                From = new MailAddress(profile.sender, "Pro-test"),
+                Subject = "SMTP test from Pro-test",
+                IsBodyHtml = true
+            };
+
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            mail.AlternateViews.Add(view);
+
+            if (!String.IsNullOrEmpty(recipient)) {
+                mail.To.Add(recipient);
+            }
+
+            using SmtpClient smtp = new SmtpClient(profile.server) {
+                Port = profile.port,
+                EnableSsl = profile.ssl,
+                Credentials = new NetworkCredential(profile.username, profile.password),
+            };
+            smtp.Send(mail);
+
+            return Data.CODE_OK.Array;
+        }
+        catch (Exception ex) {
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
+    }
 }
 
 internal sealed class EmailProfilesJsonConverter : JsonConverter<SmtpProfiles.Profile[]> {

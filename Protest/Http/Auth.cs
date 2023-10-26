@@ -346,6 +346,7 @@ internal static class Auth {
                 path.Add("/config/zones/save");
                 path.Add("/config/smtpprofiles/list");
                 path.Add("/config/smtpprofiles/save");
+                path.Add("/config/smtpprofiles/test");
                 path.Add("/config/checkupdate");
                 path.Add("/config/upload/iplocation");
                 path.Add("/config/upload/proxy");

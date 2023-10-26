@@ -145,17 +145,13 @@ internal static class Watchdog {
                             if (watcher.lastStatus != status && watcher.lastStatus != short.MinValue) {
                                 Notification[] gist =  notifications.Where(n => n.watchers.Any(w => w.Equals(watcher.file))).ToArray();
                                 for (int i = 0; i < gist.Length; i++) {
-
-                                    SmtpProfiles.Profile smtpProfile = smtpProfiles.First(o=>o.guid == gist[i].smtpProfile.guid);
-
+                                    SmtpProfiles.Profile smtpProfile = smtpProfiles.First(o => o.guid == gist[i].smtpProfile.guid);
                                     if (watcher.lastStatus < 0 && status >= 0 && gist[i].notify == NotifyOn.rise || gist[i].notify == NotifyOn.both) { //rise
                                         SendSmtpNotification(watcher, gist[i], smtpProfile, status);
                                     }
-
                                     if (watcher.lastStatus >= 0 && status < 0 && gist[i].notify == NotifyOn.fall || gist[i].notify == NotifyOn.both) { //fall
                                         SendSmtpNotification(watcher, gist[i], smtpProfile, status);
                                     }
-
                                 }
                             }
 
@@ -616,7 +612,7 @@ internal static class Watchdog {
 
 
             body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\">");
-            body.Append("<tr><td style=\"padding:10px; font-size:18px\">");
+            body.Append("<tr><td style=\"padding:10px\">");
 
             body.Append("<tr><td style=\"height:40px;text-align:center;color:#202020;font-size:20px\"><b>Watchdog notification</b></td></tr>");
 
@@ -628,9 +624,17 @@ internal static class Watchdog {
             case -4: body.Append(blueDot);   break; //tls not yet valid
             case -3: body.Append(yellowDot); break; //expiration warning
             case -2: body.Append(orangeDot); break; //expired
-            case -1: body.Append(yellowDot); break; //unreachable
+            case -1: body.Append(redDot);    break; //unreachable
             default: body.Append(greenDot);  break; //alive
             }
+
+            string dotEmoji = status switch {
+                -4 => "🔵",
+                -3 => "🟡",
+                -2 => "🟠",
+                -1 => "🔴",
+                _ => "🟢",
+            };
 
             string stringStatus = watcher.type switch {
                 WatcherType.icmp        => status < 0 ? "Host is unreachable"     : "Host is reachable",
@@ -657,7 +661,7 @@ internal static class Watchdog {
 
             body.Append("</td></tr>");
 
-            body.Append("<tr><td style=\"padding:10px; font-size:18px\">");
+            body.Append("<tr><td style=\"padding:10px\">");
 
             body.Append("</table>");
 
@@ -671,10 +675,13 @@ internal static class Watchdog {
             body.Append("</html>");
 
             using MailMessage mail = new MailMessage {
-                From = new MailAddress("sender here", "Pro-test"),
-                Subject = $"Watchdog notification {DateTime.Now.ToString(Data.DATETIME_FORMAT)}",
+                From = new MailAddress(smtpProfile.sender, "Pro-test"),
+                Subject = $"{dotEmoji} Watchdog notification {DateTime.Now.ToString(Data.DATETIME_FORMAT)}",
                 IsBodyHtml = true
             };
+
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            mail.AlternateViews.Add(view);
 
             for (int i = 0; i < notification.recipients.Length; i++) {
                 mail.To.Add(notification.recipients[i]);
@@ -686,11 +693,6 @@ internal static class Watchdog {
                 Credentials = new NetworkCredential(smtpProfile.username, smtpProfile.password)
             };
             smtp.Send(mail);
-
-            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-
-            mail.AlternateViews.Add(view);
-
         }
 #if !DEBUG
         catch (SmtpFailedRecipientException ex) { Logger.Error(ex); }
