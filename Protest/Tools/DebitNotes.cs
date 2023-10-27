@@ -183,7 +183,8 @@ internal static class DebitNotes {
         try {
             byte[] data = File.ReadAllBytes(filename);
             return data;
-        } catch {
+        }
+        catch {
             return Data.CODE_FAILED.Array;
         }
     }
@@ -191,7 +192,10 @@ internal static class DebitNotes {
     public static byte[] Create(HttpListenerContext ctx, string initiator) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
+        return Create(payload, initiator);
+    }
 
+    public static byte[] Create(string payload, string initiator) {
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new DebitJsonConverter());
         Record record = JsonSerializer.Deserialize<Record>(payload, options);
@@ -206,12 +210,22 @@ internal static class DebitNotes {
                 if (record.status == "short") {
                     DirectoryInfo dirShort = new DirectoryInfo(Data.DIR_DEBIT_SHORT);
                     if (!dirShort.Exists) dirShort.Create();
-                    File.WriteAllText($"{dirShort}\\{name}", payload, Encoding.UTF8);
+                    File.WriteAllText($"{dirShort}{Data.DELIMITER}{name}", payload, Encoding.UTF8);
                 }
                 else if (record.status == "long") {
                     DirectoryInfo dirLong = new DirectoryInfo(Data.DIR_DEBIT_LONG);
                     if (!dirLong.Exists) dirLong.Create();
-                    File.WriteAllText($"{dirLong}\\{name}", payload, Encoding.UTF8);
+                    File.WriteAllText($"{dirLong}{Data.DELIMITER}{name}", payload, Encoding.UTF8);
+                }
+                else if (record.status == "returned") {
+                    DirectoryInfo dirReturned = new DirectoryInfo(Data.DIR_DEBIT_RETURNED);
+                    if (!dirReturned.Exists) dirReturned.Create();
+
+                    record.status = "returned";
+                    record.returnedDate = DateTime.UtcNow.Ticks;
+
+                    byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, options);
+                    File.WriteAllBytes($"{dirReturned}{Data.DELIMITER}{name}", json);
                 }
                 else {
                     return Data.CODE_INVALID_ARGUMENT.Array;

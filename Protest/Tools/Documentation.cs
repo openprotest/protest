@@ -90,9 +90,9 @@ class Documentation {
             return Encoding.UTF8.GetBytes("unsafe content: scripts are not allowed");
 
         string filename = payload[0];
-        foreach (char c in Path.GetInvalidFileNameChars())
+        foreach (char c in Path.GetInvalidFileNameChars()) {
             filename = filename.Replace(c, '_');
-
+        }
 
         List<string> keywords = new List<string>();
 
@@ -184,6 +184,8 @@ class Documentation {
 
         return Data.CODE_OK.Array;
     }
+
+
 
     public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
         if (parameters is null) {

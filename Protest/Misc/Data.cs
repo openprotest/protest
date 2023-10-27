@@ -242,7 +242,7 @@ public static class Data {
             case '\r': builder.Append("\\r"); break;
             case '\t': builder.Append("\\t"); break;
 
-            //currency codes: 
+            //currency codes:
             case '\u0024': builder.Append("\\u0024"); break;
             case '\u20AC': builder.Append("\\u20AC"); break;
             case '\u00A3': builder.Append("\\u00A3"); break;

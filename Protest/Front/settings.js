@@ -262,7 +262,7 @@ class Settings extends Tabs {
 
 		this.profilesTestButton.onclick = ()=>{
 			const dialog = this.DialogBox("108px");
-			dialog.innerBox.parentElement.style.maxWidth = "400px";
+			dialog.innerBox.parentElement.style.maxWidth = "480px";
 			dialog.innerBox.style.textAlign = "center";
 
 			dialog.btnOK.value = "Test";

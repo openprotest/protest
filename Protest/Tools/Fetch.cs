@@ -792,21 +792,23 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
         
-        parameters.TryGetValue("ip",       out string ip);
-        parameters.TryGetValue("port",     out string port);
-        parameters.TryGetValue("protocol", out string protocol);
-        parameters.TryGetValue("username", out string username);
-        parameters.TryGetValue("password", out string password);
-        parameters.TryGetValue("devices",  out string importDevices);
-        parameters.TryGetValue("users",    out string importUsers);
+        parameters.TryGetValue("ip",            out string ip);
+        parameters.TryGetValue("port",          out string port);
+        parameters.TryGetValue("protocol",      out string protocol);
+        parameters.TryGetValue("username",      out string username);
+        parameters.TryGetValue("password",      out string password);
+        parameters.TryGetValue("devices",       out string importDevices);
+        parameters.TryGetValue("users",         out string importUsers);
+        parameters.TryGetValue("debitnotes",    out string importDebitNotes);
 
         IPAddress ipAddress = IPAddress.Parse(ip);
         if (!IPAddress.IsLoopback(ipAddress)) {
             return "{\"error\":\"Please prefer to import data on the same host, via the loopback address, to avoid information exposure.\"}"u8.ToArray();
         }
 
-        bool fetchDevices = importDevices?.Equals("true") ?? false;
-        bool fetchUsers   = importUsers?.Equals("true") ?? false;
+        bool fetchDevices       = importDevices?.Equals("true") ?? false;
+        bool fetchUsers         = importUsers?.Equals("true") ?? false;
+        bool fetchDebitNotes    = importDebitNotes?.Equals("true") ?? false;
 
         string sessionid = null;
         float version = 0f;
@@ -914,6 +916,16 @@ internal static class Fetch {
             }
             else if (version >= 5f && version < 6f) {
                 ImportUsersV5(uri, cookieContainer);
+            }
+        }
+
+        if (fetchDebitNotes) {
+            Logger.Action(initiator, $"Importing users from {ip}");
+            if (version >= 4f && version < 5f) {
+                ImportDebitNotesV4(uri, cookieContainer);
+            }
+            else if (version >= 5f && version < 6f) {
+                ImportDebitNotesV5(uri, cookieContainer);
             }
         }
 
@@ -1076,6 +1088,76 @@ internal static class Fetch {
         }
     }
 
+    public static void ImportDebitNotesV4(Uri uri, CookieContainer cookieContainer) {
+        using HttpClientHandler handler = new HttpClientHandler();
+        handler.CookieContainer = cookieContainer;
+
+        using HttpClient client = new HttpClient(handler);
+        client.BaseAddress = uri;
+        client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
+        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+
+        Task<HttpResponseMessage> res = client.GetAsync($"debitnotes/get&keywords=&from=2000-01-01&to={DateTime.Now:yyyy-MM-dd}&filters=111");
+        string payload = res.Result.Content.ReadAsStringAsync().Result;
+        string[] split = payload.Split((char)127);
+
+        for (int i = 0; i < split.Length-9; i+=10) {
+            string code       = split[i+0];
+            string firstname  = split[i+1];
+            string lastname   = split[i+2];
+            string title      = split[i+3];
+            string department = split[i+4];
+            string date       = split[i+5];
+            string it         = split[i+6];
+            string template   = split[i+7];
+            string equip      = split[i+8];
+            string status     = split[i+9];
+
+            Thread.Sleep(1);
+
+            string[] dateSplit = date.Split('-');
+            string[] equipSplit = equip.Split(';');
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append('{');
+            
+            if (dateSplit.Length == 3) {
+                builder.Append($"\"date\":{new DateTime(int.Parse(dateSplit[2]), int.Parse(dateSplit[1]), int.Parse(dateSplit[0])).Ticks.ToString()},");
+            }
+            else {
+                builder.Append($"\"date\":{DateTime.UtcNow.Ticks},");
+            }
+
+            builder.Append($"\"status\":\"{status}\",");
+            builder.Append($"\"template\":\"{Data.EscapeJsonTextWithUnicodeCharacters(template)}\",");
+            builder.Append($"\"banner\":\"default.svg\",");
+            builder.Append($"\"firstname\":\"{Data.EscapeJsonText(firstname)}\",");
+            builder.Append($"\"lastname\":\"{Data.EscapeJsonText(lastname)}\",");
+            builder.Append($"\"title\":\"{Data.EscapeJsonText(title)}\",");
+            builder.Append($"\"department\":\"{Data.EscapeJsonText(department)}\",");
+            builder.Append($"\"issuer\":\"{Data.EscapeJsonText(it)}\",");
+
+            builder.Append($"\"devices\":[");
+            bool first = true;
+            for (int j = 0; j < equipSplit.Length - 2; j += 3) {
+                if (!first) builder.Append(',');
+                builder.Append('{');
+                builder.Append($"\"description\":\"{Data.EscapeJsonText(equipSplit[j])}\",");
+                builder.Append($"\"model\":\"\",");
+                builder.Append($"\"quantity\":{int.Parse(equipSplit[j+1])},");
+                builder.Append($"\"serial\":\"{Data.EscapeJsonText(equipSplit[j+2])}\"");
+                builder.Append('}');
+                first = false;
+            }
+            builder.Append(']');
+
+
+            builder.Append('}');
+
+            DebitNotes.Create(builder.ToString(), "Imported");
+        }
+    }
+
     public static void ImportDevicesV5(Uri uri, CookieContainer cookieContainer) {
         using HttpClientHandler handler = new HttpClientHandler();
         handler.CookieContainer = cookieContainer;
@@ -1116,6 +1198,10 @@ internal static class Fetch {
         foreach (Database.Entry entry in import.dictionary.Values) {
             DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Pro-test");
         }
+    }
+
+    public static void ImportDebitNotesV5(Uri uri, CookieContainer cookieContainer) {
+
     }
 
     public static string GetHiddenAttribute(Uri uri, CookieContainer cookieContainer, string path) {

@@ -107,7 +107,6 @@ internal class SmtpProfiles {
         return Data.CODE_OK.Array;
     }
 
-
     public static byte[] SendTest(Dictionary<string, string> parameters) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;

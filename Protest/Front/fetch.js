@@ -457,7 +457,7 @@ class Fetch extends Tabs {
 
 		this.rdoIP.disabled = false;
 		this.tabsPanel.appendChild(this.rdoIP);
-		const ipOption = this.AddRadioLabel(this.tabsPanel, this.rdoIP, "IP range: ");
+		const ipOption = this.AddRadioLabel(this.tabsPanel, this.rdoIP, "IP range:");
 		ipOption.style.gridArea = "2 / 2";
 
 		this.tabsPanel.appendChild(this.divRange);
@@ -465,7 +465,7 @@ class Fetch extends Tabs {
 		this.ipTo.SetEnabled(this.rdoIP.checked);
 		
 		this.tabsPanel.appendChild(this.rdoDomain);
-		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain: ");
+		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain:");
 		domainOption.style.gridArea = "3 / 2";
 
 		this.tabsPanel.appendChild(this.txtDomain);
@@ -525,7 +525,7 @@ class Fetch extends Tabs {
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
 		this.tabsPanel.appendChild(this.rdoIP);
-		const ipOption = this.AddRadioLabel(this.tabsPanel, this.rdoIP, "IP range: ");
+		const ipOption = this.AddRadioLabel(this.tabsPanel, this.rdoIP, "IP range:");
 		ipOption.style.gridArea = "2 / 2";
 
 		this.tabsPanel.appendChild(this.divRange);
@@ -533,7 +533,7 @@ class Fetch extends Tabs {
 		this.ipTo.SetEnabled(false);
 
 		this.tabsPanel.appendChild(this.rdoDomain);
-		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain: ");
+		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain:");
 		domainOption.style.gridArea = "3 / 2";
 
 		this.tabsPanel.appendChild(this.txtDomain);
@@ -559,7 +559,7 @@ class Fetch extends Tabs {
 
 		const lblProtest = document.createElement("div");
 		lblProtest.style.gridArea = "1 / 3";
-		lblProtest.textContent = "Targets IP: ";
+		lblProtest.textContent = "Targets IP:";
 		this.tabsPanel.appendChild(lblProtest);
 		const txtTargetContainer = document.createElement("div");
 		txtTargetContainer.style.gridArea = "1 / 5";
@@ -570,7 +570,7 @@ class Fetch extends Tabs {
 
 		const lblPort = document.createElement("div");
 		lblPort.style.gridArea = "2 / 3";
-		lblPort.textContent = "Port: ";
+		lblPort.textContent = "Port:";
 		this.tabsPanel.appendChild(lblPort);
 		const txtPort = document.createElement("input");
 		txtPort.type = "number";
@@ -585,7 +585,7 @@ class Fetch extends Tabs {
 
 		const lblProtocol = document.createElement("div");
 		lblProtocol.style.gridArea = "3 / 3";
-		lblProtocol.textContent = "Protocol: ";
+		lblProtocol.textContent = "Protocol:";
 		this.tabsPanel.appendChild(lblProtocol);
 		const txtProtocol = document.createElement("select");
 		txtProtocol.style.gridArea = "3 / 5";
@@ -607,7 +607,7 @@ class Fetch extends Tabs {
 
 		const lblUsername = document.createElement("div");
 		lblUsername.style.gridArea = "4 / 3";
-		lblUsername.textContent = "Username: ";
+		lblUsername.textContent = "Username:";
 		this.tabsPanel.appendChild(lblUsername);
 
 		const txtUsername = document.createElement("input");
@@ -621,7 +621,7 @@ class Fetch extends Tabs {
 
 		const lblPassword = document.createElement("div");
 		lblPassword.style.gridArea = "5 / 3";
-		lblPassword.textContent = "Password: ";
+		lblPassword.textContent = "Password:";
 		this.tabsPanel.appendChild(lblPassword);
 		const txtPassword = document.createElement("input");
 		txtPassword.type = "password";
@@ -633,7 +633,7 @@ class Fetch extends Tabs {
 
 		const lblDevice = document.createElement("div");
 		lblDevice.style.gridArea = "6 / 3";
-		lblDevice.textContent = "Import devices: ";
+		lblDevice.textContent = "Devices:";
 		this.tabsPanel.appendChild(lblDevice);
 		const chkDeviceContainer = document.createElement("div");
 		chkDeviceContainer.style.gridArea = "6 / 5";
@@ -646,7 +646,7 @@ class Fetch extends Tabs {
 
 		const lblUsers = document.createElement("div");
 		lblUsers.style.gridArea = "7 / 3";
-		lblUsers.textContent = "Import users: ";
+		lblUsers.textContent = "Users:";
 		this.tabsPanel.appendChild(lblUsers);
 		const chkUsersContainer = document.createElement("div");
 		chkUsersContainer.style.gridArea = "7 / 5";
@@ -656,9 +656,23 @@ class Fetch extends Tabs {
 		chkUsers.checked = true;
 		chkUsersContainer.appendChild(chkUsers);
 		this.AddCheckBoxLabel(chkUsersContainer, chkUsers, ".").style = "width:4px; min-width:4px; padding-left:8px;";
-		
+
+		const lblDebitNotes = document.createElement("div");
+		lblDebitNotes.style.gridArea = "8 / 3";
+		lblDebitNotes.textContent = "Debit notes:";
+		this.tabsPanel.appendChild(lblDebitNotes);
+		const chkDebitNotesContainer = document.createElement("div");
+		chkDebitNotesContainer.style.gridArea = "8 / 5";
+		this.tabsPanel.appendChild(chkDebitNotesContainer);
+		const chkDebitNotes = document.createElement("input");
+		chkDebitNotes.type = "checkbox";
+		chkDebitNotes.checked = false;
+		chkDebitNotesContainer.appendChild(chkDebitNotes);
+		this.AddCheckBoxLabel(chkDebitNotesContainer, chkDebitNotes, ".").style = "width:4px; min-width:4px; padding-left:8px;";
+
+
 		const buttonsContainer = document.createElement("div");
-		buttonsContainer.style.gridArea = "9 / 2 / auto / 7";
+		buttonsContainer.style.gridArea = "10 / 2 / auto / 7";
 		buttonsContainer.style.textAlign = "center";
 		this.tabsPanel.appendChild(buttonsContainer);
 
@@ -676,17 +690,40 @@ class Fetch extends Tabs {
 
 		const description = document.createElement("div");
 		description.textContent = "Use this utility to import an inventory from another Pro-test. It's recommended to import on a blank database. Conflicts and duplicate records will not be managed.";
-		description.style.gridArea = "11 / 2 / auto / 7";
+		description.style.gridArea = "12 / 2 / auto / 7";
 		description.style.fontSize = "small";
 		this.tabsPanel.appendChild(description);
 
 		btnImport.onclick = async ()=> {
 			try {
 				btnImport.disabled = btnCancel.disabled = true;
-
-				let uri = `fetch/import?ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${encodeURIComponent(txtUsername.value)}&password=${encodeURIComponent(txtPassword.value)}&devices=${chkDevice.checked}&users=${chkUsers.checked}`;
-				const response = await fetch(uri);
 	
+				const dialog = this.DialogBox("180px");
+				dialog.innerBox.parentElement.style.maxWidth = "400px";
+				dialog.innerBox.style.textAlign = "center";
+				dialog.btnOK.value = "Hide";
+				dialog.btnCancel.style.display = "none";
+
+				const spinner = document.createElement("div");
+				spinner.className = "spinner";
+				spinner.style.textAlign = "left";
+				spinner.style.marginTop = "32px";
+				spinner.style.marginBottom = "16px";
+				spinner.appendChild(document.createElement("div"));
+				dialog.innerBox.appendChild(spinner);
+
+				const status = document.createElement("div");
+				status.textContent = "Importing data...";
+				status.style.textAlign = "center";
+				status.style.fontWeight = "bold";
+				status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+				dialog.innerBox.appendChild(status);
+
+				let uri = `fetch/import?ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${encodeURIComponent(txtUsername.value)}&password=${encodeURIComponent(txtPassword.value)}&devices=${chkDevice.checked}&users=${chkUsers.checked}&debitnotes=${chkDebitNotes.checked}`;
+				const response = await fetch(uri);
+
+				dialog.Close();
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 				
 				const json = await response.json();
@@ -697,7 +734,8 @@ class Fetch extends Tabs {
 				}
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg");
+				dialog.Close();
+				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
 			}
 			finally {
 				btnImport.disabled = btnCancel.disabled = false;
@@ -721,7 +759,7 @@ class Fetch extends Tabs {
 
 		const lblStatus = document.createElement("div");
 		lblStatus.style.gridArea = "4 / 3";
-		lblStatus.textContent = "Status: ";
+		lblStatus.textContent = "Status:";
 		this.tabsPanel.appendChild(lblStatus);
 		this.lblStatusValue.style.gridArea = "4 / 5";
 		this.tabsPanel.appendChild(this.lblStatusValue);
@@ -729,7 +767,7 @@ class Fetch extends Tabs {
 
 		const lblDate = document.createElement("div");
 		lblDate.style.gridArea = "5 / 3";
-		lblDate.textContent = "Started date: ";
+		lblDate.textContent = "Started date:";
 		this.tabsPanel.appendChild(lblDate);
 		const lblDateValue = document.createElement("div");
 		lblDateValue.style.gridArea = "5 / 5";
@@ -740,7 +778,7 @@ class Fetch extends Tabs {
 
 		const lblProgress = document.createElement("div");
 		lblProgress.style.gridArea = "6 / 3";
-		lblProgress.textContent = "Progress: ";
+		lblProgress.textContent = "Progress:";
 		this.tabsPanel.appendChild(lblProgress);
 		this.lblProgressValue.style.gridArea = "6 / 5";
 		if (this.taskStatus) this.lblProgressValue.textContent = `${this.taskStatus.completed}/${this.taskStatus.total}`;
@@ -748,7 +786,7 @@ class Fetch extends Tabs {
 
 		const lblEtc = document.createElement("div");
 		lblEtc.style.gridArea = "7 / 3";
-		lblEtc.textContent = "Etc: ";
+		lblEtc.textContent = "Etc:";
 		this.tabsPanel.appendChild(lblEtc);
 		this.lblEtcValue.style.gridArea = "7 / 5";
 		if (this.taskStatus) this.lblEtcValue.textContent = this.taskStatus.etc;
@@ -809,7 +847,7 @@ class Fetch extends Tabs {
 			this.ConfirmBox("Are you sure you want to abort this task?").addEventListener("click", async()=> {
 				try {
 					const response = await fetch("fetch/abort");
-	
+
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					
 					const json = await response.json();
@@ -840,7 +878,7 @@ class Fetch extends Tabs {
 
 		const lblStart = document.createElement("div");
 		lblStart.style.gridArea = "3 / 3";
-		lblStart.textContent = "Started date: ";
+		lblStart.textContent = "Started date:";
 		this.tabsPanel.appendChild(lblStart);
 		const lblStartValue = document.createElement("div");
 		lblStartValue.style.gridArea = "3 / 5";
@@ -851,7 +889,7 @@ class Fetch extends Tabs {
 
 		const lblFinish = document.createElement("div");
 		lblFinish.style.gridArea = "4 / 3";
-		lblFinish.textContent = "Finished date: ";
+		lblFinish.textContent = "Finished date:";
 		this.tabsPanel.appendChild(lblFinish);
 		const lblFinishValue = document.createElement("div");
 		lblFinishValue.style.gridArea = "4 / 5";
@@ -862,7 +900,7 @@ class Fetch extends Tabs {
 
 		const lblSuccess = document.createElement("div");
 		lblSuccess.style.gridArea = "5 / 3";
-		lblSuccess.textContent = "Successfully fetched: ";
+		lblSuccess.textContent = "Successfully fetched:";
 		this.tabsPanel.appendChild(lblSuccess);
 		const lblSuccessValue = document.createElement("div");
 		lblSuccessValue.style.gridArea = "5 / 5";
@@ -872,7 +910,7 @@ class Fetch extends Tabs {
 
 		const lblUnsuccess = document.createElement("div");
 		lblUnsuccess.style.gridArea = "6 / 3";
-		lblUnsuccess.textContent = "Unsuccessful: ";
+		lblUnsuccess.textContent = "Unsuccessful:";
 		this.tabsPanel.appendChild(lblUnsuccess);
 		const lblUnsuccessValue = document.createElement("div");
 		lblUnsuccessValue.style.gridArea = "6 / 5";
