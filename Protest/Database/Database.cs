@@ -99,8 +99,9 @@ public sealed class Database {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
-            lock (entry.syncWrite)
+            lock (entry.syncWrite) {
                 File.WriteAllBytes(filename, cipher);
+            }
         }
         catch (Exception ex) {
             Logger.Error(ex);

@@ -415,7 +415,7 @@ public static class PasswordStrength {
             body.Append("<p align=\"center\"0 style=\"color:#808080\">This is an automated e-mail from the IT Department.</p>");
             body.Append("<br>");
 
-            body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\"");
+            body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\">");
             body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
 
             body.Append($"<p>Dear {(name.Length > 0 ? name.Trim() : "colleague")},</p>");
@@ -433,7 +433,7 @@ public static class PasswordStrength {
             if (ttc is not null && ttc.Length > 0) {
                 body.Append("<p>");
                 body.Append($"Your password can be cracked in {ttc}.");
-                body.Append("</b>");
+                body.Append("</p>");
             }
 
             body.Append("<p>");
@@ -471,12 +471,15 @@ public static class PasswordStrength {
             body.Append("</td></tr>");
             body.Append("</table>");
 
+            body.Append("</td></tr>");
+
             body.Append("<tr><td>&nbsp;</td></tr>");
             body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
             body.Append("<tr><td>&nbsp;</td></tr>");
 
             body.Append("</td></tr>");
             body.Append("</table>");
+
             body.Append("</html>");
 
             using MailMessage mail = new MailMessage {

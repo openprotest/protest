@@ -39,7 +39,7 @@ class Settings extends Tabs {
 	AfterResize() { //override
 		super.AfterResize();
 		if (this.options) {
-			if (this.options.getBoundingClientRect().width < 200) {
+			if (this.options.getBoundingClientRect().width < 320) {
 				for (let i=0; i<this.options.childNodes.length; i++) {
 					this.options.childNodes[i].style.color = "transparent";
 					this.options.childNodes[i].style.width = "30px";
@@ -265,6 +265,8 @@ class Settings extends Tabs {
 			dialog.innerBox.parentElement.style.maxWidth = "400px";
 			dialog.innerBox.style.textAlign = "center";
 
+			dialog.btnOK.value = "Test";
+
 			const recipientInput = document.createElement("input");
 			recipientInput.type = "text";
 			recipientInput.placeholder = "recipient";
@@ -278,7 +280,7 @@ class Settings extends Tabs {
 				if (recipientInput.value.length === 0) return;
 				dialog.btnOK.disabled = true;
 				dialog.innerBox.removeChild(recipientInput);
-				dialog.innerBox.parentElement.style.maxHeight = "160px";
+				dialog.innerBox.parentElement.style.maxHeight = "180px";
 
 				const spinner = document.createElement("div");
 				spinner.className = "spinner";
@@ -288,10 +290,18 @@ class Settings extends Tabs {
 				spinner.appendChild(document.createElement("div"));
 				dialog.innerBox.appendChild(spinner);
 
+				const status = document.createElement("div");
+				status.textContent = "Sending mail test...";
+				status.style.textAlign = "center";
+				status.style.fontWeight = "bold";
+				status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+				dialog.innerBox.appendChild(status);
+
 				try {
 					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedProfile.guid}&recipient=${recipientInput.value}`);
 					const json = await response.json();
 					if (json.error) throw (json.error);
+					dialog.Close();
 				}
 				catch (ex) {
 					dialog.Close();
@@ -448,6 +458,8 @@ class Settings extends Tabs {
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 
+		btnOK.value = "Save";
+
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
@@ -518,6 +530,8 @@ class Settings extends Tabs {
 
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
+
+		btnOK.value = "Save";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";

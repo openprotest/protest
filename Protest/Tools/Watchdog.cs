@@ -145,12 +145,23 @@ internal static class Watchdog {
                             if (watcher.lastStatus != status && watcher.lastStatus != short.MinValue) {
                                 Notification[] gist =  notifications.Where(n => n.watchers.Any(w => w.Equals(watcher.file))).ToArray();
                                 for (int i = 0; i < gist.Length; i++) {
-                                    SmtpProfiles.Profile smtpProfile = smtpProfiles.First(o => o.guid == gist[i].smtpProfile.guid);
-                                    if (watcher.lastStatus < 0 && status >= 0 && gist[i].notify == NotifyOn.rise || gist[i].notify == NotifyOn.both) { //rise
-                                        SendSmtpNotification(watcher, gist[i], smtpProfile, status);
+                                    SmtpProfiles.Profile profile;
+                                    try {
+                                        profile = smtpProfiles.First(o => o?.guid == gist[i]?.smtpProfile?.guid);
                                     }
-                                    if (watcher.lastStatus >= 0 && status < 0 && gist[i].notify == NotifyOn.fall || gist[i].notify == NotifyOn.both) { //fall
-                                        SendSmtpNotification(watcher, gist[i], smtpProfile, status);
+                                    catch {
+                                        continue;
+                                    }
+
+                                    if (profile is null) { continue; }
+
+
+
+                                    if (watcher.lastStatus < 0 && status >= 0 && (gist[i].notify == NotifyOn.rise || gist[i].notify == NotifyOn.both)) { //rise
+                                        SendSmtpNotification(watcher, gist[i], profile, status);
+                                    }
+                                    else if (watcher.lastStatus >= 0 && status < 0 && (gist[i].notify == NotifyOn.fall || gist[i].notify == NotifyOn.both)) { //fall
+                                        SendSmtpNotification(watcher, gist[i], profile, status);
                                     }
                                 }
                             }
@@ -592,91 +603,101 @@ internal static class Watchdog {
         }
     }
 
-    public static void SendSmtpNotification(Watcher watcher, Notification notification, SmtpProfiles.Profile smtpProfile, short status) {
-        const string redDot = "&#128308;"; //🔴
+    public static void SendSmtpNotification(Watcher watcher, Notification notification, SmtpProfiles.Profile profile, short status) {
+        const string redDot    = "&#128308;"; //🔴
         const string orangeDot = "&#128992;"; //🟠
         const string yellowDot = "&#128993;"; //🟡
-        const string greenDot = "&#128994;"; //🟢
-        const string blueDot = "&#128309;"; //🔵
+        const string greenDot  = "&#128994;"; //🟢
+        const string blueDot   = "&#128309;"; //🔵
+
+        /*string dotEmoji = status switch {
+            -4 => "🔵",
+            -3 => "🟡",
+            -2 => "🟠",
+            -1 => "🔴",
+            _ => "🟢",
+        };*/
+
+        StringBuilder body = new StringBuilder();
+        body.Append("<html>");
+        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
+
+        body.Append("<tr><td>&nbsp;</td></tr>");
+
+        body.Append("<tr><td align=\"center\">");
+
+
+        body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\" style=\"text-align:center\">");
+        body.Append("<tr><td style=\"padding:10px\"></td></tr>");
+
+        body.Append("<tr><td style=\"height:40px;color:#202020;font-size:20px\"><b>Watchdog notification</b></td></tr>");
+
+        body.Append("<tr><td style=\"height:28px;font-size:18\">");
+
+        switch (status) {
+        case -4: body.Append(blueDot);   break; //tls not yet valid
+        case -3: body.Append(yellowDot); break; //expiration warning
+        case -2: body.Append(orangeDot); break; //expired
+        case -1: body.Append(redDot);    break; //unreachable
+        default: body.Append(greenDot);  break; //alive
+        }
+
+        string stringStatus = watcher.type switch {
+            WatcherType.icmp        => status < 0 ? "Host is unreachable"     : "Host is reachable",
+            WatcherType.tcp         => status < 0 ? "Endpoint is unreachable" : "Endpoint is reachable",
+            WatcherType.dns         => status < 0 ? "Domain is unresolved"    : "Domain is resolved",
+            WatcherType.http        => status < 0 ? "Response is invalid"     : "Response is valid",
+            WatcherType.httpKeyword => status < 0 ? "Keyword not found"       : "Keyword is found",
+
+            WatcherType.tls => status switch {
+                0 => "Certificate is valid",
+                -1 => "Host is unreachable",
+                -2 => "Certificate is expired",
+                -3 => "Expiration warning",
+                -4 => "Certificate is not yet valid",
+                _ => "Certificate is valid",
+            },
+
+            _ => String.Empty
+        };
+
+        string target;
+        if (watcher.type == WatcherType.tcp) {
+            target = $"{watcher.target}:{watcher.port}";
+        }
+        else {
+            target = watcher.target;
+        }
+
+        body.Append($"&nbsp;&nbsp;{stringStatus}: {target}");
+        body.Append("</td></tr>");
+
+        //body.Append("<tr><td style=\"height:28px;font-size:16\">");
+        //TODO: add short description
+        //body.Append($"{}");
+        //body.Append("</td></tr>");
+
+        body.Append("<tr><td style=\"padding:10px\"></td></tr>");
+        body.Append("</table>");
+
+        body.Append("</td></tr>");
+
+        body.Append("<tr><td>&nbsp;</td></tr>");
+        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+        body.Append("<tr><td>&nbsp;</td></tr>");
+
+        body.Append("</td></tr>");
+
+        body.Append("</table>");
+        body.Append("</html>");
 
 #if !DEBUG
         try
 #endif
         {
-            StringBuilder body = new StringBuilder();
-            body.Append("<html>");
-            body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-            body.Append("<tr><td>&nbsp;</td></tr>");
-
-            body.Append("<tr><td align=\"center\">");
-
-
-            body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\">");
-            body.Append("<tr><td style=\"padding:10px\">");
-
-            body.Append("<tr><td style=\"height:40px;text-align:center;color:#202020;font-size:20px\"><b>Watchdog notification</b></td></tr>");
-
-            body.Append("<tr><td style=\"height:28px;font-size:18;text-align:left\">");
-
-            body.Append(status == 0 ? greenDot : redDot);
-
-            switch (status) {
-            case -4: body.Append(blueDot);   break; //tls not yet valid
-            case -3: body.Append(yellowDot); break; //expiration warning
-            case -2: body.Append(orangeDot); break; //expired
-            case -1: body.Append(redDot);    break; //unreachable
-            default: body.Append(greenDot);  break; //alive
-            }
-
-            string dotEmoji = status switch {
-                -4 => "🔵",
-                -3 => "🟡",
-                -2 => "🟠",
-                -1 => "🔴",
-                _ => "🟢",
-            };
-
-            string stringStatus = watcher.type switch {
-                WatcherType.icmp        => status < 0 ? "Host is unreachable"     : "Host is reachable",
-                WatcherType.tcp         => status < 0 ? "Endpoint is unreachable" : "Endpoint is reachable",
-                WatcherType.dns         => status < 0 ? "Domain is unresolved"    : "Domain is resolved",
-                WatcherType.http        => status < 0 ? "Invalid response"        : "Valid response",
-                WatcherType.httpKeyword => status < 0 ? "Keyword not found"       : "Keyword is found",
-
-                WatcherType.tls => status switch {
-                     0 => "Certificate is valid",
-                    -1 => "Host is unreachable",
-                    -2 => "Certificate is expired",
-                    -3 => "Expiration warning",
-                    -4 => "Certificate is not yet valid",
-                     _ => "Certificate is valid",
-                },
-
-                _ => String.Empty
-            };
-
-            body.Append($"&nbsp;&nbsp;{stringStatus}: {watcher.target}");
-
-            body.Append("</td></tr>");
-
-            body.Append("</td></tr>");
-
-            body.Append("<tr><td style=\"padding:10px\">");
-
-            body.Append("</table>");
-
-
-            body.Append("<tr><td>&nbsp;</td></tr>");
-            body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-            body.Append("<tr><td>&nbsp;</td></tr>");
-
-            body.Append("</td></tr>");
-            body.Append("</table>");
-            body.Append("</html>");
-
             using MailMessage mail = new MailMessage {
-                From = new MailAddress(smtpProfile.sender, "Pro-test"),
-                Subject = $"{dotEmoji} Watchdog notification {DateTime.Now.ToString(Data.DATETIME_FORMAT)}",
+                From = new MailAddress(profile.sender, "Pro-test"),
+                Subject = $"Watchdog notification {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}",
                 IsBodyHtml = true
             };
 
@@ -687,10 +708,10 @@ internal static class Watchdog {
                 mail.To.Add(notification.recipients[i]);
             }
 
-            using SmtpClient smtp = new SmtpClient(smtpProfile.server) {
-                Port = smtpProfile.port,
-                EnableSsl = smtpProfile.ssl,
-                Credentials = new NetworkCredential(smtpProfile.username, smtpProfile.password)
+            using SmtpClient smtp = new SmtpClient(profile.server) {
+                Port = profile.port,
+                EnableSsl = profile.ssl,
+                Credentials = new NetworkCredential(profile.username, profile.password)
             };
             smtp.Send(mail);
         }

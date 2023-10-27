@@ -28,10 +28,12 @@ internal class SmtpProfiles {
         options.Converters.Add(new EmailProfilesJsonConverter(false));
 
         try {
-            byte[] plain = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
+            byte[] bytes = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
+            byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, options);
             return profiles;
-        } catch {
+        }
+        catch {
             return Array.Empty<Profile>();
         }
     }
@@ -44,7 +46,8 @@ internal class SmtpProfiles {
             Profile[] profiles = Load();
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, options);
             return json;
-        } catch {
+        }
+        catch {
             return Data.CODE_FAILED.Array;
         }
     }
@@ -61,7 +64,8 @@ internal class SmtpProfiles {
         try {
             byte[] bytes = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
             oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, options);
-        } catch {
+        }
+        catch {
             oldProfiles = Array.Empty<Profile>();
         }
 
@@ -89,11 +93,14 @@ internal class SmtpProfiles {
                 }
             }
 
-            byte[] file = JsonSerializer.SerializeToUtf8Bytes(newProfiles, options);
-            File.WriteAllBytes(Data.FILE_EMAIL_PROFILES, file);
-        } catch (JsonException) {
+            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, options);
+            byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+            File.WriteAllBytes(Data.FILE_EMAIL_PROFILES, cipher);
+        }
+        catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
-        } catch (Exception) {
+        }
+        catch (Exception) {
             return Data.CODE_FAILED.Array;
         }
 
@@ -114,7 +121,7 @@ internal class SmtpProfiles {
         }
 
         try {
-            Profile[] smtpProfiles =  SmtpProfiles.Load();
+            Profile[] smtpProfiles = SmtpProfiles.Load();
             Profile profile = smtpProfiles.First(o => o.guid.ToString() == guid);
             return SendTest(recipient, profile);
         }
@@ -124,42 +131,41 @@ internal class SmtpProfiles {
     }
 
     public static byte[] SendTest(string recipient, SmtpProfiles.Profile profile) {
-        StringBuilder body = new StringBuilder();
-        body.Append("<html>");
-        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-        body.Append("<tr><td>&nbsp;</td></tr>");
+        string body = """
+            <html>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
 
-        body.Append("<tr><td align=\"center\">");
+            <tr><td>&nbsp;</td></tr>
+            <tr><td align="center">
+            
+            <table width="640" bgcolor="#e0e0e0">
+            <tr><td style="padding:10px"></td></tr>
 
+            <tr><td style="height:28px;font-size:18;text-align:center">
+            You have successfully configure this SMTP profile.
+            </td></tr>
 
-        body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\">");
-        body.Append("<tr><td style=\"padding:10px\">");
-        body.Append("<tr><td style=\"height:28px;font-size:18;text-align:center\">");
-        body.Append("You have successfully configure this SMTP profile.");
-        body.Append("</td></tr>");
-        body.Append("</td></tr>");
+            <tr><td style="padding:10px"></td></tr>
+            </table>
 
-        body.Append("<tr><td style=\"padding:10px\">");
+            </td></tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr><td style="text-align:center;color:#808080">Sent from <a href="https://github.com/veniware/OpenProtest" style="color:#e67624">Pro-test</a></td></tr>
+            <tr><td>&nbsp;</td></tr>
+            </td></tr>
 
-        body.Append("</table>");
-
-
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-
-        body.Append("</td></tr>");
-        body.Append("</table>");
-        body.Append("</html>");
+            </table>
+            </html>
+            """;
 
         try {
             using MailMessage mail = new MailMessage {
                 From = new MailAddress(profile.sender, "Pro-test"),
-                Subject = "SMTP test from Pro-test",
+                Subject = "E-mail test from Pro-test",
                 IsBodyHtml = true
             };
 
-            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
+            AlternateView view = AlternateView.CreateAlternateViewFromString(body, null, "text/html");
             mail.AlternateViews.Add(view);
 
             if (!String.IsNullOrEmpty(recipient)) {
