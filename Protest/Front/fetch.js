@@ -633,7 +633,7 @@ class Fetch extends Tabs {
 
 		const lblDevice = document.createElement("div");
 		lblDevice.style.gridArea = "6 / 3";
-		lblDevice.textContent = "Devices:";
+		lblDevice.textContent = "Import devices:";
 		this.tabsPanel.appendChild(lblDevice);
 		const chkDeviceContainer = document.createElement("div");
 		chkDeviceContainer.style.gridArea = "6 / 5";
@@ -646,7 +646,7 @@ class Fetch extends Tabs {
 
 		const lblUsers = document.createElement("div");
 		lblUsers.style.gridArea = "7 / 3";
-		lblUsers.textContent = "Users:";
+		lblUsers.textContent = "Import users:";
 		this.tabsPanel.appendChild(lblUsers);
 		const chkUsersContainer = document.createElement("div");
 		chkUsersContainer.style.gridArea = "7 / 5";
@@ -659,7 +659,7 @@ class Fetch extends Tabs {
 
 		const lblDebitNotes = document.createElement("div");
 		lblDebitNotes.style.gridArea = "8 / 3";
-		lblDebitNotes.textContent = "Debit notes:";
+		lblDebitNotes.textContent = "Import debit notes:";
 		this.tabsPanel.appendChild(lblDebitNotes);
 		const chkDebitNotesContainer = document.createElement("div");
 		chkDebitNotesContainer.style.gridArea = "8 / 5";

@@ -792,23 +792,23 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
         
-        parameters.TryGetValue("ip",            out string ip);
-        parameters.TryGetValue("port",          out string port);
-        parameters.TryGetValue("protocol",      out string protocol);
-        parameters.TryGetValue("username",      out string username);
-        parameters.TryGetValue("password",      out string password);
-        parameters.TryGetValue("devices",       out string importDevices);
-        parameters.TryGetValue("users",         out string importUsers);
-        parameters.TryGetValue("debitnotes",    out string importDebitNotes);
+        parameters.TryGetValue("ip",         out string ip);
+        parameters.TryGetValue("port",       out string port);
+        parameters.TryGetValue("protocol",   out string protocol);
+        parameters.TryGetValue("username",   out string username);
+        parameters.TryGetValue("password",   out string password);
+        parameters.TryGetValue("devices",    out string importDevices);
+        parameters.TryGetValue("users",      out string importUsers);
+        parameters.TryGetValue("debitnotes", out string importDebitNotes);
 
         IPAddress ipAddress = IPAddress.Parse(ip);
         if (!IPAddress.IsLoopback(ipAddress)) {
             return "{\"error\":\"Please prefer to import data on the same host, via the loopback address, to avoid information exposure.\"}"u8.ToArray();
         }
 
-        bool fetchDevices       = importDevices?.Equals("true") ?? false;
-        bool fetchUsers         = importUsers?.Equals("true") ?? false;
-        bool fetchDebitNotes    = importDebitNotes?.Equals("true") ?? false;
+        bool fetchDevices    = importDevices?.Equals("true") ?? false;
+        bool fetchUsers      = importUsers?.Equals("true") ?? false;
+        bool fetchDebitNotes = importDebitNotes?.Equals("true") ?? false;
 
         string sessionid = null;
         float version = 0f;
@@ -934,7 +934,7 @@ internal static class Fetch {
         return Data.CODE_OK.Array;
     }
 
-    public static void ImportDevicesV4(Uri uri, CookieContainer cookieContainer) {
+    private static void ImportDevicesV4(Uri uri, CookieContainer cookieContainer) {
         using HttpClientHandler handler = new HttpClientHandler();
         handler.CookieContainer = cookieContainer;
 
@@ -1011,7 +1011,7 @@ internal static class Fetch {
         }
     }
 
-    public static void ImportUsersV4(Uri uri, CookieContainer cookieContainer) {
+    private static void ImportUsersV4(Uri uri, CookieContainer cookieContainer) {
         using HttpClientHandler handler = new HttpClientHandler();
         handler.CookieContainer = cookieContainer;
 
@@ -1088,7 +1088,7 @@ internal static class Fetch {
         }
     }
 
-    public static void ImportDebitNotesV4(Uri uri, CookieContainer cookieContainer) {
+    private static void ImportDebitNotesV4(Uri uri, CookieContainer cookieContainer) {
         using HttpClientHandler handler = new HttpClientHandler();
         handler.CookieContainer = cookieContainer;
 
@@ -1129,8 +1129,8 @@ internal static class Fetch {
             }
 
             builder.Append($"\"status\":\"{status}\",");
-            builder.Append($"\"template\":\"{Data.EscapeJsonTextWithUnicodeCharacters(template)}\",");
-            builder.Append($"\"banner\":\"default.svg\",");
+            builder.Append($"\"template\":\"{Data.EscapeJsonText(template)}\",");
+            builder.Append($"\"banner\":\"none.svg\",");
             builder.Append($"\"firstname\":\"{Data.EscapeJsonText(firstname)}\",");
             builder.Append($"\"lastname\":\"{Data.EscapeJsonText(lastname)}\",");
             builder.Append($"\"title\":\"{Data.EscapeJsonText(title)}\",");
@@ -1158,7 +1158,7 @@ internal static class Fetch {
         }
     }
 
-    public static void ImportDevicesV5(Uri uri, CookieContainer cookieContainer) {
+    private static void ImportDevicesV5(Uri uri, CookieContainer cookieContainer) {
         using HttpClientHandler handler = new HttpClientHandler();
         handler.CookieContainer = cookieContainer;
 
@@ -1179,7 +1179,7 @@ internal static class Fetch {
         }
     }
 
-    public static void ImportUsersV5(Uri uri, CookieContainer cookieContainer) {
+    private static void ImportUsersV5(Uri uri, CookieContainer cookieContainer) {
         using HttpClientHandler handler = new HttpClientHandler();
         handler.CookieContainer = cookieContainer;
 
@@ -1200,8 +1200,34 @@ internal static class Fetch {
         }
     }
 
-    public static void ImportDebitNotesV5(Uri uri, CookieContainer cookieContainer) {
+    private record DebitParseHelper {
+        [JsonPropertyName("file")] 
+        public string File { get; set; }
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+    }
+    private static void ImportDebitNotesV5(Uri uri, CookieContainer cookieContainer) {
+        using HttpClientHandler handler = new HttpClientHandler();
+        handler.CookieContainer = cookieContainer;
 
+        using HttpClient client = new HttpClient(handler);
+        client.BaseAddress = uri;
+        client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "5.0"));
+        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
+
+        Task<HttpResponseMessage> listResponse = client.GetAsync($"debit/list?upto=all&short=true&long=true&returned=true");
+        string listPayload = listResponse.Result.Content.ReadAsStringAsync().Result;
+
+        DebitParseHelper[] records = JsonSerializer.Deserialize<DebitParseHelper[]>(listPayload);
+        Console.WriteLine(records.Length);
+
+        for (int i = 0; i < records.Length; i++ ) {
+            Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
+            string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
+            DebitNotes.Create(viewPayload, "Imported");
+        }
     }
 
     public static string GetHiddenAttribute(Uri uri, CookieContainer cookieContainer, string path) {
