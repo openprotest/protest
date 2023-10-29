@@ -72,6 +72,8 @@ internal static class Watchdog {
     private static readonly ConcurrentDictionary<string, Watcher> watchers = new ConcurrentDictionary<string, Watcher>();
     private static ConcurrentBag<Notification> notifications = new ConcurrentBag<Notification>();
 
+    private static readonly object syncNotification = new object();
+
     public static void Initialize() {
         DirectoryInfo dirWatchers = new DirectoryInfo(Data.DIR_WATCHDOG);
         if (dirWatchers.Exists) {
@@ -111,82 +113,7 @@ internal static class Watchdog {
     public static bool StartTask() {
         if (task is not null) return false;
 
-        Thread thread = new Thread(()=> {
-
-            //align time to the next 5-min interval
-            long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
-            Thread.Sleep((int)gap);
-
-            while (true) {
-                long startTimeStamp = DateTime.UtcNow.Ticks;
-                int nextSleep = FIVE_MINUTE_IN_MILLI;
-
-                SmtpProfiles.Profile[] smtpProfiles =  SmtpProfiles.Load();
-
-                foreach (Watcher watcher in watchers.Values) {
-                    if (!watcher.enable) continue;
-
-                    long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
-                    if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
-
-                        watcher.lastCheck = DateTime.UtcNow.Ticks;
-
-                        new Thread(()=> {
-                            short status = watcher.type switch {
-                                WatcherType.icmp        => CheckIcmp(watcher),
-                                WatcherType.tcp         => CheckTcp(watcher),
-                                WatcherType.dns         => CheckDns(watcher),
-                                WatcherType.http        => CheckHttp(watcher),
-                                WatcherType.httpKeyword => CheckHttpKeyword(watcher),
-                                WatcherType.tls         => CheckTls(watcher),
-                                _                       => CheckIcmp(watcher)
-                            };
-
-                            if (watcher.lastStatus != status && watcher.lastStatus != short.MinValue) {
-                                Notification[] gist =  notifications.Where(n => n.watchers.Any(w => w.Equals(watcher.file))).ToArray();
-                                for (int i = 0; i < gist.Length; i++) {
-                                    SmtpProfiles.Profile profile;
-                                    try {
-                                        profile = smtpProfiles.First(o => o?.guid == gist[i]?.smtpProfile?.guid);
-                                    }
-                                    catch {
-                                        continue;
-                                    }
-
-                                    if (profile is null) { continue; }
-
-
-
-                                    if (watcher.lastStatus < 0 && status >= 0 && (gist[i].notify == NotifyOn.rise || gist[i].notify == NotifyOn.both)) { //rise
-                                        SendSmtpNotification(watcher, gist[i], profile, status);
-                                    }
-                                    else if (watcher.lastStatus >= 0 && status < 0 && (gist[i].notify == NotifyOn.fall || gist[i].notify == NotifyOn.both)) { //fall
-                                        SendSmtpNotification(watcher, gist[i], profile, status);
-                                    }
-                                }
-                            }
-
-                            watcher.lastStatus = status;
-
-                        }).Start();
-                    }
-                    else {
-                        int millisRemain = (int)(ticksElapsed / 10_000);
-                        if (nextSleep > millisRemain) {
-                            nextSleep = millisRemain;
-                        }
-                    }
-                }
-
-                Thread.Sleep(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000);
-
-                if (task.cancellationToken.IsCancellationRequested) {
-                    task.Dispose();
-                    task = null;
-                    return;
-                }
-            }
-        });
+        Thread thread = new Thread(()=>WatchLoop());
 
         task = new TaskWrapper("Watchdog") {
             thread = thread,
@@ -194,9 +121,86 @@ internal static class Watchdog {
             TotalSteps = 0,
             CompletedSteps = 0
         };
+
         task.thread.Start();
 
         return true;
+    }
+
+    private static void WatchLoop() {
+        //align time to the next 5-min interval
+        long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
+        Thread.Sleep((int)gap);
+
+        while (true) {
+            long startTimeStamp = DateTime.UtcNow.Ticks;
+            int nextSleep = FIVE_MINUTE_IN_MILLI;
+
+            SmtpProfiles.Profile[] smtpProfiles =  SmtpProfiles.Load();
+
+            foreach (Watcher watcher in watchers.Values) {
+                if (!watcher.enable) continue;
+
+                long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
+                if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
+                    new Thread(() => Watch(watcher, smtpProfiles)).Start();
+                }
+                else {
+                    int millisRemain = (int)(ticksElapsed / 10_000);
+                    if (nextSleep > millisRemain) {
+                        nextSleep = millisRemain;
+                    }
+                }
+            }
+
+            Thread.Sleep(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000);
+
+            if (task.cancellationToken.IsCancellationRequested) {
+                task.Dispose();
+                task = null;
+                return;
+            }
+        }
+    }
+
+    private static void Watch(Watcher watcher, SmtpProfiles.Profile[] smtpProfiles) {
+        watcher.lastCheck = DateTime.UtcNow.Ticks;
+
+        short status = watcher.type switch {
+            WatcherType.icmp        => CheckIcmp(watcher),
+            WatcherType.tcp         => CheckTcp(watcher),
+            WatcherType.dns         => CheckDns(watcher),
+            WatcherType.http        => CheckHttp(watcher),
+            WatcherType.httpKeyword => CheckHttpKeyword(watcher),
+            WatcherType.tls         => CheckTls(watcher),
+            _                       => CheckIcmp(watcher)
+        };
+
+        WriteResult(watcher, status);
+
+        if (watcher.lastStatus != status && watcher.lastStatus != short.MinValue) {
+            Notification[] gist =  notifications.Where(n => n.watchers.Any(w => w.Equals(watcher.file))).ToArray();
+            for (int i = 0; i < gist.Length; i++) {
+                SmtpProfiles.Profile profile;
+                try {
+                    profile = smtpProfiles.First(o => o?.guid == gist[i]?.smtpProfile?.guid);
+                }
+                catch {
+                    continue;
+                }
+
+                if (profile is null) { continue; }
+
+                if (watcher.lastStatus < 0 && status >= 0 && (gist[i].notify == NotifyOn.rise || gist[i].notify == NotifyOn.both)) { //rise
+                    SendSmtpNotification(watcher, gist[i], profile, status);
+                }
+                else if (watcher.lastStatus >= 0 && status < 0 && (gist[i].notify == NotifyOn.fall || gist[i].notify == NotifyOn.both)) { //fall
+                    SendSmtpNotification(watcher, gist[i], profile, status);
+                }
+            }
+        }
+
+        watcher.lastStatus = status;
     }
 
     public static bool StopTask(string initiator) {
@@ -221,7 +225,6 @@ internal static class Watchdog {
             catch (Exception ex) when (ex is not PlatformNotSupportedException) { }
         }
 
-        WriteResult(watcher, result);
         return result;
     }
 
@@ -248,7 +251,6 @@ internal static class Watchdog {
             catch {}
         }
 
-        WriteResult(watcher, result);
         return result;
     }
 
@@ -271,7 +273,6 @@ internal static class Watchdog {
             break;
         }
 
-        WriteResult(watcher, result);
         return result;
     }
 
@@ -301,7 +302,6 @@ internal static class Watchdog {
             catch { }
         }
 
-        WriteResult(watcher, result);
         return result;
     }
 
@@ -333,7 +333,6 @@ internal static class Watchdog {
             catch { }
         }
 
-        WriteResult(watcher, result);
         return result;
     }
 
@@ -369,7 +368,6 @@ internal static class Watchdog {
             break;
         }
 
-        WriteResult(watcher, result);
         return result;
     }
 
@@ -413,6 +411,34 @@ internal static class Watchdog {
         builder.Append(']');
 
         return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    public static byte[] ViewN(Dictionary<string, string> parameters) {
+        if (parameters is null) {
+            return null;
+        }
+
+        if (!parameters.TryGetValue("date", out string date)) {
+            return null;
+        }
+
+        if (!parameters.TryGetValue("file", out string file)) {
+            return null;
+        }
+
+        watchers.TryGetValue(file, out Watcher watcher);
+
+        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
+
+        lock (watcher?.sync) {
+            try {
+                byte[] bytes = File.ReadAllBytes(filename);
+                return bytes;
+            }
+            catch {
+                return null;
+            }
+        }
     }
 
     public static byte[] View(Dictionary<string, string> parameters) {
@@ -591,7 +617,9 @@ internal static class Watchdog {
             options.Converters.Add(new NotificationJsonConverter());
             notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, options);
 
-            File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
+            lock (syncNotification) {
+                File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
+            }
             
             Logger.Action(initiator, $"Modified watchdog notifications");
 

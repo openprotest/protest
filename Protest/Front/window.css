@@ -377,7 +377,6 @@
 	border-radius: 50%;
 	border-style: solid;
 	border-color: rgb(255,255,255) rgb(255,255,255) transparent transparent;
-	backdrop-filter: invert(1);
 	border-width: 2px 3px 3px 0px;
 	box-sizing: border-box;
 	animation: spin 2s linear infinite;

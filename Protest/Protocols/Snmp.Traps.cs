@@ -1,5 +1,5 @@
 ﻿namespace Protest.Protocols.Snmp;
 
-internal class Traps {
+internal static class Traps {
 
 }

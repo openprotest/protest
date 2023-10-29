@@ -197,7 +197,6 @@ internal static class Fetch {
             tSnmp?.Join();
             tAd?.Join();
             tPortscan?.Join();
-
         }
         else {
             tWmi?.Start(); tWmi?.Join();

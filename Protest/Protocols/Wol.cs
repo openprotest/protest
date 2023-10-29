@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Protest.Protocols;
 
-internal class Wol {
+internal static class Wol {
     public static byte[] Wakeup(Dictionary<string, string> parameters) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;

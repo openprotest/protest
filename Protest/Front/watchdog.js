@@ -2,6 +2,37 @@ class Watchdog extends Window {
 	static HOUR_TICKS = 3_600_000;
 	static DAY_TICKS  = 3_600_000 * 24;
 
+	async test() {
+		const response = await fetch("http://127.0.0.1:8080/watchdog/view_n?date=2023-10-29&file=8dbcc921df17f63");
+		const buffer = await response.arrayBuffer();
+		
+		const bytes = new Uint8Array(buffer);
+		console.log(bytes);
+
+		for (let i = 0; i < bytes.length; i += 10) {
+			
+			let long = bytes[i] +
+			           (bytes[i+1] << 8) |
+			           (bytes[i+2] << 16) |
+			           (bytes[i+3] << 24) |
+			           (bytes[i+4] << 32) |
+			           (bytes[i+5] << 40) |
+			           (bytes[i+6] << 48) |
+			           (bytes[i+7] << 56); //TODO:fix  on back-end: convert to unix format
+
+			console.log(bytes[i], bytes[i+1], bytes[i+2], bytes[i+3], bytes[i+4], bytes[i+5], bytes[i+6], bytes[i+7]);
+			console.log(long);
+			
+			
+			let short = (bytes[i+8] << 8) | bytes[i+9];
+			if (short >= 32768) {
+				short = -(65536 - short);
+			}
+			console.log(bytes[8], bytes[i+9], short);
+		}
+	}
+
+
 	constructor() {
 		super();
 

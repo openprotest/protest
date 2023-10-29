@@ -2,7 +2,7 @@
 using System.Net;
 
 namespace Protest.Tools;
-internal class Zones {
+internal static class Zones {
     public static byte[] ListZones() {
         if (!File.Exists(Data.FILE_ZONES)) return "[]"u8.ToArray();
 

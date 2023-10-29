@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Net;
-using System.Text;
 
 namespace Protest.Tools;
 
-internal class SpeedTest {
+internal static class SpeedTest {
     static readonly byte[] buffer = Cryptography.RandomByteGenerator(65_535);
 
     public static byte[] DownStream(HttpListenerContext ctx, Dictionary<string, string> parameters) {

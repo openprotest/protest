@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Protest.Tools;
 
-class Documentation {
+internal static class Documentation {
     private static readonly object syncLock = new object();
 
     public static byte[] List(Dictionary<string, string> parameters) {

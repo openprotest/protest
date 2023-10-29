@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Protest.Protocols.Snmp;
 
-internal class Polling {
+internal static class Polling {
     public static void Poll(IPAddress target, string communityString, string oidString) {
         IPEndPoint endpoint = new IPEndPoint(target, 161);
         OctetString community = new OctetString(communityString);

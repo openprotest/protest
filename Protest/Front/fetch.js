@@ -692,6 +692,12 @@ class Fetch extends Tabs {
 		description.textContent = "Use this utility to import an inventory from another Pro-test. It's recommended to import on a blank database. Conflicts and duplicate records will not be managed.";
 		description.style.gridArea = "12 / 2 / auto / 7";
 		description.style.fontSize = "small";
+		description.style.paddingLeft = "48px";
+		description.style.minHeight = "40px";
+		description.style.backgroundImage = "url(mono/warning.svg)";
+		description.style.backgroundPosition = "2px center";
+		description.style.backgroundSize = "40px 40px";
+		description.style.backgroundRepeat = "no-repeat";
 		this.tabsPanel.appendChild(description);
 
 		btnImport.onclick = async ()=> {

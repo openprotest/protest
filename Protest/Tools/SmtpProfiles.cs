@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Protest.Tools;
-internal class SmtpProfiles {
+internal static class SmtpProfiles {
     public record Profile {
         public string server;
         public int port;

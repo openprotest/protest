@@ -2,7 +2,7 @@
 using System.Net.NetworkInformation;
 
 namespace Protest.Tools {
-    internal class LastSeen {
+    internal static class LastSeen {
         public static void Seen(in string ip) {
             try {
                 string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
