@@ -33,7 +33,7 @@ internal static class Lifeline {
 
     public static void Ping(string host) {
         try {
-            
+
         }
         catch { }
     }
