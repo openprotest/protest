@@ -1,4 +1,6 @@
-﻿namespace Protest.Tools;
+﻿using System.Net;
+
+namespace Protest.Tools;
 
 internal static class Lifeline {
     public static void Initialize() {
@@ -31,25 +33,29 @@ internal static class Lifeline {
         }
     }
 
-    public static void Ping(string host) {
+    private static void Ping(string host) {
         try {
 
         }
         catch { }
     }
 
-    public static void Memory(string host) {
+    private static void Memory(string host) {
         try {
 
         }
         catch { }
     }
 
-    public static void Disk(string host) {
+    private static void Disk(string host) {
         try {
 
         }
         catch { }
+    }
+
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
+
     }
 
 }

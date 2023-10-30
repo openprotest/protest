@@ -16,7 +16,7 @@ public static class Data {
     public const string TIME_FORMAT = "HH:mm:ss";
     public const string TIME_FORMAT_MILLI = "HH:mm:ss:fff";
     public const string DATE_FORMAT = "dd-MM-yyyy";
-    public const string DATE_FORMAT_FILE = "yyyy-MM-dd";
+    public const string DATE_FORMAT_FILE = "yyyyMMdd";
     public const string DATETIME_FORMAT = "ddd, dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_TIMEZONE = "ddd, dd MMM yyyy HH:mm:ss zzz";
     public const string DATETIME_FORMAT_LONG = "dddd dd MMM yyyy HH:mm:ss";

@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Mail;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Protest.Tools;
 
@@ -418,34 +419,6 @@ internal static class Watchdog {
         builder.Append(']');
 
         return Encoding.UTF8.GetBytes(builder.ToString());
-    }
-
-    public static byte[] ViewN(Dictionary<string, string> parameters) {
-        if (parameters is null) {
-            return null;
-        }
-
-        if (!parameters.TryGetValue("date", out string date)) {
-            return null;
-        }
-
-        if (!parameters.TryGetValue("file", out string file)) {
-            return null;
-        }
-
-        watchers.TryGetValue(file, out Watcher watcher);
-
-        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
-
-        lock (watcher?.sync) {
-            try {
-                byte[] bytes = File.ReadAllBytes(filename);
-                return bytes;
-            }
-            catch {
-                return null;
-            }
-        }
     }
 
     public static byte[] View(Dictionary<string, string> parameters) {

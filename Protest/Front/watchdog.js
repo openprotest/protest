@@ -2,37 +2,6 @@ class Watchdog extends Window {
 	static HOUR_TICKS = 3_600_000;
 	static DAY_TICKS  = 3_600_000 * 24;
 
-	async test() {
-		const response = await fetch("http://127.0.0.1:8080/watchdog/view_n?date=2023-10-29&file=8dbcc921df17f63");
-		const buffer = await response.arrayBuffer();
-		
-		const bytes = new Uint8Array(buffer);
-		console.log(bytes);
-
-		for (let i = 0; i < bytes.length; i += 10) {
-			
-			let long = bytes[i] +
-			           (bytes[i+1] << 8) |
-			           (bytes[i+2] << 16) |
-			           (bytes[i+3] << 24) |
-			           (bytes[i+4] << 32) |
-			           (bytes[i+5] << 40) |
-			           (bytes[i+6] << 48) |
-			           (bytes[i+7] << 56); //TODO:fix  on back-end: convert to unix format
-
-			console.log(bytes[i], bytes[i+1], bytes[i+2], bytes[i+3], bytes[i+4], bytes[i+5], bytes[i+6], bytes[i+7]);
-			console.log(long);
-			
-			
-			let short = (bytes[i+8] << 8) | bytes[i+9];
-			if (short >= 32768) {
-				short = -(65536 - short);
-			}
-			console.log(bytes[8], bytes[i+9], short);
-		}
-	}
-
-
 	constructor() {
 		super();
 
@@ -1010,29 +979,34 @@ class Watchdog extends Window {
 		this.stats.textContent = "";
 		if (watcher === null) return;
 
-		const uptimeBox = document.createElement("div");
-		this.stats.appendChild(uptimeBox);
-
-		const uptimeLabel = document.createElement("div");
-		uptimeLabel.textContent = "Uptime";
-		uptimeLabel.style.fontSize = "larger";
-		uptimeLabel.style.fontWeight = "bold";
-
-		const uptimeLabel2 = document.createElement("div");
-		uptimeLabel2.textContent = "(24-hour)";
-		uptimeLabel2.style.fontSize = "smaller";
-
-		const uptimeValue = document.createElement("div");
-		uptimeValue.style.fontSize = "xx-large";
-
-		uptimeBox.append(uptimeLabel, uptimeLabel2, uptimeValue);
+		const CreateStatBox = (title, subtitle, value)=>{
+			const box = document.createElement("div");
+			this.stats.appendChild(box);
+	
+			const titleBox = document.createElement("div");
+			titleBox.textContent = title;
+			titleBox.style.fontSize = "larger";
+			titleBox.style.fontWeight = "bold";
+	
+			const titleBox2 = document.createElement("div");
+			titleBox2.textContent = subtitle;
+			titleBox2.style.fontSize = "smaller";
+	
+			const valueBox = document.createElement("div");
+			valueBox.textContent = value;
+			valueBox.style.fontSize = "xx-large";
+	
+			box.append(titleBox, titleBox2, valueBox);
+		};
 
 		let today = this.cache[this.today] ? this.cache[this.today][watcher.file] ?? {} : {};
 		let yesterday = this.cache[this.today-Watchdog.DAY_TICKS] ? this.cache[this.today-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
 
 		let uptime24 = {...today, ...yesterday};
+
 		let total = 0;
 		let uptimeCount = 0;
+		let min = Number.MAX_SAFE_INTEGER, max = 0;
 		let totalRoundtrip = 0;
 		for (let time in uptime24) {
 			if (time < Date.now() - Watchdog.DAY_TICKS) continue;
@@ -1040,39 +1014,26 @@ class Watchdog extends Window {
 			if (uptime24[time] >= 0) {
 				uptimeCount++;
 				totalRoundtrip += uptime24[time];
+				if (min > uptime24[time]) min = uptime24[time];
+				if (max < uptime24[time]) max = uptime24[time];
 			}
 		}
 
 		if (total === 0) {
-			uptimeValue.textContent = "--";
+			CreateStatBox("Uptime", "(24-hour)", "--");
 		}
 		else {
-			uptimeValue.textContent = `${Math.round(uptimeCount * 1000 / total) / 10}%`;
+			CreateStatBox("Uptime", "(24-hour)", `${Math.round(uptimeCount * 1000 / total) / 10}%`);
 		}
 
 		if (watcher.type === "ICMP" || watcher.type === "TCP") {
-			const roundtripBox = document.createElement("div");
-			this.stats.appendChild(roundtripBox);
-
-			const roundtripLabel = document.createElement("div");
-			roundtripLabel.textContent = watcher.type === "ICMP" ? "Average roundtrip" : "Average response";
-			roundtripLabel.style.fontSize = "larger";
-			roundtripLabel.style.fontWeight = "bold";
-	
-			const roundtripLabel2 = document.createElement("div");
-			roundtripLabel2.textContent = "(24-hour)";
-			roundtripLabel2.style.fontSize = "smaller";
-	
-			const roundtripValue = document.createElement("div");
-			roundtripValue.style.fontSize = "xx-large";
-
-			roundtripBox.append(roundtripLabel, roundtripLabel2, roundtripValue);
-
 			if (uptimeCount === 0) {
-				roundtripValue.textContent = "--";
+				CreateStatBox("Average roundtrip", "(24-hour)", "--");
+				CreateStatBox("Min-max roundtrip", "(24-hour)", "--");
 			}
 			else {
-				roundtripValue.textContent = `${Math.round(totalRoundtrip / uptimeCount)} ms`;
+				CreateStatBox("Average roundtrip", "(24-hour)", `${Math.round(totalRoundtrip / uptimeCount)} ms`);
+				CreateStatBox("Min-max roundtrip", "(24-hour)", `${min}-${max}ms`);
 			}
 		}
 	}
@@ -1091,7 +1052,7 @@ class Watchdog extends Window {
 			if (right < -this.dayPixels) break;
 
 			let day = new Date(date);
-			let dayString = `${day.getFullYear()}-${`${day.getMonth()+1}`.padStart(2,"0")}-${`${day.getDate()}`.padStart(2,"0")}`;
+			let dayString = `${day.getFullYear()}${`${day.getMonth()+1}`.padStart(2,"0")}${`${day.getDate()}`.padStart(2,"0")}`;
 
 			if (!this.cache.hasOwnProperty(date)) {
 				this.cache[date] = {};
@@ -1103,16 +1064,21 @@ class Watchdog extends Window {
 					continue;
 				}
 
-				this.cache[date][file] = {};
+				if (!this.cache[date].hasOwnProperty(file)) {
+					this.cache[date][file] = null;
+				}
 				
 				const response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
 				const buffer = await response.arrayBuffer();
 				const bytes = new Uint8Array(buffer);
 
+				if (this.cache[date][file] === null) {
+					this.cache[date][file] = {};
+				}
+
 				for (let i=0; i<bytes.length-9; i+=10) {
 					const arrayBuffer = new ArrayBuffer(8);
 					const dataView = new DataView(arrayBuffer);
-					
 					for (let j=0; j<8; j++) {
 						dataView.setUint8(j, bytes[i+j]);
 					}
@@ -1169,10 +1135,13 @@ class Watchdog extends Window {
 		svg.style.outline = "none";
 
 		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
+
+			if (this.cache[date][file] === null) {
+				return svg;
+			}
+
 			let lastX = -20;
 			let lastV = -20;
-			
-			let count = 0;
 			for (let key in this.cache[date][file]) {
 				let x = (key - date) * this.dayPixels / Watchdog.DAY_TICKS - 3;
 				let value = this.cache[date][file][key];
@@ -1208,12 +1177,6 @@ class Watchdog extends Window {
 				else { //other
 					dot.setAttribute("fill", "rgb(128,128,128)");
 				}
-
-				count++;
-			}
-
-			if (count > 0) {
-				svg.setAttribute("date", date);
 			}
 		}
 
