@@ -11,12 +11,10 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Mail;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Protest.Tools;
 
 internal static class Watchdog {
-    private const long UNIX_BASE_TICKS      = 621_355_968_000_000_000L;
     private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
     private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
     private const long MINUTE_IN_TICKS      = 600_000_000L;
@@ -294,10 +292,15 @@ internal static class Watchdog {
                 int category = statusCode / 100 - 1;
 
                 if (watcher.httpstatus.Length < category) continue;
-                if (!watcher.httpstatus[category]) continue;
 
-                result = 0;
-                break;
+                if (watcher.httpstatus[category]) {
+                    result = 0;
+                    break;
+                }
+                else {
+                    result = (short)(-statusCode);
+                    break;
+                }
             }
             catch { }
         }
@@ -324,11 +327,17 @@ internal static class Watchdog {
                 int category = statusCode / 100 - 1;
 
                 if (watcher.httpstatus.Length < category) continue;
-                if (!watcher.httpstatus[category]) continue;
-                if (!response.Content.ReadAsStringAsync().Result.Contains(watcher.keyword, StringComparison.OrdinalIgnoreCase)) continue;
+                //if (!watcher.httpstatus[category]) continue;
 
-                result = 0;
-                break;
+                if (watcher.httpstatus[category]) {
+                    if (!response.Content.ReadAsStringAsync().Result.Contains(watcher.keyword, StringComparison.OrdinalIgnoreCase)) continue;
+                    result = 0;
+                    break;
+                }
+                else {
+                    result = (short)(-statusCode);
+                    break;
+                }
             }
             catch { }
         }
@@ -372,19 +381,17 @@ internal static class Watchdog {
     }
 
     private static bool WriteResult(Watcher watcher, short result) {
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.UtcNow;
         string dir = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_";
         string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
         lock (watcher.sync) {
             try {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
                 using FileStream stream = new FileStream(path, FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-                writer.Write(now.Ticks); //8 bytes
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                 writer.Write(result); //2 bytes
                 stream.Close();
-
                 return true;
             }
             catch (Exception ex) {
@@ -443,77 +450,24 @@ internal static class Watchdog {
 
     public static byte[] View(Dictionary<string, string> parameters) {
         if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return null;
+        }
+
+        if (!parameters.TryGetValue("file", out string file)) {
+            return null;
         }
 
         if (!parameters.TryGetValue("date", out string date)) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return null;
         }
-
-        if (parameters.TryGetValue("file", out string file)) { //single file
-            StringBuilder builder = new StringBuilder();
-            
-            builder.Append('{');
-            builder.Append($"\"{file}\":");
-            ViewFile(date, file, builder);
-            builder.Append('}');
-
-            return Encoding.UTF8.GetBytes(builder.ToString());
-        }
-        else { //if no file, send all files for that day
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append('{');
-
-            bool first = true;
-            foreach (Watcher watcher in watchers.Values) {
-                if (!first) { builder.Append(','); }
-
-                builder.Append($"\"{watcher.file}\":");
-                ViewFile(date, watcher.file, builder);
-
-                first = false;
-            }
-
-            builder.Append('}');
-
-            return Encoding.UTF8.GetBytes(builder.ToString());
-        }
-    }
-
-    private static void ViewFile(string date, string file, StringBuilder builder) {
-        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
-        
-        if (!File.Exists(filename)) {
-            builder.Append("null");
-            return;
-        }
-
-        watchers.TryGetValue(file, out Watcher watcher);
-
-        builder.Append('{');
 
         try {
-            lock (watcher?.sync) {
-                using FileStream stream = File.Open(filename, FileMode.Open);
-                using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false);
-
-                bool first = true;
-                while (reader.BaseStream.Position < reader.BaseStream.Length) {
-                    long ticks = reader.ReadInt64();
-                    long unixDate = (ticks - UNIX_BASE_TICKS) / 10_000;
-                    short result = reader.ReadInt16();
-
-                    if (!first) builder.Append(',');
-                    builder.Append($"\"{unixDate}\":{result}");
-
-                    first = false;
-                }
-            }
+            byte[] bytes = File.ReadAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}");
+            return bytes;
         }
-        catch {}
-
-        builder.Append('}');
+        catch {
+            return null;
+        }
     }
 
     public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string initiator) {
@@ -639,11 +593,12 @@ internal static class Watchdog {
         const string blueDot   = "&#128309;"; //🔵
 
         /*string dotEmoji = status switch {
+             0 => "🟢",
             -4 => "🔵",
             -3 => "🟡",
             -2 => "🟠",
             -1 => "🔴",
-            _ => "🟢",
+            _ => "🟠",
         };*/
 
         StringBuilder body = new StringBuilder();
@@ -658,32 +613,31 @@ internal static class Watchdog {
         body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\" style=\"text-align:center\">");
         body.Append("<tr><td style=\"padding:10px\"></td></tr>");
 
-        body.Append("<tr><td style=\"height:40px;color:#202020;font-size:20px\"><b>Watchdog notification</b></td></tr>");
-
-        body.Append("<tr><td style=\"height:28px;font-size:18\">");
+        body.Append("<tr><td style=\"height:40px;color:#202020;font-size:20px\"><b>");
 
         switch (status) {
+        case  0: body.Append(greenDot);  break; //ok
         case -4: body.Append(blueDot);   break; //tls not yet valid
         case -3: body.Append(yellowDot); break; //expiration warning
         case -2: body.Append(orangeDot); break; //expired
         case -1: body.Append(redDot);    break; //unreachable
-        default: body.Append(greenDot);  break; //alive
+        default: body.Append(orangeDot); break; 
         }
 
         string stringStatus = watcher.type switch {
-            WatcherType.icmp        => status < 0 ? "Host is unreachable"     : "Host is reachable",
-            WatcherType.tcp         => status < 0 ? "Endpoint is unreachable" : "Endpoint is reachable",
-            WatcherType.dns         => status < 0 ? "Domain is unresolved"    : "Domain is resolved",
-            WatcherType.http        => status < 0 ? "Response is invalid"     : "Response is valid",
-            WatcherType.httpKeyword => status < 0 ? "Keyword not found"       : "Keyword is found",
+            WatcherType.icmp        => status < 0 ? "Host is unreachable"    : "Host is reachable",
+            WatcherType.tcp         => status < 0 ? "Connection failed"      : "Connection succeeded",
+            WatcherType.dns         => status < 0 ? "Domain is not resolved" : "Domain is resolved",
+            WatcherType.http        => status < 0 ? "Response not valid"     : "Response is valid",
+            WatcherType.httpKeyword => status < 0 ? "Keyword not found"      : "Keyword is found",
 
             WatcherType.tls => status switch {
-                0 => "Certificate is valid",
+                0  => "Certificate is valid",
                 -1 => "Host is unreachable",
-                -2 => "Certificate is expired",
+                -2 => "Certificate expired",
                 -3 => "Expiration warning",
                 -4 => "Certificate is not yet valid",
-                _ => "Certificate is valid",
+                _  => "Certificate is valid",
             },
 
             _ => String.Empty
@@ -698,11 +652,82 @@ internal static class Watchdog {
         }
 
         body.Append($"&nbsp;&nbsp;{stringStatus}: {target}");
+        body.Append("</b></td></tr>");
+
+
+        body.Append("<tr><td style=\"height:28px;font-size:18\">");
+        switch (watcher.type) {
+        case WatcherType.icmp:
+            if (status < 0) {
+                body.Append($"<b>{watcher.target}</b> stoped responding to ICMP requests.");
+            }
+            else {
+                body.Append($"<b>{watcher.target}</b> is now responding to ICMP requests.");
+            }
+            break;
+
+        case WatcherType.tcp:
+            if (status < 0) {
+                body.Append($"<b>{watcher.target}</b> stoped listening on TCP port {watcher.port}.");
+            }
+            else {
+                body.Append($"<b>{watcher.target}</b> is now listening on TCP port {watcher.port}.");
+            }
+            break;
+
+        case WatcherType.dns:
+            if (status < 0) {
+                body.Append($"<b>{watcher.query}</b>'s IP address could not be found on {watcher.target}.");
+            }
+            else {
+                body.Append($"<b>{watcher.query}</b>'s IP address is now found on {watcher.target}.");
+            }
+            break;
+
+        case WatcherType.http:
+            if (status < 0) {
+                if (status <= -100) {
+                    body.Append($"HTTP response from <b>{watcher.target}</b> is not valid. Server responded with a HTTP status of \"{status * -1}\"");
+                }
+                else {
+                    body.Append($"HTTP response from <b>{watcher.target}</b> is not valid.");
+                }
+            }
+            else {
+                body.Append($"HTTP response from <b>{watcher.target}</b> is now valid.");
+            }
+            break;
+
+        case WatcherType.httpKeyword:
+            if (status < 0) {
+                if (status <= -100) {
+                    body.Append($"Keyword <b>{watcher.keyword}</b> is not found on {watcher.target}. Server responded with a HTTP status of \"{status * -1}\"");
+                }
+                else {
+                    body.Append($"Keyword <b>{watcher.keyword}</b> is not found on {watcher.target}.");
+                }
+            }
+            else {
+                body.Append($"Keyword <b>{watcher.keyword}</b> is now found on {watcher.target}.");
+            }
+            break;
+
+        case WatcherType.tls:
+            switch (status) {
+            case  0: body.Append($"Certificate for <b>{watcher.target}</b> is now valid."); break;
+            case -1: body.Append($"Host for <b>{watcher.target}</b> is unreachable."); break;
+            case -2: body.Append($"Certificate for <b>{watcher.target}</b> is expired."); break;
+            case -3: body.Append($"Certificate for <b>{watcher.target}</b> is close to it's expiration date."); break;
+            case -4: body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached."); break;
+            //default: body.Append($""); break;
+            }
+            break;
+        }
         body.Append("</td></tr>");
 
-        //body.Append("<tr><td style=\"height:28px;font-size:16\">");
-        //TODO: add short description
-        //body.Append($"{}");
+
+        //body.Append("<tr><td style=\"padding:10px;font-size:16\">");
+        //body.Append($"");
         //body.Append("</td></tr>");
 
         body.Append("<tr><td style=\"padding:10px\"></td></tr>");
@@ -725,7 +750,7 @@ internal static class Watchdog {
         {
             using MailMessage mail = new MailMessage {
                 From = new MailAddress(profile.sender, "Pro-test"),
-                Subject = $"Watchdog notification {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}",
+                Subject = $"Watchdog notification - {target} - {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}",
                 IsBodyHtml = true
             };
 

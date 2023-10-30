@@ -1084,6 +1084,8 @@ class Watchdog extends Window {
 		const high = this.today + Watchdog.DAY_TICKS;
 		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
 		
+		const timezoneOffset = new Date().getTimezoneOffset() * Watchdog.HOUR_TICKS / 60;
+
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
 			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right < -this.dayPixels) break;
@@ -1093,15 +1095,6 @@ class Watchdog extends Window {
 
 			if (!this.cache.hasOwnProperty(date)) {
 				this.cache[date] = {};
-				let response = await fetch(`watchdog/view?date=${dayString}`);
-				let json = await response.json();
-
-				this.cache[date] = json;
-				for (let file in json) {
-					this.DrawWatcher(this.watchers[file]);
-				}
-
-				continue;
 			}
 
 			for (let file in this.watchers) {
@@ -1112,10 +1105,26 @@ class Watchdog extends Window {
 
 				this.cache[date][file] = {};
 				
-				let response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
-				let json = await response.json();
+				const response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
+				const buffer = await response.arrayBuffer();
+				const bytes = new Uint8Array(buffer);
 
-				this.cache[date][file] = json[file];
+				for (let i=0; i<bytes.length-9; i+=10) {
+					const arrayBuffer = new ArrayBuffer(8);
+					const dataView = new DataView(arrayBuffer);
+					
+					for (let j=0; j<8; j++) {
+						dataView.setUint8(j, bytes[i+j]);
+					}
+					const time = Number(dataView.getBigInt64(0, true)) - timezoneOffset;
+
+					let status = (bytes[i+9] << 8) | bytes[i+8];
+					if (status >= 32768) { //it's negative number
+						status = -(65536 - status);
+					}
+
+					this.cache[date][file][time] = status;
+				}
 
 				this.DrawWatcher(this.watchers[file]);
 			}
@@ -1125,6 +1134,7 @@ class Watchdog extends Window {
 	DrawWatcher(watcher) {
 		let previous = {};
 		for (let i = 0; i < watcher.element.childNodes[2].childNodes.length; i++) {
+			if (!watcher.element.childNodes[2].childNodes[i].getAttribute("date")) continue;
 			previous[watcher.element.childNodes[2].childNodes[i].getAttribute("date")] = watcher.element.childNodes[2].childNodes[i];
 		}
 
@@ -1159,11 +1169,10 @@ class Watchdog extends Window {
 		svg.style.outline = "none";
 
 		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
-			svg.setAttribute("date", date);
-
 			let lastX = -20;
 			let lastV = -20;
-
+			
+			let count = 0;
 			for (let key in this.cache[date][file]) {
 				let x = (key - date) * this.dayPixels / Watchdog.DAY_TICKS - 3;
 				let value = this.cache[date][file][key];
@@ -1199,6 +1208,12 @@ class Watchdog extends Window {
 				else { //other
 					dot.setAttribute("fill", "rgb(128,128,128)");
 				}
+
+				count++;
+			}
+
+			if (count > 0) {
+				svg.setAttribute("date", date);
 			}
 		}
 
