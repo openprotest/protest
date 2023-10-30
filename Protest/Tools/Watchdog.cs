@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Net.Mail;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 
 namespace Protest.Tools;
 
@@ -114,7 +115,7 @@ internal static class Watchdog {
 
             //align time to the next 5-min interval
             long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
-            Thread.Sleep((int)gap);
+//            Thread.Sleep((int)gap);
 
             while (true) {
                 long startTimeStamp = DateTime.UtcNow.Ticks;
@@ -385,19 +386,17 @@ internal static class Watchdog {
     }
 
     private static bool WriteResult(Watcher watcher, short result) {
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.UtcNow;
         string dir = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_";
         string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
         lock (watcher.sync) {
             try {
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
                 using FileStream stream = new FileStream(path, FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-                writer.Write(now.Ticks); //8 bytes
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                 writer.Write(result); //2 bytes
                 stream.Close();
-
                 return true;
             }
             catch (Exception ex) {
@@ -428,77 +427,24 @@ internal static class Watchdog {
 
     public static byte[] View(Dictionary<string, string> parameters) {
         if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return null;
+        }
+
+        if (!parameters.TryGetValue("file", out string file)) {
+            return null;
         }
 
         if (!parameters.TryGetValue("date", out string date)) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return null;
         }
-
-        if (parameters.TryGetValue("file", out string file)) { //single file
-            StringBuilder builder = new StringBuilder();
-            
-            builder.Append('{');
-            builder.Append($"\"{file}\":");
-            ViewFile(date, file, builder);
-            builder.Append('}');
-
-            return Encoding.UTF8.GetBytes(builder.ToString());
-        }
-        else { //if no file, send all files for that day
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append('{');
-
-            bool first = true;
-            foreach (Watcher watcher in watchers.Values) {
-                if (!first) { builder.Append(','); }
-
-                builder.Append($"\"{watcher.file}\":");
-                ViewFile(date, watcher.file, builder);
-
-                first = false;
-            }
-
-            builder.Append('}');
-
-            return Encoding.UTF8.GetBytes(builder.ToString());
-        }
-    }
-
-    private static void ViewFile(string date, string file, StringBuilder builder) {
-        string filename = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}";
-        
-        if (!File.Exists(filename)) {
-            builder.Append("null");
-            return;
-        }
-
-        watchers.TryGetValue(file, out Watcher watcher);
-
-        builder.Append('{');
 
         try {
-            lock (watcher?.sync) {
-                using FileStream stream = File.Open(filename, FileMode.Open);
-                using BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, false);
-
-                bool first = true;
-                while (reader.BaseStream.Position < reader.BaseStream.Length) {
-                    long ticks = reader.ReadInt64();
-                    long unixDate = Data.DateTimeToUnixDate(ticks);
-                    short result = reader.ReadInt16();
-
-                    if (!first) builder.Append(',');
-                    builder.Append($"\"{unixDate}\":{result}");
-
-                    first = false;
-                }
-            }
+            byte[] bytes = File.ReadAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}");
+            return bytes;
         }
-        catch {}
-
-        builder.Append('}');
+        catch {
+            return null;
+        }
     }
 
     public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string initiator) {

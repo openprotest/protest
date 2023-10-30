@@ -112,16 +112,6 @@ public static class Data {
         return size.ToString();
     }
 
-    private const long UNIX_BASE_TICKS = 621_355_968_000_000_000L; //January 1, 1970
-    public static long DateTimeToUnixDate(DateTime date) {
-        return DateTimeToUnixDate(date.Ticks);
-    }
-    public static long DateTimeToUnixDate(long ticks) {
-        long unixTimestamp = ticks - UNIX_BASE_TICKS - TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).Ticks;
-        unixTimestamp /= 10_000;
-        return unixTimestamp;
-    }
-
     public static byte[] VersionToJson() {
         Version ver = Assembly.GetExecutingAssembly().GetName().Version;
         StringBuilder result = new StringBuilder();
