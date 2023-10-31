@@ -26,7 +26,7 @@ class Watchdog extends Window {
 		this.editButton.onclick         = ()=> this.EditWatcher();
 		this.deleteButton.onclick       = ()=> this.DeleteWatcher();
 		this.notificationButton.onclick = ()=> this.NotificationsDialog();
-		this.reloadButton.onclick       = ()=> this.GetWatchers();
+		this.reloadButton.onclick       = ()=> this.ListWatchers();
 		this.zoomOutButton.onclick      = ()=> this.ZoomOut();
 		this.zoomInButton.onclick       = ()=> this.ZoomIn();
 		this.gotoButton.onclick         = ()=> this.GoTo();
@@ -53,7 +53,7 @@ class Watchdog extends Window {
 		this.timezonePixelOffset = new Date().getTimezoneOffset() * (this.dayPixels / 24) / 60;
 
 		let now = Date.now();
-		this.utcToday = new Date(now - now % Watchdog.DAY_TICKS).getTime() + this.timezoneOffset;
+		this.utcToday = new Date(now - now % Watchdog.DAY_TICKS).getTime();
 
 		let seeking = false;
 		let mouseX0;
@@ -95,7 +95,7 @@ class Watchdog extends Window {
 		this.win.addEventListener("mouseup", event=> this.timeline.onmouseup(event));
 	
 		this.UpdateAuthorization();
-		this.GetWatchers();
+		this.ListWatchers();
 
 		setTimeout(()=> { this.AfterResize(); }, 250);
 	}
@@ -196,7 +196,7 @@ class Watchdog extends Window {
 		this.notificationButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
 	}
 
-	async GetWatchers() {
+	async ListWatchers() {
 		let now = Date.now();
 		this.utcToday = new Date(now - now % Watchdog.DAY_TICKS).getTime() + this.timezoneOffset;
 
@@ -1054,13 +1054,31 @@ class Watchdog extends Window {
 		}
 	}
 
-	async Seek() {
+	Seek() {
 		this.DrawTimeline();
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.utcToday + Watchdog.DAY_TICKS;
 		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
-		
+
+		let delta = this.offset / this.dayPixels;
+		if (delta > 1) {
+			let today = new Date(this.utcToday);
+			let todayString = `${today.getFullYear()}${`${today.getMonth()+1}`.padStart(2,"0")}${`${today.getDate()}`.padStart(2,"0")}`;
+			if (!this.cache.hasOwnProperty(today.getTime())) { this.cache[today.getTime()] = {}; }
+			for (let file in this.watchers) {
+				this.GetWatcher(today.getTime(), file, todayString);
+			}
+		}
+		if (delta > 2) {
+			let yesterday = new Date(this.utcToday - Watchdog.DAY_TICKS);
+			let yesterdayString = `${yesterday.getFullYear()}${`${yesterday.getMonth()+1}`.padStart(2,"0")}${`${yesterday.getDate()}`.padStart(2,"0")}`;
+			if (!this.cache.hasOwnProperty(yesterday.getTime())) { this.cache[yesterday.getTime()] = {}; }
+			for (let file in this.watchers) {
+				this.GetWatcher(yesterday.getTime(), file, yesterdayString);
+			}
+		}
+
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
 			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right < -this.dayPixels*2) break;
@@ -1075,30 +1093,33 @@ class Watchdog extends Window {
 					this.DrawWatcher(this.watchers[file]);
 					continue;
 				}
-
-				if (!this.cache[date].hasOwnProperty(file)) { this.cache[date][file] = null; }
-				
-				const response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
-				const buffer = await response.arrayBuffer();
-				const bytes = new Uint8Array(buffer);
-
-				if (this.cache[date][file] === null) { this.cache[date][file] = {}; }
-
-				for (let i=0; i<bytes.length-9; i+=10) {
-					const timeBuffer = new Uint8Array(bytes.slice(i,i+8)).buffer;
-					const time = Number(new DataView(timeBuffer).getBigInt64(0, true));
-
-					let status = (bytes[i+9] << 8) | bytes[i+8];
-					if (status >= 32768) { //negative number
-						status = -(65536 - status);
-					}
-
-					this.cache[date][file][time] = status;
-				}
-
-				this.DrawWatcher(this.watchers[file]);
+				this.GetWatcher(date, file, dayString);
 			}
 		}
+	}
+
+	async GetWatcher(date, file, dayString) {
+		if (!this.cache[date].hasOwnProperty(file)) { this.cache[date][file] = null; }
+
+		const response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
+		const buffer = await response.arrayBuffer();
+		const bytes = new Uint8Array(buffer);
+
+		if (this.cache[date][file] === null) { this.cache[date][file] = {}; }
+
+		for (let i=0; i<bytes.length-9; i+=10) {
+			const timeBuffer = new Uint8Array(bytes.slice(i,i+8)).buffer;
+			const time = Number(new DataView(timeBuffer).getBigInt64(0, true));
+
+			let status = (bytes[i+9] << 8) | bytes[i+8];
+			if (status >= 32768) { //negative number
+				status = -(65536 - status);
+			}
+
+			this.cache[date][file][time] = status;
+		}
+
+		this.DrawWatcher(this.watchers[file]);
 	}
 
 	DrawWatcher(watcher) {
