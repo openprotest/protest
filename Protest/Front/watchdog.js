@@ -147,7 +147,7 @@ class Watchdog extends Window {
 
 		btnOK.onclick = ()=> {
 			this.offset = (this.utcToday - dateInput.valueAsDate) * this.dayPixels / Watchdog.DAY_TICKS;
-			if (this.offset < 0) this.offset = 0;
+			if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
 			this.Seek();
 			dialog.Close();
 		};
@@ -158,12 +158,15 @@ class Watchdog extends Window {
 	ZoomOut() {
 		if (this.dayPixels <= 30) return;
 
+		let current = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
+
 		for (let key in this.watchers) {
 			this.watchers[key].element.childNodes[2].textContent = "";
 		}
 
 		this.dayPixels /= 2;
 		this.timezonePixelOffset = new Date().getTimezoneOffset() * (this.dayPixels / 24) / 60;
+		this.offset = (this.utcToday - current) * this.dayPixels / Watchdog.DAY_TICKS;
 		if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
 
 		this.Seek();
@@ -172,12 +175,15 @@ class Watchdog extends Window {
 	ZoomIn() {
 		if (this.dayPixels >= 1920) return;
 
+		let current = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
+
 		for (let key in this.watchers) {
 			this.watchers[key].element.childNodes[2].textContent = "";
 		}
 
 		this.dayPixels *= 2;
 		this.timezonePixelOffset = new Date().getTimezoneOffset() * (this.dayPixels / 24) / 60;
+		this.offset = (this.utcToday - current) * this.dayPixels / Watchdog.DAY_TICKS;
 		if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
 
 		this.Seek();

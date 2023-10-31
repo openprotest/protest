@@ -571,7 +571,7 @@ internal static class Watchdog {
             -3 => "🟡",
             -2 => "🟠",
             -1 => "🔴",
-            _ => "🟠",
+            _ => "🟢",
         };*/
 
         StringBuilder body = new StringBuilder();
@@ -594,7 +594,7 @@ internal static class Watchdog {
         case -3: body.Append(yellowDot); break; //expiration warning
         case -2: body.Append(orangeDot); break; //expired
         case -1: body.Append(redDot);    break; //unreachable
-        default: body.Append(orangeDot); break; 
+        default: body.Append(greenDot); break;
         }
 
         string stringStatus = watcher.type switch {
@@ -624,7 +624,7 @@ internal static class Watchdog {
             target = watcher.target;
         }
 
-        body.Append($"&nbsp;&nbsp;{stringStatus}: {target}");
+        body.Append(stringStatus);
         body.Append("</b></td></tr>");
 
 
