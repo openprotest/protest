@@ -1,4 +1,9 @@
-﻿using System.IO;
+﻿#if !DEBUG && NET7_0_OR_GREATER
+//#define DEFLATE
+#define BROTLI
+# endif
+
+using System.IO;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
@@ -35,7 +40,7 @@ public sealed class Database {
 
     internal long version = 0;
     private long lastCachedVersion = -1;
-    private byte[] lastCached;
+    private Cache.Entry lastCached;
 
     public Database(string name, string location) {
         this.name = name;
@@ -413,18 +418,58 @@ public sealed class Database {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public byte[] Serialize() {
+    public byte[] Serialize(HttpListenerContext ctx) {
+        string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
+        bool acceptGZip = acceptEncoding.Contains("gzip");
+
+        Cache.Entry entry;
         if (lastCachedVersion == version) {
-            return lastCached;
+            entry = this.lastCached;
+        }
+        else {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new DatabaseJsonConverter(name, location, true));
+
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(this, options);
+
+            entry = new Cache.Entry {
+                bytes = bytes,
+                gzip = Cache.GZip(bytes),
+#if BROTLI
+                brotli = Cache.Brotli(bytes),
+#endif
+
+#if DEFLATE
+                deflate = Cache.Deflate(bytes),
+#endif
+            };
+
+            this.lastCached = entry;
+            lastCachedVersion = version;
         }
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new DatabaseJsonConverter(name, location, true));
+#if BROTLI
+        bool acceptBrotli = acceptEncoding.Contains("br");
+        if (acceptBrotli) {
+            ctx.Response.AddHeader("Content-Encoding", "br");
+            return entry.brotli;
+        }
+#endif
 
-        lastCachedVersion = version;
-        lastCached = JsonSerializer.SerializeToUtf8Bytes(this, options);
+#if DEFLATE
+        bool acceptDeflate = acceptEncoding.Contains("deflate");
+        if (acceptDeflate) {
+            ctx.Response.AddHeader("Content-Encoding", "deflate");
+            return entry.deflate;
+        }
+#endif
 
-        return lastCached;
+        if (acceptGZip) { //gzip
+            ctx.Response.AddHeader("Content-Encoding", "gzip");
+            return entry.gzip;
+        }
+
+        return entry.bytes;
     }
 
     public byte[] SerializeContacts() {

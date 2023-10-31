@@ -255,14 +255,14 @@ public sealed class Listener {
             ctx.Response.ContentType = "image/svg+xml; charset=utf-8";
             break;
 
-        case "/db/device/list"      : buffer = DatabaseInstances.devices.Serialize(); break;
+        case "/db/device/list"      : buffer = DatabaseInstances.devices.Serialize(ctx); break;
         case "/db/device/timeline"  : buffer = DatabaseInstances.devices.TimelineHandler(parameters); break;
         case "/db/device/save"      : buffer = DatabaseInstances.devices.SaveHandler(ctx, parameters, username); break;
         case "/db/device/delete"    : buffer = DatabaseInstances.devices.DeleteHandler(parameters, username); break;
         case "/db/device/grid"      : buffer = DatabaseInstances.devices.GridHandler(ctx, username); break;
         case "/db/device/attribute" : buffer = DatabaseInstances.devices.AttributeValue(parameters); break;
 
-        case "/db/user/list"      : buffer = DatabaseInstances.users.Serialize(); break;
+        case "/db/user/list"      : buffer = DatabaseInstances.users.Serialize(ctx); break;
         case "/db/user/timeline"  : buffer = DatabaseInstances.users.TimelineHandler(parameters); break;
         case "/db/user/save"      : buffer = DatabaseInstances.users.SaveHandler(ctx, parameters, username); break;
         case "/db/user/delete"    : buffer = DatabaseInstances.users.DeleteHandler(parameters, username); break;
