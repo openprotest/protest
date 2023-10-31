@@ -47,9 +47,13 @@ class Watchdog extends Window {
 		this.selected = null;
 		this.selectedElement = null;
 
-		this.today = new Date(Date.now() - Date.now() % (Watchdog.DAY_TICKS)).getTime();
 		this.offset = 0;
 		this.dayPixels = 480;
+		this.timezoneOffset = new Date().getTimezoneOffset() * Watchdog.HOUR_TICKS / 60;
+		this.timezonePixelOffset = new Date().getTimezoneOffset() * (this.dayPixels / 24) / 60;
+
+		let now = Date.now();
+		this.utcToday = new Date(now - now % Watchdog.DAY_TICKS).getTime() + this.timezoneOffset;
 
 		let seeking = false;
 		let mouseX0;
@@ -68,15 +72,13 @@ class Watchdog extends Window {
 				return;
 			}
 
-			if (!seeking) {
-				return;
-			}
+			if (!seeking) { return; }
 
 			let last = this.offset;
 
 			this.offset = lastOffset - (mouseX0 - event.clientX);
-			this.offset -= this.offset % 20;
-			if (this.offset < 0) this.offset = 0;
+			this.offset -= this.offset % Math.max((this.dayPixels / 24), 20);
+			if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
 
 			if (last === this.offset) return;
 			this.Seek();
@@ -127,7 +129,7 @@ class Watchdog extends Window {
 		innerBox.style.textAlign = "center";
 		innerBox.style.marginTop = "20px";
 
-		let maxDate = new Date(this.today);
+		let maxDate = new Date(this.utcToday);
 
 		const dateInput = document.createElement("input");
 		dateInput.style.width = "calc(100% - 40px)";
@@ -135,7 +137,7 @@ class Watchdog extends Window {
 		dateInput.max = `${maxDate.getFullYear()}-${`${maxDate.getMonth()+1}`.padStart(2,"0")}-${`${maxDate.getDate()}`.padStart(2,"0")}`;
 		innerBox.appendChild(dateInput);
 
-		dateInput.valueAsDate = new Date(this.today - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
+		dateInput.valueAsDate = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
 		
 		dateInput.onkeydown = event=> {
 			if (event.key === "Enter") {
@@ -144,7 +146,7 @@ class Watchdog extends Window {
 		};
 
 		btnOK.onclick = ()=> {
-			this.offset = (this.today - dateInput.valueAsDate) * this.dayPixels / Watchdog.DAY_TICKS;
+			this.offset = (this.utcToday - dateInput.valueAsDate) * this.dayPixels / Watchdog.DAY_TICKS;
 			if (this.offset < 0) this.offset = 0;
 			this.Seek();
 			dialog.Close();
@@ -161,6 +163,9 @@ class Watchdog extends Window {
 		}
 
 		this.dayPixels /= 2;
+		this.timezonePixelOffset = new Date().getTimezoneOffset() * (this.dayPixels / 24) / 60;
+		if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
+
 		this.Seek();
 	}
 
@@ -172,6 +177,9 @@ class Watchdog extends Window {
 		}
 
 		this.dayPixels *= 2;
+		this.timezonePixelOffset = new Date().getTimezoneOffset() * (this.dayPixels / 24) / 60;
+		if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
+
 		this.Seek();
 	}
 
@@ -183,7 +191,9 @@ class Watchdog extends Window {
 	}
 
 	async GetWatchers() {
-		this.today = new Date(Date.now() - Date.now() % (Watchdog.DAY_TICKS)).getTime();
+		let now = Date.now();
+		this.utcToday = new Date(now - now % Watchdog.DAY_TICKS).getTime() + this.timezoneOffset;
+
 		this.cache = {};
 
 		try {
@@ -999,8 +1009,8 @@ class Watchdog extends Window {
 			box.append(titleBox, titleBox2, valueBox);
 		};
 
-		let today = this.cache[this.today] ? this.cache[this.today][watcher.file] ?? {} : {};
-		let yesterday = this.cache[this.today-Watchdog.DAY_TICKS] ? this.cache[this.today-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
+		let today = this.cache[this.utcToday] ? this.cache[this.utcToday][watcher.file] ?? {} : {};
+		let yesterday = this.cache[this.utcToday-Watchdog.DAY_TICKS] ? this.cache[this.utcToday-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
 
 		let uptime24 = {...today, ...yesterday};
 
@@ -1042,21 +1052,17 @@ class Watchdog extends Window {
 		this.DrawTimeline();
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
-		const high = this.today + Watchdog.DAY_TICKS;
-		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
+		const high = this.utcToday + Watchdog.DAY_TICKS;
+		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
 		
-		const timezoneOffset = new Date().getTimezoneOffset() * Watchdog.HOUR_TICKS / 60;
-
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
-			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
-			if (right < -this.dayPixels) break;
+			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
+			if (right < -this.dayPixels*2) break;
 
 			let day = new Date(date);
 			let dayString = `${day.getFullYear()}${`${day.getMonth()+1}`.padStart(2,"0")}${`${day.getDate()}`.padStart(2,"0")}`;
 
-			if (!this.cache.hasOwnProperty(date)) {
-				this.cache[date] = {};
-			}
+			if (!this.cache.hasOwnProperty(date)) { this.cache[date] = {}; }
 
 			for (let file in this.watchers) {
 				if (this.cache[date].hasOwnProperty(file)) {
@@ -1064,28 +1070,20 @@ class Watchdog extends Window {
 					continue;
 				}
 
-				if (!this.cache[date].hasOwnProperty(file)) {
-					this.cache[date][file] = null;
-				}
+				if (!this.cache[date].hasOwnProperty(file)) { this.cache[date][file] = null; }
 				
 				const response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
 				const buffer = await response.arrayBuffer();
 				const bytes = new Uint8Array(buffer);
 
-				if (this.cache[date][file] === null) {
-					this.cache[date][file] = {};
-				}
+				if (this.cache[date][file] === null) { this.cache[date][file] = {}; }
 
 				for (let i=0; i<bytes.length-9; i+=10) {
-					const arrayBuffer = new ArrayBuffer(8);
-					const dataView = new DataView(arrayBuffer);
-					for (let j=0; j<8; j++) {
-						dataView.setUint8(j, bytes[i+j]);
-					}
-					const time = Number(dataView.getBigInt64(0, true)) - timezoneOffset;
+					const timeBuffer = new Uint8Array(bytes.slice(i,i+8)).buffer;
+					const time = Number(new DataView(timeBuffer).getBigInt64(0, true));
 
 					let status = (bytes[i+9] << 8) | bytes[i+8];
-					if (status >= 32768) { //it's negative number
+					if (status >= 32768) { //negative number
 						status = -(65536 - status);
 					}
 
@@ -1107,11 +1105,11 @@ class Watchdog extends Window {
 		watcher.element.childNodes[2].textContent = "";
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
-		const high = this.today + Watchdog.DAY_TICKS;
-		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
+		const high = this.utcToday + Watchdog.DAY_TICKS;
+		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport+1) * Watchdog.DAY_TICKS;
 		
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
-			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
+			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels) break;
 
 			if (previous.hasOwnProperty(date) && date) {
@@ -1135,17 +1133,16 @@ class Watchdog extends Window {
 		svg.style.outline = "none";
 
 		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
-
-			if (this.cache[date][file] === null) {
-				return svg;
-			}
+			if (this.cache[date][file] === null) { return svg; }
 
 			let lastX = -20;
 			let lastV = -20;
 			for (let key in this.cache[date][file]) {
-				let x = (key - date) * this.dayPixels / Watchdog.DAY_TICKS - 3;
+				key = parseInt(key);
 				let value = this.cache[date][file][key];
-				
+
+				let x = (key - date + this.timezoneOffset) * this.dayPixels / Watchdog.DAY_TICKS - 3;
+
 				if (x - lastX < 6 && lastV === value) continue;
 				
 				lastX = x;
@@ -1180,21 +1177,41 @@ class Watchdog extends Window {
 			}
 		}
 
-		const s1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		s1.setAttribute("x", 0);
-		s1.setAttribute("y", 1);
-		s1.setAttribute("width", 1);
-		s1.setAttribute("height", 30);
-		s1.setAttribute("fill", "rgb(128,128,128)");
-		svg.appendChild(s1);
+		if (this.timezonePixelOffset < 0) {
+			const s1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			s1.setAttribute("x", this.dayPixels + this.timezonePixelOffset - 1);
+			s1.setAttribute("y", 1);
+			s1.setAttribute("width", 2);
+			s1.setAttribute("height", 30);
+			s1.setAttribute("fill", "rgb(128,128,128)");
+			svg.appendChild(s1);
+		}
+		else if (this.timezonePixelOffset > 0) {
+			const s1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			s1.setAttribute("x", this.timezonePixelOffset - 1);
+			s1.setAttribute("y", 1);
+			s1.setAttribute("width", 2);
+			s1.setAttribute("height", 30);
+			s1.setAttribute("fill", "rgb(128,128,128)");
+			svg.appendChild(s1);
+		}
+		else {
+			const s1 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			s1.setAttribute("x", 0);
+			s1.setAttribute("y", 1);
+			s1.setAttribute("width", 1);
+			s1.setAttribute("height", 30);
+			s1.setAttribute("fill", "rgb(128,128,128)");
+			svg.appendChild(s1);
 
-		const s2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		s2.setAttribute("x", this.dayPixels-1);
-		s2.setAttribute("y", 1);
-		s2.setAttribute("width", 1);
-		s2.setAttribute("height", 30);
-		s2.setAttribute("fill", "rgb(128,128,128)");
-		svg.appendChild(s2);
+			const s2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			s2.setAttribute("x", this.dayPixels-1);
+			s2.setAttribute("y", 1);
+			s2.setAttribute("width", 1);
+			s2.setAttribute("height", 30);
+			s2.setAttribute("fill", "rgb(128,128,128)");
+			svg.appendChild(s2);
+		}
 
 		return svg;
 	}
@@ -1203,12 +1220,12 @@ class Watchdog extends Window {
 		this.timeline.textContent = "";
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
-		const high = this.today + Watchdog.DAY_TICKS;
-		const low = this.today - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
+		const high = this.utcToday + Watchdog.DAY_TICKS*2;
+		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
 		
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
-			let right = (this.today - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
-			if (right <= -this.dayPixels) break;
+			let right = (this.utcToday - date - this.timezoneOffset) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
+			if (right <= -this.dayPixels*2) break;
 
 			const svg = this.GenerateTimelineSvg(new Date(date));
 			svg.style.top = "0";

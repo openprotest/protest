@@ -145,14 +145,14 @@ internal static class Watchdog {
                     new Thread(() => Watch(watcher, smtpProfiles)).Start();
                 }
                 else {
-                    int millisRemain = (int)(ticksElapsed / 10_000);
+                    int millisRemain = (int)ticksElapsed / 10_000;
                     if (nextSleep > millisRemain) {
                         nextSleep = millisRemain;
                     }
                 }
             }
 
-            Thread.Sleep(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000);
+            Thread.Sleep(Math.Max(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000, 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
                 task.Dispose();
