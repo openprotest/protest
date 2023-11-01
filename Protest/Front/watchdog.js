@@ -96,10 +96,8 @@ class Watchdog extends Window {
 	
 		this.UpdateAuthorization();
 		this.ListWatchers();
-
-		setTimeout(()=> { this.AfterResize(); }, 250);
 	}
-	
+
 	AfterResize() { //override
 		if (this.content.getBoundingClientRect().width < 720) {
 			this.timeline.style.right = `${4 + this.list.offsetWidth - this.list.clientWidth}px`;
@@ -154,7 +152,7 @@ class Watchdog extends Window {
 
 		dateInput.focus();
 	}
-	
+
 	ZoomOut() {
 		if (this.dayPixels <= 30) return;
 

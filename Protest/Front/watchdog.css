@@ -64,7 +64,7 @@
 	margin: 0px;
 }
 
-.watchdog-list > div > div:nth-child(3) {/*graph*/
+.watchdog-list > div > div:nth-child(3) { /*graph*/
 	left: 300px;
 	top: 0px;
 	right: 0px;

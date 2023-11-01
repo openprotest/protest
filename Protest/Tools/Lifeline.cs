@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using Protest.Http;
+using System.Net;
+using System.Net.WebSockets;
+using System.Threading;
 
 namespace Protest.Tools;
 
@@ -55,6 +58,30 @@ internal static class Lifeline {
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
+        WebSocketContext wsc;
+        WebSocket ws;
+
+        try {
+            wsc = await ctx.AcceptWebSocketAsync(null);
+            ws = wsc.WebSocket;
+        }
+        catch (WebSocketException ex) {
+            ctx.Response.Close();
+            Logger.Error(ex);
+            return;
+        }
+
+        byte[] buff = new byte[1024];
+        WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+            return;
+        }
+
+        if (receiveResult.MessageType == WebSocketMessageType.Close) {
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+        }
 
     }
 
