@@ -236,14 +236,14 @@ class Ping extends Console {
 			const tr3 = document.createElement("tr");
 			tblLegend.appendChild(tr3);
 
-			const tr4 = document.createElement("tr");
-			tblLegend.appendChild(tr4);
+			//const tr4 = document.createElement("tr");
+			//tblLegend.appendChild(tr4);
 
 			const td1a = document.createElement("td");
 			td1a.style.borderRadius = "8px 8px 0 0";
 			td1a.style.width = "24px";
 			td1a.style.height = "24px";
-			td1a.style.background = "linear-gradient(to bottom, hsl(96,66%,50%)0%, hsl(146,66%,50%)100%)";
+			td1a.style.background = `linear-gradient(to bottom, ${UI.PingColor(0)}0%, ${UI.PingColor(250)}100%)`;
 			tr1.appendChild(td1a);
 			const td1b = document.createElement("td");
 			td1b.style.minWidth = "96px";
@@ -254,7 +254,7 @@ class Ping extends Console {
 			const td2a = document.createElement("td");
 			td2a.style.width = "24px";
 			td2a.style.height = "24px";
-			td2a.style.background = "linear-gradient(to bottom, hsl(146,66%,50%)0%, hsl(196,66%,50%)100%)";
+			td2a.style.background = `linear-gradient(to bottom, ${UI.PingColor(250)}0%, ${UI.PingColor(500)}100%)`;
 			tr2.appendChild(td2a);
 			const td2b = document.createElement("td");
 			td2b.style.paddingLeft = "8px";
@@ -262,25 +262,26 @@ class Ping extends Console {
 			tr2.appendChild(td2b);
 
 			const td3a = document.createElement("td");
+			td3a.style.borderRadius = "0 0 8px 8px";
 			td3a.style.width = "24px";
 			td3a.style.height = "24px";
-			td3a.style.background = "linear-gradient(to bottom, hsl(196,66%,50%)0%, hsl(246,66%,50%)100%)";
+			td3a.style.background = `linear-gradient(to bottom, ${UI.PingColor(500)}0%, ${UI.PingColor(750)}100%)`;
 			tr3.appendChild(td3a);
 			const td3b = document.createElement("td");
 			td3b.style.paddingLeft = "8px";
 			td3b.textContent = "500ms";
 			tr3.appendChild(td3b);
 
-			const td4a = document.createElement("td");
+			/*const td4a = document.createElement("td");
 			td4a.style.borderRadius = "0 0 8px 8px";
 			td4a.style.width = "24px";
 			td4a.style.height = "24px";
-			td4a.style.background = "linear-gradient(to bottom, hsl(246,66%,50%)0%, hsl(345,66%,50%)100%)";
+			td4a.style.background = `linear-gradient(to bottom, ${UI.PingColor(750)}0%, ${UI.PingColor(1000)}100%)`;
 			tr4.appendChild(td4a);
 			const td4b = document.createElement("td");
 			td4b.style.paddingLeft = "8px";
 			td4b.textContent = "750ms";
-			tr4.appendChild(td4b);
+			tr4.appendChild(td4b);*/
 
 			const td5a = document.createElement("td");
 			td5a.style.borderRadius = "8px";

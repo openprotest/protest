@@ -51,7 +51,7 @@
 	color: var(--clr-dark);
 	border-collapse: collapse;
 	margin: 8px;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 }
 
 .wmi-table > tr:first-child td {

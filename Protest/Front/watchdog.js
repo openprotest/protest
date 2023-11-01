@@ -211,6 +211,9 @@ class Watchdog extends Window {
 			if (json.error) throw(json.error);
 			
 			this.list.textContent = "";
+
+			json.sort((a, b)=>a.name.localeCompare(b.name));
+
 			for (let i=0; i<json.length; i++) {
 				const element = this.CreateWatcherElement(json[i]);
 				this.list.appendChild(element);
@@ -1019,20 +1022,46 @@ class Watchdog extends Window {
 		let yesterday = this.cache[this.utcToday-Watchdog.DAY_TICKS] ? this.cache[this.utcToday-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
 
 		let uptime24 = {...today, ...yesterday};
+		let total, uptimeCount, totalRoundtrip, graphCount, graphWidth;
 
-		let total = 0;
-		let uptimeCount = 0;
-		let min = Number.MAX_SAFE_INTEGER, max = 0;
-		let totalRoundtrip = 0;
-		for (let time in uptime24) {
-			if (time < Date.now() - Watchdog.DAY_TICKS) continue;
-			total++;
-			if (uptime24[time] >= 0) {
-				uptimeCount++;
-				totalRoundtrip += uptime24[time];
-				if (min > uptime24[time]) min = uptime24[time];
-				if (max < uptime24[time]) max = uptime24[time];
+		let barsCount = 0;
+		let step = 100;
+		while (barsCount < 8 && step > 4) {
+			total = 0;
+			uptimeCount = 0;
+			totalRoundtrip = 0;
+			graphCount = {};
+			graphWidth = 0;
+			barsCount = 0;
+			
+			for (let time in uptime24) {
+				if (time < Date.now() - Watchdog.DAY_TICKS) continue;
+
+				let status = uptime24[time];
+	
+				if (status < 0) {
+					if (!graphCount[status]) {
+						barsCount++;
+						graphWidth += 18;
+					}
+					graphCount[status] = graphCount[status] ? graphCount[status] + 1 : 1;
+				}
+				else {
+					uptimeCount++;
+					totalRoundtrip += status;
+
+					let index = Math.floor(status / step) * step;
+					if (!graphCount[index]) {
+						barsCount++;
+						graphWidth += 14;
+					}
+					graphCount[index] = graphCount[index] ? graphCount[index] + 1 : 1;
+				}
+
+				total++;
 			}
+
+			step = Math.floor(step/2);
 		}
 
 		if (total === 0) {
@@ -1045,11 +1074,60 @@ class Watchdog extends Window {
 		if (watcher.type === "ICMP" || watcher.type === "TCP") {
 			if (uptimeCount === 0) {
 				CreateStatBox("Average roundtrip", "(24-hour)", "--");
-				CreateStatBox("Min-max roundtrip", "(24-hour)", "--");
 			}
 			else {
 				CreateStatBox("Average roundtrip", "(24-hour)", `${Math.round(totalRoundtrip / uptimeCount)} ms`);
-				CreateStatBox("Min-max roundtrip", "(24-hour)", `${min}-${max}ms`);
+			}
+		}
+
+		if (total > 0) {
+			const graphBox = document.createElement("div");
+			graphBox.style.backgroundColor = "transparent";
+			graphBox.style.boxShadow = "var(--clr-light) 0 0 0 2px inset";
+			this.stats.appendChild(graphBox);
+
+			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute("width", 180);
+			svg.setAttribute("height", 128);
+			svg.style.outline = "none";
+			graphBox.appendChild(svg);
+
+			let x = (180 - graphWidth) / 2;
+
+			let maxH = 2, maxX = 0, negativeCount = 0;
+			let graphSorted = Object.entries(graphCount).sort((a,b)=> parseInt(a[0]) > parseInt(b[0]));
+
+			for (let i=0; i<graphSorted.length; i++) {
+				let key = parseInt(graphSorted[i][0]);
+				if (key < 0) negativeCount++;
+				if (maxX < key) maxX = key;
+				if (maxH < graphSorted[i][1]) maxH = graphSorted[i][1];
+			}
+
+			for (let i=0; i<graphSorted.length; i++) {
+				let key = parseInt(graphSorted[i][0]);
+				let h = Math.max(graphSorted[i][1] * 64 / maxH, 2);
+
+				const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+				bar.setAttribute("x", x);
+				bar.setAttribute("y", 72 - h);
+				bar.setAttribute("width", 11);
+				bar.setAttribute("height", h);
+				bar.setAttribute("rx", 2);
+				bar.setAttribute("fill", this.StatusToColor(key));
+				svg.appendChild(bar);
+
+				const lblCount = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				lblCount.textContent = this.StatusToString(key, watcher);
+				lblCount.setAttribute("x", x);
+				lblCount.setAttribute("y", 70);
+				lblCount.setAttribute("fill", this.StatusToColor(key));
+				lblCount.setAttribute("font-size", "11px");
+				lblCount.style.transformOrigin = `${x-1}px ${74}px`;
+				lblCount.style.transform = "rotate(90deg)";
+				svg.appendChild(lblCount);
+
+				x += key < 0 ? 18 : 14;
 			}
 		}
 	}
@@ -1181,26 +1259,8 @@ class Watchdog extends Window {
 				dot.setAttribute("width", 6);
 				dot.setAttribute("height", 24);
 				dot.setAttribute("rx", 2);
+				dot.setAttribute("fill", this.StatusToColor(value))
 				svg.appendChild(dot);
-
-				if (value === -1) { //unreachable
-					dot.setAttribute("fill", "var(--clr-error)");
-				}
-				else if (value === -2) { //expired
-					dot.setAttribute("fill", "var(--clr-orange)");
-				}
-				else if (value === -3) { //warning
-					dot.setAttribute("fill", "var(--clr-warning)");
-				}
-				else if (value === -4) { //tls not yet valid
-					dot.setAttribute("fill", "rgb(0,162,232)");
-				}
-				else if (value >=0) { //alive
-					dot.setAttribute("fill", UI.PingColor(value));
-				}
-				else { //other
-					dot.setAttribute("fill", "rgb(128,128,128)");
-				}
 			}
 		}
 
@@ -1241,6 +1301,49 @@ class Watchdog extends Window {
 		}
 
 		return svg;
+	}
+
+	StatusToString(status, watcher) {
+		if (status === -1) {
+			return "unreach.";
+		}
+		else if (status === -2) {
+			return "expired";
+		}
+		else if (status === -3) {
+			return "warning";
+		}
+		else if (status === -4) {
+			return "not valid";
+		}
+		else if (status >=0) {
+			switch (watcher.type) {
+			case "ICMP" : return `${status}ms`;
+			case "TCP"  : return `${status}ms`;
+			default     : return "OK";
+			}
+		}
+	}
+
+	StatusToColor(status) {
+		if (status === -1) { //unreachable
+			return "var(--clr-error)";
+		}
+		else if (status === -2) { //expired
+			return "var(--clr-orange)";
+		}
+		else if (status === -3) { //warning
+			return "var(--clr-warning)";
+		}
+		else if (status === -4) { //tls not yet valid
+			return "rgb(0,162,232)";
+		}
+		else if (status >=0) { //alive
+			return UI.PingColor(status);
+		}
+		else { //other
+			return "rgb(128,128,128)";
+		}
 	}
 
 	DrawTimeline() {
@@ -1295,9 +1398,8 @@ class Watchdog extends Window {
 		if (this.dayPixels >= 120) {
 			let lastX = 0;
 
-			for (let i = 2; i < 24; i++) {
+			for (let i = this.dayPixels < 960 ? 2 : 1; i < 24; i++) {
 				let x = i * this.dayPixels / 24;
-				
 				if (x - lastX < 40) continue;
 				lastX = x;
 				
@@ -1308,8 +1410,6 @@ class Watchdog extends Window {
 				lblTime.setAttribute("fill", "#C0C0C0");
 				lblTime.setAttribute("text-anchor", "middle");
 				lblTime.setAttribute("font-size", "10px");
-				//lblTime.style.transform = "rotate(-60deg)";
-				//lblTime.style.transformOrigin = `${10 + i*this.dayPixels / 24}px 14px`;
 				svg.appendChild(lblTime);
 			}
 		}

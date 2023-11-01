@@ -214,7 +214,7 @@
 	border-radius: 8px;
 	padding: 8px;
 	box-sizing: border-box;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 	overflow-y: auto;
 }
 

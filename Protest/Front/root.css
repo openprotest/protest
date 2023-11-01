@@ -64,7 +64,7 @@ body {
 	font-family: var(--global-font-family);
 	font-size: var(--global-font-size);
 
-	user-select: none;
+	-webkit-user-select: none; user-select: none;
 
 	background: var(--bg);
 	background-size: 100vw 200vh;

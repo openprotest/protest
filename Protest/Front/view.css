@@ -184,7 +184,7 @@
 	border-radius: 2px;
 	padding: 0 4px;
 	margin: 2px;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 }
 
 .view-attributes-list > div > input[type="button"]:nth-child(3) { /*remove button*/
@@ -289,7 +289,7 @@
 .view-password-preview {
 	padding: 2px 8px !important;
 	border: none !important;
-	user-select: all !important;
+	-webkit-user-select: all !important; user-select: all !important;
 
 	background: linear-gradient(0deg, var(--clr-accent) 0%, var(--clr-accent) 100%);
 	background-size: 0px 0px;
@@ -354,7 +354,7 @@ button.view-live-button:active {
 	background-position: 4px center;
 	background-size: 24px 24px;
 	background-repeat: no-repeat;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 }
 
 .view-info-box {

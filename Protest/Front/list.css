@@ -93,9 +93,12 @@
 .list-element {
 	position: relative;
 	height: 32px;
-	border-bottom: rgb(128,128,128) 1px solid;
 	content-visibility: auto;
 	contain-intrinsic-size: 33px;
+}
+
+.list-element:not(:last-child) {
+	border-bottom: rgb(128,128,128) 1px solid;
 }
 
 .list-element:hover{

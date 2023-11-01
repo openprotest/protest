@@ -160,7 +160,7 @@
 	overflow-y: auto;
 	border-radius: 4px;
 
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 	-webkit-user-drag: text;
 
 	transition: .4s;

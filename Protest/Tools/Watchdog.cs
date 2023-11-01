@@ -594,7 +594,7 @@ internal static class Watchdog {
         case -3: body.Append(yellowDot); break; //expiration warning
         case -2: body.Append(orangeDot); break; //expired
         case -1: body.Append(redDot);    break; //unreachable
-        default: body.Append(greenDot); break;
+        default: body.Append(greenDot);  break;
         }
 
         string stringStatus = watcher.type switch {
@@ -624,7 +624,7 @@ internal static class Watchdog {
             target = watcher.target;
         }
 
-        body.Append(stringStatus);
+        body.Append($"&nbsp;{stringStatus}");
         body.Append("</b></td></tr>");
 
 

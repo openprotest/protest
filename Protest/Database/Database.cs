@@ -448,6 +448,8 @@ public sealed class Database {
             lastCachedVersion = version;
         }
 
+        ctx.Response.ContentType = "application/json; charset=utf-8";
+
 #if BROTLI
         bool acceptBrotli = acceptEncoding.Contains("br");
         if (acceptBrotli) {

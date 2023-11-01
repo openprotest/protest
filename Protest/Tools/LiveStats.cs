@@ -95,7 +95,6 @@ internal static class LiveStats {
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
                         string lastseen = LastSeen.HasBeenSeen(pingArray[i], true);
-                        
                         WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastseen}\",\"source\":\"ICMP\"}}");
                     }
                 }

@@ -126,7 +126,8 @@ const UI = {
 		if (pingResult === -1)
 			return "rgb(192,192,192)";
 
-		return `hsl(${Math.round(96 + pingResult * 250 / 1000)},66%,${lightness}%)`;
+		if (pingResult > 500) pingResult = 500;
+		return `hsl(${Math.round(96 + pingResult * 250 / 500)},66%,${lightness}%)`;
 	},
 
 	TicksToUnixDate: ticks=> {
@@ -255,8 +256,9 @@ const MENU = {
 	Open: ()=> {
 		if (MENU.filterIndex === 1) { //recent
 			searchboxinput.value = "";
-			MENU.Update();
 		}
+
+		MENU.Update();
 
 		MENU.isOpen = true;
 		MENU.UpdatePosition();
@@ -275,8 +277,9 @@ const MENU = {
 	Toggle: ()=> {
 		if (MENU.filterIndex === 1) { //recent
 			searchboxinput.value = "";
-			MENU.Update("");
 		}
+
+		MENU.Update("");
 
 		MENU.isOpen = !MENU.isOpen;
 		MENU.UpdatePosition();
@@ -586,8 +589,6 @@ const MENU = {
 		}));
 	}
 };
-
-MENU.Update();
 
 window.addEventListener("mousedown", ()=> {
 	UI.lastActivity = Date.now();

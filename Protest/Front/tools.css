@@ -30,7 +30,7 @@
 	background-repeat: no-repeat;
 	background-size: 24px 24px;
 	background-position: 4px 4px;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 }
 
 .tool-element > .tool-button-expanded {
@@ -68,7 +68,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	line-height: 33px;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 }
 
 .tool-element > .tool-result > div {
@@ -78,7 +78,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	user-select: text;
+	-webkit-user-select: text; user-select: text;
 }
 
 .tool-element > .tool-label[label]::before {

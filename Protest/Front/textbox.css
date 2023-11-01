@@ -70,7 +70,7 @@ input[type="date"]:required {
 }
 
 input[type=number]:not(:focus) {
-	-moz-appearance: textfield;
+	appearance: textfield;
 }
 
 select > option {
