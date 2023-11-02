@@ -15,10 +15,8 @@ internal static class Lifeline {
     public static TaskWrapper task;
 
     public static void Initialize() {
-
         //TODO: if autostart then start task
         StartTask("system");
-
     }
 
     public static bool StartTask(string initiator) {
@@ -141,7 +139,10 @@ internal static class Lifeline {
         catch { }
 
         try {
-            using FileStream stream = new FileStream($"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}", FileMode.Append);
+            string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(rtt); //2 bytes
@@ -165,7 +166,10 @@ internal static class Lifeline {
         catch { }
 
         try {
-            using FileStream stream = new FileStream($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}", FileMode.Append);
+            string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(total); //8 bytes
@@ -194,7 +198,10 @@ internal static class Lifeline {
         catch { }
 
         try {
-            using FileStream stream = new FileStream($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}", FileMode.Append);
+            string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
 
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
