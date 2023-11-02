@@ -12,7 +12,7 @@ namespace Protest.Tasks;
 internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
 
-    [GeneratedRegex("^(?!-)[A-Za-z0-9-.]{1,255}(?<!-)$")]
+    [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
 
     public static TaskWrapper task;
@@ -77,8 +77,10 @@ internal static partial class Lifeline {
                     null;
 
                     for (int i = 0; i < remoteEndPoint.Length; i++) {
-                        if (remoteEndPoint.Length == 0) continue;
+                        if (remoteEndPoint[i].Length == 0) continue;
                         if (!regex.IsMatch(remoteEndPoint[i])) continue;
+
+                        Console.WriteLine(remoteEndPoint[i]);
 
                         ping.Add(remoteEndPoint[i]);
                         if (os is not null && os.Contains("windows")) {
