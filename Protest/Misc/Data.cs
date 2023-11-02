@@ -50,8 +50,9 @@ public static class Data {
     public static readonly string DIR_USERS   = $"{DIR_DATA}{DELIMITER}users";
 
     public static readonly string DIR_CONFIG         = $"{DIR_DATA}{DELIMITER}configuration";
-    public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
     public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DELIMITER}documentation";
+    public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
+    public static readonly string DIR_LIFELINE       = $"{DIR_DATA}{DELIMITER}lifeline";
     public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DELIMITER}watchdog";
     public static readonly string DIR_SCRIPTS        = $"{DIR_DATA}{DELIMITER}scripts";
     public static readonly string DIR_DEBIT          = $"{DIR_DATA}{DELIMITER}debit";
@@ -76,6 +77,7 @@ public static class Data {
             new DirectoryInfo(DIR_KNOWLADGE),
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
+            new DirectoryInfo(DIR_LIFELINE),
             new DirectoryInfo(DIR_WATCHDOG),
             new DirectoryInfo(DIR_DOCUMENTATION),
             new DirectoryInfo(DIR_DEBIT),
@@ -323,6 +325,39 @@ public static class Data {
             }
         }
         return builder.ToString();
+    }
+
+    public static bool ContainsBytesSequence(byte[] source, byte[] target) {
+        for (int i = 0; i <= source.Length - target.Length; i++) {
+            bool found = true;
+            for (int j = 0; j < target.Length; j++) {
+                if (source[i + j] != target[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found)
+                return true;
+        }
+        return false;
+    }
+
+    public static void ReplaceAllBytesSequence(byte[] source, byte[] target, byte[] replacement) {
+        for (int i = 0; i <= source.Length - target.Length; i++) {
+            bool found = true;
+            for (int j = 0; j < target.Length; j++) {
+                if (source[i + j] != target[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                for (int j = 0; j < target.Length; j++) {
+                    source[i + j] = replacement[j];
+                }
+                //return;
+            }
+        }
     }
 
 }

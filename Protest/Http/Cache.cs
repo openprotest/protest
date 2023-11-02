@@ -137,8 +137,8 @@ internal sealed class Cache {
             byte[] pattern = "\"#202020\""u8.ToArray();
             byte[] target = "\"#c0c0c0\""u8.ToArray();
             if (name.StartsWith("/mono/") && name.EndsWith(".svg")) {
-                if (FindBytes(bytes, pattern)) {
-                    ReplaceAllBytes(bytes, Encoding.UTF8.GetBytes("\"#202020\""), target);
+                if (Data.ContainsBytesSequence(bytes, pattern)) {
+                    Data.ReplaceAllBytesSequence(bytes, Encoding.UTF8.GetBytes("\"#202020\""), target);
                     byte[] lightBytes = bytes.ToArray();
                     string lightName = $"{name}?light";
                     Entry lightEntry = ConstructEntry(lightName, lightBytes, "svg");
@@ -265,38 +265,6 @@ internal sealed class Cache {
         };
 
         return entry;
-    }
-
-    private static bool FindBytes(byte[] source, byte[] target) {
-        for (int i = 0; i <= source.Length - target.Length; i++) {
-            bool found = true;
-            for (int j = 0; j < target.Length; j++) {
-                if (source[i + j] != target[j]) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) return true;
-        }
-        return false;
-    }
-
-    private static void ReplaceAllBytes(byte[] source, byte[] target, byte[] replacement) {
-        for (int i = 0; i <= source.Length - target.Length; i++) {
-            bool found = true;
-            for (int j = 0; j < target.Length; j++) {
-                if (source[i + j] != target[j]) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) {
-                for (int j = 0; j < target.Length; j++) {
-                    source[i + j] = replacement[j];
-                }
-                //return;
-            }
-        }
     }
 
     private static byte[] Minify(byte[] bytes) {

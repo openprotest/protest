@@ -745,8 +745,4 @@ internal static class Wmi {
         if (!value.Contains('.')) return String.Empty;
         return value;
     }
-
-    internal static ManagementScope WmiScope(string firstAlive, ImpersonationLevel impersonate, string empty1, string empty2) {
-        throw new NotImplementedException();
-    }
 }

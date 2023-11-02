@@ -1,4 +1,5 @@
 ﻿using Protest.Protocols;
+using Protest.Tasks;
 using System.DirectoryServices;
 using System.Management;
 using System.Net;
@@ -61,6 +62,7 @@ internal static class LiveStats {
 
             entry.attributes.TryGetValue("ip", out Database.Attribute _ip);
             entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname);
+            entry.attributes.TryGetValue("operating system", out Database.Attribute _os);
 
             if (_ip?.value?.Length > 0) {
                 pingArray = _ip.value.Split(';').Select(o => o.Trim()).ToArray();
@@ -102,7 +104,11 @@ internal static class LiveStats {
 
             string wmiHostname = null, adHostname = null, netbios = null, dns = null;
 
-            if (OperatingSystem.IsWindows() && firstAlive is not null && firstReply.Status == IPStatus.Success) {
+            if (OperatingSystem.IsWindows() &&
+                _os?.value?.ToLower().Contains("windows") == true &&
+                firstAlive is not null &&
+                firstReply.Status == IPStatus.Success) {
+
                 try {
                     ManagementScope scope = Wmi.Scope(firstAlive);
                     using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
@@ -310,5 +316,4 @@ internal static class LiveStats {
             }
         }
     }
-
 }

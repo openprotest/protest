@@ -18,7 +18,7 @@ class Watchdog extends Window {
 		this.notificationButton = this.AddToolbarButton("Notifications", "mono/notifications.svg?light");
 		this.AddToolbarSeparator();
 		this.reloadButton       = this.AddToolbarButton("Reload", "mono/restart.svg?light");
-		this.gotoButton         = this.AddToolbarButton("Go to", "mono/timeline.svg?light");
+		this.gotoButton         = this.AddToolbarButton("Go to", "mono/skipback.svg?light");
 		this.zoomOutButton      = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
 		this.zoomInButton       = this.AddToolbarButton("Zoom in", "mono/zoomin.svg?light");
 
@@ -1091,7 +1091,6 @@ class Watchdog extends Window {
 			graphBox.appendChild(svg);
 
 			let x = (180 - graphWidth) / 2;
-
 			let maxH = 2, maxX = 0, negativeCount = 0;
 			let graphSorted = Object.entries(graphCount).sort((a,b)=> parseInt(a[0]) > parseInt(b[0]));
 
@@ -1115,15 +1114,15 @@ class Watchdog extends Window {
 				bar.setAttribute("fill", this.StatusToColor(key));
 				svg.appendChild(bar);
 
-				const lblCount = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				lblCount.textContent = this.StatusToString(key, watcher);
-				lblCount.setAttribute("x", x);
-				lblCount.setAttribute("y", 70);
-				lblCount.setAttribute("fill", this.StatusToColor(key));
-				lblCount.setAttribute("font-size", "11px");
-				lblCount.style.transformOrigin = `${x-1}px ${74}px`;
-				lblCount.style.transform = "rotate(90deg)";
-				svg.appendChild(lblCount);
+				const lbllabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				lbllabel.textContent = this.StatusToString(key, watcher);
+				lbllabel.setAttribute("x", x);
+				lbllabel.setAttribute("y", 70);
+				lbllabel.setAttribute("fill", this.StatusToColor(key));
+				lbllabel.setAttribute("font-size", "11px");
+				lbllabel.style.transformOrigin = `${x-1}px ${74}px`;
+				lbllabel.style.transform = "rotate(90deg)";
+				svg.appendChild(lbllabel);
 
 				x += key < 0 ? 18 : 14;
 			}
@@ -1318,6 +1317,8 @@ class Watchdog extends Window {
 			switch (watcher.type) {
 			case "ICMP" : return `${status}ms`;
 			case "TCP"  : return `${status}ms`;
+			case "DNS"  : return "resolved";
+			case "TLS"  : return "valid";
 			default     : return "OK";
 			}
 		}

@@ -11,15 +11,15 @@ using System.Net.Sockets;
 using System.Net.Http;
 using System.Net.Security;
 using System.Net.Mail;
-using System.Security.Cryptography.X509Certificates;
+using Protest.Tools;
 
-namespace Protest.Tools;
+namespace Protest.Tasks;
 
 internal static class Watchdog {
-    private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
+    private const long WEEK_IN_TICKS = 6_048_000_000_000L;
     private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
-    private const long MINUTE_IN_TICKS      = 600_000_000L;
-    private const int  FIVE_MINUTE_IN_MILLI = 300_000;
+    private const long MINUTE_IN_TICKS = 600_000_000L;
+    private const int FIVE_MINUTE_IN_MILLI = 300_000;
 
     public enum WatcherType {
         icmp,
@@ -94,7 +94,7 @@ internal static class Watchdog {
         if (fileNotifications.Exists) {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.Converters.Add(new NotificationJsonConverter());
-            
+
             try {
                 string plain = File.ReadAllText(fileNotifications.FullName);
                 notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(plain, options);
@@ -104,25 +104,29 @@ internal static class Watchdog {
             }
         }
 
-        if (!watchers.IsEmpty) {
-            StartTask();
-        }
+        if (!watchers.IsEmpty) { StartTask("system"); }
     }
 
-    public static bool StartTask() {
+    public static bool StartTask(string initiator) {
         if (task is not null) return false;
 
-        Thread thread = new Thread(()=>WatchLoop());
+        Thread thread = new Thread(() => WatchLoop());
 
         task = new TaskWrapper("Watchdog") {
             thread = thread,
-            initiator = "system",
+            initiator = initiator,
             TotalSteps = 0,
             CompletedSteps = 0
         };
 
         task.thread.Start();
 
+        return true;
+    }
+
+    public static bool StopTask(string initiator) {
+        if (task is null) return false;
+        task.RequestCancel(initiator);
         return true;
     }
 
@@ -135,10 +139,11 @@ internal static class Watchdog {
             long startTimeStamp = DateTime.UtcNow.Ticks;
             int nextSleep = FIVE_MINUTE_IN_MILLI;
 
-            SmtpProfiles.Profile[] smtpProfiles =  SmtpProfiles.Load();
+            SmtpProfiles.Profile[] smtpProfiles = SmtpProfiles.Load();
 
             foreach (Watcher watcher in watchers.Values) {
-                if (!watcher.enable) continue;
+                if (!watcher.enable)
+                    continue;
 
                 long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
                 if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
@@ -152,7 +157,7 @@ internal static class Watchdog {
                 }
             }
 
-            Thread.Sleep(Math.Max(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000, 0));
+            task.Sleep(Math.Max(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000, 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
                 task.Dispose();
@@ -165,20 +170,21 @@ internal static class Watchdog {
     private static void Watch(Watcher watcher, SmtpProfiles.Profile[] smtpProfiles) {
         watcher.lastCheck = DateTime.UtcNow.Ticks;
 
-        short status = watcher.type switch {
-            WatcherType.icmp        => CheckIcmp(watcher),
-            WatcherType.tcp         => CheckTcp(watcher),
-            WatcherType.dns         => CheckDns(watcher),
-            WatcherType.http        => CheckHttp(watcher),
+        short status = watcher.type switch
+        {
+            WatcherType.icmp => CheckIcmp(watcher),
+            WatcherType.tcp => CheckTcp(watcher),
+            WatcherType.dns => CheckDns(watcher),
+            WatcherType.http => CheckHttp(watcher),
             WatcherType.httpKeyword => CheckHttpKeyword(watcher),
-            WatcherType.tls         => CheckTls(watcher),
-            _                       => CheckIcmp(watcher)
+            WatcherType.tls => CheckTls(watcher),
+            _ => CheckIcmp(watcher)
         };
 
         WriteResult(watcher, status);
 
         if (watcher.lastStatus != status && watcher.lastStatus != short.MinValue) {
-            Notification[] gist =  notifications.Where(n => n.watchers.Any(w => w.Equals(watcher.file))).ToArray();
+            Notification[] gist = notifications.Where(n => n.watchers.Any(w => w.Equals(watcher.file))).ToArray();
             for (int i = 0; i < gist.Length; i++) {
                 SmtpProfiles.Profile profile;
                 try {
@@ -200,12 +206,6 @@ internal static class Watchdog {
         }
 
         watcher.lastStatus = status;
-    }
-
-    public static bool StopTask(string initiator) {
-        if (task is null) return false;
-        task.RequestCancel(initiator);
-        return true;
     }
 
     private static short CheckIcmp(Watcher watcher) {
@@ -247,7 +247,7 @@ internal static class Watchdog {
                 result = (short)((after - before) / 10_000);
                 break;
             }
-            catch {}
+            catch { }
         }
 
         return result;
@@ -257,7 +257,7 @@ internal static class Watchdog {
         short result = -1;
         for (int i = 0; i < watcher.retries; i++) {
             Protocols.Dns.Resolve(
-                new string[] { watcher.query},
+                new string[] { watcher.query },
                 watcher.target,
                 watcher.timeout,
                 out ushort answerCount,
@@ -266,7 +266,8 @@ internal static class Watchdog {
                 Protocols.Dns.TransportMethod.auto,
                 watcher.rrtype);
 
-            if (answerCount + authorityCount + additionalCount == 0) continue;
+            if (answerCount + authorityCount + additionalCount == 0)
+                continue;
 
             result = 0;
             break;
@@ -280,26 +281,28 @@ internal static class Watchdog {
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 using HttpClient client = new HttpClient();
-                HttpResponseMessage response = watcher.method switch {
-                    "GET"    => client.GetAsync(watcher.target).Result,
-                    "POST"   => client.PostAsync(watcher.target, null).Result,
-                    "PUT"    => client.PutAsync(watcher.target, null).Result,
-                    "PATCH"  => client.PatchAsync(watcher.target, null).Result,
+                HttpResponseMessage response = watcher.method switch
+                {
+                    "GET" => client.GetAsync(watcher.target).Result,
+                    "POST" => client.PostAsync(watcher.target, null).Result,
+                    "PUT" => client.PutAsync(watcher.target, null).Result,
+                    "PATCH" => client.PatchAsync(watcher.target, null).Result,
                     "DELETE" => client.DeleteAsync(watcher.target).Result,
-                    _        => client.GetAsync(watcher.target).Result,
+                    _ => client.GetAsync(watcher.target).Result,
                 };
 
                 int statusCode = (int)response.StatusCode;
                 int category = statusCode / 100 - 1;
 
-                if (watcher.httpstatus.Length < category) continue;
+                if (watcher.httpstatus.Length < category)
+                    continue;
 
                 if (watcher.httpstatus[category]) {
                     result = 0;
                     break;
                 }
                 else {
-                    result = (short)(-statusCode);
+                    result = (short)-statusCode;
                     break;
                 }
             }
@@ -313,30 +316,41 @@ internal static class Watchdog {
         using HttpClient client = new HttpClient();
         short result = -1;
 
+        byte[] keywordArray = Encoding.UTF8.GetBytes(watcher.keyword.ToLower());
+
         for (int i = 0; i < watcher.retries; i++) {
             try {
-                HttpResponseMessage response = watcher.method switch {
-                    "GET"    => client.GetAsync(watcher.target).Result,
-                    "POST"   => client.PostAsync(watcher.target, null).Result,
-                    "PUT"    => client.PutAsync(watcher.target, null).Result,
-                    "PATCH"  => client.PatchAsync(watcher.target, null).Result,
+                HttpResponseMessage response = watcher.method switch
+                {
+                    "GET" => client.GetAsync(watcher.target).Result,
+                    "POST" => client.PostAsync(watcher.target, null).Result,
+                    "PUT" => client.PutAsync(watcher.target, null).Result,
+                    "PATCH" => client.PatchAsync(watcher.target, null).Result,
                     "DELETE" => client.DeleteAsync(watcher.target).Result,
-                    _        => client.GetAsync(watcher.target).Result,
+                    _ => client.GetAsync(watcher.target).Result,
                 };
 
                 int statusCode = (int)response.StatusCode;
                 int category = statusCode / 100 - 1;
 
-                if (watcher.httpstatus.Length < category) continue;
+                if (watcher.httpstatus.Length < category)
+                    continue;
                 //if (!watcher.httpstatus[category]) continue;
 
                 if (watcher.httpstatus[category]) {
-                    if (!response.Content.ReadAsStringAsync().Result.Contains(watcher.keyword, StringComparison.OrdinalIgnoreCase)) continue;
+                    byte[] buffer = response.Content.ReadAsByteArrayAsync().Result;
+                    for (int j = 0; j < buffer.Length; j++) { //to lower case
+                        if (buffer[j] > 64 && buffer[j] < 91) { buffer[j] -= 32; }
+                    }
+
+                    if (!Data.ContainsBytesSequence(buffer, keywordArray))
+                        continue;
+
                     result = 0;
                     break;
                 }
                 else {
-                    result = (short)(-statusCode);
+                    result = (short)-statusCode;
                     break;
                 }
             }
@@ -350,7 +364,7 @@ internal static class Watchdog {
         short result = -1;
 
         using HttpClientHandler handler = new HttpClientHandler();
-        handler.ServerCertificateCustomValidationCallback = (HttpRequestMessage request, X509Certificate2 cert, X509Chain chain, SslPolicyErrors errors) => {
+        handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
             long now = DateTime.UtcNow.Ticks;
             if (cert.NotBefore.Ticks > now) { //not yet valid
                 result = -4;
@@ -370,11 +384,13 @@ internal static class Watchdog {
 
         for (int i = 0; i < watcher.retries; i++) {
             try {
-                using  HttpClient client = new HttpClient(handler);
-                using  HttpResponseMessage response = client.GetAsync(watcher.target).Result;
-            } catch { }
+                using HttpClient client = new HttpClient(handler);
+                using HttpResponseMessage response = client.GetAsync(watcher.target).Result;
+            }
+            catch { }
 
-            if (result == short.MaxValue) continue;
+            if (result == short.MaxValue)
+                continue;
             break;
         }
 
@@ -387,7 +403,8 @@ internal static class Watchdog {
         string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
         lock (watcher.sync) {
             try {
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
                 using FileStream stream = new FileStream(path, FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
@@ -411,8 +428,9 @@ internal static class Watchdog {
 
         bool first = true;
         foreach (Watcher watcher in watchers.Values) {
-            if (!first) builder.Append(',');
-            builder.Append(JsonSerializer.Serialize<Watcher>(watcher, options));
+            if (!first)
+                builder.Append(',');
+            builder.Append(JsonSerializer.Serialize(watcher, options));
             first = false;
         }
 
@@ -497,7 +515,7 @@ internal static class Watchdog {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
 
-            lock(watcher.sync) {
+            lock (watcher.sync) {
                 Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_", true);
                 File.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
             }
@@ -535,7 +553,7 @@ internal static class Watchdog {
             payload = reader.ReadToEnd();
         }
 
-        if (String.IsNullOrEmpty(payload)) {
+        if (string.IsNullOrEmpty(payload)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -547,23 +565,24 @@ internal static class Watchdog {
             lock (syncNotification) {
                 File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
             }
-            
+
             Logger.Action(initiator, $"Modified watchdog notifications");
 
             return Data.CODE_OK.Array;
 
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
     }
 
     public static void SendSmtpNotification(Watcher watcher, Notification notification, SmtpProfiles.Profile profile, short status) {
-        const string redDot    = "&#128308;"; //🔴
+        const string redDot = "&#128308;"; //🔴
         const string orangeDot = "&#128992;"; //🟠
         const string yellowDot = "&#128993;"; //🟡
-        const string greenDot  = "&#128994;"; //🟢
-        const string blueDot   = "&#128309;"; //🔵
+        const string greenDot = "&#128994;"; //🟢
+        const string blueDot = "&#128309;"; //🔵
 
         /*string dotEmoji = status switch {
              0 => "🟢",
@@ -589,31 +608,45 @@ internal static class Watchdog {
         body.Append("<tr><td style=\"height:40px;color:#202020;font-size:20px\"><b>");
 
         switch (status) {
-        case  0: body.Append(greenDot);  break; //ok
-        case -4: body.Append(blueDot);   break; //tls not yet valid
-        case -3: body.Append(yellowDot); break; //expiration warning
-        case -2: body.Append(orangeDot); break; //expired
-        case -1: body.Append(redDot);    break; //unreachable
-        default: body.Append(greenDot);  break;
+        case 0:
+            body.Append(greenDot);
+            break; //ok
+        case -4:
+            body.Append(blueDot);
+            break; //tls not yet valid
+        case -3:
+            body.Append(yellowDot);
+            break; //expiration warning
+        case -2:
+            body.Append(orangeDot);
+            break; //expired
+        case -1:
+            body.Append(redDot);
+            break; //unreachable
+        default:
+            body.Append(greenDot);
+            break;
         }
 
-        string stringStatus = watcher.type switch {
-            WatcherType.icmp        => status < 0 ? "Host is unreachable"    : "Host is reachable",
-            WatcherType.tcp         => status < 0 ? "Connection failed"      : "Connection succeeded",
-            WatcherType.dns         => status < 0 ? "Domain is not resolved" : "Domain is resolved",
-            WatcherType.http        => status < 0 ? "Response not valid"     : "Response is valid",
-            WatcherType.httpKeyword => status < 0 ? "Keyword not found"      : "Keyword is found",
+        string stringStatus = watcher.type switch
+        {
+            WatcherType.icmp => status < 0 ? "Host is unreachable" : "Host is reachable",
+            WatcherType.tcp => status < 0 ? "Connection failed" : "Connection succeeded",
+            WatcherType.dns => status < 0 ? "Domain is not resolved" : "Domain is resolved",
+            WatcherType.http => status < 0 ? "Response not valid" : "Response is valid",
+            WatcherType.httpKeyword => status < 0 ? "Keyword not found" : "Keyword is found",
 
-            WatcherType.tls => status switch {
-                0  => "Certificate is valid",
+            WatcherType.tls => status switch
+            {
+                0 => "Certificate is valid",
                 -1 => "Host is unreachable",
                 -2 => "Certificate expired",
                 -3 => "Expiration warning",
                 -4 => "Certificate is not yet valid",
-                _  => "Certificate is valid",
+                _ => "Certificate is valid",
             },
 
-            _ => String.Empty
+            _ => string.Empty
         };
 
         string target;
@@ -687,12 +720,22 @@ internal static class Watchdog {
 
         case WatcherType.tls:
             switch (status) {
-            case  0: body.Append($"Certificate for <b>{watcher.target}</b> is now valid."); break;
-            case -1: body.Append($"Host for <b>{watcher.target}</b> is unreachable."); break;
-            case -2: body.Append($"Certificate for <b>{watcher.target}</b> is expired."); break;
-            case -3: body.Append($"Certificate for <b>{watcher.target}</b> is close to it's expiration date."); break;
-            case -4: body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached."); break;
-            //default: body.Append($""); break;
+            case 0:
+                body.Append($"Certificate for <b>{watcher.target}</b> is now valid.");
+                break;
+            case -1:
+                body.Append($"Host for <b>{watcher.target}</b> is unreachable.");
+                break;
+            case -2:
+                body.Append($"Certificate for <b>{watcher.target}</b> is expired.");
+                break;
+            case -3:
+                body.Append($"Certificate for <b>{watcher.target}</b> is close to it's expiration date.");
+                break;
+            case -4:
+                body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached.");
+                break;
+                //default: body.Append($""); break;
             }
             break;
         }
@@ -721,7 +764,8 @@ internal static class Watchdog {
         try
 #endif
         {
-            using MailMessage mail = new MailMessage {
+            using MailMessage mail = new MailMessage
+            {
                 From = new MailAddress(profile.sender, "Pro-test"),
                 Subject = $"Watchdog notification - {target} - {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}",
                 IsBodyHtml = true
@@ -734,7 +778,8 @@ internal static class Watchdog {
                 mail.To.Add(notification.recipients[i]);
             }
 
-            using SmtpClient smtp = new SmtpClient(profile.server) {
+            using SmtpClient smtp = new SmtpClient(profile.server)
+            {
                 Port = profile.port,
                 EnableSsl = profile.ssl,
                 Credentials = new NetworkCredential(profile.username, profile.password)
@@ -763,42 +808,60 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
                 reader.Read();
 
                 switch (propertyName) {
-                case "file"    : watcher.file    = reader.GetString();  break;
-                case "enable"  : watcher.enable  = reader.GetBoolean(); break;
-                case "name"    : watcher.name    = reader.GetString();  break;
-                case "target"  : watcher.target  = reader.GetString();  break;
-                case "port"    : watcher.port    = reader.GetInt32();   break;
-                case "timeout" : watcher.timeout = Math.Max(reader.GetInt32(), 5);   break;
-                case "method"  : watcher.method  = reader.GetString();  break;
-                case "keyword" : watcher.keyword = reader.GetString();  break;
-                case "query"   : watcher.query   = reader.GetString();  break;
+                case "file":
+                    watcher.file = reader.GetString();
+                    break;
+                case "enable":
+                    watcher.enable = reader.GetBoolean();
+                    break;
+                case "name":
+                    watcher.name = reader.GetString();
+                    break;
+                case "target":
+                    watcher.target = reader.GetString();
+                    break;
+                case "port":
+                    watcher.port = reader.GetInt32();
+                    break;
+                case "timeout":
+                    watcher.timeout = Math.Max(reader.GetInt32(), 5);
+                    break;
+                case "method":
+                    watcher.method = reader.GetString();
+                    break;
+                case "keyword":
+                    watcher.keyword = reader.GetString();
+                    break;
+                case "query":
+                    watcher.query = reader.GetString();
+                    break;
 
                 case "type":
                     string typeString = reader.GetString().ToUpper();
                     watcher.type = typeString switch {
-                        "ICMP"         => Watchdog.WatcherType.icmp,
-                        "TCP"          => Watchdog.WatcherType.tcp,
-                        "DNS"          => Watchdog.WatcherType.dns,
-                        "HTTP"         => Watchdog.WatcherType.http,
+                        "ICMP" => Watchdog.WatcherType.icmp,
+                        "TCP" => Watchdog.WatcherType.tcp,
+                        "DNS" => Watchdog.WatcherType.dns,
+                        "HTTP" => Watchdog.WatcherType.http,
                         "HTTP KEYWORD" => Watchdog.WatcherType.httpKeyword,
-                        "TLS"          => Watchdog.WatcherType.tls,
-                        _              => Watchdog.WatcherType.icmp,
+                        "TLS" => Watchdog.WatcherType.tls,
+                        _ => Watchdog.WatcherType.icmp,
                     };
                     break;
 
                 case "rrtype":
                     string rrtypeString = reader.GetString().ToUpper();
                     watcher.rrtype = rrtypeString switch {
-                        "A"     => Protocols.Dns.RecordType.A,
-                        "NS"    => Protocols.Dns.RecordType.NS,
+                        "A" => Protocols.Dns.RecordType.A,
+                        "NS" => Protocols.Dns.RecordType.NS,
                         "CNAME" => Protocols.Dns.RecordType.CNAME,
-                        "SOA"   => Protocols.Dns.RecordType.SOA,
-                        "PTR"   => Protocols.Dns.RecordType.PTR,
-                        "MX"    => Protocols.Dns.RecordType.MX,
-                        "TXT"   => Protocols.Dns.RecordType.TXT,
-                        "AAAA"  => Protocols.Dns.RecordType.AAAA,
-                        "SRV"   => Protocols.Dns.RecordType.SRV,
-                        _       => Protocols.Dns.RecordType.A,
+                        "SOA" => Protocols.Dns.RecordType.SOA,
+                        "PTR" => Protocols.Dns.RecordType.PTR,
+                        "MX" => Protocols.Dns.RecordType.MX,
+                        "TXT" => Protocols.Dns.RecordType.TXT,
+                        "AAAA" => Protocols.Dns.RecordType.AAAA,
+                        "SRV" => Protocols.Dns.RecordType.SRV,
+                        _ => Protocols.Dns.RecordType.A,
                     };
                     break;
 
@@ -810,8 +873,12 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
                     watcher.httpstatus = httpStatusList.ToArray();
                     break;
 
-                case "interval" : watcher.interval = reader.GetInt32(); break;
-                case "retries"  : watcher.retries  = reader.GetInt32(); break;
+                case "interval":
+                    watcher.interval = reader.GetInt32();
+                    break;
+                case "retries":
+                    watcher.retries = reader.GetInt32();
+                    break;
                 }
             }
         }
@@ -824,36 +891,36 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
     public override void Write(Utf8JsonWriter writer, Watchdog.Watcher value, JsonSerializerOptions options) {
         writer.WriteStartObject();
 
-        writer.WriteString("file"u8,    value.file);
+        writer.WriteString("file"u8, value.file);
         writer.WriteBoolean("enable"u8, value.enable);
-        writer.WriteString("name"u8,    value.name);
-        writer.WriteString("target"u8,  value.target);
-        writer.WriteNumber("port"u8,    value.port);
+        writer.WriteString("name"u8, value.name);
+        writer.WriteString("target"u8, value.target);
+        writer.WriteNumber("port"u8, value.port);
         writer.WriteNumber("timeout"u8, value.timeout);
-        writer.WriteString("method"u8,  value.method);
+        writer.WriteString("method"u8, value.method);
         writer.WriteString("keyword"u8, value.keyword);
-        writer.WriteString("query"u8,   value.query);
+        writer.WriteString("query"u8, value.query);
 
         writer.WriteString("type"u8, value.type switch {
-            Watchdog.WatcherType.icmp        => "ICMP",
-            Watchdog.WatcherType.tcp         => "TCP",
-            Watchdog.WatcherType.dns         => "DNS",
-            Watchdog.WatcherType.http        => "HTTP",
+            Watchdog.WatcherType.icmp => "ICMP",
+            Watchdog.WatcherType.tcp => "TCP",
+            Watchdog.WatcherType.dns => "DNS",
+            Watchdog.WatcherType.http => "HTTP",
             Watchdog.WatcherType.httpKeyword => "HTTP keyword",
-            Watchdog.WatcherType.tls         => "TLS",
+            Watchdog.WatcherType.tls => "TLS",
             _ => "ICMP"
         });
 
         writer.WriteString("rrtype"u8, value.rrtype switch {
-            Protocols.Dns.RecordType.A     => "A",
-            Protocols.Dns.RecordType.NS    => "NS",
+            Protocols.Dns.RecordType.A => "A",
+            Protocols.Dns.RecordType.NS => "NS",
             Protocols.Dns.RecordType.CNAME => "CNAME",
-            Protocols.Dns.RecordType.SOA   => "SOA",
-            Protocols.Dns.RecordType.PTR   => "PTR",
-            Protocols.Dns.RecordType.MX    => "MX",
-            Protocols.Dns.RecordType.TXT   => "TXT",
-            Protocols.Dns.RecordType.AAAA  => "AAAA",
-            Protocols.Dns.RecordType.SRV   => "SRV",
+            Protocols.Dns.RecordType.SOA => "SOA",
+            Protocols.Dns.RecordType.PTR => "PTR",
+            Protocols.Dns.RecordType.MX => "MX",
+            Protocols.Dns.RecordType.TXT => "TXT",
+            Protocols.Dns.RecordType.AAAA => "AAAA",
+            Protocols.Dns.RecordType.SRV => "SRV",
             _ => "A"
         });
 
@@ -915,10 +982,18 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
             reader.Read();
 
             switch (propertyName) {
-            case "name"       : notification.name       = reader.GetString(); break;
-            case "notify"     : notification.notify     = (Watchdog.NotifyOn)reader.GetInt32(); break;
-            case "recipients" : notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
-            case "watchers"   : notification.watchers   = JsonSerializer.Deserialize<string[]>(ref reader, options); break;
+            case "name":
+                notification.name = reader.GetString();
+                break;
+            case "notify":
+                notification.notify = (Watchdog.NotifyOn)reader.GetInt32();
+                break;
+            case "recipients":
+                notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                break;
+            case "watchers":
+                notification.watchers = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                break;
 
             case "smtpprofile":
                 if (reader.TokenType != JsonTokenType.String) {
@@ -926,13 +1001,15 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
                 }
 
                 Guid guid = reader.GetGuid();
-                SmtpProfiles.Profile profile = Array.Find(profiles, o=>o.guid == guid);
+                SmtpProfiles.Profile profile = Array.Find(profiles, o => o.guid == guid);
                 if (profile is not null) {
                     notification.smtpProfile = profile;
                 }
                 break;
 
-            default: reader.Skip(); break;
+            default:
+                reader.Skip();
+                break;
             }
         }
 

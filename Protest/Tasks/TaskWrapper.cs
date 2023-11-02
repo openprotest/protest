@@ -1,6 +1,9 @@
-﻿using System.Threading;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Drawing.Text;
+using System.Threading;
+using System.Timers;
 
-namespace Protest.Tools;
+namespace Protest.Tasks;
 
 internal sealed class TaskWrapper : IDisposable {
 
@@ -44,7 +47,8 @@ internal sealed class TaskWrapper : IDisposable {
     }
 
     public string CalculateEtc() {
-        if (CompletedSteps < 1) return "Calculating";
+        if (CompletedSteps < 1)
+            return "Calculating";
 
         long d = _lastSet - started; //total duration
 
@@ -67,6 +71,22 @@ internal sealed class TaskWrapper : IDisposable {
         status = TaskStatus.canceling;
         Logger.Action(initiator, $"Canceling task: {name}");
         cancellationTokenSource.Cancel();
+    }
+
+    public void Sleep(int millisecond, int interval = 360_000) {
+        long start = DateTime.UtcNow.Ticks;
+        while (!cancellationToken.IsCancellationRequested) {
+            long elapsed = (DateTime.UtcNow.Ticks - start) / 10_000; //to millisec
+            if (elapsed >= millisecond) return;
+
+            int remain = (int)(millisecond - elapsed);
+            if (remain < interval) {
+                Thread.Sleep(remain);
+            }
+            else {
+                Thread.Sleep(interval);
+            }
+        }
     }
 
     public void Dispose() {

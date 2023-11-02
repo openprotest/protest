@@ -123,11 +123,12 @@ const UI = {
 		if (isNaN(pingResult))
 			return (pingResult === "TimedOut") ? "var(--clr-error)" : "var(--clr-orange)";
 		
-		if (pingResult === -1)
+		if (pingResult === -1) {
 			return "rgb(192,192,192)";
+		}
 
 		if (pingResult > 500) pingResult = 500;
-		return `hsl(${Math.round(96 + pingResult * 250 / 500)},66%,${lightness}%)`;
+		return `hsl(${Math.round(92 + pingResult / 2.2)},66%,${lightness}%)`;
 	},
 
 	TicksToUnixDate: ticks=> {

@@ -243,7 +243,7 @@ class Ping extends Console {
 			td1a.style.borderRadius = "8px 8px 0 0";
 			td1a.style.width = "24px";
 			td1a.style.height = "24px";
-			td1a.style.background = `linear-gradient(to bottom, ${UI.PingColor(0)}0%, ${UI.PingColor(250)}100%)`;
+			td1a.style.background = `linear-gradient(to bottom, ${UI.PingColor(0)}0%, ${UI.PingColor(125)}50%, ${UI.PingColor(250)}100%)`;
 			tr1.appendChild(td1a);
 			const td1b = document.createElement("td");
 			td1b.style.minWidth = "96px";
@@ -254,7 +254,7 @@ class Ping extends Console {
 			const td2a = document.createElement("td");
 			td2a.style.width = "24px";
 			td2a.style.height = "24px";
-			td2a.style.background = `linear-gradient(to bottom, ${UI.PingColor(250)}0%, ${UI.PingColor(500)}100%)`;
+			td2a.style.background = `linear-gradient(to bottom, ${UI.PingColor(250)}0%, ${UI.PingColor(375)}50%, ${UI.PingColor(500)}100%)`;
 			tr2.appendChild(td2a);
 			const td2b = document.createElement("td");
 			td2b.style.paddingLeft = "8px";
@@ -265,7 +265,7 @@ class Ping extends Console {
 			td3a.style.borderRadius = "0 0 8px 8px";
 			td3a.style.width = "24px";
 			td3a.style.height = "24px";
-			td3a.style.background = `linear-gradient(to bottom, ${UI.PingColor(500)}0%, ${UI.PingColor(750)}100%)`;
+			td3a.style.background = `linear-gradient(to bottom, ${UI.PingColor(500)}0%, ${UI.PingColor(675)}50%, ${UI.PingColor(750)}100%)`;
 			tr3.appendChild(td3a);
 			const td3b = document.createElement("td");
 			td3b.style.paddingLeft = "8px";
