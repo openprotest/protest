@@ -47,8 +47,9 @@ internal static partial class Lifeline {
 
     private static void LifelineLoop() {
         Regex regex = ValidHostnameRegex();
-        HashSet<string> ping = new HashSet<string>();
-        HashSet<string> wmi = new HashSet<string>();
+        HashSet<string> pingOnly = new HashSet<string>();
+        HashSet<string> pingAndWmiA = new HashSet<string>();
+        HashSet<string> pingAndWmiB = new HashSet<string>();
 
         long lastVersion = 0;
 
@@ -56,8 +57,9 @@ internal static partial class Lifeline {
             long startTimeStamp = DateTime.UtcNow.Ticks;
             
             if (lastVersion != DatabaseInstances.devices.version) {
-                ping.Clear();
-                wmi.Clear();
+                pingOnly.Clear();
+                pingAndWmiA.Clear();
+                pingAndWmiB.Clear();
 
                 foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
                     string[] remoteEndPoint;
@@ -80,11 +82,18 @@ internal static partial class Lifeline {
                         if (remoteEndPoint[i].Length == 0) continue;
                         if (!regex.IsMatch(remoteEndPoint[i])) continue;
 
-                        Console.WriteLine(remoteEndPoint[i]);
+Console.WriteLine(remoteEndPoint[i]);
 
-                        ping.Add(remoteEndPoint[i]);
                         if (os is not null && os.Contains("windows")) {
-                            wmi.Add(remoteEndPoint[i]);
+                            if (pingAndWmiB.Count > pingAndWmiA.Count) { 
+                                pingAndWmiA.Add(remoteEndPoint[i]);
+                            }
+                            else {
+                                pingAndWmiB.Add(remoteEndPoint[i]);
+                            }
+                        }
+                        else {
+                            pingOnly.Add(remoteEndPoint[i]);
                         }
                     }
                 }
@@ -93,15 +102,32 @@ internal static partial class Lifeline {
             }
 
             Thread pingThread = new Thread(() => {
-                foreach (string host in ping) {
+                foreach (string host in pingOnly) {
                     Ping(host);
                 }
             });
 
-            Thread wmiThread = new Thread(() => {
+            Thread wmiThreadA = new Thread(() => {
                 if (!OperatingSystem.IsWindows()) return;
 
-                foreach (string host in wmi) {
+                foreach (string host in pingAndWmiA) {
+                    if (!Ping(host)) continue;
+                    try {
+                        ManagementScope scope = Protocols.Wmi.Scope(host);
+                        Memory(host, scope);
+                        Disk(host, scope);
+                    }
+                    catch { }
+                }
+            });
+
+            Thread wmiThreadB = new Thread(() => {
+                if (!OperatingSystem.IsWindows())
+                    return;
+
+                foreach (string host in pingAndWmiB) {
+                    if (!Ping(host))
+                        continue;
                     try {
                         ManagementScope scope = Protocols.Wmi.Scope(host);
                         Memory(host, scope);
@@ -112,10 +138,12 @@ internal static partial class Lifeline {
             });
 
             pingThread.Start();
-            wmiThread.Start();
+            wmiThreadA.Start();
+            wmiThreadB.Start();
 
             pingThread.Join();
-            wmiThread.Join();
+            wmiThreadA.Join();
+            wmiThreadB.Join();
 
             task.Sleep((int)Math.Max(FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp) / 10_000L, 0));
 
@@ -127,7 +155,7 @@ internal static partial class Lifeline {
         }
     }
 
-    private static void Ping(string host) {
+    private static bool Ping(string host) {
         DateTime now = DateTime.UtcNow;
         short rtt = -1;
 
@@ -157,6 +185,8 @@ internal static partial class Lifeline {
             writer.Write(rtt); //2 bytes
             stream.Close();
         } catch { }
+
+        return rtt >= 0;
     }
 
     [SupportedOSPlatform("windows")]
@@ -191,7 +221,7 @@ internal static partial class Lifeline {
     [SupportedOSPlatform("windows")]
     private static void Disk(string host, ManagementScope scope) {
         DateTime now = DateTime.UtcNow;
-        List<string> caption = new List<string>();
+        List<byte> caption = new List<byte>();
         List<ulong> size = new List<ulong>();
         List<ulong> free = new List<ulong>();
 
@@ -199,7 +229,7 @@ internal static partial class Lifeline {
             using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                caption.Add(o.GetPropertyValue("Caption").ToString());
+                caption.Add((byte)o.GetPropertyValue("Caption").ToString()[0]);
                 size.Add((ulong)o.GetPropertyValue("Size"));
                 free.Add((ulong)o.GetPropertyValue("FreeSpace"));
             }
@@ -217,7 +247,7 @@ internal static partial class Lifeline {
             writer.Write(caption.Count); //4 bytes
 
             for (int i = 0; i < caption.Count; i++) {
-                writer.Write(caption[i]); //8 bytes
+                writer.Write(caption[i]); //1 bytes
                 writer.Write(size[i]); //8 bytes
                 writer.Write(size[i] - free[i]); //8 bytes
             }
