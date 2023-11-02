@@ -2,15 +2,18 @@
 using System.IO;
 using System.Management;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Protest.Tasks;
 
-internal static class Lifeline {
+internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
+
+    [GeneratedRegex("^(?!-)[A-Za-z0-9-.]{1,255}(?<!-)$")]
+    private static partial Regex ValidHostnameRegex();
 
     public static TaskWrapper task;
 
@@ -43,6 +46,7 @@ internal static class Lifeline {
     }
 
     private static void LifelineLoop() {
+        Regex regex = ValidHostnameRegex();
         HashSet<string> ping = new HashSet<string>();
         HashSet<string> wmi = new HashSet<string>();
 
@@ -73,6 +77,9 @@ internal static class Lifeline {
                     null;
 
                     for (int i = 0; i < remoteEndPoint.Length; i++) {
+                        if (remoteEndPoint.Length == 0) continue;
+                        if (!regex.IsMatch(remoteEndPoint[i])) continue;
+
                         ping.Add(remoteEndPoint[i]);
                         if (os is not null && os.Contains("windows")) {
                             wmi.Add(remoteEndPoint[i]);

@@ -13,7 +13,7 @@ internal static partial class Arp {
     private static partial uint SendARP(uint destIP, uint srcIP, byte[] macAddr, ref int macAddrLen);
 
     [GeneratedRegex("^((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\s+\\w+){2}\\s+((?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2}))")]
-    private static partial Regex LinuxMacAddress();
+    private static partial Regex LinuxMacAddressRegex();
 
     public static string ArpRequest(string ip) {
         string[] split = ip.Split('.');
@@ -69,7 +69,7 @@ internal static partial class Arp {
             using FileStream arpFile = new FileStream("/proc/net/arp", FileMode.Open, FileAccess.Read);
             using StreamReader reader = new StreamReader(arpFile);
 
-            Regex regex = LinuxMacAddress();
+            Regex regex = LinuxMacAddressRegex();
 
             reader.ReadLine(); //skip header
 
