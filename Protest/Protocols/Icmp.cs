@@ -1,5 +1,4 @@
-﻿using Protest.Http;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -7,6 +6,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
 
 namespace Protest.Protocols;
 

@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 
 namespace Protest.Tasks;
@@ -37,8 +39,7 @@ internal static class Lifeline {
     }
 
     public static bool StopTask(string initiator) {
-        if (task is null)
-            return false;
+        if (task is null) return false;
         task.RequestCancel(initiator);
         return true;
     }
@@ -96,8 +97,8 @@ internal static class Lifeline {
                 foreach (string host in wmi) {
                     try {
                         ManagementScope scope = Protocols.Wmi.Scope(host);
-                        Memory(scope);
-                        Disk(scope);
+                        Memory(host, scope);
+                        Disk(host, scope);
                     }
                     catch { }
                 }
@@ -120,48 +121,92 @@ internal static class Lifeline {
     }
 
     private static void Ping(string host) {
+        DateTime now = DateTime.UtcNow;
+        short rtt = -1;
+
         Ping ping = new Ping();
         try {
-            PingReply reply = ping.Send(host, 500);
-
+            PingReply reply = ping.Send(host, 1000); //1st try
             if (reply.Status != IPStatus.Success) {
                 LastSeen.Seen(host);
+                rtt = (short)reply.RoundtripTime;
             }
-            else {
 
+            reply = ping.Send(host, 1000); //2nd try
+            if (reply.Status != IPStatus.Success) {
+                LastSeen.Seen(host);
+                rtt = (short)reply.RoundtripTime;
             }
+        }
+        catch { }
+
+        try {
+            using FileStream stream = new FileStream($"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}", FileMode.Append);
+            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+            writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+            writer.Write(rtt); //2 bytes
+            stream.Close();
+        } catch { }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static void Memory(string host, ManagementScope scope) {
+        DateTime now = DateTime.UtcNow;
+        ulong total = 0, free = 0;
+
+        try {
+            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_OperatingSystem")).Get();
+            foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
+                if (o is null) continue;
+                total += (ulong)o.GetPropertyValue("TotalPhysicalMemory");
+                free += (ulong)o.GetPropertyValue("FreePhysicalMemory");
+            }
+        }
+        catch { }
+
+        try {
+            using FileStream stream = new FileStream($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}", FileMode.Append);
+            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+            writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+            writer.Write(total); //8 bytes
+            writer.Write(total - free); //8 bytes
+            stream.Close();
         }
         catch { }
     }
 
     [SupportedOSPlatform("windows")]
-    private static void Memory(ManagementScope scope) {
+    private static void Disk(string host, ManagementScope scope) {
+        DateTime now = DateTime.UtcNow;
+        List<string> caption = new List<string>();
+        List<ulong> size = new List<ulong>();
+        List<ulong> free = new List<ulong>();
+
         try {
             using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
-                string caption = o.GetPropertyValue("Caption").ToString();
-                ulong size = (ulong)o.GetPropertyValue("Size");
-                ulong free = (ulong)o.GetPropertyValue("FreeSpace");
-
+                if (o is null) continue;
+                caption.Add(o.GetPropertyValue("Caption").ToString());
+                size.Add((ulong)o.GetPropertyValue("Size"));
+                free.Add((ulong)o.GetPropertyValue("FreeSpace"));
             }
         }
         catch { }
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static void Disk(ManagementScope scope) {
-
-        //Win32_OperatingSystem : FreePhysicalMemory, TotalPhysicalMemory
-        //
 
         try {
-            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
-            foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
-                string caption = o.GetPropertyValue("Caption").ToString();
-                ulong size = (ulong)o.GetPropertyValue("Size");
-                ulong free = (ulong)o.GetPropertyValue("FreeSpace");
+            using FileStream stream = new FileStream($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}", FileMode.Append);
+            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
 
+            writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+            writer.Write(caption.Count); //4 bytes
+
+            for (int i = 0; i < caption.Count; i++) {
+                writer.Write(caption[i]); //8 bytes
+                writer.Write(size[i]); //8 bytes
+                writer.Write(size[i] - free[i]); //8 bytes
             }
+
+            stream.Close();
         }
         catch { }
     }

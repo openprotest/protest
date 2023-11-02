@@ -5,7 +5,6 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Protest.Protocols;
 
 namespace Protest.Http;
 
@@ -108,7 +107,7 @@ internal static class Auth {
         AccessControl access = acl[username];
 
         bool successful = access.isDomainUser && OperatingSystem.IsWindows() ?
-            Kerberos.TryDirectoryAuthenticate(username, password) :
+            Protocols.Kerberos.TryDirectoryAuthenticate(username, password) :
             Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.hash);
 
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;

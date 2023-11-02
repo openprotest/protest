@@ -403,8 +403,7 @@ internal static class Watchdog {
         string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
         lock (watcher.sync) {
             try {
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                if (!Directory.Exists(dir)) { Directory.CreateDirectory(dir); }
                 using FileStream stream = new FileStream(path, FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes

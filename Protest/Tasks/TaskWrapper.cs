@@ -47,24 +47,27 @@ internal sealed class TaskWrapper : IDisposable {
     }
 
     public string CalculateEtc() {
-        if (CompletedSteps < 1)
-            return "Calculating";
+        if (CompletedSteps < 1) { return "Calculating"; }
 
         long d = _lastSet - started; //total duration
 
         double tps = d / CompletedSteps; //avg ticks/step
 
         long etc = (long)(tps * (TotalSteps - CompletedSteps));
-        if (etc - (DateTime.UtcNow.Ticks - _lastSet) > 0) //subtract time passed since last-set
+        if (etc - (DateTime.UtcNow.Ticks - _lastSet) > 0) { //subtract time passed since last-set
             etc -= DateTime.UtcNow.Ticks - _lastSet;
+        }
 
         TimeSpan ts = new TimeSpan(etc);
-        if (ts.Days == 0)
+        if (ts.Days == 0) {
             return $"{ts.Hours.ToString().PadLeft(2, '0')}:{ts.Minutes.ToString().PadLeft(2, '0')}:{ts.Seconds.ToString().PadLeft(2, '0')}";
-        else if (ts.Days == 1)
+        }
+        else if (ts.Days == 1) {
             return $"1 day, {ts.Hours.ToString().PadLeft(2, '0')}:{ts.Minutes.ToString().PadLeft(2, '0')}:{ts.Seconds.ToString().PadLeft(2, '0')}";
-        else
+        }
+        else {
             return $"{Math.Round(ts.TotalDays)} days";
+        }
     }
 
     public void RequestCancel(string initiator) {

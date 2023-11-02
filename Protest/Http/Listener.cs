@@ -6,7 +6,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
-using Protest.Tasks;
 
 namespace Protest.Http;
 
@@ -274,15 +273,15 @@ public sealed class Listener {
         case "/db/gandalf"    : buffer = Tools.PasswordStrength.GandalfThreadWrapper(ctx, username); break;
 
         case "/fetch/networkinfo": buffer = Protocols.Kerberos.NetworkInfo(); break;
-        case "/fetch/status"        : buffer = Fetch.Status(); break;
-        case "/fetch/singledevice"  : buffer = Fetch.SingleDeviceSerialize(parameters, true); break;
-        case "/fetch/singleuser"    : buffer = Fetch.SingleUserSerialize(parameters); break;
-        case "/fetch/devices"       : buffer = Fetch.DevicesTask(parameters, username); break;
-        case "/fetch/users"         : buffer = Fetch.UsersTask(parameters, username); break;
-        case "/fetch/import"        : buffer = Fetch.ImportTask(parameters, username); break;
-        case "/fetch/approve"       : buffer = Fetch.ApproveLastTask(parameters, username); break;
-        case "/fetch/abort"         : buffer = Fetch.CancelTask(username); break;
-        case "/fetch/discard"       : buffer = Fetch.DiscardLastTask(username); break;
+        case "/fetch/status"        : buffer = Tasks.Fetch.Status(); break;
+        case "/fetch/singledevice"  : buffer = Tasks.Fetch.SingleDeviceSerialize(parameters, true); break;
+        case "/fetch/singleuser"    : buffer = Tasks.Fetch.SingleUserSerialize(parameters); break;
+        case "/fetch/devices"       : buffer = Tasks.Fetch.DevicesTask(parameters, username); break;
+        case "/fetch/users"         : buffer = Tasks.Fetch.UsersTask(parameters, username); break;
+        case "/fetch/import"        : buffer = Tasks.Fetch.ImportTask(parameters, username); break;
+        case "/fetch/approve"       : buffer = Tasks.Fetch.ApproveLastTask(parameters, username); break;
+        case "/fetch/abort"         : buffer = Tasks.Fetch.CancelTask(username); break;
+        case "/fetch/discard"       : buffer = Tasks.Fetch.DiscardLastTask(username); break;
 
         case "/manage/device/wol"      : buffer = Protocols.Wol.Wakeup(parameters); break;
         case "/manage/device/shutdown" : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null; break;
@@ -314,13 +313,13 @@ public sealed class Listener {
         case "/debit/templates" : buffer = Tools.DebitNotes.ListTemplate(); break;
         case "/debit/banners"   : buffer = Tools.DebitNotes.ListBanners(); break;
 
-        case "/watchdog/list"   : buffer = Watchdog.List(); break;
-        case "/watchdog/view"   : buffer = Watchdog.View(parameters); break;
-        case "/watchdog/create" : buffer = Watchdog.Create(parameters, ctx, username); break;
-        case "/watchdog/delete" : buffer = Watchdog.Delete(parameters, username); break;
+        case "/watchdog/list"   : buffer = Tasks.Watchdog.List(); break;
+        case "/watchdog/view"   : buffer = Tasks.Watchdog.View(parameters); break;
+        case "/watchdog/create" : buffer = Tasks.Watchdog.Create(parameters, ctx, username); break;
+        case "/watchdog/delete" : buffer = Tasks.Watchdog.Delete(parameters, username); break;
         
-        case "/notifications/list"   : buffer = Watchdog.ListNotifications(); break;
-        case "/notifications/save"   : buffer = Watchdog.SaveNotifications(ctx, username); break;
+        case "/notifications/list"   : buffer = Tasks.Watchdog.ListNotifications(); break;
+        case "/notifications/save"   : buffer = Tasks.Watchdog.SaveNotifications(ctx, username); break;
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;
