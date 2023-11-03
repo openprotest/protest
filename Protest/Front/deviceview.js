@@ -421,28 +421,32 @@ class DeviceView extends View {
 		
 		this.liveStatsWebSockets.onclose = ()=> {
 			this.liveStatsWebSockets = null;
-			this.GetGraph();
+			this.InitializeGraph();
 		};
 
 		//this.liveStatsWebSockets.onerror = error=> {};
 	}
 
-	async GetGraph() {
-		const responses = await Promise.all([
-			fetch("lifeline/ping/view"),
-			fetch("lifeline/memory/view"),
-			fetch("lifeline/disk/view"),
+	async InitializeGraph() {
+		const [pingArray, memoryArray, diskArray] = await Promise.all([
+			(async ()=> {
+				const response = await fetch("lifeline/ping/view");
+				const buffer = await response.arrayBuffer();
+				return new Uint8Array(buffer);
+			})(),
+
+			(async ()=> {
+				const response = await fetch("lifeline/memory/view");
+				const buffer = await response.arrayBuffer();
+				return new Uint8Array(buffer);
+			})(),
+
+			(async ()=> {
+				const response = await fetch("lifeline/disk/view");
+				const buffer = await response.arrayBuffer();
+				return new Uint8Array(buffer);
+			})()
 		]);
-
-		const pingBuffer   = await responses[0].arrayBuffer();
-		const memoryBuffer = await responses[1].arrayBuffer();
-		const diskBuffer   = await responses[2].arrayBuffer();
-
-		const pingArray   = new Uint8Array(pingBuffer);
-		const memoryArray = new Uint8Array(memoryBuffer);
-		const diskArray   = new Uint8Array(diskBuffer);
-
-		
 	}
 
 	Edit(isNew=false) { //override
