@@ -215,9 +215,7 @@ internal static class Watchdog {
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 PingReply reply = ping.Send(watcher.target, watcher.timeout);
-
                 if (reply.Status != IPStatus.Success) continue;
-
                 result = (short)reply.RoundtripTime;
                 break;
             }
@@ -343,8 +341,7 @@ internal static class Watchdog {
                         if (buffer[j] > 64 && buffer[j] < 91) { buffer[j] -= 32; }
                     }
 
-                    if (!Data.ContainsBytesSequence(buffer, keywordArray))
-                        continue;
+                    if (!Data.ContainsBytesSequence(buffer, keywordArray)) continue;
 
                     result = 0;
                     break;

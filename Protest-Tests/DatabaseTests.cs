@@ -1,4 +1,5 @@
 global using NUnit.Framework;
+using System.Collections.Concurrent;
 
 namespace Protest.Tests;
 
@@ -29,19 +30,19 @@ public class DatabaseTests {
         Database.Entry john = new Database.Entry {
             filename = Database.GenerateFilename(),
             syncWrite = new object(),
-            attributes = new SynchronizedDictionary<string, Database.Attribute>()
+            attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        john.attributes.Add("firstname", new Database.Attribute() {
+        john.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "John",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        john.attributes.Add("lastname", new Database.Attribute() {
+        john.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Smith",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        john.attributes.Add("title", new Database.Attribute() {
+        john.attributes.TryAdd("title", new Database.Attribute() {
             value = "CEO",
             date = DateTime.Now.Ticks,
             initiator = initiator
@@ -50,19 +51,19 @@ public class DatabaseTests {
         Database.Entry noah = new Database.Entry {
             filename = Database.GenerateFilename(),
             syncWrite = new object(),
-            attributes = new SynchronizedDictionary<string, Database.Attribute>()
+            attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        noah.attributes.Add("firstname", new Database.Attribute() {
+        noah.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "Noah",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        noah.attributes.Add("lastname", new Database.Attribute() {
+        noah.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Williams",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        noah.attributes.Add("title", new Database.Attribute() {
+        noah.attributes.TryAdd("title", new Database.Attribute() {
             value = "CFO",
             date = DateTime.Now.Ticks,
             initiator = initiator
@@ -102,19 +103,19 @@ public class DatabaseTests {
         Database.Entry newCfo = new Database.Entry {
             filename = noahFilename,
             syncWrite = new object(),
-            attributes = new SynchronizedDictionary<string, Database.Attribute>()
+            attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        newCfo.attributes.Add("firstname", new Database.Attribute() {
+        newCfo.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "Lily",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        newCfo.attributes.Add("lastname", new Database.Attribute() {
+        newCfo.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Miller",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        newCfo.attributes.Add("title", new Database.Attribute() {
+        newCfo.attributes.TryAdd("title", new Database.Attribute() {
             value = "CFO",
             date = DateTime.Now.Ticks,
             initiator = initiator
@@ -143,14 +144,14 @@ public class DatabaseTests {
         Database.Entry lilyWithEmail = new Database.Entry {
             filename = lilyFilename,
             syncWrite = new object(),
-            attributes = new SynchronizedDictionary<string, Database.Attribute>()
+            attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        lilyWithEmail.attributes.Add("firstname", new Database.Attribute() {
+        lilyWithEmail.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "IGNORE",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        lilyWithEmail.attributes.Add("e-mail", new Database.Attribute() {
+        lilyWithEmail.attributes.TryAdd("e-mail", new Database.Attribute() {
             value = "lily@protest.com",
             date = DateTime.Now.Ticks,
             initiator = initiator
@@ -186,14 +187,14 @@ public class DatabaseTests {
         Database.Entry liliGotMarried = new Database.Entry {
             filename = lilyFilename,
             syncWrite = new object(),
-            attributes = new SynchronizedDictionary<string, Database.Attribute>()
+            attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        liliGotMarried.attributes.Add("lastname", new Database.Attribute() {
+        liliGotMarried.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Rodriguez",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        liliGotMarried.attributes.Add("phone", new Database.Attribute() {
+        liliGotMarried.attributes.TryAdd("phone", new Database.Attribute() {
             value = "555-12345678",
             date = DateTime.Now.Ticks,
             initiator = initiator

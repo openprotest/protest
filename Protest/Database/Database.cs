@@ -30,7 +30,7 @@ public sealed class Database {
 
     public record Entry {
         public string filename;
-        public SynchronizedDictionary<string, Attribute> attributes;
+        public ConcurrentDictionary<string, Attribute> attributes;
         public object syncWrite;
     }
 
@@ -84,7 +84,7 @@ public sealed class Database {
 
             return new Entry {
                 filename = file.Name,
-                attributes = JsonSerializer.Deserialize<SynchronizedDictionary<string, Attribute>>(plain, serializerOptions),
+                attributes = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(plain, serializerOptions),
                 syncWrite = new object()
             };
         }
@@ -155,7 +155,7 @@ public sealed class Database {
         return Delete(entry.filename, initiator);
     }
 
-    public bool Save(string file, SynchronizedDictionary<string, Attribute> modifications, SaveMethod method, string initiator) {
+    public bool Save(string file, ConcurrentDictionary<string, Attribute> modifications, SaveMethod method, string initiator) {
         if (String.IsNullOrEmpty(file)) {
             file = GenerateFilename();
         }
@@ -189,7 +189,7 @@ public sealed class Database {
                             toRemove.Add(pair.Key);
                     }
                     for (int i = 0; i < toRemove.Count; i++) {
-                        oldEntry.attributes.Remove(toRemove[i]);
+                        oldEntry.attributes.TryRemove(toRemove[i], out _);
                     }
 
                     DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DELIMITER}{file}_");
@@ -246,7 +246,7 @@ public sealed class Database {
         return Write(newEntry);
     }
 
-    private Entry SaveNew(string file, SynchronizedDictionary<string, Attribute> modifications, string initiator) {
+    private Entry SaveNew(string file, ConcurrentDictionary<string, Attribute> modifications, string initiator) {
         Entry newEntry = new Entry() {
             filename = dictionary.ContainsKey(file) ? GenerateFilename(1) : file,
             attributes = modifications,
@@ -256,7 +256,7 @@ public sealed class Database {
         Logger.Action(initiator, $"Create new entry on {this.name} database: {file}");
         return newEntry;
     }
-    private Entry SaveOverwrite(string file, SynchronizedDictionary<string, Attribute> modifications, Entry oldEntry, string initiator) {
+    private Entry SaveOverwrite(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string initiator) {
         //dictionary.Remove(file, out Entry oldEntry);
 
         //keep old initiator and date, if data didn't change
@@ -272,7 +272,7 @@ public sealed class Database {
         Logger.Action(initiator, $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
-    private Entry SaveAppend(string file, SynchronizedDictionary<string, Attribute> modifications, Entry oldEntry, string initiator) {
+    private Entry SaveAppend(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string initiator) {
         //dictionary.Remove(file, out Entry oldEntry);
 
         foreach (KeyValuePair<string, Attribute> pair in modifications) {
@@ -284,7 +284,7 @@ public sealed class Database {
         Logger.Action(initiator, $"Modify on entry {this.name} database: {file}");
         return oldEntry;
     }
-    private Entry SaveMerge(string file, SynchronizedDictionary<string, Attribute> modifications, Entry oldEntry, string initiator) {
+    private Entry SaveMerge(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string initiator) {
         //dictionary.Remove(file, out Entry oldEntry);
 
         foreach (KeyValuePair<string, Attribute> pair in oldEntry.attributes) {
@@ -313,9 +313,9 @@ public sealed class Database {
             JsonSerializerOptions options = new JsonSerializerOptions();
             options.Converters.Add(new GridDataConverter(initiator));
             
-            Dictionary<string, SynchronizedDictionary<string, Attribute>> mods = JsonSerializer.Deserialize<Dictionary<string, SynchronizedDictionary<string, Attribute>>>(payload, options);
+            Dictionary<string, ConcurrentDictionary<string, Attribute>> mods = JsonSerializer.Deserialize<Dictionary<string, ConcurrentDictionary<string, Attribute>>>(payload, options);
 
-            foreach (KeyValuePair<string, SynchronizedDictionary<string, Attribute>> pair in mods) {
+            foreach (KeyValuePair<string, ConcurrentDictionary<string, Attribute>> pair in mods) {
                 Save(pair.Key, pair.Value, SaveMethod.merge, initiator);
             }
         }
@@ -343,7 +343,7 @@ public sealed class Database {
 
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new AttributesJsonConverter(false));
-        SynchronizedDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<SynchronizedDictionary<string, Attribute>>(payload, options);
+        ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, options);
 
         long date = DateTime.UtcNow.Ticks;
 

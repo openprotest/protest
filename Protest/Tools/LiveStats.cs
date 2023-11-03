@@ -182,8 +182,9 @@ internal static class LiveStats {
                             }
                         }
 
-                        if (result.Properties["dNSHostName"].Count > 0)
+                        if (result.Properties["dNSHostName"].Count > 0) {
                             adHostname = result.Properties["dNSHostName"][0].ToString();
+                        }
                     }
                 }
                 catch { }

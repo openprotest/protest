@@ -1,18 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Protest;
 
-public sealed class AttributesJsonConverter : JsonConverter<SynchronizedDictionary<string, Database.Attribute>> {
+public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary<string, Database.Attribute>> {
     private readonly bool ignorePasswords = false;
 
     public AttributesJsonConverter(bool ignorePasswords) {
         this.ignorePasswords = ignorePasswords;
     }
 
-    public override SynchronizedDictionary<string, Database.Attribute> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-        SynchronizedDictionary<string, Database.Attribute> dictionary = new SynchronizedDictionary<string, Database.Attribute>();
+    public override ConcurrentDictionary<string, Database.Attribute> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        ConcurrentDictionary<string, Database.Attribute> dictionary = new ConcurrentDictionary<string, Database.Attribute>();
 
         reader.Read(); //root object
 
@@ -45,7 +46,7 @@ public sealed class AttributesJsonConverter : JsonConverter<SynchronizedDictiona
                 reader.Read(); //end obj
             }
 
-            dictionary.Add(key, attr);
+            dictionary.TryAdd(key, attr);
 
             reader.Read(); //end of attribute
         }
@@ -55,7 +56,7 @@ public sealed class AttributesJsonConverter : JsonConverter<SynchronizedDictiona
         return dictionary;
     }
 
-    public override void Write(Utf8JsonWriter writer, SynchronizedDictionary<string, Database.Attribute> value, JsonSerializerOptions options) {
+    public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, Database.Attribute> value, JsonSerializerOptions options) {
         ReadOnlySpan<char> _v = stackalloc[] {'v'};
         ReadOnlySpan<char> _i = stackalloc[] {'i'};
         ReadOnlySpan<char> _d = stackalloc[] {'d'};

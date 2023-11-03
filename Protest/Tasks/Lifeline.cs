@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Management;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.Versioning;
 using System.Text;
@@ -14,6 +16,8 @@ internal static partial class Lifeline {
 
     [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
+
+    private static readonly ConcurrentDictionary<string, object> lockTable = new ConcurrentDictionary<string, object>();
 
     public static TaskWrapper task;
 
@@ -82,10 +86,8 @@ internal static partial class Lifeline {
                         if (remoteEndPoint[i].Length == 0) continue;
                         if (!regex.IsMatch(remoteEndPoint[i])) continue;
 
-Console.WriteLine(remoteEndPoint[i]);
-
                         if (os is not null && os.Contains("windows")) {
-                            if (pingAndWmiB.Count > pingAndWmiA.Count) { 
+                            if (pingAndWmiB.Count > pingAndWmiA.Count) {
                                 pingAndWmiA.Add(remoteEndPoint[i]);
                             }
                             else {
@@ -103,7 +105,7 @@ Console.WriteLine(remoteEndPoint[i]);
 
             Thread pingThread = new Thread(() => {
                 foreach (string host in pingOnly) {
-                    Ping(host);
+                    WritePing(host);
                 }
             });
 
@@ -111,11 +113,11 @@ Console.WriteLine(remoteEndPoint[i]);
                 if (!OperatingSystem.IsWindows()) return;
 
                 foreach (string host in pingAndWmiA) {
-                    if (!Ping(host)) continue;
                     try {
+                        if (!WritePing(host)) continue;
                         ManagementScope scope = Protocols.Wmi.Scope(host);
-                        Memory(host, scope);
-                        Disk(host, scope);
+                        WriteMemory(host, scope);
+                        WriteDisk(host, scope);
                     }
                     catch { }
                 }
@@ -126,12 +128,11 @@ Console.WriteLine(remoteEndPoint[i]);
                     return;
 
                 foreach (string host in pingAndWmiB) {
-                    if (!Ping(host))
-                        continue;
                     try {
+                        if (!WritePing(host)) continue;
                         ManagementScope scope = Protocols.Wmi.Scope(host);
-                        Memory(host, scope);
-                        Disk(host, scope);
+                        WriteMemory(host, scope);
+                        WriteDisk(host, scope);
                     }
                     catch { }
                 }
@@ -155,7 +156,7 @@ Console.WriteLine(remoteEndPoint[i]);
         }
     }
 
-    private static bool Ping(string host) {
+    private static bool WritePing(string host) {
         DateTime now = DateTime.UtcNow;
         short rtt = -1;
 
@@ -175,22 +176,25 @@ Console.WriteLine(remoteEndPoint[i]);
         }
         catch { }
 
+        string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}";
+        using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
         try {
-            string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(rtt); //2 bytes
+        }
+        finally {
             stream.Close();
-        } catch { }
+        }
 
         return rtt >= 0;
     }
 
     [SupportedOSPlatform("windows")]
-    private static void Memory(string host, ManagementScope scope) {
+    private static void WriteMemory(string host, ManagementScope scope) {
         DateTime now = DateTime.UtcNow;
         ulong total = 0, free = 0;
 
@@ -204,22 +208,24 @@ Console.WriteLine(remoteEndPoint[i]);
         }
         catch { }
 
+        string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
+        using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
         try {
-            string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(total); //8 bytes
             writer.Write(total - free); //8 bytes
+        }
+        finally {
             stream.Close();
         }
-        catch { }
     }
 
     [SupportedOSPlatform("windows")]
-    private static void Disk(string host, ManagementScope scope) {
+    private static void WriteDisk(string host, ManagementScope scope) {
         DateTime now = DateTime.UtcNow;
         List<byte> caption = new List<byte>();
         List<ulong> size = new List<ulong>();
@@ -236,13 +242,13 @@ Console.WriteLine(remoteEndPoint[i]);
         }
         catch { }
 
+        string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
+        using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
         try {
-            string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(caption.Count); //4 bytes
 
@@ -251,10 +257,60 @@ Console.WriteLine(remoteEndPoint[i]);
                 writer.Write(size[i]); //8 bytes
                 writer.Write(size[i] - free[i]); //8 bytes
             }
-
+        }
+        finally {
             stream.Close();
         }
-        catch { }
     }
 
+    public static byte[] ViewPing(Dictionary<string, string> parameters) {
+        if (parameters is null) { return null; }
+
+        parameters.TryGetValue("host", out string host);
+        if (String.IsNullOrEmpty(host)) return null;
+
+        parameters.TryGetValue("date", out string date);
+        if (String.IsNullOrEmpty(date)) return null;
+
+        try {
+            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
+        }
+        catch {
+            return null;
+        }
+    }
+
+    public static byte[] ViewMemory(Dictionary<string, string> parameters) {
+        if (parameters is null) { return null; }
+
+        parameters.TryGetValue("host", out string host);
+        if (String.IsNullOrEmpty(host)) return null;
+
+        parameters.TryGetValue("date", out string date);
+        if (String.IsNullOrEmpty(date)) return null;
+
+        try {
+            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
+        }
+        catch {
+            return null;
+        }
+    }
+
+    public static byte[] ViewDisk(Dictionary<string, string> parameters) {
+        if (parameters is null) { return null; }
+
+        parameters.TryGetValue("host", out string host);
+        if (String.IsNullOrEmpty(host)) return null;
+
+        parameters.TryGetValue("date", out string date);
+        if (String.IsNullOrEmpty(date)) return null;
+
+        try {
+            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
+        }
+        catch {
+            return null;
+        }
+    }
 }

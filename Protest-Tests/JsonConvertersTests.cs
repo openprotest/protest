@@ -1,4 +1,5 @@
 global using NUnit.Framework;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace Protest.Tests;
@@ -14,19 +15,19 @@ internal class JsonConvertersTests {
         Database.Entry john = new Database.Entry {
             filename = Database.GenerateFilename(),
             syncWrite = new object(),
-            attributes = new SynchronizedDictionary<string, Database.Attribute>()
+            attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        john.attributes.Add("firstname", new Database.Attribute() {
+        john.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "John",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        john.attributes.Add("lastname", new Database.Attribute() {
+        john.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Smith",
             date = DateTime.Now.Ticks,
             initiator = initiator
         });
-        john.attributes.Add("title", new Database.Attribute() {
+        john.attributes.TryAdd("title", new Database.Attribute() {
             value = "CEO",
             date = DateTime.Now.Ticks,
             initiator = initiator
@@ -39,8 +40,8 @@ internal class JsonConvertersTests {
         options.Converters.Add(new AttributesJsonConverter(true));
         
         byte[] first = JsonSerializer.SerializeToUtf8Bytes(database.dictionary, options);
-        
-        SynchronizedDictionary<string, Database.Attribute>? reverse = JsonSerializer.Deserialize<SynchronizedDictionary<string, Database.Attribute>>(first, options);
+
+        ConcurrentDictionary<string, Database.Attribute>? reverse = JsonSerializer.Deserialize<ConcurrentDictionary<string, Database.Attribute>>(first, options);
 
         byte[] second = JsonSerializer.SerializeToUtf8Bytes(reverse, options);
 

@@ -1020,7 +1020,7 @@ class Watchdog extends Window {
 		let yesterday = this.cache[this.utcToday-Watchdog.DAY_TICKS] ? this.cache[this.utcToday-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
 
 		let uptime24 = {...today, ...yesterday};
-		let total, uptimeCount, totalRoundtrip, graphCount, graphWidth;
+		let total, uptimeCount, totalRoundtrip, graphCounts, graphWidth;
 
 		let barsCount = 0;
 		let step = 100;
@@ -1028,7 +1028,7 @@ class Watchdog extends Window {
 			total = 0;
 			uptimeCount = 0;
 			totalRoundtrip = 0;
-			graphCount = {};
+			graphCounts = {};
 			graphWidth = 0;
 			barsCount = 0;
 			
@@ -1038,22 +1038,22 @@ class Watchdog extends Window {
 				let status = uptime24[time];
 	
 				if (status < 0) {
-					if (!graphCount[status]) {
+					if (!graphCounts[status]) {
 						barsCount++;
 						graphWidth += 18;
 					}
-					graphCount[status] = graphCount[status] ? graphCount[status] + 1 : 1;
+					graphCounts[status] = graphCounts[status] ? graphCounts[status] + 1 : 1;
 				}
 				else {
 					uptimeCount++;
 					totalRoundtrip += status;
 
 					let index = Math.floor(status / step) * step;
-					if (!graphCount[index]) {
+					if (!graphCounts[index]) {
 						barsCount++;
 						graphWidth += 14;
 					}
-					graphCount[index] = graphCount[index] ? graphCount[index] + 1 : 1;
+					graphCounts[index] = graphCounts[index] ? graphCounts[index] + 1 : 1;
 				}
 
 				total++;
@@ -1092,7 +1092,7 @@ class Watchdog extends Window {
 
 			let x = (180 - graphWidth) / 2;
 			let maxH = 2, maxX = 0, negativeCount = 0;
-			let graphSorted = Object.entries(graphCount).sort((a,b)=> parseInt(a[0]) > parseInt(b[0]));
+			let graphSorted = Object.entries(graphCounts).sort((a,b)=> parseInt(a[0]) > parseInt(b[0]));
 
 			for (let i=0; i<graphSorted.length; i++) {
 				let key = parseInt(graphSorted[i][0]);
@@ -1256,7 +1256,7 @@ class Watchdog extends Window {
 				dot.setAttribute("width", 6);
 				dot.setAttribute("height", 24);
 				dot.setAttribute("rx", 2);
-				dot.setAttribute("fill", this.StatusToColor(value))
+				dot.setAttribute("fill", this.StatusToColor(value));
 				svg.appendChild(dot);
 			}
 		}

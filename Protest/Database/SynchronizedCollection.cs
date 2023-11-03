@@ -16,48 +16,57 @@ public sealed class SynchronizedDictionary<TKey, TValue> : Dictionary<TKey, TVal
 
     public new TValue this[TKey key] {
         get {
-            lock (syncLock)
+            lock (syncLock) {
                 return base[key];
+            }
         }
         set {
-            lock (syncLock)
+            lock (syncLock) {
                 base[key] = value;
+            }
         }
     }
 
     public void Add(KeyValuePair<TKey, TValue> pair) {
-        lock (syncLock)
+        lock (syncLock) {
             base.Add(pair.Key, pair.Value);
+        }
     }
 
     public new void Add(TKey key, TValue value) {
-        lock (syncLock)
+        lock (syncLock) {
             base.Add(key, value);
+        }
     }
 
     public new void Clear() {
-        lock (syncLock)
+        lock (syncLock) {
             base.Clear();
+        }
     }
 
     public new bool ContainsKey(TKey key) {
-        lock (syncLock)
+        lock (syncLock) {
             return base.ContainsKey(key);
+        }
     }
 
     public new bool Remove(TKey key) {
-        lock (syncLock)
+        lock (syncLock) {
             return base.Remove(key);
+        }
     }
 
     public new bool TryAdd(TKey key, TValue value) {
-        lock (syncLock)
+        lock (syncLock) {
             return base.TryAdd(key, value);
+        }
     }
 
     public new bool TryGetValue(TKey key, out TValue value) {
-        lock (syncLock)
+        lock (syncLock) {
             return base.TryGetValue(key, out value);
+        }
     }
 
 }

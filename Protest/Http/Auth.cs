@@ -235,6 +235,9 @@ internal static class Auth {
                 path.Add("/manage/device/logoff");
                 path.Add("/manage/device/printtest");
                 path.Add("/manage/device/getfiles");
+                path.Add("/lifeline/ping/view");
+                path.Add("/lifeline/memory/view");
+                path.Add("/lifeline/disk/view");
                 path.Add("/ws/livestats/device");
                 break;
 

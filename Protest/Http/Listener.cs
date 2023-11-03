@@ -318,8 +318,12 @@ public sealed class Listener {
         case "/watchdog/create" : buffer = Tasks.Watchdog.Create(parameters, ctx, username); break;
         case "/watchdog/delete" : buffer = Tasks.Watchdog.Delete(parameters, username); break;
         
-        case "/notifications/list"   : buffer = Tasks.Watchdog.ListNotifications(); break;
-        case "/notifications/save"   : buffer = Tasks.Watchdog.SaveNotifications(ctx, username); break;
+        case "/notifications/list" : buffer = Tasks.Watchdog.ListNotifications(); break;
+        case "/notifications/save" : buffer = Tasks.Watchdog.SaveNotifications(ctx, username); break;
+
+        case "/lifeline/ping/view"  : buffer = Tasks.Lifeline.ViewPing(parameters); break;
+        case "/lifeline/memory/view": buffer = Tasks.Lifeline.ViewMemory(parameters); break;
+        case "/lifeline/disk/view"  : buffer = Tasks.Lifeline.ViewDisk(parameters); break;
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;

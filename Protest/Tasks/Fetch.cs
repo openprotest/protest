@@ -11,6 +11,7 @@ using System.Data;
 using System.DirectoryServices;
 using Protest.Http;
 using Protest.Tools;
+using System.Collections.Concurrent;
 
 namespace Protest.Tasks;
 
@@ -27,7 +28,7 @@ internal static class Fetch {
         public Type type;
         public long started;
         public long finished;
-        public SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>> dataset;
+        public ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset;
         public int successful;
         public int unsuccessful;
     }
@@ -46,13 +47,13 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        SynchronizedDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp, portScan, asynchronous, CancellationToken.None);
+        ConcurrentDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp, portScan, asynchronous, CancellationToken.None);
 
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new FetchedDataJsonConverter());
         return JsonSerializer.SerializeToUtf8Bytes(data, options);
     }
-    public static async Task<SynchronizedDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         PingReply reply = null;
         try {
             reply = await new Ping().SendPingAsync(target, 1500);
@@ -62,13 +63,13 @@ internal static class Fetch {
         catch { }
 
         if (reply?.Status == IPStatus.Success) {
-            SynchronizedDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, argSnmp, argPortScan, asynchronous, cancellationToken);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, argSnmp, argPortScan, asynchronous, cancellationToken);
             return data;
         }
 
         return null;
     }
-    public static SynchronizedDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         bool isIp = IPAddress.TryParse(target, out IPAddress ipAddress);
 
         string hostname = null;
@@ -80,7 +81,6 @@ internal static class Fetch {
                 hostname = Dns.GetHostEntry(target).HostName;
             }
             catch { }
-
         }
         else {
             hostname = target;
@@ -103,8 +103,9 @@ internal static class Fetch {
 
         if (useWmi) {
             tWmi = new Thread(() => {
-                if (!OperatingSystem.IsWindows())
+                if (!OperatingSystem.IsWindows()) {
                     return;
+                }
 
                 wmi = Protocols.Wmi.WmiFetch(target);
 
@@ -178,18 +179,21 @@ internal static class Fetch {
 
         if (argPortScan is not null) {
             tPortscan = new Thread(() => {
-                if (argPortScan is null)
-                    return;
+                if (argPortScan is null) return;
+
                 short[] portsPool = argPortScan == "full" ? PortScan.BASIC_PORTS : PortScan.BASIC_PORTS;
 
                 bool[] ports = PortScan.PortsScanAsync(target, portsPool).Result;
 
-                for (int i = 0; i < portsPool.Length; i++)
-                    if (ports[i])
+                for (int i = 0; i < portsPool.Length; i++) {
+                    if (ports[i]) {
                         portscan += $"{portsPool[i]}; ";
+                    }
+                }
 
-                if (portscan.EndsWith("; "))
+                if (portscan.EndsWith("; ")) {
                     portscan = portscan[..^2];
+                }
             });
         }
 
@@ -227,25 +231,28 @@ internal static class Fetch {
                 return null;
         }
 
-        SynchronizedDictionary<string, string[]> data = new SynchronizedDictionary<string, string[]>();
+        ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 
-        foreach (KeyValuePair<string, string> o in wmi)
-            data.Add(o.Key, new string[] { o.Value.ToString(), "WMI", string.Empty });
+        foreach (KeyValuePair<string, string> o in wmi) {
+            data.TryAdd(o.Key, new string[] { o.Value.ToString(), "WMI", string.Empty });
+        }
 
         foreach (KeyValuePair<string, string> o in ad) {
             string key = o.Key.ToString();
 
             if (key == "operating system") { //os not found in ad, use wmi
-                if (!wmi.ContainsKey("operating system"))
-                    data.Add(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
+                if (!wmi.ContainsKey("operating system")) {
+                    data.TryAdd(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
+                }
             }
             else {
-                data.Add(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
+                data.TryAdd(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
             }
         }
 
-        if (portscan.Length > 0)
-            data.Add("ports", new string[] { portscan, "Port-scan", string.Empty });
+        if (portscan.Length > 0) {
+            data.TryAdd("ports", new string[] { portscan, "Port-scan", string.Empty });
+        }
 
         string mac = string.Empty;
         if (wmi.ContainsKey("mac address")) {
@@ -253,37 +260,40 @@ internal static class Fetch {
         }
         else {
             mac = Protocols.Arp.ArpRequest(target);
-            if (mac is not null && mac.Length > 0)
-                data.Add("mac address", new string[] { mac, "ARP", string.Empty });
+            if (mac is not null && mac.Length > 0) {
+                data.TryAdd("mac address", new string[] { mac, "ARP", string.Empty });
+            }
         }
 
         if (!wmi.ContainsKey("manufacturer") && mac.Length > 0) {
             byte[] manufacturerArray = MacLookup.Lookup(mac);
             if (manufacturerArray is not null) {
                 string manufacturer = Encoding.UTF8.GetString(manufacturerArray);
-                if (manufacturer.Length > 0 && manufacturer != "not found")
-                    data.Add("manufacturer", new string[] { manufacturer, "MAC lookup", string.Empty });
+                if (manufacturer.Length > 0 && manufacturer != "not found") {
+                    data.TryAdd("manufacturer", new string[] { manufacturer, "MAC lookup", string.Empty });
+                }
             }
         }
 
         if (!wmi.ContainsKey("hostname")) {
             if (netbios is not null && netbios.Length > 0) { //use netbios
-                data.Add("hostname", new string[] { netbios, "NetBIOS", string.Empty });
+                data.TryAdd("hostname", new string[] { netbios, "NetBIOS", string.Empty });
             }
             else if (useDns && hostname is not null && hostname.Length > 0) { //use dns
-                data.Add("hostname", new string[] { hostname, "DNS", string.Empty });
+                data.TryAdd("hostname", new string[] { hostname, "DNS", string.Empty });
             }
         }
 
         if (!data.ContainsKey("ip") && ipList is not null) {
-            data.Add("ip", new string[] { string.Join("; ", ipList.Select(o => o.ToString())), "IP", string.Empty });
+            data.TryAdd("ip", new string[] { string.Join("; ", ipList.Select(o => o.ToString())), "IP", string.Empty });
         }
 
         if (!data.ContainsKey("type")) {
             if (data.ContainsKey("operating system")) {
                 string os = data["operating system"][0];
-                if (os.ToLower().Contains("server")) //if os is windows server, set type as server
-                    data.Add("type", new string[] { "Server", "Kerberos", string.Empty });
+                if (os.ToLower().Contains("server")) { //if os is windows server, set type as server
+                    data.TryAdd("type", new string[] { "Server", "Kerberos", string.Empty });
+                }
             }
         }
 
@@ -291,23 +301,16 @@ internal static class Fetch {
             for (int i = 0; i < ipList.Length; i++) {
                 byte[] bytes = ipList[i].GetAddressBytes();
                 ulong ipNumber = ((ulong)bytes[0] << 24) + ((ulong)bytes[0] << 16) + ((ulong)bytes[0] << 8) + bytes[0];
-                if (ipNumber >= 2130706432 && ipNumber <= 2147483647)
-                    continue; //127.0.0.0 <> 127.255.255.255
-                if (ipNumber >= 167772160 && ipNumber >= 184549375)
-                    continue;   //10.0.0.0 <> 10.255.255.255
-                if (ipNumber >= 2886729728 && ipNumber >= 2887778303)
-                    continue; //172.16.0.0 <> 172.31.255.255
-                if (ipNumber >= 3232235520 && ipNumber >= 3232301055)
-                    continue; //192.168.0.0 <> 192.168.255.255
-                if (ipNumber >= 2851995648 && ipNumber >= 184549375)
-                    continue;  //169.254.0.0 <> 169.254.255.255
-                if (ipNumber >= 3758096384)
-                    continue; // > 224.0.0.0
+                if (ipNumber >= 2130706432 && ipNumber <= 2147483647) continue; //127.0.0.0 <> 127.255.255.255
+                if (ipNumber >= 167772160 && ipNumber >= 184549375)   continue;   //10.0.0.0 <> 10.255.255.255
+                if (ipNumber >= 2886729728 && ipNumber >= 2887778303) continue; //172.16.0.0 <> 172.31.255.255
+                if (ipNumber >= 3232235520 && ipNumber >= 3232301055) continue; //192.168.0.0 <> 192.168.255.255
+                if (ipNumber >= 2851995648 && ipNumber >= 184549375)  continue;  //169.254.0.0 <> 169.254.255.255
+                if (ipNumber >= 3758096384)                           continue; // > 224.0.0.0
 
                 string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress.ToString(), true));
-                if (ipLocation is null)
-                    continue;
-                data.Add("location", new string[] { ipLocation, "Locate IP", string.Empty });
+                if (ipLocation is null) continue;
+                data.TryAdd("location", new string[] { ipLocation, "Locate IP", string.Empty });
             }
         }
 
@@ -323,28 +326,28 @@ internal static class Fetch {
         if (!data.ContainsKey("type") && portscan.Length > 0) {
             int[] ports = portscan.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
 
-            if (ports.Contains(445) && ports.Contains(3389) && (ports.Contains(53) || ports.Contains(67) || ports.Contains(389) || ports.Contains(636) || ports.Contains(853))) //SMB, RDP, DNS, DHCP, LDAP
-                data.Add("type", new string[] { "Server", "Port-scan", string.Empty });
-
-            else if (ports.Contains(445) && ports.Contains(3389)) //SMB, RDP
-                data.Add("type", new string[] { "Workstation", "Port-scan", string.Empty });
-
-            else if (ports.Contains(515) || ports.Contains(631) || ports.Contains(9100)) //LPD, IPP, Print-server
-                data.Add("type", new string[] { "Printer", "Port-scan", string.Empty });
-
-            else if (ports.Contains(6789) || ports.Contains(10001)) //ap
-                data.Add("type", new string[] { "Access point", "Port-scan", string.Empty });
-
-            else if (ports.Contains(7442) || ports.Contains(7550)) //cam
-                data.Add("type", new string[] { "Camera", "Port-scan", string.Empty });
+            if (ports.Contains(445) && ports.Contains(3389) && (ports.Contains(53) || ports.Contains(67) || ports.Contains(389) || ports.Contains(636) || ports.Contains(853))) { //SMB, RDP, DNS, DHCP, LDAP
+                data.TryAdd("type", new string[] { "Server", "Port-scan", string.Empty });
+            }
+            else if (ports.Contains(445) && ports.Contains(3389)) { //SMB, RDP
+                data.TryAdd("type", new string[] { "Workstation", "Port-scan", string.Empty });
+            }
+            else if (ports.Contains(515) || ports.Contains(631) || ports.Contains(9100)) { //LPD, IPP, Print-server
+                data.TryAdd("type", new string[] { "Printer", "Port-scan", string.Empty });
+            }
+            else if (ports.Contains(6789) || ports.Contains(10001)) { //ap
+                data.TryAdd("type", new string[] { "Access point", "Port-scan", string.Empty });
+            }
+            else if (ports.Contains(7442) || ports.Contains(7550)) { //cam
+                data.TryAdd("type", new string[] { "Camera", "Port-scan", string.Empty });
+            }
         }
 
         if (!data.ContainsKey("type") && wmi.Count > 0) {
-            data.Add("type", new string[] { "Workstation", "WMI", string.Empty });
+            data.TryAdd("type", new string[] { "Workstation", "WMI", string.Empty });
         }
 
-        if (cancellationToken.IsCancellationRequested)
-            return null;
+        if (cancellationToken.IsCancellationRequested) return null;
 
         return data;
     }
@@ -356,13 +359,13 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        SynchronizedDictionary<string, string[]> data = SingleUser(target);
+        ConcurrentDictionary<string, string[]> data = SingleUser(target);
 
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new FetchedDataJsonConverter());
         return JsonSerializer.SerializeToUtf8Bytes(data, options);
     }
-    public static SynchronizedDictionary<string, string[]> SingleUser(string target) {
+    public static ConcurrentDictionary<string, string[]> SingleUser(string target) {
         if (!OperatingSystem.IsWindows())
             return null;
 
@@ -371,10 +374,11 @@ internal static class Fetch {
             return null;
         }
 
-        SynchronizedDictionary<string, string[]> data = new SynchronizedDictionary<string, string[]>();
+        ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 
-        foreach (KeyValuePair<string, string> o in fetch)
-            data.Add(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
+        foreach (KeyValuePair<string, string> o in fetch) {
+            data.TryAdd(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
+        }
 
         return data;
     }
@@ -424,8 +428,7 @@ internal static class Fetch {
         }
         else if (domain is not null) {
             hosts = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllWorkstations(domain) : Array.Empty<string>();
-            if (hosts is null)
-                return Data.CODE_FAILED.Array;
+            if (hosts is null) return Data.CODE_FAILED.Array;
         }
         else if (parameters.ContainsKey("update")) {
             List<string> gist = new List<string>();
@@ -480,7 +483,7 @@ internal static class Fetch {
 
         Thread thread = new Thread(async () => {
             const int WINDOW = 32;
-            SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>> dataset = new SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>>();
+            ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
             task.status = TaskWrapper.TaskStatus.running;
 
@@ -492,11 +495,12 @@ internal static class Fetch {
                 while (queue.Count > 0) {
                     int size = Math.Min(WINDOW, queue.Count);
 
-                    List<Task<SynchronizedDictionary<string, string[]>>> tasks = new List<Task<SynchronizedDictionary<string, string[]>>>();
-                    for (int i = 0; i < size; i++)
+                    List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>();
+                    for (int i = 0; i < size; i++) {
                         tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmp, portscan, false, task.cancellationToken));
+                    }
 
-                    SynchronizedDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
+                    ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
 
                     if (task.cancellationToken.IsCancellationRequested) {
                         break;
@@ -506,13 +510,13 @@ internal static class Fetch {
                         if (result[i] is null) { //unreachable
                             redo.Add(queue[i]);
                         }
-                        else if (result[i].Count > 0)
+                        else if (!result[i].IsEmpty)
                         {
                             task.CompletedSteps = ++totalFetched;
                             if (dataset.ContainsKey(queue[i])) {
                                 continue;
                             }
-                            dataset.Add(queue[i], result[i]);
+                            dataset.TryAdd(queue[i], result[i]);
                         }
                     }
 
@@ -590,14 +594,10 @@ internal static class Fetch {
         if (parameters.ContainsKey("update")) {
             List<string> users = new List<string>();
             foreach (Database.Entry entry in DatabaseInstances.users.dictionary.Values) {
-                if (!entry.attributes.TryGetValue("type", out Database.Attribute type))
-                    continue;
-                if (!entry.attributes.TryGetValue("username", out Database.Attribute username))
-                    continue;
-                if (type.value != "Domain user")
-                    continue;
-                if (username.value is null)
-                    continue;
+                if (!entry.attributes.TryGetValue("type", out Database.Attribute type)) continue;
+                if (!entry.attributes.TryGetValue("username", out Database.Attribute username)) continue;
+                if (type.value != "Domain user") continue;
+                if (username.value is null) continue;
                 users.Add(username.value);
             }
             return UsersTask(users.ToArray(), initiator);
@@ -621,15 +621,15 @@ internal static class Fetch {
 
         Thread thread = new Thread(() => {
             long lastBroadcast = DateTime.UtcNow.Ticks;
-            SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>> dataset = new SynchronizedDictionary<string, SynchronizedDictionary<string, string[]>>();
+            ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
             task.status = TaskWrapper.TaskStatus.running;
 
             for (int i = 0; i < users.Length; i++) {
-                SynchronizedDictionary<string, string[]> hash = SingleUser(users[i]);
+                ConcurrentDictionary<string, string[]> hash = SingleUser(users[i]);
                 task.CompletedSteps++;
 
-                dataset.Add(users[i], hash);
+                dataset.TryAdd(users[i], hash);
 
                 if (task.cancellationToken.IsCancellationRequested) {
                     break;
@@ -775,10 +775,10 @@ internal static class Fetch {
 
         long date = DateTime.UtcNow.Ticks;
 
-        foreach (KeyValuePair<string, SynchronizedDictionary<string, string[]>> pair in result?.dataset) {
-            SynchronizedDictionary<string, Database.Attribute> attributes = new SynchronizedDictionary<string, Database.Attribute>();
+        foreach (KeyValuePair<string, ConcurrentDictionary<string, string[]>> pair in result?.dataset) {
+            ConcurrentDictionary<string, Database.Attribute> attributes = new ConcurrentDictionary<string, Database.Attribute>();
             foreach (KeyValuePair<string, string[]> attr in pair.Value) {
-                attributes.Add(attr.Key, new Database.Attribute() {
+                attributes.TryAdd(attr.Key, new Database.Attribute() {
                     value = attr.Value[0],
                     date = date,
                     initiator = initiator,
@@ -863,11 +863,11 @@ internal static class Fetch {
                 }
                 else {
                     string[] ver = versionResponse.Content.ReadAsStringAsync().Result
-                                    .Replace("{", string.Empty)
-                                    .Replace("}", string.Empty)
-                                    .Replace("\"", string.Empty)
-                                    .Replace(" ", string.Empty)
-                                    .Split(',');
+                                   .Replace("{", string.Empty)
+                                   .Replace("}", string.Empty)
+                                   .Replace("\"", string.Empty)
+                                   .Replace(" ", string.Empty)
+                                   .Split(',');
 
                     string major = "0", minor = "0";
                     for (int i = 0; i < ver.Length; i++) {
@@ -975,7 +975,7 @@ internal static class Fetch {
         while (i < split.Length) {
             if (int.TryParse(split[i], out int len)) {
                 string filename = null;
-                SynchronizedDictionary<string, Database.Attribute> attributes = new SynchronizedDictionary<string, Database.Attribute>();
+                ConcurrentDictionary<string, Database.Attribute> attributes = new ConcurrentDictionary<string, Database.Attribute>();
 
                 for (int j = i + 1; j < i + len * 4; j += 4) {
                     if (split[j] == ".FILENAME") {
@@ -1011,7 +1011,7 @@ internal static class Fetch {
                         date = initDate;
                     }
 
-                    attributes.Add(name, new Database.Attribute() {
+                    attributes.TryAdd(name, new Database.Attribute() {
                         value = value,
                         date = date,
                         initiator = initiator
@@ -1052,7 +1052,7 @@ internal static class Fetch {
         while (i < split.Length) {
             if (int.TryParse(split[i], out int len)) {
                 string filename = null;
-                SynchronizedDictionary<string, Database.Attribute> attributes = new SynchronizedDictionary<string, Database.Attribute>();
+                ConcurrentDictionary<string, Database.Attribute> attributes = new ConcurrentDictionary<string, Database.Attribute>();
 
                 for (int j = i + 1; j < i + len * 4; j += 4) {
                     if (split[j] == ".FILENAME") {
@@ -1088,7 +1088,7 @@ internal static class Fetch {
                         date = initDate;
                     }
 
-                    attributes.Add(name, new Database.Attribute() {
+                    attributes.TryAdd(name, new Database.Attribute() {
                         value = value,
                         date = date,
                         initiator = initiator
