@@ -1,8 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using Lextm.SharpSnmpLib;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Management;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.Versioning;
 using System.Text;
@@ -16,8 +17,6 @@ internal static partial class Lifeline {
 
     [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
-
-    private static readonly ConcurrentDictionary<string, object> lockTable = new ConcurrentDictionary<string, object>();
 
     public static TaskWrapper task;
 
@@ -51,9 +50,9 @@ internal static partial class Lifeline {
 
     private static void LifelineLoop() {
         Regex regex = ValidHostnameRegex();
+        ConcurrentDictionary<string, object> lockTable = new ConcurrentDictionary<string, object>();
         HashSet<string> pingOnly = new HashSet<string>();
-        HashSet<string> pingAndWmiA = new HashSet<string>();
-        HashSet<string> pingAndWmiB = new HashSet<string>();
+        HashSet<string> pingAndWmi = new HashSet<string>();
 
         long lastVersion = 0;
 
@@ -61,9 +60,9 @@ internal static partial class Lifeline {
             long startTimeStamp = DateTime.UtcNow.Ticks;
             
             if (lastVersion != DatabaseInstances.devices.version) {
+                lockTable.Clear();
                 pingOnly.Clear();
-                pingAndWmiA.Clear();
-                pingAndWmiB.Clear();
+                pingAndWmi.Clear();
 
                 foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
                     string[] remoteEndPoint;
@@ -87,16 +86,13 @@ internal static partial class Lifeline {
                         if (!regex.IsMatch(remoteEndPoint[i])) continue;
 
                         if (os is not null && os.Contains("windows")) {
-                            if (pingAndWmiB.Count > pingAndWmiA.Count) {
-                                pingAndWmiA.Add(remoteEndPoint[i]);
-                            }
-                            else {
-                                pingAndWmiB.Add(remoteEndPoint[i]);
-                            }
+                            pingAndWmi.Add(remoteEndPoint[i]);
                         }
                         else {
                             pingOnly.Add(remoteEndPoint[i]);
                         }
+
+                        lockTable.TryAdd(remoteEndPoint[i], new Object());
                     }
                 }
 
@@ -105,48 +101,41 @@ internal static partial class Lifeline {
 
             Thread pingThread = new Thread(() => {
                 foreach (string host in pingOnly) {
-                    WritePing(host);
-                }
-            });
-
-            Thread wmiThreadA = new Thread(() => {
-                if (!OperatingSystem.IsWindows()) return;
-
-                foreach (string host in pingAndWmiA) {
+                    lockTable.TryGetValue(host, out object lockObject);
                     try {
-                        if (!WritePing(host)) continue;
-                        ManagementScope scope = Protocols.Wmi.Scope(host);
-                        WriteMemory(host, scope);
-                        WriteDisk(host, scope);
+                        lock (lockObject) {
+                            WritePing(host);
+                        }
                     }
                     catch { }
                 }
             });
 
-            Thread wmiThreadB = new Thread(() => {
-                if (!OperatingSystem.IsWindows())
-                    return;
+            Thread wmiThread = new Thread(() => {
+                if (!OperatingSystem.IsWindows()) return;
 
-                foreach (string host in pingAndWmiB) {
+                foreach (string host in pingAndWmi) {
+                    lockTable.TryGetValue(host, out object lockObject);
                     try {
-                        if (!WritePing(host)) continue;
-                        ManagementScope scope = Protocols.Wmi.Scope(host);
-                        WriteMemory(host, scope);
-                        WriteDisk(host, scope);
+                        lock (lockObject) {
+                            bool p = WritePing(host);
+                            if (!p) continue;
+                            ManagementScope scope = Protocols.Wmi.Scope(host);
+                            WriteMemory(host, scope);
+                            WriteDisk(host, scope);
+                        }
                     }
                     catch { }
                 }
             });
 
             pingThread.Start();
-            wmiThreadA.Start();
-            wmiThreadB.Start();
+            wmiThread.Start();
 
             pingThread.Join();
-            wmiThreadA.Join();
-            wmiThreadB.Join();
+            wmiThread.Join();
 
-            task.Sleep((int)Math.Max(FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp) / 10_000L, 0));
+            task.Sleep(Math.Max((int)((FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
                 task.Dispose();
@@ -163,103 +152,106 @@ internal static partial class Lifeline {
         Ping ping = new Ping();
         try {
             PingReply reply = ping.Send(host, 1000); //1st try
-            if (reply.Status != IPStatus.Success) {
+            if (reply.Status == IPStatus.Success) {
                 LastSeen.Seen(host);
                 rtt = (short)reply.RoundtripTime;
             }
-
-            reply = ping.Send(host, 1000); //2nd try
-            if (reply.Status != IPStatus.Success) {
-                LastSeen.Seen(host);
-                rtt = (short)reply.RoundtripTime;
+            else {
+                reply = ping.Send(host, 1000); //2nd try
+                if (reply.Status == IPStatus.Success) {
+                    LastSeen.Seen(host);
+                    rtt = (short)reply.RoundtripTime;
+                }
             }
         }
-        catch { }
+        catch {
+            rtt = -1;
+        }
 
         string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}";
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
         try {
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(rtt); //2 bytes
+            return rtt >= 0;
         }
-        finally {
-            stream.Close();
+        catch {
+            return rtt >= 0;
         }
-
-        return rtt >= 0;
     }
+
+    
 
     [SupportedOSPlatform("windows")]
     private static void WriteMemory(string host, ManagementScope scope) {
-        DateTime now = DateTime.UtcNow;
-        ulong total = 0, free = 0;
+        ulong free = 0, total = 0;
 
         try {
-            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_OperatingSystem")).Get();
+            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                total += (ulong)o.GetPropertyValue("TotalPhysicalMemory");
                 free += (ulong)o.GetPropertyValue("FreePhysicalMemory");
+                total += (ulong)o.GetPropertyValue("TotalVisibleMemorySize");
             }
         }
         catch { }
 
+        DateTime now = DateTime.UtcNow;
         string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
         try {
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-            writer.Write(total); //8 bytes
             writer.Write(total - free); //8 bytes
+            writer.Write(total); //8 bytes
         }
-        finally {
-            stream.Close();
+        catch {
+            return;
         }
     }
 
     [SupportedOSPlatform("windows")]
     private static void WriteDisk(string host, ManagementScope scope) {
-        DateTime now = DateTime.UtcNow;
         List<byte> caption = new List<byte>();
-        List<ulong> size = new List<ulong>();
         List<ulong> free = new List<ulong>();
+        List<ulong> total = new List<ulong>();
 
         try {
             using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
                 caption.Add((byte)o.GetPropertyValue("Caption").ToString()[0]);
-                size.Add((ulong)o.GetPropertyValue("Size"));
                 free.Add((ulong)o.GetPropertyValue("FreeSpace"));
+                total.Add((ulong)o.GetPropertyValue("Size"));
             }
         }
         catch { }
 
+        if (caption.Count == 0) return;
+
+        DateTime now = DateTime.UtcNow;
         string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
         try {
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(caption.Count); //4 bytes
 
             for (int i = 0; i < caption.Count; i++) {
                 writer.Write(caption[i]); //1 bytes
-                writer.Write(size[i]); //8 bytes
-                writer.Write(size[i] - free[i]); //8 bytes
+                writer.Write(total[i] - free[i]); //8 bytes
+                writer.Write(total[i]); //8 bytes
             }
         }
-        finally {
-            stream.Close();
+        catch {
+            return;
         }
     }
 
@@ -270,7 +262,10 @@ internal static partial class Lifeline {
         if (String.IsNullOrEmpty(host)) return null;
 
         parameters.TryGetValue("date", out string date);
-        if (String.IsNullOrEmpty(date)) return null;
+        if (String.IsNullOrEmpty(date)) {
+            DateTime now = DateTime.Now;
+            date = now.ToString("yyyyMM");
+        }
 
         try {
             return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
@@ -287,7 +282,10 @@ internal static partial class Lifeline {
         if (String.IsNullOrEmpty(host)) return null;
 
         parameters.TryGetValue("date", out string date);
-        if (String.IsNullOrEmpty(date)) return null;
+        if (String.IsNullOrEmpty(date)) {
+            DateTime now = DateTime.Now;
+            date = now.ToString("yyyyMM");
+        }
 
         try {
             return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
@@ -304,7 +302,10 @@ internal static partial class Lifeline {
         if (String.IsNullOrEmpty(host)) return null;
 
         parameters.TryGetValue("date", out string date);
-        if (String.IsNullOrEmpty(date)) return null;
+        if (String.IsNullOrEmpty(date)) {
+            DateTime now = DateTime.Now;
+            date = now.ToString("yyyyMM");
+        }
 
         try {
             return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}{Data.DELIMITER}{date}");

@@ -131,33 +131,32 @@ internal static class Watchdog {
     }
 
     private static void WatchLoop() {
+        int nextSleep = FIVE_MINUTE_IN_MILLI;
         //align time to the next 5-min interval
         long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
         Thread.Sleep((int)gap);
 
         while (true) {
-            long startTimeStamp = DateTime.UtcNow.Ticks;
-            int nextSleep = FIVE_MINUTE_IN_MILLI;
+            long loopStartTimeStamp = DateTime.UtcNow.Ticks;
 
             SmtpProfiles.Profile[] smtpProfiles = SmtpProfiles.Load();
 
             foreach (Watcher watcher in watchers.Values) {
-                if (!watcher.enable)
-                    continue;
+                if (!watcher.enable) continue;
 
                 long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
                 if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
-                    new Thread(() => Watch(watcher, smtpProfiles)).Start();
+                    new Thread(()=> Watch(watcher, smtpProfiles)).Start();
                 }
                 else {
-                    int millisRemain = (int)ticksElapsed / 10_000;
+                    int millisRemain = (int)((watcher.interval * MINUTE_IN_TICKS - ticksElapsed) / 10_000);
                     if (nextSleep > millisRemain) {
                         nextSleep = millisRemain;
                     }
                 }
             }
 
-            task.Sleep(Math.Max(nextSleep - (int)(DateTime.UtcNow.Ticks - startTimeStamp) / 10_000, 0));
+            task.Sleep(Math.Max(nextSleep - (int)((DateTime.UtcNow.Ticks - loopStartTimeStamp) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
                 task.Dispose();

@@ -148,7 +148,7 @@ class DeviceView extends View {
 
 				const btnPowerOff = this.CreateSideButton("mono/turnoff.svg", "Power off");
 				btnPowerOff.onclick = ()=> {
-					this.ConfirmBox("Are you sure you want to power off this device?").addEventListener("click", async ()=> {
+					this.ConfirmBox("Are you sure you want to power off this device?", false, "mono/turnoff.svg").addEventListener("click", async ()=> {
 						if (btnPowerOff.hasAttribute("busy")) return;
 						try {
 							btnPowerOff.setAttribute("busy", true);
@@ -163,7 +163,7 @@ class DeviceView extends View {
 
 				const btnReboot = this.CreateSideButton("mono/restart.svg", "Reboot");
 				btnReboot.onclick = ()=> {
-					this.ConfirmBox("Are you sure you want to reboot this device?").addEventListener("click", async ()=> {
+					this.ConfirmBox("Are you sure you want to reboot this device?", false, "mono/restart.svg").addEventListener("click", async ()=> {
 						if (btnReboot.hasAttribute("busy")) return;
 						try {
 							btnReboot.setAttribute("busy", true);
@@ -178,7 +178,7 @@ class DeviceView extends View {
 
 				const btnLogOff = this.CreateSideButton("mono/logoff.svg", "Log off");
 				btnLogOff.onclick = ()=> {
-					this.ConfirmBox("Are you sure you want to log off this device?").addEventListener("click", async ()=> {
+					this.ConfirmBox("Are you sure you want to log off this device?", false, "mono/logoff.svg").addEventListener("click", async ()=> {
 						if (btnLogOff.hasAttribute("busy")) return;
 						try {
 							btnLogOff.setAttribute("busy", true);
@@ -421,32 +421,118 @@ class DeviceView extends View {
 		
 		this.liveStatsWebSockets.onclose = ()=> {
 			this.liveStatsWebSockets = null;
-			this.InitializeGraph();
+			this.InitializeGraphs();
 		};
 
 		//this.liveStatsWebSockets.onerror = error=> {};
 	}
 
-	async InitializeGraph() {
+	async InitializeGraphs() {
+		let host;
+		if (this.link.ip && this.link.ip.v.length > 0) {
+			host = this.link.ip.v.split(";")[0];
+		}
+		else if (this.link.hostname && this.link.hostname.v.length > 0) {
+			host = this.link.hostname.v.split(";")[0];
+		}
+		
 		const [pingArray, memoryArray, diskArray] = await Promise.all([
 			(async ()=> {
-				const response = await fetch("lifeline/ping/view");
+				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
 
 			(async ()=> {
-				const response = await fetch("lifeline/memory/view");
+				const response = await fetch(`lifeline/memory/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
 
 			(async ()=> {
-				const response = await fetch("lifeline/disk/view");
+				const response = await fetch(`lifeline/disk/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})()
 		]);
+
+		const GenerateGraph = (data)=> {
+			const graphBox = document.createElement("div");
+			graphBox.className = "view-lifeline-graph";
+			this.liveC.appendChild(graphBox);
+
+			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute("width", 800);
+			svg.setAttribute("height", 128);
+			svg.style.outline = "none";
+			graphBox.appendChild(svg);
+
+			return svg;
+		};
+
+		if (pingArray.length > 0) {
+			let data = [];
+			for (let i=0; i<pingArray.length-9; i+=10) {
+				const dateBuffer = new Uint8Array(pingArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+	
+				let rtt = (pingArray[i+9] << 8) | pingArray[i+8];
+				if (rtt >= 32768) { //negative number
+					rtt = -(65536 - rtt);
+				}
+	
+				data.push({t: date, v: rtt});
+			}
+
+			GenerateGraph(data);
+		}
+
+		if (memoryArray.length > 0) {
+			let data = [];
+			for (let i=0; i<memoryArray.length-23; i+=24) {
+				const dateBuffer = new Uint8Array(memoryArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+
+				const usedBuffer = new Uint8Array(memoryArray.slice(i+8, i+16)).buffer;
+				const used = Number(new DataView(usedBuffer).getBigInt64(0, true));
+
+				const totalBuffer = new Uint8Array(memoryArray.slice(i+16, i+24)).buffer;
+				const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
+	
+				data.push({t: date, v: used, m: total});
+			}
+
+			GenerateGraph(data);
+		}
+
+		if (diskArray.length > 0) {
+			let data = [];
+			let index = 0;
+			while (index < diskArray.length) {
+				const dateBuffer = new Uint8Array(diskArray.slice(index,index+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+				
+				const count = (diskArray[index+9] << 8) | diskArray[index+8]; // | (diskArray[index+11] << 24) | (diskArray[index+10] << 16)
+
+				index += 12;
+
+
+				for (let j=0; j<count; j++) {
+					const caption = String.fromCharCode(diskArray[index + j*17]);
+
+					const usedBuffer = new Uint8Array(diskArray.slice(index + j*17+1, index + j*17+9)).buffer;
+					const used = Number(new DataView(usedBuffer).getBigInt64(0, true));
+
+					const totalBuffer = new Uint8Array(diskArray.slice(index + j*17+9, index + j*17+17)).buffer;
+					const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
+
+					data.push({t: date, l: caption, v: used, m: total});
+				}
+				index += 17*count;
+			}
+
+			GenerateGraph(data);
+		}
 	}
 
 	Edit(isNew=false) { //override
@@ -510,19 +596,6 @@ class DeviceView extends View {
 				LOADER.devices.data[json.filename] = obj;
 
 				this.InitializePreview();
-
-				for (let i = 0; i < WIN.array.length; i++) {
-					if (WIN.array[i] instanceof DevicesList) {
-						if (isNew && WIN.array[i].MatchFilters(obj)) {
-							const newElement = document.createElement("div");
-							newElement.id = json.filename;
-							newElement.className = "list-element";
-							WIN.array[i].list.appendChild(newElement);
-						}
-						WIN.array[i].UpdateViewport(true);
-					}
-				}
-
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{

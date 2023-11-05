@@ -272,16 +272,16 @@ public sealed class Listener {
         case "/db/getentropy" : buffer = Tools.PasswordStrength.GetEntropy(); break;
         case "/db/gandalf"    : buffer = Tools.PasswordStrength.GandalfThreadWrapper(ctx, username); break;
 
-        case "/fetch/networkinfo": buffer = Protocols.Kerberos.NetworkInfo(); break;
-        case "/fetch/status"        : buffer = Tasks.Fetch.Status(); break;
-        case "/fetch/singledevice"  : buffer = Tasks.Fetch.SingleDeviceSerialize(parameters, true); break;
-        case "/fetch/singleuser"    : buffer = Tasks.Fetch.SingleUserSerialize(parameters); break;
-        case "/fetch/devices"       : buffer = Tasks.Fetch.DevicesTask(parameters, username); break;
-        case "/fetch/users"         : buffer = Tasks.Fetch.UsersTask(parameters, username); break;
-        case "/fetch/import"        : buffer = Tasks.Fetch.ImportTask(parameters, username); break;
-        case "/fetch/approve"       : buffer = Tasks.Fetch.ApproveLastTask(parameters, username); break;
-        case "/fetch/abort"         : buffer = Tasks.Fetch.CancelTask(username); break;
-        case "/fetch/discard"       : buffer = Tasks.Fetch.DiscardLastTask(username); break;
+        case "/fetch/networkinfo"  : buffer = Protocols.Kerberos.NetworkInfo(); break;
+        case "/fetch/status"       : buffer = Tasks.Fetch.Status(); break;
+        case "/fetch/singledevice" : buffer = Tasks.Fetch.SingleDeviceSerialize(parameters, true); break;
+        case "/fetch/singleuser"   : buffer = Tasks.Fetch.SingleUserSerialize(parameters); break;
+        case "/fetch/devices"      : buffer = Tasks.Fetch.DevicesTask(parameters, username); break;
+        case "/fetch/users"        : buffer = Tasks.Fetch.UsersTask(parameters, username); break;
+        case "/fetch/import"       : buffer = Tasks.Fetch.ImportTask(parameters, username); break;
+        case "/fetch/approve"      : buffer = Tasks.Fetch.ApproveLastTask(parameters, username); break;
+        case "/fetch/abort"        : buffer = Tasks.Fetch.CancelTask(username); break;
+        case "/fetch/discard"      : buffer = Tasks.Fetch.DiscardLastTask(username); break;
 
         case "/manage/device/wol"      : buffer = Protocols.Wol.Wakeup(parameters); break;
         case "/manage/device/shutdown" : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null; break;

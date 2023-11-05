@@ -227,18 +227,6 @@ class UserView extends View {
 				LOADER.users.data[json.filename] = obj;
 
 				this.InitializePreview();
-
-				for (let i = 0; i < WIN.array.length; i++) {
-					if (WIN.array[i] instanceof UsersList) {
-						if (isNew && WIN.array[i].MatchFilters(obj)) {
-							const newElement = document.createElement("div");
-							newElement.id = json.filename;
-							newElement.className = "list-element";
-							WIN.array[i].list.appendChild(newElement);
-						}
-						WIN.array[i].UpdateViewport(true);
-					}
-				}
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{

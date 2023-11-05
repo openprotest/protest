@@ -328,12 +328,13 @@ public sealed class Database {
     }
 
     public byte[] SaveHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, string initiator) {
-        if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+        string file;
+        if (parameters is not null) {
+            parameters!.TryGetValue("file", out file);
         }
-
-        parameters!.TryGetValue("file", out string file);
-        file ??= GenerateFilename();
+        else {
+           file = GenerateFilename();
+        }
 
         string payload;
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);

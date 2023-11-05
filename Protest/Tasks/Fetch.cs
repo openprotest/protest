@@ -123,7 +123,10 @@ internal static class Fetch {
                     if (user is not null && user.Properties["sn"].Count > 0)
                         sn = user.Properties["sn"][0].ToString();
 
-                    wmi.Add("owner name", $"{fn} {sn}".Trim());
+                    string fullname = $"{fn} {sn}".Trim();
+                    if (!String.IsNullOrEmpty(fullname)) {
+                        wmi.Add("owner name", fullname);
+                    }
                 }
             });
         }

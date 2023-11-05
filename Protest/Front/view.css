@@ -345,6 +345,23 @@ button.view-live-button:active {
 	display: none !important;
 }
 
+.view-lifeline-graph {
+	position: relative;
+	width: 100%;
+	height: 128px;
+	overflow: hidden;
+}
+
+.view-lifeline-graph:not(:last-child) {
+	margin-bottom: 8px;
+}
+
+.view-lifeline-graph > svg {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
 .view-info-box,
 .view-warning-box {
 	font-weight: 600;
