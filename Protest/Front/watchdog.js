@@ -1019,11 +1019,6 @@ class Watchdog extends Window {
 		let today = this.cache[this.utcToday] ? this.cache[this.utcToday][watcher.file] ?? {} : {};
 		let yesterday = this.cache[this.utcToday-Watchdog.DAY_TICKS] ? this.cache[this.utcToday-Watchdog.DAY_TICKS][watcher.file] ?? {} : {};
 
-		for (let time in today) {
-			console.log(new Date(parseInt(time)), today[time]);
-		}
-
-
 		let uptime24 = {...yesterday, ...today};
 		let total, uptimeCount, totalRoundtrip, graphCounts, graphWidth;
 
