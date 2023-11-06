@@ -1,7 +1,5 @@
-﻿using Lextm.SharpSnmpLib;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Management;
 using System.Net.NetworkInformation;
@@ -104,7 +102,7 @@ internal static partial class Lifeline {
                     lockTable.TryGetValue(host, out object lockObject);
                     try {
                         lock (lockObject) {
-                            WritePing(host);
+                            DoPing(host);
                         }
                     }
                     catch { }
@@ -118,11 +116,9 @@ internal static partial class Lifeline {
                     lockTable.TryGetValue(host, out object lockObject);
                     try {
                         lock (lockObject) {
-                            bool p = WritePing(host);
+                            bool p = DoPing(host);
                             if (!p) continue;
-                            ManagementScope scope = Protocols.Wmi.Scope(host);
-                            WriteMemory(host, scope);
-                            WriteDisk(host, scope);
+                            DoWmi(host);
                         }
                     }
                     catch { }
@@ -145,7 +141,7 @@ internal static partial class Lifeline {
         }
     }
 
-    private static bool WritePing(string host) {
+    private static bool DoPing(string host) {
         DateTime now = DateTime.UtcNow;
         short rtt = -1;
 
@@ -183,77 +179,89 @@ internal static partial class Lifeline {
         }
     }
 
-    
-
     [SupportedOSPlatform("windows")]
-    private static void WriteMemory(string host, ManagementScope scope) {
-        ulong free = 0, total = 0;
+    private static void DoWmi(string host) {
+        ulong memoryFree = 0, memoryTotal = 0;
+
+        List<byte> diskCaption = new List<byte>();
+        List<ulong> diskFree = new List<ulong>();
+        List<ulong> diskTotal = new List<ulong>();
+
+        ManagementScope scope;
+        try {
+            scope = Protocols.Wmi.Scope(host);
+        } catch {
+            return;
+        }
 
         try {
-            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
-            foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
+            using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
+            foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                free += (ulong)o.GetPropertyValue("FreePhysicalMemory");
-                total += (ulong)o.GetPropertyValue("TotalVisibleMemorySize");
+                memoryFree += (ulong)o.GetPropertyValue("FreePhysicalMemory");
+                memoryTotal += (ulong)o.GetPropertyValue("TotalVisibleMemorySize");
             }
         }
         catch { }
-
-        DateTime now = DateTime.UtcNow;
-        string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
-        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-        using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
-
-        try {
-            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-            writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-            writer.Write(total - free); //8 bytes
-            writer.Write(total); //8 bytes
-        }
-        catch {
-            return;
-        }
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static void WriteDisk(string host, ManagementScope scope) {
-        List<byte> caption = new List<byte>();
-        List<ulong> free = new List<ulong>();
-        List<ulong> total = new List<ulong>();
 
         try {
             using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                caption.Add((byte)o.GetPropertyValue("Caption").ToString()[0]);
-                free.Add((ulong)o.GetPropertyValue("FreeSpace"));
-                total.Add((ulong)o.GetPropertyValue("Size"));
+
+                object caption = o.GetPropertyValue("Caption");
+                object free = o.GetPropertyValue("FreeSpace");
+                object size = o.GetPropertyValue("Size");
+
+                diskCaption.Add((byte)caption);
+                diskFree.Add((ulong)free);
+                diskTotal.Add((ulong)size);
             }
         }
         catch { }
 
-        if (caption.Count == 0) return;
 
         DateTime now = DateTime.UtcNow;
-        string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
-        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-        using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
-        try {
-            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-            writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-            writer.Write(caption.Count); //4 bytes
+        if (memoryTotal > 0) {
+            string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
+            if (!Directory.Exists(dirMemory)) Directory.CreateDirectory(dirMemory);
+            using FileStream memoryStream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
-            for (int i = 0; i < caption.Count; i++) {
-                writer.Write(caption[i]); //1 bytes
-                writer.Write(total[i] - free[i]); //8 bytes
-                writer.Write(total[i]); //8 bytes
+            try {
+                using BinaryWriter writer = new BinaryWriter(memoryStream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(memoryTotal - memoryFree); //8 bytes
+                writer.Write(memoryTotal); //8 bytes
+            }
+            catch {
+                return;
             }
         }
-        catch {
-            return;
+
+        if (diskCaption.Count > 0) {
+            string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
+            if (!Directory.Exists(dirDisk))
+                Directory.CreateDirectory(dirDisk);
+            using FileStream diskStream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
+            try {
+                using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(diskCaption.Count); //4 bytes
+
+                for (int i = 0; i < diskCaption.Count; i++) {
+                    writer.Write(diskCaption[i]); //1 bytes
+                    writer.Write(diskTotal[i] - diskFree[i]); //8 bytes
+                    writer.Write(diskTotal[i]); //8 bytes
+                }
+            }
+            catch {
+                return;
+            }
         }
     }
+
 
     public static byte[] ViewPing(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }

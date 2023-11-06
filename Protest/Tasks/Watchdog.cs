@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Net.Mail;
 using Protest.Tools;
+using System.Net.Http.Headers;
 
 namespace Protest.Tasks;
 
@@ -169,15 +170,14 @@ internal static class Watchdog {
     private static void Watch(Watcher watcher, SmtpProfiles.Profile[] smtpProfiles) {
         watcher.lastCheck = DateTime.UtcNow.Ticks;
 
-        short status = watcher.type switch
-        {
+        short status = watcher.type switch {
             WatcherType.icmp => CheckIcmp(watcher),
             WatcherType.tcp => CheckTcp(watcher),
             WatcherType.dns => CheckDns(watcher),
             WatcherType.http => CheckHttp(watcher),
             WatcherType.httpKeyword => CheckHttpKeyword(watcher),
             WatcherType.tls => CheckTls(watcher),
-            _ => CheckIcmp(watcher)
+            _ => -9
         };
 
         WriteResult(watcher, status);
@@ -218,7 +218,8 @@ internal static class Watchdog {
                 result = (short)reply.RoundtripTime;
                 break;
             }
-            catch (Exception ex) when (ex is not PlatformNotSupportedException) { }
+            catch { }
+            //catch (Exception ex) when (ex is not PlatformNotSupportedException) { }
         }
 
         return result;
