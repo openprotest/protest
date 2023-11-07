@@ -1,4 +1,6 @@
 class DeviceView extends View {
+	static DAY_TICKS  = 3_600_000 * 24;
+
 	static DEVICES_GROUP_SCHEMA = [
 		"type", "name",
 	
@@ -456,7 +458,7 @@ class DeviceView extends View {
 			})()
 		]);
 
-		const GenerateGraph = (data)=> {
+		const GenerateGraph = (data, type)=> {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
 			this.liveC.appendChild(graphBox);
@@ -466,6 +468,22 @@ class DeviceView extends View {
 			svg.setAttribute("height", 128);
 			svg.style.outline = "none";
 			graphBox.appendChild(svg);
+
+			console.log(type);
+
+			if (type === "ping") {
+				for (let i=0; i<data.length; i++) {
+					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					dot.setAttribute("cx", 760 - (Date.now() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					dot.setAttribute("cy", 100 - data[i].v * 10);
+					dot.setAttribute("r", 4);
+					dot.setAttribute("fill", this.StatusToColor(data[i].v));
+					svg.appendChild(dot);
+				}
+			}
+			else {
+
+			}
 
 			return svg;
 		};
@@ -481,10 +499,10 @@ class DeviceView extends View {
 					rtt = -(65536 - rtt);
 				}
 	
-				data.push({t: date, v: rtt});
+				data.push({d:date, v:rtt});
 			}
 
-			GenerateGraph(data);
+			GenerateGraph(data, "ping");
 		}
 
 		if (memoryArray.length > 0) {
@@ -499,10 +517,10 @@ class DeviceView extends View {
 				const totalBuffer = new Uint8Array(memoryArray.slice(i+16, i+24)).buffer;
 				const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 	
-				data.push({t: date, v: used, m: total});
+				data.push({d:date, v:used, t:total});
 			}
 
-			GenerateGraph(data);
+			GenerateGraph(data, "vol");
 		}
 
 		if (diskArray.length > 0) {
@@ -516,7 +534,6 @@ class DeviceView extends View {
 
 				index += 12;
 
-
 				for (let j=0; j<count; j++) {
 					const caption = String.fromCharCode(diskArray[index + j*17]);
 
@@ -526,15 +543,36 @@ class DeviceView extends View {
 					const totalBuffer = new Uint8Array(diskArray.slice(index + j*17+9, index + j*17+17)).buffer;
 					const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 
-					data.push({t: date, l: caption, v: used, m: total});
+					data.push({d:date, v:used, t:total, c:caption});
 				}
 				index += 17*count;
 			}
 
-			GenerateGraph(data);
+			GenerateGraph(data, "vol");
 		}
 	}
 
+	StatusToColor(status) {
+		if (status === -1) { //unreachable
+			return "var(--clr-error)";
+		}
+		else if (status === -2) { //expired
+			return "var(--clr-orange)";
+		}
+		else if (status === -3) { //warning
+			return "var(--clr-warning)";
+		}
+		else if (status === -4) { //tls not yet valid
+			return "rgb(0,162,232)";
+		}
+		else if (status >=0) { //alive
+			return UI.PingColor(status);
+		}
+		else { //other
+			return "rgb(128,128,128)";
+		}
+	}
+	
 	Edit(isNew=false) { //override
 		const btnFetch = document.createElement("input");
 		if (isNew && !this.params.clone) {

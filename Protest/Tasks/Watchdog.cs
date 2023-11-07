@@ -12,7 +12,6 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Net.Mail;
 using Protest.Tools;
-using System.Net.Http.Headers;
 
 namespace Protest.Tasks;
 
