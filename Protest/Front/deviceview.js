@@ -589,7 +589,7 @@ class DeviceView extends View {
 			};
 
 			graphBox.onmousemove = event =>{
-				if (event.layerX < 300) {
+				if (event.layerX < 800 - graphBox.clientWidth + 100) {
 					infoBox.style.left = "";
 					infoBox.style.right = "16px";
 				}
@@ -608,7 +608,7 @@ class DeviceView extends View {
 							closestIndex = i;
 						}
 					}
-					infoBox.textContent = `${data[closestIndex].v} ms`;
+					infoBox.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
 				}
 				else if (type === "vol") {
 					let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);

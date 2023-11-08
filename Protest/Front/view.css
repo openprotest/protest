@@ -302,6 +302,7 @@
 	position: absolute;
 	display: none;
 	top: 48px;
+	bottom: 8px;
 	left: 1000px;
 	right: 0;
 	max-width: 800px;
