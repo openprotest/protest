@@ -409,12 +409,12 @@ class DeviceView extends View {
 
 					if (found) {
 						for (let k = 0; k < WIN.array.length; k++) {
-							if (WIN.array[k] instanceof User && WIN.array[k].params.file === found) {
+							if (WIN.array[k] instanceof UserView && WIN.array[k].params.file === found) {
 								WIN.array[k].Minimize();
 								return;
 							}
 						}
-						new User(found);
+						new UserView({file: found});
 					}
 
 				};
@@ -458,10 +458,40 @@ class DeviceView extends View {
 			})()
 		]);
 
-		const GenerateGraph = (data, type)=> {
+		const GenerateGraph = (data, label, type)=> {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
 			this.liveC.appendChild(graphBox);
+
+			const labelBox = document.createElement("div");
+			labelBox.style.position = "absolute";
+			labelBox.style.left = "-2px";
+			labelBox.style.top = "100px";
+			labelBox.style.width = "100px";
+			labelBox.style.height = "14px";
+			labelBox.style.transformOrigin = "0 0";
+			labelBox.style.transform = "rotate(-90deg)";
+			labelBox.style.textAlign = "center";
+			labelBox.style.fontSize = "13px";
+			labelBox.style.color = "var(--clr-light)";
+			labelBox.textContent = label;
+			graphBox.appendChild(labelBox);
+
+			const infoBox = document.createElement("div");
+			infoBox.style.position = "absolute";
+			infoBox.style.bottom = "32px";
+			infoBox.style.zIndex = "2";
+			infoBox.style.minWidth = "64px";
+			infoBox.style.minHeight = "20px";
+			infoBox.style.padding = "0 4px";
+			infoBox.style.color = "var(--clr-dark)";
+			infoBox.style.backgroundColor = "var(--clr-pane)";
+			infoBox.style.borderRadius = "2px";
+			infoBox.style.boxShadow = "rgba(32,32,32,.5) 0 0 4px";
+			infoBox.style.opacity = "0";
+			infoBox.style.pointerEvents = "none";
+			infoBox.style.transition = ".2s";
+			graphBox.appendChild(infoBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 800);
@@ -469,21 +499,130 @@ class DeviceView extends View {
 			svg.style.outline = "none";
 			graphBox.appendChild(svg);
 
-			console.log(type);
+			const line = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			line.setAttribute("x", 0);
+			line.setAttribute("y", 105);
+			line.setAttribute("width", 800);
+			line.setAttribute("height", 1);
+			line.setAttribute("fill", "color-mix(in hsl, var(--clr-light) 25%, transparent)");
+			svg.appendChild(line);
 
-			if (type === "ping") {
-				for (let i=0; i<data.length; i++) {
+			const today = new Date(Date.now() - Date.now() % DeviceView.DAY_TICKS);
+
+			for (let i=0; i<14; i++) {
+				let x = 750 - i*50;
+
+				const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				dot.setAttribute("cx", x);
+				dot.setAttribute("cy", 110);
+				dot.setAttribute("r", 1.5);
+				dot.setAttribute("fill", "var(--clr-light)");
+				svg.appendChild(dot);
+
+				const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				lblTime.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short",day:"numeric"});
+				lblTime.setAttribute("x", x);
+				lblTime.setAttribute("y", 120);
+				lblTime.setAttribute("fill", "var(--clr-light)");
+				lblTime.setAttribute("text-anchor", "middle");
+				lblTime.setAttribute("font-size", "10px");
+				svg.appendChild(lblTime);
+			}
+
+			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+			path.setAttribute("fill", "rgba(224,224,224,.4)");
+			svg.appendChild(path);
+
+			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} 105 `;
+			
+			let lastX = -8, lastY = -8;
+
+			if (type === "line") {
+				for (let i = 0; i < data.length; i++) {
+					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let y = 3 + Math.round(data[i].v < 0 ? 100 : Math.min(data[i].v / 10, 90));
+					d += `L ${x} ${y} `;
+	
+					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
+	
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-					dot.setAttribute("cx", 760 - (Date.now() - data[i].d) / DeviceView.DAY_TICKS * 50);
-					dot.setAttribute("cy", 100 - data[i].v * 10);
-					dot.setAttribute("r", 4);
-					dot.setAttribute("fill", this.StatusToColor(data[i].v));
+					dot.setAttribute("cx", x);
+					dot.setAttribute("cy", y);
+					dot.setAttribute("r", 3);
+					dot.setAttribute("fill", this.RttToColor(data[i].v));
 					svg.appendChild(dot);
+	
+					lastX = x;
+					lastY = y;
 				}
 			}
-			else {
-
+			else if (type === "vol") {
+				for (let i = 0; i < data.length; i++) {
+					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let y = 104 - Math.round(100 * data[i].v / data[i].t);
+					d += `L ${x} ${y} `;
+	
+					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
+	
+					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					dot.setAttribute("cx", x);
+					dot.setAttribute("cy", y);
+					dot.setAttribute("r", 3);
+					dot.setAttribute("fill", this.VolumeToColor(data[i].v, data[i].t));
+					svg.appendChild(dot);
+	
+					lastX = x;
+					lastY = y;
+				}
 			}
+
+			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} 105 Z`;
+			path.setAttribute("d", d);
+
+
+			graphBox.onmouseenter = ()=>{
+				infoBox.style.opacity = "1";
+			};
+			
+			graphBox.onmouseleave = ()=>{
+				infoBox.style.opacity = "0";
+			};
+
+			graphBox.onmousemove = event =>{
+				if (event.layerX < 300) {
+					infoBox.style.left = "";
+					infoBox.style.right = "16px";
+				}
+				else {
+					infoBox.style.left = "16px";
+					infoBox.style.right = "";
+				}
+
+				if (type === "line") {
+					let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
+					let closestIndex = 0;
+					for (let i = 0; i < data.length; i++) {
+						let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+						if (Math.abs(x - event.layerX) < Math.abs(x - closestX)) {
+							closestX = x;
+							closestIndex = i;
+						}
+					}
+					infoBox.textContent = `${data[closestIndex].v} ms`;
+				}
+				else if (type === "vol") {
+					let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
+					let closestIndex = 0;
+					for (let i = 0; i < data.length; i++) {
+						let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+						if (Math.abs(x - event.layerX) < Math.abs(x - closestX)) {
+							closestX = x;
+							closestIndex = i;
+						}
+					}
+					infoBox.textContent = `${Math.round(1000 * data[closestIndex].v / data[closestIndex].t)/10} %`;
+				}
+			};
 
 			return svg;
 		};
@@ -502,7 +641,7 @@ class DeviceView extends View {
 				data.push({d:date, v:rtt});
 			}
 
-			GenerateGraph(data, "ping");
+			GenerateGraph(data, "Roundtrip time", "line");
 		}
 
 		if (memoryArray.length > 0) {
@@ -520,11 +659,11 @@ class DeviceView extends View {
 				data.push({d:date, v:used, t:total});
 			}
 
-			GenerateGraph(data, "vol");
+			GenerateGraph(data, "Memory", "vol");
 		}
 
 		if (diskArray.length > 0) {
-			let data = [];
+			const data = new Map();
 			let index = 0;
 			while (index < diskArray.length) {
 				const dateBuffer = new Uint8Array(diskArray.slice(index,index+8)).buffer;
@@ -543,34 +682,36 @@ class DeviceView extends View {
 					const totalBuffer = new Uint8Array(diskArray.slice(index + j*17+9, index + j*17+17)).buffer;
 					const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 
-					data.push({d:date, v:used, t:total, c:caption});
+					if (!data.has(caption)) {
+						data.set(caption, []);
+					}
+
+					data.get(caption).push({d:date, v:used, t:total, c:caption});
 				}
-				index += 17*count;
+				index += 17 * count;
 			}
 
-			GenerateGraph(data, "vol");
+			data.forEach ((value, key)=> {
+				GenerateGraph(value, `Disk capacity (${key})`, "vol");
+			});
 		}
 	}
 
-	StatusToColor(status) {
-		if (status === -1) { //unreachable
+	RttToColor(status) {
+		if (status < 0) { //unreachable/timed out
 			return "var(--clr-error)";
 		}
-		else if (status === -2) { //expired
-			return "var(--clr-orange)";
-		}
-		else if (status === -3) { //warning
-			return "var(--clr-warning)";
-		}
-		else if (status === -4) { //tls not yet valid
-			return "rgb(0,162,232)";
-		}
-		else if (status >=0) { //alive
+		else { //alive
 			return UI.PingColor(status);
 		}
-		else { //other
-			return "rgb(128,128,128)";
-		}
+	}
+
+	VolumeToColor(value, total) {
+		let p = value / total;
+		if (p > .9) return "var(--clr-error)";
+		if (p > .85) return "var(--clr-orange)";
+		if (p > .75) return "var(--clr-warning)";
+		return "hsl(92, 66%, 50%)";
 	}
 	
 	Edit(isNew=false) { //override

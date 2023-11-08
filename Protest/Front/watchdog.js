@@ -1237,8 +1237,7 @@ class Watchdog extends Window {
 		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
 			if (this.cache[date][file] === null) { return svg; }
 
-			let lastX = -20;
-			let lastV = -20;
+			let lastX = -20, lastV = -20;
 			for (let key in this.cache[date][file]) {
 				key = parseInt(key);
 				let value = this.cache[date][file][key];

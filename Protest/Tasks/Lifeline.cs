@@ -198,8 +198,8 @@ internal static partial class Lifeline {
             using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                memoryFree += (ulong)o.GetPropertyValue("FreePhysicalMemory");
-                memoryTotal += (ulong)o.GetPropertyValue("TotalVisibleMemorySize");
+                memoryFree += (ulong)o!.GetPropertyValue("FreePhysicalMemory");
+                memoryTotal += (ulong)o!.GetPropertyValue("TotalVisibleMemorySize");
             }
         }
         catch { }
@@ -209,17 +209,19 @@ internal static partial class Lifeline {
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
 
-                object caption = o.GetPropertyValue("Caption");
-                object free = o.GetPropertyValue("FreeSpace");
-                object size = o.GetPropertyValue("Size");
+                string caption = o!.GetPropertyValue("Caption")?.ToString();
+                object free = o!.GetPropertyValue("FreeSpace");
+                object size = o!.GetPropertyValue("Size");
 
-                diskCaption.Add((byte)caption);
+                if (String.IsNullOrEmpty(caption)) continue;
+                if (free is null || size is null) continue;
+                
+                diskCaption.Add(Convert.ToByte(caption[0]));
                 diskFree.Add((ulong)free);
                 diskTotal.Add((ulong)size);
             }
         }
         catch { }
-
 
         DateTime now = DateTime.UtcNow;
 
@@ -234,9 +236,7 @@ internal static partial class Lifeline {
                 writer.Write(memoryTotal - memoryFree); //8 bytes
                 writer.Write(memoryTotal); //8 bytes
             }
-            catch {
-                return;
-            }
+            catch { }
         }
 
         if (diskCaption.Count > 0) {
@@ -256,9 +256,7 @@ internal static partial class Lifeline {
                     writer.Write(diskTotal[i]); //8 bytes
                 }
             }
-            catch {
-                return;
-            }
+            catch { }
         }
     }
 
