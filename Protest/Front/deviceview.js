@@ -428,19 +428,10 @@ class DeviceView extends View {
 					this.floating.appendChild(divVlan);
 				}
 
-				if (obj.i[i].c.length > 0) {
-					this.floating.appendChild(document.createElement("br"));
-
-					const divComm = document.createElement("div");
-					divComm.style.display = "inline-block";
-					divComm.textContent = obj.i[i].c;
-					this.floating.appendChild(divComm);
-				}
-
 				if (list[i].link && LOADER.devices.data.hasOwnProperty(list[i].link)) {
 					let file = list[i].link;
-					let type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file]["type"].v : null;
-					const icon = LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg";
+					let type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file].type.v.toLowerCase() : "";
+					const icon = LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg";
 					
 					this.floating.appendChild(document.createElement("br"));
 
@@ -467,7 +458,7 @@ class DeviceView extends View {
 					}
 
 					list[i].frontElement.ondblclick = ()=> {
-						for (let i = 0; i < WIN.array.length; i++) {							
+						for (let i = 0; i < WIN.array.length; i++) {
 							if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
 								WIN.array[i].Minimize(); //minimize/restore
 								return;
@@ -1149,7 +1140,7 @@ class DeviceView extends View {
 			listElement.appendChild(txtL);
 
 			if (link && link.length > 0) {
-				const device = LOADER.devices.data.hasOwnProperty(link);
+				const device = LOADER.devices.data[link];
 				if (device) {
 					let value;
 					if (device.hasOwnProperty("name") && device["name"].v.length > 0) {
@@ -1163,7 +1154,9 @@ class DeviceView extends View {
 					}
 
 					txtL.value = value;
+					const type = device.type ? device.type.v.toLowerCase() : null;
 					const icon = LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg";
+					
 					txtL.style.backgroundImage = `url(${icon})`;
 				}
 			}
@@ -1350,7 +1343,7 @@ class DeviceView extends View {
 						element.className = "list-element";
 						divEquip.appendChild(element);
 
-						const type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file]["type"].v : null;
+						const type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file]["type"].v.toLowerCase() : null;
 
 						const icon = document.createElement("div");
 						icon.className = "list-element-icon";
