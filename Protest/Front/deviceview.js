@@ -339,6 +339,8 @@ class DeviceView extends View {
 
 		if (!this.link.hasOwnProperty(".interfaces")) return;
 		const obj = JSON.parse(this.link[".interfaces"].v);
+
+		if (obj === null) return;
 		
 		const frame = document.createElement("div");
 		frame.className = "view-interfaces-frame";
@@ -1369,7 +1371,7 @@ class DeviceView extends View {
 						icon.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
 						element.appendChild(icon);
 
-						for (let j = 0; j < 6; j++) {
+						for (let j=0; j<6; j++) {
 							if (!LOADER.devices.data[file].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
 							if (LOADER.devices.data[file][EQUIP_LIST_ORDER[j]].v.length === 0) continue;
 							const newLabel = document.createElement("div");
@@ -1420,12 +1422,12 @@ class DeviceView extends View {
 			this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 		};
 
-		const SortList = () => {
-			list.sort((a, b) => {
+		const SortList = ()=> {
+			list.sort((a, b)=> {
 				return a.listElement.getBoundingClientRect().top - b.listElement.getBoundingClientRect().top;
 			});
 
-			for (let i = 0; i < list.length; i++) {
+			for (let i=0; i<list.length; i++) {
 				list[i].numberElement.innerHTML = i+1;
 				if (lastSelect === null || list[i].listElement !== lastSelect.listElement)
 					list[i].listElement.style.top = `${i * 36}px`;
@@ -1434,23 +1436,49 @@ class DeviceView extends View {
 
 		this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 
-		if (this.link.hasOwnProperty(".interfaces")) {
+		if (this.link.hasOwnProperty(".interfaces") && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
-			for (let i = 0; i < obj.i.length; i++)
+			for (let i=0; i<obj.i.length; i++)
 				AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
-		} else {
-			for (let i = 0; i < 4; i++){
+		}
+		else {
+			for (let i=0; i<4; i++){
 				AddInterface("Ethernet", "1 Gbps", 1, null, "");
 			}
 		}
 		
-		btnOK.addEventListener("click", async () => {
-				this.link[".interfaces"] = {}; //TODO:
+		btnOK.addEventListener("click", async () => {	
+				let interfaces = {
+					i: [],
+					n: txtNumbering.value
+				};
 	
+				for (let i = 0; i < list.length; i++) {
+					interfaces.i.push({
+						i: list[i].txtPort.value,
+						s: list[i].txtSpeed.value,
+						v: list[i].txtVlan.value,
+						c: list[i].txtComm.value,
+						l: list[i].link
+					});
+				}
+
+				let obj = {};
+				for (let i = 0; i < this.attributes.childNodes.length; i++) {
+					if (this.attributes.childNodes[i].childNodes.length < 2) continue;
+					let name  = this.attributes.childNodes[i].childNodes[0].value;
+					let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
+					obj[name] = {v:value};
+				}
+
+				obj[".interfaces"] = {v:JSON.stringify(interfaces)};
+
+				console.log(obj);
+
 				try {
 					const response = await fetch(this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save", {
 						method: "POST",
-						body: JSON.stringify(this.link)
+						body: JSON.stringify(obj)
 					});
 	
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -1464,12 +1492,7 @@ class DeviceView extends View {
 					this.InitializePreview();
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{
-						this.Close();
-					});
-				}
-				finally {
-					if (isNew) this.content.removeChild(btnFetch);
+					setTimeout(()=>{this.ConfirmBox(ex, true, "mono/error.svg")}, 250);
 				}
 		});
 		
@@ -1485,10 +1508,12 @@ class DeviceView extends View {
 			if (list.length < 16 || list.length < 20 && isMixedInterface) {
 				rows = 1;
 				columns = list.length;
-			} else if (list.length <= 52) {
+			}
+			else if (list.length <= 52) {
 				rows = 2;
 				columns = Math.ceil(list.length / 2);
-			} else {
+			}
+			else {
 				rows = Math.ceil(list.length / 24);
 				columns = Math.ceil(list.length / rows);
 			}
@@ -1502,16 +1527,18 @@ class DeviceView extends View {
 
 		let size = columns <= 12 ? 50 : 40;
 
-		if (size === 50)
+		if (size === 50) {
 			for (let i = 0; i < list.length; i++) {
 				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 7px auto 7px 8%";
 				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 4px 16%";
 			}
-		else 
+		}
+		else {
 			for (let i = 0; i < list.length; i++) {
 				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 5px auto 5px 8%";
 				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 3px 24%";
 			}
+		}
 
 		let vlans = [];
 		for (let i = 0; i < list.length; i++) {
@@ -1547,19 +1574,19 @@ class DeviceView extends View {
 	
 	GetSpeedColor(speed) {
 		switch (speed) {
-			case "10 Mbps" : return "hsl(20,95%,60%)";
-			case "100 Mbps": return "hsl(40,95%,60%)";
-			case "1 Gbps"  : return "hsl(60,95%,60%)";
-			case "2.5 Gbps": return "hsl(70,95%,60%)";
-			case "5 Gbps"  : return "hsl(80,95%,60%)";
-			case "10 Gbps" : return "hsl(130,95%,60%)";
-			case "25 Gbps" : return "hsl(150,95%,60%)";
-			case "40 Gbps" : return "hsl(170,95%,60%)";
-			case "100 Gbps": return "hsl(190,95%,60%)";
-			case "200 Gbps": return "hsl(210,95%,60%)";
-			case "400 Gbps": return "hsl(275,95%,60%)";
-			case "800 Gbps": return "hsl(295,95%,60%)";
-			default: return "transparent";
+		case "10 Mbps" : return "hsl(20,95%,60%)";
+		case "100 Mbps": return "hsl(40,95%,60%)";
+		case "1 Gbps"  : return "hsl(60,95%,60%)";
+		case "2.5 Gbps": return "hsl(70,95%,60%)";
+		case "5 Gbps"  : return "hsl(80,95%,60%)";
+		case "10 Gbps" : return "hsl(130,95%,60%)";
+		case "25 Gbps" : return "hsl(150,95%,60%)";
+		case "40 Gbps" : return "hsl(170,95%,60%)";
+		case "100 Gbps": return "hsl(190,95%,60%)";
+		case "200 Gbps": return "hsl(210,95%,60%)";
+		case "400 Gbps": return "hsl(275,95%,60%)";
+		case "800 Gbps": return "hsl(295,95%,60%)";
+		default: return "transparent";
 		}
 	}
 

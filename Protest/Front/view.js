@@ -258,7 +258,7 @@ class View extends Window {
 				}
 			};
 		}
-		else if (value.includes(";") && !editMode) {
+		else if (value?.includes(";") && !editMode) {
 			valueBox.style.display = "none";
 
 			let split = value.split(";");
