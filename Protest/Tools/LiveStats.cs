@@ -118,7 +118,7 @@ internal static class LiveStats {
                         ulong free = (ulong)o.GetPropertyValue("FreeSpace");
 
                         if (size == 0) continue;
-                        ulong percent = 100 * free / size;
+                        double percent = Math.Round(100.0 * free / size, 1);
 
                         WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{size},\"used\":{size - free},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", "")}$")}\",\"source\":\"WMI\"}}");
 

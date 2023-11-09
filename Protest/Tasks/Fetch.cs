@@ -70,6 +70,10 @@ internal static class Fetch {
         return null;
     }
     public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+        if (target.Contains(';')) {
+            target = target.Split(';')[0].Trim();
+        }
+        
         bool isIp = IPAddress.TryParse(target, out IPAddress ipAddress);
 
         string hostname = null;

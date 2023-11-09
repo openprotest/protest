@@ -102,15 +102,15 @@ public static class Data {
     }
 
     public static string SizeToString(long size) {
-        if (size < 1024) return $"{size} Bytes";
-        if (size < Math.Pow(1024, 2)) return $"{Math.Round(size / 1024f)} KB";
-        if (size < Math.Pow(1024, 3)) return $"{Math.Round(size / Math.Pow(1024, 2))} MB";
-        if (size < Math.Pow(1024, 4)) return $"{Math.Round(size / Math.Pow(1024, 3))} GB";
-        if (size < Math.Pow(1024, 5)) return $"{Math.Round(size / Math.Pow(1024, 4))} TB";
-        if (size < Math.Pow(1024, 6)) return $"{Math.Round(size / Math.Pow(1024, 5))} EB"; //Exabyte
-        if (size < Math.Pow(1024, 7)) return $"{Math.Round(size / Math.Pow(1024, 6))} ZB"; //Zettabyte
-        if (size < Math.Pow(1024, 8)) return $"{Math.Round(size / Math.Pow(1024, 7))} YB"; //Yottabyte
-        if (size < Math.Pow(1024, 9)) return $"{Math.Round(size / Math.Pow(1024, 8))} BB"; //Brontobyte
+        if (size < 8_192) return $"{size} Bytes";
+        if (size < 8_192 * 1024) return $"{Math.Floor(size / 1024f)} KB";
+        if (size < 8_192 * Math.Pow(1024, 2)) return $"{Math.Floor(size / Math.Pow(1024, 2))} MB";
+        if (size < 8_192 * Math.Pow(1024, 3)) return $"{Math.Floor(size / Math.Pow(1024, 3))} GB";
+        if (size < 8_192 * Math.Pow(1024, 4)) return $"{Math.Floor(size / Math.Pow(1024, 4))} TB";
+        if (size < 8_192 * Math.Pow(1024, 5)) return $"{Math.Floor(size / Math.Pow(1024, 5))} EB"; //Exabyte
+        if (size < 8_192 * Math.Pow(1024, 6)) return $"{Math.Floor(size / Math.Pow(1024, 6))} ZB"; //Zettabyte
+        if (size < 8_192 * Math.Pow(1024, 7)) return $"{Math.Floor(size / Math.Pow(1024, 7))} YB"; //Yottabyte
+        if (size < 8_192 * Math.Pow(1024, 8)) return $"{Math.Floor(size / Math.Pow(1024, 8))} BB"; //Brontobyte
         return size.ToString();
     }
 

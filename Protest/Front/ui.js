@@ -64,6 +64,24 @@ const UI = {
 		}
 	},
 
+	PromptAgent: (parent, command, value)=>{
+		let key = localStorage.getItem("agent_key");
+
+		if (!key) {
+			const okButton = parent.ConfirmBox("Agent is not configured", false, "mono/agent.svg");
+			okButton.value = "Configure";
+			okButton.addEventListener("click", ()=>{new Personalize("agent")});
+			return;
+		}
+
+		let url = btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}`);
+		const iframe = document.createElement("iframe");
+		iframe.src = `protest://${url}`;
+		iframe.style.border = "none";
+		parent.win.appendChild(iframe);
+		setTimeout(()=>{ parent.win.removeChild(iframe); }, 100);
+	},
+
 	SetAccentColor: (accent, saturation)=> {
 		let hsl = UI.RgbToHsl(accent);
 
@@ -141,23 +159,18 @@ const UI = {
 		return (long + UNIX_BASE_TICKS) * 10000;
 	},
 
-	PromptAgent: (parent, command, value)=>{
-		let key = localStorage.getItem("agent_key");
-
-		if (!key) {
-			const okButton = parent.ConfirmBox("Agent is not configured", false, "mono/agent.svg");
-			okButton.value = "Configure";
-			okButton.addEventListener("click", ()=>{new Personalize("agent")});
-			return;
-		}
-
-		let url = btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}`);
-		const iframe = document.createElement("iframe");
-		iframe.src = `protest://${url}`;
-		iframe.style.border = "none";
-		parent.win.appendChild(iframe);
-		setTimeout(()=>{ parent.win.removeChild(iframe); }, 100);
+	SizeToString: size=> {
+		if (size < 8_192) return `${size} bytes`;
+		if (size < 8_192 * 1024) return `${Math.floor(size / 1024)} KB`;
+		if (size < 8_192 * Math.pow(1024, 2)) return `${Math.floor(10 * size / Math.pow(1024, 2)) / 10}MB`;
+		if (size < 8_192 * Math.pow(1024, 3)) return `${Math.floor(10 * size / Math.pow(1024, 3)) / 10}GB`;
+		if (size < 8_192 * Math.pow(1024, 4)) return `${Math.floor(10 * size / Math.pow(1024, 4)) / 10}TB`;
+		if (size < 8_192 * Math.pow(1024, 5)) return `${Math.floor(10 * size / Math.pow(1024, 5)) / 10}EB`;
+		if (size < 8_192 * Math.pow(1024, 6)) return `${Math.floor(10 * size / Math.pow(1024, 6)) / 10}ZB`;
+		if (size < 8_192 * Math.pow(1024, 7)) return `${Math.floor(10 * size / Math.pow(1024, 7)) / 10}YB`;
+		if (size < 8_192 * Math.pow(1024, 8)) return `${Math.floor(10 * size / Math.pow(1024, 8)) / 10}BB`;
 	}
+
 };
 
 const MENU = {

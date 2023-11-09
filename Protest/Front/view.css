@@ -346,6 +346,10 @@ button.view-live-button:active {
 	display: none !important;
 }
 
+.view-Interfaces {
+	background-color: red;
+}
+
 .view-lifeline-graph {
 	position: relative;
 	width: 100%;

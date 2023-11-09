@@ -29,7 +29,6 @@ const LOADER = {
 		"serial converter"    : "mono/serialconverter.svg",
 		"server"              : "mono/server.svg",
 		"switch"              : "mono/switch.svg",
-		"multilayer switch"   : "mono/l3switch.svg",
 		"tablet"              : "mono/tablet.svg",
 		"tv"                  : "mono/tv.svg",
 		"ups"                 : "mono/ups.svg",

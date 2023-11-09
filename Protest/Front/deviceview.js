@@ -78,7 +78,7 @@ class DeviceView extends View {
 			this.Edit(true);
 
 			let initiator = KEEP.username;
-			let date      = new Date();
+			let date = new Date();
 
 			this.attributes.appendChild(this.CreateAttribute("type",         "", initiator, date, true));
 
@@ -100,6 +100,7 @@ class DeviceView extends View {
 		this.SetIcon(LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg");
 		super.InitializePreview();
 		this.InitializeLiveStats();
+		this.InitializeInterfaces();
 	}
 
 	InitializeSideTools() { //override
@@ -143,7 +144,7 @@ class DeviceView extends View {
 			};
 		}
 
-		if ((this.link.hasOwnProperty("ports"))) {
+		if (this.link.hasOwnProperty("ports")) {
 			let ports = this.link["ports"].v.split(";").map(o=> parseInt(o.trim()));
 
 			if (ports.includes(445) && this.link.hasOwnProperty("operating system")) { //wmi service 445
@@ -322,6 +323,28 @@ class DeviceView extends View {
 				};
 			}
 		}
+
+		if (this.link.hasOwnProperty("type")) {
+			const type = this.link["type"].v.toLowerCase();
+			if (type === "router" || type === "switch") {
+				const btnInterfaces = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
+				btnInterfaces.style.marginTop = "16px";
+			}
+		}
+	}
+
+	InitializeInterfaces() {
+		this.liveC.textContent = "";
+
+		if (!this.link.hasOwnProperty("type")) return;
+		const type = this.link["type"].v.toLowerCase();
+
+		if (type !== "router" && type !== "switch") return;
+
+		
+		this.interfaces = document.createElement("div");
+		this.interfaces.className = "view-Interfaces";
+		this.liveC.appendChild(this.interfaces);
 	}
 
 	async InitializeLiveStats() {
@@ -329,7 +352,7 @@ class DeviceView extends View {
 
 		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
-		
+
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/device");
 
 		this.liveStatsWebSockets.onopen = ()=> {
@@ -340,9 +363,9 @@ class DeviceView extends View {
 
 			this.liveA.textContent = "";
 			this.liveB.textContent = "";
-			this.liveC.textContent = "";
+			this.liveD.textContent = "";
 
-			this.liveStatsWebSockets.send(this.params.file)
+			this.liveStatsWebSockets.send(this.params.file);
 		};
 		
 		this.liveStatsWebSockets.onmessage = event=> {
@@ -461,7 +484,7 @@ class DeviceView extends View {
 		const GenerateGraph = (data, label, type)=> {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
-			this.liveC.appendChild(graphBox);
+			this.liveD.appendChild(graphBox);
 
 			const labelBox = document.createElement("div");
 			labelBox.style.position = "absolute";
@@ -558,12 +581,15 @@ class DeviceView extends View {
 			}
 			else if (type === "vol") {
 				for (let i = 0; i < data.length; i++) {
+					if (data[i].t === 0) continue;
+					
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 104 - Math.round(100 * data[i].v / data[i].t);
+					
 					d += `L ${x} ${y} `;
 	
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
-	
+
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
@@ -588,7 +614,7 @@ class DeviceView extends View {
 				infoBox.style.opacity = "0";
 			};
 
-			graphBox.onmousemove = event =>{
+			graphBox.onmousemove = event=>{
 				if (event.layerX < 800 - graphBox.clientWidth + 100) {
 					infoBox.style.left = "";
 					infoBox.style.right = "16px";
@@ -598,29 +624,22 @@ class DeviceView extends View {
 					infoBox.style.right = "";
 				}
 
-				if (type === "line") {
-					let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
-					let closestIndex = 0;
-					for (let i = 0; i < data.length; i++) {
-						let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-						if (Math.abs(x - event.layerX) < Math.abs(x - closestX)) {
-							closestX = x;
-							closestIndex = i;
-						}
+				let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
+				let closestIndex = 0;
+				for (let i = 0; i < data.length; i++) {
+					let currentX = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					if (Math.abs(currentX - event.layerX) < Math.abs(closestX - event.layerX)) {
+						closestX = currentX;
+						closestIndex = i;
 					}
+				}
+
+				if (type === "line") {
 					infoBox.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
 				}
 				else if (type === "vol") {
-					let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
-					let closestIndex = 0;
-					for (let i = 0; i < data.length; i++) {
-						let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-						if (Math.abs(x - event.layerX) < Math.abs(x - closestX)) {
-							closestX = x;
-							closestIndex = i;
-						}
-					}
-					infoBox.textContent = `${Math.round(1000 * data[closestIndex].v / data[closestIndex].t)/10} %`;
+					let percent = Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10;
+					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v * 1024)} / ${UI.SizeToString(data[closestIndex].t * 1024)} (${percent})%`;
 				}
 			};
 
@@ -710,7 +729,7 @@ class DeviceView extends View {
 		let p = value / total;
 		if (p > .9) return "var(--clr-error)";
 		if (p > .85) return "var(--clr-orange)";
-		if (p > .75) return "var(--clr-warning)";
+		if (p > .80) return "var(--clr-warning)";
 		return "hsl(92, 66%, 50%)";
 	}
 	

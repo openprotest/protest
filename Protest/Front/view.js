@@ -15,11 +15,11 @@ class View extends Window {
 	AfterResize() { //override
 		if (this.content.clientWidth >= 1400) {
 			this.infoPane.style.display = "initial";
-			this.infoPane.append(this.liveA, this.liveB, this.liveC);
+			this.infoPane.append(this.liveA, this.liveB, this.liveC, this.liveD);
 		}
 		else {
 			this.infoPane.style.display = "none";
-			this.scroll.append(this.liveA, this.liveB, this.attributes, this.liveC);
+			this.scroll.append(this.liveA, this.liveB, this.liveC, this.attributes, this.liveD);
 		}
 	}
 	
@@ -56,8 +56,9 @@ class View extends Window {
 		this.liveA = document.createElement("div");
 		this.liveB = document.createElement("div");
 		this.liveC = document.createElement("div");
+		this.liveD = document.createElement("div");
 
-		this.scroll.append(this.liveA, this.liveB, this.attributes, this.liveC);
+		this.scroll.append(this.liveA, this.liveB, this.liveC, this.attributes, this.liveD);
 
 		this.sortButton = this.AddToolbarButton("Order", "mono/sort.svg?light");
 		this.sortButton.onclick = ()=> this.Sort();
@@ -671,6 +672,7 @@ class View extends Window {
 		this.liveA.style.display = "none";
 		this.liveB.style.display = "none";
 		this.liveC.style.display = "none";
+		this.liveD.style.display = "none";
 
 		for (let i = 0; i < this.attributes.childNodes.length; i++) {
 			this.attributes.childNodes[i].style.display = "inherit";
@@ -751,6 +753,7 @@ class View extends Window {
 			this.liveA.style.display = "block";
 			this.liveB.style.display = "block";
 			this.liveC.style.display = "block";
+			this.liveD.style.display = "block";
 
 			this.scroll.removeChild(addAttribute);
 

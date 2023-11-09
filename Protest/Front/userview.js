@@ -140,7 +140,7 @@ class UserView extends View {
 			this.AfterResize();
 			this.liveA.textContent = "";
 			this.liveB.textContent = "";
-			this.liveC.textContent = "";
+			this.liveD.textContent = "";
 
 			this.liveStatsWebSockets.send(this.params.file);
 		};
