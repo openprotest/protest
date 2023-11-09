@@ -437,57 +437,43 @@ class DeviceView extends View {
 					this.floating.appendChild(divComm);
 				}
 
-				if (list[i].link) {
+				if (list[i].link && LOADER.devices.data.hasOwnProperty(list[i].link)) {
+					let file = list[i].link;
+					let type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file]["type"].v : null;
+					const icon = LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg";
+					
 					this.floating.appendChild(document.createElement("br"));
 
-					const divLink = document.createElement("div");
-					divLink.style.padding = "4px";
-					divLink.style.marginTop = "8px";
-					divLink.style.border = "1px solid #C0C0C0";
-					divLink.style.borderRadius = "4px";
-					divLink.style.display = "inline-block";
-					this.floating.appendChild(divLink);
-
 					const linkIcon = document.createElement("div");
-					
-					linkIcon.style.backgroundImage = `url(${GetEquipIcon(list[i].link["TYPE"])})`;
+					linkIcon.style.backgroundImage = `url(${icon})`;
 					linkIcon.style.backgroundRepeat = "no-repeat";
-					linkIcon.style.backgroundPosition = "center";
-					linkIcon.style.backgroundSize = "contain";
+					linkIcon.style.backgroundPosition = "0 center";
+					linkIcon.style.backgroundSize = "32px 32px";
 					linkIcon.style.width = "100%";
-					linkIcon.style.height = "36px";
-					linkIcon.style.filter = "invert(1)";
-					divLink.appendChild(linkIcon);
+					linkIcon.style.height = "40px";
+					linkIcon.style.lineHeight = "40px";
+					linkIcon.style.margin = "4px";
+					linkIcon.style.paddingLeft = "36px";
+					this.floating.appendChild(linkIcon);
 
-					let name = null;
-					if (list[i].link.hasOwnProperty("NAME")) {
-						name = list[i].link["NAME"][0];
-						const linkName = document.createElement("div");
-						linkName.textContent = name;
-						divLink.appendChild(linkName);
+					if (LOADER.devices.data[file].hasOwnProperty("name")) {
+						linkIcon.textContent = LOADER.devices.data[file]["name"].v;
+					}
+					else if (LOADER.devices.data[file].hasOwnProperty("hostname") && LOADER.devices.data[file]["hostname"].v !== name) {
+						linkIcon.textContent= file["hostname"].v;
+					}
+					else if (LOADER.devices.data[file].hasOwnProperty("IP")) {
+						linkIcon.textContent = LOADER.devices.data[file]["ip"].v;
 					}
 
-					if (list[i].link.hasOwnProperty("HOSTNAME") && list[i].link["HOSTNAME"][0] !== name) {
-						const linkHostname = document.createElement("div");
-						linkHostname.textContent = list[i].link["HOSTNAME"][0];
-						divLink.appendChild(linkHostname);
-					}
-
-					if (list[i].link.hasOwnProperty("IP")) {
-						const linkIp = document.createElement("div");
-						linkIp.textContent = list[i].link["IP"][0];
-						divLink.appendChild(linkIp);
-					}
-
-					list[i].frontElement.ondblclick =() => {
-						let filename = list[i].link[".FILENAME"][0];
-						for (let i = 0; i < $w.array.length; i++)
-							if ($w.array[i] instanceof Equip && $w.array[i].filename === filename) {
-								$w.array[i].Minimize(); //minimize/restore
+					list[i].frontElement.ondblclick = ()=> {
+						for (let i = 0; i < WIN.array.length; i++) {							
+							if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
+								WIN.array[i].Minimize(); //minimize/restore
 								return;
 							}
-
-						new Equip(filename);
+						}
+						new DeviceView({file: file});
 					};
 				}
 
