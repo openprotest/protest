@@ -33,7 +33,7 @@ button:active, input[type="button"]:active, input[type="submit"]:active, input[t
 button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled, input[type="color"]:disabled {
 	color: rgb(176,176,176);
 	background-color: rgb(96,96,96) !important;
-	filter: contrast(60%) brightness(80%);
+	filter: contrast(60%) brightness(80%) !important;
 }
 
 button.with-icon,
@@ -45,7 +45,7 @@ input[type="color"].with-icon{
 	text-align: left;
 	padding-left: 32px;
 	padding-right: 8px;
-	background-repeat: no-repeat;
 	background-size: 22px 22px;
 	background-position: 4px center;
+	background-repeat: no-repeat;
 }

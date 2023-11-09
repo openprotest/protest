@@ -669,6 +669,10 @@ class View extends Window {
 			this.bar.childNodes[i].style.display = "none";
 		}
 
+		for (let i=0; i<this.sideTools.childNodes.length; i++) {
+			this.sideTools.childNodes[i].disabled = true;
+		}
+
 		this.liveA.style.display = "none";
 		this.liveB.style.display = "none";
 		this.liveC.style.display = "none";
@@ -748,6 +752,10 @@ class View extends Window {
 
 			for (let i = 0; i < this.bar.childNodes.length; i++) {
 				this.bar.childNodes[i].style.display = "initial";
+			}
+
+			for (let i=0; i<this.sideTools.childNodes.length; i++) {
+				this.sideTools.childNodes[i].disabled = false;
 			}
 
 			this.liveA.style.display = "block";

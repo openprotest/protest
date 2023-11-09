@@ -260,7 +260,6 @@ internal static partial class Lifeline {
         }
     }
 
-
     public static byte[] ViewPing(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
 

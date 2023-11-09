@@ -329,6 +329,7 @@ class DeviceView extends View {
 			if (type === "router" || type === "switch") {
 				const btnInterfaces = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
 				btnInterfaces.style.marginTop = "16px";
+				btnInterfaces.onclick = ()=> this.EditInterfaces();
 			}
 		}
 	}
@@ -336,15 +337,177 @@ class DeviceView extends View {
 	InitializeInterfaces() {
 		this.liveC.textContent = "";
 
-		if (!this.link.hasOwnProperty("type")) return;
-		const type = this.link["type"].v.toLowerCase();
-
-		if (type !== "router" && type !== "switch") return;
-
+		if (!this.link.hasOwnProperty(".interfaces")) return;
+		const obj = JSON.parse(this.link[".interfaces"].v);
 		
-		this.interfaces = document.createElement("div");
-		this.interfaces.className = "view-Interfaces";
-		this.liveC.appendChild(this.interfaces);
+		const frame = document.createElement("div");
+		frame.className = "view-interfaces-frame";
+		this.liveC.appendChild(frame);
+
+		this.liveC.style.overflowX = "auto";
+
+		let numbering = obj.n ? obj.n : "vertical";
+		let list = [];
+
+		for (let i = 0; i < obj.i.length; i++) {
+			const front = document.createElement("div");
+			front.className = "view-interface-port";
+			frame.appendChild(front);
+
+			const icon = document.createElement("div");
+			switch (obj.i[i].i) {
+			case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
+			case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
+			case "QSFP"    : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
+			case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
+			case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
+			}
+			front.appendChild(icon);
+
+			if (obj.i[i].i === "Ethernet" || obj.i[i].i === "SFP") {
+				icon.appendChild(document.createElement("div")); //led1
+				icon.appendChild(document.createElement("div")); //led2
+			}
+
+			const num = document.createElement("div");
+			num.textContent = frame.childNodes.length;
+			front.appendChild(num);
+
+			list.push({
+				frontElement: front,
+				number  : num,
+				port    : obj.i[i].i,
+				speed   : obj.i[i].s,
+				vlan    : obj.i[i].v,
+				comment : obj.i[i].c,
+				link    : obj.i[i].l
+			});
+
+			LOADER.devices
+
+			front.onmouseenter = ()=> {
+				this.floating.textContent = "";
+
+				const divSpeedColor = document.createElement("div");
+				divSpeedColor.style.display = "inline-block";
+				divSpeedColor.style.width = "8px";
+				divSpeedColor.style.height = "8px";
+				divSpeedColor.style.borderRadius = "2px";
+				divSpeedColor.style.marginLeft = "4px";
+				divSpeedColor.style.marginRight = "4px";
+				divSpeedColor.style.backgroundColor = list[i].speedColor;
+				divSpeedColor.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+				this.floating.appendChild(divSpeedColor);
+
+				if (obj.i[i].s !== "N/A") {
+					const divSpeed = document.createElement("div");
+					divSpeed.style.display = "inline-block";
+					divSpeed.textContent = `${obj.i[i].s} ${obj.i[i].i}`;
+					this.floating.appendChild(divSpeed);
+				}
+
+				this.floating.appendChild(document.createElement("br"));
+
+				const divVlanColor = document.createElement("div");
+				divVlanColor.style.display = "inline-block";
+				divVlanColor.style.width = "8px";
+				divVlanColor.style.height = "8px";
+				divVlanColor.style.borderRadius = "2px";
+				divVlanColor.style.marginLeft = "4px";
+				divVlanColor.style.marginRight = "4px";
+				divVlanColor.style.backgroundColor = list[i].vlanColor ? list[i].vlanColor : "transparent";
+				divVlanColor.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+				this.floating.appendChild(divVlanColor);
+
+				if (obj.i[i].v && obj.i[i].v.toString().length) {
+					const divVlan = document.createElement("div");
+					divVlan.style.display = "inline-block";
+					divVlan.textContent = `VLAN ${obj.i[i].v}`;
+					this.floating.appendChild(divVlan);
+				}
+
+				if (obj.i[i].c.length > 0) {
+					this.floating.appendChild(document.createElement("br"));
+
+					const divComm = document.createElement("div");
+					divComm.style.display = "inline-block";
+					divComm.textContent = obj.i[i].c;
+					this.floating.appendChild(divComm);
+				}
+
+				if (list[i].link) {
+					this.floating.appendChild(document.createElement("br"));
+
+					const divLink = document.createElement("div");
+					divLink.style.padding = "4px";
+					divLink.style.marginTop = "8px";
+					divLink.style.border = "1px solid #C0C0C0";
+					divLink.style.borderRadius = "4px";
+					divLink.style.display = "inline-block";
+					this.floating.appendChild(divLink);
+
+					const linkIcon = document.createElement("div");
+					
+					linkIcon.style.backgroundImage = `url(${GetEquipIcon(list[i].link["TYPE"])})`;
+					linkIcon.style.backgroundRepeat = "no-repeat";
+					linkIcon.style.backgroundPosition = "center";
+					linkIcon.style.backgroundSize = "contain";
+					linkIcon.style.width = "100%";
+					linkIcon.style.height = "36px";
+					linkIcon.style.filter = "invert(1)";
+					divLink.appendChild(linkIcon);
+
+					let name = null;
+					if (list[i].link.hasOwnProperty("NAME")) {
+						name = list[i].link["NAME"][0];
+						const linkName = document.createElement("div");
+						linkName.textContent = name;
+						divLink.appendChild(linkName);
+					}
+
+					if (list[i].link.hasOwnProperty("HOSTNAME") && list[i].link["HOSTNAME"][0] !== name) {
+						const linkHostname = document.createElement("div");
+						linkHostname.textContent = list[i].link["HOSTNAME"][0];
+						divLink.appendChild(linkHostname);
+					}
+
+					if (list[i].link.hasOwnProperty("IP")) {
+						const linkIp = document.createElement("div");
+						linkIp.textContent = list[i].link["IP"][0];
+						divLink.appendChild(linkIp);
+					}
+
+					list[i].frontElement.ondblclick =() => {
+						let filename = list[i].link[".FILENAME"][0];
+						for (let i = 0; i < $w.array.length; i++)
+							if ($w.array[i] instanceof Equip && $w.array[i].filename === filename) {
+								$w.array[i].Minimize(); //minimize/restore
+								return;
+							}
+
+						new Equip(filename);
+					};
+				}
+
+				let x = front.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
+				if (x > this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8)
+					x = this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8;
+
+				this.floating.style.left = `${x}px`;
+				this.floating.style.top = `${front.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
+				this.floating.style.visibility = "visible";
+				this.floating.style.opacity = "1";
+				this.floating.style.display = "initial";
+			};
+
+			front.onmouseleave = ()=> {
+				this.floating.style.opacity = "0";
+				this.floating.style.visibility = "hidden";
+				this.floating.style.display = "none";
+			};
+		}
+
+		this.InitInterfaceComponents(frame, numbering, list, false);
 	}
 
 	async InitializeLiveStats() {
@@ -716,12 +879,12 @@ class DeviceView extends View {
 		}
 	}
 
-	RttToColor(status) {
-		if (status < 0) { //unreachable/timed out
+	RttToColor(rtt) {
+		if (rtt < 0) { //unreachable/timed out
 			return "var(--clr-error)";
 		}
 		else { //alive
-			return UI.PingColor(status);
+			return UI.PingColor(rtt);
 		}
 	}
 
@@ -806,6 +969,609 @@ class DeviceView extends View {
 		});
 	}
 
+	EditInterfaces() {
+		const dialog = this.DialogBox("calc(100% - 34px)");
+		if (dialog === null) return;
+
+		const btnOK     = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
+		const buttonBox = dialog.buttonBox;
+		const innerBox  = dialog.innerBox;
+
+		innerBox.parentElement.style.maxWidth = "80%";
+		innerBox.style.padding = "20px";
+
+		const frame = document.createElement("div");
+		frame.style.backgroundColor = "var(--clr-control)";
+		frame.style.border = "2px solid var(--clr-dark)";
+		frame.className = "view-interfaces-frame";
+		innerBox.appendChild(frame);
+
+		const divNumbering = document.createElement("div");
+		divNumbering.style.marginTop = "24px";
+		innerBox.appendChild(divNumbering);
+
+		const lblNumbering = document.createElement("div");
+		lblNumbering.innerHTML = "Numbering: ";
+		lblNumbering.style.display = "inline-block";
+		lblNumbering.style.width = "120px";
+		divNumbering.appendChild(lblNumbering);
+
+		const txtNumbering = document.createElement("select");
+		txtNumbering.style.width = "120px";
+		divNumbering.appendChild(txtNumbering);
+		let numbering = ["Vertical", "Horizontal"];
+		for (let i = 0; i < numbering.length; i++) {
+			const optNumbering = document.createElement("option");
+			optNumbering.value = numbering[i].toLowerCase();
+			optNumbering.innerHTML = numbering[i];
+			txtNumbering.appendChild(optNumbering);
+		}
+
+		const divAdd = document.createElement("div");
+		divAdd.style.marginTop = "8px";
+		innerBox.appendChild(divAdd);
+
+		const lblAdd = document.createElement("div");
+		lblAdd.innerHTML = "Add interface: ";
+		lblAdd.style.display = "inline-block";
+		lblAdd.style.width = "120px";
+		divAdd.appendChild(lblAdd);
+
+		const txtPort = document.createElement("select");
+		txtPort.style.minWidth = "120px";
+		divAdd.appendChild(txtPort);
+		let portsArray = ["Ethernet", "SFP", "QSFP", "USB", "Serial"];
+		for (let i = 0; i < portsArray.length; i++) {
+			const optPort = document.createElement("option");
+			optPort.value = portsArray[i];
+			optPort.innerHTML = portsArray[i];
+			txtPort.appendChild(optPort);
+		}
+
+		const txtSpeed = document.createElement("select");
+		txtSpeed.style.minWidth = "120px";
+		divAdd.appendChild(txtSpeed);
+		let speedArray = [
+			"N/A",
+			"10 Mbps", "100 Mbps", "1 Gbps", "2.5 Gbps","5 Gbps", "10 Gbps",
+			"25 Gbps", "40 Gbps", "100 Gbps", "200 Gbps", "400 Gbps", "800 Gbps"
+		];
+		for (let i = 0; i < speedArray.length; i++) {
+			const optSpeed = document.createElement("option");
+			optSpeed.value = speedArray[i];
+			optSpeed.innerHTML = speedArray[i];
+			txtSpeed.appendChild(optSpeed);
+		}
+		txtSpeed.value = "1 Gbps";
+
+		const lblX = document.createElement("div");
+		lblX.innerHTML = " x ";
+		lblX.style.display = "inline-block";
+		lblX.style.marginLeft = "8px";
+		divAdd.appendChild(lblX);
+
+		const txtMulti = document.createElement("input");
+		txtMulti.type = "number";
+		txtMulti.min = 1;
+		txtMulti.max = 48;
+		txtMulti.value = 1;
+		txtMulti.style.width = "50px";
+		divAdd.appendChild(txtMulti);
+
+		const btnAdd = document.createElement("input");
+		btnAdd.type = "button";
+		btnAdd.value = "Add";
+		divAdd.appendChild(btnAdd);
+
+		const divTitle = document.createElement("div");
+		divTitle.style.position = "absolute";
+		divTitle.style.whiteSpace = "nowrap";
+		divTitle.style.overflow = "hidden";
+		divTitle.style.left = "16px";
+		divTitle.style.right = "16px";
+		divTitle.style.top = "280px";
+		divTitle.style.height = "20px";
+		divTitle.className = "view-interfaces-edit-title";
+		innerBox.appendChild(divTitle);
+
+		let titleArray = ["Interface", "Speed", "VLAN", "Link"];
+		for (let i = 0; i < titleArray.length; i++) {
+			const newLabel = document.createElement("div");
+			newLabel.textContent = titleArray[i];
+			divTitle.appendChild(newLabel);
+		}
+
+		const divList = document.createElement("div");
+		divList.style.position = "absolute";
+		divList.style.left = "16px";
+		divList.style.right = "0";
+		divList.style.top = "304px";
+		divList.style.bottom = "16px";
+		divList.style.overflowX = "hidden";
+		divList.style.overflowY = "scroll";
+		innerBox.appendChild(divList);
+ 
+		let list = [];
+
+		txtNumbering.onchange = ()=> this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+
+		btnAdd.onclick = ()=> {
+			if (list.length + parseInt(txtMulti.value) > 52) return;
+			for (let i = 0; i < txtMulti.value; i++) {
+				AddInterface(txtPort.value, txtSpeed.value, 1, null, "");
+			}
+		};
+
+		let lastSelect = null;
+		let lastMouseY = 0;
+		let lastElementY = 0;
+
+		const AddInterface = (port, speed, vlan, link, comment) => {
+			const front = document.createElement("div");
+			front.className = "view-interface-port";
+			front.style.gridArea = `1 / ${frame.childNodes.length+1}`;
+			frame.appendChild(front);
+
+			const icon = document.createElement("div");
+			front.appendChild(icon);
+
+			const num = document.createElement("div");
+			num.innerHTML = frame.childNodes.length;
+			front.appendChild(num);
+
+			icon.appendChild(document.createElement("div")); //led1
+			icon.appendChild(document.createElement("div")); //led2
+
+			const listElement = document.createElement("div");
+			listElement.className = "view-interfaces-edit-list-element";
+			listElement.style.top = `${divList.childNodes.length * 36}px`;
+			divList.appendChild(listElement);
+
+			const divMove = document.createElement("div");
+			divMove.style.display = "inline-block";
+			listElement.appendChild(divMove);
+
+			const txtP = document.createElement("select");
+			listElement.appendChild(txtP);
+			for (let i = 0; i < portsArray.length; i++) {
+				const optPort = document.createElement("option");
+				optPort.value = portsArray[i];
+				optPort.innerHTML = portsArray[i];
+				txtP.appendChild(optPort);
+			}
+
+			const txtS = document.createElement("select");
+			listElement.appendChild(txtS);
+			for (let i = 0; i < speedArray.length; i++) {
+				const optSpeed = document.createElement("option");
+				optSpeed.value = speedArray[i];
+				optSpeed.innerHTML = speedArray[i];
+				txtS.appendChild(optSpeed);
+			}
+
+			const txtV = document.createElement("input");
+			txtV.type = "text";
+			txtV.value = vlan;
+			listElement.appendChild(txtV);
+
+			const txtL = document.createElement("input");
+			txtL.type = "text";
+			txtL.setAttribute("readonly", true);
+			listElement.appendChild(txtL);
+
+			if (link && link.length > 0) {
+				const device = LOADER.devices.data.hasOwnProperty(link);
+				if (device) {
+					let value;
+					if (device.hasOwnProperty("name") && device["name"].v.length > 0) {
+						value = device["name"].v;
+					}
+					else if (device.hasOwnProperty("hostname") && device["hostname"].v.length > 0) {
+						value = device["hostname"].v;
+					}
+					else if (device.hasOwnProperty("ip") && device["ip"].v.length > 0) {
+						value = device["ip"].v;
+					}
+
+					txtL.value = value;
+					const icon = LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg";
+					txtL.style.backgroundImage = `url(${icon})`;
+				}
+			}
+
+			const txtC = document.createElement("input");
+			txtC.type = "text";
+			txtC.placeholder = "description";
+			txtC.value= comment;
+			listElement.appendChild(txtC);
+
+			const remove = document.createElement("input");
+			remove.type = "button";
+			remove.setAttribute("aria-label", "Remove interface");
+			listElement.appendChild(remove);
+
+			let obj = {
+				frontElement  : front,
+				listElement   : listElement,
+				numberElement : num,
+				txtPort  : txtP,
+				txtSpeed : txtS,
+				txtVlan  : txtV,
+				txtComm  : txtC,
+				link: link
+			};
+			list.push(obj);
+
+			front.onclick = () => listElement.scrollIntoView({ behavior: "smooth", block: "center" });
+			front.onmouseover = () => divMove.style.backgroundColor = "var(--clr-select)";
+			front.onmouseleave = () => divMove.style.backgroundColor = "";
+
+			divMove.onmousedown = event => {
+				if (event.buttons !== 1) return;
+				lastSelect = obj;
+				lastMouseY = event.clientY;
+				lastElementY = parseInt(lastSelect.listElement.style.top.replace("px", ""));
+
+				lastSelect.listElement.style.zIndex = "1";
+				lastSelect.listElement.style.backgroundColor = "var(--clr-pane)";
+				lastSelect.listElement.style.transition = "transition .2s";
+				lastSelect.frontElement.style.backgroundColor = "var(--clr-select)";
+				lastSelect.frontElement.style.boxShadow = "0 -3px 0px 3px var(--clr-select)";
+				lastSelect.listElement.childNodes[0].style.backgroundColor = "var(--clr-select)";
+			};
+
+			innerBox.parentElement.onmouseup = event => {
+				if (lastSelect === null) return;
+				lastSelect.listElement.style.zIndex = "0";
+				lastSelect.listElement.style.transform = "none";
+				lastSelect.listElement.style.boxShadow = "none";
+				lastSelect.listElement.style.transition = ".2s";
+				lastSelect.frontElement.style.backgroundColor = "";
+				lastSelect.frontElement.style.boxShadow = "";
+				lastSelect.listElement.childNodes[0].style.backgroundColor = "";
+
+				lastSelect = null;
+				SortList();
+				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+			};
+
+			innerBox.parentElement.onmousemove = event => {
+				if (lastSelect === null) return;
+				if (event.buttons !== 1) return;
+				let pos = lastElementY - (lastMouseY - event.clientY);
+				if (pos < 0) pos = 0;
+				lastSelect.listElement.style.transform = "scale(1.05)";
+				lastSelect.listElement.style.boxShadow = "0 0 4px rgba(0,0,0,.5)";
+				lastSelect.listElement.style.top = `${pos}px`;
+				SortList();
+				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+			};
+
+			txtP.onchange = () => {
+				switch (txtP.value) {
+				case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
+				case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
+				case "QSFP"     : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
+				case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
+				case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
+				}
+				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+			};
+
+			txtS.onchange =
+			txtV.onchange = () => {
+				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+			};
+
+			txtL.ondblclick = () => {
+				if (obj.link.length > 0) {
+					obj.link = "";
+					txtL.value = "";
+					txtL.style.backgroundImage = "url(mono/gear.svg)";
+				}
+			};
+
+			txtL.onclick = () => {
+				if (obj.link !== null && obj.link.length > 0) return;
+
+				this.AddCssDependencies("list.css");
+
+				const dim = document.createElement("div");
+				dim.style.top = "0";
+				dim.className = "win-dim";
+				innerBox.parentElement.appendChild(dim);
+
+				const frame = document.createElement("div");
+				frame.style.position = "absolute";
+				frame.style.overflow = "hidden";
+				frame.style.width = "100%";
+				frame.style.maxWidth = "1000px";
+				frame.style.height = "calc(100% - 80px)";
+				frame.style.left = " max(calc(50% - 516px), 0px)";
+				frame.style.top = "40px";
+				frame.style.padding = "8px";
+				frame.style.boxSizing = "border-box";
+				frame.style.borderRadius = "8px";
+				frame.style.backgroundColor = "var(--clr-pane)";
+				frame.style.boxShadow = "rgba(0,0,0,.2) 0 12px 16px";
+				dim.appendChild(frame);
+
+				const txtFind = document.createElement("input");
+				txtFind.type = "text";
+				txtFind.placeholder = "Search";
+				frame.appendChild(txtFind);
+
+				const divEquip = document.createElement("div");
+				divEquip.className = "no-results";
+				divEquip.style.position = "absolute";
+				divEquip.style.left = divEquip.style.right = "0";
+				divEquip.style.top = "48px";
+				divEquip.style.bottom = "52px";
+				divEquip.style.overflowY = "auto";
+				frame.appendChild(divEquip);
+
+				const btnCloseLink = document.createElement("input");
+				btnCloseLink.type = "button";
+				btnCloseLink.value = "Close";
+				btnCloseLink.style.position = "absolute";
+				btnCloseLink.style.width = "72px";
+				btnCloseLink.style.left = "calc(50% - 30px)";
+				btnCloseLink.style.bottom = "8px";
+				frame.appendChild(btnCloseLink);
+
+				btnCloseLink.onclick = () => {
+					btnCloseLink.onclick = () => { };
+					dim.style.filter = "opacity(0)";
+					setTimeout(() => { innerBox.parentElement.removeChild(dim); }, 200);
+				};
+
+				txtFind.onchange = txtFind.oninput = () => {
+					divEquip.innerHTML = "";
+
+					let keywords = [];
+					if (txtFind.value.trim().length > 0)
+						keywords = txtFind.value.trim().toLowerCase().split(" ");
+
+					let EQUIP_LIST_ORDER;
+					if (localStorage.hasOwnProperty("deviceslist_columns"))
+						EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("deviceslist_columns"));
+					else
+						EQUIP_LIST_ORDER = ["name", "type", "hostname", "ip", "manufacturer", "model"];
+
+					for (let file in LOADER.devices.data) {
+						let match = true;
+
+						for (let j = 0; j < keywords.length; j++) {
+							let flag = false;
+							for (let k in LOADER.devices.data[file]) {
+								if (k.startsWith(".")) continue;
+								if (LOADER.devices.data[file][k].v.toLowerCase().indexOf(keywords[j]) > -1) {
+									flag = true;
+								}
+							}
+							if (!flag) {
+								match = false;
+								continue;
+							}
+						}
+
+						if (!match) continue;
+
+						const element = document.createElement("div");
+						element.className = "list-element";
+						divEquip.appendChild(element);
+
+						const type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file]["type"].v : null;
+
+						const icon = document.createElement("div");
+						icon.className = "list-element-icon";
+						icon.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+						element.appendChild(icon);
+
+						for (let j = 0; j < 6; j++) {
+							if (!LOADER.devices.data[file].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
+							if (LOADER.devices.data[file][EQUIP_LIST_ORDER[j]].v.length === 0) continue;
+							const newLabel = document.createElement("div");
+							newLabel.style.left = j === 0 ? `calc(32px + ${100 * j / 6}%)` : `${100 * j / 6}%`;
+							newLabel.style.width = j === 0 ? `calc(${100 / 6}% - 32px)` : `${100 / 6}%`;
+							newLabel.textContent = LOADER.devices.data[file][EQUIP_LIST_ORDER[j]].v;
+							element.appendChild(newLabel);
+						}
+
+						element.ondblclick = ()=> {
+							let value;
+							if (LOADER.devices.data[file].hasOwnProperty("name") && LOADER.devices.data[file]["name"].v.length > 0) {
+								value = LOADER.devices.data[file]["name"].v;
+							}
+							else if (LOADER.devices.data[file].hasOwnProperty("hostname") && LOADER.devices.data[file]["hostname"].v.length > 0) {
+								value = LOADER.devices.data[file]["hostname"].v;
+							}
+							else if (LOADER.devices.data[file].hasOwnProperty("ip") && LOADER.devices.data[file]["ip"].v.length > 0) {
+								value = LOADER.devices.data[file]["ip"].v;
+							}
+
+							obj.link = file;
+							txtL.value = value;
+							txtL.style.backgroundImage = icon.style.backgroundImage;
+							btnCloseLink.onclick();
+						};
+					}
+				};
+
+				txtFind.focus();
+
+				setTimeout(() => { txtFind.onchange(); }, 1);
+			};
+			
+			remove.onclick = () => {
+				divList.removeChild(listElement);
+				frame.removeChild(front);
+				list.splice(list.indexOf(obj), 1);
+				SortList();
+				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+			};
+
+			txtP.value = port;
+			txtS.value = speed;
+			txtP.onchange();
+
+			SortList();
+			this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+		};
+
+		const SortList = () => {
+			list.sort((a, b) => {
+				return a.listElement.getBoundingClientRect().top - b.listElement.getBoundingClientRect().top;
+			});
+
+			for (let i = 0; i < list.length; i++) {
+				list[i].numberElement.innerHTML = i+1;
+				if (lastSelect === null || list[i].listElement !== lastSelect.listElement)
+					list[i].listElement.style.top = `${i * 36}px`;
+			}
+		};
+
+		this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+
+		if (this.link.hasOwnProperty(".interfaces")) {
+			let obj = JSON.parse(this.link[".interfaces"].v);
+			for (let i = 0; i < obj.i.length; i++)
+				AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
+		} else {
+			for (let i = 0; i < 4; i++){
+				AddInterface("Ethernet", "1 Gbps", 1, null, "");
+			}
+		}
+		
+		btnOK.addEventListener("click", async () => {
+				this.link[".interfaces"] = {}; //TODO:
+	
+				try {
+					const response = await fetch(this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save", {
+						method: "POST",
+						body: JSON.stringify(this.link)
+					});
+	
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	
+					const json = await response.json();
+					if (json.error) throw(json.error);
+	
+					this.params.file = json.filename;
+					LOADER.devices.data[json.filename] = obj;
+	
+					this.InitializePreview();
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{
+						this.Close();
+					});
+				}
+				finally {
+					if (isNew) this.content.removeChild(btnFetch);
+				}
+		});
+		
+	}
+
+	InitInterfaceComponents(frame, numbering, list, editMode) {
+		let isMixedInterface = editMode ?
+			!list.every(o => o.txtPort.value === list[0].txtPort.value) :
+			!list.every(o => o.port === list[0].port);
+
+		let rows = 1, columns = 4;
+		if (list.length > 0)
+			if (list.length < 16 || list.length < 20 && isMixedInterface) {
+				rows = 1;
+				columns = list.length;
+			} else if (list.length <= 52) {
+				rows = 2;
+				columns = Math.ceil(list.length / 2);
+			} else {
+				rows = Math.ceil(list.length / 24);
+				columns = Math.ceil(list.length / rows);
+			}
+
+		if (numbering === "vertical")
+			for (let i = 0; i < list.length; i++)
+				list[i].frontElement.style.gridArea = `${i % rows + 1} / ${Math.floor(i / rows) + 1}`;
+		else
+			for (let i = 0; i < list.length; i++)
+				list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
+
+		let size = columns <= 12 ? 50 : 40;
+
+		if (size === 50)
+			for (let i = 0; i < list.length; i++) {
+				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 7px auto 7px 8%";
+				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 4px 16%";
+			}
+		else 
+			for (let i = 0; i < list.length; i++) {
+				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 5px auto 5px 8%";
+				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 3px 24%";
+			}
+
+		let vlans = [];
+		for (let i = 0; i < list.length; i++) {
+			let v = editMode ? list[i].txtVlan.value : list[i].vlan;
+			if (v.length === 0) continue;
+			if (v === "TRUNK") continue;
+			if (!vlans.includes(v)) vlans.push(v);
+		}
+
+		for (let i = 0; i < list.length; i++) {
+			let led1 = list[i].frontElement.childNodes[0].childNodes[0];
+			let led2 = list[i].frontElement.childNodes[0].childNodes[1];
+
+			if (led1) {
+				list[i].speedColor = this.GetSpeedColor(editMode ? list[i].txtSpeed.value : list[i].speed);
+				led1.style.backgroundColor = list[i].speedColor;
+				led1.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+			}
+
+			if (led2) {
+				list[i].vlanColor = this.GetVlanColor(editMode ? list[i].txtVlan.value : list[i].vlan, vlans);
+				led2.style.backgroundColor = list[i].vlanColor;
+				led2.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+			}
+
+			list[i].frontElement.style.width = `${size - 2}px`;
+		}
+
+		frame.style.width = `${columns * size + 28}px`;
+		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
+		frame.style.gridTemplateRows = `repeat(${rows}, $50px)`;
+	}
+	
+	GetSpeedColor(speed) {
+		switch (speed) {
+			case "10 Mbps" : return "hsl(20,95%,60%)";
+			case "100 Mbps": return "hsl(40,95%,60%)";
+			case "1 Gbps"  : return "hsl(60,95%,60%)";
+			case "2.5 Gbps": return "hsl(70,95%,60%)";
+			case "5 Gbps"  : return "hsl(80,95%,60%)";
+			case "10 Gbps" : return "hsl(130,95%,60%)";
+			case "25 Gbps" : return "hsl(150,95%,60%)";
+			case "40 Gbps" : return "hsl(170,95%,60%)";
+			case "100 Gbps": return "hsl(190,95%,60%)";
+			case "200 Gbps": return "hsl(210,95%,60%)";
+			case "400 Gbps": return "hsl(275,95%,60%)";
+			case "800 Gbps": return "hsl(295,95%,60%)";
+			default: return "transparent";
+		}
+	}
+
+	GetVlanColor(vlan, array) {
+		if (vlan === null || vlan.length === 0) return "transparent";
+		if (vlan === "TRUNK") return "#FFFFFF";
+		if (array.length < 2) return "transparent";
+		let index = array.indexOf(vlan);
+		if (index === -1) return "transparent";
+		return `hsl(${(240 + index * 1.61803398875 * 360) % 360},95%,60%)`;
+	}
+	
 	Fetch(isNew=false, forceTarget=null) { //override
 		let target = null;
 		if (isNew) {
