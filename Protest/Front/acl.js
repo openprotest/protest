@@ -29,7 +29,7 @@ class Acl extends Tabs {
 		}
 
 		setTimeout(()=> { this.AfterResize(); }, 250);
-	} 
+	}
 
 	AfterResize() { //override
 		super.AfterResize();

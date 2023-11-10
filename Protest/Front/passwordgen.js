@@ -338,14 +338,14 @@ class PassGen extends Window {
 					if (this.chkLowercase.checked && this.chkUppercase.checked) {
 						let w = this.words[Math.round(Math.random() * this.words.length)];
 						word += w[0].toUpperCase() + w.substring(1);
-
 					}
-					else if (this.chkUppercase.checked) 
+					else if (this.chkUppercase.checked){
 						word += this.words[Math.round(Math.random() * this.words.length)].toUpperCase();
-
-					else
+					}
+					else {
 						word += this.words[Math.round(Math.random() * this.words.length)];
-
+					}
+					
 					if (i+1 < this.rngLength.value)word += "-";
 				}
 

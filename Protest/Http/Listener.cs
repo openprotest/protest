@@ -269,9 +269,10 @@ public sealed class Listener {
         case "/db/device/grid"      : buffer = DatabaseInstances.devices.GridHandler(ctx, username); break;
         case "/db/device/attribute" : buffer = DatabaseInstances.devices.AttributeValue(parameters); break;
         
-        case "/db/config/view"  : buffer = DeviceConfiguration.View(parameters); break;
-        case "/db/config/save"  : buffer = DeviceConfiguration.Save(parameters, ctx, username); break;
-        case "/db/config/fetch" : buffer = DeviceConfiguration.Fetch(parameters, ctx, username); break;
+        case "/db/config/view"    : buffer = DeviceConfiguration.View(parameters); break;
+        case "/db/config/save"    : buffer = DeviceConfiguration.Save(parameters, ctx, username); break;
+        case "/db/config/fetch"   : buffer = DeviceConfiguration.Fetch(parameters, ctx, username); break;
+        case "/db/config/extract" : buffer = DeviceConfiguration.ExtractInterfaces(parameters); break;
 
         case "/db/getentropy" : buffer = Tools.PasswordStrength.GetEntropy(); break;
         case "/db/gandalf"    : buffer = Tools.PasswordStrength.GandalfThreadWrapper(ctx, username); break;

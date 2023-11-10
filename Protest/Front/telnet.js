@@ -142,7 +142,7 @@ class Telnet extends Window {
 		txtHost.oninput = txtHost.onchange = ()=> {
 			if (txtHost.value.length === 0)
 				btnOK.setAttribute("disabled", true);
-			else 
+			else
 				btnOK.removeAttribute("disabled");
 		};
 
@@ -315,7 +315,7 @@ class Telnet extends Window {
 				else { //plain
 					if (front == "#ccc" && back == "transparent")
 						this.last.textContent += line[i];
-					else 
+					else
 						this.PushText(line[i], front, back);
 				}
 

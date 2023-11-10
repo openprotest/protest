@@ -186,7 +186,7 @@ internal static partial class DeviceConfiguration {
     [GeneratedRegex("comment=\\\"?(.*)+\\\"?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex Comment();
 
-    public static byte[] GetInterfaces(Dictionary<string, string> parameters) {
+    public static byte[] ExtractInterfaces(Dictionary<string, string> parameters) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -197,8 +197,9 @@ internal static partial class DeviceConfiguration {
         }
 
         string absolutePath = $"{Data.DIR_CONFIG}{Data.DELIMITER}{file}";
-        if (!File.Exists(absolutePath))
-            return Encoding.UTF8.GetBytes($"{{\"error\":\"configuration file does not exists\"}}");
+        if (!File.Exists(absolutePath)) {
+            return "{\"error\":\"configuration file does not exists\"}"u8.ToArray();
+        }
 
         string[] lines;
         try {
@@ -306,21 +307,17 @@ internal static partial class DeviceConfiguration {
 
                 if (lines[i].IndexOf("ethernet", StringComparison.OrdinalIgnoreCase) > -1) {
                     currentInt = "Ethernet";
-
                 }
                 else if (lines[i].IndexOf("serial", StringComparison.OrdinalIgnoreCase) > -1) {
                     currentInt = "Serial";
-
                 }
                 else if (lines[i].IndexOf("aux", StringComparison.OrdinalIgnoreCase) > -1) {
                     currentInt = "Ethernet";
                     currentComment = "Auxiliary";
-
                 }
                 else if (lines[i].IndexOf("null0", StringComparison.OrdinalIgnoreCase) > -1) {
                     currentInt = "Ethernet";
                     currentComment = "Null interface";
-
                 }
                 else {
                     currentInt = "Ethernet";
@@ -348,7 +345,6 @@ internal static partial class DeviceConfiguration {
                 string vlan = lines[i][23..];
                 if (int.TryParse(vlan, out _))
                     currentVlan = vlan;
-
             }
             else if (lines[i].ToLower() == "switchport mode trunk") {
                 currentVlan = "TRUNK";
@@ -380,8 +376,7 @@ internal static partial class DeviceConfiguration {
 
         StringBuilder builder = new StringBuilder("[");
         for (int i = 0; i < interfaces.Count; i++) {
-            if (builder.Length != 1)
-                builder.Append(',');
+            if (builder.Length != 1) builder.Append(',');
             builder.Append('{');
             builder.Append($"\"port\":\"{interfaces[i][0].Replace("\"", "\\\"")}\",");
             builder.Append($"\"speed\":\"{interfaces[i][1].Replace("\"", "\\\"")}\",");

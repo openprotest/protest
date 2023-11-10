@@ -166,7 +166,7 @@ class HexViewer extends Window {
 		"OPTION_V4_DOTS_ADDRESS",
 		"",
 
-		"Etherboot", //150 
+		"Etherboot", //150
 		"Status code",
 		"Base time",
 		"start time of state",

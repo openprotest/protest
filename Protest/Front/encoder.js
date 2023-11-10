@@ -153,7 +153,7 @@ class Encoder extends Window {
 			let hex = this.txtB.textContent;
 			if (hex.startsWith("0x")) hex = hex.substring(2);
 			this.txtA.textContent = "";
-			for (let i = 0; i < hex.length; i += 2) 
+			for (let i = 0; i < hex.length; i += 2)
 				this.txtA.textContent += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16));
 			break;
 

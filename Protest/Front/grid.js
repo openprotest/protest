@@ -184,7 +184,7 @@ class Grid extends Window {
 
 				this.txtFindAttribute.style.opacity = "0";
 				this.sideList.style.opacity = "0";
-				btnNone.style.opacity = btnAll.style.opacity = "0"; 
+				btnNone.style.opacity = btnAll.style.opacity = "0";
 
 				this.txtFindAttribute.style.visibility = "hidden";
 				this.sideList.style.visibility = "hidden";

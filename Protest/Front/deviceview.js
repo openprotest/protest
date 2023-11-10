@@ -970,11 +970,24 @@ class DeviceView extends View {
 
 		btnOK.value = "Close";
 
+		buttonBox.style.maxHeight = "40px";
+		buttonBox.style.overflow = "hidden";
+
 		buttonBox.removeChild(btnCancel);
+
+		const btnFetch = document.createElement("input");
+		btnFetch.type = "button";
+		btnFetch.value = "Fetch";
+		btnFetch.className = "with-icon";
+		btnFetch.style.backgroundImage = "url(mono/ball.svg?light)";
+		btnFetch.style.float = "left";
+		buttonBox.appendChild(btnFetch);
 
 		const btnEdit = document.createElement("input");
 		btnEdit.type = "button";
 		btnEdit.value = "Edit";
+		btnEdit.className = "with-icon";
+		btnEdit.style.backgroundImage = "url(mono/edit.svg?light)";
 		btnEdit.style.float = "left";
 		buttonBox.appendChild(btnEdit);
 
@@ -987,6 +1000,71 @@ class DeviceView extends View {
 		innerBox.style.padding = "20px";
 
 		innerBox.parentElement.style.backgroundColor = "#202020";
+
+		let hasCredentials = this.link.hasOwnProperty("username") && this.link.hasOwnProperty("password");
+		if (!hasCredentials) {
+			hasCredentials = this.link.hasOwnProperty("ssh username") && this.link.hasOwnProperty("ssh password");
+		}
+
+		const divFetch = document.createElement("div");
+		divFetch.style.position = "absolute";
+		divFetch.style.visibility = "hidden";
+		divFetch.style.left = "30%";
+		divFetch.style.top = "28px";
+		divFetch.style.width = "40%";
+		divFetch.style.maxWidth = "400px";
+		divFetch.style.minWidth = "220px";
+		divFetch.style.borderRadius = "8px";
+		divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		divFetch.style.backgroundColor = "var(--clr-pane)";
+		divFetch.style.padding = "16px 8px";
+		divFetch.style.overflow = "hidden";
+		divFetch.style.textAlign = "center";
+		dialog.innerBox.parentElement.parentElement.appendChild(divFetch);
+
+		const lblFetchUsername = document.createElement("div");
+		lblFetchUsername.style.display = "inline-block";
+		lblFetchUsername.style.minWidth = "96px";
+		lblFetchUsername.textContent = "Username:";
+
+		const txtFetchUsername = document.createElement("input");
+		txtFetchUsername.type = "text";
+
+		const lblFetchPassword = document.createElement("div");
+		lblFetchPassword.style.display = "inline-block";
+		lblFetchPassword.style.minWidth = "96px";
+		lblFetchPassword.textContent = "Password:";
+
+		const txtFetchPassword = document.createElement("input");
+		txtFetchPassword.type = "password";
+
+		const btnFetchOk = document.createElement("input");
+		btnFetchOk.type = "button";
+		btnFetchOk.value = "Fetch";
+		
+		const btnFetchCancel = document.createElement("input");
+		btnFetchCancel.type = "button";
+		btnFetchCancel.value = "Cancel";
+
+		if (hasCredentials) {
+			const lblMessage = document.createElement("div");
+			lblMessage.style.display = "inline-block";
+			lblMessage.textContent = "Are you sure you want to fetch data from this device using SSH?";
+			divFetch.appendChild(lblMessage);
+		}
+		else {
+			divFetch.appendChild(lblFetchUsername);
+			divFetch.appendChild(txtFetchUsername);
+			divFetch.appendChild(document.createElement("br"));
+			divFetch.appendChild(lblFetchPassword);
+			divFetch.appendChild(txtFetchPassword);
+		}
+		
+		divFetch.appendChild(document.createElement("br"));
+		divFetch.appendChild(document.createElement("br"));
+		divFetch.appendChild(btnFetchOk);
+		divFetch.appendChild(btnFetchCancel);
+
 
 		const DisplayScript = lines=> {
 			innerBox.textContent = "";
@@ -1074,7 +1152,21 @@ class DeviceView extends View {
 			}
 		};
 
+		let fetchToggle = false;
+		const FetchToggle = ()=> {
+			dialog.innerBox.parentElement.style.transition = ".2s";
+			dialog.innerBox.parentElement.style.transform = fetchToggle ? "none" : "translateY(-25%)";
+			dialog.innerBox.parentElement.style.filter = fetchToggle ? "none" : "opacity(0)";
+			dialog.innerBox.parentElement.style.visibility = fetchToggle ? "visible" : "hidden";
 
+			divFetch.style.transition = ".2s";
+			divFetch.style.filter = fetchToggle ? "opacity(0)" : "none";
+			divFetch.style.transform = fetchToggle ? "translateY(-25%)" : "none";
+			divFetch.style.visibility = fetchToggle ? "hidden" : "visible";
+
+			fetchToggle = !fetchToggle;
+		};
+		
 		const response = await fetch(`db/config/view?file=${this.params.file}`);
 		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 		const text = await response.text();
@@ -1083,12 +1175,60 @@ class DeviceView extends View {
 			DisplayScript(text.split("\n"));
 		}
 		
-		btnOK.onclick = ()=> {
-			innerBox.textContent = "";
-			dialog.Close();
+
+		btnFetch.onclick = ()=> FetchToggle();
+
+		btnFetchOk.onclick = async () => {
+			divFetch.style.filter = "opacity(0)";
+			divFetch.style.transform = "translateY(-25%)";
+			divFetch.style.visibility = "hidden";
+
+			const spinner = document.createElement("div");
+			spinner.className = "spinner";
+			spinner.style.textAlign = "left";
+			spinner.style.marginTop = "32px";
+			spinner.style.marginBottom = "16px";
+			spinner.appendChild(document.createElement("div"));
+			dialog.innerBox.parentElement.parentElement.appendChild(spinner);
+
+			const status = document.createElement("div");
+			status.textContent = "Fetching...";
+			status.style.color = "var(--clr-light)";
+			status.style.textAlign = "center";
+			status.style.fontWeight = "bold";
+			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+			dialog.innerBox.parentElement.parentElement.appendChild(status);
+
+			try {
+				const response = await fetch(`db/config/fetch?file=${this.params.file}`, {
+					method: "POST",
+					body: hasCredentials ? "" : `${txtFetchUsername.value}${String.fromCharCode(127)}${txtFetchPassword.value}`
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			
+				const text = await response.text();
+				DisplayScript(text.split("\n"));
+			
+			}
+			catch {
+				dialog.innerBox.textContent = "";
+			}
+			finally {
+				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
+				dialog.innerBox.parentElement.parentElement.removeChild(status);
+			
+				dialog.innerBox.parentElement.style.transition = ".2s";
+				dialog.innerBox.parentElement.style.transform = "none";
+				dialog.innerBox.parentElement.style.filter = "none";
+				dialog.innerBox.parentElement.style.visibility = "visible";
+			}
+
 		};
 
-		btnEdit.onclick = () => {
+		btnFetchCancel.onclick = () =>  btnFetch.onclick();
+
+		btnEdit.onclick = ()=> {
 			innerBox.contentEditable = true;
 
 			const btnSave = document.createElement("input");
@@ -1126,6 +1266,10 @@ class DeviceView extends View {
 			};
 		};
 
+		btnOK.onclick = ()=> {
+			innerBox.textContent = "";
+			dialog.Close();
+		};
 	}
 
 	EditInterfaces() {
@@ -1134,11 +1278,23 @@ class DeviceView extends View {
 
 		const btnOK    = dialog.btnOK;
 		const innerBox = dialog.innerBox;
+		const buttonBox = dialog.buttonBox;
 
 		innerBox.parentElement.style.maxWidth = "1110px";
 		innerBox.parentElement.style.left = "40px";
 		innerBox.parentElement.style.right = "40px";
 		innerBox.style.padding = "20px";
+
+		buttonBox.style.maxHeight = "40px";
+		buttonBox.style.overflow = "hidden";
+
+		const btnExtract = document.createElement("input");
+		btnExtract.type = "button";
+		btnExtract.value = "Extract from configuration";
+		btnExtract.className = "with-icon";
+		btnExtract.style.backgroundImage = "url(mono/configfile.svg?light)";
+		btnExtract.style.float = "left";
+		buttonBox.appendChild(btnExtract);
 
 		const frame = document.createElement("div");
 		frame.style.backgroundColor = "var(--clr-control)";
@@ -1252,8 +1408,57 @@ class DeviceView extends View {
 		divList.style.overflowX = "hidden";
 		divList.style.overflowY = "scroll";
 		innerBox.appendChild(divList);
- 
+
+		const divExtract = document.createElement("div");
+		divExtract.style.position = "absolute";
+		divExtract.style.visibility = "hidden";
+		divExtract.style.left = "30%";
+		divExtract.style.top = "28px";
+		divExtract.style.width = "40%";
+		divExtract.style.maxWidth = "400px";
+		divExtract.style.minWidth = "220px";
+		divExtract.style.borderRadius = "8px";
+		divExtract.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		divExtract.style.backgroundColor = "rgb(208,208,208)";
+		divExtract.style.padding = "16px 8px";
+		divExtract.style.overflow = "hidden";
+		divExtract.style.textAlign = "center";
+		dialog.innerBox.parentElement.parentElement.appendChild(divExtract);
+
+		const btnExtractOk = document.createElement("input");
+		btnExtractOk.type = "button";
+		btnExtractOk.value = "Extract";
+		
+		const btnExtractCancel = document.createElement("input");
+		btnExtractCancel.type = "button";
+		btnExtractCancel.value = "Cancel";
+
+		const lblMessage = document.createElement("div");
+		lblMessage.style.display = "inline-block";
+		lblMessage.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
+		divExtract.appendChild(lblMessage);
+		
+		divExtract.appendChild(document.createElement("br"));
+		divExtract.appendChild(document.createElement("br"));
+		divExtract.appendChild(btnExtractOk);
+		divExtract.appendChild(btnExtractCancel);
+
 		let list = [];
+
+		let fetchToggle = false;
+		const FetchToggle = ()=> {
+			dialog.innerBox.parentElement.style.transition = ".2s";
+			dialog.innerBox.parentElement.style.transform = fetchToggle ? "none" : "translateY(-25%)";
+			dialog.innerBox.parentElement.style.filter = fetchToggle ? "none" : "opacity(0)";
+			dialog.innerBox.parentElement.style.visibility = fetchToggle ? "visible" : "hidden";
+
+			divExtract.style.transition = ".2s";
+			divExtract.style.filter = fetchToggle ? "opacity(0)" : "none";
+			divExtract.style.transform = fetchToggle ? "translateY(-25%)" : "none";
+			divExtract.style.visibility = fetchToggle ? "hidden" : "visible";
+
+			fetchToggle = !fetchToggle;
+		};
 
 		txtNumbering.onchange = ()=> this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 
@@ -1597,6 +1802,72 @@ class DeviceView extends View {
 
 		this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 
+		btnExtract.onclick = ()=> FetchToggle();
+		
+		btnExtractOk.onclick = async ()=> {
+			divExtract.style.filter = "opacity(0)";
+			divExtract.style.transform = "translateY(-25%)";
+			divExtract.style.visibility = "hidden";
+
+			const spinner = document.createElement("div");
+			spinner.className = "spinner";
+			spinner.style.textAlign = "left";
+			spinner.style.marginTop = "32px";
+			spinner.style.marginBottom = "16px";
+			spinner.appendChild(document.createElement("div"));
+			dialog.innerBox.parentElement.parentElement.appendChild(spinner);
+
+			const status = document.createElement("div");
+			status.textContent = "Fetching...";
+			status.style.color = "var(--clr-light)";
+			status.style.textAlign = "center";
+			status.style.fontWeight = "bold";
+			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+			dialog.innerBox.parentElement.parentElement.appendChild(status);
+
+			try {
+				const response = await fetch(`db/config/extract?file=${this.params.file}`);
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			
+				const json = await response.json();
+				
+				if (json.error) {
+					message.innerHTML = json.error;
+					divFetch.removeChild(iconsContainer);
+					divFetch.removeChild(btnFetchOk);
+					btnFetchCancel.value = "Close";
+				}
+				else if (json instanceof Array) {
+					divList.innerHTML = "";
+					frame.innerHTML = "";
+					list = [];
+
+					for (let i = 0; i < json.length; i++) {
+						AddInterface(json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
+					}
+					
+					SortList();
+					this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+
+					btnFetch.onclick();
+				}
+
+			}
+			catch {}
+			finally {
+				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
+				dialog.innerBox.parentElement.parentElement.removeChild(status);
+			
+				dialog.innerBox.parentElement.style.transition = ".2s";
+				dialog.innerBox.parentElement.style.transform = "none";
+				dialog.innerBox.parentElement.style.filter = "none";
+				dialog.innerBox.parentElement.style.visibility = "visible";
+			}
+		};
+
+		btnExtractCancel.onclick = ()=> FetchToggle();
+		
 		if (this.link.hasOwnProperty(".interfaces") && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)

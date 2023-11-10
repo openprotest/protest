@@ -498,8 +498,8 @@ button.view-live-button:active {
 .view-interfaces-edit-list-element > *:nth-child(3) {
 	 width: 120px;
 }
-.view-interfaces-edit-list-element > *:nth-child(4) { 
-	 width: 56px;
+.view-interfaces-edit-list-element > *:nth-child(4) {
+	 width: 64px;
 }
 .view-interfaces-edit-list-element > *:nth-child(5) {
 	width: 188px;
@@ -510,7 +510,7 @@ button.view-live-button:active {
 	background-repeat: no-repeat;
 	cursor: pointer;
 }
-.view-interfaces-edit-list-element > *:nth-child(6) { 
+.view-interfaces-edit-list-element > *:nth-child(6) {
 	width: calc(100% - 574px);
 	min-width: 100px;
 	max-width: 308px;
