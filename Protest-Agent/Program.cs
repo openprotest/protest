@@ -125,7 +125,7 @@ namespace ProtestAgent {
                 }
                 break;
 
-            case "ubnv":
+            case "uvnc":
                 if (!Configuration.uvnc.enabled) return;
                 try {
                     Process.Start(

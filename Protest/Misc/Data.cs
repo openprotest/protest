@@ -92,13 +92,15 @@ public static class Data {
             new DirectoryInfo(DIR_USERS)
         };
 
-        for (int i = 0; i < dirs.Length; i++)
+        for (int i = 0; i < dirs.Length; i++) {
             try {
-                if (!dirs[i].Exists) dirs[i].Create();
+                if (!dirs[i].Exists)
+                    dirs[i].Create();
             }
             catch (Exception ex) {
                 Logger.Error(ex);
             }
+        }
     }
 
     public static string SizeToString(long size) {

@@ -327,8 +327,11 @@ class DeviceView extends View {
 		if (this.link.hasOwnProperty("type")) {
 			const type = this.link["type"].v.toLowerCase();
 			if (type === "router" || type === "switch") {
+				const btnConfig = this.CreateSideButton("mono/configfile.svg", "Configuration");
+				btnConfig.style.marginTop = "16px";
+				btnConfig.onclick = () => this.DeviceConfiguration();
+
 				const btnInterfaces = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
-				btnInterfaces.style.marginTop = "16px";
 				btnInterfaces.onclick = ()=> this.EditInterfaces();
 			}
 		}
@@ -338,7 +341,14 @@ class DeviceView extends View {
 		this.liveC.textContent = "";
 
 		if (!this.link.hasOwnProperty(".interfaces")) return;
-		const obj = JSON.parse(this.link[".interfaces"].v);
+		let obj;
+
+		try {
+			obj = JSON.parse(this.link[".interfaces"].v);
+		}
+		catch {
+			return;
+		}
 
 		if (obj === null) return;
 		
@@ -476,14 +486,15 @@ class DeviceView extends View {
 				this.floating.style.top = `${front.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
 				this.floating.style.visibility = "visible";
 				this.floating.style.opacity = "1";
-				this.floating.style.display = "initial";
 			};
 
 			front.onmouseleave = ()=> {
 				this.floating.style.opacity = "0";
 				this.floating.style.visibility = "hidden";
-				this.floating.style.display = "none";
 			};
+
+			frame.onmouseenter = ()=> { this.floating.style.display = "initial"; };
+			frame.onmouseleave = ()=> { this.floating.style.display = "none"; };
 		}
 
 		this.InitInterfaceComponents(frame, numbering, list, false);
@@ -780,7 +791,7 @@ class DeviceView extends View {
 					infoBox.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
 				}
 				else if (type === "vol") {
-					let percent = Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10;
+					let percent = data[closestIndex].t > 0? Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10 : 0;
 					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v * 1024)} / ${UI.SizeToString(data[closestIndex].t * 1024)} (${percent})%`;
 				}
 			};
@@ -948,7 +959,7 @@ class DeviceView extends View {
 		});
 	}
 
-	EditInterfaces() {
+	async DeviceConfiguration() {
 		const dialog = this.DialogBox("calc(100% - 34px)");
 		if (dialog === null) return;
 
@@ -957,7 +968,176 @@ class DeviceView extends View {
 		const buttonBox = dialog.buttonBox;
 		const innerBox  = dialog.innerBox;
 
-		innerBox.parentElement.style.maxWidth = "80%";
+		btnOK.value = "Close";
+
+		buttonBox.removeChild(btnCancel);
+
+		const btnEdit = document.createElement("input");
+		btnEdit.type = "button";
+		btnEdit.value = "Edit";
+		btnEdit.style.float = "left";
+		buttonBox.appendChild(btnEdit);
+
+		innerBox.classList.add("view-config-code-box");
+		innerBox.style.margin = "8px";
+
+		innerBox.parentElement.style.maxWidth = "1200px";
+		innerBox.parentElement.style.left = "40px";
+		innerBox.parentElement.style.right = "40px";
+		innerBox.style.padding = "20px";
+
+		innerBox.parentElement.style.backgroundColor = "#202020";
+
+		const DisplayScript = lines=> {
+			innerBox.textContent = "";
+			for (let i = 0; i < lines.length; i++) {
+				lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
+
+				const divLine = document.createElement("div");
+
+				if (lines[i].startsWith("#") || lines[i].startsWith("!")) { //comment
+					divLine.textContent = lines[i];
+					divLine.style.color = "#9C6";
+					divLine.style.fontStyle = "italic";
+					innerBox.appendChild(divLine);
+				}
+				else if (lines[i].startsWith("/")) { //location
+					divLine.textContent = lines[i];
+					divLine.style.color = "#8FD";
+					divLine.style.paddingTop = ".5em";
+					innerBox.appendChild(divLine);
+				}
+				else {
+					let line = [];
+
+					let temp = lines[i].split("\"");
+					for (let j = 0; j < temp.length; j++)
+						if (j % 2 === 0)
+							line.push(temp[j]);
+						else
+							line.push(`\"${temp[j]}\"`);
+
+					for (let j = 0; j < line.length; j++) {
+						if (line[j].length === 0) continue;
+
+						if (line[j].startsWith("\"") && line[j].length > 2) { //quot
+							const newSpan = document.createElement("span");
+							newSpan.textContent = line[j];
+							newSpan.style.color = "#D98";
+							divLine.appendChild(newSpan);
+						}
+						else {
+							let p = 0;
+
+							/*if (j == 0) { //verb
+								while (line[0].substring(0, p).trim().length === 0 && p < line[0].length)
+									p++;
+								p = line[0].indexOf(" ", p);
+
+								const span = document.createElement("span");
+								span.textContent = line[0].substring(0, p);
+								span.style.color = "#A8F";
+								divLine.appendChild(span);
+							}*/
+
+							while (p < line[j].length) {
+								let ep = line[j].indexOf("=", p); //equal position
+								if (ep < 0) break;
+
+								let sp = line[j].lastIndexOf(" ", ep); //space position
+								if (sp < 0) break;
+
+								if (p != sp) {
+									const spanA = document.createElement("span");
+									spanA.textContent = j == 0 ? line[j].substring(p, sp): line[j].substring(p, sp);
+									divLine.appendChild(spanA);
+								}
+
+								const spanB = document.createElement("span");
+								spanB.textContent = j == 0 ? line[j].substring(sp, ep + 1) : line[j].substring(sp, ep + 1);
+								spanB.style.color = "#5BE";
+								divLine.appendChild(spanB);
+
+								p = ep + 1;
+							}
+
+							if (p < line[j].length) {
+								const spanC = document.createElement("span");
+								spanC.textContent = j == 0 ? line[j].substring(p): line[j].substring(p);
+								divLine.appendChild(spanC);
+							}
+						}
+					}
+
+					innerBox.appendChild(divLine);
+				}
+			}
+		};
+
+
+		const response = await fetch(`db/config/view?file=${this.params.file}`);
+		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+		const text = await response.text();
+
+		if (text.length > 0) {
+			DisplayScript(text.split("\n"));
+		}
+		
+		btnOK.onclick = ()=> {
+			innerBox.textContent = "";
+			dialog.Close();
+		};
+
+		btnEdit.onclick = () => {
+			innerBox.contentEditable = true;
+
+			const btnSave = document.createElement("input");
+			btnSave.type = "button";
+			btnSave.value = "Save";
+
+			buttonBox.removeChild(btnEdit);
+			buttonBox.removeChild(btnOK);
+
+			buttonBox.appendChild(btnSave);
+			buttonBox.appendChild(btnCancel);
+
+			btnSave.onclick = async ()=>{
+				const saveResponse = await fetch(`db/config/save?file=${this.params.file}`, {
+					method: "POST",
+					body: innerBox.innerText
+				});
+	
+				if (saveResponse.status !== 200) LOADER.HttpErrorHandler(saveResponse.status);
+				const saveJson = await saveResponse.json();
+	
+				if (saveJson.error) {
+					btnCancel.onclick();
+					this.ConfirmBox(saveJson.error, true);
+				}
+				else {
+					innerBox.contentEditable = false;
+					buttonBox.appendChild(btnEdit);
+					buttonBox.appendChild(btnOK);
+					buttonBox.removeChild(btnSave);
+					buttonBox.removeChild(btnCancel);
+	
+					DisplayScript(innerBox.innerText.split("\n"));
+				}
+			};
+		};
+
+	}
+
+	EditInterfaces() {
+		const dialog = this.DialogBox("calc(100% - 40px)");
+		if (dialog === null) return;
+
+		const btnOK    = dialog.btnOK;
+		const innerBox = dialog.innerBox;
+
+		innerBox.parentElement.style.maxWidth = "1110px";
+		innerBox.parentElement.style.left = "40px";
+		innerBox.parentElement.style.right = "40px";
 		innerBox.style.padding = "20px";
 
 		const frame = document.createElement("div");
@@ -968,10 +1148,11 @@ class DeviceView extends View {
 
 		const divNumbering = document.createElement("div");
 		divNumbering.style.marginTop = "24px";
+		divNumbering.style.whiteSpace = "nowrap";
 		innerBox.appendChild(divNumbering);
 
 		const lblNumbering = document.createElement("div");
-		lblNumbering.innerHTML = "Numbering: ";
+		lblNumbering.textContent = "Numbering: ";
 		lblNumbering.style.display = "inline-block";
 		lblNumbering.style.width = "120px";
 		divNumbering.appendChild(lblNumbering);
@@ -983,16 +1164,17 @@ class DeviceView extends View {
 		for (let i = 0; i < numbering.length; i++) {
 			const optNumbering = document.createElement("option");
 			optNumbering.value = numbering[i].toLowerCase();
-			optNumbering.innerHTML = numbering[i];
+			optNumbering.textContent = numbering[i];
 			txtNumbering.appendChild(optNumbering);
 		}
 
 		const divAdd = document.createElement("div");
 		divAdd.style.marginTop = "8px";
+		divAdd.style.whiteSpace = "nowrap";
 		innerBox.appendChild(divAdd);
 
 		const lblAdd = document.createElement("div");
-		lblAdd.innerHTML = "Add interface: ";
+		lblAdd.textContent = "Add interface: ";
 		lblAdd.style.display = "inline-block";
 		lblAdd.style.width = "120px";
 		divAdd.appendChild(lblAdd);
@@ -1004,7 +1186,7 @@ class DeviceView extends View {
 		for (let i = 0; i < portsArray.length; i++) {
 			const optPort = document.createElement("option");
 			optPort.value = portsArray[i];
-			optPort.innerHTML = portsArray[i];
+			optPort.textContent = portsArray[i];
 			txtPort.appendChild(optPort);
 		}
 
@@ -1019,13 +1201,13 @@ class DeviceView extends View {
 		for (let i = 0; i < speedArray.length; i++) {
 			const optSpeed = document.createElement("option");
 			optSpeed.value = speedArray[i];
-			optSpeed.innerHTML = speedArray[i];
+			optSpeed.textContent = speedArray[i];
 			txtSpeed.appendChild(optSpeed);
 		}
 		txtSpeed.value = "1 Gbps";
 
 		const lblX = document.createElement("div");
-		lblX.innerHTML = " x ";
+		lblX.textContent = " x ";
 		lblX.style.display = "inline-block";
 		lblX.style.marginLeft = "8px";
 		divAdd.appendChild(lblX);
@@ -1049,7 +1231,7 @@ class DeviceView extends View {
 		divTitle.style.overflow = "hidden";
 		divTitle.style.left = "16px";
 		divTitle.style.right = "16px";
-		divTitle.style.top = "280px";
+		divTitle.style.top = "248px";
 		divTitle.style.height = "20px";
 		divTitle.className = "view-interfaces-edit-title";
 		innerBox.appendChild(divTitle);
@@ -1065,7 +1247,7 @@ class DeviceView extends View {
 		divList.style.position = "absolute";
 		divList.style.left = "16px";
 		divList.style.right = "0";
-		divList.style.top = "304px";
+		divList.style.top = "278px";
 		divList.style.bottom = "16px";
 		divList.style.overflowX = "hidden";
 		divList.style.overflowY = "scroll";
@@ -1096,7 +1278,7 @@ class DeviceView extends View {
 			front.appendChild(icon);
 
 			const num = document.createElement("div");
-			num.innerHTML = frame.childNodes.length;
+			num.textContent = frame.childNodes.length;
 			front.appendChild(num);
 
 			icon.appendChild(document.createElement("div")); //led1
@@ -1116,7 +1298,7 @@ class DeviceView extends View {
 			for (let i = 0; i < portsArray.length; i++) {
 				const optPort = document.createElement("option");
 				optPort.value = portsArray[i];
-				optPort.innerHTML = portsArray[i];
+				optPort.textContent = portsArray[i];
 				txtP.appendChild(optPort);
 			}
 
@@ -1125,7 +1307,7 @@ class DeviceView extends View {
 			for (let i = 0; i < speedArray.length; i++) {
 				const optSpeed = document.createElement("option");
 				optSpeed.value = speedArray[i];
-				optSpeed.innerHTML = speedArray[i];
+				optSpeed.textContent = speedArray[i];
 				txtS.appendChild(optSpeed);
 			}
 
@@ -1308,7 +1490,7 @@ class DeviceView extends View {
 				};
 
 				txtFind.onchange = txtFind.oninput = () => {
-					divEquip.innerHTML = "";
+					divEquip.textContent = "";
 
 					let keywords = [];
 					if (txtFind.value.trim().length > 0)
@@ -1407,7 +1589,7 @@ class DeviceView extends View {
 			});
 
 			for (let i=0; i<list.length; i++) {
-				list[i].numberElement.innerHTML = i+1;
+				list[i].numberElement.textContent = i+1;
 				if (lastSelect === null || list[i].listElement !== lastSelect.listElement)
 					list[i].listElement.style.top = `${i * 36}px`;
 			}
@@ -1452,8 +1634,6 @@ class DeviceView extends View {
 
 				obj[".interfaces"] = {v:JSON.stringify(interfaces)};
 
-				console.log(obj);
-
 				try {
 					const response = await fetch(this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save", {
 						method: "POST",
@@ -1497,13 +1677,16 @@ class DeviceView extends View {
 				columns = Math.ceil(list.length / rows);
 			}
 
-		if (numbering === "vertical")
-			for (let i = 0; i < list.length; i++)
+		if (numbering === "vertical") {
+			for (let i = 0; i < list.length; i++) {
 				list[i].frontElement.style.gridArea = `${i % rows + 1} / ${Math.floor(i / rows) + 1}`;
-		else
-			for (let i = 0; i < list.length; i++)
+			}
+		}
+		else {
+			for (let i = 0; i < list.length; i++) {
 				list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
-
+			}
+		}
 		let size = columns <= 12 ? 50 : 40;
 
 		if (size === 50) {

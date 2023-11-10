@@ -18,6 +18,7 @@ internal static class Wmi {
     private static readonly ArraySegment<byte> CODE_INSUFFICIENT_PRIVILEGE = new ArraySegment<byte>("insufficient privilege"u8.ToArray());
     private static readonly ArraySegment<byte> CODE_UNKNOWN                = new ArraySegment<byte>("unknown failure"u8.ToArray());
     private static readonly ArraySegment<byte> CODE_PATH_NOT_FOUND         = new ArraySegment<byte>("path not found"u8.ToArray());
+    private static readonly ArraySegment<byte> CODE_AUTHENTICATION_FAILED  = new ArraySegment<byte>("authentication failed"u8.ToArray());
     //private static readonly ArraySegment<byte> CODE_INVALID                = new ArraySegment<byte>("invalid parameter"u8.ToArray());
 
     /*public static ManagementScope WmiScope(string host, string impersonation, string username, string password) {
@@ -46,6 +47,12 @@ internal static class Wmi {
             scope.Connect();
             if (!scope.IsConnected) return null;
             return scope;
+        }
+        catch (UnauthorizedAccessException) {
+            return null;
+        }
+        catch (System.Management.ManagementException) {
+            return null;
         }
         catch {
             return null;

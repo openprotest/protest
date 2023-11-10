@@ -721,15 +721,17 @@ class View extends Window {
 
 		const addAttribute = document.createElement("div");
 		addAttribute.style.textAlign = "center";
-		this.scroll.appendChild(addAttribute);
+		this.attributes.appendChild(addAttribute);
 
 		const addAttributeButton = document.createElement("input");
 		addAttributeButton.type = "button";
 		addAttributeButton.value = "Add attribute";
-		addAttributeButton.style.marginTop = "24px";
+		addAttributeButton.style.bottom = "0px";
+		addAttributeButton.style.marginTop = "16px";
+		addAttributeButton.style.marginBottom = "16px";
 		addAttributeButton.style.width = "128px";
 		addAttributeButton.style.maxWidth = "150px";
-		addAttributeButton.style.height = "38px";
+		addAttributeButton.style.height = "32px";
 		addAttribute.appendChild(addAttributeButton);
 
 		this.attributes.classList.remove("view-attributes-freeze");
@@ -741,8 +743,11 @@ class View extends Window {
 		}
 
 		addAttributeButton.onclick = ()=> {
-			this.attributes.appendChild(this.CreateAttribute("", "", KEEP.username, new Date(), true));
+			const newAttribute = this.CreateAttribute("", "", KEEP.username, new Date(), true);
+			this.attributes.appendChild(newAttribute);
+			this.attributes.appendChild(addAttribute); //move to end
 			addAttributeButton.scrollIntoView({ block: "end" });
+			newAttribute.childNodes[0].focus();
 		};
 
 		const ExitEdit = ()=> {
@@ -762,8 +767,6 @@ class View extends Window {
 			this.liveB.style.display = "block";
 			this.liveC.style.display = "block";
 			this.liveD.style.display = "block";
-
-			this.scroll.removeChild(addAttribute);
 
 			this.attributes.classList.add("view-attributes-freeze");
 
@@ -786,6 +789,8 @@ class View extends Window {
 				}
 				this.attributes.childNodes[i].childNodes[1].firstChild.style.display = "initial";
 			}
+
+			this.attributes.appendChild(addAttribute);
 		};
 
 		btnSave.onclick = ()=> {

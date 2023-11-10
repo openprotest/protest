@@ -582,7 +582,7 @@ class DebitNotes extends Window {
 		const divTemplate = document.createElement("div");
 		divTemplate.style.margin = "40px 20px";
 		divTemplate.style.whiteSpace = "pre-line";
-		divTemplate.textContent = content.template;
+		divTemplate.innerHTML = content.template;
 		page.append(divTemplate);
 
 		const divSignature = document.createElement("div");

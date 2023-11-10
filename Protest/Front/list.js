@@ -206,11 +206,13 @@ class List extends Window {
 		const ClearSelection = ()=> filtersList.childNodes.forEach(o=> o.style.backgroundColor = "");
 
 		const Refresh = ()=> {
+			findFilter.value = findFilter.value.toLowerCase();
+
 			let types = [];
 			for (const key in this.link.data) {
 				if (!this.link.data[key].hasOwnProperty("type")) continue;
 				if (types.includes(this.link.data[key].type.v)) continue;
-				if (!this.link.data[key].type.v.includes(findFilter.value)) continue;
+				if (!this.link.data[key].type.v.toLowerCase().includes(findFilter.value)) continue;
 				if (this.link.data[key].type.v.length === 0) continue;
 				types.push(this.link.data[key].type.v);
 			}
