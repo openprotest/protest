@@ -10,10 +10,6 @@ internal static class Configuration {
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
-    internal static string PRESHARED_KEY_STRING;
-    internal static byte[] PRESHARED_KEY;
-    internal static byte[] PRESHARED_KEY_IV;
-
     internal static bool force_registry_keys = false;
 
     internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
@@ -45,12 +41,6 @@ internal static class Configuration {
                 DB_KEY_STRING = value.ToString();
                 DB_KEY = DB_KEY_STRING.Length > 0 ? Cryptography.HashStringToBytes(DB_KEY_STRING, 32) : null; //256-bits
                 DB_KEY_IV = DB_KEY_STRING.Length > 0 ? Cryptography.HashStringToBytes(DB_KEY_STRING, 16) : null; //128-bits
-                break;
-
-            case "preshared_key":
-                PRESHARED_KEY_STRING = value.ToString();
-                PRESHARED_KEY = PRESHARED_KEY_STRING.Length > 0 ? Cryptography.HashStringToBytes(PRESHARED_KEY_STRING, 32) : null; //256-bits
-                PRESHARED_KEY_IV = PRESHARED_KEY_STRING.Length > 0 ? Cryptography.HashStringToBytes(PRESHARED_KEY_STRING, 16) : null; //128-bits
                 break;
 
             case "force_registry_keys":
@@ -121,17 +111,10 @@ internal static class Configuration {
             DB_KEY_IV = Cryptography.HashStringToBytes(DB_KEY_STRING, 16); //128-bits
         }
 
-        if (PRESHARED_KEY_STRING is null || PRESHARED_KEY_STRING.Length > 0) {
-            PRESHARED_KEY_STRING = Cryptography.RandomStringGenerator(40);
-            PRESHARED_KEY = Cryptography.HashStringToBytes(PRESHARED_KEY_STRING, 32); //256-bits
-            PRESHARED_KEY_IV = Cryptography.HashStringToBytes(PRESHARED_KEY_STRING, 16); //128-bits
-        }
-
         builder.AppendLine($"# version {Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
         builder.AppendLine();
 
         builder.AppendLine($"db_key        = {DB_KEY_STRING}");
-        builder.AppendLine($"preshared_key = {PRESHARED_KEY_STRING}");
         builder.AppendLine();
 
         builder.AppendLine($"front_path = {front_path}");

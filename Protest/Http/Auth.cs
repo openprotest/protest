@@ -189,12 +189,15 @@ internal static class Auth {
             case "devices:read":
                 path.Add("/db/device/list");
                 path.Add("/db/device/timeline");
+                path.Add("/db/config/view");
                 break;
 
             case "devices:write":
                 path.Add("/db/device/save");
                 path.Add("/db/device/delete");
                 path.Add("/db/device/grid");
+                path.Add("/db/config/save");
+                path.Add("/db/config/fetch");
                 break;
 
             case "users:read":
@@ -470,7 +473,7 @@ internal static class Auth {
             access.isDomainUser = isDomainUser;
         }
         else {
-            if (String.IsNullOrEmpty(password)) {
+            if (String.IsNullOrEmpty(password) && !isDomainUser) {
                 return "{\"error\":\"please enter password\"}"u8.ToArray();
             }
             access = new AccessControl {

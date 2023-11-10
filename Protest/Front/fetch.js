@@ -559,7 +559,7 @@ class Fetch extends Tabs {
 
 		const lblProtest = document.createElement("div");
 		lblProtest.style.gridArea = "1 / 3";
-		lblProtest.textContent = "Targets IP:";
+		lblProtest.textContent = "Target's IP:";
 		this.tabsPanel.appendChild(lblProtest);
 		const txtTargetContainer = document.createElement("div");
 		txtTargetContainer.style.gridArea = "1 / 5";

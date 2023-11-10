@@ -79,7 +79,7 @@ const UI = {
 		iframe.src = `protest://${url}`;
 		iframe.style.border = "none";
 		parent.win.appendChild(iframe);
-		setTimeout(()=>{ parent.win.removeChild(iframe); }, 100);
+		setTimeout(()=>{ parent.win.removeChild(iframe); }, 200);
 	},
 
 	SetAccentColor: (accent, saturation)=> {
@@ -242,7 +242,7 @@ const MENU = {
 		{ t: "Update modules", i: "mono/department.svg?light",  g: "manage", h: true, f: params=> new About("updatemod") },
 		{ t: "Legal",          i: "mono/gpl.svg?light",         g: "manage", h: true,  f: params=> new About("legal") },
 
-		{ t: "Logout", i: "mono/logoff.svg?light", g: "manage", h: true, f: params=> btnLogout.onclick() },
+		{ t: "Logout", i: "mono/logoff.svg?light", g: "manage", h: true, f: ()=> btnLogout.onclick() },
 	],
 
 	isOpen: false,
@@ -861,7 +861,7 @@ username.onclick = event=> event.stopPropagation();
 lblUsername.onclick = event=> event.stopPropagation();
 
 btnLogout.onclick = async event=> {
-	event.stopPropagation();
+	event?.stopPropagation();
 
 	MENU.Close();
 

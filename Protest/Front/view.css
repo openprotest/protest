@@ -354,6 +354,42 @@ button.view-live-button:active {
 	display: none !important;
 }
 
+.view-config-code-box {
+	padding: 20px;
+	color: #E0E0E0;
+	background-color: #282828;
+	font-family: monospace;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-user-select: text;
+	user-select: text;
+	counter-reset: code-enumeration;
+}
+
+.view-config-code-box::selection {
+	color: #000 !important;
+	background-color: #FFF !important;
+}
+
+.view-config-code-box > div {
+	display: flex;
+}
+
+.view-config-code-box > div:before {
+	text-align: right;
+	padding-right: 24px;
+	color: #808080;
+	counter-increment: code-enumeration;
+	content: counter(code-enumeration);
+	display: inline-block;
+	min-width: 40px;
+	font-weight: 400;
+}
+
+.view-config-code-box > div > span {
+	display: contents;
+}
+
 .view-interfaces-frame {
 	display: grid;
 	background-color: var(--clr-pane);
@@ -430,64 +466,64 @@ button.view-live-button:active {
 }
 
 .view-interfaces-edit-list-element {
-    position: absolute;
-    width: calc(100% - 8px);
-    max-width: 882px;
-    box-sizing: border-box;
-    height: 32px;
-    left: 8px;
-    overflow: hidden;
-    border-radius: 4px;
-    transition: .1s;
-    transform-origin: 0 50%;
+	position: absolute;
+	width: calc(100% - 8px);
+	max-width: 882px;
+	box-sizing: border-box;
+	height: 32px;
+	left: 8px;
+	overflow: hidden;
+	border-radius: 4px;
+	transition: .1s;
+	transform-origin: 0 50%;
 }
 
 .view-interfaces-edit-list-element > * {
-    float: left;
+	float: left;
 }
 
 .view-interfaces-edit-list-element > *:nth-child(1) {
-    width: 8px;
-    height: 22px;
-    margin-left: 4px;
-    margin-right: 1px;
-    transform: translateY(5px) scaleY(1.2);
-    cursor: move;
-    border-radius: 2px;
-    background-color: var(--clr-control);
+	width: 8px;
+	height: 22px;
+	margin-left: 4px;
+	margin-right: 1px;
+	transform: translateY(5px) scaleY(1.2);
+	cursor: move;
+	border-radius: 2px;
+	background-color: var(--clr-control);
 }
 .view-interfaces-edit-list-element > *:nth-child(2) {
-    width: 120px;
+	width: 120px;
 }
 .view-interfaces-edit-list-element > *:nth-child(3) {
-     width: 120px;
+	 width: 120px;
 }
 .view-interfaces-edit-list-element > *:nth-child(4) { 
-     width: 56px;
+	 width: 56px;
 }
 .view-interfaces-edit-list-element > *:nth-child(5) {
-    width: 120px;
-    padding-left: 32px;
-    background-image: url(mono/gear.svg);
-    background-size: 20px 20px;
-    background-position: 4px center;
-    background-repeat: no-repeat;
-    cursor: pointer;
+	width: 188px;
+	padding-left: 32px;
+	background-image: url(mono/gear.svg);
+	background-size: 20px 20px;
+	background-position: 4px center;
+	background-repeat: no-repeat;
+	cursor: pointer;
 }
 .view-interfaces-edit-list-element > *:nth-child(6) { 
-    width: calc(100% - 574px);
-    min-width: 100px;
-    max-width: 308px;
+	width: calc(100% - 574px);
+	min-width: 100px;
+	max-width: 308px;
 }
 .view-interfaces-edit-list-element > *:last-child {
-    min-width: 28px;
-    height: 28px;
-    margin: 2px 0px 0px 0px;
-    background-color: var(--clr-control);
-    background-image: url(mono/delete.svg);
-    background-size: 24px 24px;
-    background-position: center;
-    background-repeat: no-repeat;
+	min-width: 28px;
+	height: 28px;
+	margin: 2px 0px 0px 0px;
+	background-color: var(--clr-control);
+	background-image: url(mono/delete.svg);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
 .view-lifeline-graph {

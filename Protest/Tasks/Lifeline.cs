@@ -190,7 +190,12 @@ internal static partial class Lifeline {
         ManagementScope scope;
         try {
             scope = Protocols.Wmi.Scope(host);
-        } catch {
+        }
+        catch {
+            return;
+        }
+
+        if (scope is null) {
             return;
         }
 
