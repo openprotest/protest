@@ -411,7 +411,7 @@ class DeviceView extends View {
 				divSpeedColor.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
 				this.floating.appendChild(divSpeedColor);
 
-				if (obj.i[i].s !== "N/A") {
+				if (obj.i[i].s !== "") {
 					const divSpeed = document.createElement("div");
 					divSpeed.style.display = "inline-block";
 					divSpeed.textContent = `${obj.i[i].s} ${obj.i[i].i}`;

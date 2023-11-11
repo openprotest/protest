@@ -214,21 +214,23 @@ internal static partial class DeviceConfiguration {
             return Data.CODE_FAILED.Array;
         }
 
+
         List<string[]> interfaces = new List<string[]>();
 
         int lastEther = 0, lastSfp = 0;
         bool isSubinterface = false;
         string currentInt = null;
         string currentSpeed = "N/A";
-        string currentVlan = "";
-        string currentComment = "";
+        string currentVlan = String.Empty;
+        string currentComment = String.Empty;
 
         for (int i = 0; i < lines.Length; i++) {
             lines[i] = lines[i].Trim();
+            lines[i] = lines[i].Replace("\x2002", " ");
 
-            if (lines[i].StartsWith("set [ find default-name=", StringComparison.OrdinalIgnoreCase)) { //mikrotik interface                
+            if (lines[i].StartsWith("set [ find default-name=", StringComparison.OrdinalIgnoreCase)) { //mikrotik interface
                 Match intMatch = DefaultNameRegex().Match(lines[i]);
-                string defname = intMatch.Value.Replace("default-name=", "");
+                string defname = intMatch.Value.Replace("default-name=", String.Empty);
                 if (!defname.Contains('"', StringComparison.Ordinal))
                     defname = defname.Split(' ')[0];
                 if (defname.StartsWith("\"") && defname.EndsWith("\""))
@@ -237,30 +239,29 @@ internal static partial class DeviceConfiguration {
                 string interf;
                 if (defname.IndexOf("ether") > -1) {
                     interf = "Ethernet";
-                    if (int.TryParse(defname.Replace("ether", ""), out int ether)) {
+                    if (int.TryParse(defname.Replace("ether", String.Empty), out int ether)) {
                         if (lastEther + 1 < ether)
                             for (int j = lastEther + 1; j < ether; j++)
-                                interfaces.Add(new string[] { "Ethernet", "N/A", "", "" });
+                                interfaces.Add(new string[] { "Ethernet", "N/A", String.Empty, String.Empty });
                         lastEther = ether;
                     }
 
                 }
                 else if (defname.IndexOf("sfp") > -1) {
                     interf = "SFP";
-                    if (int.TryParse(defname.Replace("sfp", ""), out int sfp)) {
+                    if (int.TryParse(defname.Replace("sfp", String.Empty), out int sfp)) {
                         if (lastSfp + 1 < sfp)
-                            for (int j = lastEther + 1; j < sfp; j++)
-                                interfaces.Add(new string[] { "SFP", "N/A", "", "" });
+                            for (int j = lastSfp + 1; j < sfp; j++)
+                                interfaces.Add(new string[] { "SFP", "N/A", String.Empty, String.Empty });
                         lastSfp = sfp;
                     }
-
                 }
                 else {
                     interf = "Ethernet";
                 }
 
                 Match speedMatch = SpeedRegex().Match(lines[i]);
-                string speed = speedMatch.Value.Replace("speed=", "");
+                string speed = speedMatch.Value.Replace("speed=", String.Empty);
                 if (!speed.Contains('"', StringComparison.Ordinal))
                     speed = speed.Split(' ')[0];
                 if (speed.StartsWith("\"") && speed.EndsWith("\""))
@@ -270,11 +271,11 @@ internal static partial class DeviceConfiguration {
                 if (speedMatch.Value?.Length > 0)
                     lines[i] = lines[i].Replace(speedMatch.Value, string.Empty);
 
-                if (speed is null || speed == "N/A" || speed == "") //default value for Mikrotik is 1 Gbps
+                if (speed is null || speed == "N/A" || speed == String.Empty) //default value for Mikrotik is 1 Gbps
                     speed = "1 Gbps";
 
                 Match commentMatch = CommentRegex().Match(lines[i]);
-                string comment = commentMatch.Value.Replace("comment=", "");
+                string comment = commentMatch.Value.Replace("comment=", String.Empty);
                 if (!comment.Contains('"', StringComparison.Ordinal))
                     comment = comment.Split(' ')[0];
                 comment = comment.Trim();
@@ -284,8 +285,8 @@ internal static partial class DeviceConfiguration {
                 interfaces.Add(new string[] {
                     interf ?? "Ethernet",
                     speed ?? "N/A",
-                    "",
-                    comment ?? ""
+                    String.Empty,
+                    comment ?? String.Empty
                 });
             }
 
@@ -304,8 +305,8 @@ internal static partial class DeviceConfiguration {
                 isSubinterface = lines[i].IndexOf('.') > -1;
                 //currentInt = null;
                 //currentSpeed = "N/A";
-                currentVlan = "";
-                currentComment = "";
+                currentVlan = String.Empty;
+                currentComment = String.Empty;
 
                 if (lines[i].IndexOf("ethernet", StringComparison.OrdinalIgnoreCase) > -1) {
                     currentInt = "Ethernet";
@@ -333,11 +334,13 @@ internal static partial class DeviceConfiguration {
                 }
                 else if (lines[i].IndexOf("ethernet", StringComparison.OrdinalIgnoreCase) > -1) { //10 Mbps
                     currentSpeed = "10 Mbps";
-                    //} else if (lines[i].IndexOf("aux", StringComparison.OrdinalIgnoreCase) > -1) {
-                    //    currentSpeed = "N/A";
-                    //} else if (lines[i].IndexOf("serial", StringComparison.OrdinalIgnoreCase) > -1) {
-                    //    currentSpeed = "N/A";
                 }
+                /*else if (lines[i].IndexOf("aux", StringComparison.OrdinalIgnoreCase) > -1) {
+                    currentSpeed = "N/A";
+                }
+                else if (lines[i].IndexOf("serial", StringComparison.OrdinalIgnoreCase) > -1) {
+                    currentSpeed = "N/A";
+                }*/
                 else {
                     currentSpeed = "N/A";
                 }
