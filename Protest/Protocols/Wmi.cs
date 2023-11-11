@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Protest.Protocols;
 
-//http://msdn.microsoft.com/en-us/library/aa394388(v=vs.85).aspx
+//https://msdn.microsoft.com/en-us/library/aa394388(v=vs.85).aspx
 //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-impersonationlevel
 //https://docs.microsoft.com/en-us/windows/desktop/wmisdk/swbemsecurity-authenticationlevel
 
@@ -35,8 +35,8 @@ internal static class Wmi {
     }
     public static ManagementScope Scope(string host, ImpersonationLevel impersonation, string username, string password) {
         ConnectionOptions options = new ConnectionOptions();
-        if (username.Length > 0) options.Username = username;
-        if (password.Length > 0) options.Password = password;
+        if (username?.Length > 0) options.Username = username;
+        if (password?.Length > 0) options.Password = password;
 
         options.Impersonation = impersonation;
         options.Authentication = AuthenticationLevel.PacketPrivacy;
@@ -51,7 +51,7 @@ internal static class Wmi {
         catch (UnauthorizedAccessException) {
             return null;
         }
-        catch (System.Management.ManagementException) {
+        catch (ManagementException) {
             return null;
         }
         catch {
@@ -384,8 +384,9 @@ internal static class Wmi {
                 builder.Append(o.Properties.Count);
                 builder.Append((char)127);
 
-                foreach (PropertyData p in o.Properties)
+                foreach (PropertyData p in o.Properties) {
                     builder.Append(p.Name.ToString() + (char)127);
+                }
             }
 
             foreach (PropertyData p in o.Properties) { //values

@@ -792,7 +792,7 @@ class DeviceView extends View {
 				}
 				else if (type === "vol") {
 					let percent = data[closestIndex].t > 0? Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10 : 0;
-					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v * 1024)} / ${UI.SizeToString(data[closestIndex].t * 1024)} (${percent})%`;
+					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v)} / ${UI.SizeToString(data[closestIndex].t)} (${percent})%`;
 				}
 			};
 
@@ -828,7 +828,7 @@ class DeviceView extends View {
 				const totalBuffer = new Uint8Array(memoryArray.slice(i+16, i+24)).buffer;
 				const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 	
-				data.push({d:date, v:used, t:total});
+				data.push({d:date, v:used*1024, t:total*1024});
 			}
 
 			GenerateGraph(data, "Memory", "vol");

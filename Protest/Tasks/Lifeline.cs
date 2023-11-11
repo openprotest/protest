@@ -19,7 +19,7 @@ internal static partial class Lifeline {
     public static TaskWrapper task;
 
     public static void Initialize() {
-        //TODO: if autostart then start task
+        //TODO: autostart
         StartTask("system");
     }
 
@@ -190,12 +190,9 @@ internal static partial class Lifeline {
         ManagementScope scope;
         try {
             scope = Protocols.Wmi.Scope(host);
+            if (scope is null) { return; }
         }
         catch {
-            return;
-        }
-
-        if (scope is null) {
             return;
         }
 
@@ -220,7 +217,8 @@ internal static partial class Lifeline {
 
                 if (String.IsNullOrEmpty(caption)) continue;
                 if (free is null || size is null) continue;
-                
+                if ((ulong)size == 0) continue;
+
                 diskCaption.Add(Convert.ToByte(caption[0]));
                 diskFree.Add((ulong)free);
                 diskTotal.Add((ulong)size);

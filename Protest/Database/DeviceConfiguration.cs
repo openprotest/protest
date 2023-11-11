@@ -180,11 +180,13 @@ internal static partial class DeviceConfiguration {
 
 
     [GeneratedRegex("default-name=[\"']?(\\w+\\s?)+[\"']?", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex DefaultName();
+    private static partial Regex DefaultNameRegex();
+    
     [GeneratedRegex("speed=\\\"?(\\w+\\s?)+\\\"?", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex Speed();
+    private static partial Regex SpeedRegex();
+    
     [GeneratedRegex("comment=\\\"?(.*)+\\\"?", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex Comment();
+    private static partial Regex CommentRegex();
 
     public static byte[] ExtractInterfaces(Dictionary<string, string> parameters) {
         if (parameters is null) {
@@ -225,7 +227,7 @@ internal static partial class DeviceConfiguration {
             lines[i] = lines[i].Trim();
 
             if (lines[i].StartsWith("set [ find default-name=", StringComparison.OrdinalIgnoreCase)) { //mikrotik interface                
-                Match intMatch = DefaultName().Match(lines[i]);
+                Match intMatch = DefaultNameRegex().Match(lines[i]);
                 string defname = intMatch.Value.Replace("default-name=", "");
                 if (!defname.Contains('"', StringComparison.Ordinal))
                     defname = defname.Split(' ')[0];
@@ -257,7 +259,7 @@ internal static partial class DeviceConfiguration {
                     interf = "Ethernet";
                 }
 
-                Match speedMatch = Speed().Match(lines[i]);
+                Match speedMatch = SpeedRegex().Match(lines[i]);
                 string speed = speedMatch.Value.Replace("speed=", "");
                 if (!speed.Contains('"', StringComparison.Ordinal))
                     speed = speed.Split(' ')[0];
@@ -271,7 +273,7 @@ internal static partial class DeviceConfiguration {
                 if (speed is null || speed == "N/A" || speed == "") //default value for Mikrotik is 1 Gbps
                     speed = "1 Gbps";
 
-                Match commentMatch = Comment().Match(lines[i]);
+                Match commentMatch = CommentRegex().Match(lines[i]);
                 string comment = commentMatch.Value.Replace("comment=", "");
                 if (!comment.Contains('"', StringComparison.Ordinal))
                     comment = comment.Split(' ')[0];
