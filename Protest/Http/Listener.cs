@@ -358,7 +358,7 @@ public sealed class Listener {
         case "/config/upload/macresolve" : buffer = Update.MacResolverFormDataHandler(ctx); break;
         case "/config/upload/tor"        : buffer = Update.TorFormDataHandler(ctx); break;
 
-        case "/log/list": buffer = Logger.List(); break;
+        case "/log/list": buffer = Logger.List(parameters); break;
         default: return false;
         }
         

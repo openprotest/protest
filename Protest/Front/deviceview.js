@@ -641,14 +641,14 @@ class DeviceView extends View {
 
 			const labelBox = document.createElement("div");
 			labelBox.style.position = "absolute";
-			labelBox.style.left = "-2px";
-			labelBox.style.top = "100px";
-			labelBox.style.width = "100px";
+			labelBox.style.left = "2px";
+			labelBox.style.top = "108px";
+			labelBox.style.width = "108px";
 			labelBox.style.height = "14px";
 			labelBox.style.transformOrigin = "0 0";
 			labelBox.style.transform = "rotate(-90deg)";
 			labelBox.style.textAlign = "center";
-			labelBox.style.fontSize = "13px";
+			labelBox.style.fontSize = "12px";
 			labelBox.style.color = "var(--clr-light)";
 			labelBox.textContent = label;
 			graphBox.appendChild(labelBox);
@@ -672,7 +672,6 @@ class DeviceView extends View {
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 800);
 			svg.setAttribute("height", 128);
-			svg.style.outline = "none";
 			graphBox.appendChild(svg);
 
 			const line = document.createElementNS("http://www.w3.org/2000/svg", "rect");

@@ -529,7 +529,9 @@ button.view-live-button:active {
 .view-lifeline-graph {
 	position: relative;
 	width: 100%;
-	height: 128px;
+	height: 132px;
+	background-color: #20202040;
+	border-radius: 4px;
 	overflow: hidden;
 }
 
@@ -540,7 +542,8 @@ button.view-live-button:active {
 .view-lifeline-graph > svg {
 	position: absolute;
 	right: 0;
-	top: 0;
+	top: 4px;
+	outline: none;
 }
 
 .view-info-box,

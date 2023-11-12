@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using Renci.SshNet;
+﻿using Renci.SshNet;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -97,8 +96,9 @@ internal static partial class DeviceConfiguration {
         int port = 22;
         for (int i = 0; i < overwriteProto?.Length; i++) {
             overwriteProto[i] = overwriteProto[i].Trim();
-            if (!overwriteProto[i].StartsWith("ssh:"))
+            if (!overwriteProto[i].StartsWith("ssh:")) {
                 continue;
+            }
             Int32.TryParse(overwriteProto[i][4..], out port);
             break;
         }
@@ -231,10 +231,12 @@ internal static partial class DeviceConfiguration {
             if (lines[i].StartsWith("set [ find default-name=", StringComparison.OrdinalIgnoreCase)) { //mikrotik interface
                 Match intMatch = DefaultNameRegex().Match(lines[i]);
                 string defname = intMatch.Value.Replace("default-name=", String.Empty);
-                if (!defname.Contains('"', StringComparison.Ordinal))
+                if (!defname.Contains('"', StringComparison.Ordinal)) {
                     defname = defname.Split(' ')[0];
-                if (defname.StartsWith("\"") && defname.EndsWith("\""))
+                }
+                if (defname.StartsWith("\"") && defname.EndsWith("\"")) {
                     defname = defname[1..^1];
+                }
 
                 string interf;
                 if (defname.IndexOf("ether") > -1) {
@@ -262,25 +264,31 @@ internal static partial class DeviceConfiguration {
 
                 Match speedMatch = SpeedRegex().Match(lines[i]);
                 string speed = speedMatch.Value.Replace("speed=", String.Empty);
-                if (!speed.Contains('"', StringComparison.Ordinal))
+                if (!speed.Contains('"', StringComparison.Ordinal)) {
                     speed = speed.Split(' ')[0];
-                if (speed.StartsWith("\"") && speed.EndsWith("\""))
+                }
+                if (speed.StartsWith("\"") && speed.EndsWith("\"")) {
                     speed = speed[1..^1];
+                }
                 speed = FormarRouterOsSpeed(speed);
 
-                if (speedMatch.Value?.Length > 0)
+                if (speedMatch.Value?.Length > 0) {
                     lines[i] = lines[i].Replace(speedMatch.Value, string.Empty);
+                }
 
-                if (speed is null || speed == "N/A" || speed == String.Empty) //default value for Mikrotik is 1 Gbps
+                if (speed is null || speed == "N/A" || speed == String.Empty) {//default value for Mikrotik is 1 Gbps
                     speed = "1 Gbps";
-
+                }
                 Match commentMatch = CommentRegex().Match(lines[i]);
                 string comment = commentMatch.Value.Replace("comment=", String.Empty);
-                if (!comment.Contains('"', StringComparison.Ordinal))
+                if (!comment.Contains('"', StringComparison.Ordinal)) {
                     comment = comment.Split(' ')[0];
+                }
                 comment = comment.Trim();
-                if (comment.StartsWith("\"") && comment.EndsWith("\""))
+                
+                if (comment.StartsWith("\"") && comment.EndsWith("\"")) {
                     comment = comment[1..^1];
+                }
 
                 interfaces.Add(new string[] {
                     interf ?? "Ethernet",
@@ -348,8 +356,9 @@ internal static partial class DeviceConfiguration {
 
             if (lines[i].StartsWith("switchport access vlan ", StringComparison.OrdinalIgnoreCase)) {
                 string vlan = lines[i][23..];
-                if (int.TryParse(vlan, out _))
+                if (int.TryParse(vlan, out _)) {
                     currentVlan = vlan;
+                }
             }
             else if (lines[i].ToLower() == "switchport mode trunk") {
                 currentVlan = "TRUNK";
@@ -358,14 +367,17 @@ internal static partial class DeviceConfiguration {
             //overwrites default interface speed
             if (lines[i].StartsWith("speed", StringComparison.OrdinalIgnoreCase)) {
                 string speed = lines[i].ToLower();
-                if (!speed.EndsWith("auto"))
+                if (!speed.EndsWith("auto")) {
                     currentSpeed = FormatCiscoSpeed(speed);
+                }
             }
 
             if (lines[i].StartsWith("description", StringComparison.OrdinalIgnoreCase)) {
                 string description = lines[i][11..].Trim();
-                if (description.StartsWith("\"") && description.EndsWith("\""))
+                if (description.StartsWith("\"") && description.EndsWith("\"")) {
                     description = description[1..^1];
+                }
+
                 currentComment = description;
             }
         }

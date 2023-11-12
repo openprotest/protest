@@ -1,5 +1,7 @@
 using System.IO;
 using System.Threading;
+using System.Collections.Generic;
+using Protest.Tasks;
 
 #if DEBUG
 using System.Runtime.CompilerServices;
@@ -58,15 +60,87 @@ internal static class Logger {
         }).Start();
     }
 
-    public static byte[] List() {
-        byte[] bytes = null;
-        lock (syncAction) {
-            try {
-                bytes = File.ReadAllBytes($"{Data.DIR_LOG}{Data.DELIMITER}{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log");
+    public static byte[] List(Dictionary<string, string> parameters) {
+        if (parameters is null) return ListToday();
+        if (!parameters.TryGetValue("last", out string last) || last.Length < 8) return ListToday();
+        if (!int.TryParse(last, out int lastInt)) return null;
+
+        try {
+            FileInfo[] files = new DirectoryInfo(Data.DIR_LOG).GetFiles("*.log");
+            Array.Sort(files, (a, b) => string.Compare(a.Name, b.Name));
+
+            if (files[0].Name != "error.log" && files[0].Name.Length >= 8) {
+               if (int.TryParse(files[0].Name[0..8], out int firstInt)) {
+                    if (lastInt < firstInt) return "end"u8.ToArray();
+                }
             }
-            catch {}
+            else if (files.Length > 1 && files[1].Name.Length >= 8) {
+                if (int.TryParse(files[1].Name[0..8], out int firstInt)) {
+                    if (lastInt < firstInt) return "end"u8.ToArray();
+                }
+            }
+
+            int firstIndex = 0;
+            int lastIndex = files.Length-1;
+            long sizeCount = 0;
+
+            for (int i = files.Length - 1; i >= 0; i--) {
+                if (files[i].Name == "error.log") continue;
+                if (files[i].Name.Length < 8) continue;
+                if (!int.TryParse(files[i].Name[0..8], out int currentInt)) continue;
+
+                if (currentInt < lastInt) {
+                    lastIndex = i;
+                    break;
+                }
+            }
+
+            for (int i = lastIndex; i >= 0; i--) {
+                if (files[i].Name == "error.log") continue;
+                if (files[i].Name.Length < 8) continue;
+
+                sizeCount += files[i].Length;
+
+                if (sizeCount > 5120) {
+                    firstIndex = i;
+                    break;
+                }
+            }
+
+            List<byte[]> byteList = new List<byte[]>();
+            for (int i = firstIndex; i <= lastIndex; i++) {
+                byte[] bytes;
+
+                lock (syncAction) {
+                    bytes = File.ReadAllBytes(files[i].FullName);
+                    byteList.Add(bytes);
+                }
+            }
+
+            byte[] buffer = byteList.SelectMany(o=>o).ToArray();
+            return buffer;
+        }
+        catch (Exception ex){
+            Logger.Error(ex);
+            return null;
+        }
+    }
+
+    private static byte[] ListToday() {
+        string filename = $"{Data.DIR_LOG}{Data.DELIMITER}{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log";
+        if (!File.Exists(filename)) {
+            return null;
         }
 
-        return bytes;
+        try {
+            byte[] bytes;
+            lock (syncAction) {
+                bytes = File.ReadAllBytes(filename);
+            }
+            return bytes;
+        }
+        catch {
+            return null;
+        }
     }
 }

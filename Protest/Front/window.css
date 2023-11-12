@@ -462,6 +462,18 @@
 	transition: .4s;
 }
 
+.red-dot {
+	position: absolute;
+	pointer-events: none;
+	right: 2px;
+	bottom: 2px;
+	z-index: 9999999;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: var(--clr-error);
+}
+
 @keyframes wait-animation {
 	0%   { transform: translateX(175px) }
 	50%  { transform: translateX(-175px) }

@@ -4,6 +4,8 @@ const KEEP = {
 	version: "0",
 	username: "",
 	authorization: [],
+	lastReconnect: 0,
+	redDot: document.createElement("div"),
 
 	Initialize: ()=> {
 		let server = window.location.href;
@@ -14,19 +16,30 @@ const KEEP = {
 		KEEP.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/keepalive");
 
 		KEEP.socket.onopen = ()=> {
-			//KEEP.socket.send("hello");
+			if (KEEP.redDot.parentElement) {
+				container.removeChild(KEEP.redDot);
+			}
+			//KEEP.socket.send("hello from client");
 		};
 
 		KEEP.socket.onclose = ()=> {
-			setTimeout(()=>{
-				KEEP.DisconnectNotification();
-			},500);
+			KEEP.redDot.className = "red-dot";
+			container.appendChild(KEEP.redDot);
+
+			setTimeout(()=> {
+				if (Date.now() - KEEP.lastReconnect < 5_000) { //5s
+					KEEP.DisconnectNotification();
+				}
+				else {
+					KEEP.lastReconnect = Date.now();
+					KEEP.Initialize();
+				}
+			}, 1000);
 		};
 
 		KEEP.socket.onmessage = event=> {
 			let message = JSON.parse(event.data);
 			KEEP.MessageHandler(message);
-
 		};
 
 		KEEP.socket.onerror = ()=> { };
@@ -206,7 +219,7 @@ const KEEP = {
 	},
 
 	DisconnectNotification: ()=> {
-		const notification = KEEP.PushNotification("Communication with the server has been lost.");
+		const notification = KEEP.PushNotification("The connection to the server has been lost.");
 
 		const btnReconnect = document.createElement("input");
 		btnReconnect.type = "button";

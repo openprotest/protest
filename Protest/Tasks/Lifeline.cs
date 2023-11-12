@@ -244,8 +244,7 @@ internal static partial class Lifeline {
 
         if (diskCaption.Count > 0) {
             string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
-            if (!Directory.Exists(dirDisk))
-                Directory.CreateDirectory(dirDisk);
+            if (!Directory.Exists(dirDisk)) Directory.CreateDirectory(dirDisk);
             using FileStream diskStream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
             try {

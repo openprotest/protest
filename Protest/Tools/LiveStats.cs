@@ -195,12 +195,12 @@ internal static class LiveStats {
             }
             catch { }
 
-            if (dns is not null) {
+            if (String.IsNullOrEmpty(dns)) { //check dns mismatch
                 try {
                     dns = dns?.Split('.')[0].ToUpper();
                     bool mismatch = false;
 
-                    if (!mismatch && wmiHostname is not null && wmiHostname.Length > 0) {
+                    if (!mismatch &&  !String.IsNullOrEmpty(wmiHostname)) {
                         wmiHostname = wmiHostname?.Split('.')[0].ToUpper();
                         if (wmiHostname != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)} / {Data.EscapeJsonText(dns)}\",\"source\":\"WMI\"}}");
@@ -208,7 +208,7 @@ internal static class LiveStats {
                         }
                     }
 
-                    if (!mismatch && adHostname is not null && adHostname.Length > 0) {
+                    if (!mismatch && !String.IsNullOrEmpty(adHostname)) {
                         adHostname = adHostname?.Split('.')[0].ToUpper();
                         if (adHostname != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)} / {Data.EscapeJsonText(dns)}\",\"source\":\"Kerberos\"}}");
@@ -219,7 +219,7 @@ internal static class LiveStats {
                     if (!mismatch && wmiHostname is null && adHostname is null)
                         netbios = await NetBios.GetBiosNameAsync(firstAlive);
 
-                    if (!mismatch && netbios is not null && netbios.Length > 0) {
+                    if (!mismatch && !String.IsNullOrEmpty(netbios)) {
                         netbios = netbios?.Split('.')[0].ToUpper();
                         if (netbios != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netbios)} / {Data.EscapeJsonText(dns)}\",\"source\":\"NetBIOS\"}}");
@@ -228,6 +228,24 @@ internal static class LiveStats {
                     }
                 }
                 catch { }
+            }
+
+            if (String.IsNullOrEmpty(_hostname?.value) && String.IsNullOrEmpty(_ip?.value)) { //check revese dns mismatch
+                string[] hostnames = _hostname.value.Split(';').Select(o => o.Trim()).ToArray();
+                string[] ips = _ip.value.Split(';').Select(o => o.Trim()).ToArray();
+
+                for (int i = 0; i < hostnames.Length; i++) {
+                    try {
+                        IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
+                        for (int j = 0; j < reversed.Length; j++) {
+                            if (!ips.Contains(reversed[j].ToString())) {
+                                WsWriteText(ws, $"{{\"warning\":\"Revese DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}");
+                                break;
+                            }
+                        }
+                    }
+                    catch { }
+                }
             }
 
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
