@@ -3,6 +3,7 @@
 #define BROTLI
 #endif
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
@@ -99,6 +100,14 @@ public sealed class Listener {
             return;
         }
 
+        if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
+            byte[] buffer = DatabaseInstances.users.SerializeContacts();
+            ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+            ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            ctx.Response.Close();
+            return;
+        }
 
         if (CacheHandler(ctx, path)) return;
 
@@ -243,7 +252,7 @@ public sealed class Listener {
         case "/logout" : buffer = Auth.RevokeAccess(sessionId, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array; break;
         case "/version": buffer = Data.VersionToJson(); break;
 
-        case "/contacts": buffer = DatabaseInstances.users.SerializeContacts(); break;
+        //case "/contacts": buffer = DatabaseInstances.users.SerializeContacts(); break;
 
         case "/barcode39":
             buffer = Protocols.Barcode39.GenerateSvgHandler(parameters);

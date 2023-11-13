@@ -3,10 +3,14 @@ class Log extends Window {
 		super();
 
 		this.params = params ? params : {
-			autoscroll: true,
+			autoScroll: true,
 			opaque: true,
 			onTop: false
 		};
+
+		this.last = null;
+		this.end = false;
+		this.isLoading = false;
 
 		this.AddCssDependencies("list.css");
 
@@ -55,7 +59,7 @@ class Log extends Window {
 		this.options.appendChild(divAutoScroll);
 		this.chkAutoScroll = document.createElement("input");
 		this.chkAutoScroll.type = "checkbox";
-		this.chkAutoScroll.checked = this.params.autoscroll;
+		this.chkAutoScroll.checked = this.params.autoScroll;
 		divAutoScroll.appendChild(this.chkAutoScroll);
 		this.AddCheckBoxLabel(divAutoScroll, this.chkAutoScroll, "Auto-scroll");
 
@@ -81,7 +85,7 @@ class Log extends Window {
 		this.divOnTop.appendChild(this.chkOnTop);
 		this.AddCheckBoxLabel(this.divOnTop, this.chkOnTop, "Always on top");
 
-		this.chkAutoScroll.onchange = ()=> { this.params.autoscroll = this.chkAutoScroll.checked; };
+		this.chkAutoScroll.onchange = ()=> { this.params.autoScroll = this.chkAutoScroll.checked; };
 
 		this.chkOpaque.onchange = ()=> {
 			this.params.opaque = this.chkOpaque.checked;
@@ -93,9 +97,11 @@ class Log extends Window {
 			this.SetOnTop(this.chkOnTop.checked);
 		};
 
+		this.list.onscroll = event=> this.Log_onscroll(event);
+
 		this.SetOpaque(this.chkOpaque.checked);
 		this.SetOnTop(this.chkOnTop.checked);
-		this.GetLog();
+		this.GetTodaysLog();
 	}
 
 	PopOut() { //override
@@ -117,7 +123,16 @@ class Log extends Window {
 		});
 	}
 
-	async GetLog() {
+	Log_onscroll(event) {
+		if (this.list.scrollTop < 2) {
+			this.list.scrollTop = 2;
+			this.GetNextLog();
+		}
+	}
+
+	async GetTodaysLog() {
+		this.isLoading = true;
+		
 		try {
 			const response = await fetch("log/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -126,16 +141,61 @@ class Log extends Window {
 			
 			let split = text.split("\n");
 			for (let i = 0; i < split.length - 1; i++) {
+				if (split[i].length === 0) return;
 				this.Add(split[i]);
 			}
-			this.isLoading = false;
+
+			if (split.length > 1 && split[0].length >= 10) {
+				let last =  split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
+				if (!isNaN(last)) {
+					console.log(last);
+					this.last = last;
+				}
+			}
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
+		finally {
+			this.isLoading = false;
+		}
 	}
 
-	Add(log) {
+	async GetNextLog() {
+		if (this.isLoading) return;
+
+		this.isLoading = true;
+
+		try {
+			const response = await fetch(`log/list?last=${this.last}`);
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const text = await response.text();
+			let split = text.split("\n");
+
+			for (let i = split.length - 1; i >= 0; i--) {
+				if (split[i].length === 0) continue;
+				const element = this.CreateLog(split[i]);
+				this.list.prepend(element);
+			}
+
+			if (split.length > 1 && split[0].length >= 10) {
+				let last =  split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
+				if (!isNaN(last)) {
+					console.log(last);
+					this.last = last;
+				}
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+		finally {
+			this.isLoading = false;
+		}
+	}
+
+	CreateLog(log) {
 		const element = document.createElement("div");
 		element.textContent = log;
 		element.style.fontFamily = "monospace";
@@ -144,9 +204,13 @@ class Log extends Window {
 		element.style.paddingLeft = "28px";
 		element.style.whiteSpace = "pre-wrap";
 		element.style.overflow = "hidden";
-		this.list.appendChild(element);
+		return element;
+	}
 
-		if (this.params.autoscroll) element.scrollIntoView();
+	Add(log) {
+		const element = this.CreateLog(log);
+		this.list.appendChild(element);
+		if (this.params.autoScroll) element.scrollIntoView();
 	}
 
 	SetOpaque(opaque) {

@@ -278,9 +278,13 @@ internal static class Kerberos {
         data.Add("telephone number", telephoneBuilder.ToString());
 
         StringBuilder mobileBuilder = new StringBuilder();
-        string mobileNumber = result.Properties["mobile"][0].ToString();
-        if (mobileNumber?.Length > 0)
-            mobileBuilder.Append(mobileNumber);
+        try {
+            string mobileNumber = result.Properties["mobile"][0].ToString();
+            if (mobileNumber?.Length > 0) {
+                mobileBuilder.Append(mobileNumber);
+            }
+        }
+        catch { }
 
         ResultPropertyValueCollection otherMobile = result.Properties["othermobile"];
         for (int i = 0; i < otherMobile.Count; i++) {

@@ -719,20 +719,14 @@ class View extends Window {
 		btnCancel.style.margin = "6px";
 		this.bar.appendChild(btnCancel);
 
-		const addAttribute = document.createElement("div");
-		addAttribute.style.textAlign = "center";
-		this.attributes.appendChild(addAttribute);
-
-		const addAttributeButton = document.createElement("input");
-		addAttributeButton.type = "button";
-		addAttributeButton.value = "Add attribute";
-		addAttributeButton.style.bottom = "0px";
-		addAttributeButton.style.marginTop = "16px";
-		addAttributeButton.style.marginBottom = "16px";
-		addAttributeButton.style.width = "128px";
-		addAttributeButton.style.maxWidth = "150px";
-		addAttributeButton.style.height = "32px";
-		addAttribute.appendChild(addAttributeButton);
+		const btnAddAttribute = document.createElement("input");
+		btnAddAttribute.type = "button";
+		btnAddAttribute.value = "Add attribute";
+		btnAddAttribute.className = "with-icon";
+		btnAddAttribute.style.backgroundImage = "url(mono/add.svg?light)";
+		btnAddAttribute.style.margin = "6px";
+		btnAddAttribute.style.float = "right";
+		this.bar.appendChild(btnAddAttribute);
 
 		this.attributes.classList.remove("view-attributes-freeze");
 
@@ -742,11 +736,10 @@ class View extends Window {
 			this.attributes.childNodes[i].childNodes[1].firstChild.removeAttribute("readonly");
 		}
 
-		addAttributeButton.onclick = ()=> {
+		btnAddAttribute.onclick = ()=> {
 			const newAttribute = this.CreateAttribute("", "", KEEP.username, new Date(), true);
 			this.attributes.appendChild(newAttribute);
-			this.attributes.appendChild(addAttribute); //move to end
-			addAttributeButton.scrollIntoView({ block: "end" });
+			newAttribute.scrollIntoView({ block: "end" });
 			newAttribute.childNodes[0].focus();
 		};
 
@@ -754,6 +747,7 @@ class View extends Window {
 			this.bar.removeChild(btnSave);
 			this.bar.removeChild(btnRevert);
 			this.bar.removeChild(btnCancel);
+			this.bar.removeChild(btnAddAttribute);
 
 			for (let i = 0; i < this.bar.childNodes.length; i++) {
 				this.bar.childNodes[i].style.display = "initial";
@@ -789,8 +783,6 @@ class View extends Window {
 				}
 				this.attributes.childNodes[i].childNodes[1].firstChild.style.display = "initial";
 			}
-
-			this.attributes.appendChild(addAttribute);
 		};
 
 		btnSave.onclick = ()=> {

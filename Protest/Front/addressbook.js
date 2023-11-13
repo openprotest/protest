@@ -65,6 +65,13 @@ class AddressBook extends Window {
 		this.defaultElement = this.searchBox;
 
 		this.searchBox.oninput = this.onchange = event=> this.SearchBox_onchange(event);
+
+		this.searchBox.onkeydown = event=> {
+			if (event.key === "Escape") {
+				this.searchBox.value = "";
+				this.searchBox.oninput();
+			}
+		};
 	}
 
 	async GetContacts() {
@@ -76,6 +83,13 @@ class AddressBook extends Window {
 			
 			json = await response.json();
 			if (json.error) throw(json.error);
+
+			json = json.sort((a, b)=> {
+				if (a.hasOwnProperty("title") && b.hasOwnProperty("title")) return a.title.toLowerCase() > b.title.toLowerCase();
+				if (!a.hasOwnProperty("title") && !b.hasOwnProperty("title")) return 0;
+				if (!a.hasOwnProperty("title")) return -1;
+				if (!b.hasOwnProperty("title")) return 1;
+			});
 
 			this.contacts = json;
 		}

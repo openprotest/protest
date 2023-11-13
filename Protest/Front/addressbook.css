@@ -4,15 +4,20 @@
 	right: 0;
 	top: 0;
 	height: 96px;
-	border-radius: 4px;
+	border-radius: 0 0 4px 4px;
 	text-align: center;
 	z-index: 1;
 
-	backdrop-filter: blur(12px) brightness(80%);
-	box-shadow: rgba(0,0,0,.5) 0 1px 4px;
+	background: linear-gradient(0deg, rgba(64,64,64,.66) 0%, rgba(64,64,64,1) 100%);
+	backdrop-filter: blur(8px) brightness(80%);
+	box-shadow: rgba(0,0,0,.8) 0 1px 8px;
 
 	container-name: address-book-search-container;
 	container-type: inline-size;
+}
+
+.address-book-search-box:placeholder-shown {
+	background-position: 4px 4px !important;
 }
 
 .address-book-search-box {
@@ -33,7 +38,7 @@
 	background-image: url(/mono/search.svg);
 	background-repeat: no-repeat;
 	background-size: 28px 28px;
-	background-position: 4px 4px;
+	background-position: -32px 4px !important;
 }
 
 .address-book-frequent {
@@ -76,7 +81,7 @@
 	background-position: center;
 	background-repeat: no-repeat;
 	filter: drop-shadow(rgba(32,32,32,.5)1px 1px 1px);
-
+	outline: 0;
 	transition: .2s;
 }
 
@@ -171,12 +176,12 @@
 }
 
 .address-book-list.card > div > div:first-child {
-	font-weight: 600;
+	font-weight: 700;
 	text-align: center;
 	text-transform: uppercase;
 	margin-bottom: 2px;
 	border-bottom-width: 2px;
-	border-bottom-color: var(--clr-accent);
+	border-bottom-color: var(--clr-select);
 	border-bottom-style: solid;
 }
 
@@ -208,7 +213,6 @@
 
 .address-book-preview {
 	position: absolute;
-	background-color:var(--clr-pane);
 	color: var(--clr-dark);
 	box-shadow: rgba(0,0,0,.8) 2px 2px 8px;
 	border-radius: 8px;
@@ -216,6 +220,8 @@
 	box-sizing: border-box;
 	-webkit-user-select: text; user-select: text;
 	overflow-y: auto;
+
+	backdrop-filter: blur(8px);
 }
 
 .address-book-preview > div:first-child {
@@ -277,7 +283,7 @@
 	background-position: center;
 	background-repeat: no-repeat;
 	transition: .15s;
-	animation: delayed-fade-in .8s ease-in 0s 1;
+	animation: delayed-fade-in .5s ease-in 0s 1;
 }
 .address-book-close-button:hover {
 	transform: scale(115%);
@@ -294,5 +300,19 @@
 	.address-book-button {
 		visibility: hidden;
 		opacity: 0;
+	}
+}
+
+@media (prefers-color-scheme: light) {
+	.address-book-list > div,
+	.address-book-preview {
+		background-color: rgba(224,232,234,.85);
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	.address-book-list > div,
+	.address-book-preview {
+		background-color: color-mix(in hsl, var(--clr-pane) 95%, transparent 5%);
 	}
 }

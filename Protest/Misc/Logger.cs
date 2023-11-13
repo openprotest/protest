@@ -65,37 +65,44 @@ internal static class Logger {
         if (!parameters.TryGetValue("last", out string last) || last.Length < 8) return ListToday();
         if (!int.TryParse(last, out int lastInt)) return null;
 
+        //TODO:
+
+
         try {
             FileInfo[] files = new DirectoryInfo(Data.DIR_LOG).GetFiles("*.log");
             Array.Sort(files, (a, b) => string.Compare(a.Name, b.Name));
 
-            if (files[0].Name != "error.log" && files[0].Name.Length >= 8) {
-               if (int.TryParse(files[0].Name[0..8], out int firstInt)) {
-                    if (lastInt < firstInt) return "end"u8.ToArray();
-                }
-            }
-            else if (files.Length > 1 && files[1].Name.Length >= 8) {
-                if (int.TryParse(files[1].Name[0..8], out int firstInt)) {
-                    if (lastInt < firstInt) return "end"u8.ToArray();
-                }
-            }
-
-            int firstIndex = 0;
-            int lastIndex = files.Length-1;
-            long sizeCount = 0;
+            int lastIndex = files.Length - 1;
 
             for (int i = files.Length - 1; i >= 0; i--) {
                 if (files[i].Name == "error.log") continue;
                 if (files[i].Name.Length < 8) continue;
-                if (!int.TryParse(files[i].Name[0..8], out int currentInt)) continue;
 
-                if (currentInt < lastInt) {
-                    lastIndex = i;
+                string currentDateString = files[i].Name[..8];
+
+                if (string.Compare(currentDateString, last) <= 0) {
+                    lastIndex = i - 1; //exclude last
                     break;
                 }
             }
 
-            for (int i = lastIndex; i >= 0; i--) {
+            int firstIndex =  Math.Max(0, lastIndex - 1);
+            long sizeCount = 0;
+
+            /*if (files[0].Name != "error.log" && files[0].Name.Length >= 8) {
+                if (int.TryParse(files[0].Name[0..8], out int firstInt)) {
+                    if (lastInt < firstInt)
+                        return "end"u8.ToArray();
+                }
+            }
+            else if (files.Length > 1 && files[1].Name.Length >= 8) {
+                if (int.TryParse(files[1].Name[0..8], out int firstInt)) {
+                    if (lastInt < firstInt)
+                        return "end"u8.ToArray();
+                }
+}*/
+
+            for (int i = lastIndex; i >= 0; i--) { //count upto 5Kb
                 if (files[i].Name == "error.log") continue;
                 if (files[i].Name.Length < 8) continue;
 

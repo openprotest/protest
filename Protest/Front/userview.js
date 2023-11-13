@@ -362,7 +362,6 @@ class UserView extends View {
 
 		//dialog.btnOK.focus();
 		dialog.btnOK.onclick();
-
 	}
 
 	Clone() { //override
