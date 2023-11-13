@@ -190,7 +190,6 @@
 
 	overflow-x: hidden;
 	overflow-y: scroll;
-	outline: 0;
 }
 
 .menu-group {
@@ -282,7 +281,6 @@
 	bottom: 8px;
 	width: 300px;
 	height: 36px;
-	outline: 0;
 }
 
 #lblUsername {
@@ -301,7 +299,6 @@
 	background-size: 32px 32px;
 	background-repeat: no-repeat;
 
-	outline: 0;
 	border: #808080 1px solid;
 	border-radius: 4px;
 
@@ -344,7 +341,6 @@
 	min-width: 150px;
 	min-height: 28px;
 	overflow: hidden;
-	outline: 0;
 	background-color: var(--clr-pane);
 	border-radius: 4px;
 	box-shadow: var(--clr-dark) 0 0 4px;

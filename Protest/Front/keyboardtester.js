@@ -5,7 +5,6 @@ class KeyboardTester extends Window {
 		this.params = params;
 
 		this.win.tabIndex = "0";
-		this.win.style.outline = "0";
 
 		this.content.style.overflow = "scroll";
 

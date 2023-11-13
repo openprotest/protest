@@ -60,7 +60,6 @@
 	left: 48px;
 	right: 0px;
 	max-width: 800px;
-	outline: 0;
 	overflow-y: auto;
 
 	transition: .2s;
@@ -314,7 +313,6 @@
 	left: 1000px;
 	right: 0;
 	max-width: 800px;
-	outline: 0;
 	overflow-y: auto;
 	
 	animation: slide-right .2s ease-out 1;
@@ -543,7 +541,6 @@ button.view-live-button:active {
 	position: absolute;
 	right: 0;
 	top: 4px;
-	outline: none;
 }
 
 .view-info-box,

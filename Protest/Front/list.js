@@ -198,7 +198,6 @@ class List extends Window {
 		filterMenu.appendChild(findFilter);
 
 		const filtersList = document.createElement("div");
-		filtersList.style.outline = "0";
 		filtersList.className = "no-results-small";
 
 		filterMenu.appendChild(filtersList);

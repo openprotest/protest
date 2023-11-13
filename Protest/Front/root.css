@@ -79,6 +79,10 @@ hr {
 	border: 1px solid var(--clr-control);
 }
 
+div, svg {
+	outline: 0;
+}
+
 .disable-animations *,
 .disable-animations *::before,
 .disable-animations *::after {

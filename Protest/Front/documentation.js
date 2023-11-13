@@ -125,7 +125,6 @@ class Documentation extends Window {
 		this.divContent = document.createElement("div");
 		this.divContent.style.width = "100%";
 		this.divContent.style.minHeight = "100%";
-		this.divContent.style.outline = "none";
 		this.divContentContainer.appendChild(this.divContent);
 
 		this.btnBold = document.createElement("button");

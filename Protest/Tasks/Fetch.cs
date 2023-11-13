@@ -1026,7 +1026,7 @@ internal static class Fetch {
                         }
                     }
                     else {
-                        initiator = "Imported";
+                        initiator = "fetch task";
                         date = initDate;
                     }
 
@@ -1103,7 +1103,7 @@ internal static class Fetch {
                         }
                     }
                     else {
-                        initiator = "Imported";
+                        initiator = "fetch task";
                         date = initDate;
                     }
 
@@ -1195,7 +1195,7 @@ internal static class Fetch {
 
             builder.Append('}');
 
-            DebitNotes.Create(builder.ToString(), "Imported");
+            DebitNotes.Create(builder.ToString(), "fetch task");
         }
     }
 
@@ -1267,7 +1267,7 @@ internal static class Fetch {
         for (int i = 0; i < records.Length; i++) {
             Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
             string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
-            DebitNotes.Create(viewPayload, "Imported");
+            DebitNotes.Create(viewPayload, "fetch task");
         }
     }
 

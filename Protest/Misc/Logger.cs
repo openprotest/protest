@@ -65,9 +65,6 @@ internal static class Logger {
         if (!parameters.TryGetValue("last", out string last) || last.Length < 8) return ListToday();
         if (!int.TryParse(last, out int lastInt)) return null;
 
-        //TODO:
-
-
         try {
             FileInfo[] files = new DirectoryInfo(Data.DIR_LOG).GetFiles("*.log");
             Array.Sort(files, (a, b) => string.Compare(a.Name, b.Name));
@@ -89,26 +86,13 @@ internal static class Logger {
             int firstIndex =  Math.Max(0, lastIndex - 1);
             long sizeCount = 0;
 
-            /*if (files[0].Name != "error.log" && files[0].Name.Length >= 8) {
-                if (int.TryParse(files[0].Name[0..8], out int firstInt)) {
-                    if (lastInt < firstInt)
-                        return "end"u8.ToArray();
-                }
-            }
-            else if (files.Length > 1 && files[1].Name.Length >= 8) {
-                if (int.TryParse(files[1].Name[0..8], out int firstInt)) {
-                    if (lastInt < firstInt)
-                        return "end"u8.ToArray();
-                }
-}*/
-
-            for (int i = lastIndex; i >= 0; i--) { //count upto 5Kb
+            for (int i = lastIndex; i >= 0; i--) { //count upto 10Kb
                 if (files[i].Name == "error.log") continue;
                 if (files[i].Name.Length < 8) continue;
 
                 sizeCount += files[i].Length;
 
-                if (sizeCount > 5120) {
+                if (sizeCount > 10240) {
                     firstIndex = i;
                     break;
                 }
@@ -124,8 +108,11 @@ internal static class Logger {
                 }
             }
 
-            byte[] buffer = byteList.SelectMany(o=>o).ToArray();
-            return buffer;
+            if (byteList.Count == 0) {
+                return "end"u8.ToArray();
+            }
+
+            return byteList.SelectMany(o => o).ToArray();
         }
         catch (Exception ex){
             Logger.Error(ex);

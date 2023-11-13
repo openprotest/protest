@@ -23,7 +23,6 @@ class Console extends Window {
 		this.txtInput.style.width     = "calc(100% - 80px)";
 		this.txtInput.style.margin    = "0";
 		this.txtInput.style.border    = "0";
-		this.txtInput.style.outline   = "0";
 		this.txtInput.style.boxSizing = "border-box";
 		this.content.appendChild(this.txtInput);
 

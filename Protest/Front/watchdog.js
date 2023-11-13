@@ -1087,7 +1087,6 @@ class Watchdog extends Window {
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 180);
 			svg.setAttribute("height", 128);
-			svg.style.outline = "none";
 			graphBox.appendChild(svg);
 
 			let x = (180 - graphWidth) / 2;
@@ -1232,7 +1231,6 @@ class Watchdog extends Window {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		svg.setAttribute("width", this.dayPixels);
 		svg.setAttribute("height", 32);
-		svg.style.outline = "none";
 
 		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
 			if (this.cache[date][file] === null) { return svg; }
@@ -1382,7 +1380,6 @@ class Watchdog extends Window {
 		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		svg.setAttribute("width", this.dayPixels);
 		svg.setAttribute("height", 40);
-		svg.style.outline = "none";
 
 		for (let i = 0; i < 25; i++) {
 			const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");

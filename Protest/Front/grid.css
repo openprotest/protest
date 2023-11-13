@@ -38,7 +38,6 @@
 	top: 72px;
 	bottom: 0px;
 	width: 250px;
-	outline: 0;
 
 	overflow-x: hidden;
 	overflow-y: scroll;
@@ -155,7 +154,6 @@
 	right: 0;
 	top: 0px;
 	bottom: 0;
-	outline: 0;
 	background-color: var(--clr-pane);
 	overflow-x: scroll;
 

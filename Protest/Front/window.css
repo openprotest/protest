@@ -118,7 +118,6 @@
 
 	width: 36px;
 	height: 36px;
-	outline: 0;
 	border-radius: 2px;
 	margin: 2px;
 	box-sizing: border-box;
@@ -251,7 +250,6 @@
 
 .win-content {
 	position: absolute;
-	outline: 0;
 	color: var(--clr-light);
 	left: 4px;
 	right: 4px;
@@ -393,7 +391,6 @@
 	min-height: 20px;
 	max-height: 100px;
 	overflow: hidden;
-	outline: 0;
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
 	border-radius: 4px;

@@ -1,7 +1,6 @@
 .list-listbox {
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
-	outline: 0;
 
 	position: absolute;
 	left: 0;

@@ -174,7 +174,6 @@ class Window {
 		innerBox.style.right = "0";
 		innerBox.style.top = "0";
 		innerBox.style.bottom = "52px";
-		innerBox.style.outline = "0";
 		innerBox.style.overflowY = "auto";
 		dialogBox.appendChild(innerBox);
 

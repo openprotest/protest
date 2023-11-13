@@ -176,14 +176,12 @@ class Wmi extends Window {
 		lstClasses.style.border = "var(--clr-control) solid 1.5px";
 		lstClasses.style.gridArea = "3 / 1";
 		lstClasses.style.overflowY = "scroll";
-		lstClasses.style.outline = "0";
 
 		const lstProperties = document.createElement("div");
 		lstProperties.className = "wmi-properties-list";
 		lstProperties.style.border = "var(--clr-control) solid 1.5px";
 		lstProperties.style.gridArea = "3 / 3";
 		lstProperties.style.overflowY = "scroll";
-		lstProperties.style.outline = "0";
 
 		const txtPreview = document.createElement("textarea");
 		txtPreview.setAttribute("readonly", true);

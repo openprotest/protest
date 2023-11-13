@@ -172,7 +172,6 @@ class Acl extends Tabs {
 		this.accessList.style.bottom = "8px";
 		this.accessList.style.paddingLeft = "8px";
 		this.accessList.style.paddingTop = "20px";
-		this.accessList.style.outline = "0";
 		this.accessList.style.overflowY = "scroll";
 
 		this.tabsPanel.append(this.usersList, userDetails, this.accessList);

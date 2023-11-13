@@ -33,7 +33,6 @@ class Telnet extends Window {
 		this.txtInput.style.width = "calc(100% - 16px)";
 		this.txtInput.style.margin = "0";
 		this.txtInput.style.border = "0";
-		this.txtInput.style.outline = "none";
 		this.txtInput.style.boxSizing = "border-box";
 		this.content.appendChild(this.txtInput);
 

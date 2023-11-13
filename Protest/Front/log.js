@@ -9,7 +9,7 @@ class Log extends Window {
 		};
 
 		this.last = null;
-		this.end = false;
+		this.hasEnded = false;
 		this.isLoading = false;
 
 		this.AddCssDependencies("list.css");
@@ -37,7 +37,6 @@ class Log extends Window {
 		this.list.style.bottom = "28px";
 		this.list.style.color = "var(--clr-dark)";
 		this.list.style.backgroundColor = "var(--clr-pane)";
-		this.list.style.outline = "0";
 		this.list.style.overflowX = "hidden";
 		this.list.style.overflowY = "scroll";
 		this.list.style.userSelect = "text";
@@ -101,6 +100,7 @@ class Log extends Window {
 
 		this.SetOpaque(this.chkOpaque.checked);
 		this.SetOnTop(this.chkOnTop.checked);
+		
 		this.GetTodaysLog();
 	}
 
@@ -124,6 +124,8 @@ class Log extends Window {
 	}
 
 	Log_onscroll(event) {
+		if (this.hasEnded) return;
+		
 		if (this.list.scrollTop < 2) {
 			this.list.scrollTop = 2;
 			this.GetNextLog();
@@ -152,6 +154,8 @@ class Log extends Window {
 					this.last = last;
 				}
 			}
+
+			this.list.scrollTop = 2;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -162,7 +166,7 @@ class Log extends Window {
 	}
 
 	async GetNextLog() {
-		if (this.isLoading) return;
+		if (this.hasEnded || this.isLoading) return;
 
 		this.isLoading = true;
 
@@ -175,6 +179,15 @@ class Log extends Window {
 
 			for (let i = split.length - 1; i >= 0; i--) {
 				if (split[i].length === 0) continue;
+
+				if (split[i] === "end") {
+					this.hasEnded = true;
+					const endElement = this.CreateLog(split[i]);
+					endElement.style.textAlign = "center";
+					this.list.prepend(endElement);
+					break;
+				}
+
 				const element = this.CreateLog(split[i]);
 				this.list.prepend(element);
 			}
