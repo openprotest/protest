@@ -682,7 +682,7 @@ class Watchdog extends Window {
 
 
 		const notifyLabel = document.createElement("div");
-		notifyLabel.textContent = "Notify on: ";
+		notifyLabel.textContent = "Notify when: ";
 		notifyLabel.style.position = "absolute";
 		notifyLabel.style.left = "270px";
 		notifyLabel.style.top = "145px";

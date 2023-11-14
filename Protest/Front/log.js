@@ -101,7 +101,7 @@ class Log extends Window {
 		this.SetOpaque(this.chkOpaque.checked);
 		this.SetOnTop(this.chkOnTop.checked);
 		
-		this.GetTodaysLog();
+		this.ListTodaysLog();
 	}
 
 	PopOut() { //override
@@ -128,11 +128,11 @@ class Log extends Window {
 		
 		if (this.list.scrollTop < 2) {
 			this.list.scrollTop = 2;
-			this.GetNextLog();
+			this.ListNextLog();
 		}
 	}
 
-	async GetTodaysLog() {
+	async ListTodaysLog() {
 		this.isLoading = true;
 		
 		try {
@@ -143,7 +143,7 @@ class Log extends Window {
 			
 			let split = text.split("\n");
 			for (let i = 0; i < split.length - 1; i++) {
-				if (split[i].length === 0) return;
+				if (split[i].length === 0) continue;
 				this.Add(split[i]);
 			}
 
@@ -154,6 +154,10 @@ class Log extends Window {
 					this.last = last;
 				}
 			}
+			if (!this.last) {
+				const now = new Date();
+				this.last = `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}`;
+			}
 
 			this.list.scrollTop = 2;
 		}
@@ -162,10 +166,15 @@ class Log extends Window {
 		}
 		finally {
 			this.isLoading = false;
+			await this.ListNextLog();
+			
+			if (this.params.autoScroll) {
+				this.list.scrollTop = this.list.scrollHeight;
+			}
 		}
 	}
 
-	async GetNextLog() {
+	async ListNextLog() {
 		if (this.hasEnded || this.isLoading) return;
 
 		this.isLoading = true;
@@ -184,6 +193,7 @@ class Log extends Window {
 					this.hasEnded = true;
 					const endElement = this.CreateLog(split[i]);
 					endElement.style.textAlign = "center";
+					endElement.style.color = "#808080";
 					this.list.prepend(endElement);
 					break;
 				}
@@ -195,7 +205,6 @@ class Log extends Window {
 			if (split.length > 1 && split[0].length >= 10) {
 				let last =  split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
 				if (!isNaN(last)) {
-					console.log(last);
 					this.last = last;
 				}
 			}

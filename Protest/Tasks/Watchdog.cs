@@ -30,7 +30,7 @@ internal static class Watchdog {
         tls
     }
 
-    public enum NotifyOn {
+    public enum NotifyWhen {
         rise = 0,
         fall = 1,
         both = 2
@@ -62,7 +62,7 @@ internal static class Watchdog {
     public record Notification {
         public string name;
         public SmtpProfiles.Profile smtpProfile;
-        public NotifyOn notify;
+        public NotifyWhen notify;
         public string[] recipients;
         public string[] watchers;
     }
@@ -194,10 +194,10 @@ internal static class Watchdog {
 
                 if (profile is null) { continue; }
 
-                if (watcher.lastStatus < 0 && status >= 0 && (gist[i].notify == NotifyOn.rise || gist[i].notify == NotifyOn.both)) { //rise
+                if (watcher.lastStatus < 0 && status >= 0 && (gist[i].notify == NotifyWhen.rise || gist[i].notify == NotifyWhen.both)) { //rise
                     SendSmtpNotification(watcher, gist[i], profile, status);
                 }
-                else if (watcher.lastStatus >= 0 && status < 0 && (gist[i].notify == NotifyOn.fall || gist[i].notify == NotifyOn.both)) { //fall
+                else if (watcher.lastStatus >= 0 && status < 0 && (gist[i].notify == NotifyWhen.fall || gist[i].notify == NotifyWhen.both)) { //fall
                     SendSmtpNotification(watcher, gist[i], profile, status);
                 }
             }
@@ -981,7 +981,7 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
                 notification.name = reader.GetString();
                 break;
             case "notify":
-                notification.notify = (Watchdog.NotifyOn)reader.GetInt32();
+                notification.notify = (Watchdog.NotifyWhen)reader.GetInt32();
                 break;
             case "recipients":
                 notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options);

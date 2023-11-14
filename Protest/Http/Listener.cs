@@ -3,7 +3,6 @@
 #define BROTLI
 #endif
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
@@ -354,6 +353,8 @@ public sealed class Listener {
         case "/acl/delete"   : buffer = Auth.DeleteUser(parameters, username); break;
         case "/acl/sessions" : buffer = Auth.ListSessions(); break;
         case "/acl/kickuser" : buffer = Auth.KickUser(parameters, username); break;
+
+        case "/automation/list": buffer = Tasks.Automation.ListTasks(); break;
 
         case "/config/zones/list"        : buffer = Tools.Zones.ListZones(); break;
         case "/config/zones/save"        : buffer = Tools.Zones.SaveZones(ctx); break;

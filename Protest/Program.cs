@@ -65,8 +65,7 @@ internal class Program {
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading ACL", loadAcl ? "OK  " : "Failed"));
 
         Console.Write("Initialize tasks");
-        Tasks.Watchdog.Initialize();
-        Tasks.Lifeline.Initialize();
+        Tasks.Automation.Initialize();
         Console.WriteLine("        OK");
 
         try {

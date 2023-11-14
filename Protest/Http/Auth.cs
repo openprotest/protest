@@ -335,7 +335,9 @@ internal static class Auth {
                 break;
 
             case "automation:write":
-                path.Add("");
+                path.Add("/automation/list");
+                path.Add("/automation/start");
+                path.Add("/automation/stop");
                 break;
 
             case "access control lists:write":

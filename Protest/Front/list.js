@@ -552,8 +552,7 @@ class List extends Window {
 		}
 
 		element.onclick = ()=> {
-			if (this.selected)
-				this.selected.style.backgroundColor = "";
+			if (this.selected) this.selected.style.backgroundColor = "";
 
 			this.params.select = element.getAttribute("id");
 
