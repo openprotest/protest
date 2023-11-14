@@ -30,11 +30,11 @@ internal static class Automation {
         builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
         builder.Append("},");
 
-        builder.Append("\"lastseen\":{");
-        builder.Append($"\"name\":{{\"v\":\"Lastseen\"}},");
-        builder.Append($"\"status\":{{\"v\":\"Running\"}},");
-        builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
-        builder.Append("},");
+        //builder.Append("\"lastseen\":{");
+        //builder.Append($"\"name\":{{\"v\":\"Lastseen\"}},");
+        //builder.Append($"\"status\":{{\"v\":\"Running\"}},");
+        //builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
+        //builder.Append("},");
 
         builder.Append("\"fetch\":{");
         builder.Append($"\"name\":{{\"v\":\"Fetch\"}},");
