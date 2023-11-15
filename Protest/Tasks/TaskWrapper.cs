@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Drawing.Text;
+using System.Threading;
+using System.Timers;
 
 namespace Protest.Tasks;
 
@@ -22,7 +25,7 @@ internal sealed class TaskWrapper : IDisposable {
 
     public Thread thread;
     public string name;
-    public string initiator;
+    public string originator;
     public TaskStatus status;
 
     public int TotalSteps {
@@ -67,9 +70,9 @@ internal sealed class TaskWrapper : IDisposable {
         }
     }
 
-    public void RequestCancel(string initiator) {
+    public void RequestCancel(string originator) {
         status = TaskStatus.canceling;
-        Logger.Action(initiator, $"Canceling task: {name}");
+        Logger.Action(originator, $"Canceling task: {name}");
         cancellationTokenSource.Cancel();
     }
 

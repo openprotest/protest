@@ -189,13 +189,13 @@ internal static class DebitNotes {
         }
     }
 
-    public static byte[] Create(HttpListenerContext ctx, string initiator) {
+    public static byte[] Create(HttpListenerContext ctx, string originator) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
-        return Create(payload, initiator);
+        return Create(payload, originator);
     }
 
-    public static byte[] Create(string payload, string initiator) {
+    public static byte[] Create(string payload, string originator) {
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new DebitJsonConverter());
         Record record = JsonSerializer.Deserialize<Record>(payload, options);
@@ -232,7 +232,7 @@ internal static class DebitNotes {
                 }
             }
 
-            Logger.Action(initiator, $"Create a debit note: {name}");
+            Logger.Action(originator, $"Create a debit note: {name}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -242,7 +242,7 @@ internal static class DebitNotes {
         return Encoding.UTF8.GetBytes($"{{\"file\":\"{name}\"}}");
     }
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] Delete(Dictionary<string, string> parameters, string originator) {
         string file = null;
         string status = null;
         parameters?.TryGetValue("status", out status);
@@ -259,7 +259,7 @@ internal static class DebitNotes {
 
         try {
             File.Delete(filename);
-            Logger.Action(initiator, $"Delete debit note: {filename}");
+            Logger.Action(originator, $"Delete debit note: {filename}");
             return Data.CODE_OK.Array;
         }
         catch {
@@ -267,7 +267,7 @@ internal static class DebitNotes {
         }
     }
 
-    public static byte[] Return(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] Return(Dictionary<string, string> parameters, string originator) {
         string file = null;
         string status = null;
         parameters?.TryGetValue("status", out status);
@@ -296,7 +296,7 @@ internal static class DebitNotes {
 
             File.Delete(filename);
 
-            Logger.Action(initiator, $"Mark a debit note as returned: {file}");
+            Logger.Action(originator, $"Mark a debit note as returned: {file}");
 
             return Encoding.UTF8.GetBytes($"{{\"file\":\"{file}\"}}");
         }

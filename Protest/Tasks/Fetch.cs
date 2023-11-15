@@ -390,7 +390,7 @@ internal static class Fetch {
         return data;
     }
 
-    public static byte[] DevicesTask(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] DevicesTask(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -479,9 +479,9 @@ internal static class Fetch {
                 _ => 0
             },
 
-            initiator);
+            originator);
     }
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, string snmp, string portscan, int retries, float interval, string initiator) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, string snmp, string portscan, int retries, float interval, string originator) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -558,7 +558,7 @@ internal static class Fetch {
 
             if (task.cancellationToken.IsCancellationRequested) {
                 KeepAlive.Broadcast("{\"action\":\"abortfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-                Logger.Action(initiator, "Fetch task aborted");
+                Logger.Action(originator, "Fetch task aborted");
 
                 task.Dispose();
                 task = null;
@@ -576,15 +576,15 @@ internal static class Fetch {
             };
 
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
-            Logger.Action(initiator, "Fetch task succesully finished");
+            Logger.Action(originator, "Fetch task succesully finished");
         });
 
         KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-        Logger.Action(initiator, "Start fetch task");
+        Logger.Action(originator, "Start fetch task");
 
         task = new TaskWrapper("Fetching devices") {
             thread = thread,
-            initiator = initiator,
+            originator = originator,
             TotalSteps = hosts.Length,
             CompletedSteps = 0
         };
@@ -593,7 +593,7 @@ internal static class Fetch {
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] UsersTask(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] UsersTask(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
@@ -607,7 +607,7 @@ internal static class Fetch {
                 if (username.value is null) continue;
                 users.Add(username.value);
             }
-            return UsersTask(users.ToArray(), initiator);
+            return UsersTask(users.ToArray(), originator);
         }
         else if (parameters.TryGetValue("domain", out string domain)) {
             if (domain is null) {
@@ -617,12 +617,12 @@ internal static class Fetch {
             string[] users = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllUsers(domain) : Array.Empty<string>();
             if (users is null)
                 return Data.CODE_FAILED.Array;
-            return UsersTask(users, initiator);
+            return UsersTask(users, originator);
         }
 
         return Data.CODE_INVALID_ARGUMENT.ToArray();
     }
-    public static byte[] UsersTask(string[] users, string initiator) {
+    public static byte[] UsersTask(string[] users, string originator) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -659,15 +659,15 @@ internal static class Fetch {
             };
 
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
-            Logger.Action(initiator, "Fetch task succesully finished");
+            Logger.Action(originator, "Fetch task succesully finished");
         });
 
         KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
-        Logger.Action(initiator, "Start fetch task");
+        Logger.Action(originator, "Start fetch task");
 
         task = new TaskWrapper("Fetching users") {
             thread = thread,
-            initiator = initiator,
+            originator = originator,
             TotalSteps = users.Length,
             CompletedSteps = 0
         };
@@ -722,17 +722,17 @@ internal static class Fetch {
         return "{\"status\":\"none\"}"u8.ToArray();
     }
 
-    public static byte[] CancelTask(string initiator) {
+    public static byte[] CancelTask(string originator) {
         if (task is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
 
         KeepAlive.Broadcast("{\"action\":\"cancelfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-        task.RequestCancel(initiator);
+        task.RequestCancel(originator);
         //wrapper = null;
 
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] ApproveLastTask(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] ApproveLastTask(Dictionary<string, string> parameters, string originator) {
         if (result is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
 
         parameters.TryGetValue("condition", out string targetAttribute);
@@ -749,13 +749,13 @@ internal static class Fetch {
         Database database;
 
         if (result?.type == Type.devices) {
-            Logger.Action(initiator, "Approve fetched devices");
+            Logger.Action(originator, "Approve fetched devices");
             KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
 
             database = DatabaseInstances.devices;
         }
         else if (result?.type == Type.users) {
-            Logger.Action(initiator, "Approve fetched users");
+            Logger.Action(originator, "Approve fetched users");
             KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
 
             database = DatabaseInstances.users;
@@ -788,17 +788,17 @@ internal static class Fetch {
                 attributes.TryAdd(attr.Key, new Database.Attribute() {
                     value = attr.Value[0],
                     date = date,
-                    initiator = initiator,
+                    originator = originator,
                 });
             }
 
             if (pair.Value.ContainsKey(targetAttribute)) {
                 string value = pair.Value[targetAttribute][0];
                 string file = values.ContainsKey(value) ? values[value] : null;
-                database.Save(file, attributes, saveMethod, initiator);
+                database.Save(file, attributes, saveMethod, originator);
             }
             else {
-                database.Save(null, attributes, saveMethod, initiator);
+                database.Save(null, attributes, saveMethod, originator);
             }
         }
 
@@ -811,23 +811,23 @@ internal static class Fetch {
             KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
         }
 
-        Logger.Action(initiator, "Fetched data approved");
+        Logger.Action(originator, "Fetched data approved");
 
         result = null;
         task = null;
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] DiscardLastTask(string initiator) {
+    public static byte[] DiscardLastTask(string originator) {
         KeepAlive.Broadcast("{\"action\":\"discardfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-        Logger.Action(initiator, "Discard fetched data");
+        Logger.Action(originator, "Discard fetched data");
 
         result = null;
         task = null;
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] ImportTask(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] ImportTask(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
@@ -940,7 +940,7 @@ internal static class Fetch {
         }
 
         if (fetchDevices) {
-            Logger.Action(initiator, $"Importing devices from {ip}");
+            Logger.Action(originator, $"Importing devices from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportDevicesV4(uri, cookieContainer);
             }
@@ -950,7 +950,7 @@ internal static class Fetch {
         }
 
         if (fetchUsers) {
-            Logger.Action(initiator, $"Importing users from {ip}");
+            Logger.Action(originator, $"Importing users from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportUsersV4(uri, cookieContainer);
             }
@@ -960,7 +960,7 @@ internal static class Fetch {
         }
 
         if (fetchDebitNotes) {
-            Logger.Action(initiator, $"Importing users from {ip}");
+            Logger.Action(originator, $"Importing users from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportDebitNotesV4(uri, cookieContainer);
             }
@@ -1005,16 +1005,16 @@ internal static class Fetch {
                     string name = split[j].ToLower();
                     string value = split[j + 1];
                     long date;
-                    string initiator;
+                    string originator;
 
-                    string[] initiatorSplit = split[j + 2].Split(",").Select(o => o.Trim()).ToArray();
-                    if (initiatorSplit.Length == 1) {
-                        initiator = initiatorSplit[0];
+                    string[] originatorSplit = split[j + 2].Split(",").Select(o => o.Trim()).ToArray();
+                    if (originatorSplit.Length == 1) {
+                        originator = originatorSplit[0];
                         date = initDate;
                     }
-                    else if (initiatorSplit.Length >= 2) {
-                        initiator = initiatorSplit[0];
-                        string[] dateSplit = initiatorSplit[1].Split("-");
+                    else if (originatorSplit.Length >= 2) {
+                        originator = originatorSplit[0];
+                        string[] dateSplit = originatorSplit[1].Split("-");
                         if (dateSplit.Length == 3) {
                             int year = int.Parse(dateSplit[2]);
                             int month = int.Parse(dateSplit[1]);
@@ -1026,14 +1026,14 @@ internal static class Fetch {
                         }
                     }
                     else {
-                        initiator = "fetch task";
+                        originator = "Imported";
                         date = initDate;
                     }
 
                     attributes.TryAdd(name, new Database.Attribute() {
                         value = value,
                         date = date,
-                        initiator = initiator
+                        originator = originator
                     });
                 }
 
@@ -1082,16 +1082,16 @@ internal static class Fetch {
                     string name = split[j].ToLower();
                     string value = split[j + 1];
                     long date;
-                    string initiator;
+                    string originator;
 
-                    string[] initiatorSplit = split[j + 2].Split(",").Select(o => o.Trim()).ToArray();
-                    if (initiatorSplit.Length == 1) {
-                        initiator = initiatorSplit[0];
+                    string[] originatorSplit = split[j + 2].Split(",").Select(o => o.Trim()).ToArray();
+                    if (originatorSplit.Length == 1) {
+                        originator = originatorSplit[0];
                         date = initDate;
                     }
-                    else if (initiatorSplit.Length >= 2) {
-                        initiator = initiatorSplit[0];
-                        string[] dateSplit = initiatorSplit[1].Split("-");
+                    else if (originatorSplit.Length >= 2) {
+                        originator = originatorSplit[0];
+                        string[] dateSplit = originatorSplit[1].Split("-");
                         if (dateSplit.Length == 3) {
                             int year = int.Parse(dateSplit[2]);
                             int month = int.Parse(dateSplit[1]);
@@ -1103,14 +1103,14 @@ internal static class Fetch {
                         }
                     }
                     else {
-                        initiator = "fetch task";
+                        originator = "Imported";
                         date = initDate;
                     }
 
                     attributes.TryAdd(name, new Database.Attribute() {
                         value = value,
                         date = date,
-                        initiator = initiator
+                        originator = originator
                     });
                 }
 
@@ -1195,7 +1195,7 @@ internal static class Fetch {
 
             builder.Append('}');
 
-            DebitNotes.Create(builder.ToString(), "fetch task");
+            DebitNotes.Create(builder.ToString(), "Imported");
         }
     }
 
@@ -1267,7 +1267,7 @@ internal static class Fetch {
         for (int i = 0; i < records.Length; i++) {
             Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
             string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
-            DebitNotes.Create(viewPayload, "fetch task");
+            DebitNotes.Create(viewPayload, "Imported");
         }
     }
 

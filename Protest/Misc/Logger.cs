@@ -1,7 +1,6 @@
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
-using Protest.Tasks;
 
 #if DEBUG
 using System.Runtime.CompilerServices;
@@ -44,11 +43,11 @@ internal static class Logger {
         Console.ResetColor();
     }
 
-    public static void Action(string initiator, string action) {
+    public static void Action(string originator, string action) {
         new Thread(() => {
             DateTime dateTime = DateTime.Now;
             string date = dateTime.ToString(Data.DATETIME_FORMAT_FILE);
-            string message = $"{date,-24}{initiator,-32}{action}";
+            string message = $"{date,-24}{originator,-32}{action}";
             lock (syncAction)
                 try {
                     using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}{dateTime.ToString(Data.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);
@@ -61,52 +60,40 @@ internal static class Logger {
     }
 
     public static byte[] List(Dictionary<string, string> parameters) {
-        if (parameters is null) return ListToday();
-        if (!parameters.TryGetValue("last", out string last) || last.Length < 8) return ListToday();
-        if (!int.TryParse(last, out int lastInt)) return null;
-
         try {
-            FileInfo[] files = new DirectoryInfo(Data.DIR_LOG).GetFiles("*.log");
-            Array.Sort(files, (a, b) => string.Compare(a.Name, b.Name));
-
-            int lastIndex = files.Length - 1;
-
-            for (int i = files.Length - 1; i >= 0; i--) {
-                if (files[i].Name == "error.log") continue;
-                if (files[i].Name.Length < 8) continue;
-
-                string currentDateString = files[i].Name[..8];
-
-                if (string.Compare(currentDateString, last) <= 0) {
-                    lastIndex = i - 1; //exclude last
-                    break;
-                }
+            if (parameters is null || !parameters.TryGetValue("last", out string last) || last.Length < 8) {
+                return ListToday();
             }
 
-            int firstIndex =  Math.Max(0, lastIndex - 1);
-            long sizeCount = 0;
-
-            for (int i = lastIndex; i >= 0; i--) { //count upto 10Kb
-                if (files[i].Name == "error.log") continue;
-                if (files[i].Name.Length < 8) continue;
-
-                sizeCount += files[i].Length;
-
-                if (sizeCount > 10240) {
-                    firstIndex = i;
-                    break;
-                }
+            if (!int.TryParse(last, out int lastInt)) {
+                return null;
             }
 
-            List<byte[]> byteList = new List<byte[]>();
-            for (int i = firstIndex; i <= lastIndex; i++) {
-                byte[] bytes;
+            FileInfo[] files = new DirectoryInfo(Data.DIR_LOG)
+                .GetFiles("*.log")
+                .Where(file => file.Name != "error.log" && file.Name.Length >= 8)
+                .OrderBy(file => file.Name)
+                .ToArray();
 
-                lock (syncAction) {
-                    bytes = File.ReadAllBytes(files[i].FullName);
-                    byteList.Add(bytes);
-                }
+            int lastIndex = Array.FindLastIndex(files, file => string.Compare(file.Name[..8], last) < 0);
+            if (lastIndex == -1) {
+                return "end"u8.ToArray();
             }
+
+            int firstIndex = Math.Max(0, lastIndex - 1);
+            long sizeCount = files.Skip(firstIndex)
+                .Take(lastIndex - firstIndex + 1)
+                .Where(file => file.Length <= 10240)
+                .Sum(file => file.Length);
+
+            if (sizeCount > 10240) { //10Kb
+                firstIndex = Array.FindLastIndex(files, firstIndex, file => sizeCount <= 10240);
+            }
+
+            List<byte[]> byteList = files.Skip(firstIndex)
+                .Take(lastIndex - firstIndex + 1)
+                .Select(file => File.ReadAllBytes(file.FullName))
+                .ToList();
 
             if (byteList.Count == 0) {
                 return "end"u8.ToArray();
@@ -114,7 +101,7 @@ internal static class Logger {
 
             return byteList.SelectMany(o => o).ToArray();
         }
-        catch (Exception ex){
+        catch (Exception ex) {
             Logger.Error(ex);
             return null;
         }

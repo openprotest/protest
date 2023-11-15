@@ -107,14 +107,14 @@ internal static class Watchdog {
         if (!watchers.IsEmpty) { StartTask("system"); }
     }
 
-    public static bool StartTask(string initiator) {
+    public static bool StartTask(string originator) {
         if (task is not null) return false;
 
         Thread thread = new Thread(() => WatchLoop());
 
         task = new TaskWrapper("Watchdog") {
             thread = thread,
-            initiator = initiator,
+            originator = originator,
             TotalSteps = 0,
             CompletedSteps = 0
         };
@@ -124,9 +124,9 @@ internal static class Watchdog {
         return true;
     }
 
-    public static bool StopTask(string initiator) {
+    public static bool StopTask(string originator) {
         if (task is null) return false;
-        task.RequestCancel(initiator);
+        task.RequestCancel(originator);
         return true;
     }
 
@@ -456,7 +456,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string initiator) {
+    public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string originator) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string watcherString = reader.ReadToEnd();
 
@@ -484,10 +484,10 @@ internal static class Watchdog {
             watchers[file] = watcher;
 
             if (exists) {
-                Logger.Action(initiator, $"Modify a watcher: {watcher.name}");
+                Logger.Action(originator, $"Modify a watcher: {watcher.name}");
             }
             else {
-                Logger.Action(initiator, $"Create a new watcher: {watcher.name}");
+                Logger.Action(originator, $"Create a new watcher: {watcher.name}");
             }
 
             return content;
@@ -498,7 +498,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] Delete(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -516,10 +516,10 @@ internal static class Watchdog {
             }
 
             if (task?.status == TaskWrapper.TaskStatus.running) {
-                StopTask(initiator);
+                StopTask(originator);
             }
 
-            Logger.Action(initiator, $"Delete watcher: {watcher.name}");
+            Logger.Action(originator, $"Delete watcher: {watcher.name}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -542,7 +542,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] SaveNotifications(HttpListenerContext ctx, string initiator) {
+    public static byte[] SaveNotifications(HttpListenerContext ctx, string originator) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             payload = reader.ReadToEnd();
@@ -561,7 +561,7 @@ internal static class Watchdog {
                 File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
             }
 
-            Logger.Action(initiator, $"Modified watchdog notifications");
+            Logger.Action(originator, $"Modified watchdog notifications");
 
             return Data.CODE_OK.Array;
 

@@ -17,8 +17,8 @@ internal static class Zones {
 
     public static byte[] SaveZones(HttpListenerContext ctx) {
         string payload;
-        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
-            payload = reader.ReadToEnd();
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        payload = reader.ReadToEnd();
 
         File.WriteAllText(Data.FILE_ZONES, payload);
 

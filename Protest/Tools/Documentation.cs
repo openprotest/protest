@@ -77,7 +77,7 @@ internal static class Documentation {
         return Data.CODE_FAILED.Array;
     }
 
-    public static byte[] Create(HttpListenerContext ctx, string initiator) {
+    public static byte[] Create(HttpListenerContext ctx, string originator) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string[] payload = reader.ReadToEnd().Split((char)127);
 
@@ -180,14 +180,14 @@ internal static class Documentation {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
 
-        Logger.Action(initiator, $"Create documentation: {filename}");
+        Logger.Action(originator, $"Create documentation: {filename}");
 
         return Data.CODE_OK.Array;
     }
 
 
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] Delete(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -209,7 +209,7 @@ internal static class Documentation {
                     html.Delete();
                 }
 
-                Logger.Action(initiator, $"Delete documentation: {name}");
+                Logger.Action(originator, $"Delete documentation: {name}");
             }
             catch {
                 return Data.CODE_FAILED.Array;

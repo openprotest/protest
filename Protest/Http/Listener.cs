@@ -34,8 +34,9 @@ public sealed class Listener {
     private void Bind(string[] uriPrefixes) {
         listener.IgnoreWriteExceptions = true;
 
-        for (int i = 0; i < uriPrefixes.Length; i++)
+        for (int i = 0; i < uriPrefixes.Length; i++) {
             listener.Prefixes.Add(uriPrefixes[i]);
+        }
 
         try {
             listener.Start();

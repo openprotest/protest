@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
+using Protest.Http;
 
 namespace Protest;
 internal static class Configuration {
@@ -49,11 +50,6 @@ internal static class Configuration {
 
             case "http_prefix":
                 httpPrefixes.Add(value.ToString());
-                break;
-
-            case "ip_access":
-                //TODO:
-                //Session.ip_access.Add(value, null);
                 break;
 
             case "front_path":
@@ -114,7 +110,7 @@ internal static class Configuration {
         builder.AppendLine($"# version {Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}");
         builder.AppendLine();
 
-        builder.AppendLine($"db_key        = {DB_KEY_STRING}");
+        builder.AppendLine($"db_key = {DB_KEY_STRING}");
         builder.AppendLine();
 
         builder.AppendLine($"front_path = {front_path}");
@@ -123,12 +119,8 @@ internal static class Configuration {
         builder.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
         builder.AppendLine();
 
-        builder.AppendLine("# you can use multiple entries");
-        builder.AppendLine("ip_access   = *");
-        builder.AppendLine();
-
         builder.AppendLine("http_prefix = http://127.0.0.1:8080/");
-        builder.AppendLine("#http_prefix = http://[::1]:8080/");
+        builder.AppendLine("http_prefix = http://[::1]:8080/");
         builder.AppendLine("#http_prefix = https://+:443/");
         builder.AppendLine();
 

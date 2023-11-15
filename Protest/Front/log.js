@@ -150,7 +150,6 @@ class Log extends Window {
 			if (split.length > 1 && split[0].length >= 10) {
 				let last =  split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
 				if (!isNaN(last)) {
-					console.log(last);
 					this.last = last;
 				}
 			}
@@ -191,9 +190,10 @@ class Log extends Window {
 
 				if (split[i] === "end") {
 					this.hasEnded = true;
-					const endElement = this.CreateLog(split[i]);
+					const endElement = this.CreateLog("- END -");
 					endElement.style.textAlign = "center";
-					endElement.style.color = "#808080";
+					endElement.style.color = "#606060";
+					endElement.style.paddingTop = endElement.style.paddingBottom = "16px";
 					this.list.prepend(endElement);
 					break;
 				}

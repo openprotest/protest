@@ -77,19 +77,19 @@ class DeviceView extends View {
 			this.SetTitle("New device");
 			this.Edit(true);
 
-			let initiator = KEEP.username;
+			let originator = KEEP.username;
 			let date = new Date();
 
-			this.attributes.appendChild(this.CreateAttribute("type",         "", initiator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("type",         "", originator, date, true));
 
-			this.attributes.appendChild(this.CreateAttribute("name",         "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("ip",           "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("hostname",     "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("mac address",  "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("manufacturer", "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("model",        "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("location",     "", initiator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("owner",        "", initiator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("name",         "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("ip",           "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("hostname",     "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("mac address",  "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("manufacturer", "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("model",        "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("location",     "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("owner",        "", originator, date, true));
 		}
 	}
 

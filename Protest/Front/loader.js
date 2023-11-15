@@ -1,3 +1,6 @@
+console.log("%cWarning:", "color:#FFBA00; font-weight:bold; font-size:20px");
+console.log("%cFor security reasons, don't copy-paste any code into this console. Unauthorized code execution may compromise your data. Always ensure the source and legitimacy of any code you execute.", "background:#FFBA00; color:#202020; font-weight:bold");
+
 const LOADER = {
 	devices: {},
 	users: {},

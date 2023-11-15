@@ -10,7 +10,7 @@
         <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
         <OutputType>Exe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <LangVersion>11</LangVersion>
         <Platforms>x64</Platforms>
         <PlatformTarget>x64</PlatformTarget>

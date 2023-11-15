@@ -561,6 +561,7 @@ class Acl extends Tabs {
 		sessionsList.style.right = "20px";
 		sessionsList.style.top = "45px";
 		sessionsList.style.bottom = "20px";
+		sessionsList.style.border = "rgb(82,82,82) solid 2px";
 		this.tabsPanel.appendChild(sessionsList);
 
 		try {

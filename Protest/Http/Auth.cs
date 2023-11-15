@@ -147,17 +147,17 @@ internal static class Auth {
         return null;
     }
 
-    public static bool RevokeAccess(HttpListenerContext ctx, string initiator) {
+    public static bool RevokeAccess(HttpListenerContext ctx, string originator) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
-        return RevokeAccess(sessionId, initiator);
+        return RevokeAccess(sessionId, originator);
     }
-    public static bool RevokeAccess(string sessionId, string initiator = null) {
+    public static bool RevokeAccess(string sessionId, string originator = null) {
         if (sessionId is null) return false;
         if (!sessions.ContainsKey(sessionId)) return false;
 
         if (sessions.TryRemove(sessionId, out _)) {
-            if (initiator != null) Logger.Action(initiator, $"User actively logged out");
+            if (originator != null) Logger.Action(originator, $"User actively logged out");
             return true;
         }
 
@@ -441,7 +441,7 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] CreateUser(Dictionary<string, string> parameters, HttpListenerContext ctx, string initiator) {
+    public static byte[] CreateUser(Dictionary<string, string> parameters, HttpListenerContext ctx, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -511,14 +511,14 @@ internal static class Auth {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(initiator, $"Save access control for {username}");
+        Logger.Action(originator, $"Save access control for {username}");
 
         KeepAlive.BroadcastToUser(username, $"{{\"action\":\"updateacl\",\"authorization\":[{permissionsString}]}}", "/global");
 
         return plain;
     }
 
-    public static byte[] DeleteUser(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] DeleteUser(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -541,7 +541,7 @@ internal static class Auth {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(initiator, $"Delete access control for {username}");
+        Logger.Action(originator, $"Delete access control for {username}");
 
         return "{\"status\":\"ok\"}"u8.ToArray();
     }
@@ -571,7 +571,7 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] KickUser(Dictionary<string, string> parameters, string initiator) {
+    public static byte[] KickUser(Dictionary<string, string> parameters, string originator) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -585,7 +585,7 @@ internal static class Auth {
             if (session.ip.ToString() != ip) continue;
             if (session.sessionId.Length == 0 || !session.sessionId.StartsWith(id8)) continue;
 
-            if (RevokeAccess(session.sessionId, initiator)) {
+            if (RevokeAccess(session.sessionId, originator)) {
                 return Data.CODE_OK.ToArray();
             }
             else {

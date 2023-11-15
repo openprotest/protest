@@ -133,6 +133,7 @@ class Settings extends Tabs {
 		this.zonesList.style.right = "20px";
 		this.zonesList.style.top = "80px";
 		this.zonesList.style.bottom = "20px";
+		this.zonesList.style.border = "rgb(82,82,82) solid 2px";
 		this.tabsPanel.appendChild(this.zonesList);
 
 		this.zonesNewButton.onclick = ()=>{
@@ -239,6 +240,7 @@ class Settings extends Tabs {
 		this.profilesList.style.right = "20px";
 		this.profilesList.style.top = "80px";
 		this.profilesList.style.bottom = "20px";
+		this.profilesList.style.border = "rgb(82,82,82) solid 2px";
 		this.tabsPanel.appendChild(this.profilesList);
 
 		this.profilesNewButton.onclick = ()=>{
@@ -452,7 +454,7 @@ class Settings extends Tabs {
 	}
 
 	PreviewZone(object=null) {
-		const dialog = this.DialogBox("210px");
+		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
 		const btnOK = dialog.btnOK;
@@ -490,10 +492,20 @@ class Settings extends Tabs {
 		colorInput.type = "color";
 		innerBox.append(colorLabel, colorInput);
 
+		const chkTrusted = document.createElement("input");
+		chkTrusted.type = "checkbox";
+		chkTrusted.checked = false;
+		const trustedBox = document.createElement("div");
+		trustedBox.style.gridArea = "4 / 2 / 4 / 4";
+		trustedBox.appendChild(chkTrusted);
+		innerBox.append(trustedBox);
+		const domainUser = this.AddCheckBoxLabel(trustedBox, chkTrusted, "Trusted zone");
+
 		if (object) {
-			nameInput.value = object.name;
+			nameInput.value    = object.name;
 			networkInput.value = object.network;
-			colorInput.value = object.color;
+			colorInput.value   = object.color;
+			chkTrusted.checked = object.isTrusted;
 		}
 
 		btnOK.addEventListener("click", async ()=>{
@@ -505,9 +517,10 @@ class Settings extends Tabs {
 			}
 
 			const newObject = {
-				name   : nameInput.value,
-				network: networkInput.value,
-				color  : colorInput.value
+				name     : nameInput.value,
+				network  : networkInput.value,
+				color    : colorInput.value,
+				isTrusted: chkTrusted.checked
 			};
 
 			if (isNew) {
@@ -647,7 +660,6 @@ class Settings extends Tabs {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -665,7 +677,6 @@ class Settings extends Tabs {
 			
 			const json = await response.json();
 			if (json.error) throw(json.error);
-
 			
 		}
 		catch (ex) {

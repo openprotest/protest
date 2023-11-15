@@ -97,7 +97,7 @@ class View extends Window {
 		this.SetupFloatingMenu();
 	}
 
-	CreateAttribute(name, value, initiator, date, editMode = false) {
+	CreateAttribute(name, value, originator, date, editMode = false) {
 		const newAttribute = document.createElement("div");
 
 		const nameBox = document.createElement("input");
@@ -126,16 +126,16 @@ class View extends Window {
 		const infoBox = document.createElement("div");
 		newAttribute.appendChild(infoBox);
 
-		if (date && initiator) {
+		if (date && originator) {
 			let modDate = new Date(UI.TicksToUnixDate(date));
 			const dateBox = document.createElement("div");
 			dateBox.textContent = `${modDate.toLocaleDateString(UI.regionalFormat, {})}`;
 			infoBox.appendChild(dateBox);
 
-			let modInitiator = initiator;
-			const initiatorBox = document.createElement("div");
-			initiatorBox.textContent = modInitiator;
-			infoBox.appendChild(initiatorBox);
+			let modOriginator = originator;
+			const originatorBox = document.createElement("div");
+			originatorBox.textContent = modOriginator;
+			infoBox.appendChild(originatorBox);
 		}
 
 		if (this instanceof DeviceView) {
