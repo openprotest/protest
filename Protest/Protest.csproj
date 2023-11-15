@@ -36,38 +36,8 @@
         <PublishReadyToRun>true</PublishReadyToRun>
         <PublishSingleFile>true</PublishSingleFile>
         <Copyright>2023 veniware. Released into the public domain.</Copyright>
-
     </PropertyGroup>
-
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <DefineConstants>OS_WINDOWS</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-        <DefineConstants>OS_WINDOWS</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
-        <DefineConstants>OS_WINDOWS</DefineConstants>
-    </PropertyGroup>
-
-    <!--<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-        <DefineConstants>OS_MAC</DefineConstants>
-    </PropertyGroup>-->
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-        <DefineConstants>OS_MAC</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
-        <DefineConstants>OS_MAC</DefineConstants>
-    </PropertyGroup>
-
-    <!--<PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <DefineConstants>OS_LINUX</DefineConstants>
-    </PropertyGroup>-->
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-        <DefineConstants>OS_LINUX</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
-        <DefineConstants>OS_LINUX</DefineConstants>
-    </PropertyGroup>
+  
     <ItemGroup>
       <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
       <PackageReference Include="SSH.NET" Version="2023.0.0" />

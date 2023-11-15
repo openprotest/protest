@@ -22,6 +22,8 @@ global using System.Linq;
 namespace Protest;
 
 internal class Program {
+    internal static readonly string[] alternativeUriPrefixes = new string[] { "http://127.0.0.1:8080/" };
+
     static void Main(string[] args) {
         Console.Title = "Pro-test";
 
@@ -50,12 +52,10 @@ internal class Program {
             Configuration.CreateDefault();
         }
 
-#if OS_WINDOWS
         if (OperatingSystem.IsWindows() && Configuration.force_registry_keys) {
             bool disableHeader = Configuration.DisableServerHeaderRegKey();
             Console.WriteLine(String.Format("{0, -23} {1, -10}", "Force registry keys", disableHeader ? "OK  " : "Failed"));
         }
-#endif
 
         Console.Write("Loading database");
         DatabaseInstances.Initialize();
@@ -77,7 +77,7 @@ internal class Program {
             if (ex.ErrorCode != 5) return; //access denied
             Console.WriteLine("Switching to alternative prefix");
 
-            Http.Listener listener = new Http.Listener(new string[] { "http://127.0.0.1:8080/" }, Configuration.front_path);
+            Http.Listener listener = new Http.Listener(alternativeUriPrefixes, Configuration.front_path);
             Console.WriteLine(listener.ToString());
             listener.Start();
         }

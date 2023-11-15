@@ -10,7 +10,7 @@ internal static partial class Arp {
 
     [SupportedOSPlatform("windows")]
     [LibraryImport("iphlpapi.dll")]
-    private static partial uint SendARP(uint destIP, uint srcIP, byte[] macAddr, ref int macAddrLen);
+    private static partial uint SendARP(uint destIP, uint srcIP, in byte[] macAddr, ref int macAddrLen);
 
     [GeneratedRegex("^((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\s+\\w+){2}\\s+((?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2}))")]
     private static partial Regex LinuxMacAddressRegex();

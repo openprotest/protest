@@ -61,7 +61,7 @@ class Automation extends List {
 		case "lastseen": icon = "mono/lastseen.svg"; break;
 		case "watchdog": icon = "mono/watchdog.svg"; break;
 		case "fetch"   : icon = "mono/fetch.svg"   ; break;
-		default        : icon = "mono/task.svg"    ; break;
+		default        : icon = "mono/automation.svg"    ; break;
 		}
 
 		const iconBox = document.createElement("div");
