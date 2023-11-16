@@ -1832,14 +1832,14 @@ class DeviceView extends View {
 				const json = await response.json();
 				
 				if (json.error) {
-					message.innerHTML = json.error;
+					message.textContent = json.error;
 					divFetch.removeChild(iconsContainer);
 					divFetch.removeChild(btnFetchOk);
 					btnFetchCancel.value = "Close";
 				}
 				else if (json instanceof Array) {
-					divList.innerHTML = "";
-					frame.innerHTML = "";
+					divList.textContent = "";
+					frame.textContent = "";
 					list = [];
 
 					for (let i = 0; i < json.length; i++) {

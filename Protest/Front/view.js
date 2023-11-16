@@ -311,7 +311,7 @@ class View extends Window {
 					}
 
 					this.attributes.appendChild(
-						this.CreateAttribute(this.groupSchema[i], hash[this.groupSchema[i]].v, hash[this.groupSchema[i]].i, hash[this.groupSchema[i]].d)
+						this.CreateAttribute(this.groupSchema[i], hash[this.groupSchema[i]].v, hash[this.groupSchema[i]].o, hash[this.groupSchema[i]].d)
 					);
 
 					pushed.push(this.groupSchema[i]);
@@ -330,7 +330,7 @@ class View extends Window {
 						nextGroup = null;
 					}
 
-					const newAttr = this.CreateAttribute(key, hash[key].v, hash[key].i, hash[key].d);
+					const newAttr = this.CreateAttribute(key, hash[key].v, hash[key].o, hash[key].d);
 					if (key.startsWith(".")) {
 						if (!editMode) newAttr.style.display = "none";
 						newAttr.style.opacity = ".66";
@@ -348,7 +348,7 @@ class View extends Window {
 
 			for (let i = 0; i < sorted.length; i++) {
 				this.attributes.appendChild(
-					this.CreateAttribute(sorted[i], hash[sorted[i]].v, hash[sorted[i]].i, hash[sorted[i]].d)
+					this.CreateAttribute(sorted[i], hash[sorted[i]].v, hash[sorted[i]].o, hash[sorted[i]].d)
 				);
 			}
 		}

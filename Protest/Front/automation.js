@@ -21,7 +21,7 @@ class Automation extends List {
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 
-		this.createButton.disabled = true;
+		this.createButton.disabled = true; //TODO: <-
 		this.deleteButton.disabled = true;
 		this.startButton.disabled = true;
 		this.pauseButton.disabled = true;
@@ -47,6 +47,8 @@ class Automation extends List {
 				this.list.appendChild(element);
 	
 				this.InflateElement(element, this.link.data[task]);
+
+				element.addEventListener("click", event=>this.Entry_onclick(event));
 			}
 		}
 		catch (ex) {
@@ -74,9 +76,42 @@ class Automation extends List {
 		if (!element.ondblclick) {
 			element.ondblclick = event=> {
 				event.stopPropagation();
+				this.Entry_ondblclick(event);
 			};
 		}
 	}
 
+	Entry_onclick(event) {
+		this.deleteButton.disabled = true;
+		this.startButton.disabled = true;
+		this.stopButton.disabled = true;
+
+		if (!this.link.data.hasOwnProperty(this.params.select)) {
+			return;
+		}
+
+		if (this.link.data[this.params.select].name.v.toLowerCase() === "lifeline" ||
+			this.link.data[this.params.select].name.v.toLowerCase() === "watchdog" ||
+			this.link.data[this.params.select].name.v.toLowerCase() === "fetch") {
+			this.deleteButton.disabled = true;
+		}
+		else {
+			//this.deleteButton.disabled = false; //TODO: <-
+		}
+
+		if (this.link.data[this.params.select].status.v.toLowerCase() === "stopped") {
+			//this.startButton.disabled = false;
+			this.stopButton.disabled = true;
+		}
+		else {
+			this.startButton.disabled = true;
+			//this.stopButton.disabled = false;
+		}
+
+	}
+
+	Entry_ondblclick(event) {
+		
+	}
 
 }

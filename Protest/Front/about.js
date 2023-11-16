@@ -119,11 +119,11 @@ class About extends Tabs {
 		credits.style.textAlign = "left";
 		credits.style.userSelect = "text";
 		credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
-		credits.innerHTML += "<b>-</b> MAC addresses lookup table          <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
-		credits.innerHTML += "<b>-</b> IP2Location LITE                    <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-		credits.innerHTML += "<b>-</b> IP2Proxy LITE                       <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-		credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient              <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
-		credits.innerHTML += "<b>-</b> Open Sans typeface                  <a>by Steve Matteson</a><br>";
+		credits.innerHTML += "<b>-</b> MAC addresses lookup table <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
+		credits.innerHTML += "<b>-</b> IP2Location LITE           <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
+		credits.innerHTML += "<b>-</b> IP2Proxy LITE              <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
+		credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient     <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
+		credits.innerHTML += "<b>-</b> Open Sans typeface         <a>by Steve Matteson</a><br>";
 		center.appendChild(credits);
 
 		center.appendChild(document.createElement("br"));
@@ -216,7 +216,7 @@ class About extends Tabs {
 		animationBox.appendChild(animation);
 
 		const status = document.createElement("div");
-		status.innerHTML = "Checking for updates...";
+		status.textContent = "Checking for updates...";
 		status.style.textAlign = "center";
 		status.style.fontSize = "large";
 		status.style.fontWeight = "600";

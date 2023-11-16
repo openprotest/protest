@@ -33,7 +33,7 @@ public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary
                 if (propertyName == "v") {
                     attr.value = removeValue ? String.Empty : reader.GetString();
                 }
-                else if (propertyName == "i") {
+                else if (propertyName == "o") {
                     attr.originator = removeValue ? String.Empty : reader.GetString();
                 }
                 else if (propertyName == "d") {
@@ -58,7 +58,7 @@ public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary
 
     public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, Database.Attribute> value, JsonSerializerOptions options) {
         ReadOnlySpan<char> _v = stackalloc[] {'v'};
-        ReadOnlySpan<char> _i = stackalloc[] {'i'};
+        ReadOnlySpan<char> _o = stackalloc[] {'o'};
         ReadOnlySpan<char> _d = stackalloc[] {'d'};
 
         writer.WriteStartObject();
@@ -68,7 +68,7 @@ public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary
 
             writer.WriteStartObject();
             writer.WriteString(_v, pair.Key.Contains("password") && ignorePasswords ? String.Empty : pair.Value.value);
-            writer.WriteString(_i, pair.Value.originator);
+            writer.WriteString(_o, pair.Value.originator);
             writer.WriteNumber(_d, pair.Value.date);
             writer.WriteEndObject();
         }

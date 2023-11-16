@@ -4,10 +4,65 @@
 	right: 8px;
 	top: 8px;
 	bottom: 64px;
-	color: var(--clr-dark);
-	background-color: var(--clr-pane);
+	color: var(--clr-light);
+	border: solid var(--clr-light) 2px;
 	padding: 4px;
 	margin: 8px;
 	border-radius: 4px;
 	overflow-y: auto;
+}
+
+.chat-input {
+	position: absolute;
+	left: 8px;
+	right: 188px;
+	bottom: 12px;
+	height: 40px;
+	margin: 0 8px;
+	padding: 4px 12px;
+	border-radius: 16px;
+
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	overflow-y: auto;
+}
+
+.chat-input:empty::before {
+	content: "Aa";
+	color: rgb(96,96,96);
+}
+
+.chat-button {
+	position: absolute;
+	bottom: 12px;
+	width: 40px !important;
+	min-width: 40px !important;
+	height: 40px !important;
+	min-height: 40px !important;
+	padding: 2px !important;
+	margin: 4px !important;
+	background-position: center;
+	background-size: 32px 32px;
+	background-repeat: no-repeat;
+}
+.chat-button:active {
+	background-color: rgb(52,52,52) !important;
+}
+
+.chat-send {
+	background-image: url(mono/send.svg?light);
+	right: 140px;
+}
+.chat-mic {
+	background-image: url(mono/mic.svg?light);
+	right: 96px;
+}
+.chat-cam {
+	background-image: url(mono/webcam.svg?light);
+	right: 52px;
+}
+
+.chat-screen {
+	background-image: url(mono/screenshare.svg?light);
+	right: 8px;
 }

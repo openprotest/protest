@@ -24,7 +24,7 @@ const UI = {
 		document.body.className = localStorage.getItem("animations") !== "false" ? "" : "disable-animations";
 
 		container.className = "";
-		if (localStorage.getItem("w_popout") === "false") container.classList.add("no-popout");
+		if (localStorage.getItem("w_popout") !== "true") container.classList.add("no-popout");
 		if (localStorage.getItem("w_dropshadow") === "false") container.classList.add("disable-window-dropshadows");
 		if (localStorage.getItem("glass") === "true") container.classList.add("glass");
 
@@ -188,11 +188,11 @@ const MENU = {
 		{ t: "Password strength",                   i: "mono/strength.svg?light",    g: "inventory", h: false, f: ()=> new PasswordStrength() },
 		{ t: "Gandalf",                             i: "mono/gandalf.svg?light",     g: "inventory", h: true,  f: params=> new Gandalf() },
 
-		{ t: "Address book",  i: "mono/addressbook.svg?light",   g: "documentation", h: false, f: params=> new AddressBook() },
-		//{ t: "Team chat",     i: "mono/chat.svg?light",          g: "documentation", h: false, f: params=> new Chat() },
+		{ t: "Address book",  i: "mono/addressbook.svg?light",   g: "documentation", h: true, f: params=> new AddressBook() },
 		{ t: "Documentation", i: "mono/documentation.svg?light", g: "documentation", h: false, f: params=> new Documentation() },
 		{ t: "Debit notes",   i: "mono/notes.svg?light",         g: "documentation", h: false, f: params=> new DebitNotes() },
 		{ t: "Watchdog",      i: "mono/watchdog.svg?light",      g: "documentation", h: false, f: params=> new Watchdog(params) },
+		{ t: "Team chat",     i: "mono/chat.svg?light",          g: "documentation", h: false, f: params=> new Chat() },
 
 		{ t: "Telnet",             i: "mono/telnet.svg?light",        g: "tools", h: true,  f: params=> new Telnet(params) },
 		{ t: "Secure shell",       i: "mono/ssh.svg?light",           g: "tools", h: true,  f: params=> {} },

@@ -377,10 +377,10 @@ class Window {
 		};
 
 		this.task.onmouseup = event=> {
-			if (event.button == 0 && (Math.abs(icoPosition - this.task.offsetLeft) < 2)) { //clicked but not moved
-				if (this.popOutWindow)
+			if (event.button == 0 && (Math.abs(icoPosition - this.task.offsetLeft) < 4)) { //clicked but not moved
+				if (this.popOutWindow) {
 					this.popOutWindow.focus();
-
+				}
 				this.Minimize();
 				if (!this.isMinimized && this.defaultElement) this.defaultElement.focus();
 			}
