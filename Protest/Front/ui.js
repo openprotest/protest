@@ -219,6 +219,8 @@ const MENU = {
 		{ t: "Password generator", i: "mono/passgen.svg?light",  g: "utilities", h: false, f: params=> new PassGen(params) },
 		{ t: "Keyboard tester",    i: "mono/keyboard.svg?light", g: "utilities", h: true,  f: params=> new KeyboardTester() },
 		{ t: "Gamepad tester",     i: "mono/gamepad.svg?light",  g: "utilities", h: true,  f: params=> new KeyboardTester("gamepad") },
+		{ t: "Mic tester",         i: "mono/mic.svg?light",      g: "utilities", h: true,  f: params=> new MicTester() },
+		{ t: "Webcam tester",      i: "mono/webcam.svg?light",   g: "utilities", h: true,  f: params=> new WebcamTester() },
 				
 		{ t: "Settings",       i: "mono/wrench.svg?light",      g: "manage", h: false, f: params=> new Settings() },
 		{ t: "Zones",          i: "mono/router.svg?light",      g: "manage", h: true,  f: params=> new Settings("zones") },

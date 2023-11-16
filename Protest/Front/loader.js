@@ -111,6 +111,8 @@ const LOADER = {
 		"encoder.js",
 		"netcalc.js",
 		"keyboardtester.js",
+		"mictester.js",
+		"webcamtester.js",
 		"automation.js",
 		"log.js"
 	],
@@ -320,6 +322,8 @@ const LOADER = {
 		case "Encoder"        : win = new Encoder(session.params); break;
 		case "NetCalc"        : win = new NetCalc(session.params); break;
 		case "KeyboardTester" : win = new KeyboardTester(session.params); break;
+		case "MicTester" : win = new MicTester(session.params); break;
+		case "WebcamTester" : win = new WebcamTester(session.params); break;
 
 		case "Automation" : win = new Automation(session.params); break;
 		case "Log"        : win = new Log(session.params); break;

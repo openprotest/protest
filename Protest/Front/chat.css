@@ -14,10 +14,11 @@
 
 .chat-input {
 	position: absolute;
-	left: 8px;
-	right: 188px;
+	left: 148px;
+	right: 56px;
 	bottom: 12px;
-	height: 40px;
+	min-height: 40px;
+	max-height: 60%;
 	margin: 0 8px;
 	padding: 4px 12px;
 	border-radius: 16px;
@@ -49,20 +50,20 @@
 	background-color: rgb(52,52,52) !important;
 }
 
-.chat-send {
-	background-image: url(mono/send.svg?light);
-	right: 140px;
-}
 .chat-mic {
 	background-image: url(mono/mic.svg?light);
-	right: 96px;
+	left: 8px;
 }
 .chat-cam {
 	background-image: url(mono/webcam.svg?light);
-	right: 52px;
+	left: 52px;
 }
-
 .chat-screen {
 	background-image: url(mono/screenshare.svg?light);
+	left: 96px;
+}
+
+.chat-send {
+	background-image: url(mono/send.svg?light);
 	right: 8px;
 }
