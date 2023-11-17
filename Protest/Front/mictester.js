@@ -6,9 +6,9 @@ class MicTester extends Window {
 
 		this.params = params ?? {
 			echoCancellation: true,
-			noiseSuppression: true,
+			noiseSuppression: false,
 			sampleSize: 16,
-			sampleRate: 44100
+			sampleRate: 48_000
 		};
 
 		this.SetTitle("Mic tester");
@@ -19,6 +19,15 @@ class MicTester extends Window {
 		this.SetupToolbar();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+
+		this.infoBox = document.createElement("div");
+		this.infoBox.style.position = "absolute";
+		this.infoBox.style.right = "8px";
+		this.infoBox.style.bottom = "8px";
+		this.infoBox.style.zIndex = "1";
+		this.infoBox.style.color = "var(--clr-light)";
+		this.infoBox.style.textShadow = "black 0 0 2px";
+		this.content.appendChild(this.infoBox);
 
 		this.stopButton.disabled = true;
 
@@ -48,7 +57,6 @@ class MicTester extends Window {
 
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
-		
 
 		const chkEchoCancellation = document.createElement("input");
 		chkEchoCancellation.type = "checkbox";
@@ -68,7 +76,7 @@ class MicTester extends Window {
 		innerBox.appendChild(document.createElement("br"));
 
 		const sampleSizeLabel = document.createElement("div");
-		sampleSizeLabel.textContent = "Sample size:";
+		sampleSizeLabel.textContent = "Bit depth:";
 		sampleSizeLabel.style.display = "inline-block";
 		sampleSizeLabel.style.minWidth = "120px";
 		innerBox.appendChild(sampleSizeLabel);
@@ -100,10 +108,10 @@ class MicTester extends Window {
 		sampleRateInput.style.width = "100px";
 		innerBox.appendChild(sampleRateInput);
 		const rate44 = document.createElement("option");
-		rate44.value = 44100;
+		rate44.value = 44_100;
 		rate44.text = "44.1KHz";
 		const rate48 = document.createElement("option");
-		rate48.value = 48000;
+		rate48.value = 48_000;
 		rate48.text = "48KHz";
 		const rate96 = document.createElement("option");
 		rate96.value = 96000;
@@ -121,14 +129,22 @@ class MicTester extends Window {
 					audio: {
 						echoCancellation: chkEchoCancellation.checked,
 						noiseSuppression: chkNoiseSuppression.checked,
-						sampleSize: sampleSizeInput.value,
-						sampleRate: sampleRateInput.value
+						sampleSize: parseInt(sampleSizeInput.value),
+						sampleRate: parseInt(sampleRateInput.value)
 					},
 					video: false
 				});
+				
+				const audioTrack = this.stream.getAudioTracks()[0];
+				const audioSettings = audioTrack.getSettings();
+				audioTrack.onended = () => this.Stop();
 
 				this.Start();
-
+		
+				if (audioSettings.sampleRate && audioSettings.sampleSize) {
+					this.infoBox.textContent = `${audioSettings.sampleRate}Hz @ ${audioSettings.sampleSize}-bits`;
+				}
+		
 				this.startButton.disabled = true;
 				this.stopButton.disabled = false;
 			}
@@ -140,8 +156,8 @@ class MicTester extends Window {
 
 				this.params.echoCancellation = chkEchoCancellation.checked;
 				this.params.noiseSuppression = chkNoiseSuppression.checked;
-				this.params.sampleSize = sampleSizeInput.value;
-				this.params.sampleRate = sampleRateInput.value;
+				this.params.sampleSize = parseInt(sampleSizeInput.value);
+				this.params.sampleRate = parseInt(sampleRateInput.value);
 			}
 		};
 		
@@ -181,48 +197,96 @@ class MicTester extends Window {
 				this.analyser.getByteFrequencyData(dataArray);
 				ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+				ctx.fillStyle = "#c0c0c0";
+				ctx.font = "14px Consolas";
+				ctx.textAlign = "right";
+				ctx.textBaseline = 'middle';
+
+				const step = this.canvas.height > 800 ? 32 : this.canvas.height > 400 ? 64 : 128;
+				for (let i=step; i<256; i+=step) {
+					let y = i * this.canvas.height / 512;
+					const dB = 20 * Math.log10((i / 255));
+					ctx.fillText(`${dB.toFixed(1)}dB`, 56, this.canvas.height / 2 - y);
+					ctx.fillRect(64, this.canvas.height / 2 - y, this.canvas.width, 1);
+
+					ctx.fillText(`${dB.toFixed(1)}dB`, 56, this.canvas.height / 2 + y);
+					ctx.fillRect(64, this.canvas.height / 2 + y, this.canvas.width, 1);
+				}
+
 				const horizontalCenter = this.canvas.width / 2;
-				const barWidth = 2 * this.canvas.width / bufferLength;
+				const barWidth = Math.max(this.canvas.width / bufferLength, 2);
 				let barHeight;
 				let x = 0;
- 
-				for (let i = 0; i < bufferLength; i++) {
+				let peakFrequency = 0;
+				let peakIndex = -1;
+
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+
+				for (let i=0; i < bufferLength; i++) {
+					if (peakFrequency < dataArray[i]) {
+						peakFrequency = dataArray[i];
+						peakIndex = i;
+					}
+
+					ctx.fillStyle = "#c0c0c0";
+
+					//draw bars
 					barHeight = dataArray[i] * this.canvas.height / 255;
-					ctx.fillStyle = `hsl(${12 + dataArray[i]/2},100%,40%)`;
 					ctx.fillRect(horizontalCenter + x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
 					ctx.fillRect(horizontalCenter - x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
 					
+					//draw labels
+					if (i > 0 && i % (this.canvas.width > 800 ? 32 : 64) === 0) {
+						const frequency = i * this.audioContext.sampleRate / bufferLength / 2000;
+						ctx.fillText(`${frequency}KHz`, horizontalCenter + x, 10);
+						ctx.fillText(`${frequency}KHz`, horizontalCenter - x, 10);
+						ctx.fillRect(horizontalCenter + x, 20, 3, 3);
+						ctx.fillRect(horizontalCenter - x, 20, 3, 3);
+					}
+
+					//calculate recent max
 					if (maxHeight[i] < dataArray[i]) {
 						maxHeight[i] = dataArray[i];
 						maxAcc[i] = 0;
-					} else {
+					}
+					else {
 						maxAcc[i] += .2;
 						maxHeight[i] = Math.max(maxHeight[i] - maxAcc[i], 0);
 					}
 
+					//draw recent max
+					ctx.fillStyle = `hsl(${12 + dataArray[i]/2},100%,40%)`;
 					barHeight = maxHeight[i] * this.canvas.height / 255;
-					ctx.fillRect(horizontalCenter + x, (this.canvas.height - barHeight) / 2, barWidth, 4);
-					ctx.fillRect(horizontalCenter - x, (this.canvas.height - barHeight) / 2, barWidth, 4);
-					ctx.fillRect(horizontalCenter + x, (this.canvas.height + barHeight) / 2, barWidth, 4);
-					ctx.fillRect(horizontalCenter - x, (this.canvas.height + barHeight) / 2, barWidth, 4);
+					ctx.fillRect(horizontalCenter + x, (this.canvas.height - barHeight) / 2 - barWidth, barWidth, barWidth);
+					ctx.fillRect(horizontalCenter - x, (this.canvas.height - barHeight) / 2 - barWidth, barWidth, barWidth);
+					ctx.fillRect(horizontalCenter + x, (this.canvas.height + barHeight) / 2, barWidth, barWidth);
+					ctx.fillRect(horizontalCenter - x, (this.canvas.height + barHeight) / 2, barWidth, barWidth);
 
 					x += barWidth - 1;
+
+					if (x > horizontalCenter) {
+						break;
+					}
 				}
 
-				const step =this.canvas.width < 960 ? 22 : 11;
-				ctx.fillStyle = '#c0c0c0';
-				ctx.font = '11px';
-				ctx.textBaseline = 'middle';
-				ctx.textAlign = "center";
-				for (let i = step; i < bufferLength; i+=step) {
-					let tx = i * barWidth;
-					if (horizontalCenter + tx + 20 > this.canvas.width) continue;
+				if (peakIndex > -1) { //draw peak
+					ctx.fillStyle = "#c0c0c0";
+					ctx.textBaseline = "bottom";
+					const frequency = Math.round(peakIndex * this.audioContext.sampleRate / bufferLength / 2);
+					const frequencyString = frequency < 1000 ? `${frequency}Hz` : `${frequency/1000}KHz`
+					const x = (horizontalCenter + (barWidth-1) * peakIndex + barWidth / 2);
+					const y = this.canvas.height * 46 / 48;
 
-					const text = `${Math.round(i * this.audioContext.sampleRate / bufferLength / 1000)}KHz`;
-					ctx.fillText(text, horizontalCenter + tx , 10);
-					ctx.fillText(text, horizontalCenter - tx , 10);
-					ctx.fillRect(horizontalCenter + tx, 20, 3, 3);
-					ctx.fillRect(horizontalCenter - tx, 20, 3, 3);
+					if (frequency > 0) {
+						ctx.fillRect(x-2, this.canvas.height - 52, 5, 5);
+						ctx.fillRect(x, this.canvas.height - 48, 1, 10);
+						ctx.fillText(`${frequencyString}`, x, this.canvas.height-20);
+						if (frequency >= 440) {
+							let note = this.CalculateNote(frequency);
+							ctx.fillText(`${note.note} ${note.cents}`, x, this.canvas.height);
+						}
+					}
 				}
 
 				if (this.stream) {
@@ -232,6 +296,23 @@ class MicTester extends Window {
 
 			drawVisualizer();
 		}
+	}
+
+	CalculateNote(frequency) {
+		const referenceFrequency = 440; //A4
+		const referenceNote = 69; //MIDI note number for A4
+	
+		const cents = Math.round(1200 * Math.log2(frequency / referenceFrequency)) % 1200;
+		const note = 12 * Math.log2(frequency / referenceFrequency) + referenceNote;
+		const roundedNote = Math.round(note);
+
+		const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+		const noteIndex = (roundedNote % 12 + 12) % 12;
+		const octave = Math.floor(roundedNote / 12) - 1; //MIDI octave starts from -1
+	
+		const closestNote = `${noteNames[noteIndex]}${octave}`;
+
+		return { note: closestNote, cents: cents > 0 ? `+${cents}` : `${cents}`};
 	}
 
 	Stop() {
@@ -251,6 +332,7 @@ class MicTester extends Window {
 			this.canvas = null;
 		}
 
+		this.infoBox.textContent = "";
 		this.startButton.disabled = false;
 		this.stopButton.disabled = true;
 	}

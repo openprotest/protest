@@ -137,13 +137,13 @@ class WebcamTester extends Window {
 				audio: false,
 				video: {
 					width: { ideal: 3840 },
-					height: { ideal: 2160 },
+					height: { ideal: 2160 }
 				}
 			} : {
 				audio: false,
 				video: {
 					width: { min: 1024, ideal: 1920, max: 3840 },
-					height: { min: 576, ideal: 1080, max: 2160 },
+					height: { min: 576, ideal: 1080, max: 2160 }
 				}
 			});
 
@@ -151,7 +151,7 @@ class WebcamTester extends Window {
 			const videoSettings = videoTrack.getSettings();
 			videoTrack.onended = ()=> this.Stop();
 
-			this.infoBox.textContent = `${videoSettings.width} x ${videoSettings.height} @ ${videoSettings.frameRate}FPS`;
+			this.infoBox.textContent = `${videoSettings.width} x ${videoSettings.height} @ ${Math.round(videoSettings.frameRate)}FPS`;
 
 			this.Start();
 
