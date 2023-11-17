@@ -64,7 +64,7 @@ class PasswordStrength extends List {
 
 				if (types[i] === this.params.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
-					filterButton.style.borderBottom = "var(--clr-light) solid 3px";
+					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 				}
 
 				newType.onclick = ()=> {
@@ -76,7 +76,7 @@ class PasswordStrength extends List {
 					}
 					else {
 						this.params.filter = types[i];
-						filterButton.style.borderBottom = "var(--clr-light) solid 3px";
+						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 						newType.style.backgroundColor = "var(--clr-select)";
 					}
 

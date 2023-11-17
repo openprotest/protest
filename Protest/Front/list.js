@@ -227,7 +227,7 @@ class List extends Window {
 
 				if (types[i] === this.params.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
-					filterButton.style.borderBottom = "var(--clr-light) solid 3px";
+					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 				}
 
 				newType.onclick =()=> {
@@ -239,7 +239,7 @@ class List extends Window {
 					}
 					else {
 						this.params.filter = types[i];
-						filterButton.style.borderBottom = "var(--clr-light) solid 3px";
+						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 						newType.style.backgroundColor = "var(--clr-select)";
 					}
 
@@ -305,7 +305,7 @@ class List extends Window {
 		};
 
 		findInput.onchange = ()=> {
-			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
+			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
 			this.params.find = findInput.value;
 			this.RefreshList();
 		};
