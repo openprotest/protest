@@ -45,6 +45,7 @@
 	background-position: center;
 	background-size: 32px 32px;
 	background-repeat: no-repeat;
+	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
 }
 .chat-button:active {
 	background-color: rgb(52,52,52) !important;

@@ -2,21 +2,28 @@ class WebcamTester extends Window {
 	constructor(params) {
 		super();
 
-		this.params = params;
+		this.params = params ?? {
+			force4K: false,
+			audio: false
+		};
 
 		this.SetTitle("Webcam tester");
 		this.SetIcon("mono/webcam.svg");
 
+		this.recorder = null;
+		this.recordChunks = [];
+
 		this.SetupToolbar();
+		this.recordButton = this.AddToolbarButton("Record", "mono/record.svg?light");
 		this.startButton   = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.stopButton    = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 		this.AddToolbarSeparator();
-		this.flipButton    = this.AddToolbarButton("Horizontal flip", "mono/horizontalflip.svg?light");
+		this.settingsButton = this.AddToolbarButton("Settings", "mono/wrench.svg?light");
 		this.controlButton = this.AddToolbarButton("Picture controls", "mono/personalize.svg?light");
-		this.force4kButton = this.AddToolbarButton("Force 4K", "mono/4k.svg?light");
+		this.flipButton    = this.AddToolbarButton("Horizontal flip", "mono/horizontalflip.svg?light");
 
 		this.stopButton.disabled = true;
-
+		
 		this.content.style.overflow = "hidden";
 
 		this.videoFeedback = document.createElement("video");
@@ -36,8 +43,11 @@ class WebcamTester extends Window {
 
 		this.stream = null;
 		
-		this.startButton.onclick = ()=> this.AttachCamera();
+		this.recordButton.onclick = () => this.Record();
+		this.startButton.onclick = ()=> this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
+
+		this.settingsButton.onclick = ()=> this.Settings();
 
 		let flipToggle = false;
 		this.flipButton.onclick = ()=>{
@@ -53,13 +63,38 @@ class WebcamTester extends Window {
 			this.controlsBox.style.transform = controlsToggle ? "none" : "translateY(-150px)";
 			this.controlButton.style.borderBottom = controlsToggle ? "#c0c0c0 solid 3px" : "none";
 		};
+	}
 
-		this.force4k = false;
-		this.force4kButton.onclick = ()=> {
-			this.force4k = !this.force4k;
-			this.Stop();
-			this.AttachCamera();
-			this.force4kButton.style.borderBottom = this.force4k ? "#c0c0c0 solid 3px" : "none";
+	Settings() {
+		const dialog = this.DialogBox("150px");
+		const btnOK = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
+		const innerBox = dialog.innerBox;
+
+		innerBox.style.padding = "20px 20px 0 20px";
+		innerBox.parentElement.style.maxWidth = "480px";
+
+		const chkForce4K = document.createElement("input");
+		chkForce4K.type = "checkbox";
+		innerBox.appendChild(chkForce4K);
+		this.AddCheckBoxLabel(innerBox, chkForce4K, "Force 4K resolution").style.paddingBottom = "16px";;
+
+		innerBox.appendChild(document.createElement("br"));
+
+		const chkAudio = document.createElement("input");
+		chkAudio.type = "checkbox";
+		innerBox.appendChild(chkAudio);
+		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";;
+
+		innerBox.appendChild(document.createElement("br"));
+
+		chkForce4K.checked = this.params.force4K;
+		chkAudio.checked = this.params.audio;
+
+		btnOK.onclick = async ()=> {
+			this.params.force4K = chkForce4K.checked;
+			this.params.audio = chkAudio.checked;
+			dialog.Close();
 		};
 	}
 
@@ -130,51 +165,61 @@ class WebcamTester extends Window {
 		saturate.oninput = saturate.onchange = ()=> Update();
 	}
 
-	async AttachCamera() {
+	async Start(withRecording=false) {
 		try {
-			this.stream = await navigator.mediaDevices.getUserMedia(this.force4k ?
-			{
-				audio: false,
-				video: {
+			this.stream = await navigator.mediaDevices.getUserMedia({
+				audio: this.params.audio ? {
+					echoCancellation: true,
+					noiseSuppression: true
+				} : false,
+
+				video: this.params.force4K ?
+				{
 					width: { ideal: 3840 },
 					height: { ideal: 2160 }
-				}
-			} : {
-				audio: false,
-				video: {
-					width: { min: 1024, ideal: 1920, max: 3840 },
-					height: { min: 576, ideal: 1080, max: 2160 }
+				} : {
+					width: { min: 640, ideal: 1920, max: 3840 },
+					height: { min: 480, ideal: 1080, max: 2160 }
 				}
 			});
-
+			
 			const videoTrack = this.stream.getVideoTracks()[0];
 			const videoSettings = videoTrack.getSettings();
 			videoTrack.onended = ()=> this.Stop();
 
+			this.videoFeedback.srcObject = this.stream;
+			this.videoFeedback.play();
+
 			this.infoBox.textContent = `${videoSettings.width} x ${videoSettings.height} @ ${Math.round(videoSettings.frameRate)}FPS`;
 
-			this.Start();
+			if (withRecording) {
+				this.recorder = new MediaRecorder(this.stream);
+				this.recordChunks = [];
+
+				this.recorder.ondataavailable = event=> this.recordChunks.push(event.data);
+				this.recorder.onstop = ()=> this.HandleRecording();
+				this.recorder.start();
+
+				this.recorder = new MediaRecorder(this.stream);
+			}
 
 			this.startButton.disabled = true;
 			this.stopButton.disabled = false;
-			this.force4kButton.disabled = false;
+			this.settingsButton.disabled = true;
 		}
 		catch (ex) {
 			this.startButton.disabled = false;
 			this.stopButton.disabled = true;
-			this.force4kButton.disabled = true;
+			this.settingsButton.disabled = false;
 			setTimeout(() => this.ConfirmBox(ex, true, "mono/error.svg"), 400);
 		}
 	}
 
-	Start() {
-		if (this.stream) {
-			this.videoFeedback.srcObject = this.stream;
-			this.videoFeedback.play();
-		}
-	}
-
 	Stop() {
+		if (this.recorder) {
+			this.recorder.stop();
+		}
+
 		if (this.stream) {
 			const tracks = this.stream.getTracks();
 			tracks.forEach(track => track.stop());
@@ -183,9 +228,70 @@ class WebcamTester extends Window {
 		}
 
 		this.infoBox.textContent = "";
+		this.recordButton.disabled = false;
 		this.startButton.disabled = false;
 		this.stopButton.disabled = true;
-		this.force4kButton.disabled = true;
+		this.settingsButton.disabled = false;
+	}
+
+	async Record() {
+		this.Stop();
+		await this.Start(true);
+		this.recordButton.disabled = true;
+	}
+
+	HandleRecording() {
+		const dialog = this.DialogBox("120px");
+		const btnOK = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
+		const innerBox = dialog.innerBox;
+
+		btnOK.value = "Export";
+		btnCancel.value = "Discard";
+
+		innerBox.style.padding = "20px 20px 0 20px";
+		innerBox.parentElement.style.maxWidth = "480px";
+
+		const typeLabel = document.createElement("div");
+		typeLabel.textContent = "Type:";
+		typeLabel.style.display = "inline-block";
+		typeLabel.style.minWidth = "80px";
+		typeLabel.style.paddingBottom = "16px";
+		innerBox.appendChild(typeLabel);
+
+		const typeInput = document.createElement("select");
+		typeInput.style.width = "280px";
+		innerBox.appendChild(typeInput);
+
+		const webm = document.createElement("option");
+		webm.text = "WebM video";
+		webm.value = "video/webm";
+		
+		const mp4 = document.createElement("option");
+		mp4.text = "MP4 -MPEG-4 Part 14";
+		mp4.value = "video/mp4";
+		
+		const ogg = document.createElement("option");
+		ogg.text = "OGG container format";
+		ogg.value = "video/ogg";
+		
+		typeInput.append(webm, mp4, ogg);
+
+		btnOK.onclick = async ()=> {
+			const blob = new Blob(this.recordChunks, { type: typeInput.video });
+			const audioURL = URL.createObjectURL(blob);
+			window.open(audioURL, "_blank");
+	
+			this.recordChunks = [];
+			this.recorder = null;
+			dialog.Close();
+		};
+		
+		btnCancel.onclick = ()=> {
+			this.recordChunks = [];
+			this.recorder = null;
+			dialog.Close();
+		};
 	}
 
 	Close() { //override

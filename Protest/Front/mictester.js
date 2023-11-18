@@ -1,6 +1,4 @@
 class MicTester extends Window {
-	static FFT_SIZE = 512;
-
 	constructor(params) {
 		super();
 
@@ -8,17 +6,29 @@ class MicTester extends Window {
 			echoCancellation: true,
 			noiseSuppression: false,
 			sampleSize: 16,
-			sampleRate: 48_000
+			sampleRate: 48_000,
+			graphResolution: 512
 		};
 
 		this.SetTitle("Mic tester");
 		this.SetIcon("mono/mic.svg");
 
+		this.recorder = null;
+		this.recordChunks = [];
+
 		this.content.style.padding = "20px";
 
 		this.SetupToolbar();
+		this.recordButton = this.AddToolbarButton("Record", "mono/record.svg?light");
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+		this.AddToolbarSeparator();
+		this.settingsButton = this.AddToolbarButton("Settings", "mono/wrench.svg?light");
+
+		this.canvas = document.createElement("canvas");
+		this.canvas.style.width = "100%";
+		this.canvas.style.height = "100%";
+		this.content.appendChild(this.canvas);
 
 		this.infoBox = document.createElement("div");
 		this.infoBox.style.position = "absolute";
@@ -34,23 +44,28 @@ class MicTester extends Window {
 		this.stream = null;
 		this.audioContext = null;
 		this.analyser = null;
-		this.canvas = null;
 
-		this.startButton.onclick = () => this.AttachMic();
+		this.recordButton.onclick = () => this.Record();
+
+		this.startButton.onclick = () =>  this.Start(
+			this.params.echoCancellation,
+			this.params.noiseSuppression,
+			this.params.sampleSize,
+			this.params.sampleRate
+		);
+
 		this.stopButton.onclick = () => this.Stop();
 
-		this.AttachMic();
+		this.settingsButton.onclick = () => this.Settings();
 	}
 
 	AfterResize() { //override
-		if (this.canvas) {
-			this.canvas.width = this.content.clientWidth;
-			this.canvas.height = this.content.clientHeight;
-		}
+		this.canvas.width = this.content.clientWidth;
+		this.canvas.height = this.content.clientHeight;
 	}
 
-	async AttachMic() {
-		const dialog = this.DialogBox("250px");
+	async Settings(closeOnCancel=false) {
+		const dialog = this.DialogBox("300px");
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
@@ -60,25 +75,23 @@ class MicTester extends Window {
 
 		const chkEchoCancellation = document.createElement("input");
 		chkEchoCancellation.type = "checkbox";
-		chkEchoCancellation.checked = true;
 		innerBox.appendChild(chkEchoCancellation);
-		this.AddCheckBoxLabel(innerBox, chkEchoCancellation, "Echo cancellation");
+		this.AddCheckBoxLabel(innerBox, chkEchoCancellation, "Echo cancellation").style.paddingBottom = "16px";;
 
 		innerBox.appendChild(document.createElement("br"));
 
 		const chkNoiseSuppression = document.createElement("input");
 		chkNoiseSuppression.type = "checkbox";
-		chkNoiseSuppression.checked = true;
 		innerBox.appendChild(chkNoiseSuppression);
-		this.AddCheckBoxLabel(innerBox, chkNoiseSuppression, "Noise suppression");
+		this.AddCheckBoxLabel(innerBox, chkNoiseSuppression, "Noise suppression").style.paddingBottom = "16px";
 
-		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
 		const sampleSizeLabel = document.createElement("div");
 		sampleSizeLabel.textContent = "Bit depth:";
 		sampleSizeLabel.style.display = "inline-block";
-		sampleSizeLabel.style.minWidth = "120px";
+		sampleSizeLabel.style.minWidth = "140px";
+		sampleSizeLabel.style.paddingBottom = "16px";
 		innerBox.appendChild(sampleSizeLabel);
 
 		const sampleSizeInput = document.createElement("select");
@@ -96,12 +109,12 @@ class MicTester extends Window {
 		sampleSizeInput.append(size16, size24, size32);
 
 		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
 
 		const sampleRateLabel = document.createElement("div");
 		sampleRateLabel.textContent = "Sample rate:";
 		sampleRateLabel.style.display = "inline-block";
-		sampleRateLabel.style.minWidth = "120px";
+		sampleRateLabel.style.minWidth = "140px";
+		sampleRateLabel.style.paddingBottom = "16px";
 		innerBox.appendChild(sampleRateLabel);
 
 		const sampleRateInput = document.createElement("select");
@@ -118,72 +131,215 @@ class MicTester extends Window {
 		rate96.text = "96KHz";
 		sampleRateInput.append(rate44, rate48, rate96);
 
+		innerBox.appendChild(document.createElement("br"));
+
+		const graphResolutionLabel = document.createElement("div");
+		graphResolutionLabel.textContent = "Graph resolution:";
+		graphResolutionLabel.style.display = "inline-block";
+		graphResolutionLabel.style.minWidth = "140px";
+		graphResolutionLabel.style.paddingBottom = "16px";
+		innerBox.appendChild(graphResolutionLabel);
+
+		const graphResolutionInput = document.createElement("select");
+		graphResolutionInput.style.width = "100px";
+		innerBox.appendChild(graphResolutionInput);
+		const resVeryLow = document.createElement("option");
+		resVeryLow.value = 64;
+		resVeryLow.text = "Very low";
+		const resLow = document.createElement("option");
+		resLow.value = 128;
+		resLow.text = "Low";
+		const resMed = document.createElement("option");
+		resMed.value = 256;
+		resMed.text = "Medium";
+		const resHigh = document.createElement("option");
+		resHigh.value = 512;
+		resHigh.text = "High";
+		const resVeryHigh = document.createElement("option");
+		resVeryHigh.value = 1024;
+		resVeryHigh.text = "Very high";
+		const resUltra = document.createElement("option");
+		resUltra.value = 2048;
+		resUltra.text = "Ultra";
+		graphResolutionInput.append(resVeryLow, resLow, resMed, resHigh, resVeryHigh, resUltra);
+
 		chkEchoCancellation.checked = this.params.echoCancellation;
 		chkNoiseSuppression.checked = this.params.noiseSuppression;
 		sampleSizeInput.value = this.params.sampleSize;
 		sampleRateInput.value = this.params.sampleRate;
+		graphResolutionInput.value = this.params.graphResolution;
 
 		btnOK.onclick = async ()=> {
-			try {
-				this.stream = await navigator.mediaDevices.getUserMedia({
-					audio: {
-						echoCancellation: chkEchoCancellation.checked,
-						noiseSuppression: chkNoiseSuppression.checked,
-						sampleSize: parseInt(sampleSizeInput.value),
-						sampleRate: parseInt(sampleRateInput.value)
-					},
-					video: false
-				});
-				
-				const audioTrack = this.stream.getAudioTracks()[0];
-				const audioSettings = audioTrack.getSettings();
-				audioTrack.onended = () => this.Stop();
+			this.params.graphResolution = parseInt(graphResolutionInput.value);
+			this.params.echoCancellation = chkEchoCancellation.checked;
+			this.params.noiseSuppression = chkNoiseSuppression.checked;
+			this.params.sampleSize = parseInt(sampleSizeInput.value);
+			this.params.sampleRate = parseInt(sampleRateInput.value);
 
-				this.Start();
-		
-				if (audioSettings.sampleRate && audioSettings.sampleSize) {
-					this.infoBox.textContent = `${audioSettings.sampleRate}Hz @ ${audioSettings.sampleSize}-bits`;
-				}
-		
-				this.startButton.disabled = true;
-				this.stopButton.disabled = false;
-			}
-			catch (ex) {
-				setTimeout(() => this.ConfirmBox(ex, true, "mono/error.svg"), 400);
-			}
-			finally {
-				dialog.Close();
-
-				this.params.echoCancellation = chkEchoCancellation.checked;
-				this.params.noiseSuppression = chkNoiseSuppression.checked;
-				this.params.sampleSize = parseInt(sampleSizeInput.value);
-				this.params.sampleRate = parseInt(sampleRateInput.value);
-			}
+			dialog.Close();
 		};
-		
-		btnCancel.onclick = ()=> this.Close();
 	}
 
-	Start() {
+	async Start(echoCancellation, noiseSuppression, sampleSize, sampleRate, withRecording=false) {
+		try {
+			this.stream = await navigator.mediaDevices.getUserMedia({
+				audio: {
+					echoCancellation: echoCancellation,
+					noiseSuppression: noiseSuppression,
+					sampleSize: sampleSize,
+					sampleRate: sampleRate
+				},
+				video: false
+			});
+			
+			const audioTrack = this.stream.getAudioTracks()[0];
+			const audioSettings = audioTrack.getSettings();
+			audioTrack.onended = () => this.Stop();
+
+			this.StartVisualizer();
+	
+			if (audioSettings.sampleRate && audioSettings.sampleSize) {
+				this.infoBox.textContent = `${audioSettings.sampleRate}Hz @ ${audioSettings.sampleSize}-bits`;
+			}
+
+			if (withRecording) {
+				this.recorder = new MediaRecorder(this.stream);
+				this.recordChunks = [];
+
+				this.recorder.ondataavailable = event=> this.recordChunks.push(event.data);
+				this.recorder.onstop = ()=> this.HandleRecording();
+				this.recorder.start();
+
+				this.recordButton.disabled = true;
+			}
+
+			this.startButton.disabled = true;
+			this.stopButton.disabled = false;
+			this.settingsButton.disabled = true;
+		}
+		catch (ex) {
+			setTimeout(() => this.ConfirmBox(ex, true, "mono/error.svg"), 400);
+		}
+	}
+
+	Stop() {
+		if (this.recorder) {
+			this.recorder.stop();
+		}
+
+		if (this.stream) {
+			const tracks = this.stream.getTracks();
+			tracks.forEach(track => track.stop());
+			this.stream = null;
+		}
+
+		if (this.audioContext) {
+			this.audioContext.close();
+			this.audioContext = null;
+		}
+		
+		this.infoBox.textContent = "";
+		this.recordButton.disabled = false;
+		this.startButton.disabled = false;
+		this.stopButton.disabled = true;
+		this.settingsButton.disabled = false;
+	}
+
+	Record() {
+		this.recordButton.disabled = true;
+		this.Stop();
+		this.Start(
+			this.params.echoCancellation,
+			this.params.noiseSuppression,
+			this.params.sampleSize,
+			this.params.sampleRate,
+			true
+		);
+	}
+
+	HandleRecording() {
+		const dialog = this.DialogBox("120px");
+		const btnOK = dialog.btnOK;
+		const btnCancel = dialog.btnCancel;
+		const innerBox = dialog.innerBox;
+
+		btnOK.value = "Export";
+		btnCancel.value = "Discard";
+
+		innerBox.style.padding = "20px 20px 0 20px";
+		innerBox.parentElement.style.maxWidth = "480px";
+
+		const typeLabel = document.createElement("div");
+		typeLabel.textContent = "Type:";
+		typeLabel.style.display = "inline-block";
+		typeLabel.style.minWidth = "80px";
+		typeLabel.style.paddingBottom = "16px";
+		innerBox.appendChild(typeLabel);
+
+		const typeInput = document.createElement("select");
+		typeInput.style.width = "280px";
+		innerBox.appendChild(typeInput);
+
+		const wav = document.createElement("option");
+		wav.text = "WAV - Waveform audio format-";
+		wav.value = "audio/wav";
+		
+		const mp3 = document.createElement("option");
+		mp3.text = "MP3 - MPEG audio layer III";
+		mp3.value = "audio/mpeg";
+
+		const ogg = document.createElement("option");
+		ogg.text = "OGG container format";
+		ogg.value = "audio/ogg";
+
+		const webm = document.createElement("option");
+		webm.text = "WebM audio";
+		webm.value = "audio/aac";
+
+		const acc = document.createElement("option");
+		acc.text = "AAC - Advanced Audio Codec";
+		acc.value = "audio/wav";
+
+		const flac = document.createElement("option");
+		flac.text = "FLAC - Free Lossless Audio Codec";
+		flac.value = "audio/flac";
+
+		typeInput.append(wav, mp3, ogg, webm, acc, flac);
+
+		btnOK.onclick = async ()=> {
+			const blob = new Blob(this.recordChunks, { type: typeInput.value });
+			const audioURL = URL.createObjectURL(blob);
+			window.open(audioURL, "_blank");
+	
+			this.recordChunks = [];
+			this.recorder = null;
+			dialog.Close();
+		};
+		
+		btnCancel.onclick = ()=> {
+			this.recordChunks = [];
+			this.recorder = null;
+			dialog.Close();
+		};
+	}
+
+	StartVisualizer() {
 		if (this.stream) {
 			this.audioContext = new window.AudioContext();
 			this.analyser = this.audioContext.createAnalyser();
-			this.analyser.fftSize = MicTester.FFT_SIZE;
+			this.analyser.fftSize = this.params.graphResolution ?? 512;
 			const bufferLength = this.analyser.frequencyBinCount;
 			const dataArray = new Uint8Array(bufferLength);
 
 			const source = this.audioContext.createMediaStreamSource(this.stream);
 			source.connect(this.analyser);
 
-			this.canvas = document.createElement("canvas");
 			this.canvas.width = this.content.clientWidth;
 			this.canvas.height = this.content.clientHeight;
-			this.canvas.style.width = "100%";
-			this.canvas.style.height = "100%";
-			this.content.appendChild(this.canvas);
 
 			const ctx = this.canvas.getContext("2d");
-
+			//ctx.imageSmoothingQuality = false;
+			
 			let maxHeight = [];
 			let maxAcc = [];
 			for (let i = 0; i < this.analyser.frequencyBinCount; i++) {
@@ -192,7 +348,10 @@ class MicTester extends Window {
 			}
 
 			const drawVisualizer = ()=> {
-				if (!this.canvas) return;
+				if (!this.stream) {
+					ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+					return;
+				}
 
 				this.analyser.getByteFrequencyData(dataArray);
 				ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -213,8 +372,9 @@ class MicTester extends Window {
 					ctx.fillRect(64, this.canvas.height / 2 + y, this.canvas.width, 1);
 				}
 
-				const horizontalCenter = this.canvas.width / 2;
-				const barWidth = Math.max(this.canvas.width / bufferLength, 2);
+				const centerX = this.canvas.width / 2;
+				const centerY = this.canvas.height / 2;
+				const barWidth = Math.max(this.canvas.width / bufferLength, 4);
 				let barHeight;
 				let x = 0;
 				let peakFrequency = 0;
@@ -233,16 +393,16 @@ class MicTester extends Window {
 
 					//draw bars
 					barHeight = dataArray[i] * this.canvas.height / 255;
-					ctx.fillRect(horizontalCenter + x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
-					ctx.fillRect(horizontalCenter - x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
+					ctx.fillRect(centerX + x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
+					ctx.fillRect(centerX - x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
 					
 					//draw labels
 					if (i > 0 && i % (this.canvas.width > 800 ? 32 : 64) === 0) {
 						const frequency = i * this.audioContext.sampleRate / bufferLength / 2000;
-						ctx.fillText(`${frequency}KHz`, horizontalCenter + x, 10);
-						ctx.fillText(`${frequency}KHz`, horizontalCenter - x, 10);
-						ctx.fillRect(horizontalCenter + x, 20, 3, 3);
-						ctx.fillRect(horizontalCenter - x, 20, 3, 3);
+						ctx.fillText(`${frequency}KHz`, centerX + x, 10);
+						ctx.fillText(`${frequency}KHz`, centerX - x, 10);
+						ctx.fillRect(centerX + x, 20, 3, 3);
+						ctx.fillRect(centerX - x, 20, 3, 3);
 					}
 
 					//calculate recent max
@@ -251,47 +411,46 @@ class MicTester extends Window {
 						maxAcc[i] = 0;
 					}
 					else {
-						maxAcc[i] += .2;
+						maxAcc[i] += .15;
 						maxHeight[i] = Math.max(maxHeight[i] - maxAcc[i], 0);
 					}
 
 					//draw recent max
 					ctx.fillStyle = `hsl(${12 + dataArray[i]/2},100%,40%)`;
 					barHeight = maxHeight[i] * this.canvas.height / 255;
-					ctx.fillRect(horizontalCenter + x, (this.canvas.height - barHeight) / 2 - barWidth, barWidth, barWidth);
-					ctx.fillRect(horizontalCenter - x, (this.canvas.height - barHeight) / 2 - barWidth, barWidth, barWidth);
-					ctx.fillRect(horizontalCenter + x, (this.canvas.height + barHeight) / 2, barWidth, barWidth);
-					ctx.fillRect(horizontalCenter - x, (this.canvas.height + barHeight) / 2, barWidth, barWidth);
+					
+					ctx.fillRect(centerX + x, centerY - (barHeight + barWidth) / 2, barWidth, barWidth);
+					ctx.fillRect(centerX - x, centerY - (barHeight + barWidth) / 2, barWidth, barWidth);
+					ctx.fillRect(centerX + x, centerY + (barHeight - barWidth) / 2, barWidth, barWidth);
+					ctx.fillRect(centerX - x, centerY + (barHeight - barWidth) / 2, barWidth, barWidth);
 
 					x += barWidth - 1;
 
-					if (x > horizontalCenter) {
+					if (x > centerX) {
 						break;
 					}
 				}
 
-				if (peakIndex > -1) { //draw peak
+				if (peakIndex > -1 && this.params.graphResolution > 64) { //draw peak
 					ctx.fillStyle = "#c0c0c0";
 					ctx.textBaseline = "bottom";
 					const frequency = Math.round(peakIndex * this.audioContext.sampleRate / bufferLength / 2);
 					const frequencyString = frequency < 1000 ? `${frequency}Hz` : `${frequency/1000}KHz`
-					const x = (horizontalCenter + (barWidth-1) * peakIndex + barWidth / 2);
+					const x = (centerX + (barWidth-1) * peakIndex + barWidth / 2);
 					const y = this.canvas.height * 46 / 48;
 
 					if (frequency > 0) {
 						ctx.fillRect(x-2, this.canvas.height - 52, 5, 5);
 						ctx.fillRect(x, this.canvas.height - 48, 1, 10);
 						ctx.fillText(`${frequencyString}`, x, this.canvas.height-20);
-						if (frequency >= 440) {
+						if (frequency >= 440 && this.params.graphResolution > 128) {
 							let note = this.CalculateNote(frequency);
 							ctx.fillText(`${note.note} ${note.cents}`, x, this.canvas.height);
 						}
 					}
 				}
 
-				if (this.stream) {
-					requestAnimationFrame(drawVisualizer);
-				}
+				requestAnimationFrame(drawVisualizer);
 			};
 
 			drawVisualizer();
@@ -315,30 +474,10 @@ class MicTester extends Window {
 		return { note: closestNote, cents: cents > 0 ? `+${cents}` : `${cents}`};
 	}
 
-	Stop() {
-		if (this.stream) {
-			const tracks = this.stream.getTracks();
-			tracks.forEach(track => track.stop());
-			this.stream = null;
-		}
-
-		if (this.audioContext) {
-			this.audioContext.close();
-			this.audioContext = null;
-		}
-
-		if (this.canvas) {
-			this.canvas.remove();
-			this.canvas = null;
-		}
-
-		this.infoBox.textContent = "";
-		this.startButton.disabled = false;
-		this.stopButton.disabled = true;
-	}
-
 	Close() { //override
 		this.Stop();
-		super.Close();
+		if (!this.recorder) {
+			super.Close();
+		}
 	}
 }

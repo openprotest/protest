@@ -127,7 +127,7 @@
 	background-repeat: no-repeat;
 	background-color: transparent;
 
-	filter: drop-shadow(rgba(32, 32, 32, .5)1px 1px 1px);
+	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
 }
 
 .win-toolbar>.win-toolbar-button:is(:hover, :focus, :focus-within) {
