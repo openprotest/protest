@@ -439,11 +439,11 @@ class MicTester extends Window {
 					const x = (centerX + (barWidth-1) * peakIndex + barWidth / 2);
 					const y = this.canvas.height * 46 / 48;
 
-					if (frequency > 0) {
+					if (frequency > 2) {
 						ctx.fillRect(x-2, this.canvas.height - 52, 5, 5);
 						ctx.fillRect(x, this.canvas.height - 48, 1, 10);
 						ctx.fillText(`${frequencyString}`, x, this.canvas.height-20);
-						if (frequency >= 440 && this.params.graphResolution > 128) {
+						if (frequency >= 220 && this.params.graphResolution > 128) {
 							let note = this.CalculateNote(frequency);
 							ctx.fillText(`${note.note} ${note.cents}`, x, this.canvas.height);
 						}
