@@ -103,7 +103,7 @@ class Acl extends Tabs {
 		userDetails.style.position = "absolute";
 		userDetails.style.display = "grid";
 		userDetails.style.gridTemplateColumns = "minmax(80px, 120px) minmax(60px, 250px) minmax(60px, 160px)";
-		userDetails.style.gridTemplateRows = "repeat(3, 36px)";
+		userDetails.style.gridTemplateRows = "repeat(5, 36px)";
 		userDetails.style.alignItems = "center";
 		userDetails.style.left = "266px";
 		userDetails.style.right = "8px";
@@ -164,11 +164,21 @@ class Acl extends Tabs {
 		this.alias.style.gridColumn = "2";
 		userDetails.append(aliasLabel, this.alias);
 
+		const colorLabel = document.createElement("div");
+		colorLabel.textContent = "Color:";
+		colorLabel.style.gridRow = "5";
+		colorLabel.style.gridColumn = "1";
+		this.color = document.createElement("input");
+		this.color.type = "color";
+		this.color.style.gridRow = "5";
+		this.color.style.gridColumn = "2";
+		userDetails.append(colorLabel, this.color);
+
 		this.accessList = document.createElement("div");
 		this.accessList.style.position = "absolute";
 		this.accessList.style.left = "266px";
 		this.accessList.style.right = "8px";
-		this.accessList.style.top = "200px";
+		this.accessList.style.top = "240px";
 		this.accessList.style.bottom = "8px";
 		this.accessList.style.paddingLeft = "8px";
 		this.accessList.style.paddingTop = "20px";
@@ -178,7 +188,7 @@ class Acl extends Tabs {
 
 		this.InitializePermissionList();
 
-		this.username.onchange = ()=>{
+		this.username.onchange = ()=> {
 			this.alias.placeholder = this.username.value;
 		};
 		
@@ -202,7 +212,7 @@ class Acl extends Tabs {
 			this.domain.value = "";
 			this.password.value = "";
 			this.alias.value = "";
-
+			this.color.value = "#0080C0";
 			this.password.placeholder = "";
 			this.alias.placeholder = "";
 
@@ -233,7 +243,7 @@ class Acl extends Tabs {
 			this.username.setAttribute("readonly", true);
 
 			try {
-				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&isdomain=${this.chkDomainUser.checked}`;
+				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.chkDomainUser.checked}`;
 				let authorization = [];
 				
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -262,7 +272,7 @@ class Acl extends Tabs {
 					}
 				}
 	
-				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.chkDomainUser.checked, authorization);
+				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.chkDomainUser.checked, authorization);
 				newUser.onclick();
 			}
 			catch (ex) {
@@ -443,7 +453,7 @@ class Acl extends Tabs {
 			if (json.error) throw(json.error);
 
 			for (let i = 0; i < json.length; i++) {
-				this.AddUser(json[i].username, json[i].domain, "", json[i].alias, json[i].isDomain, json[i].authorization);
+				this.AddUser(json[i].username, json[i].domain, "", json[i].alias, json[i].color, json[i].isDomain, json[i].authorization);
 			}
 		}
 		catch (ex) {
@@ -451,7 +461,7 @@ class Acl extends Tabs {
 		}
 	}
 
-	AddUser(username, domain, password, alias, isDomain, authorization) {
+	AddUser(username, domain, password, alias, color, isDomain, authorization) {
 		const lblUsername = document.createElement("div");
 		lblUsername.textContent = username;
 		lblUsername.style.fontWeight = "600";
@@ -486,6 +496,7 @@ class Acl extends Tabs {
 			this.domain.value = domain;
 			this.password.value = "";
 			this.alias.value = alias;
+			this.color.value = color;
 			this.chkDomainUser.checked = isDomain;
 
 			this.chkDomainUser.onchange();

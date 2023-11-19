@@ -5,11 +5,129 @@
 	top: 8px;
 	bottom: 64px;
 	color: var(--clr-light);
-	border: solid var(--clr-light) 2px;
+	border: 2px solid var(--clr-pane);
 	padding: 4px;
 	margin: 8px;
 	border-radius: 4px;
 	overflow-y: auto;
+	transition: .2s;
+}
+
+.chat-group {
+	position: relative;
+	filter: drop-shadow(rgba(16,16,16,.5) 0 1px 2px);
+}
+
+.chat-group[sender]::before {
+	content: attr(sender);
+	color: var(--clr-pane);
+	padding: 0 8px;
+}
+
+.chat-avatar {
+	position: absolute;
+	bottom: 12px;
+	width: 32px;
+	height: 32px;
+
+	-webkit-mask-image: url(mono/admin.svg); mask-image: url(mono/admin.svg);
+	-webkit-mask-position: center; mask-position: center;
+	-webkit-mask-size: 32px 32px; mask-size: 32px 32px;
+	-webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+
+.chat-box > div > .out {
+	text-align: right;
+}
+.chat-box > div > .in {
+	text-align: left;
+}
+
+.chat-pin {
+	display: inline-block;
+	width: 28px;
+	height: 28px;
+	margin: 0 4px 6px 4px;
+	background-image: url(mono/pin.svg?light);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+	
+	opacity: 0;
+	visibility: hidden;
+	transition: .2s;
+}
+
+.chat-box > div > .out:focus > .chat-pin,
+.chat-box > div > .out:hover > .chat-pin,
+.chat-box > div > .in:focus > .chat-pin,
+.chat-box > div > .in:hover > .chat-pin {
+	opacity: 1;
+	visibility: visible;
+}
+
+.chat-box > div > .out:focus-visible > .chat-bubble,
+.chat-box > div > .in:focus-visible > .chat-bubble {
+	animation: outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0 0 0 2px;
+}
+
+.chat-bubble {
+	display: inline-block;
+	text-align: start;
+	margin: 4px;
+	margin-top: 8px;
+	padding: 8px 12px;
+	border-radius: 12px;
+	color: var(--clr-dark);
+	overflow: hidden;
+	word-wrap: break-word;
+	background-color: var(--clr-pane);
+	max-width: 80%;
+	-webkit-user-select: text; user-select: text;
+}
+
+.chat-box > div > div:last-child  .chat-bubble:before {
+	content: "";
+	position: absolute;
+	bottom: 18px;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 9px;
+}
+
+.chat-box > div > .out:last-child .chat-bubble:before {
+	right: 24px;
+	border-color: transparent transparent transparent var(--clr-pane);
+}
+.chat-box > div > .in:last-child .chat-bubble:before {
+	left: 24px;
+	border-color: transparent var(--clr-pane) transparent transparent;
+}
+
+.local-streams-box {
+	position: absolute;
+	top: 8px;
+	bottom: 64px;
+	width: 142px;
+	padding: 4px;
+	margin: 4px;
+	overflow-y: auto;
+	transition: .2s;
+}
+
+.local-streams-box > div {
+	width: 100%;
+	min-height: 40px;
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	margin-bottom: 8px;
+}
+
+.local-streams-box > div:hover {
+	filter: brightness(120%);
+	transition: .2s;
 }
 
 .chat-input {
@@ -22,9 +140,11 @@
 	margin: 0 8px;
 	padding: 4px 12px;
 	border-radius: 16px;
+	text-align: start;
 
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
+	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
 	overflow-y: auto;
 }
 

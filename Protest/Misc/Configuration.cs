@@ -38,6 +38,10 @@ internal static class Configuration {
             ReadOnlySpan<char> value = line[(equal_index + 1)..].Trim();
 
             switch (name) {
+            case "title":
+                Console.Title = $"Pro-test - {value}";
+                break;
+
             case "db_key":
                 DB_KEY_STRING = value.ToString();
                 DB_KEY = DB_KEY_STRING.Length > 0 ? Cryptography.HashStringToBytes(DB_KEY_STRING, 32) : null; //256-bits

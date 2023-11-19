@@ -185,6 +185,8 @@ class ScreenCapture extends Window {
 
 	Close() { //override
 		this.Stop();
-		super.Close();
+		if (!this.recorder) {
+			super.Close();
+		}
 	}
 }

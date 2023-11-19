@@ -769,14 +769,14 @@ class Window {
 		//if a dialog is already opened, queue
 		if (this.popOutWindow) {
 			if (this.popOutWindow.document.body.getElementsByClassName("win-dim")[0] != null) {
-				this.messagesQueue.push([message, okOnly]);
+				this.messagesQueue.push([message, okOnly, icon]);
 				return null;
 			}
 		}
 		else {
 			document.getSelection().removeAllRanges();
 			if (this.win.getElementsByClassName("win-dim")[0] != null) {
-				this.messagesQueue.push([message, okOnly]);
+				this.messagesQueue.push([message, okOnly, icon]);
 				return null;
 			}
 		}
@@ -845,7 +845,7 @@ class Window {
 					this.win.removeChild(dim);
 
 				let next = this.messagesQueue.shift();
-				if (next) this.ConfirmBox(next[0], next[1]);
+				if (next) this.ConfirmBox(next[0], next[1], next[2]);
 			}, WIN.ANIME_DURATION);
 		};
 

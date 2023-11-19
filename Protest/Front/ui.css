@@ -401,7 +401,7 @@
 }
 
 .glass > #menubox {
-	background-color: #202020C0 !important;
+	background-color: #202020D0 !important;
 	backdrop-filter: blur(12px);
 	box-shadow: black 0 0 4px;
 }

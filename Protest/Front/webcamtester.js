@@ -40,8 +40,6 @@ class WebcamTester extends Window {
 		this.content.appendChild(this.infoBox);
 
 		this.InitializePictureControls();
-
-		this.stream = null;
 		
 		this.recordButton.onclick = () => this.Record();
 		this.startButton.onclick = ()=> this.Start();
@@ -173,8 +171,7 @@ class WebcamTester extends Window {
 					noiseSuppression: true
 				} : false,
 
-				video: this.params.force4K ?
-				{
+				video: this.params.force4K ? {
 					width: { ideal: 3840 },
 					height: { ideal: 2160 }
 				} : {
@@ -296,6 +293,8 @@ class WebcamTester extends Window {
 
 	Close() { //override
 		this.Stop();
-		super.Close();
+		if (!this.recorder) {
+			super.Close();
+		}
 	}
 }

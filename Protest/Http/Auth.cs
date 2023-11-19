@@ -20,6 +20,7 @@ internal static class Auth {
         public string domain;
         public byte[] hash;
         public string alias;
+        public string color;
         public bool isDomainUser;
         public string[] authorization;
         public HashSet<string> accessPath;
@@ -420,6 +421,7 @@ internal static class Auth {
             builder.Append($"\"domain\":\"{Data.EscapeJsonText(access.Value.domain)}\",");
             //builder.Append($"\"password\":\"{access.Value.hash}\",");
             builder.Append($"\"alias\":\"{Data.EscapeJsonText(access.Value.alias)}\",");
+            builder.Append($"\"color\":\"{Data.EscapeJsonText(access.Value.color)}\",");
             builder.Append($"\"isDomain\":{(access.Value.isDomainUser ? "true" : "false")},");
             
             builder.Append($"\"authorization\":[");
@@ -456,12 +458,16 @@ internal static class Auth {
         parameters.TryGetValue("domain", out string domain);
         parameters.TryGetValue("password", out string password);
         parameters.TryGetValue("alias", out string alias);
+        parameters.TryGetValue("color", out string color);
         parameters.TryGetValue("isdomain", out string isDomainString);
 
         username = Uri.UnescapeDataString(username);
         password = Uri.UnescapeDataString(password);
         alias = Uri.UnescapeDataString(alias);
+        color = Uri.UnescapeDataString(color);
         bool isDomainUser = Uri.UnescapeDataString(isDomainString) == "true";
+
+        Console.WriteLine(color);
 
         if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
@@ -472,6 +478,7 @@ internal static class Auth {
             access.domain = domain;
             access.hash = String.IsNullOrEmpty(password) ? access.hash : Cryptography.HashUsernameAndPassword(username, password);
             access.alias = alias;
+            access.color = color;
             access.isDomainUser = isDomainUser;
         }
         else {
@@ -483,6 +490,7 @@ internal static class Auth {
                 domain = domain,
                 hash = Cryptography.HashUsernameAndPassword(username, password),
                 alias = alias,
+                color = color,
                 isDomainUser = isDomainUser
             };
         }
@@ -617,6 +625,9 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
                 else if (propertyName == "hash") {
                     access.hash = Convert.FromHexString(reader.GetString());
                 }
+                else if (propertyName == "color") {
+                    access.color = reader.GetString();
+                }
                 else if (propertyName == "isDomainUser") {
                     access.isDomainUser = reader.GetBoolean();
                 }
@@ -639,6 +650,7 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
     public override void Write(Utf8JsonWriter writer, Auth.AccessControl value, JsonSerializerOptions options) {
         ReadOnlySpan<byte> _username = "username"u8;
         ReadOnlySpan<byte> _alias = "alias"u8;
+        ReadOnlySpan<byte> _color = "color"u8;
         ReadOnlySpan<byte> _hash = "hash"u8;
         ReadOnlySpan<byte> _isDomainUser = "isDomainUser"u8;
         ReadOnlySpan<byte> _authorization = "authorization"u8;
@@ -647,6 +659,7 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
 
         writer.WriteString(_username, value.username);
         writer.WriteString(_alias, value.alias);
+        writer.WriteString(_color, value.color);
         writer.WriteString(_hash, Convert.ToHexString(value.hash));
         writer.WriteBoolean(_isDomainUser, value.isDomainUser);
 
