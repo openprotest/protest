@@ -288,6 +288,7 @@ class View extends Window {
 	InitializePreview() { //overridable
 		this.InitializeAttributesList(this.link);
 		this.InitializeSideTools();
+		this.scroll.focus();
 	}
 
 	InitializeAttributesList(hash, editMode = false) {

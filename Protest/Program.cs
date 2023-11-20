@@ -67,7 +67,7 @@ internal class Program {
         Console.Write("Initialize tasks");
         Tasks.Automation.Initialize();
         Console.WriteLine("        OK");
-
+        
         try {
             Http.Listener listener = new Http.Listener(Configuration.http_prefixes, Configuration.front_path);
             Console.WriteLine(listener.ToString());

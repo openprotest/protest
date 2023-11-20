@@ -38,8 +38,8 @@ internal static class Wol {
     }
 
     public static byte[] Wakeup(in string mac, string ip, string mask) {
-        if (ip.Contains(';')) ip = ip[..ip.IndexOf(";")].Trim();
-        if (mask.Contains(';')) mask = mask[..mask.IndexOf(";")].Trim();
+        if (ip.Contains(';')) ip = ip[..ip.IndexOf(';')].Trim();
+        if (mask.Contains(';')) mask = mask[..mask.IndexOf(';')].Trim();
 
         try {
             return Wakeup(mac, IPAddress.Parse(ip), IPAddress.Parse(mask));

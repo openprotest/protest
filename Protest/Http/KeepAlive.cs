@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 
 namespace Protest.Http;
@@ -68,10 +70,9 @@ internal static class KeepAlive {
                 }
 
                 string msg = Encoding.Default.GetString(buff, 0, receive.Count);
-
+                Console.WriteLine(msg);
                 //await ws.SendAsync(Strings.CODE_ACK, WebSocketMessageType.Text, true, CancellationToken.None);
             }
-
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
@@ -136,4 +137,14 @@ internal static class KeepAlive {
         }
     }
 
+}
+
+file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<string, Database.Attribute>> {
+    public override ConcurrentDictionary<string, Database.Attribute> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, Database.Attribute> value, JsonSerializerOptions options) {
+        throw new NotImplementedException();
+    }
 }

@@ -23,7 +23,7 @@
 
 .address-book-search-box {
 	color: var(--clr-dark);
-	background-color: var(--clr-control) !important;
+	background-color: #C0C0C0 !important;
 	font-family: "Segoe UI";
 	text-align: center;
 	font-size: 20px !important;
@@ -112,8 +112,15 @@
 	transition: opacity .15s;
 }
 
-.address-book-list > div:hover {
-	background-color: var(--clr-select);
+@media (prefers-color-scheme: light) {
+	.address-book-list > div:hover {
+		background-color: color-mix(in srgb, var(--clr-select) 85%, var(--clr-light) 15%);
+	}
+}
+@media (prefers-color-scheme: dark) {
+	.address-book-list > div:hover {
+		background-color: color-mix(in srgb, var(--clr-select) 80%, var(--clr-dark) 20%);
+	}
 }
 
 .address-book-list.card > div:hover > div:first-child {

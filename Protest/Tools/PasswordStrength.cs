@@ -53,10 +53,10 @@ public static class PasswordStrength {
             "dragon"
     };
 
-    static private readonly JsonSerializerOptions smtpSerializerOptions = new();
+    static private readonly JsonSerializerOptions emailProfilesSerializerOptions = new();
     
     static PasswordStrength() {
-        smtpSerializerOptions.Converters.Add(new EmailProfilesJsonConverter(false));
+        emailProfilesSerializerOptions.Converters.Add(new SmtpProfilesJsonConverter(false));
     }
 
     public static double Entropy(string password, string[] related = null) {
@@ -332,7 +332,7 @@ public static class PasswordStrength {
         try {
             byte[] json = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
 
-            SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, smtpSerializerOptions);
+            SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, emailProfilesSerializerOptions);
 
             for (int i=0; i<profiles.Length; i++) {
                 if (profiles[i].guid == smtpGuid) {

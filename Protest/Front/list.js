@@ -351,7 +351,7 @@ class List extends Window {
 				}
 			}
 			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
-				this.selected.ondblclick(event);
+				this.selected?.ondblclick(event);
 			}
 		});
 
