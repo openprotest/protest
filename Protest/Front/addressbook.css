@@ -3,10 +3,11 @@
 	left: 0;
 	right: 0;
 	top: 0;
-	height: 96px;
-	border-radius: 0 0 4px 4px;
-	text-align: center;
 	z-index: 1;
+	transform: translateY(-1px);
+	height: 96px;
+	border-radius: 0 0 12px 12px;
+	text-align: center;
 
 	background: linear-gradient(0deg, rgba(64,64,64,.66) 0%, rgba(64,64,64,1) 100%);
 	backdrop-filter: blur(8px) brightness(80%);

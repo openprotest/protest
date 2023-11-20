@@ -121,6 +121,9 @@ class Chat extends Window {
 	}
 
 	Send() {
+		if (this.input.innerHTML.length === 0) return;
+		if (this.input.innerHTML.trim().length === 0) return;
+
 		try {
 			KEEP.socket.send(JSON.stringify({
 				type: "chat-text",
@@ -206,7 +209,7 @@ class Chat extends Window {
 			sender: sender
 		};
 
-		const isScrolledToBottom = this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -64;
+		const isScrolledToBottom = this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
 
 		group.appendChild(wrapper);
 

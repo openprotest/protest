@@ -30,6 +30,8 @@ class Window {
 		this.win.style.width = "100%";
 		this.win.style.height = "100%";
 		this.win.style.backgroundColor = "transparent";
+		this.win.style.borderTop = "unset";
+		this.win.style.borderRadius = "unset";
 		this.win.className = "window";
 		container.appendChild(this.win);
 
@@ -40,6 +42,7 @@ class Window {
 		this.content.style.top = "0";
 		this.content.style.bottom = "0";
 		this.win.appendChild(this.content);
+
 	}
 
 	ConfirmBox(message, okOnly=false, icon=null) {

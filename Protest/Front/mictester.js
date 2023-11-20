@@ -10,7 +10,7 @@ class MicTester extends Window {
 			graphResolution: 512
 		};
 
-		this.SetTitle("Mic tester");
+		this.SetTitle("Microphone tester");
 		this.SetIcon("mono/mic.svg");
 
 		this.recorder = null;
