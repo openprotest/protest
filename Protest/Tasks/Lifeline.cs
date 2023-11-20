@@ -49,8 +49,8 @@ internal static partial class Lifeline {
     private static void LifelineLoop() {
         Regex regex = ValidHostnameRegex();
         ConcurrentDictionary<string, object> lockTable = new ConcurrentDictionary<string, object>();
-        HashSet<string> pingOnly = new HashSet<string>();
-        HashSet<string> pingAndWmi = new HashSet<string>();
+        HashSet<string> ping = new HashSet<string>();
+        HashSet<string[]> wmi = new HashSet<string[]>();
 
         long lastVersion = 0;
 
@@ -59,8 +59,8 @@ internal static partial class Lifeline {
             
             if (lastVersion != DatabaseInstances.devices.version) {
                 lockTable.Clear();
-                pingOnly.Clear();
-                pingAndWmi.Clear();
+                ping.Clear();
+                wmi.Clear();
 
                 foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
                     string[] remoteEndPoint;
@@ -79,26 +79,28 @@ internal static partial class Lifeline {
                     osAttr.value.ToLower() :
                     null;
 
+                    bool wmiOnce = true;
                     for (int i = 0; i < remoteEndPoint.Length; i++) {
                         if (remoteEndPoint[i].Length == 0) continue;
                         if (!regex.IsMatch(remoteEndPoint[i])) continue;
 
-                        if (os is not null && os.Contains("windows")) {
-                            pingAndWmi.Add(remoteEndPoint[i]);
-                        }
-                        else {
-                            pingOnly.Add(remoteEndPoint[i]);
-                        }
-
+                        ping.Add(remoteEndPoint[i]);
                         lockTable.TryAdd(remoteEndPoint[i], new Object());
+
+                        if (wmiOnce && os is not null && os.Contains("windows")) {
+                            wmiOnce = false;
+                            wmi.Add(new string[] { entry.filename, remoteEndPoint[i] });
+                            lockTable.TryAdd(entry.filename, new Object());
+                        }
                     }
+
                 }
 
                 lastVersion = DatabaseInstances.devices.version;
             }
 
             Thread pingThread = new Thread(() => {
-                foreach (string host in pingOnly) {
+                foreach (string host in ping) {
                     lockTable.TryGetValue(host, out object lockObject);
                     try {
                         lock (lockObject) {
@@ -112,13 +114,13 @@ internal static partial class Lifeline {
             Thread wmiThread = new Thread(() => {
                 if (!OperatingSystem.IsWindows()) return;
 
-                foreach (string host in pingAndWmi) {
-                    lockTable.TryGetValue(host, out object lockObject);
+                foreach (string[] data in wmi) {
+                    lockTable.TryGetValue(data[0], out object lockObject);
                     try {
                         lock (lockObject) {
-                            bool p = DoPing(host);
+                            bool p = DoPing(data[1]);
                             if (!p) continue;
-                            DoWmi(host);
+                            DoWmi(data[0], data[1]);
                         }
                     }
                     catch { }
@@ -180,7 +182,7 @@ internal static partial class Lifeline {
     }
 
     [SupportedOSPlatform("windows")]
-    private static void DoWmi(string host) {
+    private static void DoWmi(string file, string host) {
         ulong memoryFree = 0, memoryTotal = 0;
 
         List<byte> diskCaption = new List<byte>();
@@ -229,7 +231,7 @@ internal static partial class Lifeline {
         DateTime now = DateTime.UtcNow;
 
         if (memoryTotal > 0) {
-            string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}";
+            string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}";
             if (!Directory.Exists(dirMemory)) Directory.CreateDirectory(dirMemory);
             using FileStream memoryStream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
@@ -243,7 +245,7 @@ internal static partial class Lifeline {
         }
 
         if (diskCaption.Count > 0) {
-            string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}";
+            string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{file}";
             if (!Directory.Exists(dirDisk)) Directory.CreateDirectory(dirDisk);
             using FileStream diskStream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
@@ -285,8 +287,8 @@ internal static partial class Lifeline {
     public static byte[] ViewMemory(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
 
-        parameters.TryGetValue("host", out string host);
-        if (String.IsNullOrEmpty(host)) return null;
+        parameters.TryGetValue("file", out string file);
+        if (String.IsNullOrEmpty(file)) return null;
 
         parameters.TryGetValue("date", out string date);
         if (String.IsNullOrEmpty(date)) {
@@ -295,7 +297,7 @@ internal static partial class Lifeline {
         }
 
         try {
-            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
+            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}{Data.DELIMITER}{date}");
         }
         catch {
             return null;
@@ -305,8 +307,8 @@ internal static partial class Lifeline {
     public static byte[] ViewDisk(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
 
-        parameters.TryGetValue("host", out string host);
-        if (String.IsNullOrEmpty(host)) return null;
+        parameters.TryGetValue("file", out string file);
+        if (String.IsNullOrEmpty(file)) return null;
 
         parameters.TryGetValue("date", out string date);
         if (String.IsNullOrEmpty(date)) {
@@ -315,7 +317,7 @@ internal static partial class Lifeline {
         }
 
         try {
-            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{host}{Data.DELIMITER}{date}");
+            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{file}{Data.DELIMITER}{date}");
         }
         catch {
             return null;
