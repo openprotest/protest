@@ -12,11 +12,32 @@
 	<link rel="stylesheet" href="window.css"/>
 	<link rel="stylesheet" href="textbox.css"/>
 
+	<script>
+		const DayOfYear = ()=> {
+			let now = new Date();
+			let start = new Date(now.getFullYear(), 0, 0);
+			let diff = now - start;
+			let oneDay = 1000 * 60 * 60 * 24;
+			return Math.floor(diff / oneDay);
+		};
+
+		const hsl = [DayOfYear(), 100, 50];
+
+		document.querySelector(":root").style.setProperty("--clr-select", `hsl(${hsl[0]+7},${hsl[1]}%,${hsl[2]*.9}%)`);
+		document.querySelector(":root").style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1]}%,${hsl[2]}%)`);
+
+		function SetBarColor() {
+			const bar = document.getElementsByClassName("address-book-search-bar")[0];
+			console.log(bar);
+			bar.style.background = `linear-gradient(0deg, hsla(${hsl[0]+7},60%,40%,.5) 0%, hsla(${hsl[0]+7},60%,40%,1) 100%)`;
+		}
+	</script>
+
 	<script defer src="fullwindow.js"></script>
 	<script defer src="addressbook.js" onload="new AddressBook()"></script>
 </head>
 
-<body>
+<body onload="SetBarColor()">
 <main id="container"></main>
 
 <noscript>

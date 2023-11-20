@@ -33,8 +33,14 @@ internal static class Fetch {
         public int unsuccessful;
     }
 
+    private static readonly JsonSerializerOptions fetchSerializerOptions = new();
+
     public static TaskWrapper task;
     private static Result? result;
+
+    static Fetch() {
+        fetchSerializerOptions.Converters.Add(new FetchedDataJsonConverter());
+    }
 
     public static byte[] SingleDeviceSerialize(Dictionary<string, string> parameters, bool asynchronous = false) {
         parameters.TryGetValue("target", out string target);
@@ -49,9 +55,7 @@ internal static class Fetch {
 
         ConcurrentDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp, portScan, asynchronous, CancellationToken.None);
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new FetchedDataJsonConverter());
-        return JsonSerializer.SerializeToUtf8Bytes(data, options);
+        return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
     public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         PingReply reply = null;
@@ -113,8 +117,7 @@ internal static class Fetch {
 
                 wmi = Protocols.Wmi.WmiFetch(target);
 
-                if (wmi.ContainsKey("owner")) {
-                    string owner = wmi["owner"];
+                if (wmi.TryGetValue("owner", out string owner)) {
                     if (owner.IndexOf('\\') > -1)
                         owner = owner.Split('\\')[1];
 
@@ -261,9 +264,8 @@ internal static class Fetch {
             data.TryAdd("ports", new string[] { portscan, "Port-scan", string.Empty });
         }
 
-        string mac = string.Empty;
-        if (wmi.ContainsKey("mac address")) {
-            mac = wmi["mac address"].Split(';')[0].Trim();
+        if (wmi.TryGetValue("mac address", out string mac)) {
+            mac = mac.Split(';')[0].Trim();
         }
         else {
             mac = Protocols.Arp.ArpRequest(target);
@@ -296,9 +298,9 @@ internal static class Fetch {
         }
 
         if (!data.ContainsKey("type")) {
-            if (data.ContainsKey("operating system")) {
-                string os = data["operating system"][0];
-                if (os.ToLower().Contains("server")) { //if os is windows server, set type as server
+            if (data.TryGetValue("operating system", out string[] osValue)) {
+                string os = osValue[0];
+                if (os.Contains("server", StringComparison.CurrentCultureIgnoreCase)) { //if os is windows server, set type as server
                     data.TryAdd("type", new string[] { "Server", "Kerberos", string.Empty });
                 }
             }
@@ -368,9 +370,7 @@ internal static class Fetch {
 
         ConcurrentDictionary<string, string[]> data = SingleUser(target);
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new FetchedDataJsonConverter());
-        return JsonSerializer.SerializeToUtf8Bytes(data, options);
+        return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
     public static ConcurrentDictionary<string, string[]> SingleUser(string target) {
         if (!OperatingSystem.IsWindows())
@@ -792,10 +792,10 @@ internal static class Fetch {
                 });
             }
 
-            if (pair.Value.ContainsKey(targetAttribute)) {
-                string value = pair.Value[targetAttribute][0];
-                string file = values.ContainsKey(value) ? values[value] : null;
-                database.Save(file, attributes, saveMethod, originator);
+            if (pair.Value.TryGetValue(targetAttribute, out string[] targetValue)) {
+                if (values.TryGetValue(targetValue[0], out string file)) {
+                    database.Save(file, attributes, saveMethod, originator);
+                }
             }
             else {
                 database.Save(null, attributes, saveMethod, originator);
@@ -1211,7 +1211,9 @@ internal static class Fetch {
         Task<HttpResponseMessage> res = client.GetAsync("/db/device/list");
         byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().Result;
 
+#pragma warning disable CA1869 // Cache and reuse
         JsonSerializerOptions options = new JsonSerializerOptions();
+#pragma warning restore CA1869
         options.Converters.Add(new DatabaseJsonConverter("import", $"{Data.DIR_DEVICES}_import", false));
         Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
@@ -1232,7 +1234,9 @@ internal static class Fetch {
         Task<HttpResponseMessage> res = client.GetAsync("/db/user/list");
         byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().Result;
 
+#pragma warning disable CA1869 // Cache and reuse
         JsonSerializerOptions options = new JsonSerializerOptions();
+#pragma warning restore CA1869
         options.Converters.Add(new DatabaseJsonConverter("import", $"{Data.DIR_USERS}_import", false));
         Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 

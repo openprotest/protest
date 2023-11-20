@@ -8,7 +8,9 @@ using System.Text.Json;
 namespace Protest.Tools;
 
 internal static class DebitNotes {
-    static readonly object syncLock = new object();
+    static private readonly object syncLock = new object();
+
+    static private readonly JsonSerializerOptions debitSerializerOptions = new();
 
     public record Device {
         public string description;
@@ -29,6 +31,10 @@ internal static class DebitNotes {
         public string department;
         public string issuer;
         public Device[] devices;
+    }
+
+    static DebitNotes() {
+        debitSerializerOptions.Converters.Add(new DebitJsonConverter());
     }
 
     public static byte[] List(Dictionary<string, string> parameters) {
@@ -74,9 +80,6 @@ internal static class DebitNotes {
 
         files.Sort((a, b) => String.Compare(b.Name, a.Name));
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new DebitJsonConverter());
-
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
 
@@ -86,7 +89,7 @@ internal static class DebitNotes {
                 string data = File.ReadAllText(files[i].FullName);
                 if (String.IsNullOrEmpty(data)) continue;
 
-                Record record = JsonSerializer.Deserialize<Record>(data, options);
+                Record record = JsonSerializer.Deserialize<Record>(data, debitSerializerOptions);
 
                 if (record.issuedDate < afterDate) continue;
 
@@ -196,9 +199,7 @@ internal static class DebitNotes {
     }
 
     public static byte[] Create(string payload, string originator) {
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new DebitJsonConverter());
-        Record record = JsonSerializer.Deserialize<Record>(payload, options);
+        Record record = JsonSerializer.Deserialize<Record>(payload, debitSerializerOptions);
 
         string name = $"D-{Database.GenerateFilename()}";
 
@@ -224,7 +225,7 @@ internal static class DebitNotes {
                     record.status = "returned";
                     record.returnedDate = DateTime.UtcNow.Ticks;
 
-                    byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, options);
+                    byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, debitSerializerOptions);
                     File.WriteAllBytes($"{dirReturned}{Data.DELIMITER}{name}", json);
                 }
                 else {
@@ -284,14 +285,12 @@ internal static class DebitNotes {
 
         try {
             string data = File.ReadAllText(filename);
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new DebitJsonConverter());
 
-            Record record = JsonSerializer.Deserialize<Record>(data, options);
+            Record record = JsonSerializer.Deserialize<Record>(data, debitSerializerOptions);
             record.status = "returned";
             record.returnedDate = DateTime.UtcNow.Ticks;
 
-            byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, options);
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, debitSerializerOptions);
             File.WriteAllBytes($"{Data.DIR_DEBIT_RETURNED}{Data.DELIMITER}{file}", json);
 
             File.Delete(filename);

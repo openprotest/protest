@@ -36,7 +36,7 @@ internal static class KeepAlive {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
-        string[] accessArray = Auth.acl.ContainsKey(username) ? Auth.acl[username].authorization : new string[] { "*" };
+        string[] accessArray = Auth.acl.TryGetValue(username, out Auth.AccessControl accessControl) ? accessControl.authorization : new string[] { "*" };
 
         connections.TryAdd(ws, new Entry() {
             ws = ws,
@@ -112,10 +112,10 @@ internal static class KeepAlive {
         }
     }
 
-    public static void BroadcastToUser(string username, string message, string accessPath) {
-        BroadcastToUser(username, Encoding.UTF8.GetBytes(message), accessPath);
+    public static void Unicast(string username, string message, string accessPath) {
+        Unicast(username, Encoding.UTF8.GetBytes(message), accessPath);
     }
-    public static void BroadcastToUser(string username, byte[] message, string accessPath) {
+    public static void Unicast(string username, byte[] message, string accessPath) {
         foreach (Entry entry in connections.Values) {
             if (entry.username != username) continue;
 

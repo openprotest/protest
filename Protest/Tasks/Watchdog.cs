@@ -73,17 +73,22 @@ internal static class Watchdog {
 
     private static readonly object syncNotification = new object();
 
-    public static void Initialize() {
+    private static readonly JsonSerializerOptions watcherSerializerOptions = new();
+    private static readonly JsonSerializerOptions notificationSerializerOptions = new();
+
+    static Watchdog() {
+        watcherSerializerOptions.Converters.Add(new WatcherJsonConverter());
+        notificationSerializerOptions.Converters.Add(new NotificationJsonConverter());
+
         DirectoryInfo dirWatchers = new DirectoryInfo(Data.DIR_WATCHDOG);
         if (dirWatchers.Exists) {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new WatcherJsonConverter());
+
 
             FileInfo[] files = dirWatchers.GetFiles();
             for (int i = 0; i < files.Length; i++) {
                 try {
                     string plain = File.ReadAllText(files[i].FullName);
-                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, options);
+                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, watcherSerializerOptions);
                     watchers.TryAdd(files[i].Name, watcher);
                 }
                 catch { }
@@ -92,12 +97,11 @@ internal static class Watchdog {
 
         FileInfo fileNotifications = new FileInfo(Data.FILE_NOTIFICATIONS);
         if (fileNotifications.Exists) {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new NotificationJsonConverter());
+
 
             try {
                 string plain = File.ReadAllText(fileNotifications.FullName);
-                notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(plain, options);
+                notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(plain, notificationSerializerOptions);
             }
             catch (Exception ex) {
                 Logger.Error(ex);
@@ -418,14 +422,11 @@ internal static class Watchdog {
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new WatcherJsonConverter());
-
         bool first = true;
         foreach (Watcher watcher in watchers.Values) {
             if (!first)
                 builder.Append(',');
-            builder.Append(JsonSerializer.Serialize(watcher, options));
+            builder.Append(JsonSerializer.Serialize(watcher, watcherSerializerOptions));
             first = false;
         }
 
@@ -464,15 +465,12 @@ internal static class Watchdog {
             file = Database.GenerateFilename();
         }
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new WatcherJsonConverter());
-
         try {
             bool exists = File.Exists($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
-            Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, options);
+            Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, watcherSerializerOptions);
             watcher.file = file;
 
-            byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, options);
+            byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, watcherSerializerOptions);
 
             File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}", content);
 
@@ -530,11 +528,8 @@ internal static class Watchdog {
     }
 
     public static byte[] ListNotifications() {
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new NotificationJsonConverter());
-
         try {
-            byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, options);
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, notificationSerializerOptions);
             return json;
         }
         catch {
@@ -553,9 +548,7 @@ internal static class Watchdog {
         }
 
         try {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new NotificationJsonConverter());
-            notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, options);
+            notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, notificationSerializerOptions);
 
             lock (syncNotification) {
                 File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);

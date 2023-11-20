@@ -12,6 +12,8 @@ internal static class Auth {
     private const long HOUR = 36_000_000_000L;
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
 
+    private static readonly JsonSerializerOptions serializerOptions = new();
+    
     internal static readonly ConcurrentDictionary<string, AccessControl> acl = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
@@ -34,6 +36,10 @@ internal static class Auth {
         public long ttl;
     }
 
+    static Auth() {
+        serializerOptions.Converters.Add(new AccessControlJsonConverter());
+    }
+
     public static bool IsAuthenticated(HttpListenerContext ctx) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
@@ -41,9 +47,7 @@ internal static class Auth {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
 
-        if (!sessions.ContainsKey(sessionId)) return false;
-
-        Session session = sessions[sessionId];
+        if (!sessions.TryGetValue(sessionId, out Session session)) return false;
 
         if (DateTime.UtcNow.Ticks - session.loginDate > session.ttl) { //expired
             RevokeAccess(sessionId);
@@ -60,9 +64,8 @@ internal static class Auth {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
 
-        if (!sessions.ContainsKey(sessionId)) return false;
+        if (!sessions.TryGetValue(sessionId, out Session session)) return false;
 
-        Session session = sessions[sessionId];
         return session.access.accessPath.Contains(path);
     }
 
@@ -73,9 +76,7 @@ internal static class Auth {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
 
-        if (!sessions.ContainsKey(sessionId)) return false;
-
-        Session session = sessions[sessionId];
+        if (!sessions.TryGetValue(sessionId, out Session session)) return false;
 
         if (DateTime.UtcNow.Ticks - session.loginDate > session.ttl) { //expired
             RevokeAccess(sessionId);
@@ -98,14 +99,12 @@ internal static class Auth {
         string username = payload[..index].ToString().ToLower();
         string password = payload[(index+1)..].ToString();
 
-        if (!acl.ContainsKey(username)) {
+        if (!acl.TryGetValue(username, out AccessControl access)) {
             sessionId = null;
             return false;
         }
 
         //TODO: check all users access
-
-        AccessControl access = acl[username];
 
         bool successful = access.isDomainUser && OperatingSystem.IsWindows() ?
             Protocols.Kerberos.TryDirectoryAuthenticate(username, password) :
@@ -386,9 +385,6 @@ internal static class Auth {
 
         acl.Clear();
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new AccessControlJsonConverter());
-
         FileInfo[] files = dirAcl.GetFiles();
         for (int i = 0; i < files.Length; i++) {
             byte[] cipher;
@@ -396,7 +392,7 @@ internal static class Auth {
                 cipher = File.ReadAllBytes(files[i].FullName.ToLower());
                 byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
-                AccessControl access = JsonSerializer.Deserialize<AccessControl>(plain, options);
+                AccessControl access = JsonSerializer.Deserialize<AccessControl>(plain, serializerOptions);
                 access.accessPath = PopulateAccessPath(access.authorization);
                 acl.TryAdd(access.username, access);
             }
@@ -467,8 +463,6 @@ internal static class Auth {
         color = Uri.UnescapeDataString(color);
         bool isDomainUser = Uri.UnescapeDataString(isDomainString) == "true";
 
-        Console.WriteLine(color);
-
         if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
         AccessControl access;
@@ -505,10 +499,7 @@ internal static class Auth {
             return "{\"error\":\"failed to create user.\"}"u8.ToArray();
         }
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new AccessControlJsonConverter());
-
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, options);
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
@@ -521,7 +512,7 @@ internal static class Auth {
 
         Logger.Action(originator, $"Save access control for {username}");
 
-        KeepAlive.BroadcastToUser(username, $"{{\"action\":\"updateacl\",\"authorization\":[{permissionsString}]}}", "/global");
+        KeepAlive.Unicast(username, $"{{\"action\":\"updateacl\",\"authorization\":[{permissionsString}]}}", "/global");
 
         return plain;
     }

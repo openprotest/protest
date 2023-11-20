@@ -604,8 +604,11 @@ class Window {
 
 			this.task.style.top = "2px";
 			this.task.style.borderRadius = "8%";
-			this.task.className = "bar-icon";
 
+			this.task.className = "bar-icon";
+			this.task.style.backgroundColor = "transparent";
+			this.icon.style.filter = "none";
+		
 			WIN.focused = null;
 		}
 

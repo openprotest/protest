@@ -121,6 +121,16 @@ class Chat extends Window {
 	}
 
 	Send() {
+		try {
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-text",
+				text: this.input.innerHTML
+			}));
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/webcam.svg");
+		}
+
 		let s = Math.random() > .5 ? "in" : "out";
 		this.CreateBubble(this.input.innerHTML, s, s);
 		this.ClearInput();

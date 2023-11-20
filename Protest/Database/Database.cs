@@ -42,10 +42,21 @@ public sealed class Database {
     private long lastCachedVersion = -1;
     private Cache.Entry lastCached;
 
+    private readonly JsonSerializerOptions databaseSerializerOptions = new();
+    private readonly JsonSerializerOptions attrubutesSerializerOptions = new();
+    private readonly JsonSerializerOptions attrubutesSerializerOptionsWithPassword = new();
+    private readonly JsonSerializerOptions contactsSerializerOptions = new();
+
     public Database(string name, string location) {
         this.name = name;
         this.location = location;
         dictionary = new ConcurrentDictionary<string, Entry>();
+
+        databaseSerializerOptions.Converters.Add(new DatabaseJsonConverter(name, location, true));
+        attrubutesSerializerOptions.Converters.Add(new AttributesJsonConverter(true));
+        attrubutesSerializerOptionsWithPassword.Converters.Add(new AttributesJsonConverter(false));
+        contactsSerializerOptions.Converters.Add(new ContactsJsonConverter());
+
         ReadAll();
     }
 
@@ -60,11 +71,8 @@ public sealed class Database {
         bool successful = false;
         FileInfo[] files = dir.GetFiles();
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new AttributesJsonConverter(false));
-
         for (int i = 0; i < files.Length; i++) {
-            Entry entry = Read(files[i], options);
+            Entry entry = Read(files[i], attrubutesSerializerOptionsWithPassword);
             if (entry is null) continue;
 
             dictionary.Remove(files[i].Name, out _);
@@ -97,10 +105,7 @@ public sealed class Database {
     private bool Write(Entry entry) {
         string filename = $"{location}{Data.DELIMITER}{entry.filename}";
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new AttributesJsonConverter(false));
-
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry.attributes, options);
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry.attributes, attrubutesSerializerOptionsWithPassword);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
@@ -175,8 +180,8 @@ public sealed class Database {
             foreach (KeyValuePair<string, Attribute> pair in modifications) {
                 if (pair.Key.Contains("password") &&
                     pair.Value.value.Length == 0 &&
-                    oldEntry.attributes.ContainsKey(pair.Key)) {
-                    modifications[pair.Key] = oldEntry.attributes[pair.Key];
+                    oldEntry.attributes.TryGetValue(pair.Key, out Attribute oldPassword)) {
+                    modifications[pair.Key] = oldPassword;
                 }
             }
 
@@ -195,10 +200,7 @@ public sealed class Database {
                     DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DELIMITER}{file}_");
                     if (!timelineDir.Exists) timelineDir.Create();
 
-                    JsonSerializerOptions options = new JsonSerializerOptions();
-                    options.Converters.Add(new AttributesJsonConverter(false));
-
-                    byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, options);
+                    byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attrubutesSerializerOptionsWithPassword);
                     byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
                     File.WriteAllBytes($"{timelineDir.FullName}{Data.DELIMITER}{lastModTimestamp}", cipher);
 
@@ -233,9 +235,8 @@ public sealed class Database {
         broadcastMessage.Append($"\"version\":\"{version}\",");
 
         broadcastMessage.Append("\"obj\":");
-        JsonSerializerOptions options2 = new JsonSerializerOptions();
-        options2.Converters.Add(new AttributesJsonConverter(true));
-        broadcastMessage.Append(JsonSerializer.Serialize(newEntry.attributes, options2));
+
+        broadcastMessage.Append(JsonSerializer.Serialize(newEntry.attributes, attrubutesSerializerOptions));
 
         broadcastMessage.Append('}');
 
@@ -309,8 +310,10 @@ public sealed class Database {
             string payload;
             using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
             payload = reader.ReadToEnd();
-        
+
+#pragma warning disable CA1869 // Cache and reuse
             JsonSerializerOptions options = new JsonSerializerOptions();
+#pragma warning restore CA1869
             options.Converters.Add(new GridDataConverter(originator));
             
             Dictionary<string, ConcurrentDictionary<string, Attribute>> mods = JsonSerializer.Deserialize<Dictionary<string, ConcurrentDictionary<string, Attribute>>>(payload, options);
@@ -342,9 +345,7 @@ public sealed class Database {
 
         if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
 
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new AttributesJsonConverter(false));
-        ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, options);
+        ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, attrubutesSerializerOptionsWithPassword);
 
         long date = DateTime.UtcNow.Ticks;
 
@@ -428,10 +429,7 @@ public sealed class Database {
             entry = this.lastCached;
         }
         else {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new DatabaseJsonConverter(name, location, true));
-
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(this, options);
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(this, databaseSerializerOptions);
 
             entry = new Cache.Entry {
                 bytes = bytes,
@@ -476,10 +474,7 @@ public sealed class Database {
     }
 
     public byte[] SerializeContacts() {
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new ContactsJsonConverter());
-
-        return JsonSerializer.SerializeToUtf8Bytes(this, options);
+        return JsonSerializer.SerializeToUtf8Bytes(this, contactsSerializerOptions);
     }
 
     public byte[] AttributeValue(Dictionary<string, string> parameters) {

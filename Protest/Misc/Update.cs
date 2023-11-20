@@ -452,14 +452,13 @@ internal static class Update {
         return Data.CODE_OK.Array;
     }
 
-    private static string GetFieldName(string part) {
-        string fieldName = part[(part.IndexOf("name=\"") + 6)..].Split('"')[0];
-        return fieldName;
-    }
+    //private static string GetFieldName(string part) {
+    //   return part[(part.IndexOf("name=\"") + 6)..].Split('"')[0]; ;
+    //}
 
+    private static readonly string[] separator = new[] { "\r\n\r\n" };
     private static string GetFieldValue(string part) {
-        string fieldValue = part.Split(new[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
-        return fieldValue;
+        return part.Split(separator, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
     }
 
 }

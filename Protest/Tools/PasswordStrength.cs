@@ -10,7 +10,7 @@ using System.Text.Json;
 namespace Protest.Tools;
 
 public static class PasswordStrength {
-    static readonly string[] COMMON = new string[] {
+    static private readonly string[] COMMON = new string[] {
             "123456789",
             "12345678",
             "1234567",
@@ -52,6 +52,12 @@ public static class PasswordStrength {
             "asshole",
             "dragon"
     };
+
+    static private readonly JsonSerializerOptions smtpSerializerOptions = new();
+    
+    static PasswordStrength() {
+        smtpSerializerOptions.Converters.Add(new EmailProfilesJsonConverter(false));
+    }
 
     public static double Entropy(string password, string[] related = null) {
         return Entropy(password, out _, out _, related);
@@ -326,10 +332,7 @@ public static class PasswordStrength {
         try {
             byte[] json = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
 
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new EmailProfilesJsonConverter(false));
-
-            SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, options);
+            SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, smtpSerializerOptions);
 
             for (int i=0; i<profiles.Length; i++) {
                 if (profiles[i].guid == smtpGuid) {

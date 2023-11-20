@@ -9,6 +9,14 @@ namespace Protest.Tools;
 
 internal static class LocateIp {
 
+    static private readonly JsonSerializerOptions locationDerializerOptions = new();
+    static private readonly JsonSerializerOptions locationDerializerOptionsOnlyLocation = new();
+
+    static LocateIp() {
+        locationDerializerOptions.Converters.Add(new IP2LApiJsonConverter(false));
+        locationDerializerOptionsOnlyLocation.Converters.Add(new IP2LApiJsonConverter(true));
+    }
+
     public static byte[] Locate(HttpListenerContext ctx) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
@@ -167,9 +175,6 @@ internal static class LocateIp {
     }
 
     public static byte[] LocateViaOnlineApi(string ip, bool onlyLocation = false) {
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.Converters.Add(new IP2LApiJsonConverter(onlyLocation));
-
         try {
             string url = $"https://api.ip2location.io/?key={Configuration.IP2LOCATION_API_KEY}&ip={ip}";
             using HttpClient client = new HttpClient();
@@ -179,7 +184,7 @@ internal static class LocateIp {
             responseMessage.EnsureSuccessStatusCode();
 
             string data = responseMessage.Content.ReadAsStringAsync().Result;
-            string access = JsonSerializer.Deserialize<string>(data, options);
+            string access = JsonSerializer.Deserialize<string>(data, onlyLocation ? locationDerializerOptionsOnlyLocation : locationDerializerOptions) ;
             return Encoding.UTF8.GetBytes(access);
         }
         catch {

@@ -171,9 +171,8 @@ public sealed class Listener {
     }
 
     private bool CacheHandler(HttpListenerContext ctx, string path) {
-        if (!cache.cache.ContainsKey(path)) return false;
+        if (!cache.cache.TryGetValue(path, out Cache.Entry entry)) return false;
 
-        Cache.Entry entry;
         if (String.Equals(path, "/", StringComparison.Ordinal)) {
             if (!Auth.IsAuthenticated(ctx)) {
                 entry = cache.cache.TryGetValue("/login", out Cache.Entry value) ? value : default;
@@ -181,9 +180,6 @@ public sealed class Listener {
             else {
                 entry = cache.cache["/"];
             }
-        }
-        else {
-            entry = cache.cache[path];
         }
 
         string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;

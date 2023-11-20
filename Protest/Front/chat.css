@@ -16,6 +16,7 @@
 .chat-group {
 	position: relative;
 	filter: drop-shadow(rgba(16,16,16,.5) 0 1px 2px);
+	animation: rise-in 1 .2s;
 }
 
 .chat-group[sender]::before {
