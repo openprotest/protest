@@ -10,7 +10,7 @@ public class DatabaseTests {
     private string lilyFilename;
 
     private readonly DirectoryInfo directory = new DirectoryInfo($"{Data.DIR_DATA}{Data.DELIMITER}database_test");
-    private readonly string originator = "unit test";
+    private readonly string origin = "unit test";
 
     public DatabaseTests() {
         johnFilename = String.Empty;
@@ -35,17 +35,17 @@ public class DatabaseTests {
         john.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "John",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         john.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Smith",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         john.attributes.TryAdd("title", new Database.Attribute() {
             value = "CEO",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
 
         Database.Entry noah = new Database.Entry {
@@ -56,23 +56,23 @@ public class DatabaseTests {
         noah.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "Noah",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         noah.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Williams",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         noah.attributes.TryAdd("title", new Database.Attribute() {
             value = "CFO",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
 
-        bool a = database.Save(john.filename, john.attributes, Database.SaveMethod.createnew, originator);
+        bool a = database.Save(john.filename, john.attributes, Database.SaveMethod.createnew, origin);
         if (!a) Assert.Fail("Failed to save John");
 
-        bool b = database.Save(noah.filename, noah.attributes, Database.SaveMethod.createnew, originator);
+        bool b = database.Save(noah.filename, noah.attributes, Database.SaveMethod.createnew, origin);
         if (!b) Assert.Fail("Failed to save Noah");
 
         johnFilename = john.filename;
@@ -108,20 +108,20 @@ public class DatabaseTests {
         newCfo.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "Lily",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         newCfo.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Miller",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         newCfo.attributes.TryAdd("title", new Database.Attribute() {
             value = "CFO",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
 
-        bool a = database.Save(newCfo.filename, newCfo.attributes, Database.SaveMethod.overwrite, originator);
+        bool a = database.Save(newCfo.filename, newCfo.attributes, Database.SaveMethod.overwrite, origin);
         if (!a) Assert.Fail("Failed to save new CFO");
 
 
@@ -149,15 +149,15 @@ public class DatabaseTests {
         lilyWithEmail.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "IGNORE",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         lilyWithEmail.attributes.TryAdd("e-mail", new Database.Attribute() {
             value = "lily@protest.com",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
 
-        bool a = database.Save(lilyWithEmail.filename, lilyWithEmail.attributes, Database.SaveMethod.append, originator);
+        bool a = database.Save(lilyWithEmail.filename, lilyWithEmail.attributes, Database.SaveMethod.append, origin);
         if (!a) Assert.Fail("Failed to save Lily with e-mail");
 
         Database.Entry john = database.GetEntry(johnFilename);
@@ -192,15 +192,15 @@ public class DatabaseTests {
         liliGotMarried.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Rodriguez",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         liliGotMarried.attributes.TryAdd("phone", new Database.Attribute() {
             value = "555-12345678",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
 
-        bool a = database.Save(liliGotMarried.filename, liliGotMarried.attributes, Database.SaveMethod.merge, originator);
+        bool a = database.Save(liliGotMarried.filename, liliGotMarried.attributes, Database.SaveMethod.merge, origin);
         if (!a) Assert.Fail("Failed to save Lily after getting married");
 
         Database.Entry john = database.GetEntry(johnFilename);
@@ -253,10 +253,10 @@ public class DatabaseTests {
     public void Database6_Delete() {
         Database database = new Database("test", directory.FullName);
 
-        bool a = database.Delete(johnFilename, originator);
+        bool a = database.Delete(johnFilename, origin);
         if (!a) Assert.Fail("Failed to delete John");
 
-        bool b = database.Delete(lilyFilename, originator);
+        bool b = database.Delete(lilyFilename, origin);
         if (!b) Assert.Fail("Failed to delete Lili");
 
         Assert.Pass();

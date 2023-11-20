@@ -29,7 +29,7 @@ internal static partial class DeviceConfiguration {
         return null;
     }
 
-    public static byte[] Save(Dictionary<string, string> parameters, HttpListenerContext ctx, string originator) {
+    public static byte[] Save(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -47,12 +47,12 @@ internal static partial class DeviceConfiguration {
         byte[] cipher = Cryptography.Encrypt(gzip, Configuration.DB_KEY, Configuration.DB_KEY_IV);
         File.WriteAllBytes($"{Data.DIR_CONFIG}{Data.DELIMITER}{file}", cipher);
 
-        Logger.Action(originator, $"Modify the device conficuration for file: {file}");
+        Logger.Action(origin, $"Modify the device conficuration for file: {file}");
 
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] Fetch(Dictionary<string, string> parameters, HttpListenerContext ctx, string originator) {
+    public static byte[] Fetch(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -140,7 +140,7 @@ internal static partial class DeviceConfiguration {
                 byte[] cipher = Cryptography.Encrypt(gzip, Configuration.DB_KEY, Configuration.DB_KEY_IV);
                 File.WriteAllBytes($"{Data.DIR_CONFIG}{Data.DELIMITER}{file}", cipher);
 
-                Logger.Action(originator, $"Fetch device configuration for file: {host}");
+                Logger.Action(origin, $"Fetch device configuration for file: {host}");
 
                 return plain;
             }
@@ -153,7 +153,7 @@ internal static partial class DeviceConfiguration {
                 byte[] cipher = Cryptography.Encrypt(gzip, Configuration.DB_KEY, Configuration.DB_KEY_IV);
                 File.WriteAllBytes($"{Data.DIR_CONFIG}{Data.DELIMITER}{file}", cipher);
 
-                Logger.Action(originator, $"Fetch device configuration for file: {host}");
+                Logger.Action(origin, $"Fetch device configuration for file: {host}");
 
                 return plain;
             }
@@ -166,7 +166,7 @@ internal static partial class DeviceConfiguration {
                 byte[] cipher = Cryptography.Encrypt(gzip, Configuration.DB_KEY, Configuration.DB_KEY_IV);
                 File.WriteAllBytes($"{Data.DIR_CONFIG}{Data.DELIMITER}{file}", cipher);
 
-                Logger.Action(originator, $"Fetch device configuration for file: {host}");
+                Logger.Action(origin, $"Fetch device configuration for file: {host}");
 
                 return plain;
             }

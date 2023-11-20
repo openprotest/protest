@@ -298,7 +298,7 @@ public static class PasswordStrength {
         }
     }
 
-    public static byte[] GandalfThreadWrapper(HttpListenerContext ctx, string originator) {
+    public static byte[] GandalfThreadWrapper(HttpListenerContext ctx, string origin) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
             payload = reader.ReadToEnd();
@@ -312,7 +312,7 @@ public static class PasswordStrength {
         };
         thread.Start();
 
-        Logger.Action(originator, $"Send email notification to users with weak passwords");
+        Logger.Action(origin, $"Send email notification to users with weak passwords");
 
         return Data.CODE_OK.Array;
     }

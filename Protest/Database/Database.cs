@@ -24,7 +24,7 @@ public sealed class Database {
 
     public record Attribute {
         public string value;
-        public string originator;
+        public string origin;
         public long date; //utc
     }
 
@@ -121,7 +121,7 @@ public sealed class Database {
         return true;
     }
 
-    public bool Delete(string file, string originator) {
+    public bool Delete(string file, string origin) {
         if (!dictionary.ContainsKey(file)) {
             return false;
         }
@@ -138,7 +138,7 @@ public sealed class Database {
             return false;
         }
 
-        Logger.Action(originator, $"Delete entry from {this.name} database: {file}");
+        Logger.Action(origin, $"Delete entry from {this.name} database: {file}");
 
         version = DateTime.UtcNow.Ticks;
 
@@ -147,7 +147,7 @@ public sealed class Database {
         broadcastMessage.Append("\"action\":\"delete\",");
         broadcastMessage.Append($"\"type\":\"{Data.EscapeJsonText(this.name)}\",");
         broadcastMessage.Append($"\"target\":\"{file}\",");
-        broadcastMessage.Append($"\"originator\":\"{originator}\",");
+        broadcastMessage.Append($"\"origin\":\"{origin}\",");
         broadcastMessage.Append($"\"version\":\"{version}\"");
         broadcastMessage.Append('}');
 
@@ -156,11 +156,11 @@ public sealed class Database {
         return true;
     }
 
-    public bool Delete(Entry entry, string originator) {
-        return Delete(entry.filename, originator);
+    public bool Delete(Entry entry, string origin) {
+        return Delete(entry.filename, origin);
     }
 
-    public bool Save(string file, ConcurrentDictionary<string, Attribute> modifications, SaveMethod method, string originator) {
+    public bool Save(string file, ConcurrentDictionary<string, Attribute> modifications, SaveMethod method, string origin) {
         if (String.IsNullOrEmpty(file)) {
             file = GenerateFilename();
         }
@@ -213,10 +213,10 @@ public sealed class Database {
 
         Entry newEntry = method switch {
             //SaveMethod.ignore    => null,
-            SaveMethod.createnew => SaveNew(file, modifications, originator),                 //keep the old file, create new
-            SaveMethod.overwrite => SaveOverwrite(file, modifications, oldEntry, originator), //ignore previous attributes
-            SaveMethod.append    => SaveAppend(file, modifications, oldEntry, originator),    //append new attributes
-            SaveMethod.merge     => SaveMerge(file, modifications, oldEntry, originator),     //merged all attributes
+            SaveMethod.createnew => SaveNew(file, modifications, origin),                 //keep the old file, create new
+            SaveMethod.overwrite => SaveOverwrite(file, modifications, oldEntry, origin), //ignore previous attributes
+            SaveMethod.append    => SaveAppend(file, modifications, oldEntry, origin),    //append new attributes
+            SaveMethod.merge     => SaveMerge(file, modifications, oldEntry, origin),     //merged all attributes
             _ => null,
         };
 
@@ -231,7 +231,7 @@ public sealed class Database {
         broadcastMessage.Append("\"action\":\"update\",");
         broadcastMessage.Append($"\"type\":\"{Data.EscapeJsonText(name)}\",");
         broadcastMessage.Append($"\"target\":\"{Data.EscapeJsonText(file)}\",");
-        broadcastMessage.Append($"\"originator\":\"{Data.EscapeJsonText(originator)}\",");
+        broadcastMessage.Append($"\"origin\":\"{Data.EscapeJsonText(origin)}\",");
         broadcastMessage.Append($"\"version\":\"{version}\",");
 
         broadcastMessage.Append("\"obj\":");
@@ -247,33 +247,33 @@ public sealed class Database {
         return Write(newEntry);
     }
 
-    private Entry SaveNew(string file, ConcurrentDictionary<string, Attribute> modifications, string originator) {
+    private Entry SaveNew(string file, ConcurrentDictionary<string, Attribute> modifications, string origin) {
         Entry newEntry = new Entry() {
             filename = dictionary.ContainsKey(file) ? GenerateFilename(1) : file,
             attributes = modifications,
             syncWrite = new object()
         };
 
-        Logger.Action(originator, $"Create new entry on {this.name} database: {file}");
+        Logger.Action(origin, $"Create new entry on {this.name} database: {file}");
         return newEntry;
     }
-    private Entry SaveOverwrite(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string originator) {
+    private Entry SaveOverwrite(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
         //dictionary.Remove(file, out Entry oldEntry);
 
-        //keep old originator and date, if data didn't change
+        //keep old origin and date, if data didn't change
         foreach (KeyValuePair<string, Attribute> pair in modifications) {
             if (!oldEntry.attributes.ContainsKey(pair.Key)) continue;
             if (pair.Value.value != oldEntry.attributes[pair.Key].value) continue;
-            pair.Value.originator = oldEntry.attributes[pair.Key].originator;
+            pair.Value.origin = oldEntry.attributes[pair.Key].origin;
             pair.Value.date = oldEntry.attributes[pair.Key].date;
         }
 
         oldEntry.attributes = modifications;
 
-        Logger.Action(originator, $"Modify entry on {this.name} database: {file}");
+        Logger.Action(origin, $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
-    private Entry SaveAppend(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string originator) {
+    private Entry SaveAppend(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
         //dictionary.Remove(file, out Entry oldEntry);
 
         foreach (KeyValuePair<string, Attribute> pair in modifications) {
@@ -282,10 +282,10 @@ public sealed class Database {
             }
         }
 
-        Logger.Action(originator, $"Modify on entry {this.name} database: {file}");
+        Logger.Action(origin, $"Modify on entry {this.name} database: {file}");
         return oldEntry;
     }
-    private Entry SaveMerge(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string originator) {
+    private Entry SaveMerge(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
         //dictionary.Remove(file, out Entry oldEntry);
 
         foreach (KeyValuePair<string, Attribute> pair in oldEntry.attributes) {
@@ -296,7 +296,7 @@ public sealed class Database {
 
         oldEntry.attributes = modifications;
 
-        Logger.Action(originator, $"Modify entry on {this.name} database: {file}");
+        Logger.Action(origin, $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
 
@@ -305,7 +305,7 @@ public sealed class Database {
         return null;
     }
 
-    public byte[] GridHandler(HttpListenerContext ctx, string originator) {
+    public byte[] GridHandler(HttpListenerContext ctx, string origin) {
         try {
             string payload;
             using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
@@ -314,12 +314,12 @@ public sealed class Database {
 #pragma warning disable CA1869 // Cache and reuse
             JsonSerializerOptions options = new JsonSerializerOptions();
 #pragma warning restore CA1869
-            options.Converters.Add(new GridDataConverter(originator));
+            options.Converters.Add(new GridDataConverter(origin));
             
             Dictionary<string, ConcurrentDictionary<string, Attribute>> mods = JsonSerializer.Deserialize<Dictionary<string, ConcurrentDictionary<string, Attribute>>>(payload, options);
 
             foreach (KeyValuePair<string, ConcurrentDictionary<string, Attribute>> pair in mods) {
-                Save(pair.Key, pair.Value, SaveMethod.merge, originator);
+                Save(pair.Key, pair.Value, SaveMethod.merge, origin);
             }
         }
         catch (Exception ex) {
@@ -330,7 +330,7 @@ public sealed class Database {
         return Data.CODE_OK.Array;
     }
 
-    public byte[] SaveHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, string originator) {
+    public byte[] SaveHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         string file;
         if (parameters is not null) {
             parameters!.TryGetValue("file", out file);
@@ -350,18 +350,18 @@ public sealed class Database {
         long date = DateTime.UtcNow.Ticks;
 
         foreach (KeyValuePair<string, Attribute> pair in modifications) {
-            pair.Value.originator = originator;
+            pair.Value.origin = origin;
             pair.Value.date = date;
         }
 
-        if (Save(file, modifications, SaveMethod.overwrite, originator)) {
+        if (Save(file, modifications, SaveMethod.overwrite, origin)) {
             return Encoding.UTF8.GetBytes($"{{\"status\":\"ok\", \"filename\":\"{Data.EscapeJsonText(file)}\"}}");
         }
 
         return Data.CODE_FAILED.Array;
     }
 
-    public byte[] DeleteHandler(Dictionary<string, string> parameters, string originator) {
+    public byte[] DeleteHandler(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -371,7 +371,7 @@ public sealed class Database {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (Delete(file, originator)) {
+        if (Delete(file, origin)) {
             return Data.CODE_OK.Array;
         }
         else {

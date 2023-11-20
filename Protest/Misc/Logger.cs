@@ -43,11 +43,11 @@ internal static class Logger {
         Console.ResetColor();
     }
 
-    public static void Action(string originator, string action) {
+    public static void Action(string origin, string action) {
         new Thread(() => {
             DateTime dateTime = DateTime.Now;
             string date = dateTime.ToString(Data.DATETIME_FORMAT_FILE);
-            string message = $"{date,-24}{originator,-32}{action}";
+            string message = $"{date,-24}{origin,-32}{action}";
             lock (syncAction)
                 try {
                     using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}{dateTime.ToString(Data.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);

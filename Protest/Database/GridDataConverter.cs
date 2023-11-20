@@ -7,9 +7,9 @@ namespace Protest;
 
 internal sealed class GridDataConverter : JsonConverter<Dictionary<string, ConcurrentDictionary<string, Database.Attribute>>> {
 
-    private readonly string originator;
-    public GridDataConverter(string originator) {
-        this.originator = originator;
+    private readonly string origin;
+    public GridDataConverter(string origin) {
+        this.origin = origin;
     }
 
     public override Dictionary<string, ConcurrentDictionary<string, Database.Attribute>> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
@@ -46,7 +46,7 @@ internal sealed class GridDataConverter : JsonConverter<Dictionary<string, Concu
 
                 Database.Attribute attribute = new Database.Attribute {
                     value = reader.GetString(),
-                    originator = originator,
+                    origin = origin,
                     date = DateTime.UtcNow.Ticks
                 };
 

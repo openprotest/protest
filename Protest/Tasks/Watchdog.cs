@@ -73,22 +73,17 @@ internal static class Watchdog {
 
     private static readonly object syncNotification = new object();
 
-    private static readonly JsonSerializerOptions watcherSerializerOptions = new();
-    private static readonly JsonSerializerOptions notificationSerializerOptions = new();
-
-    static Watchdog() {
-        watcherSerializerOptions.Converters.Add(new WatcherJsonConverter());
-        notificationSerializerOptions.Converters.Add(new NotificationJsonConverter());
-
+    public static void Initialize() {
         DirectoryInfo dirWatchers = new DirectoryInfo(Data.DIR_WATCHDOG);
         if (dirWatchers.Exists) {
-
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new WatcherJsonConverter());
 
             FileInfo[] files = dirWatchers.GetFiles();
             for (int i = 0; i < files.Length; i++) {
                 try {
                     string plain = File.ReadAllText(files[i].FullName);
-                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, watcherSerializerOptions);
+                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, options);
                     watchers.TryAdd(files[i].Name, watcher);
                 }
                 catch { }
@@ -97,11 +92,12 @@ internal static class Watchdog {
 
         FileInfo fileNotifications = new FileInfo(Data.FILE_NOTIFICATIONS);
         if (fileNotifications.Exists) {
-
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new NotificationJsonConverter());
 
             try {
                 string plain = File.ReadAllText(fileNotifications.FullName);
-                notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(plain, notificationSerializerOptions);
+                notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(plain, options);
             }
             catch (Exception ex) {
                 Logger.Error(ex);
@@ -111,14 +107,14 @@ internal static class Watchdog {
         if (!watchers.IsEmpty) { StartTask("system"); }
     }
 
-    public static bool StartTask(string originator) {
+    public static bool StartTask(string origin) {
         if (task is not null) return false;
 
         Thread thread = new Thread(() => WatchLoop());
 
         task = new TaskWrapper("Watchdog") {
             thread = thread,
-            originator = originator,
+            origin = origin,
             TotalSteps = 0,
             CompletedSteps = 0
         };
@@ -128,9 +124,9 @@ internal static class Watchdog {
         return true;
     }
 
-    public static bool StopTask(string originator) {
+    public static bool StopTask(string origin) {
         if (task is null) return false;
-        task.RequestCancel(originator);
+        task.RequestCancel(origin);
         return true;
     }
 
@@ -422,11 +418,14 @@ internal static class Watchdog {
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
 
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new WatcherJsonConverter());
+
         bool first = true;
         foreach (Watcher watcher in watchers.Values) {
             if (!first)
                 builder.Append(',');
-            builder.Append(JsonSerializer.Serialize(watcher, watcherSerializerOptions));
+            builder.Append(JsonSerializer.Serialize(watcher, options));
             first = false;
         }
 
@@ -457,7 +456,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string originator) {
+    public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string watcherString = reader.ReadToEnd();
 
@@ -465,12 +464,15 @@ internal static class Watchdog {
             file = Database.GenerateFilename();
         }
 
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new WatcherJsonConverter());
+
         try {
             bool exists = File.Exists($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
-            Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, watcherSerializerOptions);
+            Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, options);
             watcher.file = file;
 
-            byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, watcherSerializerOptions);
+            byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, options);
 
             File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}", content);
 
@@ -482,10 +484,10 @@ internal static class Watchdog {
             watchers[file] = watcher;
 
             if (exists) {
-                Logger.Action(originator, $"Modify a watcher: {watcher.name}");
+                Logger.Action(origin, $"Modify a watcher: {watcher.name}");
             }
             else {
-                Logger.Action(originator, $"Create a new watcher: {watcher.name}");
+                Logger.Action(origin, $"Create a new watcher: {watcher.name}");
             }
 
             return content;
@@ -496,7 +498,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string originator) {
+    public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -514,10 +516,10 @@ internal static class Watchdog {
             }
 
             if (task?.status == TaskWrapper.TaskStatus.running) {
-                StopTask(originator);
+                StopTask(origin);
             }
 
-            Logger.Action(originator, $"Delete watcher: {watcher.name}");
+            Logger.Action(origin, $"Delete watcher: {watcher.name}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -528,8 +530,11 @@ internal static class Watchdog {
     }
 
     public static byte[] ListNotifications() {
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.Converters.Add(new NotificationJsonConverter());
+
         try {
-            byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, notificationSerializerOptions);
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, options);
             return json;
         }
         catch {
@@ -537,7 +542,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] SaveNotifications(HttpListenerContext ctx, string originator) {
+    public static byte[] SaveNotifications(HttpListenerContext ctx, string origin) {
         string payload;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             payload = reader.ReadToEnd();
@@ -548,13 +553,15 @@ internal static class Watchdog {
         }
 
         try {
-            notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, notificationSerializerOptions);
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new NotificationJsonConverter());
+            notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, options);
 
             lock (syncNotification) {
                 File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
             }
 
-            Logger.Action(originator, $"Modified watchdog notifications");
+            Logger.Action(origin, $"Modified watchdog notifications");
 
             return Data.CODE_OK.Array;
 

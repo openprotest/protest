@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Protest.Tests;
 
 internal class JsonConvertersTests {
-    private readonly string originator = "unit test";
+    private readonly string origin = "unit test";
     Database database;
 
     [SetUp]
@@ -20,17 +20,17 @@ internal class JsonConvertersTests {
         john.attributes.TryAdd("firstname", new Database.Attribute() {
             value = "John",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         john.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Smith",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
         john.attributes.TryAdd("title", new Database.Attribute() {
             value = "CEO",
             date = DateTime.Now.Ticks,
-            originator = originator
+            origin = origin
         });
     }
 

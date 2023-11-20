@@ -23,14 +23,14 @@ internal static partial class Lifeline {
         StartTask("system");
     }
 
-    public static bool StartTask(string originator) {
+    public static bool StartTask(string origin) {
         if (task is not null) return false;
 
         Thread thread = new Thread(() => LifelineLoop());
 
         task = new TaskWrapper("Lifeline") {
             thread = thread,
-            originator = originator,
+            origin = origin,
             TotalSteps = 0,
             CompletedSteps = 0
         };
@@ -40,9 +40,9 @@ internal static partial class Lifeline {
         return true;
     }
 
-    public static bool StopTask(string originator) {
+    public static bool StopTask(string origin) {
         if (task is null) return false;
-        task.RequestCancel(originator);
+        task.RequestCancel(origin);
         return true;
     }
 

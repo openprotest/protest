@@ -6,7 +6,7 @@ class View extends Window {
 
 		this.content.style.overflowY = "scroll";
 		this.content.style.containerType = "inline-size";
-
+		
 		this.InitializeComponent();
 
 		setTimeout(()=>this.UpdateAuthorization(), 1);
@@ -97,7 +97,7 @@ class View extends Window {
 		this.SetupFloatingMenu();
 	}
 
-	CreateAttribute(name, value, originator, date, editMode = false) {
+	CreateAttribute(name, value, origin, date, editMode = false) {
 		const newAttribute = document.createElement("div");
 
 		const nameBox = document.createElement("input");
@@ -126,16 +126,16 @@ class View extends Window {
 		const infoBox = document.createElement("div");
 		newAttribute.appendChild(infoBox);
 
-		if (date && originator) {
+		if (date && origin) {
 			let modDate = new Date(UI.TicksToUnixDate(date));
 			const dateBox = document.createElement("div");
 			dateBox.textContent = `${modDate.toLocaleDateString(UI.regionalFormat, {})}`;
 			infoBox.appendChild(dateBox);
 
-			let modOriginator = originator;
-			const originatorBox = document.createElement("div");
-			originatorBox.textContent = modOriginator;
-			infoBox.appendChild(originatorBox);
+			let modOrigin = origin;
+			const originBox = document.createElement("div");
+			originBox.textContent = modOrigin;
+			infoBox.appendChild(originBox);
 		}
 
 		if (this instanceof DeviceView) {

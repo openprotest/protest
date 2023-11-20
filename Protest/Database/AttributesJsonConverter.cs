@@ -34,7 +34,7 @@ public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary
                     attr.value = removeValue ? String.Empty : reader.GetString();
                 }
                 else if (propertyName == "o") {
-                    attr.originator = removeValue ? String.Empty : reader.GetString();
+                    attr.origin = removeValue ? String.Empty : reader.GetString();
                 }
                 else if (propertyName == "d") {
                     try {
@@ -68,7 +68,7 @@ public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary
 
             writer.WriteStartObject();
             writer.WriteString(_v, pair.Key.Contains("password") && ignorePasswords ? String.Empty : pair.Value.value);
-            writer.WriteString(_o, pair.Value.originator);
+            writer.WriteString(_o, pair.Value.origin);
             writer.WriteNumber(_d, pair.Value.date);
             writer.WriteEndObject();
         }

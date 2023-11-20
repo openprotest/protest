@@ -56,19 +56,19 @@ class UserView extends View {
 			this.SetTitle("New user");
 			this.Edit(true);
 
-			let originator = KEEP.username;
+			let origin = KEEP.username;
 			let date = new Date();
 
-			this.attributes.appendChild(this.CreateAttribute("type", "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("type", "", origin, date, true));
 
-			this.attributes.appendChild(this.CreateAttribute("title", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("department", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("first name", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("last name", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("username", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("e-mail", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("office number", "", originator, date, true));
-			this.attributes.appendChild(this.CreateAttribute("mobile number", "", originator, date, true));
+			this.attributes.appendChild(this.CreateAttribute("title",         "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("department",    "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("first name",    "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("last name",     "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("username",      "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("e-mail",        "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("office number", "", origin, date, true));
+			this.attributes.appendChild(this.CreateAttribute("mobile number", "", origin, date, true));
 		}
 	}
 

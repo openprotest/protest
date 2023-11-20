@@ -25,7 +25,7 @@ internal sealed class TaskWrapper : IDisposable {
 
     public Thread thread;
     public string name;
-    public string originator;
+    public string origin;
     public TaskStatus status;
 
     public int TotalSteps {
@@ -70,9 +70,9 @@ internal sealed class TaskWrapper : IDisposable {
         }
     }
 
-    public void RequestCancel(string originator) {
+    public void RequestCancel(string origin) {
         status = TaskStatus.canceling;
-        Logger.Action(originator, $"Canceling task: {name}");
+        Logger.Action(origin, $"Canceling task: {name}");
         cancellationTokenSource.Cancel();
     }
 
