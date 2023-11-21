@@ -525,6 +525,13 @@
 	100% { opacity: 1; transform: none; }
 }
 
+@keyframes blink {
+	0% { opacity: 0; }
+	30% { opacity: 1; }
+	70% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
 @keyframes highlight {
 	0% {
 		background: radial-gradient(circle, var(--clr-accent) 0%, transparent 100%);

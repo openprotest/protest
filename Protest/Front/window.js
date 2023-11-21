@@ -1041,6 +1041,21 @@ class Window {
 		return newSeparator;
 	}
 
+	AddSendToChatButton() {
+		this.sendChatButton = this.AddToolbarButton("Send to chat", "mono/send.svg?light");
+		
+		this.sendChatButton.onclick = ()=>{
+			KEEP.socket.send(JSON.stringify({
+				type   : "chat-command",
+				command: this.constructor.name,
+				params : JSON.stringify(this.params),
+				icon   : this.iconPath,
+				title  : this.header.textContent,
+				id: `${KEEP.username}${Date.now()}`
+			}));
+		};
+	}
+
 	SetTitle(title = "") {
 		this.header.textContent = title;
 		this.task.setAttribute("tip", title);
@@ -1062,7 +1077,16 @@ class Window {
 
 	AfterResize() { } //overridable
 
-	UpdateAuthorization() { } //overridable
+	UpdateAuthorization() { //overridable
+		if (this.sendChatButton) {
+			if (KEEP.authorization.includes("*") || KEEP.authorization.includes("chat:write")) {
+				this.sendChatButton.disabled = false;
+			}
+			else {
+				this.sendChatButton.disabled = true;
+			}
+		}
+	}
 
 	AddCheckBoxLabel(parent, checkbox, label) {
 		let id = Date.now() + Math.random() * 1000;

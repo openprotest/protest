@@ -188,6 +188,7 @@ class Watchdog extends Window {
 	}
 
 	UpdateAuthorization() {
+		//super.UpdateAuthorization();
 		this.newButton.disabled          = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
 		this.editButton.disabled         = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
 		this.deleteButton.disabled       = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");

@@ -42,7 +42,9 @@ class DnsLookup extends Console {
 		this.AddToolbarSeparator();
 		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=>o[0]===this.params.type)[2]));
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
-
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.AddSendToChatButton();
+		
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;
 			this.params.entries = [];

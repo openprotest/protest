@@ -19,6 +19,8 @@ class UsersList extends List {
 		this.deleteButton  = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		const filterButton = this.SetupFilter();
 		const findInput    = this.SetupFind();
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.sentChatButton = this.AddSendToChatButton();
 
 		if (this.params.find && this.params.find.length > 0) {
 			findInput.value = this.params.find;
@@ -30,11 +32,12 @@ class UsersList extends List {
 
 		this.addButton.onclick = ()=> this.Add();
 		this.deleteButton.onclick = ()=> this.Delete();
-	
+
 		this.UpdateAuthorization();
 	}
 
 	UpdateAuthorization() { //override
+		super.UpdateAuthorization();
 		this.addButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
 		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
 	}

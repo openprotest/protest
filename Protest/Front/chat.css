@@ -107,6 +107,24 @@
 	border-color: transparent var(--clr-pane) transparent transparent;
 }
 
+.chat-command-box {
+	min-width: 96px;
+	min-height: 48px;
+	line-height: 48px;
+	font-weight: 600;
+	padding-left: 56px;
+	background-size: 40px 40px;
+	background-position: 8px center;
+	background-repeat: no-repeat;
+	border-radius:  8px;
+	-webkit-user-select: none; user-select: none;
+}
+
+.chat-command-box:hover {
+	background-color: var(--clr-select);
+	transition: .2s;
+}
+
 .local-streams-box {
 	position: absolute;
 	top: 8px;

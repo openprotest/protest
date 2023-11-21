@@ -186,13 +186,44 @@ const KEEP = {
 			}
 			break;
 			
-		case "chattext":
-		case "chatstream":
+		case "chattext": {
+			let chatCount = 0;
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
+				console.log(message);
+				chatCount++;
 			}
+			
+			if (chatCount === 0) {
+				const newChat = new Chat();
+				newChat.win.style.display = "none";
+				newChat.Minimize();
+				newChat.HandleMessage(message);
+				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
+			}
+
 			break;
+		}
+
+		case "chatcommand": {
+			let chatCount = 0;
+			for (let i = 0; i < WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof Chat)) continue;
+				WIN.array[i].HandleCommand(message);
+				chatCount++;
+			}
+			
+			if (chatCount === 0) {
+				const newChat = new Chat();
+				newChat.win.style.display = "none";
+				newChat.Minimize();
+				newChat.HandleCommand(message);
+				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
+			}
+
+			break;
+		}
 
 		default:
 			console.log("none register action: " + message.action);

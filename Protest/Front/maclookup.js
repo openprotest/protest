@@ -11,6 +11,10 @@ class MacLookup extends Console {
 		this.SetTitle("MAC lookup");
 		this.SetIcon("mono/maclookup.svg");
 
+		this.SetupToolbar();
+		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.AddSendToChatButton();
+		
 		this.txtInput.placeholder = "mac address";
 
 		if (this.params.entries) { //restore entries from previous session
@@ -19,6 +23,15 @@ class MacLookup extends Console {
 			for (let i = 0; i < temp.length; i++)
 				this.Push(temp[i]);
 		}
+
+		this.clearButton.addEventListener("click", ()=> {
+			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
+			if (btnOK) btnOK.addEventListener("click", ()=> {
+				this.list.textContent = "";
+				this.hashtable = {};
+				this.params.entries = [];
+			});
+		});
 	}
 
 	Push(name) { //override

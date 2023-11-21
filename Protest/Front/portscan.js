@@ -158,6 +158,8 @@ class PortScan extends Console {
 		this.btnClear = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.btnOptions = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.AddSendToChatButton();
 
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;

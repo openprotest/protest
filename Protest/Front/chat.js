@@ -8,7 +8,7 @@ class Chat extends Window {
 		this.SetIcon("mono/chat.svg");
 
 		this.lastBubble = null;
-		this.outbox = {};
+		this.outdoing = {};
 
 		this.userStream  = [];
 		this.displayStreams = [];
@@ -57,12 +57,32 @@ class Chat extends Window {
 
 		this.content.append(this.sendButton, this.micButton, this.camButton, this.displayButton);
 
+		this.blinkingDot = document.createElement("div");
+		this.blinkingDot.className = "task-icon-dots";
+		this.blinkingDot.style.backgroundColor = "transparent";
+		this.blinkingDot.style.width = "10px";
+		this.blinkingDot.style.height = "10px";
+		this.blinkingDot.style.left = "unset";
+		this.blinkingDot.style.right = "1px";
+		this.blinkingDot.style.bottom = "0px";
+		this.blinkingDot.style.boxShadow = "none";
+		this.blinkingDot.style.animation = "blink 2s infinite";
+		this.task.appendChild(this.blinkingDot);
+
 		this.input.onkeydown = event=> this.Input_onkeydown(event);
 
 		this.sendButton.onclick    = ()=> this.Send();
 		this.micButton.onclick     = ()=> this.Mic_onclick();
 		this.camButton.onclick     = ()=> this.Webcam_onclick();
 		this.displayButton.onclick = ()=> this.Display_onclick();
+	}
+
+	BringToFront() { //override
+		super.BringToFront();
+		if (this.blinkingDot) {
+			this.blinkingDot.style.backgroundColor = "transparent";
+			this.blinkingDot.style.boxShadow = "none";
+		}
 	}
 
 	AdjustUI() {
@@ -138,30 +158,59 @@ class Chat extends Window {
 			this.ConfirmBox(ex, true, "mono/webcam.svg");
 		}
 
-		this.CreateBubble(this.input.innerHTML, "out", "", KEEP.color, id);
+		this.CreateTextBubble(this.input.innerHTML, "out", "", KEEP.color, id);
 		this.ClearInput();
 	}
 
 	HandleMessage(message) {
-		if (this.outbox.hasOwnProperty(message.id)) {
-			this.outbox[message.id].style.color = "var(--clr-dark)";
-			this.outbox[message.id].style.backgroundColor = "var(--clr-pane)";
-			this.outbox[message.id].style.boxShadow = "none";
-			delete this.outbox[message.id];
+		if (this.outdoing.hasOwnProperty(message.id)) {
+			this.outdoing[message.id].style.color = "var(--clr-dark)";
+			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
+			this.outdoing[message.id].style.boxShadow = "none";
+			delete this.outdoing[message.id];
 		}
 		else {
-			const bubble = this.CreateBubble(
-				message.content,
+			const bubble = this.CreateTextBubble(
+				message.text,
 				message.sender === KEEP.username ? "out" : "in",
 				message.sender,
 				message.color
 			);
 		}
+		
+		if (!(WIN.focused instanceof Chat)) {
+			this.blinkingDot.style.backgroundColor = message.color;
+			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
+		}
 	}
 
-	CreateBubble(text, direction, sender, color, id=null) {
-		if (text.length === 0) return;
+	HandleCommand(message) {
+		if (this.outdoing.hasOwnProperty(message.id)) {
+			this.outdoing[message.id].style.color = "var(--clr-dark)";
+			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
+			this.outdoing[message.id].style.boxShadow = "none";
+			delete this.outdoing[message.id];
+		}
+		else {
+			const bubble = this.CreateCommandBubble(
+				message.command,
+				message.params,
+				message.icon,
+				message.title,
+				message.sender === KEEP.username ? "out" : "in",
+				message.sender,
+				message.color,
+				message.id
+			);
+		}
 		
+		if (!(WIN.focused instanceof Chat)) {
+			this.blinkingDot.style.backgroundColor = message.color;
+			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
+		}
+	}
+
+	CreateBubble(direction, sender, color, id=null) {
 		let group;
 
 		const wrapper = document.createElement("div");
@@ -170,7 +219,6 @@ class Chat extends Window {
 
 		const bubble = document.createElement("div");
 		bubble.className = "chat-bubble";
-		bubble.innerHTML = text;
 
 		const pin = document.createElement("div");
 		pin.className = "chat-pin";
@@ -191,14 +239,6 @@ class Chat extends Window {
 			if (direction === "out") {
 				this.lastBubble.bubble.style.borderBottomRightRadius = "2px";
 				bubble.style.borderTopRightRadius = "2px";
-
-				bubble.style.color = "var(--clr-pane)";
-				bubble.style.backgroundColor = "transparent";
-				bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
-
-				if (id && !this.outbox.hasOwnProperty(id)) {
-					this.outbox[id] = bubble;
-				}
 			}
 			else if (direction === "in") {
 				this.lastBubble.bubble.style.borderBottomLeftRadius = "2px";
@@ -221,14 +261,6 @@ class Chat extends Window {
 				group.style.textAlign = "right";
 				group.style.paddingRight = "36px";
 				avatar.style.right = "4px";
-
-				bubble.style.color = "var(--clr-pane)";
-				bubble.style.backgroundColor = "transparent";
-				bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
-
-				if (id && !this.outbox.hasOwnProperty(id)) {
-					this.outbox[id] = bubble;
-				}
 			}
 			else {
 				group.style.textAlign = "left";
@@ -252,6 +284,42 @@ class Chat extends Window {
 		if (isScrolledToBottom) {
 			wrapper.scrollIntoView({behavior:"smooth"});
 		}
+
+		return bubble;
+	}
+
+	CreateTextBubble(text, direction, sender, color, id=null) {
+		if (text.length === 0) return;
+		
+		const bubble = this.CreateBubble(direction, sender, color, id);
+		bubble.innerHTML = text;
+
+		if (direction === "out") {
+			bubble.style.color = "var(--clr-pane)";
+			bubble.style.backgroundColor = "transparent";
+			bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+
+			if (id && !this.outdoing.hasOwnProperty(id)) {
+				this.outdoing[id] = bubble;
+			}
+		}
+
+		return bubble;
+	}
+
+	CreateCommandBubble(command, params, icon, title, direction, sender, color) {
+		const bubble = this.CreateBubble(direction, sender, color);
+
+		const commandBox = document.createElement("div");
+		commandBox.className = "chat-command-box";
+		commandBox.style.backgroundImage= `url(${icon})`;
+		commandBox.textContent= title;
+		bubble.appendChild(commandBox);
+
+		commandBox.onclick = ()=> LOADER.Invoke({
+			class: command,
+			params: JSON.parse(params)
+		});
 
 		return bubble;
 	}
@@ -346,5 +414,4 @@ class Chat extends Window {
 			this.AdjustUI();
 		}
 	}
-
 }

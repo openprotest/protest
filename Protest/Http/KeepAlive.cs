@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
-using System.Xml.Linq;
 
 namespace Protest.Http;
 
@@ -59,7 +58,7 @@ internal static class KeepAlive {
 
         try {
             //init
-            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
+            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color ?? "#A0A0A0"}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
             await ws.SendAsync(initSegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
             StringBuilder messageBuilder = new StringBuilder();
@@ -150,21 +149,23 @@ internal static class KeepAlive {
     }
 
     private static void HandleMessage(string message, HttpListenerContext ctx, string origin) {
-        Console.WriteLine(message.Length);
-        Console.WriteLine(message);
-
         ConcurrentDictionary<string, string> dictionary = JsonSerializer.Deserialize<ConcurrentDictionary<string, string>>(message, messageSerializerOptions);
         if (dictionary.IsEmpty) { return; }
-
 
         if (!dictionary.TryGetValue("type", out string type)) {
             return;
         }
 
-        switch (type!) {
+        switch (type) {
         case "chat-text":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                Chat.HandlerText(dictionary, origin);
+                Chat.MessageHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-command":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.CommandHandler(dictionary, origin);
             }
             return;
 

@@ -24,6 +24,7 @@ class View extends Window {
 	}
 	
 	UpdateAuthorization() { //override
+		super.UpdateAuthorization();
 		this.editButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
 		this.fetchButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("fetch:write");
 		this.cloneButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
@@ -93,6 +94,10 @@ class View extends Window {
 		this.sideTools = document.createElement("div");
 		this.sideTools.className = "view-side-tools";
 		this.content.appendChild(this.sideTools);
+
+		this.bar.appendChild(this.AddToolbarSeparator());
+		this.AddSendToChatButton();
+		this.bar.appendChild(this.sendChatButton);
 
 		this.SetupFloatingMenu();
 	}

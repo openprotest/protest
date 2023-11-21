@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static Protest.Http.Auth;
 
 namespace Protest.Http;
 
@@ -511,6 +512,8 @@ internal static class Auth {
         }
 
         Logger.Action(origin, $"Save access control for {username}");
+
+        //KeepAlive.Unicast(username, $"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{color}\",\"authorization\":[{permissionsString}]}}", "/global");
 
         KeepAlive.Unicast(username, $"{{\"action\":\"updateacl\",\"authorization\":[{permissionsString}]}}", "/global");
 

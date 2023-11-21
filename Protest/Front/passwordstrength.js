@@ -14,10 +14,11 @@ class PasswordStrength extends List {
 		this.columnsOptions.style.display = "none";
 
 		this.SetupToolbar();
-		const btnGandalf = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
-		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.filterButton = this.SetupFilter();
 		this.findInput = this.SetupFind();
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		const btnGandalf = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
+		this.AddSendToChatButton();
 
 		if (this.params.find && this.params.find.length > 0) {
 			this.findInput.value = this.params.find;

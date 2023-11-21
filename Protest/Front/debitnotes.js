@@ -188,6 +188,8 @@ class DebitNotes extends Window {
 	}
 
 	UpdateAuthorization() { //override
+		//super.UpdateAuthorization();
+		
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("debit notes:write")) {
 			this.btnNew.disabled = true;
 			this.btnDuplicate.disabled = true;

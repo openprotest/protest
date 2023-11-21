@@ -20,6 +20,7 @@ class TraceRoute extends Console {
 
 		this.SetupToolbar();
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.AddSendToChatButton();
 
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;

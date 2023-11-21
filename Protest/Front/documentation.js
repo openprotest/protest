@@ -272,6 +272,8 @@ class Documentation extends Window {
 	}
 
 	UpdateAuthorization() { //override
+		//super.UpdateAuthorization();
+		
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("documentation:write")) {
 			this.btnNew.disabled = true;
 			this.btnEdit.disabled = true;

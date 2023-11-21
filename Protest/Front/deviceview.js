@@ -622,13 +622,13 @@ class DeviceView extends View {
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/memory/file?host=${host}`);
+				const response = await fetch(`lifeline/memory/view?file=${host}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/disk/file?host=${host}`);
+				const response = await fetch(`lifeline/disk/view?file=${host}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})()

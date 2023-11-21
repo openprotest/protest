@@ -31,6 +31,8 @@ class Ping extends Console {
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.AddSendToChatButton();
 
 		this.playButton.disabled = this.params.status === "play";
 		this.pauseButton.disabled = this.params.status === "pause";
@@ -90,14 +92,10 @@ class Ping extends Console {
 				OriginalCancelClickHandler();
 			};
 
-			dialog.btnCancel.onclick = ()=> {
-				clone.Close();
-			};
+			dialog.btnCancel.onclick = ()=> clone.Close();
 		});
 
-		this.optionsButton.addEventListener("click", ()=> {
-			this.Options();
-		});
+		this.optionsButton.onclick = ()=> this.Options();
 
 		this.list.onscroll = ()=> this.InvalidateRecyclerList();
 	}
