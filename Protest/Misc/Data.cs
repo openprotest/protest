@@ -133,7 +133,9 @@ public static class Data {
     }
 
     public static string EscapeJsonText(string text) {
-        if (String.IsNullOrEmpty(text)) return String.Empty;
+        if (String.IsNullOrEmpty(text)) {
+            return String.Empty;
+        }
 
         if (text.Length <= 256) {
             int count = 0;
@@ -216,7 +218,9 @@ public static class Data {
     }
 
     public static string EscapeJsonTextWithUnicodeCharacters(string text) {
-        if (String.IsNullOrEmpty(text)) return String.Empty;
+        if (String.IsNullOrEmpty(text)) {
+            return String.Empty;
+        }
 
         StringBuilder builder = new StringBuilder();
         foreach (char c in text) {
@@ -322,6 +326,74 @@ public static class Data {
             }
         }
         return builder.ToString();
+    }
+
+    public static byte[] EscapeJsonTextToBytes(string text) {
+        if (String.IsNullOrEmpty(text)) {
+            return Array.Empty<byte>();
+        }
+
+        int count = 0;
+        foreach (char c in text) {
+            switch (c) {
+            case '\\':
+            case '\"':
+            case '\b':
+            case '\f':
+            case '\n':
+            case '\r':
+            case '\t':
+                count += 2;
+                break;
+
+            default:
+                count++;
+                break;
+            }
+        }
+
+        byte[] result = new byte[count];
+        count = 0;
+        foreach (char c in text) {
+            switch (c) {
+            case '\\':
+            case '\"':
+                result[count++] = (byte)'\\';
+                result[count++] = (byte)c;
+                break;
+
+            case '\b':
+                result[count++] = (byte)'\\';
+                result[count++] = (byte)'b';
+                break;
+
+            case '\f':
+                result[count++] = (byte)'\\';
+                result[count++] = (byte)'f';
+                break;
+
+            case '\t':
+                result[count++] = (byte)'\\';
+                result[count++] = (byte)'t';
+                break;
+
+            case '\n':
+                result[count++] = (byte)'\\';
+                result[count++] = (byte)'n';
+                break;
+
+            case '\r':
+                result[count++] = (byte)'\\';
+                result[count++] = (byte)'r';
+                break;
+
+            default:
+                result[count++] = (byte)c;
+                break;
+            }
+        }
+
+        return result;
     }
 
     public static bool ContainsBytesSequence(byte[] source, byte[] target) {

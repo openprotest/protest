@@ -86,7 +86,7 @@ internal static class Watchdog {
             for (int i = 0; i < files.Length; i++) {
                 try {
                     string plain = File.ReadAllText(files[i].FullName);
-                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, notificationSerializerOptions);
+                    Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, watcherSerializerOptions);
                     watchers.TryAdd(files[i].Name, watcher);
                 }
                 catch { }
@@ -420,9 +420,8 @@ internal static class Watchdog {
 
         bool first = true;
         foreach (Watcher watcher in watchers.Values) {
-            if (!first)
-                builder.Append(',');
-            builder.Append(JsonSerializer.Serialize(watcher, notificationSerializerOptions));
+            if (!first) builder.Append(',');
+            builder.Append(JsonSerializer.Serialize(watcher, watcherSerializerOptions));
             first = false;
         }
 
@@ -463,10 +462,10 @@ internal static class Watchdog {
 
         try {
             bool exists = File.Exists($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
-            Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, notificationSerializerOptions);
+            Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, watcherSerializerOptions);
             watcher.file = file;
 
-            byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, notificationSerializerOptions);
+            byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, watcherSerializerOptions);
 
             File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}", content);
 

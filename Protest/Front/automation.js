@@ -5,7 +5,7 @@ class Automation extends List {
 		this.AddCssDependencies("list.css");
 		//this.AddCssDependencies("automation.css");
 
-		const columns = ["name", "status", "progress"]
+		const columns = ["name", "status", "progress"];
 		this.SetupColumns(columns);
 
 		this.columnsOptions.style.display = "none";

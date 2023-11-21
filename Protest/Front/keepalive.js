@@ -3,6 +3,7 @@ const KEEP = {
 	socket: null,
 	version: "0",
 	username: "",
+	color: "var(--clr-accent)",
 	authorization: [],
 	lastReconnect: 0,
 	redDot: document.createElement("div"),
@@ -50,6 +51,7 @@ const KEEP = {
 		case "init":
 			KEEP.version = message.version;
 			KEEP.username = message.username;
+			KEEP.color = message.color;
 			KEEP.authorization = message.authorization;
 			lblUsername.textContent = KEEP.username;
 			break;
@@ -184,6 +186,14 @@ const KEEP = {
 			}
 			break;
 			
+		case "chattext":
+		case "chatstream":
+			for (let i = 0; i < WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof Chat)) continue;
+				WIN.array[i].HandleMessage(message);
+			}
+			break;
+
 		default:
 			console.log("none register action: " + message.action);
 			break;

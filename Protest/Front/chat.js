@@ -7,11 +7,12 @@ class Chat extends Window {
 		this.SetTitle("Team chat");
 		this.SetIcon("mono/chat.svg");
 
+		this.lastBubble = null;
+		this.outbox = {};
+
 		this.userStream  = [];
 		this.displayStreams = [];
 		this.remoteStreams = [];
-
-		this.lastBubble = null;
 
 		this.InitializeComponents();
 	}
@@ -121,11 +122,14 @@ class Chat extends Window {
 	}
 
 	Send() {
+		if (this.input.textContent.length === 0) return;
 		if (this.input.innerHTML.length === 0) return;
-		if (this.input.innerHTML.trim().length === 0) return;
+
+		const id = `${KEEP.username}${Date.now()}`;
 
 		try {
 			KEEP.socket.send(JSON.stringify({
+				id: id,
 				type: "chat-text",
 				text: this.input.innerHTML
 			}));
@@ -134,12 +138,28 @@ class Chat extends Window {
 			this.ConfirmBox(ex, true, "mono/webcam.svg");
 		}
 
-		let s = Math.random() > .5 ? "in" : "out";
-		this.CreateBubble(this.input.innerHTML, s, s);
+		this.CreateBubble(this.input.innerHTML, "out", "", KEEP.color, id);
 		this.ClearInput();
 	}
 
-	CreateBubble(text, direction, sender) {
+	HandleMessage(message) {
+		if (this.outbox.hasOwnProperty(message.id)) {
+			this.outbox[message.id].style.color = "var(--clr-dark)";
+			this.outbox[message.id].style.backgroundColor = "var(--clr-pane)";
+			this.outbox[message.id].style.boxShadow = "none";
+			delete this.outbox[message.id];
+		}
+		else {
+			const bubble = this.CreateBubble(
+				message.content,
+				message.sender === KEEP.username ? "out" : "in",
+				message.sender,
+				message.color
+			);
+		}
+	}
+
+	CreateBubble(text, direction, sender, color, id=null) {
 		if (text.length === 0) return;
 		
 		let group;
@@ -171,6 +191,14 @@ class Chat extends Window {
 			if (direction === "out") {
 				this.lastBubble.bubble.style.borderBottomRightRadius = "2px";
 				bubble.style.borderTopRightRadius = "2px";
+
+				bubble.style.color = "var(--clr-pane)";
+				bubble.style.backgroundColor = "transparent";
+				bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+
+				if (id && !this.outbox.hasOwnProperty(id)) {
+					this.outbox[id] = bubble;
+				}
 			}
 			else if (direction === "in") {
 				this.lastBubble.bubble.style.borderBottomLeftRadius = "2px";
@@ -186,13 +214,21 @@ class Chat extends Window {
 
 			const avatar = document.createElement("div");
 			avatar.className = "chat-avatar";
-			avatar.style.backgroundColor = "var(--clr-accent)";
+			avatar.style.backgroundColor = color;
 			group.appendChild(avatar);
 
 			if (direction === "out") {
 				group.style.textAlign = "right";
 				group.style.paddingRight = "36px";
 				avatar.style.right = "4px";
+
+				bubble.style.color = "var(--clr-pane)";
+				bubble.style.backgroundColor = "transparent";
+				bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+
+				if (id && !this.outbox.hasOwnProperty(id)) {
+					this.outbox[id] = bubble;
+				}
 			}
 			else {
 				group.style.textAlign = "left";
@@ -216,6 +252,8 @@ class Chat extends Window {
 		if (isScrolledToBottom) {
 			wrapper.scrollIntoView({behavior:"smooth"});
 		}
+
+		return bubble;
 	}
 
 	CreateLocalStream(isUserMedia=false) {

@@ -435,7 +435,7 @@ class MicTester extends Window {
 					ctx.fillStyle = "#c0c0c0";
 					ctx.textBaseline = "bottom";
 					const frequency = Math.round(peakIndex * this.audioContext.sampleRate / bufferLength / 2);
-					const frequencyString = frequency < 1000 ? `${frequency}Hz` : `${frequency/1000}KHz`
+					const frequencyString = frequency < 1000 ? `${frequency}Hz` : `${frequency/1000}KHz`;
 					const x = (centerX + (barWidth-1) * peakIndex + barWidth / 2);
 					const y = this.canvas.height * 46 / 48;
 

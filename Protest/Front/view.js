@@ -289,6 +289,7 @@ class View extends Window {
 		this.InitializeAttributesList(this.link);
 		this.InitializeSideTools();
 		this.scroll.focus();
+		setTimeout(()=> this.scroll.focus(), WIN.ANIME_DURATION);
 	}
 
 	InitializeAttributesList(hash, editMode = false) {

@@ -252,11 +252,11 @@ internal static class Auth {
                 break;
 
             case "chat:read":
-                path.Add("");
+                path.Add("/chat/read");
                 break;
 
             case "chat:write":
-                path.Add("");
+                path.Add("/chat/write");
                 break;
 
             case "documentation:read":
@@ -610,6 +610,9 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
                 if (propertyName == "username") {
                     access.username = reader.GetString();
                 }
+                else if (propertyName == "domain") {
+                    access.domain = reader.GetString();
+                }
                 else if (propertyName == "alias") {
                     access.alias = reader.GetString();
                 }
@@ -640,6 +643,7 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
 
     public override void Write(Utf8JsonWriter writer, Auth.AccessControl value, JsonSerializerOptions options) {
         ReadOnlySpan<byte> _username = "username"u8;
+        ReadOnlySpan<byte> _domain = "domain"u8;
         ReadOnlySpan<byte> _alias = "alias"u8;
         ReadOnlySpan<byte> _color = "color"u8;
         ReadOnlySpan<byte> _hash = "hash"u8;
@@ -649,6 +653,7 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
         writer.WriteStartObject();
 
         writer.WriteString(_username, value.username);
+        writer.WriteString(_domain, value.domain);
         writer.WriteString(_alias, value.alias);
         writer.WriteString(_color, value.color);
         writer.WriteString(_hash, Convert.ToHexString(value.hash));

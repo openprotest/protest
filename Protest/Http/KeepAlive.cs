@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Protest.Http;
 
@@ -21,6 +22,12 @@ internal static class KeepAlive {
     }
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
+
+    private static readonly JsonSerializerOptions messageSerializerOptions = new();
+
+    static KeepAlive() {
+        messageSerializerOptions.Converters.Add(new MessageJsonConverter());
+    }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
@@ -52,8 +59,10 @@ internal static class KeepAlive {
 
         try {
             //init
-            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
+            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
             await ws.SendAsync(initSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+            StringBuilder messageBuilder = new StringBuilder();
 
             while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticated(ctx)) {
@@ -69,9 +78,12 @@ internal static class KeepAlive {
                     break;
                 }
 
-                string msg = Encoding.Default.GetString(buff, 0, receive.Count);
-                Console.WriteLine(msg);
-                //await ws.SendAsync(Strings.CODE_ACK, WebSocketMessageType.Text, true, CancellationToken.None);
+                messageBuilder.Append(Encoding.Default.GetString(buff, 0, receive.Count));
+
+                if (receive.EndOfMessage) {
+                    HandleMessage(messageBuilder.ToString(), ctx, username);
+                    messageBuilder.Clear();
+                }
             }
         }
         catch (WebSocketException ex) {
@@ -137,14 +149,59 @@ internal static class KeepAlive {
         }
     }
 
+    private static void HandleMessage(string message, HttpListenerContext ctx, string origin) {
+        Console.WriteLine(message.Length);
+        Console.WriteLine(message);
+
+        ConcurrentDictionary<string, string> dictionary = JsonSerializer.Deserialize<ConcurrentDictionary<string, string>>(message, messageSerializerOptions);
+        if (dictionary.IsEmpty) { return; }
+
+
+        if (!dictionary.TryGetValue("type", out string type)) {
+            return;
+        }
+
+        switch (type!) {
+        case "chat-text":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.HandlerText(dictionary, origin);
+            }
+            return;
+
+        case "chat-stream":
+            //TODO
+            return;
+        }
+    }
 }
 
-file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<string, Database.Attribute>> {
-    public override ConcurrentDictionary<string, Database.Attribute> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-        throw new NotImplementedException();
+file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<string, string>> {
+    public override ConcurrentDictionary<string, string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        ConcurrentDictionary<string, string> dictionary = new ConcurrentDictionary<string, string>();
+
+        while (reader.Read()) {
+            if (reader.TokenType == JsonTokenType.EndObject) {
+                break;
+            }
+
+            if (reader.TokenType == JsonTokenType.PropertyName) {
+                string key = reader.GetString();
+                reader.Read();
+                string value = reader.GetString();
+                dictionary.TryAdd(key, value);
+            }
+        }
+
+        return dictionary;
     }
 
-    public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, Database.Attribute> value, JsonSerializerOptions options) {
-        throw new NotImplementedException();
+    public override void Write(Utf8JsonWriter writer, ConcurrentDictionary<string, string> value, JsonSerializerOptions options) {
+        writer.WriteStartObject();
+
+        foreach (KeyValuePair<string, string> pair in value) {
+            writer.WriteString(pair.Key, pair.Value);
+        }
+
+        writer.WriteEndObject();
     }
 }

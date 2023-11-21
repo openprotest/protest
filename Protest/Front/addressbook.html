@@ -21,14 +21,13 @@
 			return Math.floor(diff / oneDay);
 		};
 
-		const hsl = [DayOfYear(), 100, 50];
+		const hsl = [-DayOfYear(), 100, 50];
 
 		document.querySelector(":root").style.setProperty("--clr-select", `hsl(${hsl[0]+7},${hsl[1]}%,${hsl[2]*.9}%)`);
 		document.querySelector(":root").style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1]}%,${hsl[2]}%)`);
 
 		function SetBarColor() {
 			const bar = document.getElementsByClassName("address-book-search-bar")[0];
-			console.log(bar);
 			bar.style.background = `linear-gradient(0deg, hsla(${hsl[0]+7},60%,40%,.5) 0%, hsla(${hsl[0]+7},60%,40%,1) 100%)`;
 		}
 	</script>

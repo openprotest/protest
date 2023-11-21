@@ -1,41 +1,51 @@
 ﻿using System.Collections.Concurrent;
-using static System.Net.Mime.MediaTypeNames;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace Protest.Http;
 
 internal static class Chat {
 
     private struct Message {
-        public string text;
+        public string content;
         public string sender;
         public long timestamp;
     }
 
     private static readonly ConcurrentBag<Message> history = new ConcurrentBag<Message>();
 
-    public static void Handler(string payload) {
-        string text = null;
-        string sender = null;
-        long timestamp = 0;
+    public static void HandlerText(ConcurrentDictionary<string, string> dictionary, string origin) {
+        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl)) { return; }
+        if (!dictionary.TryGetValue("text", out string text)) { return; }
 
-        //TODO:
-        Console.WriteLine(payload);
+        dictionary.TryGetValue("id", out string id);
 
-        Handler(text, sender, timestamp);
-    }
+        string sanitised = Data.EscapeJsonText(text);
 
-    public static void Handler(string text, string sender, long timestamp) {
         Message message = new Message {
-            text = text,
-            sender = sender,
-            timestamp = timestamp
+            content = sanitised,
+            sender = acl.username,
+            timestamp = DateTime.UtcNow.Ticks
         };
 
         history.Add(message);
+
+        StringBuilder builder = new StringBuilder();
+        builder.Append('{');
+        builder.Append("\"action\":\"chattext\",");
+        builder.Append($"\"id\":\"{id}\",");
+        builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
+        builder.Append($"\"sender\":\"{(String.IsNullOrEmpty(acl.alias) ? acl.username : acl.alias)}\",");
+        builder.Append($"\"color\":\"{acl.color}\",");
+        builder.Append($"\"content\":\"{sanitised}\"");
+        builder.Append('}');
+
+        KeepAlive.Broadcast(builder.ToString(), "/chat/read");
     }
 
     public static byte[] GetHistory() {
         history.ToArray();
+        //TODO:
         return null;
     }
 }

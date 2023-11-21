@@ -19,7 +19,7 @@
 	animation: rise-in 1 .2s;
 }
 
-.chat-group[sender]::before {
+.chat-group[sender]:not([sender=""])::before {
 	content: attr(sender);
 	color: var(--clr-pane);
 	padding: 0 8px;
