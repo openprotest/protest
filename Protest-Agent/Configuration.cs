@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using System.Security.Cryptography;
+using System.Windows.Forms;
 
 namespace ProtestAgent {
     internal class Configuration {
@@ -63,7 +64,7 @@ namespace ProtestAgent {
         }
 
         public static string EncryptB64(string text, byte[] key, byte[] iv) {
-            if (text.Length == 0) return String.Empty;
+            if (String.IsNullOrEmpty(text)) return String.Empty;
 
             byte[] bytes = Encoding.UTF8.GetBytes(text);
             byte[] cipher = Encrypt(bytes, key, iv);
@@ -211,7 +212,9 @@ namespace ProtestAgent {
 
                 File.WriteAllText(configFile.FullName, builder.ToString());
             }
-            catch { }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }

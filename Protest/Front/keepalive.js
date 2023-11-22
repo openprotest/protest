@@ -191,7 +191,6 @@ const KEEP = {
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
-				console.log(message);
 				chatCount++;
 			}
 			

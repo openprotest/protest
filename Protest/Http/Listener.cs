@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
+using System.Security.Policy;
 
 namespace Protest.Http;
 
@@ -134,6 +135,7 @@ public sealed class Listener {
         if (DynamicHandler(ctx, parameters)) return;
 
         ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
+
         ctx.Response.Close();
     }
 
@@ -238,7 +240,12 @@ public sealed class Listener {
 
     private static bool DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+
+//#if DEBUG
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+//#else
+//        string username = Auth.GetUsername(sessionId);
+//#endif
 
         ctx.Response.AddHeader("Cache-Control", "no-cache");
 

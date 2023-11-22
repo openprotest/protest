@@ -44,7 +44,12 @@ class Chat extends Window {
 		this.displayButton.className = "chat-button chat-screen";
 		this.displayButton.type = "button";
 		this.displayButton.style.backgroundColor = "transparent";
-		
+
+		//TODO:
+		this.micButton.disabled = true;
+		this.camButton.disabled = true;
+		this.displayButton.disabled = true;
+
 		this.input = document.createElement("div");
 		this.input.setAttribute("contenteditable", true);
 		this.input.className = "chat-input";
@@ -158,7 +163,7 @@ class Chat extends Window {
 			this.ConfirmBox(ex, true, "mono/webcam.svg");
 		}
 
-		this.CreateTextBubble(this.input.innerHTML, "out", "", KEEP.color, id);
+		this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, KEEP.color, id);
 		this.ClearInput();
 	}
 
@@ -170,11 +175,12 @@ class Chat extends Window {
 			delete this.outdoing[message.id];
 		}
 		else {
-			const bubble = this.CreateTextBubble(
+			this.CreateTextBubble(
 				message.text,
 				message.sender === KEEP.username ? "out" : "in",
 				message.sender,
-				message.color
+				message.color,
+				message.id
 			);
 		}
 		
@@ -192,15 +198,14 @@ class Chat extends Window {
 			delete this.outdoing[message.id];
 		}
 		else {
-			const bubble = this.CreateCommandBubble(
+			this.CreateCommandBubble(
 				message.command,
 				message.params,
 				message.icon,
 				message.title,
 				message.sender === KEEP.username ? "out" : "in",
 				message.sender,
-				message.color,
-				message.id
+				message.color
 			);
 		}
 		
@@ -210,7 +215,7 @@ class Chat extends Window {
 		}
 	}
 
-	CreateBubble(direction, sender, color, id=null) {
+	CreateBubble(direction, sender, color) {
 		let group;
 
 		const wrapper = document.createElement("div");
@@ -231,7 +236,7 @@ class Chat extends Window {
 			wrapper.appendChild(bubble);
 			wrapper.appendChild(pin);
 		}
-		
+
 		if (this.lastBubble && this.lastBubble.sender === sender) {
 			this.lastBubble.bubble.style.marginBottom = "0";
 			bubble.style.marginTop = "0";
@@ -291,7 +296,7 @@ class Chat extends Window {
 	CreateTextBubble(text, direction, sender, color, id=null) {
 		if (text.length === 0) return;
 		
-		const bubble = this.CreateBubble(direction, sender, color, id);
+		const bubble = this.CreateBubble(direction, sender, color);
 		bubble.innerHTML = text;
 
 		if (direction === "out") {

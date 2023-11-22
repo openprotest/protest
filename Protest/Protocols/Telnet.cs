@@ -32,7 +32,12 @@ internal static class Telnet {
         }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+
+//#if DEBUG
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+//#else
+//        string username = Auth.GetUsername(sessionId);
+//#endif
 
         Thread wsToServer = null;
 

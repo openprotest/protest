@@ -5,7 +5,6 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using static Protest.Http.Auth;
 
 namespace Protest.Http;
 
@@ -42,8 +41,10 @@ internal static class Auth {
     }
 
     public static bool IsAuthenticated(HttpListenerContext ctx) {
+//#if DEBUG
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
+//#endif
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -59,8 +60,10 @@ internal static class Auth {
     }
 
     public static bool IsAuthorized(HttpListenerContext ctx, string path) {
+//#if DEBUG
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
+//#endif
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -71,8 +74,10 @@ internal static class Auth {
     }
 
     public static bool IsAuthenticatedAndAuthorized(HttpListenerContext ctx, string path) {
+//#if DEBUG
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
+//#endif
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -130,7 +135,9 @@ internal static class Auth {
 #if DEBUG
         ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict;");
 #else
-        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
+        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Max-age=604800; HttpOnly; SameSite=Strict;");
+        //TODO:
+        //ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
 #endif
 
         Session newSession = new Session() {
