@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Drawing.Text;
-using System.Threading;
-using System.Timers;
+﻿using System.Threading;
 
 namespace Protest.Tasks;
 

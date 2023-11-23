@@ -55,6 +55,10 @@ internal static class Fetch {
 
         ConcurrentDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp, portScan, asynchronous, CancellationToken.None);
 
+        if (data is null || data.IsEmpty) {
+            return "{\"error\":\"Failed to fetch data.\"}"u8.ToArray();
+        }
+
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
     public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
@@ -369,6 +373,10 @@ internal static class Fetch {
         }
 
         ConcurrentDictionary<string, string[]> data = SingleUser(target);
+
+        if (data is null || data.IsEmpty) {
+            return "{\"error\":\"Failed to fetch data.\"}"u8.ToArray();
+        } 
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
@@ -1026,7 +1034,7 @@ internal static class Fetch {
                         }
                     }
                     else {
-                        origin = "Imported";
+                        origin = "Import task";
                         date = initDate;
                     }
 
@@ -1044,7 +1052,7 @@ internal static class Fetch {
                     }
                 }
 
-                DatabaseInstances.devices.Save((++filenameCount).ToString("x"), attributes, Database.SaveMethod.createnew, "Pro-test");
+                DatabaseInstances.devices.Save((++filenameCount).ToString("x"), attributes, Database.SaveMethod.createnew, "Import task");
             }
 
             i += 1 + len * 4;
@@ -1103,7 +1111,7 @@ internal static class Fetch {
                         }
                     }
                     else {
-                        origin = "Imported";
+                        origin = "Import task";
                         date = initDate;
                     }
 
@@ -1121,7 +1129,7 @@ internal static class Fetch {
                     }
                 }
 
-                DatabaseInstances.users.Save((++filenameCount).ToString("x"), attributes, Database.SaveMethod.createnew, "Pro-test");
+                DatabaseInstances.users.Save((++filenameCount).ToString("x"), attributes, Database.SaveMethod.createnew, "Import task");
             }
 
             i += 1 + len * 4;
@@ -1195,7 +1203,7 @@ internal static class Fetch {
 
             builder.Append('}');
 
-            DebitNotes.Create(builder.ToString(), "Imported");
+            DebitNotes.Create(builder.ToString(), "Import task");
         }
     }
 
@@ -1218,7 +1226,7 @@ internal static class Fetch {
         Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
         foreach (Database.Entry entry in import.dictionary.Values) {
-            DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Pro-test");
+            DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
         }
     }
 
@@ -1241,7 +1249,7 @@ internal static class Fetch {
         Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
         foreach (Database.Entry entry in import.dictionary.Values) {
-            DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Pro-test");
+            DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
         }
     }
 
@@ -1271,7 +1279,7 @@ internal static class Fetch {
         for (int i = 0; i < records.Length; i++) {
             Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
             string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
-            DebitNotes.Create(viewPayload, "Imported");
+            DebitNotes.Create(viewPayload, "Import task");
         }
     }
 

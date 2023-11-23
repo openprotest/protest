@@ -190,7 +190,7 @@ const KEEP = {
 			let chatCount = 0;
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
-				WIN.array[i].HandleMessage(message);
+				WIN.array[i].HandleText(message);
 				chatCount++;
 			}
 			
@@ -198,7 +198,7 @@ const KEEP = {
 				const newChat = new Chat();
 				newChat.win.style.display = "none";
 				newChat.Minimize();
-				newChat.HandleMessage(message);
+				newChat.HandleText(message);
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
 			}
 

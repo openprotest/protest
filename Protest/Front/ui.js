@@ -175,18 +175,18 @@ const UI = {
 
 const MENU = {
 	items: [
-		{ t: "Devices",                             i: "mono/devices.svg?light",     g: "inventory", h: false, f: params=> new DevicesList() },
-		{ t: "Users",                               i: "mono/users.svg?light",       g: "inventory", h: false, f: params=> new UsersList() },
-		{ t: "Devices grid",                        i: "mono/griddevices.svg?light", g: "inventory", h: true,  f: params=> new DevicesGrid() },
-		{ t: "Users grid",                          i: "mono/gridusers.svg?light",   g: "inventory", h: true,  f: params=> new UsersGrid() },
-		{ t: "New device",                          i: "mono/newdevice.svg?light",   g: "inventory", h: true,  f: params=> new DeviceView({}) },
-		{ t: "New user",                            i: "mono/newuser.svg?light",     g: "inventory", h: true,  f: params=> new UserView({}) },
-		{ t: "Fetch",                               i: "mono/fetch.svg?light",       g: "inventory", h: false, f: params=> new Fetch() },
-		{ t: "Fetch devices",                       i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("devices") },
-		{ t: "Fetch users",                         i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("users") },
-		{ t: "Import from another Pro-test",        i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("protest") },
-		{ t: "Password strength",                   i: "mono/strength.svg?light",    g: "inventory", h: false, f: ()=> new PasswordStrength() },
-		{ t: "Gandalf",                             i: "mono/gandalf.svg?light",     g: "inventory", h: true,  f: params=> new Gandalf() },
+		{ t: "Devices",                      i: "mono/devices.svg?light",     g: "inventory", h: false, f: params=> new DevicesList() },
+		{ t: "Users",                        i: "mono/users.svg?light",       g: "inventory", h: false, f: params=> new UsersList() },
+		{ t: "Devices grid",                 i: "mono/griddevices.svg?light", g: "inventory", h: true,  f: params=> new DevicesGrid() },
+		{ t: "Users grid",                   i: "mono/gridusers.svg?light",   g: "inventory", h: true,  f: params=> new UsersGrid() },
+		{ t: "New device",                   i: "mono/newdevice.svg?light",   g: "inventory", h: true,  f: params=> new DeviceView({}) },
+		{ t: "New user",                     i: "mono/newuser.svg?light",     g: "inventory", h: true,  f: params=> new UserView({}) },
+		{ t: "Fetch",                        i: "mono/fetch.svg?light",       g: "inventory", h: false, f: params=> new Fetch() },
+		{ t: "Fetch devices",                i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("devices") },
+		{ t: "Fetch users",                  i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("users") },
+		{ t: "Import from another Pro-test", i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("protest") },
+		{ t: "Password strength",            i: "mono/strength.svg?light",    g: "inventory", h: false, f: ()=> new PasswordStrength() },
+		{ t: "Gandalf",                      i: "mono/gandalf.svg?light",     g: "inventory", h: true,  f: params=> new Gandalf() },
 
 		{ t: "Address book",  i: "mono/addressbook.svg?light",   g: "documentation", h: true, f: params=> new AddressBook() },
 		{ t: "Documentation", i: "mono/documentation.svg?light", g: "documentation", h: false, f: params=> new Documentation() },
@@ -238,7 +238,7 @@ const MENU = {
 		
 		{ t: "Automation",     i: "mono/automation.svg?light",  g: "manage", h: false, f: params=> new Automation() },
 		
-		{ t: "Backup",         i: "mono/backup.svg?light",      g: "manage", h: false, f: params=> {} },
+		//{ t: "Backup",         i: "mono/backup.svg?light",      g: "manage", h: false, f: params=> {} },
 		{ t: "Log",            i: "mono/log.svg?light",         g: "manage", h: false, f: params=> new Log(params) },
 		{ t: "About",          i: "mono/logo.svg?light",        g: "manage", h: false, f: params=> new About("about") },
 		{ t: "Update",         i: "mono/update.svg?light",      g: "manage", h: true, f: params=> new About("update") },

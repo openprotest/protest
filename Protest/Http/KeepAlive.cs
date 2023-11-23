@@ -20,6 +20,7 @@ internal static class KeepAlive {
         public object syncLock;
     }
 
+
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
 
     private static readonly JsonSerializerOptions messageSerializerOptions = new();

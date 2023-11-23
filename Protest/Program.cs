@@ -40,7 +40,6 @@ internal class Program {
         Console.WriteLine(" - Debug mode");
 #endif
         Console.WriteLine($" - Startup time: {DateTime.Now.ToString(Data.DATETIME_FORMAT)}");
-        Console.WriteLine($" - GUID: {Data.GUID}");
         Console.WriteLine();
 
         Data.InitializeDirectories();
@@ -67,7 +66,9 @@ internal class Program {
         Console.Write("Initialize tasks");
         Tasks.Automation.Initialize();
         Console.WriteLine("        OK");
-        
+
+        Console.WriteLine();
+
         try {
             Http.Listener listener = new Http.Listener(Configuration.http_prefixes, Configuration.front_path);
             Console.WriteLine(listener.ToString());

@@ -17,7 +17,30 @@ class Chat extends Window {
 		this.InitializeComponents();
 	}
 
-	InitializeComponents() {
+	async GetHistory() {
+		try {
+			const response = await fetch("chat/history");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			for (let i=0; i<json.length; i++) {
+				switch (json[i].action) {
+				case "chattext": this.HandleText(json[i]); break;
+				case "chatcommand": this.HandleCommand(json[i]); break;
+				}
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+		finally {
+			//TODO: handle queue
+		}
+	}
+
+	async InitializeComponents() {
 		this.localStreamsBox = document.createElement("div");
 		this.localStreamsBox.className = "local-streams-box";
 		this.content.appendChild(this.localStreamsBox);
@@ -80,6 +103,8 @@ class Chat extends Window {
 		this.micButton.onclick     = ()=> this.Mic_onclick();
 		this.camButton.onclick     = ()=> this.Webcam_onclick();
 		this.displayButton.onclick = ()=> this.Display_onclick();
+
+		await this.GetHistory();
 	}
 
 	BringToFront() { //override
@@ -163,11 +188,15 @@ class Chat extends Window {
 			this.ConfirmBox(ex, true, "mono/webcam.svg");
 		}
 
-		this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, KEEP.color, id);
+		const bubble = this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, KEEP.color, id);
+		bubble.style.color = "var(--clr-pane)";
+		bubble.style.backgroundColor = "transparent";
+		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+
 		this.ClearInput();
 	}
 
-	HandleMessage(message) {
+	HandleText(message) {
 		if (this.outdoing.hasOwnProperty(message.id)) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
@@ -216,6 +245,8 @@ class Chat extends Window {
 	}
 
 	CreateBubble(direction, sender, color) {
+		if (sender === KEEP.username) sender = "";
+
 		let group;
 
 		const wrapper = document.createElement("div");
@@ -287,7 +318,7 @@ class Chat extends Window {
 		group.appendChild(wrapper);
 
 		if (isScrolledToBottom) {
-			wrapper.scrollIntoView({behavior:"smooth"});
+			setTimeout(()=>wrapper.scrollIntoView({behavior:"smooth"}),50);
 		}
 
 		return bubble;
@@ -300,10 +331,6 @@ class Chat extends Window {
 		bubble.innerHTML = text;
 
 		if (direction === "out") {
-			bubble.style.color = "var(--clr-pane)";
-			bubble.style.backgroundColor = "transparent";
-			bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
-
 			if (id && !this.outdoing.hasOwnProperty(id)) {
 				this.outdoing[id] = bubble;
 			}

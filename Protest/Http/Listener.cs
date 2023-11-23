@@ -6,7 +6,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
-using System.Security.Policy;
 
 namespace Protest.Http;
 
@@ -65,7 +64,7 @@ public sealed class Listener {
         HttpListenerContext ctx = listener.EndGetContext(result);
 
         //Cross Site Request Forgery protection
-        if (ctx.Request.UrlReferrer != null) {
+        /*if (ctx.Request.UrlReferrer != null) {
             if (!String.Equals(ctx.Request.UrlReferrer.Host, ctx.Request.UserHostName.Split(':')[0], StringComparison.Ordinal)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
@@ -82,7 +81,7 @@ public sealed class Listener {
                 ctx.Response.Close();
                 return;
             }
-        }
+        }*/
 
         string path = ctx.Request.Url.PathAndQuery;
 
@@ -321,6 +320,8 @@ public sealed class Listener {
             if (acceptGZip)
                 ctx.Response.AddHeader("Content-Encoding", "gzip");
             break;
+
+        case "/chat/history": buffer = Chat.GetHistory(); break;
 
         case "/debit/list"      : buffer = Tools.DebitNotes.List(parameters); break;
         case "/debit/view"      : buffer = Tools.DebitNotes.View(parameters); break;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
-using Protest.Http;
 
 namespace Protest;
 internal static class Configuration {

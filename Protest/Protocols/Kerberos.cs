@@ -268,29 +268,33 @@ internal static class Kerberos {
         ContentBuilderAddValue(result, "othermailbox", "secondary e-mail", data, null);
 
         StringBuilder telephoneBuilder = new StringBuilder();
-        string telephoneNumber = result.Properties["telephonenumber"][0].ToString();
-        if (telephoneNumber?.Length > 0) telephoneBuilder.Append(telephoneNumber);
-
-        ResultPropertyValueCollection otherTelephone = result.Properties["othertelephone"];
-        for (int i = 0; i< otherTelephone.Count; i++) {
-            telephoneBuilder.Append(telephoneBuilder.Length > 0 ? $"; {otherTelephone[i]}" : otherTelephone[i].ToString());
-        }
-        data.Add("telephone number", telephoneBuilder.ToString());
-
         StringBuilder mobileBuilder = new StringBuilder();
-        try {
-            string mobileNumber = result.Properties["mobile"][0].ToString();
-            if (mobileNumber?.Length > 0) {
-                mobileBuilder.Append(mobileNumber);
-            }
-        }
-        catch { }
 
-        ResultPropertyValueCollection otherMobile = result.Properties["othermobile"];
-        for (int i = 0; i < otherMobile.Count; i++) {
-            mobileBuilder.Append(mobileBuilder.Length > 0 ? $"; {otherMobile[i]}" : otherMobile[i].ToString());
+        ResultPropertyValueCollection telephoneCollection = result.Properties["telephonenumber"];
+        for (int i = 0; i < telephoneCollection.Count; i++) {
+            telephoneBuilder.Append(telephoneBuilder.Length > 0 ? $"; {telephoneCollection[i]}" : telephoneCollection[i].ToString());
         }
-        data.Add("mobile number", mobileBuilder.ToString());
+        ResultPropertyValueCollection otherTelCollection = result.Properties["othertelephone"];
+        for (int i = 0; i< otherTelCollection.Count; i++) {
+            telephoneBuilder.Append(telephoneBuilder.Length > 0 ? $"; {otherTelCollection[i]}" : otherTelCollection[i].ToString());
+        }
+
+        ResultPropertyValueCollection mobileCollection = result.Properties["mobile"];
+        for (int i = 0; i < mobileCollection.Count; i++) {
+            mobileBuilder.Append(mobileBuilder.Length > 0 ? $"; {mobileCollection[i]}" : mobileCollection[i].ToString());
+        }
+        ResultPropertyValueCollection otherMobileCollectrion = result.Properties["othermobile"];
+        for (int i = 0; i < otherMobileCollectrion.Count; i++) {
+            mobileBuilder.Append(mobileBuilder.Length > 0 ? $"; {otherMobileCollectrion[i]}" : otherMobileCollectrion[i].ToString());
+        }
+
+        if (telephoneBuilder.Length > 0) {
+            data.Add("telephone number", telephoneBuilder.ToString());
+        }
+    
+        if (mobileBuilder.Length > 0) {
+            data.Add("mobile number", mobileBuilder.ToString());
+        }
 
         ContentBuilderAddValue(result, "facsimiletelephonenumber", "fax", data, null);
 

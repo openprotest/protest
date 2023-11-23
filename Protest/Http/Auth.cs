@@ -371,7 +371,7 @@ internal static class Auth {
 
             case "log:write":
                 path.Add("/log");
-                path.Add("/log/get");
+                path.Add("/log/list");
                 break;
 
             case "backup:write":
