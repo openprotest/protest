@@ -64,7 +64,7 @@ internal static class Kerberos {
     }
 
     [SupportedOSPlatform("windows")]
-    public static bool TryDirectoryAuthenticate(string username, string password) {
+    public static bool TryDirectoryAuthentication(string username, string password) {
         string domain = null;
 
         if (username.Contains('@')) {

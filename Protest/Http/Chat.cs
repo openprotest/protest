@@ -66,14 +66,12 @@ internal static class Chat {
 
         dictionary.TryGetValue("id", out string id);
 
-        string sanitised = Data.EscapeJsonText(command);
-
         string json = BuildCommandMessage(
             id,
             String.IsNullOrEmpty(acl?.alias ?? null) ? acl?.username ?? "loopback" : acl.alias,
             acl?.color ?? "#A0A0A0",
-            sanitised,
-            Data.EscapeJsonText(param),
+            Data.EscapeJsonText(command),
+            param,
             Data.EscapeJsonText(icon),
             Data.EscapeJsonText(title)
             );
@@ -81,7 +79,7 @@ internal static class Chat {
         Message message = new Message {
             sender = acl?.username ?? "loopback",
             timestamp = DateTime.UtcNow.Ticks,
-            json = sanitised
+            json = json
         };
 
         lock (syncLock) {
@@ -130,6 +128,8 @@ internal static class Chat {
             }
         }
         builder.Append(']');
+
+        Console.WriteLine(builder.ToString());
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }

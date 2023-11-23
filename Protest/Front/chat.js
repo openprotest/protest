@@ -25,11 +25,14 @@ class Chat extends Window {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
+			if (json.length === 0) {
+				const placeholder = document.createElement("div");
+				placeholder.style.height = "150px";
+				this.chatBox.append(placeholder);
+			}
+
 			for (let i=0; i<json.length; i++) {
-				switch (json[i].action) {
-				case "chattext": this.HandleText(json[i]); break;
-				case "chatcommand": this.HandleCommand(json[i]); break;
-				}
+				this.HandleMessage(json[i]);
 			}
 		}
 		catch (ex) {
@@ -48,10 +51,6 @@ class Chat extends Window {
 		this.chatBox = document.createElement("div");
 		this.chatBox.className = "chat-box";
 		this.content.appendChild(this.chatBox);
-
-		const placeholder = document.createElement("div");
-		placeholder.style.height = "150px";
-		this.chatBox.append(placeholder);
 
 		this.micButton = document.createElement("input");
 		this.micButton.type = "button";
@@ -196,7 +195,7 @@ class Chat extends Window {
 		this.ClearInput();
 	}
 
-	HandleText(message) {
+	HandleMessage(message) {
 		if (this.outdoing.hasOwnProperty(message.id)) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
@@ -204,40 +203,31 @@ class Chat extends Window {
 			delete this.outdoing[message.id];
 		}
 		else {
-			this.CreateTextBubble(
-				message.text,
-				message.sender === KEEP.username ? "out" : "in",
-				message.sender,
-				message.color,
-				message.id
-			);
-		}
-		
-		if (!(WIN.focused instanceof Chat)) {
-			this.blinkingDot.style.backgroundColor = message.color;
-			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
-		}
-	}
+			switch (message.action) {
+			case "chattext":
+				this.CreateTextBubble(
+					message.text,
+					message.sender === KEEP.username ? "out" : "in",
+					message.sender,
+					message.color,
+					message.id
+				);
+				break;
 
-	HandleCommand(message) {
-		if (this.outdoing.hasOwnProperty(message.id)) {
-			this.outdoing[message.id].style.color = "var(--clr-dark)";
-			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
-			this.outdoing[message.id].style.boxShadow = "none";
-			delete this.outdoing[message.id];
+			case "chatcommand":
+				this.CreateCommandBubble(
+					message.command,
+					message.params,
+					message.icon,
+					message.title,
+					message.sender === KEEP.username ? "out" : "in",
+					message.sender,
+					message.color
+				);
+				break;
+			}
 		}
-		else {
-			this.CreateCommandBubble(
-				message.command,
-				message.params,
-				message.icon,
-				message.title,
-				message.sender === KEEP.username ? "out" : "in",
-				message.sender,
-				message.color
-			);
-		}
-		
+
 		if (!(WIN.focused instanceof Chat)) {
 			this.blinkingDot.style.backgroundColor = message.color;
 			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
@@ -256,17 +246,7 @@ class Chat extends Window {
 		const bubble = document.createElement("div");
 		bubble.className = "chat-bubble";
 
-		const pin = document.createElement("div");
-		pin.className = "chat-pin";
-
-		if (direction === "out") {
-			wrapper.appendChild(pin);
-			wrapper.appendChild(bubble);
-		}
-		else {
-			wrapper.appendChild(bubble);
-			wrapper.appendChild(pin);
-		}
+		wrapper.append(bubble);
 
 		if (this.lastBubble && this.lastBubble.sender === sender) {
 			this.lastBubble.bubble.style.marginBottom = "0";
@@ -312,7 +292,7 @@ class Chat extends Window {
 			bubble: bubble,
 			sender: sender
 		};
-
+		
 		const isScrolledToBottom = this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
 
 		group.appendChild(wrapper);

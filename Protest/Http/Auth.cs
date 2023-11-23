@@ -113,7 +113,7 @@ internal static class Auth {
         //TODO: check all users access
 
         bool successful = access.isDomainUser && OperatingSystem.IsWindows() ?
-            Protocols.Kerberos.TryDirectoryAuthenticate(username, password) :
+            Protocols.Kerberos.TryDirectoryAuthentication(username, password) :
             Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.hash);
 
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
@@ -261,6 +261,7 @@ internal static class Auth {
 
             case "chat:read":
                 path.Add("/chat/read");
+                path.Add("/chat/history");
                 break;
 
             case "chat:write":

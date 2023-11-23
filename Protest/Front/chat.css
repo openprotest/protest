@@ -44,29 +44,6 @@
 	text-align: left;
 }
 
-.chat-pin {
-	display: inline-block;
-	width: 28px;
-	height: 28px;
-	margin: 0 4px 6px 4px;
-	background-image: url(mono/pin.svg?light);
-	background-size: 24px 24px;
-	background-position: center;
-	background-repeat: no-repeat;
-	
-	opacity: 0;
-	visibility: hidden;
-	transition: .2s;
-}
-
-.chat-box > div > .out:focus > .chat-pin,
-.chat-box > div > .out:hover > .chat-pin,
-.chat-box > div > .in:focus > .chat-pin,
-.chat-box > div > .in:hover > .chat-pin {
-	opacity: 1;
-	visibility: visible;
-}
-
 .chat-box > div > .out:focus-visible > .chat-bubble,
 .chat-box > div > .in:focus-visible > .chat-bubble {
 	animation: outline .3s ease-in;

@@ -17,14 +17,28 @@ class Settings extends Tabs {
 
 		this.tabZones = this.AddTab("Zones", "mono/router.svg", "Network zones");
 		this.tabEmailProfiles = this.AddTab("SMTP profiles", "mono/email.svg");
+		this.tabAd = this.AddTab("Active directory", "mono/directory.svg");
+		this.tabGraph = this.AddTab("Graph", "mono/graph.svg");
 
 		this.tabZones.onclick = ()=> this.ShowZones();
 		this.tabEmailProfiles.onclick = ()=> this.ShowEmailProfiles();
+		this.tabAd.onclick = ()=> this.ShowActiveDirectory();
+		this.tabGraph.onclick = ()=> this.ShowGraph();
 
 		switch (this.params) {
 		case "smtpprofiles":
 			this.tabEmailProfiles.className = "v-tab-selected";
 			this.ShowEmailProfiles();
+			break;
+
+		case "ad":
+			this.tabAd.className = "v-tab-selected";
+			this.ShowActiveDirectory();
+			break;
+
+		case "graph":
+			this.tabGraph.className = "v-tab-selected";
+			this.ShowGraph();
 			break;
 
 		default:
@@ -322,6 +336,16 @@ class Settings extends Tabs {
 
 		this.GetSmtpProfiles();
 		this.AfterResize();
+	}
+
+	ShowActiveDirectory() {
+		this.params = "ad";
+		this.tabsPanel.textContent = "";
+	}
+
+	ShowGraph() {
+		this.params = "graph";
+		this.tabsPanel.textContent = "";
 	}
 
 	async GetZones() {

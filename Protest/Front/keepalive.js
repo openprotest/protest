@@ -186,30 +186,13 @@ const KEEP = {
 			}
 			break;
 			
-		case "chattext": {
-			let chatCount = 0;
-			for (let i = 0; i < WIN.array.length; i++) {
-				if (!(WIN.array[i] instanceof Chat)) continue;
-				WIN.array[i].HandleText(message);
-				chatCount++;
-			}
-			
-			if (chatCount === 0) {
-				const newChat = new Chat();
-				newChat.win.style.display = "none";
-				newChat.Minimize();
-				newChat.HandleText(message);
-				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
-			}
-
-			break;
-		}
-
+		case "chattext":
 		case "chatcommand": {
 			let chatCount = 0;
+
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
-				WIN.array[i].HandleCommand(message);
+				WIN.array[i].HandleMessage(message);
 				chatCount++;
 			}
 			
@@ -217,7 +200,7 @@ const KEEP = {
 				const newChat = new Chat();
 				newChat.win.style.display = "none";
 				newChat.Minimize();
-				newChat.HandleCommand(message);
+				//newChat.HandleMessage(message);
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
 			}
 
