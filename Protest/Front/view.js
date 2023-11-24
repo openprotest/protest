@@ -4,7 +4,7 @@ class View extends Window {
 
 		this.AddCssDependencies("view.css");
 
-		this.content.style.overflowY = "scroll";
+		this.content.style.overflowY = "auto";
 		this.content.style.containerType = "inline-size";
 		
 		this.InitializeComponent();

@@ -18,7 +18,7 @@ class Personalize extends Tabs {
 		this.tabGui.onclick     = ()=> this.ShowGui();
 		this.tabRegion.onclick  = ()=> this.ShowRegion();
 		this.tabSession.onclick = ()=> this.ShowSession();
-		this.tabAgent.onclick = ()=> this.ShowAgent();
+		this.tabAgent.onclick   = ()=> this.ShowAgent();
 
 		switch (this.params) {
 		case "region":
@@ -88,39 +88,39 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		//TODO: scrollbar options
-		/*const divScrollBar = document.createElement("div");
+		const divScrollBar = document.createElement("div");
 		divScrollBar.textContent = "Scroll bar style: ";
 		divScrollBar.style.display = "inline-block";
 		divScrollBar.style.minWidth = "150px";
 		divScrollBar.style.fontWeight = "600";
 		this.tabsPanel.appendChild(divScrollBar);
 
-		this.scrollBar = document.createElement("select");
-		this.scrollBar.style.width = "200px";
-		this.tabsPanel.appendChild(this.scrollBar);
+		this.scrollBarInput = document.createElement("select");
+		this.scrollBarInput.style.width = "200px";
+		this.tabsPanel.appendChild(this.scrollBarInput);
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
 		const optDefault = document.createElement("option");
 		optDefault.value = "default";
 		optDefault.textContent = "System default";
-		this.scrollBar.appendChild(optDefault);
+		this.scrollBarInput.appendChild(optDefault);
 
 		const optThin = document.createElement("option");
 		optThin.value = "thin";
 		optThin.textContent = "Thin";
-		this.scrollBar.appendChild(optThin);
+		this.scrollBarInput.appendChild(optThin);
 
 		const optHidden = document.createElement("option");
 		optHidden.value = "hidden";
 		optHidden.textContent = "Hidden";
-		this.scrollBar.appendChild(optHidden);*/
+		this.scrollBarInput.appendChild(optHidden);
 
 		this.tabsPanel.appendChild(document.createElement("hr"));
+		this.tabsPanel.appendChild(document.createElement("br"));
 
 		const divColor = document.createElement("div");
-		divColor.textContent = "Accent color: ";
+		divColor.textContent = "Accent color:";
 		divColor.style.fontWeight = "600";
 		divColor.style.paddingBottom = "8px";
 		this.tabsPanel.appendChild(divColor);
@@ -131,7 +131,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 
 		const divSaturation = document.createElement("div");
-		divSaturation.textContent = "Saturation: ";
+		divSaturation.textContent = "Saturation:";
 		divSaturation.style.display = "inline-block";
 		divSaturation.style.minWidth = "120px";
 		divSaturation.style.fontWeight = "600";
@@ -154,10 +154,13 @@ class Personalize extends Tabs {
 		this.chkPopOut.checked        = localStorage.getItem("w_popout") === "true";
 		this.chkTaskTooltip.checked   = localStorage.getItem("w_tasktooltip") !== "false";
 		this.chkWindowShadows.checked = localStorage.getItem("w_dropshadow") !== "false";
-		this.chkAnimations.checked	  = localStorage.getItem("animations") !== "false";
-		this.chkGlass.checked		  = localStorage.getItem("glass") === "true";
+		this.chkAnimations.checked    = localStorage.getItem("animations") !== "false";
+		this.chkGlass.checked         = localStorage.getItem("glass") === "true";
+		this.scrollBarInput.value     = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
 
 		this.saturation.value = localStorage.getItem("accent_saturation") ? localStorage.getItem("accent_saturation") : 100;
+
+		this.tabsPanel.appendChild(document.createElement("br"));
 
 		this.accentIndicators = [];
 		let selected_accent = [255,102,0];
@@ -219,6 +222,63 @@ class Personalize extends Tabs {
 			};
 		}
 
+		/*this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("hr"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		const divWallpaper = document.createElement("div");
+		divWallpaper.textContent = "Wallpaper:";
+		divWallpaper.style.fontWeight = "600";
+		this.tabsPanel.appendChild(divWallpaper);
+
+		const wallpaperDropArea = document.createElement("div");
+		wallpaperDropArea.style.maxWidth     = "400px";
+		wallpaperDropArea.style.minHeight    = "20px";
+		wallpaperDropArea.style.margin       = "16px";
+		wallpaperDropArea.style.padding      = "20px";
+		wallpaperDropArea.style.border       = "2px dashed var(--clr-dark)";
+		wallpaperDropArea.style.borderRadius = "8px";
+		wallpaperDropArea.style.transition   = ".4s";
+		this.tabsPanel.appendChild(wallpaperDropArea);
+
+		const wallpaperLabel = document.createElement("div");
+		wallpaperLabel.textContent = "Drop a picture file here to set as wallpaper";
+		wallpaperLabel.style.color = "var(--clr-dark)";
+		wallpaperLabel.style.fontWeight = "600";
+		wallpaperLabel.style.textAlign = "center";
+		wallpaperDropArea.append(wallpaperLabel);
+
+		wallpaperDropArea.ondragover = ()=> {
+			wallpaperDropArea.style.backgroundColor = "var(--clr-control)";
+			wallpaperDropArea.style.border = "2px solid var(--clr-dark)";
+			return false;
+		};
+
+		wallpaperDropArea.ondragleave = ()=> {
+			wallpaperDropArea.style.backgroundColor = "";
+			wallpaperDropArea.style.border = "2px dashed var(--clr-dark)";
+		};
+
+		wallpaperDropArea.ondrop = event=>{
+			event.preventDefault();
+			wallpaperDropArea.style.backgroundColor = "";
+			wallpaperDropArea.style.border = "2px dashed var(--clr-dark)";
+
+			if (event.dataTransfer.files.length !== 1) { return; }
+
+			const reader = new FileReader();
+			reader.onload = () => {
+				const base64Url = reader.result;
+				console.log(base64Url);
+				console.log(container);
+				container.style.backgroundImage = `url(${base64Url})`;
+				container.style.backgroundSize = "cover";
+				container.style.backgroundPosition = "center";
+			};
+		
+			reader.readAsDataURL(event.dataTransfer.files[0]);
+		};*/
+
 		const Apply = ()=> {
 			WIN.always_maxed = this.chkWinMaxed.checked;
 			taskbar.className = this.chkTaskTooltip.checked ? "" : "no-tooltip";
@@ -228,6 +288,8 @@ class Personalize extends Tabs {
 			if (!this.chkWindowShadows.checked) container.classList.add("disable-window-dropshadows");
 			if (this.chkGlass.checked)          container.classList.add("glass");
 
+			container.classList.add(`scrollbar-${this.scrollBarInput.value}`);
+
 			document.body.className = this.chkAnimations.checked ? "" : "disable-animations";
 
 			localStorage.setItem("w_always_maxed", this.chkWinMaxed.checked);
@@ -236,6 +298,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("w_dropshadow", this.chkWindowShadows.checked);
 			localStorage.setItem("animations", this.chkAnimations.checked);
 			localStorage.setItem("glass", this.chkGlass.checked);
+			localStorage.setItem("scrollbar_style", this.scrollBarInput.value);
 
 			localStorage.setItem("accent_saturation", this.saturation.value);
 
@@ -292,7 +355,7 @@ class Personalize extends Tabs {
 		this.chkAnimations.onchange    = Apply;
 		this.chkGlass.onchange         = Apply;
 		this.saturation.oninput        = Apply;
-		//this.scrollBar.onchange        = Apply;
+		this.scrollBarInput.onchange   = Apply;
 
 		Apply();
 	}
@@ -620,4 +683,6 @@ class Personalize extends Tabs {
 			location.reload();
 		});
 	}
+
+
 }

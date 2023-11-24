@@ -279,110 +279,66 @@ const LOADER = {
 	},
 
 	Invoke: (command)=> {
-		let win;
-
 		switch (command.class) {
-		case "About"       : win = new About(command.params); break;
-		case "Settings"    : win = new Settings(command.params); break;
-		case "Personalize" : win = new Personalize(command.params); break;
-		case "Acl"         : win = new Acl(command.params); break;
-			
-		case "DevicesList"      : win = new DevicesList(command.params); break;
-		case "UsersList"        : win = new UsersList(command.params); break;
-		case "DeviceView"       : win = new DeviceView(command.params); break;
-		case "UserView"         : win = new UserView(command.params); break;
-		case "DevicesGrid"      : win = new DevicesGrid(command.params); break;
-		case "UsersGrid"        : win = new UsersGrid(command.params); break;
-		case "PasswordStrength" : win = new PasswordStrength(command.params); break;
-		case "Gandalf"          : win = new Gandalf(command.params); break;
-		case "Fetch"            : win = new Fetch(command.params); break;
+		case "DeviceView":
+			for (let i=0; i<WIN.array.length; i++) {
+				if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === command.params.file) {
+					return WIN.array[i];
+				}
+			}
+			return new DeviceView({ file: command.params.file });
 
-		case "AddressBook"   : win = new AddressBook(command.params); break;
-		case "Chat"          : win = new Chat(command.params); break;
-		case "Documentation" : win = new Documentation(command.params); break;
-		case "DebitNotes"    : win = new DebitNotes(command.params); break;
-		case "Watchdog"      : win = new Watchdog(command.params); break;
+		case "UserView":
+			for (let i=0; i<WIN.array.length; i++) {
+				if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === command.params.file) {
+					return WIN.array[i];
+				}
+			}
+			return new UserView({ file: command.params.file });
 
-		case "HexViewer" : win = new HexViewer(command.params); break;
+		case "DevicesList"      : return new DevicesList(command.params);
+		case "UsersList"        : return new UsersList(command.params);
+		case "DevicesGrid"      : return new DevicesGrid(command.params);
+		case "UsersGrid"        : return new UsersGrid(command.params);
+		case "PasswordStrength" : return new PasswordStrength(command.params);
+		case "Gandalf"          : return new Gandalf(command.params);
+		case "Fetch"            : return new Fetch(command.params);
 
-		case "Ping"         : win = new Ping(command.params); break;
-		case "DnsLookup"    : win = new DnsLookup(command.params); break;
-		case "TraceRoute"   : win = new TraceRoute(command.params); break;
-		case "SpeedTest"    : win = new SpeedTest(command.params); break;
-		case "PortScan"     : win = new PortScan(command.params); break;
-		case "MacLookup"    : win = new MacLookup(command.params); break;
-		case "LocateIp"     : win = new LocateIp(command.params); break;
-		case "DhcpDiscover" : win = new DhcpDiscover(command.params); break;
-		case "NtpClient"    : win = new NtpClient(command.params); break;
-		case "SiteCheck"     : win = new SiteCheck(command.params); break;
+		case "AddressBook"   : return new AddressBook(command.params);
+		case "Chat"          : return new Chat(command.params);
+		case "Documentation" : return new Documentation(command.params);
+		case "DebitNotes"    : return new DebitNotes(command.params);
+		case "Watchdog"      : return new Watchdog(command.params);
 
-		case "Telnet" : win = new Telnet(command.params); break;
-		case "Wmi"    : win = new Wmi(command.params); break;
+		case "HexViewer" : return new HexViewer(command.params);
 
-		case "PassGen"        : win = new PassGen(command.params); break;
-		case "Encoder"        : win = new Encoder(command.params); break;
-		case "NetCalc"        : win = new NetCalc(command.params); break;
-		case "KeyboardTester" : win = new KeyboardTester(command.params); break;
-		case "MicTester"      : win = new MicTester(command.params); break;
-		case "WebcamTester"   : win = new WebcamTester(command.params); break;
-		case "ScreenCapture"  : win = new ScreenCapture(command.params); break;
+		case "Ping"         : return new Ping(command.params);
+		case "DnsLookup"    : return new DnsLookup(command.params);
+		case "TraceRoute"   : return new TraceRoute(command.params);
+		case "SpeedTest"    : return new SpeedTest(command.params);
+		case "PortScan"     : return new PortScan(command.params);
+		case "MacLookup"    : return new MacLookup(command.params);
+		case "LocateIp"     : return new LocateIp(command.params);
+		case "DhcpDiscover" : return new DhcpDiscover(command.params);
+		case "NtpClient"    : return new NtpClient(command.params);
+		case "SiteCheck"    : return new SiteCheck(command.params);
+		case "Telnet"       : return new Telnet(command.params);
+		case "Wmi"          : return new Wmi(command.params);
 
-		case "Automation" : win = new Automation(command.params); break;
-		case "Log"        : win = new Log(command.params); break;
-		}
+		case "PassGen"        : return new PassGen(command.params);
+		case "Encoder"        : return new Encoder(command.params);
+		case "NetCalc"        : return new NetCalc(command.params);
+		case "KeyboardTester" : return new KeyboardTester(command.params);
+		case "MicTester"      : return new MicTester(command.params);
+		case "WebcamTester"   : return new WebcamTester(command.params);
+		case "ScreenCapture"  : return new ScreenCapture(command.params);
 
-		return win;
-	},
-
-	MapCommand: (command)=> {
-		switch (command.class) {
-		case "About"            : return { icon:"mono/logo.svg", prettyName:"", Invoke: ()=> new About(command.params) };
-		case "Settings"         : return { icon:"mono/wrench.svg", prettyName:"", Invoke: ()=> new Settings(command.params) };
-		case "Personalize"      : return { icon:"mono/personalize.svg", prettyName:"", Invoke: ()=> new Personalize(command.params) };
-		case "Acl"              : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Acl(command.params) };
-			
-		case "DevicesList"      : return { icon:"mono/devices.svg", prettyName:"", Invoke: ()=> new DevicesList(command.params) };
-		case "UsersList"        : return { icon:"mono/users.svg", prettyName:"", Invoke: ()=> new UsersList(command.params) };
-		case "DeviceView"       : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new DeviceView(command.params) };
-		case "UserView"         : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new UserView(command.params) };
-		case "DevicesGrid"      : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new DevicesGrid(command.params) };
-		case "UsersGrid"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new UsersGrid(command.params) };
-		case "PasswordStrength" : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new PasswordStrength(command.params) };
-		case "Gandalf"          : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Gandalf(command.params) };
-		case "Fetch"            : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Fetch(command.params) };
-
-		case "AddressBook"      : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new AddressBook(command.params) };
-		case "Chat"             : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Chat(command.params) };
-		case "Documentation"    : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Documentation(command.params) };
-		case "DebitNotes"       : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new DebitNotes(command.params) };
-		case "Watchdog"         : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Watchdog(command.params) };
-
-		case "HexViewer"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new HexViewer(command.params) };
-
-		case "Ping"             : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Ping(command.params) };
-		case "DnsLookup"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new DnsLookup(command.params) };
-		case "TraceRoute"       : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new TraceRoute(command.params) };
-		case "SpeedTest"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new SpeedTest(command.params) };
-		case "PortScan"         : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new PortScan(command.params) };
-		case "MacLookup"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new MacLookup(command.params) };
-		case "LocateIp"         : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new LocateIp(command.params) };
-		case "DhcpDiscover"     : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new DhcpDiscover(command.params) };
-		case "NtpClient"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new NtpClient(command.params) };
-		case "SiteCheck"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new SiteCheck(command.params) };
-
-		case "Telnet"           : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Telnet(command.params) };
-		case "Wmi"              : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Wmi(command.params) };
-
-		case "PassGen"          : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new PassGen(command.params) };
-		case "Encoder"          : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Encoder(command.params) };
-		case "NetCalc"          : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new NetCalc(command.params) };
-		case "KeyboardTester"   : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new KeyboardTester(command.params) };
-		case "MicTester"        : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new MicTester(command.params) };
-		case "WebcamTester"     : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new WebcamTester(command.params) };
-		case "ScreenCapture"    : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new ScreenCapture(command.params) };
-
-		case "Automation"       : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Automation(command.params) };
-		case "Log"              : return { icon:"mono/.svg", prettyName:"", Invoke: ()=> new Log(command.params) };
+		case "About"       : return new About(command.params);
+		case "Settings"    : return new Settings(command.params);
+		case "Personalize" : return new Personalize(command.params);
+		case "Acl"         : return new Acl(command.params);
+		case "Automation" : return new Automation(command.params);
+		case "Log"        : return new Log(command.params);
 		}
 	},
 

@@ -332,10 +332,13 @@ class Chat extends Window {
 		commandBox.textContent= title;
 		bubble.appendChild(commandBox);
 
-		commandBox.onclick = ()=> LOADER.Invoke({
-			class: command,
-			params: JSON.parse(params)
-		});
+		commandBox.onclick = ()=> {
+			const window = LOADER.Invoke({
+				class: command,
+				params: JSON.parse(params)
+			});
+			window.Pop();
+		};
 
 		return bubble;
 	}

@@ -347,7 +347,6 @@ class About extends Tabs {
 		message.style.color = "var(--clr-dark)";
 		message.style.fontWeight = "600";
 		message.style.textAlign = "center";
-		
 		dropArea.append(message);
 
 		let isBusy = false;
