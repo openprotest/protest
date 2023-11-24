@@ -291,8 +291,9 @@
 }
 
 .win-confirm {
-	width: 440px;
+	width: 480px;
 	text-align: center;
+	word-wrap: anywhere;
 	font-weight: 600;
 }
 

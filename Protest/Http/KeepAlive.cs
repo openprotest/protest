@@ -165,7 +165,7 @@ internal static class KeepAlive {
         switch (type) {
         case "chat-text":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                Chat.MessageHandler(dictionary, origin);
+                Chat.TextHandler(dictionary, origin);
             }
             return;
 

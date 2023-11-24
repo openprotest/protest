@@ -737,7 +737,7 @@ class Watchdog extends Window {
 			notificationsList.appendChild(element);
 
 			const label =  document.createElement("div");
-			label.textContent = name.length===0 ? "unnamed notification" : name;
+			label.textContent = name.length===0 ? "unnamed" : name;
 			label.style.color = name.length===0 ? "rgb(96,96,96)" : "var(--clr-dark)";
 			label.style.fontStyle = name.length===0 ? "oblique" : "normal";
 			label.style.lineHeight = "32px";
@@ -817,7 +817,7 @@ class Watchdog extends Window {
 			notifications[selected].name = nameInput.value;
 
 			if (nameInput.value.length === 0) {
-				notifications[selected].element.childNodes[0].textContent = "unnamed notification";
+				notifications[selected].element.childNodes[0].textContent = "unnamed";
 				notifications[selected].element.childNodes[0].style.color = "rgb(96,96,96)";
 				notifications[selected].element.childNodes[0].style.fontStyle = "oblique";
 			}
@@ -903,6 +903,9 @@ class Watchdog extends Window {
 			check.checked = true;
 			watcher.appendChild(check);
 			const toggle = this.AddCheckBoxLabel(watcher, check, this.watchers[file].name);
+			toggle.style.whiteSpace = "nowrap";
+			toggle.style.overflow = "hidden";
+			toggle.style.textOverflow = "ellipses";
 			toggle.style.left = "8px";
 			toggle.style.top = "5px";
 

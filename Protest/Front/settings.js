@@ -18,7 +18,7 @@ class Settings extends Tabs {
 		this.tabZones = this.AddTab("Zones", "mono/router.svg", "Network zones");
 		this.tabEmailProfiles = this.AddTab("SMTP profiles", "mono/email.svg");
 		this.tabAd = this.AddTab("Active directory", "mono/directory.svg");
-		this.tabGraph = this.AddTab("Graph", "mono/graph.svg");
+		this.tabGraph = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
 		this.tabZones.onclick = ()=> this.ShowZones();
 		this.tabEmailProfiles.onclick = ()=> this.ShowEmailProfiles();
@@ -338,9 +338,35 @@ class Settings extends Tabs {
 		this.AfterResize();
 	}
 
-	ShowActiveDirectory() {
+	async ShowActiveDirectory() {
 		this.params = "ad";
 		this.tabsPanel.textContent = "";
+
+		const domainLabel = document.createElement("div");
+		domainLabel.textContent = "Domain:";
+		domainLabel.style.display = "inline-block";
+		domainLabel.style.paddingRight = "8px";
+		this.tabsPanel.append(domainLabel);
+
+		const domainInput = document.createElement("input");
+		domainInput.type = "text";
+		domainInput.disabled = true;
+		domainInput.style.display = "inline-block";
+		domainInput.style.width = "250px";
+		this.tabsPanel.append(domainInput);
+
+		try {
+			const response = await fetch("fetch/networkinfo");
+
+			if (response.status !== 200) return;
+			
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			let domain = json.domain  ? json.domain : "";
+			domainInput.value = domain;
+		}
+		catch {}
 	}
 
 	ShowGraph() {

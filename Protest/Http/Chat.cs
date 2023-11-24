@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using System.Text;
 
 namespace Protest.Http;
@@ -15,17 +16,20 @@ internal static class Chat {
     private static readonly List<Message> history = new List<Message>();
     private static readonly object syncLock = new object();
 
-    public static void MessageHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
+    public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("text", out string text)) { return; }
 
         dictionary.TryGetValue("id", out string id);
 
+        string username = acl?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
         string sanitised = Data.EscapeJsonText(text);
 
         string json = BuildTextMessage(
             id,
-            (String.IsNullOrEmpty(acl?.alias ?? null) ? acl?.username ?? "loopback" : acl.alias),
+            username,
+            alias,
             acl?.color ?? "#A0A0A0",
             sanitised
             );
@@ -43,20 +47,6 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
     }
 
-    private static string BuildTextMessage(string id, string sender, string color, string text) {
-        StringBuilder builder = new StringBuilder();
-        builder.Append('{');
-        builder.Append($"\"action\":\"chattext\",");
-        builder.Append($"\"id\":\"{id}\",");
-        builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
-        builder.Append($"\"sender\":\"{sender}\",");
-        builder.Append($"\"color\":\"{color}\",");
-        builder.Append($"\"text\":\"{text}\"");
-        builder.Append('}');
-
-        return builder.ToString();
-    }
-
     public static void CommandHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("command", out string command)) { return; }
@@ -66,9 +56,13 @@ internal static class Chat {
 
         dictionary.TryGetValue("id", out string id);
 
+        string username = acl?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+
         string json = BuildCommandMessage(
             id,
-            String.IsNullOrEmpty(acl?.alias ?? null) ? acl?.username ?? "loopback" : acl.alias,
+            username,
+            alias,
             acl?.color ?? "#A0A0A0",
             Data.EscapeJsonText(command),
             param,
@@ -89,13 +83,29 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
     }
 
-    private static string BuildCommandMessage(string id, string sender, string color, string command, String param, string icon, string title) {
+    private static string BuildTextMessage(string id, string sender, string alias, string color, string text) {
+        StringBuilder builder = new StringBuilder();
+        builder.Append('{');
+        builder.Append($"\"action\":\"chattext\",");
+        builder.Append($"\"id\":\"{id}\",");
+        builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
+        builder.Append($"\"sender\":\"{sender}\",");
+        builder.Append($"\"alias\":\"{alias}\",");
+        builder.Append($"\"color\":\"{color}\",");
+        builder.Append($"\"text\":\"{text}\"");
+        builder.Append('}');
+
+        return builder.ToString();
+    }
+
+    private static string BuildCommandMessage(string id, string sender, string alias, string color, string command, String param, string icon, string title) {
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
         builder.Append($"\"action\":\"chatcommand\",");
         builder.Append($"\"id\":\"{id}\",");
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{sender}\",");
+        builder.Append($"\"alias\":\"{alias}\",");
         builder.Append($"\"color\":\"{color}\",");
         builder.Append($"\"command\":\"{command}\",");
         builder.Append($"\"params\":\"{Data.EscapeJsonText(param)}\",");
@@ -128,8 +138,6 @@ internal static class Chat {
             }
         }
         builder.Append(']');
-
-        Console.WriteLine(builder.ToString());
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }

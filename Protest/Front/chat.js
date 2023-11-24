@@ -187,7 +187,7 @@ class Chat extends Window {
 			this.ConfirmBox(ex, true, "mono/webcam.svg");
 		}
 
-		const bubble = this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, KEEP.color, id);
+		const bubble = this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, "", KEEP.color, id);
 		bubble.style.color = "var(--clr-pane)";
 		bubble.style.backgroundColor = "transparent";
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
@@ -196,6 +196,7 @@ class Chat extends Window {
 	}
 
 	HandleMessage(message) {
+
 		if (this.outdoing.hasOwnProperty(message.id)) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
@@ -209,6 +210,7 @@ class Chat extends Window {
 					message.text,
 					message.sender === KEEP.username ? "out" : "in",
 					message.sender,
+					message.alias,
 					message.color,
 					message.id
 				);
@@ -222,6 +224,7 @@ class Chat extends Window {
 					message.title,
 					message.sender === KEEP.username ? "out" : "in",
 					message.sender,
+					message.alias,
 					message.color
 				);
 				break;
@@ -234,9 +237,7 @@ class Chat extends Window {
 		}
 	}
 
-	CreateBubble(direction, sender, color) {
-		if (sender === KEEP.username) sender = "";
-
+	CreateBubble(direction, sender, alias, color) {
 		let group;
 
 		const wrapper = document.createElement("div");
@@ -266,7 +267,10 @@ class Chat extends Window {
 		else {
 			group = document.createElement("div");
 			group.className = "chat-group";
-			group.setAttribute("sender", sender);
+
+			if (sender !== KEEP.username) {
+				group.setAttribute("sender", alias && alias.length > 0 ? alias : sender);
+			}
 
 			const avatar = document.createElement("div");
 			avatar.className = "chat-avatar";
@@ -304,10 +308,10 @@ class Chat extends Window {
 		return bubble;
 	}
 
-	CreateTextBubble(text, direction, sender, color, id=null) {
+	CreateTextBubble(text, direction, sender, alias, color, id=null) {
 		if (text.length === 0) return;
 		
-		const bubble = this.CreateBubble(direction, sender, color);
+		const bubble = this.CreateBubble(direction, sender, alias, color);
 		bubble.innerHTML = text;
 
 		if (direction === "out") {
@@ -319,8 +323,8 @@ class Chat extends Window {
 		return bubble;
 	}
 
-	CreateCommandBubble(command, params, icon, title, direction, sender, color) {
-		const bubble = this.CreateBubble(direction, sender, color);
+	CreateCommandBubble(command, params, icon, title, direction, sender, alias, color) {
+		const bubble = this.CreateBubble(direction, sender, alias, color);
 
 		const commandBox = document.createElement("div");
 		commandBox.className = "chat-command-box";
