@@ -145,7 +145,7 @@ internal static class Auth {
             ip             = ctx.Request.RemoteEndPoint.Address,
             sessionId      = sessionId,
             loginDate      = DateTime.UtcNow.Ticks,
-            ttl = SESSION_TIMEOUT,
+            ttl            = SESSION_TIMEOUT,
         };
 
         if (sessions.TryAdd(sessionId, newSession)) {
@@ -166,6 +166,7 @@ internal static class Auth {
 
         if (sessions.TryRemove(sessionId, out _)) {
             if (origin != null) Logger.Action(origin, $"User actively logged out");
+            KeepAlive.CloseConnection(sessionId);
             return true;
         }
 
@@ -521,8 +522,6 @@ internal static class Auth {
 
         Logger.Action(origin, $"Save access control for {username}");
 
-        //KeepAlive.Unicast(username, $"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{color}\",\"authorization\":[{permissionsString}]}}", "/global");
-
         KeepAlive.Unicast(username, $"{{\"action\":\"updateacl\",\"authorization\":[{permissionsString}]}}", "/global");
 
         return plain;
@@ -542,6 +541,12 @@ internal static class Auth {
         }
 
         acl.TryRemove(username, out _);
+
+        foreach (KeyValuePair<string, Session> pair in sessions) {
+            if (pair.Value.access.username == username) {
+                RevokeAccess(pair.Value.sessionId);
+            }
+        }
 
         try {
             File.Delete($"{Data.DIR_ACL}{Data.DELIMITER}{username}");
@@ -588,12 +593,12 @@ internal static class Auth {
 
         parameters.TryGetValue("username", out string username);
         parameters.TryGetValue("ip", out string ip);
-        parameters.TryGetValue("id", out string id8);
+        parameters.TryGetValue("id", out string id);
 
         foreach (Session session in sessions.Values) {
             if (session.access.username != username) continue;
             if (session.ip.ToString() != ip) continue;
-            if (session.sessionId.Length == 0 || !session.sessionId.StartsWith(id8)) continue;
+            if (session.sessionId.Length == 0 || !session.sessionId.StartsWith(id)) continue;
 
             if (RevokeAccess(session.sessionId, origin)) {
                 return Data.CODE_OK.ToArray();
@@ -604,6 +609,12 @@ internal static class Auth {
         }
 
         return Data.CODE_FAILED.ToArray();
+    }
+
+    public static void UpdateSessionTtl(string sessionId, long ttl) {
+        if (!sessions.TryGetValue(sessionId, out Session session)) return;
+        session.ttl = ttl * 24 * HOUR; //in ticks
+        sessions[sessionId] = session;
     }
 }
 

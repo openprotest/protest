@@ -688,17 +688,17 @@ class Fetch extends Tabs {
 		btnCancel.style.minWidth = "96px";
 		buttonsContainer.appendChild(btnCancel);
 
-		const description = document.createElement("div");
-		description.textContent = "Use this utility to import an inventory from another Pro-test. It's recommended to import on a blank database. Conflicts and duplicate records will not be managed.";
-		description.style.gridArea = "12 / 2 / auto / 7";
-		description.style.fontSize = "small";
-		description.style.paddingLeft = "48px";
-		description.style.minHeight = "40px";
-		description.style.backgroundImage = "url(mono/warning.svg)";
-		description.style.backgroundPosition = "2px center";
-		description.style.backgroundSize = "40px 40px";
-		description.style.backgroundRepeat = "no-repeat";
-		this.tabsPanel.appendChild(description);
+		const warningBox = document.createElement("div");
+		warningBox.textContent = "Use this utility to import an inventory from another Pro-test. It's recommended to import on a blank database. Conflicts and duplicate records will not be managed.";
+		warningBox.style.gridArea = "12 / 2 / auto / 7";
+		warningBox.style.fontSize = "small";
+		warningBox.style.paddingLeft = "56px";
+		warningBox.style.minHeight = "40px";
+		warningBox.style.backgroundImage = "url(mono/warning.svg)";
+		warningBox.style.backgroundPosition = "2px center";
+		warningBox.style.backgroundSize = "40px 40px";
+		warningBox.style.backgroundRepeat = "no-repeat";
+		this.tabsPanel.appendChild(warningBox);
 
 		btnImport.onclick = async ()=> {
 			try {

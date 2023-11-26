@@ -769,7 +769,7 @@ class Window {
 	}
 
 	ConfirmBox(message, okOnly=false, icon=null) {
-		//if a dialog is already opened, queue
+		//if a dialog is already open, queue
 		if (this.popOutWindow) {
 			if (this.popOutWindow.document.body.getElementsByClassName("win-dim")[0] != null) {
 				this.messagesQueue.push([message, okOnly, icon]);

@@ -87,13 +87,12 @@ class Chat extends Window {
 		this.blinkingDot = document.createElement("div");
 		this.blinkingDot.className = "task-icon-dots";
 		this.blinkingDot.style.backgroundColor = "transparent";
-		this.blinkingDot.style.width = "10px";
-		this.blinkingDot.style.height = "10px";
-		this.blinkingDot.style.left = "unset";
-		this.blinkingDot.style.right = "1px";
-		this.blinkingDot.style.bottom = "0px";
+		this.blinkingDot.style.width = "16px";
+		this.blinkingDot.style.height = "16px";
+		this.blinkingDot.style.left = "calc(50% - 8px)";
+		this.blinkingDot.style.top = "30%";
 		this.blinkingDot.style.boxShadow = "none";
-		this.blinkingDot.style.animation = "blink 2s infinite";
+		this.blinkingDot.style.animation = "blink 1.5s infinite";
 		this.task.appendChild(this.blinkingDot);
 
 		this.input.onkeydown = event=> this.Input_onkeydown(event);

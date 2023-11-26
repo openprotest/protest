@@ -47,7 +47,7 @@ internal static class KeepAlive {
 //#if DEBUG
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 //#else
-//        string username = Auth.GetUsername(sessionId);
+//      string username = Auth.GetUsername(sessionId);
 //#endif
 
         string[] accessArray = Auth.acl.TryGetValue(username, out Auth.AccessControl accessControl) ? accessControl.authorization : new string[] { "*" };
@@ -97,6 +97,23 @@ internal static class KeepAlive {
         }
 
         connections.Remove(ws, out _);
+    }
+
+    public static async void CloseConnection(string sessionId) {
+        foreach (KeyValuePair<WebSocket, Entry> pair in connections) {
+            if (pair.Value.sessionId != sessionId) continue;
+
+            if (pair.Value.ws.State == WebSocketState.Open) {
+                lock(pair.Value.syncLock) {
+                    pair.Value.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                await pair.Value.ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                pair.Value.ws.Dispose();
+            }
+
+            connections.TryRemove(pair.Key, out _);
+            return;
+        }
     }
 
     public static void Broadcast(string message, string accessPath) {
@@ -155,7 +172,14 @@ internal static class KeepAlive {
     }
 
     private static void HandleMessage(string message, HttpListenerContext ctx, string origin) {
-        ConcurrentDictionary<string, string> dictionary = JsonSerializer.Deserialize<ConcurrentDictionary<string, string>>(message, messageSerializerOptions);
+        ConcurrentDictionary<string, string> dictionary;
+        try {
+            dictionary = JsonSerializer.Deserialize<ConcurrentDictionary<string, string>>(message, messageSerializerOptions);
+        }
+        catch {
+            return;
+        }
+
         if (dictionary.IsEmpty) { return; }
 
         if (!dictionary.TryGetValue("type", out string type)) {
@@ -163,6 +187,20 @@ internal static class KeepAlive {
         }
 
         switch (type) {
+
+        case "update-session-ttl":
+            if (!dictionary.TryGetValue("ttl", out string ttl)) {
+                return;
+            }
+
+            if (long.TryParse(ttl, out long ttlLong)) {
+                string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+                if (sessionId is null) return;
+                Auth.UpdateSessionTtl(sessionId, ttlLong);
+            }
+
+            return;
+
         case "chat-text":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
                 Chat.TextHandler(dictionary, origin);
@@ -194,7 +232,15 @@ file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<stri
             if (reader.TokenType == JsonTokenType.PropertyName) {
                 string key = reader.GetString();
                 reader.Read();
-                string value = reader.GetString();
+
+                string value;
+                if (reader.TokenType == JsonTokenType.Number) {
+                    value = reader.GetInt64().ToString();
+                }
+                else {
+                    value = reader.GetString();
+                }
+
                 dictionary.TryAdd(key, value);
             }
         }

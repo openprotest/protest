@@ -567,13 +567,12 @@ class Personalize extends Tabs {
 		this.chkRestoreSession.checked = localStorage.getItem("restore_session") === "true";
 		this.chkAliveOnClose.checked = localStorage.getItem("alive_after_close") === "true";
 		this.sessionTimeout.value = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
-		this.cookieLife.value = localStorage.getItem("cookie_lifetime") == null ? 7 : parseInt(localStorage.getItem("cookie_lifetime"));
+		this.cookieLife.value = localStorage.getItem("cookie_lifetime") == null ? 5 : parseInt(localStorage.getItem("cookie_lifetime"));
 
 
 		btnClearLocalCache.onclick = ()=> { this.ClearCache() };
 
 		const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
-		const cookieMapping = { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 };
 		const Apply = ()=> {
 			localStorage.setItem("restore_session", this.chkRestoreSession.checked);
 			localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
@@ -595,12 +594,12 @@ class Personalize extends Tabs {
 						WIN.array[i].divSessionTimeoutValue.textContent = value > 60 ? value / 60 + " hours" : value + " minutes";
 					}
 
-					if (cookieMapping[this.cookieLife.value] < 8)
-						WIN.array[i].divCookieLifeValue.textContent = cookieMapping[this.cookieLife.value] == 1 ? "1 day" : cookieMapping[this.cookieLife.value] + " days";
-					else if (cookieMapping[this.cookieLife.value] < 29)
-						WIN.array[i].divCookieLifeValue.textContent = cookieMapping[this.cookieLife.value] == 7 ? "1 week" : cookieMapping[this.cookieLife.value] / 7 + " weeks";
+					if (KEEP.sessionTtlMapping[this.cookieLife.value] < 8)
+						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 1 ? "1 day" : KEEP.sessionTtlMapping[this.cookieLife.value] + " days";
+					else if (KEEP.sessionTtlMapping[this.cookieLife.value] < 29)
+						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 7 ? "1 week" : KEEP.sessionTtlMapping[this.cookieLife.value] / 7 + " weeks";
 					else
-						WIN.array[i].divCookieLifeValue.textContent = cookieMapping[this.cookieLife.value] == 30 ? "1 month" : cookieMapping[this.cookieLife.value] / 30 + " months";
+						WIN.array[i].divCookieLifeValue.textContent = cookieMKEEP.sessionTtlMappingapping[this.cookieLife.value] == 30 ? "1 month" : KEEP.sessionTtlMapping[this.cookieLife.value] / 30 + " months";
 
 				}
 		};
@@ -610,8 +609,14 @@ class Personalize extends Tabs {
 		this.sessionTimeout.oninput = Apply;
 
 		this.cookieLife.oninput = ()=> {
-			KEEP.SendAction(`updatesessiontimeout${String.fromCharCode(127)}${cookieMapping[this.cookieLife.value]}`);
-			Apply();
+			try {
+				KEEP.socket.send(JSON.stringify({
+					type : "update-session-ttl",
+					ttl: KEEP.sessionTtlMapping[this.cookieLife.value]
+				}));
+
+				Apply();
+			} catch (ex) {}
 		};
 
 		Apply();
@@ -683,6 +688,4 @@ class Personalize extends Tabs {
 			location.reload();
 		});
 	}
-
-
 }

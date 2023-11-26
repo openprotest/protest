@@ -134,7 +134,6 @@ public sealed class Listener {
         if (DynamicHandler(ctx, parameters)) return;
 
         ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
-
         ctx.Response.Close();
     }
 

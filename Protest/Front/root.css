@@ -121,7 +121,6 @@ div, svg {
 	}
 	.scrollbar-hidden * {
 		scrollbar-width: none;
-		scrollbar-color: #888 transparent !important;
 	}
 }
 

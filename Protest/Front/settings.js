@@ -25,6 +25,9 @@ class Settings extends Tabs {
 		this.tabAd.onclick = ()=> this.ShowActiveDirectory();
 		this.tabGraph.onclick = ()=> this.ShowGraph();
 
+		//TODO:
+		this.tabGraph.style.display = "none";
+
 		switch (this.params) {
 		case "smtpprofiles":
 			this.tabEmailProfiles.className = "v-tab-selected";
@@ -365,6 +368,25 @@ class Settings extends Tabs {
 
 			let domain = json.domain  ? json.domain : "";
 			domainInput.value = domain;
+
+			if (domain.length === 0) {
+				this.tabsPanel.appendChild(document.createElement("br"));
+				this.tabsPanel.appendChild(document.createElement("br"));
+
+				const warningBox = document.createElement("div");
+				warningBox.textContent = "Domain privileges are inherited by the user executing the pro-test.exe executable. To utilize Directory Services, run the executable with the credentials of a Domain Administrator.";
+				warningBox.style.fontSize = "small";
+				warningBox.style.paddingLeft = "56px";
+				warningBox.style.maxWidth = "480px";
+				warningBox.style.minHeight = "40px";
+				warningBox.style.paddingTop = "20px";
+				warningBox.style.paddingBottom = "20px";
+				warningBox.style.backgroundImage = "url(mono/warning.svg)";
+				warningBox.style.backgroundPosition = "2px center";
+				warningBox.style.backgroundSize = "40px 40px";
+				warningBox.style.backgroundRepeat = "no-repeat";
+				this.tabsPanel.appendChild(warningBox);
+			}
 		}
 		catch {}
 	}

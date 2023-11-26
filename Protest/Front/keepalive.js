@@ -7,6 +7,7 @@ const KEEP = {
 	authorization: [],
 	lastReconnect: 0,
 	redDot: document.createElement("div"),
+	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
 
 	Initialize: ()=> {
 		let server = window.location.href;
@@ -20,7 +21,15 @@ const KEEP = {
 			if (KEEP.redDot.parentElement) {
 				container.removeChild(KEEP.redDot);
 			}
-			//KEEP.socket.send("hello from client");
+
+			setTimeout(() => {
+				if (localStorage.getItem("cookie_lifetime") && parseInt(localStorage.getItem("cookie_lifetime")) != 5) {
+					KEEP.socket.send(JSON.stringify({
+						type : "update-session-ttl",
+						ttl: KEEP.sessionTtlMapping[localStorage.getItem("cookie_lifetime")]
+					}));
+				}
+			}, 100);
 		};
 
 		KEEP.socket.onclose = ()=> {
@@ -188,12 +197,23 @@ const KEEP = {
 			
 		case "chattext":
 		case "chatcommand": {
-			let chatCount = 0;
+			if (!KEEP.chatNotificationSound) {
+				KEEP.chatNotificationSound = new Audio("chatnotification.ogg");
+			}
 
+			if (document.hidden) {
+				KEEP.chatNotificationSound.play();
+			}
+
+			let chatCount = 0;
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
 				chatCount++;
+				
+				if (WIN.focused !== WIN.array[i]) {
+					KEEP.chatNotificationSound.play();
+				}
 			}
 			
 			if (chatCount === 0) {
@@ -202,6 +222,7 @@ const KEEP = {
 				newChat.Minimize();
 				//newChat.HandleMessage(message);
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
+				KEEP.chatNotificationSound.play();
 			}
 
 			break;
@@ -211,11 +232,6 @@ const KEEP = {
 			console.log("none register action: " + message.action);
 			break;
 		}
-	},
-
-	SendAction: action=> {
-		if (KEEP.socket === null || KEEP.socket.readyState !== 1) return;
-		KEEP.socket.send(action);
 	},
 
 	PushNotification: msg=> {
