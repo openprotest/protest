@@ -84,6 +84,17 @@
 	border-color: transparent var(--clr-pane) transparent transparent;
 }
 
+.chat-emoji-bubble {
+	width: 72px;
+	height: 72px;
+
+	background-color: var(--clr-select);
+	filter: brightness(75%);
+	-webkit-mask-position: center; mask-position: center;
+	-webkit-mask-size: 64px 64px; mask-size: 64px 64px;
+	-webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+
 .chat-command-box {
 	min-width: 96px;
 	min-height: 48px;
@@ -130,7 +141,7 @@
 .chat-input {
 	position: absolute;
 	left: 148px;
-	right: 56px;
+	right: 96px;
 	bottom: 12px;
 	min-height: 40px;
 	max-height: 60%;
@@ -183,5 +194,56 @@
 
 .chat-send {
 	background-image: url(mono/send.svg?light);
+	right: 52px;
+}
+
+.chat-emoji {
+	background-image: url(mono/logo.svg?light);
 	right: 8px;
+
+	overflow: visible;
+}
+
+.chat-emoji:focus > .chat-emoji-box,
+.chat-emoji:focus-within > .chat-emoji-box {
+	visibility: visible;
+	opacity: 1;
+	bottom: calc(100% + 12px);
+}
+
+.chat-emoji-box {
+	position: absolute;
+	right: -2px;
+	bottom: calc(100% - 4px);
+	width: 340px;
+	height: 56px;
+	padding: 8px;
+	background-color: var(--clr-pane);
+	box-shadow: var(--clr-dark) 0 0 4px;
+	border-radius: 8px;
+	overflow: visible;
+
+	visibility: hidden;
+	opacity: 0;
+	transition: .2s;
+}
+
+.chat-emoji-box::after {
+	content: "";
+	position: absolute;
+	right: 12px;
+	bottom: -20px;
+	border-style: solid;
+	border-width: 10px;
+	border-color: var(--clr-pane) transparent transparent transparent;
+}
+
+.chat-emoji-box > input {
+	background-color: transparent !important;
+	width: 48px;
+	min-width: 48px;
+	height: 48px;
+	background-size: 40px 40px;
+	background-position: center;
+	background-repeat: no-repeat;
 }

@@ -265,8 +265,8 @@ const MENU = {
 	lastSearchValue: "",
 
 	Clear: ()=> {
-		if (searchboxinput.value.length > 0) {
-			searchboxinput.value = "";
+		if (searchinput.value.length > 0) {
+			searchinput.value = "";
 			MENU.Update();
 		}
 		else {
@@ -276,7 +276,7 @@ const MENU = {
 
 	Open: ()=> {
 		if (MENU.filterIndex === 1) { //recent
-			searchboxinput.value = "";
+			searchinput.value = "";
 		}
 
 		MENU.Update();
@@ -284,20 +284,20 @@ const MENU = {
 		MENU.isOpen = true;
 		MENU.UpdatePosition();
 		
-		setTimeout(()=> searchboxinput.focus(), 150);
+		setTimeout(()=> searchinput.focus(), 150);
 	},
 
 	Close: ()=> {
 		MENU.isOpen = false;
 		MENU.UpdatePosition();
 
-		searchboxinput.value = "";
+		searchinput.value = "";
 		MENU.Update();
 	},
 
 	Toggle: ()=> {
 		if (MENU.filterIndex === 1) { //recent
-			searchboxinput.value = "";
+			searchinput.value = "";
 		}
 
 		MENU.Update("");
@@ -306,7 +306,7 @@ const MENU = {
 		MENU.UpdatePosition();
 
 		if (MENU.isOpen) {
-			setTimeout(()=> searchboxinput.focus(), 150);
+			setTimeout(()=> searchinput.focus(), 150);
 		}
 	},
 
@@ -557,7 +557,7 @@ const MENU = {
 			MENU.filterIndex = index;
 		}
 
-		MENU.Update(searchboxinput.value);
+		MENU.Update(searchinput.value);
 	},
 
 	UpdatePosition: ()=> {
@@ -795,24 +795,22 @@ menubutton.onmousedown = event=> {
 	event.stopPropagation();
 };
 
-menubox.onclick = ()=> searchboxinput.focus();
+menubox.onclick = ()=> searchinput.focus();
 
-searchboxinput.onchange = searchboxinput.oninput = event=> {
-	if (MENU.lastSearchValue === searchboxinput.value.trim()) return;
-	let current = searchboxinput.value;
+searchinput.onchange = searchinput.oninput = event=> {
+	if (MENU.lastSearchValue === searchinput.value.trim()) return;
+	let current = searchinput.value;
 	MENU.lastSearchValue = current.trim();
 
 	setTimeout(()=> {
-		if (current !== searchboxinput.value) return;
+		if (current !== searchinput.value) return;
 		MENU.Update(current);
 	}, 100);
 };
 
-searchbox.onclick = ()=> searchboxinput.focus();
+searchinput.onclick = event=> event.stopPropagation();
 
-searchboxinput.onclick = event=> event.stopPropagation();
-
-searchboxinput.onkeydown = event=> {
+searchinput.onkeydown = event=> {
 	switch (event.key) {
 	case "Escape":
 		event.stopPropagation();
@@ -822,8 +820,8 @@ searchboxinput.onkeydown = event=> {
 	case "Enter":
 		if (event.ctrlKey) {
 			MENU.list[MENU.index].onmousedown({ button: 1 });
-			searchboxinput.focus();
-			setTimeout(searchboxinput.focus(), 10);
+			searchinput.focus();
+			setTimeout(searchinput.focus(), 10);
 		}
 		else {
 			if (MENU.index > -1)

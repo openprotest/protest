@@ -17,33 +17,18 @@ class Chat extends Window {
 		this.InitializeComponents();
 	}
 
-	async GetHistory() {
-		try {
-			const response = await fetch("chat/history");
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-			const json = await response.json();
-			if (json.error) throw(json.error);
-
-			if (json.length === 0) {
-				const placeholder = document.createElement("div");
-				placeholder.style.height = "150px";
-				this.chatBox.append(placeholder);
-			}
-
-			for (let i=0; i<json.length; i++) {
-				this.HandleMessage(json[i]);
-			}
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg");
-		}
-		finally {
-			//TODO: handle queue
-		}
-	}
-
 	async InitializeComponents() {
+		this.blinkingDot = document.createElement("div");
+		this.blinkingDot.className = "task-icon-dots";
+		this.blinkingDot.style.backgroundColor = "transparent";
+		this.blinkingDot.style.width = "16px";
+		this.blinkingDot.style.height = "16px";
+		this.blinkingDot.style.left = "calc(50% - 8px)";
+		this.blinkingDot.style.top = "30%";
+		this.blinkingDot.style.boxShadow = "none";
+		this.blinkingDot.style.animation = "blink 1.5s infinite";
+		this.task.appendChild(this.blinkingDot);
+
 		this.localStreamsBox = document.createElement("div");
 		this.localStreamsBox.className = "local-streams-box";
 		this.content.appendChild(this.localStreamsBox);
@@ -67,10 +52,12 @@ class Chat extends Window {
 		this.displayButton.type = "button";
 		this.displayButton.style.backgroundColor = "transparent";
 
+		this.content.append(this.micButton, this.camButton, this.displayButton);
+
 		//TODO:
-		this.micButton.disabled = true;
-		this.camButton.disabled = true;
-		this.displayButton.disabled = true;
+		//this.micButton.disabled = true;
+		//this.camButton.disabled = true;
+		//this.displayButton.disabled = true;
 
 		this.input = document.createElement("div");
 		this.input.setAttribute("contenteditable", true);
@@ -82,18 +69,44 @@ class Chat extends Window {
 		this.sendButton.className = "chat-button chat-send";
 		this.sendButton.style.backgroundColor = "transparent";
 
-		this.content.append(this.sendButton, this.micButton, this.camButton, this.displayButton);
+		this.emojiButton = document.createElement("button");
+		this.emojiButton.className = "chat-button chat-emoji";
+		this.emojiButton.style.backgroundColor = "transparent";
 
-		this.blinkingDot = document.createElement("div");
-		this.blinkingDot.className = "task-icon-dots";
-		this.blinkingDot.style.backgroundColor = "transparent";
-		this.blinkingDot.style.width = "16px";
-		this.blinkingDot.style.height = "16px";
-		this.blinkingDot.style.left = "calc(50% - 8px)";
-		this.blinkingDot.style.top = "30%";
-		this.blinkingDot.style.boxShadow = "none";
-		this.blinkingDot.style.animation = "blink 1.5s infinite";
-		this.task.appendChild(this.blinkingDot);
+		this.content.append(this.sendButton, this.emojiButton);
+
+		const emojiBox = document.createElement("div");
+		emojiBox.className = "chat-emoji-box";
+		this.emojiButton.append(emojiBox);
+
+		const emojisArray = ["mono/logo.svg", "mono/logo.svg", "mono/logo.svg", "mono/logo.svg", "mono/logo.svg", "mono/logo.svg"];
+		for (let i=0; i<emojisArray.length; i++) {
+			const emojiIcon = document.createElement("input");
+			emojiIcon.type = "button";
+			emojiIcon.style.backgroundImage = `url(${emojisArray[i]})`;
+			emojiBox.appendChild(emojiIcon);
+
+			emojiIcon.onclick = ()=> {
+				const id = `${KEEP.username}${Date.now()}`;
+				const bubble = this.CreateEmojiBubble(emojisArray[i], "out", KEEP.username, "", KEEP.color, id);
+				bubble.style.color = "var(--clr-pane)";
+				bubble.style.backgroundColor = "transparent";
+				bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+
+				try {
+					KEEP.socket.send(JSON.stringify({
+						id: id,
+						type: "chat-emoji",
+						url: emojisArray[i]
+					}));
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/chat.svg");
+				}
+
+				emojiIcon.blur();
+			};
+		}
 
 		this.input.onkeydown = event=> this.Input_onkeydown(event);
 
@@ -103,6 +116,29 @@ class Chat extends Window {
 		this.displayButton.onclick = ()=> this.Display_onclick();
 
 		await this.GetHistory();
+	}
+
+	async GetHistory() {
+		try {
+			const response = await fetch("chat/history");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			if (json.length === 0) {
+				const placeholder = document.createElement("div");
+				placeholder.style.height = "150px";
+				this.chatBox.append(placeholder);
+			}
+
+			for (let i=0; i<json.length; i++) {
+				this.HandleMessage(json[i]);
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
 	}
 
 	BringToFront() { //override
@@ -183,7 +219,7 @@ class Chat extends Window {
 			}));
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/webcam.svg");
+			this.ConfirmBox(ex, true, "mono/chat.svg");
 		}
 
 		const bubble = this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, "", KEEP.color, id);
@@ -195,7 +231,6 @@ class Chat extends Window {
 	}
 
 	HandleMessage(message) {
-
 		if (this.outdoing.hasOwnProperty(message.id)) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
@@ -207,6 +242,17 @@ class Chat extends Window {
 			case "chattext":
 				this.CreateTextBubble(
 					message.text,
+					message.sender === KEEP.username ? "out" : "in",
+					message.sender,
+					message.alias,
+					message.color,
+					message.id
+				);
+				break;
+
+			case "chatemoji":
+				this.CreateEmojiBubble(
+					message.url,
 					message.sender === KEEP.username ? "out" : "in",
 					message.sender,
 					message.alias,
@@ -322,6 +368,23 @@ class Chat extends Window {
 		return bubble;
 	}
 
+	CreateEmojiBubble(url, direction, sender, alias, color, id=null) {
+		const bubble = this.CreateBubble(direction, sender, alias, color);
+		
+		const commandBox = document.createElement("div");
+		commandBox.className = "chat-emoji-bubble";
+		commandBox.style.maskImage = `url(${url})`;
+		bubble.appendChild(commandBox);
+
+		if (direction === "out") {
+			if (id && !this.outdoing.hasOwnProperty(id)) {
+				this.outdoing[id] = bubble;
+			}
+		}
+
+		return bubble;
+	}
+
 	CreateCommandBubble(command, params, icon, title, direction, sender, alias, color) {
 		const bubble = this.CreateBubble(direction, sender, alias, color);
 
@@ -358,7 +421,6 @@ class Chat extends Window {
 				audio: {
 					echoCancellation: true,
 					noiseSuppression: true,
-					sampleRate: 44100
 				},
 				video: false
 			});

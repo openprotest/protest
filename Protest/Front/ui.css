@@ -68,57 +68,39 @@
 	transform: translateX(calc(-100% - 24px));
 }
 
-#searchbox {
-	position: absolute;
-	left: 32px;
-	right: 32px;
-	top: 32px;
-	height: 36px;
-
-	cursor: text;
-	border: #808080 1px solid;
-	border-radius: 4px;
-}
-
-#searchbox > #searchicon {
-	position: absolute;
-	left: 4px;
-	top: 4px;
-	width: 28px;
-	height: 28px;
-	background-image: url(mono/search.svg?light);
-	background-size: cover;
-}
-
-#searchbox > input[type=text] {
+#searchinput {
 	all: unset;
 	position: absolute;
 	left: 40px;
-	top: 0px;
+	top: 24px;
 	width: calc(100% - 80px);
 	background-color: transparent;
 	font-size: 22px;
-
+	
 	outline: 0;
-	border-width: initial;
-	border-style: none;
-	border-color: initial;
-	border-image: initial;
-	padding: 1px 0px 2px 0px !important;
+	border: 1px solid #C0C0C0;
+	border-radius: 4px;
+	box-sizing: border-box;
+	padding: 4px 8px 4px 40px !important;
 	margin: 2px 0px !important;
+
+	background-image: url(mono/search.svg?light);
+	background-size: 28px;
+	background-position: 6px 5px;
+	background-repeat: no-repeat;
 
 	animation: none;
 }
 
-#searchbox > input[type=text]::selection {
+#searchinput::selection {
 	background: #444;
 	color: #fff;
 }
 
-#searchbox > #clearmenusearch {
+#clearmenusearch {
 	position: absolute;
-	right: 4px;
-	top: 4px;
+	right: 8px;
+	top: 32px;
 	width: 28px;
 	height: 28px;
 	border-radius: 4px;
@@ -131,11 +113,11 @@
 	transition-duration: .2s;
 }
 
-#searchbox > #clearmenusearch:hover {
+#clearmenusearch:hover {
 	background-color: rgb(72,72,72);
 }
 
-#searchbox > #clearmenusearch:active {
+#clearmenusearch:active {
 	background-color: rgb(64,64,64);
 }
 

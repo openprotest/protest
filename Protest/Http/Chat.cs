@@ -26,13 +26,7 @@ internal static class Chat {
         string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
         string sanitised = Data.EscapeJsonText(text);
 
-        string json = BuildTextMessage(
-            id,
-            username,
-            alias,
-            acl?.color ?? "#A0A0A0",
-            sanitised
-            );
+        string json = BuildTextMessage(id, username, alias, acl?.color ?? "#A0A0A0", sanitised);
 
         Message message = new Message {
             sender = acl?.username ?? "loopback",
@@ -41,6 +35,31 @@ internal static class Chat {
         };
 
         lock(syncLock) {
+            history.Add(message);
+        }
+
+        KeepAlive.Broadcast(json, "/chat/read");
+    }
+
+    public static void EmojiHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
+        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!dictionary.TryGetValue("url", out string url)) { return; }
+
+        dictionary.TryGetValue("id", out string id);
+
+        string username = acl?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+
+        string json = BuildEmojiMessage(id, username, alias, acl?.color ?? "#A0A0A0", url);
+
+        Message message = new Message
+        {
+            sender = acl?.username ?? "loopback",
+            timestamp = DateTime.UtcNow.Ticks,
+            json = json
+        };
+
+        lock (syncLock) {
             history.Add(message);
         }
 
@@ -93,6 +112,21 @@ internal static class Chat {
         builder.Append($"\"alias\":\"{alias}\",");
         builder.Append($"\"color\":\"{color}\",");
         builder.Append($"\"text\":\"{text}\"");
+        builder.Append('}');
+
+        return builder.ToString();
+    }
+
+    private static string BuildEmojiMessage(string id, string sender, string alias, string color, string url) {
+        StringBuilder builder = new StringBuilder();
+        builder.Append('{');
+        builder.Append($"\"action\":\"chatemoji\",");
+        builder.Append($"\"id\":\"{id}\",");
+        builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
+        builder.Append($"\"sender\":\"{sender}\",");
+        builder.Append($"\"alias\":\"{alias}\",");
+        builder.Append($"\"color\":\"{color}\",");
+        builder.Append($"\"url\":\"{url}\"");
         builder.Append('}');
 
         return builder.ToString();

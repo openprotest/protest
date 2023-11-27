@@ -196,6 +196,7 @@ const KEEP = {
 			break;
 			
 		case "chattext":
+		case "chatemoji":
 		case "chatcommand": {
 			if (!KEEP.chatNotificationSound) {
 				KEEP.chatNotificationSound = new Audio("chatnotification.ogg");
