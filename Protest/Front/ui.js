@@ -620,11 +620,10 @@ window.addEventListener("keydown", ()=> {
 	UI.lastActivity = Date.now();
 });
 
-if (!UI.onMobile && false) {
-	window.addEventListener("resize", ()=> {
-		MENU.UpdatePosition();
-	});
-}
+window.addEventListener("resize", ()=> {
+	if (UI.onMobile) return;
+	MENU.UpdatePosition();
+});
 
 document.body.addEventListener("mousemove", event=> {
 	if (event.buttons != 1) {

@@ -269,8 +269,6 @@ class Personalize extends Tabs {
 			const reader = new FileReader();
 			reader.onload = () => {
 				const base64Url = reader.result;
-				console.log(base64Url);
-				console.log(container);
 				container.style.backgroundImage = `url(${base64Url})`;
 				container.style.backgroundSize = "cover";
 				container.style.backgroundPosition = "center";

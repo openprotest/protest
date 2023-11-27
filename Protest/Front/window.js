@@ -328,7 +328,7 @@ class Window {
 			if (!this.popOutWindow)
 				this.BringToFront();
 
-			if (event.button == 0 && event.offsetY < 32) { //left click on title bar
+			if (event.button === 0 && event.offsetY < 32) { //left click on title bar
 				WIN.offsetX = this.win.offsetLeft;
 				WIN.offsetY = this.win.offsetTop;
 				WIN.x0 = event.clientX;
@@ -351,7 +351,7 @@ class Window {
 
 		this.resize.onmousedown = event=> {
 			this.BringToFront();
-			if (event.button == 0) { //left click
+			if (event.button === 0) { //left click
 				this.win.style.transition = "0s";
 				WIN.offsetX = this.win.clientWidth;
 				WIN.offsetY = this.win.clientHeight;
@@ -365,7 +365,7 @@ class Window {
 
 		let icoPosition = 0;
 		this.task.onmousedown = event=> {
-			if (event.button == 0) { //left click
+			if (event.button === 0) { //left click
 				icoPosition = this.task.offsetLeft;
 
 				this.task.style.zIndex = "5";
@@ -377,18 +377,18 @@ class Window {
 		};
 
 		this.task.onmouseup = event=> {
-			if (event.button == 0 && (Math.abs(icoPosition - this.task.offsetLeft) < 4)) { //clicked but not moved
+			if (event.button === 0 && (Math.abs(icoPosition - this.task.offsetLeft) < 4)) { //clicked but not moved
 				if (this.popOutWindow) {
 					this.popOutWindow.focus();
 				}
 				this.Minimize();
 				if (!this.isMinimized && this.defaultElement) this.defaultElement.focus();
 			}
-			else if (event.button == 1) { //middle click
+			else if (event.button === 1) { //middle click
 				this.Close();
 				event.preventDefault();
 			}
-			else if (event.button == 2) { //right click
+			else if (event.button === 2) { //right click
 				contextmenu.style.display = "block";
 				contextmenu.style.left = `${event.x}px`;
 
@@ -515,7 +515,7 @@ class Window {
 		this.win.style.transition = WIN.ANIME_DURATION / 1000 + "s";
 
 		if (this.isMaximized) {
-			if (this.position == null) {
+			if (this.position === null) {
 				this.win.style.left = "20%";
 				this.win.style.top = "20%";
 				this.win.style.width = "40%";
@@ -577,7 +577,7 @@ class Window {
 	Minimize(force) {
 		document.getSelection().removeAllRanges();
 
-		let isFocused = (WIN.count == this.win.style.zIndex);
+		let isFocused = (WIN.count === this.win.style.zIndex);
 		this.win.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
 
 		if (this.isMinimized && !force) { //restore
@@ -1135,7 +1135,7 @@ class Window {
 	}
 
 	AddCssDependencies(filename) {
-		if (document.head.querySelectorAll(`link[href$='${filename}']`).length == 0) {
+		if (document.head.querySelectorAll(`link[href$='${filename}']`).length === 0) {
 			const cssLink = document.createElement("link");
 			cssLink.rel = "stylesheet";
 			cssLink.href = filename;
