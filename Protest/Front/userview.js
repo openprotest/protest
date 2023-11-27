@@ -167,10 +167,10 @@ class UserView extends View {
 	}
 
 	Edit(isNew = false) { //override
-		const btnFetch = document.createElement("input");
+		const btnFetch = document.createElement("button");
 		if (isNew && !this.params.clone) {
-			btnFetch.type = "button";
 			btnFetch.className = "view-fetch-floating-button";
+			btnFetch.setAttribute("tip-below", "Fetch");
 			this.content.appendChild(btnFetch);
 
 			btnFetch.onclick = ()=> {

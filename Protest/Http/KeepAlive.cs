@@ -91,9 +91,12 @@ internal static class KeepAlive {
                 }
             }
         }
-        catch (WebSocketException ex) {
+        catch (WebSocketException ex) when (ex.ErrorCode != 0) {
             ctx.Response.Close();
             Logger.Error(ex);
+        }
+        catch {
+            ctx.Response.Close();
         }
 
         connections.Remove(ws, out _);

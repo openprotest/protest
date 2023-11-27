@@ -16,14 +16,12 @@
  For more information, visit https://github.com/veniware/OpenProtest
 */
 
-const onMobile = (/Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent));
-
 const WIN = {
 	ANIME_DURATION: 200,
 	array: [],
 	active: null,
 	focused: null,
-	iconSize: onMobile ? 48 : 56,
+	iconSize: UI.onMobile ? 48 : 56,
 	isMoving: false,
 	isResizing: false,
 	isIcoMoving: false,
@@ -38,7 +36,7 @@ const WIN = {
 	always_maxed: false,
 
 	AlignIcon: (ignoreActive)=> {
-		let max = onMobile ? 48 : 56;
+		let max = UI.onMobile ? 48 : 56;
 		WIN.iconSize = (taskbar.clientWidth / (WIN.array.length) > max) ? max : taskbar.clientWidth / WIN.array.length;
 
 		for (let i = 0; i < WIN.array.length; i++) {
@@ -274,7 +272,7 @@ class Window {
 		this.task.setAttribute("role", "button");
 		//this.task.tabIndex = "0";
 		this.task.className = "bar-icon";
-		this.task.style.left = `${2 + WIN.array.length * (onMobile ? 48 : 56)}px`;
+		this.task.style.left = `${2 + WIN.array.length * (UI.onMobile ? 48 : 56)}px`;
 		taskbar.appendChild(this.task);
 
 		this.icon = document.createElement("div");
@@ -300,26 +298,26 @@ class Window {
 		this.btnClose = document.createElement("div");
 		this.btnClose.className = "control close-box";
 		this.win.appendChild(this.btnClose);
-		if (onMobile) {
+		if (UI.onMobile) {
 			this.btnClose.style.width = this.btnClose.style.height = "28px";
 			this.btnClose.style.backgroundSize = "26px";
 			this.btnClose.style.backgroundPosition = "1px 1px";
 		}
 
 		this.btnMaximize = document.createElement("div");
-		if (!onMobile) {
+		if (!UI.onMobile) {
 			this.btnMaximize.className = "control maximize-box";
 			this.win.appendChild(this.btnMaximize);
 		}
 
 		this.btnMinimize = document.createElement("div");
-		if (!onMobile) {
+		if (!UI.onMobile) {
 			this.btnMinimize.className = "control minimize-box";
 			this.win.appendChild(this.btnMinimize);
 		}
 
 		this.btnPopOut = document.createElement("div");
-		if (!onMobile) {
+		if (!UI.onMobile) {
 			this.btnPopOut.className = "control popout-box";
 			this.win.appendChild(this.btnPopOut);
 		}
@@ -339,7 +337,7 @@ class Window {
 
 				this.win.style.transition = "0s";
 
-				if (dblclickCheck && !onMobile) {
+				if (dblclickCheck && !UI.onMobile) {
 					this.Toggle();
 					dblclickCheck = false;
 					return;
@@ -456,10 +454,10 @@ class Window {
 				event.stopPropagation();
 			};
 
-		this.btnClose.onmouseup = event=> { if (event.button == 0 && WIN.controlPressed == this) { WIN.controlPressed = null; this.Close(); } };
-		this.btnMaximize.onmouseup = event=> { if (event.button == 0 && WIN.controlPressed == this) { WIN.controlPressed = null; this.Toggle(); } };
-		this.btnMinimize.onmouseup = event=> { if (event.button == 0 && WIN.controlPressed == this) { WIN.controlPressed = null; this.Minimize(); } };
-		this.btnPopOut.onmouseup = event=> { if (event.button == 0 && WIN.controlPressed == this) { WIN.controlPressed = null; this.PopOut(); } };
+		this.btnClose.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Close(); } };
+		this.btnMaximize.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Toggle(); } };
+		this.btnMinimize.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Minimize(); } };
+		this.btnPopOut.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.PopOut(); } };
 
 		this.SetTitle("untitled");
 		WIN.array.push(this);
@@ -469,7 +467,7 @@ class Window {
 
 		WIN.AlignIcon(false);
 
-		if (onMobile || WIN.always_maxed) this.Toggle();
+		if (UI.onMobile || WIN.always_maxed) this.Toggle();
 	}
 
 	Close() {
