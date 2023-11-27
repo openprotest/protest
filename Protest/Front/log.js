@@ -19,7 +19,7 @@ class Log extends Window {
 
 		this.listTitle = document.createElement("div");
 		this.listTitle.className = "list-title";
-		this.listTitle.textContent = `${"Date".padEnd(23)} ${"User".padEnd(31)} ${"Action"}`;
+		this.listTitle.textContent = `${"Date".padEnd(23)} ${"Origin".padEnd(31)} ${"Action"}`;
 		this.listTitle.style.fontFamily = "monospace";
 		this.listTitle.style.lineHeight = "25px";
 		this.listTitle.style.paddingLeft = "28px";

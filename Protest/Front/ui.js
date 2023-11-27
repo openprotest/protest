@@ -4,6 +4,7 @@ const UI = {
 	lastActivity: Date.now(),
 	lastUpdateFilter: "",
 	regionalFormat: "sys",
+	onMobile: (/Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)),
 
 	Initialize: ()=> {
 		for (let i = 0; i < 12; i++) { //clock dots
@@ -619,9 +620,11 @@ window.addEventListener("keydown", ()=> {
 	UI.lastActivity = Date.now();
 });
 
-window.addEventListener("resize", ()=> {
-	MENU.UpdatePosition();
-});
+if (!UI.onMobile && false) {
+	window.addEventListener("resize", ()=> {
+		MENU.UpdatePosition();
+	});
+}
 
 document.body.addEventListener("mousemove", event=> {
 	if (event.buttons != 1) {
@@ -665,7 +668,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "16px";
 		logo.style.width = "26px";
 		logo.style.height = "26px";
-
 	}
 	else if (event.x > container.clientWidth - 48 && event.y < 56) {
 		menubutton.style.borderRadius = "8px 4px 8px 64px";
@@ -678,7 +680,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "6px";
 		logo.style.width = "26px";
 		logo.style.height = "26px";
-
 	}
 	else if (event.x > container.clientWidth - 48 && event.y > container.clientHeight - 48) {
 		menubutton.style.borderRadius = "64px 8px 4px 8px";
@@ -691,7 +692,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "16px";
 		logo.style.width = "26px";
 		logo.style.height = "26px";
-
 	}
 	else if (px < py && 1 - px > py) { //left
 		let y = 100 * (event.y - 32) / container.clientHeight;
@@ -706,7 +706,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "18px";
 		logo.style.width = "28px";
 		logo.style.height = "28px";
-
 	}
 	else if (px > py && 1 - px > py) { //top
 		let x = 100 * (event.x - 32) / container.clientWidth;
@@ -721,7 +720,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "6px";
 		logo.style.width = "28px";
 		logo.style.height = "28px";
-
 	}
 	else if (px < py && 1 - px < py) { //bottom
 		let x = 100 * (event.x - 32) / container.clientWidth;
@@ -736,7 +734,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "16px";
 		logo.style.width = "28px";
 		logo.style.height = "28px";
-
 	}
 	else if (px > py && 1 - px < py) { //right
 		let y = 100 * (event.y - 32) / container.clientHeight;

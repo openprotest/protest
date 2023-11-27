@@ -594,13 +594,15 @@ class Personalize extends Tabs {
 						WIN.array[i].divSessionTimeoutValue.textContent = value > 60 ? value / 60 + " hours" : value + " minutes";
 					}
 
-					if (KEEP.sessionTtlMapping[this.cookieLife.value] < 8)
+					if (KEEP.sessionTtlMapping[this.cookieLife.value] < 8) {
 						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 1 ? "1 day" : KEEP.sessionTtlMapping[this.cookieLife.value] + " days";
-					else if (KEEP.sessionTtlMapping[this.cookieLife.value] < 29)
+					}
+					else if (KEEP.sessionTtlMapping[this.cookieLife.value] < 29) {
 						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 7 ? "1 week" : KEEP.sessionTtlMapping[this.cookieLife.value] / 7 + " weeks";
-					else
-						WIN.array[i].divCookieLifeValue.textContent = cookieMKEEP.sessionTtlMappingapping[this.cookieLife.value] == 30 ? "1 month" : KEEP.sessionTtlMapping[this.cookieLife.value] / 30 + " months";
-
+					}
+					else {
+						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 30 ? "1 month" : KEEP.sessionTtlMapping[this.cookieLife.value] / 30 + " months";
+					}
 				}
 		};
 
