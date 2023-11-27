@@ -152,6 +152,8 @@ const WIN = {
 };
 
 document.body.onresize = ()=> {
+	if (UI.onMobile) return;
+	
 	document.getSelection().removeAllRanges();
 	WIN.AlignIcon(false);
 

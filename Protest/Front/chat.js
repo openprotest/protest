@@ -371,10 +371,14 @@ class Chat extends Window {
 	CreateEmojiBubble(url, direction, sender, alias, color, id=null) {
 		const bubble = this.CreateBubble(direction, sender, alias, color);
 		
-		const commandBox = document.createElement("div");
-		commandBox.className = "chat-emoji-bubble";
-		commandBox.style.maskImage = `url(${url})`;
-		bubble.appendChild(commandBox);
+		const emojiBox = document.createElement("div");
+		emojiBox.style.filter = "drop-shadow(#000 0 0 1px)";
+		bubble.appendChild(emojiBox);
+
+		const emoji = document.createElement("div");
+		emoji.className = "chat-emoji-bubble";
+		emoji.style.maskImage = `url(${url})`;
+		emojiBox.appendChild(emoji);
 
 		if (direction === "out") {
 			if (id && !this.outdoing.hasOwnProperty(id)) {
