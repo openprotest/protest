@@ -75,7 +75,7 @@ class Chat extends Window {
 		emojiBox.className = "chat-emoji-box";
 		this.emojiButton.append(emojiBox);
 
-		const emojisArray = ["mono/logo.svg", "mono/logo.svg", "mono/logo.svg", "mono/logo.svg", "mono/logo.svg", "mono/logo.svg"];
+		const emojisArray = ["mono/handthumbsup.svg", "mono/handok.svg", "mono/handhorns.svg", "mono/handvictory.svg", "mono/handfist.svg", "mono/handbird.svg", "mono/handthumbsdown.svg"];
 		for (let i=0; i<emojisArray.length; i++) {
 			const emojiIcon = document.createElement("input");
 			emojiIcon.type = "button";

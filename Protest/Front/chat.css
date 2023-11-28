@@ -221,7 +221,7 @@
 }
 
 .chat-emoji {
-	background-image: url(mono/logo.svg?light);
+	background-image: url(mono/handthumbsup.svg?light);
 	right: 8px;
 
 	overflow: visible;
@@ -238,7 +238,7 @@
 	position: absolute;
 	right: -2px;
 	bottom: calc(100% - 4px);
-	width: 340px;
+	width: 400px;
 	height: 56px;
 	padding: 8px;
 	background-color: var(--clr-pane);
