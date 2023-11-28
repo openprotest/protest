@@ -199,7 +199,8 @@ const KEEP = {
 		case "chatemoji":
 		case "chatcommand": {
 			if (!KEEP.chatNotificationSound) {
-				KEEP.chatNotificationSound = new Audio("chatnotification.ogg");
+				KEEP.chatNotificationSound = new Audio("notification.ogg");
+				KEEP.chatNotificationSound.volume = .8;
 			}
 
 			if (document.hidden) {
@@ -212,7 +213,7 @@ const KEEP = {
 				WIN.array[i].HandleMessage(message);
 				chatCount++;
 				
-				if (WIN.focused !== WIN.array[i]) {
+				if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username) {
 					KEEP.chatNotificationSound.play();
 				}
 			}

@@ -292,7 +292,7 @@ class PasswordStrength extends List {
 
 		const lblModified = document.createElement("div");
 		let date = new Date(UI.TicksToUnixDate(entry.date));
-		lblModified.textContent = `${date.toLocaleDateString(UI.regionalFormat, {})} ${date.toLocaleTimeString(UI.regionalFormat, {})}`;;
+		lblModified.textContent = `${date.toLocaleDateString(UI.regionalFormat, {})} ${date.toLocaleTimeString(UI.regionalFormat, {})}`;
 		lblModified.className = "lst-strength-lbl-3";
 		lblModified.style.left = columns[2].style.left === "0%" ? "36px" : columns[2].style.left;
 		lblModified.style.width = columns[2].style.left === "0%" ? `calc(${columns[2].style.width} - 36px)` : columns[2].style.width;

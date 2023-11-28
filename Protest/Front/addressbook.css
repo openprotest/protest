@@ -57,7 +57,7 @@
 	border-radius: 4px;
 	padding: 2px 4px;
 	margin: 4px 4px;
-	background-color: rgba(72,72,72,.2);
+	background-color: rgba(72,72,72,.4);
 	transition: .2s;
 }
 .address-book-frequent > div:hover {

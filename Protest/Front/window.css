@@ -48,7 +48,7 @@
 
 .window>.control:active {
 	filter: brightness(85%);
-	transform: scale(.95);
+	transform: scale(.96);
 }
 
 .window>.close-box {

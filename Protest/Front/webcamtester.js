@@ -75,14 +75,14 @@ class WebcamTester extends Window {
 		const chkForce4K = document.createElement("input");
 		chkForce4K.type = "checkbox";
 		innerBox.appendChild(chkForce4K);
-		this.AddCheckBoxLabel(innerBox, chkForce4K, "Force 4K resolution").style.paddingBottom = "16px";;
+		this.AddCheckBoxLabel(innerBox, chkForce4K, "Force 4K resolution").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
 		const chkAudio = document.createElement("input");
 		chkAudio.type = "checkbox";
 		innerBox.appendChild(chkAudio);
-		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";;
+		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 

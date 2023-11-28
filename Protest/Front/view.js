@@ -513,7 +513,7 @@ class View extends Window {
 			sorted[i].con = con;
 
 			let gap = lastStamp - x;
-			if (maxGap.length < gap) maxGap = { index: i, length: gap };;
+			if (maxGap.length < gap) maxGap = { index: i, length: gap };
 			lastStamp = x;
 
 			con.onmouseenter = ()=> {

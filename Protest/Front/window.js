@@ -15,13 +15,14 @@
  Released into the public domain under the GPL v3
  For more information, visit https://github.com/veniware/OpenProtest
 */
+var onMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
 
 const WIN = {
 	ANIME_DURATION: 200,
 	array: [],
 	active: null,
 	focused: null,
-	iconSize: UI.onMobile ? 48 : 56,
+	iconSize: onMobile ? 48 : 56,
 	isMoving: false,
 	isResizing: false,
 	isIcoMoving: false,
@@ -36,7 +37,7 @@ const WIN = {
 	always_maxed: false,
 
 	AlignIcon: (ignoreActive)=> {
-		let max = UI.onMobile ? 48 : 56;
+		let max = onMobile ? 48 : 56;
 		WIN.iconSize = (taskbar.clientWidth / (WIN.array.length) > max) ? max : taskbar.clientWidth / WIN.array.length;
 
 		for (let i = 0; i < WIN.array.length; i++) {
@@ -150,7 +151,7 @@ const WIN = {
 };
 
 document.body.onresize = ()=> {
-	if (UI.onMobile) return;
+	if (onMobile) return;
 	
 	document.getSelection().removeAllRanges();
 	WIN.AlignIcon(false);
@@ -272,7 +273,7 @@ class Window {
 		this.task.setAttribute("role", "button");
 		//this.task.tabIndex = "0";
 		this.task.className = "bar-icon";
-		this.task.style.left = `${2 + WIN.array.length * (UI.onMobile ? 48 : 56)}px`;
+		this.task.style.left = `${2 + WIN.array.length * (onMobile ? 48 : 56)}px`;
 		taskbar.appendChild(this.task);
 
 		this.icon = document.createElement("div");
@@ -298,26 +299,26 @@ class Window {
 		this.btnClose = document.createElement("div");
 		this.btnClose.className = "control close-box";
 		this.win.appendChild(this.btnClose);
-		if (UI.onMobile) {
+		if (onMobile) {
 			this.btnClose.style.width = this.btnClose.style.height = "28px";
 			this.btnClose.style.backgroundSize = "26px";
 			this.btnClose.style.backgroundPosition = "1px 1px";
 		}
 
 		this.btnMaximize = document.createElement("div");
-		if (!UI.onMobile) {
+		if (!onMobile) {
 			this.btnMaximize.className = "control maximize-box";
 			this.win.appendChild(this.btnMaximize);
 		}
 
 		this.btnMinimize = document.createElement("div");
-		if (!UI.onMobile) {
+		if (!onMobile) {
 			this.btnMinimize.className = "control minimize-box";
 			this.win.appendChild(this.btnMinimize);
 		}
 
 		this.btnPopOut = document.createElement("div");
-		if (!UI.onMobile) {
+		if (!onMobile) {
 			this.btnPopOut.className = "control popout-box";
 			this.win.appendChild(this.btnPopOut);
 		}
@@ -337,7 +338,7 @@ class Window {
 
 				this.win.style.transition = "0s";
 
-				if (dblclickCheck && !UI.onMobile) {
+				if (dblclickCheck && !onMobile) {
 					this.Toggle();
 					dblclickCheck = false;
 					return;
@@ -467,7 +468,7 @@ class Window {
 
 		WIN.AlignIcon(false);
 
-		if (UI.onMobile || WIN.always_maxed) this.Toggle();
+		if (onMobile || WIN.always_maxed) this.Toggle();
 	}
 
 	Close() {
@@ -577,7 +578,7 @@ class Window {
 	Minimize(force) {
 		document.getSelection().removeAllRanges();
 
-		let isFocused = (WIN.count === this.win.style.zIndex);
+		let isFocused = (WIN.count == this.win.style.zIndex);
 		this.win.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
 
 		if (this.isMinimized && !force) { //restore

@@ -47,7 +47,7 @@ class ScreenCapture extends Window {
 		const chkAudio = document.createElement("input");
 		chkAudio.type = "checkbox";
 		innerBox.appendChild(chkAudio);
-		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";;
+		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 

@@ -76,7 +76,7 @@ class MicTester extends Window {
 		const chkEchoCancellation = document.createElement("input");
 		chkEchoCancellation.type = "checkbox";
 		innerBox.appendChild(chkEchoCancellation);
-		this.AddCheckBoxLabel(innerBox, chkEchoCancellation, "Echo cancellation").style.paddingBottom = "16px";;
+		this.AddCheckBoxLabel(innerBox, chkEchoCancellation, "Echo cancellation").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 

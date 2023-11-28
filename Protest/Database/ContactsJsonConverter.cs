@@ -29,9 +29,9 @@ internal sealed class ContactsJsonConverter : JsonConverter<Database> {
             entry.attributes.TryGetValue("telephone number", out Database.Attribute telephoneNumber);
             entry.attributes.TryGetValue("mobile number", out Database.Attribute mobileNumber);
 
-            if ((email is null || email.value.Length == 0) &&
-                (telephoneNumber is null || telephoneNumber.value.Length == 0) &&
-                (mobileNumber is null || mobileNumber.value.Length == 0)) {
+            if (String.IsNullOrEmpty(email.value) &&
+                String.IsNullOrEmpty(telephoneNumber.value) &&
+                String.IsNullOrEmpty(mobileNumber.value)) {
                 continue;
             }
 
@@ -44,9 +44,9 @@ internal sealed class ContactsJsonConverter : JsonConverter<Database> {
 
             writer.WriteStartObject();
 
-            if (title?.value.Length > 0)       writer.WriteString(_title, title.value);
-            if (name?.Length > 0)              writer.WriteString(_name, name);
-            if (department?.value.Length > 0)  writer.WriteString(_department, department.value);
+            if (title?.value.Length > 0)      writer.WriteString(_title, title.value);
+            if (name?.Length > 0)             writer.WriteString(_name, name);
+            if (department?.value.Length > 0) writer.WriteString(_department, department.value);
 
             if (email?.value.Length > 0)           writer.WriteString(_email, email.value);
             if (telephoneNumber?.value.Length > 0) writer.WriteString(_telephone, telephoneNumber.value);

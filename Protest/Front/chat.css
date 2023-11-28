@@ -1,3 +1,8 @@
+.chat-window {
+	container-name: chat-container;
+	container-type: inline-size;
+}
+
 .chat-box {
 	position: absolute;
 	left: 8px;
@@ -20,14 +25,15 @@
 }
 
 .chat-group[sender]:not([sender=""])::before {
+	display: inline-block;
 	content: attr(sender);
 	color: var(--clr-pane);
-	padding: 0 8px;
+	padding: 4px 8px;
 }
 
 .chat-avatar {
 	position: absolute;
-	bottom: 12px;
+	bottom: 4px;
 	width: 32px;
 	height: 32px;
 
@@ -44,17 +50,29 @@
 	text-align: left;
 }
 
-.chat-box > div > .out:focus-visible > .chat-bubble,
-.chat-box > div > .in:focus-visible > .chat-bubble {
-	animation: outline .3s ease-in;
-	box-shadow: var(--clr-accent) 0 0 0 2px;
+.chat-timestamp {
+	display: inline-block;
+	position: relative;
+	bottom: 14px;
+	padding: 0 8px;
+	font-size: small;
+	color: var(--clr-pane);
+
+	transition: .2s;
+	opacity: 0;
+	visibility: hidden;
+}
+
+.in:focus-within > .chat-timestamp,
+.out:focus-within  > .chat-timestamp {
+	opacity: 1;
+	visibility: visible;
 }
 
 .chat-bubble {
 	display: inline-block;
 	text-align: start;
-	margin: 4px;
-	margin-top: 8px;
+	margin: 0 4px;
 	padding: 8px 12px;
 	border-radius: 12px;
 	color: var(--clr-dark);
@@ -65,12 +83,10 @@
 	-webkit-user-select: text; user-select: text;
 }
 
-.chat-box > div > div:last-child  .chat-bubble:before {
+.chat-box > div > div:last-child .chat-bubble:before {
 	content: "";
 	position: absolute;
-	bottom: 18px;
-	width: 0;
-	height: 0;
+	bottom: 13px;
 	border-style: solid;
 	border-width: 9px;
 }
@@ -88,10 +104,17 @@
 	width: 72px;
 	height: 72px;
 
-	background-color: var(--clr-select);
+	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 90%, black 10%);
 	-webkit-mask-position: center; mask-position: center;
 	-webkit-mask-size: 64px 64px; mask-size: 64px 64px;
 	-webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+
+.chat-emoji-bubble:active {
+	background-color: var(--clr-accent);
+	transform: scale(.95);
+	transition: .4s;
+	transition-timing-function: ease-out;
 }
 
 .chat-command-box {
@@ -153,6 +176,7 @@
 	background-color: var(--clr-pane);
 	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
 	overflow-y: auto;
+	transition: .2s;
 }
 
 .chat-input:empty::before {
@@ -245,4 +269,16 @@
 	background-size: 40px 40px;
 	background-position: center;
 	background-repeat: no-repeat;
+}
+
+@container chat-container (max-width: 400px) {
+	.chat-box > .chat-timestamp {
+		display: none;
+	}
+	.chat-mic, .chat-cam, .chat-screen {
+		display: none;
+	}
+	.chat-input {
+		left: 8px;
+	}
 }

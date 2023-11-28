@@ -173,7 +173,7 @@ class AddressBook extends Window {
 			for (let i=0; i<values.length; i++ ) {
 				const label = document.createElement("a");
 				label.textContent = values[i].trim();
-				label.href = `mailto:${values[i].trim()}`;;
+				label.href = `mailto:${values[i].trim()}`;
 				label.className = "email";
 				preview.appendChild(label);
 			}
