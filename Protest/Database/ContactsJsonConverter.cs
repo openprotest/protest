@@ -29,9 +29,9 @@ internal sealed class ContactsJsonConverter : JsonConverter<Database> {
             entry.attributes.TryGetValue("telephone number", out Database.Attribute telephoneNumber);
             entry.attributes.TryGetValue("mobile number", out Database.Attribute mobileNumber);
 
-            if (String.IsNullOrEmpty(email.value) &&
-                String.IsNullOrEmpty(telephoneNumber.value) &&
-                String.IsNullOrEmpty(mobileNumber.value)) {
+            if (String.IsNullOrEmpty(email?.value) &&
+                String.IsNullOrEmpty(telephoneNumber?.value) &&
+                String.IsNullOrEmpty(mobileNumber?.value)) {
                 continue;
             }
 

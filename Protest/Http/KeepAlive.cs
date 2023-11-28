@@ -225,6 +225,10 @@ internal static class KeepAlive {
         case "chat-stream":
             //TODO
             return;
+
+        default:
+            Console.WriteLine($"unhandle case: {type}");
+            break;
         }
     }
 }

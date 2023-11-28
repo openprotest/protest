@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
 using System.Text;
 
 namespace Protest.Http;
@@ -132,7 +131,7 @@ internal static class Chat {
         return builder.ToString();
     }
 
-    private static string BuildCommandMessage(string id, string sender, string alias, string color, string command, String param, string icon, string title) {
+    private static string BuildCommandMessage(string id, string sender, string alias, string color, string command, string param, string icon, string title) {
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
         builder.Append($"\"action\":\"chatcommand\",");

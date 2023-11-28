@@ -11,9 +11,12 @@ class Chat extends Window {
 		this.lastBubble = null;
 		this.outdoing = {};
 
-		this.userStream = [];
+		this.userStream = null;
 		this.displayStreams = [];
 		this.remoteStreams = [];
+
+		this.isMicEnable = false;
+		this.isCamEnable = false;
 
 		this.InitializeComponents();
 	}
@@ -116,6 +119,73 @@ class Chat extends Window {
 		await this.GetHistory();
 	}
 
+	async SetupLocalUserMediaStream() {
+		/*try*/ {
+			const stream = await navigator.mediaDevices.getUserMedia({
+				audio: {
+					echoCancellation: true,
+					noiseSuppression: true
+				},
+				video: {
+					width: { min: 640, ideal: 1280, max: 1920 },
+					height: { min: 480, ideal: 720, max: 1080 }
+				}
+			});
+
+			const videoTrack = stream.getVideoTracks()[0];
+			videoTrack.onended = ()=> {};
+
+			const element = this.CreateLocalStreamElement(true);
+			this.localStreamsBox.appendChild(element.container);
+
+			element.videoFeedback.srcObject = stream;
+			element.videoFeedback.play();
+
+			this.userStream = {
+				stream: stream,
+				element: element
+			};
+		}
+		/*catch (ex) {
+			this.ConfirmBox(ex, true, "mono/mic.svg");
+			this.micButton.style.backgroundColor = "transparent";
+			this.micButton.style.backgroundImage = "url(mono/mic.svg?light)";
+		}
+		finally {
+			this.AdjustUI();
+		}*/
+	}
+
+	async SetupLocalDisplayMediaStream() {
+		/*try*/ {
+			const stream = await navigator.mediaDevices.getDisplayMedia({
+				video: true
+			});
+
+			const videoTrack = stream.getVideoTracks()[0];
+			videoTrack.onended = ()=> {};
+
+			const element = this.CreateLocalStreamElement();
+			this.localStreamsBox.appendChild(element.container);
+
+			element.videoFeedback.srcObject = stream;
+			element.videoFeedback.play();
+
+			this.displayStreams.push({
+				stream: stream,
+				element: element
+			});
+		}
+		/*catch (ex) {
+			this.ConfirmBox(ex, true, "mono/screenshare.svg");
+			this.displayButton.style.backgroundColor = "transparent";
+			this.displayButton.style.backgroundImage = "url(mono/screenshare.svg?light)";
+		}
+		finally {
+			this.AdjustUI();
+		}*/
+	}
+
 	async InitializeRtc() {
 		this.peer = new RTCPeerConnection();
 
@@ -182,14 +252,14 @@ class Chat extends Window {
 	}
 
 	AdjustUI() {
-		const hasUserStream     = this.userStream.length > 0;
+		const hasUserStream     = this.userStream !== null;
 		const hasDisplayStreams = this.displayStreams.length > 0;
 		const hasRemoteStreams  = this.remoteStreams.length > 0;
 
-		//this.micButton.style.backgroundColor = isMicOn ? "var(--clr-accent)" : "transparent";
-		//this.micButton.style.backgroundImage = isMicOn ? "url(mono/mic.svg)" : "url(mono/mic.svg?light)";
-		//this.camButton.style.backgroundColor = isCameraOn ? "var(--clr-accent)" : "transparent";
-		//this.camButton.style.backgroundImage = isCameraOn ? "url(mono/webcam.svg)" : "url(mono/webcam.svg?light)";
+		this.micButton.style.backgroundColor = this.isMicEnable ? "var(--clr-accent)" : "transparent";
+		this.micButton.style.backgroundImage = this.isMicEnable ? "url(mono/mic.svg)" : "url(mono/mic.svg?light)";
+		this.camButton.style.backgroundColor = this.isCamEnable ? "var(--clr-accent)" : "transparent";
+		this.camButton.style.backgroundImage = this.isCamEnable ? "url(mono/webcam.svg)" : "url(mono/webcam.svg?light)";
 		
 		this.displayButton.style.backgroundColor = hasDisplayStreams ? "var(--clr-accent)" : "transparent";
 		this.displayButton.style.backgroundImage = hasDisplayStreams ? "url(mono/screenshare.svg)" : "url(mono/screenshare.svg?light)";
@@ -217,16 +287,6 @@ class Chat extends Window {
 			this.localStreamsBox.style.opacity = "0";
 			this.chatBox.style.left = "8px";
 			this.chatBox.style.width = "unset";
-		}
-	}
-
-	Input_onkeydown(event) {
-		if (event.key === "Enter" && !event.shiftKey) {
-			event.preventDefault();
-			this.Send();
-		}
-		else if (event.key === "Escape") {
-			this.ClearInput();
 		}
 	}
 
@@ -262,6 +322,38 @@ class Chat extends Window {
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
 
 		this.ClearInput();
+	}
+
+	Input_onkeydown(event) {
+		if (event.key === "Enter" && !event.shiftKey) {
+			event.preventDefault();
+			this.Send();
+		}
+		else if (event.key === "Escape") {
+			this.ClearInput();
+		}
+	}
+
+	async Mic_onclick() {
+		this.isMicEnable = !this.isMicEnable;
+		if (this.userStream === null) {
+			this.SetupLocalUserMediaStream();
+		}
+
+		this.AdjustUI();
+	}
+
+	async Webcam_onclick() {
+		this.isCamEnable = !this.isCamEnable;
+		if (this.userStream === null) {
+			this.SetupLocalUserMediaStream();
+		}
+
+		this.AdjustUI();
+	}
+
+	async Display_onclick() {
+		this.SetupLocalDisplayMediaStream();
 	}
 
 	HandleMessage(message) {
@@ -453,93 +545,22 @@ class Chat extends Window {
 		return bubble;
 	}
 
-	CreateLocalStream(isUserMedia=false) {
-		const element = document.createElement("div");
-		return element;
+	CreateLocalStreamElement(isUserMedia=false) {
+		const container = document.createElement("div");
+		
+		const videoFeedback = document.createElement("video");
+		videoFeedback.style.width = "100%";
+		videoFeedback.style.height = "100%";
+		container.appendChild(videoFeedback);
+
+		return {
+			container: container,
+			videoFeedback: videoFeedback
+		};
 	}
 
 	CreateRemoteStream() {
 		const element = document.createElement("div");
 		return element;
-	}
-
-	async Mic_onclick() {
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: {
-					echoCancellation: true,
-					noiseSuppression: true,
-				},
-				video: false
-			});
-
-			const element = this.CreateLocalStream(true);
-			this.localStreamsBox.appendChild(element);
-
-			this.userStream.push({
-				stream: stream,
-				element: element
-			});
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/mic.svg");
-			this.micButton.style.backgroundColor = "transparent";
-			this.micButton.style.backgroundImage = "url(mono/mic.svg?light)";
-		}
-		finally {
-			this.AdjustUI();
-		}
-	}
-
-	async Webcam_onclick() {
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: false,
-				video: {
-					width: { min: 640, ideal: 1280, max: 1920 },
-					height: { min: 480, ideal: 720, max: 1080 },
-				}
-			});
-
-			const element = this.CreateLocalStream(true);
-			this.localStreamsBox.appendChild(element);
-
-			this.userStream.push({
-				stream: stream,
-				element: element
-			});
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/webcam.svg");
-			this.camButton.style.backgroundColor = "transparent";
-			this.camButton.style.backgroundImage = "url(mono/webcam.svg?light)";
-		}
-		finally {
-			this.AdjustUI();
-		}
-	}
-
-	async Display_onclick() {
-		try {
-			const stream = await navigator.mediaDevices.getDisplayMedia({
-				video: true
-			});
-
-			const element = this.CreateLocalStream();
-			this.localStreamsBox.appendChild(element);
-
-			this.displayStreams.push({
-				stream: stream,
-				element: element
-			});
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/screenshare.svg");
-			this.displayButton.style.backgroundColor = "transparent";
-			this.displayButton.style.backgroundImage = "url(mono/screenshare.svg?light)";
-		}
-		finally {
-			this.AdjustUI();
-		}
 	}
 }
