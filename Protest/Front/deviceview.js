@@ -732,11 +732,16 @@ class DeviceView extends View {
 				}
 			}
 			else if (type === "vol") {
+				let max = 0;
+				for (let i = 0; i < data.length; i++) {
+					if (max < data[i].t) { max = data[i].t; }
+				}
+
 				for (let i = 0; i < data.length; i++) {
 					if (data[i].t === 0) continue;
 					
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-					let y = 104 - Math.round(100 * data[i].v / data[i].t);
+					let y = 104 - Math.round(100 * data[i].v / max);
 					
 					d += `L ${x} ${y} `;
 	
