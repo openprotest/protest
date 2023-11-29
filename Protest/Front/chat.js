@@ -1,4 +1,6 @@
 class Chat extends Window {
+	static EMOJIS = ["mono/handthumbsup.svg", "mono/handok.svg", "mono/handhorns.svg", "mono/handvictory.svg", "mono/handfist.svg", "mono/handbird.svg", "mono/handthumbsdown.svg"];
+
 	constructor() {
 		super();
 
@@ -78,18 +80,17 @@ class Chat extends Window {
 		emojiBox.className = "chat-emoji-box";
 		this.emojiButton.append(emojiBox);
 
-		const emojisArray = ["mono/handthumbsup.svg", "mono/handok.svg", "mono/handhorns.svg", "mono/handvictory.svg", "mono/handfist.svg", "mono/handbird.svg", "mono/handthumbsdown.svg"];
-		for (let i=0; i<emojisArray.length; i++) {
+		for (let i=0; i<Chat.EMOJIS.length; i++) {
 			const emojiIcon = document.createElement("input");
 			emojiIcon.type = "button";
-			emojiIcon.style.backgroundImage = `url(${emojisArray[i]})`;
+			emojiIcon.style.backgroundImage = `url(${Chat.EMOJIS[i]})`;
 			emojiBox.appendChild(emojiIcon);
 
 			emojiIcon.onclick = ()=> {
 				let nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
 
 				const id = `${KEEP.username}${Date.now()}`;
-				const bubble = this.CreateEmojiBubble(emojisArray[i], "out", KEEP.username, "", KEEP.color, nowString, id);
+				const bubble = this.CreateEmojiBubble(Chat.EMOJIS[i], "out", KEEP.username, "", KEEP.color, nowString, id);
 				bubble.style.color = "var(--clr-pane)";
 				bubble.style.backgroundColor = "transparent";
 				bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
@@ -98,7 +99,7 @@ class Chat extends Window {
 					KEEP.socket.send(JSON.stringify({
 						id: id,
 						type: "chat-emoji",
-						url: emojisArray[i]
+						url: Chat.EMOJIS[i]
 					}));
 				}
 				catch (ex) {
@@ -120,7 +121,7 @@ class Chat extends Window {
 	}
 
 	async SetupLocalUserMediaStream() {
-		/*try*/ {
+		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: {
 					echoCancellation: true,
@@ -146,14 +147,14 @@ class Chat extends Window {
 				element: element
 			};
 		}
-		/*catch (ex) {
+		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/mic.svg");
 			this.micButton.style.backgroundColor = "transparent";
 			this.micButton.style.backgroundImage = "url(mono/mic.svg?light)";
 		}
 		finally {
 			this.AdjustUI();
-		}*/
+		}
 	}
 
 	async SetupLocalDisplayMediaStream() {
@@ -354,6 +355,8 @@ class Chat extends Window {
 
 	async Display_onclick() {
 		this.SetupLocalDisplayMediaStream();
+		
+		this.AdjustUI();
 	}
 
 	HandleMessage(message) {
@@ -505,6 +508,7 @@ class Chat extends Window {
 	}
 
 	CreateEmojiBubble(url, direction, sender, alias, color, time, id=null) {
+		console.log(color);
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		
 		const emojiBox = document.createElement("div");
@@ -513,8 +517,16 @@ class Chat extends Window {
 
 		const emoji = document.createElement("div");
 		emoji.className = "chat-emoji-bubble";
+		emoji.style.background = `linear-gradient(to bottom, ${color} 0%, color-mix(in hsl shorter hue, ${color} 80%, black 20%)100%)`;
+		emoji.style.webkitMaskImage = `url(${url})`;
 		emoji.style.maskImage = `url(${url})`;
 		emojiBox.appendChild(emoji);
+
+		let index = Chat.EMOJIS.indexOf("url");
+		
+		if (index !== -1) {
+			emoji.classList.add(`chat-emoji-${index+1}`);
+		}
 
 		if (direction === "out") {
 			if (id && !this.outdoing.hasOwnProperty(id)) {

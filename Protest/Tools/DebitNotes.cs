@@ -260,7 +260,7 @@ internal static class DebitNotes {
 
         try {
             File.Delete(filename);
-            Logger.Action(origin, $"Delete debit note: {filename}");
+            Logger.Action(origin, $"Delete debit note: {file}");
             return Data.CODE_OK.Array;
         }
         catch {
