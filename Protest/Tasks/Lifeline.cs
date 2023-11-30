@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Management;
@@ -183,6 +184,7 @@ internal static partial class Lifeline {
 
     [SupportedOSPlatform("windows")]
     private static void DoWmi(string file, string host) {
+        byte cpuUsage = 255, diskUsage = 255;
         ulong memoryFree = 0, memoryTotal = 0;
 
         List<byte> diskCaption = new List<byte>();
@@ -199,6 +201,28 @@ internal static partial class Lifeline {
         }
 
         try {
+            using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
+            foreach (ManagementObject o in os.Cast<ManagementObject>()) {
+                if (o is null) continue;
+                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                cpuUsage = (byte)idle;
+                break;
+            }
+        }
+        catch { }
+
+        try {
+            using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name = '_Total'")).Get();
+            foreach (ManagementObject o in os.Cast<ManagementObject>()) {
+                if (o is null) continue;
+                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                diskUsage = (byte)idle;
+                break;
+            }
+        }
+        catch { }
+
+        try {
             using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
@@ -209,7 +233,7 @@ internal static partial class Lifeline {
         catch { }
 
         try {
-            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
+            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT Caption, FreeSpace, Size FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
 
@@ -228,7 +252,34 @@ internal static partial class Lifeline {
         }
         catch { }
 
+
         DateTime now = DateTime.UtcNow;
+
+        if (cpuUsage != 255) {
+            string dirCpu = $"{Data.DIR_LIFELINE}{Data.DELIMITER}cpu{Data.DELIMITER}{file}";
+            if (!Directory.Exists(dirCpu)) Directory.CreateDirectory(dirCpu);
+            using FileStream cpuStream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
+            try {
+                using BinaryWriter writer = new BinaryWriter(cpuStream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(100 - cpuUsage); //1 byte
+            }
+            catch { }
+        }
+
+        if (diskUsage != 255) {
+            string dirDiskUsage = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskusage{Data.DELIMITER}{file}";
+            if (!Directory.Exists(dirDiskUsage)) Directory.CreateDirectory(dirDiskUsage);
+            using FileStream diskStream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
+            try {
+                using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(100 - diskUsage); //1 byte
+            }
+            catch { }
+        }
 
         if (memoryTotal > 0) {
             string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}";
@@ -262,6 +313,8 @@ internal static partial class Lifeline {
             }
             catch { }
         }
+
+
     }
 
     public static byte[] ViewPing(Dictionary<string, string> parameters) {

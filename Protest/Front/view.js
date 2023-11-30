@@ -389,6 +389,7 @@ class View extends Window {
 		info.className = "view-info-box";
 		info.textContent = text;
 		this.liveB.append(info);
+		return info;
 	}
 
 	CreateWarning(text) {
@@ -396,6 +397,7 @@ class View extends Window {
 		warning.className = "view-warning-box";
 		warning.textContent = text;
 		this.liveB.prepend(warning);
+		return warning;
 	}
 
 	CreateSideButton(icon, label) {

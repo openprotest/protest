@@ -94,6 +94,10 @@ class UserView extends View {
 					const response = await fetch(`manage/user/unlock?file=${this.params.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
+
+					if (this.lockedUserWarning) {
+						this.lockedUserWarning.style.display = "none";
+					}
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
 				btnUnlock.removeAttribute("busy");
@@ -155,7 +159,7 @@ class UserView extends View {
 				this.CreateWarning(json.warning);
 			}
 			else if (json.lockedOut) {
-				this.CreateWarning(`User is locked out (${json.lockedOut})`);
+				this.lockedUserWarning = this.CreateWarning(`User is locked out (${json.lockedOut})`);
 			}
 		};
 
