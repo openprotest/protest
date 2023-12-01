@@ -58,6 +58,11 @@ class Chat extends Window {
 		this.displayButton.type = "button";
 		this.displayButton.style.backgroundColor = "transparent";
 
+		//TODO:
+		this.micButton.disabled = true;
+		this.camButton.disabled = true;
+		this.displayButton.disabled = true;
+
 		this.content.append(this.micButton, this.camButton, this.displayButton);
 
 		this.input = document.createElement("div");
@@ -232,7 +237,10 @@ class Chat extends Window {
 			if (json.error) throw(json.error);
 
 			const placeholder = document.createElement("div");
-			placeholder.style.height = json.length === 0 ? "150px" : "50px";
+			placeholder.style.padding = "40px 8px";
+			placeholder.style.textAlign = "center";
+			placeholder.style.color = "var(--clr-pane)";
+			placeholder.textContent = "Messages are self-destruct after 24 hours.";
 			this.chatBox.append(placeholder);
 
 			for (let i=0; i<json.length; i++) {

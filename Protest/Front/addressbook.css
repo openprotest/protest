@@ -43,8 +43,8 @@
 
 .address-book-frequent {
 	position: absolute;
-	left: 50px;
-	right: 50px;
+	left: 40px;
+	right: 40px;
 	top: 56px;
 	bottom: 0;
 	overflow: hidden;
@@ -53,18 +53,19 @@
 
 .address-book-frequent > div {
 	display: inline-block;
-	border: 1px solid var(--clr-light);
 	border-radius: 4px;
-	padding: 2px 4px;
-	margin: 4px 4px;
-	background-color: rgba(72,72,72,.4);
+	padding: 4px 8px;
+	margin: 0 4px;
+	text-transform: uppercase;
+	color: var(--clr-dark);
+	background-color: #C0C0C0;
 	transition: .2s;
 }
 .address-book-frequent > div:hover {
-	background-color: rgb(72,72,72);
+	background-color: #D0D0D0;
 }
 .address-book-frequent > div:active {
-	background-color: rgb(64,64,64);
+	background-color: #E0E0E0;
 }
 
 .address-book-search-box:not(:placeholder-shown) {
@@ -100,10 +101,12 @@
 }
 
 .address-book-list {
-	margin: 20px 40px;
+	margin: 20px 20px;
+	text-align: center;
 }
 
 .address-book-list > div {
+	text-align: left;
 	border-radius: 4px;
 	box-sizing: border-box;
 	color: var(--clr-dark);
@@ -123,17 +126,18 @@
 	}
 }
 
-.address-book-list.card > div:hover > div:first-child {
-	border-bottom-color: var(--clr-dark);
-}
-
 .address-book-list.card > div {
-	float: left;
+	display: inline-block;
+	vertical-align: top;
 	width: 250px;
 	height: 160px;
 	margin: 8px;
 	padding: 8px;
 	box-shadow: rgba(0,0,0,.5) 1px 1px 4px;
+}
+
+.address-book-list.card > div:hover > div:first-child {
+	border-bottom-color: var(--clr-dark);
 }
 
 .address-book-list.list > div {
@@ -276,6 +280,35 @@
 	background-image: url(/mono/mobilephone.svg);
 }
 
+.address-book-preview > .qr-icon {
+	position: absolute !important;
+	right: 8px;
+	bottom: 8px;
+	width: 48px;
+	height: 48px;
+	padding: 4px !important;
+	background-image: url(mono/qrcode.svg);
+	background-size: 40px 40px !important;
+	background-position: center !important;
+	background-repeat: no-repeat;
+	border-radius: 8px;
+}
+
+.address-book-qrcode {
+	background-color:  transparent !important;
+	padding: 4px !important;
+	margin: 4px auto;
+	text-align: center;
+}
+
+.address-book-qrcode > div {
+	display: inline-block;
+	padding: 8px;
+	background-color: #C0C0C0;
+	border-radius: 8px;
+	width: 150px;
+}
+
 .address-book-close-button {
 	position: absolute;
 	left: calc(50% + 294px);
@@ -312,7 +345,7 @@
 @media (prefers-color-scheme: light) {
 	.address-book-list > div,
 	.address-book-preview {
-		background-color: rgba(224,232,234,.85);
+		background-color: rgba(224,232,234,.9);
 	}
 }
 

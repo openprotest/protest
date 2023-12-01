@@ -9,6 +9,10 @@ class AddressBook extends Window {
 		this.SetTitle("Address book");
 		this.SetIcon("mono/addressbook.svg");
 
+		const qrLib = document.createElement("script");
+		qrLib.src = "qrcode.js";
+		this.win.appendChild(qrLib);
+
 		this.contacts = [];
 		this.lastSearch = null;
 
@@ -170,7 +174,7 @@ class AddressBook extends Window {
 
 		if (this.contacts[index].email) {
 			let values = this.contacts[index].email.split(";");
-			for (let i=0; i<values.length; i++ ) {
+			for (let i=0; i<values.length; i++) {
 				const label = document.createElement("a");
 				label.textContent = values[i].trim();
 				label.href = `mailto:${values[i].trim()}`;
@@ -181,7 +185,7 @@ class AddressBook extends Window {
 
 		if (this.contacts[index].telephone) {
 			let values = this.contacts[index].telephone.split(";");
-			for (let i=0; i<values.length; i++ ) {
+			for (let i=0; i<values.length; i++) {
 				const label = document.createElement("a");
 				label.textContent = values[i].trim();
 				label.href = `tel:${values[i].trim()}`;
@@ -192,14 +196,51 @@ class AddressBook extends Window {
 
 		if (this.contacts[index].mobile) {
 			let values = this.contacts[index].mobile.split(";");
-			for (let i=0; i<values.length; i++ ) {
+			for (let i=0; i<values.length; i++) {
 				const label = document.createElement("a");
 				label.textContent = values[i].trim();
 				label.href = `tel:${values[i].trim()}`;
 				label.className = "mobile";
 				preview.appendChild(label);
 			}
+
+			const qrButton = document.createElement("div");
+			qrButton.className = "qr-icon";
+			preview.appendChild(qrButton);
+			
+			qrButton.onclick = ()=>{
+				qrButton.style.display = "none";
+		
+				for (let i=0; i<values.length; i++) {
+					const qrContainer = document.createElement("div");
+					qrContainer.className = "address-book-qrcode";
+					preview.appendChild(qrContainer);
+
+					const qrBox = document.createElement("div");
+					qrContainer.appendChild(qrBox);
+
+					new QRCode(qrBox, {
+						text: `tel:${values[i].trim()}`,
+						width: 150,
+						height: 150,
+						colorDark : "#202020",
+						colorLight : "transparent",
+						correctLevel : QRCode.CorrectLevel.L
+					});
+
+					const qrText = document.createElement("div");
+					qrText.textContent = values[i].trim();
+					qrText.style.paddingTop = "4px";
+					qrBox.appendChild(qrText);
+
+					if (i == 0) {
+						qrContainer.scrollIntoView({ behavior: "smooth" });
+					}
+				}
+			};
 		}
+
+
 
 		const closeButton = document.createElement("div");
 		closeButton.className = "address-book-close-button";
@@ -242,9 +283,8 @@ class AddressBook extends Window {
 			this.BringToFront();
 		};
 
-		preview.onclick = event=>{
-			event.stopPropagation();
-		};
+		preview.onclick = event=> event.stopPropagation();
+		
 	}
 
 	RefreshList() {
@@ -416,7 +456,9 @@ class AddressBook extends Window {
 		pseudo.style.display = "none";
 		document.body.appendChild(pseudo);
 
-		let filename = (this.searchBox.value.length == 0) ? "All contacts" : "contacts_" + this.searchBox.value;
+		let filename = (this.searchBox.value.length == 0) ?
+			"All contacts" :
+			"contacts_" + this.searchBox.value;
 
 		pseudo.setAttribute("href", "data:text/vcard;charset=utf-8," + encodeURI(text));
 		pseudo.setAttribute("download", filename + ".vcf");
@@ -458,5 +500,4 @@ class AddressBook extends Window {
 			this.viewButton.childNodes[i].style.height = "4px";
 		}
 	}
-
 }
