@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Management;
@@ -313,7 +312,6 @@ internal static partial class Lifeline {
             }
             catch { }
         }
-
 
     }
 

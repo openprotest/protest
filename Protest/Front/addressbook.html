@@ -28,7 +28,7 @@
 
 		function SetBarColor() {
 			const bar = document.getElementsByClassName("address-book-search-bar")[0];
-			bar.style.background = `linear-gradient(0deg, hsla(${hsl[0]+5},70%,45%,.6) 0%, hsla(${hsl[0]},80%,50%,1) 100%)`;
+			bar.style.background = `linear-gradient(0deg, hsla(${hsl[0]+5},70%,40%,.6) 0%, hsla(${hsl[0]},75%,45%,1) 100%)`;
 		}
 	</script>
 
@@ -36,7 +36,7 @@
 	<script defer src="addressbook.js" onload="new AddressBook()"></script>
 </head>
 
-<body onload="SetBarColor()">
+<body onload="SetBarColor()" class="scrollbar-thin">
 <main id="container"></main>
 
 <noscript>

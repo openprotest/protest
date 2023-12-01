@@ -614,7 +614,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 		
-		const [pingArray, memoryArray, diskArray] = await Promise.all([
+		let [pingArray, memoryArray, diskArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
@@ -633,6 +633,43 @@ class DeviceView extends View {
 				return new Uint8Array(buffer);
 			})()
 		]);
+
+		const firstInstantBuffer = new Uint8Array(pingArray.slice(0, 8)).buffer;
+		const firstInstantDate = Number(new DataView(firstInstantBuffer).getBigInt64(0, true));
+
+		if (firstInstantDate > Date.now() - DeviceView.DAY_TICKS * 15) {
+			let oYear = new Date().getFullYear();
+			let oMonth = new Date().getMonth() - 1;
+
+			if (oMonth === -1) {
+				oYear--;
+				oMonth = 11;
+			}
+
+			const [oldPingArray, oldMemoryArray, oldDiskArray] = await Promise.all([
+				(async ()=> {
+					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth+1}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				})(),
+	
+				(async ()=> {
+					const response = await fetch(`lifeline/memory/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				})(),
+	
+				(async ()=> {
+					const response = await fetch(`lifeline/disk/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				})()
+			]);
+
+			pingArray = [...oldPingArray, ...pingArray];
+			memoryArray = [...oldMemoryArray, ...memoryArray];
+			diskArray = [...oldDiskArray, ...diskArray];
+		}
 
 		const GenerateGraph = (data, label, type)=> {
 			const graphBox = document.createElement("div");
