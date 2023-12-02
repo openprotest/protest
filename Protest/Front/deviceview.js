@@ -614,9 +614,15 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 		
-		let [pingArray, memoryArray, diskArray] = await Promise.all([
+		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskUsageArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
+				const buffer = await response.arrayBuffer();
+				return new Uint8Array(buffer);
+			})(),
+
+			(async ()=> {
+				const response = await fetch(`lifeline/cpu/view?file=${this.params.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
@@ -629,6 +635,12 @@ class DeviceView extends View {
 
 			(async ()=> {
 				const response = await fetch(`lifeline/disk/view?file=${this.params.file}`);
+				const buffer = await response.arrayBuffer();
+				return new Uint8Array(buffer);
+			})(),
+
+			(async ()=> {
+				const response = await fetch(`lifeline/diskusage/view?file=${this.params.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})()
@@ -646,9 +658,15 @@ class DeviceView extends View {
 				oMonth = 11;
 			}
 
-			const [oldPingArray, oldMemoryArray, oldDiskArray] = await Promise.all([
+			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskUsageArray] = await Promise.all([
 				(async ()=> {
 					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth+1}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				})(),
+
+				(async ()=> {
+					const response = await fetch(`lifeline/cpu/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
@@ -663,12 +681,20 @@ class DeviceView extends View {
 					const response = await fetch(`lifeline/disk/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
+				})(),
+
+				(async ()=> {
+					const response = await fetch(`lifeline/diskusage/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
 				})()
 			]);
 
 			pingArray = [...oldPingArray, ...pingArray];
+			cpuArray = [...oldCpuArray, ...cpuArray];
 			memoryArray = [...oldMemoryArray, ...memoryArray];
-			diskArray = [...oldDiskArray, ...diskArray];
+			diskCapacityArray = [...oldDiskCapacityArray, ...diskCapacityArray];
+			diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
 		}
 
 		const GenerateGraph = (data, label, type)=> {
@@ -794,6 +820,26 @@ class DeviceView extends View {
 					lastY = y;
 				}
 			}
+			else if (type === "percent") {
+				for (let i = 0; i < data.length; i++) {
+					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let y = 104 - Math.round(data[i].v);
+					
+					d += `L ${x} ${y} `;
+	
+					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
+
+					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					dot.setAttribute("cx", x);
+					dot.setAttribute("cy", y);
+					dot.setAttribute("r", 3);
+					dot.setAttribute("fill", this.VolumeToColor(data[i].v, 100));
+					svg.appendChild(dot);
+	
+					lastX = x;
+					lastY = y;
+				}
+			}
 
 			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} 105 Z`;
 			path.setAttribute("d", d);
@@ -832,7 +878,10 @@ class DeviceView extends View {
 				}
 				else if (type === "vol") {
 					let percent = data[closestIndex].t > 0? Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10 : 0;
-					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v)} / ${UI.SizeToString(data[closestIndex].t)} (${percent})%`;
+					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v)} / ${UI.SizeToString(data[closestIndex].t)} (${percent}%)`;
+				}
+				else if (type === "percent") {
+					infoBox.textContent = `${data[closestIndex].v}%`;
 				}
 			};
 
@@ -853,7 +902,22 @@ class DeviceView extends View {
 				data.push({d:date, v:rtt});
 			}
 
+			console.log(data);
+
+
 			GenerateGraph(data, "Roundtrip time", "line");
+		}
+
+		if (cpuArray.length > 0) {
+			let data = [];
+			for (let i=0; i<cpuArray.length-8; i+=9) {
+				const dateBuffer = new Uint8Array(cpuArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+				const usage =  cpuArray[i+8];
+				data.push({d:date, v:usage});
+			}
+	
+			GenerateGraph(data, "CPU usage", "percent");
 		}
 
 		if (memoryArray.length > 0) {
@@ -874,24 +938,24 @@ class DeviceView extends View {
 			GenerateGraph(data, "Memory", "vol");
 		}
 
-		if (diskArray.length > 0) {
+		if (diskCapacityArray.length > 0) {
 			const data = new Map();
 			let index = 0;
-			while (index < diskArray.length) {
-				const dateBuffer = new Uint8Array(diskArray.slice(index,index+8)).buffer;
+			while (index < diskCapacityArray.length) {
+				const dateBuffer = new Uint8Array(diskCapacityArray.slice(index,index+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
 				
-				const count = (diskArray[index+9] << 8) | diskArray[index+8]; // | (diskArray[index+11] << 24) | (diskArray[index+10] << 16)
+				const count = (diskCapacityArray[index+9] << 8) | diskCapacityArray[index+8]; // | (diskCapacityArray[index+11] << 24) | (diskCapacityArray[index+10] << 16)
 
 				index += 12;
 
 				for (let j=0; j<count; j++) {
-					const caption = String.fromCharCode(diskArray[index + j*17]);
+					const caption = String.fromCharCode(diskCapacityArray[index + j*17]);
 
-					const usedBuffer = new Uint8Array(diskArray.slice(index + j*17+1, index + j*17+9)).buffer;
+					const usedBuffer = new Uint8Array(diskCapacityArray.slice(index + j*17+1, index + j*17+9)).buffer;
 					const used = Number(new DataView(usedBuffer).getBigInt64(0, true));
 
-					const totalBuffer = new Uint8Array(diskArray.slice(index + j*17+9, index + j*17+17)).buffer;
+					const totalBuffer = new Uint8Array(diskCapacityArray.slice(index + j*17+9, index + j*17+17)).buffer;
 					const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 
 					if (!data.has(caption)) {
@@ -906,6 +970,18 @@ class DeviceView extends View {
 			data.forEach ((value, key)=> {
 				GenerateGraph(value, `Disk capacity (${key})`, "vol");
 			});
+		}
+
+		if (diskUsageArray.length > 0) {
+			let data = [];
+			for (let i=0; i<diskUsageArray.length-8; i+=9) {
+				const dateBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+				const usage =  diskUsageArray[i+8];
+				data.push({d:date, v:usage});
+			}
+
+			GenerateGraph(data, "CPU usage", "percent");
 		}
 	}
 

@@ -262,7 +262,7 @@ internal static partial class Lifeline {
             try {
                 using BinaryWriter writer = new BinaryWriter(cpuStream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write(100 - cpuUsage); //1 byte
+                writer.Write((byte)(100 - cpuUsage)); //1 byte
             }
             catch { }
         }
@@ -275,7 +275,7 @@ internal static partial class Lifeline {
             try {
                 using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write(100 - diskUsage); //1 byte
+                writer.Write((byte)(100 - diskUsage)); //1 byte
             }
             catch { }
         }
@@ -315,6 +315,26 @@ internal static partial class Lifeline {
 
     }
 
+    public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {
+        if (parameters is null) { return null; }
+
+        parameters.TryGetValue("file", out string file);
+        if (String.IsNullOrEmpty(file)) return null;
+
+        parameters.TryGetValue("date", out string date);
+        if (String.IsNullOrEmpty(date)) {
+            DateTime now = DateTime.Now;
+            date = now.ToString("yyyyMM");
+        }
+
+        try {
+            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}{type}{Data.DELIMITER}{file}{Data.DELIMITER}{date}");
+        }
+        catch {
+            return null;
+        }
+    }
+
     public static byte[] ViewPing(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
 
@@ -335,43 +355,4 @@ internal static partial class Lifeline {
         }
     }
 
-    public static byte[] ViewMemory(Dictionary<string, string> parameters) {
-        if (parameters is null) { return null; }
-
-        parameters.TryGetValue("file", out string file);
-        if (String.IsNullOrEmpty(file)) return null;
-
-        parameters.TryGetValue("date", out string date);
-        if (String.IsNullOrEmpty(date)) {
-            DateTime now = DateTime.Now;
-            date = now.ToString("yyyyMM");
-        }
-
-        try {
-            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}{Data.DELIMITER}{date}");
-        }
-        catch {
-            return null;
-        }
-    }
-
-    public static byte[] ViewDisk(Dictionary<string, string> parameters) {
-        if (parameters is null) { return null; }
-
-        parameters.TryGetValue("file", out string file);
-        if (String.IsNullOrEmpty(file)) return null;
-
-        parameters.TryGetValue("date", out string date);
-        if (String.IsNullOrEmpty(date)) {
-            DateTime now = DateTime.Now;
-            date = now.ToString("yyyyMM");
-        }
-
-        try {
-            return File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{file}{Data.DELIMITER}{date}");
-        }
-        catch {
-            return null;
-        }
-    }
 }
