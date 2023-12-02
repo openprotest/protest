@@ -101,7 +101,7 @@
 }
 
 .address-book-list {
-	margin: 20px 20px;
+	margin: 20px 40px;
 	text-align: center;
 }
 
@@ -228,8 +228,9 @@
 	border-radius: 8px;
 	padding: 8px;
 	box-sizing: border-box;
-	-webkit-user-select: text; user-select: text;
 	overflow-y: auto;
+	scroll-behavior: smooth;
+	-webkit-user-select: text; user-select: text;
 
 	backdrop-filter: blur(8px);
 }
@@ -243,6 +244,8 @@
 	border-bottom-width: 2px;
 	border-bottom-color: var(--clr-accent);
 	border-bottom-style: solid;
+	position: sticky;
+	top: 0px;
 }
 
 .address-book-preview > a:nth-child(n+2),
@@ -296,17 +299,27 @@
 
 .address-book-qrcode {
 	background-color:  transparent !important;
+	height: 100%;
+	text-align: center;
 	padding: 4px !important;
 	margin: 4px auto;
-	text-align: center;
+	scroll-snap-align: start;
 }
 
 .address-book-qrcode > div {
 	display: inline-block;
 	padding: 8px;
-	background-color: #C0C0C0;
 	border-radius: 8px;
 	width: 150px;
+	margin-top: 40px;
+	box-shadow: rgba(0,0,0,.5) 0 1px 4px;
+}
+
+.address-book-qrcode > div > div { /*qr text*/
+	padding-top: 4px;
+	font-family: monospace;
+	white-space: normal;
+	word-break: break-word;
 }
 
 .address-book-close-button {
@@ -335,7 +348,6 @@
 	.address-book-search-box {
 		width: calc(100% - 40px);
 	}
-
 	.address-book-button {
 		visibility: hidden;
 		opacity: 0;
@@ -345,13 +357,19 @@
 @media (prefers-color-scheme: light) {
 	.address-book-list > div,
 	.address-book-preview {
-		background-color: rgba(224,232,234,.9);
+		background-color: rgba(224,232,234,.96);
+	}
+	.address-book-qrcode > div {
+		background-color: white;
 	}
 }
 
 @media (prefers-color-scheme: dark) {
 	.address-book-list > div,
 	.address-book-preview {
-		background-color: color-mix(in hsl, var(--clr-pane) 95%, transparent 5%);
+		background-color: color-mix(in hsl, var(--clr-pane) 96%, transparent 4%);
+	}
+	.address-book-qrcode > div {
+		background-color: #C0C0C0;
 	}
 }

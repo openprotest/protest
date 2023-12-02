@@ -172,75 +172,133 @@ class AddressBook extends Window {
 			preview.appendChild(label);
 		}
 
+		let qrList = [];
+
 		if (this.contacts[index].email) {
 			let values = this.contacts[index].email.split(";");
 			for (let i=0; i<values.length; i++) {
+				const trimmed = values[i].trim();
+				if (trimmed.length === 0) continue;
 				const label = document.createElement("a");
-				label.textContent = values[i].trim();
-				label.href = `mailto:${values[i].trim()}`;
+				label.textContent = trimmed;
+				label.href = `mailto:${trimmed}`;
 				label.className = "email";
 				preview.appendChild(label);
+				qrList.push(trimmed);
 			}
 		}
 
 		if (this.contacts[index].telephone) {
 			let values = this.contacts[index].telephone.split(";");
 			for (let i=0; i<values.length; i++) {
+				const trimmed = values[i].trim();
+				if (trimmed.length === 0) continue;
 				const label = document.createElement("a");
-				label.textContent = values[i].trim();
-				label.href = `tel:${values[i].trim()}`;
+				label.textContent = trimmed;
+				label.href = `tel:${trimmed}`;
 				label.className = "telephone";
 				preview.appendChild(label);
+				if (values[i].length > 7) {
+					qrList.push(trimmed);
+				}
 			}
 		}
 
 		if (this.contacts[index].mobile) {
 			let values = this.contacts[index].mobile.split(";");
 			for (let i=0; i<values.length; i++) {
+				const trimmed = values[i].trim();
+				if (trimmed.length === 0) continue;
 				const label = document.createElement("a");
-				label.textContent = values[i].trim();
-				label.href = `tel:${values[i].trim()}`;
+				label.textContent = trimmed;
+				label.href = `tel:${trimmed}`;
 				label.className = "mobile";
 				preview.appendChild(label);
+				qrList.push(trimmed);
 			}
+		}
 
+		if (qrList.length > 0) {
 			const qrButton = document.createElement("div");
 			qrButton.className = "qr-icon";
 			preview.appendChild(qrButton);
+
+			preview.style.scrollSnapType = "y mandatory";
+			preview.style.scrollSnapAlign = "bottom";
 			
+			const BuildQrCode = (value, label, type, size=150)=> {
+				const qrContainer = document.createElement("div");
+				qrContainer.className = "address-book-qrcode";
+				preview.appendChild(qrContainer);
+
+				const qrBox = document.createElement("div");
+				qrContainer.appendChild(qrBox);
+
+				new QRCode(qrBox, {
+					text: type==="vcard" ? value : `${type}:${value}`,
+					width: size,
+					height: size,
+					colorDark : "#202020",
+					colorLight : "transparent",
+					correctLevel : QRCode.CorrectLevel.L
+				});
+
+				const qrText = document.createElement("div");
+				qrText.textContent = label;
+				qrBox.appendChild(qrText);
+
+				return qrContainer;
+			};
+
 			qrButton.onclick = ()=>{
 				qrButton.style.display = "none";
-		
-				for (let i=0; i<values.length; i++) {
-					const qrContainer = document.createElement("div");
-					qrContainer.className = "address-book-qrcode";
-					preview.appendChild(qrContainer);
+				for (let i=qrList.length-1; i>=0; i--) {
+					BuildQrCode(qrList[i], qrList[i], qrList[i].includes("@") ? "mailto" : "tel");
+				}
 
-					const qrBox = document.createElement("div");
-					qrContainer.appendChild(qrBox);
-
-					new QRCode(qrBox, {
-						text: `tel:${values[i].trim()}`,
-						width: 150,
-						height: 150,
-						colorDark : "#202020",
-						colorLight : "transparent",
-						correctLevel : QRCode.CorrectLevel.L
-					});
-
-					const qrText = document.createElement("div");
-					qrText.textContent = values[i].trim();
-					qrText.style.paddingTop = "4px";
-					qrBox.appendChild(qrText);
-
-					if (i == 0) {
-						qrContainer.scrollIntoView({ behavior: "smooth" });
+				const NL = String.fromCharCode(13) + String.fromCharCode(10);
+				let vCard = "";
+				vCard += "BEGIN:VCARD" + NL;
+				vCard += "VERSION:2.1" + NL;
+	
+				if (this.contacts[index].name && this.contacts[index].name.length > 0) {
+					let split = this.contacts[index].name.split(" ");
+					if (split.length > 1) {
+						vCard += "N:" + split[0] + ";" + split[1] + ";;" + NL;
+						vCard += "FN:" + split[0] + " " + split[1] + NL;
+					}
+					else {
+						vCard += "FN:" + this.contacts[index].name + NL;
 					}
 				}
+				else {
+					vCard += "FN:" + this.contacts[index].title + NL;
+				}
+	
+				if (this.contacts[index].title && this.contacts[index].title.length > 0) vCard += "TITLE:" + this.contacts[index].title + NL;
+				if (this.contacts[index].department && this.contacts[index].department.length > 0) vCard += "ORG:" + this.contacts[index].department + NL;
+				if (this.contacts[index].email && this.contacts[index].email.length > 0) vCard += "EMAIL:" + this.contacts[index].email + NL;
+	
+				if (this.contacts[index].telephone) {
+					let telephone = this.contacts[index].telephone.split(";").map(o=>o.trim());
+					for (let j=0; j<telephone.length; j++) {
+						vCard += "TEL;WORK:" + telephone[j].replace(" ", "") + NL;
+					}
+				}
+	
+				if (this.contacts[index].mobile) {
+					let mobile = this.contacts[index].mobile.split(";").map(o=>o.trim());
+					for (let j=0; j<mobile.length; j++) {
+						vCard += "TEL;CELL:" + mobile[j].replace(" ", "") + NL;
+					}
+				}
+	
+				vCard += "END:VCARD" + NL;
+	
+				const vCardContainer = BuildQrCode(vCard, "Save contact", "vcard", 220);
+				vCardContainer.firstChild.style.width = "220px";
 			};
 		}
-
-
 
 		const closeButton = document.createElement("div");
 		closeButton.className = "address-book-close-button";
