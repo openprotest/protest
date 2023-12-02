@@ -485,9 +485,9 @@ const MENU = {
 
 				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v : null;
 
-				let title = LOADER.users.data[file].title ? LOADER.users.data[file].title.v : null;
+				let title = LOADER.users.data[file]["display name"] ? LOADER.users.data[file]["display name"].v : null;
+				title ??= LOADER.users.data[file].title ? LOADER.users.data[file].title.v : null;
 				title ??= LOADER.users.data[file]["e-mail"] ? LOADER.users.data[file]["e-mail"].v : null;
-				title ??= LOADER.users.data[file]["display name"] ? LOADER.users.data[file]["display name"].v : null;
 
 				const newItem = document.createElement("div");
 				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
