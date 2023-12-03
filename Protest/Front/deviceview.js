@@ -697,13 +697,14 @@ class DeviceView extends View {
 			diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
 		}
 
-		const GenerateGraph = (data, label, type)=> {
+		const GenerateGraph = (data, label, type, icon)=> {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
 			this.liveD.appendChild(graphBox);
 
 			const labelBox = document.createElement("div");
 			labelBox.style.position = "absolute";
+			labelBox.style.zIndex = "1";
 			labelBox.style.left = "2px";
 			labelBox.style.top = "108px";
 			labelBox.style.width = "108px";
@@ -715,6 +716,17 @@ class DeviceView extends View {
 			labelBox.style.color = "var(--clr-light)";
 			labelBox.textContent = label;
 			graphBox.appendChild(labelBox);
+
+			const iconBox = document.createElement("div")
+			iconBox.style.position = "absolute";
+			iconBox.style.zIndex = "1";
+			iconBox.style.left = "24px";
+			iconBox.style.top = "24px";
+			iconBox.style.width = "64px";
+			iconBox.style.height = "64px";
+			iconBox.style.backgroundImage = `url(${icon})`;
+			iconBox.style.backgroundSize = "64px 64px";
+			graphBox.appendChild(iconBox);
 
 			const infoBox = document.createElement("div");
 			infoBox.style.position = "absolute";
@@ -795,11 +807,6 @@ class DeviceView extends View {
 				}
 			}
 			else if (type === "vol") {
-				//let max = 0;
-				//for (let i = 0; i < data.length; i++) {
-				//	if (max < data[i].t) { max = data[i].t; }
-				//}
-
 				for (let i = 0; i < data.length; i++) {
 					if (data[i].t === 0) continue;
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
@@ -833,7 +840,7 @@ class DeviceView extends View {
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
 					dot.setAttribute("r", 3);
-					dot.setAttribute("fill", this.VolumeToColor(data[i].v, 100));
+					dot.setAttribute("fill", this.PercentToColor(data[i].v, 100));
 					svg.appendChild(dot);
 	
 					lastX = x;
@@ -902,10 +909,7 @@ class DeviceView extends View {
 				data.push({d:date, v:rtt});
 			}
 
-			console.log(data);
-
-
-			GenerateGraph(data, "Roundtrip time", "line");
+			GenerateGraph(data, "Roundtrip time", "line", "mono/ping.svg?light");
 		}
 
 		if (cpuArray.length > 0) {
@@ -917,7 +921,7 @@ class DeviceView extends View {
 				data.push({d:date, v:usage});
 			}
 	
-			GenerateGraph(data, "CPU usage", "percent");
+			GenerateGraph(data, "CPU usage", "percent", "mono/cpu.svg?light");
 		}
 
 		if (memoryArray.length > 0) {
@@ -935,7 +939,7 @@ class DeviceView extends View {
 				data.push({d:date, v:used*1024, t:total*1024});
 			}
 
-			GenerateGraph(data, "Memory", "vol");
+			GenerateGraph(data, "Memory", "vol", "mono/ram.svg?light");
 		}
 
 		if (diskCapacityArray.length > 0) {
@@ -968,7 +972,7 @@ class DeviceView extends View {
 			}
 
 			data.forEach ((value, key)=> {
-				GenerateGraph(value, `Disk capacity (${key})`, "vol");
+				GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg?light");
 			});
 		}
 
@@ -981,7 +985,7 @@ class DeviceView extends View {
 				data.push({d:date, v:usage});
 			}
 
-			GenerateGraph(data, "CPU usage", "percent");
+			GenerateGraph(data, "Disk usage", "percent", "mono/hdd.svg?light");
 		}
 	}
 
@@ -999,6 +1003,14 @@ class DeviceView extends View {
 		if (p > .9) return "var(--clr-error)";
 		if (p > .85) return "var(--clr-orange)";
 		if (p > .80) return "var(--clr-warning)";
+		return "hsl(92, 66%, 50%)";
+	}
+
+	PercentToColor(value, total) {
+		let p = value / total;
+		if (p > .9) return "var(--clr-error)";
+		if (p > .75) return "var(--clr-orange)";
+		if (p > .6) return "var(--clr-warning)";
 		return "hsl(92, 66%, 50%)";
 	}
 	

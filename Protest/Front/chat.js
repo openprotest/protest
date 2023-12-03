@@ -15,6 +15,7 @@ class Chat extends Window {
 
 		this.userStream = null;
 		this.displayStreams = [];
+		this.localStreams = [];
 		this.remoteStreams = [];
 
 		this.isMicEnable = false;
@@ -59,9 +60,9 @@ class Chat extends Window {
 		this.displayButton.style.backgroundColor = "transparent";
 
 		//TODO:
-		this.micButton.disabled = true;
-		this.camButton.disabled = true;
-		this.displayButton.disabled = true;
+		//this.micButton.disabled = true;
+		//this.camButton.disabled = true;
+		//this.displayButton.disabled = true;
 
 		this.content.append(this.micButton, this.camButton, this.displayButton);
 
@@ -138,58 +139,72 @@ class Chat extends Window {
 				}
 			});
 
-			const videoTrack = stream.getVideoTracks()[0];
-			videoTrack.onended = ()=> {};
-
 			const element = this.CreateLocalStreamElement(true);
 			this.localStreamsBox.appendChild(element.container);
-
 			element.videoFeedback.srcObject = stream;
-			element.videoFeedback.play();
+			element.videoFeedback.muted = true;
 
-			this.userStream = {
+			const userStream = {
 				stream: stream,
 				element: element
 			};
+
+			this.userStream = userStream;
+
+			const videoTrack = stream.getVideoTracks()[0];
+			videoTrack.onended = ()=> {
+				this.localStreamsBox.removeChild(element.container);
+				this.userStream = null;
+				this.AdjustUI();
+			};
+			
+			element.videoFeedback.play();
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/mic.svg");
 			this.micButton.style.backgroundColor = "transparent";
 			this.micButton.style.backgroundImage = "url(mono/mic.svg?light)";
 		}
-		finally {
-			this.AdjustUI();
-		}
+
+		this.AdjustUI();
 	}
 
 	async SetupLocalDisplayMediaStream() {
-		/*try*/ {
+		try {
 			const stream = await navigator.mediaDevices.getDisplayMedia({
 				video: true
 			});
 
-			const videoTrack = stream.getVideoTracks()[0];
-			videoTrack.onended = ()=> {};
-
 			const element = this.CreateLocalStreamElement();
 			this.localStreamsBox.appendChild(element.container);
-
 			element.videoFeedback.srcObject = stream;
-			element.videoFeedback.play();
 
-			this.displayStreams.push({
+			const displayStream = {
 				stream: stream,
 				element: element
-			});
+			};
+
+			this.displayStreams.push(displayStream);
+
+			const videoTrack = stream.getVideoTracks()[0];
+			videoTrack.onended = ()=> {
+				this.localStreamsBox.removeChild(element.container);
+				let index = this.displayStreams.indexOf(displayStream);
+				if (index > -1) {
+					this.displayStreams.splice(index, 1);
+				}
+				this.AdjustUI();
+			};
+
+			element.videoFeedback.play();
 		}
-		/*catch (ex) {
+		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/screenshare.svg");
 			this.displayButton.style.backgroundColor = "transparent";
 			this.displayButton.style.backgroundImage = "url(mono/screenshare.svg?light)";
 		}
-		finally {
-			this.AdjustUI();
-		}*/
+
+		this.AdjustUI();
 	}
 
 	async InitializeRtc() {
@@ -279,13 +294,13 @@ class Chat extends Window {
 			this.chatBox.style.left = "150px";
 			this.chatBox.style.width = "unset";
 		}
-		else if ((hasUserStream || hasDisplayStreams) && hasRemoteStreams)  {
+		else if ((hasUserStream || hasDisplayStreams) && hasRemoteStreams) {
 			this.localStreamsBox.style.visibility = "visible";
 			this.localStreamsBox.style.opacity = "1";
 			this.chatBox.style.left = "unset";
 			this.chatBox.style.width = "33%";
 		}
-		else if (!hasRemoteStreams) {
+		else if (hasRemoteStreams) {
 			this.localStreamsBox.style.visibility = "hidden";
 			this.localStreamsBox.style.opacity = "0";
 			this.chatBox.style.left = "unset";
@@ -348,8 +363,6 @@ class Chat extends Window {
 		if (this.userStream === null) {
 			this.SetupLocalUserMediaStream();
 		}
-
-		this.AdjustUI();
 	}
 
 	async Webcam_onclick() {
@@ -357,14 +370,10 @@ class Chat extends Window {
 		if (this.userStream === null) {
 			this.SetupLocalUserMediaStream();
 		}
-
-		this.AdjustUI();
 	}
 
 	async Display_onclick() {
 		this.SetupLocalDisplayMediaStream();
-		
-		this.AdjustUI();
 	}
 
 	HandleMessage(message) {
@@ -516,7 +525,6 @@ class Chat extends Window {
 	}
 
 	CreateEmojiBubble(url, direction, sender, alias, color, time, id=null) {
-		console.log(color);
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		
 		const emojiBox = document.createElement("div");

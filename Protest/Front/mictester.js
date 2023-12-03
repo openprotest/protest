@@ -461,8 +461,18 @@ class MicTester extends Window {
 		const referenceFrequency = 440; //A4
 		const referenceNote = 69; //MIDI note number for A4
 	
-		const cents = Math.round(1200 * Math.log2(frequency / referenceFrequency)) % 1200;
-		const note = 12 * Math.log2(frequency / referenceFrequency) + referenceNote;
+		let cents = Math.round(1200 * Math.log2(frequency / referenceFrequency)) % 1200;
+		let note = 12 * Math.log2(frequency / referenceFrequency) + referenceNote;
+
+		if (cents > 600) {
+			note += 1;
+			cents -= 1200;
+		}
+		else if (cents < -600){
+			note -= 1;
+			cents += 1200;
+		}
+
 		const roundedNote = Math.round(note);
 
 		const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

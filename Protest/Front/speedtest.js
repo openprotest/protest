@@ -141,7 +141,6 @@ class SpeedTest extends Window {
 					callback(index, "ping", startTime - openTime);
 				}
 				else if (xhr.readyState === XMLHttpRequest.LOADING) {
-					console.log(this.isClosed);
 					if (this.isClosed) {
 						xhr.abort();
 						return;

@@ -423,7 +423,6 @@ class About extends Tabs {
 			/*let fileReader = new FileReader();
 			fileReader.onload = ()=> {
 				let fileUrl = fileReader.result;
-				console.log(fileUrl);
 			};
 			fileReader.readAsDataURL(file);*/
 		};
