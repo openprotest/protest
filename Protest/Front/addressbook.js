@@ -120,7 +120,8 @@ class AddressBook extends Window {
 	Contact_onclick(element, index) {
 		const dim = document.createElement("div");
 		dim.className = "win-dim";
-		dim.style.backgroundColor = "rgba(0,0,0,0)";
+		dim.style.backgroundColor = "rgba(32,32,32,.25)";
+		dim.style.animation = "fade-in .2s 1";
 		dim.style.zIndex = "2";
 
 		if (this.popOutWindow) {
@@ -316,8 +317,11 @@ class AddressBook extends Window {
 		dim.onclick = ()=> {
 			dim.onclick = ()=>{};
 
-			closeButton.style.opacity = "0";
+			dim.style.background = "rgba(0,0,0,0)";
+			dim.style.transition = ".2s";
+
 			preview.style.transition = ".2s";
+			closeButton.style.opacity = "0";
 
 			if (this.params.view === "card") {
 				preview.style.width = `${element.clientWidth*2}px`;
