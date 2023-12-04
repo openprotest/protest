@@ -152,7 +152,7 @@ const KEEP = {
 
 
 		case "startfetch":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].tabTask.style.visibility = "visible";
 				WIN.array[i].tabTask.style.animation = "slide-in .4s 1";
@@ -167,12 +167,14 @@ const KEEP = {
 			break;
 
 		case "updatefetch":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].lblStatusValue.textContent = message.task.status;
 				WIN.array[i].lblProgressValue.textContent = `${message.task.completed}/${message.task.total}`;
 				WIN.array[i].lblEtcValue.textContent = message.task.etc;
 				WIN.array[i].divProgress.style.width = `${100 * message.task.completed / message.task.total}%`;
+				WIN.array[i].tabTask.style.visibility = "visible";
+				WIN.array[i].tabTask.style.animation = "slide-in .4s 1";
 			}
 			break;
 

@@ -395,8 +395,6 @@ class DeviceView extends View {
 				link    : obj.i[i].l
 			});
 
-			LOADER.devices
-
 			front.onmouseenter = ()=> {
 				this.floating.textContent = "";
 
@@ -460,10 +458,10 @@ class DeviceView extends View {
 					if (LOADER.devices.data[file].hasOwnProperty("name")) {
 						linkIcon.textContent = LOADER.devices.data[file]["name"].v;
 					}
-					else if (LOADER.devices.data[file].hasOwnProperty("hostname") && LOADER.devices.data[file]["hostname"].v !== name) {
-						linkIcon.textContent= file["hostname"].v;
+					else if (LOADER.devices.data[file].hasOwnProperty("hostname")) {
+						linkIcon.textContent = file["hostname"].v;
 					}
-					else if (LOADER.devices.data[file].hasOwnProperty("IP")) {
+					else if (LOADER.devices.data[file].hasOwnProperty("ip")) {
 						linkIcon.textContent = LOADER.devices.data[file]["ip"].v;
 					}
 

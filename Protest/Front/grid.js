@@ -115,8 +115,6 @@ class Grid extends Window {
 
 		this.attributeElements = [];
 		for (let i=0; i < attributes.length; i++) {
-			if (attributes[i].includes("password")) continue;
-
 			this.CreateAttribute(attributes[i], defaultColumns.includes(attributes[i]));
 		}
 

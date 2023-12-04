@@ -321,7 +321,7 @@ internal static class Fetch {
                 if (ipNumber >= 2851995648 && ipNumber >= 184549375)  continue;  //169.254.0.0 <> 169.254.255.255
                 if (ipNumber >= 3758096384)                           continue; // > 224.0.0.0
 
-                string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress.ToString(), true));
+                string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress?.ToString(), true));
                 if (ipLocation is null) continue;
                 data.TryAdd("location", new string[] { ipLocation, "Locate IP", string.Empty });
             }
@@ -566,7 +566,7 @@ internal static class Fetch {
 
             if (task.cancellationToken.IsCancellationRequested) {
                 KeepAlive.Broadcast("{\"action\":\"abortfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-                Logger.Action(origin, "Fetch task aborted");
+                Logger.Action(origin, "Devices fetch task aborted");
 
                 task.Dispose();
                 task = null;
@@ -584,13 +584,13 @@ internal static class Fetch {
             };
 
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
-            Logger.Action(origin, "Fetch task succesully finished");
+            Logger.Action(origin, "Fetch task finished");
         });
 
         KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-        Logger.Action(origin, "Start fetch task");
+        Logger.Action(origin, "Devices fetch task started");
 
-        task = new TaskWrapper("Fetching devices") {
+        task = new TaskWrapper("Fetch devices") {
             thread = thread,
             origin = origin,
             TotalSteps = hosts.Length,
@@ -667,13 +667,13 @@ internal static class Fetch {
             };
 
             KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
-            Logger.Action(origin, "Fetch task succesully finished");
+            Logger.Action(origin, "Users fetch task finished");
         });
 
         KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
-        Logger.Action(origin, "Start fetch task");
+        Logger.Action(origin, "Users fetch task started");
 
-        task = new TaskWrapper("Fetching users") {
+        task = new TaskWrapper("Fetch users") {
             thread = thread,
             origin = origin,
             TotalSteps = users.Length,
@@ -814,12 +814,13 @@ internal static class Fetch {
 
         if (result?.type == Type.devices) {
             KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+            Logger.Action(origin, "Devices fetched data approved");
         }
         else if (result?.type == Type.users) {
             KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
+            Logger.Action(origin, "Users fetched data approved");
         }
 
-        Logger.Action(origin, "Fetched data approved");
 
         result = null;
         task = null;

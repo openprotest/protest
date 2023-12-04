@@ -90,9 +90,11 @@ public sealed class Database {
             byte[] bytes = File.ReadAllBytes(file.FullName);
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
+            ConcurrentDictionary<string, Attribute> attributes = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(plain, serializerOptions);
+
             return new Entry {
                 filename = file.Name,
-                attributes = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(plain, serializerOptions),
+                attributes = attributes,
                 syncWrite = new object()
             };
         }
@@ -176,10 +178,10 @@ public sealed class Database {
                 lastModTimestamp = Math.Max(lastModTimestamp, attr.date);
             }
 
-            //if password is null, keep old value
+            //if password is empty-string, keep old value
             foreach (KeyValuePair<string, Attribute> pair in modifications) {
-                if (pair.Key.Contains("password") &&
-                    pair.Value.value.Length == 0 &&
+                if (pair.Key.Contains("password", StringComparison.OrdinalIgnoreCase) &&
+                    String.IsNullOrEmpty(pair.Value.value) &&
                     oldEntry.attributes.TryGetValue(pair.Key, out Attribute oldPassword)) {
                     modifications[pair.Key] = oldPassword;
                 }
@@ -187,23 +189,12 @@ public sealed class Database {
 
             if (lastModTimestamp > 0) { //create timeline
                 try {
-                    //remove passwords
-                    List<string> toRemove = new List<string>();
-                    foreach (KeyValuePair<string, Attribute> pair in oldEntry.attributes) {
-                        if (pair.Key.Contains("password"))
-                            toRemove.Add(pair.Key);
-                    }
-                    for (int i = 0; i < toRemove.Count; i++) {
-                        oldEntry.attributes.TryRemove(toRemove[i], out _);
-                    }
-
                     DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DELIMITER}{file}_");
-                    if (!timelineDir.Exists) timelineDir.Create();
+                    if (!timelineDir.Exists) { timelineDir.Create(); }
 
-                    byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attrubutesSerializerOptionsWithPassword);
+                    byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attrubutesSerializerOptions); //remove password from timeline
                     byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
                     File.WriteAllBytes($"{timelineDir.FullName}{Data.DELIMITER}{lastModTimestamp}", cipher);
-
                 }
                 catch (Exception ex) {
                     Logger.Error($"Failed to create timeline object for {file}.\n{ex.Message}");
@@ -216,8 +207,8 @@ public sealed class Database {
             SaveMethod.createnew => SaveNew(file, modifications, origin),                 //keep the old file, create new
             SaveMethod.overwrite => SaveOverwrite(file, modifications, oldEntry, origin), //ignore previous attributes
             SaveMethod.append    => SaveAppend(file, modifications, oldEntry, origin),    //append new attributes
-            SaveMethod.merge     => SaveMerge(file, modifications, oldEntry, origin),     //merged all attributes
-            _ => null,
+            SaveMethod.merge     => SaveMerge(file, modifications, oldEntry, origin),     //merge all attributes
+            _ => null
         };
 
         if (newEntry is null) return true;
@@ -235,7 +226,6 @@ public sealed class Database {
         broadcastMessage.Append($"\"version\":\"{version}\",");
 
         broadcastMessage.Append("\"obj\":");
-
         broadcastMessage.Append(JsonSerializer.Serialize(newEntry.attributes, attrubutesSerializerOptions));
 
         broadcastMessage.Append('}');
@@ -263,7 +253,7 @@ public sealed class Database {
         //keep old origin and date, if data didn't change
         foreach (KeyValuePair<string, Attribute> pair in modifications) {
             if (!oldEntry.attributes.ContainsKey(pair.Key)) continue;
-            if (pair.Value.value != oldEntry.attributes[pair.Key].value) continue;
+            if (oldEntry.attributes[pair.Key].value != pair.Value.value) continue;
             pair.Value.origin = oldEntry.attributes[pair.Key].origin;
             pair.Value.date = oldEntry.attributes[pair.Key].date;
         }
@@ -282,7 +272,7 @@ public sealed class Database {
             }
         }
 
-        Logger.Action(origin, $"Modify on entry {this.name} database: {file}");
+        Logger.Action(origin, $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
     private Entry SaveMerge(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
@@ -311,7 +301,7 @@ public sealed class Database {
             using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
             payload = reader.ReadToEnd();
 
-#pragma warning disable CA1869 // Cache and reuse
+#pragma warning disable CA1869 //Cache and reuse
             JsonSerializerOptions options = new JsonSerializerOptions();
 #pragma warning restore CA1869
             options.Converters.Add(new GridDataConverter(origin));

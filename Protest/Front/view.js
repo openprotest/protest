@@ -102,7 +102,7 @@ class View extends Window {
 		this.SetupFloatingMenu();
 	}
 
-	CreateAttribute(name, value, origin, date, editMode = false) {
+	CreateAttribute(name, value, origin, date, editMode=false) {
 		const newAttribute = document.createElement("div");
 
 		const nameBox = document.createElement("input");
@@ -185,11 +185,19 @@ class View extends Window {
 			nameBox.setAttribute("list", this.attributeAutofill.id);
 
 			nameBox.oninput = ()=> {
-				if (nameBox.value.toLowerCase() === "type") {
+				const nameLowerCase = nameBox.value.toLowerCase();
+				if (nameLowerCase === "type") {
 					valueBox.setAttribute("list", "user_type_autofill");
 				}
 				else {
 					valueBox.removeAttribute("list");
+				}
+
+				if (nameLowerCase.includes("password")) {
+					valueBox.placeholder = "unchanged";
+				}
+				else {
+					valueBox.placeholder = "";
 				}
 			};
 			nameBox.oninput();
@@ -627,20 +635,28 @@ class View extends Window {
 				this.InitializeAttributesList(sorted[i].obj);
 
 				if (i === sorted.length - 1) {
-					for (let j = 0; j < this.attributes.childNodes.length; j++) {
+					for (let j=0; j<this.attributes.childNodes.length; j++) {
 						if (this.attributes.childNodes[j].childNodes.length < 2) continue;
-						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) continue;
-						this.attributes.childNodes[j].style.backgroundImage = "url(mono/add.svg)";
+						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) {
+							this.attributes.childNodes[j].style.backgroundImage = "url(mono/lock.svg)";
+						}
+						else {
+							this.attributes.childNodes[j].style.backgroundImage = "url(mono/add.svg)";
+						}
 					}
 				}
 				else {
-					for (let j = 0; j < this.attributes.childNodes.length; j++) {
+					for (let j=0; j<this.attributes.childNodes.length; j++) {
 						if (this.attributes.childNodes[j].childNodes.length < 2) continue;
-						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) continue;
+						
+						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) {
+							this.attributes.childNodes[j].style.backgroundImage = "url(mono/lock.svg)";
+							continue;
+						}
 
 						let key = this.attributes.childNodes[j].childNodes[0].value;
-						if (sorted[i + 1].obj.hasOwnProperty(key)) {
-							if (this.attributes.childNodes[j].childNodes[1].firstChild.value !== sorted[i + 1].obj[key].v) {
+						if (sorted[i+1].obj.hasOwnProperty(key)) {
+							if (this.attributes.childNodes[j].childNodes[1].firstChild.value !== sorted[i+1].obj[key].v) {
 								this.attributes.childNodes[j].style.backgroundImage = "url(mono/edit.svg)";
 							}
 						}

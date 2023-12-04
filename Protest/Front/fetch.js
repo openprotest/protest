@@ -370,7 +370,7 @@ class Fetch extends Tabs {
 				const json = await response.json();
 				if (json.error) throw(json.error);
 	
-				if (json.status === "ok") {
+				if (json.status === "running" || json.status === "idle") {
 					this.tabTask.style.visibility = "visible";
 					this.tabTask.style.animation = "slide-in .4s 1";
 					
@@ -427,7 +427,7 @@ class Fetch extends Tabs {
 			if (json.error) throw(json.error);
 			this.taskStatus = json;
 
-			if (json.status === "fetching" || json.status === "idle") {
+			if (json.status === "running" || json.status === "idle") {
 				this.tabTask.style.visibility = "visible";
 				this.tabTask.style.animation = "slide-in .4s 1";
 			}
@@ -830,7 +830,7 @@ class Fetch extends Tabs {
 			if (json.status === "pending") {
 				this.ShowPending(json);
 			}
-			else if (json.status === "fetching" || json.status === "idle") {
+			else if (json.status === "running" || json.status === "idle") {
 				lblName.textContent = json.name;
 				let startedDate = new Date(UI.TicksToUnixDate(json.started));
 				lblDateValue.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
