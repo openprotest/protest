@@ -310,7 +310,7 @@ class AddressBook extends Window {
 			preview.style.height = "320px";
 			preview.style.left = `calc(50% - 250px)`;
 			preview.style.top = `calc(50% - 160px)`;
-			preview.style.transform = "scale(125%)";
+			preview.style.transform = "scale(100%)";
 		}, 0);
 
 		dim.onclick = ()=> {

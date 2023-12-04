@@ -224,6 +224,7 @@
 .address-book-preview {
 	position: absolute;
 	color: var(--clr-dark);
+	font-size: large;
 	box-shadow: rgba(0,0,0,.8) 2px 2px 8px;
 	border-radius: 8px;
 	padding: 8px;
@@ -324,8 +325,8 @@
 
 .address-book-close-button {
 	position: absolute;
-	left: calc(50% + 294px);
-	top: calc(50% - 220px);
+	left: calc(50% + 232px);
+	top: calc(50% - 180px);
 	width: 36px;
 	height: 36px;
 	border-radius: 20px;
