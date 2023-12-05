@@ -105,7 +105,7 @@ internal static class LiveStats {
             string wmiHostname = null, adHostname = null, netbios = null, dns = null;
 
             if (OperatingSystem.IsWindows() &&
-                _os?.value?.ToLower().Contains("windows") == true &&
+                _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true &&
                 firstAlive is not null &&
                 firstReply.Status == IPStatus.Success) {
 
@@ -114,13 +114,20 @@ internal static class LiveStats {
                     using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
                     foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                         string caption = o.GetPropertyValue("Caption").ToString();
-                        ulong size = (ulong)o.GetPropertyValue("Size");
-                        ulong free = (ulong)o.GetPropertyValue("FreeSpace");
 
-                        if (size == 0) continue;
-                        double percent = Math.Round(100.0 * free / size, 1);
+                        object size = o.GetPropertyValue("Size");
+                        if (size is null) continue;
 
-                        WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{size},\"used\":{size - free},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", "")}$")}\",\"source\":\"WMI\"}}");
+                        object free = o.GetPropertyValue("FreeSpace");
+                        if (free is null) continue;
+
+                        ulong nSize = (ulong)size;
+                        ulong nFree = (ulong)free;
+
+                        if (nSize == 0) continue;
+                        double percent = Math.Round(100.0 * nFree / nSize, 1);
+
+                        WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", "")}$")}\",\"source\":\"WMI\"}}");
 
                         if (percent < 15) {
                             WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}");
@@ -157,8 +164,8 @@ internal static class LiveStats {
 
                         WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
                     }
-
                 }
+                catch (NullReferenceException) { }
                 catch { }
             }
 

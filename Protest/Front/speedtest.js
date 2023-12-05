@@ -1,5 +1,5 @@
 class SpeedTest extends Window {
-	static duration = 5;
+	static DURATION = 5;
 
 	constructor(params) {
 		super();
@@ -166,7 +166,7 @@ class SpeedTest extends Window {
 				}
 			};
 
-			xhr.open("GET", `tools/speedtestdown?chunksize=32768&duration=${SpeedTest.duration}`, true);
+			xhr.open("GET", `tools/speedtestdown?chunksize=32768&duration=${SpeedTest.DURATION}`, true);
 			xhr.send();
 		});
 	}

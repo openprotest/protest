@@ -34,6 +34,15 @@ class UsersList extends List {
 		this.deleteButton.onclick = ()=> this.Delete();
 
 		this.UpdateAuthorization();
+
+		this.content.addEventListener("keydown", event=>{
+			if (event.key === "Delete") {
+				this.Delete();
+			}
+			else if (event.key === "Insert") {
+				this.Add();
+			}
+		});
 	}
 
 	UpdateAuthorization() { //override

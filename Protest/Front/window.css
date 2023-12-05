@@ -212,11 +212,17 @@
 	border-radius: 2px;
 	padding: 2px;
 	margin: 2px;
-	height: 20px;
-	transition: .2s;
+	height: 22px;
+	line-height: 22px;
+	text-transform: capitalize;
+	padding-left: 28px;
+	background-size: 22px 22px;
+	background-position: 2px center;
+	background-repeat: no-repeat;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	transition: .2s;
 }
 
 .win-toolbar>.win-toolbar-button>.win-toolbar-submenu>div>div:hover {

@@ -39,7 +39,6 @@ class UserView extends View {
 		if (params.file) {
 			this.SetTitle(this.link.title ? this.link.title.v : "");
 			this.InitializePreview();
-
 		}
 		else if (params.clone) {
 			const origin = LOADER.users.data[params.clone];

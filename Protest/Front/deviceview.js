@@ -597,7 +597,9 @@ class DeviceView extends View {
 		
 		this.liveStatsWebSockets.onclose = ()=> {
 			this.liveStatsWebSockets = null;
-			this.InitializeGraphs();
+			if (this.link.hasOwnProperty("ip")) {
+				this.InitializeGraphs();
+			}
 		};
 
 		//this.liveStatsWebSockets.onerror = error=> {};

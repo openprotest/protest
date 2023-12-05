@@ -103,7 +103,6 @@
 .chat-emoji-bubble {
 	width: 72px;
 	height: 72px;
-
 	-webkit-mask-position: center; mask-position: center;
 	-webkit-mask-size: 64px 64px; mask-size: 64px 64px;
 	-webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
@@ -116,12 +115,14 @@
 }
 
 .chat-command-box {
-	min-width: 96px;
+	min-width: 80px;
 	min-height: 48px;
 	line-height: 48px;
 	font-weight: 600;
 	padding-left: 56px;
 	padding-right: 8px;
+	padding-top: 4px;
+	padding-bottom: 4px;
 	background-size: 40px 40px;
 	background-position: 8px center;
 	background-repeat: no-repeat;
@@ -220,9 +221,8 @@
 }
 
 .chat-emoji {
-	background-image: url(mono/handthumbsup.svg?light);
 	right: 8px;
-
+	background-image: url(mono/handthumbsup.svg?light);
 	overflow: visible;
 }
 

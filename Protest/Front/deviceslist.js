@@ -34,6 +34,15 @@ class DevicesList extends List {
 		this.deleteButton.onclick = ()=> this.Delete();
 
 		this.UpdateAuthorization();
+
+		this.content.addEventListener("keydown", event=>{
+			if (event.key === "Delete") {
+				this.Delete();
+			}
+			else if (event.key === "Insert") {
+				this.Add();
+			}
+		});
 	}
 
 	UpdateAuthorization() { //override
@@ -92,7 +101,6 @@ class DevicesList extends List {
 						let element = Array.from(WIN.array[i].list.childNodes).filter(o=>o.getAttribute("id") === file);
 						element.forEach(o=> WIN.array[i].list.removeChild(o));
 						WIN.array[i].UpdateViewport(true);
-
 					}
 					else if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
 						WIN.array[i].Close();

@@ -81,7 +81,7 @@ const KEEP = {
 			break;
 
 		case "update":
-			if (message.type === "devices") {
+			if (message.type === "device") {
 				if (LOADER.devices.version === message.version) break;
 
 				LOADER.devices.data[message.target] = message.obj;
@@ -99,7 +99,7 @@ const KEEP = {
 
 				LOADER.devices.version = message.version;
 			}
-			else if (message.type === "users") {
+			else if (message.type === "user") {
 				if (LOADER.users.version === message.version) break;
 
 				LOADER.users.data[message.target] = message.obj;
@@ -120,7 +120,7 @@ const KEEP = {
 			break;
 
 		case "delete":
-			if (message.type === "devices") {
+			if (message.type === "device") {
 				if (LOADER.devices.version === message.version) break;
 
 				const view = WIN.array.find(o=> o instanceof DeviceView && o.params.file === message.target);
@@ -134,7 +134,7 @@ const KEEP = {
 					WIN.array[i].RefreshList();
 				}
 			}
-			else if (message.type === "users") {
+			else if (message.type === "user") {
 				if (LOADER.users.version === message.version) break;
 				
 				const view = WIN.array.find(o=> o instanceof UserView && o.params.file === message.target);

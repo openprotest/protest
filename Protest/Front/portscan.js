@@ -1,5 +1,5 @@
 class PortScan extends Console {
-	static protocol = {
+	static PROTOCOL = {
 		1: "TCPMUX	TCP Port Service Multiplexer",
 		5: "RJE	Remote Job Entry",
 		7: "Echo",
@@ -513,9 +513,9 @@ class PortScan extends Console {
 						const port = document.createElement("div");
 						port.textContent = split[i];
 						this.hashtable[name].result.appendChild(port);
-						if (PortScan.protocol.hasOwnProperty(parseInt(split[i]))) {
+						if (PortScan.PROTOCOL.hasOwnProperty(parseInt(split[i]))) {
 							port.className = "tool-after-label";
-							port.setAttribute("after-label", PortScan.protocol[parseInt(split[i])]);
+							port.setAttribute("after-label", PortScan.PROTOCOL[parseInt(split[i])]);
 						}
 
 						this.hashtable[name].list.push(split[i]);

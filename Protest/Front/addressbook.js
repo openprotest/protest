@@ -120,6 +120,7 @@ class AddressBook extends Window {
 	Contact_onclick(element, index) {
 		const dim = document.createElement("div");
 		dim.className = "win-dim";
+		dim.style.top = "0";
 		dim.style.backgroundColor = "rgba(32,32,32,.25)";
 		dim.style.animation = "fade-in .2s 1";
 		dim.style.zIndex = "2";

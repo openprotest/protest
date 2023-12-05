@@ -210,20 +210,27 @@ class List extends Window {
 			let types = [];
 			for (const key in this.link.data) {
 				if (!this.link.data[key].hasOwnProperty("type")) continue;
-				if (types.includes(this.link.data[key].type.v)) continue;
+				if (types.includes(this.link.data[key].type.v.toLowerCase())) continue;
 				if (!this.link.data[key].type.v.toLowerCase().includes(findFilter.value)) continue;
 				if (this.link.data[key].type.v.length === 0) continue;
-				types.push(this.link.data[key].type.v);
+				types.push(this.link.data[key].type.v.toLowerCase());
 			}
 			types = types.sort();
 
 			filtersList.textContent = "";
-			filterMenu.style.height = `${32 + types.length * 26}px`;
+			filterMenu.style.height = `${32 + types.length * 27}px`;
 
 			for (let i = 0; i < types.length; i++) {
 				const newType = document.createElement("div");
 				newType.textContent = types[i];
 				filtersList.appendChild(newType);
+
+				if (this instanceof DevicesList) {
+					newType.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(types[i]) ? LOADER.deviceIcons[types[i]] : "mono/gear.svg"})`;
+				}
+				else if (this instanceof UsersList) {
+					newType.style.backgroundImage = `url(${LOADER.userIcons.hasOwnProperty(types[i]) ? LOADER.userIcons[types[i]] : "mono/user.svg"})`;
+				}
 
 				if (types[i] === this.params.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
@@ -339,7 +346,6 @@ class List extends Window {
 					this.selected.style.backgroundColor = "var(--clr-select)";
 					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
 				}
-
 			}
 			else if (event.code === "ArrowDown" && this.selected) {
 				const nextElement = this.selected.nextElementSibling;

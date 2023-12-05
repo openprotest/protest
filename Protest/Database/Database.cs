@@ -60,7 +60,7 @@ public sealed class Database {
         ReadAll();
     }
 
-    public static string GenerateFilename(int offset = 0) {
+    public static string GenerateFilename(int offset=0) {
         return (DateTime.UtcNow.Ticks + offset).ToString("x");
     }
 
