@@ -377,7 +377,7 @@ class Chat extends Window {
 	}
 
 	HandleMessage(message) {
-		if (this.outdoing.hasOwnProperty(message.id)) {
+		if (message.id in this.outdoing) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
 			this.outdoing[message.id].style.boxShadow = "none";
@@ -516,7 +516,7 @@ class Chat extends Window {
 		bubble.innerHTML = text;
 
 		if (direction === "out") {
-			if (id && !this.outdoing.hasOwnProperty(id)) {
+			if (id && !(id in this.outdoing)) {
 				this.outdoing[id] = bubble;
 			}
 		}
@@ -545,7 +545,7 @@ class Chat extends Window {
 		}
 
 		if (direction === "out") {
-			if (id && !this.outdoing.hasOwnProperty(id)) {
+			if (id && !(id in this.outdoing)) {
 				this.outdoing[id] = bubble;
 			}
 		}

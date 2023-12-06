@@ -667,21 +667,21 @@ class Documentation extends Window {
 				if (!match) continue;
 
 				let name = "";
-				if (LOADER.devices.data[key].hasOwnProperty("name")) {
+				if ("name" in LOADER.devices.data[key]) {
 					name = LOADER.devices.data[key]["name"].v;
 				}
-				else if (LOADER.devices.data[key].hasOwnProperty("hostname")) {
+				else if ("hostname" in LOADER.devices.data[key]) {
 					name = LOADER.devices.data[key]["hostname"].v;
 				}
-				else if (LOADER.devices.data[key].hasOwnProperty("ip")) {
+				else if ("ip" in LOADER.devices.data[key]) {
 					name = LOADER.devices.data[key]["ip"].v;
 				}
 
 				let unique = "";
-				if (LOADER.devices.data[key].hasOwnProperty("serial number")) {
+				if ("serial number" in LOADER.devices.data[key]) {
 					unique = LOADER.devices.data[key]["serial number"].v;
 				}
-				else if (LOADER.devices.data[key].hasOwnProperty("mac address")) {
+				else if ("mac address" in LOADER.devices.data[key]) {
 					unique = LOADER.devices.data[key]["mac address"].v;
 				}
 
@@ -700,7 +700,7 @@ class Documentation extends Window {
 				element.appendChild(icon);
 
 				for (let i=0; i<devicesColumns.length; i++) {
-					if (!LOADER.devices.data[key].hasOwnProperty(devicesColumns[i])) continue;
+					if (!(devicesColumns[i] in LOADER.devices.data[key])) continue;
 					if (LOADER.devices.data[key][devicesColumns[i]].v.length === 0) continue;
 					
 					const newLabel = document.createElement("div");

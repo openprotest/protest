@@ -353,24 +353,23 @@
 	transition: .4s;
 }
 
-.task-icon-dots:nth-child(2) {
-	left: 6.5%;
+.task-icon-emblem {
+	position: absolute;
+	overflow: hidden;
+	top: 0px;
+	right: 0px;
+	width: 20px;
+	height: 20px;
+	max-width: 50%;
+	max-height: 50%;
+	filter: drop-shadow(rgb(32,32,32) 0 0 1px);
+	transform: scale(1.1);
 }
 
-.task-icon-dots:nth-child(3) {
-	left: 26.5%
-}
-
-.task-icon-dots:nth-child(4) {
-	left: 46.5%
-}
-
-.task-icon-dots:nth-child(5) {
-	left: 66.5%
-}
-
-.task-icon-dots:nth-child(6) {
-	left: 86.5%
+.task-icon-emblem > div {
+	width: 8px;
+	height: 32px;
+	transform: rotate(-45deg) translate(12px, 0px);
 }
 
 .task-spinner {

@@ -19,157 +19,160 @@ class NetCalc extends Window {
 		this.content.style.maxHeight = "400px";
 
 
-		let lblAddress = document.createElement("div");
-		lblAddress.textContent = "IP address:";
-		lblAddress.style.gridColumn = "2";
-		lblAddress.style.gridRow = "1";
-		this.content.appendChild(lblAddress);
+		let addressLabel = document.createElement("div");
+		addressLabel.textContent = "IP address:";
+		addressLabel.style.gridColumn = "2";
+		addressLabel.style.gridRow = "1";
+		this.content.appendChild(addressLabel);
 
-		let divAddress = document.createElement("div");
-		divAddress.style.gridColumn = "2";
-		divAddress.style.gridRow = "2";
-		this.content.appendChild(divAddress);
+		let addressBox = document.createElement("div");
+		addressBox.style.gridColumn = "2";
+		addressBox.style.gridRow = "2";
+		this.content.appendChild(addressBox);
 		this.ipAddress = new IpBox();
 		this.ipAddress.SetIp(192, 168, 0, 0);
-		this.ipAddress.Attach(divAddress);
+		this.ipAddress.Attach(addressBox);
 
-		this.lblClass = document.createElement("div");
-		this.lblClass.textContent = "Class C";
-		this.lblClass.style.gridColumn = "3";
-		this.lblClass.style.gridRow = "2";
-		this.lblClass.style.padding = "10px 0px";
-		this.content.appendChild(this.lblClass);
+		this.classLabel = document.createElement("div");
+		this.classLabel.textContent = "Class C";
+		this.classLabel.style.gridColumn = "3";
+		this.classLabel.style.gridRow = "2";
+		this.classLabel.style.padding = "10px 0px";
+		this.content.appendChild(this.classLabel);
 
-		let lblMask = document.createElement("div");
-		lblMask.textContent = "Subnet mask:";
-		lblMask.style.gridColumn = "2";
-		lblMask.style.gridRow = "3";
-		this.content.appendChild(lblMask);
+		let maskLabel = document.createElement("div");
+		maskLabel.textContent = "Subnet mask:";
+		maskLabel.style.gridColumn = "2";
+		maskLabel.style.gridRow = "3";
+		this.content.appendChild(maskLabel);
 
-		let divMask = document.createElement("div");
-		divMask.style.gridColumn = "2";
-		divMask.style.gridRow = "4";
-		this.content.appendChild(divMask);
+		let maskBox = document.createElement("div");
+		maskBox.style.gridColumn = "2";
+		maskBox.style.gridRow = "4";
+		this.content.appendChild(maskBox);
 		this.ipMask = new IpBox();
-		this.ipMask.SetIp(255, 255, 255, 0);
-		this.ipMask.Attach(divMask);
+		this.ipMask.SetIp(255,255,255,0);
+		this.ipMask.Attach(maskBox);
 
-		let lblSlash = document.createElement("div");
-		lblSlash.textContent = "/";
-		lblSlash.style.display = "inline-block";
-		lblSlash.style.paddingLeft = "4px";
-		divMask.appendChild(lblSlash);
+		let slashLabel = document.createElement("div");
+		slashLabel.textContent = "/";
+		slashLabel.style.display = "inline-block";
+		slashLabel.style.paddingLeft = "4px";
+		maskBox.appendChild(slashLabel);
 
-		let lblCIDR = document.createElement("div");
-		lblCIDR.textContent = "CIDR:";
-		lblCIDR.value = "24";
-		lblCIDR.style.gridColumn = "3";
-		lblCIDR.style.gridRow = "3";
-		this.content.appendChild(lblCIDR);
+		let cidrLabel = document.createElement("div");
+		cidrLabel.textContent = "CIDR:";
+		cidrLabel.value = "24";
+		cidrLabel.style.gridColumn = "3";
+		cidrLabel.style.gridRow = "3";
+		this.content.appendChild(cidrLabel);
 
-		this.txtCIDR = document.createElement("input");
-		this.txtCIDR.type = "number";
-		this.txtCIDR.min = "4";
-		this.txtCIDR.max = "30";
-		this.txtCIDR.value = "24";
-		this.txtCIDR.style.width = "40px";
-		this.txtCIDR.style.marginLeft = "0px";
-		this.txtCIDR.style.gridColumn = "3";
-		this.txtCIDR.style.gridRow = "4";
-		this.content.appendChild(this.txtCIDR);
+		this.cidrInput = document.createElement("input");
+		this.cidrInput.type = "number";
+		this.cidrInput.min = "4";
+		this.cidrInput.max = "30";
+		this.cidrInput.value = "24";
+		this.cidrInput.style.width = "40px";
+		this.cidrInput.style.marginLeft = "0px";
+		this.cidrInput.style.gridColumn = "3";
+		this.cidrInput.style.gridRow = "4";
+		this.content.appendChild(this.cidrInput);
 
-		this.rngCIDR = document.createElement("input");
-		this.rngCIDR.type = "range";
-		this.rngCIDR.min = "4";
-		this.rngCIDR.max = "30";
-		this.rngCIDR.value = "24";
-		this.rngCIDR.style.gridColumn = "4";
-		this.rngCIDR.style.gridRow = "4";
-		this.rngCIDR.style.margin = "10px 0";
-		this.rngCIDR.style.marginLeft = "8px";
-		this.content.appendChild(this.rngCIDR);
-
-
-		let lblWildcard = document.createElement("div");
-		lblWildcard.textContent = "Wildcard:";
-		lblWildcard.value = "24";
-		lblWildcard.style.gridColumn = "2";
-		lblWildcard.style.gridRow = "5";
-		this.content.appendChild(lblWildcard);
-
-		this.divWildcard = document.createElement("div");
-		this.divWildcard.textContent = "0.0.0.255";
-		this.divWildcard.style.gridArea = "6 / 2";
-		this.divWildcard.style.padding = "4px 8px";
-		this.divWildcard.style.textAlign = "center";
-		this.content.appendChild(this.divWildcard);
+		this.cidrRange = document.createElement("input");
+		this.cidrRange.type = "range";
+		this.cidrRange.min = "4";
+		this.cidrRange.max = "30";
+		this.cidrRange.value = "24";
+		this.cidrRange.style.gridColumn = "4";
+		this.cidrRange.style.gridRow = "4";
+		this.cidrRange.style.margin = "10px 0";
+		this.cidrRange.style.marginLeft = "8px";
+		this.content.appendChild(this.cidrRange);
 
 
-		this.divMap = document.createElement("div");
-		this.divMap.style.gridArea = "9 / 5 / 1 / 2";
-		this.divMap.style.padding = "8px";
-		this.divMap.style.textAlign = "center";
-		this.content.appendChild(this.divMap);
+		const wildcardLabel = document.createElement("div");
+		wildcardLabel.textContent = "Wildcard:";
+		wildcardLabel.value = "24";
+		wildcardLabel.style.gridColumn = "2";
+		wildcardLabel.style.gridRow = "5";
+		this.content.appendChild(wildcardLabel);
 
-		this.lblSubnet = document.createElement("div");
-		this.lblSubnet.textContent = `Subnet:${String.fromCharCode(13)}${String.fromCharCode(10)}192.168.0.0`;
-		this.lblSubnet.style.gridArea = "11 / 2 / 1 / 2";
-		this.lblSubnet.style.textAlign = "center";
-		this.lblSubnet.style.whiteSpace = "pre-wrap";
-		this.content.appendChild(this.lblSubnet);
+		this.wildcardBox = document.createElement("div");
+		this.wildcardBox.textContent = "0.0.0.255";
+		this.wildcardBox.style.gridArea = "6 / 2";
+		this.wildcardBox.style.padding = "4px 8px";
+		this.wildcardBox.style.textAlign = "center";
+		this.content.appendChild(this.wildcardBox);
 
-		this.lblBroadcast = document.createElement("div");
-		this.lblBroadcast.textContent = `Broadcast:${String.fromCharCode(13)}${String.fromCharCode(10)}192.168.0.255`;
-		this.lblBroadcast.style.gridArea = "11 / 4 / 1 / auto";
-		this.lblBroadcast.style.textAlign = "center";
-		this.lblBroadcast.style.whiteSpace = "pre-wrap";
-		this.content.appendChild(this.lblBroadcast);
 
-		this.lblRange = document.createElement("div");
-		this.lblRange.textContent = `Host range:${String.fromCharCode(13)}${String.fromCharCode(10)}192.168.0.1 - 192.168.0.254`;
-		this.lblRange.style.gridArea = "13 / 2 / 1 / 5";
-		this.lblRange.style.textAlign = "center";
-		this.lblRange.style.whiteSpace = "pre-wrap";
-		this.content.appendChild(this.lblRange);
+		this.mapBox = document.createElement("div");
+		this.mapBox.style.gridArea = "9 / 5 / 1 / 2";
+		this.mapBox.style.padding = "8px";
+		this.mapBox.style.textAlign = "center";
+		this.content.appendChild(this.mapBox);
 
-		this.lblTotal = document.createElement("div");
-		this.lblTotal.textContent = `Hosts:${String.fromCharCode(13)}${String.fromCharCode(10)}254`;
-		this.lblTotal.style.gridArea = "11 / 5 / 1 / 5";
-		this.lblTotal.style.textAlign = "center";
-		this.lblTotal.style.marginLeft = "8px";
-		this.lblTotal.style.whiteSpace = "pre-wrap";
-		this.content.appendChild(this.lblTotal);
+		this.subnetLabel = document.createElement("div");
+		this.subnetLabel.textContent = `Subnet:\n192.168.0.0`;
+		this.subnetLabel.style.gridArea = "11 / 2 / 1 / 2";
+		this.subnetLabel.style.textAlign = "center";
+		this.subnetLabel.style.whiteSpace = "pre-wrap";
+		this.content.appendChild(this.subnetLabel);
 
-		this.divWildcard.style.border = this.divMap.style.border = this.lblSubnet.style.border = this.lblBroadcast.style.border = this.lblRange.style.border = this.lblTotal.style.border = "var(--clr-dark) 1px solid";
-		this.divWildcard.style.borderRadius = this.divMap.style.borderRadius = this.lblSubnet.style.borderRadius = this.lblBroadcast.style.borderRadius = this.lblRange.style.borderRadius = this.lblTotal.style.borderRadius = "4px";
+		this.broadcastLabel = document.createElement("div");
+		this.broadcastLabel.textContent = `Broadcast:\n192.168.0.255`;
+		this.broadcastLabel.style.gridArea = "11 / 4 / 1 / auto";
+		this.broadcastLabel.style.textAlign = "center";
+		this.broadcastLabel.style.whiteSpace = "pre-wrap";
+		this.content.appendChild(this.broadcastLabel);
 
-		this.divWildcard.style.userSelect = this.lblSubnet.style.userSelect = this.lblBroadcast.style.userSelect = this.lblRange.style.userSelect = this.lblTotal.style.userSelect = "text";
+		this.RangeLabel = document.createElement("div");
+		this.RangeLabel.textContent = `Host range:\n192.168.0.1 - 192.168.0.254`;
+		this.RangeLabel.style.gridArea = "13 / 2 / 1 / 5";
+		this.RangeLabel.style.textAlign = "center";
+		this.RangeLabel.style.whiteSpace = "pre-wrap";
+		this.content.appendChild(this.RangeLabel);
 
-		this.txtCIDR.oninput = ()=> {
-			this.rngCIDR.value = this.txtCIDR.value;
+		this.totalLabel = document.createElement("div");
+		this.totalLabel.textContent = `Hosts:\n254`;
+		this.totalLabel.style.gridArea = "11 / 5 / 1 / 5";
+		this.totalLabel.style.textAlign = "center";
+		this.totalLabel.style.marginLeft = "8px";
+		this.totalLabel.style.whiteSpace = "pre-wrap";
+		this.content.appendChild(this.totalLabel);
 
-			let octet = Math.floor(this.txtCIDR.value / 8);
-			let value = this.txtCIDR.value % 8;
+		this.wildcardBox.style.border = this.mapBox.style.border = this.subnetLabel.style.border = this.broadcastLabel.style.border = this.RangeLabel.style.border = this.totalLabel.style.border = "var(--clr-dark) 1px solid";
+		this.wildcardBox.style.borderRadius = this.mapBox.style.borderRadius = this.subnetLabel.style.borderRadius = this.broadcastLabel.style.borderRadius = this.RangeLabel.style.borderRadius = this.totalLabel.style.borderRadius = "4px";
 
-			for (let i = 0; i < octet; i++)
+		this.wildcardBox.style.userSelect = this.subnetLabel.style.userSelect = this.broadcastLabel.style.userSelect = this.RangeLabel.style.userSelect = this.totalLabel.style.userSelect = "text";
+
+		this.cidrInput.oninput = ()=> {
+			this.cidrRange.value = this.cidrInput.value;
+
+			let octet = Math.floor(this.cidrInput.value / 8);
+			let value = this.cidrInput.value % 8;
+
+			for (let i=0; i<octet; i++) {
 				this.ipMask.textBoxes[i].value = 255;
+			}
 
-			for (let i = octet + 1; i < 4; i++)
+			for (let i=octet+1; i<4; i++) {
 				this.ipMask.textBoxes[i].value = 0;
+			}
 
 			let v = 0;
-			for (let i = 0; i < value; i++)
+			for (let i=0; i<value; i++) {
 				v += Math.pow(2, 7 - i);
+			}
 			this.ipMask.textBoxes[octet].value = v;
 
 			this.Calculate();
 		};
 
-		this.rngCIDR.oninput = ()=> {
-			this.txtCIDR.value = this.rngCIDR.value;
+		this.cidrRange.oninput = ()=> {
+			this.cidrInput.value = this.cidrRange.value;
 
-			let octet = Math.floor(this.rngCIDR.value / 8);
-			let value = this.rngCIDR.value % 8;
+			let octet = Math.floor(this.cidrRange.value / 8);
+			let value = this.cidrRange.value % 8;
 
 			for (let i = 0; i < octet; i++)
 				this.ipMask.textBoxes[i].value = 255;
@@ -194,17 +197,17 @@ class NetCalc extends Window {
 			newBit.style.borderRadius = "1px";
 			newBit.style.transition = ".4s";
 			if (i % 8 == 0 && 1 > 0) newBit.style.margin = "0 1px 0 4px";
-			this.divMap.appendChild(newBit);
+			this.mapBox.appendChild(newBit);
 		}
 
-		this.divMap.childNodes[0].style.borderRadius = "2px 1px 1px 2px";
-		this.divMap.childNodes[7].style.borderRadius = "1px 2px 2px 1px";
-		this.divMap.childNodes[8].style.borderRadius = "2px 1px 1px 2px";
-		this.divMap.childNodes[15].style.borderRadius = "1px 2px 2px 1px";
-		this.divMap.childNodes[16].style.borderRadius = "2px 1px 1px 2px";
-		this.divMap.childNodes[23].style.borderRadius = "1px 2px 2px 1px";
-		this.divMap.childNodes[24].style.borderRadius = "2px 1px 1px 2px";
-		this.divMap.childNodes[31].style.borderRadius = "1px 2px 2px 1px";
+		this.mapBox.childNodes[0].style.borderRadius = "2px 1px 1px 2px";
+		this.mapBox.childNodes[7].style.borderRadius = "1px 2px 2px 1px";
+		this.mapBox.childNodes[8].style.borderRadius = "2px 1px 1px 2px";
+		this.mapBox.childNodes[15].style.borderRadius = "1px 2px 2px 1px";
+		this.mapBox.childNodes[16].style.borderRadius = "2px 1px 1px 2px";
+		this.mapBox.childNodes[23].style.borderRadius = "1px 2px 2px 1px";
+		this.mapBox.childNodes[24].style.borderRadius = "2px 1px 1px 2px";
+		this.mapBox.childNodes[31].style.borderRadius = "1px 2px 2px 1px";
 
 		this.ipAddress.textBoxes[0].onkeyup = this.ipAddress.textBoxes[0].oninput =
 		this.ipAddress.textBoxes[1].onkeyup = this.ipAddress.textBoxes[1].oninput =
@@ -222,14 +225,14 @@ class NetCalc extends Window {
 				parseInt(this.ipMask.textBoxes[2].value).toString(2) +
 				parseInt(this.ipMask.textBoxes[3].value).toString(2);
 
-			let bitcount = 0;
+			let bitCount = 0;
 			for (let i = 0; i < bits; i++) {
 				if (bits[i] == "0") break;
-				bitcount++;
+				bitCount++;
 			}
 
-			this.rngCIDR.value = bitcount;
-			this.txtCIDR.value = bitcount;
+			this.cidrRange.value = bitCount;
+			this.cidrInput.value = bitCount;
 
 			this.Calculate();
 		};
@@ -244,18 +247,18 @@ class NetCalc extends Window {
 		let octet = parseInt(this.ipAddress.GetIpArray()[0]);
 		let octet2 = parseInt(this.ipAddress.GetIpArray()[1]);
 
-		if (octet == 10) this.lblClass.textContent = "Private";
-		else if (octet > 0 && octet < 127) this.lblClass.textContent = "Class A";
-		else if (octet == 127) this.lblClass.textContent = "Local host";
+		if (octet == 10) this.classLabel.textContent = "Private";
+		else if (octet > 0 && octet < 127) this.classLabel.textContent = "Class A";
+		else if (octet == 127) this.classLabel.textContent = "Local host";
 
-		else if (octet == 172 && octet2 > 15 && octet2 < 32) this.lblClass.textContent = "Private";
-		else if (octet > 127 && octet < 192) this.lblClass.textContent = "Class B";
+		else if (octet == 172 && octet2 > 15 && octet2 < 32) this.classLabel.textContent = "Private";
+		else if (octet > 127 && octet < 192) this.classLabel.textContent = "Class B";
 
-		else if (octet == 192) this.lblClass.textContent = "Private";
-		else if (octet > 192 && octet < 224) this.lblClass.textContent = "Class C";
+		else if (octet == 192) this.classLabel.textContent = "Private";
+		else if (octet > 192 && octet < 224) this.classLabel.textContent = "Class C";
 
-		else if (octet >= 224 && octet < 240) this.lblClass.textContent = "Class D";
-		else this.lblClass.textContent = "";
+		else if (octet >= 224 && octet < 240) this.classLabel.textContent = "Class D";
+		else this.classLabel.textContent = "";
 
 		let net = [], broadcast = [];
 		for (let i = 0; i < 4; i++) {
@@ -268,19 +271,21 @@ class NetCalc extends Window {
 		else if (octet > 127 && octet <= 192) static_bits = 16;
 		else static_bits = 24;
 
-		for (let i = 0; i < 32; i++)
-			this.divMap.childNodes[i].style.backgroundColor = i < this.rngCIDR.value ? "rgb(232,96,0)" : "rgb(96,232,23)";
+		for (let i = 0; i < 32; i++) {
+			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(232,96,0)" : "rgb(96,232,23)";
+		}
 
-		for (let i = 0; i < static_bits; i++)
-			this.divMap.childNodes[i].style.backgroundColor = i < this.rngCIDR.value ? "rgb(232,0,0)" : "rgb(96,232,32)";
-
-		this.lblSubnet.textContent = `Subnet:${String.fromCharCode(13)}${String.fromCharCode(10)}${net.join(".")}`;
-		this.lblBroadcast.textContent = `Broadcast:${String.fromCharCode(13)}${String.fromCharCode(10)}${broadcast.join(".")}`;
-		this.lblRange.textContent = `Host range:${String.fromCharCode(13)}${String.fromCharCode(10)}` + net[0] + "." + net[1] + "." + net[2] + "." + (net[3] + 1) + " - " +
+		for (let i = 0; i < static_bits; i++) {
+			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(232,0,0)" : "rgb(96,232,32)";
+		}
+		
+		this.subnetLabel.textContent = `Subnet:\n${net.join(".")}`;
+		this.broadcastLabel.textContent = `Broadcast:\n${broadcast.join(".")}`;
+		this.RangeLabel.textContent = `Host range:\n` + net[0] + "." + net[1] + "." + net[2] + "." + (net[3] + 1) + " - " +
 			broadcast[0] + "." + broadcast[1] + "." + broadcast[2] + "." + (broadcast[3] - 1);
 
-		this.lblTotal.textContent = `Hosts:${String.fromCharCode(13)}${String.fromCharCode(10)}${(Math.pow(2, 32 - this.rngCIDR.value) - 2)}`;
+		this.totalLabel.textContent = `Hosts:\n${(Math.pow(2, 32 - this.cidrRange.value) - 2)}`;
 
-		this.divWildcard.textContent = `${255-mask[0]}.${255-mask[1]}.${255-mask[2]}.${255-mask[3]}`;
+		this.wildcardBox.textContent = `${255-mask[0]}.${255-mask[1]}.${255-mask[2]}.${255-mask[3]}`;
 	}
 }

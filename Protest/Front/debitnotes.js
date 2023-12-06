@@ -281,7 +281,7 @@ class DebitNotes extends Window {
 		if (Object.keys(DebitNotes.MODELS) > 0 && !force) return;
 
 		for (let file in LOADER.devices.data) {
-			if (!LOADER.devices.data[file].hasOwnProperty("type")) continue;
+			if (!LOADER.devices.data[file].type) continue;
 			let type = LOADER.devices.data[file]["type"].v;
 			if (type.length == 0) continue;
 
@@ -292,7 +292,7 @@ class DebitNotes extends Window {
 			let description = (manufacturer + " " + type).trim();
 			let serial = LOADER.devices.data[file]["serial number"] ? LOADER.devices.data[file]["serial number"].v : "";
 			
-			if (description && !DebitNotes.MODELS.hasOwnProperty(description)) {
+			if (description && !(description in DebitNotes.MODELS)) {
 				DebitNotes.MODELS[description] = [];
 				const option = document.createElement("option");
 				option.value = description;
@@ -302,7 +302,7 @@ class DebitNotes extends Window {
 				DebitNotes.MODELS[description].push(model);
 			}
 
-			if (model && !DebitNotes.MODELS.hasOwnProperty(model)) {
+			if (model && !(model in DebitNotes.MODELS)) {
 				DebitNotes.SERIAL_NUMBERS[model] = [];
 			}
 			if (model && serial && !DebitNotes.SERIAL_NUMBERS[model].includes(serial)) {
@@ -805,7 +805,7 @@ class DebitNotes extends Window {
 			txtSerialNo.setAttribute("list", serialId);
 
 			txtDescription.onchange = txtDescription.oninput = ()=> {
-				if (!DebitNotes.MODELS.hasOwnProperty(txtDescription.value)) return;
+				if (!(txtDescription.value in DebitNotes.MODELS)) return;
 
 				if (DebitNotes.MODELS[txtDescription.value].length == 1) {
 					txtModel.value = DebitNotes.MODELS[txtDescription.value][0];
@@ -824,7 +824,7 @@ class DebitNotes extends Window {
 			};
 
 			txtModel.onchange = txtModel.oninput = ()=> {
-				if (!DebitNotes.SERIAL_NUMBERS.hasOwnProperty(txtModel.value)) return;
+				if (!(txtModel.value in DebitNotes.SERIAL_NUMBERS)) return;
 
 				if (DebitNotes.SERIAL_NUMBERS[txtModel.value].length == 1) {
 					txtSerialNo.value = DebitNotes.SERIAL_NUMBERS[txtModel.value][0];
@@ -953,7 +953,7 @@ class DebitNotes extends Window {
 					element.appendChild(icon);
 
 					for (let i=0; i<usersColumns.length; i++) {
-						if (!LOADER.users.data[file].hasOwnProperty(usersColumns[i])) continue;
+						if (!(usersColumns[i] in LOADER.users.data[file])) continue;
 						const newLabel = document.createElement("div");
 						newLabel.textContent = LOADER.users.data[file][usersColumns[i]].v;
 						newLabel.style.left = i===0 ? `calc(28px + ${i * 100 / usersColumns.length}%)` : `${i * 100 / usersColumns.length}%`;

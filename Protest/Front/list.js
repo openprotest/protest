@@ -209,7 +209,7 @@ class List extends Window {
 
 			let types = [];
 			for (const key in this.link.data) {
-				if (!this.link.data[key].hasOwnProperty("type")) continue;
+				if (!this.link.data[key].type) continue;
 				if (types.includes(this.link.data[key].type.v.toLowerCase())) continue;
 				if (!this.link.data[key].type.v.toLowerCase().includes(findFilter.value)) continue;
 				if (this.link.data[key].type.v.length === 0) continue;
@@ -226,10 +226,10 @@ class List extends Window {
 				filtersList.appendChild(newType);
 
 				if (this instanceof DevicesList) {
-					newType.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(types[i]) ? LOADER.deviceIcons[types[i]] : "mono/gear.svg"})`;
+					newType.style.backgroundImage = `url(${types[i] in LOADER.deviceIcons ? LOADER.deviceIcons[types[i]] : "mono/gear.svg"})`;
 				}
 				else if (this instanceof UsersList) {
-					newType.style.backgroundImage = `url(${LOADER.userIcons.hasOwnProperty(types[i]) ? LOADER.userIcons[types[i]] : "mono/user.svg"})`;
+					newType.style.backgroundImage = `url(${types[i] in LOADER.userIcons ? LOADER.userIcons[types[i]] : "mono/user.svg"})`;
 				}
 
 				if (types[i] === this.params.filter) {
@@ -448,7 +448,7 @@ class List extends Window {
 		}
 		else {
 			for (const key in this.link.data) {
-				if (!this.link.data[key].hasOwnProperty("type")) continue;
+				if (!this.link.data[key].type) continue;
 				if (this.link.data[key].type.v.toLowerCase() !== this.params.filter.toLowerCase()) continue;
 				filtered.push(key);
 			}
@@ -548,7 +548,7 @@ class List extends Window {
 			else {
 				if (this.list.childNodes[i].childNodes.length > 0) continue;
 				const key = this.list.childNodes[i].getAttribute("id");
-				let type = (this.link.data[key].hasOwnProperty("type")) ? this.link.data[key]["type"].v.toLowerCase() : null;
+				let type = this.link.data[key].type ? this.link.data[key].type.v.toLowerCase() : null;
 				this.InflateElement(this.list.childNodes[i], this.link.data[key], type);
 			}
 		}
@@ -562,7 +562,7 @@ class List extends Window {
 
 	InflateElement(element, entry, c_type) { //overridable
 		for (let i = 0; i < this.columnsElements.length; i++) {
-			if (!entry.hasOwnProperty(this.columnsElements[i].textContent)) continue;
+			if (!(this.columnsElements[i].textContent in entry)) continue;
 
 			const newAttr = document.createElement("div");
 			newAttr.textContent = entry[this.columnsElements[i].textContent].v;
@@ -660,7 +660,7 @@ class List extends Window {
 			const newAttr = document.createElement("div");
 			const newCheck = document.createElement("input");
 			newCheck.type = "checkbox";
-			newCheck.checked = checkList.hasOwnProperty(attr) ? checkList[attr] : value;
+			newCheck.checked = attr in checkList ? checkList[attr] : value;
 			newAttr.appendChild(newCheck);
 
 			const newLabel = this.AddCheckBoxLabel(newAttr, newCheck, attr);

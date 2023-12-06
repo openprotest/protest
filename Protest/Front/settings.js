@@ -552,6 +552,7 @@ class Settings extends Tabs {
 		const networkInput = document.createElement("input");
 		networkInput.style.gridArea = "2 / 3";
 		networkInput.type = "text";
+		networkInput.placeholder = "10.0.0.1/24";
 		innerBox.append(networkLabel, networkInput);
 
 		const colorLabel = document.createElement("div");

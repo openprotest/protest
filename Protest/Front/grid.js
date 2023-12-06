@@ -487,11 +487,11 @@ class Grid extends Window {
 				let id = element.getAttribute("id");
 				if (!id) continue;
 
-				if (!this.data[id].hasOwnProperty(this.selectedColumn)) continue;
+				if (!(this.selectedColumn in this.data[id])) continue;
 
 				let value = this.data[id][this.selectedColumn].v;
 	
-				if (!this.mods.hasOwnProperty(id)) this.mods[id] = {};
+				if (!(id in this.mods)) this.mods[id] = {};
 				this.mods[id][this.selectedColumn] = "";
 				this.mods[id][newName] = value;
 			}
@@ -541,7 +541,7 @@ class Grid extends Window {
 				let id = element.getAttribute("id");
 				if (!id) continue;
 	
-				if (!this.mods.hasOwnProperty(id)) this.mods[id] = {};
+				if (!(id in this.mods)) this.mods[id] = {};
 				this.mods[id][this.selectedColumn] = txtNewValue.value;
 			}
 			this.UpdateTable();
@@ -561,7 +561,7 @@ class Grid extends Window {
 			let id = element.getAttribute("id");
 			if (!id) continue;
 			
-			if (!this.mods.hasOwnProperty(id)) this.mods[id] = {};
+			if (!(id in this.mods)) this.mods[id] = {};
 			this.mods[id][this.selectedColumn] = "";
 		}
 
@@ -572,7 +572,7 @@ class Grid extends Window {
 		if (!this.selectedColumn) return;
 
 		for (let file in this.mods) {
-			if (this.mods[file].hasOwnProperty(this.selectedColumn)) {
+			if (this.selectedColumn in this.mods[file]) {
 				delete this.mods[file][this.selectedColumn];
 
 				if (Object.keys(this.mods[file]).length === 0) {
@@ -607,7 +607,7 @@ class Grid extends Window {
 				icon.style.backgroundImage = "url(/mono/sort.svg?light)";
 				filters.appendChild(icon);
 			}
-			if (this.filters.hasOwnProperty(this.attributeElements[i].name)) {
+			if (this.attributeElements[i].name in this.filters) {
 				const icon = document.createElement("div");
 				icon.style.backgroundImage = "url(/mono/filter.svg?light)";
 				filters.appendChild(icon);
@@ -630,7 +630,7 @@ class Grid extends Window {
 			let skip = false;
 
 			for (let i = 0; i < this.hideNull.length; i++) {
-				if (!this.data[key].hasOwnProperty(this.hideNull[i])) {
+				if (!(this.hideNull[i] in this.data[key])) {
 					skip = true;
 					break;
 				}
@@ -638,7 +638,7 @@ class Grid extends Window {
 			if (skip) continue;
 
 			for (let filter in this.filters) {
-				if (!this.data[key].hasOwnProperty(filter)) {
+				if (!(filter in this.data[key])) {
 					skip = true;
 					break;
 				}
@@ -703,10 +703,10 @@ class Grid extends Window {
 			input.type = "text";
 			input.onchange = event=> this.Cell_onchange(event);
 			
-			if (this.mods.hasOwnProperty(file) && this.mods[file].hasOwnProperty(columns[i])) {
+			if (file in this.mods && columns[i] in this.mods[file]) {
  				input.value = this.mods[file][columns[i]];
 			}
-			else if (entry.hasOwnProperty(columns[i])){
+			else if (columns[i] in entry){
 				input.value = entry[columns[i]].v;
 			}
 
@@ -731,7 +731,7 @@ class Grid extends Window {
 			}
 		}
 		else if (newValue !== oldValue) { //edit
-			if (!this.mods.hasOwnProperty(file)) {
+			if (!(file in this.mods)) {
 				this.mods[file] = {};
 			}
 			this.mods[file][attribute] = newValue;

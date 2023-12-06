@@ -75,7 +75,7 @@ class UserView extends View {
 		let type = this.link.type ? this.link.type.v.toLowerCase() : "";
 
 		this.SetTitle(this.link.title ? this.link.title.v : "untitled");
-		this.SetIcon(LOADER.userIcons.hasOwnProperty(type) ? LOADER.userIcons[type] : "mono/user.svg");
+		this.SetIcon(type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg");
 		super.InitializePreview();
 		this.InitializeLiveStats();
 	}
@@ -84,7 +84,7 @@ class UserView extends View {
 		super.InitializeSideTools();
 		this.sideTools.textContent = "";
 
-		if (this.link.hasOwnProperty("username") && this.link.username.v.length > 0) {
+		if (this.link.username && this.link.username.v.length > 0) {
 			const btnUnlock = this.CreateSideButton("mono/lock.svg", "Unlock");
 			btnUnlock.onclick = async ()=>{
 				if (btnUnlock.hasAttribute("busy")) return;

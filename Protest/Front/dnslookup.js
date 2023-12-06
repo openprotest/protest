@@ -346,7 +346,7 @@ class DnsLookup extends Console {
 
 		const entryKey = `${type ?? this.params.type},${domain}`;
 
-		if (this.hashtable.hasOwnProperty(entryKey)) {
+		if (entryKey in this.hashtable) {
 			this.list.appendChild(this.hashtable[entryKey].element);
 			return;
 		}
@@ -514,7 +514,7 @@ class DnsLookup extends Console {
 	}
 
 	Remove(domain) {
-		if (!this.hashtable.hasOwnProperty(domain)) return;
+		if (!(domain in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[domain].element);
 		delete this.hashtable[domain];
 

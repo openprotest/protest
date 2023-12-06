@@ -448,7 +448,7 @@ const MENU = {
 
 				const newItem = document.createElement("div");
 				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
-				newItem.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
+				newItem.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
 				newItem.textContent = title;
 
 				if (LOADER.devices.data[file].ip && LOADER.devices.data[file].ip.v.length > 0) {
@@ -492,7 +492,7 @@ const MENU = {
 				const newItem = document.createElement("div");
 				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
 				newItem.style.backgroundImage = `url(mono/user.svg?light)`;
-				newItem.style.backgroundImage = `url(${LOADER.userIcons.hasOwnProperty(type) ? LOADER.userIcons[type] : "mono/user.svg"}?light)`;
+				newItem.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"}?light)`;
 				newItem.textContent = title;
 
 				if (LOADER.users.data[file].username && LOADER.users.data[file].username.v.length > 0) {

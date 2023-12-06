@@ -1,17 +1,37 @@
-﻿using System.IO;
+﻿using Protest.Http;
+using System.IO;
 using System.Net;
+using System.Text;
 
 namespace Protest.Tools;
 internal static class Zones {
+
+    private static readonly object syncLock = new object();
+
     public static byte[] ListZones() {
         if (!File.Exists(Data.FILE_ZONES)) return "[]"u8.ToArray();
 
         try {
-            byte[] zones = File.ReadAllBytes(Data.FILE_ZONES);
-            return zones;
+            lock (syncLock) {
+                return File.ReadAllBytes(Data.FILE_ZONES);
+            }
         }
         catch {
             return Data.CODE_FAILED.Array;
+        }
+    }
+
+    public static string ListZonesString() {
+        if (!File.Exists(Data.FILE_ZONES))
+            return "[]";
+
+        try {
+            lock (syncLock) {
+                return File.ReadAllText(Data.FILE_ZONES);
+            }
+        }
+        catch {
+            return "[]";
         }
     }
 
@@ -20,7 +40,11 @@ internal static class Zones {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         payload = reader.ReadToEnd();
 
-        File.WriteAllText(Data.FILE_ZONES, payload);
+        lock (syncLock) {
+            File.WriteAllText(Data.FILE_ZONES, payload);
+        }
+
+        KeepAlive.Broadcast($"{{\"action\":\"zones\",\"list\":{payload}}}", "/config/zones/list");
 
         return Data.CODE_OK.Array;
     }

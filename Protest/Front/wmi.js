@@ -118,7 +118,7 @@ class Wmi extends Window {
 
 		let words = lastQuery.split(" ");
 		let className = null;
-		if (this.wmi_classes.hasOwnProperty("classes"))
+		if (this.wmi_classes.classes)
 			for (let i = 0; i < words.length; i++)
 				if (words[i].startsWith("win32_")) {
 					className = words[i];
@@ -190,7 +190,7 @@ class Wmi extends Window {
 
 		innerBox.append(lstClasses, lstProperties, txtPreview);
 
-		if (!this.wmi_classes.hasOwnProperty("classes")) {
+		if (!this.wmi_classes.classes) {
 			this.ConfirmBox("Failed to load WMI classes.");
 			btnOK.onclick();
 			return;
@@ -213,7 +213,7 @@ class Wmi extends Window {
 		let propertyCheckboxes = [];
 
 		txtClassFilter.oninput = ()=> {
-			if (!this.wmi_classes.hasOwnProperty("classes")) return;
+			if (!this.wmi_classes.classes) return;
 			let filter = txtClassFilter.value.toLowerCase();
 
 			lstClasses.textContent = "";
@@ -394,7 +394,7 @@ class Wmi extends Window {
 		let hasMethods = false;
 		let targetHost = this.txtTarget.value;
 
-		if (this.wmi_classes.hasOwnProperty("classes")) {
+		if (this.wmi_classes.classes) {
 			for (let i = 0; i < words.length; i++)
 				if (words[i].startsWith("win32_")) {
 					className = words[i];
@@ -403,7 +403,7 @@ class Wmi extends Window {
 
 			for (let i = 0; i < this.wmi_classes.classes.length; i++)
 				if (this.wmi_classes.classes[i].class.toLowerCase().indexOf(className) > -1) {
-					hasMethods = this.wmi_classes.classes[i].hasOwnProperty("methods");
+					hasMethods = this.wmi_classes.classes[i].methods;
 					break;
 				}
 		}

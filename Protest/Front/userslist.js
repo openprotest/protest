@@ -54,7 +54,7 @@ class UsersList extends List {
 	InflateElement(element, entry, type) { //override
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
-		icon.style.backgroundImage = `url(${LOADER.userIcons.hasOwnProperty(type) ? LOADER.userIcons[type] : "mono/user.svg"})`;
+		icon.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"})`;
 		element.appendChild(icon);
 		
 		super.InflateElement(element, entry, type);

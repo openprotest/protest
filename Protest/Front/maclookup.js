@@ -56,7 +56,7 @@ class MacLookup extends Console {
 	}
 
 	async Add(macaddr) {
-		if (this.hashtable.hasOwnProperty(macaddr)) {
+		if (macaddr in this.hashtable) {
 			this.list.appendChild(this.hashtable[macaddr].element);
 			return;
 		}
@@ -109,7 +109,7 @@ class MacLookup extends Console {
 	}
 
 	Remove(macaddr) {
-		if (!this.hashtable.hasOwnProperty(macaddr)) return;
+		if (!(macaddr in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[macaddr].element);
 		delete this.hashtable[macaddr];
 

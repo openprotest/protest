@@ -54,7 +54,7 @@ class DevicesList extends List {
 	InflateElement(element, entry, type) { //override
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
-		icon.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+		icon.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
 		element.appendChild(icon);
 
 		super.InflateElement(element, entry, type);

@@ -280,7 +280,7 @@ class KeyboardTester extends Window {
 			event.preventDefault();
 			this.PushHistory(event.code);
 
-			if (!this.keyElements.hasOwnProperty(event.code)) return;
+			if (!(event.code in this.keyElements)) return;
 			this.keyElements[event.code].style.color = "#000";
 			this.keyElements[event.code].style.backgroundColor = "var(--clr-accent)";
 			this.keyElements[event.code].style.filter = "brightness(2.5)";
@@ -296,7 +296,7 @@ class KeyboardTester extends Window {
 				this.keyElements["PrintScreen"].style.backgroundColor = "var(--clr-accent)";
 			}
 
-			if (!this.keyElements.hasOwnProperty(event.code)) return;
+			if (!(event.code in this.keyElements)) return;
 			this.keyElements[event.code].style.filter = "none";
 			this.keyElements[event.code].style.boxShadow = "none";
 
@@ -825,7 +825,7 @@ class KeyboardTester extends Window {
 		element.style.color = "#000";
 		element.style.backgroundColor = "var(--clr-accent)";
 
-		if (this.keyElements.hasOwnProperty(key)) {
+		if (key in this.keyElements) {
 			element.textContent = this.keyText[key];
 		}
 		else {

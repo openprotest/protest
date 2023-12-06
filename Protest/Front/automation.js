@@ -86,7 +86,7 @@ class Automation extends List {
 		this.startButton.disabled = true;
 		this.stopButton.disabled = true;
 
-		if (!this.link.data.hasOwnProperty(this.params.select)) {
+		if (!(this.params.select in this.link.data)) {
 			return;
 		}
 

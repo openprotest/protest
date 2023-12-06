@@ -1143,7 +1143,7 @@ class Watchdog extends Window {
 		if (delta > 1) {
 			let today = new Date(this.utcToday);
 			let todayString = `${today.getFullYear()}${`${today.getMonth()+1}`.padStart(2,"0")}${`${today.getDate()}`.padStart(2,"0")}`;
-			if (!this.cache.hasOwnProperty(today.getTime())) { this.cache[today.getTime()] = {}; }
+			if (!(today.getTime() in this.cache)) { this.cache[today.getTime()] = {}; }
 			for (let file in this.watchers) {
 				this.GetWatcher(today.getTime(), file, todayString);
 			}
@@ -1151,7 +1151,7 @@ class Watchdog extends Window {
 		if (delta > 2) {
 			let yesterday = new Date(this.utcToday - Watchdog.DAY_TICKS);
 			let yesterdayString = `${yesterday.getFullYear()}${`${yesterday.getMonth()+1}`.padStart(2,"0")}${`${yesterday.getDate()}`.padStart(2,"0")}`;
-			if (!this.cache.hasOwnProperty(yesterday.getTime())) { this.cache[yesterday.getTime()] = {}; }
+			if (!(yesterday.getTime() in this.cache)) { this.cache[yesterday.getTime()] = {}; }
 			for (let file in this.watchers) {
 				this.GetWatcher(yesterday.getTime(), file, yesterdayString);
 			}
@@ -1164,10 +1164,10 @@ class Watchdog extends Window {
 			let day = new Date(date);
 			let dayString = `${day.getFullYear()}${`${day.getMonth()+1}`.padStart(2,"0")}${`${day.getDate()}`.padStart(2,"0")}`;
 
-			if (!this.cache.hasOwnProperty(date)) { this.cache[date] = {}; }
+			if (!(date in this.cache)) { this.cache[date] = {}; }
 
 			for (let file in this.watchers) {
-				if (this.cache[date].hasOwnProperty(file)) {
+				if (file in this.cache[date]) {
 					this.DrawWatcher(this.watchers[file]);
 					continue;
 				}
@@ -1177,7 +1177,7 @@ class Watchdog extends Window {
 	}
 
 	async GetWatcher(date, file, dayString) {
-		if (!this.cache[date].hasOwnProperty(file)) { this.cache[date][file] = null; }
+		if (!(file in this.cache[date])) { this.cache[date][file] = null; }
 
 		const response = await fetch(`watchdog/view?date=${dayString}&file=${file}`);
 		const buffer = await response.arrayBuffer();
@@ -1217,7 +1217,7 @@ class Watchdog extends Window {
 			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels) break;
 
-			if (previous.hasOwnProperty(date) && date) {
+			if (date in previous && date) {
 				const svg = previous[date];
 				svg.style.right = `${right}px`;
 				watcher.element.childNodes[2].appendChild(svg);
@@ -1236,7 +1236,7 @@ class Watchdog extends Window {
 		svg.setAttribute("width", this.dayPixels);
 		svg.setAttribute("height", 32);
 
-		if (this.cache.hasOwnProperty(date) && this.cache[date].hasOwnProperty(file)) {
+		if (date in this.cache && file in this.cache[date]) {
 			if (this.cache[date][file] === null) { return svg; }
 
 			let lastX = -20, lastV = -20;

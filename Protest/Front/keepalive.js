@@ -5,6 +5,7 @@ const KEEP = {
 	username: "",
 	color: "var(--clr-accent)",
 	authorization: [],
+	zones: [],
 	lastReconnect: 0,
 	redDot: document.createElement("div"),
 	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
@@ -77,6 +78,46 @@ const KEEP = {
 			KEEP.authorization = message.authorization;
 			for (let i=0; i<WIN.array.length; i++) {
 				WIN.array[i].UpdateAuthorization();
+			}
+			break;
+
+		case "zones":
+			KEEP.zones = message.list;
+
+			for (let i=0; i<KEEP.zones.length; i++) {
+				const split = KEEP.zones[i].network.split("/");
+				if (split.length !== 2) { continue; }
+				
+				let gw = split[0].split(".").map(o=>parseInt(o));
+				if (gw.length != 4) { continue; }
+				if (gw.find(o => o<0 || o>255)) { continue; }
+
+				let cidr = parseInt(split[1]);
+				let octet = Math.floor(cidr / 8);
+				let target = cidr % 8;
+
+				let mask = [0, 0, 0, 0];
+				for (let i=0; i<octet; i++) { mask[i] = 255; }
+				for (let i=octet+1; i<4; i++) { mask[i] = 0; }
+				let v = 0;
+				for (let i=0; i<target; i++) { v += Math.pow(2, 7-i); }
+				mask[octet] = v;
+
+				let first =
+					(gw[0] & mask[0]) * 256*256*256 +
+					(gw[1] & mask[1]) * 256*256 +
+					(gw[2] & mask[2]) * 256 +
+					(gw[3] & mask[3]);
+
+				let last =
+					(gw[0] | (255 - mask[0])) * 256*256*256 +
+					(gw[1] | (255 - mask[1])) * 256*256 +
+					(gw[2] | (255 - mask[2])) * 256 +
+					(gw[3] | (255 - mask[3]));
+
+				KEEP.zones[i].first = first;
+				KEEP.zones[i].last = last;
+				KEEP.zones[i].priority = cidr;
 			}
 			break;
 
@@ -219,7 +260,7 @@ const KEEP = {
 					KEEP.chatNotificationSound.play();
 				}
 			}
-			
+
 			if (chatCount === 0) {
 				const newChat = new Chat();
 				newChat.win.style.display = "none";
@@ -249,11 +290,11 @@ const KEEP = {
 		message.style.fontSize = "16px";
 		message.style.fontWeight = "600";
 		notificationBox.appendChild(message);
-	
+
 		const buttonsBox = document.createElement("div");
 		buttonsBox.style.paddingTop = "16px";
 		notificationBox.appendChild(buttonsBox);
-	
+
 		return {
 			notificationBox: notificationBox,
 			message: message,
@@ -273,7 +314,7 @@ const KEEP = {
 		btnReload.type = "button";
 		btnReload.value = "Reload";
 		btnReload.style.height = "30px";
-	
+
 		const btnIgnore = document.createElement("input");
 		btnIgnore.type = "button";
 		btnIgnore.value = "Ignore";
@@ -283,17 +324,17 @@ const KEEP = {
 
 		btnReconnect.onclick = ()=> {
 			KEEP.Initialize();
-	
+
 			notification.notificationBox.style.opacity = "0";
 			setTimeout(()=> {
 				container.removeChild(notification.notificationBox);
 			}, 400);
 		};
-	
+
 		btnReload.onclick = ()=> {
 			location.reload();
 		};
-	
+
 		btnIgnore.onclick = ()=> {
 			notification.notificationBox.style.opacity = "0";
 			setTimeout(()=> {

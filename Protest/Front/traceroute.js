@@ -118,7 +118,7 @@ class TraceRoute extends Console {
 	}
 
 	Add(hostname) {
-		if (this.hashtable.hasOwnProperty(hostname)) {
+		if (hostname in this.hashtable) {
 			this.list.appendChild(this.hashtable[hostname].element);
 			return;
 		}
@@ -194,7 +194,7 @@ class TraceRoute extends Console {
 	}
 
 	Remove(hostname) {
-		if (!this.hashtable.hasOwnProperty(hostname)) return;
+		if (!(hostname in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[hostname].element);
 		delete this.hashtable[hostname];
 
@@ -266,7 +266,7 @@ class TraceRoute extends Console {
 
 			if (name == "over" || name == "unreachable") {
 				name = split[1];
-				if (this.hashtable.hasOwnProperty(name)) {
+				if (name in this.hashtable) {
 					this.hashtable[name].status.style.visibility = "hidden";
 					if (this.pending.includes(name)) this.pending.splice(this.pending.indexOf(name), 1);
 				}
@@ -274,7 +274,7 @@ class TraceRoute extends Console {
 			}
 			else if (name == "[hostnames]") {
 				let target = split[1];
-				if (this.hashtable.hasOwnProperty(target)) {
+				if (target in this.hashtable) {
 					for (let i = 2; i < split.length; i += 2)
 						for (let j = 0; j < this.hashtable[target].result.childNodes.length; j++)
 							if (this.hashtable[target].result.childNodes[j].textContent.trim() === split[i]) {
@@ -285,7 +285,7 @@ class TraceRoute extends Console {
 				}
 			}
 			else
-				if (this.hashtable.hasOwnProperty(name)) {
+				if (name in this.hashtable) {
 					const hop = document.createElement("div");
 					hop.textContent = split[1];
 					this.hashtable[name].result.appendChild(hop);

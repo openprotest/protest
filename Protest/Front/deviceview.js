@@ -39,6 +39,8 @@ class DeviceView extends View {
 		"domain", "username", "password", "la password", "ssh username", "ssh password"
 	];
 
+	static regexIPv4 = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
+
 	constructor(params) {
 		super();
 		this.params = params ?? { file: null };
@@ -60,7 +62,7 @@ class DeviceView extends View {
 		if (params.file) {
 			this.SetTitle(this.link.name ? this.link.name.v : "");
 			this.InitializePreview();
-
+			setTimeout(()=>this.InitializeSubnetEmblem(), 200);
 		}
 		else if (params.clone) {
 			const origin = LOADER.devices.data[params.clone];
@@ -97,10 +99,58 @@ class DeviceView extends View {
 		let type = this.link.type ? this.link.type.v.toLowerCase() : "";
 
 		this.SetTitle(this.link.name ? this.link.name.v : "untitled");
-		this.SetIcon(LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg");
+		this.SetIcon(type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg");
 		super.InitializePreview();
 		this.InitializeLiveStats();
 		this.InitializeInterfaces();
+	}
+
+	InitializeSubnetEmblem() {
+		if (this.emblem) {
+			this.task.removeChild(this.emblem);
+			this.emblem = null;
+		}
+
+		if (!this.link.ip) return;
+		
+		let colors = [];
+		let ips = this.link.ip.v.split(";").map(o=>o.trim());
+		
+		for (let i=0; i<ips.length; i++) {
+			if (!ips[i].match(DeviceView.regexIPv4)) { continue; }
+			let split = ips[i].split(".").map(o=>parseInt(o));
+			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3]
+
+			for (let j=0; j<KEEP.zones.length; j++) {
+				if (n < KEEP.zones[j].first || n > KEEP.zones[j].last) continue;
+				colors.push(KEEP.zones[j].color);
+			}
+		}
+		
+		if (colors.length === 0) { return; }
+		
+		let gradient = "linear-gradient(";
+		for (let i=0; i<colors.length; i++) {
+			if (i > 0) {
+				gradient += colors[i-1];
+				gradient += ` ${100 * i / colors.length}%`;
+				gradient += ", ";
+			}
+
+			gradient += colors[i];
+			gradient += ` ${100 * i / colors.length}%`;
+			if (i != colors.length - 1) {gradient += ","}
+		}
+		gradient += `, ${colors[colors.length-1]} 100%`;
+		gradient += ")";
+		
+		this.emblem = document.createElement("div");
+		this.emblem.className = "task-icon-emblem"
+		this.task.appendChild(this.emblem);
+
+		const emblemInner = document.createElement("div");
+		emblemInner.style.background = gradient;
+		this.emblem.appendChild(emblemInner);
 	}
 
 	InitializeSideTools() { //override
@@ -116,20 +166,20 @@ class DeviceView extends View {
 		}
 
 		const overwriteProtocol = {};
-		if (this.link.hasOwnProperty(".overwriteprotocol")) {
+		if (".overwriteprotocol" in this.link) {
 			this.link[".overwriteprotocol"].v.split(";").map(o=> o.trim()).forEach(o=> {
 				let split = o.split(":");
 				if (split.length === 2) overwriteProtocol[split[0]] = split[1];
 			});
 		}
-		if (this.link.hasOwnProperty("overwriteprotocol")) {
+		if ("overwriteprotocol" in this.link) {
 			this.link["overwriteprotocol"].v.split(";").map(o=> o.trim()).forEach(o=> {
 				let split = o.split(":");
 				if (split.length === 2) overwriteProtocol[split[0]] = split[1];
 			});
 		}
 
-		if (this.link.hasOwnProperty("mac address")) {
+		if ("mac address" in this.link) {
 			const btnWoL = this.CreateSideButton("mono/wol.svg", "Wake on LAN");
 			btnWoL.onclick = async ()=> {
 				if (btnWoL.hasAttribute("busy")) return;
@@ -144,10 +194,10 @@ class DeviceView extends View {
 			};
 		}
 
-		if (this.link.hasOwnProperty("ports")) {
+		if (this.link.ports) {
 			let ports = this.link["ports"].v.split(";").map(o=> parseInt(o.trim()));
 
-			if (ports.includes(445) && this.link.hasOwnProperty("operating system")) { //wmi service 445
+			if (ports.includes(445) && "operating system" in this.link) { //wmi service 445
 
 				const btnPowerOff = this.CreateSideButton("mono/turnoff.svg", "Power off");
 				btnPowerOff.onclick = ()=> {
@@ -196,9 +246,9 @@ class DeviceView extends View {
 
 				const btnProcesses = this.CreateSideButton("mono/console.svg", "Processes");
 				btnProcesses.onclick = ()=> {
-					const wmi = new Wmi({ target:host.split(";")[0].trim(), query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
+					const wmi = new Wmi({target:host.split(";")[0].trim(), query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
 					wmi.SetIcon("mono/console.svg");
-					if (!this.link.hasOwnProperty("name") || this.link["name"].v.length == 0)
+					if (!this.link.name || this.link["name"].v.length == 0)
 						wmi.SetTitle("[untitled] - Processes");
 					else
 						wmi.SetTitle(this.link["name"].v + " - Processes");
@@ -208,7 +258,7 @@ class DeviceView extends View {
 				btnServices.onclick = ()=> {
 					const wmi = new Wmi({target: host.split(";")[0].trim(), query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
 					wmi.SetIcon("mono/service.svg");
-					if (!this.link.hasOwnProperty("name") || this.link["name"].v.length == 0)
+					if (!this.link.name || this.link["name"].v.length==0)
 						wmi.SetTitle("[untitled] - Processes");
 					else
 						wmi.SetTitle(this.link["name"].v + " - Services");
@@ -324,8 +374,8 @@ class DeviceView extends View {
 			}
 		}
 
-		if (this.link.hasOwnProperty("type")) {
-			const type = this.link["type"].v.toLowerCase();
+		if (this.link.type) {
+			const type = this.link.type.v.toLowerCase();
 			if (type === "router" || type === "switch") {
 				const btnConfig = this.CreateSideButton("mono/configfile.svg", "Configuration");
 				btnConfig.style.marginTop = "16px";
@@ -340,7 +390,7 @@ class DeviceView extends View {
 	InitializeInterfaces() {
 		this.liveC.textContent = "";
 
-		if (!this.link.hasOwnProperty(".interfaces")) return;
+		if (!(".interfaces" in this.link)) return;
 		let obj;
 
 		try {
@@ -436,9 +486,9 @@ class DeviceView extends View {
 					this.floating.appendChild(divVlan);
 				}
 
-				if (list[i].link && LOADER.devices.data.hasOwnProperty(list[i].link)) {
+				if (list[i].link && list[i].link in LOADER.devices.data) {
 					let file = list[i].link;
-					let type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file].type.v.toLowerCase() : "";
+					let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : "";
 					const icon = LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg";
 					
 					this.floating.appendChild(document.createElement("br"));
@@ -455,13 +505,13 @@ class DeviceView extends View {
 					linkIcon.style.paddingLeft = "36px";
 					this.floating.appendChild(linkIcon);
 
-					if (LOADER.devices.data[file].hasOwnProperty("name")) {
+					if (LOADER.devices.data[file].name) {
 						linkIcon.textContent = LOADER.devices.data[file]["name"].v;
 					}
-					else if (LOADER.devices.data[file].hasOwnProperty("hostname")) {
+					else if (LOADER.devices.data[file].hostname) {
 						linkIcon.textContent = file["hostname"].v;
 					}
-					else if (LOADER.devices.data[file].hasOwnProperty("ip")) {
+					else if (LOADER.devices.data[file].ip) {
 						linkIcon.textContent = LOADER.devices.data[file]["ip"].v;
 					}
 
@@ -482,8 +532,8 @@ class DeviceView extends View {
 
 				this.floating.style.left = `${x}px`;
 				this.floating.style.top = `${front.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
-				this.floating.style.visibility = "visible";
 				this.floating.style.opacity = "1";
+				this.floating.style.visibility = "visible";
 			};
 
 			front.onmouseleave = ()=> {
@@ -506,11 +556,19 @@ class DeviceView extends View {
 
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/device");
 
+		let dotPingCounter = 0;
+
 		this.liveStatsWebSockets.onopen = ()=> {
+			dotPingCounter = 0;
+
 			this.AfterResize();
 			const icon = this.task.querySelector(".icon");
 			this.task.textContent = "";
 			this.task.appendChild(icon);
+
+			if (this.emblem) {
+				this.task.appendChild(this.emblem);
+			}
 
 			this.liveA.textContent = "";
 			this.liveB.textContent = "";
@@ -529,12 +587,16 @@ class DeviceView extends View {
 				this.CreateWarning(json.warning);
 			}
 			else if (json.echoReply) {
+				
 				if (this.task.childNodes.length < 6) {
 					this.dot = document.createElement("div");
 					this.dot.className = "task-icon-dots";
+					this.dot.style.left = `${6.5 + dotPingCounter*20}%`;
 					this.dot.style.backgroundColor = UI.PingColor(json.echoReply);
 					this.task.appendChild(this.dot);
 				}
+
+				dotPingCounter++;
 
 				const pingButton = this.CreateInfoButton(json.for, "/mono/ping.svg");
 				pingButton.secondary.textContent = isNaN(json.echoReply) ? json.echoReply : `${json.echoReply}ms`;
@@ -574,7 +636,7 @@ class DeviceView extends View {
 					if (json.activeUser.indexOf("\\") > 0) usersList.push(json.activeUser.split("\\")[1]);
 					let found = null;
 					for (let file in LOADER.users.data) {
-						if (!LOADER.users.data[file].hasOwnProperty("username")) continue;
+						if (!LOADER.users.data[file].username) continue;
 						if (usersList.includes(LOADER.users.data[file].username.v)) {
 							found = file;
 							break;
@@ -597,7 +659,7 @@ class DeviceView extends View {
 		
 		this.liveStatsWebSockets.onclose = ()=> {
 			this.liveStatsWebSockets = null;
-			if (this.link.hasOwnProperty("ip")) {
+			if (this.link.ip) {
 				this.InitializeGraphs();
 			}
 		};
@@ -726,6 +788,7 @@ class DeviceView extends View {
 			iconBox.style.height = "64px";
 			iconBox.style.backgroundImage = `url(${icon})`;
 			iconBox.style.backgroundSize = "64px 64px";
+			iconBox.style.filter = "drop-shadow(var(--clr-dark) 0 0 2px)";
 			graphBox.appendChild(iconBox);
 
 			const infoBox = document.createElement("div");
@@ -1075,6 +1138,7 @@ class DeviceView extends View {
 				LOADER.devices.data[json.filename] = obj;
 
 				this.InitializePreview();
+				this.InitializeSubnetEmblem();
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=>{
@@ -1082,7 +1146,7 @@ class DeviceView extends View {
 				});
 			}
 			finally {
-				if (isNew) this.content.removeChild(btnFetch);
+				if (isNew && btnFetch.parentElement) this.content.removeChild(btnFetch);
 			}
 		});
 	}
@@ -1129,9 +1193,9 @@ class DeviceView extends View {
 
 		innerBox.parentElement.style.backgroundColor = "#202020";
 
-		let hasCredentials = this.link.hasOwnProperty("username") && this.link.hasOwnProperty("password");
+		let hasCredentials = this.link.username && this.link.password;
 		if (!hasCredentials) {
-			hasCredentials = this.link.hasOwnProperty("ssh username") && this.link.hasOwnProperty("ssh password");
+			hasCredentials = "ssh username" in this.link && "ssh password" in this.link;
 		}
 
 		const divFetch = document.createElement("div");
@@ -1658,19 +1722,19 @@ class DeviceView extends View {
 				const device = LOADER.devices.data[link];
 				if (device) {
 					let value;
-					if (device.hasOwnProperty("name") && device["name"].v.length > 0) {
-						value = device["name"].v;
+					if (device.name && device.name.v.length > 0) {
+						value = device.name.v;
 					}
-					else if (device.hasOwnProperty("hostname") && device["hostname"].v.length > 0) {
-						value = device["hostname"].v;
+					else if (device.hostname && device.hostname.v.length > 0) {
+						value = device.hostname.v;
 					}
-					else if (device.hasOwnProperty("ip") && device["ip"].v.length > 0) {
-						value = device["ip"].v;
+					else if (device.ip && device.ip.v.length > 0) {
+						value = device.ip.v;
 					}
 
 					txtL.value = value;
 					const type = device.type ? device.type.v.toLowerCase() : null;
-					const icon = LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg";
+					const icon = type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg";
 					
 					txtL.style.backgroundImage = `url(${icon})`;
 				}
@@ -1830,7 +1894,7 @@ class DeviceView extends View {
 						keywords = txtFind.value.trim().toLowerCase().split(" ");
 
 					let EQUIP_LIST_ORDER;
-					if (localStorage.hasOwnProperty("deviceslist_columns"))
+					if (localStorage.deviceslist_columns)
 						EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("deviceslist_columns"));
 					else
 						EQUIP_LIST_ORDER = ["name", "type", "hostname", "ip", "manufacturer", "model"];
@@ -1858,15 +1922,15 @@ class DeviceView extends View {
 						element.className = "list-element";
 						divEquip.appendChild(element);
 
-						const type = LOADER.devices.data[file].hasOwnProperty("type") ? LOADER.devices.data[file]["type"].v.toLowerCase() : null;
+						const type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : null;
 
 						const icon = document.createElement("div");
 						icon.className = "list-element-icon";
-						icon.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+						icon.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
 						element.appendChild(icon);
 
 						for (let j=0; j<6; j++) {
-							if (!LOADER.devices.data[file].hasOwnProperty(EQUIP_LIST_ORDER[j])) continue;
+							if (!(EQUIP_LIST_ORDER[j] in LOADER.devices.data[file])) continue;
 							if (LOADER.devices.data[file][EQUIP_LIST_ORDER[j]].v.length === 0) continue;
 							const newLabel = document.createElement("div");
 							newLabel.style.left = j === 0 ? `calc(32px + ${100 * j / 6}%)` : `${100 * j / 6}%`;
@@ -1877,14 +1941,14 @@ class DeviceView extends View {
 
 						element.ondblclick = ()=> {
 							let value;
-							if (LOADER.devices.data[file].hasOwnProperty("name") && LOADER.devices.data[file]["name"].v.length > 0) {
-								value = LOADER.devices.data[file]["name"].v;
+							if (LOADER.devices.data[file].name && LOADER.devices.data[file].name.v.length > 0) {
+								value = LOADER.devices.data[file].name.v;
 							}
-							else if (LOADER.devices.data[file].hasOwnProperty("hostname") && LOADER.devices.data[file]["hostname"].v.length > 0) {
-								value = LOADER.devices.data[file]["hostname"].v;
+							else if (LOADER.devices.data[file].hostname && LOADER.devices.data[file].hostname.v.length > 0) {
+								value = LOADER.devices.data[file].hostname.v;
 							}
-							else if (LOADER.devices.data[file].hasOwnProperty("ip") && LOADER.devices.data[file]["ip"].v.length > 0) {
-								value = LOADER.devices.data[file]["ip"].v;
+							else if (LOADER.devices.data[file].ip && LOADER.devices.data[file].ip.v.length > 0) {
+								value = LOADER.devices.data[file].ip.v;
 							}
 
 							obj.link = file;
@@ -1996,7 +2060,7 @@ class DeviceView extends View {
 
 		btnExtractCancel.onclick = ()=> FetchToggle();
 		
-		if (this.link.hasOwnProperty(".interfaces") && this.link[".interfaces"].v) {
+		if (".interfaces" in this.link && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
 				AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);

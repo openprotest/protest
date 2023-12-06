@@ -104,7 +104,7 @@ class LocateIp extends Console {
 		if (ipaddr.length == 0) return;
 		if (ipaddr.indexOf(" ") > -1) return;
 
-		if (this.hashtable.hasOwnProperty(ipaddr)) {
+		if (ipaddr in this.hashtable) {
 			this.list.appendChild(this.hashtable[ipaddr].element);
 			return;
 		}
@@ -217,7 +217,7 @@ class LocateIp extends Console {
 	}
 
 	Remove(ipaddr) {
-		if (!this.hashtable.hasOwnProperty(ipaddr)) return;
+		if (!(ipaddr in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[ipaddr].element);
 		delete this.hashtable[ipaddr];
 

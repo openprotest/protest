@@ -341,7 +341,7 @@ class PortScan extends Console {
 	}
 
 	Add(hostname) {
-		if (this.hashtable.hasOwnProperty(hostname)) {
+		if (hostname in this.hashtable) {
 			this.list.appendChild(this.hashtable[hostname].element);
 			return;
 		}
@@ -415,7 +415,7 @@ class PortScan extends Console {
 	}
 
 	Remove(hostname) {
-		if (!this.hashtable.hasOwnProperty(hostname)) return;
+		if (!(hostname in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[hostname].element);
 		delete this.hashtable[hostname];
 
@@ -498,7 +498,7 @@ class PortScan extends Console {
 
 			if (name === "done" || name === "unreachable") {
 				name = split[1];
-				if (this.hashtable.hasOwnProperty(name)) {
+				if (name in this.hashtable) {
 					this.hashtable[name].status.style.visibility = "hidden";
 					if (this.pending.includes(name)) this.pending.splice(this.pending.indexOf(name), 1);
 				}
@@ -506,14 +506,14 @@ class PortScan extends Console {
 				this.UpdateTaskSpinner();
 			}
 			else {
-				if (this.hashtable.hasOwnProperty(name))
+				if (name in this.hashtable)
 					for (let i = 1; i < split.length; i++) {
 						if (split[i].length == 0) continue;
 
 						const port = document.createElement("div");
 						port.textContent = split[i];
 						this.hashtable[name].result.appendChild(port);
-						if (PortScan.PROTOCOL.hasOwnProperty(parseInt(split[i]))) {
+						if (parseInt(split[i]) in PortScan.PROTOCOL) {
 							port.className = "tool-after-label";
 							port.setAttribute("after-label", PortScan.PROTOCOL[parseInt(split[i])]);
 						}

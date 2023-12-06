@@ -318,7 +318,7 @@ class View extends Window {
 					}
 				}
 				else {
-					if (!hash.hasOwnProperty(this.groupSchema[i])) continue;
+					if (!(this.groupSchema[i] in hash)) continue;
 
 					if (nextGroup) {
 						this.attributes.appendChild(nextGroup);
@@ -549,7 +549,7 @@ class View extends Window {
 					for (let key in sorted[i].obj) {
 						if (key.includes("password")) continue;
 
-						if (sorted[i + 1].obj.hasOwnProperty(key)) {
+						if (key in sorted[i+1].obj) {
 							if (sorted[i].obj[key].v === sorted[i + 1].obj[key].v) {
 								unchanged++;
 							}
@@ -564,7 +564,7 @@ class View extends Window {
 
 					for (let key in sorted[i + 1].obj) {
 						if (key.includes("password")) continue;
-						if (!sorted[i].obj.hasOwnProperty(key)) {
+						if (!(key in sorted[i].obj)) {
 							removed++;
 						}
 					}
@@ -655,7 +655,7 @@ class View extends Window {
 						}
 
 						let key = this.attributes.childNodes[j].childNodes[0].value;
-						if (sorted[i+1].obj.hasOwnProperty(key)) {
+						if (key in sorted[i+1].obj) {
 							if (this.attributes.childNodes[j].childNodes[1].firstChild.value !== sorted[i+1].obj[key].v) {
 								this.attributes.childNodes[j].style.backgroundImage = "url(mono/edit.svg)";
 							}

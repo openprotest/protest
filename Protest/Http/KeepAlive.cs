@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Protest.Tools;
 
 namespace Protest.Http;
 
@@ -19,7 +20,6 @@ internal static class KeepAlive {
         public string username;
         public object syncLock;
     }
-
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
 
@@ -66,6 +66,9 @@ internal static class KeepAlive {
             //init
             ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color ?? "#A0A0A0"}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
             await ws.SendAsync(initSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+            ArraySegment<byte> zonesSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"zones\",\"list\":{Zones.ListZonesString()}}}"));
+            await ws.SendAsync(zonesSegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
             StringBuilder messageBuilder = new StringBuilder();
 

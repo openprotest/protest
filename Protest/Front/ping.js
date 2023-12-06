@@ -482,7 +482,7 @@ class Ping extends Console {
 		}
 
 		for (const key in LOADER.devices.data) { //get device
-			if (!LOADER.devices.data[key].hasOwnProperty("type") || LOADER.devices.data[key].type.length === 0) continue;
+			if (!LOADER.devices.data[key].type || LOADER.devices.data[key].type.length === 0) continue;
 
 			const target = LOADER.devices.data[key].ip?.v ?? LOADER.devices.data[key].hostname?.v;
 			if (!target) continue;
@@ -500,7 +500,7 @@ class Ping extends Console {
 			if (type) {
 				const icon = document.createElement("div");
 				icon.className = "tool-icon";
-				icon.style.backgroundImage = `url(${LOADER.deviceIcons.hasOwnProperty(type) ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
+				icon.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
 				div.appendChild(icon);
 
 				icon.ondblclick = ()=> {
@@ -671,7 +671,7 @@ class Ping extends Console {
 			let index = payload[i];
 			let value = payload[i + 1];
 
-			if (this.hashtable.hasOwnProperty(index)) {
+			if (index in this.hashtable) {
 
 				for (let j = 0; j < Ping.HISTORY_LIMIT - 1; j++) this.hashtable[index].ping[j] = this.hashtable[index].ping[j + 1];
 				this.hashtable[index].ping[Ping.HISTORY_LIMIT - 1] = value;
