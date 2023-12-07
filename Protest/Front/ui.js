@@ -483,7 +483,7 @@ const MENU = {
 				);
 				if (!match) continue;
 
-				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v : null;
+				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v.toLowerCase()  : null;
 
 				let title = LOADER.users.data[file]["display name"] ? LOADER.users.data[file]["display name"].v : null;
 				title ??= LOADER.users.data[file].title ? LOADER.users.data[file].title.v : null;
@@ -491,7 +491,6 @@ const MENU = {
 
 				const newItem = document.createElement("div");
 				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
-				newItem.style.backgroundImage = `url(mono/user.svg?light)`;
 				newItem.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"}?light)`;
 				newItem.textContent = title;
 

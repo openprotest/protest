@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Net;
 
 namespace Protest;
 internal static class Configuration {
@@ -11,6 +12,8 @@ internal static class Configuration {
     internal static byte[] DB_KEY_IV;
 
     internal static bool force_registry_keys = false;
+    internal static bool accept_xff_header = false;
+    internal static IPAddress accept_xff_only_from = null;
 
     internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
@@ -47,16 +50,26 @@ internal static class Configuration {
                 DB_KEY_IV = DB_KEY_STRING.Length > 0 ? Cryptography.HashStringToBytes(DB_KEY_STRING, 16) : null; //128-bits
                 break;
 
+            case "front_path":
+                front_path = value.ToString();
+                break;
+
             case "force_registry_keys":
-                force_registry_keys = value == "true";
+                force_registry_keys = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                break;
+
+            case "accept_xff_header":
+                accept_xff_header = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                break;
+
+            case "accept_xff_header_only_from":
+                if (IPAddress.TryParse(value.ToString(), out IPAddress address)) {
+                    accept_xff_only_from = address;
+                }
                 break;
 
             case "http_prefix":
                 httpPrefixes.Add(value.ToString());
-                break;
-
-            case "front_path":
-                front_path = value.ToString();
                 break;
 
             case "ip2location_api_key":
@@ -120,6 +133,8 @@ internal static class Configuration {
         builder.AppendLine();
 
         builder.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
+        builder.AppendLine("accept_xff_header = false");
+        builder.AppendLine("#accept_xff_header_only_from = [reverse proxy ip address]");
         builder.AppendLine();
 
         builder.AppendLine("http_prefix = http://127.0.0.1:8080/");

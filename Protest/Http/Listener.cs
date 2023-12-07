@@ -64,13 +64,9 @@ public sealed class Listener {
         HttpListenerContext ctx = listener.EndGetContext(result);
 
         //Cross Site Request Forgery protection
-        /*if (ctx.Request.UrlReferrer != null) {
-            if (!String.Equals(ctx.Request.UrlReferrer.Host, ctx.Request.UserHostName.Split(':')[0], StringComparison.Ordinal)) {
-                ctx.Response.StatusCode = 418; //I'm a teapot
-                ctx.Response.Close();
-                return;
-            }
-            if (Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.Host, UriKind.Absolute)) {
+        if (ctx.Request.UrlReferrer != null) {
+            if (!String.Equals(ctx.Request.UrlReferrer.Host, ctx.Request.UserHostName.Split(':')[0], StringComparison.Ordinal) ||
+                Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.Host, UriKind.Absolute)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
                 return;
@@ -81,7 +77,23 @@ public sealed class Listener {
                 ctx.Response.Close();
                 return;
             }
-        }*/
+        }
+
+        //handle X-Forwarded-For header
+        if (Configuration.accept_xff_header) {
+            string xff = ctx.Request.Headers.Get("X-Forwarded-For");
+            if (IPAddress.TryParse(xff, out IPAddress xffIp)) {
+                if (!IPAddress.IsLoopback(xffIp) &&
+                    (Configuration.accept_xff_only_from is null || IPAddress.Equals(ctx.Request.RemoteEndPoint.Address, Configuration.accept_xff_only_from))) {
+                    ctx.Request.RemoteEndPoint.Address = xffIp;
+                }
+                else {
+                    ctx.Response.StatusCode = 418; //I'm a teapot
+                    ctx.Response.Close();
+                    return;
+                }
+            }
+        }
 
         string path = ctx.Request.Url.PathAndQuery;
 

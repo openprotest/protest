@@ -132,20 +132,19 @@ internal static class Auth {
     public static string GrandAccess(HttpListenerContext ctx, string username) {
         string sessionId = Cryptography.RandomStringGenerator(64);
 
+        //RFC6265: no port allowd in the Domain attribute
 #if DEBUG
         ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict;");
 #else
-        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Max-age=604800; HttpOnly; SameSite=Strict;");
-        //TODO:
-        //ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
+        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
 #endif
 
         Session newSession = new Session() {
-            access         = acl.TryGetValue(username, out AccessControl value) ? value : default!,
-            ip             = ctx.Request.RemoteEndPoint.Address,
-            sessionId      = sessionId,
-            loginDate      = DateTime.UtcNow.Ticks,
-            ttl            = SESSION_TIMEOUT,
+            access    = acl.TryGetValue(username, out AccessControl value) ? value : default!,
+            ip        = ctx.Request.RemoteEndPoint.Address,
+            sessionId = sessionId,
+            loginDate = DateTime.UtcNow.Ticks,
+            ttl       = SESSION_TIMEOUT,
         };
 
         if (sessions.TryAdd(sessionId, newSession)) {

@@ -119,7 +119,7 @@ class DeviceView extends View {
 		for (let i=0; i<ips.length; i++) {
 			if (!ips[i].match(DeviceView.regexIPv4)) { continue; }
 			let split = ips[i].split(".").map(o=>parseInt(o));
-			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3]
+			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3];
 
 			for (let j=0; j<KEEP.zones.length; j++) {
 				if (n < KEEP.zones[j].first || n > KEEP.zones[j].last) continue;
@@ -145,7 +145,7 @@ class DeviceView extends View {
 		gradient += ")";
 		
 		this.emblem = document.createElement("div");
-		this.emblem.className = "task-icon-emblem"
+		this.emblem.className = "task-icon-emblem";
 		this.task.appendChild(this.emblem);
 
 		const emblemInner = document.createElement("div");
@@ -411,7 +411,7 @@ class DeviceView extends View {
 		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
 
-		for (let i = 0; i < obj.i.length; i++) {
+		for (let i=0; i<obj.i.length; i++) {
 			const front = document.createElement("div");
 			front.className = "view-interface-port";
 			frame.appendChild(front);
@@ -516,7 +516,7 @@ class DeviceView extends View {
 					}
 
 					list[i].frontElement.ondblclick = ()=> {
-						for (let i = 0; i < WIN.array.length; i++) {
+						for (let i=0; i<WIN.array.length; i++) {
 							if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
 								WIN.array[i].Minimize(); //minimize/restore
 								return;
@@ -644,7 +644,7 @@ class DeviceView extends View {
 					}
 
 					if (found) {
-						for (let k = 0; k < WIN.array.length; k++) {
+						for (let k=0; k<WIN.array.length; k++) {
 							if (WIN.array[k] instanceof UserView && WIN.array[k].params.file === found) {
 								WIN.array[k].Minimize();
 								return;
@@ -709,7 +709,10 @@ class DeviceView extends View {
 		]);
 
 		const firstInstantBuffer = new Uint8Array(pingArray.slice(0, 8)).buffer;
-		const firstInstantDate = Number(new DataView(firstInstantBuffer).getBigInt64(0, true));
+		let  firstInstantDate = 0;
+		if (firstInstantBuffer.byteLength >= 8) {
+			firstInstantDate = Number(new DataView(firstInstantBuffer).getBigInt64(0, true));
+		}
 
 		if (firstInstantDate > Date.now() - DeviceView.DAY_TICKS * 15) {
 			let oYear = new Date().getFullYear();
@@ -752,11 +755,11 @@ class DeviceView extends View {
 				})()
 			]);
 
-			pingArray = [...oldPingArray, ...pingArray];
-			cpuArray = [...oldCpuArray, ...cpuArray];
-			memoryArray = [...oldMemoryArray, ...memoryArray];
-			diskCapacityArray = [...oldDiskCapacityArray, ...diskCapacityArray];
-			diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
+			if (oldPingArray.length > 0) pingArray = [...oldPingArray, ...pingArray];
+			if (oldCpuArray.length > 0) cpuArray = [...oldCpuArray, ...cpuArray];
+			if (oldMemoryArray.length > 0) memoryArray = [...oldMemoryArray, ...memoryArray];
+			if (oldDiskCapacityArray.length > 0) diskCapacityArray = [...oldDiskCapacityArray, ...diskCapacityArray];
+			if (oldDiskUsageArray.length > 0) diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
 		}
 
 		const GenerateGraph = (data, label, type, icon)=> {
@@ -779,7 +782,7 @@ class DeviceView extends View {
 			labelBox.textContent = label;
 			graphBox.appendChild(labelBox);
 
-			const iconBox = document.createElement("div")
+			const iconBox = document.createElement("div");
 			iconBox.style.position = "absolute";
 			iconBox.style.zIndex = "1";
 			iconBox.style.left = "24px";
@@ -851,7 +854,7 @@ class DeviceView extends View {
 			let lastX = -8, lastY = -8;
 
 			if (type === "line") {
-				for (let i = 0; i < data.length; i++) {
+				for (let i=0; i<data.length; i++) {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 3 + Math.round(data[i].v < 0 ? 100 : Math.min(data[i].v / 10, 90));
 					d += `L ${x} ${y} `;
@@ -870,7 +873,7 @@ class DeviceView extends View {
 				}
 			}
 			else if (type === "vol") {
-				for (let i = 0; i < data.length; i++) {
+				for (let i=0; i<data.length; i++) {
 					if (data[i].t === 0) continue;
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 104 - Math.round(100 * data[i].v / data[i].t);
@@ -891,7 +894,7 @@ class DeviceView extends View {
 				}
 			}
 			else if (type === "percent") {
-				for (let i = 0; i < data.length; i++) {
+				for (let i=0; i<data.length; i++) {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 104 - Math.round(data[i].v);
 					
@@ -935,7 +938,7 @@ class DeviceView extends View {
 
 				let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
 				let closestIndex = 0;
-				for (let i = 0; i < data.length; i++) {
+				for (let i=0; i<data.length; i++) {
 					let currentX = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					if (Math.abs(currentX - event.layerX) < Math.abs(closestX - event.layerX)) {
 						closestX = currentX;
@@ -1115,7 +1118,7 @@ class DeviceView extends View {
 		const btnSave = super.Edit(isNew);
 		btnSave.addEventListener("click", async ()=> {
 			let obj = {};
-			for (let i = 0; i < this.attributes.childNodes.length; i++) {
+			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
 				let name  = this.attributes.childNodes[i].childNodes[0].value;
 				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
@@ -1260,7 +1263,7 @@ class DeviceView extends View {
 
 		const DisplayScript = lines=> {
 			innerBox.textContent = "";
-			for (let i = 0; i < lines.length; i++) {
+			for (let i=0; i<lines.length; i++) {
 				lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
 
 				const divLine = document.createElement("div");
@@ -1281,13 +1284,13 @@ class DeviceView extends View {
 					let line = [];
 
 					let temp = lines[i].split("\"");
-					for (let j = 0; j < temp.length; j++)
+					for (let j=0; j<temp.length; j++)
 						if (j % 2 === 0)
 							line.push(temp[j]);
 						else
 							line.push(`\"${temp[j]}\"`);
 
-					for (let j = 0; j < line.length; j++) {
+					for (let j=0; j<line.length; j++) {
 						if (line[j].length === 0) continue;
 
 						if (line[j].startsWith("\"") && line[j].length > 2) { //quot
@@ -1509,7 +1512,7 @@ class DeviceView extends View {
 		txtNumbering.style.width = "120px";
 		divNumbering.appendChild(txtNumbering);
 		let numbering = ["Vertical", "Horizontal"];
-		for (let i = 0; i < numbering.length; i++) {
+		for (let i=0; i<numbering.length; i++) {
 			const optNumbering = document.createElement("option");
 			optNumbering.value = numbering[i].toLowerCase();
 			optNumbering.textContent = numbering[i];
@@ -1531,7 +1534,7 @@ class DeviceView extends View {
 		txtPort.style.minWidth = "120px";
 		divAdd.appendChild(txtPort);
 		let portsArray = ["Ethernet", "SFP", "QSFP", "USB", "Serial"];
-		for (let i = 0; i < portsArray.length; i++) {
+		for (let i=0; i<portsArray.length; i++) {
 			const optPort = document.createElement("option");
 			optPort.value = portsArray[i];
 			optPort.textContent = portsArray[i];
@@ -1546,7 +1549,7 @@ class DeviceView extends View {
 			"10 Mbps", "100 Mbps", "1 Gbps", "2.5 Gbps","5 Gbps", "10 Gbps",
 			"25 Gbps", "40 Gbps", "100 Gbps", "200 Gbps", "400 Gbps", "800 Gbps"
 		];
-		for (let i = 0; i < speedArray.length; i++) {
+		for (let i=0; i<speedArray.length; i++) {
 			const optSpeed = document.createElement("option");
 			optSpeed.value = speedArray[i];
 			optSpeed.textContent = speedArray[i];
@@ -1585,7 +1588,7 @@ class DeviceView extends View {
 		innerBox.appendChild(divTitle);
 
 		let titleArray = ["Interface", "Speed", "VLAN", "Link"];
-		for (let i = 0; i < titleArray.length; i++) {
+		for (let i=0; i<titleArray.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.textContent = titleArray[i];
 			divTitle.appendChild(newLabel);
@@ -1656,7 +1659,7 @@ class DeviceView extends View {
 
 		btnAdd.onclick = ()=> {
 			if (list.length + parseInt(txtMulti.value) > 52) return;
-			for (let i = 0; i < txtMulti.value; i++) {
+			for (let i=0; i<txtMulti.value; i++) {
 				AddInterface(txtPort.value, txtSpeed.value, 1, null, "");
 			}
 		};
@@ -1692,7 +1695,7 @@ class DeviceView extends View {
 
 			const txtP = document.createElement("select");
 			listElement.appendChild(txtP);
-			for (let i = 0; i < portsArray.length; i++) {
+			for (let i=0; i<portsArray.length; i++) {
 				const optPort = document.createElement("option");
 				optPort.value = portsArray[i];
 				optPort.textContent = portsArray[i];
@@ -1701,7 +1704,7 @@ class DeviceView extends View {
 
 			const txtS = document.createElement("select");
 			listElement.appendChild(txtS);
-			for (let i = 0; i < speedArray.length; i++) {
+			for (let i=0; i<speedArray.length; i++) {
 				const optSpeed = document.createElement("option");
 				optSpeed.value = speedArray[i];
 				optSpeed.textContent = speedArray[i];
@@ -1902,7 +1905,7 @@ class DeviceView extends View {
 					for (let file in LOADER.devices.data) {
 						let match = true;
 
-						for (let j = 0; j < keywords.length; j++) {
+						for (let j=0; j<keywords.length; j++) {
 							let flag = false;
 							for (let k in LOADER.devices.data[file]) {
 								if (k.startsWith(".")) continue;
@@ -2035,7 +2038,7 @@ class DeviceView extends View {
 					frame.textContent = "";
 					list = [];
 
-					for (let i = 0; i < json.length; i++) {
+					for (let i=0; i<json.length; i++) {
 						AddInterface(json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
 					}
 					
@@ -2066,18 +2069,18 @@ class DeviceView extends View {
 				AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
 		}
 		else {
-			for (let i=0; i<4; i++){
+			for (let i=0; i<4; i++) {
 				AddInterface("Ethernet", "1 Gbps", 1, null, "");
 			}
 		}
 		
-		btnOK.addEventListener("click", async () => {	
+		btnOK.addEventListener("click", async ()=> {
 				let interfaces = {
 					i: [],
 					n: txtNumbering.value
 				};
 	
-				for (let i = 0; i < list.length; i++) {
+				for (let i=0; i<list.length; i++) {
 					interfaces.i.push({
 						i: list[i].txtPort.value,
 						s: list[i].txtSpeed.value,
@@ -2088,7 +2091,7 @@ class DeviceView extends View {
 				}
 
 				let obj = {};
-				for (let i = 0; i < this.attributes.childNodes.length; i++) {
+				for (let i=0; i<this.attributes.childNodes.length; i++) {
 					if (this.attributes.childNodes[i].childNodes.length < 2) continue;
 					let name  = this.attributes.childNodes[i].childNodes[0].value;
 					let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
@@ -2126,7 +2129,7 @@ class DeviceView extends View {
 			!list.every(o => o.port === list[0].port);
 
 		let rows = 1, columns = 4;
-		if (list.length > 0)
+		if (list.length > 0) {
 			if (list.length < 16 || list.length < 20 && isMixedInterface) {
 				rows = 1;
 				columns = list.length;
@@ -2139,41 +2142,42 @@ class DeviceView extends View {
 				rows = Math.ceil(list.length / 24);
 				columns = Math.ceil(list.length / rows);
 			}
+		}
 
 		if (numbering === "vertical") {
-			for (let i = 0; i < list.length; i++) {
+			for (let i=0; i<list.length; i++) {
 				list[i].frontElement.style.gridArea = `${i % rows + 1} / ${Math.floor(i / rows) + 1}`;
 			}
 		}
 		else {
-			for (let i = 0; i < list.length; i++) {
+			for (let i=0; i<list.length; i++) {
 				list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
 			}
 		}
 		let size = columns <= 12 ? 50 : 40;
 
 		if (size === 50) {
-			for (let i = 0; i < list.length; i++) {
+			for (let i=0; i<list.length; i++) {
 				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 7px auto 7px 8%";
 				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 4px 16%";
 			}
 		}
 		else {
-			for (let i = 0; i < list.length; i++) {
+			for (let i=0; i<list.length; i++) {
 				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 5px auto 5px 8%";
 				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 3px 24%";
 			}
 		}
 
 		let vlans = [];
-		for (let i = 0; i < list.length; i++) {
+		for (let i=0; i<list.length; i++) {
 			let v = editMode ? list[i].txtVlan.value : list[i].vlan;
 			if (v.length === 0) continue;
 			if (v === "TRUNK") continue;
 			if (!vlans.includes(v)) vlans.push(v);
 		}
 
-		for (let i = 0; i < list.length; i++) {
+		for (let i=0; i<list.length; i++) {
 			let led1 = list[i].frontElement.childNodes[0].childNodes[0];
 			let led2 = list[i].frontElement.childNodes[0].childNodes[1];
 
@@ -2474,11 +2478,10 @@ class DeviceView extends View {
 				delete LOADER.devices.data[this.params.file];
 				LOADER.devices.length--;
 	
-				for (let i = 0; i < WIN.array.length; i++) {
+				for (let i=0; i<WIN.array.length; i++) {
 					if (WIN.array[i] instanceof DevicesList) {
 						let element = Array.from(WIN.array[i].list.childNodes).filter(o=>o.getAttribute("id") === this.params.file);
-						element.forEach(o=> WIN.array[i].list.removeChild(o));
-	
+						element.forEach(o=> WIN.array[i].list.removeChild(o));	
 						WIN.array[i].UpdateViewport(true);
 					}
 				}
