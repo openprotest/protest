@@ -41,14 +41,14 @@ class WebcamTester extends Window {
 
 		this.InitializePictureControls();
 		
-		this.recordButton.onclick = () => this.Record();
+		this.recordButton.onclick = ()=> this.Record();
 		this.startButton.onclick = ()=> this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
 
 		this.settingsButton.onclick = ()=> this.Settings();
 
 		let flipToggle = false;
-		this.flipButton.onclick = ()=>{
+		this.flipButton.onclick = ()=> {
 			flipToggle = !flipToggle;
 			this.videoFeedback.style.transform = flipToggle ? "rotateY(180deg)" : "none";
 			this.flipButton.style.borderBottom = flipToggle ? "#c0c0c0 solid 3px" : "none";

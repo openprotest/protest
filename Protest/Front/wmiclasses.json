@@ -5066,6 +5066,44 @@
 			]
 		},
 		{
+			"class": "Win32_USBHub",
+			"properties": [
+				"Availability",
+				"Caption",
+				"ClassCode",
+				"ConfigManagerUserConfig",
+				"CreationClassName",
+				"CurrentAlternateSettings",
+				"CurrentConfigValue",
+				"Description",
+				"ErrorCleared",
+				"ErrorDescription",
+				"GangSwitched",
+				"InstallDate",
+				"LastErrorCode",
+				"NumberOfConfigs",
+				"NumberOfPorts",
+				"PNPDeviceID",
+				"PowerManagementCapabilities",
+				"PowerManagementSupported",
+				"ProtocolCode",
+				"Status",
+				"StatusInfo",
+				"SubclassCode",
+				"SystemCreationClassName",
+				"SystemName",
+				"USBVersion",
+				"ConfigManagerErrorCode",
+				"DeviceID",
+				"Name"
+			],
+			"methods": [
+				{"name":"GetDescriptor", "args":["[in] uint8 RequestType", "[in] uint16 RequestValue", "[in] uint16 RequestIndex", "[in, out] uint16 RequestLength", "[out] uint8 Buffer[]"]},
+				{"name":"Reset", "args":[]},
+				{"name":"SetPowerState", "args":["[in] uint16 PowerState", "[in] datetime Time"]}
+			]
+		},
+		{
 			"class": "Win32_UserAccount",
 			"properties": [
 				"AccountType",
@@ -5094,6 +5132,50 @@
 			"properties": [
 				"Element",
 				"Setting"
+			]
+		},
+		{
+			"class": "Win32_UserInDomain",
+			"properties": [
+				"GroupComponent",
+				"PartComponent"
+			]
+		},
+		{
+			"class": "Win32_UserProfile",
+			"properties": [
+				"SID",
+				"LocalPath",
+				"Loaded",
+				"refCount",
+				"Special",
+				"RoamingConfigured",
+				"RoamingPath",
+				"RoamingPreference",
+				"Status",
+				"LastUseTime",
+				"LastDownloadTime",
+				"LastUploadTime",
+				"HealthStatus",
+				"LastAttemptedProfileDownloadTime",
+				"LastAttemptedProfileUploadTime",
+				"LastBackgroundRegistryUploadTime",
+				"AppDataRoaming",
+				"Desktop",
+				"StartMenu",
+				"Documents",
+				"Pictures",
+				"Music",
+				"Videos",
+				"Favorites",
+				"Contacts",
+				"Downloads",
+				"Links",
+				"Searches",
+				"SavedGames"
+			],
+			"methods": [
+				{"name":"ChangeOwner", "args":["[in] string NewOwnerSID", "[in] uint32 Flags"]}
 			]
 		},
 		{
@@ -5258,12 +5340,54 @@
 			]
 		},
 		{
+			"class": "Win32_Volume",
+			"properties": []
+		},
+		{
 			"class": "Win32_VolumeChangeEvent",
 			"properties": [
 				"DriveName",
 				"EventType",
 				"SECURITY_DESCRIPTOR",
 				"TIME_CREATED"
+			]
+		},
+		{
+			"class": "Win32_VolumeQuota",
+			"properties": [
+				"Element",
+				"Setting"
+			]
+		},
+		{
+			"class": "Win32_VolumeQuotaSetting",
+			"properties": [
+				"Element",
+				"Setting"
+			]
+		},
+		{
+			"class": "Win32_VolumeUserQuota",
+			"properties": [
+				"Account",
+				"DiskSpaceUsed",
+				"Status",
+				"Limit",
+				"Volume",
+				"WarningLimit"
+			]
+		},
+		{
+			"class": "Win32_WinSAT",
+			"properties": [
+				"TimeTaken",
+				"WinSPRLevel",
+				"WinSATAssessmentState",
+				"MemoryScore",
+				"CPUScore",
+				"DiskScore",
+				"D3DScore",
+				"GraphicsScore"
 			]
 		},
 		{
