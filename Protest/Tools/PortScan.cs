@@ -178,7 +178,7 @@ internal static class PortScan {
                     return;
                 }
 
-            if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                if (receiveResult.MessageType == WebSocketMessageType.Close) {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     break;
                 }

@@ -296,44 +296,83 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.http) { //http
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTP");
-				btnAction.onclick = ()=> window.open("http://" + host.split(";")[0].trim() + ":" + overwriteProtocol.http, "");
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "http://" + host.split(";")[0].trim() + ":" + overwriteProtocol.http;
+					link.target = "_blank";
+					link.click();
+				};
 			}
 			else if (ports.includes(80)) {
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTP");
-				btnAction.onclick = ()=> window.open("http://" + host.split(";")[0].trim());
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "http://" + host.split(";")[0].trim();
+					link.target = "_blank";
+					link.click();
+				};
 			}
 
 			if (overwriteProtocol.https) { //https
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
-				btnAction.onclick = ()=> window.open("https://" + host.split(";")[0].trim() + ":" + overwriteProtocol.https);
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "https://" + host.split(";")[0].trim() + ":" + overwriteProtocol.https;
+					link.target = "_blank";
+					link.click();
+				};
 			}
 			else if (ports.includes(443)) { //https
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
-				btnAction.onclick = ()=> window.open("https://" + host.split(";")[0].trim());
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "https://" + host.split(";")[0].trim();
+					link.target = "_blank";
+					link.click();
+				};
 			}
 
 			if (overwriteProtocol.ftp) { //ftp
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
-				btnAction.onclick = ()=> window.open("ftp://" + host.split(";")[0].trim() + ":" + overwriteProtocol.ftp, "", "width=200,height=100").close();
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftp://" + host.split(";")[0].trim() + ":" + overwriteProtocol.ftp;
+					link.target = "_blank";
+					link.click();
+				};
 			}
 			else if (ports.includes(21)) {
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
-				btnAction.onclick = ()=> window.open("ftp://" + host.split(";")[0].trim(), "", "width=200,height=100").close();
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftp://" + host.split(";")[0].trim();
+					link.target = "_blank";
+					link.click();
+				};
 			}
 
 			if (overwriteProtocol.ftps) { //ftps
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
-				btnAction.onclick = ()=> window.open("ftps://" + host.split(";")[0].trim() + ":" + overwriteProtocol.ftps, "", "width=200,height=100").close();
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftps://" + host.split(";")[0].trim() + ":" + overwriteProtocol.ftp;
+					link.target = "_blank";
+					link.click();
+				};
 			}
 			else if (ports.includes(989)) {
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTPs");
-				btnAction.onclick = ()=> window.open("ftps://" + host.split(";")[0].trim(), "", "width=200,height=100").close();
+				btnAction.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftps://" + host.split(";")[0].trim();
+					link.target = "_blank";
+					link.click();
+				};
 			}
 
 			if (overwriteProtocol.rdp) { //rdp
 				const btnAction = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
 				btnAction.onclick = ()=> UI.PromptAgent(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
-
 			}
 			else if (ports.includes(3389)) {
 				const btnAction = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
@@ -378,8 +417,9 @@ class DeviceView extends View {
 			const type = this.link.type.v.toLowerCase();
 			if (type === "router" || type === "switch") {
 				const btnConfig = this.CreateSideButton("mono/configfile.svg", "Configuration");
-				btnConfig.style.marginTop = "16px";
 				btnConfig.onclick = () => this.DeviceConfiguration();
+				console.log(this.sideTools.childNodes.length);
+				btnConfig.style.marginTop = "16px";
 
 				const btnInterfaces = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
 				btnInterfaces.onclick = ()=> this.EditInterfaces();

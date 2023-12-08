@@ -64,10 +64,9 @@ class MicTester extends Window {
 		this.canvas.height = this.content.clientHeight;
 	}
 
-	async Settings(closeOnCancel=false) {
+	async Settings() {
 		const dialog = this.DialogBox("300px");
 		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.padding = "20px";
@@ -209,8 +208,6 @@ class MicTester extends Window {
 				this.recorder.ondataavailable = event=> this.recordChunks.push(event.data);
 				this.recorder.onstop = ()=> this.HandleRecording();
 				this.recorder.start();
-
-				this.recordButton.disabled = true;
 			}
 
 			this.startButton.disabled = true;
@@ -246,8 +243,8 @@ class MicTester extends Window {
 	}
 
 	Record() {
-		this.recordButton.disabled = true;
 		this.Stop();
+		this.recordButton.disabled = true;
 		this.Start(
 			this.params.echoCancellation,
 			this.params.noiseSuppression,

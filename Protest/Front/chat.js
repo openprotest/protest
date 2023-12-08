@@ -21,6 +21,8 @@ class Chat extends Window {
 		this.isMicEnable = false;
 		this.isCamEnable = false;
 
+		this.upstreamUserSocket = null;
+
 		this.InitializeComponents();
 	}
 
@@ -146,7 +148,8 @@ class Chat extends Window {
 
 			const userStream = {
 				stream: stream,
-				element: element
+				element: element,
+				feedbackElement: element.videoFeedback
 			};
 
 			this.userStream = userStream;
@@ -159,6 +162,8 @@ class Chat extends Window {
 			};
 			
 			element.videoFeedback.play();
+
+			await this.InitializeRtc();
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/mic.svg");
@@ -181,7 +186,8 @@ class Chat extends Window {
 
 			const displayStream = {
 				stream: stream,
-				element: element
+				element: element,
+				feedbackElement: element.videoFeedback
 			};
 
 			this.displayStreams.push(displayStream);
@@ -214,25 +220,22 @@ class Chat extends Window {
 		this.peer.onnegotiationneeded = event=> this.Peer_onNegotiationNeeded(event);
 		this.peer.ontrack = event=> this.Peer_onTrack(event);
 
-		this.userStream.forEach(user=> {
-			user.stream.getTracks().forEach(track=> {
-				this.peer.addTrack(track, user.stream);
-			});
+		this.userStream.stream.getTracks().forEach(track=> {
+			this.peer.addTrack(track, this.userStream.stream);
 		});
+
+		await this.Peer_onNegotiationNeeded();
 	}
 
 	Peer_onIceCandidate(event) {
-		if (event.candidate) {
-			console.log(event.candidate);
-			KEEP.socket.send(JSON.stringify({ type: 'chat-stream-candidate', candidate: event.candidate }));
-		}
+		if (!event.candidate) return;
+		console.log(event.candidate);
+		KEEP.socket.send(JSON.stringify({ type: 'chat-stream-candidate', candidate: event.candidate }));
 	}
 
 	async Peer_onNegotiationNeeded(event) {
 		const offer = await this.peer.createOffer();
 		await this.peer.setLocalDescription(offer);
-	
-
 		KEEP.socket.send(JSON.stringify({ type: 'chat-stream-offer', offer: offer }));
 	}
 
@@ -240,8 +243,17 @@ class Chat extends Window {
 		const remoteStreamElement = this.CreateRemoteStream();
 		remoteStreamElement.srcObject = event.streams[0];
 
+		this.remoteStreams.push({
+			stream: event.streams[0],
+			element: remoteStreamElement
+		});
+
+		console.log(event);
+
 		//this.remoteStreamsBox.appendChild(remoteStreamElement);
+		this.AdjustUI();
 	}
+
 
 	async GetHistory() {
 		try {
@@ -360,16 +372,42 @@ class Chat extends Window {
 
 	async Mic_onclick() {
 		this.isMicEnable = !this.isMicEnable;
-		if (this.userStream === null) {
-			this.SetupLocalUserMediaStream();
+		
+		try {
+			if (this.userStream === null) {
+				await this.SetupLocalUserMediaStream();
+			}
 		}
+		catch {
+			this.isMicEnable = false;
+		}
+
+		this.AdjustUI();
 	}
 
 	async Webcam_onclick() {
 		this.isCamEnable = !this.isCamEnable;
-		if (this.userStream === null) {
-			this.SetupLocalUserMediaStream();
+
+		try {
+			if (this.userStream === null) {
+				await this.SetupLocalUserMediaStream();
+			}
 		}
+		catch {
+			this.isCamEnable = false;
+		}
+
+		if (this.isCamEnable) {
+			if (this.userStream.feedbackElement.srcObject === null) {
+				this.userStream.feedbackElement.srcObject = this.userStream.stream;
+				this.userStream.feedbackElement.play();
+			}
+		}
+		else {
+			this.userStream.feedbackElement.srcObject = null;
+		}
+
+		this.AdjustUI();
 	}
 
 	async Display_onclick() {
@@ -537,12 +575,6 @@ class Chat extends Window {
 		emoji.style.webkitMaskImage = `url(${url})`;
 		emoji.style.maskImage = `url(${url})`;
 		emojiBox.appendChild(emoji);
-
-		let index = Chat.EMOJIS.indexOf("url");
-		
-		if (index !== -1) {
-			emoji.classList.add(`chat-emoji-${index+1}`);
-		}
 
 		if (direction === "out") {
 			if (id && !(id in this.outdoing)) {

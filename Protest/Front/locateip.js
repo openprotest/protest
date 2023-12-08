@@ -182,7 +182,12 @@ class LocateIp extends Console {
 				divLocation.setAttribute("tip-below", "Location");
 				divLocation.style.cursor = "pointer";
 				element.appendChild(divLocation);
-				divLocation.onclick = ()=> window.open(`https://www.google.com/maps/place/${split[4]}`);
+				divLocation.onclick= ()=>{
+					const link = document.createElement("a");
+					link.href = `https://www.google.com/maps/place/${split[4]}`;
+					link.target = "_blank";
+					link.click();
+				};
 			}
 
 			if (split[6] == "true") { //tor

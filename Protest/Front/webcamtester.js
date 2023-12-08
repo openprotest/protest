@@ -196,8 +196,6 @@ class WebcamTester extends Window {
 				this.recorder.ondataavailable = event=> this.recordChunks.push(event.data);
 				this.recorder.onstop = ()=> this.HandleRecording();
 				this.recorder.start();
-
-				this.recorder = new MediaRecorder(this.stream);
 			}
 
 			this.startButton.disabled = true;
@@ -233,8 +231,8 @@ class WebcamTester extends Window {
 
 	async Record() {
 		this.Stop();
-		await this.Start(true);
 		this.recordButton.disabled = true;
+		await this.Start(true);
 	}
 
 	HandleRecording() {
