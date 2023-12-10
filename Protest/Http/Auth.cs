@@ -523,7 +523,7 @@ internal static class Auth {
 
         Logger.Action(origin, $"Save access control for {username}");
 
-        KeepAlive.Unicast(username, $"{{\"action\":\"updateacl\",\"authorization\":[{permissionsString}]}}", "/global");
+        KeepAlive.Unicast(username, $"{{\"action\":\"update-acl\",\"authorization\":[{permissionsString}]}}", "/global");
 
         return plain;
     }

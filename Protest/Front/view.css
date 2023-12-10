@@ -667,7 +667,7 @@ button.view-live-button:active {
 }
 
 @keyframes password-countdown {
-	0%   { background-size: 100% 4px;}
+	0%   { background-size: 100% 4px; }
 	100% { background-size: 0% 4px; }
 }
 

@@ -190,7 +190,9 @@ public sealed class Database {
             if (lastModTimestamp > 0) { //create timeline
                 try {
                     DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DELIMITER}{file}_");
-                    if (!timelineDir.Exists) { timelineDir.Create(); }
+                    if (!timelineDir.Exists) {
+                        timelineDir.Create();
+                    }
 
                     byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attrubutesSerializerOptions); //remove password from timeline
                     byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);

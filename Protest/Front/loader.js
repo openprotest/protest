@@ -112,7 +112,7 @@ const LOADER = {
 		"netcalc.js",
 		"keyboardtester.js",
 		"mictester.js",
-		"webcamtester.js",
+		"cameratester.js",
 		"screencapture.js",
 		"automation.js",
 		"log.js"
@@ -330,7 +330,7 @@ const LOADER = {
 		case "NetCalc"        : return new NetCalc(command.params);
 		case "KeyboardTester" : return new KeyboardTester(command.params);
 		case "MicTester"      : return new MicTester(command.params);
-		case "WebcamTester"   : return new WebcamTester(command.params);
+		case "CameraTester"   : return new CameraTester(command.params);
 		case "ScreenCapture"  : return new ScreenCapture(command.params);
 
 		case "About"       : return new About(command.params);

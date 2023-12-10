@@ -548,7 +548,7 @@ internal static class Fetch {
                     long wait0 = DateTime.UtcNow.Ticks;
                     task.status = TaskWrapper.TaskStatus.idle;
 
-                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
+                    KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
 
                     task.Sleep((int)(interval * 3_600_000));
                     if (task.cancellationToken.IsCancellationRequested) {
@@ -557,7 +557,7 @@ internal static class Fetch {
 
                     task.status = TaskWrapper.TaskStatus.running;
 
-                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
+                    KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
                 }
                 else {
                     break;
@@ -565,7 +565,7 @@ internal static class Fetch {
             }
 
             if (task.cancellationToken.IsCancellationRequested) {
-                KeepAlive.Broadcast("{\"action\":\"abortfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+                KeepAlive.Broadcast("{\"action\":\"abort-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
                 Logger.Action(origin, "Devices fetch task aborted");
 
                 task.Dispose();
@@ -583,11 +583,11 @@ internal static class Fetch {
                 unsuccessful = task.TotalSteps - task.CompletedSteps,
             };
 
-            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
+            KeepAlive.Broadcast($"{{\"action\":\"finish-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
             Logger.Action(origin, "Fetch task finished");
         });
 
-        KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+        KeepAlive.Broadcast("{\"action\":\"start-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
         Logger.Action(origin, "Devices fetch task started");
 
         task = new TaskWrapper("Fetch devices") {
@@ -651,7 +651,7 @@ internal static class Fetch {
                 }
 
                 if (DateTime.UtcNow.Ticks - lastBroadcast > 30_000_000) { //after 3 seconds
-                    KeepAlive.Broadcast($"{{\"action\":\"updatefetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
+                    KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
                     lastBroadcast = DateTime.UtcNow.Ticks;
                 }
             }
@@ -666,11 +666,11 @@ internal static class Fetch {
                 unsuccessful = task.TotalSteps - task.CompletedSteps,
             };
 
-            KeepAlive.Broadcast($"{{\"action\":\"finishfetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
+            KeepAlive.Broadcast($"{{\"action\":\"finish-fetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
             Logger.Action(origin, "Users fetch task finished");
         });
 
-        KeepAlive.Broadcast("{\"action\":\"startfetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
+        KeepAlive.Broadcast("{\"action\":\"start-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
         Logger.Action(origin, "Users fetch task started");
 
         task = new TaskWrapper("Fetch users") {
@@ -733,7 +733,7 @@ internal static class Fetch {
     public static byte[] CancelTask(string origin) {
         if (task is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
 
-        KeepAlive.Broadcast("{\"action\":\"cancelfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+        KeepAlive.Broadcast("{\"action\":\"cancel-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
         task.RequestCancel(origin);
         //wrapper = null;
 
@@ -758,13 +758,13 @@ internal static class Fetch {
 
         if (result?.type == Type.devices) {
             Logger.Action(origin, "Approve fetched devices");
-            KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+            KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
 
             database = DatabaseInstances.devices;
         }
         else if (result?.type == Type.users) {
             Logger.Action(origin, "Approve fetched users");
-            KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
+            KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
 
             database = DatabaseInstances.users;
         }
@@ -813,11 +813,11 @@ internal static class Fetch {
         values.Clear();
 
         if (result?.type == Type.devices) {
-            KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+            KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Devices fetched data approved");
         }
         else if (result?.type == Type.users) {
-            KeepAlive.Broadcast("{\"action\":\"approvefetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
+            KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Users fetched data approved");
         }
 
@@ -828,7 +828,7 @@ internal static class Fetch {
     }
 
     public static byte[] DiscardLastTask(string origin) {
-        KeepAlive.Broadcast("{\"action\":\"discardfetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+        KeepAlive.Broadcast("{\"action\":\"discard-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
         Logger.Action(origin, "Discard fetched data");
 
         result = null;

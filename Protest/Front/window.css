@@ -48,7 +48,6 @@
 
 .window>.control:active {
 	filter: brightness(85%);
-	transform: scale(.96);
 }
 
 .window>.close-box {
@@ -522,7 +521,7 @@
 }
 
 @keyframes fall-in {
-	0%   { opacity: 0; transform: translateY(-24px);}
+	0%   { opacity: 0; transform: translateY(-24px); }
 	100% { opacity: 1; transform: none; }
 }
 

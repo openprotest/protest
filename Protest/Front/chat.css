@@ -83,7 +83,7 @@
 	-webkit-user-select: text; user-select: text;
 }
 
-.chat-box > div > div:last-child .chat-bubble:before {
+.chat-box > div > div:last-child .chat-bubble::before {
 	content: "";
 	position: absolute;
 	bottom: 13px;
@@ -91,11 +91,11 @@
 	border-width: 9px;
 }
 
-.chat-box > div > .out:last-child .chat-bubble:before {
+.chat-box > div > .out:last-child .chat-bubble::before {
 	right: 24px;
 	border-color: transparent transparent transparent var(--clr-pane);
 }
-.chat-box > div > .in:last-child .chat-bubble:before {
+.chat-box > div > .in:last-child .chat-bubble::before {
 	left: 24px;
 	border-color: transparent var(--clr-pane) transparent transparent;
 }
@@ -135,6 +135,25 @@
 	transition: .2s;
 }
 
+.chat-burst-bubble {
+	all: unset;
+
+	display: inline-block;
+	text-align: start;
+	margin: 0 4px;
+	padding: 8px 12px;
+	color: var(--clr-pane);
+	border: dotted var(--clr-pane) 2px;
+	border-radius: 12px;
+	overflow: hidden;
+	word-wrap: break-word;
+	max-width: 80%;
+}
+
+.chat-box > div > div:last-child .chat-burst-bubble::before {
+	content: none !important;
+}
+
 .local-streams-box {
 	position: absolute;
 	top: 8px;
@@ -147,6 +166,7 @@
 }
 
 .local-streams-box > div {
+	position: relative;
 	width: 100%;
 	min-height: 40px;
 	background-color: var(--clr-dark);
@@ -158,6 +178,31 @@
 .local-streams-box > div:hover {
 	filter: brightness(120%);
 	transition: .2s;
+}
+
+.chat-stop-stream-button {
+	position: absolute;
+	right: 4px;
+	top: 4px;
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	background-color: var(--clr-accent);
+	background-image: url(controls/close.svg);
+	opacity: 0;
+	transition: .2s;
+}
+
+.chat-stop-stream-button:hover {
+	filter: brightness(115%);
+}
+
+.chat-stop-stream-button:active {
+	filter: brightness(85%);
+}
+
+.local-streams-box > div:hover > .chat-stop-stream-button {
+	opacity: 1;
 }
 
 .chat-input {
@@ -270,7 +315,7 @@
 	background-repeat: no-repeat;
 }
 
-@container chat-container (max-width: 400px) {
+@container chat-container (max-width: 520px) {
 	.chat-timestamp {
 		display: none;
 	}

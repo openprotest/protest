@@ -253,7 +253,7 @@ class Documentation extends Window {
 		
 		this.OnUiReady();
 
-		setTimeout(()=> { this.AfterResize(); }, 250);
+		setTimeout(()=> this.AfterResize(), 250);
 	}
 
 	OnUiReady(count = 0) {

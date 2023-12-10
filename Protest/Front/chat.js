@@ -1,5 +1,25 @@
+"use strict";
+
 class Chat extends Window {
-	static EMOJIS = ["mono/handthumbsup.svg", "mono/handok.svg", "mono/handhorns.svg", "mono/handvictory.svg", "mono/handfist.svg", "mono/handbird.svg", "mono/handthumbsdown.svg"];
+	static EMOJIS = [
+		"mono/handthumbsup.svg",
+		"mono/handok.svg",
+		"mono/handhorns.svg",
+		"mono/handvictory.svg",
+		"mono/handfist.svg",
+		"mono/handbird.svg",
+		"mono/handthumbsdown.svg"
+	];
+
+	static ICE_SERVERS = {
+		iceServers: [
+			{
+				urls: ["stun:stun2.l.google.com:19302", "stun:stun4.l.google.com:19302"],
+				//username: "", //optional
+				//credentials: "" //token
+			}
+		]
+	};
 
 	constructor() {
 		super();
@@ -10,13 +30,18 @@ class Chat extends Window {
 		this.SetIcon("mono/chat.svg");
 		this.content.classList.add("chat-window");
 
+		//this.uuid = this.GenerateUuid(KEEP.username);
+
 		this.lastBubble = null;
 		this.outdoing = {};
 
 		this.userStream = null;
 		this.displayStreams = [];
-		this.localStreams = [];
 		this.remoteStreams = [];
+
+		this.uuidTable = [];
+		this.localConnections = {};
+		this.remoteConnections = {};
 
 		this.isMicEnable = false;
 		this.isCamEnable = false;
@@ -24,6 +49,10 @@ class Chat extends Window {
 		this.upstreamUserSocket = null;
 
 		this.InitializeComponents();
+	}
+
+	GenerateUuid(prefix) {
+		return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, c=>(Math.random() * 16 | 0).toString(16))}`;
 	}
 
 	async InitializeComponents() {
@@ -60,11 +89,6 @@ class Chat extends Window {
 		this.displayButton.className = "chat-button chat-screen";
 		this.displayButton.type = "button";
 		this.displayButton.style.backgroundColor = "transparent";
-
-		//TODO:
-		//this.micButton.disabled = true;
-		//this.camButton.disabled = true;
-		//this.displayButton.disabled = true;
 
 		this.content.append(this.micButton, this.camButton, this.displayButton);
 
@@ -129,13 +153,14 @@ class Chat extends Window {
 	}
 
 	async SetupLocalUserMediaStream() {
-		try {
+		/*try*/ {
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: {
 					echoCancellation: true,
 					noiseSuppression: true
 				},
 				video: {
+					//aspectRatio: { ideal: 1.333333},
 					width: { min: 640, ideal: 1280, max: 1920 },
 					height: { min: 480, ideal: 720, max: 1080 }
 				}
@@ -155,27 +180,34 @@ class Chat extends Window {
 			this.userStream = userStream;
 
 			const videoTrack = stream.getVideoTracks()[0];
+			const audioTrack = this.userStream.stream.getAudioTracks()[0];
+			audioTrack.enabled = this.isMicEnable;
+			videoTrack.enabled = this.isCamEnable;
+
 			videoTrack.onended = ()=> {
 				this.localStreamsBox.removeChild(element.container);
+				this.userStream.stream.getTracks().forEach(track=>track.enabled = false);
 				this.userStream = null;
+				this.isMicEnable = false;
+				this.isCamEnable = false;
 				this.AdjustUI();
 			};
-			
-			element.videoFeedback.play();
 
 			await this.InitializeRtc();
 		}
-		catch (ex) {
+		/*catch (ex) {
 			this.ConfirmBox(ex, true, "mono/mic.svg");
 			this.micButton.style.backgroundColor = "transparent";
 			this.micButton.style.backgroundImage = "url(mono/mic.svg?light)";
-		}
+			this.isMicEnable = false;
+			this.isCamEnable = false;
+		}*/
 
 		this.AdjustUI();
 	}
 
 	async SetupLocalDisplayMediaStream() {
-		try {
+		/*try*/ {
 			const stream = await navigator.mediaDevices.getDisplayMedia({
 				video: true
 			});
@@ -202,58 +234,258 @@ class Chat extends Window {
 				this.AdjustUI();
 			};
 
-			element.videoFeedback.play();
+			await this.InitializeRtc();
 		}
-		catch (ex) {
+		/*catch (ex) {
 			this.ConfirmBox(ex, true, "mono/screenshare.svg");
 			this.displayButton.style.backgroundColor = "transparent";
 			this.displayButton.style.backgroundImage = "url(mono/screenshare.svg?light)";
-		}
+		}*/
 
 		this.AdjustUI();
 	}
 
 	async InitializeRtc() {
-		this.peer = new RTCPeerConnection();
+		const uuid = this.GenerateUuid(KEEP.username);
 
-		this.peer.onicecandidate = event=> this.Peer_onIceCandidate(event);
-		this.peer.onnegotiationneeded = event=> this.Peer_onNegotiationNeeded(event);
-		this.peer.ontrack = event=> this.Peer_onTrack(event);
+		KEEP.socket.send(JSON.stringify({
+			type: "chat-start-stream",
+			uuid: uuid
+		}));
+		console.log("send chat-start-stream:" + uuid);
 
-		this.userStream.stream.getTracks().forEach(track=> {
-			this.peer.addTrack(track, this.userStream.stream);
-		});
+		const localConnection = new RTCPeerConnection(Chat.ICE_SERVERS);
+		this.localConnections[uuid] = localConnection;
 
-		await this.Peer_onNegotiationNeeded();
-	}
+		console.log("pushing into local connections:" + uuid);
 
-	Peer_onIceCandidate(event) {
-		if (!event.candidate) return;
-		console.log(event.candidate);
-		KEEP.socket.send(JSON.stringify({ type: 'chat-stream-candidate', candidate: event.candidate }));
-	}
+		localConnection.onicecandidate = event=> {
+			if (localConnection.iceGatheringState !== "complete") { return; }
 
-	async Peer_onNegotiationNeeded(event) {
-		const offer = await this.peer.createOffer();
-		await this.peer.setLocalDescription(offer);
-		KEEP.socket.send(JSON.stringify({ type: 'chat-stream-offer', offer: offer }));
-	}
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-sdp-offer",
+				uuid: uuid,
+				offer: JSON.stringify(offer)
+			}));
 
-	Peer_onTrack(event) {
-		const remoteStreamElement = this.CreateRemoteStream();
-		remoteStreamElement.srcObject = event.streams[0];
+			console.log("send chat-sdp-offer:" + uuid);
+		};
 
-		this.remoteStreams.push({
-			stream: event.streams[0],
-			element: remoteStreamElement
-		});
+		localConnection.onnegotiationneeded = async event=> {
+			console.log("negotiation needed");
 
-		console.log(event);
+			let offer = await localConnection.createOffer();
 
-		//this.remoteStreamsBox.appendChild(remoteStreamElement);
+			if (localConnection.signalingState != "stable") { return; }
+
+			await localConnection.setLocalDescription(offer);
+
+			console.log({description: localConnection.localDescription});
+
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-sdp-negotiation",
+				uuid: uuid,
+				answer: JSON.stringify({description: localConnection.localDescription})
+			}));
+		};
+
+		localConnection.onopen = event=>{
+			console.log("local connection open");
+		};
+
+		const sendChannel = localConnection.createDataChannel("channel");
+		sendChannel.onmessage = event=> console.log(`message received: ${e.data}`);
+
+		sendChannel.onopen = event=> {
+			console.log("local data channel open");
+			setInterval(()=>{
+				sendChannel.send("if you see this, we good!");
+			}, 2000);
+		};
+
+		sendChannel.onclose = event=> {
+			console.log("local data channel close");
+		};
+
+		setTimeout(()=>{
+			this.userStream.stream.getTracks().forEach(track=> {
+				console.log("adding track");
+				localConnection.addTrack(track, this.userStream.stream);
+			});
+
+			/*this.displayStreams[0].stream.getTracks().forEach(track=> {
+				console.log("adding track");
+				localConnection.addTrack(track, this.displayStreams[0].stream);
+			});*/
+		}, 2000);
+
+		const offer = await localConnection.createOffer();
+
+		localConnection.setLocalDescription(offer);
+		
 		this.AdjustUI();
 	}
 
+	async HandleMessage(message) {
+		if (message.id in this.outdoing) {
+			this.outdoing[message.id].style.color = "var(--clr-dark)";
+			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
+			this.outdoing[message.id].style.boxShadow = "none";
+			delete this.outdoing[message.id];
+		}
+		else {
+			const time = new Date(UI.TicksToUnixDate(message.time));
+			const timeString = time.toLocaleTimeString(UI.regionalFormat, {});
+			const direction = message.sender === KEEP.username ? "out" : "in";
+
+			switch (message.action) {
+			case "chat-text":
+				this.CreateTextBubble(message.text, direction, message.sender, message.alias, message.color, timeString, message.id);
+				break;
+
+			case "chat-emoji":
+				this.CreateEmojiBubble(message.url, direction, message.sender, message.alias, message.color, timeString, message.id);
+				break;
+
+			case "chat-command":
+				this.CreateCommandBubble(message.command, message.params, message.icon, message.title, direction, message.sender, message.alias, message.color, timeString);
+				break;
+
+			case "chat-start-stream":
+				this.CreateBurstedBubble(`Starting a stream: ${message.uuid}`, direction, message.sender, message.alias, message.color, timeString);
+				if (direction === "out") { break; }
+				this.uuidTable.push({
+					username: message.sender,
+					uuid: message.uuid
+				});
+
+				console.log("receive chat-start-stream:" + message.uuid);
+				break;
+
+			case "chat-offer":
+				this.CreateBurstedBubble("SDP: Offer", direction, message.sender, message.alias, message.color, timeString);
+				if (direction === "out") { break; }
+				this.HandleOffer(message);
+				break;
+
+			case "chat-answer":
+				this.CreateBurstedBubble("SDP: Answer", direction, message.sender, message.alias, message.color, timeString);
+				this.HandleAnswer(message, direction);
+				break;
+
+			case "chat-ice":
+				this.CreateBurstedBubble("ICE:", direction, message.sender, message.alias, message.color, timeString);
+				this.HandleIce
+				(message, direction);
+				break;
+			}
+		}
+
+		if (!(WIN.focused instanceof Chat)) {
+			this.blinkingDot.style.backgroundColor = message.color;
+			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
+		}
+	}
+
+	async HandleOffer(message) {
+		console.log("receive chat-sdp-offer:" + message.uuid);
+
+		const remoteConnection = new RTCPeerConnection(Chat.ICE_SERVERS);
+
+		this.remoteConnections[message.uuid] = remoteConnection;
+		console.log("pushing in remote connections:" + message.uuid);
+
+		remoteConnection.onicecandidate = event=> {
+			if (remoteConnection.iceGatheringState !== "complete") { return; }
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-sdp-answer",
+				uuid: message.uuid,
+				answer: JSON.stringify(remoteConnection.localDescription)
+			}));
+
+			console.log("sending chat-sdp-answer:" + message.uuid);
+		};
+
+		remoteConnection.onnegotiationneeded = async event=> {
+			console.log("negotiation needed");
+
+			let offer = await remoteConnection.createOffer();
+
+			if (remoteConnection.signalingState != "stable") { return; }
+
+			await remoteConnection.setLocalDescription(offer);
+
+			console.log({description: remoteConnection.localDescription});
+				
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-sdp-negotiation",
+				uuid: message.uuid,
+				answer: JSON.stringify({description: remoteConnection.localDescription})
+			}));
+		};
+
+		remoteConnection.onopen = event=> {
+			console.log("remote connection open");
+		};
+
+		remoteConnection.ondatachannel = event=> {
+			const receiveChannel = event.channel;
+			receiveChannel.onmessage = event=> console.log("message received:" + event.data);
+
+			receiveChannel.onopen = event=> {
+				console.log("remote data channel open");
+			};
+
+			receiveChannel.onclose = event=> {
+				console.log("remote data channel close");
+			};
+
+			remoteConnection.channel = receiveChannel;
+		};
+
+		remoteConnection.ontrack = event=> {
+			console.log("getting track");
+
+			/*const track = event.track;
+			if (track.kind === "audio") {
+				const remoteAudio = document.createElement("audio");
+				remoteAudio.controls = true;
+				remoteAudio.srcObject = new MediaStream([track]);
+				this.chatBox.appendChild(remoteAudio);
+				try {
+					remoteAudio.play();
+				} catch {}
+			}
+			else if (track.kind === "video") {
+				const remoteVideo = document.createElement("video");
+				remoteVideo.controls = true;
+				remoteVideo.srcObject = new MediaStream([track]);
+				this.chatBox.appendChild(remoteVideo);
+				try {
+					remoteVideo.play();
+				} catch {}
+			}*/
+		};
+
+		await remoteConnection.setRemoteDescription(JSON.parse(message.sdp));
+
+		const answer = await remoteConnection.createAnswer();
+		await remoteConnection.setLocalDescription(answer);
+	}
+
+	async HandleAnswer(message) {
+		const answer = JSON.parse(message.sdp);
+		console.log("received chat-sdp-answer:", message.uuid);
+
+		console.log("looking for local connection:" + message.uuid);
+		if (message.uuid in this.localConnections) {
+			this.localConnections[message.uuid].setRemoteDescription(answer);
+		}
+	}
+
+	async HandleIce(message) {
+
+	}
 
 	async GetHistory() {
 		try {
@@ -375,11 +607,18 @@ class Chat extends Window {
 		
 		try {
 			if (this.userStream === null) {
+				this.isMicEnable = true;
+				this.isCamEnable = false;
 				await this.SetupLocalUserMediaStream();
 			}
 		}
 		catch {
 			this.isMicEnable = false;
+		}
+
+		if (this.userStream) {
+			let audioTrack = this.userStream.stream.getAudioTracks()[0];
+			if (audioTrack) { audioTrack.enabled = this.isMicEnable; }
 		}
 
 		this.AdjustUI();
@@ -390,6 +629,8 @@ class Chat extends Window {
 
 		try {
 			if (this.userStream === null) {
+				this.isMicEnable = false;
+				this.isCamEnable = true;
 				await this.SetupLocalUserMediaStream();
 			}
 		}
@@ -397,14 +638,9 @@ class Chat extends Window {
 			this.isCamEnable = false;
 		}
 
-		if (this.isCamEnable) {
-			if (this.userStream.feedbackElement.srcObject === null) {
-				this.userStream.feedbackElement.srcObject = this.userStream.stream;
-				this.userStream.feedbackElement.play();
-			}
-		}
-		else {
-			this.userStream.feedbackElement.srcObject = null;
+		if (this.userStream) {
+			let videoTrack = this.userStream.stream.getVideoTracks()[0];
+			if (videoTrack) { videoTrack.enabled = this.isCamEnable; }
 		}
 
 		this.AdjustUI();
@@ -412,64 +648,6 @@ class Chat extends Window {
 
 	async Display_onclick() {
 		this.SetupLocalDisplayMediaStream();
-	}
-
-	HandleMessage(message) {
-		if (message.id in this.outdoing) {
-			this.outdoing[message.id].style.color = "var(--clr-dark)";
-			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
-			this.outdoing[message.id].style.boxShadow = "none";
-			delete this.outdoing[message.id];
-		}
-		else {
-			let time = new Date(UI.TicksToUnixDate(message.time));
-			let timeString = time.toLocaleTimeString(UI.regionalFormat, {});
-
-			switch (message.action) {
-			case "chattext":
-				this.CreateTextBubble(
-					message.text,
-					message.sender === KEEP.username ? "out" : "in",
-					message.sender,
-					message.alias,
-					message.color,
-					timeString,
-					message.id
-				);
-				break;
-
-			case "chatemoji":
-				this.CreateEmojiBubble(
-					message.url,
-					message.sender === KEEP.username ? "out" : "in",
-					message.sender,
-					message.alias,
-					message.color,
-					timeString,
-					message.id
-				);
-				break;
-
-			case "chatcommand":
-				this.CreateCommandBubble(
-					message.command,
-					message.params,
-					message.icon,
-					message.title,
-					message.sender === KEEP.username ? "out" : "in",
-					message.sender,
-					message.alias,
-					message.color,
-					timeString
-				);
-				break;
-			}
-		}
-
-		if (!(WIN.focused instanceof Chat)) {
-			this.blinkingDot.style.backgroundColor = message.color;
-			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
-		}
 	}
 
 	CreateBubble(direction, sender, alias, color, time) {
@@ -590,8 +768,8 @@ class Chat extends Window {
 
 		const commandBox = document.createElement("div");
 		commandBox.className = "chat-command-box";
-		commandBox.style.backgroundImage= `url(${icon})`;
-		commandBox.textContent= title;
+		commandBox.style.backgroundImage = `url(${icon})`;
+		commandBox.textContent = title;
 		bubble.appendChild(commandBox);
 
 		commandBox.onclick = ()=> {
@@ -605,13 +783,25 @@ class Chat extends Window {
 		return bubble;
 	}
 
+	CreateBurstedBubble(text, direction, sender, alias, color, time) {
+		const bubble = this.CreateBubble(direction, sender, alias, color, time);
+		bubble.classList.add("chat-burst-bubble");
+		bubble.textContent = text;
+		return bubble;
+	}
+
 	CreateLocalStreamElement(isUserMedia=false) {
 		const container = document.createElement("div");
 		
 		const videoFeedback = document.createElement("video");
+		videoFeedback.setAttribute("autoplay", true);
 		videoFeedback.style.width = "100%";
 		videoFeedback.style.height = "100%";
 		container.appendChild(videoFeedback);
+
+		const stopButton = document.createElement("div");
+		stopButton.className = "chat-stop-stream-button";
+		container.appendChild(stopButton);
 
 		return {
 			container: container,

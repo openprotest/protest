@@ -468,13 +468,13 @@
 	100% { transform: rotateY( 90deg); }
 }
 @keyframes light-spinner {
-	0%   { filter: brightness(100%) }
-	20%  { filter: brightness(140%) }
-	100% { filter: brightness(140%) }
+	0%   { filter: brightness(100%); }
+	20%  { filter: brightness(140%); }
+	100% { filter: brightness(140%); }
 }
 @keyframes fill-spinner {
-	0%   { filter: brightness(40%) }
-	20%  { filter: brightness(100%);}
+	0%   { filter: brightness(40%); }
+	20%  { filter: brightness(100%); }
 	20.1%{ box-shadow: var(--clr-accent) 0 0 0 inset; }
 	95%  { box-shadow: var(--clr-accent) 64px 0 0 inset; }
 	100% { box-shadow: var(--clr-accent) 64px 0 0 inset; }

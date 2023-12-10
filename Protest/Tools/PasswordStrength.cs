@@ -501,8 +501,8 @@ public static class PasswordStrength {
             smtp.Send(mail);
         }
 
-        catch (SmtpFailedRecipientException ex) { Logger.Error(ex);}
-        catch (SmtpException ex)                { Logger.Error(ex);}
-        catch (Exception ex)                    { Logger.Error(ex);}
+        catch (SmtpFailedRecipientException ex) { Logger.Error(ex); }
+        catch (SmtpException ex)                { Logger.Error(ex); }
+        catch (Exception ex)                    { Logger.Error(ex); }
     }
 }

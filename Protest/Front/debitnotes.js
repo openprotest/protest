@@ -169,7 +169,7 @@ class DebitNotes extends Window {
 		
 		this.OnUiReady();
 		
-		setTimeout(()=> { this.AfterResize(); }, 250);
+		setTimeout(()=> this.AfterResize(), 250);
 	}
 
 	OnUiReady(count = 0) {
@@ -1151,8 +1151,8 @@ class DebitNotes extends Window {
 		newPrint.document.write("<html><body>" + this.preview.innerHTML + "</body></html>");
 		newPrint.document.title = "Debit note";
 		newPrint.document.body.childNodes[0].style.backgroundColor = "white";
-		newPrint.onload = ()=> { newPrint.print(); };
+		newPrint.onload = ()=> newPrint.print();
 		newPrint.document.close();
-		setTimeout(()=> { newPrint.close(); }, 99);
+		setTimeout(()=> newPrint.close(), 99);
 	}
 }

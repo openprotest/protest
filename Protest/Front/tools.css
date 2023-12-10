@@ -103,7 +103,7 @@
 
 .tool-element > .expanded { overflow-y:auto; }
 .tool-element > .expanded > div { width:33%; }
-.tool-element > .collapsed > div { width:auto;}
+.tool-element > .collapsed > div { width:auto; }
 .tool-element > .collapsed > div::after {
 	padding-right: 8px;
 	content: ", ";

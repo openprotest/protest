@@ -1,4 +1,4 @@
-class WebcamTester extends Window {
+class CameraTester extends Window {
 	constructor(params) {
 		super();
 
@@ -7,7 +7,7 @@ class WebcamTester extends Window {
 			audio: false
 		};
 
-		this.SetTitle("Webcam tester");
+		this.SetTitle("Camera tester");
 		this.SetIcon("mono/webcam.svg");
 
 		this.recorder = null;

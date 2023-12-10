@@ -57,7 +57,7 @@ class Console extends Window {
 		this.defaultElement = this.txtInput;
 		this.txtInput.focus();
 
-		this.txtInput.onfocus = ()=> { this.BringToFront(); };
+		this.txtInput.onfocus = ()=> this.BringToFront();
 		this.escAction = ()=> { this.txtInput.value = ""; };
 	}
 

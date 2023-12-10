@@ -11,7 +11,7 @@ using Protest.Tools;
 namespace Protest.Http;
 
 internal static class KeepAlive {
-    private static readonly ArraySegment<byte> MSG_FORCE_RELOAD = new(Encoding.UTF8.GetBytes(@"{""action"":""forcereload""}"));
+    private static readonly ArraySegment<byte> MSG_FORCE_RELOAD = new(Encoding.UTF8.GetBytes(@"{""action"":""force-reload""}"));
 
     private struct Entry {
         public WebSocket ws;
@@ -122,13 +122,17 @@ internal static class KeepAlive {
         }
     }
 
-    public static void Broadcast(string message, string accessPath) {
-        Broadcast(Encoding.UTF8.GetBytes(message), accessPath);
+    public static void Broadcast(string message, string accessPath, bool includeOrigin = true, string origin=null) {
+        Broadcast(Encoding.UTF8.GetBytes(message), accessPath, includeOrigin, origin);
     }
-    public static void Broadcast(byte[] message, string accessPath) {
+    public static void Broadcast(byte[] message, string accessPath, bool includeOrigin = true, string origin = null) {
         List<WebSocket> remove = new List<WebSocket>();
 
         foreach (Entry entry in connections.Values) {
+            if (!includeOrigin && entry.username == origin) {
+                continue;
+            }
+
             bool isAuthorized = Auth.IsAuthorized(entry.ctx, accessPath);
             if (!isAuthorized) { continue; }
 
@@ -224,13 +228,33 @@ internal static class KeepAlive {
             }
             return;
 
-        case "chat-stream":
-            //TODO
+        case "chat-sdp-offer":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.SdpHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-sdp-answer":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.SdpHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-start-stream":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.StreamHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-ice":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.IceHandler(dictionary, origin);
+            }
             return;
 
         default:
-            Console.WriteLine($"unhandle case: {type}");
-            break;
+            Logger.Error($"Unhandle keep-alive message case: {type}");
+            return;
         }
     }
 }
@@ -248,15 +272,15 @@ file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<stri
                 string key = reader.GetString();
                 reader.Read();
 
-                string value;
                 if (reader.TokenType == JsonTokenType.Number) {
-                    value = reader.GetInt64().ToString();
+                    string value = reader.GetInt64().ToString();
+                    dictionary.TryAdd(key, value);
                 }
-                else {
-                    value = reader.GetString();
+                else if (reader.TokenType == JsonTokenType.String) {
+                    string value = reader.GetString();
+                    dictionary.TryAdd(key, value);
                 }
 
-                dictionary.TryAdd(key, value);
             }
         }
 

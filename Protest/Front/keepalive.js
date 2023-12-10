@@ -70,11 +70,11 @@ const KEEP = {
 			WIN.array.filter(win=> win instanceof Log).forEach(log=> log.Add(message.msg));
 			break;
 
-		case "forcereload":
+		case "force-reload":
 			location.reload();
 			break;
 
-		case "updateacl":
+		case "update-acl":
 			KEEP.authorization = message.authorization;
 			for (let i=0; i<WIN.array.length; i++) {
 				WIN.array[i].UpdateAuthorization();
@@ -192,7 +192,7 @@ const KEEP = {
 			break;
 
 
-		case "startfetch":
+		case "start-fetch":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].tabTask.style.visibility = "visible";
@@ -200,14 +200,14 @@ const KEEP = {
 			}
 			break;
 
-		case "cancelfetch":
+		case "cancel-fetch":
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].lblStatusValue.textContent = "canceling";
 			}
 			break;
 
-		case "updatefetch":
+		case "update-fetch":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].lblStatusValue.textContent = message.task.status;
@@ -219,16 +219,16 @@ const KEEP = {
 			}
 			break;
 
-		case "finishfetch":
+		case "finish-fetch":
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].ShowPending(message.task);
 			}
 			break;
 
-		case "abortfetch":
-		case "discardfetch":
-		case "approvefetch":
+		case "abort-fetch":
+		case "discard-fetch":
+		case "approve-fetch":
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].ShowDevices();
@@ -238,9 +238,11 @@ const KEEP = {
 			}
 			break;
 			
-		case "chattext":
-		case "chatemoji":
-		case "chatcommand": {
+		case "chat-text":
+		case "chat-emoji":
+		case "chat-command":
+		case "chat-offer":
+		case "chat-answer": {
 			if (!KEEP.chatNotificationSound) {
 				KEEP.chatNotificationSound = new Audio("notification.ogg");
 				KEEP.chatNotificationSound.volume = .8;
@@ -265,13 +267,28 @@ const KEEP = {
 				const newChat = new Chat();
 				newChat.win.style.display = "none";
 				newChat.Minimize();
-				//newChat.HandleMessage(message);
+				if (message.action === "chat-offer" || message.action === "chat-answer") {
+					newChat.HandleMessage(message);
+				}
+
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
 				KEEP.chatNotificationSound.play();
 			}
 
 			break;
 		}
+
+		case "chat-ice":
+		case "chat-start-stream":
+			for (let i = 0; i < WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof Chat)) continue;
+				WIN.array[i].HandleMessage(message);
+				
+				if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username) {
+					KEEP.chatNotificationSound.play();
+				}
+			}
+			break;
 
 		default:
 			console.log("none register action: " + message.action);
