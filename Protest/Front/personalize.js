@@ -13,11 +13,13 @@ class Personalize extends Tabs {
 		this.tabGui     = this.AddTab("Appearance", "mono/tv.svg");
 		this.tabRegion  = this.AddTab("Regional format", "mono/earth.svg" );
 		this.tabSession = this.AddTab("Session", "mono/hourglass.svg");
+		this.tabChat    = this.AddTab("Chat", "mono/chat.svg");
 		this.tabAgent   = this.AddTab("Agent", "mono/agent.svg");
 
 		this.tabGui.onclick     = ()=> this.ShowGui();
 		this.tabRegion.onclick  = ()=> this.ShowRegion();
 		this.tabSession.onclick = ()=> this.ShowSession();
+		this.tabChat.onclick    = ()=> this.ShowChat();
 		this.tabAgent.onclick   = ()=> this.ShowAgent();
 
 		switch (this.params) {
@@ -29,6 +31,11 @@ class Personalize extends Tabs {
 		case "session":
 			this.tabSession.className = "v-tab-selected";
 			this.ShowSession();
+			break;
+
+		case "chat":
+			this.tabChat.className = "v-tab-selected";
+			this.ShowChat();
 			break;
 
 		case "agent":
@@ -365,7 +372,7 @@ class Personalize extends Tabs {
 		const divRegion = document.createElement("div");
 		divRegion.textContent = "Region: ";
 		divRegion.style.display = "inline-block";
-		divRegion.style.minWidth = "200px";
+		divRegion.style.minWidth = "100px";
 		divRegion.style.fontWeight = "600";
 		this.tabsPanel.appendChild(divRegion);
 
@@ -618,6 +625,109 @@ class Personalize extends Tabs {
 				Apply();
 			} catch (ex) {}
 		};
+
+		Apply();
+	}
+
+	ShowChat() {
+		this.params = "chat";
+		this.tabsPanel.textContent = "";
+
+		this.chkOpenChatWindowOnMessage = document.createElement("input");
+		this.chkOpenChatWindowOnMessage.type = "checkbox";
+		this.tabsPanel.appendChild(this.chkOpenChatWindowOnMessage);
+		this.AddCheckBoxLabel(this.tabsPanel, this.chkOpenChatWindowOnMessage, "Focus chat window when receiving a message").style.fontWeight = "600";
+		
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("hr"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		this.chkEnableNotificationSound = document.createElement("input");
+		this.chkEnableNotificationSound.type = "checkbox";
+		this.tabsPanel.appendChild(this.chkEnableNotificationSound);
+		this.AddCheckBoxLabel(this.tabsPanel, this.chkEnableNotificationSound, "Play notification sound").style.fontWeight = "600";
+		
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		const divVolume = document.createElement("div");
+		divVolume.textContent = "Volume: ";
+		divVolume.style.display = "inline-block";
+		divVolume.style.minWidth = "100px";
+		divVolume.style.fontWeight = "600";
+		this.tabsPanel.appendChild(divVolume);
+
+		this.notificationVolume = document.createElement("input");
+		this.notificationVolume.setAttribute("aria-label", "Chat notification volume");
+		this.notificationVolume.type = "range";
+		this.notificationVolume.min = 0;
+		this.notificationVolume.max = 100;
+		this.notificationVolume.style.width = "100px";
+		this.tabsPanel.appendChild(this.notificationVolume);
+
+		this.notificationVolumeValue = document.createElement("div");
+		this.notificationVolumeValue.textContent = "100%";
+		this.notificationVolumeValue.style.paddingLeft = "8px";
+		this.notificationVolumeValue.style.display = "inline-block";
+		this.tabsPanel.appendChild(this.notificationVolumeValue);
+
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		const playButton = document.createElement("input");
+		playButton.type = "button";
+		playButton.value = "Test";
+		playButton.classList.add("with-icon");
+		playButton.style.backgroundImage = "url(mono/play.svg?light)";
+		this.tabsPanel.appendChild(playButton);
+
+		playButton.onclick = ()=> {
+			if (this.chkEnableNotificationSound.checked === false) {
+				return;
+			}
+
+			//playButton.disabled = true;
+
+			const audio = new Audio();
+			audio.src = "notification.ogg";
+			audio.volume = this.notificationVolume.value / 100;
+			audio.play();
+
+			audio.onended = ()=> {
+				playButton.disabled = false;
+				playButton.focus();
+			};
+		};
+
+		this.chkOpenChatWindowOnMessage.checked = localStorage.getItem("focus_chat_window") === "true";
+		this.chkEnableNotificationSound.checked = localStorage.getItem("enable_notification_sound") !== "false";
+		this.notificationVolume.value = localStorage.getItem("notification_volume") == null ? 80 : parseInt(localStorage.getItem("notification_volume"));
+
+		const Apply = ()=> {
+			localStorage.setItem("focus_chat_window", this.chkOpenChatWindowOnMessage.checked);
+			localStorage.setItem("enable_notification_sound", this.chkEnableNotificationSound.checked);
+			localStorage.setItem("notification_volume", this.notificationVolume.value);
+
+			for (let i = 0; i < WIN.array.length; i++) {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "chat") {
+					WIN.array[i].chkOpenChatWindowOnMessage.checked = this.chkOpenChatWindowOnMessage.checked;
+					WIN.array[i].chkEnableNotificationSound.checked = this.chkEnableNotificationSound.checked;
+					WIN.array[i].notificationVolume.value           = this.notificationVolume.value;
+
+					WIN.array[i].notificationVolume.disabled = !this.chkEnableNotificationSound.checked;
+					WIN.array[i].notificationVolumeValue.textContent = `${this.notificationVolume.value}%`;
+				}
+			}
+
+			if (KEEP.chatNotificationSound) {
+				KEEP.chatNotificationSound.volume = this.notificationVolume.value / 100;
+			}
+		};
+
+		this.chkOpenChatWindowOnMessage.onchange = ()=> Apply();
+		this.chkEnableNotificationSound.onchange = ()=> Apply();
+		this.notificationVolume.onchange = this.notificationVolume.oninput = ()=> Apply();
 
 		Apply();
 	}

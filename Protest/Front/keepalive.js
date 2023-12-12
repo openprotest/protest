@@ -234,7 +234,6 @@ const KEEP = {
 				WIN.array[i].ShowDevices();
 				WIN.array[i].tabsList[0].className = "v-tab-selected";
 				WIN.array[i].tabTask.style.visibility = "hidden";
-
 			}
 			break;
 			
@@ -245,34 +244,51 @@ const KEEP = {
 		case "chat-answer": {
 			if (!KEEP.chatNotificationSound) {
 				KEEP.chatNotificationSound = new Audio("notification.ogg");
-				KEEP.chatNotificationSound.volume = .8;
+				const volume = localStorage.getItem("notification_volume") == null ? 80 : parseInt(localStorage.getItem("notification_volume"));
+				KEEP.chatNotificationSound.volume = volume / 100;
 			}
 
-			if (document.hidden) {
+			if (document.hidden &&
+				localStorage.getItem("enable_notification_sound") !== "false") {
 				KEEP.chatNotificationSound.play();
 			}
 
 			let chatCount = 0;
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
+
+				if (localStorage.getItem("focus_chat_window") === "true") {
+					if (WIN.array[i].isMinimized) {
+						WIN.array[i].Minimize(false); //restore
+					}
+					WIN.array[i].BringToFront();
+				}
+
 				WIN.array[i].HandleMessage(message);
 				chatCount++;
 				
-				if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username) {
+				if (WIN.focused !== WIN.array[i] &&
+					message.sender !== KEEP.username &&
+					localStorage.getItem("enable_notification_sound") !== "false") {
 					KEEP.chatNotificationSound.play();
 				}
 			}
 
 			if (chatCount === 0) {
 				const newChat = new Chat();
-				newChat.win.style.display = "none";
-				newChat.Minimize();
+				if (localStorage.getItem("focus_chat_window") !== "true") {
+					newChat.win.style.display = "none";
+					newChat.Minimize();
+				}
+
 				if (message.action === "chat-offer" || message.action === "chat-answer") {
 					newChat.HandleMessage(message);
 				}
 
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
-				KEEP.chatNotificationSound.play();
+				if (localStorage.getItem("enable_notification_sound") !== "false") {
+					KEEP.chatNotificationSound.play();
+				}
 			}
 
 			break;
@@ -284,9 +300,11 @@ const KEEP = {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
 				
-				if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username) {
+				/*if (WIN.focused !== WIN.array[i] &&
+					message.sender !== KEEP.username &&
+					localStorage.getItem("enable_notification_sound") !== "false") {
 					KEEP.chatNotificationSound.play();
-				}
+				}*/
 			}
 			break;
 
