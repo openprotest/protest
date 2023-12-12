@@ -30,8 +30,6 @@ class Chat extends Window {
 		this.SetIcon("mono/chat.svg");
 		this.content.classList.add("chat-window");
 
-		//this.uuid = this.GenerateUuid(KEEP.username);
-
 		this.lastBubble = null;
 		this.outdoing = {};
 
@@ -39,7 +37,6 @@ class Chat extends Window {
 		this.displayStreams = [];
 		this.remoteStreams = [];
 
-		this.uuidTable = [];
 		this.localConnections = {};
 		this.remoteConnections = {};
 
@@ -150,6 +147,10 @@ class Chat extends Window {
 		this.displayButton.onclick = ()=> this.Display_onclick();
 
 		await this.GetHistory();
+
+		KEEP.socket.send(JSON.stringify({
+			type: "chat-join"
+		}));
 	}
 
 	async SetupLocalUserMediaStream() {
@@ -248,18 +249,29 @@ class Chat extends Window {
 	async InitializeRtc() {
 		const uuid = this.GenerateUuid(KEEP.username);
 
-		KEEP.socket.send(JSON.stringify({
-			type: "chat-start-stream",
+		await KEEP.socket.send(JSON.stringify({
+			type: "chat-stream",
 			uuid: uuid
 		}));
-		console.log("send chat-start-stream:" + uuid);
+		console.log("send chat-stream:", uuid);
 
 		const localConnection = new RTCPeerConnection(Chat.ICE_SERVERS);
 		this.localConnections[uuid] = localConnection;
 
-		console.log("pushing into local connections:" + uuid);
+		console.log("pushing into local connections:", uuid);
 
 		localConnection.onicecandidate = event=> {
+			/*const time = new Date();
+			this.CreateBurstedBubble(`ICE: ${JSON.stringify(event.candidate)}`, "out", KEEP.username, KEEP.alias, KEEP.color, time.toLocaleTimeString(UI.regionalFormat, {}));
+
+			if (event.candidate) {
+				KEEP.socket.send(JSON.stringify({
+					type: "chat-ice",
+					uuid: uuid,
+					candidate: JSON.stringify(event.candidate)
+				}));
+			}*/
+
 			if (localConnection.iceGatheringState !== "complete") { return; }
 
 			KEEP.socket.send(JSON.stringify({
@@ -268,10 +280,10 @@ class Chat extends Window {
 				offer: JSON.stringify(offer)
 			}));
 
-			console.log("send chat-sdp-offer:" + uuid);
+			console.log("send chat-sdp-offer:", uuid);
 		};
 
-		localConnection.onnegotiationneeded = async event=> {
+		/*localConnection.onnegotiationneeded = async event=> {
 			console.log("negotiation needed");
 
 			let offer = await localConnection.createOffer();
@@ -287,7 +299,7 @@ class Chat extends Window {
 				uuid: uuid,
 				answer: JSON.stringify({description: localConnection.localDescription})
 			}));
-		};
+		};*/
 
 		localConnection.onopen = event=>{
 			console.log("local connection open");
@@ -351,17 +363,6 @@ class Chat extends Window {
 				this.CreateCommandBubble(message.command, message.params, message.icon, message.title, direction, message.sender, message.alias, message.color, timeString);
 				break;
 
-			case "chat-start-stream":
-				this.CreateBurstedBubble(`Starting a stream: ${message.uuid}`, direction, message.sender, message.alias, message.color, timeString);
-				if (direction === "out") { break; }
-				this.uuidTable.push({
-					username: message.sender,
-					uuid: message.uuid
-				});
-
-				console.log("receive chat-start-stream:" + message.uuid);
-				break;
-
 			case "chat-offer":
 				this.CreateBurstedBubble("SDP: Offer", direction, message.sender, message.alias, message.color, timeString);
 				if (direction === "out") { break; }
@@ -373,10 +374,20 @@ class Chat extends Window {
 				this.HandleAnswer(message, direction);
 				break;
 
+			case "chat-join":
+				this.CreateBurstedBubble("Join", direction, message.sender, message.alias, message.color, timeString);
+				break;
+
+			case "chat-stream":
+				this.CreateBurstedBubble(`Starting a stream: ${message.uuid}`, direction, message.sender, message.alias, message.color, timeString);
+				if (direction === "out") { break; }
+
+				console.log("receive chat-stream:", message.uuid);
+				break;
+
 			case "chat-ice":
-				this.CreateBurstedBubble("ICE:", direction, message.sender, message.alias, message.color, timeString);
-				this.HandleIce
-				(message, direction);
+				this.CreateBurstedBubble(`ICE: ${message.candidate}`, direction, message.sender, message.alias, message.color, timeString);
+				this.HandleIce(message, direction);
 				break;
 			}
 		}
@@ -388,25 +399,44 @@ class Chat extends Window {
 	}
 
 	async HandleOffer(message) {
-		console.log("receive chat-sdp-offer:" + message.uuid);
+		console.log("receive chat-sdp-offer:", message.uuid);
 
 		const remoteConnection = new RTCPeerConnection(Chat.ICE_SERVERS);
 
 		this.remoteConnections[message.uuid] = remoteConnection;
-		console.log("pushing in remote connections:" + message.uuid);
+		console.log("pushing in remote connections:", message.uuid);
 
 		remoteConnection.onicecandidate = event=> {
+			const time = new Date();
+			this.CreateBurstedBubble(
+				`ICE: ${JSON.stringify(event.candidate)}`,
+				"out",
+				KEEP.username,
+				KEEP.alias,
+				KEEP.color,
+				time.toLocaleTimeString(UI.regionalFormat, {})
+			);
+
+			if (event.candidate) {
+				KEEP.socket.send(JSON.stringify({
+					type: "chat-ice",
+					uuid: message.uuid,
+					candidate: JSON.stringify(event.candidate)
+				}));
+			}
+
 			if (remoteConnection.iceGatheringState !== "complete") { return; }
+
 			KEEP.socket.send(JSON.stringify({
 				type: "chat-sdp-answer",
 				uuid: message.uuid,
 				answer: JSON.stringify(remoteConnection.localDescription)
 			}));
 
-			console.log("sending chat-sdp-answer:" + message.uuid);
+			console.log("sending chat-sdp-answer:", message.uuid);
 		};
 
-		remoteConnection.onnegotiationneeded = async event=> {
+		/*remoteConnection.onnegotiationneeded = async event=> {
 			console.log("negotiation needed");
 
 			let offer = await remoteConnection.createOffer();
@@ -422,7 +452,7 @@ class Chat extends Window {
 				uuid: message.uuid,
 				answer: JSON.stringify({description: remoteConnection.localDescription})
 			}));
-		};
+		};*/
 
 		remoteConnection.onopen = event=> {
 			console.log("remote connection open");
@@ -430,7 +460,7 @@ class Chat extends Window {
 
 		remoteConnection.ondatachannel = event=> {
 			const receiveChannel = event.channel;
-			receiveChannel.onmessage = event=> console.log("message received:" + event.data);
+			receiveChannel.onmessage = event=> console.log("message received:", event.data);
 
 			receiveChannel.onopen = event=> {
 				console.log("remote data channel open");
@@ -475,16 +505,21 @@ class Chat extends Window {
 
 	async HandleAnswer(message) {
 		const answer = JSON.parse(message.sdp);
-		console.log("received chat-sdp-answer:", message.uuid);
 
-		console.log("looking for local connection:" + message.uuid);
+		console.log("looking for local connection:", message.uuid);
 		if (message.uuid in this.localConnections) {
 			this.localConnections[message.uuid].setRemoteDescription(answer);
 		}
 	}
 
 	async HandleIce(message) {
+		/*if (message.uuid in this.remoteConnections) {
+			await this.remoteConnections[message.uuid].addIceCandidate(JSON.parse(message.candidate));
+		}
 
+		if (message.uuid in this.localConnections) {
+			await this.localConnections[message.uuid].addIceCandidate(JSON.parse(message.candidate));
+		}*/
 	}
 
 	async GetHistory() {

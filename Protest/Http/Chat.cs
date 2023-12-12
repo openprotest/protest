@@ -165,6 +165,7 @@ internal static class Chat {
     public static void IceHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("candidate", out string candidate)) { return; }
+        if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
 
         string username = acl?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
@@ -172,6 +173,7 @@ internal static class Chat {
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
         builder.Append($"\"action\":\"chat-ice\",");
+        builder.Append($"\"uuid\":\"{Data.EscapeJsonText(uuid)}\",");
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
@@ -184,6 +186,26 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read", false, origin);
     }
 
+    public static void JoinHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
+        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+
+        string username = acl?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+
+        StringBuilder builder = new StringBuilder();
+        builder.Append('{');
+        builder.Append($"\"action\":\"chat-join\",");
+        builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
+        builder.Append($"\"sender\":\"{username}\",");
+        builder.Append($"\"alias\":\"{alias}\",");
+        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\"");
+        builder.Append('}');
+
+        string json = builder.ToString();
+
+        KeepAlive.Broadcast(json, "/chat/read");
+    }
+
     public static void StreamHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
@@ -193,7 +215,7 @@ internal static class Chat {
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
-        builder.Append($"\"action\":\"chat-start-stream\",");
+        builder.Append($"\"action\":\"chat-stream\",");
         builder.Append($"\"uuid\":\"{Data.EscapeJsonText(uuid)}\",");
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
@@ -216,8 +238,6 @@ internal static class Chat {
         }
     }
 
-
-    
     public static byte[] GetHistory() {
         long yesterday = DateTime.UtcNow.Ticks - 864_000_000_000;
 

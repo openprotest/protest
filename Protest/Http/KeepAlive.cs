@@ -240,7 +240,13 @@ internal static class KeepAlive {
             }
             return;
 
-        case "chat-start-stream":
+        case "chat-join":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.JoinHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-stream":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
                 Chat.StreamHandler(dictionary, origin);
             }
