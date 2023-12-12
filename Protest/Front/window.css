@@ -369,6 +369,7 @@
 	width: 8px;
 	height: 32px;
 	transform: rotate(-45deg) translate(12px, 0px);
+	animation: fade-in .2s 1;
 }
 
 .task-spinner {

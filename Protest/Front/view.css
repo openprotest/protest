@@ -342,7 +342,7 @@ button.view-live-button:active {
 
 .view-info-pane > div {
 	background-color: color-mix(in hsl, rgb(64,64,64) 50%, transparent);
-	margin: 0 8px 8px 8px;
+	margin: 0 8px 16px 8px;
 	padding: 8px;
 	border: var(--clr-pane) solid 2px;
 	border-radius: 4px;
