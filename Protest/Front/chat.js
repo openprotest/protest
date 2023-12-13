@@ -49,7 +49,11 @@ class Chat extends Window {
 	}
 
 	GenerateUuid(prefix) {
-		return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, c=>(Math.random() * 16 | 0).toString(16))}`;
+		if (prefix) {
+			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
+		}
+
+		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
 	}
 
 	async InitializeComponents() {
