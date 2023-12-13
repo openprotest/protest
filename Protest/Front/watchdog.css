@@ -89,5 +89,5 @@
 	color: rgb(64,64,64);
 	background-color: var(--clr-light);
 	border-radius: 4px;
-	margin: 4px;
+	margin: 0 2px 8px 2px;
 }

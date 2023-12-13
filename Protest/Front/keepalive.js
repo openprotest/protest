@@ -294,8 +294,9 @@ const KEEP = {
 			break;
 		}
 
+		case "chat-join":
+		case "chat-stream":
 		case "chat-ice":
-		case "chat-start-stream":
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
