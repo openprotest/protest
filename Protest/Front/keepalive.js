@@ -53,7 +53,7 @@ const KEEP = {
 			KEEP.MessageHandler(message);
 		};
 
-		KEEP.socket.onerror = ()=> { };
+		//KEEP.socket.onerror = ex=> {};
 	},
 
 	MessageHandler: message=> {
@@ -367,9 +367,7 @@ const KEEP = {
 			}, 400);
 		};
 
-		btnReload.onclick = ()=> {
-			location.reload();
-		};
+		btnReload.onclick = ()=> location.reload();
 
 		btnIgnore.onclick = ()=> {
 			notification.notificationBox.style.opacity = "0";
