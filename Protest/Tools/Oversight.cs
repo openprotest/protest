@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Protest.Tools;
 
-internal class Overwatch {
+internal class Oversight {
     private static async void WsWriteText(WebSocket ws, string text, object sendLock = null) {
         if (sendLock is null) {
             await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
