@@ -159,10 +159,10 @@ class DeviceView extends View {
 
 		let host = null;
 		if (this.link.ip) {
-			host = this.link.ip.v
+			host = this.link.ip.v.split(";")[0].trim();
 		}
 		else if (this.link.hostname) {
-			host = this.link.hostname.v
+			host = this.link.hostname.v.split(";")[0].trim();
 		}
 
 		const overwriteProtocol = {};
@@ -262,6 +262,11 @@ class DeviceView extends View {
 						wmi.SetTitle("[untitled] - Processes");
 					else
 						wmi.SetTitle(this.link["name"].v + " - Services");
+				};
+
+				const btnOversight = this.CreateSideButton("mono/oversight.svg", "Resources oversight");
+				btnOversight.onclick = ()=> {
+					//TODO:
 				};
 
 				const btnComputerMng = this.CreateSideButton("mono/computermanage.svg", "Management");
@@ -597,6 +602,7 @@ class DeviceView extends View {
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/device");
 
 		let dotPingCounter = 0;
+		let liveButtons = [];
 
 		this.liveStatsWebSockets.onopen = ()=> {
 			dotPingCounter = 0;
@@ -639,6 +645,7 @@ class DeviceView extends View {
 				dotPingCounter++;
 
 				const pingButton = this.CreateInfoButton(json.for, "/mono/ping.svg");
+				liveButtons.push(pingButton);
 				pingButton.secondary.textContent = isNaN(json.echoReply) ? json.echoReply : `${json.echoReply}ms`;
 				pingButton.secondary.style.display = "inline-block";
 				pingButton.secondary.style.color = UI.PingColor(json.echoReply);
@@ -658,6 +665,7 @@ class DeviceView extends View {
 			}
 			else if (json.drive) {
 				const driveButton = this.CreateInfoButton(json.drive, "/mono/hdd.svg");
+				liveButtons.push(driveButton);
 				driveButton.secondary.style.display = "inline-block";
 				driveButton.secondary.style.width = "64px";
 				driveButton.secondary.style.height = "10px";
@@ -670,7 +678,12 @@ class DeviceView extends View {
 			}
 			else if (json.activeUser) {
 				const userButton = this.CreateInfoButton(json.activeUser, "/mono/user.svg");
+				liveButtons.push(userButton);
+				userButton.secondary.textContent = "Logged in";
 				userButton.secondary.style.display = "inline-block";
+				userButton.secondary.style.verticalAlign = "top";
+				userButton.secondary.style.height = "12px";
+
 				userButton.button.onclick = ()=> {
 					let usersList = [json.activeUser];
 					if (json.activeUser.indexOf("\\") > 0) usersList.push(json.activeUser.split("\\")[1]);
@@ -692,12 +705,48 @@ class DeviceView extends View {
 						}
 						new UserView({file: found});
 					}
-
 				};
 			}
 		};
 		
 		this.liveStatsWebSockets.onclose = ()=> {
+			const loggedIn = liveButtons.find(o=> o.secondary.textContent === "Logged in");
+			if (!loggedIn && this.link.owner) {
+				const split = this.link.owner.v.split(";").map(o=>o.trim());
+
+				for (let i=0; i<split.length; i++) {
+					const userButton = this.CreateInfoButton(split[i], "/mono/user.svg");
+					liveButtons.push(userButton);
+					userButton.secondary.textContent = "Owner";
+					userButton.secondary.style.display = "inline-block";
+					userButton.secondary.style.verticalAlign = "top";
+					userButton.secondary.style.height = "12px";
+
+					userButton.button.onclick = ()=> {
+						let usersList = [split[i]];
+						if (split[i].indexOf("\\") > 0) usersList.push(split[i].split("\\")[1]);
+						let found = null;
+						for (let file in LOADER.users.data) {
+							if (!LOADER.users.data[file].username) continue;
+							if (usersList.includes(LOADER.users.data[file].username.v)) {
+								found = file;
+								break;
+							}
+						}
+
+						if (found) {
+							for (let k=0; k<WIN.array.length; k++) {
+								if (WIN.array[k] instanceof UserView && WIN.array[k].params.file === found) {
+									WIN.array[k].Minimize();
+									return;
+								}
+							}
+							new UserView({file: found});
+						}
+					};
+				}
+			}
+
 			this.liveStatsWebSockets = null;
 			if (this.link.ip) {
 				this.InitializeGraphs();
@@ -803,61 +852,35 @@ class DeviceView extends View {
 		}
 
 		const GenerateGraph = (data, label, type, icon)=> {
+			const height = 64;
+
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
+			graphBox.style.height = `${height+32}px`;
 			this.liveD.appendChild(graphBox);
 
 			const labelBox = document.createElement("div");
-			labelBox.style.position = "absolute";
-			labelBox.style.zIndex = "1";
-			labelBox.style.left = "2px";
-			labelBox.style.top = "108px";
-			labelBox.style.width = "108px";
-			labelBox.style.height = "14px";
-			labelBox.style.transformOrigin = "0 0";
-			labelBox.style.transform = "rotate(-90deg)";
-			labelBox.style.textAlign = "center";
-			labelBox.style.fontSize = "12px";
-			labelBox.style.color = "var(--clr-light)";
-			labelBox.textContent = label;
+			labelBox.className = "view-lifeline-label";
+			labelBox.textContent = label.toUpperCase();
 			graphBox.appendChild(labelBox);
 
 			const iconBox = document.createElement("div");
-			iconBox.style.position = "absolute";
-			iconBox.style.zIndex = "1";
-			iconBox.style.left = "24px";
-			iconBox.style.top = "24px";
-			iconBox.style.width = "64px";
-			iconBox.style.height = "64px";
-			iconBox.style.backgroundImage = `url(${icon})`;
-			iconBox.style.backgroundSize = "64px 64px";
-			iconBox.style.filter = "drop-shadow(var(--clr-dark) 0 0 2px)";
+			iconBox.className = "view-lifeline-icon";
+			iconBox.style.backgroundImage = `url(${icon}?light)`;
 			graphBox.appendChild(iconBox);
 
 			const infoBox = document.createElement("div");
-			infoBox.style.position = "absolute";
-			infoBox.style.bottom = "32px";
-			infoBox.style.zIndex = "2";
-			infoBox.style.minWidth = "64px";
-			infoBox.style.minHeight = "20px";
-			infoBox.style.padding = "0 4px";
-			infoBox.style.color = "var(--clr-dark)";
-			infoBox.style.backgroundColor = "var(--clr-pane)";
-			infoBox.style.borderRadius = "2px";
-			infoBox.style.boxShadow = "rgba(32,32,32,.5) 0 0 4px";
-			infoBox.style.opacity = "0";
-			infoBox.style.pointerEvents = "none";
-			infoBox.style.transition = ".2s";
+			infoBox.className = "view-lifeline-info";
 			graphBox.appendChild(infoBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 800);
-			svg.setAttribute("height", 128);
+			svg.setAttribute("height", `${height+28}px`);
 			graphBox.appendChild(svg);
 
 			const line = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 			line.setAttribute("x", 0);
-			line.setAttribute("y", 105);
+			line.setAttribute("y", height + 5);
 			line.setAttribute("width", 800);
 			line.setAttribute("height", 1);
 			line.setAttribute("fill", "color-mix(in hsl, var(--clr-light) 25%, transparent)");
@@ -870,15 +893,15 @@ class DeviceView extends View {
 
 				const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 				dot.setAttribute("cx", x);
-				dot.setAttribute("cy", 110);
+				dot.setAttribute("cy", height + 10);
 				dot.setAttribute("r", 1.5);
 				dot.setAttribute("fill", "var(--clr-light)");
 				svg.appendChild(dot);
 
 				const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				lblTime.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short",day:"numeric"});
+				lblTime.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short", day:"numeric"});
 				lblTime.setAttribute("x", x);
-				lblTime.setAttribute("y", 120);
+				lblTime.setAttribute("y", height + 20);
 				lblTime.setAttribute("fill", "var(--clr-light)");
 				lblTime.setAttribute("text-anchor", "middle");
 				lblTime.setAttribute("font-size", "10px");
@@ -886,17 +909,17 @@ class DeviceView extends View {
 			}
 
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-			path.setAttribute("fill", "rgba(224,224,224,.4)");
+			path.setAttribute("fill", "rgba(200,200,200,.4)");
 			svg.appendChild(path);
 
-			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} 105 `;
+			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} ${height + 5} `;
 			
 			let lastX = -8, lastY = -8;
 
 			if (type === "line") {
 				for (let i=0; i<data.length; i++) {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-					let y = 3 + Math.round(data[i].v < 0 ? 100 : Math.min(data[i].v / 10, 90));
+					let y = 3 + Math.round(data[i].v < 0 ? height : Math.min(data[i].v / 10, height - 10));
 					d += `L ${x} ${y} `;
 	
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
@@ -908,15 +931,15 @@ class DeviceView extends View {
 					dot.setAttribute("fill", this.RttToColor(data[i].v));
 					svg.appendChild(dot);
 	
-					lastX = x;
-					lastY = y;
+					if (x < -50) continue;
+					lastX = x, lastY = y;
 				}
 			}
 			else if (type === "vol") {
 				for (let i=0; i<data.length; i++) {
 					if (data[i].t === 0) continue;
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-					let y = 104 - Math.round(100 * data[i].v / data[i].t);
+					let y = (height + 4) - Math.round(height * data[i].v / data[i].t);
 					
 					d += `L ${x} ${y} `;
 	
@@ -929,14 +952,14 @@ class DeviceView extends View {
 					dot.setAttribute("fill", this.VolumeToColor(data[i].v, data[i].t));
 					svg.appendChild(dot);
 	
-					lastX = x;
-					lastY = y;
+					if (x < -50) continue;
+					lastX = x, lastY = y;
 				}
 			}
 			else if (type === "percent") {
 				for (let i=0; i<data.length; i++) {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-					let y = 104 - Math.round(data[i].v);
+					let y = (height + 4) - Math.round(height * data[i].v / 100);
 					
 					d += `L ${x} ${y} `;
 	
@@ -949,12 +972,12 @@ class DeviceView extends View {
 					dot.setAttribute("fill", this.PercentToColor(data[i].v, 100));
 					svg.appendChild(dot);
 	
-					lastX = x;
-					lastY = y;
+					if (x < -50) continue;
+					lastX = x, lastY = y;
 				}
 			}
 
-			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} 105 Z`;
+			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} ${height + 5} Z`;
 			path.setAttribute("d", d);
 
 
@@ -969,10 +992,10 @@ class DeviceView extends View {
 			graphBox.onmousemove = event=>{
 				if (event.layerX < 800 - graphBox.clientWidth + 100) {
 					infoBox.style.left = "";
-					infoBox.style.right = "16px";
+					infoBox.style.right = "8px";
 				}
 				else {
-					infoBox.style.left = "16px";
+					infoBox.style.left = "8px";
 					infoBox.style.right = "";
 				}
 
@@ -1015,7 +1038,7 @@ class DeviceView extends View {
 				data.push({d:date, v:rtt});
 			}
 
-			GenerateGraph(data, "Roundtrip time", "line", "mono/ping.svg?light");
+			GenerateGraph(data, "Roundtrip time", "line", "mono/ping.svg");
 		}
 
 		if (cpuArray.length > 0) {
@@ -1027,7 +1050,7 @@ class DeviceView extends View {
 				data.push({d:date, v:usage});
 			}
 	
-			GenerateGraph(data, "CPU usage", "percent", "mono/cpu.svg?light");
+			GenerateGraph(data, "CPU usage", "percent", "mono/cpu.svg");
 		}
 
 		if (memoryArray.length > 0) {
@@ -1045,7 +1068,7 @@ class DeviceView extends View {
 				data.push({d:date, v:used*1024, t:total*1024});
 			}
 
-			GenerateGraph(data, "Memory", "vol", "mono/ram.svg?light");
+			GenerateGraph(data, "Memory", "vol", "mono/ram.svg");
 		}
 
 		if (diskCapacityArray.length > 0) {
@@ -1078,7 +1101,7 @@ class DeviceView extends View {
 			}
 
 			data.forEach ((value, key)=> {
-				GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg?light");
+				GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg");
 			});
 		}
 
@@ -1091,7 +1114,7 @@ class DeviceView extends View {
 				data.push({d:date, v:usage});
 			}
 
-			GenerateGraph(data, "Disk usage", "percent", "mono/hdd.svg?light");
+			GenerateGraph(data, "Disk usage", "percent", "mono/hdd.svg");
 		}
 	}
 

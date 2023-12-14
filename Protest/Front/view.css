@@ -528,7 +528,7 @@ button.view-live-button:active {
 	position: relative;
 	width: 100%;
 	height: 132px;
-	background-color: #20202040;
+	background-color: #FFFFFF20;
 	border-radius: 4px;
 	overflow: hidden;
 }
@@ -541,6 +541,54 @@ button.view-live-button:active {
 	position: absolute;
 	right: 0;
 	top: 4px;
+}
+
+.view-lifeline-graph > .view-lifeline-label {
+	position: absolute;
+	z-index: 1;
+	left: 8px;
+	top: 2px;
+	width: 150px;
+	font-size: 12px;
+	color: var(--clr-light);
+	font-weight: 600;
+	text-shadow: var(--clr-dark) 0 0 2px;
+	transition: .2s;
+}
+
+.view-lifeline-graph > .view-lifeline-icon {
+	position: absolute;
+	z-index: 1;
+	left: 8px;
+	top: 20px;
+	width: 48px;
+	height: 48px;
+	background-size: cover;
+	filter: drop-shadow(var(--clr-dark) 0 0 2px);
+	transition: .4s;
+}
+
+.view-lifeline-graph > .view-lifeline-info {
+	position: absolute;
+	bottom: 20px;
+	z-index: 2;
+	min-Width: 64px;
+	min-Height: 20px;
+	padding: 0 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	border-radius: 2px;
+	box-sizing: rgba(32,32,32,.5) 0 0 4px;
+	opacity: 0;
+	pointer-events: none;
+	transition: .25s;
+}
+
+.view-lifeline-graph:hover > .view-lifeline-label,
+.view-lifeline-graph:hover > .view-lifeline-icon{
+	opacity: 0;
+	visibility: hidden;
+	transform: translateX(-24px);
 }
 
 .view-info-box,

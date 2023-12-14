@@ -91,7 +91,7 @@ class Chat extends Window {
 		this.displayButton.type = "button";
 		this.displayButton.style.backgroundColor = "transparent";
 
-		this.content.append(this.micButton, this.camButton, this.displayButton);
+		//this.content.append(this.micButton, this.camButton, this.displayButton);
 
 		this.input = document.createElement("div");
 		this.input.setAttribute("contenteditable", true);
@@ -378,9 +378,9 @@ class Chat extends Window {
 				this.HandleAnswer(message, direction);
 				break;
 
-			case "chat-join":
+			/*case "chat-join":
 				this.CreateBurstedBubble("Join", direction, message.sender, message.alias, message.color, timeString);
-				break;
+				break;*/
 
 			case "chat-stream":
 				this.CreateBurstedBubble(`Starting a stream: ${message.uuid}`, direction, message.sender, message.alias, message.color, timeString);

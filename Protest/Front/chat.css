@@ -207,7 +207,8 @@
 
 .chat-input {
 	position: absolute;
-	left: 148px;
+	/*left: 148px;*/
+	left: 8px;
 	right: 96px;
 	bottom: 12px;
 	min-height: 40px;
