@@ -56,8 +56,6 @@ internal class Oversight {
             int interval = 3000;
             while (ws.State == WebSocketState.Open) {
 
-
-
                 Thread.Sleep(interval);
             }
 

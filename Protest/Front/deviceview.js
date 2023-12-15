@@ -922,7 +922,26 @@ class DeviceView extends View {
 			
 			let lastX = -8, lastY = -8;
 
-			if (type === "line") {
+			if (type === "ping") {
+				for (let i=0; i<data.length; i++) {
+					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let y = 3 + Math.round(data[i].v < 0 ? height : 24 + Math.min((height - 24) * data[i].v / 1000, height - 10));
+					d += `L ${x} ${y} `;
+	
+					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
+	
+					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					dot.setAttribute("cx", x);
+					dot.setAttribute("cy", y);
+					dot.setAttribute("r", 3);
+					dot.setAttribute("fill", this.RttToColor(data[i].v));
+					svg.appendChild(dot);
+	
+					if (x < -50) continue;
+					lastX = x, lastY = y;
+				}
+			}
+			else if (type === "line") {
 				for (let i=0; i<data.length; i++) {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 3 + Math.round(data[i].v < 0 ? height : Math.min(data[i].v / 10, height - 10));
@@ -996,13 +1015,16 @@ class DeviceView extends View {
 			};
 
 			graphBox.onmousemove = event=>{
-				if (event.layerX < 800 - graphBox.clientWidth + 100) {
-					infoBox.style.left = "";
-					infoBox.style.right = "8px";
+				let right = graphBox.clientWidth - event.layerX + 12;
+				right = Math.max(right, 8);
+				right = Math.min(right, graphBox.clientWidth - infoBox.clientWidth - 8);
+				infoBox.style.right = `${right}px`;
+
+				if (event.layerY > height / 2) {
+					infoBox.style.top = "4px";
 				}
 				else {
-					infoBox.style.left = "8px";
-					infoBox.style.right = "";
+					infoBox.style.top = `${height-16}px`;
 				}
 
 				let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
@@ -1015,8 +1037,11 @@ class DeviceView extends View {
 					}
 				}
 
-				if (type === "line") {
+				if (type === "ping") {
 					infoBox.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
+				}
+				if (type === "line") {
+					infoBox.textContent = data[closestIndex].v;
 				}
 				else if (type === "vol") {
 					let percent = data[closestIndex].t > 0? Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10 : 0;
@@ -1044,7 +1069,7 @@ class DeviceView extends View {
 				data.push({d:date, v:rtt});
 			}
 
-			GenerateGraph(data, "Roundtrip time", "line", "mono/ping.svg");
+			GenerateGraph(data, "Roundtrip time", "ping", "mono/ping.svg");
 		}
 
 		if (cpuArray.length > 0) {
