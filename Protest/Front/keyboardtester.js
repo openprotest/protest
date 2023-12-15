@@ -333,7 +333,7 @@ class KeyboardTester extends Window {
 		this.gpLeftButton.style.top = "-10px";
 		this.gpLeftButton.style.width = "48px";
 		this.gpLeftButton.style.height = "10px";
-		this.gpLeftButton.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpLeftButton.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpLeftButton.style.border = "1.5px solid var(--clr-light)";
 		this.gpLeftButton.style.borderRadius = "8px 2px 0px 0px";
 		this.gpLeftButton.style.boxSizing = "border-box";
@@ -345,7 +345,7 @@ class KeyboardTester extends Window {
 		this.gpRightButton.style.top = "-10px";
 		this.gpRightButton.style.width = "48px";
 		this.gpRightButton.style.height = "10px";
-		this.gpRightButton.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpRightButton.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpRightButton.style.border = "1.5px solid var(--clr-light)";
 		this.gpRightButton.style.borderRadius = "2px 8px 0px 0px";
 		this.gpRightButton.style.boxSizing = "border-box";
@@ -357,7 +357,7 @@ class KeyboardTester extends Window {
 		this.gpLeftTrigger.style.top = "-32px";
 		this.gpLeftTrigger.style.width = "32px";
 		this.gpLeftTrigger.style.height = "20px";
-		this.gpLeftTrigger.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpLeftTrigger.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpLeftTrigger.style.border = "1.5px solid var(--clr-light)";
 		this.gpLeftTrigger.style.borderRadius = "12px 12px 0px 0px";
 		this.gpLeftTrigger.style.boxSizing = "border-box";
@@ -369,7 +369,7 @@ class KeyboardTester extends Window {
 		this.gpRightTrigger.style.top = "-32px";
 		this.gpRightTrigger.style.width = "32px";
 		this.gpRightTrigger.style.height = "20px";
-		this.gpRightTrigger.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpRightTrigger.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpRightTrigger.style.border = "1.5px solid var(--clr-light)";
 		this.gpRightTrigger.style.borderRadius = "12px 12px 0px 0px";
 		this.gpRightTrigger.style.boxSizing = "border-box";
@@ -384,7 +384,7 @@ class KeyboardTester extends Window {
 		this.gpDLeft.style.top = "65px";
 		this.gpDLeft.style.width = "25px";
 		this.gpDLeft.style.height = "20px";
-		this.gpDLeft.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpDLeft.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpDLeft.style.border = "1.5px solid var(--clr-light)";
 		this.gpDLeft.style.borderRadius = "2px 6px 6px 2px";
 		this.gpDLeft.style.boxSizing = "border-box";
@@ -395,7 +395,7 @@ class KeyboardTester extends Window {
 		this.gpDRight.style.top = "65px";
 		this.gpDRight.style.width = "25px";
 		this.gpDRight.style.height = "20px";
-		this.gpDRight.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpDRight.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpDRight.style.border = "1.5px solid var(--clr-light)";
 		this.gpDRight.style.borderRadius = "6px 2px 2px 6px";
 		this.gpDRight.style.boxSizing = "border-box";
@@ -406,7 +406,7 @@ class KeyboardTester extends Window {
 		this.gpDUp.style.top = "40px";
 		this.gpDUp.style.width = "20px";
 		this.gpDUp.style.height = "25px";
-		this.gpDUp.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpDUp.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpDUp.style.border = "1.5px solid var(--clr-light)";
 		this.gpDUp.style.borderRadius = "2px 2px 6px 6px";
 		this.gpDUp.style.boxSizing = "border-box";
@@ -417,7 +417,7 @@ class KeyboardTester extends Window {
 		this.gpDDown.style.top = "85px";
 		this.gpDDown.style.width = "20px";
 		this.gpDDown.style.height = "25px";
-		this.gpDDown.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpDDown.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpDDown.style.border = "1.5px solid var(--clr-light)";
 		this.gpDDown.style.borderRadius = "6px 6px 2px 2px";
 		this.gpDDown.style.boxSizing = "border-box";
@@ -431,7 +431,7 @@ class KeyboardTester extends Window {
 		this.gpA.style.top = "90px";
 		this.gpA.style.width = "30px";
 		this.gpA.style.height = "30px";
-		this.gpA.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpA.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpA.style.border = "1.5px solid var(--clr-light)";
 		this.gpA.style.borderRadius = "15px";
 		this.gpA.style.boxSizing = "border-box";
@@ -442,7 +442,7 @@ class KeyboardTester extends Window {
 		this.gpB.style.top = "60px";
 		this.gpB.style.width = "30px";
 		this.gpB.style.height = "30px";
-		this.gpB.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpB.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpB.style.border = "1.5px solid var(--clr-light)";
 		this.gpB.style.borderRadius = "15px";
 		this.gpB.style.boxSizing = "border-box";
@@ -453,7 +453,7 @@ class KeyboardTester extends Window {
 		this.gpX.style.top = "60px";
 		this.gpX.style.width = "30px";
 		this.gpX.style.height = "30px";
-		this.gpX.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpX.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpX.style.border = "1.5px solid var(--clr-light)";
 		this.gpX.style.borderRadius = "15px";
 		this.gpX.style.boxSizing = "border-box";
@@ -464,7 +464,7 @@ class KeyboardTester extends Window {
 		this.gpY.style.top = "30px";
 		this.gpY.style.width = "30px";
 		this.gpY.style.height = "30px";
-		this.gpY.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpY.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpY.style.border = "1.5px solid var(--clr-light)";
 		this.gpY.style.borderRadius = "15px";
 		this.gpY.style.boxSizing = "border-box";
@@ -520,7 +520,7 @@ class KeyboardTester extends Window {
 		this.gpShare.style.top = "16px";
 		this.gpShare.style.width = "14px";
 		this.gpShare.style.height = "22px";
-		this.gpShare.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpShare.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpShare.style.border = "1.5px solid var(--clr-light)";
 		this.gpShare.style.borderRadius = "8px";
 		this.gpShare.style.boxSizing = "border-box";
@@ -531,7 +531,7 @@ class KeyboardTester extends Window {
 		this.gpMenu.style.top = "16px";
 		this.gpMenu.style.width = "14px";
 		this.gpMenu.style.height = "22px";
-		this.gpMenu.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpMenu.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpMenu.style.border = "1.5px solid var(--clr-light)";
 		this.gpMenu.style.borderRadius = "8px";
 		this.gpMenu.style.boxSizing = "border-box";
@@ -542,7 +542,7 @@ class KeyboardTester extends Window {
 		this.gpLogo.style.top = "105px";
 		this.gpLogo.style.width = "24px";
 		this.gpLogo.style.height = "24px";
-		this.gpLogo.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpLogo.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpLogo.style.border = "1.5px solid var(--clr-light)";
 		this.gpLogo.style.borderRadius = "12px";
 		this.gpLogo.style.boxSizing = "border-box";
@@ -553,7 +553,7 @@ class KeyboardTester extends Window {
 		this.gpTrackPad.style.top = "0px";
 		this.gpTrackPad.style.width = "120px";
 		this.gpTrackPad.style.height = "70px";
-		this.gpTrackPad.style.backgroundColor = "rgba(16,16,16,0.2)";
+		this.gpTrackPad.style.backgroundColor = "rgba(16,16,16,.2)";
 		this.gpTrackPad.style.border = "1.5px solid var(--clr-light)";
 		this.gpTrackPad.style.borderRadius = "0 0 8px 8px";
 		this.gpTrackPad.style.boxSizing = "border-box";

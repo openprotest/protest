@@ -440,6 +440,10 @@ public sealed class Listener {
             //Watchdog.WebSocketHandler(ctx);
             break;
 
+        case "/ws/oversight":
+            Tools.Oversight.WebSocketHandler(ctx);
+            return true;
+
         case "/ws/livestats/device":
             Tools.LiveStats.DeviceStats(ctx);
             return true;

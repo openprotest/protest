@@ -60,7 +60,6 @@ class DeviceView extends View {
 		}
 
 		if (params.file) {
-			this.SetTitle(this.link.name ? this.link.name.v : "");
 			this.InitializePreview();
 			setTimeout(()=>this.InitializeSubnetEmblem(), 200);
 		}
@@ -98,7 +97,16 @@ class DeviceView extends View {
 	InitializePreview() { //override
 		let type = this.link.type ? this.link.type.v.toLowerCase() : "";
 
-		this.SetTitle(this.link.name ? this.link.name.v : "untitled");
+		if (this.link.name && this.link.name.v.length > 0) {
+			this.SetTitle(this.link.name.v);
+		}
+		else if (this.link.ip && this.link.ip.v.length > 0) {
+			this.SetTitle(this.link.ip.v);
+		}
+		else {
+			this.SetTitle("");
+		}
+		
 		this.SetIcon(type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg");
 		super.InitializePreview();
 		this.InitializeLiveStats();
@@ -265,9 +273,7 @@ class DeviceView extends View {
 				};
 
 				const btnOversight = this.CreateSideButton("mono/oversight.svg", "Resources oversight");
-				btnOversight.onclick = ()=> {
-					//TODO:
-				};
+				btnOversight.onclick = ()=> new Oversight({file: this.params.file});
 
 				const btnComputerMng = this.CreateSideButton("mono/computermanage.svg", "Management");
 				btnComputerMng.onclick = ()=> UI.PromptAgent(this, "management", host);

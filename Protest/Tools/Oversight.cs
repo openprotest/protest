@@ -27,7 +27,7 @@ internal class Oversight {
         }
     }
 
-    public static async void Attach(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

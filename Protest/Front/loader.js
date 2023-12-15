@@ -91,6 +91,7 @@ const LOADER = {
 		"userview.js",
 		"devicesgrid.js",
 		"usersgrid.js",
+		"oversight.js",
 		"fetch.js",
 		"hexviewer.js",
 		"ping.js",
@@ -303,6 +304,7 @@ const LOADER = {
 		case "PasswordStrength" : return new PasswordStrength(command.params);
 		case "Gandalf"          : return new Gandalf(command.params);
 		case "Fetch"            : return new Fetch(command.params);
+		case "Oversight"        : return new Oversight(command.params);
 
 		case "AddressBook"   : return new AddressBook(command.params);
 		case "Chat"          : return new Chat(command.params);
