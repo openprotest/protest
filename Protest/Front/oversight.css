@@ -2,10 +2,11 @@
 	position: absolute;
 	bottom: 0;
 	width: 100%;
-	height: min(480px, 40%);
+	height: min(280px, 35%);
 	padding: 8px;
 	box-sizing: border-box;
-	background-color: rgba(0,0,0,.2);
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
 	font-family: monospace;
 	overflow-y: scroll;
 	user-select: text; -webkit-user-select: text;
@@ -17,4 +18,62 @@
 	background-position: 4px center;
 	background-repeat: no-repeat;
 	line-height: 24px;
+}
+
+.oversight-scrollable {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: calc(100% - min(280px, 35%));
+	overflow-y: scroll;
+}
+
+.oversight-graph-container {
+	position: relative;
+	max-width: 960px;
+	padding: 8px 16px;
+}
+
+.oversight-graph-inner {
+	position: relative;
+	background-color: color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%);
+	width: calc(100% - 200px);
+	padding: 2px;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.oversight-graph-inner > canvas {
+	position: absolute;
+	right: 4px;
+	top: 0;
+}
+
+.oversight-graph-title {
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	top: 1px;
+	color: var(--clr-light);
+	font-weight: 600;
+	font-size: small;
+	text-transform: capitalize;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.oversight-graph-value {
+	position: absolute;
+	right: 8px;
+	top: 20px;
+	width: 192px;
+	color: var(--clr-light);
+	font-weight: 600;
+	white-space: break-spaces;
+	line-height: 24px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }

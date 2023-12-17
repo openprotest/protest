@@ -242,7 +242,7 @@ internal static class KeepAlive {
 
         case "chat-join":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                Chat.JoinHandler(dictionary, origin);
+                Chat.JoinHandler(origin);
             }
             return;
 

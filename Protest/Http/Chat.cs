@@ -186,7 +186,7 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read", false, origin);
     }
 
-    public static void JoinHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
+    public static void JoinHandler(string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
 
         string username = acl?.username ?? "loopback";

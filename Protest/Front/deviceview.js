@@ -721,6 +721,7 @@ class DeviceView extends View {
 				const split = this.link.owner.v.split(";").map(o=>o.trim());
 
 				for (let i=0; i<split.length; i++) {
+					if (split[i].length === 0) { continue; }
 					const userButton = this.CreateInfoButton(split[i], "/mono/user.svg");
 					liveButtons.push(userButton);
 					userButton.secondary.textContent = "Owner";
@@ -915,7 +916,7 @@ class DeviceView extends View {
 			}
 
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-			path.setAttribute("fill", "rgba(200,200,200,.4)");
+			path.setAttribute("fill", "rgba(192,192,192,.125)");
 			svg.appendChild(path);
 
 			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} ${height + 5} `;
@@ -953,7 +954,7 @@ class DeviceView extends View {
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
 					dot.setAttribute("r", 3);
-					dot.setAttribute("fill", this.RttToColor(data[i].v));
+					dot.setAttribute("fill", "var(--clr-dark)");
 					svg.appendChild(dot);
 	
 					if (x < -50) continue;

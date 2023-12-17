@@ -252,6 +252,7 @@ internal static class Auth {
                 path.Add("/lifeline/disk/view");
                 path.Add("/lifeline/diskusage/view");
                 path.Add("/ws/livestats/device");
+                path.Add("/ws/ws/oversight");
                 break;
 
             case "manage users:write":

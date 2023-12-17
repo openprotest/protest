@@ -115,9 +115,11 @@ div, svg {
 }
 
 @-moz-document url-prefix() {
+	* {
+		scrollbar-color: #888 transparent !important;
+	}
 	.scrollbar-thin * {
 		scrollbar-width: thin;
-		scrollbar-color: #888 transparent !important;
 	}
 	.scrollbar-hidden * {
 		scrollbar-width: none;

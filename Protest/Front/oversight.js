@@ -1,15 +1,19 @@
 class Oversight extends Window {
 	constructor(params) {
 		super();
-		this.params = params ?? { file: null };
+		this.params = params ?? { file: null};
+		
+		this.params.stats ??= [];
 
 		this.socket = null;
 		this.link = LOADER.devices.data[this.params.file];
+		this.autoReconnect = true;
+		this.connectRetries = 0;
+		this.statsList = [];
 
 		this.AddCssDependencies("oversight.css");
 
 		this.SetIcon("mono/oversight.svg");
-
 		
 		if (this.link.name && this.link.name.v.length > 0) {
 			this.SetTitle(`Oversight - ${this.link.name.v}`);
@@ -21,12 +25,44 @@ class Oversight extends Window {
 			this.SetTitle("Oversight");
 		}
 
-		this.console = document.createElement("div");
-		this.console.className = "oversight-console";
-		this.content.appendChild(this.console);
+		this.SetupToolbar();
+		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
+		this.addStatButton = this.AddToolbarButton("Add", "mono/add.svg?light");
+		this.AddToolbarSeparator();
+		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
+		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
+
+		this.connectButton.disabled = true;
+		this.startButton.disabled = true;
+
+		this.scrollable = document.createElement("div");
+		this.scrollable.className = "oversight-scrollable";
+
+		this.consoleBox = document.createElement("div");
+		this.consoleBox.className = "oversight-console";
+
+		this.content.append(this.scrollable, this.consoleBox);
+
+		this.connectButton.onclick = event=> this.InitializeSocketConnection();
+		this.addStatButton.onclick = event=> this.AddStat();
+		this.startButton.onclick = event=> this.Start();
+		this.pauseButton.onclick = event=> this.Pause();
+
+		this.statsList.push(this.CreateStatBox("ping", 75, { type:"ping", prefix:"RTT", unit:"ms" }));
+		this.statsList.push(this.CreateStatBox("cpu", 75, { type:"percent", prefix:"Usage", unit:"%" }));
+		this.statsList.push(this.CreateStatBox("cores", 75, { type:"percents", prefix:"Usage", unit:"%" }));
 
 		this.InitializeSubnetEmblem();
 		this.InitializeSocketConnection();
+	}
+
+	Close() { //override
+		this.autoReconnect = false;
+		if (this.socket) {
+			this.socket.close();
+		}
+
+		super.Close();
 	}
 
 	InitializeSubnetEmblem() {
@@ -78,6 +114,8 @@ class Oversight extends Window {
 	}
 
 	InitializeSocketConnection() {
+		this.connectButton.disabled = true;
+
 		if (this.socket !== null) return;
 
 		let server = window.location.href.replace("https://", "").replace("http://", "");
@@ -86,26 +124,299 @@ class Oversight extends Window {
 		this.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/oversight");
 
 		this.socket.onopen = event=> {
-			this.ConsoleLog("connection established", "info");
+			this.connectRetries = 0;
+			this.socket.send(this.params.file);
+			this.ConsoleLog("Web-socket connection established", "info");
+
+			this.socket.send("ping=true");
+			this.socket.send("cpu=true");
+			this.socket.send("cores=true");
 		};
 
 		this.socket.onmessage = event=> {
+			let message = JSON.parse(event.data);
 
+			if (message.loglevel) {
+				this.ConsoleLog(message.text, message.loglevel);
+				return;
+			}
+
+			for (let i=0; i<this.statsList.length; i++) {
+				if (this.statsList[i].name !== message.result) { continue; }
+
+				if (this.statsList[i].options.type === "percents") {
+					this.statsList[i].Update(message.value);
+				}
+				else {
+					this.statsList[i].Update(parseInt(message.value));
+				}
+				break;
+			}
 		};
 
 		this.socket.onclose = event=> {
-			this.ConsoleLog("connection closed", "info");
+			this.ConsoleLog("Web-socket connection closed", "error");
+
+			if (this.autoReconnect && this.connectRetries < 3) {
+				this.socket = null;
+				this.AutoReconnect();
+			}
+			else {
+				this.connectButton.disabled = false;
+				this.socket = null;
+			}
+		};
+	}
+
+	AutoReconnect() {
+		this.connectRetries++;
+		this.ConsoleLog(`Reconnecting web-socket: attempt ${this.connectRetries}/3`, "info");
+		this.InitializeSocketConnection();
+	}
+
+	AddStat() {
+		if (!this.socket) return;
+		//TODO:
+		//this.socket.send("");
+	}
+
+	Start() {
+		if (!this.socket) return;
+		this.socket.send("start");
+		this.startButton.disabled = true;
+		this.pauseButton.disabled = false;
+	}
+
+	Pause() {
+		if (!this.socket) return;
+		this.socket.send("pause");
+		this.startButton.disabled = false;
+		this.pauseButton.disabled = true;
+	}
+	
+	CreateStatBox(name, height, options) {
+		const container = document.createElement("div");
+		container.className = "oversight-graph-container";
+		this.scrollable.appendChild(container);
+
+		const inner = document.createElement("div");
+		inner.className = "oversight-graph-inner";
+		inner.style.height = `${height}px`;
+		container.appendChild(inner);
+
+		const titleLabel = document.createElement("div");
+		titleLabel.className = "oversight-graph-title";
+		titleLabel.textContent = name;
+		inner.appendChild(titleLabel);
+
+		const valueLabel = document.createElement("div");
+		valueLabel.className = "oversight-graph-value";
+		container.appendChild(valueLabel);
+
+		switch(options.type) {
+		case "ping": return this.CreatePingGraph(inner, valueLabel, name, height, options);
+		case "percent": return this.CreatePercentGraph(inner, valueLabel, name, height, options);
+		case "percents": return this.CreatePercentsGridGraph(inner, valueLabel, name, height, options);
+		}
+	}
+
+	CreatePingGraph(inner, valueLabel, name, height, options) {
+		const canvas = document.createElement("canvas");
+		canvas.width = 750;
+		canvas.height = height;
+		inner.appendChild(canvas);
+
+		let min = Number.MAX_SAFE_INTEGER;
+		let max = Number.MIN_SAFE_INTEGER;
+		const list = [];
+		const gap = 5;
+
+		const ctx = canvas.getContext("2d");
+
+		const DrawGraph = ()=> {
+			ctx.clearRect(0, 0, canvas.width, height);
+
+			ctx.beginPath();
+			for (let i=list.length-1; i>=0; i--) {
+				let x = canvas.width - (list.length-i-1)*gap;
+				let y = list[i] < 0 ? height-10 : 24 + Math.min((height - 24) * list[i] / 1000, height - 10);
+				ctx.lineTo(x, y);
+			}
+
+			ctx.lineTo(canvas.width - list.length*gap + gap, height);
+			ctx.lineTo(canvas.width, height);
+			ctx.closePath();
+			ctx.fillStyle = "#C0C0C010";
+			ctx.fill();
+
+			for (let i=list.length-1; i>=0; i--) {
+				let x = canvas.width - (list.length-i-1)*gap;
+				let y = list[i] < 0 ? height-10 : 24 + Math.min((height - 24) * list[i] / 1000, height - 10);
+				let color;
+				if (list[i] < 0) { //unreachable/timed out
+					color = "var(--clr-error)";
+				}
+				else { //alive
+					color = UI.PingColor(list[i]);
+				}
+
+				ctx.beginPath();
+				ctx.arc(x, y, 1.5, 0, 2*Math.PI);
+				ctx.fillStyle = color;
+				ctx.fill();
+			}
 		};
 
-		this.socket.onerror = event=> {
-			this.ConsoleLog(`socket error`, "error");
+		const Update = value=> {
+			if (list.length * gap > 800) list.shift();
+			list.push(value);
+
+			if (min > value) { min = value; }
+			if (max < value) { max = value; }
+
+			valueLabel.textContent = `${options.prefix}: ${value}${options.unit}`;
+			valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+
+			DrawGraph();
+		};
+
+		return {
+			name: name,
+			options: options,
+			Update: Update
+		};
+	}
+
+	CreatePercentGraph(inner, valueLabel, name, height, options) {
+		const canvas = document.createElement("canvas");
+		canvas.width = 750;
+		canvas.height = height;
+		inner.appendChild(canvas);
+
+		let min = Number.MAX_SAFE_INTEGER;
+		let max = Number.MIN_SAFE_INTEGER;
+		const list = [];
+		const gap = 5;
+
+		const ctx = canvas.getContext("2d");
+		ctx.lineWidth = 2;
+		ctx.fillStyle = "#C0C0C020";
+		ctx.strokeStyle = "#F0F0F0";
+
+		const DrawGraph = ()=>{
+			ctx.clearRect(0, 0, canvas.width, height);
+
+			ctx.beginPath();
+			for (let i=list.length-1; i>=0; i--) {
+				ctx.lineTo(canvas.width - (list.length-i-1)*gap, height - height * list[i] / 100);
+			}
+			ctx.stroke();
+
+			ctx.lineTo(canvas.width - list.length*gap + gap, height);
+			ctx.lineTo(canvas.width, height);
+			ctx.closePath();
+			ctx.fill();
+		};
+
+		const Update = value=> {
+			if (list.length * gap > canvas.width) list.shift();
+			list.push(value);
+			
+			if (min > value) { min = value; }
+			if (max < value) { max = value; }
+
+			valueLabel.textContent = `${options.prefix}: ${value}${options.unit}`;
+			valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+
+			DrawGraph();
+		};
+
+		return {
+			name: name,
+			options: options,
+			Update: Update
+		};
+	}
+
+	CreatePercentsGridGraph(inner, valueLabel, name, height, options) {
+		const canvases = [];
+		const ctx = [];
+		const list = [];
+		const gap = 5;
+		let min = Number.MAX_SAFE_INTEGER;
+		let max = Number.MIN_SAFE_INTEGER;
+		
+		const DrawGraph = ()=> {
+			for (let j=0; j<ctx.length; j++) {
+				ctx[j].clearRect(0, 0, canvases[j].width, height);
+				ctx[j].beginPath();
+
+				for (let i=list.length-1; i>=0; i--) {
+					ctx[j].lineTo(canvases[j].width - (list.length-i-1)*gap, height - height * list[i][j] / 100);
+				}
+				ctx[j].stroke();
+
+				ctx[j].lineTo(canvases[j].width - list.length*gap + gap, height);
+				ctx[j].lineTo(canvases[j].width, height);
+				ctx[j].closePath();
+				ctx[j].fill();
+			}
+		};
+
+		const Update = valuesArray=> {
+			if (canvases.length === 0) {
+				let normalizedLength = Math.min(valuesArray.length, 4);
+				inner.style.backgroundColor = "transparent";
+				inner.style.height = `${(height+4) * Math.ceil(valuesArray.length / normalizedLength)}px`;
+
+				for (let i=0; i<valuesArray.length; i++) {
+					const container = document.createElement("div");
+					container.className = "oversight-graph-inner";
+					container.style.position = "absolute";
+					container.style.left = `${100 * (i % normalizedLength) / normalizedLength}%`;
+					container.style.top = `${(height + 8) * Math.floor(i / normalizedLength)}px`;
+					container.style.zIndex = "-1";
+					container.style.width = "calc(25% - 8px)";
+					container.style.height = `${height}px`;
+					inner.appendChild(container);
+
+					const canvas = document.createElement("canvas");
+					canvas.width = 750 / normalizedLength;
+					canvas.height = height;
+					container.appendChild(canvas);
+					canvases.push(canvas);
+
+					ctx.push(canvas.getContext("2d"));
+					ctx[i].lineWidth = 2;
+					ctx[i].fillStyle = "#C0C0C020";
+					ctx[i].strokeStyle = "#F0F0F0";
+				}
+			}
+
+			if (list.length * gap > 400) list.shift();
+			list.push(valuesArray);
+			
+			for (let i=0; i<valuesArray.length; i++) {
+				if (min > valuesArray[i]) { min = valuesArray[i]; }
+				if (max < valuesArray[i]) { max = valuesArray[i]; }
+			}
+			
+			valueLabel.textContent = `Min-max: ${min}-${max}${options.unit}`;
+
+			DrawGraph();
+		};
+
+		return {
+			name: name,
+			options: options,
+			Update: Update
 		};
 	}
 
 	ConsoleLog(text, level) {
 		const line = document.createElement("div");
 		line.className = "oversight-console-line";
-		line.innerText = text;
+		line.innerText = `${new Date().toLocaleTimeString(UI.regionalFormat, {})} - ${text}`;
 
 		switch (level) {
 			case "info"   : line.style.backgroundImage = "url(mono/info.svg?light)"; break;
@@ -113,7 +424,8 @@ class Oversight extends Window {
 			case "error"  : line.style.backgroundImage = "url(mono/error.svg?light)"; break;
 		}
 
-		this.console.appendChild(line);
+		this.consoleBox.appendChild(line);
+		line.scrollIntoView();
 	}
 
 }

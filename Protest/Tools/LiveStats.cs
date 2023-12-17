@@ -1,4 +1,5 @@
-﻿using System.DirectoryServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.DirectoryServices;
 using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -11,25 +12,11 @@ using Protest.Tasks;
 namespace Protest.Tools;
 
 internal static class LiveStats {
-    private static async void WsWriteText(WebSocket ws, string text, object sendLock = null) {
-        if (sendLock is null) {
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-        else {
-            lock (sendLock) {
-                ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-            }
-        }
+    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
+        WsWriteText(ws, Encoding.UTF8.GetBytes(text));
     }
-    private static async void WsWriteText(WebSocket ws, byte[] bytes, object sendLock = null) {
-        if (sendLock is null) {
-            await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-        else {
-            lock (sendLock) {
-                ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-            }
-        }
+    private static async void WsWriteText(WebSocket ws, byte[] bytes) {
+        await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
     public static async void DeviceStats(HttpListenerContext ctx) {
@@ -146,7 +133,7 @@ internal static class LiveStats {
                         DateTime current = new DateTime(year, month, day, hour, minute, second);
                         DateTime now = DateTime.UtcNow;
                         if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
-                            WsWriteText(ws, $"{{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}}");
+                            WsWriteText(ws, "{{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}}"u8.ToArray());
                         }
                     }
 

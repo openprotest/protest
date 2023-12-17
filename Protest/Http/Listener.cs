@@ -436,10 +436,6 @@ public sealed class Listener {
             //Ssh.WebSocketHandler(ctx);
             break;
 
-        case "/ws/watchdog":
-            //Watchdog.WebSocketHandler(ctx);
-            break;
-
         case "/ws/oversight":
             Tools.Oversight.WebSocketHandler(ctx);
             return true;

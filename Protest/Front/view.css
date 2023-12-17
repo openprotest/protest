@@ -322,7 +322,8 @@ button.view-live-button {
 	display: inline-block;
 	height: 48px;
 	text-align: left;
-
+	vertical-align: top;
+	
 	padding: 4px 8px 4px 40px;
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
@@ -534,13 +535,14 @@ button.view-live-button:active {
 }
 
 .view-lifeline-graph:not(:last-child) {
-	margin-bottom: 8px;
+	margin-bottom: 12px;
 }
 
 .view-lifeline-graph > svg {
 	position: absolute;
 	right: 0;
 	top: 4px;
+	pointer-events: none;
 }
 
 .view-lifeline-graph > .view-lifeline-label {
@@ -620,6 +622,7 @@ button.view-live-button:active {
 	left: 2px;
 	top: 48px;
 	width: 40px;
+	z-index: 2;
 	min-height: 40px;
 	transition: .2s;
 }
