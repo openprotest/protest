@@ -42,12 +42,18 @@ class Oversight extends Window {
 		this.consoleBox = document.createElement("div");
 		this.consoleBox.className = "oversight-console";
 
-		this.content.append(this.scrollable, this.consoleBox);
+		this.toggleConsoleButton = document.createElement("input");
+		this.toggleConsoleButton.type = "button";
+		this.toggleConsoleButton.className = "oversight-toggle-button";
+
+		this.content.append(this.scrollable, this.consoleBox, this.toggleConsoleButton);
 
 		this.connectButton.onclick = event=> this.InitializeSocketConnection();
 		this.addStatButton.onclick = event=> this.AddStat();
 		this.startButton.onclick = event=> this.Start();
 		this.pauseButton.onclick = event=> this.Pause();
+
+		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
 		this.statsList.push(this.CreateStatBox("ping", 75, { type:"ping", prefix:"RTT", unit:"ms" }));
 		this.statsList.push(this.CreateStatBox("cpu", 75, { type:"percent", prefix:"Usage", unit:"%" }));
@@ -169,6 +175,29 @@ class Oversight extends Window {
 		};
 	}
 
+	ToggleConsole() {
+		if (this.consoleBox.style.visibility === "hidden") {
+			this.scrollable.style.bottom = "var(--oversight-console-height)";
+
+			this.consoleBox.style.visibility = "visible";
+			this.consoleBox.style.opacity = "1";
+			this.consoleBox.style.height = "var(--oversight-console-height)";
+
+			this.toggleConsoleButton.style.bottom = "var(--oversight-console-height)";
+			this.toggleConsoleButton.style.transform = "none";
+		}
+		else {
+			this.scrollable.style.bottom = "0";
+
+			this.consoleBox.style.visibility = "hidden";
+			this.consoleBox.style.opacity = "0";
+			this.consoleBox.style.height = "0";
+
+			this.toggleConsoleButton.style.bottom = "8px";
+			this.toggleConsoleButton.style.transform = "rotate(180deg)";
+		}
+	}
+
 	AutoReconnect() {
 		this.connectRetries++;
 		this.ConsoleLog(`Reconnecting web-socket: attempt ${this.connectRetries}/3`, "info");
@@ -192,9 +221,10 @@ class Oversight extends Window {
 	}
 
 	async AddStat() {
-		if (!this.socket) return;
-		//TODO:
-		//this.socket.send("");
+		if (!this.socket) {
+			this.ConfirmBox("Web-socket is disconnected.", "mono/oversight.svg", true);
+			return;
+		}
 
 		await this.GetWmiClasses();
 
@@ -258,10 +288,6 @@ class Oversight extends Window {
 			btnOK.onclick();
 			return;
 		}
-
-		btnOK.addEventListener("click", ()=> {
-			
-		});
 
 		txtClassFilter.onkeydown = event=>{
 			if (event.code === "Escape") {
@@ -359,6 +385,11 @@ class Oversight extends Window {
 
 			//propertyCheckboxes[0].onchange();
 		};
+
+		btnOK.addEventListener("click", ()=> {
+			//TODO:
+			//this.socket.send("");
+		});
 
 	}
 

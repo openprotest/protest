@@ -73,7 +73,7 @@ class Wmi extends Window {
 		this.btnExecute.onclick = ()=> { this.Query(); };
 
 		btnToggle.onclick =()=> {
-			if (divInput.style.visibility == "hidden") {
+			if (divInput.style.visibility === "hidden") {
 				btnToggle.style.top = "96px";
 				btnToggle.style.transform = "rotate(-180deg)";
 				divInput.style.visibility = "visible";

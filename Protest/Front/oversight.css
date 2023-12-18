@@ -14,6 +14,7 @@
 	font-family: monospace;
 	overflow-y: scroll;
 	user-select: text; -webkit-user-select: text;
+	transition: .2s;
 }
 
 .oversight-console-line {
@@ -26,11 +27,32 @@
 
 .oversight-scrollable {
 	position: absolute;
-	top: 0;
 	left: 0;
 	right: 0;
-	height: calc(100% - var(--oversight-console-height));
+	top: 0;
+	bottom: var(--oversight-console-height);
 	overflow-y: scroll;
+}
+
+.oversight-toggle-button {
+	all: unset;
+	position: absolute;
+	right: 8px;
+	bottom: var(--oversight-console-height);
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px!important;
+	min-height: 28px !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	background-color: transparent !important;
+	background-image: url(/mono/guitarpick.svg?light);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+.oversight-toggle-button:active {
+	background-size: 22px 22px;
 }
 
 .oversight-graph-container {
