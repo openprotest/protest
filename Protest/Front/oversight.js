@@ -637,6 +637,68 @@ class Oversight extends Window {
 		};
 	}
 
+	
+	CreateDeltaGraph(inner, valueLabel, name, height, options) {
+		const canvas = document.createElement("canvas");
+		canvas.width = 750;
+		canvas.height = height;
+		inner.appendChild(canvas);
+
+		const last = null;
+		let min = Number.MAX_SAFE_INTEGER;
+		let max = Number.MIN_SAFE_INTEGER;
+		const list = [];
+		const gap = 5;
+
+		const ctx = canvas.getContext("2d");
+		ctx.lineWidth = 2;
+		ctx.fillStyle = "#C0C0C020";
+		ctx.strokeStyle = "#F0F0F0";
+
+		const DrawGraph = ()=>{
+			ctx.clearRect(0, 0, canvas.width, height);
+
+			ctx.beginPath();
+			for (let i=list.length-1; i>=0; i--) {
+				ctx.lineTo(canvas.width - (list.length-i-1)*gap, height - height * list[i] / 100);
+			}
+			ctx.stroke();
+
+			ctx.lineTo(canvas.width - list.length*gap + gap, height);
+			ctx.lineTo(canvas.width, height);
+			ctx.closePath();
+			ctx.fill();
+		};
+
+		const Update = value=> {
+			if (last === null) {
+				last = value;
+				return;
+			}
+
+			let delta = value - last;
+
+			if (list.length * gap > canvas.width) list.shift();
+			list.push(delta);
+			
+			if (min > delta) { min = delta; }
+			if (max < delta) { max = delta; }
+
+			valueLabel.textContent = `${options.prefix}: ${delta}${options.unit}`;
+			valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+
+			DrawGraph();
+
+			last = value;
+		};
+
+		return {
+			name: name,
+			options: options,
+			Update: Update
+		};
+	}
+
 	ConsoleLog(text, level) {
 		const line = document.createElement("div");
 		line.className = "oversight-console-line";

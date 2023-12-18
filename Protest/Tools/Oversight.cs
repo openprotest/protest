@@ -138,7 +138,7 @@ internal class Oversight {
                             byte[] cpuResult = DoCpuCores(scope, cores);
                             if (cpu && cpuResult is not null) {
                                 lock (sendSync) {
-                                    WsWriteText(ws, $"{{\"result\":\"cpu\",\"value\":\"{cpuResult[0]}\"}}");
+                                    WsWriteText(ws, $"{{\"result\":\"cpu\",\"value\":{cpuResult[0]}}}");
                                 }
                             }
                             if (cores && cpuResult is not null) {
