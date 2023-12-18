@@ -106,7 +106,7 @@ class Wmi extends Window {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.wmi_classes = json;	
+			this.wmi_classes = json;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");

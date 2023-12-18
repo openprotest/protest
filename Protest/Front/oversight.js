@@ -12,6 +12,7 @@ class Oversight extends Window {
 		this.statsList = [];
 
 		this.AddCssDependencies("oversight.css");
+		this.AddCssDependencies("wmi.css");
 
 		this.SetIcon("mono/oversight.svg");
 		
@@ -174,10 +175,191 @@ class Oversight extends Window {
 		this.InitializeSocketConnection();
 	}
 
-	AddStat() {
+	async GetWmiClasses() {
+		try {
+			const response = await fetch("wmiclasses.json");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.wmi_classes = json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
+	async AddStat() {
 		if (!this.socket) return;
 		//TODO:
 		//this.socket.send("");
+
+		await this.GetWmiClasses();
+
+		const dialog = this.DialogBox("640px");
+		if (dialog === null) return;
+		const btnOK = dialog.btnOK;
+		const innerBox = dialog.innerBox;
+
+		innerBox.style.margin = "16px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "50% 16px auto";
+		innerBox.style.gridTemplateRows = "32px 8px auto 8px 64px";
+
+		const txtClassFilter = document.createElement("input");
+		txtClassFilter.type = "text";
+		txtClassFilter.placeholder = "Find..";
+		txtClassFilter.style.gridArea = "1 / 1";
+
+		const btnNone = document.createElement("input");
+		btnNone.type = "button";
+		btnNone.style.position = "absolute";
+		btnNone.style.right = "32px";
+		btnNone.style.width = "28px";
+		btnNone.style.minWidth = "28px";
+		btnNone.style.backgroundColor = "transparent";
+		btnNone.style.backgroundImage = "url(/mono/selectnone.svg)";
+		btnNone.style.backgroundSize = "24px 24px";
+		btnNone.style.backgroundPosition = "center";
+		btnNone.style.backgroundRepeat = "no-repeat";
+
+		const btnAll = document.createElement("input");
+		btnAll.type = "button";
+		btnAll.style.position = "absolute";
+		btnAll.style.right = "0";
+		btnAll.style.width = "28px";
+		btnAll.style.minWidth = "28px";
+		btnAll.style.backgroundColor = "transparent";
+		btnAll.style.backgroundImage = "url(/mono/selectall.svg)";
+		btnAll.style.backgroundSize = "24px 24px";
+		btnAll.style.backgroundPosition = "center";
+		btnAll.style.backgroundRepeat = "no-repeat";
+
+		innerBox.append(txtClassFilter, btnNone, btnAll);
+
+		const lstClasses = document.createElement("div");
+		lstClasses.className = "wmi-classes-list";
+		lstClasses.style.border = "var(--clr-control) solid 1.5px";
+		lstClasses.style.gridArea = "3 / 1";
+		lstClasses.style.overflowY = "scroll";
+
+		const lstProperties = document.createElement("div");
+		lstProperties.className = "wmi-properties-list";
+		lstProperties.style.border = "var(--clr-control) solid 1.5px";
+		lstProperties.style.gridArea = "3 / 3";
+		lstProperties.style.overflowY = "scroll";
+
+		innerBox.append(lstClasses, lstProperties);
+
+		if (!this.wmi_classes.classes) {
+			this.ConfirmBox("Failed to load WMI classes.");
+			btnOK.onclick();
+			return;
+		}
+
+		btnOK.addEventListener("click", ()=> {
+			
+		});
+
+		txtClassFilter.onkeydown = event=>{
+			if (event.code === "Escape") {
+				txtClassFilter.value = "";
+				txtClassFilter.oninput()
+			}
+		};
+
+		let selected = null;
+		let propertiesList = [];
+		let propertyCheckboxes = [];
+
+		txtClassFilter.oninput = ()=> {
+			if (!this.wmi_classes.classes) return;
+			let filter = txtClassFilter.value.toLowerCase();
+
+			lstClasses.textContent = "";
+			lstProperties.textContent = "";
+
+			for (let i = 0; i < this.wmi_classes.classes.length; i++) {
+				let matched = false;
+
+				if (this.wmi_classes.classes[i].class.toLowerCase().indexOf(filter) > -1) {
+					matched = true;
+				}
+				else {
+					for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
+						if (this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
+							matched = true;
+							break;
+						}
+					}
+				}
+
+				if (matched) {
+					let newClass = document.createElement("div");
+					newClass.textContent = this.wmi_classes.classes[i].class;
+					lstClasses.appendChild(newClass);
+
+					newClass.onclick = ()=> {
+						if (selected != null) selected.style.backgroundColor = "";
+
+						propertiesList = [];
+						propertyCheckboxes = [];
+
+						lstProperties.textContent = "";
+						for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
+
+							const divProperty = document.createElement("div");
+							const chkProperty = document.createElement("input");
+							chkProperty.type = "checkbox";
+							chkProperty.checked = false;
+							propertyCheckboxes.push(chkProperty);
+							divProperty.appendChild(chkProperty);
+
+							propertiesList.push(false);
+
+							this.AddCheckBoxLabel(divProperty, chkProperty, this.wmi_classes.classes[i].properties[j]);
+							lstProperties.appendChild(divProperty);
+
+							if (filter && this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
+								divProperty.scrollIntoView({ behavior: "smooth"});
+								setTimeout(()=>{divProperty.style.animation = "highlight .8s 1"}, 500);
+							}
+
+							selected = newClass;
+							selected.style.backgroundColor = "var(--clr-select)";
+						}
+
+					};
+
+				}
+			}
+		};
+		txtClassFilter.oninput();
+
+		btnNone.onclick = ()=> {
+			if (propertyCheckboxes.length === 0) return;
+
+			for (let i = 0; i < propertyCheckboxes.length; i++) {
+				propertyCheckboxes[i].checked = false;
+				propertiesList[i] = false;
+			}
+			
+			//propertyCheckboxes[0].onchange();
+		};
+
+		btnAll.onclick = ()=> {
+			if (propertyCheckboxes.length === 0) return;
+
+			for (let i = 0; i < propertyCheckboxes.length; i++) {
+				propertyCheckboxes[i].checked = true;
+				propertiesList[i] = true;
+			}
+
+			//propertyCheckboxes[0].onchange();
+		};
+
 	}
 
 	Start() {
@@ -254,7 +436,7 @@ class Oversight extends Window {
 				let y = list[i] < 0 ? height-10 : 24 + Math.min((height - 24) * list[i] / 1000, height - 10);
 				let color;
 				if (list[i] < 0) { //unreachable/timed out
-					color = "var(--clr-error)";
+					color = "rgb(240,16,16)";
 				}
 				else { //alive
 					color = UI.PingColor(list[i]);
@@ -271,11 +453,21 @@ class Oversight extends Window {
 			if (list.length * gap > 800) list.shift();
 			list.push(value);
 
-			if (min > value) { min = value; }
-			if (max < value) { max = value; }
+			if (value > 0) {
+				if (min > value) { min = value; }
+				if (max < value) { max = value; }
+			}
 
-			valueLabel.textContent = `${options.prefix}: ${value}${options.unit}`;
-			valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+			if (value < 0) {
+				valueLabel.textContent = `${options.prefix}: --`;
+			}
+			else {
+				valueLabel.textContent = `${options.prefix}: ${value}${options.unit}`;
+			}
+
+			if (max >= 0) {
+				valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+			}
 
 			DrawGraph();
 		};
@@ -342,7 +534,7 @@ class Oversight extends Window {
 		const canvases = [];
 		const ctx = [];
 		const list = [];
-		const gap = 5;
+		let gap = 4;
 		let min = Number.MAX_SAFE_INTEGER;
 		let max = Number.MIN_SAFE_INTEGER;
 		
@@ -366,8 +558,9 @@ class Oversight extends Window {
 		const Update = valuesArray=> {
 			if (canvases.length === 0) {
 				let normalizedLength = Math.min(valuesArray.length, 4);
+				gap = 8 / normalizedLength;
 				inner.style.backgroundColor = "transparent";
-				inner.style.height = `${(height+4) * Math.ceil(valuesArray.length / normalizedLength)}px`;
+				inner.style.height = `${(height+6) * Math.ceil(valuesArray.length / normalizedLength)}px`;
 
 				for (let i=0; i<valuesArray.length; i++) {
 					const container = document.createElement("div");
@@ -427,5 +620,4 @@ class Oversight extends Window {
 		this.consoleBox.appendChild(line);
 		line.scrollIntoView();
 	}
-
 }

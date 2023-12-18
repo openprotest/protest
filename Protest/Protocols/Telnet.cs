@@ -107,6 +107,7 @@ internal static class Telnet {
             while (ws.State == WebSocketState.Open) { //server to ws loop
                 byte[] data = new byte[2048];
 
+
                 int bytes = stream.Read(data, 0, data.Length);
 
                 string responseData = Encoding.ASCII.GetString(data, 0, bytes);

@@ -1,8 +1,12 @@
+:root {
+	--oversight-console-height: min(280px, 30%);
+}
+
 .oversight-console {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
-	height: min(280px, 35%);
+	height: var(--oversight-console-height);
 	padding: 8px;
 	box-sizing: border-box;
 	color: var(--clr-light);
@@ -25,7 +29,7 @@
 	top: 0;
 	left: 0;
 	right: 0;
-	height: calc(100% - min(280px, 35%));
+	height: calc(100% - var(--oversight-console-height));
 	overflow-y: scroll;
 }
 

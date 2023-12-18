@@ -7,8 +7,6 @@ using System.Net.Http;
 using System.Collections.Generic;
 using System.Net.Security;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 
 namespace Protest.Protocols;
 

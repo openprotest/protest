@@ -9,14 +9,17 @@ using Protest.Http;
 using System.Net.NetworkInformation;
 using System.Management;
 using System.Collections.Generic;
+using System.Data;
 
 namespace Protest.Tools;
 
 internal class Oversight {
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
-        WsWriteText(ws, Encoding.UTF8.GetBytes(text));
+    private static async void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
+        if (ws.State != WebSocketState.Open) { return; }
+        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
     private static async void WsWriteText(WebSocket ws, byte[] bytes) {
+        if (ws.State != WebSocketState.Open) { return; }
         await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
@@ -59,11 +62,12 @@ internal class Oversight {
                 target = hostnameAttribute?.value.Split(";")[0].Trim();
             }
             else {
-                WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}");
+                WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
                 await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 return;
             }
 
+            object sendSync = new object();
             bool paused = false;
             bool ping = false;
             bool cpu = false;
@@ -71,24 +75,54 @@ internal class Oversight {
             int interval = 500;
             ConcurrentDictionary<string, string> wmiQueries = new ConcurrentDictionary<string, string>();
 
-            new Thread(() => {
+            new Thread(() => { //icmp thread
+                while (ws.State == WebSocketState.Open) {
+                    if (paused) {
+                        Thread.Sleep(interval);
+                        continue;
+                    }
+
+                    long startTime = DateTime.UtcNow.Ticks;
+
+                    if (ping) {
+                        long icmpResult = DoPing(target, Math.Min(interval, 1000));
+                        lock (sendSync) {
+                            WsWriteText(ws, $"{{\"result\":\"ping\",\"value\":{icmpResult}}}");
+                        }
+                    }
+
+                    long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
+                    int calculatedInterval = (int)(interval - elapsedTime);
+                    if (calculatedInterval > 0) {
+                        Thread.Sleep(calculatedInterval);
+                    }
+                }
+            }).Start();
+
+            new Thread(() => { //wmi thread
                 ManagementScope scope = null;
                 if (OperatingSystem.IsWindows()) {
                     new Thread(() => {
                         Thread.Sleep(2000);
                         if (scope is null) {
-                            WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting WMI response\"}");
+                            lock (sendSync) {
+                                WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
+                            }
                         }
                     }).Start();
 
                     scope = Protocols.Wmi.Scope(target);
 
-                    if (scope is not null && scope.IsConnected) {
-                        WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}");
+                    if (scope is null || !scope.IsConnected) {
+                        lock (sendSync) {
+                            WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
+                        }
+                        return;
                     }
-                    else {
-                        WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
-                    }
+                }
+
+                lock (sendSync) {
+                    WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
                 }
 
                 while (ws.State == WebSocketState.Open) {
@@ -97,26 +131,31 @@ internal class Oversight {
                         continue;
                     }
 
-                    if (ping) {
-                        string icmpResult = DoPing(target);
-                        WsWriteText(ws, $"{{\"result\":\"ping\",\"value\":\"{icmpResult}\"}}");
-                    }
+                    long startTime = DateTime.UtcNow.Ticks;
 
                     if (OperatingSystem.IsWindows()) {
                         if (cpu || cores) {
-                            byte[] cpuResult = DoCpuCores(scope);
-                            if (cpu) {
-                                WsWriteText(ws, $"{{\"result\":\"cpu\",\"value\":\"{cpuResult[0]}\"}}");
+                            byte[] cpuResult = DoCpuCores(scope, cores);
+                            if (cpu && cpuResult is not null) {
+                                lock (sendSync) {
+                                    WsWriteText(ws, $"{{\"result\":\"cpu\",\"value\":\"{cpuResult[0]}\"}}");
+                                }
                             }
-                            if (cores) {
-                                WsWriteText(ws, $"{{\"result\":\"cores\",\"value\":[{String.Join(",", cpuResult.Skip(1).ToArray())}]}}");
+                            if (cores && cpuResult is not null) {
+                                lock (sendSync) {
+                                    WsWriteText(ws, $"{{\"result\":\"cores\",\"value\":[{String.Join(",", cpuResult.Skip(1).ToArray())}]}}");
+                                }
                             }
                         }
 
                         DoWmi(scope , wmiQueries);
                     }
 
-                    Thread.Sleep(interval);
+                    long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
+                    int calculatedInterval = (int)(interval - elapsedTime);
+                    if (calculatedInterval > 0) {
+                        Thread.Sleep(calculatedInterval);
+                    }
                 }
             }).Start();
 
@@ -126,6 +165,13 @@ internal class Oversight {
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, "")) {
                     await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                     return;
+                }
+
+                if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                    lock (sendSync) {
+                        ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    }
+                    break;
                 }
 
                 string msg = Encoding.Default.GetString(buff, 0, receiveResult.Count);
@@ -156,30 +202,28 @@ internal class Oversight {
         }
     }
 
-    private static string DoPing(string host) {
+    private static long DoPing(string host, int timeout) {
         Ping p = new Ping();
         try {
-            PingReply reply = p.Send(host);
+            PingReply reply = p.Send(host, timeout);
 
-            return (int)reply.Status switch
-            {
+            return (int)reply.Status switch {
                 (int)IPStatus.DestinationUnreachable or
                 (int)IPStatus.DestinationHostUnreachable or
-                (int)IPStatus.DestinationNetworkUnreachable => "Unreachable",
-
-                (int)IPStatus.Success => reply.RoundtripTime.ToString(),
-                11050 => "General failure",
-                _ => reply.Status.ToString(),
+                (int)IPStatus.DestinationNetworkUnreachable => -1,
+                (int)IPStatus.Success => reply.RoundtripTime,
+                11050 => -1,
+                _ => -1,
             };
         }
         catch (ArgumentException) {
-            return "Invalid address";
+            return -1;
         }
         catch (PingException) {
-            return "Ping error";
+            return -1;
         }
         catch (Exception) {
-            return "Unknown error";
+            return -1;
         }
         finally {
             p.Dispose();
@@ -187,23 +231,28 @@ internal class Oversight {
     }
 
     [SupportedOSPlatform("windows")]
-    private static byte[] DoCpuCores(ManagementScope scope) {
+    private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
         List<byte> cores = new List<byte>();
 
         using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
-        foreach (ManagementObject o in perfTotal.Cast<ManagementObject>()) {
+        IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
+        if (perfTotalEnum is null) { return null; }
+        foreach (ManagementObject o in perfTotalEnum) {
             if (o is null) continue;
             ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
             cores.Add((byte)(100 - idle));
         }
 
-        using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
-        foreach (ManagementObject o in perf.Cast<ManagementObject>()) {
-            if (o is null) continue;
-            ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-            cores.Add((byte)(100 - idle));
+        if (getCores) {
+            using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
+            IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
+            //if (perfEnum is null) { return null; }
+            foreach (ManagementObject o in perfEnum) {
+                if (o is null) continue;
+                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                cores.Add((byte)(100 - idle));
+            }
         }
-
 
         return cores.ToArray();
     }
