@@ -315,13 +315,49 @@
 	box-sizing: border-box;
 }
 
+.win-dialog-tab {
+	all: unset;
+	position: absolute;
+	box-sizing: border-box;
+	width: 60px;
+	height: 48px;
+	left: 0;
+	border-radius: 8px 0 0 8px;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, rgba(16,16,16,.15) 80%, rgba(16,16,16,.25) 100%);
+	background-color: rgb(160,160,160);
+	transition: .2s;
+}
+
+.win-dialog-tab:not(:disabled):hover {
+	background-color: rgb(172,172,172) !important;
+}
+.win-dialog-tab:not(:disabled):active {
+	background-color: rgb(208,208,208) !important;
+}
+.win-dialog-tab:focus {
+	animation: tabs-outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0px -2px 0px 0px inset, var(--clr-accent) 2px 0px 0px 0px inset, var(--clr-accent) 0px 2px 0px 0px inset;
+}
+
+.win-dialog-tab > div {
+	position: relative;
+	left: 8px;
+	top: 0;
+	width: 40px;
+	height: 40px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 40px 40px;
+}
+
 .bar-icon {
 	position: absolute;
 	top: 2px;
 	width: 48px;
 	height: 48px;
 	border-radius: 8%;
-	background-color: rgba(0, 0, 0, 0);
+	background-color: transparent;
 	filter: none;
 
 	transition: .2s, filter 0s;

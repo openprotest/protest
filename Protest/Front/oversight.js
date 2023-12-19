@@ -213,10 +213,11 @@ class Oversight extends Window {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.wmi_classes = json;
+			return json;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
+			return {};
 		}
 	}
 
@@ -226,165 +227,246 @@ class Oversight extends Window {
 			return;
 		}
 
-		await this.GetWmiClasses();
-
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
+
+		btnOK.disabled = true;
+
+		const spinner = document.createElement("div");
+		spinner.className = "spinner";
+		spinner.style.textAlign = "left";
+		spinner.style.marginTop = "32px";
+		spinner.style.marginBottom = "16px";
+		spinner.appendChild(document.createElement("div"));
+
+		const status = document.createElement("div");
+		status.textContent = "Getting WMI classes...";
+		status.style.textAlign = "center";
+		status.style.fontWeight = "bold";
+		status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+		dialog.innerBox.append(spinner, status);
+
+		const wmiClasses = await this.GetWmiClasses();
+		if (!wmiClasses.classes) {
+			btnOK.onclick();
+			setTimeout(()=> this.ConfirmBox("Unable to load WMI classes.", true, "mono/oversight.svg"), 250);
+			return;
+		}
+
+		dialog.innerBox.removeChild(spinner);
+		dialog.innerBox.removeChild(status);
+		btnOK.disabled = false;
 
 		innerBox.style.margin = "16px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "50% 16px auto";
 		innerBox.style.gridTemplateRows = "32px 8px auto 8px 64px";
 
-		const txtClassFilter = document.createElement("input");
-		txtClassFilter.type = "text";
-		txtClassFilter.placeholder = "Find..";
-		txtClassFilter.style.gridArea = "1 / 1";
+		const templatesTab = document.createElement("button");
+		templatesTab.className = "win-dialog-tab";
+		templatesTab.style.top = "16px";
+		const templatesIcon = document.createElement("div");
+		templatesIcon.style.backgroundImage = "url(mono/graph.svg)";
+		templatesTab.appendChild(templatesIcon);
 
-		const btnNone = document.createElement("input");
-		btnNone.type = "button";
-		btnNone.style.position = "absolute";
-		btnNone.style.right = "32px";
-		btnNone.style.width = "28px";
-		btnNone.style.minWidth = "28px";
-		btnNone.style.backgroundColor = "transparent";
-		btnNone.style.backgroundImage = "url(/mono/selectnone.svg)";
-		btnNone.style.backgroundSize = "24px 24px";
-		btnNone.style.backgroundPosition = "center";
-		btnNone.style.backgroundRepeat = "no-repeat";
+		const wmiTab = document.createElement("button");
+		wmiTab.className = "win-dialog-tab";
+		wmiTab.style.top = "72px";
+		const wmiIcon = document.createElement("div");
+		wmiIcon.style.backgroundImage = "url(mono/wmi.svg)";
+		wmiTab.appendChild(wmiIcon);
 
-		const btnAll = document.createElement("input");
-		btnAll.type = "button";
-		btnAll.style.position = "absolute";
-		btnAll.style.right = "0";
-		btnAll.style.width = "28px";
-		btnAll.style.minWidth = "28px";
-		btnAll.style.backgroundColor = "transparent";
-		btnAll.style.backgroundImage = "url(/mono/selectall.svg)";
-		btnAll.style.backgroundSize = "24px 24px";
-		btnAll.style.backgroundPosition = "center";
-		btnAll.style.backgroundRepeat = "no-repeat";
+		dialog.innerBox.parentElement.append(templatesTab, wmiTab);
 
-		innerBox.append(txtClassFilter, btnNone, btnAll);
-
-		const lstClasses = document.createElement("div");
-		lstClasses.className = "wmi-classes-list";
-		lstClasses.style.border = "var(--clr-control) solid 1.5px";
-		lstClasses.style.gridArea = "3 / 1";
-		lstClasses.style.overflowY = "scroll";
-
-		const lstProperties = document.createElement("div");
-		lstProperties.className = "wmi-properties-list";
-		lstProperties.style.border = "var(--clr-control) solid 1.5px";
-		lstProperties.style.gridArea = "3 / 3";
-		lstProperties.style.overflowY = "scroll";
-
-		innerBox.append(lstClasses, lstProperties);
-
-		if (!this.wmi_classes.classes) {
-			this.ConfirmBox("Failed to load WMI classes.");
-			btnOK.onclick();
-			return;
-		}
-
-		txtClassFilter.onkeydown = event=>{
-			if (event.code === "Escape") {
-				txtClassFilter.value = "";
-				txtClassFilter.oninput()
-			}
+		const CreateTemplate = (name, icon)=>{
+			const template = document.createElement("div");
+			template.textContent = name;
+			template.style.backgroundImage = `url(${icon})`;
+			template.className = "oversight-template";
+			return template;
 		};
 
-		let selected = null;
-		let propertiesList = [];
-		let propertyCheckboxes = [];
+		templatesTab.onclick = ()=> {
+			innerBox.style.display = "initial";
+			innerBox.textContent = "";
 
-		txtClassFilter.oninput = ()=> {
-			if (!this.wmi_classes.classes) return;
-			let filter = txtClassFilter.value.toLowerCase();
+			templatesTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
+			templatesTab.style.backgroundColor = "var(--clr-pane)";
+			wmiTab.style.background = "";
+			wmiTab.style.backgroundColor = "";
 
-			lstClasses.textContent = "";
-			lstProperties.textContent = "";
+			innerBox.appendChild(CreateTemplate("Uptime", "mono/clock.svg"));
+			innerBox.appendChild(CreateTemplate("SAT score", "mono/personalize.svg"));
+			innerBox.appendChild(CreateTemplate("BIOS", "mono/chip.svg"));
+			innerBox.appendChild(CreateTemplate("CPU", "mono/cpu.svg"));
+			innerBox.appendChild(CreateTemplate("CPU Cores", "mono/cpu.svg"));
+			innerBox.appendChild(CreateTemplate("RAM", "mono/ram.svg"));
+			innerBox.appendChild(CreateTemplate("Disk usage", "mono/hdd.svg"));
+			innerBox.appendChild(CreateTemplate("Network usage", "mono/portscan.svg"));
+			innerBox.appendChild(CreateTemplate("Ping", "mono/ping.svg"));
+			innerBox.appendChild(CreateTemplate("Processes", "mono/console.svg"));
 
-			for (let i = 0; i < this.wmi_classes.classes.length; i++) {
-				let matched = false;
+			innerBox.appendChild(CreateTemplate("Battery", "mono/battery.svg"));
+			innerBox.appendChild(CreateTemplate("Monitor", "mono/monitor.svg"));
+			innerBox.appendChild(CreateTemplate("User", "mono/user.svg"));
 
-				if (this.wmi_classes.classes[i].class.toLowerCase().indexOf(filter) > -1) {
-					matched = true;
+		};
+
+		wmiTab.onclick = ()=> {
+			innerBox.textContent = "";
+			innerBox.style.display = "grid";
+
+			templatesTab.style.background = "";
+			templatesTab.style.backgroundColor = "";
+			wmiTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
+			wmiTab.style.backgroundColor = "var(--clr-pane)";
+
+			const txtClassFilter = document.createElement("input");
+			txtClassFilter.type = "text";
+			txtClassFilter.placeholder = "Find..";
+			txtClassFilter.style.gridArea = "1 / 1";
+	
+			const btnNone = document.createElement("input");
+			btnNone.type = "button";
+			btnNone.style.position = "absolute";
+			btnNone.style.right = "32px";
+			btnNone.style.width = "28px";
+			btnNone.style.minWidth = "28px";
+			btnNone.style.backgroundColor = "transparent";
+			btnNone.style.backgroundImage = "url(/mono/selectnone.svg)";
+			btnNone.style.backgroundSize = "24px 24px";
+			btnNone.style.backgroundPosition = "center";
+			btnNone.style.backgroundRepeat = "no-repeat";
+	
+			const btnAll = document.createElement("input");
+			btnAll.type = "button";
+			btnAll.style.position = "absolute";
+			btnAll.style.right = "0";
+			btnAll.style.width = "28px";
+			btnAll.style.minWidth = "28px";
+			btnAll.style.backgroundColor = "transparent";
+			btnAll.style.backgroundImage = "url(/mono/selectall.svg)";
+			btnAll.style.backgroundSize = "24px 24px";
+			btnAll.style.backgroundPosition = "center";
+			btnAll.style.backgroundRepeat = "no-repeat";
+	
+			innerBox.append(txtClassFilter, btnNone, btnAll);
+	
+			const lstClasses = document.createElement("div");
+			lstClasses.className = "wmi-classes-list";
+			lstClasses.style.border = "var(--clr-control) solid 1.5px";
+			lstClasses.style.gridArea = "3 / 1";
+			lstClasses.style.overflowY = "scroll";
+	
+			const lstProperties = document.createElement("div");
+			lstProperties.className = "wmi-properties-list";
+			lstProperties.style.border = "var(--clr-control) solid 1.5px";
+			lstProperties.style.gridArea = "3 / 3";
+			lstProperties.style.overflowY = "scroll";
+	
+			innerBox.append(lstClasses, lstProperties);
+	
+			txtClassFilter.onkeydown = event=>{
+				if (event.code === "Escape") {
+					txtClassFilter.value = "";
+					txtClassFilter.oninput();
 				}
-				else {
-					for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
-						if (this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
-							matched = true;
-							break;
+			};
+	
+			let selected = null;
+			let propertiesList = [];
+			let propertyCheckboxes = [];
+	
+			txtClassFilter.oninput = ()=> {
+				if (!wmiClasses.classes) return;
+				let filter = txtClassFilter.value.toLowerCase();
+	
+				lstClasses.textContent = "";
+				lstProperties.textContent = "";
+	
+				for (let i = 0; i < wmiClasses.classes.length; i++) {
+					let matched = false;
+	
+					if (wmiClasses.classes[i].class.toLowerCase().indexOf(filter) > -1) {
+						matched = true;
+					}
+					else {
+						for (let j = 0; j < wmiClasses.classes[i].properties.length; j++) {
+							if (wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
+								matched = true;
+								break;
+							}
 						}
 					}
-				}
-
-				if (matched) {
-					let newClass = document.createElement("div");
-					newClass.textContent = this.wmi_classes.classes[i].class;
-					lstClasses.appendChild(newClass);
-
-					newClass.onclick = ()=> {
-						if (selected != null) selected.style.backgroundColor = "";
-
-						propertiesList = [];
-						propertyCheckboxes = [];
-
-						lstProperties.textContent = "";
-						for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
-
-							const divProperty = document.createElement("div");
-							const chkProperty = document.createElement("input");
-							chkProperty.type = "checkbox";
-							chkProperty.checked = false;
-							propertyCheckboxes.push(chkProperty);
-							divProperty.appendChild(chkProperty);
-
-							propertiesList.push(false);
-
-							this.AddCheckBoxLabel(divProperty, chkProperty, this.wmi_classes.classes[i].properties[j]);
-							lstProperties.appendChild(divProperty);
-
-							if (filter && this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
-								divProperty.scrollIntoView({ behavior: "smooth"});
-								setTimeout(()=>{divProperty.style.animation = "highlight .8s 1"}, 500);
+	
+					if (matched) {
+						let newClass = document.createElement("div");
+						newClass.textContent = wmiClasses.classes[i].class;
+						lstClasses.appendChild(newClass);
+	
+						newClass.onclick = ()=> {
+							if (selected != null) selected.style.backgroundColor = "";
+	
+							propertiesList = [];
+							propertyCheckboxes = [];
+	
+							lstProperties.textContent = "";
+							for (let j = 0; j < wmiClasses.classes[i].properties.length; j++) {
+	
+								const divProperty = document.createElement("div");
+								const chkProperty = document.createElement("input");
+								chkProperty.type = "checkbox";
+								chkProperty.checked = false;
+								propertyCheckboxes.push(chkProperty);
+								divProperty.appendChild(chkProperty);
+	
+								propertiesList.push(false);
+	
+								this.AddCheckBoxLabel(divProperty, chkProperty, wmiClasses.classes[i].properties[j]);
+								lstProperties.appendChild(divProperty);
+	
+								if (filter && wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
+									divProperty.scrollIntoView({ behavior: "smooth"});
+									setTimeout(()=>{divProperty.style.animation = "highlight .8s 1"}, 500);
+								}
+	
+								selected = newClass;
+								selected.style.backgroundColor = "var(--clr-select)";
 							}
-
-							selected = newClass;
-							selected.style.backgroundColor = "var(--clr-select)";
-						}
-
-					};
-
+	
+						};
+	
+					}
 				}
-			}
+			};
+			txtClassFilter.oninput();
+	
+			btnNone.onclick = ()=> {
+				if (propertyCheckboxes.length === 0) return;
+	
+				for (let i = 0; i < propertyCheckboxes.length; i++) {
+					propertyCheckboxes[i].checked = false;
+					propertiesList[i] = false;
+				}
+				
+				//propertyCheckboxes[0].onchange();
+			};
+	
+			btnAll.onclick = ()=> {
+				if (propertyCheckboxes.length === 0) return;
+	
+				for (let i = 0; i < propertyCheckboxes.length; i++) {
+					propertyCheckboxes[i].checked = true;
+					propertiesList[i] = true;
+				}
+	
+				//propertyCheckboxes[0].onchange();
+			};
 		};
-		txtClassFilter.oninput();
 
-		btnNone.onclick = ()=> {
-			if (propertyCheckboxes.length === 0) return;
-
-			for (let i = 0; i < propertyCheckboxes.length; i++) {
-				propertyCheckboxes[i].checked = false;
-				propertiesList[i] = false;
-			}
-			
-			//propertyCheckboxes[0].onchange();
-		};
-
-		btnAll.onclick = ()=> {
-			if (propertyCheckboxes.length === 0) return;
-
-			for (let i = 0; i < propertyCheckboxes.length; i++) {
-				propertyCheckboxes[i].checked = true;
-				propertiesList[i] = true;
-			}
-
-			//propertyCheckboxes[0].onchange();
-		};
+		templatesTab.onclick();
 
 		btnOK.addEventListener("click", ()=> {
 			//TODO:
@@ -636,7 +718,6 @@ class Oversight extends Window {
 			Update: Update
 		};
 	}
-
 	
 	CreateDeltaGraph(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");

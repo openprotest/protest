@@ -103,3 +103,29 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
+.oversight-template {
+	display: inline-block;
+	vertical-align: top;
+	width: 150px;
+	height: 64px;
+	line-height: 64px;
+	padding: 8px;
+	padding-left: 72px;
+	margin: 8px;
+	border-radius: 4px;
+	font-weight: 600;
+	background-size: 56px 56px;
+	background-position: 4px center;
+	background-repeat: no-repeat;
+
+	transition: .2s;
+}
+
+.oversight-template:hover {
+	background-color: var(--clr-control);
+}
+
+.oversight-template:active {
+	background-color: var(--clr-select);
+}

@@ -148,7 +148,7 @@ internal class Oversight {
                             }
                         }
 
-                        DoWmi(scope , wmiQueries);
+                        DoWmi(scope, wmiQueries);
                     }
 
                     long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;

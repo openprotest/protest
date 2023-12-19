@@ -35,7 +35,6 @@
 }
 
 .tabs-box > .v-tab-selected {
-	background: unset;
 	background: linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%);
 	background-color: var(--clr-pane);
 	transform: scaleX(1);

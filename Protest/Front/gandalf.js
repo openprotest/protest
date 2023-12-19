@@ -81,7 +81,7 @@ class Gandalf extends Window {
 			this.menuArray[0].appendChild(document.createElement("br"));
 
 			const description = document.createElement("div");
-			description.textContent = "Gandalf is a security tool designed to help you identify users who use weak passwords. Users bellow the strength threshold will get an email notification asking them to change to a more secure password.";
+			description.textContent = "Gandalf serves as a security tool designed to help you identify users with weak and vulnerable passwords. Individuals falling below the strength threshold will receive an email prompt, urging them to switch to a more robust and secure password.";
 			description.style.display = "inline-block";
 			description.style.fontSize = "large";
 			description.style.maxWidth = "720px";

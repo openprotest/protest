@@ -18,7 +18,7 @@ class Settings extends Tabs {
 		this.tabZones = this.AddTab("Zones", "mono/router.svg", "Network zones");
 		this.tabEmailProfiles = this.AddTab("SMTP profiles", "mono/email.svg");
 		this.tabAd = this.AddTab("Active directory", "mono/directory.svg");
-		this.tabGraph = this.AddTab("Microsoft Graph", "mono/graph.svg");
+		this.tabGraph = this.AddTab("Microsoft Graph", "mono/msgraph.svg");
 
 		this.tabZones.onclick = ()=> this.ShowZones();
 		this.tabEmailProfiles.onclick = ()=> this.ShowEmailProfiles();
