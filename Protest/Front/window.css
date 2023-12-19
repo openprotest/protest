@@ -319,7 +319,7 @@
 	all: unset;
 	position: absolute;
 	box-sizing: border-box;
-	width: 60px;
+	width: 56px;
 	height: 48px;
 	left: 0;
 	border-radius: 8px 0 0 8px;
@@ -344,11 +344,11 @@
 	position: relative;
 	left: 8px;
 	top: 0;
-	width: 40px;
-	height: 40px;
+	width: 36px;
+	height: 36px;
 	background-position: center;
 	background-repeat: no-repeat;
-	background-size: 40px 40px;
+	background-size: cover;
 }
 
 .bar-icon {

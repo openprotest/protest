@@ -250,6 +250,12 @@ internal static class LiveStats {
             }
 
         }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            return;
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
+            Logger.Error(ex);
+        }
         catch (Exception ex) {
             Logger.Error(ex);
         }
@@ -320,6 +326,12 @@ internal static class LiveStats {
                 }
             }
 
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            return;
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
+            Logger.Error(ex);
         }
         catch (Exception ex) {
             Logger.Error(ex);

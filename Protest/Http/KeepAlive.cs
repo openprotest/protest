@@ -94,7 +94,11 @@ internal static class KeepAlive {
                 }
             }
         }
-        catch (WebSocketException ex) when (ex.ErrorCode != 0) {
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            ctx.Response.Close();
+            return;
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
             ctx.Response.Close();
             Logger.Error(ex);
         }

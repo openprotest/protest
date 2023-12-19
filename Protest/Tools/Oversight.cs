@@ -192,6 +192,12 @@ internal class Oversight {
                 }
             }
         }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            return;
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
+            Logger.Error(ex);
+        }
         catch (Exception ex) {
             Logger.Error(ex);
         }
