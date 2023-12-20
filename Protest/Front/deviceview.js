@@ -1016,7 +1016,7 @@ class DeviceView extends View {
 			};
 
 			graphBox.onmousemove = event=>{
-				let right = graphBox.clientWidth - event.layerX + 12;
+				let right = graphBox.clientWidth - event.layerX + 12 - (graphBox.clientWidth - svg.clientWidth);
 				right = Math.max(right, 8);
 				right = Math.min(right, graphBox.clientWidth - infoBox.clientWidth - 8);
 				infoBox.style.right = `${right}px`;

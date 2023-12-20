@@ -542,7 +542,6 @@ button.view-live-button:active {
 	position: absolute;
 	right: 0;
 	top: 4px;
-	pointer-events: none;
 }
 
 .view-lifeline-graph > .view-lifeline-label {

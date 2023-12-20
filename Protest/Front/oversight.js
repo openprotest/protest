@@ -55,9 +55,9 @@ class Oversight extends Window {
 
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
-		this.statsList.push(this.CreateStatBox("ping", 75, { type:"ping", prefix:"RTT", unit:"ms" }));
-		this.statsList.push(this.CreateStatBox("cpu", 75, { type:"percent", prefix:"Usage", unit:"%" }));
-		this.statsList.push(this.CreateStatBox("cores", 75, { type:"percents", prefix:"Usage", unit:"%" }));
+		this.statsList.push(this.CreateChart("ping", 75, { type:"ping", prefix:"RTT", unit:"ms" }));
+		this.statsList.push(this.CreateChart("cpu", 75, { type:"percent", prefix:"Usage", unit:"%" }));
+		this.statsList.push(this.CreateChart("cores", 75, { type:"percents", prefix:"Usage", unit:"%" }));
 
 		this.InitializeSubnetEmblem();
 		this.InitializeSocketConnection();
@@ -121,6 +121,8 @@ class Oversight extends Window {
 	}
 
 	InitializeSocketConnection() {
+		this.ConsoleLog("Initializing web-socket connection", "info");
+
 		this.connectButton.disabled = true;
 
 		if (this.socket !== null) return;
@@ -289,34 +291,59 @@ class Oversight extends Window {
 		};
 
 		templatesTab.onclick = ()=> {
-			innerBox.style.display = "initial";
 			innerBox.textContent = "";
+
+			const templatesBox = document.createElement("div");
+			templatesBox.style.border = "var(--clr-control) solid 1.5px";
+			templatesBox.style.gridArea = "1 / 1 /  6 / 4";
+			templatesBox.style.overflowY = "scroll";
+			innerBox.appendChild(templatesBox);
 
 			templatesTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
 			templatesTab.style.backgroundColor = "var(--clr-pane)";
 			wmiTab.style.background = "";
 			wmiTab.style.backgroundColor = "";
 
-			innerBox.appendChild(CreateTemplate("Uptime", "mono/clock.svg"));
-			innerBox.appendChild(CreateTemplate("SAT score", "mono/personalize.svg"));
-			innerBox.appendChild(CreateTemplate("BIOS", "mono/chip.svg"));
-			innerBox.appendChild(CreateTemplate("CPU", "mono/cpu.svg"));
-			innerBox.appendChild(CreateTemplate("CPU Cores", "mono/cpu.svg"));
-			innerBox.appendChild(CreateTemplate("RAM", "mono/ram.svg"));
-			innerBox.appendChild(CreateTemplate("Disk usage", "mono/hdd.svg"));
-			innerBox.appendChild(CreateTemplate("Network usage", "mono/portscan.svg"));
-			innerBox.appendChild(CreateTemplate("Ping", "mono/ping.svg"));
-			innerBox.appendChild(CreateTemplate("Processes", "mono/console.svg"));
-
-			innerBox.appendChild(CreateTemplate("Battery", "mono/battery.svg"));
-			innerBox.appendChild(CreateTemplate("Monitor", "mono/monitor.svg"));
-			innerBox.appendChild(CreateTemplate("User", "mono/user.svg"));
-
+			templatesBox.appendChild(CreateTemplate("Uptime", "mono/clock.svg"));
+			templatesBox.appendChild(CreateTemplate("SAT score", "mono/personalize.svg"));
+			templatesBox.appendChild(CreateTemplate("BIOS", "mono/chip.svg"));
+			templatesBox.appendChild(CreateTemplate("CPU", "mono/cpu.svg"));
+			templatesBox.appendChild(CreateTemplate("CPU Cores", "mono/cpu.svg"));
+			templatesBox.appendChild(CreateTemplate("RAM", "mono/ram.svg"));
+			templatesBox.appendChild(CreateTemplate("Disk usage", "mono/hdd.svg"));
+			templatesBox.appendChild(CreateTemplate("Network usage", "mono/portscan.svg"));
+			templatesBox.appendChild(CreateTemplate("Ping", "mono/ping.svg"));
+			templatesBox.appendChild(CreateTemplate("Processes", "mono/console.svg"));
+			templatesBox.appendChild(CreateTemplate("Battery", "mono/battery.svg"));
+			templatesBox.appendChild(CreateTemplate("Monitor", "mono/monitor.svg"));
+			templatesBox.appendChild(CreateTemplate("User info", "mono/user.svg"));
 		};
+
+		const formatInput = document.createElement("select");
+
+		const formatOptionsArray = [
+			"Ping",
+			"Line chart",
+			"Line charts (grid)",
+			"Area chart",
+			"Bar chart",
+			"Delta chart",
+			"Pie chart",
+			"Doughnut chart",
+			"Single value",
+			"List",
+			"Table",
+			//"Histogram",
+		];
+		for (let i=0; i<formatOptionsArray.length; i++) {
+			const newOption = document.createElement("option");
+			newOption.value = formatOptionsArray[i];
+			newOption.text = formatOptionsArray[i];
+			formatInput.appendChild(newOption);
+		}
 
 		wmiTab.onclick = ()=> {
 			innerBox.textContent = "";
-			innerBox.style.display = "grid";
 
 			templatesTab.style.background = "";
 			templatesTab.style.backgroundColor = "";
@@ -354,20 +381,59 @@ class Oversight extends Window {
 	
 			innerBox.append(txtClassFilter, btnNone, btnAll);
 	
-			const lstClasses = document.createElement("div");
-			lstClasses.className = "wmi-classes-list";
-			lstClasses.style.border = "var(--clr-control) solid 1.5px";
-			lstClasses.style.gridArea = "3 / 1";
-			lstClasses.style.overflowY = "scroll";
+			const classesBox = document.createElement("div");
+			classesBox.className = "wmi-classes-list";
+			classesBox.style.border = "var(--clr-control) solid 1.5px";
+			classesBox.style.gridArea = "3 / 1";
+			classesBox.style.overflowY = "scroll";
 	
-			const lstProperties = document.createElement("div");
-			lstProperties.className = "wmi-properties-list";
-			lstProperties.style.border = "var(--clr-control) solid 1.5px";
-			lstProperties.style.gridArea = "3 / 3";
-			lstProperties.style.overflowY = "scroll";
-	
-			innerBox.append(lstClasses, lstProperties);
-	
+			const propertiesBox = document.createElement("div");
+			propertiesBox.className = "wmi-properties-list";
+			propertiesBox.style.border = "var(--clr-control) solid 1.5px";
+			propertiesBox.style.gridArea = "3 / 3";
+			propertiesBox.style.overflowY = "scroll";
+
+			const optionsBox = document.createElement("div");
+			optionsBox.style.gridArea = "5 / 1 / 6 / 4";
+			optionsBox.style.display = "grid";
+			optionsBox.style.alignItems = "center";
+			optionsBox.style.gridTemplateColumns = "60px 120px repeat(4, 20%)";
+			optionsBox.style.gridTemplateRows = "32px 32px";
+			optionsBox.style.gap = "2px 12px";
+
+			innerBox.append(classesBox, propertiesBox, optionsBox);
+
+			const formatLabel = document.createElement("div");
+			formatLabel.textContent = "Format:";
+			formatInput.style.gridArea = "1 / 2";
+
+			optionsBox.append(formatLabel, formatInput);
+
+
+			const minmaxBox = document.createElement("div");
+			minmaxBox.style.gridArea = "1 / 3"
+			optionsBox.appendChild(minmaxBox);
+			const minmaxInput = document.createElement("input");
+			minmaxInput.type = "checkbox";
+			minmaxBox.appendChild(minmaxInput);
+			this.AddCheckBoxLabel(minmaxBox, minmaxInput, "Show min-max");
+
+			const averageBox = document.createElement("div");
+			averageBox.style.gridArea = "2 / 3"
+			optionsBox.appendChild(averageBox);
+			const averageInput = document.createElement("input");
+			averageInput.type = "checkbox";
+			averageBox.appendChild(averageInput);
+			this.AddCheckBoxLabel(averageBox, averageInput, "Show average");
+
+			const complementizeBox = document.createElement("div");
+			complementizeBox.style.gridArea = "1 / 4"
+			optionsBox.appendChild(complementizeBox);
+			const complementizeInput = document.createElement("input");
+			complementizeInput.type = "checkbox";
+			complementizeBox.appendChild(complementizeInput);
+			this.AddCheckBoxLabel(complementizeBox, complementizeInput, "Complementize");
+
 			txtClassFilter.onkeydown = event=>{
 				if (event.code === "Escape") {
 					txtClassFilter.value = "";
@@ -383,8 +449,8 @@ class Oversight extends Window {
 				if (!wmiClasses.classes) return;
 				let filter = txtClassFilter.value.toLowerCase();
 	
-				lstClasses.textContent = "";
-				lstProperties.textContent = "";
+				classesBox.textContent = "";
+				propertiesBox.textContent = "";
 	
 				for (let i = 0; i < wmiClasses.classes.length; i++) {
 					let matched = false;
@@ -404,7 +470,7 @@ class Oversight extends Window {
 					if (matched) {
 						let newClass = document.createElement("div");
 						newClass.textContent = wmiClasses.classes[i].class;
-						lstClasses.appendChild(newClass);
+						classesBox.appendChild(newClass);
 	
 						newClass.onclick = ()=> {
 							if (selected != null) selected.style.backgroundColor = "";
@@ -412,9 +478,8 @@ class Oversight extends Window {
 							propertiesList = [];
 							propertyCheckboxes = [];
 	
-							lstProperties.textContent = "";
+							propertiesBox.textContent = "";
 							for (let j = 0; j < wmiClasses.classes[i].properties.length; j++) {
-	
 								const divProperty = document.createElement("div");
 								const chkProperty = document.createElement("input");
 								chkProperty.type = "checkbox";
@@ -425,7 +490,7 @@ class Oversight extends Window {
 								propertiesList.push(false);
 	
 								this.AddCheckBoxLabel(divProperty, chkProperty, wmiClasses.classes[i].properties[j]);
-								lstProperties.appendChild(divProperty);
+								propertiesBox.appendChild(divProperty);
 	
 								if (filter && wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
 									divProperty.scrollIntoView({ behavior: "smooth"});
@@ -434,14 +499,12 @@ class Oversight extends Window {
 	
 								selected = newClass;
 								selected.style.backgroundColor = "var(--clr-select)";
-							}
-	
+							}	
 						};
 	
 					}
 				}
 			};
-			txtClassFilter.oninput();
 	
 			btnNone.onclick = ()=> {
 				if (propertyCheckboxes.length === 0) return;
@@ -464,6 +527,8 @@ class Oversight extends Window {
 	
 				//propertyCheckboxes[0].onchange();
 			};
+
+			txtClassFilter.oninput();
 		};
 
 		templatesTab.onclick();
@@ -489,7 +554,7 @@ class Oversight extends Window {
 		this.pauseButton.disabled = true;
 	}
 	
-	CreateStatBox(name, height, options) {
+	CreateChart(name, height, options) {
 		const container = document.createElement("div");
 		container.className = "oversight-graph-container";
 		this.scrollable.appendChild(container);
@@ -509,13 +574,13 @@ class Oversight extends Window {
 		container.appendChild(valueLabel);
 
 		switch(options.type) {
-		case "ping": return this.CreatePingGraph(inner, valueLabel, name, height, options);
-		case "percent": return this.CreatePercentGraph(inner, valueLabel, name, height, options);
-		case "percents": return this.CreatePercentsGridGraph(inner, valueLabel, name, height, options);
+		case "ping": return this.CreatePingChart(inner, valueLabel, name, height, options);
+		case "percent": return this.CreateLineChart(inner, valueLabel, name, height, options);
+		case "percents": return this.CreateGridLineChart(inner, valueLabel, name, height, options);
 		}
 	}
 
-	CreatePingGraph(inner, valueLabel, name, height, options) {
+	CreatePingChart(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
 		canvas.height = height;
@@ -592,7 +657,7 @@ class Oversight extends Window {
 		};
 	}
 
-	CreatePercentGraph(inner, valueLabel, name, height, options) {
+	CreateLineChart(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
 		canvas.height = height;
@@ -643,7 +708,7 @@ class Oversight extends Window {
 		};
 	}
 
-	CreatePercentsGridGraph(inner, valueLabel, name, height, options) {
+	CreateGridLineChart(inner, valueLabel, name, height, options) {
 		const canvases = [];
 		const ctx = [];
 		const list = [];
@@ -719,7 +784,7 @@ class Oversight extends Window {
 		};
 	}
 	
-	CreateDeltaGraph(inner, valueLabel, name, height, options) {
+	CreateDeltaChart(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
 		canvas.height = height;

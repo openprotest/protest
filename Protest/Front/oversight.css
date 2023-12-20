@@ -111,12 +111,12 @@
 	height: 64px;
 	line-height: 64px;
 	padding: 8px;
-	padding-left: 72px;
+	padding-left: 80px;
 	margin: 8px;
 	border-radius: 4px;
 	font-weight: 600;
 	background-size: 56px 56px;
-	background-position: 4px center;
+	background-position: 8px center;
 	background-repeat: no-repeat;
 
 	transition: .2s;
