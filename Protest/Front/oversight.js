@@ -264,7 +264,7 @@ class Oversight extends Window {
 		innerBox.style.margin = "16px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "50% 16px auto";
-		innerBox.style.gridTemplateRows = "32px 8px auto 8px 64px";
+		innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px";
 
 		const templatesTab = document.createElement("button");
 		templatesTab.className = "win-dialog-tab";
@@ -295,7 +295,7 @@ class Oversight extends Window {
 
 			const templatesBox = document.createElement("div");
 			templatesBox.style.border = "var(--clr-control) solid 1.5px";
-			templatesBox.style.gridArea = "1 / 1 /  6 / 4";
+			templatesBox.style.gridArea = "1 / 1 / 7 / 4";
 			templatesBox.style.overflowY = "scroll";
 			innerBox.appendChild(templatesBox);
 
@@ -320,20 +320,22 @@ class Oversight extends Window {
 		};
 
 		const formatInput = document.createElement("select");
+		formatInput.style.gridArea = "1 / 2 / 2 / 2";
+		formatInput.style.maxWidth = "200px";
 
 		const formatOptionsArray = [
 			"Ping",
 			"Line chart",
 			"Line charts (grid)",
-			"Area chart",
-			"Bar chart",
+			//"Area chart",
+			//"Bar chart",
 			"Delta chart",
 			"Pie chart",
 			"Doughnut chart",
 			"Single value",
 			"List",
 			"Table",
-			//"Histogram",
+			//"Histogram"
 		];
 		for (let i=0; i<formatOptionsArray.length; i++) {
 			const newOption = document.createElement("option");
@@ -384,7 +386,7 @@ class Oversight extends Window {
 			const classesBox = document.createElement("div");
 			classesBox.className = "wmi-classes-list";
 			classesBox.style.border = "var(--clr-control) solid 1.5px";
-			classesBox.style.gridArea = "3 / 1";
+			classesBox.style.gridArea = "3 / 1 / 7 / 2";
 			classesBox.style.overflowY = "scroll";
 	
 			const propertiesBox = document.createElement("div");
@@ -393,25 +395,25 @@ class Oversight extends Window {
 			propertiesBox.style.gridArea = "3 / 3";
 			propertiesBox.style.overflowY = "scroll";
 
+
 			const optionsBox = document.createElement("div");
-			optionsBox.style.gridArea = "5 / 1 / 6 / 4";
 			optionsBox.style.display = "grid";
+			optionsBox.style.gridArea = "4 / 2 / 6 / 4";
+			optionsBox.style.margin = "8px 20px";
 			optionsBox.style.alignItems = "center";
-			optionsBox.style.gridTemplateColumns = "60px 120px repeat(4, 20%)";
-			optionsBox.style.gridTemplateRows = "32px 32px";
-			optionsBox.style.gap = "2px 12px";
+			optionsBox.style.gridTemplateColumns = "100px auto";
+			optionsBox.style.gridTemplateRows = "repeat(6, 32px)";
 
 			innerBox.append(classesBox, propertiesBox, optionsBox);
 
 			const formatLabel = document.createElement("div");
 			formatLabel.textContent = "Format:";
-			formatInput.style.gridArea = "1 / 2";
 
 			optionsBox.append(formatLabel, formatInput);
 
 
 			const minmaxBox = document.createElement("div");
-			minmaxBox.style.gridArea = "1 / 3"
+			minmaxBox.style.gridArea = "2 / 1 / 2 / 3"
 			optionsBox.appendChild(minmaxBox);
 			const minmaxInput = document.createElement("input");
 			minmaxInput.type = "checkbox";
@@ -419,7 +421,7 @@ class Oversight extends Window {
 			this.AddCheckBoxLabel(minmaxBox, minmaxInput, "Show min-max");
 
 			const averageBox = document.createElement("div");
-			averageBox.style.gridArea = "2 / 3"
+			averageBox.style.gridArea = "3 / 1 / 3 / 3"
 			optionsBox.appendChild(averageBox);
 			const averageInput = document.createElement("input");
 			averageInput.type = "checkbox";
@@ -427,12 +429,12 @@ class Oversight extends Window {
 			this.AddCheckBoxLabel(averageBox, averageInput, "Show average");
 
 			const complementizeBox = document.createElement("div");
-			complementizeBox.style.gridArea = "1 / 4"
+			complementizeBox.style.gridArea = "4 / 1 / 4 / 3"
 			optionsBox.appendChild(complementizeBox);
 			const complementizeInput = document.createElement("input");
 			complementizeInput.type = "checkbox";
 			complementizeBox.appendChild(complementizeInput);
-			this.AddCheckBoxLabel(complementizeBox, complementizeInput, "Complementize");
+			this.AddCheckBoxLabel(complementizeBox, complementizeInput, "Complementing mode");
 
 			txtClassFilter.onkeydown = event=>{
 				if (event.code === "Escape") {
