@@ -285,7 +285,7 @@ class Ping extends Console {
 			td5a.style.borderRadius = "8px";
 			td5a.style.width = "24px";
 			td5a.style.height = "24px";
-			td5a.style.backgroundColor = "var(--clr-error)";
+			td5a.style.boxShadow = "var(--clr-error) 0 0 0 4px inset";
 			tr1.appendChild(td5a);
 			const td5b = document.createElement("td");
 			td5b.style.minWidth = "96px";
@@ -297,7 +297,7 @@ class Ping extends Console {
 			td6a.style.borderRadius = "8px";
 			td6a.style.width = "24px";
 			td6a.style.height = "24px";
-			td6a.style.backgroundColor = "var(--clr-orange)";
+			td6a.style.boxShadow = "var(--clr-orange) 0 0 0 4px inset";
 			tr2.appendChild(td6a);
 			const td6b = document.createElement("td");
 			td6b.style.paddingLeft = "8px";
@@ -660,20 +660,19 @@ class Ping extends Console {
 		this.ws.onerror = error=> {
 			this.playButton.disabled = false;
 			this.pauseButton.disabled = true;
-			//console.error(error);
 		};
 	}
 
 	InvalidateList(payload) {
-		if (this.ws.readyState != 1) return; //if not connected return
+		if (this.ws.readyState != 1) return;
 
-		for (let i = 0; i < payload.length - 1; i += 2) {
+		for (let i=0; i < payload.length-1; i+=2) {
 			let index = payload[i];
-			let value = payload[i + 1];
+			let value = payload[i+1];
 
 			if (index in this.hashtable) {
 
-				for (let j = 0; j < Ping.HISTORY_LIMIT - 1; j++) this.hashtable[index].ping[j] = this.hashtable[index].ping[j + 1];
+				for (let j=0; j<Ping.HISTORY_LIMIT-1; j++) this.hashtable[index].ping[j] = this.hashtable[index].ping[j+1];
 				this.hashtable[index].ping[Ping.HISTORY_LIMIT - 1] = value;
 
 				if (isNaN(value)) {
@@ -686,17 +685,31 @@ class Ping extends Console {
 				}
 
 				for (let j = 0; j < Ping.HISTORY_LIMIT; j++) {
-					this.hashtable[index].ping_e[j].style.backgroundColor = UI.PingColor(this.hashtable[index].ping[j]);
-					if (isNaN(this.hashtable[index].ping[j]))
+					let color = UI.PingColor(this.hashtable[index].ping[j]);
+					if (isNaN(this.hashtable[index].ping[j])) {
+						this.hashtable[index].ping_e[j].style.backgroundColor = "transparent";
+						this.hashtable[index].ping_e[j].style.boxShadow = `${color} 0 0 0 2px inset`;
+					}
+					else if (this.hashtable[index].ping[j] < 0) {
+						this.hashtable[index].ping_e[j].style.boxShadow = `rgb(128,128,128) 0 0 0 1px inset`;
+					}
+					else {
+						this.hashtable[index].ping_e[j].style.backgroundColor = color;
+						this.hashtable[index].ping_e[j].style.boxShadow = "none";
+					}
+
+					if (isNaN(this.hashtable[index].ping[j])) {
 						this.hashtable[index].ping_e[j].setAttribute("tip-below", this.hashtable[index].ping[j]);
-					else
+					}
+					else {
 						this.hashtable[index].ping_e[j].setAttribute("tip-below", this.hashtable[index].ping[j] < 0 ? "" : this.hashtable[index].ping[j] + "ms");
+					}
 				}
 
 				if (this.params.moveToTop) {
-					let p0 = (isNaN(this.hashtable[index].ping[Ping.HISTORY_LIMIT - 1])) ? 4 : 5;
-					let p1 = (isNaN(this.hashtable[index].ping[Ping.HISTORY_LIMIT - 2])) ? 4 : 5;
-					if (p0 != p1 && this.hashtable[index].element != this.list.childNodes[this.list.childNodes.length - 1]) {//if status changed and not already last
+					let p0 = (isNaN(this.hashtable[index].ping[Ping.HISTORY_LIMIT-1])) ? 4 : 5;
+					let p1 = (isNaN(this.hashtable[index].ping[Ping.HISTORY_LIMIT-2])) ? 4 : 5;
+					if (p0 != p1 && this.hashtable[index].element != this.list.childNodes[this.list.childNodes.length - 1]) { //if status changed and not already last
 						this.list.prepend(this.hashtable[index].element);
 						this.list.scrollTop = 0;
 						this.hashtable[index].graph.style.display = "initial";

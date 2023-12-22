@@ -381,10 +381,17 @@
 .task-icon-dots {
 	position: absolute;
 	bottom: 2px;
-	width: 17%;
-	height: 17%;
-	border-radius: 50%;
-	box-shadow: rgb(32, 32, 32) 0 0 0 1px;
+
+	width: 0;
+	height: 0;
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent; 
+	border-bottom: 8px solid;
+	border-bottom-color: red;
+	
+	background-color: transparent !important;
+	filter: drop-shadow(rgb(64, 64, 64) 0 0 1px);
+
 	transition: .4s;
 }
 

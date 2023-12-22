@@ -1117,15 +1117,15 @@ class Watchdog extends Window {
 				bar.setAttribute("fill", this.StatusToColor(key));
 				svg.appendChild(bar);
 
-				const lbllabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				lbllabel.textContent = this.StatusToString(key, watcher);
-				lbllabel.setAttribute("x", x);
-				lbllabel.setAttribute("y", 70);
-				lbllabel.setAttribute("fill", this.StatusToColor(key));
-				lbllabel.setAttribute("font-size", "11px");
-				lbllabel.style.transformOrigin = `${x-1}px ${74}px`;
-				lbllabel.style.transform = "rotate(90deg)";
-				svg.appendChild(lbllabel);
+				const lblLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				lblLabel.textContent = this.StatusToString(key, watcher);
+				lblLabel.setAttribute("x", x);
+				lblLabel.setAttribute("y", 70);
+				lblLabel.setAttribute("fill", this.StatusToColor(key));
+				lblLabel.setAttribute("font-size", "11px");
+				lblLabel.style.transformOrigin = `${x-1}px ${74}px`;
+				lblLabel.style.transform = "rotate(90deg)";
+				svg.appendChild(lblLabel);
 
 				x += key < 0 ? 18 : 14;
 			}
@@ -1236,6 +1236,35 @@ class Watchdog extends Window {
 		svg.setAttribute("width", this.dayPixels);
 		svg.setAttribute("height", 32);
 
+		const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+		svg.appendChild(defs);
+
+		const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
+		pattern.setAttribute("id", "pattern");
+		pattern.setAttribute("width", 5);
+		pattern.setAttribute("height", 5);
+		pattern.setAttribute("patternUnits", "userSpaceOnUse");
+		pattern.setAttribute("patternTransform", "rotate(45)");
+		defs.appendChild(pattern);
+
+		const stripesRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		stripesRect.setAttribute("width", 3);
+		stripesRect.setAttribute("height", 5);
+		stripesRect.setAttribute("fill", "#fff");
+		pattern.appendChild(stripesRect);
+
+		const stripesMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		stripesMask.setAttribute("id", "mask");
+		defs.appendChild(stripesMask);
+
+		const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		maskRect.setAttribute("x", 0);
+		maskRect.setAttribute("y", 0);
+		maskRect.setAttribute("width", "100%");
+		maskRect.setAttribute("height", "100%");
+		maskRect.setAttribute("fill", "url(#pattern)");
+		stripesMask.appendChild(maskRect);
+
 		if (date in this.cache && file in this.cache[date]) {
 			if (this.cache[date][file] === null) { return svg; }
 
@@ -1259,6 +1288,10 @@ class Watchdog extends Window {
 				dot.setAttribute("rx", 2);
 				dot.setAttribute("fill", this.StatusToColor(value));
 				svg.appendChild(dot);
+
+				if (value < 0) {
+					dot.setAttribute("mask", "url(#mask)");
+				}
 			}
 		}
 

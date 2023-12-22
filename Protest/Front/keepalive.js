@@ -40,11 +40,8 @@ const KEEP = {
 			setTimeout(()=> {
 				if (Date.now() - KEEP.lastReconnect < 5_000) { //5s
 					KEEP.DisconnectNotification();
-					console.log("notification");
 				}
 				else {
-					console.log("init");
-
 					KEEP.lastReconnect = Date.now();
 					KEEP.Initialize();
 				}

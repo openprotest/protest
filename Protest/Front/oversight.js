@@ -48,10 +48,10 @@ class Oversight extends Window {
 
 		this.content.append(this.scrollable, this.consoleBox, this.toggleConsoleButton);
 
-		this.connectButton.onclick = event=> this.InitializeSocketConnection();
-		this.addStatButton.onclick = event=> this.AddStat();
-		this.startButton.onclick = event=> this.Start();
-		this.pauseButton.onclick = event=> this.Pause();
+		this.connectButton.onclick = ()=> this.InitializeSocketConnection();
+		this.addStatButton.onclick = ()=> this.AddStat();
+		this.startButton.onclick = ()=> this.Start();
+		this.pauseButton.onclick = ()=> this.Pause();
 
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 

@@ -429,7 +429,6 @@ class DeviceView extends View {
 			if (type === "router" || type === "switch") {
 				const btnConfig = this.CreateSideButton("mono/configfile.svg", "Configuration");
 				btnConfig.onclick = () => this.DeviceConfiguration();
-				console.log(this.sideTools.childNodes.length);
 				btnConfig.style.marginTop = "16px";
 
 				const btnInterfaces = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
@@ -639,13 +638,16 @@ class DeviceView extends View {
 				this.CreateWarning(json.warning);
 			}
 			else if (json.echoReply) {
-				
-				if (this.task.childNodes.length < 6) {
-					this.dot = document.createElement("div");
-					this.dot.className = "task-icon-dots";
-					this.dot.style.left = `${6.5 + dotPingCounter*20}%`;
-					this.dot.style.backgroundColor = UI.PingColor(json.echoReply);
-					this.task.appendChild(this.dot);
+				if (this.task.childNodes.length < 5) {
+					const dot = document.createElement("div");
+					dot.className = "task-icon-dots";
+					dot.style.left = `${2 + dotPingCounter*12}px`;
+					dot.style.borderBottomColor = UI.PingColor(json.echoReply);
+					this.task.appendChild(dot);
+
+					if (isNaN(json.echoReply)) {
+						dot.style.transform = "rotate(180deg)";
+					}
 				}
 
 				dotPingCounter++;
