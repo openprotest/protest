@@ -641,7 +641,7 @@ class DeviceView extends View {
 				if (this.task.childNodes.length < 5) {
 					const dot = document.createElement("div");
 					dot.className = "task-icon-dots";
-					dot.style.left = `${2 + dotPingCounter*12}px`;
+					dot.style.left = `${1 + dotPingCounter*13}px`;
 					dot.style.borderBottomColor = UI.PingColor(json.echoReply);
 					this.task.appendChild(dot);
 

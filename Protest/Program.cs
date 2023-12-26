@@ -63,9 +63,9 @@ internal class Program {
         bool loadAcl = Http.Auth.LoadAcl();
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading ACL", loadAcl ? "OK  " : "Failed"));
 
-        Console.Write("Initialize tasks");
+        Console.Write("Launching tasks");
         Tasks.Automation.Initialize();
-        Console.WriteLine("        OK");
+        Console.WriteLine("         OK");
 
         Console.WriteLine();
 

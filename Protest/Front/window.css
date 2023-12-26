@@ -384,13 +384,13 @@
 
 	width: 0;
 	height: 0;
-	border-left: 5px solid transparent;
-	border-right: 5px solid transparent; 
-	border-bottom: 8px solid;
-	border-bottom-color: red;
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent; 
+	border-bottom: 9px solid;
+	border-radius: 3px;
 	
 	background-color: transparent !important;
-	filter: drop-shadow(rgb(64, 64, 64) 0 0 1px);
+	filter: drop-shadow(#000 0 0 1px);
 
 	transition: .4s;
 }

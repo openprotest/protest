@@ -229,7 +229,7 @@ class Oversight extends Window {
 			return;
 		}
 
-		const dialog = this.DialogBox("640px");
+		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
@@ -264,7 +264,7 @@ class Oversight extends Window {
 		innerBox.style.margin = "16px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "50% 16px auto";
-		innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px";
+		innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px 8px 64px";
 
 		const templatesTab = document.createElement("button");
 		templatesTab.className = "win-dialog-tab";
@@ -435,6 +435,11 @@ class Oversight extends Window {
 			complementizeInput.type = "checkbox";
 			complementizeBox.appendChild(complementizeInput);
 			this.AddCheckBoxLabel(complementizeBox, complementizeInput, "Complementing mode");
+
+			const queryInput = document.createElement("textarea");
+			queryInput.style.resize = "none";
+			queryInput.style.gridArea = "8 / 1 / 9 / 4";
+			innerBox.append(queryInput);
 
 			txtClassFilter.onkeydown = event=>{
 				if (event.code === "Escape") {

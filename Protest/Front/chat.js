@@ -52,18 +52,18 @@ class Chat extends Window {
 		if (prefix) {
 			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
 		}
-
 		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
 	}
 
 	async InitializeComponents() {
 		this.blinkingDot = document.createElement("div");
-		this.blinkingDot.className = "task-icon-dots";
-		this.blinkingDot.style.backgroundColor = "transparent";
+		this.blinkingDot.style.position = "absolute";
 		this.blinkingDot.style.width = "12px";
 		this.blinkingDot.style.height = "12px";
 		this.blinkingDot.style.left = "calc(50% - 6px)";
 		this.blinkingDot.style.top = "30%";
+		this.blinkingDot.style.borderRadius = "50%";
+		this.blinkingDot.style.backgroundColor = "transparent";
 		this.blinkingDot.style.boxShadow = "none";
 		this.blinkingDot.style.animation = "blink 1.5s infinite";
 		this.task.appendChild(this.blinkingDot);
