@@ -4,8 +4,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 public partial class Stamp : Form {
-    static Pen outline = new Pen(Color.FromArgb(232, 118, 0), 4);
-    static Pen cross = new Pen(Color.Black, 4);
+    static readonly Pen outline = new Pen(Color.FromArgb(232, 118, 0), 4);
+    static readonly Pen cross = new Pen(Color.Black, 4);
 
     private protected string strokes = String.Empty;
 

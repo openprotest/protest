@@ -18,6 +18,7 @@
 
 global using System;
 global using System.Linq;
+using CacheGenerator;
 
 namespace Protest;
 
@@ -25,6 +26,12 @@ internal class Program {
     internal static readonly string[] alternativeUriPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
     static void Main(string[] args) {
+        Console.WriteLine(Http.FrontSerialization.array.Length);
+
+        for (int i=0; i < Http.FrontSerialization.array.Length; i++) {
+            Console.WriteLine(Http.FrontSerialization.array[i]);
+        }
+
         Console.Title = "Pro-test";
 
         Console.WriteLine(@"   _____");
