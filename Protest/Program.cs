@@ -18,7 +18,8 @@
 
 global using System;
 global using System.Linq;
-using CacheGenerator;
+
+using System.Collections.Generic;
 
 namespace Protest;
 
@@ -28,7 +29,7 @@ internal class Program {
     static void Main(string[] args) {
         Console.WriteLine(Http.FrontSerialization.array.Length);
 
-        for (int i=0; i < Http.FrontSerialization.array.Length; i++) {
+        for (int i = 0; i < Http.FrontSerialization.array.Length; i++) {
             Console.WriteLine(Http.FrontSerialization.array[i]);
         }
 

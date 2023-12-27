@@ -9,6 +9,7 @@
 
     <NoWarn>IDE0090</NoWarn>
     <NoWarn>IDE0300</NoWarn>
+    
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +18,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.8.0" />
   </ItemGroup>
 
 </Project>

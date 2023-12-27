@@ -1,9 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
-using System.Text;
 using System.Diagnostics;
+using System.Text;
 
 namespace CacheGenerator;
 
@@ -35,25 +34,46 @@ public class Generator : IIncrementalGenerator {
 
         string frontPath = $"{rootPath}Front";
 
-        StringBuilder bulder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
 
-        bulder.AppendLine("namespace Protest.Http;");
-        bulder.AppendLine("public static class FrontSerialization {");
+        builder.AppendLine("using System.Collections.Generic;");
+        builder.AppendLine("namespace Protest.Http;");
+        builder.AppendLine("public static class FrontSerialization {");
 
-        bulder.AppendLine("    public static string[] array = new string[] {");
-
-        //bulder.AppendLine($"        @\"{frontPath}\",");
+        builder.AppendLine("    public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {");
 
         DirectoryInfo frontDirectory = new DirectoryInfo(frontPath);
         FileInfo[] files = frontDirectory.GetFiles();
         for (int i = 0; i < files.Length; i++) {
-            bulder.AppendLine($"        @\"{files[i].FullName}\",");
+            byte[]? content = LoadFile(files[i].FullName);
+            if (content is null) { continue; }
+
+            builder.Append($"        {{ @\"{files[i].FullName}\", new byte[] {{");
+
+            for (int j = 0; j < content.Length; j++) {
+                if (j > 0) builder.Append(",");
+                builder.Append(content[j].ToString());
+            }
+
+            builder.Append("} },");
+            builder.AppendLine();
         }
 
-        bulder.AppendLine("    };");
+        builder.AppendLine("    };");
 
-        bulder.AppendLine("}");
+        builder.AppendLine("}");
 
-        context.AddSource("FrontSerialization.g.cs", bulder.ToString());
+        context.AddSource("FrontSerialization.g.cs", builder.ToString());
+    }
+
+    private byte[]? LoadFile(string filePath) {
+        FileInfo file = new FileInfo(filePath);
+        if (!file.Exists) return null;
+
+        using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using BinaryReader br = new BinaryReader(fs);
+
+        byte[] bytes = br.ReadBytes((int)file.Length);
+        return bytes;
     }
 }
