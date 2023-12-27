@@ -11,6 +11,8 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal static class Icmp {
+    static readonly byte[] ICMP_PAYLOAD = "0000000000000000"u8.ToArray();
+
     public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
@@ -141,7 +143,7 @@ internal static class Icmp {
         Ping p = new Ping();
 
         try {
-            PingReply reply = await p.SendPingAsync(hostname, timeout);
+            PingReply reply = await p.SendPingAsync(hostname, timeout, ICMP_PAYLOAD);
 
             return (int)reply.Status switch {
                 (int)IPStatus.DestinationUnreachable or
@@ -149,6 +151,7 @@ internal static class Icmp {
                 (int)IPStatus.DestinationNetworkUnreachable => id + ((char)127).ToString() + "Unreachable",
 
                 (int)IPStatus.Success => id + ((char)127).ToString() + reply.RoundtripTime.ToString(),
+                (int)IPStatus.TimedOut => id + ((char)127).ToString() + "Timed out",
                 11050                 => id + ((char)127).ToString() + "General failure",
                 _                     => id + ((char)127).ToString() + reply.Status.ToString(),
             };

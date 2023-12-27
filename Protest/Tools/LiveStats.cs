@@ -72,6 +72,9 @@ internal static class LiveStats {
                             WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: Just now\",\"source\":\"ICMP\"}}");
                             LastSeen.Seen(pingArray[i]);
                         }
+                        else if (reply.Status == IPStatus.TimedOut) {
+                            WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
+                        }
                         else {
                             WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
                         }

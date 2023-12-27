@@ -11,7 +11,7 @@ namespace Protest.Tools;
 
 internal static class TraceRoute {
 
-    static readonly byte[] TRACE_ROUTE_BUFFER = Encoding.ASCII.GetBytes("0000000000000000000000000000000");
+    static readonly byte[] ICMP_PAYLOAD = "0000000000000000"u8.ToArray();
     public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
@@ -64,20 +64,21 @@ internal static class TraceRoute {
                             string result = $"{hostname}{(char)127}";
 
                             try {
-                                PingReply reply = p.Send(hostname, timeout, TRACE_ROUTE_BUFFER, new PingOptions(i, true));
+                                PingReply reply = p.Send(hostname, timeout, ICMP_PAYLOAD, new PingOptions(i, true));
 
                                 if (reply.Status == IPStatus.Success || reply.Status == IPStatus.TtlExpired) {
-                                    if (lastAddress == reply.Address.ToString())
+                                    if (lastAddress == reply.Address.ToString()) {
                                         break;
-                                    else
+                                    }
+                                    else {
                                         lastAddress = reply.Address.ToString();
+                                    }
 
                                     result += $"{reply.Address}{(char)127}{reply.RoundtripTime}";
                                     ipList.Add(reply.Address);
-
                                 }
                                 else if (reply.Status == IPStatus.TimedOut) {
-                                    result += "Timed Out";
+                                    result += "Timed out";
                                 }
                                 else {
                                     break;
@@ -88,8 +89,9 @@ internal static class TraceRoute {
                                 break;
                             }
 
-                            lock (sendLock) //once send per socket
+                            lock (sendLock) { //once send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            }
                         }
 
                     List<Task<string>> tasks = new List<Task<string>>();
