@@ -4,8 +4,6 @@ class KeyboardTester extends Window {
 
 		this.params = params;
 
-		this.win.tabIndex = "0";
-
 		this.content.style.overflow = "scroll";
 
 		this.defaultElement = this.win;
@@ -601,6 +599,8 @@ class KeyboardTester extends Window {
 
 			this.AddToolbarButton("Test vibration", "mono/gamepad.svg?light").onclick = ()=> {
 				const dialog = this.DialogBox("280px");
+				if (dialog === null) return;
+				
 				dialog.innerBox.style.margin = "20px";
 				dialog.btnCancel.style.display = "none";
 				

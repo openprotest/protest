@@ -65,6 +65,8 @@ class CameraTester extends Window {
 
 	Settings() {
 		const dialog = this.DialogBox("150px");
+		if (dialog === null) return;
+
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
@@ -237,6 +239,8 @@ class CameraTester extends Window {
 
 	HandleRecording() {
 		const dialog = this.DialogBox("120px");
+		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;

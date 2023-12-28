@@ -147,6 +147,7 @@ class DnsLookup extends Console {
 	Options() {
 		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;

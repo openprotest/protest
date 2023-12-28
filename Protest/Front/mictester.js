@@ -66,6 +66,8 @@ class MicTester extends Window {
 
 	async Settings() {
 		const dialog = this.DialogBox("300px");
+		if (dialog === null) return;
+
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 
@@ -256,6 +258,8 @@ class MicTester extends Window {
 
 	HandleRecording() {
 		const dialog = this.DialogBox("120px");
+		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;

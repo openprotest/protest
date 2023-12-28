@@ -209,6 +209,7 @@ class PortScan extends Console {
 	Options() {
 		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 

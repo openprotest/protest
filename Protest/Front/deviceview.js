@@ -1186,6 +1186,8 @@ class DeviceView extends View {
 	
 			btnFetch.onclick = ()=> {
 				const dialog = this.DialogBox("108px");
+				if (dialog === null) return;
+
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
 
@@ -2343,6 +2345,7 @@ class DeviceView extends View {
 		}
 
 		const dialog = this.DialogBox("280px");
+		if (dialog === null) return;
 
 		const grid = document.createElement("div");
 		grid.style.display = "grid";

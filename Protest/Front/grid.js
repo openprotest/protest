@@ -250,6 +250,8 @@ class Grid extends Window {
 
 	async Save() {
 		const dialog = this.DialogBox("200px");
+		if (dialog === null) return;
+
 		dialog.innerBox.textContent = "";
 		dialog.btnOK.style.display = "none";
 
@@ -407,6 +409,8 @@ class Grid extends Window {
 		if (!this.selectedColumn) return;
 
 		const dialog = this.DialogBox("108px");
+		if (dialog === null) return;
+
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
@@ -464,6 +468,8 @@ class Grid extends Window {
 		if (!this.selectedColumn) return;
 
 		const dialog = this.DialogBox("108px");
+		if (dialog === null) return;
+
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
@@ -521,6 +527,8 @@ class Grid extends Window {
 		if (!this.selectedColumn) return;
 
 		const dialog = this.DialogBox("108px");
+		if (dialog === null) return;
+		
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 

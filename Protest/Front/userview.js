@@ -178,6 +178,8 @@ class UserView extends View {
 
 			btnFetch.onclick = ()=> {
 				const dialog = this.DialogBox("108px");
+				if (dialog === null) return;
+
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
 
@@ -260,6 +262,7 @@ class UserView extends View {
 		}
 
 		const dialog = this.DialogBox("200px");
+		if (dialog === null) return;
 
 		dialog.btnOK.onclick = async ()=> {
 			dialog.innerBox.textContent = "";

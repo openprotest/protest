@@ -132,6 +132,7 @@ class Wmi extends Window {
 
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
+
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 
@@ -337,6 +338,7 @@ class Wmi extends Window {
 	CallMethodDialog() {
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 
 		btnOK.addEventListener("click", ()=> {

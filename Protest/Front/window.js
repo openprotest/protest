@@ -323,6 +323,9 @@ class Window {
 			this.win.appendChild(this.btnPopOut);
 		}
 
+		this.win.tabIndex = "0";
+		this.win.addEventListener("focus", ()=> this.BringToFront());
+
 		let dblclickCheck = false;
 		this.win.onmousedown = event=> {
 
@@ -1007,7 +1010,7 @@ class Window {
 			newButton.setAttribute("aria-label", tooltip);
 		}
 
-		newButton.addEventListener("focus", this.BringToFront());
+		newButton.addEventListener("focus", ()=>this.BringToFront());
 
 		return newButton;
 	}

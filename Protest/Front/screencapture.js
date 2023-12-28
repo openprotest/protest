@@ -37,8 +37,9 @@ class ScreenCapture extends Window {
 
 	Settings() {
 		const dialog = this.DialogBox("150px");
+		if (dialog === null) return;
+
 		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.padding = "20px 20px 0 20px";
@@ -131,6 +132,8 @@ class ScreenCapture extends Window {
 		this.Stop();
 
 		const dialog = this.DialogBox("120px");
+		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;

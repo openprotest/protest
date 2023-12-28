@@ -237,6 +237,7 @@ class Oversight extends Window {
 
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
+		
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 

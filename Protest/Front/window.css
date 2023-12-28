@@ -3,6 +3,7 @@
 	background-color: rgb(64, 64, 64);
 	border-radius: 8px 8px 0 0;
 	border-top: 1px solid rgb(84, 84, 84);
+	outline: 0;
 	box-shadow: rgba(0, 0, 0, .85) 0 0 8px;
 
 	transition-timing-function: cubic-bezier(.2, .6, .36, 1);

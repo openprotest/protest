@@ -705,6 +705,8 @@ class Fetch extends Tabs {
 				btnImport.disabled = btnCancel.disabled = true;
 	
 				const dialog = this.DialogBox("180px");
+				if (dialog === null) return;
+				
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
 				dialog.btnOK.value = "Hide";
