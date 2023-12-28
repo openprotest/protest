@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Text;
 
 namespace CacheGenerator;
@@ -18,11 +19,11 @@ public class Generator : IIncrementalGenerator {
 
         context.RegisterSourceOutput(
             compilation,
-            (spc, source) => Execute(spc, source.Left, source.Right, context)
+            (spc, source) => Execute(spc, source.Left)
         );
     }
 
-    private void Execute(SourceProductionContext context, Compilation compilation, ImmutableArray<ClassDeclarationSyntax> classes, IncrementalGeneratorInitializationContext initializationContext) {
+    private void Execute(SourceProductionContext context, Compilation compilation) {
         //if (!Debugger.IsAttached) { Debugger.Launch(); }
 
         string rootPath = compilation.SyntaxTrees
@@ -38,20 +39,32 @@ public class Generator : IIncrementalGenerator {
 
         builder.AppendLine("using System.Collections.Generic;");
         builder.AppendLine("namespace Protest.Http;");
-        builder.AppendLine("public static class FrontSerialization {");
+        builder.AppendLine("public static class StaticCacheSerialization {");
 
         builder.AppendLine("    public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {");
+        
+        LoadDirectory(frontPath, frontPath, builder);
 
-        DirectoryInfo frontDirectory = new DirectoryInfo(frontPath);
-        FileInfo[] files = frontDirectory.GetFiles();
+        builder.AppendLine("    };");
+
+        builder.AppendLine("}");
+
+        context.AddSource("StaticCacheSerialization.g.cs", builder.ToString());
+    }
+
+    private void LoadDirectory(string front, string target, StringBuilder builder) {
+        DirectoryInfo targetDirectory = new DirectoryInfo(target);
+        if (!targetDirectory.Exists) { return; }
+
+        FileInfo[] files = targetDirectory.GetFiles();
         for (int i = 0; i < files.Length; i++) {
             byte[]? content = LoadFile(files[i].FullName);
             if (content is null) { continue; }
 
-            builder.Append($"        {{ @\"{files[i].FullName}\", new byte[] {{");
+            builder.Append($"        {{ @\"{files[i].FullName.Substring(front.Length)}\", new byte[] {{");
 
             for (int j = 0; j < content.Length; j++) {
-                if (j > 0) builder.Append(",");
+                if (j > 0) { builder.Append(","); }
                 builder.Append(content[j].ToString());
             }
 
@@ -59,11 +72,10 @@ public class Generator : IIncrementalGenerator {
             builder.AppendLine();
         }
 
-        builder.AppendLine("    };");
-
-        builder.AppendLine("}");
-
-        context.AddSource("FrontSerialization.g.cs", builder.ToString());
+        DirectoryInfo[] subdirectories = targetDirectory.GetDirectories();
+        for (int i = 0; i < subdirectories.Length; i++) {
+            LoadDirectory(front, subdirectories[i].FullName, builder);
+        }
     }
 
     private byte[]? LoadFile(string filePath) {
@@ -72,8 +84,13 @@ public class Generator : IIncrementalGenerator {
 
         using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using BinaryReader br = new BinaryReader(fs);
-
         byte[] bytes = br.ReadBytes((int)file.Length);
-        return bytes;
+
+        MemoryStream ms = new MemoryStream();
+        using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
+            zip.Write(bytes, 0, bytes.Length);
+        }
+
+        return ms.ToArray();
     }
 }

@@ -7,9 +7,8 @@
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
-    <NoWarn>IDE0090</NoWarn>
-    <NoWarn>IDE0300</NoWarn>
-    
+    <NoWarn>IDE0090; IDE0300</NoWarn>
+
   </PropertyGroup>
 
   <ItemGroup>
