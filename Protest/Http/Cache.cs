@@ -77,11 +77,12 @@ internal sealed class Cache {
 
     public readonly Dictionary<string, Entry> cache = new Dictionary<string, Entry>();
 
-    public Cache(string path, bool onlyFiles = false) {
+    public Cache(string path) {
         birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
         this.path = path;
-
-        if (!onlyFiles) { LoadStatic(); }
+#if !DEBUG
+        LoadStatic();
+#endif
         LoadFiles();
 
 #if DEBUG

@@ -10,6 +10,7 @@ class Oversight extends Window {
 		this.autoReconnect = true;
 		this.connectRetries = 0;
 		this.statsList = [];
+		this.hideConsoleOnce = true;
 
 		this.AddCssDependencies("oversight.css");
 		this.AddCssDependencies("wmi.css");
@@ -140,6 +141,11 @@ class Oversight extends Window {
 			this.socket.send("ping=true");
 			this.socket.send("cpu=true");
 			this.socket.send("cores=true");
+
+			if (this.hideConsoleOnce) {
+				this.hideConsoleOnce = false;
+				setTimeout(()=>this.toggleConsoleButton.onclick(), 400);
+			}
 		};
 
 		this.socket.onmessage = event=> {
