@@ -24,7 +24,7 @@ The suite automatically populates the database by targeting the domain controlle
 ### How to use:
 Pro-test is portable and self-contained. You can access its web interface via the loopback address.
 If you wish to interface from a remote host, tweak the http_ip and http_port parameters in the protest.cfg file. Requests from IPs other than loopback require authentication.
-If Pro-test fails to bind to the configured endpoint, it will try to bind the a fallback endpoint (127.0.0.1:8080).
+If Pro-test fails to bind to the configured endpoint, it will attempt to bind to a fallback endpoint (127.0.0.1:8080).
 
 Pro-test inherets the access level of the user who runs it.
 In order to utilizes protocols like WMI and Active Directory services, it is required to run as a Network Administrator.
