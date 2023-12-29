@@ -69,7 +69,6 @@ public static class Data {
 
     public static void InitializeDirectories() {
         DirectoryInfo[] dirs = new DirectoryInfo[] {
-            new DirectoryInfo(DIR_KNOWLADGE),
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
             new DirectoryInfo(DIR_LIFELINE),
@@ -81,7 +80,6 @@ public static class Data {
             new DirectoryInfo(DIR_DEBIT_RETURNED),
             new DirectoryInfo(DIR_DEBIT_TEMPLATE),
             new DirectoryInfo(DIR_CONFIG),
-            new DirectoryInfo(DIR_ACL),
             new DirectoryInfo(DIR_DATA),
             new DirectoryInfo(DIR_DEVICES),
             new DirectoryInfo(DIR_USERS)
@@ -89,8 +87,9 @@ public static class Data {
 
         for (int i = 0; i < dirs.Length; i++) {
             try {
-                if (!dirs[i].Exists)
+                if (!dirs[i].Exists) {
                     dirs[i].Create();
+                }
             }
             catch (Exception ex) {
                 Logger.Error(ex);

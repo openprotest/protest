@@ -168,7 +168,8 @@ class Encoder extends Window {
 		case "Base-64":
 			try {
 				this.txtA.textContent = atob(this.txtB.textContent);
-			} catch (ex) {
+			}
+			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 			break;

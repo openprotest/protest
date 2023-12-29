@@ -488,7 +488,8 @@ class Chat extends Window {
 				this.chatBox.appendChild(remoteAudio);
 				try {
 					remoteAudio.play();
-				} catch {}
+				}
+				catch {}
 			}
 			else if (track.kind === "video") {
 				const remoteVideo = document.createElement("video");
@@ -497,7 +498,8 @@ class Chat extends Window {
 				this.chatBox.appendChild(remoteVideo);
 				try {
 					remoteVideo.play();
-				} catch {}
+				}
+				catch {}
 			}*/
 		};
 

@@ -515,6 +515,10 @@ internal static class Auth {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
+            if (!Directory.Exists(Data.DIR_ACL)) {
+                Directory.CreateDirectory(Data.DIR_ACL);
+            }
+
             File.WriteAllBytes($"{Data.DIR_ACL}{Data.DELIMITER}{access.username}", cipher);
         }
         catch (Exception ex) {

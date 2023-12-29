@@ -131,8 +131,8 @@ internal static class Update {
             }
         }
 
-        DirectoryInfo dirIp = new DirectoryInfo(Data.DIR_IP_LOCATION);
-        if (!dirIp.Exists) dirIp.Create();
+        if (!Directory.Exists(Data.DIR_KNOWLADGE)) { Directory.CreateDirectory(Data.DIR_KNOWLADGE); }
+        if (!Directory.Exists(Data.DIR_IP_LOCATION)) { Directory.CreateDirectory(Data.DIR_IP_LOCATION); }
 
         for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
@@ -283,8 +283,8 @@ internal static class Update {
             }
         }
 
-        DirectoryInfo dirProxy = new DirectoryInfo(Data.DIR_PROXY);
-        if (!dirProxy.Exists) dirProxy.Create();
+        if (!Directory.Exists(Data.DIR_KNOWLADGE)) { Directory.CreateDirectory(Data.DIR_KNOWLADGE); }
+        if (!Directory.Exists(Data.DIR_PROXY)) { Directory.CreateDirectory(Data.DIR_PROXY); }
 
         for (int i = 0; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
@@ -349,49 +349,55 @@ internal static class Update {
             return String.Compare(a.mac, b.mac);
         });
 
-        using FileStream stream = new FileStream(Data.FILE_MAC, FileMode.OpenOrCreate);
-        using BinaryWriter writer = new BinaryWriter(stream);
+        try {
+            if (!Directory.Exists(Data.DIR_KNOWLADGE)) { Directory.CreateDirectory(Data.DIR_KNOWLADGE); }
 
+            using FileStream stream = new FileStream(Data.FILE_MAC, FileMode.OpenOrCreate);
+            using BinaryWriter writer = new BinaryWriter(stream);
 
-        uint index = 0;
-        List<string> dictionary = new List<string>();
-        List<uint> position = new List<uint>();
+            uint index = 0;
+            List<string> dictionary = new List<string>();
+            List<uint> position = new List<uint>();
 
-        uint dictStart = (uint)(4 + (3 + 4) * list.Count); //7
+            uint dictStart = (uint)(4 + (3 + 4) * list.Count); //7
 
-        writer.Write(dictStart);
+            writer.Write(dictStart);
 
-        for (int i = 0; i < list.Count; i++) {
-            uint ptr;
+            for (int i = 0; i < list.Count; i++) {
+                uint ptr;
 
-            if (dictionary.Contains(list[i].vendor)) {
-                ptr = position[dictionary.IndexOf(list[i].vendor)];
+                if (dictionary.Contains(list[i].vendor)) {
+                    ptr = position[dictionary.IndexOf(list[i].vendor)];
+                }
+                else {
+                    ptr = index;
+                    dictionary.Add(list[i].vendor);
+                    position.Add(index);
+                    index += (uint)list[i].vendor.Length + 1;
+                }
+
+                writer.Write(byte.Parse(list[i].mac[..2], NumberStyles.HexNumber));
+                writer.Write(byte.Parse(list[i].mac[2..4], NumberStyles.HexNumber));
+                writer.Write(byte.Parse(list[i].mac[4..6], NumberStyles.HexNumber));
+                writer.Write(ptr);
             }
-            else {
-                ptr = index;
-                dictionary.Add(list[i].vendor);
-                position.Add(index);
-                index += (uint)list[i].vendor.Length + 1;
+
+            for (int i = 0; i < dictionary.Count; i++) {
+                string v = dictionary[i];
+                for (int j = 0; j < v.Length; j++) {
+                    byte b = (byte)v[j];
+
+                    writer.Write(b);
+                }
+                writer.Write((byte)0); //null termination
             }
 
-            writer.Write(byte.Parse(list[i].mac[..2], NumberStyles.HexNumber));
-            writer.Write(byte.Parse(list[i].mac[2..4], NumberStyles.HexNumber));
-            writer.Write(byte.Parse(list[i].mac[4..6], NumberStyles.HexNumber));
-            writer.Write(ptr);
+            writer.Flush();
+            writer.Close();
         }
-
-        for (int i = 0; i < dictionary.Count; i++) {
-            string v = dictionary[i];
-            for (int j = 0; j < v.Length; j++) {
-                byte b = (byte)v[j];
-
-                writer.Write(b);
-            }
-            writer.Write((byte)0); //null termination
+        catch {
+            return Data.CODE_FAILED.Array;
         }
-
-        writer.Flush();
-        writer.Close();
 
         return Data.CODE_OK.Array;
     }
@@ -434,20 +440,27 @@ internal static class Update {
             return 0;
         });
 
-        using FileStream stream = new FileStream(Data.FILE_TOR, FileMode.OpenOrCreate);
-        using BinaryWriter writer = new BinaryWriter(stream);
-        for (int i = 0; i < list.Count; i++) {
-            writer.Write(list[i][3]); //reversed
-            writer.Write(list[i][2]);
-            writer.Write(list[i][1]);
-            writer.Write(list[i][0]);
+        try {
+            if (!Directory.Exists(Data.DIR_KNOWLADGE)) { Directory.CreateDirectory(Data.DIR_KNOWLADGE); }
+
+            using FileStream stream = new FileStream(Data.FILE_TOR, FileMode.OpenOrCreate);
+            using BinaryWriter writer = new BinaryWriter(stream);
+            for (int i = 0; i < list.Count; i++) {
+                writer.Write(list[i][3]); //reversed
+                writer.Write(list[i][2]);
+                writer.Write(list[i][1]);
+                writer.Write(list[i][0]);
+            }
+
+            writer.Flush();
+            stream.Flush();
+
+            writer.Close();
+            stream.Close();
         }
-
-        writer.Flush();
-        stream.Flush();
-
-        writer.Close();
-        stream.Close();
+        catch {
+            return Data.CODE_FAILED.Array;
+        }
 
         return Data.CODE_OK.Array;
     }
