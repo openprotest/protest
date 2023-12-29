@@ -12,8 +12,7 @@ jobs:
   analyze:
     name: Analyze
 
-    #runs-on: ubuntu-latest
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
 
     permissions:
       actions: read
@@ -23,6 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
         language: [ 'csharp' ]
 
     steps:
