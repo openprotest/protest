@@ -38,7 +38,7 @@ public class Generator : IIncrementalGenerator {
 
         builder.AppendLine("using System.Collections.Generic;");
         builder.AppendLine("namespace Protest.Http;");
-        builder.AppendLine("public static class StaticCacheSerialization {");
+        builder.AppendLine("internal static class StaticCacheSerialization {");
 
         builder.AppendLine("    public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {");
         

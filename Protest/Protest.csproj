@@ -1,70 +1,93 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Product>Pro-test</Product>
-        <AssemblyName>pro-test</AssemblyName>
-        <Company>veniware</Company>
-        <Authors>andreas venizelou</Authors>
-        <Description>A management base for System Admins</Description>
-        <ApplicationIcon>pro-test.ico</ApplicationIcon>
-        <PackageIcon>pro-test.png</PackageIcon>
-        <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
+  <PropertyGroup>
+    <Product>Pro-test</Product>
+    <AssemblyName>pro-test</AssemblyName>
+    <Company>veniware</Company>
+    <Authors>andreas venizelou</Authors>
+    <Description>A management base for System Admins</Description>
+    <ApplicationIcon>pro-test.ico</ApplicationIcon>
+    <PackageIcon>pro-test.png</PackageIcon>
+    <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <LangVersion>11</LangVersion>
-        <Platforms>x64</Platforms>
-        <PlatformTarget>x64</PlatformTarget>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>11</LangVersion>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
 
-        <ServerGarbageCollection>true</ServerGarbageCollection>
-        <Nullable>disable</Nullable>
-        <ImplicitUsings>disable</ImplicitUsings>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <!--<Deterministic>false</Deterministic>-->
-        <!--<Version>5.0.0</Version>-->
-        <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
+    <!--<Deterministic>false</Deterministic>-->
+    <!--<Version>5.0.0</Version>-->
+    <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
 
-        <Deterministic>false</Deterministic>
-        <VersionSuffix>5.0.$([System.DateTime]::UtcNow.ToString(yyMM))0.$([System.DateTime]::UtcNow.ToString(ddhh))</VersionSuffix>
-        <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
-        <Version>$(VersionSuffix)</Version>
+    <Deterministic>false</Deterministic>
+    <VersionSuffix>5.0.$([System.DateTime]::UtcNow.ToString(yyMM))0.$([System.DateTime]::UtcNow.ToString(ddhh))</VersionSuffix>
+    <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
+    <Version>$(VersionSuffix)</Version>
 
-        <NoWarn>IDE0090</NoWarn>
+    <NoWarn>IDE0090</NoWarn>
 
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
-        <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
-        <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
 
-        <SelfContained>false</SelfContained>
-      
-        <PublisherName>Pro-test</PublisherName>
-        <PublishAot>false</PublishAot>
-        <PublishReadyToRun>true</PublishReadyToRun>
-        <PublishSingleFile>true</PublishSingleFile>
-        <Copyright>2023 veniware. Released into the public domain.</Copyright>
-    </PropertyGroup>
+    <SelfContained>false</SelfContained>
 
-    <ItemGroup>
-        <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
-        <PackageReference Include="SSH.NET" Version="2023.0.0" />
-        <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
-        <PackageReference Include="System.Management" Version="8.0.0" />
-    </ItemGroup>
+    <PublisherName>Pro-test</PublisherName>
+    <PublishAot>false</PublishAot>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
+    <Copyright>2023 veniware. Released into the public domain.</Copyright>
+  </PropertyGroup>
 
-    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
+    <PackageReference Include="SSH.NET" Version="2023.0.0" />
+    <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <DefineConstants>OS_WINDOWS</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-        <DefineConstants>OS_MAC</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <DefineConstants>OS_LINUX</DefineConstants>
-    </PropertyGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
+    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <DefineConstants>OS_WINDOWS</DefineConstants>
+    <DefineConstants>ARCH_X64</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
+    <DefineConstants>OS_WINDOWS</DefineConstants>
+    <DefineConstants>ARCH_ARM64</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+    <DefineConstants>OS_MAC</DefineConstants>
+    <DefineConstants>ARCH_X64</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
+    <DefineConstants>OS_MAC</DefineConstants>
+    <DefineConstants>ARCH_ARM64</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <DefineConstants>OS_LINUX</DefineConstants>
+    <DefineConstants>ARCH_X64</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
+    <DefineConstants>OS_LINUX</DefineConstants>
+    <DefineConstants>ARCH_ARM64</DefineConstants>
+  </PropertyGroup>
 
 </Project>
