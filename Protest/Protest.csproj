@@ -25,7 +25,7 @@
         <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
 
         <Deterministic>false</Deterministic>
-        <VersionSuffix>5.0.$([System.DateTime]::UtcNow.ToString(yyMM)).$([System.DateTime]::UtcNow.ToString(ddhh))</VersionSuffix>
+        <VersionSuffix>5.0.$([System.DateTime]::UtcNow.ToString(yyMM))0.$([System.DateTime]::UtcNow.ToString(ddhh))</VersionSuffix>
         <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
         <Version>$(VersionSuffix)</Version>
 
@@ -33,7 +33,6 @@
 
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-
 
         <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
         <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
@@ -45,18 +44,27 @@
         <PublishReadyToRun>true</PublishReadyToRun>
         <PublishSingleFile>true</PublishSingleFile>
         <Copyright>2023 veniware. Released into the public domain.</Copyright>
-
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
-      <PackageReference Include="SSH.NET" Version="2023.0.0" />
-      <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
-      <PackageReference Include="System.Management" Version="8.0.0" />
+        <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
+        <PackageReference Include="SSH.NET" Version="2023.0.0" />
+        <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
+        <PackageReference Include="System.Management" Version="8.0.0" />
     </ItemGroup>
-  
-    <ItemGroup>
-      <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
+
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
     </ItemGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <DefineConstants>OS_WINDOWS</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <DefineConstants>OS_MAC</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <DefineConstants>OS_LINUX</DefineConstants>
+    </PropertyGroup>
 
 </Project>

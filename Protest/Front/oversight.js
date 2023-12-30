@@ -29,7 +29,7 @@ class Oversight extends Window {
 
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
-		this.addStatButton = this.AddToolbarButton("Add", "mono/add.svg?light");
+		this.addStatButton = this.AddToolbarButton("Add chart", "mono/add.svg?light");
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
@@ -50,7 +50,7 @@ class Oversight extends Window {
 		this.content.append(this.scrollable, this.consoleBox, this.toggleConsoleButton);
 
 		this.connectButton.onclick = ()=> this.InitializeSocketConnection();
-		this.addStatButton.onclick = ()=> this.AddStat();
+		this.addStatButton.onclick = ()=> this.AddChart();
 		this.startButton.onclick = ()=> this.Start();
 		this.pauseButton.onclick = ()=> this.Pause();
 
@@ -229,7 +229,7 @@ class Oversight extends Window {
 		}
 	}
 
-	async AddStat() {
+	async AddChart() {
 		if (!this.socket) {
 			this.ConfirmBox("Web-socket is disconnected.", "mono/oversight.svg", true);
 			return;
@@ -302,7 +302,7 @@ class Oversight extends Window {
 
 			const templatesBox = document.createElement("div");
 			templatesBox.style.border = "var(--clr-control) solid 1.5px";
-			templatesBox.style.gridArea = "1 / 1 / 7 / 4";
+			templatesBox.style.gridArea = "1 / 1 / 9 / 4";
 			templatesBox.style.overflowY = "scroll";
 			innerBox.appendChild(templatesBox);
 

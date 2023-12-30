@@ -14,6 +14,12 @@ using static System.Net.WebRequestMethods;
 
 namespace Protest.Http;
 
+#if !OS_WINDOWS
+public static class StaticCacheSerialization {
+    public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {};
+}
+#endif
+
 internal sealed class Cache {
     public struct Entry {
         public byte[] bytes;

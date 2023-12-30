@@ -18,9 +18,9 @@
 
 global using System;
 global using System.Linq;
+using System.Diagnostics;
 
 namespace Protest;
-
 internal class Program {
     internal static readonly string[] alternativeUriPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
