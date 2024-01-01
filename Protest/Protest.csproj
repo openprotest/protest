@@ -25,7 +25,7 @@
     <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
 
     <Deterministic>false</Deterministic>
-    <VersionSuffix>5.0.$([System.DateTime]::UtcNow.ToString(yyMM))0.$([System.DateTime]::UtcNow.ToString(ddhh))</VersionSuffix>
+    <VersionSuffix>5.0.$([System.DateTime]::UtcNow.ToString(yyMM))0.$([System.DateTime]::UtcNow.ToString(dd))</VersionSuffix>
     <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
     <Version>$(VersionSuffix)</Version>
 
@@ -35,7 +35,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+      <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
 
     <SelfContained>false</SelfContained>
 
@@ -53,41 +53,8 @@
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
+  <ItemGroup Condition="'$(Configuration)' == 'RELEASE'">
+    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer"/>
   </ItemGroup>
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
-    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
-  </ItemGroup>
-
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-    <DefineConstants>OS_WINDOWS</DefineConstants>
-    <DefineConstants>ARCH_X64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64'">
-    <DefineConstants>OS_WINDOWS</DefineConstants>
-    <DefineConstants>ARCH_ARM64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-    <DefineConstants>OS_MAC</DefineConstants>
-    <DefineConstants>ARCH_X64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
-    <DefineConstants>OS_MAC</DefineConstants>
-    <DefineConstants>ARCH_ARM64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <DefineConstants>OS_LINUX</DefineConstants>
-    <DefineConstants>ARCH_X64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
-    <DefineConstants>OS_LINUX</DefineConstants>
-    <DefineConstants>ARCH_ARM64</DefineConstants>
-  </PropertyGroup>
 
 </Project>

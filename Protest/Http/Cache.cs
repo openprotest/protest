@@ -10,11 +10,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System.Text;
-using static System.Net.WebRequestMethods;
 
 namespace Protest.Http;
 
-#if !OS_WINDOWS
+#if DEBUG
 internal static class StaticCacheSerialization {
     public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {};
 }

@@ -276,27 +276,44 @@ class KeyboardTester extends Window {
 
 		this.win.onkeydown = event=> {
 			event.preventDefault();
-			this.PushHistory(event.code);
 
-			if (!(event.code in this.keyElements)) return;
-			this.keyElements[event.code].style.color = "#000";
-			this.keyElements[event.code].style.backgroundColor = "var(--clr-accent)";
-			this.keyElements[event.code].style.filter = "brightness(2.5)";
-			this.keyElements[event.code].style.boxShadow = "var(--clr-accent) 0 0 4px";
+			let code = event.code;
+			if (code === "MetaLeft") {
+				code = "OSLeft";
+			}
+			else if (code === "MetaRight") {
+				code = "OSRight";
+			}
+
+			this.PushHistory(code);
+
+			if (!(code in this.keyElements)) return;
+			this.keyElements[code].style.color = "#000";
+			this.keyElements[code].style.backgroundColor = "var(--clr-accent)";
+			this.keyElements[code].style.filter = "brightness(2.5)";
+			this.keyElements[code].style.boxShadow = "var(--clr-accent) 0 0 4px";
 		};
 
 		this.win.onkeyup = event=> {
 			event.preventDefault();
 
+			let code = event.code;
+			if (code === "MetaLeft") {
+				code = "OSLeft";
+			}
+			else if (code === "MetaRight") {
+				code = "OSRight";
+			}
+
 			if (event.key === "PrintScreen") {
-				this.PushHistory(event.code);
+				this.PushHistory(code);
 				this.keyElements["PrintScreen"].style.color = "#000";
 				this.keyElements["PrintScreen"].style.backgroundColor = "var(--clr-accent)";
 			}
 
-			if (!(event.code in this.keyElements)) return;
-			this.keyElements[event.code].style.filter = "none";
-			this.keyElements[event.code].style.boxShadow = "none";
+			if (!(code in this.keyElements)) return;
+			this.keyElements[code].style.filter = "none";
+			this.keyElements[code].style.boxShadow = "none";
 
 			this.CheckLed(event);
 		};

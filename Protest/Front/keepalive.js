@@ -6,7 +6,7 @@ const KEEP = {
 	color: "var(--clr-accent)",
 	authorization: [],
 	zones: [],
-	lastReconnect: 0,
+	reconnectCount: 0,
 	redDot: document.createElement("div"),
 	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
 
@@ -19,6 +19,8 @@ const KEEP = {
 		KEEP.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/keepalive");
 
 		KEEP.socket.onopen = ()=> {
+			KEEP.reconnectCount = 0;
+
 			if (KEEP.redDot.parentElement) {
 				container.removeChild(KEEP.redDot);
 			}
@@ -26,7 +28,7 @@ const KEEP = {
 			setTimeout(() => {
 				if (localStorage.getItem("cookie_lifetime") && parseInt(localStorage.getItem("cookie_lifetime")) != 5) {
 					KEEP.socket.send(JSON.stringify({
-						type : "update-session-ttl",
+						type: "update-session-ttl",
 						ttl: KEEP.sessionTtlMapping[localStorage.getItem("cookie_lifetime")]
 					}));
 				}
@@ -38,11 +40,11 @@ const KEEP = {
 			container.appendChild(KEEP.redDot);
 
 			setTimeout(()=> {
-				if (Date.now() - KEEP.lastReconnect < 5_000) { //5s
+				if (KEEP.reconnectCount >= 3) {
 					KEEP.DisconnectNotification();
 				}
 				else {
-					KEEP.lastReconnect = Date.now();
+					KEEP.reconnectCount++;
 					KEEP.Initialize();
 				}
 			}, 1000);

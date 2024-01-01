@@ -236,7 +236,7 @@ class Wmi extends Window {
 				}
 
 				if (matched) {
-					let newClass = document.createElement("div");
+					const newClass = document.createElement("div");
 					newClass.textContent = this.wmi_classes.classes[i].class;
 					lstClasses.appendChild(newClass);
 
@@ -265,12 +265,14 @@ class Wmi extends Window {
 								propertiesList[j] = chkProperty.checked;
 								
 								let count = 0;
-								for (let k = 0; k < propertiesList.length; k++)
+								for (let k = 0; k < propertiesList.length; k++) {
 									if (propertiesList[k])
 										count++;
+								}
 
-								if (count === 0 || count === propertiesList.length)
+								if (count === 0 || count === propertiesList.length) {
 									txtPreview.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
+								}
 								else {
 									let sel = "";
 									for (let k = 0; k < propertiesList.length; k++)
@@ -317,7 +319,6 @@ class Wmi extends Window {
 			for (let i = 0; i < propertyCheckboxes.length; i++) {
 				propertyCheckboxes[i].checked = true;
 				propertiesList[i] = true;
-
 			}
 
 			propertyCheckboxes[0].onchange();

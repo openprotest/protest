@@ -4,13 +4,19 @@ class Oversight extends Window {
 		this.params = params ?? { file: null};
 		
 		this.params.stats ??= [];
-
+		
 		this.socket = null;
 		this.link = LOADER.devices.data[this.params.file];
 		this.autoReconnect = true;
 		this.connectRetries = 0;
 		this.statsList = [];
 		this.hideConsoleOnce = true;
+
+		if (params.file && !this.link) {
+			this.SetTitle("not found");
+			this.ConfirmBox("Device no longer exists", true).addEventListener("click", ()=>this.Close());
+			return;
+		}
 
 		this.AddCssDependencies("oversight.css");
 		this.AddCssDependencies("wmi.css");
@@ -69,7 +75,6 @@ class Oversight extends Window {
 		if (this.socket) {
 			this.socket.close();
 		}
-
 		super.Close();
 	}
 
@@ -83,7 +88,7 @@ class Oversight extends Window {
 		
 		let colors = [];
 		let ips = this.link.ip.v.split(";").map(o=>o.trim());
-		
+
 		for (let i=0; i<ips.length; i++) {
 			if (!ips[i].match(DeviceView.regexIPv4)) { continue; }
 			let split = ips[i].split(".").map(o=>parseInt(o));
@@ -94,7 +99,7 @@ class Oversight extends Window {
 				colors.push(KEEP.zones[j].color);
 			}
 		}
-		
+
 		if (colors.length === 0) { return; }
 		
 		let gradient = "linear-gradient(";
@@ -111,7 +116,7 @@ class Oversight extends Window {
 		}
 		gradient += `, ${colors[colors.length-1]} 100%`;
 		gradient += ")";
-		
+
 		this.emblem = document.createElement("div");
 		this.emblem.className = "task-icon-emblem";
 		this.task.appendChild(this.emblem);
@@ -217,7 +222,7 @@ class Oversight extends Window {
 			const response = await fetch("wmiclasses.json");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -237,7 +242,7 @@ class Oversight extends Window {
 
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 
@@ -344,6 +349,7 @@ class Oversight extends Window {
 			"Table",
 			//"Histogram"
 		];
+
 		for (let i=0; i<formatOptionsArray.length; i++) {
 			const newOption = document.createElement("option");
 			newOption.value = formatOptionsArray[i];
@@ -363,7 +369,7 @@ class Oversight extends Window {
 			txtClassFilter.type = "text";
 			txtClassFilter.placeholder = "Find..";
 			txtClassFilter.style.gridArea = "1 / 1";
-	
+
 			const btnNone = document.createElement("input");
 			btnNone.type = "button";
 			btnNone.style.position = "absolute";
@@ -375,7 +381,7 @@ class Oversight extends Window {
 			btnNone.style.backgroundSize = "24px 24px";
 			btnNone.style.backgroundPosition = "center";
 			btnNone.style.backgroundRepeat = "no-repeat";
-	
+
 			const btnAll = document.createElement("input");
 			btnAll.type = "button";
 			btnAll.style.position = "absolute";
@@ -387,15 +393,15 @@ class Oversight extends Window {
 			btnAll.style.backgroundSize = "24px 24px";
 			btnAll.style.backgroundPosition = "center";
 			btnAll.style.backgroundRepeat = "no-repeat";
-	
+
 			innerBox.append(txtClassFilter, btnNone, btnAll);
-	
+
 			const classesBox = document.createElement("div");
 			classesBox.className = "wmi-classes-list";
 			classesBox.style.border = "var(--clr-control) solid 1.5px";
 			classesBox.style.gridArea = "3 / 1 / 7 / 2";
 			classesBox.style.overflowY = "scroll";
-	
+
 			const propertiesBox = document.createElement("div");
 			propertiesBox.className = "wmi-properties-list";
 			propertiesBox.style.border = "var(--clr-control) solid 1.5px";
@@ -454,7 +460,7 @@ class Oversight extends Window {
 					txtClassFilter.oninput();
 				}
 			};
-	
+
 			let selected = null;
 			let propertiesList = [];
 			let propertyCheckboxes = [];
@@ -482,7 +488,7 @@ class Oversight extends Window {
 					}
 	
 					if (matched) {
-						let newClass = document.createElement("div");
+						const newClass = document.createElement("div");
 						newClass.textContent = wmiClasses.classes[i].class;
 						classesBox.appendChild(newClass);
 	
@@ -491,7 +497,7 @@ class Oversight extends Window {
 	
 							propertiesList = [];
 							propertyCheckboxes = [];
-	
+
 							propertiesBox.textContent = "";
 							for (let j = 0; j < wmiClasses.classes[i].properties.length; j++) {
 								const divProperty = document.createElement("div");
@@ -500,29 +506,31 @@ class Oversight extends Window {
 								chkProperty.checked = false;
 								propertyCheckboxes.push(chkProperty);
 								divProperty.appendChild(chkProperty);
-	
+
 								propertiesList.push(false);
 	
 								this.AddCheckBoxLabel(divProperty, chkProperty, wmiClasses.classes[i].properties[j]);
 								propertiesBox.appendChild(divProperty);
-	
+
 								if (filter && wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
 									divProperty.scrollIntoView({ behavior: "smooth"});
 									setTimeout(()=>{divProperty.style.animation = "highlight .8s 1"}, 500);
 								}
-	
+
 								selected = newClass;
 								selected.style.backgroundColor = "var(--clr-select)";
-							}	
+							}
+
+							queryInput.value = "SELECT * FROM " + wmiClasses.classes[i].class;
+
 						};
-	
+
 					}
 				}
 			};
-	
+
 			btnNone.onclick = ()=> {
 				if (propertyCheckboxes.length === 0) return;
-	
 				for (let i = 0; i < propertyCheckboxes.length; i++) {
 					propertyCheckboxes[i].checked = false;
 					propertiesList[i] = false;
@@ -530,10 +538,9 @@ class Oversight extends Window {
 				
 				//propertyCheckboxes[0].onchange();
 			};
-	
+
 			btnAll.onclick = ()=> {
 				if (propertyCheckboxes.length === 0) return;
-	
 				for (let i = 0; i < propertyCheckboxes.length; i++) {
 					propertyCheckboxes[i].checked = true;
 					propertiesList[i] = true;
@@ -567,7 +574,7 @@ class Oversight extends Window {
 		this.startButton.disabled = false;
 		this.pauseButton.disabled = true;
 	}
-	
+
 	CreateChart(name, height, options) {
 		const container = document.createElement("div");
 		container.className = "oversight-graph-container";
@@ -797,7 +804,7 @@ class Oversight extends Window {
 			Update: Update
 		};
 	}
-	
+
 	CreateDeltaChart(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
