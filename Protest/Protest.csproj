@@ -11,7 +11,7 @@
 
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>11</LangVersion>
+    <LangVersion>12</LangVersion>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
 
@@ -43,7 +43,7 @@
     <PublishAot>false</PublishAot>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
-    <Copyright>2023 veniware. Released into the public domain.</Copyright>
+    <Copyright>2024 veniware. Released into the public domain.</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

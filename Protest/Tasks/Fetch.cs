@@ -1046,7 +1046,7 @@ internal static class Fetch {
                     });
                 }
 
-                foreach (var attr in attributes) {
+                foreach (KeyValuePair<string, Database.Attribute> attr in attributes) {
                     if (attr.Key.Contains("password") && filename is not null) {
                         string password = GetHiddenAttribute(uri, cookieContainer, $"db/getequiprop&file={filename}&property={attr.Key.ToUpper()}");
                         attributes[attr.Key].value = password;
@@ -1123,7 +1123,7 @@ internal static class Fetch {
                     });
                 }
 
-                foreach (var attr in attributes) {
+                foreach (KeyValuePair<string, Database.Attribute> attr in attributes) {
                     if (attr.Key.Contains("password") && filename is not null) {
                         string password = GetHiddenAttribute(uri, cookieContainer, $"db/getuserprop&file={filename}&property={attr.Key.ToUpper()}");
                         attributes[attr.Key].value = password;

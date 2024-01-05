@@ -3,6 +3,7 @@
 #define BROTLI
 #endif
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
@@ -154,7 +155,7 @@ public sealed class Listener {
 
         Dictionary<string, string> parameters = new Dictionary<string, string>();
 
-        var span = queryString.AsSpan();
+        ReadOnlySpan<char> span = queryString.AsSpan();
         if (span.StartsWith("?")) span = span[1..];
 
         while (!span.IsEmpty) {

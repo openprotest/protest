@@ -203,7 +203,7 @@ class DeviceView extends View {
 		}
 
 		if (this.link.ports) {
-			let ports = this.link["ports"].v.split(";").map(o=> parseInt(o.trim()));
+			let ports = this.link.ports.v.split(";").map(o=> parseInt(o.trim()));
 
 			if (ports.includes(445) && "operating system" in this.link) { //wmi service 445
 
@@ -256,20 +256,22 @@ class DeviceView extends View {
 				btnProcesses.onclick = ()=> {
 					const wmi = new Wmi({target:host.split(";")[0].trim(), query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
 					wmi.SetIcon("mono/console.svg");
-					if (!this.link.name || this.link["name"].v.length == 0)
+					if (!this.link.name || this.link.name.v.length == 0) {
 						wmi.SetTitle("[untitled] - Processes");
-					else
-						wmi.SetTitle(this.link["name"].v + " - Processes");
+					}
+					else {
+						wmi.SetTitle(this.link.name.v + " - Processes");
+					}
 				};
 				
 				const btnServices = this.CreateSideButton("mono/service.svg", "Services");
 				btnServices.onclick = ()=> {
 					const wmi = new Wmi({target: host.split(";")[0].trim(), query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
 					wmi.SetIcon("mono/service.svg");
-					if (!this.link.name || this.link["name"].v.length==0)
+					if (!this.link.name || this.link.name.v.length==0)
 						wmi.SetTitle("[untitled] - Processes");
 					else
-						wmi.SetTitle(this.link["name"].v + " - Services");
+						wmi.SetTitle(this.link.name.v + " - Services");
 				};
 
 				const btnOversight = this.CreateSideButton("mono/oversight.svg", "Resources oversight");
@@ -556,13 +558,13 @@ class DeviceView extends View {
 					this.floating.appendChild(linkIcon);
 
 					if (LOADER.devices.data[file].name) {
-						linkIcon.textContent = LOADER.devices.data[file]["name"].v;
+						linkIcon.textContent = LOADER.devices.data[file].name.v;
 					}
 					else if (LOADER.devices.data[file].hostname) {
-						linkIcon.textContent = file["hostname"].v;
+						linkIcon.textContent = file.hostname.v;
 					}
 					else if (LOADER.devices.data[file].ip) {
-						linkIcon.textContent = LOADER.devices.data[file]["ip"].v;
+						linkIcon.textContent = LOADER.devices.data[file].ip.v;
 					}
 
 					list[i].frontElement.ondblclick = ()=> {
@@ -577,8 +579,9 @@ class DeviceView extends View {
 				}
 
 				let x = front.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
-				if (x > this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8)
+				if (x > this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8) {
 					x = this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8;
+				}
 
 				this.floating.style.left = `${x}px`;
 				this.floating.style.top = `${front.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
@@ -1383,11 +1386,14 @@ class DeviceView extends View {
 					let line = [];
 
 					let temp = lines[i].split("\"");
-					for (let j=0; j<temp.length; j++)
-						if (j % 2 === 0)
+					for (let j=0; j<temp.length; j++) {
+						if (j % 2 === 0) {
 							line.push(temp[j]);
-						else
+						}
+						else {
 							line.push(`\"${temp[j]}\"`);
+						}
+					}
 
 					for (let j=0; j<line.length; j++) {
 						if (line[j].length === 0) continue;
