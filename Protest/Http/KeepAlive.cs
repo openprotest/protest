@@ -95,18 +95,20 @@ internal static class KeepAlive {
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            //Logger.Error(ex);
             ctx.Response.Close();
-            return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            ctx.Response.Close();
             Logger.Error(ex);
+            //ctx.Response.Close();
         }
-        catch {
+        catch (Exception ex) {
+            Logger.Error(ex);
             ctx.Response.Close();
         }
-
-        connections.Remove(ws, out _);
+        finally {
+            connections.Remove(ws, out _);
+        }
     }
 
     public static async void CloseConnection(string sessionId) {

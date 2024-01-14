@@ -18,7 +18,7 @@ class Settings extends Tabs {
 		this.tabZones = this.AddTab("Zones", "mono/router.svg", "Network zones");
 		this.tabEmailProfiles = this.AddTab("SMTP profiles", "mono/email.svg");
 		this.tabAd = this.AddTab("Active directory", "mono/directory.svg");
-		this.tabGraph = this.AddTab("Microsoft Graph", "mono/msgraph.svg");
+		this.tabGraph = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
 		this.tabZones.onclick = ()=> this.ShowZones();
 		this.tabEmailProfiles.onclick = ()=> this.ShowEmailProfiles();
@@ -139,7 +139,7 @@ class Settings extends Tabs {
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
 		}
-		
+
 		titleBar.append(lblName, lblNetwork, lblColor);
 
 		this.zonesList = document.createElement("div");
@@ -166,7 +166,6 @@ class Settings extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this zone?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.zones.splice(index, 1);
 				this.SaveZones();
-	
 				this.zonesList.removeChild(this.zonesList.childNodes[index]);
 			});
 		};
@@ -273,7 +272,7 @@ class Settings extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.profiles.splice(index, 1);
 				this.SaveProfiles();
-	
+
 				this.profilesList.removeChild(this.profilesList.childNodes[index]);
 				this.profilesTestButton.disabled = true;
 			});
@@ -331,7 +330,7 @@ class Settings extends Tabs {
 					},250);
 				}
 			};
-	
+
 			recipientInput.onkeydown = event=> {
 				if (event.key === "Enter") {
 					dialog.btnOK.click();
@@ -428,7 +427,7 @@ class Settings extends Tabs {
 				networkLabel.style.width = "33%";
 				networkLabel.style.lineHeight = "32px";
 				networkLabel.textContent = json[i].network;
-				
+
 				const colorBox = document.createElement("div");
 				colorBox.style.display = "inline-block";
 				colorBox.style.top = "4px";
@@ -465,7 +464,7 @@ class Settings extends Tabs {
 			const response = await fetch("config/smtpprofiles/list");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -482,15 +481,15 @@ class Settings extends Tabs {
 				const serverLabel = document.createElement("div");
 				serverLabel.textContent = json[i].server;
 				labels.push(serverLabel);
-		
+
 				const portLabel = document.createElement("div");
 				portLabel.textContent = json[i].port;
 				labels.push(portLabel);
-		
+
 				const usernameLabel = document.createElement("Sender");
 				usernameLabel.textContent = json[i].username;
 				labels.push(usernameLabel);
-		
+
 				for (let j = 0; j < labels.length; j++) {
 					labels[j].style.display = "inline-block";
 					labels[j].style.top = "0";
@@ -503,7 +502,7 @@ class Settings extends Tabs {
 					labels[j].style.boxSizing = "border-box";
 					labels[j].style.paddingLeft = "4px";
 				}
-				
+
 				element.append(serverLabel, portLabel, usernameLabel);
 
 				element.onclick = ()=> {

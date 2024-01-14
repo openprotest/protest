@@ -123,7 +123,7 @@
 
 #menufilter {
 	position: absolute;
-	left: 140px;
+	left: calc(50% - 100px);
 	top: 76px;
 	width: 200px;
 	height: 34px;
@@ -165,7 +165,7 @@
 	position: absolute;
 	left: 6px;
 	right: 6px;
-	top: 120px;
+	top: 116px;
 	bottom: 56px;
 
 	color: #c0c0c0;
@@ -488,6 +488,14 @@
 		bottom: 0 !important;
 		width: 100% !important;
 		height: 100% !important;
+	}
+}
+
+@media only screen and (max-width: 240px) {
+	#menufilter {
+		opacity: 0 !important;
+		visibility: hidden !important;
+		transition-duration: .2s;
 	}
 }
 

@@ -7,13 +7,13 @@ class DeviceView extends View {
 		["mono/portscan.svg", "network"],
 		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed",
 		"overwriteprotocol",
-	
+
 		[".", "device"],
 		"manufacturer", "model", "serial number", "chasse type", "description",
 	
 		["mono/motherboard.svg", "motherboard"],
 		"motherboard", "motherboard manufacturer", "motherboard serial number", "bios",
-	
+
 		["mono/cpu.svg", "processor"],
 		"processor", "cpu cores", "cpu frequency", "cpu architecture", "cpu cache",
 	
@@ -22,19 +22,19 @@ class DeviceView extends View {
 	
 		["mono/diskdrive.svg", "disk drive"],
 		"disk drive", "physical disk", "logical disk",
-	
+
 		["mono/videocard.svg", "video card"],
 		"video controller", "video driver",
 	
 		["mono/os.svg", "operating system"],
 		"operating system", "os architecture", "os version", "os build", "service pack", "os serial no", "os install date",
-	
+
 		["mono/user.svg", "owner"],
 		"owner", "owner name", "location",
-	
+
 		["mono/directory.svg", "Domain information"],
 		"guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
-	
+
 		["mono/credential.svg", "credentials"],
 		"domain", "username", "password", "la password", "ssh username", "ssh password"
 	];

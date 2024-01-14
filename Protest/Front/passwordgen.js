@@ -309,7 +309,7 @@ class PassGen extends Window {
 
 	async LoadWords() {
 		try {
-			const response = await fetch("wordslist.text");
+			const response = await fetch("words.txt");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

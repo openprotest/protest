@@ -13,12 +13,6 @@ using System.Text;
 
 namespace Protest.Http;
 
-#if DEBUG
-internal static class StaticCacheSerialization {
-    public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {};
-}
-#endif
-
 internal sealed class Cache {
     public struct Entry {
         public byte[] bytes;
@@ -101,10 +95,11 @@ internal sealed class Cache {
         GC.Collect();
     }
 
+#if !DEBUG
     private void LoadStatic() {
         HandleFiles(Http.StaticCacheSerialization.cache, true);
     }
-
+#endif
     private bool LoadFiles() {
         DirectoryInfo dir = new DirectoryInfo(path);
         if (!dir.Exists) return false;

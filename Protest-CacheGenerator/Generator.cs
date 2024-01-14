@@ -40,7 +40,7 @@ public class Generator : IIncrementalGenerator {
         builder.AppendLine("namespace Protest.Http;");
         builder.AppendLine("internal static class StaticCacheSerialization {");
 
-        builder.AppendLine("    public static Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {");
+        builder.AppendLine("    public static readonly Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {");
         
         LoadDirectory(frontPath, frontPath, builder);
 
@@ -60,13 +60,16 @@ public class Generator : IIncrementalGenerator {
             byte[]? content = LoadFile(files[i].FullName);
             if (content is null) { continue; }
 
-            builder.Append($"        {{ @\"{files[i].FullName.Substring(front.Length)}\", new byte[] {{");
+            /*
+            string b64 = Convert.ToBase64String(content);
+            builder.AppendLine($"        {{ @\"{files[i].FullName.Substring(front.Length)}\", Convert.FromBase64String(\"{b64}\")}},");
+            */
 
+            builder.Append($"        {{ @\"{files[i].FullName.Substring(front.Length)}\", new byte[] {{");
             for (int j = 0; j < content.Length; j++) {
                 if (j > 0) { builder.Append(","); }
                 builder.Append(content[j].ToString());
             }
-
             builder.Append("} },");
             builder.AppendLine();
         }

@@ -4,6 +4,8 @@ class View extends Window {
 
 		this.AddCssDependencies("view.css");
 
+		this.lastWidthValue = 0;
+
 		this.content.style.overflowY = "auto";
 		this.content.style.containerType = "inline-size";
 		
@@ -13,14 +15,16 @@ class View extends Window {
 	}
 
 	AfterResize() { //override
-		if (this.content.clientWidth >= 1400) {
+		if (this.lastWidthValue < 1400 && this.content.clientWidth >= 1400) {
 			this.infoPane.style.display = "initial";
 			this.infoPane.append(this.liveA, this.liveB, this.liveC, this.liveD);
 		}
-		else {
+		else if (this.lastWidthValue >= 1400 && this.content.clientWidth < 1400){
 			this.infoPane.style.display = "none";
 			this.scroll.append(this.liveA, this.liveB, this.liveC, this.attributes, this.liveD);
 		}
+
+		this.lastWidthValue = this.content.clientWidth;
 	}
 	
 	UpdateAuthorization() { //override
@@ -137,9 +141,8 @@ class View extends Window {
 			dateBox.textContent = `${modDate.toLocaleDateString(UI.regionalFormat, {})}`;
 			infoBox.appendChild(dateBox);
 
-			let modOrigin = origin;
 			const originBox = document.createElement("div");
-			originBox.textContent = modOrigin;
+			originBox.textContent = origin;
 			infoBox.appendChild(originBox);
 		}
 

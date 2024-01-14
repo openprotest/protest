@@ -455,8 +455,10 @@ public sealed class Listener {
 
     public override string ToString() {
         string s = String.Empty;
-        foreach (string prefix in listener.Prefixes)
+        foreach (string prefix in listener.Prefixes) {
             s += (s.Length == 0 ? String.Empty : "\n") + "Listening on " + prefix;
+        }
+
         return s;
     }
 }
