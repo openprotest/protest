@@ -4,6 +4,7 @@
     <AssemblyName>pro-test</AssemblyName>
     <Company>veniware</Company>
     <Authors>andreas venizelou</Authors>
+    <Copyright>2024 veniware. Released into the public domain.</Copyright>
     <Description>A management base for System Admins</Description>
     <ApplicationIcon>pro-test.ico</ApplicationIcon>
     <PackageIcon>pro-test.png</PackageIcon>
@@ -35,7 +36,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
-      <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
 
     <SelfContained>false</SelfContained>
 
@@ -43,7 +44,7 @@
     <PublishAot>false</PublishAot>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
-    <Copyright>2024 veniware. Released into the public domain.</Copyright>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
