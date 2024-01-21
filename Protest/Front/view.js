@@ -31,7 +31,7 @@ class View extends Window {
 		super.UpdateAuthorization();
 		this.editButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
 		this.fetchButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("fetch:write");
-		this.cloneButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
+		this.copyButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
 		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
 
 		//this.InitializeAttributesList(this.link);
@@ -87,9 +87,9 @@ class View extends Window {
 		this.fetchButton.onclick = ()=> this.Fetch();
 		this.bar.appendChild(this.fetchButton);
 
-		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
-		this.cloneButton.onclick = ()=> this.Clone();
-		this.bar.appendChild(this.cloneButton);
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
+		this.copyButton.onclick = ()=> this.Copy();
+		this.bar.appendChild(this.copyButton);
 
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.deleteButton.onclick = ()=> this.Delete();
@@ -836,7 +836,7 @@ class View extends Window {
 
 	Fetch() {} //overridable
 
-	Clone() {} //overridable
+	Copy() {} //overridable
 
 	Delete() {} //overridable
 }

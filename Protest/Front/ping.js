@@ -29,7 +29,7 @@ class Ping extends Console {
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
@@ -78,21 +78,21 @@ class Ping extends Console {
 			});
 		});
 
-		this.cloneButton.addEventListener("click", ()=> {
+		this.copyButton.addEventListener("click", ()=> {
 			let paramsCopy = structuredClone(this.params);
 			paramsCopy.status = "pause";
-			const clone = new Ping(paramsCopy);
-			if (this.popOutWindow) clone.PopOut();
-			const dialog = clone.Options();
+			const copy = new Ping(paramsCopy);
+			if (this.popOutWindow) copy.PopOut();
+			const dialog = copy.Options();
 
 			const OriginalCancelClickHandler = dialog.btnCancel.onclick;
 			dialog.btnOK.onclick = ()=> {
-				clone.params.status = "play";
-				clone.Connect();
+				copy.params.status = "play";
+				copy.Connect();
 				OriginalCancelClickHandler();
 			};
 
-			dialog.btnCancel.onclick = ()=> clone.Close();
+			dialog.btnCancel.onclick = ()=> copy.Close();
 		});
 
 		this.optionsButton.onclick = ()=> this.Options();

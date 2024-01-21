@@ -156,7 +156,6 @@ internal static class Wmi {
 
         ManagementScope scope = Scope(host);
         if (scope is not null) {
-
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure")).Get();
                 string chassis = String.Empty;

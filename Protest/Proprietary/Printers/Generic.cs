@@ -10,8 +10,8 @@ internal static class Generic {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (parameters.TryGetValue("target", out string target)) {
-            return PrintTestPage(target);
+        if (parameters.TryGetValue("host", out string host)) {
+            return PrintTestPage(host);
         }
         else {
             return Data.CODE_INVALID_ARGUMENT.Array;

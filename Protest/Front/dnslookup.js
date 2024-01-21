@@ -38,7 +38,7 @@ class DnsLookup extends Console {
 		this.SetupToolbar();
 		this.reloadButton  = this.AddToolbarButton("Reload", "mono/restart.svg?light");
 		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.cloneButton   = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.copyButton   = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddToolbarSeparator();
 		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=>o[0]===this.params.type)[2]));
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
@@ -78,25 +78,25 @@ class DnsLookup extends Console {
 			});
 		});
 
-		this.cloneButton.addEventListener("click", ()=>{
+		this.copyButton.addEventListener("click", ()=>{
 			const paramsCopy = structuredClone(this.params);
 			paramsCopy.entries = [];
-			const clone = new DnsLookup(paramsCopy);
-			const dialog = clone.Options();
+			const copy = new DnsLookup(paramsCopy);
+			const dialog = copy.Options();
 
 			const OriginalCancelClickHandler = dialog.btnCancel.onclick;
 			dialog.btnOK.onclick = ()=> {
 				for (let i = 0; i < this.params.entries.length; i++) {
 					let split = this.params.entries[i].split(",");
 					if (split.length === 1) continue;
-					clone.Add(split[1], null);
+					copy.Add(split[1], null);
 				}
 
 				OriginalCancelClickHandler();
 			};
 			
 			dialog.btnCancel.onclick = ()=> {
-				clone.Close();
+				copy.Close();
 			};
 		});
 

@@ -86,8 +86,8 @@ internal static class LiveStats {
 
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
-                        string lastseen = LastSeen.HasBeenSeen(pingArray[i], true);
-                        WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastseen}\",\"source\":\"ICMP\"}}");
+                        string lastSeen = LastSeen.HasBeenSeen(pingArray[i], true);
+                        WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}");
                     }
                 }
             }
@@ -100,59 +100,61 @@ internal static class LiveStats {
                 firstReply.Status == IPStatus.Success) {
 
                 try {
-                    ManagementScope scope = Wmi.Scope(firstAlive);
-                    using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
-                    foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
-                        string caption = o.GetPropertyValue("Caption").ToString();
+                    ManagementScope scope = Protocols.Wmi.Scope(firstAlive);
+                    if (scope is not null && scope.IsConnected) {
+                        using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
+                        foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
+                            string caption = o.GetPropertyValue("Caption").ToString();
 
-                        object size = o.GetPropertyValue("Size");
-                        if (size is null) continue;
+                            object size = o.GetPropertyValue("Size");
+                            if (size is null) continue;
 
-                        object free = o.GetPropertyValue("FreeSpace");
-                        if (free is null) continue;
+                            object free = o.GetPropertyValue("FreeSpace");
+                            if (free is null) continue;
 
-                        ulong nSize = (ulong)size;
-                        ulong nFree = (ulong)free;
+                            ulong nSize = (ulong)size;
+                            ulong nFree = (ulong)free;
 
-                        if (nSize == 0) continue;
-                        double percent = Math.Round(100.0 * nFree / nSize, 1);
+                            if (nSize == 0) continue;
+                            double percent = Math.Round(100.0 * nFree / nSize, 1);
 
-                        WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", "")}$")}\",\"source\":\"WMI\"}}");
+                            WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", "")}$")}\",\"source\":\"WMI\"}}");
 
-                        if (percent < 15) {
-                            WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}");
-                        }
-                    }
-
-                    using ManagementObjectCollection currentTime = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_UTCTime")).Get();
-                    foreach (ManagementObject o in currentTime.Cast<ManagementObject>()) {
-                        int year   = (int)(uint)o.GetPropertyValue("Year");
-                        int month  = (int)(uint)o.GetPropertyValue("Month");
-                        int day    = (int)(uint)o.GetPropertyValue("Day");
-                        int hour   = (int)(uint)o.GetPropertyValue("Hour");
-                        int minute = (int)(uint)o.GetPropertyValue("Minute");
-                        int second = (int)(uint)o.GetPropertyValue("Second");
-
-                        DateTime current = new DateTime(year, month, day, hour, minute, second);
-                        DateTime now = DateTime.UtcNow;
-                        if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
-                            WsWriteText(ws, "{{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}}"u8.ToArray());
-                        }
-                    }
-
-                    if (scope is not null) {
-                        string starttime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
-                        if (starttime.Length > 0) {
-                            WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(starttime)}\",\"source\":\"WMI\"}}");
+                            if (percent < 15) {
+                                WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}");
+                            }
                         }
 
-                        string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
-                        if (username.Length > 0) {
-                            WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
-                        }
-                        wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
+                        using ManagementObjectCollection currentTime = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_UTCTime")).Get();
+                        foreach (ManagementObject o in currentTime.Cast<ManagementObject>()) {
+                            int year   = (int)(uint)o.GetPropertyValue("Year");
+                            int month  = (int)(uint)o.GetPropertyValue("Month");
+                            int day    = (int)(uint)o.GetPropertyValue("Day");
+                            int hour   = (int)(uint)o.GetPropertyValue("Hour");
+                            int minute = (int)(uint)o.GetPropertyValue("Minute");
+                            int second = (int)(uint)o.GetPropertyValue("Second");
 
-                        WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
+                            DateTime current = new DateTime(year, month, day, hour, minute, second);
+                            DateTime now = DateTime.UtcNow;
+                            if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
+                                WsWriteText(ws, "{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}"u8.ToArray());
+                            }
+                        }
+
+                        if (scope is not null) {
+                            string startTime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
+                            if (startTime.Length > 0) {
+                                WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}");
+                            }
+
+                            string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
+                            if (username.Length > 0) {
+                                WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
+                            }
+                            wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
+
+                            WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
+                        }
                     }
                 }
                 catch (NullReferenceException) { }

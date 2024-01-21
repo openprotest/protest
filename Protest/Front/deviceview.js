@@ -63,8 +63,8 @@ class DeviceView extends View {
 			this.InitializePreview();
 			setTimeout(()=>this.InitializeSubnetEmblem(), 200);
 		}
-		else if (params.clone) {
-			const origin = LOADER.devices.data[params.clone];
+		else if (params.copy) {
+			const origin = LOADER.devices.data[params.copy];
 			this.SetTitle(origin.name ? `Copy of ${origin.name.v}` : "Copy");
 			this.Edit(true);
 
@@ -197,7 +197,7 @@ class DeviceView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/wol.svg"); }
 				btnWoL.removeAttribute("busy");
 			};
 		}
@@ -217,7 +217,7 @@ class DeviceView extends View {
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
-						catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+						catch (ex) { this.ConfirmBox(ex, true, "mono/turnoff.svg"); }
 						btnPowerOff.removeAttribute("busy");
 					});
 				};
@@ -232,7 +232,7 @@ class DeviceView extends View {
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
-						catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+						catch (ex) { this.ConfirmBox(ex, true, "mono/restart.svg"); }
 						btnReboot.removeAttribute("busy");
 					});
 				};
@@ -247,14 +247,14 @@ class DeviceView extends View {
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
-						catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+						catch (ex) { this.ConfirmBox(ex, true, "mono/logoff.svg"); }
 						btnLogOff.removeAttribute("busy");
 					});
 				};
 
 				const btnProcesses = this.CreateSideButton("mono/console.svg", "Processes");
 				btnProcesses.onclick = ()=> {
-					const wmi = new Wmi({target:host.split(";")[0].trim(), query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
+					const wmi = new Wmi({target:host, query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
 					wmi.SetIcon("mono/console.svg");
 					if (!this.link.name || this.link.name.v.length == 0) {
 						wmi.SetTitle("[untitled] - Processes");
@@ -266,7 +266,7 @@ class DeviceView extends View {
 				
 				const btnServices = this.CreateSideButton("mono/service.svg", "Services");
 				btnServices.onclick = ()=> {
-					const wmi = new Wmi({target: host.split(";")[0].trim(), query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
+					const wmi = new Wmi({target: host, query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
 					wmi.SetIcon("mono/service.svg");
 					if (!this.link.name || this.link.name.v.length==0)
 						wmi.SetTitle("[untitled] - Processes");
@@ -291,11 +291,11 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.telnet) { //tenet
 				const btnTelnet = this.CreateSideButton("mono/telnet.svg", "Telnet");
-				btnTelnet.onclick = ()=> new Telnet(host.split(";")[0].trim() + ":" + overwriteProtocol.telnet);
+				btnTelnet.onclick = ()=> new Telnet(host + ":" + overwriteProtocol.telnet);
 			}
 			else if (ports.includes(23)) {
 				const btnTelnet = this.CreateSideButton("mono/telnet.svg", "Telnet");
-				btnTelnet.onclick = ()=> new Telnet(host.split(";")[0].trim());
+				btnTelnet.onclick = ()=> new Telnet(host);
 			}
 
 			if (overwriteProtocol.ssh) { //ssh
@@ -311,7 +311,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTP");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "http://" + host.split(";")[0].trim() + ":" + overwriteProtocol.http;
+					link.href = "http://" + host + ":" + overwriteProtocol.http;
 					link.target = "_blank";
 					link.click();
 				};
@@ -320,7 +320,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTP");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "http://" + host.split(";")[0].trim();
+					link.href = "http://" + host;
 					link.target = "_blank";
 					link.click();
 				};
@@ -330,7 +330,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "https://" + host.split(";")[0].trim() + ":" + overwriteProtocol.https;
+					link.href = "https://" + host + ":" + overwriteProtocol.https;
 					link.target = "_blank";
 					link.click();
 				};
@@ -339,7 +339,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "https://" + host.split(";")[0].trim();
+					link.href = "https://" + host;
 					link.target = "_blank";
 					link.click();
 				};
@@ -349,7 +349,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftp://" + host.split(";")[0].trim() + ":" + overwriteProtocol.ftp;
+					link.href = "ftp://" + host + ":" + overwriteProtocol.ftp;
 					link.target = "_blank";
 					link.click();
 				};
@@ -358,7 +358,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftp://" + host.split(";")[0].trim();
+					link.href = "ftp://" + host;
 					link.target = "_blank";
 					link.click();
 				};
@@ -368,7 +368,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftps://" + host.split(";")[0].trim() + ":" + overwriteProtocol.ftp;
+					link.href = "ftps://" + host + ":" + overwriteProtocol.ftp;
 					link.target = "_blank";
 					link.click();
 				};
@@ -377,7 +377,7 @@ class DeviceView extends View {
 				const btnAction = this.CreateSideButton("mono/shared.svg", "FTPs");
 				btnAction.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftps://" + host.split(";")[0].trim();
+					link.href = "ftps://" + host;
 					link.target = "_blank";
 					link.click();
 				};
@@ -416,11 +416,11 @@ class DeviceView extends View {
 					if (btnPrintTest.hasAttribute("busy")) return;
 					try {
 						btnPrintTest.setAttribute("busy", true);
-						const response = await fetch(`manage/device/printtest?file=${this.params.file}`);
+						const response = await fetch(`manage/device/printtest?host=${host}`);
 						const json = await response.json();
 						if (json.error) throw (json.error);
 					}
-					catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+					catch (ex) { this.ConfirmBox(ex, true, "mono/printer.svg"); }
 					btnPrintTest.removeAttribute("busy");
 				};
 			}
@@ -1182,7 +1182,7 @@ class DeviceView extends View {
 	
 	Edit(isNew=false) { //override
 		const btnFetch = document.createElement("button");
-		if (isNew && !this.params.clone) {
+		if (isNew && !this.params.copy) {
 			btnFetch.className = "view-fetch-floating-button";
 			btnFetch.setAttribute("tip-below", "Fetch");
 			this.content.appendChild(btnFetch);
@@ -2567,8 +2567,8 @@ class DeviceView extends View {
 		dialog.btnOK.focus();
 	}
 
-	Clone() { //override
-		new DeviceView({clone: this.params.file});
+	Copy() { //override
+		new DeviceView({copy: this.params.file});
 	}
 	
 	Delete() { //override

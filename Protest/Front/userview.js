@@ -40,8 +40,8 @@ class UserView extends View {
 			this.SetTitle(this.link.title ? this.link.title.v : "");
 			this.InitializePreview();
 		}
-		else if (params.clone) {
-			const origin = LOADER.users.data[params.clone];
+		else if (params.copy) {
+			const origin = LOADER.users.data[params.copy];
 			this.SetTitle(origin.title ? `Copy of ${origin.title.v}` : "Copy");
 			this.Edit(true);
 
@@ -98,7 +98,7 @@ class UserView extends View {
 						this.lockedUserWarning.style.display = "none";
 					}
 				}
-				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/lock.svg"); }
 				btnUnlock.removeAttribute("busy");
 			};
 
@@ -111,7 +111,7 @@ class UserView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/enable.svg"); }
 				btnEnable.removeAttribute("busy");
 			};
 
@@ -124,7 +124,7 @@ class UserView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
-				catch (ex) { this.ConfirmBox(ex, true, "mono/error.svg"); }
+				catch (ex) { this.ConfirmBox(ex, true, "mono/disable.svg"); }
 				btnDisable.removeAttribute("busy");
 			};
 
@@ -171,7 +171,7 @@ class UserView extends View {
 
 	Edit(isNew = false) { //override
 		const btnFetch = document.createElement("button");
-		if (isNew && !this.params.clone) {
+		if (isNew && !this.params.copy) {
 			btnFetch.className = "view-fetch-floating-button";
 			btnFetch.setAttribute("tip-below", "Fetch");
 			this.content.appendChild(btnFetch);
@@ -370,8 +370,8 @@ class UserView extends View {
 		dialog.btnOK.onclick();
 	}
 
-	Clone() { //override
-		new UserView({ clone: this.params.file });
+	Copy() { //override
+		new UserView({ copy: this.params.file });
 	}
 
 	Delete() { //override

@@ -157,7 +157,7 @@ class PortScan extends Console {
 		this.SetupToolbar();
 		this.btnClear = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.btnOptions = this.AddToolbarButton("Options", "mono/wrench.svg?light");
-		this.cloneButton = this.AddToolbarButton("Clone", "mono/clone.svg?light");
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
 
@@ -183,20 +183,20 @@ class PortScan extends Console {
 			this.Options();
 		};
 
-		this.cloneButton.addEventListener("click", ()=> {
+		this.copyButton.addEventListener("click", ()=> {
 			const paramsCopy = structuredClone(this.params);
 			paramsCopy.entries = [];
-			const clone = new PortScan(paramsCopy);
-			const dialog = clone.Options();
+			const copy = new PortScan(paramsCopy);
+			const dialog = copy.Options();
 
 			dialog.btnOK.addEventListener("click", ()=> {
 				for (let i = 0; i < this.params.entries.length; i++) {
-					clone.Add(this.params.entries[i]);
+					copy.Add(this.params.entries[i]);
 				}
 			});
 
 			dialog.btnCancel.addEventListener("click", ()=> {
-				clone.Close();
+				copy.Close();
 			});
 		});
 	}
