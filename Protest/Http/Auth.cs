@@ -335,15 +335,15 @@ internal static class Auth {
                 break;
 
             case "snmp pooling:write":
-                path.Add("");
+                //path.Add("");
                 break;
 
             case "snmp traps:write":
-                path.Add("");
+                //path.Add("");
                 break;
 
             case "scripts:write":
-                path.Add("");
+                //path.Add("");
                 break;
 
             case "automation:write":
@@ -379,11 +379,11 @@ internal static class Auth {
                 break;
 
             case "backup:write":
-                path.Add("");
+                //path.Add("");
                 break;
 
             case "update:write":
-                path.Add("");
+                //path.Add("");
                 break;
             }
         }

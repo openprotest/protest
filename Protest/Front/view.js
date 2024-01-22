@@ -104,6 +104,7 @@ class View extends Window {
 		this.bar.appendChild(this.sendChatButton);
 
 		this.SetupFloatingMenu();
+		this.floating.style.zIndex = "2";
 	}
 
 	CreateAttribute(name, value, origin, date, editMode=false) {

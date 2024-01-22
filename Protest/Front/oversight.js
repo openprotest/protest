@@ -395,7 +395,7 @@ class Oversight extends Window {
 
 
 			const minmaxBox = document.createElement("div");
-			minmaxBox.style.gridArea = "2 / 1 / 2 / 3"
+			minmaxBox.style.gridArea = "2 / 1 / 2 / 3";
 			optionsBox.appendChild(minmaxBox);
 			const minmaxInput = document.createElement("input");
 			minmaxInput.type = "checkbox";
@@ -403,7 +403,7 @@ class Oversight extends Window {
 			this.AddCheckBoxLabel(minmaxBox, minmaxInput, "Show min-max");
 
 			const averageBox = document.createElement("div");
-			averageBox.style.gridArea = "3 / 1 / 3 / 3"
+			averageBox.style.gridArea = "3 / 1 / 3 / 3";
 			optionsBox.appendChild(averageBox);
 			const averageInput = document.createElement("input");
 			averageInput.type = "checkbox";
@@ -411,7 +411,7 @@ class Oversight extends Window {
 			this.AddCheckBoxLabel(averageBox, averageInput, "Show average");
 
 			const complementizeBox = document.createElement("div");
-			complementizeBox.style.gridArea = "4 / 1 / 4 / 3"
+			complementizeBox.style.gridArea = "4 / 1 / 4 / 3";
 			optionsBox.appendChild(complementizeBox);
 			const complementizeInput = document.createElement("input");
 			complementizeInput.type = "checkbox";

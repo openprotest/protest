@@ -212,7 +212,7 @@ internal static class SiteCheck {
                 await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(fail), 0, fail.Length), WebSocketMessageType.Text, true, CancellationToken.None);
             }
 
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
 
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -223,7 +223,7 @@ internal static class SiteCheck {
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
         }
 
     }

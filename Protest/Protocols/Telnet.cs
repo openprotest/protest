@@ -60,7 +60,7 @@ internal static class Telnet {
             }
             catch (Exception ex) {
                 WsWriteText(ws, ex.Message);
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 return;
             }
 
@@ -80,7 +80,7 @@ internal static class Telnet {
                         receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                         if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                             telnet.Close();
                             break;
                         }
@@ -138,7 +138,7 @@ internal static class Telnet {
         }
         finally {
             try {
-                await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
             catch { }
             try {

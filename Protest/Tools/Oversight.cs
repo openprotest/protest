@@ -131,17 +131,22 @@ internal class Oversight {
                         continue;
                     }
 
+                    if (scope is not null && !scope.IsConnected) {
+                        WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
+                        //TODO: reconnect WMI
+                    }
+
                     long startTime = DateTime.UtcNow.Ticks;
 
                     if (OperatingSystem.IsWindows()) {
                         if (cpu || cores) {
                             byte[] cpuResult = DoCpuCores(scope, cores);
-                            if (cpu && cpuResult is not null) {
+                            if (cpu && cpuResult is not null && cpuResult.Length > 0) {
                                 lock (sendSync) {
                                     WsWriteText(ws, $"{{\"result\":\"cpu\",\"value\":{cpuResult[0]}}}");
                                 }
                             }
-                            if (cores && cpuResult is not null) {
+                            if (cores && cpuResult is not null && cpuResult.Length > 0) {
                                 lock (sendSync) {
                                     WsWriteText(ws, $"{{\"result\":\"cores\",\"value\":[{String.Join(",", cpuResult.Skip(1).ToArray())}]}}");
                                 }
@@ -192,6 +197,9 @@ internal class Oversight {
                 }
             }
         }
+        catch (ManagementException ex) {
+            Logger.Error(ex);
+        }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
         }
@@ -240,31 +248,43 @@ internal class Oversight {
     private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
         List<byte> cores = new List<byte>();
 
-        using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
-        IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
-        if (perfTotalEnum is null) { return null; }
-        foreach (ManagementObject o in perfTotalEnum) {
-            if (o is null) continue;
-            ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-            cores.Add((byte)(100 - idle));
-        }
-
-        if (getCores) {
-            using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
-            IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
-            //if (perfEnum is null) { return null; }
-            foreach (ManagementObject o in perfEnum) {
-                if (o is null) continue;
+        try {
+            using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
+            IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
+            if (perfTotalEnum is null) { return null; }
+            foreach (ManagementObject o in perfTotalEnum) {
+                if (o is null)
+                    continue;
                 ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
                 cores.Add((byte)(100 - idle));
             }
-        }
 
-        return cores.ToArray();
+            if (getCores) {
+                using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
+                IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
+                //if (perfEnum is null) { return null; }
+                foreach (ManagementObject o in perfEnum) {
+                    if (o is null)
+                        continue;
+                    ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                    cores.Add((byte)(100 - idle));
+                }
+            }
+
+            return cores.ToArray();
+
+        }
+        catch {
+            return null;
+        }
     }
 
     [SupportedOSPlatform("windows")]
     private static byte[] DoWmi(ManagementScope scope, ConcurrentDictionary<string, string> queries) {
+        try {
+
+        }
+        catch {}
         return null;
     }
 

@@ -166,16 +166,13 @@ namespace ProtestAgent {
 
             try {
                 using (RegistryKey key = Registry.ClassesRoot.CreateSubKey("protest")) {
-                     key.SetValue("URL Protocol", "");
+                     key.SetValue("URL Protocol", String.Empty);
 
                     using (RegistryKey shellKey = key.CreateSubKey("shell")) {
-
                         using (RegistryKey openKey = shellKey.CreateSubKey("open")) {
-
                             using (RegistryKey commandKey = openKey.CreateSubKey("command")) {
                                 commandKey.SetValue("", $"\"{agentFile.FullName}\" \"%1\"");
                             }
-
                         }
                     }
                 }

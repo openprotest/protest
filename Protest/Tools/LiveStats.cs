@@ -118,7 +118,7 @@ internal static class LiveStats {
                             if (nSize == 0) continue;
                             double percent = Math.Round(100.0 * nFree / nSize, 1);
 
-                            WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", "")}$")}\",\"source\":\"WMI\"}}");
+                            WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}");
 
                             if (percent < 15) {
                                 WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}");

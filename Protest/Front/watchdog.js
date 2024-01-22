@@ -130,7 +130,7 @@ class Watchdog extends Window {
 		let maxDate = new Date(this.utcToday);
 
 		const dateInput = document.createElement("input");
-		dateInput.style.width = "calc(100% - 40px)";
+		dateInput.style.width = "calc(100% - 80px)";
 		dateInput.type = "date";
 		dateInput.max = `${maxDate.getFullYear()}-${`${maxDate.getMonth()+1}`.padStart(2,"0")}-${`${maxDate.getDate()}`.padStart(2,"0")}`;
 		innerBox.appendChild(dateInput);
@@ -1093,9 +1093,40 @@ class Watchdog extends Window {
 			svg.setAttribute("height", 128);
 			graphBox.appendChild(svg);
 
+			const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+			svg.appendChild(defs);
+	
+			const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
+			pattern.setAttribute("id", "pattern_s");
+			pattern.setAttribute("width", 5);
+			pattern.setAttribute("height", 5);
+			pattern.setAttribute("patternUnits", "userSpaceOnUse");
+			pattern.setAttribute("patternTransform", "rotate(45)");
+			defs.appendChild(pattern);
+	
+			const stripesRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			stripesRect.setAttribute("width", 3);
+			stripesRect.setAttribute("height", 5);
+			stripesRect.setAttribute("fill", "#fff");
+			pattern.appendChild(stripesRect);
+	
+			const stripesMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+			stripesMask.setAttribute("id", "mask_s");
+			defs.appendChild(stripesMask);
+	
+			const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			maskRect.setAttribute("x", 0);
+			maskRect.setAttribute("y", 0);
+			maskRect.setAttribute("width", 100);
+			maskRect.setAttribute("height", 100);
+			maskRect.setAttribute("fill", "url(#pattern_s)");
+			maskRect.style.maskRepeat = "repeat-x repeat-y";
+			stripesMask.appendChild(maskRect);
+
 			let x = (180 - graphWidth) / 2;
 			let maxH = 2, maxX = 0, negativeCount = 0;
-			let graphSorted = Object.entries(graphCounts).sort((a,b)=> parseInt(a[0]) > parseInt(b[0]));
+
+			let graphSorted = Object.entries(graphCounts).sort((a,b)=> parseInt(a[0]) - parseInt(b[0]));
 
 			for (let i=0; i<graphSorted.length; i++) {
 				let key = parseInt(graphSorted[i][0]);
@@ -1116,6 +1147,10 @@ class Watchdog extends Window {
 				bar.setAttribute("rx", 2);
 				bar.setAttribute("fill", this.StatusToColor(key));
 				svg.appendChild(bar);
+
+				if (key < 0) {
+					bar.setAttribute("mask", "url(#mask_s)");
+				}
 
 				const lblLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 				lblLabel.textContent = this.StatusToString(key, watcher);
@@ -1265,33 +1300,47 @@ class Watchdog extends Window {
 		maskRect.setAttribute("fill", "url(#pattern)");
 		stripesMask.appendChild(maskRect);
 
+		const MIN_WIDTH = 7;
+
 		if (date in this.cache && file in this.cache[date]) {
 			if (this.cache[date][file] === null) { return svg; }
 
-			let lastX = -20, lastV = -20;
+			let lastX = -20, lastV = -20, lastDot = null;
 			for (let key in this.cache[date][file]) {
 				key = parseInt(key);
+				let x = (key - date + this.timezoneOffset) * this.dayPixels / Watchdog.DAY_TICKS - 3;
 				let value = this.cache[date][file][key];
 
-				let x = (key - date + this.timezoneOffset) * this.dayPixels / Watchdog.DAY_TICKS - 3;
+				if (x - lastX < MIN_WIDTH && Math.abs(lastV - value) <= 5 && lastDot !== null) {
+					let width = (x + MIN_WIDTH) - parseInt(lastDot.getAttribute("x"));
+					lastDot.setAttribute("width", width);
+					lastX = x;
+					continue;
+				}
 
-				if (x - lastX < 6 && lastV === value) continue;
-				
-				lastX = x;
-				lastV = value;
+				if (lastDot !== null) {
+					const lastW = parseInt(lastDot.getAttribute("width"));
+					if (lastW > MIN_WIDTH && lastX + lastW > x) {
+						lastDot.setAttribute("width", lastW - MIN_WIDTH + 1);
+					}
+				}
 
 				const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 				dot.setAttribute("x", x);
 				dot.setAttribute("y", 4);
-				dot.setAttribute("width", 6);
+				dot.setAttribute("width", MIN_WIDTH);
 				dot.setAttribute("height", 24);
 				dot.setAttribute("rx", 2);
 				dot.setAttribute("fill", this.StatusToColor(value));
 				svg.appendChild(dot);
-
+	
 				if (value < 0) {
 					dot.setAttribute("mask", "url(#mask)");
 				}
+
+				lastX = x;
+				lastV = value;
+				lastDot = dot;
 			}
 		}
 

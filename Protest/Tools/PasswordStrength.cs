@@ -66,13 +66,13 @@ public static class PasswordStrength {
     public static double Entropy(string password, out int length, out int pool, string[] related = null) {
         for (int i = 0; i < COMMON.Length; i++)
             if (password.IndexOf(COMMON[i], StringComparison.InvariantCultureIgnoreCase) > -1)
-                password = password.Replace(COMMON[i], "");
+                password = password.Replace(COMMON[i], String.Empty);
 
         if (related != null)
             for (int i = 0; i < related.Length; i++)
                 if (related[i].Length != 0)
                     if (password.IndexOf(related[i], StringComparison.InvariantCultureIgnoreCase) > -1)
-                        password = password.Replace(related[i], "");
+                        password = password.Replace(related[i], String.Empty);
 
         bool hasNumbers = false, hasUppercase = false, hasLowercase = false, hasSymbols = false;
         int len = password.Length;
