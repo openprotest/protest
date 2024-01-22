@@ -140,7 +140,7 @@ internal static class Auth {
 #endif
 
         Session newSession = new Session() {
-            access    = acl.TryGetValue(username, out AccessControl value) ? value : default!,
+            access    = acl.TryGetValue(username, out AccessControl value) ? value : default(AccessControl)!,
             ip        = ctx.Request.RemoteEndPoint.Address,
             sessionId = sessionId,
             loginDate = DateTime.UtcNow.Ticks,
