@@ -72,8 +72,7 @@ internal static class SmtpProfiles {
             Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, smtpProfileSerializerOptionsWithPasswords);
 
             for (int i = 0; i < newProfiles.Length; i++) {
-                if (newProfiles[i].guid == default) {
-
+                if (newProfiles[i].guid == default(Guid)) {
                     newProfiles[i].guid = Guid.NewGuid();
                 }
 
