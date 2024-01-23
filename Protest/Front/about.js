@@ -108,7 +108,6 @@ class About extends Tabs {
 		gpl.textContent = "The GNU General Public License is a type of open-source license that allows users to access, use, copy, modify, and distribute the source code of a product. It also requires that any derivative works (modified versions of the original source code) are also distributed under the same license, and the original author must be acknowledged. This ensures that the source code remains freely available to the public and can be used for any purpose.";
 		center.appendChild(gpl);
 
-
 		center.appendChild(document.createElement("br"));
 		center.appendChild(document.createElement("br"));
 

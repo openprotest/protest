@@ -23,6 +23,7 @@ class Window {
 		this.messagesQueue = [];
 		this.cssDependencies = [];
 		this.toolbar = null;
+		this.fullWindow = true;
 
 		this.win = document.createElement("section");
 		this.win.style.left = "0";

@@ -410,13 +410,13 @@ class Oversight extends Window {
 			averageBox.appendChild(averageInput);
 			this.AddCheckBoxLabel(averageBox, averageInput, "Show average");
 
-			const complementizeBox = document.createElement("div");
-			complementizeBox.style.gridArea = "4 / 1 / 4 / 3";
-			optionsBox.appendChild(complementizeBox);
-			const complementizeInput = document.createElement("input");
-			complementizeInput.type = "checkbox";
-			complementizeBox.appendChild(complementizeInput);
-			this.AddCheckBoxLabel(complementizeBox, complementizeInput, "Complementing mode");
+			const complementingBox = document.createElement("div");
+			complementingBox.style.gridArea = "4 / 1 / 4 / 3";
+			optionsBox.appendChild(complementingBox);
+			const complementingInput = document.createElement("input");
+			complementingInput.type = "checkbox";
+			complementingBox.appendChild(complementingInput);
+			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing mode");
 
 			const queryInput = document.createElement("textarea");
 			queryInput.style.resize = "none";
