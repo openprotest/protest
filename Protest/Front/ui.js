@@ -174,8 +174,14 @@ const UI = {
 		if (size < 8_192 * Math.pow(1024, 6)) return `${Math.floor(10 * size / Math.pow(1024, 6)) / 10}ZB`;
 		if (size < 8_192 * Math.pow(1024, 7)) return `${Math.floor(10 * size / Math.pow(1024, 7)) / 10}YB`;
 		if (size < 8_192 * Math.pow(1024, 8)) return `${Math.floor(10 * size / Math.pow(1024, 8)) / 10}BB`;
-	}
+	},
 
+	GenerateUuid: prefix=> {
+		if (prefix) {
+			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
+		}
+		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
+	}
 };
 
 const MENU = {

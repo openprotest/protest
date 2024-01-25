@@ -28,7 +28,7 @@ class Acl extends Tabs {
 			this.ShowAcl();
 		}
 
-		setTimeout(()=> { this.AfterResize(); }, 250);
+		setTimeout(()=> this.AfterResize(), 250);
 	}
 
 	AfterResize() { //override

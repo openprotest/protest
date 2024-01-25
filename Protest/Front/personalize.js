@@ -575,7 +575,7 @@ class Personalize extends Tabs {
 		this.cookieLife.value = localStorage.getItem("cookie_lifetime") == null ? 5 : parseInt(localStorage.getItem("cookie_lifetime"));
 
 
-		btnClearLocalCache.onclick = ()=> { this.ClearCache() };
+		btnClearLocalCache.onclick = ()=> this.ClearCache();
 
 		const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
 		const Apply = ()=> {
@@ -664,7 +664,7 @@ class Personalize extends Tabs {
 		this.notificationVolume.type = "range";
 		this.notificationVolume.min = 0;
 		this.notificationVolume.max = 100;
-		this.notificationVolume.style.width = "100px";
+		this.notificationVolume.style.width = "200px";
 		this.tabsPanel.appendChild(this.notificationVolume);
 
 		this.notificationVolumeValue = document.createElement("div");

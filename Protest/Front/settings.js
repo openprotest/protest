@@ -50,7 +50,7 @@ class Settings extends Tabs {
 			break;
 		}
 
-		setTimeout(()=> { this.AfterResize(); }, 250);
+		setTimeout(()=> this.AfterResize(), 250);
 	}
 
 	AfterResize() { //override

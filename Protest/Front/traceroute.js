@@ -159,7 +159,7 @@ class TraceRoute extends Console {
 			list: []
 		};
 
-		remove.onclick = ()=> { this.Remove(hostname); };
+		remove.onclick = ()=> this.Remove(hostname);
 
 		btnExpanded.onclick = ()=> {
 			if (this.hashtable[hostname].expanded) {

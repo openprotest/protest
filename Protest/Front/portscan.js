@@ -383,7 +383,7 @@ class PortScan extends Console {
 			list: []
 		};
 
-		remove.onclick = ()=> { this.Remove(hostname); };
+		remove.onclick = ()=> this.Remove(hostname);
 
 		btnExpanded.onclick = ()=> {
 			if (this.hashtable[hostname].expanded) {
@@ -480,7 +480,7 @@ class PortScan extends Console {
 			};
 		};
 
-		this.ws.onerror = (error)=> { console.log(error); };
+		this.ws.onerror = (error)=> console.log(error);
 
 		this.ws.onmessage = event=> {
 			let split = event.data.split(String.fromCharCode(127));

@@ -68,9 +68,9 @@ class Wmi extends Window {
 		this.txtTarget.oninput = ()=> { this.params.target = this.txtTarget.value };
 		this.txtQuery.oninput = ()=> { this.params.query = this.txtQuery.value };
 
-		btnTarget.onclick = ()=> { this.SequelAssistant(); };
+		btnTarget.onclick = ()=> this.SequelAssistant();
 
-		this.btnExecute.onclick = ()=> { this.Query(); };
+		this.btnExecute.onclick = ()=> this.Query();
 
 		btnToggle.onclick =()=> {
 			if (divInput.style.visibility === "hidden") {

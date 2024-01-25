@@ -257,9 +257,9 @@ class PassGen extends Window {
 			this.Generate();
 		};
 
-		this.chkLowercase.onchange = this.chkUppercase.onchange = this.chkNumbers.onchange = this.chkSymbols.onchange = ()=> { this.Generate(); };
+		this.chkLowercase.onchange = this.chkUppercase.onchange = this.chkNumbers.onchange = this.chkSymbols.onchange = ()=> this.Generate();
 
-		btnGenerate.onclick = ()=> { this.Generate(); };
+		btnGenerate.onclick = ()=> this.Generate();
 
 		btnCopy.onclick = ()=> {
 			this.txtPassword.focus();

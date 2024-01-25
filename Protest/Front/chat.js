@@ -48,13 +48,6 @@ class Chat extends Window {
 		this.InitializeComponents();
 	}
 
-	GenerateUuid(prefix) {
-		if (prefix) {
-			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
-		}
-		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
-	}
-
 	async InitializeComponents() {
 		this.blinkingDot = document.createElement("div");
 		this.blinkingDot.style.position = "absolute";
@@ -251,7 +244,7 @@ class Chat extends Window {
 	}
 
 	async InitializeRtc() {
-		const uuid = this.GenerateUuid(KEEP.username);
+		const uuid = UI.GenerateUuid(KEEP.username);
 
 		await KEEP.socket.send(JSON.stringify({
 			type: "chat-stream",

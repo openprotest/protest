@@ -39,13 +39,13 @@ class AddressBook extends Window {
 		this.downloadButton.style.right = "64px";
 		this.downloadButton.style.backgroundImage = "url(/mono/download.svg?light)";
 		this.downloadButton.tabIndex = "0";
-		this.downloadButton.onclick = ()=>{ this.DownloadContacts() };
+		this.downloadButton.onclick = ()=> this.DownloadContacts();
 
 		this.viewButton = document.createElement("div");
 		this.viewButton.classList = "address-book-button";
 		this.viewButton.style.right = "8px";
 		this.viewButton.tabIndex = "0";
-		this.viewButton.onclick = ()=>{ this.ToggleView() };
+		this.viewButton.onclick = ()=> this.ToggleView();
 
 		for (let i=0; i<6; i++) {
 			const item = document.createElement("div");

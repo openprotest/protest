@@ -31,7 +31,7 @@
 	right: 0;
 	top: 0;
 	bottom: var(--oversight-console-height);
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 
 .oversight-toggle-button {

@@ -1991,7 +1991,7 @@ class DeviceView extends View {
 				btnCloseLink.onclick = () => {
 					btnCloseLink.onclick = () => { };
 					dim.style.filter = "opacity(0)";
-					setTimeout(() => { innerBox.parentElement.removeChild(dim); }, 200);
+					setTimeout(()=> innerBox.parentElement.removeChild(dim), 200);
 				};
 
 				txtFind.onchange = txtFind.oninput = () => {
@@ -2069,7 +2069,7 @@ class DeviceView extends View {
 
 				txtFind.focus();
 
-				setTimeout(() => { txtFind.onchange(); }, 1);
+				setTimeout(() => txtFind.onchange(), 1);
 			};
 			
 			remove.onclick = () => {

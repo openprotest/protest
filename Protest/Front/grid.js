@@ -61,43 +61,43 @@ class Grid extends Window {
 		this.optSort.className = "grid-menu-option";
 		this.optSort.textContent = "Sort";
 		this.optSort.style.backgroundImage = "url(/mono/sort.svg)";
-		this.optSort.onclick = ()=> { this.ColumnOptions_Sort() };
+		this.optSort.onclick = ()=> this.ColumnOptions_Sort();
 
 		this.optFilter = document.createElement("div");
 		this.optFilter.className = "grid-menu-option";
 		this.optFilter.textContent = "Filter";
 		this.optFilter.style.backgroundImage = "url(/mono/filter.svg)";
-		this.optFilter.onclick = ()=> { this.ColumnOptions_Filter() };
+		this.optFilter.onclick = ()=> this.ColumnOptions_Filter();
 
 		this.optHideNull = document.createElement("div");
 		this.optHideNull.className = "grid-menu-option";
 		this.optHideNull.textContent = "Hide null";
 		this.optHideNull.style.backgroundImage = "url(/mono/clear.svg)";
-		this.optHideNull.onclick = ()=> { this.ColumnOptions_HideNull() };
+		this.optHideNull.onclick = ()=> this.ColumnOptions_HideNull();
 
 		this.optRename = document.createElement("div");
 		this.optRename.className = "grid-menu-option";
 		this.optRename.textContent = "Rename column";
 		this.optRename.style.backgroundImage = "url(/mono/rename.svg)";
-		this.optRename.onclick = ()=> { this.ColumnOptions_Rename() };
+		this.optRename.onclick = ()=> this.ColumnOptions_Rename();
 
 		this.optEditAll = document.createElement("div");
 		this.optEditAll.className = "grid-menu-option";
 		this.optEditAll.textContent = "Edit all";
 		this.optEditAll.style.backgroundImage = "url(/mono/edit.svg)";
-		this.optEditAll.onclick = ()=> { this.ColumnOptions_EditAll() };
+		this.optEditAll.onclick = ()=> this.ColumnOptions_EditAll();
 
 		this.optRemoveAll = document.createElement("div");
 		this.optRemoveAll.className = "grid-menu-option";
 		this.optRemoveAll.textContent = "Remove all";
 		this.optRemoveAll.style.backgroundImage = "url(/mono/delete.svg)";
-		this.optRemoveAll.onclick = ()=> { this.ColumnOptions_RemoveAll() };
+		this.optRemoveAll.onclick = ()=> this.ColumnOptions_RemoveAll();
 
 		this.optRevert = document.createElement("div");
 		this.optRevert.className = "grid-menu-option";
 		this.optRevert.textContent = "Revert";
 		this.optRevert.style.backgroundImage = "url(/mono/restart.svg)";
-		this.optRevert.onclick = ()=> { this.ColumnOptions_RevertAll() };
+		this.optRevert.onclick = ()=> this.ColumnOptions_RevertAll();
 
 		this.floating.append(this.optSort, this.optFilter, this.optHideNull, this.optRename, this.optEditAll, this.optRemoveAll, this.optRevert);
 
@@ -124,8 +124,8 @@ class Grid extends Window {
 		};
 
 		btnSave.onclick = ()=> {this.Save_onclick()};
-		btnRemoveFilter.onclick = ()=> {this.RemoveFilters_onclick()};
-		btnReload.onclick = ()=> {this.Reload_onclick()};
+		btnRemoveFilter.onclick = ()=> this.RemoveFilters_onclick();
+		btnReload.onclick = ()=> this.Reload_onclick();
 
 		btnNone.onclick = ()=> {
 			for (let i=0; i<this.attributeElements.length; i++) {

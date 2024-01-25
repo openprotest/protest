@@ -368,8 +368,8 @@ class List extends Window {
 		super.PopOut();
 		this.UpdateViewport(true);
 
-		this.popOutWindow.addEventListener("mouseup", event=> { this.List_mouseup(event); });
-		this.popOutWindow.addEventListener("mousemove", event=> { this.List_mousemove(event); });
+		this.popOutWindow.addEventListener("mouseup", event=> this.List_mouseup(event));
+		this.popOutWindow.addEventListener("mousemove", event=> this.List_mousemove(event));
 	}
 
 	AfterResize() { //override

@@ -136,7 +136,7 @@ class Telnet extends Window {
 		txtHost.placeholder = "10.0.0.1:23";
 		innerBox.appendChild(txtHost);
 
-		setTimeout(()=> { txtHost.focus() }, 50);
+		setTimeout(()=> txtHost.focus(), 50);
 
 		txtHost.oninput = txtHost.onchange = ()=> {
 			if (txtHost.value.length === 0)

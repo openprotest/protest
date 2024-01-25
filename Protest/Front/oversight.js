@@ -2,7 +2,6 @@ class Oversight extends Window {
 	constructor(params) {
 		super();
 		this.params = params ?? { file: null};
-		
 		this.params.stats ??= [];
 		
 		this.SetIcon("mono/oversight.svg");
@@ -11,8 +10,9 @@ class Oversight extends Window {
 		this.link = LOADER.devices.data[this.params.file];
 		this.autoReconnect = true;
 		this.connectRetries = 0;
-		this.chartsList = [];
 		this.hideConsoleOnce = true;
+		this.chartsList = [];
+		this.count = 0;
 
 		if (params.file && !this.link) {
 			this.SetTitle("Resources oversight - not found");
@@ -298,6 +298,10 @@ class Oversight extends Window {
 		formatInput.style.gridArea = "1 / 2 / 2 / 2";
 		formatInput.style.maxWidth = "200px";
 
+		const queryInput = document.createElement("textarea");
+		queryInput.style.resize = "none";
+		queryInput.style.gridArea = "8 / 1 / 9 / 4";
+		
 		const formatOptionsArray = [
 			"Ping",
 			"Line chart",
@@ -418,9 +422,6 @@ class Oversight extends Window {
 			complementingBox.appendChild(complementingInput);
 			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing mode");
 
-			const queryInput = document.createElement("textarea");
-			queryInput.style.resize = "none";
-			queryInput.style.gridArea = "8 / 1 / 9 / 4";
 			innerBox.append(queryInput);
 
 			txtClassFilter.onkeydown = event=>{
@@ -475,7 +476,9 @@ class Oversight extends Window {
 
 		btnOK.addEventListener("click", ()=> {
 			//TODO:
-			//this.socket.send("");
+			this.count++;
+			this.socket.send(`addwmi=${queryInput.value}&id=${this.count}`);
+			chartsList.push("");
 		});
 	}
 

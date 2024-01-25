@@ -26,7 +26,7 @@ class PasswordStrength extends List {
 			this.findInput.parentElement.style.width = "200px";
 		}
 
-		btnGandalf.onclick = ()=> { new Gandalf(); };
+		btnGandalf.onclick = ()=> new Gandalf();
 		
 		this.GetEntropy();
 	}
