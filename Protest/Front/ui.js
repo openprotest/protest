@@ -526,7 +526,7 @@ const MENU = {
 
 			if (MENU.list.length > 0) {
 				MENU.index = 0;
-				MENU.list[0].style.backgroundColor = "#80808060";
+				MENU.list[0].style.backgroundColor = "var(--clr-transparent)";
 			}
 		}
 	},
@@ -836,7 +836,7 @@ searchinput.onkeydown = event=> {
 			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
 			MENU.index--;
 			if (MENU.index < 0) MENU.index = MENU.list.length - 1;
-			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "#80808060";
+			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
 			}
 		break;
 
@@ -846,7 +846,7 @@ searchinput.onkeydown = event=> {
 			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
 			MENU.index++;
 			if (MENU.index >= MENU.list.length) MENU.index = 0;
-			MENU.list[MENU.index].style.backgroundColor = "#80808060";
+			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
 		}
 		break;
 	}

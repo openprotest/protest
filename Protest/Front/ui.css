@@ -141,10 +141,11 @@
 	transition: .2s;
 }
 .menufilter-option:hover {
-	background-color: rgba(128,128,128,.5);
+	background-color: var(--clr-transparent);
+
 }
 .menufilter-option:active {
-	background-color: rgb(56,56,56);
+	background-color: color-mix(in hsl shorter hue, var(--clr-transparent) 85%, rgba(0,0,0,.6));
 }
 
 #menufilterdot {
@@ -167,9 +168,7 @@
 	right: 6px;
 	top: 116px;
 	bottom: 56px;
-
 	color: #c0c0c0;
-
 	overflow-x: hidden;
 	overflow-y: scroll;
 }
@@ -178,7 +177,6 @@
 	display: block;
 	text-transform: uppercase;
 	font-weight: 600;
-	/*background-color: #00000020;*/
 	padding: 12px 0 4px 8px;
 }
 
@@ -188,7 +186,7 @@
 	height: 96px;
 	padding: 2px 2px;
 	margin: 2px 4px;
-	border-radius: 2px;
+	border-radius: 4px;
 	
 	font-weight: 600;
 	text-align: center;
@@ -200,9 +198,9 @@
 	background-size: 64px 64px;
 	background-position: center 8px;
 	background-repeat: no-repeat;
-	background-color: #80808020;
+	background-color: #80808030;
 
-	transition: .2s;
+	transition: .15s;
 }
 
 .menu-list-item {
@@ -221,17 +219,19 @@
 	background-size: 40px 40px;
 	background-position: 4px 4px;
 	background-repeat: no-repeat;
-	background-color: #80808020;
+	background-color: #80808030;
 
-	transition: .2s;
+	transition: .15s;
 }
 
-.menu-grid-item:hover, .menu-list-item:hover {
-	background-color: #80808040;
-}
-
-.menu-grid-item:active, .menu-list-item:active {
+.menu-grid-item:hover,
+.menu-list-item:hover {
 	background-color: var(--clr-transparent) !important;
+}
+
+.menu-grid-item:active,
+.menu-list-item:active {
+	background-color: color-mix(in hsl shorter hue, var(--clr-transparent) 85%, rgba(0,0,0,.6)) !important;
 }
 
 #btnPersonalize, #btnLogout {
@@ -246,7 +246,7 @@
 	border: #808080 1px solid;
 	border-radius: 4px;
 
-	transition-duration: .2s;
+	transition-duration: .15s;
 }
 
 #btnPersonalize {
@@ -302,18 +302,18 @@
 }
 #username:focus-within > #lblUsername {
 	right: 48px;
+	background-color: var(--clr-transparent) !important;
 }
 
 #lblUsername:focus {
-	background-color: rgba(128,128,128,.5);
+	background-color: var(--clr-transparent) !important;
 }
 #lblUsername:hover, #btnPersonalize:hover, #btnLogout:hover {
-	background-color: rgba(128,128,128,.5);
+	background-color: var(--clr-transparent);
 }
-#lblUsername:active, #btnPersonalize:active #btnLogout:active {
-	background-color: rgb(56,56,56);
+#lblUsername:active, #btnPersonalize:active, #btnLogout:active {
+	background-color: color-mix(in hsl shorter hue, var(--clr-transparent) 85%, rgba(0,0,0,.6)) !important;
 }
-
 
 #contextmenu {
 	display: none;

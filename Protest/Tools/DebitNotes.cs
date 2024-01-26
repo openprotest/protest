@@ -78,7 +78,7 @@ internal static class DebitNotes {
             if (dirReturned.Exists) files.AddRange(dirReturned.GetFiles());
         }
 
-        files.Sort((a, b) => String.Compare(b.Name, a.Name));
+        files.Sort((a, b) => String.Compare(a.Name, b.Name));
 
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
@@ -175,8 +175,8 @@ internal static class DebitNotes {
         if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
-            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
-            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
+            "short"    => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
+            "long"     => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
             "returned" => $"{Data.DIR_DEBIT_RETURNED}{Data.DELIMITER}{file}",
             _ => null
         };
@@ -252,8 +252,8 @@ internal static class DebitNotes {
 
         string filename = status switch  {
             "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
-            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
-            _ => null
+            "long"  => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
+            _       => null
         };
 
         if (filename is null) return Data.CODE_FILE_NOT_FOUND.Array;
@@ -277,8 +277,8 @@ internal static class DebitNotes {
 
         string filename = status switch  {
             "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
-            "long" => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
-            _ => null
+            "long"  => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
+            _       => null
         };
 
         if (filename is null) return Data.CODE_FILE_NOT_FOUND.Array;

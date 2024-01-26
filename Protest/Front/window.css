@@ -495,8 +495,8 @@
 	position: absolute;
 	width: 250px;
 	min-height: 120px;
-	right: 8px;
-	bottom: 8px;
+	right: 12px;
+	bottom: 12px;
 	z-index: 9999998;
 	text-align: center;
 	color: var(--clr-dark);
@@ -515,8 +515,8 @@
 	right: 2px;
 	bottom: 2px;
 	z-index: 9999999;
-	width: 6px;
-	height: 6px;
+	width: 8px;
+	height: 8px;
 	border-radius: 50%;
 	background-color: var(--clr-error);
 }

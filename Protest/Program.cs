@@ -72,6 +72,7 @@ internal class Program {
         try {
             Http.Listener listener = new Http.Listener(Configuration.http_prefixes, Configuration.front_path);
             Console.WriteLine(listener.ToString());
+            Console.WriteLine();
             listener.Start();
         }
         catch (System.Net.HttpListenerException ex) {
@@ -80,6 +81,7 @@ internal class Program {
 
             Http.Listener listener = new Http.Listener(alternativeUriPrefixes, Configuration.front_path);
             Console.WriteLine(listener.ToString());
+            Console.WriteLine();
             listener.Start();
         }
     }

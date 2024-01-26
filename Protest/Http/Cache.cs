@@ -10,6 +10,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System.Text;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Protest.Http;
 
@@ -74,7 +76,7 @@ internal sealed class Cache {
     private string birthdate;
     private readonly string path;
 
-    public readonly Dictionary<string, Entry> cache = new Dictionary<string, Entry>();
+    public readonly ConcurrentDictionary<string, Entry> cache = new ConcurrentDictionary<string, Entry>();
 
     public Cache(string path) {
         birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
@@ -90,9 +92,43 @@ internal sealed class Cache {
         if (_deflate > 0) { Console.WriteLine($"  Deflate : {100 * _deflate / (_raw + 1),5}% {_raw,10} -> {_deflate,8}"); }
         if (_brotli > 0)  { Console.WriteLine($"  Brotli  : {100 * _brotli / (_raw + 1),5}% {_raw,10} -> {_brotli,8}"); }
         Console.WriteLine();
+
+        FileSystemWatcher watcher = new FileSystemWatcher(path);
+        watcher.EnableRaisingEvents = true;
+        watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size | NotifyFilters.LastWrite;
+        watcher.Filter = "*";
+        watcher.IncludeSubdirectories = true;
+        watcher.Changed += OnFileChanged;
 #endif
 
         GC.Collect();
+    }
+
+    private void OnFileChanged(object source, FileSystemEventArgs e) {
+        Thread.Sleep(500);
+        Console.WriteLine($"Hot load: {e.FullPath}");
+
+        FileInfo file = new FileInfo(e.FullPath);
+        if (!file.Exists) {
+            return;
+        }
+
+        try {
+            using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+            using BinaryReader br = new BinaryReader(fs);
+            byte[] bytes = br.ReadBytes((int)file.Length);
+
+            string name = file.FullName;
+            name = name.Replace(path, String.Empty);
+            name = name.Replace("\\", "/");
+
+            HandleFile(name, bytes, false);
+        }
+        catch {
+            return;
+        }
+
+        birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
     }
 
 #if !DEBUG
@@ -147,62 +183,17 @@ internal sealed class Cache {
         files.Add(name, bytes);
     }
 
-    public void HandleFiles(Dictionary<string, byte[]> files, bool isGzipped) {
+    private void HandleFiles(Dictionary<string, byte[]> files, bool isGzipped) {
 #if SVG_TO_SVGZ //svgz
         Dictionary<string, byte[]> toSvg = new Dictionary<string, byte[]>();
 #endif
 
         foreach (KeyValuePair<string, byte[]> pair in files) {
-
-            if (pair.Value is null) { continue; }
-
-            string name = pair.Key.ToLower();
-            name = name.Replace("\\", "/");
-            name = name.Replace(".html", String.Empty).Replace(".htm", String.Empty);
-            if (name == "/index") {
-                name = "/";
+            if (pair.Value is null) {
+                continue;
             }
 
-            byte[] bytes = pair.Value;
-            Entry entry = ConstructEntry(name, bytes, isGzipped);
-            cache.Remove(name);
-            cache.Add(name, entry);
-
-#if DEBUG
-            _raw += entry.bytes.LongLength;
-            _gzip += entry.gzip.LongLength;
-#if DEFLATE
-            _deflate += entry.deflate.LongLength;
-#endif
-#if BROTLI
-            _brotli += entry.brotli.LongLength;
-#endif
-#endif
-
-#if SVG_TO_SVGZ //svgz
-            if (name.EndsWith(".svg") && !files.ContainsKey($"{pair.Key}z"))
-                toSvg.Add($"{name}z", entry.gzip);
-#endif
-
-#if SVG_TO_LIGHT
-            byte[] pattern = "\"#202020\""u8.ToArray();
-            byte[] target = "\"#c0c0c0\""u8.ToArray();
-            if (name.StartsWith("/mono/") && name.EndsWith(".svg")) {
-                if (Data.ContainsBytesSequence(entry.bytes, pattern)) {
-                    Data.ReplaceAllBytesSequence(entry.bytes, Encoding.UTF8.GetBytes("\"#202020\""), target);
-                    byte[] lightBytes = entry.bytes.ToArray();
-                    string lightName = $"{name}?light";
-                    Entry lightEntry = ConstructEntry(lightName, lightBytes, false, "svg");
-                    cache.Remove(lightName);
-                    cache.Add(lightName, lightEntry);
-
-#if SVG_TO_SVGZ //svgz
-                    if (!files.ContainsKey($"{name}z?light"))
-                        toSvg.Add($"{name}z?light", lightEntry.gzip);
-#endif
-                }
-            }
-#endif
+            HandleFile(pair.Key.ToLower(), pair.Value, isGzipped);
         }
 
 #if SVG_TO_SVGZ //svgz
@@ -222,6 +213,53 @@ internal sealed class Cache {
         }
 #endif
 
+    }
+
+    private void HandleFile(string name, byte[] bytes, bool isGzipped) {
+        name = name.Replace("\\", "/");
+        name = name.Replace(".html", String.Empty).Replace(".htm", String.Empty);
+        if (name == "/index") { name = "/"; }
+
+        Entry entry = ConstructEntry(name, bytes, isGzipped);
+        cache.AddOrUpdate(name, key => entry, (key, existingValue) => entry);
+
+#if DEBUG
+        _raw += entry.bytes.LongLength;
+        _gzip += entry.gzip.LongLength;
+#if DEFLATE
+            _deflate += entry.deflate.LongLength;
+#endif
+#if BROTLI
+            _brotli += entry.brotli.LongLength;
+#endif
+#endif
+
+#if SVG_TO_SVGZ //svgz
+            if (name.EndsWith(".svg") && !files.ContainsKey($"{pair.Key}z")) {
+                toSvg.Add($"{name}z", entry.gzip);
+            }
+#endif
+
+#if SVG_TO_LIGHT
+        byte[] pattern = "\"#202020\""u8.ToArray();
+        byte[] target = "\"#c0c0c0\""u8.ToArray();
+        if (name.StartsWith("/mono/") && name.EndsWith(".svg")) {
+            if (Data.ContainsBytesSequence(entry.bytes, pattern)) {
+                Data.ReplaceAllBytesSequence(entry.bytes, Encoding.UTF8.GetBytes("\"#202020\""), target);
+                byte[] lightBytes = entry.bytes.ToArray();
+                string lightName = $"{name}?light";
+                Entry lightEntry = ConstructEntry(lightName, lightBytes, false, "svg");
+                cache.AddOrUpdate(lightName, key => lightEntry, (key, existingValue) => lightEntry);
+
+#if SVG_TO_SVGZ //svgz
+                    if (!files.ContainsKey($"{name}z?light")) {
+                        toSvg.Add($"{name}z?light", lightEntry.gzip);
+                    }
+#endif
+
+            }
+        }
+#endif
     }
 
     private Entry ConstructEntry(string name, byte[] bytes, bool isGzipped, string extension = null) {

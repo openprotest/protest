@@ -54,8 +54,6 @@ const KEEP = {
 			let message = JSON.parse(event.data);
 			KEEP.MessageHandler(message);
 		};
-
-		//KEEP.socket.onerror = ex=> {};
 	},
 
 	MessageHandler: message=> {
