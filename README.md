@@ -78,7 +78,7 @@ http {
 }
 ```
 
-* * *This product includes IP2Location LITE data available from http://www.ip2location.com.*
+* *This product includes IP2Location LITE data available from http://www.ip2location.com.*
 * *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
 
 ### Make a donation
