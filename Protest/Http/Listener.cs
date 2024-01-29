@@ -53,6 +53,7 @@ public sealed class Listener {
             IAsyncResult result = listener.BeginGetContext(ListenerCallback, listener);
             result.AsyncWaitHandle.WaitOne();
         }
+
         Console.WriteLine("Listener stopped");
     }
 
@@ -72,6 +73,7 @@ public sealed class Listener {
                 ctx.Response.Close();
                 return;
             }
+
             UriHostNameType type = Uri.CheckHostName(ctx.Request.UrlReferrer.Host);
             if (type != UriHostNameType.Dns && type != UriHostNameType.IPv4 && type != UriHostNameType.IPv6) {
                 ctx.Response.StatusCode = 418; //I'm a teapot

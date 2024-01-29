@@ -174,7 +174,7 @@ class Personalize extends Tabs {
 		if (localStorage.getItem("accent_color"))
 			selected_accent = JSON.parse(localStorage.getItem("accent_color"));
 
-		const accentColors = [[224,56,64], [255,102,0], [255,186,0], [96,192,32], [36,176,244]];
+		const accentColors = [[224,72,64], [255,102,0], [255,186,0], [96,192,32], [36,176,244]];
 
 		for (let i = 0; i < accentColors.length; i++) {
 			let hsl = UI.RgbToHsl(accentColors[i]); //--clr-accent
