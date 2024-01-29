@@ -124,7 +124,7 @@ public sealed class Listener {
             return;
         }
 
-        if (CacheHandler(ctx, path)) return;
+        if (CacheHandler(ctx, path)) { return; }
 
         if (!Auth.IsAuthenticated(ctx)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -138,7 +138,7 @@ public sealed class Listener {
             return;
         }
 
-        if (WebSocketHandler(ctx)) return;
+        if (WebSocketHandler(ctx)) { return; }
 
         Dictionary<string, string> parameters = null;
         string query = ctx.Request.Url.Query;
@@ -146,14 +146,14 @@ public sealed class Listener {
             parameters = ParseQuery(query);
         }
 
-        if (DynamicHandler(ctx, parameters)) return;
+        if (DynamicHandler(ctx, parameters)) { return; }
 
         ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
         ctx.Response.Close();
     }
 
     public static Dictionary<string, string> ParseQuery(string queryString) {
-        if (String.IsNullOrEmpty(queryString)) return null;
+        if (String.IsNullOrEmpty(queryString)) { return null; }
 
         Dictionary<string, string> parameters = new Dictionary<string, string>();
 
@@ -162,7 +162,7 @@ public sealed class Listener {
 
         while (!span.IsEmpty) {
             int equalsIndex = span.IndexOf('=');
-            if (equalsIndex < 0) break;
+            if (equalsIndex < 0) { break; }
 
             ReadOnlySpan<char> key = span[..equalsIndex];
             span = span[(equalsIndex + 1)..];
@@ -186,7 +186,9 @@ public sealed class Listener {
     }
 
     private bool CacheHandler(HttpListenerContext ctx, string path) {
-        if (!cache.cache.TryGetValue(path, out Cache.Entry entry)) return false;
+        if (!cache.cache.TryGetValue(path, out Cache.Entry entry)) {
+            return false;
+        }
 
         if (String.Equals(path, "/", StringComparison.Ordinal)) {
             if (!Auth.IsAuthenticated(ctx)) {
