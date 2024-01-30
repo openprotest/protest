@@ -67,6 +67,17 @@ const UI = {
 			logo.style.width = pos.l_width;
 			logo.style.height = pos.l_height;
 		}
+
+		if (pos.l_top === "48px") {
+			MENU.isDetached = false;
+			attachedmenubutton.style.transform = "none";
+			attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
+			menubutton.style.transform = "scaleY(0)";
+			menubutton.children[0].style.top = "48px";
+		}
+		else {
+			MENU.isDetached = true;
+		}
 	},
 
 	PromptAgent: (parent, command, value)=>{
@@ -262,11 +273,11 @@ const MENU = {
 	isOpen: false,
 	isDragging: false,
 	isMoved: false,
+	isDetached: true,
 	position: [0, 0],
 	index: -1,
 	list: [],
 	history: [],
-	altPress: 0,
 	lastAltPress: 0,
 	filterIndex: -1,
 	lastSearchValue: "",
@@ -659,7 +670,6 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.top = "6px";
 		logo.style.width = "26px";
 		logo.style.height = "26px";
-
 	}
 	else if (event.x < 56 && event.y > container.clientHeight - 48) {
 		menubutton.style.borderRadius = "8px 48px 8px 4px";
@@ -754,6 +764,28 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 
+	if (event.x < 56 && event.y > container.clientHeight - 48 && container.clientHeight - event.y < 0) {
+		attachedmenubutton.style.transform = "none";
+		attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
+		menubutton.style.transform = "scaleY(0)";
+		logo.style.top = "48px";
+
+		if (MENU.isDetached) {
+			MENU.isDetached = false;
+			WIN.AlignIcon();
+		}
+	}
+	else {
+		attachedmenubutton.style.transform = "scaleY(0)";
+		attachedmenubutton.style.boxShadow = "none";
+		menubutton.style.transform = "none";
+
+		if (!MENU.isDetached) {
+			MENU.isDetached = true;
+			WIN.AlignIcon();
+		}
+	}
+
 	MENU.UpdatePosition();
 });
 
@@ -790,7 +822,18 @@ menubutton.onclick = event=> {
 	if (event.button == 0) MENU.Toggle();
 };
 
+attachedmenubutton.onclick = event=> {
+	if (MENU.isMoved) return;
+	if (event.button == 0) MENU.Toggle();
+};
+
 menubutton.onmousedown = event=> {
+	MENU.position = [event.clientX, event.clientY];
+	MENU.isDragging = true;
+	event.stopPropagation();
+};
+
+attachedmenubutton.onmousedown = event=> {
 	MENU.position = [event.clientX, event.clientY];
 	MENU.isDragging = true;
 	event.stopPropagation();

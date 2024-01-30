@@ -95,7 +95,7 @@ internal sealed class Cache {
 
         FileSystemWatcher watcher = new FileSystemWatcher(path);
         watcher.EnableRaisingEvents = true;
-        watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size | NotifyFilters.LastWrite;
+        watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
         watcher.Filter = "*";
         watcher.IncludeSubdirectories = true;
         watcher.Changed += OnFileChanged;
@@ -105,30 +105,35 @@ internal sealed class Cache {
     }
 
     private void OnFileChanged(object source, FileSystemEventArgs e) {
-        Thread.Sleep(500);
         Console.WriteLine($"Hot load: {e.FullPath}");
 
-        FileInfo file = new FileInfo(e.FullPath);
-        if (!file.Exists) {
-            return;
-        }
+        new Thread(() => {
+            Thread.Sleep(250);
 
-        try {
-            using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
-            using BinaryReader br = new BinaryReader(fs);
-            byte[] bytes = br.ReadBytes((int)file.Length);
+            FileInfo file = new FileInfo(e.FullPath);
+            if (!file.Exists) {
+                return;
+            }
 
-            string name = file.FullName;
-            name = name.Replace(path, String.Empty);
-            name = name.Replace("\\", "/");
+            try {
+                using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+                using BinaryReader br = new BinaryReader(fs);
+                byte[] bytes = br.ReadBytes((int)file.Length);
 
-            HandleFile(name, bytes, false);
-        }
-        catch {
-            return;
-        }
+                string name = file.FullName;
+                name = name.Replace(path, String.Empty);
+                name = name.Replace("\\", "/");
 
-        birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
+                HandleFile(name, bytes, false);
+            }
+            catch {
+                return;
+            }
+
+            birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
+
+            KeepAlive.Broadcast(KeepAlive.MSG_FORCE_RELOAD.ToArray(), "/");
+        }).Start();
     }
 
 #if !DEBUG

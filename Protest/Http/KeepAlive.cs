@@ -11,7 +11,7 @@ using Protest.Tools;
 namespace Protest.Http;
 
 internal static class KeepAlive {
-    private static readonly ArraySegment<byte> MSG_FORCE_RELOAD = new(Encoding.UTF8.GetBytes(@"{""action"":""force-reload""}"));
+    public static readonly ArraySegment<byte> MSG_FORCE_RELOAD = new(Encoding.UTF8.GetBytes(@"{""action"":""force-reload""}"));
 
     private struct Entry {
         public WebSocket ws;

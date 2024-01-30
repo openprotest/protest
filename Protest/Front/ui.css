@@ -37,7 +37,8 @@
 	border-radius: 4px 8px 48px 8px;
 	background: var(--grd-taskbar-rev);
 	box-shadow: rgba(0,0,0,.2) 2px 2px 2px;
-	transition: border-radius .4s, width .2s, height .2s;
+	transform-origin: 50% 100%;
+	transition: border-radius .4s, width .2s, height .2s, transform .2s;
 }
 
 #menubutton > div {
@@ -51,6 +52,32 @@
 	background-size: cover;
 	transition-duration: .2s;
 	transition-delay: .1s;
+}
+
+#menubutton:active > div {
+	filter: brightness(0%);
+}
+
+#attachedmenubutton {
+	position: absolute;
+	left: 4px;
+	top: 4px;
+	width: 48px;
+	height: 48px;
+	background-image: url(mono/logo.svg);
+	background-size: 55% 55%;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 48%;
+
+	transform: scaleY(0%);
+	transform-origin: 50% 0%;
+	transition: .2s;
+}
+
+#attachedmenubutton:active {
+	filter: brightness(0%);
+	background-color: rgba(32,32,32,.1);
 }
 
 #menubox {

@@ -37,8 +37,14 @@ const WIN = {
 	always_maxed: false,
 
 	AlignIcon: (ignoreActive)=> {
-		let max = onMobile ? 48 : 56;
-		WIN.iconSize = (taskbar.clientWidth / (WIN.array.length) > max) ? max : taskbar.clientWidth / WIN.array.length;
+		const max = onMobile ? 48 : 56;
+		const total = MENU.isDetached ? WIN.array.length : WIN.array.length+1;
+		WIN.iconSize = (taskbar.clientWidth / total > max) ? max : taskbar.clientWidth / total;
+
+		if (MENU.isDetached === false) {
+			attachedmenubutton.style.width = `${WIN.iconSize - 8}px`;
+			attachedmenubutton.style.height = `${WIN.iconSize - 8}px`;
+		}
 
 		for (let i = 0; i < WIN.array.length; i++) {
 			WIN.array[i].task.style.width = `${WIN.iconSize - 4}px`;
@@ -53,14 +59,16 @@ const WIN = {
 		if (ignoreActive) {
 			for (let i = 0; i < WIN.array.length; i++)
 				if (WIN.array[i].task != WIN.active.task) {
+					const left = `${2 + (MENU.isDetached ? i : i+1) * WIN.iconSize}px`;
+					WIN.array[i].task.style.left = left;
 					WIN.array[i].task.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
-					WIN.array[i].task.style.left = `${2 + i * WIN.iconSize}px`;
 				}
 		}
 		else {
 			for (let i = 0; i < WIN.array.length; i++) {
+				const left = `${2 + (MENU.isDetached ? i : i+1) * WIN.iconSize}px`;
+				WIN.array[i].task.style.left = left;
 				WIN.array[i].task.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
-				WIN.array[i].task.style.left = `${2 + i * WIN.iconSize}px`;
 			}
 
 			setTimeout(()=> {
@@ -381,7 +389,7 @@ class Window {
 		};
 
 		this.task.onmouseup = event=> {
-			if (event.button === 0 && (Math.abs(icoPosition - this.task.offsetLeft) < 4)) { //clicked but not moved
+			if (event.button === 0 && !MENU.isDragging && (Math.abs(icoPosition - this.task.offsetLeft) < 4)) { //clicked but not moved
 				if (this.popOutWindow) {
 					this.popOutWindow.focus();
 				}
