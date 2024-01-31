@@ -143,9 +143,9 @@ class Oversight extends Window {
 			this.socket.send(this.params.file);
 			this.ConsoleLog("Web-socket connection established", "info");
 
-			this.socket.send("ping=true");
-			this.socket.send("cpu=true");
-			this.socket.send("cores=true");
+			//this.socket.send("ping=true");
+			//this.socket.send("cpu=true");
+			//this.socket.send("cores=true");
 
 			if (this.hideConsoleOnce) {
 				this.hideConsoleOnce = false;
@@ -477,21 +477,28 @@ class Oversight extends Window {
 		btnOK.addEventListener("click", ()=> {
 			//TODO:
 			this.count++;
-			this.socket.send(`addwmi=${queryInput.value}&id=${this.count}`);
-			chartsList.push("");
+			//this.socket.send(`wmi=${queryInput.value}&id=${this.count}`);
+
+			this.socket.send(JSON.stringify({
+				action: "addwmi",
+				value: queryInput.value,
+				id: this.count
+			}));
+			
+			this.chartsList.push("");
 		});
 	}
 
 	Start() {
 		if (!this.socket) return;
-		this.socket.send("start");
+		this.socket.send("{\"action\":\"start\"}");
 		this.startButton.disabled = true;
 		this.pauseButton.disabled = false;
 	}
 
 	Pause() {
 		if (!this.socket) return;
-		this.socket.send("pause");
+		this.socket.send("{\"action\":\"pause\"}");
 		this.startButton.disabled = false;
 		this.pauseButton.disabled = true;
 	}

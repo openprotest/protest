@@ -23,9 +23,10 @@ internal static class KeepAlive {
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
 
-    private static readonly JsonSerializerOptions messageSerializerOptions = new();
+    private static readonly JsonSerializerOptions messageSerializerOptions;
 
     static KeepAlive() {
+        messageSerializerOptions = new JsonSerializerOptions();
         messageSerializerOptions.Converters.Add(new MessageJsonConverter());
     }
 

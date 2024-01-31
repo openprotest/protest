@@ -1,6 +1,5 @@
-﻿using System.Net.WebSockets;
-using System.Net;
-using System.Text;
+﻿using System.Net;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
@@ -9,11 +8,38 @@ using System.Net.NetworkInformation;
 using System.Management;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Protest.Http;
 
 namespace Protest.Tools;
 
-internal class Oversight {
+internal static class Oversight {
+    public enum Action {
+        none,
+        start,
+        pause,
+        interval,
+        addicmp,
+        addwmi,
+        addsnmp,
+        remove
+    }
+
+    public struct Query {
+        public Action action;
+        public string value;
+        public int id;
+    }
+
+    private static JsonSerializerOptions actionSerializerOptions;
+
+    static Oversight() {
+        actionSerializerOptions = new JsonSerializerOptions();
+        actionSerializerOptions.Converters.Add(new ActionJsonConverter());
+    }
+
     private static async void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
         if (ws.State != WebSocketState.Open) { return; }
         await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -69,9 +95,9 @@ internal class Oversight {
 
             object sendSync = new object();
             bool paused = false;
-            bool ping = false;
-            bool cpu = false;
-            bool cores = false;
+            bool ping = true;
+            bool cpu = true;
+            bool cores = true;
             int interval = 500;
             ConcurrentDictionary<string, string> wmiQueries = new ConcurrentDictionary<string, string>();
 
@@ -180,20 +206,37 @@ internal class Oversight {
                 }
 
                 string msg = Encoding.Default.GetString(buff, 0, receiveResult.Count);
-                string[] split = msg.Split("=");
-                string value = (split.Length > 1) ? split[1] : null;
+                Console.WriteLine(msg);
 
-                switch (split[0]) {
-                case "start": paused = false; break;
-                case "pause": paused = true; break;
+                Query query = JsonSerializer.Deserialize<Query>(msg, actionSerializerOptions);
+                Console.WriteLine("ac:" + query.action);
+                Console.WriteLine("va:" + query.value);
+                Console.WriteLine("id:" + query.id);
 
-                case "interval"  : _ = int.TryParse(value, out interval); break;
-                case "ping"      : ping = value == "true"; break;
-                case "cpu"       : cpu = value == "true"; break;
-                case "cores"     : cores = value == "true"; break;
-                case "processes" : break;
-                case "addwmi"    : break;
-                case "removewmi" : break;
+                switch (query.action) {
+                case Action.start:
+                    paused = false;
+                    break;
+
+                case Action.pause:
+                    paused = true;
+                    break;
+
+                case Action.interval:
+                    _ = int.TryParse(query.value, out interval);
+                    break;
+
+                case Action.addicmp:
+                    break;
+                
+                case Action.addwmi:
+                    break;
+                
+                case Action.addsnmp:
+                    break;
+
+                case Action.remove:
+                    break;
                 }
             }
         }
@@ -222,11 +265,14 @@ internal class Oversight {
             PingReply reply = p.Send(host, timeout);
 
             return (int)reply.Status switch {
+                (int)IPStatus.Success => reply.RoundtripTime,
+
                 (int)IPStatus.DestinationUnreachable or
                 (int)IPStatus.DestinationHostUnreachable or
                 (int)IPStatus.DestinationNetworkUnreachable => -1,
-                (int)IPStatus.Success => reply.RoundtripTime,
+
                 11050 => -1,
+                
                 _ => -1,
             };
         }
@@ -272,7 +318,6 @@ internal class Oversight {
             }
 
             return cores.ToArray();
-
         }
         catch {
             return null;
@@ -286,5 +331,42 @@ internal class Oversight {
         }
         catch {}
         return null;
+    }
+}
+
+file sealed class ActionJsonConverter : JsonConverter<Oversight.Query> {
+    public override Oversight.Query Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        Oversight.Query action = new Oversight.Query();
+
+        while (reader.Read()) {
+            if (reader.TokenType == JsonTokenType.EndObject) {
+                break;
+            }
+
+            if (reader.TokenType == JsonTokenType.PropertyName) {
+                string propertyName = reader.GetString();
+                reader.Read();
+
+                switch (propertyName) {
+                case "action": action .action = Enum.Parse<Oversight.Action>(reader.GetString()); break;
+                case "value" : action .value  = reader.GetString(); break;
+                case "id"    : action .id     = reader.GetInt32(); break;
+                }
+            }
+        }
+
+        return action ;
+    }
+
+    public override void Write(Utf8JsonWriter writer, Oversight.Query value, JsonSerializerOptions options) {
+        ReadOnlySpan<char> _action  = "action".AsSpan();
+        ReadOnlySpan<char> _value = "value".AsSpan();
+        ReadOnlySpan<char> _id    = stackalloc[] {'i', 'd'};
+
+        writer.WriteStartObject();
+        writer.WriteString(_action, value.action.ToString());
+        writer.WriteString(_value, value.value);
+        writer.WriteNumber(_id, value.id);
+        writer.WriteEndObject();
     }
 }

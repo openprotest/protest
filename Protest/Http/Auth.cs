@@ -12,7 +12,7 @@ internal static class Auth {
     private const long HOUR = 36_000_000_000L;
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
 
-    private static readonly JsonSerializerOptions serializerOptions = new();
+    private static readonly JsonSerializerOptions serializerOptions;
     
     internal static readonly ConcurrentDictionary<string, AccessControl> acl = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
@@ -37,6 +37,7 @@ internal static class Auth {
     }
 
     static Auth() {
+        serializerOptions = new JsonSerializerOptions();
         serializerOptions.Converters.Add(new AccessControlJsonConverter());
     }
 

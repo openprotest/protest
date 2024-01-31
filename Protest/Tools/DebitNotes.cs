@@ -10,7 +10,7 @@ namespace Protest.Tools;
 internal static class DebitNotes {
     static private readonly object syncLock = new object();
 
-    static private readonly JsonSerializerOptions debitSerializerOptions = new();
+    static private readonly JsonSerializerOptions debitSerializerOptions;
 
     public record Device {
         public string description;
@@ -34,6 +34,7 @@ internal static class DebitNotes {
     }
 
     static DebitNotes() {
+        debitSerializerOptions = new JsonSerializerOptions();
         debitSerializerOptions.Converters.Add(new DebitJsonConverter());
     }
 

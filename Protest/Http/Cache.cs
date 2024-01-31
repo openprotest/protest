@@ -6,11 +6,11 @@
 //#define SVG_TO_SVGZ
 #define SVG_TO_LIGHT
 
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Collections.Generic;
 using System.Text;
-using System.Collections.Concurrent;
 using System.Threading;
 
 namespace Protest.Http;
@@ -87,7 +87,7 @@ internal sealed class Cache {
         LoadFiles();
 
 #if DEBUG
-        Console.WriteLine("Front end cache:");
+        Console.WriteLine("Front-end cache:");
         if (_gzip > 0)    { Console.WriteLine($"  GZip    : {100 * _gzip / (_raw + 1),5}% {_raw,10} -> {_gzip,8}"); }
         if (_deflate > 0) { Console.WriteLine($"  Deflate : {100 * _deflate / (_raw + 1),5}% {_raw,10} -> {_deflate,8}"); }
         if (_brotli > 0)  { Console.WriteLine($"  Brotli  : {100 * _brotli / (_raw + 1),5}% {_raw,10} -> {_brotli,8}"); }

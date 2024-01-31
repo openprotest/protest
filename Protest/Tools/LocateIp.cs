@@ -9,10 +9,13 @@ namespace Protest.Tools;
 
 internal static class LocateIp {
 
-    static private readonly JsonSerializerOptions locationDerializerOptions = new();
-    static private readonly JsonSerializerOptions locationDerializerOptionsOnlyLocation = new();
+    static private readonly JsonSerializerOptions locationDerializerOptions;
+    static private readonly JsonSerializerOptions locationDerializerOptionsOnlyLocation;
 
     static LocateIp() {
+        locationDerializerOptions = new JsonSerializerOptions();
+        locationDerializerOptionsOnlyLocation = new JsonSerializerOptions();
+
         locationDerializerOptions.Converters.Add(new IP2LApiJsonConverter(false));
         locationDerializerOptionsOnlyLocation.Converters.Add(new IP2LApiJsonConverter(true));
     }

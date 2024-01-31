@@ -53,9 +53,10 @@ public static class PasswordStrength {
             "dragon"
     };
 
-    static private readonly JsonSerializerOptions emailProfilesSerializerOptions = new();
+    static private readonly JsonSerializerOptions emailProfilesSerializerOptions;
     
     static PasswordStrength() {
+        emailProfilesSerializerOptions = new JsonSerializerOptions();
         emailProfilesSerializerOptions.Converters.Add(new SmtpProfilesJsonConverter(false));
     }
 

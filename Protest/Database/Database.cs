@@ -42,15 +42,20 @@ public sealed class Database {
     private long lastCachedVersion = -1;
     private Cache.Entry lastCached;
 
-    private readonly JsonSerializerOptions databaseSerializerOptions = new();
-    private readonly JsonSerializerOptions attrubutesSerializerOptions = new();
-    private readonly JsonSerializerOptions attrubutesSerializerOptionsWithPassword = new();
-    private readonly JsonSerializerOptions contactsSerializerOptions = new();
+    private readonly JsonSerializerOptions databaseSerializerOptions;
+    private readonly JsonSerializerOptions attrubutesSerializerOptions;
+    private readonly JsonSerializerOptions attrubutesSerializerOptionsWithPassword;
+    private readonly JsonSerializerOptions contactsSerializerOptions;
 
     public Database(string name, string location) {
         this.name = name;
         this.location = location;
         dictionary = new ConcurrentDictionary<string, Entry>();
+
+        databaseSerializerOptions = new JsonSerializerOptions();
+        attrubutesSerializerOptions = new JsonSerializerOptions();
+        attrubutesSerializerOptionsWithPassword = new JsonSerializerOptions();
+        contactsSerializerOptions = new JsonSerializerOptions();
 
         databaseSerializerOptions.Converters.Add(new DatabaseJsonConverter(name, location, true));
         attrubutesSerializerOptions.Converters.Add(new AttributesJsonConverter(true));

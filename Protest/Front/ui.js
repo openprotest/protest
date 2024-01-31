@@ -17,8 +17,9 @@ const UI = {
 		}
 
 		//automatically disable animations if prefers-reduced-motion
-		if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("animations") === null)
+		if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("animations") === null) {
 			localStorage.setItem("animations", "false");
+		}
 
 		WIN.always_maxed = localStorage.getItem("w_always_maxed") === "true";
 		taskbar.className = localStorage.getItem("w_tasktooltip") === "false" ? "no-tooltip" : "";

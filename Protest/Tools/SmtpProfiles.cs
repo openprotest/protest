@@ -8,8 +8,8 @@ using System.Text.Json.Serialization;
 
 namespace Protest.Tools;
 internal static class SmtpProfiles {
-    static readonly JsonSerializerOptions smtpProfileSerializerOptions = new();
-    static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords = new();
+    static readonly JsonSerializerOptions smtpProfileSerializerOptions;
+    static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
     public record Profile {
         public string server;
@@ -23,6 +23,9 @@ internal static class SmtpProfiles {
     }
 
     static SmtpProfiles() {
+        smtpProfileSerializerOptions = new JsonSerializerOptions();
+        smtpProfileSerializerOptionsWithPasswords = new JsonSerializerOptions();
+
         smtpProfileSerializerOptions.Converters.Add(new SmtpProfilesJsonConverter(true));
         smtpProfileSerializerOptionsWithPasswords.Converters.Add(new SmtpProfilesJsonConverter(false));
     }

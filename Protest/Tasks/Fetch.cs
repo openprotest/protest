@@ -33,12 +33,13 @@ internal static class Fetch {
         public int unsuccessful;
     }
 
-    private static readonly JsonSerializerOptions fetchSerializerOptions = new();
+    private static readonly JsonSerializerOptions fetchSerializerOptions;
 
     public static TaskWrapper task;
     private static Result? result;
 
     static Fetch() {
+        fetchSerializerOptions = new JsonSerializerOptions();
         fetchSerializerOptions.Converters.Add(new FetchedDataJsonConverter());
     }
 
