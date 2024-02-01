@@ -1,12 +1,12 @@
 :root {
-	--oversight-console-height: min(280px, 30%);
+	--monitor-console-height: min(280px, 30%);
 }
 
-.oversight-console {
+.monitor-console {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
-	height: var(--oversight-console-height);
+	height: var(--monitor-console-height);
 	padding: 8px;
 	box-sizing: border-box;
 	color: var(--clr-light);
@@ -17,7 +17,7 @@
 	transition: .2s;
 }
 
-.oversight-console-line {
+.monitor-console-line {
 	padding-left: 28px;
 	background-size: 20px 20px;
 	background-position: 4px center;
@@ -25,20 +25,20 @@
 	line-height: 24px;
 }
 
-.oversight-scrollable {
+.monitor-scrollable {
 	position: absolute;
 	left: 0;
 	right: 0;
 	top: 0;
-	bottom: var(--oversight-console-height);
+	bottom: var(--monitor-console-height);
 	overflow-y: auto;
 }
 
-.oversight-toggle-button {
+.monitor-toggle-button {
 	all: unset;
 	position: absolute;
 	right: 8px;
-	bottom: var(--oversight-console-height);
+	bottom: var(--monitor-console-height);
 	width: 28px !important;
 	min-width: 28px !important;
 	height: 28px!important;
@@ -51,17 +51,17 @@
 	background-position: center;
 	background-repeat: no-repeat;
 }
-.oversight-toggle-button:active {
+.monitor-toggle-button:active {
 	background-size: 22px 22px;
 }
 
-.oversight-graph-container {
+.monitor-graph-container {
 	position: relative;
 	max-width: 960px;
 	padding: 8px 16px;
 }
 
-.oversight-graph-inner {
+.monitor-graph-inner {
 	position: relative;
 	background-color: color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%);
 	width: calc(100% - 200px);
@@ -70,13 +70,13 @@
 	overflow: hidden;
 }
 
-.oversight-graph-inner > canvas {
+.monitor-graph-inner > canvas {
 	position: absolute;
 	right: 4px;
 	top: 0;
 }
 
-.oversight-graph-title {
+.monitor-graph-title {
 	position: absolute;
 	left: 4px;
 	right: 4px;
@@ -91,7 +91,7 @@
 	pointer-events: none;
 }
 
-.oversight-graph-value {
+.monitor-graph-value {
 	position: absolute;
 	right: 8px;
 	top: 20px;
@@ -104,7 +104,7 @@
 	text-overflow: ellipsis;
 }
 
-.oversight-template {
+.monitor-template {
 	display: inline-block;
 	vertical-align: top;
 	width: 150px;
@@ -122,10 +122,10 @@
 	transition: .2s;
 }
 
-.oversight-template:hover {
+.monitor-template:hover {
 	background-color: var(--clr-highlight);
 }
 
-.oversight-template:active {
+.monitor-template:active {
 	background-color: var(--clr-select);
 }

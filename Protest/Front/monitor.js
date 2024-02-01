@@ -1,10 +1,10 @@
-class Oversight extends Window {
+class Monitor extends Window {
 	constructor(params) {
 		super();
 		this.params = params ?? { file: null};
 		this.params.stats ??= [];
 		
-		this.SetIcon("mono/oversight.svg");
+		this.SetIcon("mono/resmonitor.svg");
 
 		this.socket = null;
 		this.link = LOADER.devices.data[this.params.file];
@@ -15,22 +15,22 @@ class Oversight extends Window {
 		this.count = 0;
 
 		if (params.file && !this.link) {
-			this.SetTitle("Resources oversight - not found");
+			this.SetTitle("Resource monitor - not found");
 			this.ConfirmBox("Device no longer exists", true).addEventListener("click", ()=>this.Close());
 			return;
 		}
 
-		this.AddCssDependencies("oversight.css");
+		this.AddCssDependencies("monitor.css");
 		this.AddCssDependencies("wmi.css");
 		
 		if (this.link.name && this.link.name.v.length > 0) {
-			this.SetTitle(`Resources oversight - ${this.link.name.v}`);
+			this.SetTitle(`Resource monitor - ${this.link.name.v}`);
 		}
 		else if (this.link.ip && this.link.ip.v.length > 0) {
-			this.SetTitle(`Resources oversight - ${this.link.ip.v}`);
+			this.SetTitle(`Resource monitor - ${this.link.ip.v}`);
 		}
 		else {
-			this.SetTitle("Resources oversight");
+			this.SetTitle("Resource monitor");
 		}
 
 		this.SetupToolbar();
@@ -44,14 +44,14 @@ class Oversight extends Window {
 		this.startButton.disabled = true;
 
 		this.scrollable = document.createElement("div");
-		this.scrollable.className = "oversight-scrollable";
+		this.scrollable.className = "monitor-scrollable";
 
 		this.consoleBox = document.createElement("div");
-		this.consoleBox.className = "oversight-console";
+		this.consoleBox.className = "monitor-console";
 
 		this.toggleConsoleButton = document.createElement("input");
 		this.toggleConsoleButton.type = "button";
-		this.toggleConsoleButton.className = "oversight-toggle-button";
+		this.toggleConsoleButton.className = "monitor-toggle-button";
 
 		this.content.append(this.scrollable, this.consoleBox, this.toggleConsoleButton);
 
@@ -136,7 +136,7 @@ class Oversight extends Window {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
-		this.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/oversight");
+		this.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/monitor");
 
 		this.socket.onopen = event=> {
 			this.connectRetries = 0;
@@ -190,13 +190,13 @@ class Oversight extends Window {
 
 	ToggleConsole() {
 		if (this.consoleBox.style.visibility === "hidden") {
-			this.scrollable.style.bottom = "var(--oversight-console-height)";
+			this.scrollable.style.bottom = "var(--monitor-console-height)";
 
 			this.consoleBox.style.visibility = "visible";
 			this.consoleBox.style.opacity = "1";
-			this.consoleBox.style.height = "var(--oversight-console-height)";
+			this.consoleBox.style.height = "var(--monitor-console-height)";
 
-			this.toggleConsoleButton.style.bottom = "var(--oversight-console-height)";
+			this.toggleConsoleButton.style.bottom = "var(--monitor-console-height)";
 			this.toggleConsoleButton.style.transform = "none";
 		}
 		else {
@@ -236,7 +236,7 @@ class Oversight extends Window {
 
 	async AddChart() {
 		if (!this.socket) {
-			this.ConfirmBox("Web-socket is disconnected.", "mono/oversight.svg", true);
+			this.ConfirmBox("Web-socket is disconnected.", "mono/resmonitor.svg", true);
 			return;
 		}
 
@@ -265,7 +265,7 @@ class Oversight extends Window {
 		const wmiClasses = await this.GetWmiClasses();
 		if (!wmiClasses.classes) {
 			btnOK.onclick();
-			setTimeout(()=> this.ConfirmBox("Unable to load WMI classes.", true, "mono/oversight.svg"), 250);
+			setTimeout(()=> this.ConfirmBox("Unable to load WMI classes.", true, "mono/resmonitor.svg"), 250);
 			return;
 		}
 
@@ -328,7 +328,7 @@ class Oversight extends Window {
 			const template = document.createElement("div");
 			template.textContent = name;
 			template.style.backgroundImage = `url(${icon})`;
-			template.className = "oversight-template";
+			template.className = "monitor-template";
 			return template;
 		};
 
@@ -505,21 +505,21 @@ class Oversight extends Window {
 
 	CreateChart(name, height, options) {
 		const container = document.createElement("div");
-		container.className = "oversight-graph-container";
+		container.className = "monitor-graph-container";
 		this.scrollable.appendChild(container);
 
 		const inner = document.createElement("div");
-		inner.className = "oversight-graph-inner";
+		inner.className = "monitor-graph-inner";
 		inner.style.height = `${height}px`;
 		container.appendChild(inner);
 
 		const titleLabel = document.createElement("div");
-		titleLabel.className = "oversight-graph-title";
+		titleLabel.className = "monitor-graph-title";
 		titleLabel.textContent = name;
 		inner.appendChild(titleLabel);
 
 		const valueLabel = document.createElement("div");
-		valueLabel.className = "oversight-graph-value";
+		valueLabel.className = "monitor-graph-value";
 		container.appendChild(valueLabel);
 
 		switch(options.type) {
@@ -691,7 +691,7 @@ class Oversight extends Window {
 
 				for (let i=0; i<valuesArray.length; i++) {
 					const container = document.createElement("div");
-					container.className = "oversight-graph-inner";
+					container.className = "monitor-graph-inner";
 					container.style.position = "absolute";
 					container.style.left = `${100 * (i % normalizedLength) / normalizedLength}%`;
 					container.style.top = `${(height + 8) * Math.floor(i / normalizedLength)}px`;
@@ -796,7 +796,7 @@ class Oversight extends Window {
 
 	ConsoleLog(text, level) {
 		const line = document.createElement("div");
-		line.className = "oversight-console-line";
+		line.className = "monitor-console-line";
 		line.innerText = `${new Date().toLocaleTimeString(UI.regionalFormat, {})} - ${text}`;
 
 		switch (level) {

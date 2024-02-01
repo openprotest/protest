@@ -319,7 +319,7 @@ internal static partial class Lifeline {
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("file", out string file);
-        if (String.IsNullOrEmpty(file)) return null;
+        if (String.IsNullOrEmpty(file)) { return null; }
 
         parameters.TryGetValue("date", out string date);
         if (String.IsNullOrEmpty(date)) {
@@ -339,7 +339,7 @@ internal static partial class Lifeline {
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("host", out string host);
-        if (String.IsNullOrEmpty(host)) return null;
+        if (String.IsNullOrEmpty(host)) { return null; }
 
         parameters.TryGetValue("date", out string date);
         if (String.IsNullOrEmpty(date)) {

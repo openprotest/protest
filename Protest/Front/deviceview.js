@@ -274,8 +274,8 @@ class DeviceView extends View {
 						wmi.SetTitle(this.link.name.v + " - Services");
 				};
 
-				const btnOversight = this.CreateSideButton("mono/oversight.svg", "Resources oversight");
-				btnOversight.onclick = ()=> new Oversight({file: this.params.file});
+				const btnMonitor = this.CreateSideButton("mono/resmonitor.svg", "Resource monitor");
+				btnMonitor.onclick = ()=> new Monitor({file: this.params.file});
 
 				const btnComputerMng = this.CreateSideButton("mono/computermanage.svg", "Management");
 				btnComputerMng.onclick = ()=> UI.PromptAgent(this, "management", host);
@@ -824,33 +824,35 @@ class DeviceView extends View {
 				oMonth = 11;
 			}
 
+			oMonth = (oMonth+1).toString().padStart(2,0);
+
 			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskUsageArray] = await Promise.all([
 				(async ()=> {
-					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth+1}`);
+					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/cpu/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const response = await fetch(`lifeline/cpu/view?file=${this.params.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 	
 				(async ()=> {
-					const response = await fetch(`lifeline/memory/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const response = await fetch(`lifeline/memory/view?file=${this.params.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 	
 				(async ()=> {
-					const response = await fetch(`lifeline/disk/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const response = await fetch(`lifeline/disk/view?file=${this.params.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/diskusage/view?file=${this.params.file}&date=${oYear}${oMonth+1}`);
+					const response = await fetch(`lifeline/diskusage/view?file=${this.params.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})()

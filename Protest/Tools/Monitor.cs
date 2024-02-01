@@ -15,7 +15,7 @@ using Protest.Http;
 
 namespace Protest.Tools;
 
-internal static class Oversight {
+internal static class Monitor {
     public enum Action {
         none,
         start,
@@ -35,7 +35,7 @@ internal static class Oversight {
 
     private static JsonSerializerOptions actionSerializerOptions;
 
-    static Oversight() {
+    static Monitor() {
         actionSerializerOptions = new JsonSerializerOptions();
         actionSerializerOptions.Converters.Add(new ActionJsonConverter());
     }
@@ -334,9 +334,9 @@ internal static class Oversight {
     }
 }
 
-file sealed class ActionJsonConverter : JsonConverter<Oversight.Query> {
-    public override Oversight.Query Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-        Oversight.Query action = new Oversight.Query();
+file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
+    public override Monitor.Query Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        Monitor.Query action = new Monitor.Query();
 
         while (reader.Read()) {
             if (reader.TokenType == JsonTokenType.EndObject) {
@@ -348,7 +348,7 @@ file sealed class ActionJsonConverter : JsonConverter<Oversight.Query> {
                 reader.Read();
 
                 switch (propertyName) {
-                case "action": action .action = Enum.Parse<Oversight.Action>(reader.GetString()); break;
+                case "action": action .action = Enum.Parse<Monitor.Action>(reader.GetString()); break;
                 case "value" : action .value  = reader.GetString(); break;
                 case "id"    : action .id     = reader.GetInt32(); break;
                 }
@@ -358,7 +358,7 @@ file sealed class ActionJsonConverter : JsonConverter<Oversight.Query> {
         return action ;
     }
 
-    public override void Write(Utf8JsonWriter writer, Oversight.Query value, JsonSerializerOptions options) {
+    public override void Write(Utf8JsonWriter writer, Monitor.Query value, JsonSerializerOptions options) {
         ReadOnlySpan<char> _action  = "action".AsSpan();
         ReadOnlySpan<char> _value = "value".AsSpan();
         ReadOnlySpan<char> _id    = stackalloc[] {'i', 'd'};

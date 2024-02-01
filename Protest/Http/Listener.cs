@@ -441,8 +441,8 @@ public sealed class Listener {
             //Ssh.WebSocketHandler(ctx);
             break;
 
-        case "/ws/oversight":
-            Tools.Oversight.WebSocketHandler(ctx);
+        case "/ws/monitor":
+            Tools.Monitor.WebSocketHandler(ctx);
             return true;
 
         case "/ws/livestats/device":
