@@ -18,7 +18,6 @@
 
 global using System;
 global using System.Linq;
-using System.Diagnostics;
 
 namespace Protest;
 internal class Program {

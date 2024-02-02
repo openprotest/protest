@@ -206,12 +206,7 @@ internal static class Monitor {
                 }
 
                 string msg = Encoding.Default.GetString(buff, 0, receiveResult.Count);
-                Console.WriteLine(msg);
-
                 Query query = JsonSerializer.Deserialize<Query>(msg, actionSerializerOptions);
-                Console.WriteLine("ac:" + query.action);
-                Console.WriteLine("va:" + query.value);
-                Console.WriteLine("id:" + query.id);
 
                 switch (query.action) {
                 case Action.start:
@@ -295,12 +290,13 @@ internal static class Monitor {
         List<byte> cores = new List<byte>();
 
         try {
-            using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
+            using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Nalime = '_Total'")).Get();
             IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
             if (perfTotalEnum is null) { return null; }
             foreach (ManagementObject o in perfTotalEnum) {
-                if (o is null)
+                if (o is null) {
                     continue;
+                }
                 ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
                 cores.Add((byte)(100 - idle));
             }
@@ -310,8 +306,9 @@ internal static class Monitor {
                 IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
                 //if (perfEnum is null) { return null; }
                 foreach (ManagementObject o in perfEnum) {
-                    if (o is null)
+                    if (o is null) {
                         continue;
+                    }
                     ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
                     cores.Add((byte)(100 - idle));
                 }

@@ -324,11 +324,16 @@ class Monitor extends Window {
 			formatInput.appendChild(newOption);
 		}
 
-		const CreateTemplate = (name, icon)=>{
+		const CreateTemplate = (name, icon, type, query) => {
 			const template = document.createElement("div");
 			template.textContent = name;
 			template.style.backgroundImage = `url(${icon})`;
 			template.className = "monitor-template";
+
+			template.ondblclick = ()=> {
+				queryInput.value = query;
+			};
+
 			return template;
 		};
 
@@ -346,19 +351,97 @@ class Monitor extends Window {
 			wmiTab.style.background = "";
 			wmiTab.style.backgroundColor = "";
 
-			templatesBox.appendChild(CreateTemplate("Uptime", "mono/clock.svg"));
-			templatesBox.appendChild(CreateTemplate("SAT score", "mono/personalize.svg"));
-			templatesBox.appendChild(CreateTemplate("BIOS", "mono/chip.svg"));
-			templatesBox.appendChild(CreateTemplate("CPU", "mono/cpu.svg"));
-			templatesBox.appendChild(CreateTemplate("CPU Cores", "mono/cpu.svg"));
-			templatesBox.appendChild(CreateTemplate("RAM", "mono/ram.svg"));
-			templatesBox.appendChild(CreateTemplate("Disk usage", "mono/hdd.svg"));
-			templatesBox.appendChild(CreateTemplate("Network usage", "mono/portscan.svg"));
-			templatesBox.appendChild(CreateTemplate("Ping", "mono/ping.svg"));
-			templatesBox.appendChild(CreateTemplate("Processes", "mono/console.svg"));
-			templatesBox.appendChild(CreateTemplate("Battery", "mono/battery.svg"));
-			templatesBox.appendChild(CreateTemplate("Monitor", "mono/monitor.svg"));
-			templatesBox.appendChild(CreateTemplate("User info", "mono/user.svg"));
+			templatesBox.appendChild(CreateTemplate(
+				"Boot time",
+				"mono/clock.svg",
+				"wmi",
+				"SELECT LastBootUpTime FROM Win32_OperatingSystem"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"SAT score",
+				"mono/personalize.svg",
+				"wmi",
+				"SELECT WinSPRLevel FROM Win32_WinSAT"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"BIOS",
+				"mono/chip.svg",
+				"wmi",
+				"SELECT * FROM Win32_BIOS"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"CPU",
+				"mono/cpu.svg",
+				"wmi",
+				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"CPU Cores",
+				"mono/cpu.svg",
+				"wmi",
+				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"RAM",
+				"mono/ram.svg",
+				"wmi",
+				"SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM Win32_OperatingSystem"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"Disk usage",
+				"mono/hdd.svg",
+				"wmi",
+				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"Network usage",
+				"mono/portscan.svg",
+				"wmi",
+				"SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface"
+			));
+			
+			templatesBox.appendChild(CreateTemplate(
+				"Ping",
+				"mono/ping.svg",
+				"icmp",
+				"ping"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"Processes",
+				"mono/console.svg",
+				"wmi",
+				"SELECT Name, ProcessId FROM Win32_Process"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"Battery",
+				"mono/battery.svg",
+				"wmi",
+				"SELECT * FROM Win32_Battery"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"Monitor",
+				"mono/monitor.svg",
+				"wmi",
+				"SELECT * FROM Win32_DesktopMonitor"
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"User info",
+				"mono/user.svg",
+				"wmi",
+				"SELECT UserName FROM Win32_ComputerSystem"
+			));
+
 		};
 
 		wmiTab.onclick = ()=> {
