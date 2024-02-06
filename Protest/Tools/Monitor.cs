@@ -235,23 +235,27 @@ internal static class Monitor {
                 }
             }
         }
-        catch (ManagementException ex) {
-            Logger.Error(ex);
+        catch (JsonException) {
+            return; //do nothing
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
-            return;
+            return; //do nothing
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
+            Logger.Error(ex);
+        }
+        catch (ManagementException ex) {
             Logger.Error(ex);
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
-        finally {
+
+        try {
             if (ws.State == WebSocketState.Open) {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-        }
+        } catch {}
     }
 
     private static long DoPing(string host, int timeout) {

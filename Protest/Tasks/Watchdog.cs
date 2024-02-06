@@ -972,10 +972,20 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
                 notification.notify = (Watchdog.NotifyWhen)reader.GetInt32();
                 break;
             case "recipients":
-                notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                try {
+                    notification.recipients = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                }
+                catch (JsonException ex){
+                    Logger.Error(ex);
+                }
                 break;
             case "watchers":
-                notification.watchers = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                try {
+                    notification.watchers = JsonSerializer.Deserialize<string[]>(ref reader, options);
+                }
+                catch (JsonException ex) {
+                    Logger.Error(ex);
+                }
                 break;
 
             case "smtpprofile":

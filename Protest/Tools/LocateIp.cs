@@ -190,6 +190,9 @@ internal static class LocateIp {
             string access = JsonSerializer.Deserialize<string>(data, onlyLocation ? locationDerializerOptionsOnlyLocation : locationDerializerOptions) ;
             return Encoding.UTF8.GetBytes(access);
         }
+        catch (JsonException) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
         catch {
             return "not found"u8.ToArray();
         }

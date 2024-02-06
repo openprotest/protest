@@ -328,34 +328,40 @@ public sealed class Database {
     }
 
     public byte[] SaveHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
-        string file;
-        if (parameters is not null) {
-            parameters!.TryGetValue("file", out file);
+        try {
+            string file;
+            if (parameters is not null) {
+                parameters!.TryGetValue("file", out file);
+            }
+            else {
+               file = GenerateFilename();
+            }
+
+            string payload;
+            using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+            payload = reader.ReadToEnd();
+
+            if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
+
+            ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, attrubutesSerializerOptionsWithPassword);
+
+            long date = DateTime.UtcNow.Ticks;
+
+            foreach (KeyValuePair<string, Attribute> pair in modifications) {
+                pair.Value.origin = origin;
+                pair.Value.date = date;
+            }
+
+            if (Save(file, modifications, SaveMethod.overwrite, origin)) {
+                return Encoding.UTF8.GetBytes($"{{\"status\":\"ok\", \"filename\":\"{Data.EscapeJsonText(file)}\"}}");
+            }
+
+            return Data.CODE_FAILED.Array;
         }
-        else {
-           file = GenerateFilename();
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return null;
         }
-
-        string payload;
-        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        payload = reader.ReadToEnd();
-
-        if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
-
-        ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, attrubutesSerializerOptionsWithPassword);
-
-        long date = DateTime.UtcNow.Ticks;
-
-        foreach (KeyValuePair<string, Attribute> pair in modifications) {
-            pair.Value.origin = origin;
-            pair.Value.date = date;
-        }
-
-        if (Save(file, modifications, SaveMethod.overwrite, origin)) {
-            return Encoding.UTF8.GetBytes($"{{\"status\":\"ok\", \"filename\":\"{Data.EscapeJsonText(file)}\"}}");
-        }
-
-        return Data.CODE_FAILED.Array;
     }
 
     public byte[] DeleteHandler(Dictionary<string, string> parameters, string origin) {

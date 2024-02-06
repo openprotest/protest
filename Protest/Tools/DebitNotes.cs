@@ -90,7 +90,13 @@ internal static class DebitNotes {
                 string data = File.ReadAllText(files[i].FullName);
                 if (String.IsNullOrEmpty(data)) continue;
 
-                Record record = JsonSerializer.Deserialize<Record>(data, debitSerializerOptions);
+                Record record;
+                try {
+                    record = JsonSerializer.Deserialize<Record>(data, debitSerializerOptions);
+                }
+                catch {
+                    continue;
+                }
 
                 if (record.issuedDate < afterDate) continue;
 
@@ -200,7 +206,13 @@ internal static class DebitNotes {
     }
 
     public static byte[] Create(string payload, string origin) {
-        Record record = JsonSerializer.Deserialize<Record>(payload, debitSerializerOptions);
+        Record record;
+        try {
+            record = JsonSerializer.Deserialize<Record>(payload, debitSerializerOptions);
+        }
+        catch {
+            return Data.CODE_FAILED.Array;
+        }
 
         string name = $"D-{Database.GenerateFilename()}";
 

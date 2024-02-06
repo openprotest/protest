@@ -441,7 +441,6 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT UserName FROM Win32_ComputerSystem"
 			));
-
 		};
 
 		wmiTab.onclick = ()=> {
@@ -562,13 +561,14 @@ class Monitor extends Window {
 			this.count++;
 			//this.socket.send(`wmi=${queryInput.value}&id=${this.count}`);
 
-			this.socket.send(JSON.stringify({
+			const chart = {
 				action: "addwmi",
 				value: queryInput.value,
 				id: this.count
-			}));
-			
-			this.chartsList.push("");
+			};
+
+			this.chartsList.push(chart);
+			this.socket.send(JSON.stringify(chart));
 		});
 	}
 

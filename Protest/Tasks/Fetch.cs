@@ -1225,11 +1225,14 @@ internal static class Fetch {
         JsonSerializerOptions options = new JsonSerializerOptions();
 #pragma warning restore CA1869
         options.Converters.Add(new DatabaseJsonConverter("import", $"{Data.DIR_DEVICES}_import", false));
-        Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
-        foreach (Database.Entry entry in import.dictionary.Values) {
-            DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
+        try {
+            Database import = JsonSerializer.Deserialize<Database>(bytes, options);
+            foreach (Database.Entry entry in import.dictionary.Values) {
+                DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
+            }
         }
+        catch { }
     }
 
     public static void ImportUsersV5(Uri uri, CookieContainer cookieContainer) {
@@ -1248,11 +1251,14 @@ internal static class Fetch {
         JsonSerializerOptions options = new JsonSerializerOptions();
 #pragma warning restore CA1869
         options.Converters.Add(new DatabaseJsonConverter("import", $"{Data.DIR_USERS}_import", false));
-        Database import = JsonSerializer.Deserialize<Database>(bytes, options);
 
-        foreach (Database.Entry entry in import.dictionary.Values) {
-            DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
+        try {
+            Database import = JsonSerializer.Deserialize<Database>(bytes, options);
+            foreach (Database.Entry entry in import.dictionary.Values) {
+                DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
+            }
         }
+        catch {}
     }
 
     private record DebitParseHelper {
@@ -1275,14 +1281,15 @@ internal static class Fetch {
         Task<HttpResponseMessage> listResponse = client.GetAsync($"debit/list?upto=all&short=true&long=true&returned=true");
         string listPayload = listResponse.Result.Content.ReadAsStringAsync().Result;
 
-        DebitParseHelper[] records = JsonSerializer.Deserialize<DebitParseHelper[]>(listPayload);
-        Console.WriteLine(records.Length);
-
-        for (int i = 0; i < records.Length; i++) {
-            Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
-            string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
-            DebitNotes.Create(viewPayload, "Import task");
+        try {
+            DebitParseHelper[] records = JsonSerializer.Deserialize<DebitParseHelper[]>(listPayload);
+            for (int i = 0; i < records.Length; i++) {
+                Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
+                string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
+                DebitNotes.Create(viewPayload, "Import task");
+            }
         }
+        catch {}
     }
 
     public static string GetHiddenAttribute(Uri uri, CookieContainer cookieContainer, string path) {
