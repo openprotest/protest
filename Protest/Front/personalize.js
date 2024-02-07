@@ -377,7 +377,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(divRegion);
 
 		this.region = document.createElement("select");
-		this.region.style.width = "200px";
+		this.region.style.width = "220px";
 		this.tabsPanel.appendChild(this.region);
 
 		const countries = [

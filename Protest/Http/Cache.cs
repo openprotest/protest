@@ -105,7 +105,7 @@ internal sealed class Cache {
     }
 
     private void OnFileChanged(object source, FileSystemEventArgs e) {
-        Console.WriteLine($"Hot load: {e.FullPath}");
+        Console.WriteLine($"Reloading: {e.FullPath}");
 
         new Thread(() => {
             Thread.Sleep(250);

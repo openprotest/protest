@@ -2969,37 +2969,6 @@
 			]
 		},
 		{
-			"class": "Win32_PerfFormattedData_Tcpip_NetworkInterface",
-			"properties": [
-				"BytesReceivedPerSec",
-				"BytesSentPerSec",
-				"BytesTotalPerSec",
-				"Caption",
-				"CurrentBandwidth",
-				"Description",
-				"Frequency_Object",
-				"Frequency_PerfTime",
-				"Frequency_Sys100NS",
-				"Name",
-				"OutputQueueLength",
-				"PacketsOutboundDiscarded",
-				"PacketsOutboundErrors",
-				"PacketsPerSec",
-				"PacketsReceivedDiscarded",
-				"PacketsReceivedErrors",
-				"PacketsReceivedNonUnicastPerSec",
-				"PacketsReceivedPerSec",
-				"PacketsReceivedUnicastPerSec",
-				"PacketsReceivedUnknown",
-				"PacketsSentNonUnicastPerSec",
-				"PacketsSentPerSec",
-				"PacketsSentUnicastPerSec",
-				"Timestamp_Object",
-				"Timestamp_PerfTime",
-				"Timestamp_Sys100NS"
-			]
-		},
-		{
 			"class": "Win32_PerfFormattedData_PerfOS_Memory",
 			"properties": [
 				"AvailableBytes",

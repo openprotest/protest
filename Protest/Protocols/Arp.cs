@@ -10,7 +10,7 @@ internal static partial class Arp {
 
     [SupportedOSPlatform("windows")]
     [LibraryImport("iphlpapi.dll")]
-    private static partial uint SendARP(uint destIP, uint srcIP, in byte[] macAddr, ref int macAddrLen);
+    private static partial int SendARP(uint destIP, uint srcIP, byte[] macAddr, ref int macAddrLen);
 
     [GeneratedRegex("^((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\s+\\w+){2}\\s+((?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2}))")]
     private static partial Regex LinuxMacAddressRegex();
@@ -21,10 +21,11 @@ internal static partial class Arp {
 
         try {
             IPAddress ipAddress = new IPAddress(new byte[] {
-            byte.Parse(split[0]),
-            byte.Parse(split[1]),
-            byte.Parse(split[2]),
-            byte.Parse(split[3])});
+                byte.Parse(split[0]),
+                byte.Parse(split[1]),
+                byte.Parse(split[2]),
+                byte.Parse(split[3])
+            });
 
             if (OperatingSystem.IsWindows()) {
                 return ArpRequest_Windows(ipAddress);
@@ -35,7 +36,6 @@ internal static partial class Arp {
             else {
                 return String.Empty;
             }
-
         }
         catch {
             return String.Empty;
@@ -49,11 +49,11 @@ internal static partial class Arp {
 
             int len = 6;
             byte[] mac = new byte[len];
-            byte[] byte_ip = ip.GetAddressBytes();
-            uint long_ip = (uint)(byte_ip[3] * 16777216 + byte_ip[2] * 65536 + byte_ip[1] * 256 + byte_ip[0]);
-            SendARP(long_ip, 0, mac, ref len);
+            uint long_ip = BitConverter.ToUInt32(ip.GetAddressBytes());
 
-            return BitConverter.ToString(mac, 0, len).Replace("-", ":");
+            _ = SendARP(long_ip, 0, mac, ref len);
+
+            return BitConverter.ToString(mac, 0, (int)len).Replace("-", ":");
         }
         catch {
             return String.Empty;
@@ -99,15 +99,17 @@ internal static partial class Arp {
     public static bool ArpPing(string host) {
         try {
             IPAddress[] ips = System.Net.Dns.GetHostAddresses(host);
-            if (ips.Length == 0) return false;
+            if (ips.Length == 0) { return false; }
 
             IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!IpTools.OnSameNetwork(ips[0])) return false;
+            if (!IpTools.OnSameNetwork(ips[0])) {
+                return false;
+            }
 
             int len = 6;
             byte[] mac = new byte[len];
-            byte[] byte_ip = ips[0].GetAddressBytes();
-            uint long_ip = (uint)(byte_ip[3] * 16777216 + byte_ip[2] * 65536 + byte_ip[1] * 256 + byte_ip[0]);
+            uint long_ip = BitConverter.ToUInt32(ip.GetAddressBytes());
+
             _ = SendARP(long_ip, 0, mac, ref len);
 
             return true;

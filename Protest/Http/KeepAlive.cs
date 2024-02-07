@@ -53,13 +53,15 @@ internal static class KeepAlive {
 
         string[] accessArray = Auth.acl.TryGetValue(username, out Auth.AccessControl accessControl) ? accessControl.authorization : new string[] { "*" };
 
-        connections.TryAdd(ws, new Entry() {
+        Entry keepAliveEntry = new Entry{
             ws = ws,
             ctx = ctx,
             sessionId = sessionId,
             username = username,
             syncLock = new object()
-        });
+        };
+
+        connections.TryAdd(ws, keepAliveEntry);
 
         byte[] buff = new byte[2048];
 
@@ -75,9 +77,11 @@ internal static class KeepAlive {
 
             while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticated(ctx)) {
-                    await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
-                    await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                    return;
+                    lock(keepAliveEntry.syncLock) {
+                        ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                        ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                        return;
+                    }
                 }
 
                 WebSocketReceiveResult receive = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);

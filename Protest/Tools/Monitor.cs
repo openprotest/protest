@@ -68,6 +68,14 @@ internal static class Monitor {
             return;
         }
 
+        object sendSync = new object();
+        bool paused = false;
+        bool ping = true;
+        bool cpu = true;
+        bool cores = true;
+        int interval = 500;
+        ConcurrentDictionary<string, string> wmiQueries = new ConcurrentDictionary<string, string>();
+
         try {
             byte[] buff = new byte[2048];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -92,14 +100,6 @@ internal static class Monitor {
                 await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 return;
             }
-
-            object sendSync = new object();
-            bool paused = false;
-            bool ping = true;
-            bool cpu = true;
-            bool cores = true;
-            int interval = 500;
-            ConcurrentDictionary<string, string> wmiQueries = new ConcurrentDictionary<string, string>();
 
             new Thread(() => { //icmp thread
                 while (ws.State == WebSocketState.Open) {

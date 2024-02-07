@@ -324,14 +324,42 @@ class Monitor extends Window {
 			formatInput.appendChild(newOption);
 		}
 
-		const CreateTemplate = (name, icon, type, query) => {
+		const CreateTemplate = (name, icon, type, query, options) => {
 			const template = document.createElement("div");
 			template.textContent = name;
 			template.style.backgroundImage = `url(${icon})`;
 			template.className = "monitor-template";
 
+			template.onclick = ()=> {
+				switch (type) {
+				case "wmi":
+					queryInput.value = query;
+					break;
+
+				case "snmp":
+					queryInput.value = query;
+					break;
+
+				case "icmp":
+					break;
+				}
+
+				formatInput.value = options.format;
+
+			};
+
 			template.ondblclick = ()=> {
-				queryInput.value = query;
+				switch (type) {
+				case "wmi":
+					wmiTab.onclick();
+					break;
+
+				case "snmp":
+					break;
+
+				case "icmp":
+					break;
+				}
 			};
 
 			return template;
@@ -355,91 +383,130 @@ class Monitor extends Window {
 				"Boot time",
 				"mono/clock.svg",
 				"wmi",
-				"SELECT LastBootUpTime FROM Win32_OperatingSystem"
+				"SELECT LastBootUpTime FROM Win32_OperatingSystem",
+				{
+					format: "Single value"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"SAT score",
 				"mono/personalize.svg",
 				"wmi",
-				"SELECT WinSPRLevel FROM Win32_WinSAT"
+				"SELECT WinSPRLevel FROM Win32_WinSAT",
+				{
+					format: "Single value"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"BIOS",
 				"mono/chip.svg",
 				"wmi",
-				"SELECT * FROM Win32_BIOS"
+				"SELECT * FROM Win32_BIOS",
+				{
+					format: "List"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"CPU",
 				"mono/cpu.svg",
 				"wmi",
-				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'"
+				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'",
+				{
+					format: "Line chart"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"CPU Cores",
 				"mono/cpu.svg",
 				"wmi",
-				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'"
+				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'",
+				{
+					format: "Line charts (grid)"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"RAM",
 				"mono/ram.svg",
 				"wmi",
-				"SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM Win32_OperatingSystem"
+				"SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM Win32_OperatingSystem",
+				{
+					format: "Line chart"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"Disk usage",
 				"mono/hdd.svg",
 				"wmi",
-				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk"
+				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk",
+				{
+					format: "Line chart"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"Network usage",
 				"mono/portscan.svg",
 				"wmi",
-				"SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface"
+				"SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
+				{
+					format: "Delta chart"
+				}
 			));
 			
 			templatesBox.appendChild(CreateTemplate(
 				"Ping",
 				"mono/ping.svg",
 				"icmp",
-				"ping"
+				"",
+				{
+					format: "Ping"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"Processes",
 				"mono/console.svg",
 				"wmi",
-				"SELECT Name, ProcessId FROM Win32_Process"
+				"SELECT Name, ProcessId FROM Win32_Process",
+				{
+					format: "Table"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"Battery",
 				"mono/battery.svg",
 				"wmi",
-				"SELECT * FROM Win32_Battery"
+				"SELECT * FROM Win32_Battery",
+				{
+					format: "List"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"Monitor",
 				"mono/monitor.svg",
 				"wmi",
-				"SELECT * FROM Win32_DesktopMonitor"
+				"SELECT * FROM Win32_DesktopMonitor",
+				{
+					format: "List"
+				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
 				"User info",
 				"mono/user.svg",
 				"wmi",
-				"SELECT UserName FROM Win32_ComputerSystem"
+				"SELECT UserName FROM Win32_ComputerSystem",
+				{
+					format: "List"
+				}
 			));
 		};
 
@@ -506,6 +573,22 @@ class Monitor extends Window {
 
 			innerBox.append(queryInput);
 
+			let words = queryInput.value.split(" ");
+			let className = null;
+			if (wmiClasses.classes) {
+				for (let i = 0; i < words.length; i++) {
+					if (words[i].toUpperCase() === "FROM" && i !== words.length-1) {
+						className = words[i+1].toLowerCase();
+						break;
+					}
+				}
+			}
+
+			let select_index = queryInput.value.indexOf("select");
+			let from_index = queryInput.value.indexOf("from");
+			let lastProperties = queryInput.value.substring(select_index + 6, from_index).trim();
+			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim());
+
 			txtClassFilter.onkeydown = event=>{
 				if (event.code === "Escape") {
 					txtClassFilter.value = "";
@@ -540,6 +623,13 @@ class Monitor extends Window {
 						newClass.textContent = wmiClasses.classes[i].class;
 						classesBox.appendChild(newClass);
 
+						if (className && className === wmiClasses.classes[i].class.toLowerCase()) {
+							newClass.scrollIntoView({ behavior: "smooth"});
+							
+							selected = newClass;
+							selected.style.backgroundColor = "var(--clr-select)";
+						}
+
 						newClass.onclick = ()=> {
 							if (selected != null) selected.style.backgroundColor = "";
 
@@ -557,9 +647,7 @@ class Monitor extends Window {
 		templatesTab.onclick();
 
 		btnOK.addEventListener("click", ()=> {
-			//TODO:
 			this.count++;
-			//this.socket.send(`wmi=${queryInput.value}&id=${this.count}`);
 
 			const chart = {
 				action: "addwmi",

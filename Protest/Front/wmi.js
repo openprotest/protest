@@ -118,12 +118,14 @@ class Wmi extends Window {
 
 		let words = lastQuery.split(" ");
 		let className = null;
-		if (this.wmi_classes.classes)
-			for (let i = 0; i < words.length; i++)
-				if (words[i].startsWith("win32_")) {
-					className = words[i];
+		if (this.wmi_classes.classes) {
+			for (let i = 0; i < words.length; i++) {
+				if (words[i].toUpperCase() === "FROM" && i !== words.length-1) {
+					className = words[i+1].toLowerCase();
 					break;
 				}
+			}
+		}
 
 		let select_index = lastQuery.indexOf("select");
 		let from_index = lastQuery.indexOf("from");
@@ -303,7 +305,7 @@ class Wmi extends Window {
 						btnOK.onclick();
 					};
 
-					if (className && className == this.wmi_classes.classes[i].class.toLowerCase()) {
+					if (className && className === this.wmi_classes.classes[i].class.toLowerCase()) {
 						newClass.onclick();
 						newClass.scrollIntoView();
 						className = null;
