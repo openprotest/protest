@@ -446,7 +446,7 @@ public static class PasswordStrength {
             body.Append("<li><b>Go Big: </b> Opt for a minimum of twelve characters. Longer passwords significantly enhance resistance to cracking attempts.</li>");
             body.Append("<li><b>Mix Things Up: </b> Combine upper-case and lower-case letters, numbers, and symbols to add complexity.</li>");
             body.Append("<li><b>Be Unpredictable: </b> Avoid easily guessable elements such as common words, your name, favorite movie, or pet names. For example, if your email address is info@domain.com, refrain from including the term \"info\" in your password.</li>");
-            body.Append("<li><b>Make It Random: </b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://veniware.github.io/#passgen\">link</a>)</li>");
+            body.Append("<li><b>Make It Random: </b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://openprotest.github.io/#passgen\">link</a>)</li>");
             body.Append("</ul>");
             body.Append("</p>");
 
@@ -478,7 +478,7 @@ public static class PasswordStrength {
             body.Append("</td></tr>");
 
             body.Append("<tr><td>&nbsp;</td></tr>");
-            body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+            body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/openprotest/protest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
             body.Append("<tr><td>&nbsp;</td></tr>");
 
             body.Append("</td></tr>");

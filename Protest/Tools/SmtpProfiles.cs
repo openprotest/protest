@@ -150,7 +150,7 @@ internal static class SmtpProfiles {
 
             </td></tr>
             <tr><td>&nbsp;</td></tr>
-            <tr><td style="text-align:center;color:#808080">Sent from <a href="https://github.com/veniware/OpenProtest" style="color:#e67624">Pro-test</a></td></tr>
+            <tr><td style="text-align:center;color:#808080">Sent from <a href="https://github.com/openprotest/protest" style="color:#e67624">Pro-test</a></td></tr>
             <tr><td>&nbsp;</td></tr>
             </td></tr>
 

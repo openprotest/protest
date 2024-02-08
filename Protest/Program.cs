@@ -13,7 +13,7 @@
  Pro-test
  Developed by Andreas Venizelou, 2024
  Released into the public domain under the GPL v3
- For more information, visit https://github.com/veniware/OpenProtest
+ For more information, visit https://github.com/openprotest/protest
 */
 
 global using System;

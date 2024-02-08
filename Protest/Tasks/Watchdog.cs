@@ -735,7 +735,7 @@ internal static class Watchdog {
         body.Append("</td></tr>");
 
         body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/veniware/OpenProtest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
+        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/openprotest/protest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
         body.Append("<tr><td>&nbsp;</td></tr>");
 
         body.Append("</td></tr>");

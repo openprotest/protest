@@ -777,7 +777,7 @@ class Personalize extends Tabs {
 		link.style.paddingLeft = "32px";
 		link.style.background = "url(mono/download.svg) 2px center / 24px 24px no-repeat";
 		link.target = "_blank";
-		link.href = "https://github.com/veniware/OpenProtest/releases/latest";
+		link.href = "https://github.com/openprotest/protest/releases/latest";
 		link.textContent = `Download agent`;
 		this.tabsPanel.appendChild(link);
 

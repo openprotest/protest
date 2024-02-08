@@ -30,7 +30,7 @@ internal static class Update {
     }
 
     public static byte[] CheckLatestRelease() {
-        string url = $"https://raw.githubusercontent.com/veniware/OpenProtest/master/RELEASE";
+        string url = $"https://raw.githubusercontent.com/openprotest/protest/master/RELEASE";
 
         using HttpClient client = new HttpClient();
 

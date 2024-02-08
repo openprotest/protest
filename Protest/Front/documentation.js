@@ -223,7 +223,7 @@ class Documentation extends Window {
 
 			const txtLink = document.createElement("input");
 			txtLink.type = "text";
-			txtLink.placeholder = "https://github.com/veniware";
+			txtLink.placeholder = "https://github.com/openprotest";
 			txtLink.style.width = "calc(80% - 64px)";
 			innerBox.appendChild(txtLink);
 

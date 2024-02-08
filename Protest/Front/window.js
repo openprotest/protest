@@ -13,7 +13,7 @@
  windows.js is a vanilla javascript library, designed for Pro-test 5.0
  Developed by Andreas Venizelou, 2024
  Released into the public domain under the GPL v3
- For more information, visit https://github.com/veniware/OpenProtest
+ For more information, visit https://github.com/openprotest/protest
 */
 var onMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
 

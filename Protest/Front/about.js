@@ -153,7 +153,7 @@ class About extends Tabs {
 		involve.style.padding = "2px 4px";
 		involve.style.margin = "1px";
 		involve.target = "_blank";
-		involve.href = "https://github.com/veniware/OpenProtest";
+		involve.href = "https://github.com/openprotest/protest";
 		involve.textContent = "get involved";
 		center.appendChild(involve);
 
@@ -252,7 +252,7 @@ class About extends Tabs {
 				link.style.paddingLeft = "32px";
 				link.style.background = "url(mono/download.svg) 2px center / 24px 24px no-repeat";
 				link.target = "_blank";
-				link.href = "https://github.com/veniware/OpenProtest/releases/latest";
+				link.href = "https://github.com/openprotest/protest/releases/latest";
 				link.textContent = `Pro-test ${json.version}`;
 				center.appendChild(link);
 			}

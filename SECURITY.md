@@ -10,5 +10,5 @@
 
 ## Reporting a Vulnerability
 
-Use *[GitHub Security Advisories](https://github.com/veniware/OpenProtest/security/advisories)* to report a vulnerability.
+Use *[GitHub Security Advisories](https://github.com/openprotest/protest/security/advisories)* to report a vulnerability.
 You will get an update on your report within three days.
