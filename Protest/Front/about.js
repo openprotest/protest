@@ -162,7 +162,7 @@ class About extends Tabs {
 		center.appendChild(document.createElement("br"));
 
 		const icons = ["mono/logo.svg", "mono/copyleft.svg", "mono/opensource.svg","mono/gpl.svg"];
-		for (let i = 0; i < icons.length; i++) {
+		for (let i=0; i<icons.length; i++) {
 			const newIcon = document.createElement("div");
 			newIcon.style.display = "inline-block";
 			newIcon.style.width = "52px";

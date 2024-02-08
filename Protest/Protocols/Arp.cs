@@ -8,9 +8,11 @@ namespace Protest.Protocols;
 
 internal static partial class Arp {
 
+#pragma warning disable SYSLIB1092
     [SupportedOSPlatform("windows")]
     [LibraryImport("iphlpapi.dll")]
     private static partial int SendARP(uint destIP, uint srcIP, byte[] macAddr, ref int macAddrLen);
+#pragma warning restore SYSLIB1092
 
     [GeneratedRegex("^((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\s+\\w+){2}\\s+((?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2}))")]
     private static partial Regex LinuxMacAddressRegex();

@@ -25,13 +25,6 @@ internal class Program {
     internal static readonly string[] alternativeUriPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
     static void Main(string[] args) {
-
-        var res = Arp.ArpRequest("192.168.169.38");
-        Console.WriteLine("result for 192.168.169.38: " + res);
-
-        res = Arp.ArpRequest("192.168.19.1");
-        Console.WriteLine("result for 192.168.19.1: " + res);
-
         Console.Title = "Pro-test";
 
         Console.WriteLine(@"   _____");

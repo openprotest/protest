@@ -582,6 +582,11 @@
 	100% { opacity: 1; }
 }
 
+@keyframes heart-beat {
+	0% { transform: none; }
+	100% { transform: scale(1.2); }
+}
+
 @keyframes highlight {
 	0% {
 		background: radial-gradient(circle, var(--clr-accent) 0%, transparent 100%);

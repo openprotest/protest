@@ -576,7 +576,7 @@ class Monitor extends Window {
 			let words = queryInput.value.split(" ");
 			let className = null;
 			if (wmiClasses.classes) {
-				for (let i = 0; i < words.length; i++) {
+				for (let i=0; i<words.length; i++) {
 					if (words[i].toUpperCase() === "FROM" && i !== words.length-1) {
 						className = words[i+1].toLowerCase();
 						break;
@@ -603,7 +603,7 @@ class Monitor extends Window {
 
 				classesBox.textContent = "";
 
-				for (let i = 0; i < wmiClasses.classes.length; i++) {
+				for (let i=0; i<wmiClasses.classes.length; i++) {
 					let matched = false;
 
 					if (wmiClasses.classes[i].class.toLowerCase().indexOf(filter) > -1) {
@@ -706,6 +706,15 @@ class Monitor extends Window {
 		canvas.height = height;
 		inner.appendChild(canvas);
 
+		const dot = document.createElement("div");
+		dot.style.position = "absolute";
+		dot.style.right = "192px";
+		dot.style.top = "10px";
+		dot.style.width = "9px";
+		dot.style.height = "9px";
+		dot.style.borderRadius = "5px";
+		inner.parentElement.appendChild(dot);
+
 		let min = Number.MAX_SAFE_INTEGER;
 		let max = Number.MIN_SAFE_INTEGER;
 		const list = [];
@@ -768,6 +777,12 @@ class Monitor extends Window {
 			}
 
 			DrawGraph();
+
+			dot.style.backgroundColor = (list[list.length-1] < 0) ? "rgb(240,16,16)" : UI.PingColor(list[list.length-1]);
+			dot.style.boxShadow = `${dot.style.backgroundColor} 0 0 2px`;
+
+			dot.style.animation = "";
+			setTimeout(()=>{ dot.style.animation = "heart-beat .1s ease-out 1"; }, 0);
 		};
 
 		return {
