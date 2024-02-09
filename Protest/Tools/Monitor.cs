@@ -12,6 +12,7 @@ using System.Management;
 using System.Runtime.Versioning;
 using System.Diagnostics.CodeAnalysis;
 using Protest.Http;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace Protest.Tools;
 
@@ -30,7 +31,7 @@ internal static class Monitor {
     public struct Query {
         public Action action;
         public string value;
-        public int id;
+        public int index;
     }
 
     private static JsonSerializerOptions actionSerializerOptions;
@@ -99,7 +100,7 @@ internal static class Monitor {
                 return;
             }
 
-            new Thread(() => { //icmp thread
+            new Thread(()=> { //icmp thread
                 while (ws.State == WebSocketState.Open) {
                     if (paused) {
                         Thread.Sleep(interval);
@@ -111,7 +112,7 @@ internal static class Monitor {
                     if (ping) {
                         long icmpResult = DoPing(target, Math.Min(interval, 1000));
                         lock (sendSync) {
-                            WsWriteText(ws, $"{{\"result\":\"ping\",\"value\":{icmpResult}}}");
+                            WsWriteText(ws, $"{{\"index\":0,\"value\":{icmpResult}}}");
                         }
                     }
 
@@ -123,7 +124,7 @@ internal static class Monitor {
                 }
             }).Start();
 
-            new Thread(() => { //wmi thread
+            new Thread(()=> { //wmi thread
                 ManagementScope scope = null;
                 if (OperatingSystem.IsWindows()) {
                     new Thread(() => {
@@ -163,7 +164,6 @@ internal static class Monitor {
                     long startTime = DateTime.UtcNow.Ticks;
 
                     if (OperatingSystem.IsWindows()) {
-
                         DoQuery(scope, queries);
                     }
 
@@ -211,7 +211,7 @@ internal static class Monitor {
                 
                 case Action.addwmi:
                 case Action.addsnmp:
-                    queries.TryAdd(query.id, query);
+                    queries.TryAdd(query.index, query);
                     break;
 
                 case Action.remove:
@@ -241,40 +241,6 @@ internal static class Monitor {
             }
         } catch {}
     }
-
-    /*
-    [SupportedOSPlatform("windows")]
-    private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
-        List<byte> cores = new List<byte>();
-
-        try {
-            using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Nalime = '_Total'")).Get();
-            IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
-            if (perfTotalEnum is null) { return null; }
-            foreach (ManagementObject o in perfTotalEnum) {
-                if (o is null) { continue; }
-                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-                cores.Add((byte)(100 - idle));
-            }
-
-            if (getCores) {
-                using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
-                IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
-                //if (perfEnum is null) { return null; }
-                foreach (ManagementObject o in perfEnum) {
-                    if (o is null) { continue; }
-                    ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-                    cores.Add((byte)(100 - idle));
-                }
-            }
-
-            return cores.ToArray();
-        }
-        catch {
-            return null;
-        }
-    }
-    */
 
     private static long DoPing(string host, int timeout) {
         Ping p = new Ping();
@@ -311,10 +277,50 @@ internal static class Monitor {
     private static byte[] DoQuery(ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
         try {
 
+            foreach (Query query in queries.Values) {
+                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery(query.value)).Get();
+                //TODO:
+            }
+
         }
         catch {}
+
         return null;
     }
+
+    /*
+    [SupportedOSPlatform("windows")]
+    private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
+        List<byte> cores = new List<byte>();
+
+        try {
+            using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Nalime = '_Total'")).Get();
+            IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
+            if (perfTotalEnum is null) { return null; }
+            foreach (ManagementObject o in perfTotalEnum) {
+                if (o is null) { continue; }
+                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                cores.Add((byte)(100 - idle));
+            }
+
+            if (getCores) {
+                using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
+                IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
+                //if (perfEnum is null) { return null; }
+                foreach (ManagementObject o in perfEnum) {
+                    if (o is null) { continue; }
+                    ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                    cores.Add((byte)(100 - idle));
+                }
+            }
+
+            return cores.ToArray();
+        }
+        catch {
+            return null;
+        }
+    }
+*/
 }
 
 file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
@@ -331,9 +337,9 @@ file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
                 reader.Read();
 
                 switch (propertyName) {
-                case "action": action .action = Enum.Parse<Monitor.Action>(reader.GetString()); break;
-                case "value" : action .value  = reader.GetString(); break;
-                case "id"    : action .id     = reader.GetInt32(); break;
+                case "action": action.action = Enum.Parse<Monitor.Action>(reader.GetString()); break;
+                case "value" : action.value  = reader.GetString(); break;
+                case "index" : action.index  = reader.GetInt32(); break;
                 }
             }
         }
@@ -342,14 +348,14 @@ file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
     }
 
     public override void Write(Utf8JsonWriter writer, Monitor.Query value, JsonSerializerOptions options) {
-        ReadOnlySpan<char> _action  = "action".AsSpan();
-        ReadOnlySpan<char> _value = "value".AsSpan();
-        ReadOnlySpan<char> _id    = stackalloc[] {'i', 'd'};
+        ReadOnlySpan<char> _action = "action".AsSpan();
+        ReadOnlySpan<char> _value  = "value".AsSpan();
+        ReadOnlySpan<char> _index  = "index".AsSpan();
 
         writer.WriteStartObject();
         writer.WriteString(_action, value.action.ToString());
         writer.WriteString(_value, value.value);
-        writer.WriteNumber(_id, value.id);
+        writer.WriteNumber(_index, value.index);
         writer.WriteEndObject();
     }
 }

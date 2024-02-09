@@ -62,9 +62,7 @@ class Monitor extends Window {
 
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
-		this.chartsList.push(this.CreateChart("ping", 75, { type:"ping", prefix:"RTT", unit:"ms" }));
-		this.chartsList.push(this.CreateChart("cpu", 75, { type:"percent", prefix:"Usage", unit:"%" }));
-		this.chartsList.push(this.CreateChart("cores", 75, { type:"percents", prefix:"Usage", unit:"%" }));
+		this.chartsList.push(this.CreateChart("ping", 75, { index:0, protocol:"icmp", type:"ping", prefix:"RTT", unit:"ms" }));
 
 		this.InitializeSubnetEmblem();
 		this.InitializeSocketConnection();
@@ -162,7 +160,7 @@ class Monitor extends Window {
 			}
 
 			for (let i=0; i<this.chartsList.length; i++) {
-				if (this.chartsList[i].name !== message.result) { continue; }
+				if (this.chartsList[i].index !== message.index) { continue; }
 
 				if (this.chartsList[i].options.type === "percents") {
 					this.chartsList[i].Update(message.value);
@@ -274,9 +272,6 @@ class Monitor extends Window {
 		btnOK.disabled = false;
 
 		innerBox.style.margin = "16px";
-		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "45% 16px auto";
-		innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px 8px 64px";
 
 		const templatesTab = document.createElement("button");
 		templatesTab.className = "win-dialog-tab";
@@ -324,14 +319,31 @@ class Monitor extends Window {
 			formatInput.appendChild(newOption);
 		}
 
-		const CreateTemplate = (name, icon, type, query, options) => {
+		let chartOptions = {};
+		let selectedElement = null;
+
+		const CreateTemplate = (name, icon, protocol, query, options) => {
 			const template = document.createElement("div");
 			template.textContent = name;
 			template.style.backgroundImage = `url(${icon})`;
 			template.className = "monitor-template";
 
 			template.onclick = ()=> {
-				switch (type) {
+				if (selectedElement) {
+					selectedElement.style.backgroundColor = "";
+				}
+
+				selectedElement = template;
+				template.style.backgroundColor = "var(--clr-select)";
+
+				formatInput.value = options.format;
+
+				chartOptions = options;
+				chartOptions.name = name;
+				chartOptions.icon = icon;
+				chartOptions.protocol = protocol;
+
+				switch (protocol) {
 				case "wmi":
 					queryInput.value = query;
 					break;
@@ -344,14 +356,12 @@ class Monitor extends Window {
 					break;
 				}
 
-				formatInput.value = options.format;
-
 			};
 
 			template.ondblclick = ()=> {
-				switch (type) {
+				switch (protocol) {
 				case "wmi":
-					wmiTab.onclick();
+					btnOK.onclick();
 					break;
 
 				case "snmp":
@@ -367,9 +377,10 @@ class Monitor extends Window {
 
 		templatesTab.onclick = ()=> {
 			innerBox.textContent = "";
+			innerBox.style.display = "block";
+			innerBox.style.border = "var(--clr-control) solid 1.5px";
 
 			const templatesBox = document.createElement("div");
-			templatesBox.style.border = "var(--clr-control) solid 1.5px";
 			templatesBox.style.gridArea = "1 / 1 / 9 / 4";
 			templatesBox.style.overflowY = "scroll";
 			innerBox.appendChild(templatesBox);
@@ -415,7 +426,9 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'",
 				{
-					format: "Line chart"
+					format: "Line chart",
+					prefix: "Usage",
+					unit: "%"
 				}
 			));
 
@@ -425,7 +438,9 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'",
 				{
-					format: "Line charts (grid)"
+					format: "Line charts (grid)",
+					prefix: "Usage",
+					unit: "%"
 				}
 			));
 
@@ -435,7 +450,9 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM Win32_OperatingSystem",
 				{
-					format: "Line chart"
+					format: "Line chart",
+					prefix: "Usage",
+					unit: "%"
 				}
 			));
 
@@ -445,7 +462,9 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk",
 				{
-					format: "Line chart"
+					format: "Delta chart",
+					prefix: "Usage",
+					unit: "%"
 				}
 			));
 
@@ -455,7 +474,9 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
 				{
-					format: "Delta chart"
+					format: "Delta chart",
+					prefix: "Usage",
+					unit: "%"
 				}
 			));
 			
@@ -465,7 +486,9 @@ class Monitor extends Window {
 				"icmp",
 				"",
 				{
-					format: "Ping"
+					format: "Ping",
+					prefix: "RTT",
+					unit: "ms"
 				}
 			));
 
@@ -485,7 +508,9 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT * FROM Win32_Battery",
 				{
-					format: "List"
+					format: "List",
+					prefix: "Usage",
+					unit: "%"
 				}
 			));
 
@@ -512,6 +537,10 @@ class Monitor extends Window {
 
 		wmiTab.onclick = ()=> {
 			innerBox.textContent = "";
+			innerBox.style.border = "none";
+			innerBox.style.display = "grid";
+			innerBox.style.gridTemplateColumns = "45% 16px auto";
+			innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px 8px 64px";
 
 			templatesTab.style.background = "";
 			templatesTab.style.backgroundColor = "";
@@ -545,7 +574,6 @@ class Monitor extends Window {
 			formatLabel.textContent = "Format:";
 
 			optionsBox.append(formatLabel, formatInput);
-
 
 			const minmaxBox = document.createElement("div");
 			minmaxBox.style.gridArea = "2 / 1 / 2 / 3";
@@ -644,20 +672,22 @@ class Monitor extends Window {
 			txtClassFilter.oninput();
 		};
 
-		templatesTab.onclick();
+		btnOK.onclick = ()=> {
+			dialog.Close();
 
-		btnOK.addEventListener("click", ()=> {
 			this.count++;
 
 			const chart = {
 				action: "addwmi",
 				value: queryInput.value,
-				id: this.count
+				index: this.count
 			};
 
-			this.chartsList.push(chart);
+			this.chartsList.push(this.CreateChart(chartOptions.name, 75, chartOptions));
 			this.socket.send(JSON.stringify(chart));
-		});
+		};
+
+		templatesTab.onclick();
 	}
 
 	Start() {
@@ -708,10 +738,10 @@ class Monitor extends Window {
 
 		const dot = document.createElement("div");
 		dot.style.position = "absolute";
-		dot.style.right = "192px";
-		dot.style.top = "10px";
-		dot.style.width = "9px";
-		dot.style.height = "9px";
+		dot.style.right = "190px";
+		dot.style.top = "9px";
+		dot.style.width = "10px";
+		dot.style.height = "10px";
 		dot.style.borderRadius = "5px";
 		inner.parentElement.appendChild(dot);
 
@@ -741,6 +771,7 @@ class Monitor extends Window {
 			for (let i=list.length-1; i>=0; i--) {
 				let x = canvas.width - (list.length-i-1)*gap;
 				let y = list[i] < 0 ? height-10 : 24 + Math.min((height - 24) * list[i] / 1000, height - 10);
+
 				let color;
 				if (list[i] < 0) { //unreachable/timed out
 					color = "rgb(240,16,16)";
@@ -780,12 +811,12 @@ class Monitor extends Window {
 
 			dot.style.backgroundColor = (list[list.length-1] < 0) ? "rgb(240,16,16)" : UI.PingColor(list[list.length-1]);
 			dot.style.boxShadow = `${dot.style.backgroundColor} 0 0 2px`;
-
 			dot.style.animation = "";
 			setTimeout(()=>{ dot.style.animation = "heart-beat .1s ease-out 1"; }, 0);
 		};
 
 		return {
+			index: this.count,
 			name: name,
 			options: options,
 			Update: Update
@@ -837,6 +868,7 @@ class Monitor extends Window {
 		};
 
 		return {
+			index: this.count,
 			name: name,
 			options: options,
 			Update: Update
@@ -913,6 +945,7 @@ class Monitor extends Window {
 		};
 
 		return {
+			index: this.count,
 			name: name,
 			options: options,
 			Update: Update
@@ -974,6 +1007,7 @@ class Monitor extends Window {
 		};
 
 		return {
+			index: this.count,
 			name: name,
 			options: options,
 			Update: Update

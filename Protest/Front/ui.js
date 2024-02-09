@@ -67,17 +67,17 @@ const UI = {
 			logo.style.top = pos.l_top;
 			logo.style.width = pos.l_width;
 			logo.style.height = pos.l_height;
-		}
 
-		if (pos.l_top === "48px") {
-			MENU.isDetached = false;
-			attachedmenubutton.style.transform = "none";
-			attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
-			menubutton.style.transform = "scaleY(0)";
-			menubutton.children[0].style.top = "48px";
-		}
-		else {
-			MENU.isDetached = true;
+			if (pos.l_top === "48px") {
+				MENU.isDetached = false;
+				attachedmenubutton.style.transform = "none";
+				attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
+				menubutton.style.transform = "scaleY(0)";
+				menubutton.children[0].style.top = "48px";
+			}
+			else {
+				MENU.isDetached = true;
+			}
 		}
 	},
 

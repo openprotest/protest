@@ -75,7 +75,7 @@ internal static class Telnet {
                 while (ws.State == WebSocketState.Open) { //ws to server loop
 
                     byte[] buff = new byte[2048];
-                    WebSocketReceiveResult receiveResult = null;
+                    WebSocketReceiveResult receiveResult = null!;
                     try {
                         receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 

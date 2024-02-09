@@ -62,7 +62,7 @@ internal static partial class DeviceConfiguration {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        string username = null, password = null;
+        string username = null!, password = null!;
         using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
             string payload = reader.ReadToEnd().Trim();
             string[] split = payload.Split((char)127);
