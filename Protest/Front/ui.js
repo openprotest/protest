@@ -263,10 +263,10 @@ const MENU = {
 		
 		//{ t: "Backup",         i: "mono/backup.svg?light",      g: "manage", h: false, f: params=> {} },
 		{ t: "Log",            i: "mono/log.svg?light",         g: "manage", h: false, f: params=> new Log(params) },
-		{ t: "About",          i: "mono/logo.svg?light",        g: "manage", h: false, f: params=> new About("about") },
 		{ t: "Update",         i: "mono/update.svg?light",      g: "manage", h: true, f: params=> new About("update") },
 		{ t: "Update modules", i: "mono/department.svg?light",  g: "manage", h: true, f: params=> new About("updatemod") },
-		{ t: "Legal",          i: "mono/gpl.svg?light",         g: "manage", h: true,  f: params=> new About("legal") },
+		{ t: "About",          i: "mono/logo.svg?light",        g: "manage", h: false, f: params=> new About("about") },
+		{ t: "Legal",          i: "mono/law.svg?light",         g: "manage", h: true,  f: params=> new About("legal") },
 
 		{ t: "Logout", i: "mono/logoff.svg?light", g: "manage", h: true, f: ()=> btnLogout.onclick() },
 	],

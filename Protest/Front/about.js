@@ -11,16 +11,21 @@ class About extends Tabs {
 		this.tabsPanel.style.overflowY = "auto";
 
 		this.tabAbout     = this.AddTab("About", "mono/logo.svg");
+		this.tabLegal     = this.AddTab("Legal", "mono/law.svg");
 		this.tabUpdate    = this.AddTab("Update", "mono/update.svg");
 		this.tabUpdateMod = this.AddTab("Update modules", "mono/department.svg");
-		this.tabLegal     = this.AddTab("Legal", "mono/gpl.svg");
 
 		this.tabAbout.onclick = ()=> this.ShowAbout();
+		this.tabLegal.onclick = ()=> this.ShowLegal();
 		this.tabUpdate.onclick = ()=> this.ShowUpdate();
 		this.tabUpdateMod.onclick = ()=> this.ShowUpdateModules();
-		this.tabLegal.onclick = ()=> this.ShowLegal();
 
 		switch (this.params) {
+		case "legal":
+			this.tabLegal.className = "v-tab-selected";
+			this.ShowLegal();
+			break;
+
 		case "update":
 			this.tabUpdate.className = "v-tab-selected";
 			this.ShowUpdate();
@@ -29,11 +34,6 @@ class About extends Tabs {
 		case "updatemod":
 			this.tabUpdateMod.className = "v-tab-selected";
 			this.ShowUpdateModules();
-			break;
-
-		case "legal":
-			this.tabLegal.className = "v-tab-selected";
-			this.ShowLegal();
 			break;
 
 		default:
@@ -136,9 +136,26 @@ class About extends Tabs {
 		donate.style.padding = "2px 4px";
 		donate.style.margin = "1px";
 		donate.target = "_blank";
-		donate.href = "https://paypal.me/veniware/20";
+		donate.href = "https://paypal.me/veniware";
 		donate.textContent = "Make a donation";
 		center.appendChild(donate);
+
+		const comma = document.createElement("div");
+		comma.style.display = "inline-block";
+		comma.style.padding = "1px 4px";
+		comma.textContent = ",";
+		center.appendChild(comma);
+
+		const sponsor = document.createElement("a");
+		sponsor.style.display = "inline-block";
+		sponsor.style.border = "var(--clr-dark) 1px solid";
+		sponsor.style.borderRadius = "4px";
+		sponsor.style.padding = "2px 4px";
+		sponsor.style.margin = "1px";
+		sponsor.target = "_blank";
+		sponsor.href = "https://github.com/sponsors/veniware";
+		sponsor.textContent = "become a sponsor";
+		center.appendChild(sponsor);
 
 		const _or = document.createElement("div");
 		_or.style.display = "inline-block";
@@ -269,6 +286,24 @@ class About extends Tabs {
 		}
 	}
 
+	async ShowLegal() {
+		this.params = "legal";
+		this.tabsPanel.textContent = "";
+
+		const box = document.createElement("div");
+		box.style.fontFamily = "monospace";
+		box.style.userSelect = "text";
+		box.style.whiteSpace = "pre-wrap";
+		this.tabsPanel.appendChild(box);
+
+		await fetch("license.txt")
+		.then(response=> response.text())
+		.then(text=>{
+			if (text.length === 0) return;
+			box.textContent = text;
+		});
+	}
+
 	async ShowUpdateModules() {
 		this.params = "updatemod";
 		this.tabsPanel.textContent = "";
@@ -312,24 +347,6 @@ class About extends Tabs {
 		resources.append(link3);
 
 		resources.append(resourcesText, link1, link2, link3);
-	}
-
-	async ShowLegal() {
-		this.params = "legal";
-		this.tabsPanel.textContent = "";
-
-		const box = document.createElement("div");
-		box.style.fontFamily = "monospace";
-		box.style.userSelect = "text";
-		box.style.whiteSpace = "pre-wrap";
-		this.tabsPanel.appendChild(box);
-
-		await fetch("license.txt")
-		.then(response=> response.text())
-		.then(text=>{
-			if (text.length === 0) return;
-			box.textContent = text;
-		});
 	}
 
 	CreateDropArea(text, uploadUrl, filter) {

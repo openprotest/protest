@@ -288,7 +288,7 @@ internal static class Monitor {
         return null;
     }
 
-    /*
+/*
     [SupportedOSPlatform("windows")]
     private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
         List<byte> cores = new List<byte>();
