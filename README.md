@@ -42,15 +42,11 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid=72f5bca3-7
 #### Option B: nginx
 ```
 worker_processes 16;
-
 events {
     worker_connections 512;
 }
 
 http {
-    #sendfile on;
-
-    #https proxy server
     server {
         listen 443 ssl;
         ssl_certificate     ../ssl/[filename].crt;
@@ -63,7 +59,6 @@ http {
             proxy_set_header     Cookie $http_cookie;
             proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-
         location /ws/ {
             proxy_pass http://127.0.0.1:80$request_uri;
             proxy_pass_header    Set-Cookie;
@@ -81,5 +76,7 @@ http {
 * *This product includes IP2Location LITE data available from http://www.ip2location.com.*
 * *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
 
-### Make a donation
-*[![paypal](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/veniware/20)*
+
+*[![Sponsor](https://img.shields.io/badge/Sponsor%20on%20GitHub-374046?style=for-the-badge&logo=github)](https://github.com/sponsors/veniware)*
+*[![Donate](https://img.shields.io/badge/Donate-00457C?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/veniware)*
+
