@@ -841,6 +841,14 @@ class Window {
 
 		this.content.style.filter = "blur(4px)";
 
+		btnOK.onkeydown = event=>{
+			if (event.key === "ArrowRight") { btnCancel.focus(); }
+		};
+
+		btnCancel.onkeydown = event=>{
+			if (event.key === "ArrowLeft") { btnOK.focus(); }
+		};
+
 		dim.onmouseup = dim.onmousedown = event=> {
 			event.stopPropagation();
 			this.BringToFront();
@@ -955,6 +963,16 @@ class Window {
 			dialogBox.style.transform = "scaleY(.2)";
 			this.content.style.filter = "none";
 			setTimeout(()=> Abort(), WIN.ANIME_DURATION);
+		};
+
+		btnOK.onkeydown = event=> {
+			if (event.key === "ArrowRight") { btnCancel.focus(); }
+			if (event.key === "Escape") { Close(); }
+		};
+
+		btnCancel.onkeydown = event=> {
+			if (event.key === "ArrowLeft") { btnOK.focus(); }
+			if (event.key === "Escape") { Close(); }
 		};
 
 		innerBox.onkeydown = event=>{
