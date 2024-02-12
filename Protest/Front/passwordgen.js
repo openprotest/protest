@@ -45,14 +45,14 @@ class PassGen extends Window {
 
 		const grid = document.createElement("div");
 		grid.style.display = "grid";
-		grid.style.width = "424px";
+		grid.style.width = "480px";
 		grid.style.margin = "40px auto 20px auto";
 		grid.style.padding = "40px";
 		grid.style.backgroundColor = "var(--clr-pane)";
 		grid.style.color = "var(--clr-dark)";
 		grid.style.fontWeight = "600";
 		grid.style.borderRadius = "4px";
-		grid.style.gridTemplateColumns = "208px 96px 120px";
+		grid.style.gridTemplateColumns = "210px 110px 180px";
 		grid.style.gridTemplateRows = "40px repeat(5, 32px)";
 		grid.style.alignItems = "center";
 		this.content.appendChild(grid);
@@ -102,7 +102,7 @@ class PassGen extends Window {
 		this.txtLength.style.gridArea = "3 / 2";
 		grid.appendChild(this.txtLength);
 
-		let divLowercase = document.createElement("div");
+		const divLowercase = document.createElement("div");
 		divLowercase.style.textAlign = "left";
 		divLowercase.style.gridArea = "2 / 3";
 		grid.appendChild(divLowercase);
@@ -114,7 +114,7 @@ class PassGen extends Window {
 		this.AddCheckBoxLabel(divLowercase, this.chkLowercase, "Lowercase");
 
 
-		let divUppercase = document.createElement("div");
+		const divUppercase = document.createElement("div");
 		divUppercase.style.textAlign = "left";
 		divUppercase.style.gridArea = "3 / 3";
 		grid.appendChild(divUppercase);
@@ -126,7 +126,7 @@ class PassGen extends Window {
 		this.AddCheckBoxLabel(divUppercase, this.chkUppercase, "Uppercase");
 
 
-		let divNumbers = document.createElement("div");
+		const divNumbers = document.createElement("div");
 		divNumbers.style.textAlign = "left";
 		divNumbers.style.gridArea = "4 / 3";
 		grid.appendChild(divNumbers);
@@ -137,7 +137,7 @@ class PassGen extends Window {
 		divNumbers.appendChild(this.chkNumbers);
 		this.AddCheckBoxLabel(divNumbers, this.chkNumbers, "Numbers");
 
-		let divSymbols = document.createElement("div");
+		const divSymbols = document.createElement("div");
 		divSymbols.style.textAlign = "left";
 		divSymbols.style.gridArea = "5 / 3";
 		grid.appendChild(divSymbols);
@@ -147,6 +147,17 @@ class PassGen extends Window {
 		this.chkSymbols.checked = false;
 		divSymbols.appendChild(this.chkSymbols);
 		this.AddCheckBoxLabel(divSymbols, this.chkSymbols, "Symbols");
+
+		const divSimilar = document.createElement("div");
+		divSimilar.style.textAlign = "left";
+		divSimilar.style.gridArea = "6 / 3";
+		grid.appendChild(divSimilar);
+
+		this.chkSimilar = document.createElement("input");
+		this.chkSimilar.type = "checkbox";
+		this.chkSimilar.checked = false;
+		divSimilar.appendChild(this.chkSimilar);
+		this.AddCheckBoxLabel(divSimilar, this.chkSimilar, "Similar characters");
 
 		const lblEntropy = document.createElement("div");
 		lblEntropy.textContent = "Entropy (bits):";
@@ -212,10 +223,12 @@ class PassGen extends Window {
 				this.chkLowercase.checked = false;
 				this.chkUppercase.checked = false;
 				this.chkSymbols.checked = false;
+				this.chkSimilar.checked = false;
 				this.chkLowercase.disabled = true;
 				this.chkUppercase.disabled = true;
 				this.chkNumbers.disabled = true;
 				this.chkSymbols.disabled = true;
+				this.chkSimilar.disabled = true;
 				lblLength.textContent = "Length:";
 				break;
 
@@ -224,13 +237,15 @@ class PassGen extends Window {
 				this.rngLength.min = 6;
 				this.rngLength.max = 64;
 				this.chkLowercase.checked = true;
-				this.chkUppercase.checked = true;
-				this.chkNumbers.checked = false;
+				this.chkUppercase.checked = false;
+				this.chkNumbers.checked = true;
 				this.chkSymbols.checked = false;
+				this.chkSimilar.checked = false;
 				this.chkLowercase.disabled = false;
 				this.chkUppercase.disabled = false;
 				this.chkNumbers.disabled = false;
 				this.chkSymbols.disabled = false;
+				this.chkSimilar.disabled = false;
 				lblLength.textContent = "Length:";
 				break;
 
@@ -242,14 +257,15 @@ class PassGen extends Window {
 				this.chkUppercase.checked = false;
 				this.chkNumbers.checked = false;
 				this.chkSymbols.checked = false;
+				this.chkSimilar.checked = false;
 				this.chkLowercase.disabled = false;
 				this.chkUppercase.disabled = false;
 				this.chkNumbers.disabled = false;
 				this.chkSymbols.disabled = true;
+				this.chkSimilar.disabled = true;
 				lblLength.textContent = "Words:";
 				break;
 			}
-
 
 			this.txtLength.min = this.rngLength.min;
 			this.txtLength.value = this.rngLength.value;
@@ -257,7 +273,7 @@ class PassGen extends Window {
 			this.Generate();
 		};
 
-		this.chkLowercase.onchange = this.chkUppercase.onchange = this.chkNumbers.onchange = this.chkSymbols.onchange = ()=> this.Generate();
+		this.chkLowercase.onchange = this.chkUppercase.onchange = this.chkNumbers.onchange = this.chkSymbols.onchange = this.chkSimilar.onchange = ()=> this.Generate();
 
 		btnGenerate.onclick = ()=> this.Generate();
 
@@ -297,7 +313,6 @@ class PassGen extends Window {
 			this.chkUppercase.checked = hasUppercase;
 			this.chkNumbers.checked = hasNumbers;
 			this.chkSymbols.checked = hasSymbols;
-
 
 			this.Strength();
 		};
@@ -378,12 +393,12 @@ class PassGen extends Window {
 		let flag = [];
 
 		if (this.chkLowercase.checked) {
-			pool.push("abcdefghijkmnopqrstuvwxyz");
+			pool.push(this.chkSimilar.checked ? "abcdefghijklmnopqrstuvwxyz" : "abcdefghijkmnpqrstuvwxyz");
 			flag.push(false);
 		}
 
 		if (this.chkUppercase.checked) {
-			pool.push("ABCDEFGHJKLMNPQRSTUVWXYZ");
+			pool.push(this.chkSimilar.checked ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHJKLMNPQRSTUVWXYZ");
 			flag.push(false);
 		}
 
@@ -393,7 +408,7 @@ class PassGen extends Window {
 		}
 
 		if (this.chkNumbers.checked) {
-			pool.push("0123456789");
+			pool.push(this.chkSimilar.checked ? "0123456789" : "23456789");
 			flag.push(false);
 		}
 
@@ -436,7 +451,7 @@ class PassGen extends Window {
 		if (this.chkSymbols.checked) pool += 30;
 
 		let entropy = Math.log(pool, 2) * this.txtPassword.value.length;
-		//same as     Math.log(Math.pow(pool, this.txtPassword.value.length), 2))
+		//same as     Math.log(Math.pow(pool, this.txtPassword.value.length), 2));
 
 		let strength = PassGen.StrengthBar(entropy);
 		let color    = strength[0];
@@ -497,23 +512,23 @@ class PassGen extends Window {
 	
 		if (entropy < 19) {
 			comment = "Forbidden";
-			color = "#f00";	
+			color = "#f00";
 		}
 		else if (entropy < 28) {
 			comment = "Very weak";
-			color = "#d00";	
+			color = "#d00";
 		}
 		else if (entropy < 36) {
 			comment = "Weak";
-			color = "#d70";	
+			color = "#d70";
 		}
 		else if (entropy < 60) {
 			comment = "Reasonable";
-			color = "#dc0";	
+			color = "#dc0";
 		}
 		else if (entropy < 128) {
 			comment = "Strong";
-			color = "#8c2";	
+			color = "#8c2";
 		}
 		else {
 			comment = "Overkill";
