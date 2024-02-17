@@ -3,17 +3,18 @@ using System.Net.WebSockets;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Protest.Http;
 
 namespace Protest.Protocols;
 
 internal static class Telnet {
-    private static async void WsWriteText(WebSocket ws, string text) {
+    private static async Task WsWriteText(WebSocket ws, string text) {
         if (ws.State == WebSocketState.Open)
             await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {
@@ -59,7 +60,7 @@ internal static class Telnet {
                 telnet = new TcpClient(host, port);
             }
             catch (Exception ex) {
-                WsWriteText(ws, ex.Message);
+                await WsWriteText(ws, ex.Message);
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 return;
             }
@@ -71,7 +72,7 @@ internal static class Telnet {
             NetworkStream stream = telnet.GetStream();
 
             wsToServer = new Thread(async () => {
-                Thread.Sleep(500);
+                await Task.Delay(500);
                 while (ws.State == WebSocketState.Open) { //ws to server loop
 
                     byte[] buff = new byte[2048];
@@ -119,7 +120,7 @@ internal static class Telnet {
                 }
 
                 try {
-                    WsWriteText(ws, responseData);
+                    await WsWriteText(ws, responseData);
                 }
                 catch { }
 

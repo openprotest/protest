@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net;
 using System.Net.WebSockets;
 using System.Net.NetworkInformation;
@@ -29,9 +30,9 @@ internal static class Monitor {
     }
 
     public struct Query {
+        public int index;
         public Action action;
         public string value;
-        public int index;
     }
 
     private static JsonSerializerOptions actionSerializerOptions;
@@ -41,16 +42,16 @@ internal static class Monitor {
         actionSerializerOptions.Converters.Add(new ActionJsonConverter());
     }
 
-    private static async void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
+    private static async Task WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
         if (ws.State != WebSocketState.Open) { return; }
         await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
-    private static async void WsWriteText(WebSocket ws, byte[] bytes) {
+    private static async Task WsWriteText(WebSocket ws, byte[] bytes) {
         if (ws.State != WebSocketState.Open) { return; }
         await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -70,7 +71,6 @@ internal static class Monitor {
         }
 
         string target = null!;
-        object sendSync = new object();
         bool paused = false;
         bool ping = true;
         int interval = 500;
@@ -96,24 +96,24 @@ internal static class Monitor {
                 target = hostnameAttribute?.value.Split(";")[0].Trim();
             }
             else {
-                WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
+                await WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
                 await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 return;
             }
         }
-        catch (WebSocketException ex) {
+        catch (WebSocketException) {
             return;
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 
-        Thread icmpThread = new Thread(() => { //icmp thread
+        Thread icmpThread = new Thread(async () => { //icmp thread
             Console.WriteLine("icmp thread started");
 
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
-                    Thread.Sleep(interval);
+                    await Task.Delay(interval);
                     continue;
                 }
 
@@ -121,55 +121,47 @@ internal static class Monitor {
 
                 if (ping) {
                     long icmpResult = HandlePing(target, Math.Min(interval, 1000));
-                    lock (sendSync) {
-                        WsWriteText(ws, $"{{\"index\":0,\"value\":{icmpResult}}}");
-                    }
+                    await WsWriteText(ws, $"{{\"index\":0,\"value\":{icmpResult}}}");
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
                 int calculatedInterval = (int)(interval - elapsedTime);
                 if (calculatedInterval > 0) {
-                    Thread.Sleep(calculatedInterval);
+                    await Task.Delay(calculatedInterval);
                 }
             }
         });
 
-        Thread wmiThread = new Thread(() => { //wmi thread
+        Thread wmiThread = new Thread(async() => { //wmi thread
             Console.WriteLine("wmi thread started");
 
             ManagementScope scope = null;
             if (OperatingSystem.IsWindows()) {
-                new Thread(() => {
-                    Thread.Sleep(2000);
+                new Thread(async() => {
+                    await Task.Delay(2000);
                     if (scope is null) {
-                        lock (sendSync) {
-                            WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
-                        }
+                        await WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
                     }
                 }).Start();
 
                 scope = Protocols.Wmi.Scope(target);
 
                 if (scope is null || !scope.IsConnected) {
-                    lock (sendSync) {
-                        WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
-                    }
+                    await WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
                     return;
                 }
             }
 
-            lock (sendSync) {
-                WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
-            }
+            await WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
 
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
-                    Thread.Sleep(interval);
+                    await Task.Delay(interval);
                     continue;
                 }
 
                 if (scope is not null && !scope.IsConnected) {
-                    WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
+                    await WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
                     //TODO: reconnect WMI
                 }
 
@@ -182,17 +174,17 @@ internal static class Monitor {
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
                 int calculatedInterval = (int)(interval - elapsedTime);
                 if (calculatedInterval > 0) {
-                    Thread.Sleep(calculatedInterval);
+                    await Task.Delay(calculatedInterval);
                 }
             }
         });
 
-        Thread smtpThread = new Thread(() => { //snmp thread
+        Thread smtpThread = new Thread(async () => { //snmp thread
             Console.WriteLine("snmp thread started");
 
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
-                    Thread.Sleep(interval);
+                    await Task.Delay(interval);
                     continue;
                 }
 
@@ -205,7 +197,7 @@ internal static class Monitor {
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
                 int calculatedInterval = (int)(interval - elapsedTime);
                 if (calculatedInterval > 0) {
-                    Thread.Sleep(calculatedInterval);
+                    await Task.Delay(calculatedInterval);
                 }
             }
         });
@@ -223,9 +215,7 @@ internal static class Monitor {
                 }
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    lock (sendSync) {
-                        ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                    }
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     break;
                 }
 
@@ -332,50 +322,14 @@ internal static class Monitor {
 
     private static byte[] HandleSnmp(ConcurrentDictionary<int, Query> queries) {
         try {
-
             foreach (Query query in queries.Values) {
                 //TODO:
             }
-
         }
         catch { }
 
         return null;
     }
-
-    /*
-        [SupportedOSPlatform("windows")]
-        private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
-            List<byte> cores = new List<byte>();
-
-            try {
-                using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Nalime = '_Total'")).Get();
-                IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
-                if (perfTotalEnum is null) { return null; }
-                foreach (ManagementObject o in perfTotalEnum) {
-                    if (o is null) { continue; }
-                    ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-                    cores.Add((byte)(100 - idle));
-                }
-
-                if (getCores) {
-                    using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
-                    IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
-                    //if (perfEnum is null) { return null; }
-                    foreach (ManagementObject o in perfEnum) {
-                        if (o is null) { continue; }
-                        ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-                        cores.Add((byte)(100 - idle));
-                    }
-                }
-
-                return cores.ToArray();
-            }
-            catch {
-                return null;
-            }
-        }
-    */
 }
 
 file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {

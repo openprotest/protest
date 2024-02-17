@@ -6,20 +6,21 @@ using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Protest.Protocols;
 using Protest.Tasks;
 
 namespace Protest.Tools;
 
 internal static class LiveStats {
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
-        WsWriteText(ws, Encoding.UTF8.GetBytes(text));
+    private static async Task WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
+        await WsWriteText(ws, Encoding.UTF8.GetBytes(text));
     }
-    private static async void WsWriteText(WebSocket ws, byte[] bytes) {
+    private static async Task WsWriteText(WebSocket ws, byte[] bytes) {
         await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async void DeviceStats(HttpListenerContext ctx) {
+    public static async Task DeviceStats(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -68,26 +69,26 @@ internal static class LiveStats {
                                 firstAlive = pingArray[i];
                                 firstReply = reply;
                             }
-                            WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
-                            WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: Just now\",\"source\":\"ICMP\"}}");
+                            await WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
+                            await WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: Just now\",\"source\":\"ICMP\"}}");
                             LastSeen.Seen(pingArray[i]);
                         }
                         else if (reply.Status == IPStatus.TimedOut) {
-                            WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
+                            await WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
                         }
                         else {
-                            WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
+                            await WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
                         }
                     }
                     catch {
-                        WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[i])}\",\"source\":\"ICMP\"}}");
+                        await WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[i])}\",\"source\":\"ICMP\"}}");
                     }
                 }
 
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
                         string lastSeen = LastSeen.HasBeenSeen(pingArray[i], true);
-                        WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}");
+                        await WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}");
                     }
                 }
             }
@@ -118,10 +119,10 @@ internal static class LiveStats {
                             if (nSize == 0) continue;
                             double percent = Math.Round(100.0 * nFree / nSize, 1);
 
-                            WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}");
+                            await WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}");
 
                             if (percent < 15) {
-                                WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}");
+                                await WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}");
                             }
                         }
 
@@ -137,23 +138,23 @@ internal static class LiveStats {
                             DateTime current = new DateTime(year, month, day, hour, minute, second);
                             DateTime now = DateTime.UtcNow;
                             if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
-                                WsWriteText(ws, "{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}"u8.ToArray());
+                                await WsWriteText(ws, "{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}"u8.ToArray());
                             }
                         }
 
                         if (scope is not null) {
                             string startTime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
                             if (startTime.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}");
                             }
 
                             string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
                             if (username.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
                             }
                             wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
 
-                            WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
+                            await WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
                         }
                     }
                 }
@@ -170,14 +171,14 @@ internal static class LiveStats {
                         if (result.Properties["lastLogonTimestamp"].Count > 0) {
                             string time = Kerberos.FileTimeString(result.Properties["lastLogonTimestamp"][0].ToString());
                             if (time.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logon: {Data.EscapeJsonText(time)}\",\"source\":\"Kerberos\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Last logon: {Data.EscapeJsonText(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
 
                         if (result.Properties["lastLogoff"].Count > 0) {
                             string time = Kerberos.FileTimeString(result.Properties["lastLogoff"][0].ToString());
                             if (time.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {Data.EscapeJsonText(time)}\",\"source\":\"Kerberos\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Last logoff: {Data.EscapeJsonText(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
 
@@ -202,7 +203,7 @@ internal static class LiveStats {
                     if (!mismatch &&  !String.IsNullOrEmpty(wmiHostname)) {
                         wmiHostname = wmiHostname?.Split('.')[0].ToUpper();
                         if (wmiHostname != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}");
+                            await WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}");
                             mismatch = true;
                         }
                     }
@@ -210,7 +211,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(adHostname)) {
                         adHostname = adHostname?.Split('.')[0].ToUpper();
                         if (adHostname != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"Kerberos\"}}");
+                            await WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"Kerberos\"}}");
                             mismatch = true;
                         }
                     }
@@ -221,7 +222,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(netbios)) {
                         netbios = netbios?.Split('.')[0].ToUpper();
                         if (netbios != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netbios)}\",\"source\":\"NetBIOS\"}}");
+                            await WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netbios)}\",\"source\":\"NetBIOS\"}}");
                             mismatch = true;
                         }
                     }
@@ -238,7 +239,7 @@ internal static class LiveStats {
                         IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
                         for (int j = 0; j < reversed.Length; j++) {
                             if (!ips.Contains(reversed[j].ToString())) {
-                                WsWriteText(ws, $"{{\"warning\":\"Revese DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}");
+                                await WsWriteText(ws, $"{{\"warning\":\"Revese DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}");
                                 break;
                             }
                         }
@@ -250,7 +251,7 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
                 string value = password.value;
                 if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"warnings\":\"Weak password\"}"u8.ToArray());
+                    await WsWriteText(ws, "{\"warnings\":\"Weak password\"}"u8.ToArray());
                 }
             }
 
@@ -271,7 +272,7 @@ internal static class LiveStats {
         }
     }
 
-    public static async void UserStats(HttpListenerContext ctx) {
+    public static async Task UserStats(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -301,22 +302,22 @@ internal static class LiveStats {
                     if (result != null) {
                         if (result.Properties["lastLogonTimestamp"].Count > 0) {
                             if (Int64.TryParse(result.Properties["lastLogonTimestamp"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logon: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Last logon: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
                         if (result.Properties["lastLogoff"].Count > 0) {
                             if (Int64.TryParse(result.Properties["lastLogoff"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Last logoff: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
                         if (result.Properties["badPasswordTime"].Count > 0) {
                             if (Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Bad password time: {(DateTime.FromFileTime(time))}\",\"source\":\"Kerberos\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Bad password time: {(DateTime.FromFileTime(time))}\",\"source\":\"Kerberos\"}}");
                             }
                         }
                         if (result.Properties["lockoutTime"].Count > 0) {
                             if (Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"lockedOut\":\"{DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
+                                await WsWriteText(ws, $"{{\"lockedOut\":\"{DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
                     }
@@ -327,7 +328,7 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
                 string value = password.value;
                 if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"warnings\":\"Weak password\"}"u8.ToArray());
+                    await WsWriteText(ws, "{\"warnings\":\"Weak password\"}"u8.ToArray());
                 }
             }
 

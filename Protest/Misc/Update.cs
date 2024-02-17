@@ -41,7 +41,6 @@ internal static class Update {
         string[] split = data.Split('.');
         
         if (split.Length >= 3) {
-            //System.Threading.Thread.Sleep(1000);
             return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\"}}");
         }
         else {

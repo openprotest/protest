@@ -12,7 +12,7 @@ namespace Protest.Tools;
 internal static class TraceRoute {
 
     static readonly byte[] ICMP_PAYLOAD = "0000000000000000"u8.ToArray();
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {

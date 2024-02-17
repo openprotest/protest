@@ -7,11 +7,12 @@ using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Tools;
 
 internal static class SiteCheck {
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

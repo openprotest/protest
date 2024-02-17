@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using Protest.Tools;
 
 namespace Protest.Http;
@@ -30,7 +31,7 @@ internal static class KeepAlive {
         messageSerializerOptions.Converters.Add(new MessageJsonConverter());
     }
 
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
 
         try {
@@ -116,7 +117,7 @@ internal static class KeepAlive {
         }
     }
 
-    public static async void CloseConnection(string sessionId) {
+    public static async Task CloseConnection(string sessionId) {
         foreach (KeyValuePair<WebSocket, Entry> pair in connections) {
             if (pair.Value.sessionId != sessionId) continue;
 

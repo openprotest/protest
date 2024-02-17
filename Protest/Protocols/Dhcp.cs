@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Protest.Http;
 
 namespace Protest.Protocols;
@@ -11,7 +12,7 @@ namespace Protest.Protocols;
 internal static class Dhcp {
     private static readonly byte[] NULL_IP = new byte[] {0,0,0,0};
 
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

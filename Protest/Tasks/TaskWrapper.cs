@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Tasks;
 
@@ -76,7 +77,7 @@ internal sealed class TaskWrapper : IDisposable {
     public void Sleep(int millisecond, int interval = 360_000) {
         long start = DateTime.UtcNow.Ticks;
         while (!cancellationToken.IsCancellationRequested) {
-            long elapsed = (DateTime.UtcNow.Ticks - start) / 10_000; //to millisec
+            long elapsed = (DateTime.UtcNow.Ticks - start) / 10_000; //to milliseconds
             if (elapsed >= millisecond) return;
 
             int remain = (int)(millisecond - elapsed);
@@ -85,6 +86,22 @@ internal sealed class TaskWrapper : IDisposable {
             }
             else {
                 Thread.Sleep(interval);
+            }
+        }
+    }
+
+    public async Task asyncSleep(int millisecond, int interval = 360_000) {
+        long start = DateTime.UtcNow.Ticks;
+        while (!cancellationToken.IsCancellationRequested) {
+            long elapsed = (DateTime.UtcNow.Ticks - start) / 10_000; //to milliseconds
+            if (elapsed >= millisecond) return;
+
+            int remain = (int)(millisecond - elapsed);
+            if (remain < interval) {
+                await Task.Delay(remain);
+            }
+            else {
+                await Task.Delay(interval);
             }
         }
     }
