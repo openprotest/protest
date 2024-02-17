@@ -282,7 +282,7 @@ class MicTester extends Window {
 		innerBox.appendChild(typeInput);
 
 		const wav = document.createElement("option");
-		wav.text = "WAV - Waveform audio format-";
+		wav.text = "WAV - Waveform audio format";
 		wav.value = "audio/wav";
 		
 		const mp3 = document.createElement("option");

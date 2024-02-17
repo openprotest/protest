@@ -1,7 +1,7 @@
 .view-toolbar {
 	position: absolute;
 	top: 0;
-	left: 48px;
+	left: 52px;
 	right: 0px;
 	max-width: 800px;
 	z-index: 1;
@@ -13,7 +13,7 @@
 	position: absolute;
 	top: 48px;
 	height: 40px;
-	left: 48px;
+	left: 52px;
 	right: 0px;
 	max-width: 800px;
 	color: var(--clr-dark);
@@ -57,7 +57,7 @@
 	position: absolute;
 	top: 48px;
 	bottom: 8px;
-	left: 48px;
+	left: 52px;
 	right: 0px;
 	max-width: 800px;
 	overflow-y: auto;
@@ -311,6 +311,7 @@
 	top: 48px;
 	bottom: 8px;
 	left: 1000px;
+	margin-left: 4px;
 	right: 0;
 	max-width: 800px;
 	overflow-y: auto;
@@ -618,7 +619,7 @@ button.view-live-button:active {
 
 .view-side-tools {
 	position: absolute;
-	left: 2px;
+	left: 4px;
 	top: 48px;
 	width: 40px;
 	z-index: 2;
@@ -629,7 +630,7 @@ button.view-live-button:active {
 .view-side-tools > button {
 	margin: 0;
 	padding: 0;
-	margin-bottom: 4px;
+	margin-bottom: 6px;
 	width: 100%;
 	min-width: 24px !important;
 	height: 32px;
@@ -692,7 +693,7 @@ button.view-live-button:active {
 	.view-timeline,
 	.view-toolbar,
 	.view-scroll {
-		left: 200px;
+		left: 204px;
 	}
 
 	.view-side-tools {
