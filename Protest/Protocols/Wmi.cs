@@ -287,10 +287,12 @@ internal static class Wmi {
                 //ContentBuilderAddValue(moc, "MemoryType", "ram type", hash, new FormatMethodPtr(RamType));
                 ContentBuilderAddValue(moc, "FormFactor", "ram form factor", data, new FormatMethodPtr(RamFormFactor));
 
-                if (smbiosType == "20" || smbiosType == "21" || smbiosType == "22" || smbiosType == "23" || smbiosType == "24" || smbiosType == "25" || smbiosType == "26")
+                if (smbiosType == "20" || smbiosType == "21" || smbiosType == "22" || smbiosType == "23" || smbiosType == "24" || smbiosType == "25" || smbiosType == "26") {
                     data.Add("ram type", SMBIOSMemoryType(smbiosType));
-                else
+                }
+                else {
                     data.Add("ram type", RamType(memoryType));
+                }
 
             }
             catch { }
@@ -492,7 +494,6 @@ internal static class Wmi {
                 inParams["Flags"] = flags;
                 o.InvokeMethod("Win32Shutdown", inParams, null);
             }
-
         }
         catch (ManagementException ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");

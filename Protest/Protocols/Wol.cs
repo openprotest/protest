@@ -39,7 +39,7 @@ internal static class Wol {
 
     public static byte[] Wakeup(in string mac, string ip, string mask) {
         if (ip.Contains(';')) ip = ip[..ip.IndexOf(';')].Trim();
-        if (mask.Contains(';')) mask = mask[..mask.IndexOf(';')].Trim();
+        if (mask.Contains(';')) { mask = mask[..mask.IndexOf(';')].Trim(); }
 
         try {
             return Wakeup(mac, IPAddress.Parse(ip), IPAddress.Parse(mask));
@@ -50,31 +50,39 @@ internal static class Wol {
     }
 
     public static byte[] Wakeup(string mac, IPAddress ip, IPAddress mask) {
-        if (mac.Contains(';')) mac = mac.Split(';')[0].Trim();
+        if (mac.Contains(';')) { mac = mac.Split(';')[0].Trim(); }
 
         string[] macDigits;
-        if (mac.Contains('-'))
+        if (mac.Contains('-')) {
             macDigits = mac.Split('-');
-        else if (mac.Contains(':'))
+        }
+        else if (mac.Contains(':')) {
             macDigits = mac.Split(':');
-        else if (mac.Length == 12)
+        }
+        else if (mac.Length == 12) {
             macDigits = new string[] { mac[..2], mac[2..4], mac[4..6], mac[6..8], mac[8..10], mac[10..12] };
-        else
+        }
+        else {
             return "invalid mac address"u8.ToArray();
+        }
 
         if (macDigits.Length != 6) return "invalid mac address"u8.ToArray();
 
         byte[] datagram = new byte[512];
 
-        for (int i = 1; i < 6; i++)
+        for (int i = 1; i < 6; i++) {
             datagram[i] = 0xff;
+        }
 
-        for (int i = 0; i < 16; i++)
-            for (int j = 0; j < 6; j++)
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 6; j++) {
                 datagram[6 + i * 6 + j] = Convert.ToByte(macDigits[j], 16);
+            }
+        }
 
-        for (int i = datagram.Length - 7; i < datagram.Length; i++)
+        for (int i = datagram.Length - 7; i < datagram.Length; i++) {
             datagram[i] = 0;
+        }
 
         try {
             IPAddress broadcast = IpTools.GetBroadcastAddress(ip, mask);

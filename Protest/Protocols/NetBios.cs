@@ -66,9 +66,9 @@ internal static class NetBios {
                 return biosName;
 
             }
-            else //time out
+            else { //time out
                 return String.Empty;
-
+            }
         }
         catch {
             return String.Empty;

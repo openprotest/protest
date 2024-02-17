@@ -47,15 +47,12 @@ internal static class Dhcp {
         for (int i = 0; i < attributes.Length; i++) {
             if (attributes[i].StartsWith("timeout=")) {
                 timeout = int.Parse(Uri.UnescapeDataString(attributes[i][8..].ToString()));
-
             }
             else if (attributes[i].StartsWith("mac=")) {
                 mac = Uri.UnescapeDataString(attributes[i][4..].ToString()).Replace("-", String.Empty).Replace(":", String.Empty);
-
             }
             else if (attributes[i].StartsWith("hostname=")) {
                 hostname = Uri.UnescapeDataString(attributes[i][9..].ToString());
-
             }
             else if (attributes[i].StartsWith("accept=")) {
                 accept = Uri.UnescapeDataString(attributes[i][7..].ToString()) == "true";
@@ -89,16 +86,19 @@ internal static class Dhcp {
         Random rnd = new Random();
 
         byte[] transactionId = new byte[4];
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             transactionId[i] = (byte)rnd.Next(0, 255);
+        }
 
         string id = "0x";
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             id += transactionId[i].ToString("x2");
+        }
 
         if (mac.Length == 0) {
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 6; i++) {
                 mac += rnd.Next(0, 255).ToString("x2");
+            }
         }
 
         long timestamp = DateTime.Now.Ticks;
@@ -130,7 +130,6 @@ internal static class Dhcp {
                     socket.SendTo(request, remote);
                     SendMessage(ws, request, request.Length, 3, id, id, mac, server, ip);
                 }
-
             }
             catch {
                 break;
@@ -186,8 +185,9 @@ internal static class Dhcp {
         //string relayServerIp = $"{reply[24]}.{reply[25]}.{reply[26]}.{reply[27]}";
 
         //string offerMac = $"{reply[28]:x2}{reply[29]:x2}{reply[30]:x2}{reply[31]:x2}{reply[32]:x2}{reply[33]:x2}"; //client mac
-        for (int i = 0; i < macLength; i++)
+        for (int i = 0; i < macLength; i++) {
             mac += $"{reply[28 + i]:x2}";
+        }
 
         ip[0] = reply[16];
         ip[1] = reply[17];
@@ -278,14 +278,17 @@ internal static class Dhcp {
             buffer[index++] = 0x00;
         }
 
-        for (int i = 0; i < 10; i++) //padding
+        for (int i = 0; i < 10; i++) {//padding
             buffer[index++] = 0x00;
+        }
 
-        for (int i = 0; i < 64; i++) //server host name
+        for (int i = 0; i < 64; i++) { //server host name
             buffer[index++] = 0x00;
-
-        for (int i = 0; i < 128; i++) //boot file name
+        }
+        
+        for (int i = 0; i < 128; i++) { //boot file name
             buffer[index++] = 0x00;
+        }
 
         buffer[index++] = 0x63; //magic cookie
         buffer[index++] = 0x82;
@@ -319,8 +322,9 @@ internal static class Dhcp {
         if (hostname.Length > 0) {
             buffer[index++] = 0x0c; //opt: hostname
             buffer[index++] = (byte)hostname.Length; //length
-            for (int i = 0; i < hostname.Length; i++)
+            for (int i = 0; i < hostname.Length; i++) {
                 buffer[index++] = (byte)hostname[i];
+            }
         }
 
         //index: 252
@@ -342,7 +346,6 @@ internal static class Dhcp {
             buffer[index++] = 0x2f; //netbios scope
             buffer[index++] = 0x77; //domain search
             buffer[index++] = 0x79; //classless static route
-
         }
         else {
             int optionsSize = Math.Min(options.Length, 96);
@@ -358,8 +361,9 @@ internal static class Dhcp {
         buffer[index++] = 0xff; //end
 
         //dgram[index++] = 0x00;
-        for (int i = 0; i < 15; i++) //padding
+        for (int i = 0; i < 15; i++) { //padding
             buffer[index++] = 0x00;
+        }
 
         return buffer;
     }
@@ -424,14 +428,17 @@ internal static class Dhcp {
             buffer[index++] = 0x00;
         }
 
-        for (int i = 0; i < 10; i++) //padding
+        for (int i = 0; i < 10; i++) {//padding
             buffer[index++] = 0x00;
+        }
 
-        for (int i = 0; i < 64; i++) //server host name
+        for (int i = 0; i < 64; i++) { //server host name
             buffer[index++] = 0x00;
+        }
 
-        for (int i = 0; i < 128; i++) //boot file name
+        for (int i = 0; i < 128; i++) { //boot file name
             buffer[index++] = 0x00;
+        }
 
         buffer[index++] = 0x63; //magic cookie
         buffer[index++] = 0x82;
@@ -479,8 +486,9 @@ internal static class Dhcp {
         if (hostname.Length > 0) {
             buffer[index++] = 0x0c; //opt: hostname
             buffer[index++] = (byte)hostname.Length; //length
-            for (int i = 0; i < hostname.Length; i++)
+            for (int i = 0; i < hostname.Length; i++) {
                 buffer[index++] = (byte)hostname[i];
+            }
         }
 
         //index: 264
@@ -502,7 +510,6 @@ internal static class Dhcp {
             buffer[index++] = 0x2f; //netbios scope
             buffer[index++] = 0x77; //domain search
             buffer[index++] = 0x79; //classless static route
-
         }
         else {
             int optionsSize = Math.Min(options.Length, 96);
