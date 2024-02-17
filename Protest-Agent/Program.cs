@@ -136,6 +136,17 @@ namespace ProtestAgent {
                 catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
                 break;
 
+            case "anydesk":
+                if (!Configuration.anydesk.enabled) return;
+                try {
+                    Process.Start(
+                        Configuration.anydesk.path,
+                        Configuration.anydesk.arguments + " \"" + value + "\""
+                    );
+                }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                break;
+
             case "winbox":
                 if (!Configuration.winbox.enabled) return;
                 try {

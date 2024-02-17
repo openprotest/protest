@@ -17,10 +17,11 @@ namespace ProtestAgent {
 
             listProtocols.Items.Add("Password stamp");
             listProtocols.Items.Add("SMB");
-            listProtocols.Items.Add("Computer managment");
+            listProtocols.Items.Add("Computer management");
             listProtocols.Items.Add("Remote desktop");
             listProtocols.Items.Add("PS remote");
             listProtocols.Items.Add("Ultra VNC");
+            listProtocols.Items.Add("AnyDesk");
             listProtocols.Items.Add("Winbox");
 
             this.tabServices.OnPressed += new EventHandler(this.TabsServices_Press);
@@ -55,7 +56,7 @@ namespace ProtestAgent {
             switch (key) {
             case "Password stamp":
             case "SMB":
-            case "Computer managment":
+            case "Computer management":
                 txtExecutable.SetEnable(false);
                 btnBrowseExecutable.Visible = false;
                 txtArgs.SetEnable(false);
@@ -80,6 +81,14 @@ namespace ProtestAgent {
                 txtPassword.SetEnable(true);
                 break;
 
+            case "AnyDesk":
+                txtExecutable.SetEnable(true);
+                btnBrowseExecutable.Visible = true;
+                txtArgs.SetEnable(true);
+                txtUsername.SetEnable(false);
+                txtPassword.SetEnable(false);
+                break;
+
             case "Ultra VNC":
                 txtExecutable.SetEnable(true);
                 btnBrowseExecutable.Visible = true;
@@ -93,10 +102,11 @@ namespace ProtestAgent {
             switch (key) {
             case "Password stamp"     : current = Configuration.stamp;    break;
             case "SMB"                : current = Configuration.smb;      break;
-            case "Computer managment" : current = Configuration.compmgmt; break;
+            case "Computer management": current = Configuration.compmgmt; break;
             case "Remote desktop"     : current = Configuration.rdp;      break;
             case "PS remote"          : current = Configuration.pse;      break;
             case "Ultra VNC"          : current = Configuration.uvnc;     break;
+            case "AnyDesk"            : current = Configuration.anydesk;  break;
             case "Winbox"             : current = Configuration.winbox;   break;
             }
 
@@ -229,7 +239,7 @@ namespace ProtestAgent {
             else
                 e.Graphics.FillRectangle(backgroundBrush, e.Bounds.X, e.Bounds.Y, e.Bounds.Width, e.Bounds.Height);
 
-            e.Graphics.DrawString(listProtocols.Items[e.Index].ToString(), this.Font, foregroundBrush, e.Bounds.X + 2, e.Bounds.Y + 2);
+            e.Graphics.DrawString(listProtocols.Items[e.Index].ToString(), this.Font, foregroundBrush, e.Bounds.X + 2, e.Bounds.Y + 3);
         }
 
         private void ListProtocols_SelectedIndexChanged(object sender, EventArgs e) {
@@ -259,13 +269,14 @@ namespace ProtestAgent {
 
             Configuration current = null;
             switch (key) {
-            case "Password stamp"     : current = Configuration.stamp; break;
-            case "SMB"                : current = Configuration.smb; break;
-            case "Computer managment" : current = Configuration.compmgmt; break;
-            case "Remote desktop"     : current = Configuration.rdp; break;
-            case "PS remote"          : current = Configuration.pse; break;
-            case "Ultra VNC"          : current = Configuration.uvnc; break;
-            case "Winbox"             : current = Configuration.winbox; break;
+            case "Password stamp"     : current = Configuration.stamp;    break;
+            case "SMB"                : current = Configuration.smb;      break;
+            case "Computer management": current = Configuration.compmgmt; break;
+            case "Remote desktop"     : current = Configuration.rdp;      break;
+            case "PS remote"          : current = Configuration.pse;      break;
+            case "Ultra VNC"          : current = Configuration.uvnc;     break;
+            case "AnyDesk"            : current = Configuration.anydesk;  break;
+            case "Winbox"             : current = Configuration.winbox;   break;
             }
 
             if (current is null) return;

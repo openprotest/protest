@@ -426,6 +426,11 @@ class DeviceView extends View {
 			}
 		}
 
+		if ("anydesk id" in this.link && this.link["anydesk id"].v.length > 0) { //anydesk
+			const btnAction = this.CreateSideButton("mono/anydesk.svg", "AnyDesk");
+			btnAction.onclick = ()=> UI.PromptAgent(this, "anydesk", this.link["anydesk id"].v);
+		}
+
 		if (this.link.type) {
 			const type = this.link.type.v.toLowerCase();
 			if (type === "router" || type === "switch") {

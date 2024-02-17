@@ -11,8 +11,8 @@ using System.Net.NetworkInformation;
 using System.Management;
 using System.Runtime.Versioning;
 using System.Diagnostics.CodeAnalysis;
-using Protest.Http;
 using System.DirectoryServices.ActiveDirectory;
+using Protest.Http;
 
 namespace Protest.Tools;
 
@@ -69,14 +69,16 @@ internal static class Monitor {
             return;
         }
 
+        string target = null!;
         object sendSync = new object();
         bool paused = false;
         bool ping = true;
         int interval = 500;
-        ConcurrentDictionary<int, Query> queries = new ConcurrentDictionary<int, Query>();
+        ConcurrentDictionary<int, Query> wmi = new ConcurrentDictionary<int, Query>();
+        ConcurrentDictionary<int, Query> snmp = new ConcurrentDictionary<int, Query>();
+        byte[] buff = new byte[2048];
 
         try {
-            byte[] buff = new byte[2048];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
             string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
 
@@ -87,7 +89,6 @@ internal static class Monitor {
                 return;
             }
 
-            string target;
             if (ipAttribute?.value.Length > 0) {
                 target = ipAttribute?.value.Split(";")[0].Trim();
             }
@@ -99,84 +100,122 @@ internal static class Monitor {
                 await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 return;
             }
+        }
+        catch (WebSocketException ex) {
+            return;
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
 
-            new Thread(()=> { //icmp thread
-                while (ws.State == WebSocketState.Open) {
-                    if (paused) {
-                        Thread.Sleep(interval);
-                        continue;
-                    }
-
-                    long startTime = DateTime.UtcNow.Ticks;
-
-                    if (ping) {
-                        long icmpResult = DoPing(target, Math.Min(interval, 1000));
-                        lock (sendSync) {
-                            WsWriteText(ws, $"{{\"index\":0,\"value\":{icmpResult}}}");
-                        }
-                    }
-
-                    long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
-                    int calculatedInterval = (int)(interval - elapsedTime);
-                    if (calculatedInterval > 0) {
-                        Thread.Sleep(calculatedInterval);
-                    }
-                }
-            }).Start();
-
-            new Thread(()=> { //wmi thread
-                ManagementScope scope = null;
-                if (OperatingSystem.IsWindows()) {
-                    new Thread(() => {
-                        Thread.Sleep(2000);
-                        if (scope is null) {
-                            lock (sendSync) {
-                                WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
-                            }
-                        }
-                    }).Start();
-
-                    scope = Protocols.Wmi.Scope(target);
-
-                    if (scope is null || !scope.IsConnected) {
-                        lock (sendSync) {
-                            WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
-                        }
-                        return;
-                    }
-                }
-
-                lock (sendSync) {
-                    WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
-                }
-
-                while (ws.State == WebSocketState.Open) {
-                    if (paused) {
-                        Thread.Sleep(interval);
-                        continue;
-                    }
-
-                    if (scope is not null && !scope.IsConnected) {
-                        WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
-                        //TODO: reconnect WMI
-                    }
-
-                    long startTime = DateTime.UtcNow.Ticks;
-
-                    if (OperatingSystem.IsWindows()) {
-                        DoQuery(scope, queries);
-                    }
-
-                    long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
-                    int calculatedInterval = (int)(interval - elapsedTime);
-                    if (calculatedInterval > 0) {
-                        Thread.Sleep(calculatedInterval);
-                    }
-                }
-            }).Start();
+        Thread icmpThread = new Thread(() => { //icmp thread
+            Console.WriteLine("icmp thread started");
 
             while (ws.State == WebSocketState.Open) {
-                receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+                if (paused) {
+                    Thread.Sleep(interval);
+                    continue;
+                }
+
+                long startTime = DateTime.UtcNow.Ticks;
+
+                if (ping) {
+                    long icmpResult = HandlePing(target, Math.Min(interval, 1000));
+                    lock (sendSync) {
+                        WsWriteText(ws, $"{{\"index\":0,\"value\":{icmpResult}}}");
+                    }
+                }
+
+                long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
+                int calculatedInterval = (int)(interval - elapsedTime);
+                if (calculatedInterval > 0) {
+                    Thread.Sleep(calculatedInterval);
+                }
+            }
+        });
+
+        Thread wmiThread = new Thread(() => { //wmi thread
+            Console.WriteLine("wmi thread started");
+
+            ManagementScope scope = null;
+            if (OperatingSystem.IsWindows()) {
+                new Thread(() => {
+                    Thread.Sleep(2000);
+                    if (scope is null) {
+                        lock (sendSync) {
+                            WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
+                        }
+                    }
+                }).Start();
+
+                scope = Protocols.Wmi.Scope(target);
+
+                if (scope is null || !scope.IsConnected) {
+                    lock (sendSync) {
+                        WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
+                    }
+                    return;
+                }
+            }
+
+            lock (sendSync) {
+                WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
+            }
+
+            while (ws.State == WebSocketState.Open) {
+                if (paused) {
+                    Thread.Sleep(interval);
+                    continue;
+                }
+
+                if (scope is not null && !scope.IsConnected) {
+                    WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
+                    //TODO: reconnect WMI
+                }
+
+                long startTime = DateTime.UtcNow.Ticks;
+
+                if (OperatingSystem.IsWindows()) {
+                    HandleWmi(scope, wmi);
+                }
+
+                long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
+                int calculatedInterval = (int)(interval - elapsedTime);
+                if (calculatedInterval > 0) {
+                    Thread.Sleep(calculatedInterval);
+                }
+            }
+        });
+
+        Thread smtpThread = new Thread(() => { //snmp thread
+            Console.WriteLine("snmp thread started");
+
+            while (ws.State == WebSocketState.Open) {
+                if (paused) {
+                    Thread.Sleep(interval);
+                    continue;
+                }
+
+                long startTime = DateTime.UtcNow.Ticks;
+
+                if (OperatingSystem.IsWindows()) {
+                    HandleSnmp(snmp);
+                }
+
+                long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
+                int calculatedInterval = (int)(interval - elapsedTime);
+                if (calculatedInterval > 0) {
+                    Thread.Sleep(calculatedInterval);
+                }
+            }
+        });
+
+        icmpThread.Start();
+
+
+        try {
+            while (ws.State == WebSocketState.Open) {
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, "")) {
                     await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -196,6 +235,7 @@ internal static class Monitor {
                 switch (query.action) {
                 case Action.start:
                     paused = false;
+                    if (!icmpThread.IsAlive) { icmpThread.Start(); }
                     break;
 
                 case Action.pause:
@@ -205,13 +245,15 @@ internal static class Monitor {
                 case Action.interval:
                     _ = int.TryParse(query.value, out interval);
                     break;
-
-                case Action.addicmp:
-                    break;
                 
                 case Action.addwmi:
+                    wmi.TryAdd(query.index, query);
+                    if (!wmiThread.IsAlive) { wmiThread.Start(); }
+                    break;
+
                 case Action.addsnmp:
-                    queries.TryAdd(query.index, query);
+                    snmp.TryAdd(query.index, query);
+                    if (!smtpThread.IsAlive) { smtpThread.Start(); }
                     break;
 
                 case Action.remove:
@@ -220,13 +262,13 @@ internal static class Monitor {
             }
         }
         catch (JsonException) {
-            return; //do nothing
+            return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
-            return; //do nothing
+            return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
+            return;
         }
         catch (ManagementException ex) {
             Logger.Error(ex);
@@ -242,7 +284,7 @@ internal static class Monitor {
         } catch {}
     }
 
-    private static long DoPing(string host, int timeout) {
+    private static long HandlePing(string host, int timeout) {
         Ping p = new Ping();
         try {
             PingReply reply = p.Send(host, timeout);
@@ -274,7 +316,7 @@ internal static class Monitor {
     }
 
     [SupportedOSPlatform("windows")]
-    private static byte[] DoQuery(ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
+    private static byte[] HandleWmi(ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
         try {
 
             foreach (Query query in queries.Values) {
@@ -283,44 +325,57 @@ internal static class Monitor {
             }
 
         }
-        catch {}
+        catch { }
 
         return null;
     }
 
-/*
-    [SupportedOSPlatform("windows")]
-    private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
-        List<byte> cores = new List<byte>();
-
+    private static byte[] HandleSnmp(ConcurrentDictionary<int, Query> queries) {
         try {
-            using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Nalime = '_Total'")).Get();
-            IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
-            if (perfTotalEnum is null) { return null; }
-            foreach (ManagementObject o in perfTotalEnum) {
-                if (o is null) { continue; }
-                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
-                cores.Add((byte)(100 - idle));
+
+            foreach (Query query in queries.Values) {
+                //TODO:
             }
 
-            if (getCores) {
-                using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
-                IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
-                //if (perfEnum is null) { return null; }
-                foreach (ManagementObject o in perfEnum) {
+        }
+        catch { }
+
+        return null;
+    }
+
+    /*
+        [SupportedOSPlatform("windows")]
+        private static byte[] DoCpuCores(ManagementScope scope, bool getCores) {
+            List<byte> cores = new List<byte>();
+
+            try {
+                using ManagementObjectCollection perfTotal = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Nalime = '_Total'")).Get();
+                IEnumerable<ManagementObject> perfTotalEnum = perfTotal.Cast<ManagementObject>();
+                if (perfTotalEnum is null) { return null; }
+                foreach (ManagementObject o in perfTotalEnum) {
                     if (o is null) { continue; }
                     ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
                     cores.Add((byte)(100 - idle));
                 }
-            }
 
-            return cores.ToArray();
+                if (getCores) {
+                    using ManagementObjectCollection perf = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'")).Get();
+                    IEnumerable<ManagementObject> perfEnum = perf.Cast<ManagementObject>();
+                    //if (perfEnum is null) { return null; }
+                    foreach (ManagementObject o in perfEnum) {
+                        if (o is null) { continue; }
+                        ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                        cores.Add((byte)(100 - idle));
+                    }
+                }
+
+                return cores.ToArray();
+            }
+            catch {
+                return null;
+            }
         }
-        catch {
-            return null;
-        }
-    }
-*/
+    */
 }
 
 file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {

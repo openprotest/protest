@@ -21,6 +21,7 @@ namespace ProtestAgent {
         public static Configuration rdp      = new Configuration();
         public static Configuration pse      = new Configuration();
         public static Configuration uvnc     = new Configuration();
+        public static Configuration anydesk  = new Configuration();
         public static Configuration winbox   = new Configuration();
 
         public static byte[] KeyToBytes(string key, byte length) {
@@ -149,6 +150,10 @@ namespace ProtestAgent {
                     case "uvnc_args"    : uvnc.arguments = value; break;
                     case "uvnc_password": uvnc.password  = DecryptB64(value, key, iv); break;
 
+                    case "anydesk_enable": anydesk.enabled = value == "True"; break;
+                    case "anydesk_path"  : anydesk.path = value; break;
+                    case "anydesk_args"  : anydesk.arguments = value; break;
+
                     case "winbox_enable"  : winbox.enabled   = value == "True"; break;
                     case "winbox_path"    : winbox.path      = value; break;
                     case "winbox_args"    : winbox.arguments = value; break;
@@ -202,6 +207,11 @@ namespace ProtestAgent {
                 builder.AppendLine($"uvnc_path     = {Configuration.uvnc.path}");
                 builder.AppendLine($"uvnc_args     = {Configuration.uvnc.arguments}");
                 builder.AppendLine($"uvnc_password = {EncryptB64(Configuration.uvnc.password, key, iv)}");
+                builder.AppendLine();
+
+                builder.AppendLine($"anydesk_enable   = {Configuration.anydesk.enabled}");
+                builder.AppendLine($"anydesk_path     = {Configuration.anydesk.path}");
+                builder.AppendLine($"anydesk_args     = {Configuration.anydesk.arguments}");
                 builder.AppendLine();
 
                 builder.AppendLine($"winbox_enable   = {Configuration.winbox.enabled}");

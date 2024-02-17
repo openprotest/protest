@@ -118,7 +118,7 @@ namespace ProtestAgent {
                 e.Graphics.DrawPath(selectPen, path);
             }
 
-            e.Graphics.DrawString(this.Label, font, foregroundBrush, new Rectangle(0, 0, this.Width, this.Height), center);
+            e.Graphics.DrawString(this.Label, font, foregroundBrush, new Rectangle(0, 1, this.Width, this.Height), center);
         }
     }
 

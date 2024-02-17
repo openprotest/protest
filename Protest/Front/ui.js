@@ -25,6 +25,9 @@ const UI = {
 		taskbar.className = localStorage.getItem("w_tasktooltip") === "false" ? "no-tooltip" : "";
 		document.body.className = localStorage.getItem("animations") !== "false" ? "" : "disable-animations";
 
+		analog_clock.style.visibility = date_calendar.style.visibility = localStorage.getItem("desk_datetime") !== "false" ? "visible" : "hidden";
+		analog_clock.style.opacity    = date_calendar.style.opacity    = localStorage.getItem("desk_datetime") !== "false" ? "1" : "0";
+
 		container.className = "";
 		if (localStorage.getItem("w_popout") !== "true") container.classList.add("no-popout");
 		if (localStorage.getItem("w_dropshadow") === "false") container.classList.add("disable-window-dropshadows");
@@ -198,77 +201,77 @@ const UI = {
 
 const MENU = {
 	items: [
-		{ t: "Devices",                      i: "mono/devices.svg?light",     g: "inventory", h: false, f: params=> new DevicesList() },
-		{ t: "Users",                        i: "mono/users.svg?light",       g: "inventory", h: false, f: params=> new UsersList() },
-		{ t: "Devices grid",                 i: "mono/griddevices.svg?light", g: "inventory", h: true,  f: params=> new DevicesGrid() },
-		{ t: "Users grid",                   i: "mono/gridusers.svg?light",   g: "inventory", h: true,  f: params=> new UsersGrid() },
-		{ t: "New device",                   i: "mono/newdevice.svg?light",   g: "inventory", h: true,  f: params=> new DeviceView({}) },
-		{ t: "New user",                     i: "mono/newuser.svg?light",     g: "inventory", h: true,  f: params=> new UserView({}) },
-		{ t: "Fetch",                        i: "mono/fetch.svg?light",       g: "inventory", h: false, f: params=> new Fetch() },
-		{ t: "Fetch devices",                i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("devices") },
-		{ t: "Fetch users",                  i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("users") },
-		{ t: "Import from another Pro-test", i: "mono/fetch.svg?light",       g: "inventory", h: true,  f: ()=> new Fetch("protest") },
-		{ t: "Password strength",            i: "mono/strength.svg?light",    g: "inventory", h: false, f: ()=> new PasswordStrength() },
-		{ t: "Gandalf",                      i: "mono/gandalf.svg?light",     g: "inventory", h: true,  f: params=> new Gandalf() },
+		{ t:"Devices",                      i:"mono/devices.svg?light",     g:"inventory", h:false, f:params=> new DevicesList() },
+		{ t:"Users",                        i:"mono/users.svg?light",       g:"inventory", h:false, f:params=> new UsersList() },
+		{ t:"Devices grid",                 i:"mono/griddevices.svg?light", g:"inventory", h:true,  f:params=> new DevicesGrid() },
+		{ t:"Users grid",                   i:"mono/gridusers.svg?light",   g:"inventory", h:true,  f:params=> new UsersGrid() },
+		{ t:"New device",                   i:"mono/newdevice.svg?light",   g:"inventory", h:true,  f:params=> new DeviceView() },
+		{ t:"New user",                     i:"mono/newuser.svg?light",     g:"inventory", h:true,  f:params=> new UserView() },
+		{ t:"Fetch",                        i:"mono/fetch.svg?light",       g:"inventory", h:false, f:params=> new Fetch() },
+		{ t:"Fetch devices",                i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("devices") },
+		{ t:"Fetch users",                  i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("users") },
+		{ t:"Import from another Pro-test", i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("protest") },
+		{ t:"Password strength",            i:"mono/strength.svg?light",    g:"inventory", h:false, f:()=> new PasswordStrength() },
+		{ t:"Gandalf",                      i:"mono/gandalf.svg?light",     g:"inventory", h:true,  f:params=> new Gandalf() },
 
-		{ t: "Address book",  i: "mono/addressbook.svg?light",   g: "documentation", h: true, f: params=> new AddressBook() },
-		{ t: "Documentation", i: "mono/documentation.svg?light", g: "documentation", h: false, f: params=> new Documentation() },
-		{ t: "Debit notes",   i: "mono/notes.svg?light",         g: "documentation", h: false, f: params=> new DebitNotes() },
-		{ t: "Watchdog",      i: "mono/watchdog.svg?light",      g: "documentation", h: false, f: params=> new Watchdog(params) },
-		{ t: "Team chat",     i: "mono/chat.svg?light",          g: "documentation", h: false, f: params=> new Chat() },
+		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:true,  f:params=> new AddressBook(),    k:"phone email" },
+		{ t:"Documentation", i:"mono/documentation.svg?light", g:"documentation", h:false, f:params=> new Documentation(),  k:"" },
+		{ t:"Debit notes",   i:"mono/notes.svg?light",         g:"documentation", h:false, f:params=> new DebitNotes(),     k:"" },
+		{ t:"Watchdog",      i:"mono/watchdog.svg?light",      g:"documentation", h:false, f:params=> new Watchdog(params), k:"" },
+		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:params=> new Chat(),           k:"messages" },
 
-		{ t: "Telnet",             i: "mono/telnet.svg?light",        g: "tools", h: true,  f: params=> new Telnet(params) },
-		//{ t: "Secure shell",       i: "mono/ssh.svg?light",           g: "tools", h: true,  f: params=> {} },
-		{ t: "WMI client",         i: "mono/wmi.svg?light",           g: "tools", h: false, f: params=> new Wmi(params) },
-		//{ t: "SNMP polling",       i: "mono/snmp.svg?light",          g: "tools", h: false, f: params=> new Snmp(params) },
-		//{ t: "SNMP traps",         i: "mono/trap.svg?light",          g: "tools", h: false, f: params=> new Snmp(params) },
-		//{ t: "Scripts",            i: "mono/scripts.svg?light",       g: "tools", h: false, f: params=> {} },
-		//{ t: "Script reports",     i: "mono/reportfile.svg?light",    g: "tools", h: true,  f: params=> {} },
-		//{ t: "Ongoing scripts",    i: "mono/ongoingscript.svg?light", g: "tools", h: true,  f: params=> {} },
+		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:params=> new Telnet(params) },
+		//{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:true,  f:params=> {} },
+		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"tools", h:false, f:params=> new Wmi(params), k:"windows management instrumentation viewer" },
+		//{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
+		//{ t:"SNMP traps",         i:"mono/trap.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
+		//{ t:"Scripts",            i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
+		//{ t:"Script reports",     i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:params=> {} },
+		//{ t:"Ongoing scripts",    i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:params=> {} },
 
-		{ t: "Ping",          i: "mono/ping.svg?light",          g: "utilities", h: false, f: params=> new Ping(params) },
-		{ t: "ARP ping",      i: "mono/ping.svg?light",          g: "utilities", h: true,  f: params=> new Ping({ entries: [], timeout: 500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },
-		{ t: "DNS lookup",    i: "mono/dns.svg?light",           g: "utilities", h: false, f: params=> new DnsLookup(params) },
-		{ t: "Trace route",   i: "mono/traceroute.svg?light",    g: "utilities", h: false, f: params=> new TraceRoute(params) },
-		{ t: "TCP port scan", i: "mono/portscan.svg?light",      g: "utilities", h: false, f: params=> new PortScan(params) },
-		{ t: "Locate IP",     i: "mono/locate.svg?light",        g: "utilities", h: false, f: params=> new LocateIp(params) },
-		{ t: "MAC lookup",    i: "mono/maclookup.svg?light",     g: "utilities", h: false, f: params=> new MacLookup(params) },
-		{ t: "DHCP client",   i: "mono/dhcp.svg?light",          g: "utilities", h: false, f: params=> new DhcpDiscover(params) },
-		{ t: "NTP client",    i: "mono/clock.svg?light",         g: "utilities", h: false, f: params=> new NtpClient(params) },
-		{ t: "Site check",    i: "mono/websitecheck.svg?light",  g: "utilities", h: false, f: params=> new SiteCheck(params) },
-		//{ t:"Speed test",     i:"mono/speedtest.svg?light",          g:"utilities",  h: false, f: params=> new SpeedTest(params) },
-		{ t: "Encoder",            i: "mono/encoder.svg?light",      g: "utilities", h: true, f: params=> new Encoder(params) },
-		{ t: "Network calculator", i: "mono/netcalc.svg?light",      g: "utilities", h: true, f: params=> new NetCalc(params) },
-		{ t: "Password generator", i: "mono/passgen.svg?light",      g: "utilities", h: false, f: params=> new PassGen(params) },
-		{ t: "Screen capture",     i: "mono/screenrecord.svg?light", g: "utilities", h: true,  f: params=> new ScreenCapture() },
-		{ t: "Camera tester",      i: "mono/webcam.svg?light",       g: "utilities", h: true,  f: params=> new CameraTester() },
-		{ t: "Microphone tester",  i: "mono/mic.svg?light",          g: "utilities", h: true,  f: params=> new MicTester() },
-		{ t: "Keyboard tester",    i: "mono/keyboard.svg?light",     g: "utilities", h: true,  f: params=> new KeyboardTester() },
-		{ t: "Gamepad tester",     i: "mono/gamepad.svg?light",      g: "utilities", h: true,  f: params=> new KeyboardTester("gamepad") },
-				
-		{ t: "Settings",       i: "mono/wrench.svg?light",      g: "manage", h: false, f: params=> new Settings() },
-		{ t: "Zones",          i: "mono/router.svg?light",      g: "manage", h: true,  f: params=> new Settings("zones") },
-		{ t: "SMTP profiles",  i: "mono/email.svg?light",       g: "manage", h: true,  f: params=> new Settings("smtpprofiles") },
+		{ t:"Ping",               i:"mono/ping.svg?light",         g:"utilities", h:false, f:params=> new Ping(params),         k:"roundtrip rtt icmp echo reply" },
+		{ t:"ARP ping",           i:"mono/ping.svg?light",         g:"utilities", h:true,  f:params=> new Ping({ entries: [], timeout:500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },
+		{ t:"DNS lookup",         i:"mono/dns.svg?light",          g:"utilities", h:false, f:params=> new DnsLookup(params),    k:"resolve resolution" },
+		{ t:"Trace route",        i:"mono/traceroute.svg?light",   g:"utilities", h:false, f:params=> new TraceRoute(params),   k:"path" },
+		{ t:"TCP port scan",      i:"mono/portscan.svg?light",     g:"utilities", h:false, f:params=> new PortScan(params),     k:"" },
+		{ t:"Locate IP",          i:"mono/locate.svg?light",       g:"utilities", h:false, f:params=> new LocateIp(params),     k:"location" },
+		{ t:"MAC lookup",         i:"mono/maclookup.svg?light",    g:"utilities", h:false, f:params=> new MacLookup(params),    k:"vendor resolver" },
+		{ t:"DHCP client",        i:"mono/dhcp.svg?light",         g:"utilities", h:false, f:params=> new DhcpDiscover(params), k:"discover" },
+		{ t:"NTP client",         i:"mono/clock.svg?light",        g:"utilities", h:false, f:params=> new NtpClient(params),    k:"network time" },
+		{ t:"Site check",         i:"mono/websitecheck.svg?light", g:"utilities", h:false, f:params=> new SiteCheck(params),    k:"www website" },
+		//{ t:"Speed test",          i:"mono/speedtest.svg?light",     g:"utilities",  h:false, f:params=> new SpeedTest(params) },
+		{ t:"Encoder",            i:"mono/encoder.svg?light",      g:"utilities", h:true,  f:params=> new Encoder(params),   k:"binary hex base64 url html decode" },
+		{ t:"Network calculator", i:"mono/netcalc.svg?light",      g:"utilities", h:true,  f:params=> new NetCalc(params),   k:"subnet" },
+		{ t:"Password generator", i:"mono/passgen.svg?light",      g:"utilities", h:false, f:params=> new PassGen(params),  k:"code" },
+		{ t:"Screen capture",     i:"mono/screenrecord.svg?light", g:"utilities", h:true,  f:params=> new ScreenCapture(),  k:"recorder shot" },
+		{ t:"Camera tester",      i:"mono/webcam.svg?light",       g:"utilities", h:true,  f:params=> new CameraTester(),   k:"webcam" },
+		{ t:"Microphone tester",  i:"mono/mic.svg?light",          g:"utilities", h:true,  f:params=> new MicTester(),      k:"audio input" },
+		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",     g:"utilities", h:true,  f:params=> new KeyboardTester(), k:"keys" },
+		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",      g:"utilities", h:true,  f:params=> new KeyboardTester("gamepad"), k:"joystick" },
 
-		{ t: "ACL",            i: "mono/acl.svg?light",         g: "manage", h: false, f: params=> new Acl("acl") },
-		{ t: "Open sessions",  i: "mono/hourglass.svg?light",   g: "manage", h: true,  f: params=> new Acl("sessions") },
+		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:params=> new Settings(), },
+		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:params=> new Settings("zones"), },
+		{ t:"SMTP profiles", i:"mono/email.svg?light",       g:"manage", h:true,  f:params=> new Settings("smtpprofiles") },
+
+		{ t:"ACL",           i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
+		{ t:"Open sessions", i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },
+
+		{ t:"Personalize",    i:"mono/personalize.svg?light", g:"manage", h:false, f:params=> new Personalize() },
+		{ t:"Appearance",     i:"mono/tv.svg?light",          g:"manage", h:true,  f:params=> new Personalize("appearance") },
+		{ t:"Reginal format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:params=> new Personalize("region") },
+		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Personalize("session") },
+		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:params=> new Personalize("agent") },
 		
-		{ t: "Personalize",    i: "mono/personalize.svg?light", g: "manage", h: false, f: params=> new Personalize() },
-		{ t: "Appearance",     i: "mono/tv.svg?light",          g: "manage", h: true,  f: params=> new Personalize("appearance") },
-		{ t: "Reginal format", i: "mono/earth.svg?light",       g: "manage", h: true,  f: params=> new Personalize("region") },
-		{ t: "Session",        i: "mono/hourglass.svg?light",   g: "manage", h: true,  f: params=> new Personalize("session") },
-		{ t: "Agent",          i: "mono/agent.svg?light",       g: "manage", h: true,  f: params=> new Personalize("agent") },
-		
-		{ t: "Automation",     i: "mono/automation.svg?light",  g: "manage", h: false, f: params=> new Automation() },
-		
-		//{ t: "Backup",         i: "mono/backup.svg?light",      g: "manage", h: false, f: params=> {} },
-		{ t: "Log",            i: "mono/log.svg?light",         g: "manage", h: false, f: params=> new Log(params) },
-		{ t: "Update",         i: "mono/update.svg?light",      g: "manage", h: true, f: params=> new About("update") },
-		{ t: "Update modules", i: "mono/department.svg?light",  g: "manage", h: true, f: params=> new About("updatemod") },
-		{ t: "About",          i: "mono/logo.svg?light",        g: "manage", h: false, f: params=> new About("about") },
-		{ t: "Legal",          i: "mono/law.svg?light",         g: "manage", h: true,  f: params=> new About("legal") },
+		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:params=> new Automation(), k:"" },
 
-		{ t: "Logout", i: "mono/logoff.svg?light", g: "manage", h: true, f: ()=> btnLogout.onclick() },
+		//{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:params=> {} },
+		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:params=> new Log(params) },
+		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true, f:params=> new About("update") },
+		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true, f:params=> new About("updatemod") },
+		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:params=> new About("about") },
+		{ t:"Legal",          i:"mono/law.svg?light",         g:"manage", h:true,  f:params=> new About("legal") },
+
+		{ t:"Logout", i:"mono/logoff.svg?light", g:"manage", h:true, f:()=> btnLogout.onclick(), },
 	],
 
 	isOpen: false,
@@ -415,12 +418,11 @@ const MENU = {
 		}
 
 		let lastGroup = null;
-
-		for (let i = 0; i < MENU.items.length; i++) {
+		for (let i = 0; i < MENU.items.length; i++) { //menu items
 			if (MENU.items[i].h && !showHidden) continue;
 
 			const match = keywords.every(
-				keyword=> MENU.items[i].t.toLowerCase().includes(keyword) || MENU.items[i].g.toLowerCase().includes(keyword)
+				keyword=> MENU.items[i].t.toLowerCase().includes(keyword) || MENU.items[i].g.includes(keyword) || (MENU.items[i].k && MENU.items[i].k.includes(keyword))
 			);
 			if (!match) continue;
 
@@ -449,14 +451,21 @@ const MENU = {
 		}
 
 		let count = 0;
-		if (keywords.length > 0) {
+		if (keywords.length > 0) { //inventory
 			for (const file in LOADER.devices.data) {
+
 				const match = keywords.every(
 					keyword=> Object.values(LOADER.devices.data[file]).some(
 						attr=> attr.v.toLowerCase().includes(keyword)
 					)
 				);
 				if (!match) continue;
+
+				const exactMatch = keywords.some(
+					keyword=> Object.values(LOADER.devices.data[file]).some(
+						attr=> attr.v.toLowerCase() === keyword
+					)
+				);
 
 				let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : null;
 
@@ -478,8 +487,14 @@ const MENU = {
 					newItem.appendChild(info);
 				}
 
-				MENU.list.push(newItem);
-				menulist.appendChild(newItem);
+				if (exactMatch) {
+					MENU.list.unshift(newItem);
+					menulist.prepend(newItem);
+				}
+				else {
+					MENU.list.push(newItem);
+					menulist.appendChild(newItem);
+				}
 
 				MENU.ItemEvent(newItem, ()=> {
 					for (let j = 0; j < WIN.array.length; j++)
@@ -490,7 +505,7 @@ const MENU = {
 					return new DeviceView({ file: file });
 				});
 
-				if (++count > 32) break;
+				if (++count > 50) break;
 			}
 
 			for (const file in LOADER.users.data) {
@@ -500,6 +515,12 @@ const MENU = {
 					)
 				);
 				if (!match) continue;
+
+				const exactMatch = keywords.some(
+					keyword=> Object.values(LOADER.users.data[file]).some(
+						attr=> attr.v.toLowerCase() === keyword
+					)
+				);
 
 				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v.toLowerCase()  : null;
 
@@ -521,8 +542,14 @@ const MENU = {
 					newItem.appendChild(info);
 				}
 
-				MENU.list.push(newItem);
-				menulist.appendChild(newItem);
+				if (exactMatch) {
+					MENU.list.unshift(newItem);
+					menulist.prepend(newItem);
+				}
+				else {
+					MENU.list.push(newItem);
+					menulist.appendChild(newItem);
+				}
 
 				MENU.ItemEvent(newItem, ()=> {
 					for (let j = 0; j < WIN.array.length; j++)

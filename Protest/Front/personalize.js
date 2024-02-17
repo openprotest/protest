@@ -81,6 +81,13 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
+		this.chkDateTime = document.createElement("input");
+		this.chkDateTime.type = "checkbox";
+		this.tabsPanel.appendChild(this.chkDateTime);
+		this.AddCheckBoxLabel(this.tabsPanel, this.chkDateTime, "Date and time");
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
 		this.chkAnimations = document.createElement("input");
 		this.chkAnimations.type = "checkbox";
 		this.tabsPanel.appendChild(this.chkAnimations);
@@ -161,6 +168,7 @@ class Personalize extends Tabs {
 		this.chkPopOut.checked        = localStorage.getItem("w_popout") === "true";
 		this.chkTaskTooltip.checked   = localStorage.getItem("w_tasktooltip") !== "false";
 		this.chkWindowShadows.checked = localStorage.getItem("w_dropshadow") !== "false";
+		this.chkDateTime.checked      = localStorage.getItem("desk_datetime") !== "false";
 		this.chkAnimations.checked    = localStorage.getItem("animations") !== "false";
 		this.chkGlass.checked         = localStorage.getItem("glass") === "true";
 		this.scrollBarInput.value     = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
@@ -293,6 +301,9 @@ class Personalize extends Tabs {
 			if (!this.chkWindowShadows.checked) container.classList.add("disable-window-dropshadows");
 			if (this.chkGlass.checked)          container.classList.add("glass");
 
+			analog_clock.style.visibility = date_calendar.style.visibility = this.chkDateTime.checked ? "visible" : "hidden";
+			analog_clock.style.opacity = date_calendar.style.opacity = this.chkDateTime.checked ? "1" : "0";
+
 			container.classList.add(`scrollbar-${this.scrollBarInput.value}`);
 
 			document.body.className = this.chkAnimations.checked ? "" : "disable-animations";
@@ -301,6 +312,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("w_popout", this.chkPopOut.checked);
 			localStorage.setItem("w_tasktooltip", this.chkTaskTooltip.checked);
 			localStorage.setItem("w_dropshadow", this.chkWindowShadows.checked);
+			localStorage.setItem("desk_datetime", this.chkDateTime.checked);
 			localStorage.setItem("animations", this.chkAnimations.checked);
 			localStorage.setItem("glass", this.chkGlass.checked);
 			localStorage.setItem("scrollbar_style", this.scrollBarInput.value);
@@ -315,6 +327,7 @@ class Personalize extends Tabs {
 						WIN.array[i].chkPopOut.checked        = this.chkPopOut.checked;
 						WIN.array[i].chkTaskTooltip.checked   = this.chkTaskTooltip.checked;
 						WIN.array[i].chkWindowShadows.checked = this.chkWindowShadows.checked;
+						WIN.array[i].chkDateTime.checked      = this.chkDateTime.checked;
 						WIN.array[i].chkAnimations.checked    = this.chkAnimations.checked;
 						WIN.array[i].chkGlass.checked         = this.chkGlass.checked;
 
@@ -357,6 +370,7 @@ class Personalize extends Tabs {
 		this.chkPopOut.onchange        = Apply;
 		this.chkTaskTooltip.onchange   = Apply;
 		this.chkWindowShadows.onchange = Apply;
+		this.chkDateTime.onchange      = Apply;
 		this.chkAnimations.onchange    = Apply;
 		this.chkGlass.onchange         = Apply;
 		this.saturation.oninput        = Apply;

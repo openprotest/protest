@@ -399,16 +399,21 @@
 	animation: glow 1.2s infinite;
 }
 
-#analog_clock {
+#analog_clock,
+#date_calendar {
 	position: absolute;
-	right: 32px;
 	bottom: 32px;
+	opacity: 0;
+	transition: .4s;
+}
+
+#analog_clock {
+	right: 32px;
 }
 
 #date_calendar {
-	position: absolute;
 	right: 152px;
-	bottom: 32px;
+	transition-delay: .08s;
 }
 
 #analog_clock_h,
