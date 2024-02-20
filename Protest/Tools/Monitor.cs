@@ -109,8 +109,6 @@ internal static class Monitor {
         }
 
         Thread icmpThread = new Thread(async () => { //icmp thread
-            Console.WriteLine("icmp thread started");
-
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
                     await Task.Delay(interval);
@@ -133,8 +131,6 @@ internal static class Monitor {
         });
 
         Thread wmiThread = new Thread(async() => { //wmi thread
-            Console.WriteLine("wmi thread started");
-
             ManagementScope scope = null;
             if (OperatingSystem.IsWindows()) {
                 new Thread(async() => {
@@ -180,8 +176,6 @@ internal static class Monitor {
         });
 
         Thread smtpThread = new Thread(async () => { //snmp thread
-            Console.WriteLine("snmp thread started");
-
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
                     await Task.Delay(interval);

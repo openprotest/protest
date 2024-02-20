@@ -1,17 +1,16 @@
 <p align="center"><img src="https://raw.githubusercontent.com/openprotest/protest/master/Protest/pro-test.png" /></p>
 <h1 align="center">Pro-test</h1>
-<h2 align="center">A management base for System Admins.</h2>
+<h2 align="center">A management base for System Admins</h2>
 
-![GitHub](https://img.shields.io/github/license/openprotest/protest)
-![GitHub All Releases](https://img.shields.io/github/downloads/openprotest/protest/total)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/openprotest/protest)
-![GitHub Release Date](https://img.shields.io/github/release-date/openprotest/protest)
-![GitHub commits since latest release](https://img.shields.io/github/commits-since/openprotest/protest/latest)
+![downloads](https://img.shields.io/github/downloads/openprotest/protest/total)
+![code size](https://img.shields.io/github/languages/code-size/openprotest/protest)
+![release date](https://img.shields.io/github/release-date/openprotest/protest)
+![commits since](https://img.shields.io/github/commits-since/openprotest/protest/latest)
 
 ### Platform support
-![Windows](https://img.shields.io/badge/Windows-0078D6?style=&logo=windows)
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=&logo=linux&logoColor=black)
-![MacOs](https://shields.io/badge/MacOS--9cf?logo=Apple&style=social)
+![windows](https://img.shields.io/badge/Windows-0078D6?style=&logo=windows)
+![linux](https://img.shields.io/badge/Linux-FCC624?style=&logo=linux&logoColor=black)
+![macos](https://shields.io/badge/MacOS--9cf?logo=Apple&style=social)
 
 ### This repository contains the source code for:
   * **Protest:** Front-end interface and back-end application.
@@ -79,4 +78,3 @@ http {
 
 *[![Sponsor](https://img.shields.io/badge/Sponsor%20on%20GitHub-374046?style=for-the-badge&logo=github)](https://github.com/sponsors/veniware)*
 *[![Donate](https://img.shields.io/badge/Donate-00457C?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/veniware)*
-

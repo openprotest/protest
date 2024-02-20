@@ -81,7 +81,7 @@ class About extends Tabs {
 		description.style.fontWeight = "500";
 		description.style.textAlign = "center";
 		description.style.userSelect = "text";
-		description.textContent = "A management base for System Admins.";
+		description.textContent = "A management base for System Admins";
 		this.tabsPanel.appendChild(description);
 
 		const center = document.createElement("div");
