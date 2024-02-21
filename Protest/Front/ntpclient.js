@@ -55,7 +55,7 @@ class NtpClient extends Window {
 		this.btnHex.style.backgroundPosition = "center";
 		this.btnHex.style.backgroundRepeat = "no-repeat";
 		box.appendChild(this.btnHex);
-		
+
 		this.lblLive = document.createElement("div");
 		this.lblLive.style.color = "#202020";
 		this.lblLive.style.fontFamily = "monospace";
@@ -77,7 +77,7 @@ class NtpClient extends Window {
 		this.btnSend.style.marginTop = "16px";
 		this.btnSend.style.borderRadius = "4px";
 		box.appendChild(this.btnSend);
-			
+
 		this.spinner = document.createElement("div");
 		this.spinner.className = "spinner";
 		this.spinner.style.display = "none";
@@ -136,7 +136,7 @@ class NtpClient extends Window {
 
 					const value = document.createElement("td");
 					value.style.fontWeight = "bold";
-					
+
 					if (response[i][0] === "Roundtrip") {
 						value.textContent = `${response[i][1]}ms`;
 					}

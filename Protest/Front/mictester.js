@@ -192,13 +192,13 @@ class MicTester extends Window {
 				},
 				video: false
 			});
-			
+
 			const audioTrack = this.stream.getAudioTracks()[0];
 			const audioSettings = audioTrack.getSettings();
 			audioTrack.onended = () => this.Stop();
 
 			this.StartVisualizer();
-	
+
 			if (audioSettings.sampleRate && audioSettings.sampleSize) {
 				this.infoBox.textContent = `${audioSettings.sampleRate}Hz @ ${audioSettings.sampleSize}-bits`;
 			}
@@ -236,7 +236,7 @@ class MicTester extends Window {
 			this.audioContext.close();
 			this.audioContext = null;
 		}
-		
+
 		this.infoBox.textContent = "";
 		this.recordButton.disabled = false;
 		this.startButton.disabled = false;
@@ -259,7 +259,7 @@ class MicTester extends Window {
 	HandleRecording() {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
@@ -284,7 +284,7 @@ class MicTester extends Window {
 		const wav = document.createElement("option");
 		wav.text = "WAV - Waveform audio format";
 		wav.value = "audio/wav";
-		
+
 		const mp3 = document.createElement("option");
 		mp3.text = "MP3 - MPEG audio layer III";
 		mp3.value = "audio/mpeg";
@@ -311,12 +311,12 @@ class MicTester extends Window {
 			const blob = new Blob(this.recordChunks, { type: typeInput.value });
 			const audioURL = URL.createObjectURL(blob);
 			window.open(audioURL, "_blank");
-	
+
 			this.recordChunks = [];
 			this.recorder = null;
 			dialog.Close();
 		};
-		
+
 		btnCancel.onclick = ()=> {
 			this.recordChunks = [];
 			this.recorder = null;
@@ -340,7 +340,7 @@ class MicTester extends Window {
 
 			const ctx = this.canvas.getContext("2d");
 			//ctx.imageSmoothingQuality = false;
-			
+
 			let maxHeight = [];
 			let maxAcc = [];
 			for (let i = 0; i < this.analyser.frequencyBinCount; i++) {
@@ -396,7 +396,7 @@ class MicTester extends Window {
 					barHeight = dataArray[i] * this.canvas.height / 255;
 					ctx.fillRect(centerX + x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
 					ctx.fillRect(centerX - x, (this.canvas.height - barHeight) / 2, barWidth, barHeight);
-					
+
 					//draw labels
 					if (i > 0 && i % (this.canvas.width > 800 ? 32 : 64) === 0) {
 						const frequency = i * this.audioContext.sampleRate / bufferLength / 2000;
@@ -419,7 +419,7 @@ class MicTester extends Window {
 					//draw recent max
 					ctx.fillStyle = `hsl(${12 + dataArray[i]/2},100%,40%)`;
 					barHeight = maxHeight[i] * this.canvas.height / 255;
-					
+
 					ctx.fillRect(centerX + x, centerY - (barHeight + barWidth) / 2, barWidth, barWidth);
 					ctx.fillRect(centerX - x, centerY - (barHeight + barWidth) / 2, barWidth, barWidth);
 					ctx.fillRect(centerX + x, centerY + (barHeight - barWidth) / 2, barWidth, barWidth);
@@ -461,7 +461,7 @@ class MicTester extends Window {
 	CalculateNote(frequency) {
 		const referenceFrequency = 440; //A4
 		const referenceNote = 69; //MIDI note number for A4
-	
+
 		let cents = Math.round(1200 * Math.log2(frequency / referenceFrequency)) % 1200;
 		let note = 12 * Math.log2(frequency / referenceFrequency) + referenceNote;
 
@@ -479,7 +479,7 @@ class MicTester extends Window {
 		const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 		const noteIndex = (roundedNote % 12 + 12) % 12;
 		const octave = Math.floor(roundedNote / 12) - 1; //MIDI octave starts from -1
-	
+
 		const closestNote = `${noteNames[noteIndex]}${octave}`;
 
 		return { note: closestNote, cents: cents > 0 ? `+${cents}` : `${cents}`};

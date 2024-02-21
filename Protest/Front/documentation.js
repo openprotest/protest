@@ -247,10 +247,10 @@ class Documentation extends Window {
 
 			setTimeout(()=> txtLink.focus(), 10);
 		};
-		
+
 		this.ReadMode();
 		this.ListDocs();
-		
+
 		this.OnUiReady();
 
 		setTimeout(()=> this.AfterResize(), 250);
@@ -273,7 +273,7 @@ class Documentation extends Window {
 
 	UpdateAuthorization() { //override
 		//super.UpdateAuthorization();
-		
+
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("documentation:write")) {
 			this.btnNew.disabled = true;
 			this.btnEdit.disabled = true;
@@ -302,7 +302,7 @@ class Documentation extends Window {
 			const response = await fetch(uri);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -373,7 +373,7 @@ class Documentation extends Window {
 			const response = await fetch(`docs/view?name=${encodeURIComponent(name)}`);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const text = await response.text();
 			this.divRelated.textContent = "";
 			this.divContent.innerHTML = text;
@@ -538,7 +538,7 @@ class Documentation extends Window {
 			const response = await fetch(`docs/delete?name=${this.selected}`);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -584,7 +584,7 @@ class Documentation extends Window {
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -702,7 +702,7 @@ class Documentation extends Window {
 				for (let i=0; i<devicesColumns.length; i++) {
 					if (!(devicesColumns[i] in LOADER.devices.data[key])) continue;
 					if (LOADER.devices.data[key][devicesColumns[i]].v.length === 0) continue;
-					
+
 					const newLabel = document.createElement("div");
 					newLabel.textContent = LOADER.devices.data[key][devicesColumns[i]].v;
 					newLabel.style.left = `calc(28px + ${i * 100 / devicesColumns.length}%)`;

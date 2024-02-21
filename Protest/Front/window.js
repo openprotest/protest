@@ -160,7 +160,7 @@ const WIN = {
 
 document.body.onresize = ()=> {
 	if (onMobile) return;
-	
+
 	document.getSelection().removeAllRanges();
 	WIN.AlignIcon(false);
 
@@ -620,7 +620,7 @@ class Window {
 			this.task.className = "bar-icon";
 			this.task.style.backgroundColor = "transparent";
 			this.icon.style.filter = "none";
-		
+
 			WIN.focused = null;
 		}
 
@@ -1073,7 +1073,7 @@ class Window {
 
 	AddSendToChatButton() {
 		this.sendChatButton = this.AddToolbarButton("Send to chat", "mono/send.svg?light");
-		
+
 		this.sendChatButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to send this to team chat?", false, "mono/send.svg").addEventListener("click", ()=> {
 					KEEP.socket.send(JSON.stringify({

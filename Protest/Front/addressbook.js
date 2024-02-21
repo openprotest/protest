@@ -59,7 +59,7 @@ class AddressBook extends Window {
 		this.searchBar.append(this.searchBox, this.frequentWords, this.viewButton, this.downloadButton);
 
 		this.searchBox.value = this.params.search;
-		
+
 		if (this.params.view === "list") {
 			this.ViewAsList();
 		}
@@ -84,7 +84,7 @@ class AddressBook extends Window {
 			const response = await fetch("contacts");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -107,7 +107,7 @@ class AddressBook extends Window {
 	SearchBox_onchange() {
 		if (this.lastSearch === this.searchBox.value.trim()) return;
 		this.lastSearchValue = this.searchBox.value.trim();
-	
+
 		let current = this.searchBox.value;
 		setTimeout(()=> {
 			if (current !== this.searchBox.value) return;
@@ -230,7 +230,7 @@ class AddressBook extends Window {
 
 			preview.style.scrollSnapType = "y mandatory";
 			preview.style.scrollSnapAlign = "bottom";
-			
+
 			const BuildQrCode = (value, label, type, size=150)=> {
 				const qrContainer = document.createElement("div");
 				qrContainer.className = "address-book-qrcode";
@@ -265,7 +265,7 @@ class AddressBook extends Window {
 				let vCard = "";
 				vCard += "BEGIN:VCARD" + NL;
 				vCard += "VERSION:2.1" + NL;
-	
+
 				if (this.contacts[index].name && this.contacts[index].name.length > 0) {
 					let split = this.contacts[index].name.split(" ");
 					if (split.length > 1) {
@@ -279,27 +279,27 @@ class AddressBook extends Window {
 				else {
 					vCard += "FN:" + this.contacts[index].title + NL;
 				}
-	
+
 				if (this.contacts[index].title && this.contacts[index].title.length > 0) vCard += "TITLE:" + this.contacts[index].title + NL;
 				if (this.contacts[index].department && this.contacts[index].department.length > 0) vCard += "ORG:" + this.contacts[index].department + NL;
 				if (this.contacts[index].email && this.contacts[index].email.length > 0) vCard += "EMAIL:" + this.contacts[index].email + NL;
-	
+
 				if (this.contacts[index].telephone) {
 					let telephone = this.contacts[index].telephone.split(";").map(o=>o.trim());
 					for (let j=0; j<telephone.length; j++) {
 						vCard += "TEL;WORK:" + telephone[j].replace(" ", "") + NL;
 					}
 				}
-	
+
 				if (this.contacts[index].mobile) {
 					let mobile = this.contacts[index].mobile.split(";").map(o=>o.trim());
 					for (let j=0; j<mobile.length; j++) {
 						vCard += "TEL;CELL:" + mobile[j].replace(" ", "") + NL;
 					}
 				}
-	
+
 				vCard += "END:VCARD" + NL;
-	
+
 				const vCardContainer = BuildQrCode(vCard, "Save contact", "vcard", 220);
 				vCardContainer.firstChild.style.width = "220px";
 			};
@@ -369,7 +369,7 @@ class AddressBook extends Window {
 		};
 
 		for (let i=0; i<this.contacts.length; i++) {
-		
+
 			let isMatched = true;
 			for (let j=0; j<words.length; j++) {
 				let found = false;
@@ -385,7 +385,7 @@ class AddressBook extends Window {
 					break;
 				}
 			}
-			
+
 			if (!isMatched) continue;
 
 			if (this.contacts[i].title) CountWords(this.contacts[i].title);
@@ -475,7 +475,7 @@ class AddressBook extends Window {
 					break;
 				}
 			}
-			
+
 			if (!isMatched) continue;
 
 

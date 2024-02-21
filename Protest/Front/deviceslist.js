@@ -62,7 +62,7 @@ class DevicesList extends List {
 		if (!element.ondblclick) {
 			element.ondblclick = event=> {
 				event.stopPropagation();
-				
+
 				const file = element.getAttribute("id");
 				for (let i = 0; i < WIN.array.length; i++)
 					if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
@@ -82,7 +82,7 @@ class DevicesList extends List {
 	Delete() {
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			if (this.params.select === null) return;
-			
+
 			let file = this.params.select;
 
 			try {

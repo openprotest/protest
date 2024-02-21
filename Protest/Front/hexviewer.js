@@ -11,7 +11,7 @@ class HexViewer extends Window {
 		"Log server",
 		"Quote server",
 		"LPR server",
-		
+
 		"Impress server", //10
 		"Resource location server",
 		"Host name",
@@ -255,7 +255,7 @@ class HexViewer extends Window {
 		this.asciiBox = document.createElement("div");
 		this.asciiBox.className = "hexviewer-asciibox";
 		this.content.appendChild(this.asciiBox);
-		
+
 		this.list = document.createElement("div");
 		this.list.className = "hexviewer-list";
 		this.content.appendChild(this.list);
@@ -271,7 +271,7 @@ class HexViewer extends Window {
 		this.asciiBox.onscroll = ()=> {
 			this.hexBox.scrollTop = this.asciiBox.scrollTop;
 		};
-	
+
 		this.Plot(this.params.exchange, this.params.protocol);
 	}
 
@@ -295,7 +295,7 @@ class HexViewer extends Window {
 			listSeparator.textContent = exchange[i].direction;
 			listSeparator.className = "hexviewer-separator";
 			this.list.appendChild(listSeparator);
-			
+
 			const hexContainer = document.createElement("div");
 			this.hexBox.appendChild(hexContainer);
 
@@ -361,7 +361,7 @@ class HexViewer extends Window {
 				hexElements[i].style.color = charElements[i].style.color = "";
 				hexElements[i].style.backgroundColor = charElements[i].style.backgroundColor = "";
 			}
-			
+
 			for (let i = 0; i < listElements.length; i++) {
 				listElements[i].style.color = "";
 				listElements[i].style.backgroundColor = "";
@@ -441,14 +441,14 @@ class HexViewer extends Window {
 				}
 				break;
 			}
-			
+
 			const first = this.PopulateLabel("Name", 1, hexContainer, charContainer, start, end - start);
 			offset = end + 1;
 
 			let type = (stream[offset] << 8) | stream[offset+1];
 			this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
-			
+
 			let class_ = (stream[offset] << 8) | stream[offset+1];
 			this.PopulateLabel(`Class: ${class_}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
@@ -566,7 +566,7 @@ class HexViewer extends Window {
 		this.PopulateLabel(`Hops: ${stream[3]}`, 0, hexContainer, charContainer, 3, 1);
 
 		this.PopulateLabel(`Transaction ID: 0x${stream[4].toString(16).padStart(2,"0")}${stream[5].toString(16).padStart(2,"0")}${stream[6].toString(16).padStart(2,"0")}${stream[7].toString(16).padStart(2,"0")}`, 0, hexContainer, charContainer, 4, 4);
-		
+
 		this.PopulateLabel(`Seconds elapsed: ${(stream[8]<<8) | (stream[9])}`, 0, hexContainer, charContainer, 8, 2);
 
 		this.PopulateLabel(`Bootp flags`, 0, hexContainer, charContainer, 10, 2);
@@ -599,7 +599,7 @@ class HexViewer extends Window {
 		this.PopulateLabel("Magic cookie", 0, hexContainer, charContainer, 236, 4);
 
 		const options = this.PopulateLabel("Options", 0, hexContainer, charContainer, 240, stream.length - 240);
-		
+
 		let index = 240;
 		while (index < stream.length) {
 			let opt = stream[index++];
@@ -613,7 +613,7 @@ class HexViewer extends Window {
 			case 2:
 				this.PopulateLabel(`Time offset`, 1, hexContainer, charContainer, index, len);
 				break;
-				
+
 			case 3:
 				this.PopulateLabel(`Router: ${stream[index]}.${stream[index+1]}.${stream[index+2]}.${stream[index+3]}`, 1, hexContainer, charContainer, index, len);
 				break;
@@ -709,7 +709,7 @@ class HexViewer extends Window {
 				let l_time = (stream[index] << 24) | (stream[index+1] << 16) | (stream[index+2] << 8) | (stream[index+3]);
 				this.PopulateLabel(`Lease time: ${l_time}s`, 1, hexContainer, charContainer, index, len);
 				break;
-			
+
 			case 53:
 				let type;
 				switch (stream[index]) {
@@ -726,7 +726,7 @@ class HexViewer extends Window {
 				}
 				this.PopulateLabel(`DHCP Message type: ${type}`, 1, hexContainer, charContainer, index, len);
 				break;
-	
+
 			case 54:
 				this.PopulateLabel(`Server identifier: ${stream[index]}.${stream[index+1]}.${stream[index+2]}.${stream[index+3]}`, 1, hexContainer, charContainer, index, len);
 				break;
@@ -776,7 +776,7 @@ class HexViewer extends Window {
 
 				break;
 			}
-	
+
 			index += len;
 		}
 	}

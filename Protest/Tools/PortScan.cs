@@ -150,7 +150,7 @@ internal static class PortScan {
         {10001,"UniFi Discovery Service"}
     };
 
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

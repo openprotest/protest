@@ -15,7 +15,7 @@ const KEEP = {
 		server = server.replace("https://", "");
 		server = server.replace("http://", "");
 		if (server.endsWith("/")) server = server.substring(0, server.indexOf("/"));
-		
+
 		KEEP.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/keepalive");
 
 		KEEP.socket.onopen = ()=> {
@@ -87,7 +87,7 @@ const KEEP = {
 			for (let i=0; i<KEEP.zones.length; i++) {
 				const split = KEEP.zones[i].network.split("/");
 				if (split.length !== 2) { continue; }
-				
+
 				let gw = split[0].split(".").map(o=>parseInt(o));
 				if (gw.length != 4) { continue; }
 				if (gw.find(o => o<0 || o>255)) { continue; }
@@ -144,7 +144,7 @@ const KEEP = {
 				if (LOADER.users.version === message.version) break;
 
 				LOADER.users.data[message.target] = message.obj;
-				
+
 				const view = WIN.array.find(o=> o instanceof UserView && o.params.file === message.target);
 				if (view) {
 					view.link = LOADER.users.data[message.target];
@@ -177,7 +177,7 @@ const KEEP = {
 			}
 			else if (message.type === "user") {
 				if (LOADER.users.version === message.version) break;
-				
+
 				const view = WIN.array.find(o=> o instanceof UserView && o.params.file === message.target);
 				if (view) view.Close();
 
@@ -236,7 +236,7 @@ const KEEP = {
 				WIN.array[i].tabTask.style.visibility = "hidden";
 			}
 			break;
-			
+
 		case "chat-text":
 		case "chat-emoji":
 		case "chat-command":
@@ -266,7 +266,7 @@ const KEEP = {
 
 				WIN.array[i].HandleMessage(message);
 				chatCount++;
-				
+
 				if (WIN.focused !== WIN.array[i] &&
 					message.sender !== KEEP.username &&
 					localStorage.getItem("enable_notification_sound") !== "false") {
@@ -300,7 +300,7 @@ const KEEP = {
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
-				
+
 				/*if (WIN.focused !== WIN.array[i] &&
 					message.sender !== KEEP.username &&
 					localStorage.getItem("enable_notification_sound") !== "false") {
@@ -319,7 +319,7 @@ const KEEP = {
 		const notificationBox = document.createElement("div");
 		notificationBox.className = "notification-box";
 		container.appendChild(notificationBox);
-		
+
 		const message = document.createElement("div");
 		message.textContent = msg;
 		message.style.height = "64px";
@@ -345,7 +345,7 @@ const KEEP = {
 		btnReconnect.type = "button";
 		btnReconnect.value = "Connect";
 		btnReconnect.style.height = "30px";
-	
+
 		const btnReload = document.createElement("input");
 		btnReload.type = "button";
 		btnReload.value = "Reload";

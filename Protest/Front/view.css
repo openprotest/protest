@@ -197,7 +197,7 @@
 .view-attributes-list > div > input[type="button"]:nth-child(3) { /*remove button*/
 	position: absolute;
 	right: 4px;
-	
+
 	width: 28px;
 	min-width: 28px;
 	height: 28px;

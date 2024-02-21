@@ -93,7 +93,7 @@ class Watchdog extends Window {
 
 		this.win.addEventListener("mousemove", event=> this.timeline.onmousemove(event));
 		this.win.addEventListener("mouseup", event=> this.timeline.onmouseup(event));
-	
+
 		this.UpdateAuthorization();
 		this.ListWatchers();
 	}
@@ -136,7 +136,7 @@ class Watchdog extends Window {
 		innerBox.appendChild(dateInput);
 
 		dateInput.valueAsDate = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
-		
+
 		dateInput.onkeydown = event=> {
 			if (event.key === "Enter") {
 				btnOK.onclick();
@@ -205,10 +205,10 @@ class Watchdog extends Window {
 			const response = await fetch("watchdog/list");
 
 			if (response.status !== 200) return;
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
-			
+
 			this.list.textContent = "";
 
 			json.sort((a, b)=>a.name.localeCompare(b.name));
@@ -220,7 +220,7 @@ class Watchdog extends Window {
 
 				this.watchers[json[i].file] = json[i];
 			}
-	
+
 			this.Seek();
 		}
 		catch (ex) {
@@ -415,7 +415,7 @@ class Watchdog extends Window {
 				statusCodes[i].checked = this.selected.httpstatus[i];
 			}
 		}
-		
+
 		typeInput.onchange = ()=> {
 			innerBox.textContent = "";
 
@@ -501,7 +501,7 @@ class Watchdog extends Window {
 		};
 
 		typeInput.onchange();
-		
+
 		btnOK.onclick = async ()=> {
 			if (!isNew && this.selected === null) return;
 
@@ -568,14 +568,14 @@ class Watchdog extends Window {
 				});
 
 				if (response.status !== 200) return;
-				
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
 				if (!isNew) {
 					this.list.removeChild(this.selectedElement);
 				}
-				
+
 				const element = this.CreateWatcherElement(json);
 				this.list.appendChild(element);
 				json.element = element;
@@ -678,7 +678,7 @@ class Watchdog extends Window {
 		recipientsInput.style.top = "100px";
 		recipientsInput.style.width = "calc(100% - 396px)";
 		recipientsInput.style.maxWidth = "300px";
-		
+
 		innerBox.append(recipientsLabel, recipientsInput);
 
 
@@ -726,11 +726,11 @@ class Watchdog extends Window {
 		watchersList.style.overflowY = "auto";
 
 		innerBox.append(watchersLabel, watchersList);
-		
+
 		let notifications = {};
 		let watchersCheckboxes = {};
 		let selected = null;
-		
+
 		const AddNotification = name=> {
 			const element = document.createElement("div");
 			element.className = "list-element";
@@ -746,7 +746,7 @@ class Watchdog extends Window {
 			label.style.overflow = "hidden";
 			label.style.textOverflow = "ellipsis";
 			label.style.whiteSpace = "nowrap";
-			
+
 			const removeButton = document.createElement("div");
 			removeButton.style.display = "none";
 			removeButton.style.position = "absolute";
@@ -774,7 +774,7 @@ class Watchdog extends Window {
 			};
 
 			notifications[id] = obj;
-			
+
 			element.onclick = ()=> {
 				if (selected !== null && notifications[selected]) {
 					notifications[selected].element.style.backgroundColor = "";
@@ -842,7 +842,7 @@ class Watchdog extends Window {
 			if (selected === null) return;
 			notifications[selected].notify = notifyInput.value;
 		};
-		
+
 		newButton.onclick = ()=> {
 			const newElement = AddNotification("").element;
 			newElement.onclick();
@@ -865,7 +865,7 @@ class Watchdog extends Window {
 					method: "POST",
 					body: JSON.stringify(array)
 				});
-	
+
 				if (response.status !== 200) return;
 
 				const json = await response.json();
@@ -874,10 +874,10 @@ class Watchdog extends Window {
 			catch (ex){
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
 			}
-			
+
 			dialog.Close();
 		};
-		
+
 		const responses = await Promise.all([
 			fetch("config/smtpprofiles/list"),
 			fetch("notifications/list")
@@ -913,7 +913,7 @@ class Watchdog extends Window {
 
 			check.onchange = ()=> {
 				if (selected === null) return;
-				
+
 				notifications[selected].watchers = [];
 				for (let file2 in watchersCheckboxes) {
 					if (!watchersCheckboxes[file2].checked) continue;
@@ -979,12 +979,12 @@ class Watchdog extends Window {
 		this.ConfirmBox("Are you sure you want to delete this watcher?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
 				const response = await fetch(`watchdog/delete?file=${this.selected.file}`);
-				
+
 				if (response.status !== 200) return;
-				
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-				
+
 				this.list.removeChild(this.selectedElement);
 				delete this.watchers[this.selected.file];
 				this.selected = null;
@@ -1003,20 +1003,20 @@ class Watchdog extends Window {
 		const CreateStatBox = (title, subtitle, value)=>{
 			const box = document.createElement("div");
 			this.stats.appendChild(box);
-	
+
 			const titleBox = document.createElement("div");
 			titleBox.textContent = title;
 			titleBox.style.fontSize = "larger";
 			titleBox.style.fontWeight = "bold";
-	
+
 			const titleBox2 = document.createElement("div");
 			titleBox2.textContent = subtitle;
 			titleBox2.style.fontSize = "smaller";
-	
+
 			const valueBox = document.createElement("div");
 			valueBox.textContent = value;
 			valueBox.style.fontSize = "xx-large";
-	
+
 			box.append(titleBox, titleBox2, valueBox);
 		};
 
@@ -1035,12 +1035,12 @@ class Watchdog extends Window {
 			graphCounts = {};
 			graphWidth = 0;
 			barsCount = 0;
-			
+
 			for (let time in uptime24) {
 				if (time < Date.now() - Watchdog.DAY_TICKS) continue;
 
 				let status = uptime24[time];
-	
+
 				if (status < 0) {
 					if (!graphCounts[status]) {
 						barsCount++;
@@ -1095,7 +1095,7 @@ class Watchdog extends Window {
 
 			const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
 			svg.appendChild(defs);
-	
+
 			const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
 			pattern.setAttribute("id", "pattern_s");
 			pattern.setAttribute("width", 5);
@@ -1103,17 +1103,17 @@ class Watchdog extends Window {
 			pattern.setAttribute("patternUnits", "userSpaceOnUse");
 			pattern.setAttribute("patternTransform", "rotate(45)");
 			defs.appendChild(pattern);
-	
+
 			const stripesRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 			stripesRect.setAttribute("width", 3);
 			stripesRect.setAttribute("height", 5);
 			stripesRect.setAttribute("fill", "#fff");
 			pattern.appendChild(stripesRect);
-	
+
 			const stripesMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
 			stripesMask.setAttribute("id", "mask_s");
 			defs.appendChild(stripesMask);
-	
+
 			const maskRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 			maskRect.setAttribute("x", 0);
 			maskRect.setAttribute("y", 0);
@@ -1247,7 +1247,7 @@ class Watchdog extends Window {
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.utcToday + Watchdog.DAY_TICKS;
 		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport+1) * Watchdog.DAY_TICKS;
-		
+
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
 			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels) break;
@@ -1333,7 +1333,7 @@ class Watchdog extends Window {
 				dot.setAttribute("rx", 2);
 				dot.setAttribute("fill", this.StatusToColor(value));
 				svg.appendChild(dot);
-	
+
 				if (value < 0) {
 					dot.setAttribute("mask", "url(#mask)");
 				}
@@ -1434,7 +1434,7 @@ class Watchdog extends Window {
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.utcToday + Watchdog.DAY_TICKS*2;
 		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
-		
+
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
 			let right = (this.utcToday - date - this.timezoneOffset) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels*2) break;
@@ -1483,7 +1483,7 @@ class Watchdog extends Window {
 				let x = i * this.dayPixels / 24;
 				if (x - lastX < 40) continue;
 				lastX = x;
-				
+
 				const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
 				lblTime.textContent = `${i.toString().padStart(2, "0")}:00`;
 				lblTime.setAttribute("x", x);

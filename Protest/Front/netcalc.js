@@ -278,7 +278,7 @@ class NetCalc extends Window {
 		for (let i = 0; i < static_bits; i++) {
 			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(232,0,0)" : "rgb(96,232,32)";
 		}
-		
+
 		this.subnetLabel.textContent = `Subnet:\n${net.join(".")}`;
 		this.broadcastLabel.textContent = `Broadcast:\n${broadcast.join(".")}`;
 		this.RangeLabel.textContent = `Host range:\n` + net[0] + "." + net[1] + "." + net[2] + "." + (net[3] + 1) + " - " +

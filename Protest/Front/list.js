@@ -42,7 +42,7 @@ class List extends Window {
 		this.win.addEventListener("mouseup", event=> { this.List_mouseup(event); });
 		this.win.addEventListener("mousemove", event=> { this.List_mousemove(event); });
 	}
-	
+
 	List_mouseup(event) {
 		if (this.resizingColumnElement || this.movingColumnElement) this.FinalizeColumns();
 	}

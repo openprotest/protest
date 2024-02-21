@@ -206,7 +206,7 @@ class Settings extends Tabs {
 		this.profilesTestButton.disabled = true;
 		this.profilesTestButton.className = "with-icon";
 		this.profilesTestButton.style.backgroundImage = "url(mono/checked.svg?light)";
-		
+
 		this.options.append(this.profilesNewButton, this.profilesRemoveButton, this.profilesTestButton);
 
 		const titleBar = document.createElement("div");
@@ -245,7 +245,7 @@ class Settings extends Tabs {
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
 		}
-		
+
 		titleBar.append(serverLabel, portLabel, usernameLabel);
 
 		this.profilesList = document.createElement("div");
@@ -281,7 +281,7 @@ class Settings extends Tabs {
 		this.profilesTestButton.onclick = ()=>{
 			const dialog = this.DialogBox("108px");
 			if (dialog === null) return;
-			
+
 			dialog.innerBox.parentElement.style.maxWidth = "480px";
 			dialog.innerBox.style.textAlign = "center";
 
@@ -363,7 +363,7 @@ class Settings extends Tabs {
 			const response = await fetch("fetch/networkinfo");
 
 			if (response.status !== 200) return;
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -399,7 +399,7 @@ class Settings extends Tabs {
 			const response = await fetch("config/zones/list");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -728,7 +728,7 @@ class Settings extends Tabs {
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -746,10 +746,10 @@ class Settings extends Tabs {
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
-			
+
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");

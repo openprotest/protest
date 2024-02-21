@@ -34,10 +34,10 @@ class Automation extends List {
 		try {
 			const response = await fetch("automation/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw (json.error);
-			
+
 			this.link = json;
 
 			for (let task in this.link.data) {
@@ -45,7 +45,7 @@ class Automation extends List {
 				element.id = task;
 				element.className = "list-element";
 				this.list.appendChild(element);
-	
+
 				this.InflateElement(element, this.link.data[task]);
 
 				element.addEventListener("click", event=>this.Entry_onclick(event));
@@ -111,7 +111,7 @@ class Automation extends List {
 	}
 
 	Entry_ondblclick(event) {
-		
+
 	}
 
 }

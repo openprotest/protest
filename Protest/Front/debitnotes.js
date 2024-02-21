@@ -166,9 +166,9 @@ class DebitNotes extends Window {
 		this.ListDebitNotes();
 		this.GetTemplates();
 		this.GetBanners();
-		
+
 		this.OnUiReady();
-		
+
 		setTimeout(()=> this.AfterResize(), 250);
 	}
 
@@ -189,7 +189,7 @@ class DebitNotes extends Window {
 
 	UpdateAuthorization() { //override
 		//super.UpdateAuthorization();
-		
+
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("debit notes:write")) {
 			this.btnNew.disabled = true;
 			this.btnDuplicate.disabled = true;
@@ -291,7 +291,7 @@ class DebitNotes extends Window {
 
 			let description = (manufacturer + " " + type).trim();
 			let serial = LOADER.devices.data[file]["serial number"] ? LOADER.devices.data[file]["serial number"].v : "";
-			
+
 			if (description && !(description in DebitNotes.MODELS)) {
 				DebitNotes.MODELS[description] = [];
 				const option = document.createElement("option");
@@ -344,7 +344,7 @@ class DebitNotes extends Window {
 			this.params.selected = debit.file;
 			this.selectedDebit = debit;
 			this.selectedElement = element;
-			
+
 			this.Preview(debit);
 			this.UpdateAuthorization();
 		};
@@ -390,12 +390,12 @@ class DebitNotes extends Window {
 		codeContainer.style.textAlign = "right";
 		codeContainer.style.overflow = "hidden";
 		page.appendChild(codeContainer);
-		
+
 		const barcode = document.createElement("img");
 		barcode.src = `barcode128?code=${debit.file}&withlabel=true`;
 		barcode.style.textAlign = "right";
 		codeContainer.appendChild(barcode);
-		
+
 		if (content.status == "returned") {
 			const stampContainer = document.createElement("div");
 			stampContainer.style.position = "absolute";
@@ -458,7 +458,7 @@ class DebitNotes extends Window {
 		lblDateLabel.style.fontWeight = "bold";
 		grid.append(lblDateLabel);
 		const lblDate = document.createElement("div");
-		
+
 		lblDate.textContent = new Date(UI.TicksToUnixDate(content.date)).toLocaleDateString(regionalFormat);
 		lblDate.style.gridArea = "3 / 2";
 		lblDate.style.borderBottom = underline_style;
@@ -562,22 +562,22 @@ class DebitNotes extends Window {
 			deviceDesc.style.padding = "2px";
 			deviceDesc.style.border = "1px solid black";
 			deviceDesc.textContent = content.devices[i].description;
-			
+
 			const deviceModel = document.createElement("td");
 			deviceModel.style.padding = "2px";
 			deviceModel.style.border = "1px solid black";
 			deviceModel.textContent = content.devices[i].model;
-			
+
 			const deviceSerial = document.createElement("td");
 			deviceSerial.style.padding = "2px";
 			deviceSerial.style.border = "1px solid black";
 			deviceSerial.textContent = content.devices[i].serial;
-			
+
 			const deviceQuantity = document.createElement("td");
 			deviceQuantity.style.padding = "2px";
 			deviceQuantity.style.border = "1px solid black";
 			deviceQuantity.textContent = content.devices[i].quantity;
-			
+
 			row.append(deviceDesc, deviceModel, deviceSerial, deviceQuantity);
 		}
 
@@ -719,7 +719,7 @@ class DebitNotes extends Window {
 		const txtTemplate = document.createElement("select");
 		txtTemplate.style.gridArea = "3 / 5";
 		grid.appendChild(txtTemplate);
-		
+
 		const lblBanner = document.createElement("div");
 		lblBanner.textContent = "Banner:";
 		lblBanner.style.gridArea = "4 / 4";
@@ -1013,9 +1013,9 @@ class DebitNotes extends Window {
 					method: "POST",
 					body: JSON.stringify(body)
 				});
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw (json.error);
 
@@ -1083,16 +1083,16 @@ class DebitNotes extends Window {
 			this.UpdateAuthorization();
 			return;
 		}
-		
+
 		this.ConfirmBox("Are you sure you want to mark this debit note as returned?").addEventListener("click", async()=> {
 			try {
 				const response = await fetch(`debit/return?status=${this.selectedDebit.status}&file=${this.params.selected}`);
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw (json.error);
-	
+
 				let debit = {
 					file: this.params.selected,
 					status: "returned",
@@ -1120,9 +1120,9 @@ class DebitNotes extends Window {
 		this.ConfirmBox("Are you sure you want to delete this debit note?").addEventListener("click", async ()=> {
 			try {
 				const response = await fetch(`debit/delete?status=${this.selectedDebit.status}&file=${this.params.selected}`);
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw (json.error);
 

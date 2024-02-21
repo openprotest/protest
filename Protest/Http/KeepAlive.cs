@@ -31,7 +31,7 @@ internal static class KeepAlive {
         messageSerializerOptions.Converters.Add(new MessageJsonConverter());
     }
 
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
 
         try {

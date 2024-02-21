@@ -331,7 +331,7 @@ class Chat extends Window {
 		const offer = await localConnection.createOffer();
 
 		localConnection.setLocalDescription(offer);
-		
+
 		this.AdjustUI();
 	}
 
@@ -443,7 +443,7 @@ class Chat extends Window {
 			await remoteConnection.setLocalDescription(offer);
 
 			console.log({description: remoteConnection.localDescription});
-				
+
 			KEEP.socket.send(JSON.stringify({
 				type: "chat-sdp-negotiation",
 				uuid: message.uuid,
@@ -562,10 +562,10 @@ class Chat extends Window {
 		this.micButton.style.backgroundImage = this.isMicEnable ? "url(mono/mic.svg)" : "url(mono/mic.svg?light)";
 		this.camButton.style.backgroundColor = this.isCamEnable ? "var(--clr-accent)" : "transparent";
 		this.camButton.style.backgroundImage = this.isCamEnable ? "url(mono/webcam.svg)" : "url(mono/webcam.svg?light)";
-		
+
 		this.displayButton.style.backgroundColor = hasDisplayStreams ? "var(--clr-accent)" : "transparent";
 		this.displayButton.style.backgroundImage = hasDisplayStreams ? "url(mono/screenshare.svg)" : "url(mono/screenshare.svg?light)";
-	
+
 		if ((hasUserStream || hasDisplayStreams) && !hasRemoteStreams) {
 			this.localStreamsBox.style.visibility = "visible";
 			this.localStreamsBox.style.opacity = "1";
@@ -638,7 +638,7 @@ class Chat extends Window {
 
 	async Mic_onclick() {
 		this.isMicEnable = !this.isMicEnable;
-		
+
 		try {
 			if (this.userStream === null) {
 				this.isMicEnable = true;
@@ -747,7 +747,7 @@ class Chat extends Window {
 			bubble: bubble,
 			sender: sender
 		};
-		
+
 		const isScrolledToBottom = this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
 
 		group.appendChild(wrapper);
@@ -761,7 +761,7 @@ class Chat extends Window {
 
 	CreateTextBubble(text, direction, sender, alias, color, time, id=null) {
 		if (text.length === 0) return;
-		
+
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		bubble.innerHTML = text;
 
@@ -776,7 +776,7 @@ class Chat extends Window {
 
 	CreateEmojiBubble(url, direction, sender, alias, color, time, id=null) {
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
-		
+
 		const emojiBox = document.createElement("div");
 		emojiBox.style.filter = "drop-shadow(#000 0 0 1px)";
 		bubble.appendChild(emojiBox);
@@ -826,7 +826,7 @@ class Chat extends Window {
 
 	CreateLocalStreamElement(isUserMedia=false) {
 		const container = document.createElement("div");
-		
+
 		const videoFeedback = document.createElement("video");
 		videoFeedback.setAttribute("autoplay", true);
 		videoFeedback.style.width = "100%";

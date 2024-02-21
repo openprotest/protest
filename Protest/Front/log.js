@@ -100,7 +100,7 @@ class Log extends Window {
 
 		this.SetOpaque(this.chkOpaque.checked);
 		this.SetOnTop(this.chkOnTop.checked);
-		
+
 		this.ListTodaysLog();
 	}
 
@@ -125,7 +125,7 @@ class Log extends Window {
 
 	Log_onscroll(event) {
 		if (this.hasEnded) return;
-		
+
 		if (this.list.scrollTop < 2) {
 			this.list.scrollTop = 2;
 			this.ListNextLog();
@@ -134,13 +134,13 @@ class Log extends Window {
 
 	async ListTodaysLog() {
 		this.isLoading = true;
-		
+
 		try {
 			const response = await fetch("log/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const text = await response.text();
-			
+
 			let split = text.split("\n");
 			for (let i = 0; i < split.length - 1; i++) {
 				if (split[i].length === 0) continue;
@@ -166,7 +166,7 @@ class Log extends Window {
 		finally {
 			this.isLoading = false;
 			await this.ListNextLog();
-			
+
 			if (this.params.autoScroll) {
 				this.list.scrollTop = this.list.scrollHeight;
 			}

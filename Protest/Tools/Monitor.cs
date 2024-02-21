@@ -51,7 +51,7 @@ internal static class Monitor {
         await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -132,20 +132,23 @@ internal static class Monitor {
 
         Thread wmiThread = new Thread(async() => { //wmi thread
             ManagementScope scope = null;
-            if (OperatingSystem.IsWindows()) {
-                new Thread(async() => {
-                    await Task.Delay(2000);
-                    if (scope is null) {
-                        await WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
-                    }
-                }).Start();
+            if (!OperatingSystem.IsWindows()) {
+                await WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"WMI is not supported\"}"u8.ToArray());
+                return;
+            }
 
-                scope = Protocols.Wmi.Scope(target);
-
-                if (scope is null || !scope.IsConnected) {
-                    await WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
-                    return;
+            new Thread(async() => {
+                await Task.Delay(2000);
+                if (scope is null) {
+                    await WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
                 }
+            }).Start();
+
+            scope = Protocols.Wmi.Scope(target);
+
+            if (scope is null || !scope.IsConnected) {
+                await WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
+                return;
             }
 
             await WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
@@ -164,7 +167,7 @@ internal static class Monitor {
                 long startTime = DateTime.UtcNow.Ticks;
 
                 if (OperatingSystem.IsWindows()) {
-                    HandleWmi(scope, wmi);
+                    await HandleWmi(ws, scope, wmi);
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -185,7 +188,7 @@ internal static class Monitor {
                 long startTime = DateTime.UtcNow.Ticks;
 
                 if (OperatingSystem.IsWindows()) {
-                    HandleSnmp(snmp);
+                    HandleSnmp(ws, snmp);
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -195,6 +198,7 @@ internal static class Monitor {
                 }
             }
         });
+
 
         icmpThread.Start();
 
@@ -219,7 +223,7 @@ internal static class Monitor {
                 switch (query.action) {
                 case Action.start:
                     paused = false;
-                    if (!icmpThread.IsAlive) { icmpThread.Start(); }
+                    //if (!icmpThread.IsAlive) { icmpThread.Start(); }
                     break;
 
                 case Action.pause:
@@ -257,15 +261,12 @@ internal static class Monitor {
         catch (ManagementException ex) {
             Logger.Error(ex);
         }
-        catch (Exception ex) {
-            Logger.Error(ex);
-        }
 
         try {
             if (ws.State == WebSocketState.Open) {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-        } catch {}
+        } catch { }
     }
 
     private static long HandlePing(string host, int timeout) {
@@ -300,29 +301,57 @@ internal static class Monitor {
     }
 
     [SupportedOSPlatform("windows")]
-    private static byte[] HandleWmi(ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
-        try {
+    private static async Task HandleWmi(WebSocket ws, ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
+        foreach (Query query in queries.Values) {
+            Console.WriteLine(query.value);
 
-            foreach (Query query in queries.Values) {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery(query.value)).Get();
-                //TODO:
+            try {
+                await HandleWmiQuery(ws, scope, query.value);
             }
-
+            catch  { }
         }
-        catch { }
-
-        return null;
     }
 
-    private static byte[] HandleSnmp(ConcurrentDictionary<int, Query> queries) {
+    [SupportedOSPlatform("windows")]
+    async private static Task HandleWmiQuery(WebSocket ws, ManagementScope scope, string query) {
+        using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery(query)).Get();
+        Dictionary<string, List<string>> dic = new Dictionary<string, List<string>>();
+
+        foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
+            foreach (PropertyData p in o.Properties) {
+                string name = p.Name.ToString();
+                string value = Protocols.Wmi.FormatProperty(p);
+
+                if (!dic.ContainsKey(name)) {
+                    dic.Add(name, new List<string>());
+                }
+
+                Console.WriteLine(name + ": " + value);
+
+                dic[name].Add(value);
+            }
+        }
+
+        string x = JsonSerializer.Serialize<Dictionary<string, List<string>>>(dic);
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<Dictionary<string, List<string>>>(dic);
+        Console.WriteLine(x);
+
+        await WsWriteText(ws, bytes);
+
+        dic.Clear();
+    }
+
+    private static void HandleSnmp(WebSocket ws, ConcurrentDictionary<int, Query> queries) {
         try {
             foreach (Query query in queries.Values) {
-                //TODO:
+                HandleSnmpQuery(query.value);
             }
         }
         catch { }
+    }
 
-        return null;
+    private static void HandleSnmpQuery(string query) {
+        //TODO:
     }
 }
 

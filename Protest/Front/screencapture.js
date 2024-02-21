@@ -19,7 +19,7 @@ class ScreenCapture extends Window {
 		this.settingsButton = this.AddToolbarButton("Settings", "mono/wrench.svg?light");
 
 		this.stopButton.disabled = true;
-		
+
 		this.content.style.overflow = "hidden";
 
 		this.videoFeedback = document.createElement("video");
@@ -29,7 +29,7 @@ class ScreenCapture extends Window {
 
 		this.videoStream = null;
 		this.audioStream = null;
-		
+
 		this.recordButton.onclick = () => this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
 		this.settingsButton.onclick = ()=> this.Settings();
@@ -133,7 +133,7 @@ class ScreenCapture extends Window {
 
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
@@ -158,27 +158,27 @@ class ScreenCapture extends Window {
 		const webm = document.createElement("option");
 		webm.text = "WebM video";
 		webm.value = "video/webm";
-		
+
 		const mp4 = document.createElement("option");
 		mp4.text = "MP4 -MPEG-4 Part 14";
 		mp4.value = "video/mp4";
-		
+
 		const ogg = document.createElement("option");
 		ogg.text = "OGG container format";
 		ogg.value = "video/ogg";
-		
+
 		typeInput.append(webm, mp4, ogg);
 
 		btnOK.onclick = async ()=> {
 			const blob = new Blob(this.recordChunks, { type: typeInput.value });
 			const audioURL = URL.createObjectURL(blob);
 			window.open(audioURL, "_blank");
-	
+
 			this.recordChunks = [];
 			this.recorder = null;
 			dialog.Close();
 		};
-		
+
 		btnCancel.onclick = ()=> {
 			this.recordChunks = [];
 			this.recorder = null;

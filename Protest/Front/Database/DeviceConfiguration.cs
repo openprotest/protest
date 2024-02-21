@@ -33,7 +33,7 @@ internal static partial class DeviceConfiguration {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
-        
+
         parameters.TryGetValue("file", out string file);
         if (string.IsNullOrEmpty(file)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -181,10 +181,10 @@ internal static partial class DeviceConfiguration {
 
     [GeneratedRegex("default-name=[\"']?(\\w+\\s?)+[\"']?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex DefaultNameRegex();
-    
+
     [GeneratedRegex("speed=\\\"?(\\w+\\s?)+\\\"?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex SpeedRegex();
-    
+
     [GeneratedRegex("comment=\\\"?(.*)+\\\"?", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex CommentRegex();
 
@@ -285,7 +285,7 @@ internal static partial class DeviceConfiguration {
                     comment = comment.Split(' ')[0];
                 }
                 comment = comment.Trim();
-                
+
                 if (comment.StartsWith("\"") && comment.EndsWith("\"")) {
                     comment = comment[1..^1];
                 }

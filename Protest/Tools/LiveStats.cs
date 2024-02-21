@@ -20,7 +20,7 @@ internal static class LiveStats {
         await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async Task DeviceStats(HttpListenerContext ctx) {
+    public static async void DeviceStats(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 
@@ -272,7 +272,7 @@ internal static class LiveStats {
         }
     }
 
-    public static async Task UserStats(HttpListenerContext ctx) {
+    public static async void UserStats(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

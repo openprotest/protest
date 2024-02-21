@@ -6,7 +6,7 @@ class Grid extends Window {
 		this.filters = {};
 		this.hideNull = [];
 		this.mods = {};
-		
+
 		this.AddCssDependencies("grid.css");
 
 		this.content.style.overflow = "hidden";
@@ -15,7 +15,7 @@ class Grid extends Window {
 		const btnReload = this.AddToolbarButton("Reload", "/mono/restart.svg?light");
 		const btnSave = this.AddToolbarButton("Save modifications", "/mono/floppy.svg?light");
 		const btnRemoveFilter = this.AddToolbarButton("Remove all filters", "/mono/nofilter.svg?light");
-		
+
 		this.txtFindAttribute = document.createElement("input");
 		this.txtFindAttribute.className = "grid-find-box";
 		this.txtFindAttribute.type = "text";
@@ -42,7 +42,7 @@ class Grid extends Window {
 		const btnToggle = document.createElement("input");
 		btnToggle.type = "button";
 		btnToggle.className = "grid-toggle-button";
-	
+
 		this.content.append(this.txtFindAttribute, btnNone, btnAll, btnToggle, this.sideList, this.table);
 
 		this.SetupFloatingMenu();
@@ -54,7 +54,7 @@ class Grid extends Window {
 		this.floating.style.transformOrigin = "0 0";
 		this.floating.style.transitionDelay = "0s";
 		this.floating.style.transition = "transform .2s, opacity .2s, visibility .2s";
-		
+
 		this.floating.onblur = event=>this.ColumnOptions_onblur(event);
 
 		this.optSort = document.createElement("div");
@@ -164,7 +164,7 @@ class Grid extends Window {
 				btnToggle.style.backgroundImage = "url(/mono/guitarpick.svg?light)";
 				btnToggle.style.transform = "rotate(90deg)";
 				this.table.style.left = "258px";
-				
+
 				this.txtFindAttribute.style.opacity = "1";
 				this.sideList.style.opacity = "1";
 				btnNone.style.opacity = btnAll.style.opacity = "1";
@@ -241,7 +241,7 @@ class Grid extends Window {
 			for (let file in this.mods) {
 				modsCount += Object.keys(this.mods[file]).length;
 			}
-	
+
 			setTimeout(()=>{
 				this.Save();
 			}, 250);
@@ -277,19 +277,19 @@ class Grid extends Window {
 
 		try {
 			let url = (this instanceof DevicesGrid) ? `db/device/grid` : `db/user/grid`;
-			
+
 			const response = await fetch(url, {
 				method: "POST",
 				body : JSON.stringify(this.mods)
 			});
-	
+
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) {
 				throw new Error(json.error);
 			}
-	
+
 			dialog.btnCancel.onclick();
 		}
 		catch (ex) {
@@ -334,9 +334,9 @@ class Grid extends Window {
 			for (let file in this.mods) {
 				modsCount += Object.keys(this.mods[file]).length;
 			}
-	
+
 			this.ConfirmBox(`${modsCount} ${modsCount===1?"modification has":"modifications have"} been undone`, true);
-	
+
 			this.mods = {};
 			this.UpdateTable();
 		});
@@ -347,7 +347,7 @@ class Grid extends Window {
 		this.floating.style.visibility = "visible";
 		this.floating.style.opacity = "1";
 		this.floating.style.transform = "none";
-	
+
 		let left = this.table.offsetLeft + 50 + event.target.parentElement.offsetLeft + event.target.offsetLeft - this.table.scrollLeft - 65;
 		if (left > this.content.clientWidth - 158) left = this.content.clientWidth - 158;
 		this.floating.style.left = `${left}px`;
@@ -496,7 +496,7 @@ class Grid extends Window {
 				if (!(this.selectedColumn in this.data[id])) continue;
 
 				let value = this.data[id][this.selectedColumn].v;
-	
+
 				if (!(id in this.mods)) this.mods[id] = {};
 				this.mods[id][this.selectedColumn] = "";
 				this.mods[id][newName] = value;
@@ -511,7 +511,7 @@ class Grid extends Window {
 				element.scrollIntoView({ behavior: "smooth"});
 				setTimeout(()=>{element.style.animation = "highlight .8s 1"}, 500);
 			}
-	
+
 			this.UpdateHeading();
 			this.UpdateTable();
 		};
@@ -528,7 +528,7 @@ class Grid extends Window {
 
 		const dialog = this.DialogBox("108px");
 		if (dialog === null) return;
-		
+
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
@@ -548,7 +548,7 @@ class Grid extends Window {
 			for (let element of this.table.childNodes) {
 				let id = element.getAttribute("id");
 				if (!id) continue;
-	
+
 				if (!(id in this.mods)) this.mods[id] = {};
 				this.mods[id][this.selectedColumn] = txtNewValue.value;
 			}
@@ -568,7 +568,7 @@ class Grid extends Window {
 		for (let element of this.table.childNodes) {
 			let id = element.getAttribute("id");
 			if (!id) continue;
-			
+
 			if (!(id in this.mods)) this.mods[id] = {};
 			this.mods[id][this.selectedColumn] = "";
 		}
@@ -710,7 +710,7 @@ class Grid extends Window {
 			const input = document.createElement("input");
 			input.type = "text";
 			input.onchange = event=> this.Cell_onchange(event);
-			
+
 			if (file in this.mods && columns[i] in this.mods[file]) {
  				input.value = this.mods[file][columns[i]];
 			}

@@ -20,7 +20,7 @@ class KeyboardTester extends Window {
 
 		this.SetTitle("Keyboard tester");
 		this.SetIcon("mono/keyboard.svg");
-		
+
 		this.InitializeKeyboard();
 		this.InitializeGamepad();
 
@@ -248,7 +248,7 @@ class KeyboardTester extends Window {
 			{code:"Numpad0", text:"0"},
 			{code:"NumpadDecimal", text:"."}
 		];
-		
+
 		rowA.forEach(key=>this.CreateKey(key, rows[0]));
 		rowB.forEach(key=>this.CreateKey(key, rows[1]));
 		rowC.forEach(key=>this.CreateKey(key, rows[2]));
@@ -269,7 +269,7 @@ class KeyboardTester extends Window {
 		row3D.forEach(key=>this.CreateKey(key, rows3[3]));
 		row3E.forEach(key=>this.CreateKey(key, rows3[4]));
 		row3F.forEach(key=>this.CreateKey(key, rows3[5]));
-	
+
 		this.win.oncontextmenu = event=> {
 			event.preventDefault();
 		};
@@ -353,7 +353,7 @@ class KeyboardTester extends Window {
 		this.gpLeftButton.style.borderRadius = "8px 2px 0px 0px";
 		this.gpLeftButton.style.boxSizing = "border-box";
 		this.gpLeftButton.style.transformOrigin = "50% 100%";
-		
+
 		this.gpRightButton = document.createElement("div");
 		this.gpRightButton.style.position = "absolute";
 		this.gpRightButton.style.left = "294px";
@@ -377,7 +377,7 @@ class KeyboardTester extends Window {
 		this.gpLeftTrigger.style.borderRadius = "12px 12px 0px 0px";
 		this.gpLeftTrigger.style.boxSizing = "border-box";
 		this.gpLeftTrigger.style.transformOrigin = "50% 100%";
-		
+
 		this.gpRightTrigger = document.createElement("div");
 		this.gpRightTrigger.style.position = "absolute";
 		this.gpRightTrigger.style.left = "294px";
@@ -414,7 +414,7 @@ class KeyboardTester extends Window {
 		this.gpDRight.style.border = "1.5px solid var(--clr-light)";
 		this.gpDRight.style.borderRadius = "6px 2px 2px 6px";
 		this.gpDRight.style.boxSizing = "border-box";
-		
+
 		this.gpDUp = document.createElement("div");
 		this.gpDUp.style.position = "absolute";
 		this.gpDUp.style.left = "60px";
@@ -508,7 +508,7 @@ class KeyboardTester extends Window {
 		rightStickBoarder.style.borderRadius = "30px";
 		rightStickBoarder.style.boxSizing = "border-box";
 		frame.appendChild(rightStickBoarder);
-		
+
 		this.gpLStick = document.createElement("div");
 		this.gpLStick.style.position = "absolute";
 		this.gpLStick.style.left = "130px";
@@ -617,16 +617,16 @@ class KeyboardTester extends Window {
 			this.AddToolbarButton("Test vibration", "mono/gamepad.svg?light").onclick = ()=> {
 				const dialog = this.DialogBox("280px");
 				if (dialog === null) return;
-				
+
 				dialog.innerBox.style.margin = "20px";
 				dialog.btnCancel.style.display = "none";
-				
+
 				const divStrong = document.createElement("div");
 				divStrong.textContent = "Strong magnitude: ";
 				divStrong.style.display = "inline-block";
 				divStrong.style.minWidth = "200px";
 				dialog.innerBox.appendChild(divStrong);
-		
+
 				const strong = document.createElement("input");
 				strong.type = "range";
 				strong.min = 0;
@@ -643,7 +643,7 @@ class KeyboardTester extends Window {
 				divWeak.style.display = "inline-block";
 				divWeak.style.minWidth = "200px";
 				dialog.innerBox.appendChild(divWeak);
-		
+
 				const weak = document.createElement("input");
 				weak.type = "range";
 				weak.min = 0;
@@ -668,7 +668,7 @@ class KeyboardTester extends Window {
 				chkVibrateOnPress.checked = this.vibrateOnPress;
 				dialog.innerBox.appendChild(chkVibrateOnPress);
 				this.AddCheckBoxLabel(dialog.innerBox, chkVibrateOnPress, "Vibrate on button press");
-	
+
 				let gamepads = navigator.getGamepads();
 
 				btnDualRumble.onclick = ()=> {
@@ -703,7 +703,7 @@ class KeyboardTester extends Window {
 			this.gpB,
 			this.gpX,
 			this.gpY,
-			
+
 			this.gpLeftButton,
 			this.gpRightButton,
 			this.gpLeftTrigger,
@@ -754,7 +754,7 @@ class KeyboardTester extends Window {
 					elements[i].style.boxShadow = "none";
 				}
 			}
-	
+
 			elements[4].style.transform = `scaleY(${gamepad.buttons[4].pressed ? ".8" : "1"})`;
 			elements[5].style.transform = `scaleY(${gamepad.buttons[5].pressed ? ".8" : "1"})`;
 			elements[6].style.transform = `rotateX(${gamepad.buttons[6].value * 70}deg)`;
@@ -762,27 +762,27 @@ class KeyboardTester extends Window {
 
 			elements[10].style.transform = `translate(${gamepad.axes[0]*20}px,${gamepad.axes[1]*20}px)`;
 			elements[11].style.transform = `translate(${gamepad.axes[2]*20}px,${gamepad.axes[3]*20}px)`;
-	
+
 			let leftTrig = gamepad.buttons[6].value.toString();
 			let rightTrig = gamepad.buttons[7].value.toString();
 			let leftStickX = gamepad.axes[0].toString();
 			let leftStickY = gamepad.axes[1].toString();
 			let rightStickX = gamepad.axes[2].toString();
 			let rightStickY = gamepad.axes[3].toString();
-	
+
 			if (leftTrig.length > 10) leftTrig = leftTrig.substring(0, 10);
 			if (rightTrig.length > 10) rightTrig = rightTrig.substring(0, 10);
 			if (leftStickX.length > 8) leftStickX = leftStickX.substring(0, 8);
 			if (leftStickY.length > 8) leftStickY = leftStickY.substring(0, 8);
 			if (rightStickX.length > 8) rightStickX = rightStickX.substring(0, 8);
 			if (rightStickY.length > 8) rightStickY = rightStickY.substring(0, 8);
-			
+
 			this.gpLeftTriggerLabel.textContent = leftTrig;
 			this.gpRightTriggerLabel.textContent = rightTrig;
-	
+
 			this.gpLeftStickLabel.textContent = `x: ${leftStickX}${String.fromCharCode(13)}${String.fromCharCode(10)}y: ${leftStickY}`;
 			this.gpRightStickLabel.textContent = `x: ${rightStickX}${String.fromCharCode(13)}${String.fromCharCode(10)}y: ${rightStickY}`;
-		
+
 			if (anyButton && this.vibrateOnPress && gamepad.vibrationActuator) {
 				let weak = 1.0;
 				let strong = 1.0;
@@ -921,7 +921,7 @@ class KeyboardTester extends Window {
 		case "CapsLock":
 			this.CreateLed(key.code, element);
 			break;
-				
+
 		case "NumLock":
 			this.CreateLed(key.code, element);
 			break;

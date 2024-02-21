@@ -241,12 +241,12 @@ class Fetch extends Tabs {
 		this.buttonsContainer = document.createElement("div");
 		this.buttonsContainer.style.gridArea = "14 / 2 / auto / 7";
 		this.buttonsContainer.style.textAlign = "center";
-		
+
 		const btnFetch = document.createElement("input");
 		btnFetch.type = "button";
 		btnFetch.value = "Fetch";
 		btnFetch.style.minWidth = "96px";
-		
+
 		const btnCancel = document.createElement("input");
 		btnCancel.type = "button";
 		btnCancel.value = "Close";
@@ -268,7 +268,7 @@ class Fetch extends Tabs {
 				this.txtSnmp.disabled = true;
 			}
 		};
-		
+
 		this.chkPortScan.onchange = ()=> {
 			if (this.chkPortScan.checked) {
 				this.txtPortScan.disabled = false;
@@ -364,16 +364,16 @@ class Fetch extends Tabs {
 
 			try {
 				const response = await fetch(uri);
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-	
+
 				if (json.status === "running" || json.status === "idle") {
 					this.tabTask.style.visibility = "visible";
 					this.tabTask.style.animation = "slide-in .4s 1";
-					
+
 					this.DeselectAllTabs();
 					this.tabTask.className = "v-tab-selected";
 					this.ShowFetching();
@@ -402,7 +402,7 @@ class Fetch extends Tabs {
 			const response = await fetch("fetch/networkinfo");
 
 			if (response.status !== 200) return;
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -422,7 +422,7 @@ class Fetch extends Tabs {
 			const response = await fetch("fetch/status");
 
 			if (response.status !== 200) return;
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 			this.taskStatus = json;
@@ -441,7 +441,7 @@ class Fetch extends Tabs {
 				this.DeselectAllTabs();
 				this.tabTask.className = "v-tab-selected";
 			}
-	
+
 		}
 		catch {}
 	}
@@ -463,7 +463,7 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(this.divRange);
 		this.ipFrom.SetEnabled(this.rdoIP.checked);
 		this.ipTo.SetEnabled(this.rdoIP.checked);
-		
+
 		this.tabsPanel.appendChild(this.rdoDomain);
 		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain:");
 		domainOption.style.gridArea = "3 / 2";
@@ -478,7 +478,7 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(this.chkDns);
 		const dns = this.AddCheckBoxLabel(this.tabsPanel, this.chkDns, "DNS");
 		dns.style.gridArea = "5 / 3";
-		
+
 		this.tabsPanel.appendChild(this.chkWmi);
 		const wmi = this.AddCheckBoxLabel(this.tabsPanel, this.chkWmi, "WMI");
 		wmi.style.gridArea = "6 / 3";
@@ -512,7 +512,7 @@ class Fetch extends Tabs {
 	ShowUsers() {
 		this.params = "users";
 		this.tabsPanel.textContent = "";
-	
+
 
 		this.rdoIP.disabled = true;
 		this.txtDomain.disabled = false;
@@ -703,10 +703,10 @@ class Fetch extends Tabs {
 		btnImport.onclick = async ()=> {
 			try {
 				btnImport.disabled = btnCancel.disabled = true;
-	
+
 				const dialog = this.DialogBox("180px");
 				if (dialog === null) return;
-				
+
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
 				dialog.btnOK.value = "Hide";
@@ -733,10 +733,10 @@ class Fetch extends Tabs {
 				dialog.Close();
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-	
+
 				if (json.status === "ok") {
 					//TODO:
 				}
@@ -822,9 +822,9 @@ class Fetch extends Tabs {
 
 		try {
 			const response = await fetch("fetch/status");
-	
+
 			if (response.status !== 200) return;
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 			this.taskStatus = json;
@@ -857,10 +857,10 @@ class Fetch extends Tabs {
 					const response = await fetch("fetch/abort");
 
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-					
+
 					const json = await response.json();
 					if (json.error) throw(json.error);
-	
+
 					if (json.status === "ok") {
 						this.lblStatusValue.textContent = "canceling";
 						btnAbort.disabled = true;
@@ -960,7 +960,7 @@ class Fetch extends Tabs {
 			optGuid.text = "Same GUID";
 			optGuid.value = "guid";
 			txtConflictCondition.appendChild(optGuid);
-	
+
 			txtConflictCondition.value = "ip";
 		}
 		else if (json.type === "users") {
@@ -1045,14 +1045,14 @@ class Fetch extends Tabs {
 			this.ConfirmBox("Are you sure you want to approve the fetched dataset?").addEventListener("click", async()=> {
 				try {
 					let uri = `fetch/approve?condition=${txtConflictCondition.value}&action=${txtConflict.value}`;
-					
+
 					const response = await fetch(uri);
-	
+
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-					
+
 					const json = await response.json();
 					if (json.error) throw(json.error);
-	
+
 					if (json.status === "ok") {
 						this.tabTask.style.visibility = "hidden";
 						this.tabTask.style.animation = "none";
@@ -1071,12 +1071,12 @@ class Fetch extends Tabs {
 			this.ConfirmBox("Are you sure you want to discard the fetched dataset?").addEventListener("click", async()=> {
 				try {
 					const response = await fetch("fetch/discard");
-	
+
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-					
+
 					const json = await response.json();
 					if (json.error) throw(json.error);
-	
+
 					if (json.status === "ok") {
 						this.tabTask.style.visibility = "hidden";
 						this.tabTask.style.animation = "none";

@@ -3,7 +3,7 @@ class Monitor extends Window {
 		super();
 		this.params = params ?? { file: null};
 		this.params.stats ??= [];
-		
+
 		this.SetIcon("mono/resmonitor.svg");
 
 		this.socket = null;
@@ -22,7 +22,7 @@ class Monitor extends Window {
 
 		this.AddCssDependencies("monitor.css");
 		this.AddCssDependencies("wmi.css");
-		
+
 		if (this.link.name && this.link.name.v.length > 0) {
 			this.SetTitle(`Resource monitor - ${this.link.name.v}`);
 		}
@@ -99,7 +99,7 @@ class Monitor extends Window {
 		}
 
 		if (colors.length === 0) { return; }
-		
+
 		let gradient = "linear-gradient(";
 		for (let i=0; i<colors.length; i++) {
 			if (i > 0) {
@@ -296,7 +296,7 @@ class Monitor extends Window {
 		const queryInput = document.createElement("textarea");
 		queryInput.style.resize = "none";
 		queryInput.style.gridArea = "8 / 1 / 9 / 4";
-		
+
 		const formatOptionsArray = [
 			"Ping",
 			"Line chart",
@@ -479,7 +479,7 @@ class Monitor extends Window {
 					unit: "%"
 				}
 			));
-			
+
 			templatesBox.appendChild(CreateTemplate(
 				"Ping",
 				"mono/ping.svg",
@@ -653,7 +653,7 @@ class Monitor extends Window {
 
 						if (className && className === wmiClasses.classes[i].class.toLowerCase()) {
 							newClass.scrollIntoView({ behavior: "smooth"});
-							
+
 							selected = newClass;
 							selected.style.backgroundColor = "var(--clr-select)";
 						}
@@ -857,7 +857,7 @@ class Monitor extends Window {
 		const Update = value=> {
 			if (list.length * gap > canvas.width) list.shift();
 			list.push(value);
-			
+
 			if (min > value) { min = value; }
 			if (max < value) { max = value; }
 
@@ -933,7 +933,7 @@ class Monitor extends Window {
 
 			if (list.length * gap > 400) list.shift();
 			list.push(valuesArray);
-			
+
 			for (let i=0; i<valuesArray.length; i++) {
 				if (min > valuesArray[i]) { min = valuesArray[i]; }
 				if (max < valuesArray[i]) { max = valuesArray[i]; }
@@ -994,7 +994,7 @@ class Monitor extends Window {
 
 			if (list.length * gap > canvas.width) list.shift();
 			list.push(delta);
-			
+
 			if (min > delta) { min = delta; }
 			if (max < delta) { max = delta; }
 

@@ -2,7 +2,7 @@ button, input[type="button"], input[type="submit"], input[type="reset"], input[t
 	font-size: var(--global-font-size);
 	font-family: var(--global-font-family);
 	font-weight: 600;
-	
+
 	background-color: rgb(96,96,96);
 	color: var(--clr-light);
 	outline: 0;
@@ -13,7 +13,7 @@ button, input[type="button"], input[type="submit"], input[type="reset"], input[t
 	padding-left: 8px;
 	padding-right: 8px;
 	border-radius: 4px;
-	
+
 	transition: .15s;
 }
 

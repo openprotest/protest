@@ -56,13 +56,13 @@ class UsersList extends List {
 		icon.className = "list-element-icon";
 		icon.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"})`;
 		element.appendChild(icon);
-		
+
 		super.InflateElement(element, entry, type);
 
 		if (!element.ondblclick) {
 			element.ondblclick = event=> {
 				event.stopPropagation();
-				
+
 				const file = element.getAttribute("id");
 				for (let i = 0; i < WIN.array.length; i++)
 					if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
@@ -82,7 +82,7 @@ class UsersList extends List {
 	Delete() {
 		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async()=> {
 			if (this.params.select === null) return;
-			
+
 			let file = this.params.select;
 
 			try {

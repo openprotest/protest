@@ -44,7 +44,7 @@ class DnsLookup extends Console {
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
-		
+
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;
 			this.params.entries = [];
@@ -94,7 +94,7 @@ class DnsLookup extends Console {
 
 				OriginalCancelClickHandler();
 			};
-			
+
 			dialog.btnCancel.onclick = ()=> {
 				copy.Close();
 			};
@@ -147,7 +147,7 @@ class DnsLookup extends Console {
 	Options() {
 		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
@@ -318,7 +318,7 @@ class DnsLookup extends Console {
 		});
 
 		txtDnsServer.focus();
-		
+
 		return dialog;
 	}
 
@@ -416,7 +416,7 @@ class DnsLookup extends Console {
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
-			
+
 			if (json.req && json.res) {
 				const divHex = document.createElement("div");
 				divHex.style.position = "absolute";
@@ -430,10 +430,10 @@ class DnsLookup extends Console {
 				element.appendChild(divHex);
 				divHex.onclick = ()=> new HexViewer({exchange:[{direction:"query", data:json.req},{direction:"response", data:json.res}], protocol:"dns"});
 			}
-			
+
 			if (json.error) {
 				btnExpanded.style.display = "none";
-				
+
 				const code = document.createElement("span");
 				code.style.color = "var(--clr-error)";
 				code.style.fontWeight = "bold";
@@ -471,11 +471,11 @@ class DnsLookup extends Console {
 					label.style.height = "18px";
 					label.style.lineHeight = "20px";
 					label.style.userSelect = "none";
-		
+
 					const string = document.createElement("div");
 					string.style.display = "inline-block";
 					string.textContent = json.answer[i].name;
-		
+
 					box.append(label, string);
 					result.appendChild(box);
 				}
@@ -499,11 +499,11 @@ class DnsLookup extends Console {
 					label.style.height = "18px";
 					label.style.lineHeight = "20px";
 					label.style.userSelect = "none";
-		
+
 					const string = document.createElement("div");
 					string.style.display = "inline-block";
 					string.textContent = json.Answer[i].data;
-		
+
 					box.append(label, string);
 					result.appendChild(box);
 				}

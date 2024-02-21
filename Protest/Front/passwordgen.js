@@ -360,7 +360,7 @@ class PassGen extends Window {
 					else {
 						word += this.words[Math.round(Math.random() * this.words.length)];
 					}
-					
+
 					if (i+1 < this.rngLength.value)word += "-";
 				}
 
@@ -509,7 +509,7 @@ class PassGen extends Window {
 	static StrengthBar(entropy) {
 		let comment = "";
 		let color = "";
-	
+
 		if (entropy < 19) {
 			comment = "Forbidden";
 			color = "#f00";
@@ -534,7 +534,7 @@ class PassGen extends Window {
 			comment = "Overkill";
 			color = "#07d";
 		}
-	
+
 		return [color, 32 * entropy / 96, comment];
 	}
 }

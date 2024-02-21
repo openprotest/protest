@@ -103,7 +103,7 @@
 	width: calc(100% - 80px);
 	background-color: transparent;
 	font-size: 22px;
-	
+
 	outline: 0;
 	border: 1px solid #C0C0C0;
 	border-radius: 4px;
@@ -215,7 +215,7 @@
 	padding: 2px 2px;
 	margin: 2px 4px;
 	border-radius: 4px;
-	
+
 	font-weight: 600;
 	text-align: center;
 	line-height: 168px;
@@ -238,7 +238,7 @@
 	padding-left: 56px;
 	margin: 2px 4px;
 	border-radius: 2px;
-	
+
 	font-weight: 600;
 	line-height: 48px;
 	white-space: nowrap;
@@ -445,7 +445,7 @@
 
 .glass > .window header.title {
 	text-shadow: #000 0 0 4px;
-	
+
 	background: radial-gradient(circle, rgb(96,96,96) 0%, rgba(96,96,96,0) 100%);
 	background-position: 50% 100%;
 	background-repeat: no-repeat;

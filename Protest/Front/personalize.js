@@ -288,7 +288,7 @@ class Personalize extends Tabs {
 				container.style.backgroundSize = "cover";
 				container.style.backgroundPosition = "center";
 			};
-		
+
 			reader.readAsDataURL(event.dataTransfer.files[0]);
 		};*/
 
@@ -342,7 +342,7 @@ class Personalize extends Tabs {
 						let step2 = `hsl(${hsl[0]+7},${hsl[1]*saturation}%,${hsl[2]*.9}%)`; //--clr-select
 						let step3 = `hsl(${hsl[0]-4},${hsl[1]*saturation}%,${hsl[2]*.8}%)`;
 						let gradient = `linear-gradient(to bottom, ${step1}0%, ${step2}92%, ${step3}100%)`;
-					
+
 						WIN.array[i].accentBoxes.childNodes[j].firstChild.style.background = gradient;
 						WIN.array[i].accentBoxes.childNodes[j].lastChild.style.backgroundColor = `hsl(${hsl[0]},${hsl[1]*saturation}%,${hsl[2]}%)`;
 						WIN.array[i].accentBoxes.childNodes[j].firstChild.style.border = `${step1} 1px solid`;
@@ -489,7 +489,7 @@ class Personalize extends Tabs {
 
 					WIN.array[i].region_date.textContent = "Date: " + now.toLocaleDateString(UI.regionalFormat, {});
 					WIN.array[i].region_time.textContent = "Time: " + now.toLocaleTimeString(UI.regionalFormat, {});
-		
+
 					let num = 1_234_567_890.321;
 					WIN.array[i].region_number.textContent = "Number: " + num.toLocaleString(UI.regionalFormat);
 				}
@@ -597,7 +597,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
 			localStorage.setItem("session_timeout", this.sessionTimeout.value);
 			localStorage.setItem("cookie_lifetime", this.cookieLife.value);
-			
+
 			for (let i = 0; i < WIN.array.length; i++) //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "session") {
 					WIN.array[i].chkRestoreSession.checked = this.chkRestoreSession.checked;
@@ -652,7 +652,7 @@ class Personalize extends Tabs {
 		this.chkOpenChatWindowOnMessage.type = "checkbox";
 		this.tabsPanel.appendChild(this.chkOpenChatWindowOnMessage);
 		this.AddCheckBoxLabel(this.tabsPanel, this.chkOpenChatWindowOnMessage, "Focus chat window when receiving a message").style.fontWeight = "600";
-		
+
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("hr"));
@@ -662,7 +662,7 @@ class Personalize extends Tabs {
 		this.chkEnableNotificationSound.type = "checkbox";
 		this.tabsPanel.appendChild(this.chkEnableNotificationSound);
 		this.AddCheckBoxLabel(this.tabsPanel, this.chkEnableNotificationSound, "Play notification sound").style.fontWeight = "600";
-		
+
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
@@ -770,7 +770,7 @@ class Personalize extends Tabs {
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
-		
+
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 

@@ -370,7 +370,7 @@ class Gandalf extends Window {
 		this.menuArray[0].style.visibility = "visible";
 		this.btnPrevious.disabled = true;
 	}
-	
+
 	Previous() {
 		if (this.index === 0) return;
 
@@ -438,7 +438,7 @@ class Gandalf extends Window {
 			const response = await fetch("config/smtpprofiles/list");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 

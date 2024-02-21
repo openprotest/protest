@@ -47,7 +47,7 @@ class DhcpDiscover extends Window {
 		this.txtTimeout.style.gridRow = "1";
 		this.txtTimeout.style.gridColumn = "3";
 		grid.appendChild(this.txtTimeout);
-		
+
 
 		const lblHostname = document.createElement("div");
 		lblHostname.textContent = "Spoof hostname:";
@@ -117,7 +117,7 @@ class DhcpDiscover extends Window {
 		this.content.appendChild(this.spinner);
 		this.spinner.appendChild(document.createElement("div"));
 
-		
+
 		this.btnHex = document.createElement("input");
 		this.btnHex.type = "button";
 		this.btnHex.value = "";
@@ -176,7 +176,7 @@ class DhcpDiscover extends Window {
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
 		}
-		
+
 		titleBar.append(lblType, lblId, lblMac, lblServer, lblIp);
 
 		this.result = document.createElement("div");
@@ -240,7 +240,7 @@ class DhcpDiscover extends Window {
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/dhcp");
 
 		this.ws.onopen = ()=> this.ws.send(`timeout=${this.txtTimeout.value}&mac=${mac}&hostname=${this.txtHostname.value}&accept=${this.chkAccept.checked}`);
-		
+
 		this.ws.onmessage = event=> {
 			const json = JSON.parse(event.data);
 			if (json.over) return;
@@ -260,7 +260,7 @@ class DhcpDiscover extends Window {
 			const lblType = document.createElement("div");
 			lblType.textContent = `${json.type} - ${json.typeString}`;
 			labels.push(lblType);
-	
+
 			const lblId = document.createElement("div");
 			lblId.textContent = json.id;
 			labels.push(lblId);
@@ -269,19 +269,19 @@ class DhcpDiscover extends Window {
 				lblId.style.color = "var(--clr-error)";
 				lblId.style.fontWeight = "bold";
 			}
-	
+
 			const lblMac = document.createElement("div");
 			lblMac.textContent = json.mac;
 			labels.push(lblMac);
-	
+
 			const lblServer = document.createElement("div");
 			lblServer.textContent = json.server;
 			labels.push(lblServer);
-	
+
 			const lblIp = document.createElement("div");
 			lblIp.textContent = json.ip;
 			labels.push(lblIp);
-	
+
 			for (let i = 0; i < labels.length; i++) {
 				labels[i].style.display = "inline-block";
 				labels[i].style.textAlign = "left";
@@ -295,7 +295,7 @@ class DhcpDiscover extends Window {
 			}
 
 			this.hexRecord.push({direction:json.typeString, data:json.data});
-			
+
 			message.append(lblType, lblId, lblMac, lblServer, lblIp);
 		};
 
@@ -303,7 +303,7 @@ class DhcpDiscover extends Window {
 			this.btnDiscover.disabled = false;
 			this.spinner.style.visibility = "hidden";
 			this.taskSpinner.style.display = "none";
-			
+
 			this.btnHex.disabled = false;
 		};
 

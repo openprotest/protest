@@ -27,7 +27,7 @@ class PasswordStrength extends List {
 		}
 
 		btnGandalf.onclick = ()=> new Gandalf();
-		
+
 		this.GetEntropy();
 	}
 
@@ -159,7 +159,7 @@ class PasswordStrength extends List {
 		else {
 			found = [];
 			const keywords = this.params.find.toLowerCase().split(" ").filter(o=> o.length > 0);
-			
+
 			for (let i = 0; i < filtered.length; i++) {
 				let name = this.link[filtered[i]].name.toLowerCase();
 				let matched = true;

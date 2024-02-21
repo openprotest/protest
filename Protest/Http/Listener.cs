@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Protest.Http;
 
@@ -71,7 +72,7 @@ public sealed class Listener {
                 Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.Host, UriKind.Absolute)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
-                return;
+                return ;
             }
 
             UriHostNameType type = Uri.CheckHostName(ctx.Request.UrlReferrer.Host);

@@ -136,7 +136,7 @@ class UserView extends View {
 
 		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
-		
+
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/user");
 
 		this.liveStatsWebSockets.onopen = ()=> {
@@ -150,7 +150,7 @@ class UserView extends View {
 
 		this.liveStatsWebSockets.onmessage = event=> {
 			const json = JSON.parse(event.data);
-			
+
 			if (json.info) {
 				this.CreateInfo(json.info);
 			}
@@ -165,7 +165,7 @@ class UserView extends View {
 		this.liveStatsWebSockets.onclose = event=> {
 			this.liveStatsWebSockets = null;
 		};
-		
+
 		//this.liveStatsWebSockets.onerror = error=> {};
 	}
 

@@ -76,9 +76,11 @@ internal static class Wmi {
             object[] array = (object[])property.Value;
 
             string value = String.Empty;
-            for (int i = 0; i < array?.Length; i++)
-                if (array[i].ToString().Length > 0)
+            for (int i = 0; i < array?.Length; i++) {
+                if (array[i].ToString().Length > 0) {
                     value += (value.Length == 0) ? array[i].ToString() : "; " + array[i].ToString();
+                }
+            }
 
             return value;
         }
@@ -203,7 +205,6 @@ internal static class Wmi {
                         break;
                     }
                 }
-
             }
             catch { }
 
@@ -262,9 +263,9 @@ internal static class Wmi {
                         L3 += numberOfBlocks * blockSize;
                     }
 
-                if (L1 > 0 || L2 > 0 || L3 > 0)
+                if (L1 > 0 || L2 > 0 || L3 > 0) {
                     data.Add("cpu cache", $"{SizeToString(L1.ToString())}/{SizeToString(L2.ToString())}/{SizeToString(L3.ToString())}");
-
+                }
             }
             catch { }
 

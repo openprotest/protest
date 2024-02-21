@@ -191,7 +191,7 @@ class Acl extends Tabs {
 		this.username.onchange = ()=> {
 			this.alias.placeholder = this.username.value;
 		};
-		
+
 		this.chkDomainUser.onchange = ()=> {
 			if (this.chkDomainUser.checked) {
 				this.password.disabled = true;
@@ -245,7 +245,7 @@ class Acl extends Tabs {
 			try {
 				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.chkDomainUser.checked}`;
 				let authorization = [];
-				
+
 				for (let i=0; i<this.permissionsList.length; i++) {
 					if (this.permissionsList[i].read.checked) {
 						authorization.push(`${this.permissionsList[i].name.toLowerCase()}:read`);
@@ -259,9 +259,9 @@ class Acl extends Tabs {
 					method: "POST",
 					body: JSON.stringify(authorization)
 				});
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
@@ -271,7 +271,7 @@ class Acl extends Tabs {
 						break;
 					}
 				}
-	
+
 				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.chkDomainUser.checked, authorization);
 				newUser.onclick();
 			}
@@ -284,7 +284,7 @@ class Acl extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this user?").addEventListener("click", async()=>{
 				try {
 					const response = await fetch(`acl/delete?username=${encodeURIComponent(this.username.value)}`);
-					
+
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -415,7 +415,7 @@ class Acl extends Tabs {
 
 		chkRead.checked = read;
 		chkRead.disabled = !read;
-		
+
 		chkWrite.checked = write;
 		chkWrite.disabled = !write;
 
@@ -448,7 +448,7 @@ class Acl extends Tabs {
 			const response = await fetch("acl/list");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -505,10 +505,10 @@ class Acl extends Tabs {
 				this.permissionsList[i].read.checked = false;
 				this.permissionsList[i].write.checked = false;
 			}
-			
+
 			for (let i=0; i<authorization.length; i++) {
 				let split = authorization[i].split(":");
-				
+
 				let permission = this.permissionsList.find(o=>o.name.toLowerCase() === split[0]);
 				if (split[1] === "read") {
 					permission.read.checked = true;
@@ -562,7 +562,7 @@ class Acl extends Tabs {
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
 		}
-		
+
 		titleBar.append(lblUsername, lblIp, lblTime, lblTtl);
 
 		const sessionsList = document.createElement("div");
@@ -579,7 +579,7 @@ class Acl extends Tabs {
 			const response = await fetch("acl/sessions");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -597,10 +597,10 @@ class Acl extends Tabs {
 				const ip = document.createElement("div");
 				ip.textContent = json[i].ip;
 				attr.push(ip);
-		
+
 				let loginDate = new Date(UI.TicksToUnixDate(json[i].logindate));
 				let timeoutDate = new Date(UI.TicksToUnixDate(json[i].logindate + json[i].ttl));
-				
+
 				const login = document.createElement("div");
 				login.textContent = `${loginDate.toLocaleDateString(UI.regionalFormat, {})} ${loginDate.toLocaleTimeString(UI.regionalFormat, {})}`;
 				attr.push(login);
@@ -646,12 +646,12 @@ class Acl extends Tabs {
 					this.ConfirmBox(`Are you sure you want to kick ${json[i].username}?`).addEventListener("click", async ()=>{
 						try {
 							const response = await fetch(`acl/kickuser?username=${encodeURIComponent(json[i].username)}&ip=${json[i].ip}&id=${json[i].id}`);
-				
+
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-							
+
 							const kickJson = await response.json();
 							if (kickJson.error) throw(kickJson.error);
-			
+
 							sessionsList.removeChild(element);
 						}
 						catch (ex) {
@@ -662,7 +662,7 @@ class Acl extends Tabs {
 
 				element.append(username, ip, login, timeout, kickButton);
 			}
-			
+
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg", "mono/error.svg");

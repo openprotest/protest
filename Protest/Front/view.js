@@ -8,7 +8,7 @@ class View extends Window {
 
 		this.content.style.overflowY = "auto";
 		this.content.style.containerType = "inline-size";
-		
+
 		this.InitializeComponent();
 
 		setTimeout(()=>this.UpdateAuthorization(), 1);
@@ -26,7 +26,7 @@ class View extends Window {
 
 		this.lastWidthValue = this.content.clientWidth;
 	}
-	
+
 	UpdateAuthorization() { //override
 		super.UpdateAuthorization();
 		this.editButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
@@ -57,7 +57,7 @@ class View extends Window {
 
 		this.attributes = document.createElement("div");
 		this.attributes.className = "view-attributes-list view-attributes-freeze";
-		
+
 		this.liveA = document.createElement("div");
 		this.liveB = document.createElement("div");
 		this.liveC = document.createElement("div");
@@ -245,11 +245,11 @@ class View extends Window {
 					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.params.file}&attribute=${name}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const password = await response.text();
-	
+
 					preview.textContent = password;
 					preview.style.display = "inline-block";
 					btnShow.style.display = "none";
-	
+
 					setTimeout(()=> {
 						if (!this.isClosed) {
 							preview.textContent = "";
@@ -374,7 +374,7 @@ class View extends Window {
 	}
 
 	InitializeSideTools() {} //overridable
-	
+
 	CreateInfoButton(text, icon) {
 		const button = document.createElement("button");
 		button.className = "view-live-button";
@@ -652,7 +652,7 @@ class View extends Window {
 				else {
 					for (let j=0; j<this.attributes.childNodes.length; j++) {
 						if (this.attributes.childNodes[j].childNodes.length < 2) continue;
-						
+
 						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) {
 							this.attributes.childNodes[j].style.backgroundImage = "url(mono/lock.svg)";
 							continue;

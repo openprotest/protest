@@ -14,7 +14,7 @@ internal static class Telnet {
             await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
         try {

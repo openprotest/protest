@@ -164,7 +164,7 @@ class LocateIp extends Console {
 			if (split[0] !== "--") {
 				result.style.backgroundImage = `url(flags/${split[0].toLowerCase()}.svg)`;
 			}
-			
+
 			if (split[1] === "Private address" || split[1] === "Local host")
 				result.textContent += split[1];
 			else

@@ -153,7 +153,7 @@ class PortScan extends Console {
 
 		this.SetTitle("TCP port scan");
 		this.SetIcon("mono/portscan.svg");
-		
+
 		this.SetupToolbar();
 		this.btnClear = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.btnOptions = this.AddToolbarButton("Options", "mono/wrench.svg?light");
@@ -209,7 +209,7 @@ class PortScan extends Console {
 	Options() {
 		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 		const innerBox = dialog.innerBox;
 

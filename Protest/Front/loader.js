@@ -66,7 +66,7 @@ const LOADER = {
 		"keepalive.js",
 		"list.js"
 	],
-	
+
 	secondaryScripts: [
 		"tabs.js",
 		"view.js",
@@ -137,8 +137,7 @@ const LOADER = {
 			opt.value = o.charAt(0).toUpperCase() + o.substring(1);
 			user_type_autofill.appendChild(opt);
 		}
-		
-		
+
 		let count = 0;
 		const total = LOADER.baseStyles.length + LOADER.baseScripts.length + LOADER.primaryScripts.length + LOADER.secondaryScripts.length + LOADER.tertiaryScripts.length + 2;
 
@@ -164,7 +163,7 @@ const LOADER = {
 			}
 			else if (count === total) { //all done
 				KEEP.Initialize();
-				
+
 				setTimeout(()=> {
 					loadingcontainer.style.filter = "opacity(0)";
 					setTimeout(()=> container.removeChild(loadingcontainer), 200);
@@ -268,7 +267,7 @@ const LOADER = {
 				if (session[i].isMaximized) win.Toggle();
 				if (session[i].isMinimized) win.Minimize();
 				win.position = session[i].position;
-	
+
 				if (!WIN.always_maxed) {
 					win.win.style.left = session[i].left;
 					win.win.style.top = session[i].top;

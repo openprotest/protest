@@ -160,7 +160,7 @@ const UI = {
 	PingColor(pingResult, lightness=50) {
 		if (isNaN(pingResult))
 			return (pingResult === "Timed out") ? "var(--clr-error)" : "var(--clr-orange)";
-		
+
 		if (pingResult === -1) {
 			return "rgb(192,192,192)";
 		}
@@ -261,7 +261,7 @@ const MENU = {
 		{ t:"Reginal format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:params=> new Personalize("region") },
 		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Personalize("session") },
 		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:params=> new Personalize("agent") },
-		
+
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:params=> new Automation(), k:"" },
 
 		//{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:params=> {} },
@@ -305,7 +305,7 @@ const MENU = {
 
 		MENU.isOpen = true;
 		MENU.UpdatePosition();
-		
+
 		setTimeout(()=> searchinput.focus(), 150);
 	},
 
@@ -362,7 +362,7 @@ const MENU = {
 				newItem.textContent = WIN.array[i].header.textContent;
 				MENU.list.push(newItem);
 				menulist.appendChild(newItem);
-				
+
 				MENU.ItemEvent(newItem, ()=>{
 					if (!WIN.array[i].isMaximized) WIN.array[i].win.style.animation = "focus-pop .2s";
 					WIN.array[i].BringToFront();

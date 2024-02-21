@@ -312,7 +312,7 @@ public sealed class Database {
             JsonSerializerOptions options = new JsonSerializerOptions();
 #pragma warning restore CA1869
             options.Converters.Add(new GridDataConverter(origin));
-            
+
             Dictionary<string, ConcurrentDictionary<string, Attribute>> mods = JsonSerializer.Deserialize<Dictionary<string, ConcurrentDictionary<string, Attribute>>>(payload, options);
 
             foreach (KeyValuePair<string, ConcurrentDictionary<string, Attribute>> pair in mods) {

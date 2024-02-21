@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Protest.Tools;
 
 internal static class SiteCheck {
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

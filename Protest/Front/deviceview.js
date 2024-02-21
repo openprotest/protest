@@ -3,29 +3,29 @@ class DeviceView extends View {
 
 	static DEVICES_GROUP_SCHEMA = [
 		"type", "name",
-	
+
 		["mono/portscan.svg", "network"],
 		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed",
 		"overwriteprotocol",
 
 		[".", "device"],
 		"manufacturer", "model", "serial number", "chasse type", "description",
-	
+
 		["mono/motherboard.svg", "motherboard"],
 		"motherboard", "motherboard manufacturer", "motherboard serial number", "bios",
 
 		["mono/cpu.svg", "processor"],
 		"processor", "cpu cores", "cpu frequency", "cpu architecture", "cpu cache",
-	
+
 		["mono/ram.svg", "memory"],
 		"memory", "total memory", "memory modules", "ram slot", "ram speed", "ram slot used", "ram type", "ram form factor",
-	
+
 		["mono/diskdrive.svg", "disk drive"],
 		"disk drive", "physical disk", "logical disk",
 
 		["mono/videocard.svg", "video card"],
 		"video controller", "video driver",
-	
+
 		["mono/os.svg", "operating system"],
 		"operating system", "os architecture", "os version", "os build", "service pack", "os serial no", "os install date",
 
@@ -106,7 +106,7 @@ class DeviceView extends View {
 		else {
 			this.SetTitle("");
 		}
-		
+
 		this.SetIcon(type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg");
 		super.InitializePreview();
 		this.InitializeLiveStats();
@@ -120,10 +120,10 @@ class DeviceView extends View {
 		}
 
 		if (!this.link.ip) return;
-		
+
 		let colors = [];
 		let ips = this.link.ip.v.split(";").map(o=>o.trim());
-		
+
 		for (let i=0; i<ips.length; i++) {
 			if (!ips[i].match(DeviceView.regexIPv4)) { continue; }
 			let split = ips[i].split(".").map(o=>parseInt(o));
@@ -134,9 +134,9 @@ class DeviceView extends View {
 				colors.push(KEEP.zones[j].color);
 			}
 		}
-		
+
 		if (colors.length === 0) { return; }
-		
+
 		let gradient = "linear-gradient(";
 		for (let i=0; i<colors.length; i++) {
 			if (i > 0) {
@@ -151,7 +151,7 @@ class DeviceView extends View {
 		}
 		gradient += `, ${colors[colors.length-1]} 100%`;
 		gradient += ")";
-		
+
 		this.emblem = document.createElement("div");
 		this.emblem.className = "task-icon-emblem";
 		this.task.appendChild(this.emblem);
@@ -263,7 +263,7 @@ class DeviceView extends View {
 						wmi.SetTitle(this.link.name.v + " - Processes");
 					}
 				};
-				
+
 				const btnServices = this.CreateSideButton("mono/service.svg", "Services");
 				btnServices.onclick = ()=> {
 					const wmi = new Wmi({target: host, query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
@@ -458,7 +458,7 @@ class DeviceView extends View {
 		}
 
 		if (obj === null) return;
-		
+
 		const frame = document.createElement("div");
 		frame.className = "view-interfaces-frame";
 		this.liveC.appendChild(frame);
@@ -547,7 +547,7 @@ class DeviceView extends View {
 					let file = list[i].link;
 					let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : "";
 					const icon = LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg";
-					
+
 					this.floating.appendChild(document.createElement("br"));
 
 					const linkIcon = document.createElement("div");
@@ -635,10 +635,10 @@ class DeviceView extends View {
 
 			this.liveStatsWebSockets.send(this.params.file);
 		};
-		
+
 		this.liveStatsWebSockets.onmessage = event=> {
 			const json = JSON.parse(event.data);
-		
+
 			if (json.info) {
 				this.CreateInfo(json.info);
 			}
@@ -724,7 +724,7 @@ class DeviceView extends View {
 				};
 			}
 		};
-		
+
 		this.liveStatsWebSockets.onclose = ()=> {
 			const loggedIn = liveButtons.find(o=> o.secondary.textContent === "Logged in");
 			if (!loggedIn && this.link.owner) {
@@ -781,7 +781,7 @@ class DeviceView extends View {
 		else if (this.link.hostname && this.link.hostname.v.length > 0) {
 			host = this.link.hostname.v.split(";")[0];
 		}
-		
+
 		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskUsageArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
@@ -843,13 +843,13 @@ class DeviceView extends View {
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
-	
+
 				(async ()=> {
 					const response = await fetch(`lifeline/memory/view?file=${this.params.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
-	
+
 				(async ()=> {
 					const response = await fetch(`lifeline/disk/view?file=${this.params.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
@@ -932,7 +932,7 @@ class DeviceView extends View {
 			svg.appendChild(path);
 
 			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} ${height + 5} `;
-			
+
 			let lastX = -8, lastY = -8;
 
 			if (type === "ping") {
@@ -940,16 +940,16 @@ class DeviceView extends View {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 3 + Math.round(data[i].v < 0 ? height : 24 + Math.min((height - 24) * data[i].v / 1000, height - 10));
 					d += `L ${x} ${y} `;
-	
+
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
-	
+
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
 					dot.setAttribute("r", 3);
 					dot.setAttribute("fill", this.RttToColor(data[i].v));
 					svg.appendChild(dot);
-	
+
 					if (x < -50) continue;
 					lastX = x, lastY = y;
 				}
@@ -959,16 +959,16 @@ class DeviceView extends View {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = 3 + Math.round(data[i].v < 0 ? height : Math.min(data[i].v / 10, height - 10));
 					d += `L ${x} ${y} `;
-	
+
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
-	
+
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
 					dot.setAttribute("r", 3);
 					dot.setAttribute("fill", "var(--clr-dark)");
 					svg.appendChild(dot);
-	
+
 					if (x < -50) continue;
 					lastX = x, lastY = y;
 				}
@@ -977,10 +977,9 @@ class DeviceView extends View {
 				for (let i=0; i<data.length; i++) {
 					if (data[i].t === 0) continue;
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
-					let y = (height + 4) - Math.round(height * data[i].v / data[i].t);
-					
+
 					d += `L ${x} ${y} `;
-	
+
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
 
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -989,7 +988,7 @@ class DeviceView extends View {
 					dot.setAttribute("r", 3);
 					dot.setAttribute("fill", this.VolumeToColor(data[i].v, data[i].t));
 					svg.appendChild(dot);
-	
+
 					if (x < -50) continue;
 					lastX = x, lastY = y;
 				}
@@ -998,9 +997,9 @@ class DeviceView extends View {
 				for (let i=0; i<data.length; i++) {
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
 					let y = (height + 4) - Math.round(height * data[i].v / 100);
-					
+
 					d += `L ${x} ${y} `;
-	
+
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
 
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1009,7 +1008,7 @@ class DeviceView extends View {
 					dot.setAttribute("r", 3);
 					dot.setAttribute("fill", this.PercentToColor(data[i].v, 100));
 					svg.appendChild(dot);
-	
+
 					if (x < -50) continue;
 					lastX = x, lastY = y;
 				}
@@ -1022,7 +1021,7 @@ class DeviceView extends View {
 			graphBox.onmouseenter = ()=>{
 				infoBox.style.opacity = "1";
 			};
-			
+
 			graphBox.onmouseleave = ()=>{
 				infoBox.style.opacity = "0";
 			};
@@ -1073,12 +1072,12 @@ class DeviceView extends View {
 			for (let i=0; i<pingArray.length-9; i+=10) {
 				const dateBuffer = new Uint8Array(pingArray.slice(i, i+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
-	
+
 				let rtt = (pingArray[i+9] << 8) | pingArray[i+8];
 				if (rtt >= 32768) { //negative number
 					rtt = -(65536 - rtt);
 				}
-	
+
 				data.push({d:date, v:rtt});
 			}
 
@@ -1093,7 +1092,7 @@ class DeviceView extends View {
 				const usage =  cpuArray[i+8];
 				data.push({d:date, v:usage});
 			}
-	
+
 			GenerateGraph(data, "CPU usage", "percent", "mono/cpu.svg");
 		}
 
@@ -1108,7 +1107,7 @@ class DeviceView extends View {
 
 				const totalBuffer = new Uint8Array(memoryArray.slice(i+16, i+24)).buffer;
 				const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
-	
+
 				data.push({d:date, v:used*1024, t:total*1024});
 			}
 
@@ -1121,7 +1120,7 @@ class DeviceView extends View {
 			while (index < diskCapacityArray.length) {
 				const dateBuffer = new Uint8Array(diskCapacityArray.slice(index,index+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
-				
+
 				const count = (diskCapacityArray[index+9] << 8) | diskCapacityArray[index+8]; // | (diskCapacityArray[index+11] << 24) | (diskCapacityArray[index+10] << 16)
 
 				index += 12;
@@ -1186,14 +1185,14 @@ class DeviceView extends View {
 		if (p > .6) return "var(--clr-warning)";
 		return "hsl(92, 66%, 50%)";
 	}
-	
+
 	Edit(isNew=false) { //override
 		const btnFetch = document.createElement("button");
 		if (isNew && !this.params.copy) {
 			btnFetch.className = "view-fetch-floating-button";
 			btnFetch.setAttribute("tip-below", "Fetch");
 			this.content.appendChild(btnFetch);
-	
+
 			btnFetch.onclick = ()=> {
 				const dialog = this.DialogBox("108px");
 				if (dialog === null) return;
@@ -1345,7 +1344,7 @@ class DeviceView extends View {
 		const btnFetchOk = document.createElement("input");
 		btnFetchOk.type = "button";
 		btnFetchOk.value = "Fetch";
-		
+
 		const btnFetchCancel = document.createElement("input");
 		btnFetchCancel.type = "button";
 		btnFetchCancel.value = "Cancel";
@@ -1363,7 +1362,7 @@ class DeviceView extends View {
 			divFetch.appendChild(lblFetchPassword);
 			divFetch.appendChild(txtFetchPassword);
 		}
-		
+
 		divFetch.appendChild(document.createElement("br"));
 		divFetch.appendChild(document.createElement("br"));
 		divFetch.appendChild(btnFetchOk);
@@ -1473,7 +1472,7 @@ class DeviceView extends View {
 
 			fetchToggle = !fetchToggle;
 		};
-		
+
 		const response = await fetch(`db/config/view?file=${this.params.file}`);
 		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 		const text = await response.text();
@@ -1481,7 +1480,7 @@ class DeviceView extends View {
 		if (text.length > 0) {
 			DisplayScript(text.split("\n"));
 		}
-		
+
 
 		btnFetch.onclick = ()=> FetchToggle();
 
@@ -1513,10 +1512,10 @@ class DeviceView extends View {
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 				const text = await response.text();
 				DisplayScript(text.split("\n"));
-			
+
 			}
 			catch {
 				dialog.innerBox.textContent = "";
@@ -1524,7 +1523,7 @@ class DeviceView extends View {
 			finally {
 				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
 				dialog.innerBox.parentElement.parentElement.removeChild(status);
-			
+
 				dialog.innerBox.parentElement.style.transition = ".2s";
 				dialog.innerBox.parentElement.style.transform = "none";
 				dialog.innerBox.parentElement.style.filter = "none";
@@ -1553,10 +1552,10 @@ class DeviceView extends View {
 					method: "POST",
 					body: innerBox.innerText
 				});
-	
+
 				if (saveResponse.status !== 200) LOADER.HttpErrorHandler(saveResponse.status);
 				const saveJson = await saveResponse.json();
-	
+
 				if (saveJson.error) {
 					btnCancel.onclick();
 					this.ConfirmBox(saveJson.error, true);
@@ -1567,7 +1566,7 @@ class DeviceView extends View {
 					buttonBox.appendChild(btnOK);
 					buttonBox.removeChild(btnSave);
 					buttonBox.removeChild(btnCancel);
-	
+
 					DisplayScript(innerBox.innerText.split("\n"));
 				}
 			};
@@ -1735,7 +1734,7 @@ class DeviceView extends View {
 		const btnExtractOk = document.createElement("input");
 		btnExtractOk.type = "button";
 		btnExtractOk.value = "Extract";
-		
+
 		const btnExtractCancel = document.createElement("input");
 		btnExtractCancel.type = "button";
 		btnExtractCancel.value = "Cancel";
@@ -1744,7 +1743,7 @@ class DeviceView extends View {
 		lblMessage.style.display = "inline-block";
 		lblMessage.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
 		divExtract.appendChild(lblMessage);
-		
+
 		divExtract.appendChild(document.createElement("br"));
 		divExtract.appendChild(document.createElement("br"));
 		divExtract.appendChild(btnExtractOk);
@@ -1850,7 +1849,7 @@ class DeviceView extends View {
 					txtL.value = value;
 					const type = device.type ? device.type.v.toLowerCase() : null;
 					const icon = type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg";
-					
+
 					txtL.style.backgroundImage = `url(${icon})`;
 				}
 			}
@@ -2078,7 +2077,7 @@ class DeviceView extends View {
 
 				setTimeout(() => txtFind.onchange(), 1);
 			};
-			
+
 			remove.onclick = () => {
 				divList.removeChild(listElement);
 				frame.removeChild(front);
@@ -2110,7 +2109,7 @@ class DeviceView extends View {
 		this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 
 		btnExtract.onclick = ()=> FetchToggle();
-		
+
 		btnExtractOk.onclick = async ()=> {
 			divExtract.style.filter = "opacity(0)";
 			divExtract.style.transform = "translateY(-25%)";
@@ -2136,9 +2135,9 @@ class DeviceView extends View {
 				const response = await fetch(`db/config/extract?file=${this.params.file}`);
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 				const json = await response.json();
-				
+
 				if (json.error) {
 					message.textContent = json.error;
 					divFetch.removeChild(iconsContainer);
@@ -2153,7 +2152,7 @@ class DeviceView extends View {
 					for (let i=0; i<json.length; i++) {
 						AddInterface(json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
 					}
-					
+
 					SortList();
 					this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
 
@@ -2165,7 +2164,7 @@ class DeviceView extends View {
 			finally {
 				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
 				dialog.innerBox.parentElement.parentElement.removeChild(status);
-			
+
 				dialog.innerBox.parentElement.style.transition = ".2s";
 				dialog.innerBox.parentElement.style.transform = "none";
 				dialog.innerBox.parentElement.style.filter = "none";
@@ -2174,7 +2173,7 @@ class DeviceView extends View {
 		};
 
 		btnExtractCancel.onclick = ()=> FetchToggle();
-		
+
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
@@ -2185,13 +2184,13 @@ class DeviceView extends View {
 				AddInterface("Ethernet", "1 Gbps", 1, null, "");
 			}
 		}
-		
+
 		btnOK.addEventListener("click", async ()=> {
 				let interfaces = {
 					i: [],
 					n: txtNumbering.value
 				};
-	
+
 				for (let i=0; i<list.length; i++) {
 					interfaces.i.push({
 						i: list[i].txtPort.value,
@@ -2217,22 +2216,22 @@ class DeviceView extends View {
 						method: "POST",
 						body: JSON.stringify(obj)
 					});
-	
+
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 					const json = await response.json();
 					if (json.error) throw(json.error);
-	
+
 					this.params.file = json.filename;
 					LOADER.devices.data[json.filename] = obj;
-	
+
 					this.InitializePreview();
 				}
 				catch (ex) {
 					setTimeout(()=>{this.ConfirmBox(ex, true, "mono/error.svg")}, 250);
 				}
 		});
-		
+
 	}
 
 	InitInterfaceComponents(frame, numbering, list, editMode) {
@@ -2312,7 +2311,7 @@ class DeviceView extends View {
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
 		frame.style.gridTemplateRows = `repeat(${rows}, $50px)`;
 	}
-	
+
 	GetSpeedColor(speed) {
 		switch (speed) {
 		case "10 Mbps" : return "hsl(20,95%,60%)";
@@ -2339,7 +2338,7 @@ class DeviceView extends View {
 		if (index === -1) return "transparent";
 		return `hsl(${(240 + index * 1.61803398875 * 360) % 360},95%,60%)`;
 	}
-	
+
 	Fetch(isNew=false, forceTarget=null) { //override
 		let target = null;
 		if (isNew) {
@@ -2453,7 +2452,7 @@ class DeviceView extends View {
 				txtSnmp.disabled = true;
 			}
 		};
-		
+
 		chkPortScan.onchange = ()=> {
 			if (chkPortScan.checked) {
 				txtPortScan.disabled = false;
@@ -2462,7 +2461,7 @@ class DeviceView extends View {
 				txtPortScan.disabled = true;
 			}
 		};
-		
+
 		dialog.btnOK.onclick = async ()=> {
 			dialog.innerBox.textContent = "";
 			dialog.btnOK.style.display = "none";
@@ -2498,18 +2497,18 @@ class DeviceView extends View {
 				if (chkPortScan.checked) url += `&portscan=${txtPortScan.value}`;
 
 				const response = await fetch(url);
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				
+
 				const json = await response.json();
 				if (json.error) {
 					throw new Error(json.error);
 				}
-	
+
 				dialog.btnCancel.onclick();
 
 				if (isCanceled) return;
-				
+
 				if (isNew) {
 					this.attributes.textContent = "";
 				}
@@ -2577,7 +2576,7 @@ class DeviceView extends View {
 	Copy() { //override
 		new DeviceView({copy: this.params.file});
 	}
-	
+
 	Delete() { //override
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
@@ -2587,18 +2586,18 @@ class DeviceView extends View {
 				const json = await response.json();
 
 				if (json.error) throw(json.error);
-	
+
 				delete LOADER.devices.data[this.params.file];
 				LOADER.devices.length--;
-	
+
 				for (let i=0; i<WIN.array.length; i++) {
 					if (WIN.array[i] instanceof DevicesList) {
 						let element = Array.from(WIN.array[i].list.childNodes).filter(o=>o.getAttribute("id") === this.params.file);
-						element.forEach(o=> WIN.array[i].list.removeChild(o));	
+						element.forEach(o=> WIN.array[i].list.removeChild(o));
 						WIN.array[i].UpdateViewport(true);
 					}
 				}
-	
+
 				this.Close();
 			}
 			catch (ex) {

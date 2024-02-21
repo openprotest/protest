@@ -12,7 +12,7 @@ namespace Protest.Protocols;
 internal static class Dhcp {
     private static readonly byte[] NULL_IP = new byte[] {0,0,0,0};
 
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
         WebSocket ws;
 

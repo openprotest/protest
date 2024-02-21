@@ -8,7 +8,7 @@
 	overflow-y: auto;
 	z-index: 1;
 	transition: .2s;
-	
+
 	scrollbar-width: none;
 }
 

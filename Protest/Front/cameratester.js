@@ -23,7 +23,7 @@ class CameraTester extends Window {
 		this.flipButton    = this.AddToolbarButton("Horizontal flip", "mono/horizontalflip.svg?light");
 
 		this.stopButton.disabled = true;
-		
+
 		this.content.style.overflow = "hidden";
 
 		this.videoFeedback = document.createElement("video");
@@ -40,7 +40,7 @@ class CameraTester extends Window {
 		this.content.appendChild(this.infoBox);
 
 		this.InitializePictureControls();
-		
+
 		this.recordButton.onclick = ()=> this.Record();
 		this.startButton.onclick = ()=> this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
@@ -181,7 +181,7 @@ class CameraTester extends Window {
 					height: { min: 480, ideal: 1080, max: 2160 }
 				}
 			});
-			
+
 			const videoTrack = this.stream.getVideoTracks()[0];
 			const videoSettings = videoTrack.getSettings();
 			videoTrack.onended = ()=> this.Stop();
@@ -240,7 +240,7 @@ class CameraTester extends Window {
 	HandleRecording() {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 		const btnCancel = dialog.btnCancel;
 		const innerBox = dialog.innerBox;
@@ -265,27 +265,27 @@ class CameraTester extends Window {
 		const webm = document.createElement("option");
 		webm.text = "WebM video";
 		webm.value = "video/webm";
-		
+
 		const mp4 = document.createElement("option");
 		mp4.text = "MP4 -MPEG-4 Part 14";
 		mp4.value = "video/mp4";
-		
+
 		const ogg = document.createElement("option");
 		ogg.text = "OGG container format";
 		ogg.value = "video/ogg";
-		
+
 		typeInput.append(webm, mp4, ogg);
 
 		btnOK.onclick = async ()=> {
 			const blob = new Blob(this.recordChunks, { type: typeInput.video });
 			const audioURL = URL.createObjectURL(blob);
 			window.open(audioURL, "_blank");
-	
+
 			this.recordChunks = [];
 			this.recorder = null;
 			dialog.Close();
 		};
-		
+
 		btnCancel.onclick = ()=> {
 			this.recordChunks = [];
 			this.recorder = null;

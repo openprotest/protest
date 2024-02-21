@@ -102,7 +102,7 @@ class Wmi extends Window {
 			const response = await fetch("wmiclasses.json");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -265,7 +265,7 @@ class Wmi extends Window {
 
 							chkProperty.onchange = ()=> {
 								propertiesList[j] = chkProperty.checked;
-								
+
 								let count = 0;
 								for (let k = 0; k < propertiesList.length; k++) {
 									if (propertiesList[k])
@@ -280,7 +280,7 @@ class Wmi extends Window {
 									for (let k = 0; k < propertiesList.length; k++)
 										if (propertiesList[k])
 											sel += (sel.length == 0) ? this.wmi_classes.classes[i].properties[k] : ", " + this.wmi_classes.classes[i].properties[k];
-									
+
 									txtPreview.value = "SELECT " + sel + " FROM " + this.wmi_classes.classes[i].class;
 								}
 							};
@@ -325,7 +325,7 @@ class Wmi extends Window {
 
 			propertyCheckboxes[0].onchange();
 		};
-		
+
 		btnNone.onclick = ()=> {
 			if (propertyCheckboxes.length === 0) return;
 
@@ -333,7 +333,7 @@ class Wmi extends Window {
 				propertyCheckboxes[i].checked = false;
 				propertiesList[i] = false;
 			}
-			
+
 			propertyCheckboxes[0].onchange();
 		};
 	}
@@ -341,7 +341,7 @@ class Wmi extends Window {
 	CallMethodDialog() {
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
-		
+
 		const btnOK = dialog.btnOK;
 
 		btnOK.addEventListener("click", ()=> {
@@ -457,7 +457,7 @@ class Wmi extends Window {
 						btnTerminate.onclick = async event=> {
 							btnTerminate.disabled = true;
 							let pid = event.target.getAttribute("pid");
-							
+
 							try {
 								const response = await fetch(`wmi/killprocess?target=${encodeURIComponent(targetHost)}&pid=${pid}`);
 								if (response.status !== 200) return;

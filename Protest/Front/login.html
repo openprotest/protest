@@ -64,7 +64,7 @@
 			border-radius: 12px;
 			margin-top: 12px;
 			width: 100px;
-			height: 36px;	
+			height: 36px;
 			transition-duration: filter .2s, box-shadow .2s, opacity .4s;
 			opacity: 0;
 			font-weight: bold;
@@ -136,7 +136,7 @@
 		txtPassword.onkeyup = event=> {
 			if (event.key==="Enter") btnLogin.onclick(event);
 		};
-		
+
 		txtUsername.oninput = txtUsername.onchange = txtPassword.oninput = txtPassword.onchange = event=> {
 			btnLogin.style.opacity = txtUsername.value === "" || txtPassword.value === "" ? "0" : "1";
 		};

@@ -14,7 +14,7 @@ class MacLookup extends Console {
 		this.SetupToolbar();
 		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.AddSendToChatButton();
-		
+
 		this.txtInput.placeholder = "mac address";
 
 		if (this.params.entries) { //restore entries from previous session
@@ -103,7 +103,7 @@ class MacLookup extends Console {
 			label.textContent = responseText;
 			result.appendChild(label);
 		}
-		catch {
+		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}

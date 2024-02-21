@@ -30,7 +30,7 @@ class About extends Tabs {
 			this.tabUpdate.className = "v-tab-selected";
 			this.ShowUpdate();
 			break;
-	
+
 		case "updatemod":
 			this.tabUpdateMod.className = "v-tab-selected";
 			this.ShowUpdateModules();
@@ -207,7 +207,7 @@ class About extends Tabs {
 			});
 		};
 	}
-	
+
 	async ShowUpdate() {
 		this.params = "update";
 		this.tabsPanel.textContent = "";
@@ -357,7 +357,7 @@ class About extends Tabs {
 		dropArea.style.border       = "2px dashed var(--clr-dark)";
 		dropArea.style.borderRadius = "8px";
 		dropArea.style.transition   = ".4s";
-		
+
 		const message = document.createElement("div");
 		message.textContent = text;
 		message.style.color = "var(--clr-dark)";
