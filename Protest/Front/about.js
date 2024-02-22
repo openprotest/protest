@@ -266,8 +266,8 @@ class About extends Tabs {
 				link.style.borderRadius = "4px";
 				link.style.margin = "4px";
 				link.style.padding = "8px";
-				link.style.paddingLeft = "32px";
-				link.style.background = "url(mono/download.svg) 2px center / 24px 24px no-repeat";
+				link.style.paddingLeft = "36px";
+				link.style.background = "url(mono/download.svg) 4px center / 24px 24px no-repeat";
 				link.target = "_blank";
 				link.href = "https://github.com/openprotest/protest/releases/latest";
 				link.textContent = `Pro-test ${json.version}`;

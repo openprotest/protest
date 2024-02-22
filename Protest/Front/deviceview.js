@@ -977,6 +977,7 @@ class DeviceView extends View {
 				for (let i=0; i<data.length; i++) {
 					if (data[i].t === 0) continue;
 					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let y = (height + 4) - Math.round(height * data[i].v / data[i].t);
 
 					d += `L ${x} ${y} `;
 
