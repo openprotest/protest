@@ -25,8 +25,11 @@
     <!--<Version>5.0.0</Version>-->
     <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
 
-    <Deterministic>false</Deterministic>
-    <VersionSuffix>5.0.0.$([System.DateTime]::UtcNow.ToString(yyMM))</VersionSuffix>
+    <verYear>$([System.DateTime]::UtcNow.ToString(yyyy))</verYear>
+    <verDoy>$([System.DateTime]::UtcNow.DayOfYear)</verDoy>
+    
+    <VersionSuffix>5.0.$(verYear).$(verDoy)</VersionSuffix>
+    <!--<VersionSuffix>beta</VersionSuffix>-->
     <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
     <Version>$(VersionSuffix)</Version>
 
