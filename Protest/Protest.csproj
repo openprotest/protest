@@ -26,12 +26,12 @@
     <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
 
     <verYear>$([System.DateTime]::UtcNow.ToString(yyyy))</verYear>
-    <verDoy>$([System.DateTime]::UtcNow.DayOfYear)</verDoy>
+    <verDoty>$([System.DateTime]::UtcNow.DayOfYear)</verDoty>
     
-    <VersionSuffix>5.0.$(verYear).$(verDoy)</VersionSuffix>
+    <VersionPrefix>5.0.$(verYear).$(verDoty)</VersionPrefix>
     <!--<VersionSuffix>beta</VersionSuffix>-->
-    <AssemblyVersion>$(VersionSuffix)</AssemblyVersion>
-    <Version>$(VersionSuffix)</Version>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <Version>$(VersionPrefix)</Version>
 
     <NoWarn>IDE0090</NoWarn>
 
