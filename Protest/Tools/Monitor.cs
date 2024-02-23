@@ -354,10 +354,7 @@ internal static class Monitor {
             index = query.index
         };
 
-        string x = JsonSerializer.Serialize<Answer>(answer, answerSerializerOptions);
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<Answer>(answer, answerSerializerOptions);
-        Console.WriteLine(x);
-
         await WsWriteText(ws, bytes);
 
         data.Clear();

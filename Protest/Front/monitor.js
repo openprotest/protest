@@ -62,7 +62,7 @@ class Monitor extends Window {
 
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
-		this.chartsList.push(this.CreateChart("ping", 75, { index:0, protocol:"icmp", type:"ping", prefix:"RTT", unit:"ms" }));
+		this.chartsList.push(this.CreateChart("Ping", 75, { index:0, protocol:"icmp", format:"Ping chart", prefix:"RTT", unit:"ms" }));
 
 		this.InitializeSubnetEmblem();
 		this.InitializeSocketConnection();
@@ -723,10 +723,10 @@ class Monitor extends Window {
 		valueLabel.className = "monitor-graph-value";
 		container.appendChild(valueLabel);
 
-		switch(options.type) {
-		case "ping": return this.CreatePingChart(inner, valueLabel, name, height, options);
-		case "percent": return this.CreateLineChart(inner, valueLabel, name, height, options);
-		case "percents": return this.CreateGridLineChart(inner, valueLabel, name, height, options);
+		switch(options.format) {
+		case "Ping chart"     : return this.CreatePingChart(inner, valueLabel, name, height, options);
+		case "Line chart"     : return this.CreateLineChart(inner, valueLabel, name, height, options);
+		case "Grid line chart": return this.CreateGridLineChart(inner, valueLabel, name, height, options);
 		}
 	}
 
