@@ -163,10 +163,10 @@ class Monitor extends Window {
 				if (this.chartsList[i].index !== message.index) { continue; }
 
 				if (this.chartsList[i].options.type === "percents") {
-					this.chartsList[i].Update(message.value);
+					this.chartsList[i].Update(message.data);
 				}
 				else {
-					this.chartsList[i].Update(parseInt(message.value));
+					this.chartsList[i].Update(parseInt(message.data));
 				}
 				break;
 			}
@@ -787,20 +787,20 @@ class Monitor extends Window {
 			}
 		};
 
-		const Update = value=> {
+		const Update = data=> {
 			if (list.length * gap > 800) list.shift();
-			list.push(value);
+			list.push(data);
 
-			if (value > 0) {
-				if (min > value) { min = value; }
-				if (max < value) { max = value; }
+			if (data > 0) {
+				if (min > data) { min = data; }
+				if (max < data) { max = data; }
 			}
 
-			if (value < 0) {
+			if (data < 0) {
 				valueLabel.textContent = `${options.prefix}: --`;
 			}
 			else {
-				valueLabel.textContent = `${options.prefix}: ${value}${options.unit}`;
+				valueLabel.textContent = `${options.prefix}: ${data}${options.unit}`;
 			}
 
 			if (max >= 0) {

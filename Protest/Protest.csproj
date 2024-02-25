@@ -29,7 +29,7 @@
     <verDoty>$([System.DateTime]::UtcNow.DayOfYear)</verDoty>
     
     <VersionPrefix>5.0.$(verYear).$(verDoty)</VersionPrefix>
-    <!--<VersionSuffix>beta</VersionSuffix>-->
+    <VersionSuffix>beta</VersionSuffix>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <Version>$(VersionPrefix)</Version>
 
