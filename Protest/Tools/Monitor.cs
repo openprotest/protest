@@ -128,7 +128,7 @@ internal static class Monitor {
 
                 if (ping) {
                     long icmpResult = HandlePing(target, Math.Min(interval, 1000));
-                    await WsWriteText(ws, $"{{\"index\":0,\"value\":{icmpResult}}}");
+                    await WsWriteText(ws, $"{{\"index\":0,\"data\":{icmpResult}}}");
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;

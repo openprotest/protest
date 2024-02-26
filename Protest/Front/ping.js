@@ -28,11 +28,26 @@ class Ping extends Console {
 		this.playButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
-		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.clearDropDown = this.AddToolbarDropdown("mono/wing.svg?light");
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
+
+		const optionRemoveAll = document.createElement("div");
+		optionRemoveAll.style.padding = "4px 8px";
+		optionRemoveAll.textContent = "Clear";
+		this.clearDropDown.list.append(optionRemoveAll);
+
+		const optionRemoveReachable = document.createElement("div");
+		optionRemoveReachable.style.padding = "4px 8px";
+		optionRemoveReachable.textContent = "Remove reachable";
+		this.clearDropDown.list.append(optionRemoveReachable);
+
+		const optionRemoveUnreachable = document.createElement("div");
+		optionRemoveUnreachable.style.padding = "4px 8px";
+		optionRemoveUnreachable.textContent = "Remove unreachable";
+		this.clearDropDown.list.append(optionRemoveUnreachable);
 
 		this.playButton.disabled = this.params.status === "play";
 		this.pauseButton.disabled = this.params.status === "pause";
@@ -40,8 +55,9 @@ class Ping extends Console {
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;
 			this.params.entries = [];
-			for (let i = 0; i < temp.length; i++)
+			for (let i=0; i<temp.length; i++) {
 				this.Push(temp[i]);
+			}
 		}
 
 		this.playButton.addEventListener("click", ()=> {
@@ -64,8 +80,8 @@ class Ping extends Console {
 			}
 		});
 
-		this.clearButton.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
+		optionRemoveAll.addEventListener("click", ()=> {
+			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?", false, "mono/wing.svg");
 			if (btnOK) btnOK.addEventListener("click", ()=> {
 				this.playButton.disabled = true;
 				this.pauseButton.disabled = true;
@@ -74,6 +90,46 @@ class Ping extends Console {
 				for (let i = 0; i < split.length; i++) {
 					if (split[i].length === 0) continue;
 					this.Remove(this.hashtable[split[i]].host);
+				}
+			});
+		});
+
+		optionRemoveReachable.addEventListener("click", ()=> {
+			const btnOK = this.ConfirmBox("Are you sure you want to remove all reachable hosts?", false, "mono/wing.svg");
+			if (btnOK) btnOK.addEventListener("click", ()=> {
+				let split = this.request.split(";");
+				for (let i = 0; i < split.length; i++) {
+					if (split[i].length === 0) continue;
+
+					let isReachable = this.hashtable[split[i]].ping.filter(o=>o!==-1).some(o=>!isNaN(o));
+					if (isReachable) {
+						this.Remove(this.hashtable[split[i]].host);
+					}
+				}
+
+				if (Object.keys(this.hashtable).length === 0) {
+					this.playButton.disabled = true;
+					this.pauseButton.disabled = true;
+				}
+			});
+		});
+
+		optionRemoveUnreachable.addEventListener("click", ()=> {
+			const btnOK = this.ConfirmBox("Are you sure you want to remove all unreachable hosts?", false, "mono/wing.svg");
+			if (btnOK) btnOK.addEventListener("click", ()=> {
+				let split = this.request.split(";");
+				for (let i = 0; i < split.length; i++) {
+					if (split[i].length === 0) continue;
+
+					let isUnreachable = this.hashtable[split[i]].ping.filter(o=>o!==-1).every(o=>isNaN(o));
+					if (isUnreachable) {
+						this.Remove(this.hashtable[split[i]].host);
+					}
+				}
+				
+				if (Object.keys(this.hashtable).length === 0) {
+					this.playButton.disabled = true;
+					this.pauseButton.disabled = true;
 				}
 			});
 		});
