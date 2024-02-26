@@ -224,9 +224,14 @@ internal static class SiteCheck {
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
         }
 
+        if (ws.State == WebSocketState.Open) {
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
+            catch { }
+        }
     }
 
 }

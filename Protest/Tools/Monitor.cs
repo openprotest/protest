@@ -277,7 +277,7 @@ internal static class Monitor {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            return;
+            Logger.Error(ex);
         }
         catch (ManagementException ex) {
             Logger.Error(ex);

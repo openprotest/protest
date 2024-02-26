@@ -101,19 +101,25 @@ internal static class KeepAlive {
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
-            //Logger.Error(ex);
-            //ctx.Response.Close();
+            Logger.Error(ex);
+            return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            //Logger.Error(ex);
-            ctx.Response.Close();
+            //do nothing
+            //return;
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            ctx.Response.Close();
         }
         finally {
             connections.Remove(ws, out _);
+        }
+
+        if (ws.State == WebSocketState.Open) {
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
+            catch { }
         }
     }
 

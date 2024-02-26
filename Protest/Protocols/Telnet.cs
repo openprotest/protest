@@ -138,13 +138,12 @@ internal static class Telnet {
 
         }
         finally {
+            //TODO:
+            //wsToServer?.Abort();
+        }
+        if (ws.State == WebSocketState.Open) {
             try {
                 await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-            }
-            catch { }
-            try {
-                //TODO:
-                //wsToServer?.Abort();
             }
             catch { }
         }
