@@ -253,9 +253,10 @@ class About extends Tabs {
 
 			let current = KEEP.version.split(".").map(o=>parseInt(o));
 
-			if (current[0] < json.major ||
-				current[0] === json.major && current[1] < json.minor ||
-				current[0] === json.major && current[1] === json.minor  && current[2] < json.build) {
+			if ((current[0] < json.major) ||
+				(current[0] == json.major && current[1] < json.minor) ||
+				(current[0] == json.major && current[1] == json.minor && current[2] < json.build) ||
+				(current[0] == json.major && current[1] == json.minor && current[2] == json.build && current[3] < json.revision)) {
 
 				status.textContent = "A new version is available.";
 				center.appendChild(document.createElement("br"));

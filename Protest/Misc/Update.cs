@@ -30,7 +30,7 @@ internal static class Update {
     }
 
     public static byte[] CheckLatestRelease() {
-        string url = $"https://raw.githubusercontent.com/openprotest/protest/master/RELEASE";
+        string url = "https://raw.githubusercontent.com/openprotest/protest/master/RELEASE";
 
         using HttpClient client = new HttpClient();
 
@@ -40,8 +40,8 @@ internal static class Update {
         string data = responseMessage.Content.ReadAsStringAsync().Result;
         string[] split = data.Split('.');
         
-        if (split.Length >= 3) {
-            return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\"}}");
+        if (split.Length >= 4) {
+            return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
         }
         else {
             return Data.CODE_FAILED.Array;
