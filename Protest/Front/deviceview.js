@@ -385,20 +385,48 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.rdp) { //rdp
 				const btnAction = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
-				btnAction.onclick = ()=> UI.PromptAgent(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
+				btnAction.onclick = ()=> {
+					if (localStorage.getItem("prefer_rdp_file") === "true") {
+						this.DownloadRdp(host, overwriteProtocol.rdp);
+					}
+					else {
+						UI.PromptAgent(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
+					}
+				}
 			}
 			else if (ports.includes(3389)) {
 				const btnAction = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
-				btnAction.onclick = ()=> UI.PromptAgent(this, "rdp", host);
+				btnAction.onclick = ()=> {
+					if (localStorage.getItem("prefer_rdp_file") === "true") {
+						this.DownloadRdp(host, 3389);
+					}
+					else {
+						UI.PromptAgent(this, "rdp", host);
+					}
+				}
 			}
 
 			if (overwriteProtocol.uvnc) { //uvnc
 				const btnAction = this.CreateSideButton("mono/uvnc.svg", "uVNC");
-				btnAction.onclick = ()=> UI.PromptAgent(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`);
+				btnAction.onclick = ()=> {
+					if (localStorage.getItem("prefer_rdp_file") === "true") {
+						this.DownloadVnc(host, overwriteProtocol.uvnc);
+					}
+					else {
+						UI.PromptAgent(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`);
+					}
+				}
 			}
 			else if (ports.includes(5900)) {
 				const btnAction = this.CreateSideButton("mono/uvnc.svg", "uVNC");
-				btnAction.onclick = ()=> UI.PromptAgent(this, "uvnc", host);
+				btnAction.onclick = ()=> {
+					if (localStorage.getItem("prefer_rdp_file") === "true") {
+						this.DownloadVnc(host, 5900);
+					}
+					else {
+						UI.PromptAgent(this, "uvnc", host);
+					}
+				}
 			}
 
 			if (overwriteProtocol.winbox) { //winbox
@@ -2605,5 +2633,69 @@ class DeviceView extends View {
 				console.error(ex);
 			}
 		});
+	}
+
+	DownloadRdp(host, port) {
+		const NL = String.fromCharCode(13) + String.fromCharCode(10);
+
+		let text = "";
+
+		if (port) {
+			text = `full address:s:${host}:${port}${NL}`;
+		}
+		else {
+			text = `full address:s:${host}${NL}`;
+		}
+
+		text += "session bpp:i:15" + NL;
+		text += "compression:i:1" + NL;
+		text += "keyboardhook:i:2" + NL;
+		text += "videoplaybackmode:i:1" + NL;
+		text += "networkautodetect:i:1" + NL;
+		text += "bandwidthautodetect:i:1" + NL;
+		text += "displayconnectionbar:i:1" + NL;
+		text += "disable wallpaper:i:1" + NL;
+		text += "bitmapcachepersistenable:i:1" + NL;
+		text += "audiomode:i:1" + NL;
+		text += "redirectprinters:i:0" + NL;
+		text += "redirectlocation:i:0" + NL;
+		text += "redirectcomports:i:0" + NL;
+		text += "redirectsmartcards:i:1" + NL;
+		text += "redirectwebauthn:i:1" + NL;
+		text += "redirectclipboard:i:1" + NL;
+		text += "redirectposdevices:i:0" + NL;
+		text += "autoreconnection enabled:i:1" + NL;
+		text += "authentication level:i:2" + NL;
+		text += "prompt for credentials:i:1" + NL;
+		text += "negotiate security layer:i:1" + NL;
+		text += "gatewayusagemethod:i:4" + NL;
+		text += "gatewaycredentialssource:i:4" + NL;
+		text += "smart sizing:i:1" + NL;
+
+		const pseudo = document.createElement("a");
+		pseudo.style.display = "none";
+		this.win.appendChild(pseudo);
+
+		pseudo.setAttribute("href", "data:text/plain;base64," + btoa(text));
+		pseudo.setAttribute("download", `${host}.rdp`);
+
+		pseudo.click(null);
+	}
+
+	DownloadVnc(host, port) {
+		const NL = String.fromCharCode(13) + String.fromCharCode(10);
+
+		let text = "[connection]" + NL;
+		text += `host=${host}` + NL;
+		text += `port=${port===null ? 5900 : port}` + NL;
+
+		const pseudo = document.createElement("a");
+		pseudo.style.display = "none";
+		this.win.appendChild(pseudo);
+
+		pseudo.setAttribute("href", "data:text/plain;base64," + btoa(text));
+		pseudo.setAttribute("download", `${host}.vnc`);
+
+		pseudo.click(null);
 	}
 }

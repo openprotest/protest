@@ -109,7 +109,7 @@ internal static class TraceRoute {
                     lock (sendLock) {
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, CancellationToken.None);
 
-                        string over = "over" + ((char)127).ToString() + hostname;
+                        string over = $"over{((char)127)}{hostname}";
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(over), 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
 

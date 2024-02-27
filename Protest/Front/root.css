@@ -73,6 +73,12 @@ body {
 
 a {
 	color: var(--clr-dark);
+	outline: 0;
+}
+
+a:focus {
+	animation: outline .3s ease-in;
+	box-shadow: var(--clr-accent) 0 0 0 2px;
 }
 
 hr {
