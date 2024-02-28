@@ -1017,8 +1017,10 @@ class Monitor extends Window {
 
 	CreateSingleValue(inner, valueLabel, name, options) {
 
-		const Update = value=>{
+			//TODO:
 
+		const Update = value=>{
+			//TODO:
 		};
 
 		return {
@@ -1031,8 +1033,10 @@ class Monitor extends Window {
 
 	CreateList(inner, valueLabel, name, height, options) {
 
-		const Update = value=>{
+			//TODO:
 
+		const Update = value=>{
+			//TODO:
 		};
 
 		return {
@@ -1045,8 +1049,10 @@ class Monitor extends Window {
 
 	CreateTable(inner, valueLabel, name, height, options) {
 
-		const Update = value=>{
+			//TODO:
 
+		const Update = value=>{
+			//TODO:
 		};
 
 		return {
