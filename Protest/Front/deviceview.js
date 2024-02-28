@@ -94,10 +94,10 @@ class DeviceView extends View {
 			this.attributes.appendChild(this.CreateAttribute("owner",        "", origin, date, true));
 		}
 
-		this.AutoUpdate();
+		this.AutoUpdateBudges();
 	}
 
-	AutoUpdate() {
+	AutoUpdateBudges() {
 		setTimeout(async ()=>{
 			if (this.isClosed) return;
 			
@@ -128,7 +128,7 @@ class DeviceView extends View {
 			}
 			catch {}
 
-			this.AutoUpdate();
+			this.AutoUpdateBudges();
 		}, 300_000);
 	}
 

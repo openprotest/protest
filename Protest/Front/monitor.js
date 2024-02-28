@@ -300,16 +300,13 @@ class Monitor extends Window {
 		const formatOptionsArray = [
 			"Ping",
 			"Line chart",
-			"Line charts (grid)",
-			//"Area chart",
-			//"Bar chart",
+			"Grid line chart",
 			"Delta chart",
-			"Pie chart",
-			"Doughnut chart",
+			//"Pie chart",
+			//"Doughnut chart",
 			"Single value",
 			"List",
-			"Table",
-			//"Histogram"
+			"Table"
 		];
 
 		for (let i=0; i<formatOptionsArray.length; i++) {
@@ -724,12 +721,16 @@ class Monitor extends Window {
 		container.appendChild(valueLabel);
 
 		switch(options.format) {
-		case "Ping chart"     : return this.CreatePingChart(inner, valueLabel, name, height, options);
-		case "Line chart"     : return this.CreateLineChart(inner, valueLabel, name, height, options);
-		case "Grid line chart": return this.CreateGridLineChart(inner, valueLabel, name, height, options);
+		case "Ping chart"      : return this.CreatePingChart(inner, valueLabel, name, height, options);
+		case "Line chart"      : return this.CreateLineChart(inner, valueLabel, name, height, options);
+		case "Grid line chart" : return this.CreateGridLineChart(inner, valueLabel, name, height, options);
+		case "Delta chart"     : return this.CreateDeltaChart(inner, valueLabel, name, height, options);
+		case "Single value"    : return this.CreateSingleValue(inner, valueLabel, name, options);
+		case "List"            : return this.CreateList(inner, valueLabel, name, height, options);
+		case "Table"           : return this.CreateTable(inner, valueLabel, name, height, options);
 		}
 	}
-
+	
 	CreatePingChart(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
@@ -1004,6 +1005,48 @@ class Monitor extends Window {
 			DrawGraph();
 
 			last = value;
+		};
+
+		return {
+			index: this.count,
+			name: name,
+			options: options,
+			Update: Update
+		};
+	}
+
+	CreateSingleValue(inner, valueLabel, name, options) {
+
+		const Update = value=>{
+
+		};
+
+		return {
+			index: this.count,
+			name: name,
+			options: options,
+			Update: Update
+		};
+	}
+
+	CreateList(inner, valueLabel, name, height, options) {
+
+		const Update = value=>{
+
+		};
+
+		return {
+			index: this.count,
+			name: name,
+			options: options,
+			Update: Update
+		};
+	}
+
+	CreateTable(inner, valueLabel, name, height, options) {
+
+		const Update = value=>{
+
 		};
 
 		return {
