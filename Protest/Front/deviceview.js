@@ -129,7 +129,7 @@ class DeviceView extends View {
 			catch {}
 
 			this.AutoUpdateBudges();
-		}, 300_000);
+		}, 180_000);
 	}
 
 	InitializePreview() { //override
