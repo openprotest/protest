@@ -1,17 +1,64 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Protest.Http;
 
 namespace Protest.Protocols;
 
 internal static class Icmp {
-    static readonly byte[] ICMP_PAYLOAD = "0000000000000000"u8.ToArray();
+    private static readonly byte[] ICMP_PAYLOAD = "0000000000000000"u8.ToArray();
+
+    public static byte[] BulkPing(Dictionary<string, string> parameters) {
+        if (parameters is null) { return null; }
+
+        parameters.TryGetValue("query", out string query);
+        if (String.IsNullOrEmpty(query)) { return null; }
+
+        string[] queryArray = query.Split(';');
+
+        List<Task<int>> tasks = new List<Task<int>>();
+        foreach (string host in queryArray) {
+            tasks.Add(Task.Run(async () => {
+                using Ping p = new Ping();
+                try {
+                    PingReply reply = await p.SendPingAsync(host, 1000, ICMP_PAYLOAD);
+                    return reply.Status == IPStatus.Success ? (int)reply.RoundtripTime : -1;
+                }
+                catch {
+                    return -1;
+                }
+            }));
+        }
+
+        int[] result = Task.WhenAll(tasks).Result;
+        byte[] json = JsonSerializer.SerializeToUtf8Bytes(result);
+
+        return json;
+    }
+
+    private static async Task<int> SimplePingAsync(string hostname) {
+        using Ping p = new Ping();
+        try {
+            PingReply reply = await p.SendPingAsync(hostname, 1000, ICMP_PAYLOAD);
+            if (reply.Status == IPStatus.Success) {
+                return (int)reply.RoundtripTime;
+            }
+            else {
+                return -1;
+            }
+        }
+        catch {
+            return -1;
+        }
+    }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocketContext wsc;
@@ -133,13 +180,13 @@ internal static class Icmp {
             Logger.Error(ex);
         }
     }
-    public static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {
+    private static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {
         List<Task<string>> tasks = new List<Task<string>>();
         for (int i = 0; i < name.Length; i++) tasks.Add(PingAsync(name[i], id[i], timeout));
         string[] result = await Task.WhenAll(tasks);
         return String.Join((char)127, result);
     }
-    public static async Task<string> PingAsync(string hostname, string id, int timeout) {
+    private static async Task<string> PingAsync(string hostname, string id, int timeout) {
         Ping p = new Ping();
 
         try {
@@ -170,14 +217,14 @@ internal static class Icmp {
         }
     }
 
-    public static async Task<string> ArpPingArrayAsync(string[] name, string[] id) {
+    private static async Task<string> ArpPingArrayAsync(string[] name, string[] id) {
         List<Task<string>> tasks = new List<Task<string>>();
         for (int i = 0; i < name.Length; i++) tasks.Add(ArpPingAsync(name[i], id[i]));
         string[] result = await Task.WhenAll(tasks);
         return String.Join(((char)127).ToString(), result);
     }
 
-    public static async Task<string> ArpPingAsync(string name, string id) {
+    private static async Task<string> ArpPingAsync(string name, string id) {
         try {
             IPAddress[] ips = await System.Net.Dns.GetHostAddressesAsync(name);
             if (ips.Length == 0) return id + ((char)127).ToString() + "unknown host";
@@ -196,4 +243,6 @@ internal static class Icmp {
             return id + ((char)127).ToString() + "unknown error";
         }
     }
+
+
 }

@@ -264,6 +264,8 @@ class List extends Window {
 			}
 		};
 
+		filterButton.onclick = ()=> findFilter.focus();
+
 		filterButton.ondblclick = ()=> {
 			this.params.filter = "";
 			filterButton.style.borderBottom = "";

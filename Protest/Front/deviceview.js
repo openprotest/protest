@@ -52,6 +52,7 @@ class DeviceView extends View {
 		this.order = "group";
 		this.groupSchema = DeviceView.DEVICES_GROUP_SCHEMA;
 		this.dbTarget = "device";
+		this.pingIndicators = [];
 
 		if (params.file && !this.link) {
 			this.SetTitle("not found");
@@ -92,6 +93,43 @@ class DeviceView extends View {
 			this.attributes.appendChild(this.CreateAttribute("location",     "", origin, date, true));
 			this.attributes.appendChild(this.CreateAttribute("owner",        "", origin, date, true));
 		}
+
+		this.AutoUpdate();
+	}
+
+	AutoUpdate() {
+		setTimeout(async ()=>{
+			if (this.isClosed) return;
+			
+			const query = this.pingIndicators.map(indicator => indicator.target).join(';');
+
+			try {
+				const response = await fetch(`tools/bulkping?query=${query}`);
+	
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	
+				const json = await response.json();
+				if (json.error) return;
+				for (let i = 0; i < json.length; i++) {
+					if (json[i] < 0) {
+						this.pingIndicators[i].dot.style.borderBottomColor = "var(--clr-error)";
+						this.pingIndicators[i].dot.style.transform = "rotate(180deg)";
+						this.pingIndicators[i].button.secondary.style.color = "var(--clr-error)";
+						this.pingIndicators[i].button.secondary.textContent = "Timed out";
+					}
+					else {
+						const color = UI.PingColor(json[i]);
+						this.pingIndicators[i].dot.style.borderBottomColor = color;
+						this.pingIndicators[i].dot.style.transform = "none";
+						this.pingIndicators[i].button.secondary.style.color = color;
+						this.pingIndicators[i].button.secondary.textContent = `${json[i]}ms`;
+					}
+				}
+			}
+			catch {}
+
+			this.AutoUpdate();
+		}, 300_000);
 	}
 
 	InitializePreview() { //override
@@ -644,6 +682,7 @@ class DeviceView extends View {
 
 		let dotPingCounter = 0;
 		let liveButtons = [];
+		this.pingIndicators = [];
 
 		this.liveStatsWebSockets.onopen = ()=> {
 			dotPingCounter = 0;
@@ -674,8 +713,9 @@ class DeviceView extends View {
 				this.CreateWarning(json.warning);
 			}
 			else if (json.echoReply) {
+				let dot = null;
 				if (this.task.childNodes.length < 5) {
-					const dot = document.createElement("div");
+					dot = document.createElement("div");
 					dot.className = "task-icon-dots";
 					dot.style.left = `${1 + dotPingCounter*13}px`;
 					dot.style.borderBottomColor = UI.PingColor(json.echoReply);
@@ -706,6 +746,8 @@ class DeviceView extends View {
 					}
 					new Ping().Filter(json.for);
 				};
+
+				this.pingIndicators.push({target:json.for, dot:dot, button: pingButton});
 			}
 			else if (json.drive) {
 				const driveButton = this.CreateInfoButton(json.drive, "/mono/hdd.svg");

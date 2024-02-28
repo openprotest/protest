@@ -364,6 +364,7 @@ public sealed class Listener {
 
         case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;
+        case "/tools/bulkping"   : buffer = Protocols.Icmp.BulkPing(parameters); break;
         case "/tools/locateip"   : buffer = Tools.LocateIp.Locate(ctx); break;
         case "/tools/maclookup"  : buffer = Tools.MacLookup.Lookup(ctx); break;
         case "/tools/downstream" : buffer = Tools.SpeedTest.DownStream(ctx, parameters); break;
