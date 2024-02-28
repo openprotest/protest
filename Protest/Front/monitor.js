@@ -1016,7 +1016,6 @@ class Monitor extends Window {
 	}
 
 	CreateSingleValue(inner, valueLabel, name, options) {
-
 			//TODO:
 
 		const Update = value=>{
@@ -1032,7 +1031,6 @@ class Monitor extends Window {
 	}
 
 	CreateList(inner, valueLabel, name, height, options) {
-
 			//TODO:
 
 		const Update = value=>{
@@ -1048,7 +1046,6 @@ class Monitor extends Window {
 	}
 
 	CreateTable(inner, valueLabel, name, height, options) {
-
 			//TODO:
 
 		const Update = value=>{
