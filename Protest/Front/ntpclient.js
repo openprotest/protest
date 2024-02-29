@@ -13,18 +13,18 @@ class NtpClient extends Window {
 		this.content.style.overflowY = "auto";
 		this.content.style.textAlign = "center";
 
-		let lblServer = document.createElement("div");
-		lblServer.textContent = "Time server:";
-		this.content.appendChild(lblServer);
+		let serverLabel = document.createElement("div");
+		serverLabel.textContent = "Time server:";
+		this.content.appendChild(serverLabel);
 
-		this.txtServer = document.createElement("input");
-		this.txtServer.type = "text";
-		this.txtServer.style.fontSize = "larger";
-		this.txtServer.style.width = "60%";
-		this.txtServer.style.maxWidth = "480px";
-		this.txtServer.placeholder = "time.nist.gov";
-		this.txtServer.value = params ?? "";
-		this.content.appendChild(this.txtServer);
+		this.serverInput = document.createElement("input");
+		this.serverInput.type = "text";
+		this.serverInput.style.fontSize = "larger";
+		this.serverInput.style.width = "60%";
+		this.serverInput.style.maxWidth = "480px";
+		this.serverInput.placeholder = "time.nist.gov";
+		this.serverInput.value = params ?? "";
+		this.content.appendChild(this.serverInput);
 
 		const box = document.createElement("div");
 		box.style.position = "relative";
@@ -38,45 +38,45 @@ class NtpClient extends Window {
 		box.style.userSelect = "text";
 		this.content.appendChild(box);
 
-		this.btnHex = document.createElement("input");
-		this.btnHex.type = "button";
-		this.btnHex.value = "";
-		this.btnHex.disabled = true;
-		this.btnHex.style.position = "absolute";
-		this.btnHex.style.right = "20px";
-		this.btnHex.style.top = "0";
-		this.btnHex.style.width = "40px";
-		this.btnHex.style.minWidth = "40px";
-		this.btnHex.style.minHeight = "40px";
-		this.btnHex.style.margin = "2px";
-		this.btnHex.style.marginTop = "16px";
-		this.btnHex.style.backgroundImage = "url(mono/hexviewer.svg?light)";
-		this.btnHex.style.backgroundSize = "32px";
-		this.btnHex.style.backgroundPosition = "center";
-		this.btnHex.style.backgroundRepeat = "no-repeat";
-		box.appendChild(this.btnHex);
+		this.hexButton = document.createElement("input");
+		this.hexButton.type = "button";
+		this.hexButton.value = "";
+		this.hexButton.disabled = true;
+		this.hexButton.style.position = "absolute";
+		this.hexButton.style.right = "20px";
+		this.hexButton.style.top = "0";
+		this.hexButton.style.width = "40px";
+		this.hexButton.style.minWidth = "40px";
+		this.hexButton.style.minHeight = "40px";
+		this.hexButton.style.margin = "2px";
+		this.hexButton.style.marginTop = "16px";
+		this.hexButton.style.backgroundImage = "url(mono/hexviewer.svg?light)";
+		this.hexButton.style.backgroundSize = "32px";
+		this.hexButton.style.backgroundPosition = "center";
+		this.hexButton.style.backgroundRepeat = "no-repeat";
+		box.appendChild(this.hexButton);
 
-		this.lblLive = document.createElement("div");
-		this.lblLive.style.color = "#202020";
-		this.lblLive.style.fontFamily = "monospace";
-		this.lblLive.style.fontSize = "72px";
-		this.lblLive.style.fontWeight = "700";
-		this.lblLive.textContent = "00:00:00";
-		box.appendChild(this.lblLive);
+		this.liveLabel = document.createElement("div");
+		this.liveLabel.style.color = "#202020";
+		this.liveLabel.style.fontFamily = "monospace";
+		this.liveLabel.style.fontSize = "72px";
+		this.liveLabel.style.fontWeight = "700";
+		this.liveLabel.textContent = "00:00:00";
+		box.appendChild(this.liveLabel);
 
-		this.lblResponse = document.createElement("div");
-		this.lblResponse.style.textAlign = "left";
-		box.appendChild(this.lblResponse);
+		this.responseLabel = document.createElement("div");
+		this.responseLabel.style.textAlign = "left";
+		box.appendChild(this.responseLabel);
 
-		this.btnSend = document.createElement("input");
-		this.btnSend.type = "button";
-		this.btnSend.value = "Send request";
-		this.btnSend.style.width = "128px";
-		this.btnSend.style.minHeight = "40px";
-		this.btnSend.style.margin = "2px";
-		this.btnSend.style.marginTop = "16px";
-		this.btnSend.style.borderRadius = "4px";
-		box.appendChild(this.btnSend);
+		this.sendButton = document.createElement("input");
+		this.sendButton.type = "button";
+		this.sendButton.value = "Send request";
+		this.sendButton.style.width = "128px";
+		this.sendButton.style.minHeight = "40px";
+		this.sendButton.style.margin = "2px";
+		this.sendButton.style.marginTop = "16px";
+		this.sendButton.style.borderRadius = "4px";
+		box.appendChild(this.sendButton);
 
 		this.spinner = document.createElement("div");
 		this.spinner.className = "spinner";
@@ -86,24 +86,24 @@ class NtpClient extends Window {
 
 		this.spinner.appendChild(document.createElement("div"));
 
-		this.btnSend.onclick = ()=> this.Request(Date.now());
+		this.sendButton.onclick = ()=> this.Request(Date.now());
 
-		this.txtServer.onkeydown = event=> {
-			if (event.key === "Enter") this.btnSend.onclick();
+		this.serverInput.onkeydown = event=> {
+			if (event.key === "Enter") this.sendButton.onclick();
 		};
 
 		if (params) this.Request(Date.now());
 	}
 
 	async Request(id) {
-		this.params = this.txtServer.value;
-		this.btnSend.disabled = true;
+		this.params = this.serverInput.value;
+		this.sendButton.disabled = true;
 
-		this.lblResponse.textContent = "";
+		this.responseLabel.textContent = "";
 		this.spinner.style.display = "inherit";
 
 		try {
-			const response = await fetch(`tools/ntp?server=${this.txtServer.value.length === 0 ? "time.nist.gov" : encodeURIComponent(this.txtServer.value)}`);
+			const response = await fetch(`tools/ntp?server=${this.serverInput.value.length === 0 ? "time.nist.gov" : encodeURIComponent(this.serverInput.value)}`);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -120,10 +120,10 @@ class NtpClient extends Window {
 				this.id = id;
 
 				const table = document.createElement("table");
-				this.lblResponse.appendChild(table);
+				this.responseLabel.appendChild(table);
 
 				const response = [
-					["Server", this.txtServer.value.length == 0 ? "time.nist.gov" : this.txtServer.value],
+					["Server", this.serverInput.value.length == 0 ? "time.nist.gov" : this.serverInput.value],
 					["Roundtrip", json.roundtrip],
 					["Transmitted time", json.transmit],
 					["Local time", json.local],
@@ -146,7 +146,7 @@ class NtpClient extends Window {
 
 					const tr = document.createElement("tr");
 					tr.append(name, value);
-					this.lblResponse.append(tr);
+					this.responseLabel.append(tr);
 				}
 
 				let split = json.local.split(":").map(o=> parseInt(o));
@@ -155,8 +155,8 @@ class NtpClient extends Window {
 					this.Update(id, timestamp, local);
 				}, 1000 - split[3]);
 
-				this.btnHex.disabled = false;
-				this.btnHex.onclick = ()=>{
+				this.hexButton.disabled = false;
+				this.hexButton.onclick = ()=>{
 					new HexViewer({exchange:[{direction:"query", data:json.req},{direction:"response", data:json.res}], protocol:"ntp"});
 				};
 
@@ -169,7 +169,7 @@ class NtpClient extends Window {
 			console.error(ex);
 		}
 		finally {
-			this.btnSend.disabled = false;
+			this.sendButton.disabled = false;
 			this.spinner.style.display = "none";
 		}
 	}
@@ -181,7 +181,7 @@ class NtpClient extends Window {
 		let now = new Date();
 		let def = now - timestamp;
 		let d = new Date(local + def);
-		this.lblLive.textContent = `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}:${d.getSeconds().toString().padStart(2,"0")}`;
+		this.liveLabel.textContent = `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}:${d.getSeconds().toString().padStart(2,"0")}`;
 
 		setTimeout(()=> this.Update(id, timestamp, local), 1000);
 	}

@@ -10,41 +10,41 @@ class Personalize extends Tabs {
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.tabGui     = this.AddTab("Appearance", "mono/tv.svg");
-		this.tabRegion  = this.AddTab("Regional format", "mono/earth.svg" );
-		this.tabSession = this.AddTab("Session", "mono/hourglass.svg");
-		this.tabChat    = this.AddTab("Chat", "mono/chat.svg");
-		this.tabAgent   = this.AddTab("Agent", "mono/agent.svg");
+		this.guiTab     = this.AddTab("Appearance", "mono/tv.svg");
+		this.regionTab  = this.AddTab("Regional format", "mono/earth.svg" );
+		this.sessionTab = this.AddTab("Session", "mono/hourglass.svg");
+		this.chatTab    = this.AddTab("Chat", "mono/chat.svg");
+		this.agentTab   = this.AddTab("Agent", "mono/agent.svg");
 
-		this.tabGui.onclick     = ()=> this.ShowGui();
-		this.tabRegion.onclick  = ()=> this.ShowRegion();
-		this.tabSession.onclick = ()=> this.ShowSession();
-		this.tabChat.onclick    = ()=> this.ShowChat();
-		this.tabAgent.onclick   = ()=> this.ShowAgent();
+		this.guiTab.onclick     = ()=> this.ShowGui();
+		thr.onclickTab  = ()=> this.ShowRegion();
+		this.sessionTab.onclick = ()=> this.ShowSession();
+		this.chatTab.onclick    = ()=> this.ShowChat();
+		this.agentTab.onclick   = ()=> this.ShowAgent();
 
 		switch (this.params) {
 		case "region":
-			this.tabRegion.className = "v-tab-selected";
+			thr.classNameTab = "v-tab-selected";
 			this.ShowRegion();
 			break;
 
 		case "session":
-			this.tabSession.className = "v-tab-selected";
+			this.sessionTab.className = "v-tab-selected";
 			this.ShowSession();
 			break;
 
 		case "chat":
-			this.tabChat.className = "v-tab-selected";
+			this.chatTab.className = "v-tab-selected";
 			this.ShowChat();
 			break;
 
 		case "agent":
-			this.tabAgent.className = "v-tab-selected";
+			this.agentTab.className = "v-tab-selected";
 			this.ShowAgent();
 			break;
 
 		default:
-			this.tabGui.className = "v-tab-selected";
+			this.guiTab.className = "v-tab-selected";
 			this.ShowGui();
 		}
 	}
@@ -53,61 +53,61 @@ class Personalize extends Tabs {
 		this.params = "appearance";
 		this.tabsPanel.textContent = "";
 
-		this.chkWinMaxed = document.createElement("input");
-		this.chkWinMaxed.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkWinMaxed);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkWinMaxed, "Always maximize windows");
+		this.winMaxedCheckbox = document.createElement("input");
+		this.winMaxedCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.winMaxedCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.winMaxedCheckbox, "Always maximize windows");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkPopOut = document.createElement("input");
-		this.chkPopOut.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkPopOut);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkPopOut, "Pop-out button on windows");
+		this.popOutCheckbox = document.createElement("input");
+		this.popOutCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.popOutCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.popOutCheckbox, "Pop-out button on windows");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkTaskTooltip = document.createElement("input");
-		this.chkTaskTooltip.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkTaskTooltip);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkTaskTooltip, "Tooltip on taskbar icons");
+		this.taskTooltipCheckbox = document.createElement("input");
+		this.taskTooltipCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.taskTooltipCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.taskTooltipCheckbox, "Tooltip on taskbar icons");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkWindowShadows = document.createElement("input");
-		this.chkWindowShadows.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkWindowShadows);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkWindowShadows, "Shadow under windows");
+		this.windowShadowsCheckbox = document.createElement("input");
+		this.windowShadowsCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.windowShadowsCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.windowShadowsCheckbox, "Shadow under windows");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkDateTime = document.createElement("input");
-		this.chkDateTime.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkDateTime);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkDateTime, "Date and time");
+		this.dateTimeCheckbox = document.createElement("input");
+		this.dateTimeCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.dateTimeCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.dateTimeCheckbox, "Date and time");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkAnimations = document.createElement("input");
-		this.chkAnimations.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkAnimations);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkAnimations, "Animations");
+		this.animationsCheckbox = document.createElement("input");
+		this.animationsCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.animationsCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.animationsCheckbox, "Animations");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkGlass = document.createElement("input");
-		this.chkGlass.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkGlass);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkGlass, "Glass effect");
+		this.glassCheckbox = document.createElement("input");
+		this.glassCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.glassCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.glassCheckbox, "Glass effect");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divScrollBar = document.createElement("div");
-		divScrollBar.textContent = "Scroll bar style: ";
-		divScrollBar.style.display = "inline-block";
-		divScrollBar.style.minWidth = "150px";
-		divScrollBar.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divScrollBar);
+		const scrollBarLabel = document.createElement("div");
+		scrollBarLabel.textContent = "Scroll bar style: ";
+		scrollBarLabel.style.display = "inline-block";
+		scrollBarLabel.style.minWidth = "150px";
+		scrollBarLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(scrollBarLabel);
 
 		this.scrollBarInput = document.createElement("select");
 		this.scrollBarInput.style.width = "200px";
@@ -115,41 +115,41 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const optDefault = document.createElement("option");
-		optDefault.value = "default";
-		optDefault.textContent = "System default";
-		this.scrollBarInput.appendChild(optDefault);
+		const defaultOption = document.createElement("option");
+		defaultOption.value = "default";
+		defaultOption.textContent = "System default";
+		this.scrollBarInput.appendChild(defaultOption);
 
-		const optThin = document.createElement("option");
-		optThin.value = "thin";
-		optThin.textContent = "Thin";
-		this.scrollBarInput.appendChild(optThin);
+		const thinOption = document.createElement("option");
+		thinOption.value = "thin";
+		thinOption.textContent = "Thin";
+		this.scrollBarInput.appendChild(thinOption);
 
-		const optHidden = document.createElement("option");
-		optHidden.value = "hidden";
-		optHidden.textContent = "Hidden";
-		this.scrollBarInput.appendChild(optHidden);
+		const hiddenOption = document.createElement("option");
+		hiddenOption.value = "hidden";
+		hiddenOption.textContent = "Hidden";
+		this.scrollBarInput.appendChild(hiddenOption);
 
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divColor = document.createElement("div");
-		divColor.textContent = "Accent color:";
-		divColor.style.fontWeight = "600";
-		divColor.style.paddingBottom = "8px";
-		this.tabsPanel.appendChild(divColor);
+		const accentColorLabel = document.createElement("div");
+		accentColorLabel.textContent = "Accent color:";
+		accentColorLabel.style.fontWeight = "600";
+		accentColorLabel.style.paddingBottom = "8px";
+		this.tabsPanel.appendChild(accentColorLabel);
 
 		this.accentBoxes = document.createElement("div");
 		this.tabsPanel.appendChild(this.accentBoxes);
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divSaturation = document.createElement("div");
-		divSaturation.textContent = "Saturation:";
-		divSaturation.style.display = "inline-block";
-		divSaturation.style.minWidth = "120px";
-		divSaturation.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divSaturation);
+		const saturationLabel = document.createElement("div");
+		saturationLabel.textContent = "Saturation:";
+		saturationLabel.style.display = "inline-block";
+		saturationLabel.style.minWidth = "120px";
+		saturationLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(saturationLabel);
 
 		this.saturation = document.createElement("input");
 		this.saturation.setAttribute("aria-label", "Accent color saturation");
@@ -159,18 +159,18 @@ class Personalize extends Tabs {
 		this.saturation.style.width = "200px";
 		this.tabsPanel.appendChild(this.saturation);
 
-		this.divSaturationValue = document.createElement("div");
-		this.divSaturationValue.style.paddingLeft = "8px";
-		this.divSaturationValue.style.display = "inline-block";
-		this.tabsPanel.appendChild(this.divSaturationValue);
+		this.saturationValueLabel = document.createElement("div");
+		this.saturationValueLabel.style.paddingLeft = "8px";
+		this.saturationValueLabel.style.display = "inline-block";
+		this.tabsPanel.appendChild(this.saturationValueLabel);
 
-		this.chkWinMaxed.checked      = localStorage.getItem("w_always_maxed") === "true";
-		this.chkPopOut.checked        = localStorage.getItem("w_popout") === "true";
-		this.chkTaskTooltip.checked   = localStorage.getItem("w_tasktooltip") !== "false";
-		this.chkWindowShadows.checked = localStorage.getItem("w_dropshadow") !== "false";
-		this.chkDateTime.checked      = localStorage.getItem("desk_datetime") !== "false";
-		this.chkAnimations.checked    = localStorage.getItem("animations") !== "false";
-		this.chkGlass.checked         = localStorage.getItem("glass") === "true";
+		this.winMaxedCheckbox.checked      = localStorage.getItem("w_always_maxed") === "true";
+		this.popOutCheckbox.checked        = localStorage.getItem("w_popout") === "true";
+		this.taskTooltipCheckbox.checked   = localStorage.getItem("w_tasktooltip") !== "false";
+		this.windowShadowsCheckbox.checked = localStorage.getItem("w_dropshadow") !== "false";
+		this.dateTimeCheckbox.checked      = localStorage.getItem("desk_datetime") !== "false";
+		this.animationsCheckbox.checked    = localStorage.getItem("animations") !== "false";
+		this.glassCheckbox.checked         = localStorage.getItem("glass") === "true";
 		this.scrollBarInput.value     = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
 
 		this.saturation.value = localStorage.getItem("accent_saturation") ? localStorage.getItem("accent_saturation") : 100;
@@ -241,10 +241,10 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divWallpaper = document.createElement("div");
-		divWallpaper.textContent = "Wallpaper:";
-		divWallpaper.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divWallpaper);
+		const wallpaperLabel = document.createElement("div");
+		wallpaperLabel.textContent = "Wallpaper:";
+		wallpaperLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(wallpaperLabel);
 
 		const wallpaperDropArea = document.createElement("div");
 		wallpaperDropArea.style.maxWidth     = "400px";
@@ -293,28 +293,28 @@ class Personalize extends Tabs {
 		};*/
 
 		const Apply = ()=> {
-			WIN.always_maxed = this.chkWinMaxed.checked;
-			taskbar.className = this.chkTaskTooltip.checked ? "" : "no-tooltip";
+			WIN.always_maxed = this.winMaxedCheckbox.checked;
+			taskbar.className = this.taskTooltipCheckbox.checked ? "" : "no-tooltip";
 
 			container.className = "";
-			if (!this.chkPopOut.checked)        container.classList.add("no-popout");
-			if (!this.chkWindowShadows.checked) container.classList.add("disable-window-dropshadows");
-			if (this.chkGlass.checked)          container.classList.add("glass");
+			if (!this.popOutCheckbox.checked)        container.classList.add("no-popout");
+			if (!this.windowShadowsCheckbox.checked) container.classList.add("disable-window-dropshadows");
+			if (this.glassCheckbox.checked)          container.classList.add("glass");
 
-			analog_clock.style.visibility = date_calendar.style.visibility = this.chkDateTime.checked ? "visible" : "hidden";
-			analog_clock.style.opacity = date_calendar.style.opacity = this.chkDateTime.checked ? "1" : "0";
+			analog_clock.style.visibility = date_calendar.style.visibility = this.dateTimeCheckbox.checked ? "visible" : "hidden";
+			analog_clock.style.opacity = date_calendar.style.opacity = this.dateTimeCheckbox.checked ? "1" : "0";
 
 			container.classList.add(`scrollbar-${this.scrollBarInput.value}`);
 
-			document.body.className = this.chkAnimations.checked ? "" : "disable-animations";
+			document.body.className = this.animationsCheckbox.checked ? "" : "disable-animations";
 
-			localStorage.setItem("w_always_maxed", this.chkWinMaxed.checked);
-			localStorage.setItem("w_popout", this.chkPopOut.checked);
-			localStorage.setItem("w_tasktooltip", this.chkTaskTooltip.checked);
-			localStorage.setItem("w_dropshadow", this.chkWindowShadows.checked);
-			localStorage.setItem("desk_datetime", this.chkDateTime.checked);
-			localStorage.setItem("animations", this.chkAnimations.checked);
-			localStorage.setItem("glass", this.chkGlass.checked);
+			localStorage.setItem("w_always_maxed", this.winMaxedCheckbox.checked);
+			localStorage.setItem("w_popout", this.popOutCheckbox.checked);
+			localStorage.setItem("w_tasktooltip", this.taskTooltipCheckbox.checked);
+			localStorage.setItem("w_dropshadow", this.windowShadowsCheckbox.checked);
+			localStorage.setItem("desk_datetime", this.dateTimeCheckbox.checked);
+			localStorage.setItem("animations", this.animationsCheckbox.checked);
+			localStorage.setItem("glass", this.glassCheckbox.checked);
 			localStorage.setItem("scrollbar_style", this.scrollBarInput.value);
 
 			localStorage.setItem("accent_saturation", this.saturation.value);
@@ -323,16 +323,16 @@ class Personalize extends Tabs {
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "appearance") {
 
 					if (WIN.array[i] !== this) {
-						WIN.array[i].chkWinMaxed.checked      = this.chkWinMaxed.checked;
-						WIN.array[i].chkPopOut.checked        = this.chkPopOut.checked;
-						WIN.array[i].chkTaskTooltip.checked   = this.chkTaskTooltip.checked;
-						WIN.array[i].chkWindowShadows.checked = this.chkWindowShadows.checked;
-						WIN.array[i].chkDateTime.checked      = this.chkDateTime.checked;
-						WIN.array[i].chkAnimations.checked    = this.chkAnimations.checked;
-						WIN.array[i].chkGlass.checked         = this.chkGlass.checked;
+						WIN.array[i].winMaxedCheckbox.checked      = this.winMaxedCheckbox.checked;
+						WIN.array[i].popOutCheckbox.checked        = this.popOutCheckbox.checked;
+						WIN.array[i].taskTooltipCheckbox.checked   = this.taskTooltipCheckbox.checked;
+						WIN.array[i].windowShadowsCheckbox.checked = this.windowShadowsCheckbox.checked;
+						WIN.array[i].dateTimeCheckbox.checked      = this.dateTimeCheckbox.checked;
+						WIN.array[i].animationsCheckbox.checked    = this.animationsCheckbox.checked;
+						WIN.array[i].glassCheckbox.checked         = this.glassCheckbox.checked;
 
 						WIN.array[i].saturation.value = this.saturation.value;
-						WIN.array[i].divSaturationValue.textContent = `${this.saturation.value}%`;
+						WIN.array[i].saturationValueLabel.textContent = `${this.saturation.value}%`;
 					}
 
 					let saturation = this.saturation.value / 100;
@@ -358,7 +358,7 @@ class Personalize extends Tabs {
 				}
 			}
 
-			this.divSaturationValue.textContent = `${this.saturation.value}%`;
+			this.saturationValueLabel.textContent = `${this.saturation.value}%`;
 
 			let accentColor = localStorage.getItem("accent_color") ? JSON.parse(localStorage.getItem("accent_color")) : [255,102,0];
 
@@ -366,13 +366,13 @@ class Personalize extends Tabs {
 			UI.SetAccentColor(accentColor, this.saturation.value / 100);
 		};
 
-		this.chkWinMaxed.onchange      = Apply;
-		this.chkPopOut.onchange        = Apply;
-		this.chkTaskTooltip.onchange   = Apply;
-		this.chkWindowShadows.onchange = Apply;
-		this.chkDateTime.onchange      = Apply;
-		this.chkAnimations.onchange    = Apply;
-		this.chkGlass.onchange         = Apply;
+		this.winMaxedCheckbox.onchange      = Apply;
+		this.popOutCheckbox.onchange        = Apply;
+		this.taskTooltipCheckbox.onchange   = Apply;
+		this.windowShadowsCheckbox.onchange = Apply;
+		this.dateTimeCheckbox.onchange      = Apply;
+		this.animationsCheckbox.onchange    = Apply;
+		this.glassCheckbox.onchange         = Apply;
 		this.saturation.oninput        = Apply;
 		this.scrollBarInput.onchange   = Apply;
 
@@ -383,12 +383,12 @@ class Personalize extends Tabs {
 		this.params = "region";
 		this.tabsPanel.textContent = "";
 
-		const divRegion = document.createElement("div");
-		divRegion.textContent = "Region: ";
-		divRegion.style.display = "inline-block";
-		divRegion.style.minWidth = "100px";
-		divRegion.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divRegion);
+		const regionLabel = document.createElement("div");
+		regionLabel.textContent = "Region: ";
+		regionLabel.style.display = "inline-block";
+		regionLabel.style.minWidth = "100px";
+		regionLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(regionLabel);
 
 		this.region = document.createElement("select");
 		this.region.style.width = "220px";
@@ -506,30 +506,30 @@ class Personalize extends Tabs {
 		this.params = "session";
 		this.tabsPanel.textContent = "";
 
-		this.chkRestoreSession = document.createElement("input");
-		this.chkRestoreSession.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkRestoreSession);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkRestoreSession, "Re-open previous windows on page load").style.fontWeight = "600";
+		this.restoreSessionCheckbox = document.createElement("input");
+		this.restoreSessionCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.restoreSessionCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.restoreSessionCheckbox, "Re-open previous windows on page load").style.fontWeight = "600";
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkAliveOnClose = document.createElement("input");
-		this.chkAliveOnClose.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkAliveOnClose);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkAliveOnClose, "Keep session alive when browser is closed").style.fontWeight = "600";
+		this.aliveOnCloseCheckbox = document.createElement("input");
+		this.aliveOnCloseCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.aliveOnCloseCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.aliveOnCloseCheckbox, "Keep session alive when browser is closed").style.fontWeight = "600";
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divSessionTimeout = document.createElement("div");
-		divSessionTimeout.textContent = "Logout if inactive for: ";
-		divSessionTimeout.style.display = "inline-block";
-		divSessionTimeout.style.minWidth = "200px";
-		divSessionTimeout.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divSessionTimeout);
+		const sessionTimeoutLabel = document.createElement("div");
+		sessionTimeoutLabel.textContent = "Logout if inactive for: ";
+		sessionTimeoutLabel.style.display = "inline-block";
+		sessionTimeoutLabel.style.minWidth = "200px";
+		sessionTimeoutLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(sessionTimeoutLabel);
 
 		this.sessionTimeout = document.createElement("input");
 		this.sessionTimeout.setAttribute("aria-label", "Logout when inactive");
@@ -539,22 +539,22 @@ class Personalize extends Tabs {
 		this.sessionTimeout.style.width = "200px";
 		this.tabsPanel.appendChild(this.sessionTimeout);
 
-		this.divSessionTimeoutValue = document.createElement("div");
-		this.divSessionTimeoutValue.textContent = "15 min.";
-		this.divSessionTimeoutValue.style.paddingLeft = "8px";
-		this.divSessionTimeoutValue.style.display = "inline-block";
-		this.tabsPanel.appendChild(this.divSessionTimeoutValue);
+		this.sessionTimeoutValueLabel = document.createElement("div");
+		this.sessionTimeoutValueLabel.textContent = "15 min.";
+		this.sessionTimeoutValueLabel.style.paddingLeft = "8px";
+		this.sessionTimeoutValueLabel.style.display = "inline-block";
+		this.tabsPanel.appendChild(this.sessionTimeoutValueLabel);
 
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divCookieLife = document.createElement("div");
-		divCookieLife.textContent = "Cookie lifetime: ";
-		divCookieLife.style.display = "inline-block";
-		divCookieLife.style.minWidth = "200px";
-		divCookieLife.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divCookieLife);
+		const cookieLifeLabel = document.createElement("div");
+		cookieLifeLabel.textContent = "Cookie lifetime: ";
+		cookieLifeLabel.style.display = "inline-block";
+		cookieLifeLabel.style.minWidth = "200px";
+		cookieLifeLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(cookieLifeLabel);
 
 		this.cookieLife = document.createElement("input");
 		this.cookieLife.setAttribute("aria-label", "Cookie lifetime");
@@ -564,11 +564,11 @@ class Personalize extends Tabs {
 		this.cookieLife.style.width = "200px";
 		this.tabsPanel.appendChild(this.cookieLife);
 
-		this.divCookieLifeValue = document.createElement("div");
-		this.divCookieLifeValue.textContent = "15 min.";
-		this.divCookieLifeValue.style.paddingLeft = "8px";
-		this.divCookieLifeValue.style.display = "inline-block";
-		this.tabsPanel.appendChild(this.divCookieLifeValue);
+		this.cookieLifeValueLabel = document.createElement("div");
+		this.cookieLifeValueLabel.textContent = "15 min.";
+		this.cookieLifeValueLabel.style.paddingLeft = "8px";
+		this.cookieLifeValueLabel.style.display = "inline-block";
+		this.tabsPanel.appendChild(this.cookieLifeValueLabel);
 
 
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -576,57 +576,57 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const btnClearLocalCache = document.createElement("input");
-		btnClearLocalCache.type = "button";
-		btnClearLocalCache.value = "Clear local storage";
-		btnClearLocalCache.style.height = "36px";
-		btnClearLocalCache.style.padding = "8px";
-		this.tabsPanel.appendChild(btnClearLocalCache);
+		const clearLocalCacheButton = document.createElement("input");
+		clearLocalCacheButton.type = "button";
+		clearLocalCacheButton.value = "Clear local storage";
+		clearLocalCacheButton.style.height = "36px";
+		clearLocalCacheButton.style.padding = "8px";
+		this.tabsPanel.appendChild(clearLocalCacheButton);
 
-		this.chkRestoreSession.checked = localStorage.getItem("restore_session") === "true";
-		this.chkAliveOnClose.checked = localStorage.getItem("alive_after_close") === "true";
+		this.restoreSessionCheckbox.checked = localStorage.getItem("restore_session") === "true";
+		this.aliveOnCloseCheckbox.checked = localStorage.getItem("alive_after_close") === "true";
 		this.sessionTimeout.value = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
 		this.cookieLife.value = localStorage.getItem("cookie_lifetime") == null ? 5 : parseInt(localStorage.getItem("cookie_lifetime"));
 
 
-		btnClearLocalCache.onclick = ()=> this.ClearCache();
+		clearLocalCacheButton.onclick = ()=> this.ClearCache();
 
 		const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
 		const Apply = ()=> {
-			localStorage.setItem("restore_session", this.chkRestoreSession.checked);
-			localStorage.setItem("alive_after_close", this.chkAliveOnClose.checked);
+			localStorage.setItem("restore_session", this.restoreSessionCheckbox.checked);
+			localStorage.setItem("alive_after_close", this.aliveOnCloseCheckbox.checked);
 			localStorage.setItem("session_timeout", this.sessionTimeout.value);
 			localStorage.setItem("cookie_lifetime", this.cookieLife.value);
 
 			for (let i = 0; i < WIN.array.length; i++) //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "session") {
-					WIN.array[i].chkRestoreSession.checked = this.chkRestoreSession.checked;
-					WIN.array[i].chkAliveOnClose.checked   = this.chkAliveOnClose.checked;
+					WIN.array[i].restoreSessionCheckbox.checked = this.restoreSessionCheckbox.checked;
+					WIN.array[i].aliveOnCloseCheckbox.checked   = this.aliveOnCloseCheckbox.checked;
 					WIN.array[i].sessionTimeout.value      = this.sessionTimeout.value;
 					WIN.array[i].cookieLife.value          = this.cookieLife.value;
 
 					if (timeMapping[this.sessionTimeout.value] == Infinity) {
-						WIN.array[i].divSessionTimeoutValue.textContent = timeMapping[this.sessionTimeout.value];
+						WIN.array[i].sessionTimeoutValueLabel.textContent = timeMapping[this.sessionTimeout.value];
 					}
 					else {
 						let value = timeMapping[this.sessionTimeout.value];
-						WIN.array[i].divSessionTimeoutValue.textContent = value > 60 ? value / 60 + " hours" : value + " minutes";
+						WIN.array[i].sessionTimeoutValueLabel.textContent = value > 60 ? value / 60 + " hours" : value + " minutes";
 					}
 
 					if (KEEP.sessionTtlMapping[this.cookieLife.value] < 8) {
-						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 1 ? "1 day" : KEEP.sessionTtlMapping[this.cookieLife.value] + " days";
+						WIN.array[i].cookieLifeValueLabel.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 1 ? "1 day" : KEEP.sessionTtlMapping[this.cookieLife.value] + " days";
 					}
 					else if (KEEP.sessionTtlMapping[this.cookieLife.value] < 29) {
-						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 7 ? "1 week" : KEEP.sessionTtlMapping[this.cookieLife.value] / 7 + " weeks";
+						WIN.array[i].cookieLifeValueLabel.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 7 ? "1 week" : KEEP.sessionTtlMapping[this.cookieLife.value] / 7 + " weeks";
 					}
 					else {
-						WIN.array[i].divCookieLifeValue.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 30 ? "1 month" : KEEP.sessionTtlMapping[this.cookieLife.value] / 30 + " months";
+						WIN.array[i].cookieLifeValueLabel.textContent = KEEP.sessionTtlMapping[this.cookieLife.value] == 30 ? "1 month" : KEEP.sessionTtlMapping[this.cookieLife.value] / 30 + " months";
 					}
 				}
 		};
 
-		this.chkRestoreSession.onchange = Apply;
-		this.chkAliveOnClose.onchange = Apply;
+		this.restoreSessionCheckbox.onchange = Apply;
+		this.aliveOnCloseCheckbox.onchange = Apply;
 		this.sessionTimeout.oninput = Apply;
 
 		this.cookieLife.oninput = ()=> {
@@ -648,30 +648,30 @@ class Personalize extends Tabs {
 		this.params = "chat";
 		this.tabsPanel.textContent = "";
 
-		this.chkOpenChatWindowOnMessage = document.createElement("input");
-		this.chkOpenChatWindowOnMessage.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkOpenChatWindowOnMessage);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkOpenChatWindowOnMessage, "Focus chat window when receiving a message").style.fontWeight = "600";
+		this.openChatWindowOnMessageCheckbox = document.createElement("input");
+		this.openChatWindowOnMessageCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.openChatWindowOnMessageCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.openChatWindowOnMessageCheckbox, "Focus chat window when receiving a message").style.fontWeight = "600";
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkEnableNotificationSound = document.createElement("input");
-		this.chkEnableNotificationSound.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkEnableNotificationSound);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkEnableNotificationSound, "Play notification sound").style.fontWeight = "600";
+		this.enableNotificationSoundCheckbox = document.createElement("input");
+		this.enableNotificationSoundCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.enableNotificationSoundCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.enableNotificationSoundCheckbox, "Play notification sound").style.fontWeight = "600";
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const divVolume = document.createElement("div");
-		divVolume.textContent = "Volume: ";
-		divVolume.style.display = "inline-block";
-		divVolume.style.minWidth = "100px";
-		divVolume.style.fontWeight = "600";
-		this.tabsPanel.appendChild(divVolume);
+		const volumeLabel = document.createElement("div");
+		volumeLabel.textContent = "Volume: ";
+		volumeLabel.style.display = "inline-block";
+		volumeLabel.style.minWidth = "100px";
+		volumeLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(volumeLabel);
 
 		this.notificationVolume = document.createElement("input");
 		this.notificationVolume.setAttribute("aria-label", "Chat notification volume");
@@ -698,7 +698,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(playButton);
 
 		playButton.onclick = ()=> {
-			if (this.chkEnableNotificationSound.checked === false) {
+			if (this.enableNotificationSoundCheckbox.checked === false) {
 				return;
 			}
 
@@ -715,22 +715,22 @@ class Personalize extends Tabs {
 			};
 		};
 
-		this.chkOpenChatWindowOnMessage.checked = localStorage.getItem("focus_chat_window") === "true";
-		this.chkEnableNotificationSound.checked = localStorage.getItem("enable_notification_sound") !== "false";
+		this.openChatWindowOnMessageCheckbox.checked = localStorage.getItem("focus_chat_window") === "true";
+		this.enableNotificationSoundCheckbox.checked = localStorage.getItem("enable_notification_sound") !== "false";
 		this.notificationVolume.value = localStorage.getItem("notification_volume") == null ? 80 : parseInt(localStorage.getItem("notification_volume"));
 
 		const Apply = ()=> {
-			localStorage.setItem("focus_chat_window", this.chkOpenChatWindowOnMessage.checked);
-			localStorage.setItem("enable_notification_sound", this.chkEnableNotificationSound.checked);
+			localStorage.setItem("focus_chat_window", this.openChatWindowOnMessageCheckbox.checked);
+			localStorage.setItem("enable_notification_sound", this.enableNotificationSoundCheckbox.checked);
 			localStorage.setItem("notification_volume", this.notificationVolume.value);
 
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "chat") {
-					WIN.array[i].chkOpenChatWindowOnMessage.checked = this.chkOpenChatWindowOnMessage.checked;
-					WIN.array[i].chkEnableNotificationSound.checked = this.chkEnableNotificationSound.checked;
+					WIN.array[i].openChatWindowOnMessageCheckbox.checked = this.openChatWindowOnMessageCheckbox.checked;
+					WIN.array[i].enableNotificationSoundCheckbox.checked = this.enableNotificationSoundCheckbox.checked;
 					WIN.array[i].notificationVolume.value           = this.notificationVolume.value;
 
-					WIN.array[i].notificationVolume.disabled = !this.chkEnableNotificationSound.checked;
+					WIN.array[i].notificationVolume.disabled = !this.enableNotificationSoundCheckbox.checked;
 					WIN.array[i].notificationVolumeValue.textContent = `${this.notificationVolume.value}%`;
 				}
 			}
@@ -740,8 +740,8 @@ class Personalize extends Tabs {
 			}
 		};
 
-		this.chkOpenChatWindowOnMessage.onchange = ()=> Apply();
-		this.chkEnableNotificationSound.onchange = ()=> Apply();
+		this.openChatWindowOnMessageCheckbox.onchange = ()=> Apply();
+		this.enableNotificationSoundCheckbox.onchange = ()=> Apply();
 		this.notificationVolume.onchange = this.notificationVolume.oninput = ()=> Apply();
 
 		Apply();
@@ -751,18 +751,18 @@ class Personalize extends Tabs {
 		this.params = "agent";
 		this.tabsPanel.textContent = "";
 
-		const divKey = document.createElement("div");
-		divKey.textContent = "Pre-shared key: ";
-		divKey.style.display = "inline-block";
-		divKey.style.minWidth = "150px";
-		divKey.style.fontWeight = "600";
+		const keyLabel = document.createElement("div");
+		keyLabel.textContent = "Pre-shared key: ";
+		keyLabel.style.display = "inline-block";
+		keyLabel.style.minWidth = "150px";
+		keyLabel.style.fontWeight = "600";
 
 		this.presharedKeyInput = document.createElement("input");
 		this.presharedKeyInput.type = "text";
 		this.presharedKeyInput.value = localStorage.getItem("agent_key");
 		this.presharedKeyInput.style.width = "200px";
 
-		this.tabsPanel.append(divKey, this.presharedKeyInput);
+		this.tabsPanel.append(keyLabel, this.presharedKeyInput);
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -798,39 +798,39 @@ class Personalize extends Tabs {
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkPreferRdpFile = document.createElement("input");
-		this.chkPreferRdpFile.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkPreferRdpFile);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkPreferRdpFile, "Prefer to download RDP file");
+		this.preferRdpFileCheckbox = document.createElement("input");
+		this.preferRdpFileCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.preferRdpFileCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.preferRdpFileCheckbox, "Prefer to download RDP file");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkPreferVncFile = document.createElement("input");
-		this.chkPreferVncFile.type = "checkbox";
-		this.tabsPanel.appendChild(this.chkPreferVncFile);
-		this.AddCheckBoxLabel(this.tabsPanel, this.chkPreferVncFile, "Prefer to download VNC file");
+		this.preferVncFileCheckbox = document.createElement("input");
+		this.preferVncFileCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.preferVncFileCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.preferVncFileCheckbox, "Prefer to download VNC file");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.chkPreferRdpFile.checked = localStorage.getItem("prefer_rdp_file") === "true";
-		this.chkPreferVncFile.checked = localStorage.getItem("prefer_cnv_file") === "true";
+		this.preferRdpFileCheckbox.checked = localStorage.getItem("prefer_rdp_file") === "true";
+		this.preferVncFileCheckbox.checked = localStorage.getItem("prefer_cnv_file") === "true";
 
 		const Apply = ()=> {
 			localStorage.setItem("agent_key", this.presharedKeyInput.value);
-			localStorage.setItem("prefer_rdp_file", this.chkPreferRdpFile.checked);
-			localStorage.setItem("prefer_cnv_file", this.chkPreferVncFile.checked);
+			localStorage.setItem("prefer_rdp_file", this.preferRdpFileCheckbox.checked);
+			localStorage.setItem("prefer_cnv_file", this.preferVncFileCheckbox.checked);
 		
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "agent" && WIN.array[i] !== this) {
 					WIN.array[i].presharedKeyInput.value = this.presharedKeyInput.value;
-					WIN.array[i].chkPreferRdpFile.checked = this.chkPreferRdpFile.checked;
-					WIN.array[i].chkPreferVncFile.checked = this.chkPreferVncFile.checked;
+					WIN.array[i].preferRdpFileCheckbox.checked = this.preferRdpFileCheckbox.checked;
+					WIN.array[i].preferVncFileCheckbox.checked = this.preferVncFileCheckbox.checked;
 				}
 			}
 		};
 
-		this.chkPreferRdpFile.onchange = Apply;
-		this.chkPreferVncFile.onchange = Apply;
+		this.preferRdpFileCheckbox.onchange = Apply;
+		this.preferVncFileCheckbox.onchange = Apply;
 		this.presharedKeyInput.onchange = Apply;
 
 		this.presharedKeyInput.onkeydown = event=> {
@@ -841,8 +841,8 @@ class Personalize extends Tabs {
 	}
 
 	ClearCache() {
-		const btnOK = this.ConfirmBox("Are you sure you want clear local storage? The page will reload after the cleaning.", false);
-		if (btnOK) btnOK.addEventListener("click", ()=> {
+		const okButton = this.ConfirmBox("Are you sure you want clear local storage? The page will reload after the cleaning.", false);
+		if (okButton) okButton.addEventListener("click", ()=> {
 			localStorage.clear();
 			location.reload();
 		});

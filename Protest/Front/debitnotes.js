@@ -31,75 +31,75 @@ class DebitNotes extends Window {
 		listBox.className = "debit-list-pane";
 		this.content.appendChild(listBox);
 
-		const lblSearch = document.createElement("div");
-		lblSearch.style.gridArea = "1 / 1";
-		lblSearch.textContent = "Search:";
-		listBox.appendChild(lblSearch);
+		const searchLabel = document.createElement("div");
+		searchLabel.style.gridArea = "1 / 1";
+		searchLabel.textContent = "Search:";
+		listBox.appendChild(searchLabel);
 
-		this.txtSearch = document.createElement("input");
-		this.txtSearch.style.gridArea = "1 / 2";
-		this.txtSearch.type = "search";
-		this.txtSearch.value = this.params.keywords;
-		listBox.appendChild(this.txtSearch);
+		this.searchInput = document.createElement("input");
+		this.searchInput.style.gridArea = "1 / 2";
+		this.searchInput.type = "search";
+		this.searchInput.value = this.params.keywords;
+		listBox.appendChild(this.searchInput);
 
-		const lblUpTo = document.createElement("div");
-		lblUpTo.style.gridArea = "2 / 1";
-		lblUpTo.textContent = "Up to:";
-		listBox.appendChild(lblUpTo);
+		const upToLabel = document.createElement("div");
+		upToLabel.style.gridArea = "2 / 1";
+		upToLabel.textContent = "Up to:";
+		listBox.appendChild(upToLabel);
 
-		this.txtUpTo = document.createElement("select");
-		this.txtUpTo.value = this.params.upto;
-		this.txtUpTo.style.gridArea = "2 / 2";
-		listBox.appendChild(this.txtUpTo);
+		this.upToInput = document.createElement("select");
+		this.upToInput.value = this.params.upto;
+		this.upToInput.style.gridArea = "2 / 2";
+		listBox.appendChild(this.upToInput);
 
 		for (let i = 2; i < 11; i += 2) {
-			const optUpTo = document.createElement("option");
-			optUpTo.value = i;
-			optUpTo.text = `${i} ${i === 1 ? "year" : "years"}`;
-			this.txtUpTo.appendChild(optUpTo);
+			const upToOption = document.createElement("option");
+			upToOption.value = i;
+			upToOption.text = `${i} ${i === 1 ? "year" : "years"}`;
+			this.upToInput.appendChild(upToOption);
 		}
 
-		this.txtUpTo.value = this.params.upto;
+		this.upToInput.value = this.params.upto;
 
-		const optAll = document.createElement("option");
-		optAll.value = "all";
-		optAll.text = "All";
-		this.txtUpTo.appendChild(optAll);
+		const allOption = document.createElement("option");
+		allOption.value = "all";
+		allOption.text = "All";
+		this.upToInput.appendChild(allOption);
 
-		const lblFilter = document.createElement("div");
-		lblFilter.style.gridArea = "4 / 1";
-		lblFilter.textContent = "Filters:";
-		listBox.appendChild(lblFilter);
+		const filterLabel = document.createElement("div");
+		filterLabel.style.gridArea = "4 / 1";
+		filterLabel.textContent = "Filters:";
+		listBox.appendChild(filterLabel);
 
-		const divShort = document.createElement("div");
-		divShort.style.gridArea = "4 / 2";
-		divShort.style.paddingLeft = "4px";
-		listBox.appendChild(divShort);
-		this.chkShort = document.createElement("input");
-		this.chkShort.type = "checkbox";
-		this.chkShort.checked = this.params.short;
-		divShort.appendChild(this.chkShort);
-		this.AddCheckBoxLabel(divShort, this.chkShort, "Short-term");
+		const shortBox = document.createElement("div");
+		shortBox.style.gridArea = "4 / 2";
+		shortBox.style.paddingLeft = "4px";
+		listBox.appendChild(shortBox);
+		this.shortCheckbox = document.createElement("input");
+		this.shortCheckbox.type = "checkbox";
+		this.shortCheckbox.checked = this.params.short;
+		shortBox.appendChild(this.shortCheckbox);
+		this.AddCheckBoxLabel(shortBox, this.shortCheckbox, "Short-term");
 
-		const divLong = document.createElement("div");
-		divLong.style.gridArea = "5 / 2";
-		divLong.style.paddingLeft = "4px";
-		listBox.appendChild(divLong);
-		this.chkLong = document.createElement("input");
-		this.chkLong.type = "checkbox";
-		this.chkLong.checked = this.params.long;
-		divLong.appendChild(this.chkLong);
-		this.AddCheckBoxLabel(divLong, this.chkLong, "Long-term");
+		const longBox = document.createElement("div");
+		longBox.style.gridArea = "5 / 2";
+		longBox.style.paddingLeft = "4px";
+		listBox.appendChild(longBox);
+		this.longCheckbox = document.createElement("input");
+		this.longCheckbox.type = "checkbox";
+		this.longCheckbox.checked = this.params.long;
+		longBox.appendChild(this.longCheckbox);
+		this.AddCheckBoxLabel(longBox, this.longCheckbox, "Long-term");
 
-		const divReturned = document.createElement("div");
-		divReturned.style.gridArea = "6 / 2";
-		divReturned.style.paddingLeft = "4px";
-		listBox.appendChild(divReturned);
-		this.chkReturned = document.createElement("input");
-		this.chkReturned.type = "checkbox";
-		this.chkReturned.checked = this.params.returned;
-		divReturned.appendChild(this.chkReturned);
-		this.AddCheckBoxLabel(divReturned, this.chkReturned, "Returned");
+		const returnedBox = document.createElement("div");
+		returnedBox.style.gridArea = "6 / 2";
+		returnedBox.style.paddingLeft = "4px";
+		listBox.appendChild(returnedBox);
+		this.returnedCheckbox = document.createElement("input");
+		this.returnedCheckbox.type = "checkbox";
+		this.returnedCheckbox.checked = this.params.returned;
+		returnedBox.appendChild(this.returnedCheckbox);
+		this.AddCheckBoxLabel(returnedBox, this.returnedCheckbox, "Returned");
 
 		this.list = document.createElement("div");
 		this.list.className = "no-results";
@@ -115,53 +115,53 @@ class DebitNotes extends Window {
 		this.options.className = "debit-options";
 		this.content.append(this.options);
 
-		this.btnNew = document.createElement("input");
-		this.btnNew.style.backgroundImage = "url(mono/add.svg?light)";
-		this.btnNew.classList.add("with-icon");
-		this.btnNew.type = "button";
-		this.btnNew.value = "New";
+		this.newButton = document.createElement("input");
+		this.newButton.style.backgroundImage = "url(mono/add.svg?light)";
+		this.newButton.classList.add("with-icon");
+		this.newButton.type = "button";
+		this.newButton.value = "New";
 
-		this.btnDuplicate = document.createElement("input");
-		this.btnDuplicate.style.backgroundImage = "url(mono/copy.svg?light)";
-		this.btnDuplicate.classList.add("with-icon");
-		this.btnDuplicate.type = "button";
-		this.btnDuplicate.value = "Duplicate";
+		this.duplicateButton = document.createElement("input");
+		this.duplicateButton.style.backgroundImage = "url(mono/copy.svg?light)";
+		this.duplicateButton.classList.add("with-icon");
+		this.duplicateButton.type = "button";
+		this.duplicateButton.value = "Duplicate";
 
-		this.btnReturned = document.createElement("input");
-		this.btnReturned.style.backgroundImage = "url(mono/return.svg?light)";
-		this.btnReturned.classList.add("with-icon");
-		this.btnReturned.type = "button";
-		this.btnReturned.value = "Mark as returned";
+		this.returnedButton = document.createElement("input");
+		this.returnedButton.style.backgroundImage = "url(mono/return.svg?light)";
+		this.returnedButton.classList.add("with-icon");
+		this.returnedButton.type = "button";
+		this.returnedButton.value = "Mark as returned";
 
-		this.btnDelete = document.createElement("input");
-		this.btnDelete.style.backgroundImage = "url(mono/delete.svg?light)";
-		this.btnDelete.classList.add("with-icon");
-		this.btnDelete.type = "button";
-		this.btnDelete.value = "Delete";
+		this.deleteButton = document.createElement("input");
+		this.deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
+		this.deleteButton.classList.add("with-icon");
+		this.deleteButton.type = "button";
+		this.deleteButton.value = "Delete";
 
-		this.btnPrint = document.createElement("input");
-		this.btnPrint.style.backgroundImage = "url(mono/printer.svg?light)";
-		this.btnPrint.classList.add("with-icon");
-		this.btnPrint.type = "button";
-		this.btnPrint.value = "Print";
+		this.printButton = document.createElement("input");
+		this.printButton.style.backgroundImage = "url(mono/printer.svg?light)";
+		this.printButton.classList.add("with-icon");
+		this.printButton.type = "button";
+		this.printButton.value = "Print";
 
-		this.options.append(this.btnNew, this.btnDuplicate, this.btnReturned, this.btnDelete, this.btnPrint);
+		this.options.append(this.newButton, this.duplicateButton, this.returnedButton, this.deleteButton, this.printButton);
 
 		this.preview = document.createElement("div");
 		this.preview.className = "debit-preview-outer";
 		this.content.append(this.preview);
 
-		this.txtSearch.onchange = ()=> this.ListDebitNotes();
-		this.txtUpTo.onchange = ()=> this.ListDebitNotes();
-		this.chkShort.onchange = ()=> this.ListDebitNotes();
-		this.chkLong.onchange = ()=> this.ListDebitNotes();
-		this.chkReturned.onchange = ()=> this.ListDebitNotes();
+		this.searchInput.onchange = ()=> this.ListDebitNotes();
+		this.upToInput.onchange = ()=> this.ListDebitNotes();
+		this.shortCheckbox.onchange = ()=> this.ListDebitNotes();
+		this.longCheckbox.onchange = ()=> this.ListDebitNotes();
+		this.returnedCheckbox.onchange = ()=> this.ListDebitNotes();
 
-		this.btnNew.onclick = ()=> this.New();
-		this.btnPrint.onclick = ()=> this.Print();
-		this.btnDuplicate.onclick = ()=> this.Duplicate();
-		this.btnReturned.onclick = ()=> this.Return();
-		this.btnDelete.onclick = ()=> this.Delete();
+		this.newButton.onclick = ()=> this.New();
+		this.printButton.onclick = ()=> this.Print();
+		this.duplicateButton.onclick = ()=> this.Duplicate();
+		this.returnedButton.onclick = ()=> this.Return();
+		this.deleteButton.onclick = ()=> this.Delete();
 
 		this.ListDebitNotes();
 		this.GetTemplates();
@@ -191,37 +191,37 @@ class DebitNotes extends Window {
 		//super.UpdateAuthorization();
 
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("debit notes:write")) {
-			this.btnNew.disabled = true;
-			this.btnDuplicate.disabled = true;
-			this.btnReturned.disabled = true;
-			this.btnDelete.disabled = true;
-			this.btnPrint.disabled = true;
+			this.newButton.disabled = true;
+			this.duplicateButton.disabled = true;
+			this.returnedButton.disabled = true;
+			this.deleteButton.disabled = true;
+			this.printButton.disabled = true;
 			return;
 		}
 
-		this.btnDuplicate.disabled = false;
-		this.btnReturned.disabled = false;
-		this.btnDelete.disabled = false;
-		this.btnPrint.disabled = false;
+		this.duplicateButton.disabled = false;
+		this.returnedButton.disabled = false;
+		this.deleteButton.disabled = false;
+		this.printButton.disabled = false;
 
 		if (this.params.selected === null) {
-			this.btnDuplicate.disabled = true;
-			this.btnReturned.disabled = true;
-			this.btnDelete.disabled = true;
-			this.btnPrint.disabled = true;
+			this.duplicateButton.disabled = true;
+			this.returnedButton.disabled = true;
+			this.deleteButton.disabled = true;
+			this.printButton.disabled = true;
 		}
 		else if (this.selectedDebit !== null && this.selectedDebit.status === "returned") {
-			this.btnReturned.disabled = true;
-			this.btnDelete.disabled = true;
+			this.returnedButton.disabled = true;
+			this.deleteButton.disabled = true;
 		}
 	}
 
 	async ListDebitNotes() {
-		this.params.keywords = this.txtSearch.value.trim().toLocaleLowerCase();
-		this.params.upto = this.txtUpTo.value;
-		this.params.short = this.chkShort.checked;
-		this.params.long = this.chkLong.checked;
-		this.params.returned = this.chkReturned.checked;
+		this.params.keywords = this.searchInput.value.trim().toLocaleLowerCase();
+		this.params.upto = this.upToInput.value;
+		this.params.short = this.shortCheckbox.checked;
+		this.params.long = this.longCheckbox.checked;
+		this.params.returned = this.returnedCheckbox.checked;
 
 		try {
 			let uri = this.params.keywords.length === 0 ?
@@ -331,9 +331,9 @@ class DebitNotes extends Window {
 		element.appendChild(label);
 
 		if (debit.status === "returned") {
-			const lblReturned = document.createElement("div");
-			lblReturned.textContent = "Re";
-			element.appendChild(lblReturned);
+			const returnedLabel = document.createElement("div");
+			returnedLabel.textContent = "Re";
+			element.appendChild(returnedLabel);
 		}
 
 		element.onclick = ()=> {
@@ -407,21 +407,21 @@ class DebitNotes extends Window {
 			stampContainer.style.animation = "stamped .2s 1";
 			page.appendChild(stampContainer);
 
-			const divReturned = document.createElement("div");
-			divReturned.textContent = "Returned";
-			divReturned.style.fontSize = "14px";
-			divReturned.style.fontWeight = "700";
-			divReturned.style.padding = "2px";
-			divReturned.style.border = "2px solid red";
-			divReturned.style.borderRadius = "4px";
-			stampContainer.appendChild(divReturned);
+			const returnedBox = document.createElement("div");
+			returnedBox.textContent = "Returned";
+			returnedBox.style.fontSize = "14px";
+			returnedBox.style.fontWeight = "700";
+			returnedBox.style.padding = "2px";
+			returnedBox.style.border = "2px solid red";
+			returnedBox.style.borderRadius = "4px";
+			stampContainer.appendChild(returnedBox);
 
-			const divReturnedDate = document.createElement("div");
-			divReturnedDate.textContent = new Date(UI.TicksToUnixDate(content.returned)).toLocaleDateString(regionalFormat);
-			divReturnedDate.style.textAlign = "center";
-			divReturnedDate.style.fontSize = "6px";
-			divReturnedDate.style.fontWeight = "700";
-			stampContainer.appendChild(divReturnedDate);
+			const returnedDateBox = document.createElement("div");
+			returnedDateBox.textContent = new Date(UI.TicksToUnixDate(content.returned)).toLocaleDateString(regionalFormat);
+			returnedDateBox.style.textAlign = "center";
+			returnedDateBox.style.fontSize = "6px";
+			returnedDateBox.style.fontWeight = "700";
+			stampContainer.appendChild(returnedDateBox);
 		}
 
 		const grid = document.createElement("div");
@@ -432,86 +432,86 @@ class DebitNotes extends Window {
 		grid.style.alignItems = "center";
 		page.appendChild(grid);
 
-		const divLogo = document.createElement("div");
-		divLogo.style.gridArea = "1 / 1 / span 1 / span 4";
-		divLogo.style.textAlign = "center";
-		divLogo.style.maxHeight = "100px";
-		divLogo.style.userSelect = "none";
-		divLogo.style.webkitUserDrag = "none";
-		grid.appendChild(divLogo);
+		const logoBox = document.createElement("div");
+		logoBox.style.gridArea = "1 / 1 / span 1 / span 4";
+		logoBox.style.textAlign = "center";
+		logoBox.style.maxHeight = "100px";
+		logoBox.style.userSelect = "none";
+		logoBox.style.webkitUserDrag = "none";
+		grid.appendChild(logoBox);
 
 		const imgLogo = document.createElement("img");
 		imgLogo.src = content.banner ? `custom/${content.banner}` : "custom/default.svg";
-		divLogo.appendChild(imgLogo);
+		logoBox.appendChild(imgLogo);
 
-		const lblDebitNoteTitle = document.createElement("div");
-		lblDebitNoteTitle.textContent = "Debit note";
-		lblDebitNoteTitle.style.textAlign = "center";
-		lblDebitNoteTitle.style.fontWeight = "bold";
-		lblDebitNoteTitle.style.fontSize = "larger";
-		lblDebitNoteTitle.style.gridArea = "2 / 1 / span 1 / span 4";
-		grid.appendChild(lblDebitNoteTitle);
+		const debitNoteTitleLabel = document.createElement("div");
+		debitNoteTitleLabel.textContent = "Debit note";
+		debitNoteTitleLabel.style.textAlign = "center";
+		debitNoteTitleLabel.style.fontWeight = "bold";
+		debitNoteTitleLabel.style.fontSize = "larger";
+		debitNoteTitleLabel.style.gridArea = "2 / 1 / span 1 / span 4";
+		grid.appendChild(debitNoteTitleLabel);
 
-		const lblDateLabel = document.createElement("div");
-		lblDateLabel.textContent = "Issued date:";
-		lblDateLabel.style.gridArea = "3 / 1";
-		lblDateLabel.style.fontWeight = "bold";
-		grid.append(lblDateLabel);
-		const lblDate = document.createElement("div");
+		const dateLabel = document.createElement("div");
+		dateLabel.textContent = "Issued date:";
+		dateLabel.style.gridArea = "3 / 1";
+		dateLabel.style.fontWeight = "bold";
+		grid.append(dateLabel);
 
-		lblDate.textContent = new Date(UI.TicksToUnixDate(content.date)).toLocaleDateString(regionalFormat);
-		lblDate.style.gridArea = "3 / 2";
-		lblDate.style.borderBottom = underline_style;
-		lblDate.style.marginRight = "20px";
-		grid.append(lblDate);
+		const dateValueLabel = document.createElement("div");
+		dateValueLabel.textContent = new Date(UI.TicksToUnixDate(content.date)).toLocaleDateString(regionalFormat);
+		dateValueLabel.style.gridArea = "3 / 2";
+		dateValueLabel.style.borderBottom = underline_style;
+		dateValueLabel.style.marginRight = "20px";
+		grid.append(dateValueLabel);
 
-		const lblFnLabel = document.createElement("div");
-		lblFnLabel.textContent = "First name:";
-		lblFnLabel.style.gridArea = "4 / 1";
-		lblFnLabel.style.fontWeight = "bold";
-		grid.append(lblFnLabel);
-		const lblFn = document.createElement("div");
-		lblFn.textContent = content.firstname;
-		lblFn.style.gridArea = "4 / 2";
-		lblFn.style.borderBottom = underline_style;
-		lblFn.style.marginRight = "20px";
-		grid.append(lblFn);
+		const fnLabel = document.createElement("div");
+		fnLabel.textContent = "First name:";
+		fnLabel.style.gridArea = "4 / 1";
+		fnLabel.style.fontWeight = "bold";
+		grid.append(fnLabel);
+		const fnValueLabel = document.createElement("div");
+		fnValueLabel.textContent = content.firstname;
+		fnValueLabel.style.gridArea = "4 / 2";
+		fnValueLabel.style.borderBottom = underline_style;
+		fnValueLabel.style.marginRight = "20px";
+		grid.append(fnValueLabel);
 
-		const lblLnLabel = document.createElement("div");
-		lblLnLabel.textContent = "Last name:";
-		lblLnLabel.style.gridArea = "4 / 3";
-		lblLnLabel.style.fontWeight = "bold";
-		grid.append(lblLnLabel);
-		const lblLn = document.createElement("div");
-		lblLn.textContent = content.lastname;
-		lblLn.style.gridArea = "4 / 4";
-		lblLn.style.borderBottom = underline_style;
-		lblLn.style.marginRight = "20px";
-		grid.append(lblLn);
+		const lnLabel = document.createElement("div");
+		lnLabel.textContent = "Last name:";
+		lnLabel.style.gridArea = "4 / 3";
+		lnLabel.style.fontWeight = "bold";
+		grid.append(lnLabel);
+		const lnValueLabel = document.createElement("div");
+		lnValueLabel.textContent = content.lastname;
+		lnValueLabel.style.gridArea = "4 / 4";
+		lnValueLabel.style.borderBottom = underline_style;
+		lnValueLabel.style.marginRight = "20px";
+		grid.append(lnValueLabel);
 
-		const lblTitleLabel = document.createElement("div");
-		lblTitleLabel.textContent = "Title:";
-		lblTitleLabel.style.gridArea = "5 / 1";
-		lblTitleLabel.style.fontWeight = "bold";
-		grid.append(lblTitleLabel);
-		const lblTitle = document.createElement("div");
-		lblTitle.textContent = content.title;
-		lblTitle.style.gridArea = "5 / 2";
-		lblTitle.style.borderBottom = underline_style;
-		lblTitle.style.marginRight = "20px";
-		grid.append(lblTitle);
+		const titleLabel = document.createElement("div");
+		titleLabel.textContent = "Title:";
+		titleLabel.style.gridArea = "5 / 1";
+		titleLabel.style.fontWeight = "bold";
+		grid.append(titleLabel);
+		const titleValueLabel = document.createElement("div");
+		titleValueLabel.textContent = content.title;
+		titleValueLabel.style.gridArea = "5 / 2";
+		titleValueLabel.style.borderBottom = underline_style;
+		titleValueLabel.style.marginRight = "20px";
+		grid.append(titleValueLabel);
 
-		const lblDepLabel = document.createElement("div");
-		lblDepLabel.textContent = "Department:";
-		lblDepLabel.style.gridArea = "5 / 3";
-		lblDepLabel.style.fontWeight = "bold";
-		grid.append(lblDepLabel);
-		const lblDep = document.createElement("div");
-		lblDep.textContent = content.department;
-		lblDep.style.gridArea = "5 / 4";
-		lblDep.style.borderBottom = underline_style;
-		lblDep.style.marginRight = "20px";
-		grid.append(lblDep);
+		const depLabel = document.createElement("div");
+		depLabel.textContent = "Department:";
+		depLabel.style.gridArea = "5 / 3";
+		depLabel.style.fontWeight = "bold";
+		grid.append(depLabel);
+		const depValueLabel = document.createElement("div");
+		depValueLabel.textContent = content.department;
+		depValueLabel.style.gridArea = "5 / 4";
+		depValueLabel.style.borderBottom = underline_style;
+		depValueLabel.style.marginRight = "20px";
+		grid.append(depValueLabel);
 
 		for (let i = 1; i < grid.childNodes.length; i++) {
 			grid.childNodes[i].style.padding = "0 8px";
@@ -581,57 +581,57 @@ class DebitNotes extends Window {
 			row.append(deviceDesc, deviceModel, deviceSerial, deviceQuantity);
 		}
 
-		const divTemplate = document.createElement("div");
-		divTemplate.style.margin = "40px 20px";
-		divTemplate.style.whiteSpace = "pre-line";
-		divTemplate.innerHTML = content.template;
-		page.append(divTemplate);
+		const templateBox = document.createElement("div");
+		templateBox.style.margin = "40px 20px";
+		templateBox.style.whiteSpace = "pre-line";
+		templateBox.innerHTML = content.template;
+		page.append(templateBox);
 
-		const divSignature = document.createElement("div");
-		divSignature.style.margin = "20px";
-		divSignature.style.display = "grid";
-		divSignature.style.gridAutoColumns = "240px auto 240px";
-		divSignature.style.gridTemplateRows = "28px 28px 80px";
-		divSignature.style.textAlign = "center";
-		divSignature.style.padding = "40px";
-		page.appendChild(divSignature);
+		const signatureBox = document.createElement("div");
+		signatureBox.style.margin = "20px";
+		signatureBox.style.display = "grid";
+		signatureBox.style.gridAutoColumns = "240px auto 240px";
+		signatureBox.style.gridTemplateRows = "28px 28px 80px";
+		signatureBox.style.textAlign = "center";
+		signatureBox.style.padding = "40px";
+		page.appendChild(signatureBox);
 
-		const lblBehalfOfIt = document.createElement("div");
-		lblBehalfOfIt.textContent = "Issued by";
-		lblBehalfOfIt.gridArea = "1 / 1";
-		divSignature.appendChild(lblBehalfOfIt);
+		const behalfOfItLabel = document.createElement("div");
+		behalfOfItLabel.textContent = "Issued by";
+		behalfOfItLabel.gridArea = "1 / 1";
+		signatureBox.appendChild(behalfOfItLabel);
 
-		const lblBehalfOfEmployee = document.createElement("div");
-		lblBehalfOfEmployee.textContent = "Employee (or behalf of)";
-		lblBehalfOfEmployee.style.gridArea = "1 / 3";
-		divSignature.appendChild(lblBehalfOfEmployee);
+		const behalfOfEmployeeLabel = document.createElement("div");
+		behalfOfEmployeeLabel.textContent = "Employee (or behalf of)";
+		behalfOfEmployeeLabel.style.gridArea = "1 / 3";
+		signatureBox.appendChild(behalfOfEmployeeLabel);
 
-		const lblItName = document.createElement("div");
-		lblItName.textContent = content.issuer;
-		lblItName.style.gridArea = "2 / 1";
-		divSignature.appendChild(lblItName);
+		const itNameLabel = document.createElement("div");
+		itNameLabel.textContent = content.issuer;
+		itNameLabel.style.gridArea = "2 / 1";
+		signatureBox.appendChild(itNameLabel);
 
-		const lblEmployeeName = document.createElement("div");
-		lblEmployeeName.textContent = content.firstname + " " + content.lastname;
-		lblEmployeeName.style.gridArea = "2 / 3";
-		divSignature.appendChild(lblEmployeeName);
+		const employeeNameLabel = document.createElement("div");
+		employeeNameLabel.textContent = content.firstname + " " + content.lastname;
+		employeeNameLabel.style.gridArea = "2 / 3";
+		signatureBox.appendChild(employeeNameLabel);
 
-		const lblItSign = document.createElement("div");
-		lblItSign.style.gridArea = "3 / 1";
-		lblItSign.style.borderBottom = "black solid 2px";
-		divSignature.appendChild(lblItSign);
+		const itSignLabel = document.createElement("div");
+		itSignLabel.style.gridArea = "3 / 1";
+		itSignLabel.style.borderBottom = "black solid 2px";
+		signatureBox.appendChild(itSignLabel);
 
-		const lblEmployeeSign = document.createElement("div");
-		lblEmployeeSign.style.gridArea = "3 / 3";
-		lblEmployeeSign.style.borderBottom = "black solid 2px";
-		divSignature.appendChild(lblEmployeeSign);
+		const employeeSignLabel = document.createElement("div");
+		employeeSignLabel.style.gridArea = "3 / 3";
+		employeeSignLabel.style.borderBottom = "black solid 2px";
+		signatureBox.appendChild(employeeSignLabel);
 	}
 
 	New() {
 		const dialog = this.DialogBox("100%");
 		if (dialog === null) return;
 
-		const btnCreate = dialog.btnOK;
+		const createButton = dialog.okButton;
 		const innerBox  = dialog.innerBox;
 
 		this.GenerateEquipAutoComplete();
@@ -644,118 +644,118 @@ class DebitNotes extends Window {
 		grid.className = "debit-create-dialog";
 		innerBox.appendChild(grid);
 
-		btnCreate.value = "Create";
+		createButton.value = "Create";
 		innerBox.parentElement.style.width = "calc(100% - 4px)";
 		innerBox.parentElement.style.maxWidth = "calc(100% - 4px)";
 
-		const lblFirstName = document.createElement("div");
-		lblFirstName.textContent = "First name:";
-		lblFirstName.style.gridArea = "1 / 1";
-		grid.appendChild(lblFirstName);
-		const txtFirstName = document.createElement("input");
-		txtFirstName.type = "text";
-		txtFirstName.style.gridArea = "1 / 2";
-		grid.appendChild(txtFirstName);
+		const firstNameLabel = document.createElement("div");
+		firstNameLabel.textContent = "First name:";
+		firstNameLabel.style.gridArea = "1 / 1";
+		grid.appendChild(firstNameLabel);
+		const firstNameInput = document.createElement("input");
+		firstNameInput.type = "text";
+		firstNameInput.style.gridArea = "1 / 2";
+		grid.appendChild(firstNameInput);
 
-		const lblLastName = document.createElement("div");
-		lblLastName.textContent = "Last name:";
-		lblLastName.style.gridArea = "2 / 1";
-		grid.appendChild(lblLastName);
-		const txtLastName = document.createElement("input");
-		txtLastName.type = "text";
-		txtLastName.style.gridArea = "2 / 2";
-		grid.appendChild(txtLastName);
+		const lastNameLabel = document.createElement("div");
+		lastNameLabel.textContent = "Last name:";
+		lastNameLabel.style.gridArea = "2 / 1";
+		grid.appendChild(lastNameLabel);
+		const lastNameInput = document.createElement("input");
+		lastNameInput.type = "text";
+		lastNameInput.style.gridArea = "2 / 2";
+		grid.appendChild(lastNameInput);
 
-		const lblTitle = document.createElement("div");
-		lblTitle.textContent = "Title:";
-		lblTitle.style.gridArea = "3 / 1";
-		grid.appendChild(lblTitle);
-		const txtTitle = document.createElement("input");
-		txtTitle.type = "text";
-		txtTitle.style.gridArea = "3 / 2";
-		grid.appendChild(txtTitle);
+		const titleLabel = document.createElement("div");
+		titleLabel.textContent = "Title:";
+		titleLabel.style.gridArea = "3 / 1";
+		grid.appendChild(titleLabel);
+		const titleInput = document.createElement("input");
+		titleInput.type = "text";
+		titleInput.style.gridArea = "3 / 2";
+		grid.appendChild(titleInput);
 
-		const lblDep = document.createElement("div");
-		lblDep.textContent = "Department:";
-		lblDep.style.gridArea = "4 / 1";
-		grid.appendChild(lblDep);
-		const txtDep = document.createElement("input");
-		txtDep.type = "text";
-		txtDep.style.gridArea = "4 / 2";
-		grid.appendChild(txtDep);
+		const depLabel = document.createElement("div");
+		depLabel.textContent = "Department:";
+		depLabel.style.gridArea = "4 / 1";
+		grid.appendChild(depLabel);
+		const depInput = document.createElement("input");
+		depInput.type = "text";
+		depInput.style.gridArea = "4 / 2";
+		grid.appendChild(depInput);
 
-		const btnFindUser = document.createElement("input");
-		btnFindUser.type = "button";
-		btnFindUser.value = "Find...";
-		btnFindUser.style.gridArea = "4 / 3";
-		btnFindUser.style.maxWidth = "72px";
-		grid.appendChild(btnFindUser);
+		const findUserButton = document.createElement("input");
+		findUserButton.type = "button";
+		findUserButton.value = "Find...";
+		findUserButton.style.gridArea = "4 / 3";
+		findUserButton.style.maxWidth = "72px";
+		grid.appendChild(findUserButton);
 
-		const lblDate = document.createElement("div");
-		lblDate.textContent = "Issued date:";
-		lblDate.style.gridArea = "1 / 4";
-		grid.appendChild(lblDate);
+		const dateLabel = document.createElement("div");
+		dateLabel.textContent = "Issued date:";
+		dateLabel.style.gridArea = "1 / 4";
+		grid.appendChild(dateLabel);
 		let now = new Date();
-		const txtDate = document.createElement("input");
-		txtDate.type = "text";
-		txtDate.value = now.toLocaleDateString(regionalFormat);
-		txtDate.readOnly = true;
-		txtDate.style.gridArea = "1 / 5";
-		grid.appendChild(txtDate);
+		const dateInput = document.createElement("input");
+		dateInput.type = "text";
+		dateInput.value = now.toLocaleDateString(regionalFormat);
+		dateInput.readOnly = true;
+		dateInput.style.gridArea = "1 / 5";
+		grid.appendChild(dateInput);
 
-		const lblBehalfOfIt = document.createElement("div");
-		lblBehalfOfIt.textContent = "Issued by:";
-		lblBehalfOfIt.style.gridArea = "2 / 4";
-		grid.appendChild(lblBehalfOfIt);
-		const txtIssuer = document.createElement("input");
-		txtIssuer.type = "text";
-		txtIssuer.style.gridArea = "2 / 5";
-		grid.appendChild(txtIssuer);
+		const behalfOfItLabel = document.createElement("div");
+		behalfOfItLabel.textContent = "Issued by:";
+		behalfOfItLabel.style.gridArea = "2 / 4";
+		grid.appendChild(behalfOfItLabel);
+		const issuerInput = document.createElement("input");
+		issuerInput.type = "text";
+		issuerInput.style.gridArea = "2 / 5";
+		grid.appendChild(issuerInput);
 
-		const lblTemplate = document.createElement("div");
-		lblTemplate.textContent = "Template:";
-		lblTemplate.style.gridArea = "3 / 4";
-		grid.appendChild(lblTemplate);
-		const txtTemplate = document.createElement("select");
-		txtTemplate.style.gridArea = "3 / 5";
-		grid.appendChild(txtTemplate);
+		const templateLabel = document.createElement("div");
+		templateLabel.textContent = "Template:";
+		templateLabel.style.gridArea = "3 / 4";
+		grid.appendChild(templateLabel);
+		const templateInput = document.createElement("select");
+		templateInput.style.gridArea = "3 / 5";
+		grid.appendChild(templateInput);
 
-		const lblBanner = document.createElement("div");
-		lblBanner.textContent = "Banner:";
-		lblBanner.style.gridArea = "4 / 4";
-		grid.appendChild(lblBanner);
-		const txtBanner = document.createElement("select");
-		txtBanner.style.gridArea = "4 / 5";
-		grid.appendChild(txtBanner);
+		const bannerLabel = document.createElement("div");
+		bannerLabel.textContent = "Banner:";
+		bannerLabel.style.gridArea = "4 / 4";
+		grid.appendChild(bannerLabel);
+		const bannerInput = document.createElement("select");
+		bannerInput.style.gridArea = "4 / 5";
+		grid.appendChild(bannerInput);
 
 		for (let i=0; i<DebitNotes.TEMPLATES.length; i++) {
 			const option = document.createElement("option");
 			option.value = DebitNotes.TEMPLATES[i].content;
 			option.text = DebitNotes.TEMPLATES[i].name;
-			txtTemplate.appendChild(option);
+			templateInput.appendChild(option);
 		}
 
 		for (let i=0; i<DebitNotes.BANNERS.length; i++) {
 			const option = document.createElement("option");
 			option.value = DebitNotes.BANNERS[i];
 			option.text = DebitNotes.BANNERS[i];
-			txtBanner.appendChild(option);
+			bannerInput.appendChild(option);
 		}
 
-		const divStatus = document.createElement("div");
-		divStatus.style.gridArea = "5 / 5";
-		grid.appendChild(divStatus);
-		const chkStatus = document.createElement("input");
-		chkStatus.type = "checkbox";
-		divStatus.appendChild(chkStatus);
-		this.AddCheckBoxLabel(divStatus, chkStatus, "Short-term");
+		const statusBox = document.createElement("div");
+		statusBox.style.gridArea = "5 / 5";
+		grid.appendChild(statusBox);
+		const statusCheckbox = document.createElement("input");
+		statusCheckbox.type = "checkbox";
+		statusBox.appendChild(statusCheckbox);
+		this.AddCheckBoxLabel(statusBox, statusCheckbox, "Short-term");
 
-		const btnAddEquip = document.createElement("input");
-		btnAddEquip.type = "button";
-		btnAddEquip.value = "Add";
-		btnAddEquip.style.maxWidth = "72px";
-		btnAddEquip.style.margin = "0 40px";
-		innerBox.appendChild(btnAddEquip);
+		const addEquipButton = document.createElement("input");
+		addEquipButton.type = "button";
+		addEquipButton.value = "Add";
+		addEquipButton.style.maxWidth = "72px";
+		addEquipButton.style.margin = "0 40px";
+		innerBox.appendChild(addEquipButton);
 
 		const lstEquip = document.createElement("div");
 		lstEquip.className = "debit-equip-list";
@@ -766,91 +766,91 @@ class DebitNotes extends Window {
 			newEntry.className = "debit-equip-entry";
 			lstEquip.appendChild(newEntry);
 
-			const txtDescription = document.createElement("input");
-			txtDescription.type = "text";
-			txtDescription.placeholder = "Description";
-			txtDescription.setAttribute("list", "DESCRIPTION_DATALIST");
+			const descriptionInput = document.createElement("input");
+			descriptionInput.type = "text";
+			descriptionInput.placeholder = "Description";
+			descriptionInput.setAttribute("list", "DESCRIPTION_DATALIST");
 
-			const txtModel = document.createElement("input");
-			txtModel.type = "text";
-			txtModel.placeholder = "Model";
+			const modelInput = document.createElement("input");
+			modelInput.type = "text";
+			modelInput.placeholder = "Model";
 
-			const txtSerialNo = document.createElement("input");
-			txtSerialNo.type = "text";
-			txtSerialNo.placeholder = "Serial number";
+			const serialNoInput = document.createElement("input");
+			serialNoInput.type = "text";
+			serialNoInput.placeholder = "Serial number";
 
-			const txtQuantity = document.createElement("input");
-			txtQuantity.type = "number";
-			txtQuantity.min = 1;
-			txtQuantity.max = 1000;
-			txtQuantity.value = 1;
+			const quantityInput = document.createElement("input");
+			quantityInput.type = "number";
+			quantityInput.min = 1;
+			quantityInput.max = 1000;
+			quantityInput.value = 1;
 
-			newEntry.append(txtDescription, txtModel, txtSerialNo, txtQuantity);
+			newEntry.append(descriptionInput, modelInput, serialNoInput, quantityInput);
 
-			const btnRemove = document.createElement("input");
-			btnRemove.type = "button";
-			btnRemove.value = " ";
-			newEntry.appendChild(btnRemove);
+			const removeButton = document.createElement("input");
+			removeButton.type = "button";
+			removeButton.value = " ";
+			newEntry.appendChild(removeButton);
 
 			let modelId = "m" + new Date().getTime();
 			const modelsDatalist = document.createElement("datalist");
 			modelsDatalist.id = modelId;
 			newEntry.appendChild(modelsDatalist);
-			txtModel.setAttribute("list", modelId);
+			modelInput.setAttribute("list", modelId);
 
 			let serialId = "s" + new Date().getTime();
 			const serialDatalist = document.createElement("datalist");
 			serialDatalist.id = serialId;
 			newEntry.appendChild(serialDatalist);
-			txtSerialNo.setAttribute("list", serialId);
+			serialNoInput.setAttribute("list", serialId);
 
-			txtDescription.onchange = txtDescription.oninput = ()=> {
-				if (!(txtDescription.value in DebitNotes.MODELS)) return;
+			descriptionInput.onchange = descriptionInput.oninput = ()=> {
+				if (!(descriptionInput.value in DebitNotes.MODELS)) return;
 
-				if (DebitNotes.MODELS[txtDescription.value].length == 1) {
-					txtModel.value = DebitNotes.MODELS[txtDescription.value][0];
-					txtModel.onchange();
+				if (DebitNotes.MODELS[descriptionInput.value].length == 1) {
+					modelInput.value = DebitNotes.MODELS[descriptionInput.value][0];
+					modelInput.onchange();
 				}
 				else {
-					if (!DebitNotes.MODELS[txtDescription.value].includes(txtModel.value)) txtModel.value = "";
+					if (!DebitNotes.MODELS[descriptionInput.value].includes(modelInput.value)) modelInput.value = "";
 
 					while (modelsDatalist.firstChild != null) modelsDatalist.removeChild(modelsDatalist.firstChild);
-					for (let i = 0; i < DebitNotes.MODELS[txtDescription.value].length; i++) {
+					for (let i = 0; i < DebitNotes.MODELS[descriptionInput.value].length; i++) {
 						const option = document.createElement("option");
-						option.value = DebitNotes.MODELS[txtDescription.value][i];
+						option.value = DebitNotes.MODELS[descriptionInput.value][i];
 						modelsDatalist.appendChild(option);
 					}
 				}
 			};
 
-			txtModel.onchange = txtModel.oninput = ()=> {
-				if (!(txtModel.value in DebitNotes.SERIAL_NUMBERS)) return;
+			modelInput.onchange = modelInput.oninput = ()=> {
+				if (!(modelInput.value in DebitNotes.SERIAL_NUMBERS)) return;
 
-				if (DebitNotes.SERIAL_NUMBERS[txtModel.value].length == 1) {
-					txtSerialNo.value = DebitNotes.SERIAL_NUMBERS[txtModel.value][0];
+				if (DebitNotes.SERIAL_NUMBERS[modelInput.value].length == 1) {
+					serialNoInput.value = DebitNotes.SERIAL_NUMBERS[modelInput.value][0];
 				}
 				else {
-					if (!DebitNotes.SERIAL_NUMBERS[txtModel.value].includes(txtModel.value)) txtSerialNo.value = "";
+					if (!DebitNotes.SERIAL_NUMBERS[modelInput.value].includes(modelInput.value)) serialNoInput.value = "";
 
 					while (serialDatalist.firstChild != null) serialDatalist.removeChild(serialDatalist.firstChild);
-					for (let i = 0; i < DebitNotes.SERIAL_NUMBERS[txtModel.value].length; i++) {
+					for (let i = 0; i < DebitNotes.SERIAL_NUMBERS[modelInput.value].length; i++) {
 						const option = document.createElement("option");
-						option.value = DebitNotes.SERIAL_NUMBERS[txtModel.value][i];
+						option.value = DebitNotes.SERIAL_NUMBERS[modelInput.value][i];
 						serialDatalist.appendChild(option);
 					}
 				}
 			};
 
-			btnRemove.onclick = ()=> lstEquip.removeChild(newEntry);
+			removeButton.onclick = ()=> lstEquip.removeChild(newEntry);
 
 			return {
-				descriptionBox : txtDescription,
-				modelBox       : txtModel,
-				serialBox      : txtSerialNo,
-				quantityBox    : txtQuantity}
+				descriptionBox : descriptionInput,
+				modelBox       : modelInput,
+				serialBox      : serialNoInput,
+				quantityBox    : quantityInput}
 		};
 
-		btnFindUser.onclick = ()=> {
+		findUserButton.onclick = ()=> {
 			innerBox.style.filter = "blur(2px)";
 
 			const container = document.createElement("div");
@@ -874,18 +874,18 @@ class DebitNotes extends Window {
 			dialog.style.overflow = "hidden";
 			container.appendChild(dialog);
 
-			const txtFind = document.createElement("input");
-			txtFind.type = "text";
-			txtFind.placeholder = "Search";
-			dialog.appendChild(txtFind);
+			const findInput = document.createElement("input");
+			findInput.type = "text";
+			findInput.placeholder = "Search";
+			dialog.appendChild(findInput);
 
-			const divUsers = document.createElement("div");
-			divUsers.className = "no-results";
-			divUsers.style.position = "absolute";
-			divUsers.style.left = divUsers.style.right = "0";
-			divUsers.style.top = divUsers.style.bottom = "48px";
-			divUsers.style.overflowY = "auto";
-			dialog.appendChild(divUsers);
+			const usersList = document.createElement("div");
+			usersList.className = "no-results";
+			usersList.style.position = "absolute";
+			usersList.style.left = usersList.style.right = "0";
+			usersList.style.top = usersList.style.bottom = "48px";
+			usersList.style.overflowY = "auto";
+			dialog.appendChild(usersList);
 
 			const pnlButtons = document.createElement("div");
 			pnlButtons.style.bottom = "8px";
@@ -895,18 +895,18 @@ class DebitNotes extends Window {
 			pnlButtons.style.textAlign = "center";
 			dialog.appendChild(pnlButtons);
 
-			const btnCancel = document.createElement("input");
-			btnCancel.type = "button";
-			btnCancel.value = "Cancel";
-			btnCancel.style.bottom = "8px";
-			pnlButtons.appendChild(btnCancel);
+			const cancelButton = document.createElement("input");
+			cancelButton.type = "button";
+			cancelButton.value = "Cancel";
+			cancelButton.style.bottom = "8px";
+			pnlButtons.appendChild(cancelButton);
 
-			txtFind.onchange = txtFind.oninput = ()=> {
-				divUsers.textContent = "";
+			findInput.onchange = findInput.oninput = ()=> {
+				usersList.textContent = "";
 
 				let keywords = [];
-				if (txtFind.value.trim().length > 0)
-					keywords = txtFind.value.trim().toLowerCase().split(" ");
+				if (findInput.value.trim().length > 0)
+					keywords = findInput.value.trim().toLowerCase().split(" ");
 
 				let usersColumns;
 				if (localStorage.getItem("userslist_columns"))
@@ -962,40 +962,40 @@ class DebitNotes extends Window {
 					}
 
 					element.ondblclick = ()=> {
-						txtFirstName.value = firstname;
-						txtLastName.value = lastname;
-						txtTitle.value = title;
-						txtDep.value = department;
+						firstNameInput.value = firstname;
+						lastNameInput.value = lastname;
+						titleInput.value = title;
+						depInput.value = department;
 
-						btnCancel.onclick();
+						cancelButton.onclick();
 					};
 
-					divUsers.appendChild(element);
+					usersList.appendChild(element);
 				}
 			};
 
-			btnCancel.onclick = ()=> {
+			cancelButton.onclick = ()=> {
 				innerBox.style.filter = "none";
 				innerBox.parentElement.removeChild(container);
 			};
 
-			txtFind.focus();
-			txtFind.onchange();
+			findInput.focus();
+			findInput.onchange();
 		};
 
-		btnAddEquip.onclick = ()=> AddEquip();
+		addEquipButton.onclick = ()=> AddEquip();
 
-		btnCreate.addEventListener("click", async ()=>{
+		createButton.addEventListener("click", async ()=>{
 			let body = {
 				date       : UI.UnixDateToTicks(new Date().getTime()),
-				status     : chkStatus.checked ? "short" : "long",
-				template   : txtTemplate.value,
-				banner     : txtBanner.value,
-				firstname  : txtFirstName.value,
-				lastname   : txtLastName.value,
-				title      : txtTitle.value,
-				department : txtDep.value,
-				issuer     : txtIssuer.value,
+				status     : statusCheckbox.checked ? "short" : "long",
+				template   : templateInput.value,
+				banner     : bannerInput.value,
+				firstname  : firstNameInput.value,
+				lastname   : lastNameInput.value,
+				title      : titleInput.value,
+				department : depInput.value,
+				issuer     : issuerInput.value,
 				devices    : []
 			};
 
@@ -1032,13 +1032,13 @@ class DebitNotes extends Window {
 		});
 
 		return {
-			chkStatus     : chkStatus,
-			txtFirstName  : txtFirstName,
-			txtLastName   : txtLastName,
-			txtTitle      : txtTitle,
-			txtDep        : txtDep,
-			txtIssuer     : txtIssuer,
-			txtTemplate   : txtTemplate,
+			statusCheckbox     : statusCheckbox,
+			firstNameInput  : firstNameInput,
+			lastNameInput   : lastNameInput,
+			titleInput    : titleInput,
+			depInput        : depInput,
+			issuerInput     : issuerInput,
+			templateInput   : templateInput,
 			lstEquip      : lstEquip,
 			AddEquip      : AddEquip
 		};
@@ -1051,22 +1051,22 @@ class DebitNotes extends Window {
 		}
 
 		const obj = this.New();
-		const txtFirstName = obj.txtFirstName;
-		const txtLastName = obj.txtLastName;
-		const txtTitle = obj.txtTitle;
-		const txtDep = obj.txtDep;
-		const txtIssuer = obj.txtIssuer;
-		const txtTemplate = obj.txtTemplate;
-		const chkStatus = obj.chkStatus;
-		const lstEquip = obj.lstEquip;
-		const AddEquip = obj.AddEquip;
+		const firstNameInput = obj.firstNameInput;
+		const lastNameInput  = obj.lastNameInput;
+		const titleInput   = obj.titleInput;
+		const depInput       = obj.depInput;
+		const issuerInput    = obj.issuerInput;
+		const templateInput  = obj.templateInput;
+		const statusCheckbox    = obj.statusCheckbox;
+		const lstEquip     = obj.lstEquip;
+		const AddEquip     = obj.AddEquip;
 
-		txtFirstName.value = this.selectedDebit.firstname;
-		txtLastName.value = this.selectedDebit.lastname;
-		txtTitle.value = this.selectedDebit.title;
-		txtDep.value = this.selectedDebit.department;
-		txtIssuer.value = this.selectedDebit.issuer;
-		chkStatus.checked = this.selectedDebit.status === "short";
+		firstNameInput.value = this.selectedDebit.firstname;
+		lastNameInput.value = this.selectedDebit.lastname;
+		titleInput.value = this.selectedDebit.title;
+		depInput.value = this.selectedDebit.department;
+		issuerInput.value = this.selectedDebit.issuer;
+		statusCheckbox.checked = this.selectedDebit.status === "short";
 
 		const equip = this.selectedDebit.devices;
 		for (let i = 0; i < this.selectedDebit.devices.length; i++) {

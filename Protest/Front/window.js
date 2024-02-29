@@ -304,31 +304,31 @@ class Window {
 		this.resize.className = "resize";
 		this.win.appendChild(this.resize);
 
-		this.btnClose = document.createElement("div");
-		this.btnClose.className = "control close-box";
-		this.win.appendChild(this.btnClose);
+		this.closeButton = document.createElement("div");
+		this.closeButton.className = "control close-box";
+		this.win.appendChild(this.closeButton);
 		if (onMobile) {
-			this.btnClose.style.width = this.btnClose.style.height = "28px";
-			this.btnClose.style.backgroundSize = "26px";
-			this.btnClose.style.backgroundPosition = "1px 1px";
+			this.closeButton.style.width = this.closeButton.style.height = "28px";
+			this.closeButton.style.backgroundSize = "26px";
+			this.closeButton.style.backgroundPosition = "1px 1px";
 		}
 
-		this.btnMaximize = document.createElement("div");
+		this.maximizeButton = document.createElement("div");
 		if (!onMobile) {
-			this.btnMaximize.className = "control maximize-box";
-			this.win.appendChild(this.btnMaximize);
+			this.maximizeButton.className = "control maximize-box";
+			this.win.appendChild(this.maximizeButton);
 		}
 
-		this.btnMinimize = document.createElement("div");
+		this.minimizeButton = document.createElement("div");
 		if (!onMobile) {
-			this.btnMinimize.className = "control minimize-box";
-			this.win.appendChild(this.btnMinimize);
+			this.minimizeButton.className = "control minimize-box";
+			this.win.appendChild(this.minimizeButton);
 		}
 
-		this.btnPopOut = document.createElement("div");
+		this.popOutButton = document.createElement("div");
 		if (!onMobile) {
-			this.btnPopOut.className = "control popout-box";
-			this.win.appendChild(this.btnPopOut);
+			this.popOutButton.className = "control popout-box";
+			this.win.appendChild(this.popOutButton);
 		}
 
 		this.win.tabIndex = "0";
@@ -456,20 +456,20 @@ class Window {
 			event.stopPropagation();
 		};
 
-		this.btnClose.onmousedown =
-			this.btnMaximize.onmousedown =
-			this.btnMinimize.onmousedown =
-			this.btnPopOut.onmousedown =
+		this.closeButton.onmousedown =
+			this.maximizeButton.onmousedown =
+			this.minimizeButton.onmousedown =
+			this.popOutButton.onmousedown =
 			event=> {
 				WIN.controlPressed = this;
 				this.BringToFront();
 				event.stopPropagation();
 			};
 
-		this.btnClose.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Close(); } };
-		this.btnMaximize.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Toggle(); } };
-		this.btnMinimize.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Minimize(); } };
-		this.btnPopOut.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.PopOut(); } };
+		this.closeButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Close(); } };
+		this.maximizeButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Toggle(); } };
+		this.minimizeButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Minimize(); } };
+		this.popOutButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.PopOut(); } };
 
 		this.SetTitle("untitled");
 		WIN.array.push(this);
@@ -683,20 +683,20 @@ class Window {
 		this.popOutWindow = newWin;
 		container.removeChild(this.win);
 
-		const btnPopIn = document.createElement("input");
-		btnPopIn.type = "button";
-		btnPopIn.style.padding = "0";
-		btnPopIn.style.margin = "0";
-		btnPopIn.style.minWidth = "0";
-		btnPopIn.style.position = "absolute";
-		btnPopIn.style.width = this.toolbar ? "24px" : "22px";
-		btnPopIn.style.height = this.toolbar ? "24px" : "22px";
-		btnPopIn.style.right = this.toolbar ? "4px" : "2px";
-		btnPopIn.style.top = this.toolbar ? "8px" : "2px";
-		btnPopIn.style.backgroundColor = "var(--clr-light)";
-		btnPopIn.style.backgroundImage = "url(controls/popout.svg)";
-		btnPopIn.style.backgroundPosition = "center";
-		btnPopIn.style.borderRadius = "12px";
+		const popInButton = document.createElement("input");
+		popInButton.type = "button";
+		popInButton.style.padding = "0";
+		popInButton.style.margin = "0";
+		popInButton.style.minWidth = "0";
+		popInButton.style.position = "absolute";
+		popInButton.style.width = this.toolbar ? "24px" : "22px";
+		popInButton.style.height = this.toolbar ? "24px" : "22px";
+		popInButton.style.right = this.toolbar ? "4px" : "2px";
+		popInButton.style.top = this.toolbar ? "8px" : "2px";
+		popInButton.style.backgroundColor = "var(--clr-light)";
+		popInButton.style.backgroundImage = "url(controls/popout.svg)";
+		popInButton.style.backgroundPosition = "center";
+		popInButton.style.borderRadius = "12px";
 
 		this.content.style.left = "0";
 		this.content.style.right = "0";
@@ -708,17 +708,17 @@ class Window {
 			toolbar = this.toolbar;
 			this.toolbar.style.top = "4px";
 			newWin.document.body.appendChild(this.toolbar);
-			this.toolbar.appendChild(btnPopIn);
+			this.toolbar.appendChild(popInButton);
 		}
 		else {
-			newWin.document.body.appendChild(btnPopIn);
+			newWin.document.body.appendChild(popInButton);
 		}
 
 		this.content.style.filter = "none";
 
 		newWin.onresize = ()=> this.AfterResize();
 
-		btnPopIn.onclick = ()=> {
+		popInButton.onclick = ()=> {
 			container.appendChild(this.win);
 			this.win.appendChild(this.content);
 
@@ -734,7 +734,7 @@ class Window {
 			this.content.style.bottom = this.isMaximized ? "0" : "4px";
 
 			if (this.toolbar) {
-				this.toolbar.removeChild(btnPopIn);
+				this.toolbar.removeChild(popInButton);
 				this.win.appendChild(this.toolbar);
 				this.toolbar.style.top = this.isMaximized ? "38px" : "32px";
 				this.content.style.top = this.isMaximized ? "82px" : "76px";
@@ -745,7 +745,7 @@ class Window {
 
 		newWin.onbeforeunload = ()=> this.Close();
 
-		return btnPopIn;
+		return popInButton;
 	}
 
 	BringToFront() {
@@ -820,15 +820,15 @@ class Window {
 		buttonBox.style.paddingTop = "16px";
 		confirmBox.appendChild(buttonBox);
 
-		const btnOK = document.createElement("input");
-		btnOK.type = "button";
-		btnOK.value = "OK";
-		buttonBox.appendChild(btnOK);
+		const okButton = document.createElement("input");
+		okButton.type = "button";
+		okButton.value = "OK";
+		buttonBox.appendChild(okButton);
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Cancel";
-		if (!okOnly) buttonBox.appendChild(btnCancel);
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Cancel";
+		if (!okOnly) buttonBox.appendChild(cancelButton);
 
 		if (icon) {
 			messageBox.style.paddingLeft = "64px";
@@ -841,12 +841,12 @@ class Window {
 
 		this.content.style.filter = "blur(4px)";
 
-		btnOK.onkeydown = event=>{
-			if (event.key === "ArrowRight") { btnCancel.focus(); }
+		okButton.onkeydown = event=>{
+			if (event.key === "ArrowRight") { cancelButton.focus(); }
 		};
 
-		btnCancel.onkeydown = event=>{
-			if (event.key === "ArrowLeft") { btnOK.focus(); }
+		cancelButton.onkeydown = event=>{
+			if (event.key === "ArrowLeft") { okButton.focus(); }
 		};
 
 		dim.onmouseup = dim.onmousedown = event=> {
@@ -855,7 +855,7 @@ class Window {
 		};
 
 		let once = false;
-		btnCancel.onclick = ()=> {
+		cancelButton.onclick = ()=> {
 			if (once) return;
 			once = true;
 			dim.style.filter = "opacity(0)";
@@ -872,16 +872,16 @@ class Window {
 			}, WIN.ANIME_DURATION);
 		};
 
-		btnOK.onclick = event=> btnCancel.onclick(event);
-		btnOK.focus();
+		okButton.onclick = event=> cancelButton.onclick(event);
+		okButton.focus();
 
 		confirmBox.onkeydown = event=> {
 			if (event.key === "Escape") {
-				btnCancel.onclick();
+				cancelButton.onclick();
 			}
 		};
 
-		return btnOK;
+		return okButton;
 	}
 
 	DialogBox(height) {
@@ -931,15 +931,15 @@ class Window {
 		buttonBox.style.bottom = "8px";
 		dialogBox.appendChild(buttonBox);
 
-		const btnOK = document.createElement("input");
-		btnOK.type = "button";
-		btnOK.value = "OK";
-		buttonBox.appendChild(btnOK);
+		const okButton = document.createElement("input");
+		okButton.type = "button";
+		okButton.value = "OK";
+		buttonBox.appendChild(okButton);
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Cancel";
-		buttonBox.appendChild(btnCancel);
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Cancel";
+		buttonBox.appendChild(cancelButton);
 
 		this.content.style.filter = "blur(4px)";
 
@@ -965,30 +965,30 @@ class Window {
 			setTimeout(()=> Abort(), WIN.ANIME_DURATION);
 		};
 
-		btnOK.onkeydown = event=> {
-			if (event.key === "ArrowRight") { btnCancel.focus(); }
+		okButton.onkeydown = event=> {
+			if (event.key === "ArrowRight") { cancelButton.focus(); }
 			if (event.key === "Escape") { Close(); }
 		};
 
-		btnCancel.onkeydown = event=> {
-			if (event.key === "ArrowLeft") { btnOK.focus(); }
+		cancelButton.onkeydown = event=> {
+			if (event.key === "ArrowLeft") { okButton.focus(); }
 			if (event.key === "Escape") { Close(); }
 		};
 
 		innerBox.onkeydown = event=>{
 			if (event.key === "Escape") {
-				btnCancel.onclick();
+				cancelButton.onclick();
 			}
 		};
 
-		btnCancel.onclick = ()=> Close();
-		btnOK.onclick = event=> btnCancel.onclick(event);
+		cancelButton.onclick = ()=> Close();
+		okButton.onclick = event=> cancelButton.onclick(event);
 
 		return {
 			innerBox: innerBox,
 			buttonBox: buttonBox,
-			btnOK: btnOK,
-			btnCancel: btnCancel,
+			okButton: okButton,
+			cancelButton: cancelButton,
 			Close: Close
 		};
 	}

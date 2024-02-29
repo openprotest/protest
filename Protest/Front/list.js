@@ -594,8 +594,8 @@ class List extends Window {
 		const dialog = this.DialogBox("500px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const buttonBox = dialog.buttonBox;
 
 		const innerBox = dialog.innerBox;
@@ -625,36 +625,36 @@ class List extends Window {
 		buttons.style.overflow = "hidden";
 		innerBox.appendChild(buttons);
 
-		const btnMoveUp = document.createElement("input");
-		btnMoveUp.disabled = true;
-		btnMoveUp.type = "button";
-		btnMoveUp.value = "Move up";
-		btnMoveUp.style.width = "calc(100% - 8px)";
-		btnMoveUp.style.minWidth = "20px";
-		buttons.appendChild(btnMoveUp);
+		const moveUpButton = document.createElement("input");
+		moveUpButton.disabled = true;
+		moveUpButton.type = "button";
+		moveUpButton.value = "Move up";
+		moveUpButton.style.width = "calc(100% - 8px)";
+		moveUpButton.style.minWidth = "20px";
+		buttons.appendChild(moveUpButton);
 
-		const btnMoveDown = document.createElement("input");
-		btnMoveDown.disabled = true;
-		btnMoveDown.type = "button";
-		btnMoveDown.value = "Move down";
-		btnMoveDown.style.width = "calc(100% - 8px)";
-		btnMoveDown.style.minWidth = "20px";
-		buttons.appendChild(btnMoveDown);
+		const moveDownButton = document.createElement("input");
+		moveDownButton.disabled = true;
+		moveDownButton.type = "button";
+		moveDownButton.value = "Move down";
+		moveDownButton.style.width = "calc(100% - 8px)";
+		moveDownButton.style.minWidth = "20px";
+		buttons.appendChild(moveDownButton);
 
-		const btnRevert = document.createElement("input");
-		btnRevert.type = "button";
-		btnRevert.value = "Revert";
-		btnRevert.style.width = "calc(100% - 8px)";
-		btnRevert.style.minWidth = "20px";
-		btnRevert.style.marginTop = "16px";
-		buttons.appendChild(btnRevert);
+		const revertButton = document.createElement("input");
+		revertButton.type = "button";
+		revertButton.value = "Revert";
+		revertButton.style.width = "calc(100% - 8px)";
+		revertButton.style.minWidth = "20px";
+		revertButton.style.marginTop = "16px";
+		buttons.appendChild(revertButton);
 
-		const btnReset = document.createElement("input");
-		btnReset.type = "button";
-		btnReset.value = "Reset";
-		btnReset.style.width = "calc(100% - 8px)";
-		btnReset.style.minWidth = "20px";
-		buttons.appendChild(btnReset);
+		const resetButton = document.createElement("input");
+		resetButton.type = "button";
+		resetButton.value = "Reset";
+		resetButton.style.width = "calc(100% - 8px)";
+		resetButton.style.minWidth = "20px";
+		buttons.appendChild(resetButton);
 
 
 		let checkList = {};
@@ -729,36 +729,36 @@ class List extends Window {
 			Refresh();
 		};
 
-		btnRevert.onclick = ()=> {
+		revertButton.onclick = ()=> {
 			checkList = {};
 			Refresh();
 		};
 
-		btnReset.onclick = ()=> {
+		resetButton.onclick = ()=> {
 			checkList = {};
 			this.defaultColumns.forEach(o=> checkList[o] = true);
 			Refresh();
 		};
 
-		const btnApplyAll = document.createElement("input");
-		btnApplyAll.type = "button";
-		btnApplyAll.value = "Apply to all";
-		btnApplyAll.style.width = "100px";
+		const applyAllButton = document.createElement("input");
+		applyAllButton.type = "button";
+		applyAllButton.value = "Apply to all";
+		applyAllButton.style.width = "100px";
 
-		btnOK.value = "Apply";
+		okButton.value = "Apply";
 
-		buttonBox.appendChild(btnApplyAll);
-		buttonBox.appendChild(btnOK);
-		buttonBox.appendChild(btnCancel);
+		buttonBox.appendChild(applyAllButton);
+		buttonBox.appendChild(okButton);
+		buttonBox.appendChild(cancelButton);
 
-		btnApplyAll.addEventListener("click", event=> {
+		applyAllButton.addEventListener("click", event=> {
 			Apply();
 
-			btnCancel.onclick();
+			cancelButton.onclick();
 			localStorage.setItem(`${this.constructor.name.toLowerCase()}_columns`, JSON.stringify(this.columnsElements.map(o=> o.textContent)));
 		});
 
-		btnOK.addEventListener("click", event=> {
+		okButton.addEventListener("click", event=> {
 			Apply();
 		});
 

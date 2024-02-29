@@ -226,17 +226,17 @@ class DeviceView extends View {
 		}
 
 		if ("mac address" in this.link) {
-			const btnWoL = this.CreateSideButton("mono/wol.svg", "Wake on LAN");
-			btnWoL.onclick = async ()=> {
-				if (btnWoL.hasAttribute("busy")) return;
+			const wolButton = this.CreateSideButton("mono/wol.svg", "Wake on LAN");
+			wolButton.onclick = async ()=> {
+				if (wolButton.hasAttribute("busy")) return;
 				try {
-					btnWoL.setAttribute("busy", true);
+					wolButton.setAttribute("busy", true);
 					const response = await fetch(`manage/device/wol?file=${this.params.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/wol.svg"); }
-				btnWoL.removeAttribute("busy");
+				wolButton.removeAttribute("busy");
 			};
 		}
 
@@ -245,53 +245,53 @@ class DeviceView extends View {
 
 			if (ports.includes(445) && "operating system" in this.link) { //wmi service 445
 
-				const btnPowerOff = this.CreateSideButton("mono/turnoff.svg", "Power off");
-				btnPowerOff.onclick = ()=> {
+				const powerOffButton = this.CreateSideButton("mono/turnoff.svg", "Power off");
+				powerOffButton.onclick = ()=> {
 					this.ConfirmBox("Are you sure you want to power off this device?", false, "mono/turnoff.svg").addEventListener("click", async ()=> {
-						if (btnPowerOff.hasAttribute("busy")) return;
+						if (powerOffButton.hasAttribute("busy")) return;
 						try {
-							btnPowerOff.setAttribute("busy", true);
+							powerOffButton.setAttribute("busy", true);
 							const response = await fetch(`manage/device/shutdown?file=${this.params.file}`);
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
 						catch (ex) { this.ConfirmBox(ex, true, "mono/turnoff.svg"); }
-						btnPowerOff.removeAttribute("busy");
+						powerOffButton.removeAttribute("busy");
 					});
 				};
 
-				const btnReboot = this.CreateSideButton("mono/restart.svg", "Reboot");
-				btnReboot.onclick = ()=> {
+				const rebootButton = this.CreateSideButton("mono/restart.svg", "Reboot");
+				rebootButton.onclick = ()=> {
 					this.ConfirmBox("Are you sure you want to reboot this device?", false, "mono/restart.svg").addEventListener("click", async ()=> {
-						if (btnReboot.hasAttribute("busy")) return;
+						if (rebootButton.hasAttribute("busy")) return;
 						try {
-							btnReboot.setAttribute("busy", true);
+							rebootButton.setAttribute("busy", true);
 							const response = await fetch(`manage/device/reboot?file=${this.params.file}`);
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
 						catch (ex) { this.ConfirmBox(ex, true, "mono/restart.svg"); }
-						btnReboot.removeAttribute("busy");
+						rebootButton.removeAttribute("busy");
 					});
 				};
 
-				const btnLogOff = this.CreateSideButton("mono/logoff.svg", "Log off");
-				btnLogOff.onclick = ()=> {
+				const logOffButton = this.CreateSideButton("mono/logoff.svg", "Log off");
+				logOffButton.onclick = ()=> {
 					this.ConfirmBox("Are you sure you want to log off this device?", false, "mono/logoff.svg").addEventListener("click", async ()=> {
-						if (btnLogOff.hasAttribute("busy")) return;
+						if (logOffButton.hasAttribute("busy")) return;
 						try {
-							btnLogOff.setAttribute("busy", true);
+							logOffButton.setAttribute("busy", true);
 							const response = await fetch(`manage/device/logoff?file=${this.params.file}`);
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
 						catch (ex) { this.ConfirmBox(ex, true, "mono/logoff.svg"); }
-						btnLogOff.removeAttribute("busy");
+						logOffButton.removeAttribute("busy");
 					});
 				};
 
-				const btnProcesses = this.CreateSideButton("mono/console.svg", "Processes");
-				btnProcesses.onclick = ()=> {
+				const processesButton = this.CreateSideButton("mono/console.svg", "Processes");
+				processesButton.onclick = ()=> {
 					const wmi = new Wmi({target:host, query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
 					wmi.SetIcon("mono/console.svg");
 					if (!this.link.name || this.link.name.v.length == 0) {
@@ -302,8 +302,8 @@ class DeviceView extends View {
 					}
 				};
 
-				const btnServices = this.CreateSideButton("mono/service.svg", "Services");
-				btnServices.onclick = ()=> {
+				const servicesButton = this.CreateSideButton("mono/service.svg", "Services");
+				servicesButton.onclick = ()=> {
 					const wmi = new Wmi({target: host, query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
 					wmi.SetIcon("mono/service.svg");
 					if (!this.link.name || this.link.name.v.length==0)
@@ -312,42 +312,42 @@ class DeviceView extends View {
 						wmi.SetTitle(this.link.name.v + " - Services");
 				};
 
-				const btnMonitor = this.CreateSideButton("mono/resmonitor.svg", "Resource monitor");
-				btnMonitor.onclick = ()=> new Monitor({file: this.params.file});
+				const monitorButton = this.CreateSideButton("mono/resmonitor.svg", "Resource monitor");
+				monitorButton.onclick = ()=> new Monitor({file: this.params.file});
 
-				const btnComputerMng = this.CreateSideButton("mono/computermanage.svg", "Management");
-				btnComputerMng.onclick = ()=> UI.PromptAgent(this, "management", host);
+				const computerMngButton = this.CreateSideButton("mono/computermanage.svg", "Management");
+				computerMngButton.onclick = ()=> UI.PromptAgent(this, "management", host);
 
-				const btnPSRemote = this.CreateSideButton("mono/psremote.svg", "PS remote"); //psexec
-				btnPSRemote.onclick = ()=> UI.PromptAgent(this, "psremote", host);
+				const psRemoteButton = this.CreateSideButton("mono/psremote.svg", "PS remote"); //psexec
+				psRemoteButton.onclick = ()=> UI.PromptAgent(this, "psremote", host);
 
 				if (ports.includes(445)) { //smb
-					const btnSmb = this.CreateSideButton("mono/shared.svg", "SMB");
-					btnSmb.onclick = ()=> UI.PromptAgent(this, "smb", `\\\\${host}\\`);
+					const smbButton = this.CreateSideButton("mono/shared.svg", "SMB");
+					smbButton.onclick = ()=> UI.PromptAgent(this, "smb", `\\\\${host}\\`);
 				}
 			}
 
 			if (overwriteProtocol.telnet) { //tenet
-				const btnTelnet = this.CreateSideButton("mono/telnet.svg", "Telnet");
-				btnTelnet.onclick = ()=> new Telnet(host + ":" + overwriteProtocol.telnet);
+				const telnetButton = this.CreateSideButton("mono/telnet.svg", "Telnet");
+				telnetButton.onclick = ()=> new Telnet(host + ":" + overwriteProtocol.telnet);
 			}
 			else if (ports.includes(23)) {
-				const btnTelnet = this.CreateSideButton("mono/telnet.svg", "Telnet");
-				btnTelnet.onclick = ()=> new Telnet(host);
+				const telnetButton = this.CreateSideButton("mono/telnet.svg", "Telnet");
+				telnetButton.onclick = ()=> new Telnet(host);
 			}
 
 			if (overwriteProtocol.ssh) { //ssh
-				const btnSsh = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				btnSsh.onclick = ()=> UI.PromptAgent(this, "ssh", `${host}:${overwriteProtocol.ssh}`);
+				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
+				sshButton.onclick = ()=> UI.PromptAgent(this, "ssh", `${host}:${overwriteProtocol.ssh}`);
 			}
 			else if (ports.includes(22)) {
-				const btnSsh = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				btnSsh.onclick = ()=> UI.PromptAgent(this, "ssh", host);
+				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
+				sshButton.onclick = ()=> UI.PromptAgent(this, "ssh", host);
 			}
 
 			if (overwriteProtocol.http) { //http
-				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTP");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "http://" + host + ":" + overwriteProtocol.http;
 					link.target = "_blank";
@@ -355,8 +355,8 @@ class DeviceView extends View {
 				};
 			}
 			else if (ports.includes(80)) {
-				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTP");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "http://" + host;
 					link.target = "_blank";
@@ -365,8 +365,8 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.https) { //https
-				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTPS");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "https://" + host + ":" + overwriteProtocol.https;
 					link.target = "_blank";
@@ -374,8 +374,8 @@ class DeviceView extends View {
 				};
 			}
 			else if (ports.includes(443)) { //https
-				const btnAction = this.CreateSideButton("mono/earth.svg", "HTTPS");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTPS");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "https://" + host;
 					link.target = "_blank";
@@ -384,8 +384,8 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.ftp) { //ftp
-				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "ftp://" + host + ":" + overwriteProtocol.ftp;
 					link.target = "_blank";
@@ -393,8 +393,8 @@ class DeviceView extends View {
 				};
 			}
 			else if (ports.includes(21)) {
-				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "ftp://" + host;
 					link.target = "_blank";
@@ -403,8 +403,8 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.ftps) { //ftps
-				const btnAction = this.CreateSideButton("mono/shared.svg", "FTP");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "ftps://" + host + ":" + overwriteProtocol.ftp;
 					link.target = "_blank";
@@ -412,8 +412,8 @@ class DeviceView extends View {
 				};
 			}
 			else if (ports.includes(989)) {
-				const btnAction = this.CreateSideButton("mono/shared.svg", "FTPs");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTPs");
+				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "ftps://" + host;
 					link.target = "_blank";
@@ -422,8 +422,8 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.rdp) { //rdp
-				const btnAction = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
+				actionButton.onclick = ()=> {
 					if (localStorage.getItem("prefer_rdp_file") === "true") {
 						this.DownloadRdp(host, overwriteProtocol.rdp);
 					}
@@ -433,8 +433,8 @@ class DeviceView extends View {
 				}
 			}
 			else if (ports.includes(3389)) {
-				const btnAction = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
+				actionButton.onclick = ()=> {
 					if (localStorage.getItem("prefer_rdp_file") === "true") {
 						this.DownloadRdp(host, 3389);
 					}
@@ -445,8 +445,8 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.uvnc) { //uvnc
-				const btnAction = this.CreateSideButton("mono/uvnc.svg", "uVNC");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
+				actionButton.onclick = ()=> {
 					if (localStorage.getItem("prefer_rdp_file") === "true") {
 						this.DownloadVnc(host, overwriteProtocol.uvnc);
 					}
@@ -456,8 +456,8 @@ class DeviceView extends View {
 				}
 			}
 			else if (ports.includes(5900)) {
-				const btnAction = this.CreateSideButton("mono/uvnc.svg", "uVNC");
-				btnAction.onclick = ()=> {
+				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
+				actionButton.onclick = ()=> {
 					if (localStorage.getItem("prefer_rdp_file") === "true") {
 						this.DownloadVnc(host, 5900);
 					}
@@ -468,44 +468,44 @@ class DeviceView extends View {
 			}
 
 			if (overwriteProtocol.winbox) { //winbox
-				const btnAction = this.CreateSideButton("mono/mikrotik.svg", "Winbox");
-				btnAction.onclick = ()=> UI.PromptAgent(this, "winbox", `${host}:${overwriteProtocol.winbox}`);
+				const actionButton = this.CreateSideButton("mono/mikrotik.svg", "Winbox");
+				actionButton.onclick = ()=> UI.PromptAgent(this, "winbox", `${host}:${overwriteProtocol.winbox}`);
 			}
 			else if (ports.includes(8291)) {
-				const btnAction = this.CreateSideButton("mono/mikrotik.svg", "Winbox");
-				btnAction.onclick = ()=> UI.PromptAgent(this, "winbox", host);
+				const actionButton = this.CreateSideButton("mono/mikrotik.svg", "Winbox");
+				actionButton.onclick = ()=> UI.PromptAgent(this, "winbox", host);
 			}
 
 			if (ports.includes(9100)) { //print test
-				const btnPrintTest = this.CreateSideButton("mono/printer.svg", "Print test");
-				btnPrintTest.onclick = async ()=> {
-					if (btnPrintTest.hasAttribute("busy")) return;
+				const printTestButton = this.CreateSideButton("mono/printer.svg", "Print test");
+				printTestButton.onclick = async ()=> {
+					if (printTestButton.hasAttribute("busy")) return;
 					try {
-						btnPrintTest.setAttribute("busy", true);
+						printTestButton.setAttribute("busy", true);
 						const response = await fetch(`manage/device/printtest?host=${host}`);
 						const json = await response.json();
 						if (json.error) throw (json.error);
 					}
 					catch (ex) { this.ConfirmBox(ex, true, "mono/printer.svg"); }
-					btnPrintTest.removeAttribute("busy");
+					printTestButton.removeAttribute("busy");
 				};
 			}
 		}
 
 		if ("anydesk id" in this.link && this.link["anydesk id"].v.length > 0) { //anydesk
-			const btnAction = this.CreateSideButton("mono/anydesk.svg", "AnyDesk");
-			btnAction.onclick = ()=> UI.PromptAgent(this, "anydesk", this.link["anydesk id"].v);
+			const actionButton = this.CreateSideButton("mono/anydesk.svg", "AnyDesk");
+			actionButton.onclick = ()=> UI.PromptAgent(this, "anydesk", this.link["anydesk id"].v);
 		}
 
 		if (this.link.type) {
 			const type = this.link.type.v.toLowerCase();
 			if (type === "router" || type === "switch") {
-				const btnConfig = this.CreateSideButton("mono/configfile.svg", "Configuration");
-				btnConfig.onclick = () => this.DeviceConfiguration();
-				btnConfig.style.marginTop = "16px";
+				const configButton = this.CreateSideButton("mono/configfile.svg", "Configuration");
+				configButton.onclick = () => this.DeviceConfiguration();
+				configButton.style.marginTop = "16px";
 
-				const btnInterfaces = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
-				btnInterfaces.onclick = ()=> this.EditInterfaces();
+				const interfacesButton = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
+				interfacesButton.onclick = ()=> this.EditInterfaces();
 			}
 		}
 	}
@@ -571,42 +571,42 @@ class DeviceView extends View {
 			front.onmouseenter = ()=> {
 				this.floating.textContent = "";
 
-				const divSpeedColor = document.createElement("div");
-				divSpeedColor.style.display = "inline-block";
-				divSpeedColor.style.width = "8px";
-				divSpeedColor.style.height = "8px";
-				divSpeedColor.style.borderRadius = "2px";
-				divSpeedColor.style.marginLeft = "4px";
-				divSpeedColor.style.marginRight = "4px";
-				divSpeedColor.style.backgroundColor = list[i].speedColor;
-				divSpeedColor.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
-				this.floating.appendChild(divSpeedColor);
+				const speedColorBox = document.createElement("div");
+				speedColorBox.style.display = "inline-block";
+				speedColorBox.style.width = "8px";
+				speedColorBox.style.height = "8px";
+				speedColorBox.style.borderRadius = "2px";
+				speedColorBox.style.marginLeft = "4px";
+				speedColorBox.style.marginRight = "4px";
+				speedColorBox.style.backgroundColor = list[i].speedColor;
+				speedColorBox.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+				this.floating.appendChild(speedColorBox);
 
 				if (obj.i[i].s !== "") {
-					const divSpeed = document.createElement("div");
-					divSpeed.style.display = "inline-block";
-					divSpeed.textContent = `${obj.i[i].s} ${obj.i[i].i}`;
-					this.floating.appendChild(divSpeed);
+					const speedLabel = document.createElement("div");
+					speedLabel.style.display = "inline-block";
+					speedLabel.textContent = `${obj.i[i].s} ${obj.i[i].i}`;
+					this.floating.appendChild(speedLabel);
 				}
 
 				this.floating.appendChild(document.createElement("br"));
 
-				const divVlanColor = document.createElement("div");
-				divVlanColor.style.display = "inline-block";
-				divVlanColor.style.width = "8px";
-				divVlanColor.style.height = "8px";
-				divVlanColor.style.borderRadius = "2px";
-				divVlanColor.style.marginLeft = "4px";
-				divVlanColor.style.marginRight = "4px";
-				divVlanColor.style.backgroundColor = list[i].vlanColor ? list[i].vlanColor : "transparent";
-				divVlanColor.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
-				this.floating.appendChild(divVlanColor);
+				const vlanColorBox = document.createElement("div");
+				vlanColorBox.style.display = "inline-block";
+				vlanColorBox.style.width = "8px";
+				vlanColorBox.style.height = "8px";
+				vlanColorBox.style.borderRadius = "2px";
+				vlanColorBox.style.marginLeft = "4px";
+				vlanColorBox.style.marginRight = "4px";
+				vlanColorBox.style.backgroundColor = list[i].vlanColor ? list[i].vlanColor : "transparent";
+				vlanColorBox.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+				this.floating.appendChild(vlanColorBox);
 
 				if (obj.i[i].v && obj.i[i].v.toString().length) {
-					const divVlan = document.createElement("div");
-					divVlan.style.display = "inline-block";
-					divVlan.textContent = `VLAN ${obj.i[i].v}`;
-					this.floating.appendChild(divVlan);
+					const vlanLabel = document.createElement("div");
+					vlanLabel.style.display = "inline-block";
+					vlanLabel.textContent = `VLAN ${obj.i[i].v}`;
+					this.floating.appendChild(vlanLabel);
 				}
 
 				if (list[i].link && list[i].link in LOADER.devices.data) {
@@ -987,14 +987,14 @@ class DeviceView extends View {
 				dot.setAttribute("fill", "var(--clr-light)");
 				svg.appendChild(dot);
 
-				const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				lblTime.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short", day:"numeric"});
-				lblTime.setAttribute("x", x);
-				lblTime.setAttribute("y", height + 20);
-				lblTime.setAttribute("fill", "var(--clr-light)");
-				lblTime.setAttribute("text-anchor", "middle");
-				lblTime.setAttribute("font-size", "10px");
-				svg.appendChild(lblTime);
+				const timeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				timeLabel.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short", day:"numeric"});
+				timeLabel.setAttribute("x", x);
+				timeLabel.setAttribute("y", height + 20);
+				timeLabel.setAttribute("fill", "var(--clr-light)");
+				timeLabel.setAttribute("text-anchor", "middle");
+				timeLabel.setAttribute("font-size", "10px");
+				svg.appendChild(timeLabel);
 			}
 
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -1258,44 +1258,44 @@ class DeviceView extends View {
 	}
 
 	Edit(isNew=false) { //override
-		const btnFetch = document.createElement("button");
+		const fetchButton = document.createElement("button");
 		if (isNew && !this.params.copy) {
-			btnFetch.className = "view-fetch-floating-button";
-			btnFetch.setAttribute("tip-below", "Fetch");
-			this.content.appendChild(btnFetch);
+			fetchButton.className = "view-fetch-floating-button";
+			fetchButton.setAttribute("tip-below", "Fetch");
+			this.content.appendChild(fetchButton);
 
-			btnFetch.onclick = ()=> {
+			fetchButton.onclick = ()=> {
 				const dialog = this.DialogBox("108px");
 				if (dialog === null) return;
 
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
 
-				const txtFetchHost = document.createElement("input");
-				txtFetchHost.type = "text";
-				txtFetchHost.placeholder = "ip or hostname";
-				txtFetchHost.style.marginTop = "20px";
-				txtFetchHost.style.width = "min(calc(100% - 8px), 200px)";
-				dialog.innerBox.appendChild(txtFetchHost);
+				const fetchHostInput = document.createElement("input");
+				fetchHostInput.type = "text";
+				fetchHostInput.placeholder = "ip or hostname";
+				fetchHostInput.style.marginTop = "20px";
+				fetchHostInput.style.width = "min(calc(100% - 8px), 200px)";
+				dialog.innerBox.appendChild(fetchHostInput);
 
-				txtFetchHost.focus();
+				fetchHostInput.focus();
 
-				dialog.btnOK.onclick = ()=> {
-					if (txtFetchHost.value.length === 0) return;
-					dialog.btnCancel.onclick();
-					setTimeout(()=>this.Fetch(true, txtFetchHost.value), 250);
+				dialog.okButton.onclick = ()=> {
+					if (fetchHostInput.value.length === 0) return;
+					dialog.cancelButton.onclick();
+					setTimeout(()=>this.Fetch(true, fetchHostInput.value), 250);
 				};
 
-				txtFetchHost.onkeydown = event=> {
+				fetchHostInput.onkeydown = event=> {
 					if (event.key === "Enter") {
-						dialog.btnOK.click();
+						dialog.okButton.click();
 					}
 				};
 			};
 		}
 
-		const btnSave = super.Edit(isNew);
-		btnSave.addEventListener("click", async ()=> {
+		const saveButton = super.Edit(isNew);
+		saveButton.addEventListener("click", async ()=> {
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
@@ -1328,7 +1328,7 @@ class DeviceView extends View {
 				});
 			}
 			finally {
-				if (isNew && btnFetch.parentElement) this.content.removeChild(btnFetch);
+				if (isNew && fetchButton.parentElement) this.content.removeChild(fetchButton);
 			}
 		});
 	}
@@ -1337,33 +1337,33 @@ class DeviceView extends View {
 		const dialog = this.DialogBox("calc(100% - 34px)");
 		if (dialog === null) return;
 
-		const btnOK     = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton     = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const buttonBox = dialog.buttonBox;
 		const innerBox  = dialog.innerBox;
 
-		btnOK.value = "Close";
+		okButton.value = "Close";
 
 		buttonBox.style.maxHeight = "40px";
 		buttonBox.style.overflow = "hidden";
 
-		buttonBox.removeChild(btnCancel);
+		buttonBox.removeChild(cancelButton);
 
-		const btnFetch = document.createElement("input");
-		btnFetch.type = "button";
-		btnFetch.value = "Fetch";
-		btnFetch.className = "with-icon";
-		btnFetch.style.backgroundImage = "url(mono/ball.svg?light)";
-		btnFetch.style.float = "left";
-		buttonBox.appendChild(btnFetch);
+		const fetchButton = document.createElement("input");
+		fetchButton.type = "button";
+		fetchButton.value = "Fetch";
+		fetchButton.className = "with-icon";
+		fetchButton.style.backgroundImage = "url(mono/ball.svg?light)";
+		fetchButton.style.float = "left";
+		buttonBox.appendChild(fetchButton);
 
-		const btnEdit = document.createElement("input");
-		btnEdit.type = "button";
-		btnEdit.value = "Edit";
-		btnEdit.className = "with-icon";
-		btnEdit.style.backgroundImage = "url(mono/edit.svg?light)";
-		btnEdit.style.float = "left";
-		buttonBox.appendChild(btnEdit);
+		const editButton = document.createElement("input");
+		editButton.type = "button";
+		editButton.value = "Edit";
+		editButton.className = "with-icon";
+		editButton.style.backgroundImage = "url(mono/edit.svg?light)";
+		editButton.style.float = "left";
+		buttonBox.appendChild(editButton);
 
 		innerBox.classList.add("view-config-code-box");
 		innerBox.style.margin = "8px";
@@ -1380,64 +1380,64 @@ class DeviceView extends View {
 			hasCredentials = "ssh username" in this.link && "ssh password" in this.link;
 		}
 
-		const divFetch = document.createElement("div");
-		divFetch.style.position = "absolute";
-		divFetch.style.visibility = "hidden";
-		divFetch.style.left = "30%";
-		divFetch.style.top = "28px";
-		divFetch.style.width = "40%";
-		divFetch.style.maxWidth = "400px";
-		divFetch.style.minWidth = "220px";
-		divFetch.style.borderRadius = "8px";
-		divFetch.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
-		divFetch.style.backgroundColor = "var(--clr-pane)";
-		divFetch.style.padding = "16px 8px";
-		divFetch.style.overflow = "hidden";
-		divFetch.style.textAlign = "center";
-		dialog.innerBox.parentElement.parentElement.appendChild(divFetch);
+		const fetchBox = document.createElement("div");
+		fetchBox.style.position = "absolute";
+		fetchBox.style.visibility = "hidden";
+		fetchBox.style.left = "30%";
+		fetchBox.style.top = "28px";
+		fetchBox.style.width = "40%";
+		fetchBox.style.maxWidth = "400px";
+		fetchBox.style.minWidth = "220px";
+		fetchBox.style.borderRadius = "8px";
+		fetchBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		fetchBox.style.backgroundColor = "var(--clr-pane)";
+		fetchBox.style.padding = "16px 8px";
+		fetchBox.style.overflow = "hidden";
+		fetchBox.style.textAlign = "center";
+		dialog.innerBox.parentElement.parentElement.appendChild(fetchBox);
 
-		const lblFetchUsername = document.createElement("div");
-		lblFetchUsername.style.display = "inline-block";
-		lblFetchUsername.style.minWidth = "96px";
-		lblFetchUsername.textContent = "Username:";
+		const fetchUsernameLabel = document.createElement("div");
+		fetchUsernameLabel.style.display = "inline-block";
+		fetchUsernameLabel.style.minWidth = "96px";
+		fetchUsernameLabel.textContent = "Username:";
 
-		const txtFetchUsername = document.createElement("input");
-		txtFetchUsername.type = "text";
+		const fetchUsernameInput = document.createElement("input");
+		fetchUsernameInput.type = "text";
 
-		const lblFetchPassword = document.createElement("div");
-		lblFetchPassword.style.display = "inline-block";
-		lblFetchPassword.style.minWidth = "96px";
-		lblFetchPassword.textContent = "Password:";
+		const fetchPasswordLabel = document.createElement("div");
+		fetchPasswordLabel.style.display = "inline-block";
+		fetchPasswordLabel.style.minWidth = "96px";
+		fetchPasswordLabel.textContent = "Password:";
 
-		const txtFetchPassword = document.createElement("input");
-		txtFetchPassword.type = "password";
+		const fetchPasswordInput = document.createElement("input");
+		fetchPasswordInput.type = "password";
 
-		const btnFetchOk = document.createElement("input");
-		btnFetchOk.type = "button";
-		btnFetchOk.value = "Fetch";
+		const fetchOkButton = document.createElement("input");
+		fetchOkButton.type = "button";
+		fetchOkButton.value = "Fetch";
 
-		const btnFetchCancel = document.createElement("input");
-		btnFetchCancel.type = "button";
-		btnFetchCancel.value = "Cancel";
+		const fetchCancelButton = document.createElement("input");
+		fetchCancelButton.type = "button";
+		fetchCancelButton.value = "Cancel";
 
 		if (hasCredentials) {
-			const lblMessage = document.createElement("div");
-			lblMessage.style.display = "inline-block";
-			lblMessage.textContent = "Are you sure you want to fetch data from this device using SSH?";
-			divFetch.appendChild(lblMessage);
+			const messageLabel = document.createElement("div");
+			messageLabel.style.display = "inline-block";
+			messageLabel.textContent = "Are you sure you want to fetch data from this device using SSH?";
+			fetchBox.appendChild(messageLabel);
 		}
 		else {
-			divFetch.appendChild(lblFetchUsername);
-			divFetch.appendChild(txtFetchUsername);
-			divFetch.appendChild(document.createElement("br"));
-			divFetch.appendChild(lblFetchPassword);
-			divFetch.appendChild(txtFetchPassword);
+			fetchBox.appendChild(fetchUsernameLabel);
+			fetchBox.appendChild(fetchUsernameInput);
+			fetchBox.appendChild(document.createElement("br"));
+			fetchBox.appendChild(fetchPasswordLabel);
+			fetchBox.appendChild(fetchPasswordInput);
 		}
 
-		divFetch.appendChild(document.createElement("br"));
-		divFetch.appendChild(document.createElement("br"));
-		divFetch.appendChild(btnFetchOk);
-		divFetch.appendChild(btnFetchCancel);
+		fetchBox.appendChild(document.createElement("br"));
+		fetchBox.appendChild(document.createElement("br"));
+		fetchBox.appendChild(fetchOkButton);
+		fetchBox.appendChild(fetchCancelButton);
 
 
 		const DisplayScript = lines=> {
@@ -1445,19 +1445,19 @@ class DeviceView extends View {
 			for (let i=0; i<lines.length; i++) {
 				lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
 
-				const divLine = document.createElement("div");
+				const line = document.createElement("div");
 
 				if (lines[i].startsWith("#") || lines[i].startsWith("!")) { //comment
-					divLine.textContent = lines[i];
-					divLine.style.color = "#9C6";
-					divLine.style.fontStyle = "italic";
-					innerBox.appendChild(divLine);
+					line.textContent = lines[i];
+					line.style.color = "#9C6";
+					line.style.fontStyle = "italic";
+					innerBox.appendChild(line);
 				}
 				else if (lines[i].startsWith("/")) { //location
-					divLine.textContent = lines[i];
-					divLine.style.color = "#8FD";
-					divLine.style.paddingTop = ".5em";
-					innerBox.appendChild(divLine);
+					line.textContent = lines[i];
+					line.style.color = "#8FD";
+					line.style.paddingTop = ".5em";
+					innerBox.appendChild(line);
 				}
 				else {
 					let line = [];
@@ -1479,7 +1479,7 @@ class DeviceView extends View {
 							const newSpan = document.createElement("span");
 							newSpan.textContent = line[j];
 							newSpan.style.color = "#D98";
-							divLine.appendChild(newSpan);
+							line.appendChild(newSpan);
 						}
 						else {
 							let p = 0;
@@ -1492,7 +1492,7 @@ class DeviceView extends View {
 								const span = document.createElement("span");
 								span.textContent = line[0].substring(0, p);
 								span.style.color = "#A8F";
-								divLine.appendChild(span);
+								line.appendChild(span);
 							}*/
 
 							while (p < line[j].length) {
@@ -1505,13 +1505,13 @@ class DeviceView extends View {
 								if (p != sp) {
 									const spanA = document.createElement("span");
 									spanA.textContent = j == 0 ? line[j].substring(p, sp): line[j].substring(p, sp);
-									divLine.appendChild(spanA);
+									line.appendChild(spanA);
 								}
 
 								const spanB = document.createElement("span");
 								spanB.textContent = j == 0 ? line[j].substring(sp, ep + 1) : line[j].substring(sp, ep + 1);
 								spanB.style.color = "#5BE";
-								divLine.appendChild(spanB);
+								line.appendChild(spanB);
 
 								p = ep + 1;
 							}
@@ -1519,12 +1519,12 @@ class DeviceView extends View {
 							if (p < line[j].length) {
 								const spanC = document.createElement("span");
 								spanC.textContent = j == 0 ? line[j].substring(p): line[j].substring(p);
-								divLine.appendChild(spanC);
+								line.appendChild(spanC);
 							}
 						}
 					}
 
-					innerBox.appendChild(divLine);
+					innerBox.appendChild(line);
 				}
 			}
 		};
@@ -1536,10 +1536,10 @@ class DeviceView extends View {
 			dialog.innerBox.parentElement.style.filter = fetchToggle ? "none" : "opacity(0)";
 			dialog.innerBox.parentElement.style.visibility = fetchToggle ? "visible" : "hidden";
 
-			divFetch.style.transition = ".2s";
-			divFetch.style.filter = fetchToggle ? "opacity(0)" : "none";
-			divFetch.style.transform = fetchToggle ? "translateY(-25%)" : "none";
-			divFetch.style.visibility = fetchToggle ? "hidden" : "visible";
+			fetchBox.style.transition = ".2s";
+			fetchBox.style.filter = fetchToggle ? "opacity(0)" : "none";
+			fetchBox.style.transform = fetchToggle ? "translateY(-25%)" : "none";
+			fetchBox.style.visibility = fetchToggle ? "hidden" : "visible";
 
 			fetchToggle = !fetchToggle;
 		};
@@ -1553,12 +1553,12 @@ class DeviceView extends View {
 		}
 
 
-		btnFetch.onclick = ()=> FetchToggle();
+		fetchButton.onclick = ()=> FetchToggle();
 
-		btnFetchOk.onclick = async () => {
-			divFetch.style.filter = "opacity(0)";
-			divFetch.style.transform = "translateY(-25%)";
-			divFetch.style.visibility = "hidden";
+		fetchOkButton.onclick = async () => {
+			fetchBox.style.filter = "opacity(0)";
+			fetchBox.style.transform = "translateY(-25%)";
+			fetchBox.style.visibility = "hidden";
 
 			const spinner = document.createElement("div");
 			spinner.className = "spinner";
@@ -1579,7 +1579,7 @@ class DeviceView extends View {
 			try {
 				const response = await fetch(`db/config/fetch?file=${this.params.file}`, {
 					method: "POST",
-					body: hasCredentials ? "" : `${txtFetchUsername.value}${String.fromCharCode(127)}${txtFetchPassword.value}`
+					body: hasCredentials ? "" : `${fetchUsernameInput.value}${String.fromCharCode(127)}${fetchPasswordInput.value}`
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -1603,22 +1603,22 @@ class DeviceView extends View {
 
 		};
 
-		btnFetchCancel.onclick = () =>  btnFetch.onclick();
+		fetchCancelButton.onclick = () =>  fetchButton.onclick();
 
-		btnEdit.onclick = ()=> {
+		editButton.onclick = ()=> {
 			innerBox.contentEditable = true;
 
-			const btnSave = document.createElement("input");
-			btnSave.type = "button";
-			btnSave.value = "Save";
+			const saveButton = document.createElement("input");
+			saveButton.type = "button";
+			saveButton.value = "Save";
 
-			buttonBox.removeChild(btnEdit);
-			buttonBox.removeChild(btnOK);
+			buttonBox.removeChild(editButton);
+			buttonBox.removeChild(okButton);
 
-			buttonBox.appendChild(btnSave);
-			buttonBox.appendChild(btnCancel);
+			buttonBox.appendChild(saveButton);
+			buttonBox.appendChild(cancelButton);
 
-			btnSave.onclick = async ()=>{
+			saveButton.onclick = async ()=>{
 				const saveResponse = await fetch(`db/config/save?file=${this.params.file}`, {
 					method: "POST",
 					body: innerBox.innerText
@@ -1628,22 +1628,22 @@ class DeviceView extends View {
 				const saveJson = await saveResponse.json();
 
 				if (saveJson.error) {
-					btnCancel.onclick();
+					cancelButton.onclick();
 					this.ConfirmBox(saveJson.error, true);
 				}
 				else {
 					innerBox.contentEditable = false;
-					buttonBox.appendChild(btnEdit);
-					buttonBox.appendChild(btnOK);
-					buttonBox.removeChild(btnSave);
-					buttonBox.removeChild(btnCancel);
+					buttonBox.appendChild(editButton);
+					buttonBox.appendChild(okButton);
+					buttonBox.removeChild(saveButton);
+					buttonBox.removeChild(cancelButton);
 
 					DisplayScript(innerBox.innerText.split("\n"));
 				}
 			};
 		};
 
-		btnOK.onclick = ()=> {
+		okButton.onclick = ()=> {
 			innerBox.textContent = "";
 			dialog.Close();
 		};
@@ -1653,7 +1653,7 @@ class DeviceView extends View {
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
-		const btnOK    = dialog.btnOK;
+		const okButton    = dialog.okButton;
 		const innerBox = dialog.innerBox;
 		const buttonBox = dialog.buttonBox;
 
@@ -1665,13 +1665,13 @@ class DeviceView extends View {
 		buttonBox.style.maxHeight = "40px";
 		buttonBox.style.overflow = "hidden";
 
-		const btnExtract = document.createElement("input");
-		btnExtract.type = "button";
-		btnExtract.value = "Extract from configuration";
-		btnExtract.className = "with-icon";
-		btnExtract.style.backgroundImage = "url(mono/configfile.svg?light)";
-		btnExtract.style.float = "left";
-		buttonBox.appendChild(btnExtract);
+		const extractButton = document.createElement("input");
+		extractButton.type = "button";
+		extractButton.value = "Extract from configuration";
+		extractButton.className = "with-icon";
+		extractButton.style.backgroundImage = "url(mono/configfile.svg?light)";
+		extractButton.style.float = "left";
+		buttonBox.appendChild(extractButton);
 
 		const frame = document.createElement("div");
 		frame.style.backgroundColor = "var(--clr-control)";
@@ -1679,146 +1679,146 @@ class DeviceView extends View {
 		frame.className = "view-interfaces-frame";
 		innerBox.appendChild(frame);
 
-		const divNumbering = document.createElement("div");
-		divNumbering.style.marginTop = "24px";
-		divNumbering.style.whiteSpace = "nowrap";
-		innerBox.appendChild(divNumbering);
+		const numberingBox = document.createElement("div");
+		numberingBox.style.marginTop = "24px";
+		numberingBox.style.whiteSpace = "nowrap";
+		innerBox.appendChild(numberingBox);
 
-		const lblNumbering = document.createElement("div");
-		lblNumbering.textContent = "Numbering: ";
-		lblNumbering.style.display = "inline-block";
-		lblNumbering.style.width = "120px";
-		divNumbering.appendChild(lblNumbering);
+		const numberingLabel = document.createElement("div");
+		numberingLabel.textContent = "Numbering: ";
+		numberingLabel.style.display = "inline-block";
+		numberingLabel.style.width = "120px";
+		numberingBox.appendChild(numberingLabel);
 
-		const txtNumbering = document.createElement("select");
-		txtNumbering.style.width = "120px";
-		divNumbering.appendChild(txtNumbering);
+		const numberingInput = document.createElement("select");
+		numberingInput.style.width = "120px";
+		numberingBox.appendChild(numberingInput);
 		let numbering = ["Vertical", "Horizontal"];
 		for (let i=0; i<numbering.length; i++) {
-			const optNumbering = document.createElement("option");
-			optNumbering.value = numbering[i].toLowerCase();
-			optNumbering.textContent = numbering[i];
-			txtNumbering.appendChild(optNumbering);
+			const numberingOption = document.createElement("option");
+			numberingOption.value = numbering[i].toLowerCase();
+			numberingOption.textContent = numbering[i];
+			numberingInput.appendChild(numberingOption);
 		}
 
-		const divAdd = document.createElement("div");
-		divAdd.style.marginTop = "8px";
-		divAdd.style.whiteSpace = "nowrap";
-		innerBox.appendChild(divAdd);
+		const addBox = document.createElement("div");
+		addBox.style.marginTop = "8px";
+		addBox.style.whiteSpace = "nowrap";
+		innerBox.appendChild(addBox);
 
-		const lblAdd = document.createElement("div");
-		lblAdd.textContent = "Add interface: ";
-		lblAdd.style.display = "inline-block";
-		lblAdd.style.width = "120px";
-		divAdd.appendChild(lblAdd);
+		const addLabel = document.createElement("div");
+		addLabel.textContent = "Add interface: ";
+		addLabel.style.display = "inline-block";
+		addLabel.style.width = "120px";
+		addBox.appendChild(addLabel);
 
-		const txtPort = document.createElement("select");
-		txtPort.style.minWidth = "120px";
-		divAdd.appendChild(txtPort);
+		const portInput = document.createElement("select");
+		portInput.style.minWidth = "120px";
+		addBox.appendChild(portInput);
 		let portsArray = ["Ethernet", "SFP", "QSFP", "USB", "Serial"];
 		for (let i=0; i<portsArray.length; i++) {
-			const optPort = document.createElement("option");
-			optPort.value = portsArray[i];
-			optPort.textContent = portsArray[i];
-			txtPort.appendChild(optPort);
+			const portOption = document.createElement("option");
+			portOption.value = portsArray[i];
+			portOption.textContent = portsArray[i];
+			portInput.appendChild(portOption);
 		}
 
-		const txtSpeed = document.createElement("select");
-		txtSpeed.style.minWidth = "120px";
-		divAdd.appendChild(txtSpeed);
+		const speedInput = document.createElement("select");
+		speedInput.style.minWidth = "120px";
+		addBox.appendChild(speedInput);
 		let speedArray = [
 			"N/A",
 			"10 Mbps", "100 Mbps", "1 Gbps", "2.5 Gbps","5 Gbps", "10 Gbps",
 			"25 Gbps", "40 Gbps", "100 Gbps", "200 Gbps", "400 Gbps", "800 Gbps"
 		];
 		for (let i=0; i<speedArray.length; i++) {
-			const optSpeed = document.createElement("option");
-			optSpeed.value = speedArray[i];
-			optSpeed.textContent = speedArray[i];
-			txtSpeed.appendChild(optSpeed);
+			const speedOption = document.createElement("option");
+			speedOption.value = speedArray[i];
+			speedOption.textContent = speedArray[i];
+			speedInput.appendChild(speedOption);
 		}
-		txtSpeed.value = "1 Gbps";
+		speedInput.value = "1 Gbps";
 
-		const lblX = document.createElement("div");
-		lblX.textContent = " x ";
-		lblX.style.display = "inline-block";
-		lblX.style.marginLeft = "8px";
-		divAdd.appendChild(lblX);
+		const xLabel = document.createElement("div");
+		xLabel.textContent = " x ";
+		xLabel.style.display = "inline-block";
+		xLabel.style.marginLeft = "8px";
+		addBox.appendChild(xLabel);
 
-		const txtMulti = document.createElement("input");
-		txtMulti.type = "number";
-		txtMulti.min = 1;
-		txtMulti.max = 48;
-		txtMulti.value = 1;
-		txtMulti.style.width = "50px";
-		divAdd.appendChild(txtMulti);
+		const addBulkInput = document.createElement("input");
+		addBulkInput.type = "number";
+		addBulkInput.min = 1;
+		addBulkInput.max = 48;
+		addBulkInput.value = 1;
+		addBulkInput.style.width = "50px";
+		addBox.appendChild(addBulkInput);
 
-		const btnAdd = document.createElement("input");
-		btnAdd.type = "button";
-		btnAdd.value = "Add";
-		divAdd.appendChild(btnAdd);
+		const addBulkButton = document.createElement("input");
+		addBulkButton.type = "button";
+		addBulkButton.value = "Add";
+		addBox.appendChild(addBulkButton);
 
-		const divTitle = document.createElement("div");
-		divTitle.style.position = "absolute";
-		divTitle.style.whiteSpace = "nowrap";
-		divTitle.style.overflow = "hidden";
-		divTitle.style.left = "16px";
-		divTitle.style.right = "16px";
-		divTitle.style.top = "248px";
-		divTitle.style.height = "20px";
-		divTitle.className = "view-interfaces-edit-title";
-		innerBox.appendChild(divTitle);
+		const titleBar = document.createElement("div");
+		titleBar.style.position = "absolute";
+		titleBar.style.whiteSpace = "nowrap";
+		titleBar.style.overflow = "hidden";
+		titleBar.style.left = "16px";
+		titleBar.style.right = "16px";
+		titleBar.style.top = "248px";
+		titleBar.style.height = "20px";
+		titleBar.className = "view-interfaces-edit-title";
+		innerBox.appendChild(titleBar);
 
 		let titleArray = ["Interface", "Speed", "VLAN", "Link"];
 		for (let i=0; i<titleArray.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.textContent = titleArray[i];
-			divTitle.appendChild(newLabel);
+			titleBar.appendChild(newLabel);
 		}
 
-		const divList = document.createElement("div");
-		divList.style.position = "absolute";
-		divList.style.left = "16px";
-		divList.style.right = "0";
-		divList.style.top = "278px";
-		divList.style.bottom = "16px";
-		divList.style.overflowX = "hidden";
-		divList.style.overflowY = "scroll";
-		innerBox.appendChild(divList);
+		const listBox = document.createElement("div");
+		listBox.style.position = "absolute";
+		listBox.style.left = "16px";
+		listBox.style.right = "0";
+		listBox.style.top = "278px";
+		listBox.style.bottom = "16px";
+		listBox.style.overflowX = "hidden";
+		listBox.style.overflowY = "scroll";
+		innerBox.appendChild(listBox);
 
-		const divExtract = document.createElement("div");
-		divExtract.style.position = "absolute";
-		divExtract.style.visibility = "hidden";
-		divExtract.style.left = "30%";
-		divExtract.style.top = "28px";
-		divExtract.style.width = "40%";
-		divExtract.style.maxWidth = "400px";
-		divExtract.style.minWidth = "220px";
-		divExtract.style.borderRadius = "8px";
-		divExtract.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
-		divExtract.style.backgroundColor = "rgb(208,208,208)";
-		divExtract.style.padding = "16px 8px";
-		divExtract.style.overflow = "hidden";
-		divExtract.style.textAlign = "center";
-		dialog.innerBox.parentElement.parentElement.appendChild(divExtract);
+		const extractBox = document.createElement("div");
+		extractBox.style.position = "absolute";
+		extractBox.style.visibility = "hidden";
+		extractBox.style.left = "30%";
+		extractBox.style.top = "28px";
+		extractBox.style.width = "40%";
+		extractBox.style.maxWidth = "400px";
+		extractBox.style.minWidth = "220px";
+		extractBox.style.borderRadius = "8px";
+		extractBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		extractBox.style.backgroundColor = "rgb(208,208,208)";
+		extractBox.style.padding = "16px 8px";
+		extractBox.style.overflow = "hidden";
+		extractBox.style.textAlign = "center";
+		dialog.innerBox.parentElement.parentElement.appendChild(extractBox);
 
-		const btnExtractOk = document.createElement("input");
-		btnExtractOk.type = "button";
-		btnExtractOk.value = "Extract";
+		const extractOkButton = document.createElement("input");
+		extractOkButton.type = "button";
+		extractOkButton.value = "Extract";
 
-		const btnExtractCancel = document.createElement("input");
-		btnExtractCancel.type = "button";
-		btnExtractCancel.value = "Cancel";
+		const extractCancelButton = document.createElement("input");
+		extractCancelButton.type = "button";
+		extractCancelButton.value = "Cancel";
 
-		const lblMessage = document.createElement("div");
-		lblMessage.style.display = "inline-block";
-		lblMessage.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
-		divExtract.appendChild(lblMessage);
+		const messageLabel = document.createElement("div");
+		messageLabel.style.display = "inline-block";
+		messageLabel.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
+		extractBox.appendChild(messageLabel);
 
-		divExtract.appendChild(document.createElement("br"));
-		divExtract.appendChild(document.createElement("br"));
-		divExtract.appendChild(btnExtractOk);
-		divExtract.appendChild(btnExtractCancel);
+		extractBox.appendChild(document.createElement("br"));
+		extractBox.appendChild(document.createElement("br"));
+		extractBox.appendChild(extractOkButton);
+		extractBox.appendChild(extractCancelButton);
 
 		let list = [];
 
@@ -1829,20 +1829,20 @@ class DeviceView extends View {
 			dialog.innerBox.parentElement.style.filter = fetchToggle ? "none" : "opacity(0)";
 			dialog.innerBox.parentElement.style.visibility = fetchToggle ? "visible" : "hidden";
 
-			divExtract.style.transition = ".2s";
-			divExtract.style.filter = fetchToggle ? "opacity(0)" : "none";
-			divExtract.style.transform = fetchToggle ? "translateY(-25%)" : "none";
-			divExtract.style.visibility = fetchToggle ? "hidden" : "visible";
+			extractBox.style.transition = ".2s";
+			extractBox.style.filter = fetchToggle ? "opacity(0)" : "none";
+			extractBox.style.transform = fetchToggle ? "translateY(-25%)" : "none";
+			extractBox.style.visibility = fetchToggle ? "hidden" : "visible";
 
 			fetchToggle = !fetchToggle;
 		};
 
-		txtNumbering.onchange = ()=> this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+		numberingInput.onchange = ()=> this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 
-		btnAdd.onclick = ()=> {
-			if (list.length + parseInt(txtMulti.value) > 52) return;
-			for (let i=0; i<txtMulti.value; i++) {
-				AddInterface(txtPort.value, txtSpeed.value, 1, null, "");
+		addBulkButton.onclick = ()=> {
+			if (list.length + parseInt(addBulkInput.value) > 52) return;
+			for (let i=0; i<addBulkInput.value; i++) {
+				AddInterface(portInput.value, speedInput.value, 1, null, "");
 			}
 		};
 
@@ -1868,29 +1868,28 @@ class DeviceView extends View {
 
 			const listElement = document.createElement("div");
 			listElement.className = "view-interfaces-edit-list-element";
-			listElement.style.top = `${divList.childNodes.length * 36}px`;
-			divList.appendChild(listElement);
+			listElement.style.top = `${listBox.childNodes.length * 36}px`;
+			listBox.appendChild(listElement);
 
-			const divMove = document.createElement("div");
-			divMove.style.display = "inline-block";
-			listElement.appendChild(divMove);
+			const dragAndDropElement = document.createElement("div");
+			listElement.appendChild(dragAndDropElement);
 
 			const txtP = document.createElement("select");
 			listElement.appendChild(txtP);
 			for (let i=0; i<portsArray.length; i++) {
-				const optPort = document.createElement("option");
-				optPort.value = portsArray[i];
-				optPort.textContent = portsArray[i];
-				txtP.appendChild(optPort);
+				const portOption = document.createElement("option");
+				portOption.value = portsArray[i];
+				portOption.textContent = portsArray[i];
+				txtP.appendChild(portOption);
 			}
 
 			const txtS = document.createElement("select");
 			listElement.appendChild(txtS);
 			for (let i=0; i<speedArray.length; i++) {
-				const optSpeed = document.createElement("option");
-				optSpeed.value = speedArray[i];
-				optSpeed.textContent = speedArray[i];
-				txtS.appendChild(optSpeed);
+				const speedOption = document.createElement("option");
+				speedOption.value = speedArray[i];
+				speedOption.textContent = speedArray[i];
+				txtS.appendChild(speedOption);
 			}
 
 			const txtV = document.createElement("input");
@@ -1940,19 +1939,19 @@ class DeviceView extends View {
 				frontElement  : front,
 				listElement   : listElement,
 				numberElement : num,
-				txtPort  : txtP,
-				txtSpeed : txtS,
-				txtVlan  : txtV,
-				txtComm  : txtC,
+				portInput  : txtP,
+				speedInput : txtS,
+				vlanInput  : txtV,
+				commInput  : txtC,
 				link: link
 			};
 			list.push(obj);
 
 			front.onclick = () => listElement.scrollIntoView({ behavior: "smooth", block: "center" });
-			front.onmouseover = () => divMove.style.backgroundColor = "var(--clr-select)";
-			front.onmouseleave = () => divMove.style.backgroundColor = "";
+			front.onmouseover = () => dragAndDropElement.style.backgroundColor = "var(--clr-select)";
+			front.onmouseleave = () => dragAndDropElement.style.backgroundColor = "";
 
-			divMove.onmousedown = event => {
+			dragAndDropElement.onmousedown = event => {
 				if (event.buttons !== 1) return;
 				lastSelect = obj;
 				lastMouseY = event.clientY;
@@ -1978,7 +1977,7 @@ class DeviceView extends View {
 
 				lastSelect = null;
 				SortList();
-				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
 			innerBox.parentElement.onmousemove = event => {
@@ -1990,7 +1989,7 @@ class DeviceView extends View {
 				lastSelect.listElement.style.boxShadow = "0 0 4px rgba(0,0,0,.5)";
 				lastSelect.listElement.style.top = `${pos}px`;
 				SortList();
-				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
 			txtP.onchange = () => {
@@ -2001,12 +2000,12 @@ class DeviceView extends View {
 				case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
 				case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
 				}
-				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
 			txtS.onchange =
 			txtV.onchange = () => {
-				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
 			txtL.ondblclick = () => {
@@ -2042,41 +2041,41 @@ class DeviceView extends View {
 				frame.style.boxShadow = "rgba(0,0,0,.2) 0 12px 16px";
 				dim.appendChild(frame);
 
-				const txtFind = document.createElement("input");
-				txtFind.type = "text";
-				txtFind.placeholder = "Search";
-				frame.appendChild(txtFind);
+				const findInput = document.createElement("input");
+				findInput.type = "text";
+				findInput.placeholder = "Search";
+				frame.appendChild(findInput);
 
-				const divEquip = document.createElement("div");
-				divEquip.className = "no-results";
-				divEquip.style.position = "absolute";
-				divEquip.style.left = divEquip.style.right = "0";
-				divEquip.style.top = "48px";
-				divEquip.style.bottom = "52px";
-				divEquip.style.overflowY = "auto";
-				frame.appendChild(divEquip);
+				const devicesList = document.createElement("div");
+				devicesList.className = "no-results";
+				devicesList.style.position = "absolute";
+				devicesList.style.left = devicesList.style.right = "0";
+				devicesList.style.top = "48px";
+				devicesList.style.bottom = "52px";
+				devicesList.style.overflowY = "auto";
+				frame.appendChild(devicesList);
 
-				const btnCloseLink = document.createElement("input");
-				btnCloseLink.type = "button";
-				btnCloseLink.value = "Close";
-				btnCloseLink.style.position = "absolute";
-				btnCloseLink.style.width = "72px";
-				btnCloseLink.style.left = "calc(50% - 30px)";
-				btnCloseLink.style.bottom = "8px";
-				frame.appendChild(btnCloseLink);
+				const closeLinkButton = document.createElement("input");
+				closeLinkButton.type = "button";
+				closeLinkButton.value = "Close";
+				closeLinkButton.style.position = "absolute";
+				closeLinkButton.style.width = "72px";
+				closeLinkButton.style.left = "calc(50% - 30px)";
+				closeLinkButton.style.bottom = "8px";
+				frame.appendChild(closeLinkButton);
 
-				btnCloseLink.onclick = () => {
-					btnCloseLink.onclick = () => { };
+				closeLinkButton.onclick = () => {
+					closeLinkButton.onclick = () => { };
 					dim.style.filter = "opacity(0)";
 					setTimeout(()=> innerBox.parentElement.removeChild(dim), 200);
 				};
 
-				txtFind.onchange = txtFind.oninput = () => {
-					divEquip.textContent = "";
+				findInput.onchange = findInput.oninput = () => {
+					devicesList.textContent = "";
 
 					let keywords = [];
-					if (txtFind.value.trim().length > 0)
-						keywords = txtFind.value.trim().toLowerCase().split(" ");
+					if (findInput.value.trim().length > 0)
+						keywords = findInput.value.trim().toLowerCase().split(" ");
 
 					let EQUIP_LIST_ORDER;
 					if (localStorage.deviceslist_columns)
@@ -2105,7 +2104,7 @@ class DeviceView extends View {
 
 						const element = document.createElement("div");
 						element.className = "list-element";
-						divEquip.appendChild(element);
+						devicesList.appendChild(element);
 
 						const type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : null;
 
@@ -2139,22 +2138,22 @@ class DeviceView extends View {
 							obj.link = file;
 							txtL.value = value;
 							txtL.style.backgroundImage = icon.style.backgroundImage;
-							btnCloseLink.onclick();
+							closeLinkButton.onclick();
 						};
 					}
 				};
 
-				txtFind.focus();
+				findInput.focus();
 
-				setTimeout(() => txtFind.onchange(), 1);
+				setTimeout(() => findInput.onchange(), 1);
 			};
 
 			remove.onclick = () => {
-				divList.removeChild(listElement);
+				listBox.removeChild(listElement);
 				frame.removeChild(front);
 				list.splice(list.indexOf(obj), 1);
 				SortList();
-				this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
 			txtP.value = port;
@@ -2162,7 +2161,7 @@ class DeviceView extends View {
 			txtP.onchange();
 
 			SortList();
-			this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+			this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 		};
 
 		const SortList = ()=> {
@@ -2177,14 +2176,14 @@ class DeviceView extends View {
 			}
 		};
 
-		this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+		this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 
-		btnExtract.onclick = ()=> FetchToggle();
+		extractButton.onclick = ()=> FetchToggle();
 
-		btnExtractOk.onclick = async ()=> {
-			divExtract.style.filter = "opacity(0)";
-			divExtract.style.transform = "translateY(-25%)";
-			divExtract.style.visibility = "hidden";
+		extractOkButton.onclick = async ()=> {
+			extractBox.style.filter = "opacity(0)";
+			extractBox.style.transform = "translateY(-25%)";
+			extractBox.style.visibility = "hidden";
 
 			const spinner = document.createElement("div");
 			spinner.className = "spinner";
@@ -2211,12 +2210,12 @@ class DeviceView extends View {
 
 				if (json.error) {
 					message.textContent = json.error;
-					divFetch.removeChild(iconsContainer);
-					divFetch.removeChild(btnFetchOk);
-					btnFetchCancel.value = "Close";
+					fetchBox.removeChild(iconsContainer);
+					fetchBox.removeChild(fetchOkButton);
+					fetchCancelButton.value = "Close";
 				}
 				else if (json instanceof Array) {
-					divList.textContent = "";
+					listBox.textContent = "";
 					frame.textContent = "";
 					list = [];
 
@@ -2225,9 +2224,9 @@ class DeviceView extends View {
 					}
 
 					SortList();
-					this.InitInterfaceComponents(frame, txtNumbering.value, list, true);
+					this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 
-					btnFetch.onclick();
+					fetchButton.onclick();
 				}
 
 			}
@@ -2243,7 +2242,7 @@ class DeviceView extends View {
 			}
 		};
 
-		btnExtractCancel.onclick = ()=> FetchToggle();
+		extractCancelButton.onclick = ()=> FetchToggle();
 
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
@@ -2256,18 +2255,18 @@ class DeviceView extends View {
 			}
 		}
 
-		btnOK.addEventListener("click", async ()=> {
+		okButton.addEventListener("click", async ()=> {
 				let interfaces = {
 					i: [],
-					n: txtNumbering.value
+					n: numberingInput.value
 				};
 
 				for (let i=0; i<list.length; i++) {
 					interfaces.i.push({
-						i: list[i].txtPort.value,
-						s: list[i].txtSpeed.value,
-						v: list[i].txtVlan.value,
-						c: list[i].txtComm.value,
+						i: list[i].portInput.value,
+						s: list[i].speedInput.value,
+						v: list[i].vlanInput.value,
+						c: list[i].commInput.value,
 						l: list[i].link
 					});
 				}
@@ -2307,7 +2306,7 @@ class DeviceView extends View {
 
 	InitInterfaceComponents(frame, numbering, list, editMode) {
 		let isMixedInterface = editMode ?
-			!list.every(o => o.txtPort.value === list[0].txtPort.value) :
+			!list.every(o => o.portInput.value === list[0].portInput.value) :
 			!list.every(o => o.port === list[0].port);
 
 		let rows = 1, columns = 4;
@@ -2353,7 +2352,7 @@ class DeviceView extends View {
 
 		let vlans = [];
 		for (let i=0; i<list.length; i++) {
-			let v = editMode ? list[i].txtVlan.value : list[i].vlan;
+			let v = editMode ? list[i].vlanInput.value : list[i].vlan;
 			if (v.length === 0) continue;
 			if (v === "TRUNK") continue;
 			if (!vlans.includes(v)) vlans.push(v);
@@ -2364,13 +2363,13 @@ class DeviceView extends View {
 			let led2 = list[i].frontElement.childNodes[0].childNodes[1];
 
 			if (led1) {
-				list[i].speedColor = this.GetSpeedColor(editMode ? list[i].txtSpeed.value : list[i].speed);
+				list[i].speedColor = this.GetSpeedColor(editMode ? list[i].speedInput.value : list[i].speed);
 				led1.style.backgroundColor = list[i].speedColor;
 				led1.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
 			}
 
 			if (led2) {
-				list[i].vlanColor = this.GetVlanColor(editMode ? list[i].txtVlan.value : list[i].vlan, vlans);
+				list[i].vlanColor = this.GetVlanColor(editMode ? list[i].vlanInput.value : list[i].vlan, vlans);
 				led2.style.backgroundColor = list[i].vlanColor;
 				led2.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
 			}
@@ -2438,104 +2437,103 @@ class DeviceView extends View {
 		grid.style.alignItems = "center";
 		dialog.innerBox.appendChild(grid);
 
-		const chkDns = document.createElement("input");
-		chkDns.type = "checkbox";
-		chkDns.checked = true;
-		chkDns.disabled = true;
-		grid.appendChild(chkDns);
-		const dns = this.AddCheckBoxLabel(grid, chkDns, "DNS");
+		const dnsCheckbox = document.createElement("input");
+		dnsCheckbox.type = "checkbox";
+		dnsCheckbox.checked = true;
+		dnsCheckbox.disabled = true;
+		grid.appendChild(dnsCheckbox);
+		const dns = this.AddCheckBoxLabel(grid, dnsCheckbox, "DNS");
 		dns.style.gridArea = "1 / 2";
 
-		const chkWmi = document.createElement("input");
-		chkWmi.type = "checkbox";
-		chkWmi.checked = true;
-		grid.appendChild(chkWmi);
-		const wmi = this.AddCheckBoxLabel(grid, chkWmi, "WMI");
+		const wmiCheckbox = document.createElement("input");
+		wmiCheckbox.type = "checkbox";
+		wmiCheckbox.checked = true;
+		grid.appendChild(wmiCheckbox);
+		const wmi = this.AddCheckBoxLabel(grid, wmiCheckbox, "WMI");
 		wmi.style.gridArea = "2 / 2";
 
-		const chkSnmp = document.createElement("input");
-		chkSnmp.type = "checkbox";
-		chkSnmp.checked = false;
-		chkSnmp.disabled = true; //TODO:
-		grid.appendChild(chkSnmp);
-		const snmp = this.AddCheckBoxLabel(grid, chkSnmp, "SNMP");
-		snmp.style.gridArea = "3 / 2";
+		const snmpCheckBox = document.createElement("input");
+		snmpCheckBox.type = "checkbox";
+		snmpCheckBox.checked = false;
+		snmpCheckBox.disabled = true; //TODO:
+		grid.appendChild(snmpCheckBox);
+		this.AddCheckBoxLabel(grid, snmpCheckBox, "SNMP").style.gridArea = "3 / 2";;
 
-		const txtSnmp = document.createElement("select");
-		txtSnmp.style.marginLeft = "0";
-		txtSnmp.style.width = "160px";
-		txtSnmp.style.gridArea = "3 / 3";
-		txtSnmp.disabled = true;
-		grid.appendChild(txtSnmp);
+		const snmpInput = document.createElement("select");
+		snmpInput.style.marginLeft = "0";
+		snmpInput.style.width = "160px";
+		snmpInput.style.gridArea = "3 / 3";
+		snmpInput.disabled = true;
+		grid.appendChild(snmpInput);
 
-		const optVer2 = document.createElement("option");
-		optVer2.value = "2";
-		optVer2.text = "Version 2";
-		txtSnmp.appendChild(optVer2);
+		const ver2Option = document.createElement("option");
+		ver2Option.value = "2";
+		ver2Option.text = "Version 2";
+		snmpInput.appendChild(ver2Option);
 
-		const optVer3 = document.createElement("option");
-		optVer3.value = "3";
-		optVer3.text = "Version 3";
-		txtSnmp.appendChild(optVer3);
+		const ver3Option = document.createElement("option");
+		ver3Option.value = "3";
+		ver3Option.text = "Version 3";
+		snmpInput.appendChild(ver3Option);
 
-		txtSnmp.value = "3";
+		snmpInput.value = "3";
 
-		const chkKerberos = document.createElement("input");
-		chkKerberos.type = "checkbox";
-		chkKerberos.checked = true;
-		grid.appendChild(chkKerberos);
-		const kerberos = this.AddCheckBoxLabel(grid, chkKerberos, "Kerberos");
+		const kerberosCheckbox = document.createElement("input");
+		kerberosCheckbox.type = "checkbox";
+		kerberosCheckbox.checked = true;
+		grid.appendChild(kerberosCheckbox);
+		const kerberos = this.AddCheckBoxLabel(grid, kerberosCheckbox, "Kerberos");
 		kerberos.style.gridArea = "4 / 2";
 
-		const chkPortScan = document.createElement("input");
-		chkPortScan.type = "checkbox";
-		chkPortScan.checked = true;
-		grid.appendChild(chkPortScan);
-		const portScan = this.AddCheckBoxLabel(grid, chkPortScan, "Port scan");
+		const portScanCheckbox = document.createElement("input");
+		portScanCheckbox.type = "checkbox";
+		portScanCheckbox.checked = true;
+		grid.appendChild(portScanCheckbox);
+		const portScan = this.AddCheckBoxLabel(grid, portScanCheckbox, "Port scan");
 		portScan.style.gridArea = "5 / 2";
 
-		const txtPortScan = document.createElement("select");
-		txtPortScan.style.marginLeft = "0";
-		txtPortScan.style.width = "160px";
-		txtPortScan.style.gridArea = "5 / 3";
-		grid.appendChild(txtPortScan);
+		const portScanInput = document.createElement("select");
+		portScanInput.style.marginLeft = "0";
+		portScanInput.style.width = "160px";
+		portScanInput.style.gridArea = "5 / 3";
+		grid.appendChild(portScanInput);
 
-		const optBasic = document.createElement("option");
-		optBasic.value = "basic";
-		optBasic.text = "Basic";
-		txtPortScan.appendChild(optBasic);
+		const basicOption = document.createElement("option");
+		basicOption.value = "basic";
+		basicOption.text = "Basic";
+		portScanInput.appendChild(basicOption);
 
-		const optWellKnown = document.createElement("option");
-		optWellKnown.value = "wellknown";
-		optWellKnown.text = "Well known ports (1-1023)";
-		txtPortScan.appendChild(optWellKnown);
+		const wellKnownOption = document.createElement("option");
+		wellKnownOption.value = "wellknown";
+		wellKnownOption.text = "Well known ports (1-1023)";
+		portScanInput.appendChild(wellKnownOption);
 
-		const optExtended = document.createElement("option");
-		optExtended.value = "extended";
-		optExtended.text = "Extended (1-8191)";
-		txtPortScan.appendChild(optExtended);
+		const extendedOption = document.createElement("option");
+		extendedOption.value = "extended";
+		extendedOption.text = "Extended (1-8191)";
+		portScanInput.appendChild(extendedOption);
 
-		chkSnmp.onchange = ()=> {
-			if (chkSnmp.checked) {
-				txtSnmp.disabled = false;
+		snmpCheckBox.onchange = ()=> {
+			if (snmpCheckBox.checked) {
+				snmpInput.disabled = false;
 			}
 			else {
-				txtSnmp.disabled = true;
+				snmpInput.disabled = true;
 			}
 		};
 
-		chkPortScan.onchange = ()=> {
-			if (chkPortScan.checked) {
-				txtPortScan.disabled = false;
+		portScanCheckbox.onchange = ()=> {
+			if (portScanCheckbox.checked) {
+				portScanInput.disabled = false;
 			}
 			else {
-				txtPortScan.disabled = true;
+				portScanInput.disabled = true;
 			}
 		};
 
-		dialog.btnOK.onclick = async ()=> {
+		dialog.okButton.onclick = async ()=> {
 			dialog.innerBox.textContent = "";
-			dialog.btnOK.style.display = "none";
+			dialog.okButton.style.display = "none";
 
 			const spinner = document.createElement("div");
 			spinner.className = "spinner";
@@ -2556,16 +2554,16 @@ class DeviceView extends View {
 			dialog.innerBox.parentElement.style.height = "180px";
 
 			let isCanceled = false;
-			dialog.btnCancel.addEventListener("click", ()=>{
+			dialog.cancelButton.addEventListener("click", ()=>{
 				isCanceled = true;
 			});
 
 			try {
 				let url = `fetch/singledevice?target=${target}`;
-				if (chkWmi.checked)      url += `&wmi=true`;
-				if (chkSnmp.checked)     url += `&snmp=${txtSnmp.value}`;
-				if (chkKerberos.checked) url += `&kerberos=true`;
-				if (chkPortScan.checked) url += `&portscan=${txtPortScan.value}`;
+				if (wmiCheckbox.checked)      url += `&wmi=true`;
+				if (snmpCheckBox.checked)     url += `&snmp=${snmpInput.value}`;
+				if (kerberosCheckbox.checked) url += `&kerberos=true`;
+				if (portScanCheckbox.checked) url += `&portscan=${portScanInput.value}`;
 
 				const response = await fetch(url);
 
@@ -2576,7 +2574,7 @@ class DeviceView extends View {
 					throw new Error(json.error);
 				}
 
-				dialog.btnCancel.onclick();
+				dialog.cancelButton.onclick();
 
 				if (isCanceled) return;
 
@@ -2630,7 +2628,7 @@ class DeviceView extends View {
 				dialog.innerBox.parentElement.style.transition = ".4s";
 				dialog.innerBox.parentElement.style.height = "120px";
 				dialog.innerBox.textContent = "";
-				dialog.btnCancel.value = "Close";
+				dialog.cancelButton.value = "Close";
 
 				const errorBox = document.createElement("div");
 				errorBox.textContent = ex;
@@ -2641,7 +2639,7 @@ class DeviceView extends View {
 			}
 		};
 
-		dialog.btnOK.focus();
+		dialog.okButton.focus();
 	}
 
 	Copy() { //override

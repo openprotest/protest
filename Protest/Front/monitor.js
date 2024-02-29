@@ -241,10 +241,10 @@ class Monitor extends Window {
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
-		btnOK.disabled = true;
+		okButton.disabled = true;
 
 		const spinner = document.createElement("div");
 		spinner.className = "spinner";
@@ -262,14 +262,14 @@ class Monitor extends Window {
 
 		const wmiClasses = await this.GetWmiClasses();
 		if (!wmiClasses.classes) {
-			btnOK.onclick();
+			okButton.onclick();
 			setTimeout(()=> this.ConfirmBox("Unable to load WMI classes.", true, "mono/resmonitor.svg"), 250);
 			return;
 		}
 
 		dialog.innerBox.removeChild(spinner);
 		dialog.innerBox.removeChild(status);
-		btnOK.disabled = false;
+		okButton.disabled = false;
 
 		innerBox.style.margin = "16px";
 
@@ -358,7 +358,7 @@ class Monitor extends Window {
 			template.ondblclick = ()=> {
 				switch (protocol) {
 				case "wmi":
-					btnOK.onclick();
+					okButton.onclick();
 					break;
 
 				case "snmp":
@@ -544,12 +544,12 @@ class Monitor extends Window {
 			wmiTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
 			wmiTab.style.backgroundColor = "var(--clr-pane)";
 
-			const txtClassFilter = document.createElement("input");
-			txtClassFilter.type = "text";
-			txtClassFilter.placeholder = "Find..";
-			txtClassFilter.style.gridArea = "1 / 1";
+			const classFilterInput = document.createElement("input");
+			classFilterInput.type = "text";
+			classFilterInput.placeholder = "Find..";
+			classFilterInput.style.gridArea = "1 / 1";
 
-			innerBox.append(txtClassFilter);
+			innerBox.append(classFilterInput);
 
 			const classesBox = document.createElement("div");
 			classesBox.className = "wmi-classes-list";
@@ -614,17 +614,17 @@ class Monitor extends Window {
 			let lastProperties = queryInput.value.substring(select_index + 6, from_index).trim();
 			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim());
 
-			txtClassFilter.onkeydown = event=>{
+			classFilterInput.onkeydown = event=>{
 				if (event.code === "Escape") {
-					txtClassFilter.value = "";
-					txtClassFilter.oninput();
+					classFilterInput.value = "";
+					classFilterInput.oninput();
 				}
 			};
 
 			let selected = null;
-			txtClassFilter.oninput = ()=> {
+			classFilterInput.oninput = ()=> {
 				if (!wmiClasses.classes) return;
-				let filter = txtClassFilter.value.toLowerCase();
+				let filter = classFilterInput.value.toLowerCase();
 
 				classesBox.textContent = "";
 
@@ -666,10 +666,10 @@ class Monitor extends Window {
 				}
 			};
 
-			txtClassFilter.oninput();
+			classFilterInput.oninput();
 		};
 
-		btnOK.onclick = ()=> {
+		okButton.onclick = ()=> {
 			dialog.Close();
 
 			this.count++;

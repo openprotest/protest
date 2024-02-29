@@ -15,37 +15,37 @@ class Settings extends Tabs {
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.tabZones = this.AddTab("Zones", "mono/router.svg", "Network zones");
-		this.tabEmailProfiles = this.AddTab("SMTP profiles", "mono/email.svg");
-		this.tabAd = this.AddTab("Active directory", "mono/directory.svg");
-		this.tabGraph = this.AddTab("Microsoft Graph", "mono/graph.svg");
+		this.zonesTab         = this.AddTab("Zones", "mono/router.svg", "Network zones");
+		this.emailProfilesTab = this.AddTab("SMTP profiles", "mono/email.svg");
+		this.adTab            = this.AddTab("Active directory", "mono/directory.svg");
+		this.graphTab         = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
-		this.tabZones.onclick = ()=> this.ShowZones();
-		this.tabEmailProfiles.onclick = ()=> this.ShowEmailProfiles();
-		this.tabAd.onclick = ()=> this.ShowActiveDirectory();
-		this.tabGraph.onclick = ()=> this.ShowGraph();
+		this.zonesTab.onclick         = ()=> this.ShowZones();
+		this.emailProfilesTab.onclick = ()=> this.ShowEmailProfiles();
+		this.adTab.onclick            = ()=> this.ShowActiveDirectory();
+		this.graphTab.onclick         = ()=> this.ShowGraph();
 
 		//TODO:
-		this.tabGraph.style.display = "none";
+		this.graphTab.style.display = "none";
 
 		switch (this.params) {
 		case "smtpprofiles":
-			this.tabEmailProfiles.className = "v-tab-selected";
+			this.emailProfilesTab.className = "v-tab-selected";
 			this.ShowEmailProfiles();
 			break;
 
 		case "ad":
-			this.tabAd.className = "v-tab-selected";
+			this.adTab.className = "v-tab-selected";
 			this.ShowActiveDirectory();
 			break;
 
 		case "graph":
-			this.tabGraph.className = "v-tab-selected";
+			this.graphTab.className = "v-tab-selected";
 			this.ShowGraph();
 			break;
 
 		default:
-			this.tabZones.className = "v-tab-selected";
+			this.zonesTab.className = "v-tab-selected";
 			this.ShowZones();
 			break;
 		}
@@ -116,17 +116,17 @@ class Settings extends Tabs {
 
 		let labels = [];
 
-		const lblName = document.createElement("div");
-		lblName.textContent = "Name";
-		labels.push(lblName);
+		const nameLabel = document.createElement("div");
+		nameLabel.textContent = "Name";
+		labels.push(nameLabel);
 
-		const lblNetwork = document.createElement("div");
-		lblNetwork.textContent = "Network zone";
-		labels.push(lblNetwork);
+		const networkLabel = document.createElement("div");
+		networkLabel.textContent = "Network zone";
+		labels.push(networkLabel);
 
-		const lblColor = document.createElement("div");
-		lblColor.textContent = "Color";
-		labels.push(lblColor);
+		const colorLabel = document.createElement("div");
+		colorLabel.textContent = "Color";
+		labels.push(colorLabel);
 
 		for (let i = 0; i < labels.length; i++) {
 			labels[i].style.display = "inline-block";
@@ -140,7 +140,7 @@ class Settings extends Tabs {
 			labels[i].style.paddingLeft = "4px";
 		}
 
-		titleBar.append(lblName, lblNetwork, lblColor);
+		titleBar.append(nameLabel, networkLabel, colorLabel);
 
 		this.zonesList = document.createElement("div");
 		this.zonesList.className = "no-results";
@@ -285,7 +285,7 @@ class Settings extends Tabs {
 			dialog.innerBox.parentElement.style.maxWidth = "480px";
 			dialog.innerBox.style.textAlign = "center";
 
-			dialog.btnOK.value = "Test";
+			dialog.okButton.value = "Test";
 
 			const recipientInput = document.createElement("input");
 			recipientInput.type = "text";
@@ -296,9 +296,9 @@ class Settings extends Tabs {
 
 			recipientInput.focus();
 
-			dialog.btnOK.onclick = async ()=> {
+			dialog.okButton.onclick = async ()=> {
 				if (recipientInput.value.length === 0) return;
-				dialog.btnOK.disabled = true;
+				dialog.okButton.disabled = true;
 				dialog.innerBox.removeChild(recipientInput);
 				dialog.innerBox.parentElement.style.maxHeight = "180px";
 
@@ -333,7 +333,7 @@ class Settings extends Tabs {
 
 			recipientInput.onkeydown = event=> {
 				if (event.key === "Enter") {
-					dialog.btnOK.click();
+					dialog.okButton.click();
 				}
 			}
 		};
@@ -528,10 +528,10 @@ class Settings extends Tabs {
 		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
-		btnOK.value = "Save";
+		okButton.value = "Save";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
@@ -564,23 +564,23 @@ class Settings extends Tabs {
 		colorInput.type = "color";
 		innerBox.append(colorLabel, colorInput);
 
-		const chkTrusted = document.createElement("input");
-		chkTrusted.type = "checkbox";
-		chkTrusted.checked = false;
+		const trustedCheckbox = document.createElement("input");
+		trustedCheckbox.type = "checkbox";
+		trustedCheckbox.checked = false;
 		const trustedBox = document.createElement("div");
 		trustedBox.style.gridArea = "4 / 2 / 4 / 4";
-		trustedBox.appendChild(chkTrusted);
+		trustedBox.appendChild(trustedCheckbox);
 		innerBox.append(trustedBox);
-		const domainUser = this.AddCheckBoxLabel(trustedBox, chkTrusted, "Trusted zone");
+		const domainUser = this.AddCheckBoxLabel(trustedBox, trustedCheckbox, "Trusted zone");
 
 		if (object) {
 			nameInput.value    = object.name;
 			networkInput.value = object.network;
 			colorInput.value   = object.color;
-			chkTrusted.checked = object.isTrusted;
+			trustedCheckbox.checked = object.isTrusted;
 		}
 
-		btnOK.addEventListener("click", async ()=>{
+		okButton.addEventListener("click", async ()=>{
 			let isNew = object === null;
 			let index = this.zones.indexOf(object);
 
@@ -592,7 +592,7 @@ class Settings extends Tabs {
 				name     : nameInput.value,
 				network  : networkInput.value,
 				color    : colorInput.value,
-				isTrusted: chkTrusted.checked
+				isTrusted: trustedCheckbox.checked
 			};
 
 			if (isNew) {
@@ -613,10 +613,10 @@ class Settings extends Tabs {
 		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
-		btnOK.value = "Save";
+		okButton.value = "Save";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
@@ -672,11 +672,11 @@ class Settings extends Tabs {
 		const sslBox = document.createElement("div");
 		sslBox.style.gridArea = "6 / 2";
 		innerBox.appendChild(sslBox);
-		const chkSsl = document.createElement("input");
-		chkSsl.type = "checkbox";
-		chkSsl.checked = true;
-		sslBox.appendChild(chkSsl);
-		this.AddCheckBoxLabel(sslBox, chkSsl, "SSL");
+		const sslCheckbox = document.createElement("input");
+		sslCheckbox.type = "checkbox";
+		sslCheckbox.checked = true;
+		sslBox.appendChild(sslCheckbox);
+		this.AddCheckBoxLabel(sslBox, sslCheckbox, "SSL");
 
 		if (object) {
 			serverInput.value = object.server
@@ -684,10 +684,10 @@ class Settings extends Tabs {
 			senderInput.value = object.sender;
 			usernameInput.value = object.username;
 			passwordInput.value = object.password;
-			chkSsl.checked = object.ssl;
+			sslCheckbox.checked = object.ssl;
 		}
 
-		btnOK.addEventListener("click", async ()=> {
+		okButton.addEventListener("click", async ()=> {
 			let isNew = object === null;
 			let index = this.profiles.indexOf(object);
 
@@ -701,7 +701,7 @@ class Settings extends Tabs {
 				sender     : senderInput.value,
 				username   : usernameInput.value,
 				password   : passwordInput.value,
-				ssl        : chkSsl.checked,
+				ssl        : sslCheckbox.checked,
 			};
 
 			if (object && object.guid) newObject.guid = object.guid;

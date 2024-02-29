@@ -25,22 +25,22 @@ class Telnet extends Window {
 		this.list.style.userSelect = "text";
 		this.content.appendChild(this.list);
 
-		this.txtInput = document.createElement("input");
-		this.txtInput.type = "text";
-		this.txtInput.style.position = "absolute";
-		this.txtInput.style.left = "8px";
-		this.txtInput.style.bottom = "8px";
-		this.txtInput.style.width = "calc(100% - 16px)";
-		this.txtInput.style.margin = "0";
-		this.txtInput.style.border = "0";
-		this.txtInput.style.boxSizing = "border-box";
-		this.content.appendChild(this.txtInput);
+		this.inputBox = document.createElement("input");
+		this.inputBox.type = "text";
+		this.inputBox.style.position = "absolute";
+		this.inputBox.style.left = "8px";
+		this.inputBox.style.bottom = "8px";
+		this.inputBox.style.width = "calc(100% - 16px)";
+		this.inputBox.style.margin = "0";
+		this.inputBox.style.border = "0";
+		this.inputBox.style.boxSizing = "border-box";
+		this.content.appendChild(this.inputBox);
 
-		this.txtInput.onkeydown = event=> {
+		this.inputBox.onkeydown = event=> {
 			if (event.code === "Enter") {
-				this.Push(this.txtInput.value);
+				this.Push(this.inputBox.value);
 				this.list.scrollTop = this.list.scrollHeight;
-				this.txtInput.value = "";
+				this.inputBox.value = "";
 				event.preventDefault();
 			}
 
@@ -52,7 +52,7 @@ class Telnet extends Window {
 
 				if (historyIndex < 0) historyIndex = this.history.length - 1;
 				historyIndex %= this.history.length;
-				this.txtInput.value = this.history[historyIndex];
+				this.inputBox.value = this.history[historyIndex];
 
 				event.preventDefault();
 			}
@@ -62,10 +62,10 @@ class Telnet extends Window {
 		};
 
 
-		this.defaultElement = this.txtInput;
+		this.defaultElement = this.inputBox;
 
-		this.txtInput.onfocus = ()=>  this.BringToFront();
-		this.escAction = ()=> { this.txtInput.value = ""; };
+		this.inputBox.onfocus = ()=>  this.BringToFront();
+		this.escAction = ()=> { this.inputBox.value = ""; };
 
 		this.ConnectDialog(this.params);
 	}
@@ -113,56 +113,56 @@ class Telnet extends Window {
 		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const buttonBox = dialog.buttonBox;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.textAlign = "center";
 		innerBox.style.padding = "20px 40px";
 
-		btnOK.value = "Connect";
-		if (target.length === 0) btnOK.setAttribute("disabled", true);
+		okButton.value = "Connect";
+		if (target.length === 0) okButton.setAttribute("disabled", true);
 
-		const lblHost = document.createElement("div");
-		lblHost.textContent = "Remote host:";
-		lblHost.style.display = "inline-block";
-		lblHost.style.minWidth = "100px";
-		innerBox.appendChild(lblHost);
+		const hostLabel = document.createElement("div");
+		hostLabel.textContent = "Remote host:";
+		hostLabel.style.display = "inline-block";
+		hostLabel.style.minWidth = "100px";
+		innerBox.appendChild(hostLabel);
 
-		const txtHost = document.createElement("input");
-		txtHost.type = "text";
-		txtHost.value = target;
-		txtHost.placeholder = "10.0.0.1:23";
-		innerBox.appendChild(txtHost);
+		const hostInput = document.createElement("input");
+		hostInput.type = "text";
+		hostInput.value = target;
+		hostInput.placeholder = "10.0.0.1:23";
+		innerBox.appendChild(hostInput);
 
-		setTimeout(()=> txtHost.focus(), 50);
+		setTimeout(()=> hostInput.focus(), 50);
 
-		txtHost.oninput = txtHost.onchange = ()=> {
-			if (txtHost.value.length === 0)
-				btnOK.setAttribute("disabled", true);
+		hostInput.oninput = hostInput.onchange = ()=> {
+			if (hostInput.value.length === 0)
+				okButton.setAttribute("disabled", true);
 			else
-				btnOK.removeAttribute("disabled");
+				okButton.removeAttribute("disabled");
 		};
 
-		txtHost.onkeydown = event=> {
-			if (txtHost.value.length === 0) return;
+		hostInput.onkeydown = event=> {
+			if (hostInput.value.length === 0) return;
 			if (event.code === "Enter") {
-				this.Connect(txtHost.value);
-				btnCancel.onclick();
+				this.Connect(hostInput.value);
+				cancelButton.onclick();
 			}
 		};
 
-		btnOK.addEventListener("click", ()=> {
-			this.Connect(txtHost.value);
+		okButton.addEventListener("click", ()=> {
+			this.Connect(hostInput.value);
 		});
 
-		btnCancel.addEventListener("click", ()=> this.Close());
+		cancelButton.addEventListener("click", ()=> this.Close());
 	}
 
 	Connect(target) {
 		this.params = target;
-		this.txtInput.focus();
+		this.inputBox.focus();
 
 		let server = window.location.href;
 		server = server.replace("https://", "");

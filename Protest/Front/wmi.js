@@ -14,86 +14,86 @@ class Wmi extends Window {
 
 		this.content.style.overflow = "hidden";
 
-		const divInput = document.createElement("div");
-		divInput.className = "wmi-input";
-		this.content.appendChild(divInput);
+		const wmiInput = document.createElement("div");
+		wmiInput.className = "wmi-input";
+		this.content.appendChild(wmiInput);
 
-		const lblTarget = document.createElement("div");
-		lblTarget.style.gridArea = "1 / 1";
-		lblTarget.textContent = "Target: ";
-		divInput.appendChild(lblTarget);
+		const targetLabel = document.createElement("div");
+		targetLabel.style.gridArea = "1 / 1";
+		targetLabel.textContent = "Target: ";
+		wmiInput.appendChild(targetLabel);
 
-		this.txtTarget = document.createElement("input");
-		this.txtTarget.type = "text";
-		this.txtTarget.placeholder = "hostname or ip";
-		this.txtTarget.style.gridArea = "1 / 2";
-		if (this.params.target != null) this.txtTarget.value = this.params.target;
-		divInput.appendChild(this.txtTarget);
+		this.targetInput = document.createElement("input");
+		this.targetInput.type = "text";
+		this.targetInput.placeholder = "hostname or ip";
+		this.targetInput.style.gridArea = "1 / 2";
+		if (this.params.target != null) this.targetInput.value = this.params.target;
+		wmiInput.appendChild(this.targetInput);
 
-		const btnTarget = document.createElement("input");
-		btnTarget.type = "button";
-		btnTarget.value = "...";
-		btnTarget.style.gridArea = "2 / 3";
-		divInput.appendChild(btnTarget);
+		const targetButton = document.createElement("input");
+		targetButton.type = "button";
+		targetButton.value = "...";
+		targetButton.style.gridArea = "2 / 3";
+		wmiInput.appendChild(targetButton);
 
-		const lblQuery = document.createElement("div");
-		lblQuery.textContent = "Query: ";
-		lblQuery.style.gridArea = "2 / 1";
-		divInput.appendChild(lblQuery);
+		const queryLabel = document.createElement("div");
+		queryLabel.textContent = "Query: ";
+		queryLabel.style.gridArea = "2 / 1";
+		wmiInput.appendChild(queryLabel);
 
-		this.txtQuery = document.createElement("textarea");
-		this.txtQuery.placeholder = "e.g.: SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
-		this.txtQuery.style.gridArea = "2 / 2 / 2 span / auto";
-		//this.txtQuery.style.fontFamily = "monospace";
-		this.txtQuery.style.resize = "none";
-		if (this.params.query != null) this.txtQuery.value = this.params.query;
-		divInput.appendChild(this.txtQuery);
+		this.queryInput = document.createElement("textarea");
+		this.queryInput.placeholder = "e.g.: SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
+		this.queryInput.style.gridArea = "2 / 2 / 2 span / auto";
+		//this.queryInput.style.fontFamily = "monospace";
+		this.queryInput.style.resize = "none";
+		if (this.params.query != null) this.queryInput.value = this.params.query;
+		wmiInput.appendChild(this.queryInput);
 
-		this.btnExecute = document.createElement("input");
-		this.btnExecute.type = "button";
-		this.btnExecute.value = "Execute";
-		this.btnExecute.style.height = "auto";
-		this.btnExecute.style.gridArea = "3 / 3";
-		divInput.appendChild(this.btnExecute);
+		this.executeButton = document.createElement("input");
+		this.executeButton.type = "button";
+		this.executeButton.value = "Execute";
+		this.executeButton.style.height = "auto";
+		this.executeButton.style.gridArea = "3 / 3";
+		wmiInput.appendChild(this.executeButton);
 
-		const btnToggle = document.createElement("input");
-		btnToggle.type = "button";
-		btnToggle.className = "wmi-toggle-button";
-		this.content.appendChild(btnToggle);
+		const toggleButton = document.createElement("input");
+		toggleButton.type = "button";
+		toggleButton.className = "wmi-toggle-button";
+		this.content.appendChild(toggleButton);
 
-		this.divPlot = document.createElement("div");
-		this.divPlot.className = "wmi-plot no-results";
-		this.content.appendChild(this.divPlot);
+		this.plotBox = document.createElement("div");
+		this.plotBox.className = "wmi-plot no-results";
+		this.content.appendChild(this.plotBox);
 
-		this.txtTarget.oninput = ()=> { this.params.target = this.txtTarget.value };
-		this.txtQuery.oninput = ()=> { this.params.query = this.txtQuery.value };
+		this.targetInput.oninput = ()=> { this.params.target = this.targetInput.value };
+		this.queryInput.oninput = ()=> { this.params.query = this.queryInput.value };
 
-		btnTarget.onclick = ()=> this.SequelAssistant();
+		targetButton.onclick = ()=> this.SequelAssistant();
 
-		this.btnExecute.onclick = ()=> this.Query();
+		this.executeButton.onclick = ()=> this.Query();
 
-		btnToggle.onclick =()=> {
-			if (divInput.style.visibility === "hidden") {
-				btnToggle.style.top = "96px";
-				btnToggle.style.transform = "rotate(-180deg)";
-				divInput.style.visibility = "visible";
-				divInput.style.opacity = "1";
-				divInput.style.transform = "none";
-				this.divPlot.style.top = "136px";
+		toggleButton.onclick =()=> {
+			if (wmiInput.style.visibility === "hidden") {
+				toggleButton.style.top = "96px";
+				toggleButton.style.transform = "rotate(-180deg)";
+				wmiInput.style.visibility = "visible";
+				wmiInput.style.opacity = "1";
+				wmiInput.style.transform = "none";
+				this.plotBox.style.top = "136px";
 			}
 			else {
-				btnToggle.style.top = "0px";
-				btnToggle.style.transform = "rotate(0deg)";
-				divInput.style.visibility = "hidden";
-				divInput.style.opacity = "0";
-				divInput.style.transform = "translateY(-64px)";
-				this.divPlot.style.top = "36px";
+				toggleButton.style.top = "0px";
+				toggleButton.style.transform = "rotate(0deg)";
+				wmiInput.style.visibility = "hidden";
+				wmiInput.style.opacity = "0";
+				wmiInput.style.transform = "translateY(-64px)";
+				this.plotBox.style.top = "36px";
 			}
 		};
 
 		if (this.params.target.length > 0 && this.params.query.length > 0) {
-			this.btnExecute.onclick();
-			btnToggle.onclick();
+			this.executeButton.onclick();
+			toggleButton.onclick();
 		}
 	}
 
@@ -114,7 +114,7 @@ class Wmi extends Window {
 	}
 
 	SequelAssistant() {
-		let lastQuery = this.txtQuery.value.toLowerCase();
+		let lastQuery = this.queryInput.value.toLowerCase();
 
 		let words = lastQuery.split(" ");
 		let className = null;
@@ -135,7 +135,7 @@ class Wmi extends Window {
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.margin = "16px";
@@ -143,84 +143,84 @@ class Wmi extends Window {
 		innerBox.style.gridTemplateColumns = "50% 16px auto";
 		innerBox.style.gridTemplateRows = "32px 8px auto 8px 64px";
 
-		const txtClassFilter = document.createElement("input");
-		txtClassFilter.type = "text";
-		txtClassFilter.placeholder = "Find..";
-		txtClassFilter.style.gridArea = "1 / 1";
+		const classFilterInput = document.createElement("input");
+		classFilterInput.type = "text";
+		classFilterInput.placeholder = "Find..";
+		classFilterInput.style.gridArea = "1 / 1";
 
-		const btnNone = document.createElement("input");
-		btnNone.type = "button";
-		btnNone.style.position = "absolute";
-		btnNone.style.right = "32px";
-		btnNone.style.width = "28px";
-		btnNone.style.minWidth = "28px";
-		btnNone.style.backgroundColor = "transparent";
-		btnNone.style.backgroundImage = "url(/mono/selectnone.svg)";
-		btnNone.style.backgroundSize = "24px 24px";
-		btnNone.style.backgroundPosition = "center";
-		btnNone.style.backgroundRepeat = "no-repeat";
+		const noneButton = document.createElement("input");
+		noneButton.type = "button";
+		noneButton.style.position = "absolute";
+		noneButton.style.right = "32px";
+		noneButton.style.width = "28px";
+		noneButton.style.minWidth = "28px";
+		noneButton.style.backgroundColor = "transparent";
+		noneButton.style.backgroundImage = "url(/mono/selectnone.svg)";
+		noneButton.style.backgroundSize = "24px 24px";
+		noneButton.style.backgroundPosition = "center";
+		noneButton.style.backgroundRepeat = "no-repeat";
 
-		const btnAll = document.createElement("input");
-		btnAll.type = "button";
-		btnAll.style.position = "absolute";
-		btnAll.style.right = "0";
-		btnAll.style.width = "28px";
-		btnAll.style.minWidth = "28px";
-		btnAll.style.backgroundColor = "transparent";
-		btnAll.style.backgroundImage = "url(/mono/selectall.svg)";
-		btnAll.style.backgroundSize = "24px 24px";
-		btnAll.style.backgroundPosition = "center";
-		btnAll.style.backgroundRepeat = "no-repeat";
+		const allButton = document.createElement("input");
+		allButton.type = "button";
+		allButton.style.position = "absolute";
+		allButton.style.right = "0";
+		allButton.style.width = "28px";
+		allButton.style.minWidth = "28px";
+		allButton.style.backgroundColor = "transparent";
+		allButton.style.backgroundImage = "url(/mono/selectall.svg)";
+		allButton.style.backgroundSize = "24px 24px";
+		allButton.style.backgroundPosition = "center";
+		allButton.style.backgroundRepeat = "no-repeat";
 
-		innerBox.append(txtClassFilter, btnNone, btnAll);
+		innerBox.append(classFilterInput, noneButton, allButton);
 
-		const lstClasses = document.createElement("div");
-		lstClasses.className = "wmi-classes-list";
-		lstClasses.style.border = "var(--clr-control) solid 1.5px";
-		lstClasses.style.gridArea = "3 / 1";
-		lstClasses.style.overflowY = "scroll";
+		const classesList = document.createElement("div");
+		classesList.className = "wmi-classes-list";
+		classesList.style.border = "var(--clr-control) solid 1.5px";
+		classesList.style.gridArea = "3 / 1";
+		classesList.style.overflowY = "scroll";
 
-		const lstProperties = document.createElement("div");
-		lstProperties.className = "wmi-properties-list";
-		lstProperties.style.border = "var(--clr-control) solid 1.5px";
-		lstProperties.style.gridArea = "3 / 3";
-		lstProperties.style.overflowY = "scroll";
+		const propertiesList = document.createElement("div");
+		propertiesList.className = "wmi-properties-list";
+		propertiesList.style.border = "var(--clr-control) solid 1.5px";
+		propertiesList.style.gridArea = "3 / 3";
+		propertiesList.style.overflowY = "scroll";
 
-		const txtPreview = document.createElement("textarea");
-		txtPreview.setAttribute("readonly", true);
-		txtPreview.style.resize = "none";
-		txtPreview.style.gridArea = "5 / 1 / span 1 / span 3";
+		const previewInput = document.createElement("textarea");
+		previewInput.setAttribute("readonly", true);
+		previewInput.style.resize = "none";
+		previewInput.style.gridArea = "5 / 1 / span 1 / span 3";
 
-		innerBox.append(lstClasses, lstProperties, txtPreview);
+		innerBox.append(classesList, propertiesList, previewInput);
 
 		if (!this.wmi_classes.classes) {
 			this.ConfirmBox("Failed to load WMI classes.");
-			btnOK.onclick();
+			okButton.onclick();
 			return;
 		}
 
-		btnOK.addEventListener("click", ()=> {
-			this.txtQuery.value = txtPreview.value;
-			this.params.query = this.txtQuery.value;
+		okButton.addEventListener("click", ()=> {
+			this.queryInput.value = previewInput.value;
+			this.params.query = this.queryInput.value;
 		});
 
-		txtClassFilter.onkeydown = event=>{
+		classFilterInput.onkeydown = event=>{
 			if (event.code === "Escape") {
-				txtClassFilter.value = "";
-				txtClassFilter.oninput()
+				classFilterInput.value = "";
+				classFilterInput.oninput()
 			}
 		};
 
 		let selected = null;
-		let propertiesList = [];
+		let properties = [];
 		let propertyCheckboxes = [];
 
-		txtClassFilter.oninput = ()=> {
+		classFilterInput.oninput = ()=> {
 			if (!this.wmi_classes.classes) return;
-			let filter = txtClassFilter.value.toLowerCase();
+			let filter = classFilterInput.value.toLowerCase();
 
-			lstClasses.textContent = "";
-			lstProperties.textContent = "";
+			classesList.textContent = "";
+			propertiesList.textContent = "";
 
 			for (let i = 0; i < this.wmi_classes.classes.length; i++) {
 				let matched = false;
@@ -240,69 +240,69 @@ class Wmi extends Window {
 				if (matched) {
 					const newClass = document.createElement("div");
 					newClass.textContent = this.wmi_classes.classes[i].class;
-					lstClasses.appendChild(newClass);
+					classesList.appendChild(newClass);
 
 					newClass.onclick = ()=> {
 						if (selected != null) selected.style.backgroundColor = "";
 
-						propertiesList = [];
+						properties = [];
 						propertyCheckboxes = [];
 
-						lstProperties.textContent = "";
+						propertiesList.textContent = "";
 						for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
 							let value = lastProperties === "*" || className == null ||
 								className.toLowerCase() === this.wmi_classes.classes[i].class.toLowerCase() &&
 								lastPropertiesArray.includes(this.wmi_classes.classes[i].properties[j].toLowerCase());
 
-							const divProperty = document.createElement("div");
-							const chkProperty = document.createElement("input");
-							chkProperty.type = "checkbox";
-							chkProperty.checked = value;
-							propertyCheckboxes.push(chkProperty);
-							divProperty.appendChild(chkProperty);
+							const propertyBox = document.createElement("div");
+							const propertyCheckbox = document.createElement("input");
+							propertyCheckbox.type = "checkbox";
+							propertyCheckbox.checked = value;
+							propertyCheckboxes.push(propertyCheckbox);
+							propertyBox.appendChild(propertyCheckbox);
 
-							propertiesList.push(value);
+							properties.push(value);
 
-							chkProperty.onchange = ()=> {
-								propertiesList[j] = chkProperty.checked;
+							propertyCheckbox.onchange = ()=> {
+								properties[j] = propertyCheckbox.checked;
 
 								let count = 0;
-								for (let k = 0; k < propertiesList.length; k++) {
-									if (propertiesList[k])
+								for (let k = 0; k < properties.length; k++) {
+									if (properties[k])
 										count++;
 								}
 
-								if (count === 0 || count === propertiesList.length) {
-									txtPreview.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
+								if (count === 0 || count === properties.length) {
+									previewInput.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
 								}
 								else {
 									let sel = "";
-									for (let k = 0; k < propertiesList.length; k++)
-										if (propertiesList[k])
+									for (let k = 0; k < properties.length; k++)
+										if (properties[k])
 											sel += (sel.length == 0) ? this.wmi_classes.classes[i].properties[k] : ", " + this.wmi_classes.classes[i].properties[k];
 
-									txtPreview.value = "SELECT " + sel + " FROM " + this.wmi_classes.classes[i].class;
+									previewInput.value = "SELECT " + sel + " FROM " + this.wmi_classes.classes[i].class;
 								}
 							};
 
-							this.AddCheckBoxLabel(divProperty, chkProperty, this.wmi_classes.classes[i].properties[j]);
-							lstProperties.appendChild(divProperty);
+							this.AddCheckBoxLabel(propertyBox, propertyCheckbox, this.wmi_classes.classes[i].properties[j]);
+							propertiesList.appendChild(propertyBox);
 
 							if (filter && this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
-								divProperty.scrollIntoView({ behavior: "smooth"});
-								setTimeout(()=>{divProperty.style.animation = "highlight .8s 1"}, 500);
+								propertyBox.scrollIntoView({ behavior: "smooth"});
+								setTimeout(()=>{propertyBox.style.animation = "highlight .8s 1"}, 500);
 							}
 
 							selected = newClass;
 							selected.style.backgroundColor = "var(--clr-select)";
 						}
 
-						txtPreview.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
+						previewInput.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
 					};
 
 					newClass.ondblclick = ()=> {
-						this.txtQuery.value = txtPreview.value;
-						btnOK.onclick();
+						this.queryInput.value = previewInput.value;
+						okButton.onclick();
 					};
 
 					if (className && className === this.wmi_classes.classes[i].class.toLowerCase()) {
@@ -313,25 +313,25 @@ class Wmi extends Window {
 				}
 			}
 		};
-		txtClassFilter.oninput();
+		classFilterInput.oninput();
 
-		btnAll.onclick = ()=> {
+		allButton.onclick = ()=> {
 			if (propertyCheckboxes.length === 0) return;
 
 			for (let i = 0; i < propertyCheckboxes.length; i++) {
 				propertyCheckboxes[i].checked = true;
-				propertiesList[i] = true;
+				properties[i] = true;
 			}
 
 			propertyCheckboxes[0].onchange();
 		};
 
-		btnNone.onclick = ()=> {
+		noneButton.onclick = ()=> {
 			if (propertyCheckboxes.length === 0) return;
 
 			for (let i = 0; i < propertyCheckboxes.length; i++) {
 				propertyCheckboxes[i].checked = false;
-				propertiesList[i] = false;
+				properties[i] = false;
 			}
 
 			propertyCheckboxes[0].onchange();
@@ -342,15 +342,15 @@ class Wmi extends Window {
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 
-		btnOK.addEventListener("click", ()=> {
+		okButton.addEventListener("click", ()=> {
 
 		});
 	}
 
 	async Query() {
-		if (this.txtTarget.value.length == 0 || this.txtQuery.value.length == 0) {
+		if (this.targetInput.value.length == 0 || this.queryInput.value.length == 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
@@ -366,15 +366,15 @@ class Wmi extends Window {
 		spinner.appendChild(document.createElement("div"));
 		this.content.appendChild(spinner);
 
-		this.txtTarget.value = this.txtTarget.value.trim();
-		this.btnExecute.disabled = true;
-		this.divPlot.style.display = "none";
-		this.divPlot.textContent = "";
+		this.targetInput.value = this.targetInput.value.trim();
+		this.executeButton.disabled = true;
+		this.plotBox.style.display = "none";
+		this.plotBox.textContent = "";
 
 		try {
-			const response = await fetch(`wmi/query?target=${encodeURIComponent(this.txtTarget.value)}`, {
+			const response = await fetch(`wmi/query?target=${encodeURIComponent(this.targetInput.value)}`, {
 				method: "POST",
-				body: this.txtQuery.value.trim().replaceAll("\n", " ")
+				body: this.queryInput.value.trim().replaceAll("\n", " ")
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -387,17 +387,17 @@ class Wmi extends Window {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 		finally {
-			this.btnExecute.disabled = false;
-			this.divPlot.style.display = "block";
+			this.executeButton.disabled = false;
+			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
 	}
 
 	Plot(split) {
-		let words = this.txtQuery.value.split(" ").map(v=> v.toLowerCase());
+		let words = this.queryInput.value.split(" ").map(v=> v.toLowerCase());
 		let className = "";
 		let hasMethods = false;
-		let targetHost = this.txtTarget.value;
+		let targetHost = this.targetInput.value;
 
 		if (this.wmi_classes.classes) {
 			for (let i = 0; i < words.length; i++)
@@ -448,14 +448,14 @@ class Wmi extends Window {
 				if (i > length) {
 					switch (className) {
 					case "win32_process":
-						const btnTerminate = document.createElement("input");
-						btnTerminate.type = "button";
-						btnTerminate.value = "Terminate";
-						btnTerminate.setAttribute("pid", split[i + unique]);
-						td.appendChild(btnTerminate);
+						const terminateButton = document.createElement("input");
+						terminateButton.type = "button";
+						terminateButton.value = "Terminate";
+						terminateButton.setAttribute("pid", split[i + unique]);
+						td.appendChild(terminateButton);
 
-						btnTerminate.onclick = async event=> {
-							btnTerminate.disabled = true;
+						terminateButton.onclick = async event=> {
+							terminateButton.disabled = true;
 							let pid = event.target.getAttribute("pid");
 
 							try {
@@ -466,7 +466,7 @@ class Wmi extends Window {
 								if (text === "ok")
 									table.removeChild(tr);
 								else {
-									td.removeChild(btnTerminate);
+									td.removeChild(terminateButton);
 									td.textContent = text;
 								}
 							}
@@ -477,11 +477,11 @@ class Wmi extends Window {
 						break;
 
 					/*default:
-						let btnMethod = document.createElement("input");
-						btnMethod.type  = "button";
-						btnMethod.value = "Method";
-						td.appendChild(btnMethod);
-						btnMethod.onclick = ()=> {
+						let methodButton = document.createElement("input");
+						methodButton.type  = "button";
+						methodButton.value = "Method";
+						td.appendChild(methodButton);
+						methodButton.onclick = ()=> {
 							this.CallMethodDialog();
 						};*/
 					}
@@ -489,6 +489,6 @@ class Wmi extends Window {
 			}
 		}
 
-		this.divPlot.appendChild(table);
+		this.plotBox.appendChild(table);
 	}
 }

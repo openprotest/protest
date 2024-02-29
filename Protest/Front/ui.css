@@ -266,7 +266,7 @@
 	box-shadow: var(--clr-transparent) 0 0 0 1px inset;
 }
 
-#btnPersonalize, #btnLogout {
+#personalizeButton, #logoutButton {
 	position: absolute;
 	width: 40px;
 	height: 36px;
@@ -281,7 +281,7 @@
 	transition-duration: .15s;
 }
 
-#btnPersonalize {
+#personalizeButton {
 	position: absolute;
 	left: 8px;
 	bottom: 8px;
@@ -297,7 +297,7 @@
 	height: 36px;
 }
 
-#lblUsername {
+#usernameLabel {
 	position: absolute;
 	right: 0px;
 
@@ -319,7 +319,7 @@
 	transition-duration: .4s;
 }
 
-#btnLogout {
+#logoutButton {
 	position: absolute;
 	right: 0px;
 	background-image: url("mono/logoff.svg?light");
@@ -327,25 +327,25 @@
 	opacity: 0;
 }
 
-#username:focus-within > #btnLogout {
+#username:focus-within > #logoutButton {
 	visibility: visible;
 	opacity: 1;
 }
-#username:focus-within > #lblUsername {
+#username:focus-within > #usernameLabel {
 	right: 48px;
 	background-color: var(--clr-transparent) !important;
 	border: var(--clr-transparent) 1px solid;
 }
 
-#lblUsername:focus {
+#usernameLabel:focus {
 	background-color: var(--clr-transparent) !important;
 	border: var(--clr-transparent) 1px solid;
 }
-#lblUsername:hover, #btnPersonalize:hover, #btnLogout:hover {
+#usernameLabel:hover, #personalizeButton:hover, #logoutButton:hover {
 	background-color: var(--clr-transparent);
 	border: var(--clr-transparent) 1px solid;
 }
-#lblUsername:active, #btnPersonalize:active, #btnLogout:active {
+#usernameLabel:active, #personalizeButton:active, #logoutButton:active {
 	background-color: color-mix(in hsl shorter hue, var(--clr-transparent) 85%, rgba(0,0,0,.6)) !important;
 	border: var(--clr-transparent) 1px solid;
 }
@@ -558,7 +558,7 @@
 		transition-duration:.2s;
 	}
 
-	#lblUsername, #btnPersonalize, #btnLogout {
+	#usernameLabel, #personalizeButton, #logoutButton {
 		opacity: 0 !important;
 		visibility: hidden !important;
 	}

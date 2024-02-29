@@ -10,34 +10,34 @@ class About extends Tabs {
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.tabAbout     = this.AddTab("About", "mono/logo.svg");
-		this.tabLegal     = this.AddTab("Legal", "mono/law.svg");
-		this.tabUpdate    = this.AddTab("Update", "mono/update.svg");
-		this.tabUpdateMod = this.AddTab("Update modules", "mono/department.svg");
+		this.aboutTab     = this.AddTab("About", "mono/logo.svg");
+		this.legalTab     = this.AddTab("Legal", "mono/law.svg");
+		this.updateTab    = this.AddTab("Update", "mono/update.svg");
+		this.updateModTab = this.AddTab("Update modules", "mono/department.svg");
 
-		this.tabAbout.onclick = ()=> this.ShowAbout();
-		this.tabLegal.onclick = ()=> this.ShowLegal();
-		this.tabUpdate.onclick = ()=> this.ShowUpdate();
-		this.tabUpdateMod.onclick = ()=> this.ShowUpdateModules();
+		this.aboutTab.onclick = ()=> this.ShowAbout();
+		this.legalTab.onclick = ()=> this.ShowLegal();
+		this.updateTab.onclick = ()=> this.ShowUpdate();
+		this.updateModTab.onclick = ()=> this.ShowUpdateModules();
 
 		switch (this.params) {
 		case "legal":
-			this.tabLegal.className = "v-tab-selected";
+			this.legalTab.className = "v-tab-selected";
 			this.ShowLegal();
 			break;
 
 		case "update":
-			this.tabUpdate.className = "v-tab-selected";
+			this.updateTab.className = "v-tab-selected";
 			this.ShowUpdate();
 			break;
 
 		case "updatemod":
-			this.tabUpdateMod.className = "v-tab-selected";
+			this.updateModTab.className = "v-tab-selected";
 			this.ShowUpdateModules();
 			break;
 
 		default:
-			this.tabAbout.className = "v-tab-selected";
+			this.aboutTab.className = "v-tab-selected";
 			this.ShowAbout();
 		}
 	}

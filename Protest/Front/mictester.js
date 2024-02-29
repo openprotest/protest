@@ -68,23 +68,23 @@ class MicTester extends Window {
 		const dialog = this.DialogBox("300px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const chkEchoCancellation = document.createElement("input");
-		chkEchoCancellation.type = "checkbox";
-		innerBox.appendChild(chkEchoCancellation);
-		this.AddCheckBoxLabel(innerBox, chkEchoCancellation, "Echo cancellation").style.paddingBottom = "16px";
+		const echoCancellationCheckbox = document.createElement("input");
+		echoCancellationCheckbox.type = "checkbox";
+		innerBox.appendChild(echoCancellationCheckbox);
+		this.AddCheckBoxLabel(innerBox, echoCancellationCheckbox, "Echo cancellation").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		const chkNoiseSuppression = document.createElement("input");
-		chkNoiseSuppression.type = "checkbox";
-		innerBox.appendChild(chkNoiseSuppression);
-		this.AddCheckBoxLabel(innerBox, chkNoiseSuppression, "Noise suppression").style.paddingBottom = "16px";
+		const noiseSuppressionCheckbox = document.createElement("input");
+		noiseSuppressionCheckbox.type = "checkbox";
+		innerBox.appendChild(noiseSuppressionCheckbox);
+		this.AddCheckBoxLabel(innerBox, noiseSuppressionCheckbox, "Noise suppression").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
@@ -98,16 +98,16 @@ class MicTester extends Window {
 		const sampleSizeInput = document.createElement("select");
 		sampleSizeInput.style.width = "100px";
 		innerBox.appendChild(sampleSizeInput);
-		const size16 = document.createElement("option");
-		size16.value = 16;
-		size16.text = "16-bit";
-		const size24 = document.createElement("option");
-		size24.value = 24;
-		size24.text = "24-bit";
-		const size32 = document.createElement("option");
-		size32.value = 32;
-		size32.text = "32-bit";
-		sampleSizeInput.append(size16, size24, size32);
+		const size16Option = document.createElement("option");
+		size16Option.value = 16;
+		size16Option.text = "16-bit";
+		const size24Option = document.createElement("option");
+		size24Option.value = 24;
+		size24Option.text = "24-bit";
+		const size32Option = document.createElement("option");
+		size32Option.value = 32;
+		size32Option.text = "32-bit";
+		sampleSizeInput.append(size16Option, size24Option, size32Option);
 
 		innerBox.appendChild(document.createElement("br"));
 
@@ -121,16 +121,16 @@ class MicTester extends Window {
 		const sampleRateInput = document.createElement("select");
 		sampleRateInput.style.width = "100px";
 		innerBox.appendChild(sampleRateInput);
-		const rate44 = document.createElement("option");
-		rate44.value = 44_100;
-		rate44.text = "44.1KHz";
-		const rate48 = document.createElement("option");
-		rate48.value = 48_000;
-		rate48.text = "48KHz";
-		const rate96 = document.createElement("option");
-		rate96.value = 96000;
-		rate96.text = "96KHz";
-		sampleRateInput.append(rate44, rate48, rate96);
+		const rate44Option = document.createElement("option");
+		rate44Option.value = 44_100;
+		rate44Option.text = "44.1KHz";
+		const rate48Option = document.createElement("option");
+		rate48Option.value = 48_000;
+		rate48Option.text = "48KHz";
+		const rate96Option = document.createElement("option");
+		rate96Option.value = 96000;
+		rate96Option.text = "96KHz";
+		sampleRateInput.append(rate44Option, rate48Option, rate96Option);
 
 		innerBox.appendChild(document.createElement("br"));
 
@@ -144,36 +144,36 @@ class MicTester extends Window {
 		const graphResolutionInput = document.createElement("select");
 		graphResolutionInput.style.width = "100px";
 		innerBox.appendChild(graphResolutionInput);
-		const resVeryLow = document.createElement("option");
-		resVeryLow.value = 64;
-		resVeryLow.text = "Very low";
-		const resLow = document.createElement("option");
-		resLow.value = 128;
-		resLow.text = "Low";
-		const resMed = document.createElement("option");
-		resMed.value = 256;
-		resMed.text = "Medium";
-		const resHigh = document.createElement("option");
-		resHigh.value = 512;
-		resHigh.text = "High";
-		const resVeryHigh = document.createElement("option");
-		resVeryHigh.value = 1024;
-		resVeryHigh.text = "Very high";
-		const resUltra = document.createElement("option");
-		resUltra.value = 2048;
-		resUltra.text = "Ultra";
-		graphResolutionInput.append(resVeryLow, resLow, resMed, resHigh, resVeryHigh, resUltra);
+		const resVeryLowOption = document.createElement("option");
+		resVeryLowOption.value = 64;
+		resVeryLowOption.text = "Very low";
+		const resLowOption = document.createElement("option");
+		resLowOption.value = 128;
+		resLowOption.text = "Low";
+		const resMedOption = document.createElement("option");
+		resMedOption.value = 256;
+		resMedOption.text = "Medium";
+		const resHighOption = document.createElement("option");
+		resHighOption.value = 512;
+		resHighOption.text = "High";
+		const resVeryHighOption = document.createElement("option");
+		resVeryHighOption.value = 1024;
+		resVeryHighOption.text = "Very high";
+		const resUltraOption = document.createElement("option");
+		resUltraOption.value = 2048;
+		resUltraOption.text = "Ultra";
+		graphResolutionInput.append(resVeryLowOption, resLowOption, resMedOption, resHighOption, resVeryHighOption, resUltraOption);
 
-		chkEchoCancellation.checked = this.params.echoCancellation;
-		chkNoiseSuppression.checked = this.params.noiseSuppression;
+		echoCancellationCheckbox.checked = this.params.echoCancellation;
+		noiseSuppressionCheckbox.checked = this.params.noiseSuppression;
 		sampleSizeInput.value = this.params.sampleSize;
 		sampleRateInput.value = this.params.sampleRate;
 		graphResolutionInput.value = this.params.graphResolution;
 
-		btnOK.onclick = async ()=> {
+		okButton.onclick = async ()=> {
 			this.params.graphResolution = parseInt(graphResolutionInput.value);
-			this.params.echoCancellation = chkEchoCancellation.checked;
-			this.params.noiseSuppression = chkNoiseSuppression.checked;
+			this.params.echoCancellation = echoCancellationCheckbox.checked;
+			this.params.noiseSuppression = noiseSuppressionCheckbox.checked;
 			this.params.sampleSize = parseInt(sampleSizeInput.value);
 			this.params.sampleRate = parseInt(sampleRateInput.value);
 
@@ -260,12 +260,12 @@ class MicTester extends Window {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
-		btnOK.value = "Export";
-		btnCancel.value = "Discard";
+		okButton.value = "Export";
+		cancelButton.value = "Discard";
 
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
@@ -281,33 +281,33 @@ class MicTester extends Window {
 		typeInput.style.width = "280px";
 		innerBox.appendChild(typeInput);
 
-		const wav = document.createElement("option");
-		wav.text = "WAV - Waveform audio format";
-		wav.value = "audio/wav";
+		const wavOption = document.createElement("option");
+		wavOption.text = "WAV - Waveform audio format";
+		wavOption.value = "audio/wav";
 
-		const mp3 = document.createElement("option");
-		mp3.text = "MP3 - MPEG audio layer III";
-		mp3.value = "audio/mpeg";
+		const mp3Option = document.createElement("option");
+		mp3Option.text = "MP3 - MPEG audio layer III";
+		mp3Option.value = "audio/mpeg";
 
-		const ogg = document.createElement("option");
-		ogg.text = "OGG container format";
-		ogg.value = "audio/ogg";
+		const oggOption = document.createElement("option");
+		oggOption.text = "OGG container format";
+		oggOption.value = "audio/ogg";
 
-		const webm = document.createElement("option");
-		webm.text = "WebM audio";
-		webm.value = "audio/aac";
+		const webmOption = document.createElement("option");
+		webmOption.text = "WebM audio";
+		webmOption.value = "audio/aac";
 
-		const acc = document.createElement("option");
-		acc.text = "AAC - Advanced Audio Codec";
-		acc.value = "audio/wav";
+		const accOption = document.createElement("option");
+		accOption.text = "AAC - Advanced Audio Codec";
+		accOption.value = "audio/wav";
 
-		const flac = document.createElement("option");
-		flac.text = "FLAC - Free Lossless Audio Codec";
-		flac.value = "audio/flac";
+		const flacOption = document.createElement("option");
+		flacOption.text = "FLAC - Free Lossless Audio Codec";
+		flacOption.value = "audio/flac";
 
-		typeInput.append(wav, mp3, ogg, webm, acc, flac);
+		typeInput.append(wavOption, mp3Option, oggOption, webmOption, accOption, flacOption);
 
-		btnOK.onclick = async ()=> {
+		okButton.onclick = async ()=> {
 			const blob = new Blob(this.recordChunks, { type: typeInput.value });
 			const audioURL = URL.createObjectURL(blob);
 			window.open(audioURL, "_blank");
@@ -317,7 +317,7 @@ class MicTester extends Window {
 			dialog.Close();
 		};
 
-		btnCancel.onclick = ()=> {
+		cancelButton.onclick = ()=> {
 			this.recordChunks = [];
 			this.recorder = null;
 			dialog.Close();

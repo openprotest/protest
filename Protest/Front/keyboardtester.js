@@ -619,13 +619,13 @@ class KeyboardTester extends Window {
 				if (dialog === null) return;
 
 				dialog.innerBox.style.margin = "20px";
-				dialog.btnCancel.style.display = "none";
+				dialog.cancelButton.style.display = "none";
 
-				const divStrong = document.createElement("div");
-				divStrong.textContent = "Strong magnitude: ";
-				divStrong.style.display = "inline-block";
-				divStrong.style.minWidth = "200px";
-				dialog.innerBox.appendChild(divStrong);
+				const strongLabel = document.createElement("div");
+				strongLabel.textContent = "Strong magnitude: ";
+				strongLabel.style.display = "inline-block";
+				strongLabel.style.minWidth = "200px";
+				dialog.innerBox.appendChild(strongLabel);
 
 				const strong = document.createElement("input");
 				strong.type = "range";
@@ -638,11 +638,11 @@ class KeyboardTester extends Window {
 				dialog.innerBox.appendChild(document.createElement("br"));
 				dialog.innerBox.appendChild(document.createElement("br"));
 
-				const divWeak = document.createElement("div");
-				divWeak.textContent = "Weak magnitude: ";
-				divWeak.style.display = "inline-block";
-				divWeak.style.minWidth = "200px";
-				dialog.innerBox.appendChild(divWeak);
+				const weakLabel = document.createElement("div");
+				weakLabel.textContent = "Weak magnitude: ";
+				weakLabel.style.display = "inline-block";
+				weakLabel.style.minWidth = "200px";
+				dialog.innerBox.appendChild(weakLabel);
 
 				const weak = document.createElement("input");
 				weak.type = "range";
@@ -655,23 +655,23 @@ class KeyboardTester extends Window {
 				dialog.innerBox.appendChild(document.createElement("br"));
 				dialog.innerBox.appendChild(document.createElement("br"));
 
-				const btnDualRumble = document.createElement("input");
-				btnDualRumble.type = "button";
-				btnDualRumble.value = "Vibrate";
-				dialog.innerBox.append(btnDualRumble);
+				const dualRumbleButton = document.createElement("input");
+				dualRumbleButton.type = "button";
+				dualRumbleButton.value = "Vibrate";
+				dialog.innerBox.append(dualRumbleButton);
 
 				dialog.innerBox.appendChild(document.createElement("br"));
 				dialog.innerBox.appendChild(document.createElement("br"));
 
-				const chkVibrateOnPress = document.createElement("input");
-				chkVibrateOnPress.type = "checkbox";
-				chkVibrateOnPress.checked = this.vibrateOnPress;
-				dialog.innerBox.appendChild(chkVibrateOnPress);
-				this.AddCheckBoxLabel(dialog.innerBox, chkVibrateOnPress, "Vibrate on button press");
+				const vibrateOnPressCheckbox = document.createElement("input");
+				vibrateOnPressCheckbox.type = "checkbox";
+				vibrateOnPressCheckbox.checked = this.vibrateOnPress;
+				dialog.innerBox.appendChild(vibrateOnPressCheckbox);
+				this.AddCheckBoxLabel(dialog.innerBox, vibrateOnPressCheckbox, "Vibrate on button press");
 
 				let gamepads = navigator.getGamepads();
 
-				btnDualRumble.onclick = ()=> {
+				dualRumbleButton.onclick = ()=> {
 					for (let i=0; i<gamepads.length; i++) {
 						if (gamepads === null) continue;
 						if (!gamepads[i].vibrationActuator) continue;
@@ -685,8 +685,8 @@ class KeyboardTester extends Window {
 				};
 
 
-				dialog.btnOK.addEventListener("click", ()=>{
-					this.vibrateOnPress = chkVibrateOnPress.checked;
+				dialog.okButton.addEventListener("click", ()=>{
+					this.vibrateOnPress = vibrateOnPressCheckbox.checked;
 				});
 			};
 		}

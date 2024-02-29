@@ -12,22 +12,22 @@ class Grid extends Window {
 		this.content.style.overflow = "hidden";
 
 		this.SetupToolbar();
-		const btnReload = this.AddToolbarButton("Reload", "/mono/restart.svg?light");
-		const btnSave = this.AddToolbarButton("Save modifications", "/mono/floppy.svg?light");
-		const btnRemoveFilter = this.AddToolbarButton("Remove all filters", "/mono/nofilter.svg?light");
+		const reloadButton = this.AddToolbarButton("Reload", "/mono/restart.svg?light");
+		const saveButton = this.AddToolbarButton("Save modifications", "/mono/floppy.svg?light");
+		const removeFilterButton = this.AddToolbarButton("Remove all filters", "/mono/nofilter.svg?light");
 
-		this.txtFindAttribute = document.createElement("input");
-		this.txtFindAttribute.className = "grid-find-box";
-		this.txtFindAttribute.type = "text";
-		this.txtFindAttribute.placeholder = "Find attribute";
+		this.findAttributeInput = document.createElement("input");
+		this.findAttributeInput.className = "grid-find-box";
+		this.findAttributeInput.type = "text";
+		this.findAttributeInput.placeholder = "Find attribute";
 
-		const btnNone = document.createElement("button");
-		btnNone.setAttribute("tip-below", "Select none");
-		btnNone.classList = "grid-none-button";
+		const noneButton = document.createElement("button");
+		noneButton.setAttribute("tip-below", "Select none");
+		noneButton.classList = "grid-none-button";
 
-		const btnAll = document.createElement("button");
-		btnAll.setAttribute("tip-below", "Select all");
-		btnAll.classList = "grid-all-button";
+		const allButton = document.createElement("button");
+		allButton.setAttribute("tip-below", "Select all");
+		allButton.classList = "grid-all-button";
 
 		this.sideList = document.createElement("div");
 		this.sideList.className = "grid-side-list";
@@ -39,11 +39,11 @@ class Grid extends Window {
 		this.heading.className = "grid-heading";
 		this.table.appendChild(this.heading);
 
-		const btnToggle = document.createElement("input");
-		btnToggle.type = "button";
-		btnToggle.className = "grid-toggle-button";
+		const toggleButton = document.createElement("input");
+		toggleButton.type = "button";
+		toggleButton.className = "grid-toggle-button";
 
-		this.content.append(this.txtFindAttribute, btnNone, btnAll, btnToggle, this.sideList, this.table);
+		this.content.append(this.findAttributeInput, noneButton, allButton, toggleButton, this.sideList, this.table);
 
 		this.SetupFloatingMenu();
 		this.floating.tabIndex = 0;
@@ -57,49 +57,49 @@ class Grid extends Window {
 
 		this.floating.onblur = event=>this.ColumnOptions_onblur(event);
 
-		this.optSort = document.createElement("div");
-		this.optSort.className = "grid-menu-option";
-		this.optSort.textContent = "Sort";
-		this.optSort.style.backgroundImage = "url(/mono/sort.svg)";
-		this.optSort.onclick = ()=> this.ColumnOptions_Sort();
+		this.sortOption = document.createElement("div");
+		this.sortOption.className = "grid-menu-option";
+		this.sortOption.textContent = "Sort";
+		this.sortOption.style.backgroundImage = "url(/mono/sort.svg)";
+		this.sortOption.onclick = ()=> this.ColumnOptions_Sort();
 
-		this.optFilter = document.createElement("div");
-		this.optFilter.className = "grid-menu-option";
-		this.optFilter.textContent = "Filter";
-		this.optFilter.style.backgroundImage = "url(/mono/filter.svg)";
-		this.optFilter.onclick = ()=> this.ColumnOptions_Filter();
+		this.filterOption = document.createElement("div");
+		this.filterOption.className = "grid-menu-option";
+		this.filterOption.textContent = "Filter";
+		this.filterOption.style.backgroundImage = "url(/mono/filter.svg)";
+		this.filterOption.onclick = ()=> this.ColumnOptions_Filter();
 
-		this.optHideNull = document.createElement("div");
-		this.optHideNull.className = "grid-menu-option";
-		this.optHideNull.textContent = "Hide null";
-		this.optHideNull.style.backgroundImage = "url(/mono/clear.svg)";
-		this.optHideNull.onclick = ()=> this.ColumnOptions_HideNull();
+		this.hideNullOption = document.createElement("div");
+		this.hideNullOption.className = "grid-menu-option";
+		this.hideNullOption.textContent = "Hide null";
+		this.hideNullOption.style.backgroundImage = "url(/mono/clear.svg)";
+		this.hideNullOption.onclick = ()=> this.ColumnOptions_HideNull();
 
-		this.optRename = document.createElement("div");
-		this.optRename.className = "grid-menu-option";
-		this.optRename.textContent = "Rename column";
-		this.optRename.style.backgroundImage = "url(/mono/rename.svg)";
-		this.optRename.onclick = ()=> this.ColumnOptions_Rename();
+		this.renameOption = document.createElement("div");
+		this.renameOption.className = "grid-menu-option";
+		this.renameOption.textContent = "Rename column";
+		this.renameOption.style.backgroundImage = "url(/mono/rename.svg)";
+		this.renameOption.onclick = ()=> this.ColumnOptions_Rename();
 
-		this.optEditAll = document.createElement("div");
-		this.optEditAll.className = "grid-menu-option";
-		this.optEditAll.textContent = "Edit all";
-		this.optEditAll.style.backgroundImage = "url(/mono/edit.svg)";
-		this.optEditAll.onclick = ()=> this.ColumnOptions_EditAll();
+		this.editAllOption = document.createElement("div");
+		this.editAllOption.className = "grid-menu-option";
+		this.editAllOption.textContent = "Edit all";
+		this.editAllOption.style.backgroundImage = "url(/mono/edit.svg)";
+		this.editAllOption.onclick = ()=> this.ColumnOptions_EditAll();
 
-		this.optRemoveAll = document.createElement("div");
-		this.optRemoveAll.className = "grid-menu-option";
-		this.optRemoveAll.textContent = "Remove all";
-		this.optRemoveAll.style.backgroundImage = "url(/mono/delete.svg)";
-		this.optRemoveAll.onclick = ()=> this.ColumnOptions_RemoveAll();
+		this.removeAllOption = document.createElement("div");
+		this.removeAllOption.className = "grid-menu-option";
+		this.removeAllOption.textContent = "Remove all";
+		this.removeAllOption.style.backgroundImage = "url(/mono/delete.svg)";
+		this.removeAllOption.onclick = ()=> this.ColumnOptions_RemoveAll();
 
-		this.optRevert = document.createElement("div");
-		this.optRevert.className = "grid-menu-option";
-		this.optRevert.textContent = "Revert";
-		this.optRevert.style.backgroundImage = "url(/mono/restart.svg)";
-		this.optRevert.onclick = ()=> this.ColumnOptions_RevertAll();
+		this.revertOption = document.createElement("div");
+		this.revertOption.className = "grid-menu-option";
+		this.revertOption.textContent = "Revert";
+		this.revertOption.style.backgroundImage = "url(/mono/restart.svg)";
+		this.revertOption.onclick = ()=> this.ColumnOptions_RevertAll();
 
-		this.floating.append(this.optSort, this.optFilter, this.optHideNull, this.optRename, this.optEditAll, this.optRemoveAll, this.optRevert);
+		this.floating.append(this.sortOption, this.filterOption, this.hideNullOption, this.renameOption, this.editAllOption, this.removeAllOption, this.revertOption);
 
 		let attributes = new Set();
 		for (const key in data) {
@@ -123,11 +123,11 @@ class Grid extends Window {
 			this.ColumnOptions_onblur();
 		};
 
-		btnSave.onclick = ()=> {this.Save_onclick()};
-		btnRemoveFilter.onclick = ()=> this.RemoveFilters_onclick();
-		btnReload.onclick = ()=> this.Reload_onclick();
+		saveButton.onclick = ()=> {this.Save_onclick()};
+		removeFilterButton.onclick = ()=> this.RemoveFilters_onclick();
+		reloadButton.onclick = ()=> this.Reload_onclick();
 
-		btnNone.onclick = ()=> {
+		noneButton.onclick = ()=> {
 			for (let i=0; i<this.attributeElements.length; i++) {
 				if (this.attributeElements[i].element.style.display === "none") continue;
 				this.attributeElements[i].element.childNodes[0].checked = false;
@@ -136,7 +136,7 @@ class Grid extends Window {
 			this.UpdateTable();
 		};
 
-		btnAll.onclick = ()=> {
+		allButton.onclick = ()=> {
 			for (let i=0; i<this.attributeElements.length; i++) {
 				if (this.attributeElements[i].element.style.display === "none") continue;
 				this.attributeElements[i].element.childNodes[0].checked = true;
@@ -145,10 +145,10 @@ class Grid extends Window {
 			this.UpdateTable();
 		};
 
-		this.txtFindAttribute.oninput =
-		this.txtFindAttribute.onchange = ()=> {
+		this.findAttributeInput.oninput =
+		this.findAttributeInput.onchange = ()=> {
 			for (let i = 0; i<this.attributeElements.length; i++) {
-				if (this.attributeElements[i].name.includes(this.txtFindAttribute.value)) {
+				if (this.attributeElements[i].name.includes(this.findAttributeInput.value)) {
 					this.attributeElements[i].element.style.display = "block";
 				}
 				else {
@@ -157,36 +157,36 @@ class Grid extends Window {
 			}
 		};
 
-		btnToggle.onclick =()=> {
+		toggleButton.onclick =()=> {
 			if (this.table.style.left === "0px") {
-				btnToggle.style.left = "216px";
-				btnToggle.style.top = "32px";
-				btnToggle.style.backgroundImage = "url(/mono/guitarpick.svg?light)";
-				btnToggle.style.transform = "rotate(90deg)";
+				toggleButton.style.left = "216px";
+				toggleButton.style.top = "32px";
+				toggleButton.style.backgroundImage = "url(/mono/guitarpick.svg?light)";
+				toggleButton.style.transform = "rotate(90deg)";
 				this.table.style.left = "258px";
 
-				this.txtFindAttribute.style.opacity = "1";
+				this.findAttributeInput.style.opacity = "1";
 				this.sideList.style.opacity = "1";
-				btnNone.style.opacity = btnAll.style.opacity = "1";
+				noneButton.style.opacity = allButton.style.opacity = "1";
 
-				this.txtFindAttribute.style.visibility = "visible";
+				this.findAttributeInput.style.visibility = "visible";
 				this.sideList.style.visibility = "visible";
-				btnNone.style.visibility = btnAll.style.visibility = "visible";
+				noneButton.style.visibility = allButton.style.visibility = "visible";
 			}
 			else {
-				btnToggle.style.left = "2px";
-				btnToggle.style.top = "2px";
-				btnToggle.style.backgroundImage = "url(/mono/guitarpick.svg)";
-				btnToggle.style.transform = "rotate(-90deg)";
+				toggleButton.style.left = "2px";
+				toggleButton.style.top = "2px";
+				toggleButton.style.backgroundImage = "url(/mono/guitarpick.svg)";
+				toggleButton.style.transform = "rotate(-90deg)";
 				this.table.style.left = "0px";
 
-				this.txtFindAttribute.style.opacity = "0";
+				this.findAttributeInput.style.opacity = "0";
 				this.sideList.style.opacity = "0";
-				btnNone.style.opacity = btnAll.style.opacity = "0";
+				noneButton.style.opacity = allButton.style.opacity = "0";
 
-				this.txtFindAttribute.style.visibility = "hidden";
+				this.findAttributeInput.style.visibility = "hidden";
 				this.sideList.style.visibility = "hidden";
-				btnNone.style.visibility = btnAll.style.visibility = "hidden";
+				noneButton.style.visibility = allButton.style.visibility = "hidden";
 			}
 		};
 
@@ -198,21 +198,21 @@ class Grid extends Window {
 		const element = document.createElement("div");
 		this.sideList.appendChild(element);
 
-		const chkAttr = document.createElement("input");
-		chkAttr.type = "checkbox";
-		chkAttr.checked = checked;
-		element.appendChild(chkAttr);
+		const attrCheckbox = document.createElement("input");
+		attrCheckbox.type = "checkbox";
+		attrCheckbox.checked = checked;
+		element.appendChild(attrCheckbox);
 
-		const label = this.AddCheckBoxLabel(element, chkAttr, attributesName);
+		const label = this.AddCheckBoxLabel(element, attrCheckbox, attributesName);
 		label.style.width = "calc(100% - 48px)";
 
 		this.attributeElements.push({
 			name: attributesName,
 			element: element,
-			checkbox: chkAttr
+			checkbox: attrCheckbox
 		});
 
-		chkAttr.onchange = ()=> {
+		attrCheckbox.onchange = ()=> {
 			this.UpdateHeading();
 			this.UpdateTable();
 		};
@@ -253,7 +253,7 @@ class Grid extends Window {
 		if (dialog === null) return;
 
 		dialog.innerBox.textContent = "";
-		dialog.btnOK.style.display = "none";
+		dialog.okButton.style.display = "none";
 
 		const spinner = document.createElement("div");
 		spinner.className = "spinner";
@@ -273,7 +273,7 @@ class Grid extends Window {
 		dialog.innerBox.parentElement.style.transition = ".4s";
 		dialog.innerBox.parentElement.style.height = "180px";
 
-		dialog.btnCancel.disabled = true;
+		dialog.cancelButton.disabled = true;
 
 		try {
 			let url = (this instanceof DevicesGrid) ? `db/device/grid` : `db/user/grid`;
@@ -290,14 +290,14 @@ class Grid extends Window {
 				throw new Error(json.error);
 			}
 
-			dialog.btnCancel.onclick();
+			dialog.cancelButton.onclick();
 		}
 		catch (ex) {
 			dialog.innerBox.parentElement.style.transition = ".4s";
 			dialog.innerBox.parentElement.style.height = "120px";
 			dialog.innerBox.textContent = "";
-			dialog.btnCancel.value = "Close";
-			dialog.btnCancel.disabled = false;
+			dialog.cancelButton.value = "Close";
+			dialog.cancelButton.disabled = false;
 
 			const errorBox = document.createElement("div");
 			errorBox.textContent = ex;
@@ -355,25 +355,25 @@ class Grid extends Window {
 		this.selectedColumn = event.target.parentElement.textContent;
 
 		if (this.sort === this.selectedColumn) {
-			this.optSort.setAttribute("checked", "");
+			this.sortOption.setAttribute("checked", "");
 		}
 		else {
-			this.optSort.removeAttribute("checked");
+			this.sortOption.removeAttribute("checked");
 		}
 
 		if (this.filters[this.selectedColumn]) {
-			this.optFilter.setAttribute("checked", "");
+			this.filterOption.setAttribute("checked", "");
 		}
 		else {
-			this.optFilter.removeAttribute("checked");
+			this.filterOption.removeAttribute("checked");
 		}
 
 		let indexHideNull = this.hideNull.indexOf(this.selectedColumn);
 		if (indexHideNull > -1) {
-			this.optHideNull.setAttribute("checked", "");
+			this.hideNullOption.setAttribute("checked", "");
 		}
 		else {
-			this.optHideNull.removeAttribute("checked");
+			this.hideNullOption.removeAttribute("checked");
 		}
 
 		window.requestAnimationFrame(()=>{
@@ -394,11 +394,11 @@ class Grid extends Window {
 
 		if (this.sort === this.selectedColumn) {
 			this.sort = null;
-			this.optSort.removeAttribute("checked");
+			this.sortOption.removeAttribute("checked");
 		}
 		else {
 			this.sort = this.selectedColumn;
-			this.optSort.setAttribute("checked", "");
+			this.sortOption.setAttribute("checked", "");
 		}
 
 		this.UpdateHeading();
@@ -414,35 +414,35 @@ class Grid extends Window {
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
-		const txtFilter = document.createElement("input");
-		txtFilter.type = "text";
-		txtFilter.value = this.filters[this.selectedColumn] ?? "";
-		txtFilter.placeholder = "filter";
-		txtFilter.style.marginTop = "20px";
-		txtFilter.style.width = "min(calc(100% - 8px), 200px)";
-		dialog.innerBox.appendChild(txtFilter);
+		const filterInput = document.createElement("input");
+		filterInput.type = "text";
+		filterInput.value = this.filters[this.selectedColumn] ?? "";
+		filterInput.placeholder = "filter";
+		filterInput.style.marginTop = "20px";
+		filterInput.style.width = "min(calc(100% - 8px), 200px)";
+		dialog.innerBox.appendChild(filterInput);
 
-		txtFilter.focus();
-		txtFilter.select();
+		filterInput.focus();
+		filterInput.select();
 
-		dialog.btnOK.onclick = ()=> {
-			dialog.btnCancel.onclick();
-			if (txtFilter.value.length > 0) {
-				this.filters[this.selectedColumn] = txtFilter.value.toLocaleLowerCase();
-				this.optFilter.setAttribute("checked", "");
+		dialog.okButton.onclick = ()=> {
+			dialog.cancelButton.onclick();
+			if (filterInput.value.length > 0) {
+				this.filters[this.selectedColumn] = filterInput.value.toLocaleLowerCase();
+				this.filterOption.setAttribute("checked", "");
 			}
 			else {
 				delete this.filters[this.selectedColumn];
-				this.optFilter.removeAttribute("checked");
+				this.filterOption.removeAttribute("checked");
 			}
 
 			this.UpdateHeading();
 			this.UpdateTable();
 		};
 
-		txtFilter.onkeydown = event=> {
+		filterInput.onkeydown = event=> {
 			if (event.key === "Enter") {
-				dialog.btnOK.click();
+				dialog.okButton.click();
 			}
 		}
 	}
@@ -453,11 +453,11 @@ class Grid extends Window {
 		let index = this.hideNull.indexOf(this.selectedColumn);
 		if (index > -1) {
 			this.hideNull.splice(index, 1);
-			this.optHideNull.removeAttribute("checked");
+			this.hideNullOption.removeAttribute("checked");
 		}
 		else {
 			this.hideNull.push(this.selectedColumn);
-			this.optHideNull.setAttribute("checked", "");
+			this.hideNullOption.setAttribute("checked", "");
 		}
 
 		this.UpdateHeading();
@@ -473,21 +473,21 @@ class Grid extends Window {
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
-		const txtName = document.createElement("input");
-		txtName.type = "text";
-		txtName.value = this.selectedColumn;
-		txtName.placeholder = "column name";
-		txtName.style.marginTop = "20px";
-		txtName.style.width = "min(calc(100% - 8px), 200px)";
-		dialog.innerBox.appendChild(txtName);
+		const nameInput = document.createElement("input");
+		nameInput.type = "text";
+		nameInput.value = this.selectedColumn;
+		nameInput.placeholder = "column name";
+		nameInput.style.marginTop = "20px";
+		nameInput.style.width = "min(calc(100% - 8px), 200px)";
+		dialog.innerBox.appendChild(nameInput);
 
-		txtName.focus();
-		txtName.select();
+		nameInput.focus();
+		nameInput.select();
 
-		dialog.btnOK.onclick = ()=> {
-			let newName = txtName.value.trim().toLocaleLowerCase();
+		dialog.okButton.onclick = ()=> {
+			let newName = nameInput.value.trim().toLocaleLowerCase();
 			if (newName.length === 0) return;
-			dialog.btnCancel.onclick();
+			dialog.cancelButton.onclick();
 
 			for (let element of this.table.childNodes) {
 				let id = element.getAttribute("id");
@@ -516,9 +516,9 @@ class Grid extends Window {
 			this.UpdateTable();
 		};
 
-		txtName.onkeydown = event=> {
+		nameInput.onkeydown = event=> {
 			if (event.key === "Enter") {
-				dialog.btnOK.click();
+				dialog.okButton.click();
 			}
 		}
 	}
@@ -532,32 +532,32 @@ class Grid extends Window {
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
-		const txtNewValue = document.createElement("input");
-		txtNewValue.type = "text";
-		txtNewValue.placeholder = "value";
-		txtNewValue.style.marginTop = "20px";
-		txtNewValue.style.width = "min(calc(100% - 8px), 200px)";
-		dialog.innerBox.appendChild(txtNewValue);
+		const newValueInput = document.createElement("input");
+		newValueInput.type = "text";
+		newValueInput.placeholder = "value";
+		newValueInput.style.marginTop = "20px";
+		newValueInput.style.width = "min(calc(100% - 8px), 200px)";
+		dialog.innerBox.appendChild(newValueInput);
 
-		txtNewValue.focus();
+		newValueInput.focus();
 
-		dialog.btnOK.onclick = ()=> {
-			if (txtNewValue.value.length === 0) return;
-			dialog.btnCancel.onclick();
+		dialog.okButton.onclick = ()=> {
+			if (newValueInput.value.length === 0) return;
+			dialog.cancelButton.onclick();
 
 			for (let element of this.table.childNodes) {
 				let id = element.getAttribute("id");
 				if (!id) continue;
 
 				if (!(id in this.mods)) this.mods[id] = {};
-				this.mods[id][this.selectedColumn] = txtNewValue.value;
+				this.mods[id][this.selectedColumn] = newValueInput.value;
 			}
 			this.UpdateTable();
 		};
 
-		txtNewValue.onkeydown = event=> {
+		newValueInput.onkeydown = event=> {
 			if (event.key === "Enter") {
-				dialog.btnOK.click();
+				dialog.okButton.click();
 			}
 		}
 	}

@@ -47,33 +47,33 @@ class Encoder extends Window {
 		this.txtB.contentEditable = true;
 		container.appendChild(this.txtB);
 
-		this.txtEncoding = document.createElement("select");
-		buttons.appendChild(this.txtEncoding);
+		this.encodingInput = document.createElement("select");
+		buttons.appendChild(this.encodingInput);
 
-		this.txtEncoding.appendChild(this.CreateOption("Binary"));
-		this.txtEncoding.appendChild(this.CreateOption("Binary 16-bits"));
-		this.txtEncoding.appendChild(this.CreateOption("Hex"));
-		this.txtEncoding.appendChild(this.CreateOption("Hex 16-bits"));
-		this.txtEncoding.appendChild(this.CreateOption("Base-64"));
-		this.txtEncoding.appendChild(this.CreateOption("URL"));
-		this.txtEncoding.appendChild(this.CreateOption("HTML entity"));
+		this.encodingInput.appendChild(this.CreateOption("Binary"));
+		this.encodingInput.appendChild(this.CreateOption("Binary 16-bits"));
+		this.encodingInput.appendChild(this.CreateOption("Hex"));
+		this.encodingInput.appendChild(this.CreateOption("Hex 16-bits"));
+		this.encodingInput.appendChild(this.CreateOption("Base-64"));
+		this.encodingInput.appendChild(this.CreateOption("URL"));
+		this.encodingInput.appendChild(this.CreateOption("HTML entity"));
 
-		this.txtEncoding.value = "Base-64";
+		this.encodingInput.value = "Base-64";
 
-		this.btnEncode = document.createElement("input");
-		this.btnEncode.type = "button";
-		this.btnEncode.value = "Encode";
-		this.btnEncode.style.height = "32px";
-		buttons.appendChild(this.btnEncode);
+		this.encodeButton = document.createElement("input");
+		this.encodeButton.type = "button";
+		this.encodeButton.value = "Encode";
+		this.encodeButton.style.height = "32px";
+		buttons.appendChild(this.encodeButton);
 
-		this.btnDecode = document.createElement("input");
-		this.btnDecode.type = "button";
-		this.btnDecode.value = "Decode";
-		this.btnDecode.style.height = "32px";
-		buttons.appendChild(this.btnDecode);
+		this.decodeButton = document.createElement("input");
+		this.decodeButton.type = "button";
+		this.decodeButton.value = "Decode";
+		this.decodeButton.style.height = "32px";
+		buttons.appendChild(this.decodeButton);
 
-		this.btnEncode.onclick = () => this.Encode();
-		this.btnDecode.onclick = () => this.Decode();
+		this.encodeButton.onclick = () => this.Encode();
+		this.decodeButton.onclick = () => this.Decode();
 	}
 
 	CreateOption(name) {
@@ -86,7 +86,7 @@ class Encoder extends Window {
 	Encode() {
 		this.txtA.textContent = this.txtA.textContent.trim();
 
-		switch (this.txtEncoding.value) {
+		switch (this.encodingInput.value) {
 		case "Binary":
 			let bin = "";
 			for (let i = 0; i < this.txtA.textContent.length; i++)
@@ -134,7 +134,7 @@ class Encoder extends Window {
 	Decode() {
 		this.txtB.textContent = this.txtB.textContent.trim();
 
-		switch (this.txtEncoding.value) {
+		switch (this.encodingInput.value) {
 		case "Binary":
 			let bin = this.txtB.textContent;
 			this.txtA.textContent = "";

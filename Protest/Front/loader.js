@@ -124,18 +124,18 @@ const LOADER = {
 		device_type_autofill.id = "device_type_autofill";
 		document.body.appendChild(device_type_autofill);
 		for (let o in LOADER.deviceIcons) {
-			const opt = document.createElement("option");
-			opt.value = o.charAt(0).toUpperCase() + o.substring(1);
-			device_type_autofill.appendChild(opt);
+			const option = document.createElement("option");
+			option.value = o.charAt(0).toUpperCase() + o.substring(1);
+			device_type_autofill.appendChild(option);
 		}
 
 		const user_type_autofill = document.createElement("datalist"); //autofill type
 		user_type_autofill.id = "user_type_autofill";
 		document.body.appendChild(user_type_autofill);
 		for (let o in LOADER.userIcons) {
-			const opt = document.createElement("option");
-			opt.value = o.charAt(0).toUpperCase() + o.substring(1);
-			user_type_autofill.appendChild(opt);
+			const option = document.createElement("option");
+			option.value = o.charAt(0).toUpperCase() + o.substring(1);
+			user_type_autofill.appendChild(option);
 		}
 
 		let count = 0;

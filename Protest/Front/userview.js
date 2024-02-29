@@ -85,11 +85,11 @@ class UserView extends View {
 		this.sideTools.textContent = "";
 
 		if (this.link.username && this.link.username.v.length > 0) {
-			const btnUnlock = this.CreateSideButton("mono/lock.svg", "Unlock");
-			btnUnlock.onclick = async ()=>{
-				if (btnUnlock.hasAttribute("busy")) return;
+			const unlockButton = this.CreateSideButton("mono/lock.svg", "Unlock");
+			unlockButton.onclick = async ()=>{
+				if (unlockButton.hasAttribute("busy")) return;
 				try {
-					btnUnlock.setAttribute("busy", true);
+					unlockButton.setAttribute("busy", true);
 					const response = await fetch(`manage/user/unlock?file=${this.params.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
@@ -99,33 +99,33 @@ class UserView extends View {
 					}
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/lock.svg"); }
-				btnUnlock.removeAttribute("busy");
+				unlockButton.removeAttribute("busy");
 			};
 
-			const btnEnable = this.CreateSideButton("mono/enable.svg", "Enable");
-			btnEnable.onclick = async ()=>{
-				if (btnEnable.hasAttribute("busy")) return;
+			const enableButton = this.CreateSideButton("mono/enable.svg", "Enable");
+			enableButton.onclick = async ()=>{
+				if (enableButton.hasAttribute("busy")) return;
 				try {
-					btnEnable.setAttribute("busy", true);
+					enableButton.setAttribute("busy", true);
 					const response = await fetch(`manage/user/enable?file=${this.params.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/enable.svg"); }
-				btnEnable.removeAttribute("busy");
+				enableButton.removeAttribute("busy");
 			};
 
-			const btnDisable = this.CreateSideButton("mono/disable.svg", "Disable");
-			btnDisable.onclick = async ()=>{
-				if (btnDisable.hasAttribute("busy")) return;
+			const disableButton = this.CreateSideButton("mono/disable.svg", "Disable");
+			disableButton.onclick = async ()=>{
+				if (disableButton.hasAttribute("busy")) return;
 				try {
-					btnDisable.setAttribute("busy", true);
+					disableButton.setAttribute("busy", true);
 					const response = await fetch(`manage/user/disable?file=${this.params.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/disable.svg"); }
-				btnDisable.removeAttribute("busy");
+				disableButton.removeAttribute("busy");
 			};
 
 		}
@@ -170,44 +170,44 @@ class UserView extends View {
 	}
 
 	Edit(isNew = false) { //override
-		const btnFetch = document.createElement("button");
+		const fetchButton = document.createElement("button");
 		if (isNew && !this.params.copy) {
-			btnFetch.className = "view-fetch-floating-button";
-			btnFetch.setAttribute("tip-below", "Fetch");
-			this.content.appendChild(btnFetch);
+			fetchButton.className = "view-fetch-floating-button";
+			fetchButton.setAttribute("tip-below", "Fetch");
+			this.content.appendChild(fetchButton);
 
-			btnFetch.onclick = ()=> {
+			fetchButton.onclick = ()=> {
 				const dialog = this.DialogBox("108px");
 				if (dialog === null) return;
 
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
 
-				const txtFetchHost = document.createElement("input");
-				txtFetchHost.type = "text";
-				txtFetchHost.placeholder = "username or email";
-				txtFetchHost.style.marginTop = "20px";
-				txtFetchHost.style.width = "min(calc(100% - 8px), 200px)";
-				dialog.innerBox.appendChild(txtFetchHost);
+				const fetchHostInput = document.createElement("input");
+				fetchHostInput.type = "text";
+				fetchHostInput.placeholder = "username or email";
+				fetchHostInput.style.marginTop = "20px";
+				fetchHostInput.style.width = "min(calc(100% - 8px), 200px)";
+				dialog.innerBox.appendChild(fetchHostInput);
 
-				txtFetchHost.focus();
+				fetchHostInput.focus();
 
-				dialog.btnOK.onclick = ()=> {
-					if (txtFetchHost.value.length === 0) return;
-					dialog.btnCancel.onclick();
-					setTimeout(()=> this.Fetch(true, txtFetchHost.value), 250);
+				dialog.okButton.onclick = ()=> {
+					if (fetchHostInput.value.length === 0) return;
+					dialog.cancelButton.onclick();
+					setTimeout(()=> this.Fetch(true, fetchHostInput.value), 250);
 				};
 
-				txtFetchHost.onkeydown = event=> {
+				fetchHostInput.onkeydown = event=> {
 					if (event.key === "Enter") {
-						dialog.btnOK.click();
+						dialog.okButton.click();
 					}
 				}
 			};
 		}
 
-		const btnSave = super.Edit(isNew);
-		btnSave.addEventListener("click", async ()=> {
+		const saveButton = super.Edit(isNew);
+		saveButton.addEventListener("click", async ()=> {
 			let obj = {};
 			for (let i = 0; i < this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
@@ -239,7 +239,7 @@ class UserView extends View {
 				});
 			}
 			finally {
-				if (isNew) this.content.removeChild(btnFetch);
+				if (isNew) this.content.removeChild(fetchButton);
 			}
 		});
 	}
@@ -264,9 +264,9 @@ class UserView extends View {
 		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
-		dialog.btnOK.onclick = async ()=> {
+		dialog.okButton.onclick = async ()=> {
 			dialog.innerBox.textContent = "";
-			dialog.btnOK.style.display = "none";
+			dialog.okButton.style.display = "none";
 
 			const spinner = document.createElement("div");
 			spinner.className = "spinner";
@@ -287,7 +287,7 @@ class UserView extends View {
 			dialog.innerBox.parentElement.style.height = "180px";
 
 			let isCanceled = false;
-			dialog.btnCancel.addEventListener("click", ()=> {
+			dialog.cancelButton.addEventListener("click", ()=> {
 				isCanceled = true;
 			});
 
@@ -302,7 +302,7 @@ class UserView extends View {
 					throw new Error(json.error);
 				}
 
-				dialog.btnCancel.onclick();
+				dialog.cancelButton.onclick();
 
 				if (isCanceled) return;
 
@@ -355,7 +355,7 @@ class UserView extends View {
 				dialog.innerBox.parentElement.style.transition = ".4s";
 				dialog.innerBox.parentElement.style.height = "120px";
 				dialog.innerBox.textContent = "";
-				dialog.btnCancel.value = "Close";
+				dialog.cancelButton.value = "Close";
 
 				const errorBox = document.createElement("div");
 				errorBox.textContent = ex;
@@ -366,8 +366,8 @@ class UserView extends View {
 			}
 		};
 
-		//dialog.btnOK.focus();
-		dialog.btnOK.onclick();
+		//dialog.okButton.focus();
+		dialog.okButton.onclick();
 	}
 
 	Copy() { //override

@@ -32,82 +32,82 @@ class DhcpDiscover extends Window {
 		grid.style.color = "var(--clr-control)";
 		this.content.appendChild(grid);
 
-		const lblTimeout = document.createElement("div");
-		lblTimeout.textContent = "Timeout (ms):";
-		lblTimeout.style.textAlign = "right";
-		lblTimeout.style.gridRow = "1";
-		lblTimeout.style.gridColumn = "2";
-		grid.appendChild(lblTimeout);
+		const timeoutLabel = document.createElement("div");
+		timeoutLabel.textContent = "Timeout (ms):";
+		timeoutLabel.style.textAlign = "right";
+		timeoutLabel.style.gridRow = "1";
+		timeoutLabel.style.gridColumn = "2";
+		grid.appendChild(timeoutLabel);
 
-		this.txtTimeout = document.createElement("input");
-		this.txtTimeout.type = "number";
-		this.txtTimeout.min = 100;
-		this.txtTimeout.max = 30000;
-		this.txtTimeout.value = this.params.timeout;
-		this.txtTimeout.style.gridRow = "1";
-		this.txtTimeout.style.gridColumn = "3";
-		grid.appendChild(this.txtTimeout);
-
-
-		const lblHostname = document.createElement("div");
-		lblHostname.textContent = "Spoof hostname:";
-		lblHostname.style.textAlign = "right";
-		lblHostname.style.gridRow = "2";
-		lblHostname.style.gridColumn = "2";
-		grid.appendChild(lblHostname);
-
-		this.txtHostname = document.createElement("input");
-		this.txtHostname.type = "text";
-		this.txtHostname.placeholder = "none";
-		this.txtHostname.value = this.params.hostname;
-		this.txtHostname.style.gridRow = "2";
-		this.txtHostname.style.gridColumn = "3";
-		grid.appendChild(this.txtHostname);
+		this.timeoutInput = document.createElement("input");
+		this.timeoutInput.type = "number";
+		this.timeoutInput.min = 100;
+		this.timeoutInput.max = 30000;
+		this.timeoutInput.value = this.params.timeout;
+		this.timeoutInput.style.gridRow = "1";
+		this.timeoutInput.style.gridColumn = "3";
+		grid.appendChild(this.timeoutInput);
 
 
-		const lblMacAddress = document.createElement("div");
-		lblMacAddress.textContent = "Spoof MAC address:";
-		lblMacAddress.style.textAlign = "right";
-		lblMacAddress.style.gridRow = "3";
-		lblMacAddress.style.gridColumn = "2";
-		grid.appendChild(lblMacAddress);
+		const hostLabel = document.createElement("div");
+		hostLabel.textContent = "Spoof hostname:";
+		hostLabel.style.textAlign = "right";
+		hostLabel.style.gridRow = "2";
+		hostLabel.style.gridColumn = "2";
+		grid.appendChild(hostLabel);
 
-		this.txtMacAddress = document.createElement("input");
-		this.txtMacAddress.type = "text";
-		this.txtMacAddress.placeholder = "system default";
-		this.txtMacAddress.value = this.params.mac;
-		this.txtMacAddress.style.gridRow = "3";
-		this.txtMacAddress.style.gridColumn = "3";
-		grid.appendChild(this.txtMacAddress);
+		this.hostnameInput = document.createElement("input");
+		this.hostnameInput.type = "text";
+		this.hostnameInput.placeholder = "none";
+		this.hostnameInput.value = this.params.hostname;
+		this.hostnameInput.style.gridRow = "2";
+		this.hostnameInput.style.gridColumn = "3";
+		grid.appendChild(this.hostnameInput);
 
-		const lblAccept = document.createElement("div");
-		lblAccept.textContent = "Accept the offer:";
-		lblAccept.style.textAlign = "right";
-		lblAccept.style.gridRow = "4";
-		lblAccept.style.gridColumn = "2";
-		grid.appendChild(lblAccept);
 
-		const divAccept = document.createElement("div");
-		divAccept.style.gridRow = "4";
-		divAccept.style.gridColumn = "3";
-		grid.appendChild(divAccept);
+		const spoofMacLabel = document.createElement("div");
+		spoofMacLabel.textContent = "Spoof MAC address:";
+		spoofMacLabel.style.textAlign = "right";
+		spoofMacLabel.style.gridRow = "3";
+		spoofMacLabel.style.gridColumn = "2";
+		grid.appendChild(spoofMacLabel);
 
-		this.chkAccept = document.createElement("input");
-		this.chkAccept.type = "checkbox";
-		this.chkAccept.checked = this.params.accept;
-		divAccept.appendChild(this.chkAccept);
-		this.AddCheckBoxLabel(divAccept, this.chkAccept, ".").style.paddingLeft = "8px";
+		this.macInput = document.createElement("input");
+		this.macInput.type = "text";
+		this.macInput.placeholder = "system default";
+		this.macInput.value = this.params.mac;
+		this.macInput.style.gridRow = "3";
+		this.macInput.style.gridColumn = "3";
+		grid.appendChild(this.macInput);
 
-		this.btnDiscover = document.createElement("input");
-		this.btnDiscover.type = "button";
-		this.btnDiscover.value = "Discover";
-		this.btnDiscover.style.display = "block-line";
-		this.btnDiscover.style.width = "96px";
-		this.btnDiscover.style.height = "48px";
-		this.btnDiscover.style.margin = "16px";
-		this.btnDiscover.style.borderRadius = "4px";
-		this.btnDiscover.style.gridArea = "2 / 4 / span 2 / span 1";
-		grid.appendChild(this.btnDiscover);
+		const acceptLabel = document.createElement("div");
+		acceptLabel.textContent = "Accept the offer:";
+		acceptLabel.style.textAlign = "right";
+		acceptLabel.style.gridRow = "4";
+		acceptLabel.style.gridColumn = "2";
+		grid.appendChild(acceptLabel);
+
+		const acceptBox = document.createElement("div");
+		acceptBox.style.gridRow = "4";
+		acceptBox.style.gridColumn = "3";
+		grid.appendChild(acceptBox);
+
+		this.acceptCheckbox = document.createElement("input");
+		this.acceptCheckbox.type = "checkbox";
+		this.acceptCheckbox.checked = this.params.accept;
+		acceptBox.appendChild(this.acceptCheckbox);
+		this.AddCheckBoxLabel(acceptBox, this.acceptCheckbox, ".").style.paddingLeft = "8px";
+
+		this.discoverButton = document.createElement("input");
+		this.discoverButton.type = "button";
+		this.discoverButton.value = "Discover";
+		this.discoverButton.style.display = "block-line";
+		this.discoverButton.style.width = "96px";
+		this.discoverButton.style.height = "48px";
+		this.discoverButton.style.margin = "16px";
+		this.discoverButton.style.borderRadius = "4px";
+		this.discoverButton.style.gridArea = "2 / 4 / span 2 / span 1";
+		grid.appendChild(this.discoverButton);
 
 		this.spinner = document.createElement("div");
 		this.spinner.className = "spinner";
@@ -118,23 +118,23 @@ class DhcpDiscover extends Window {
 		this.spinner.appendChild(document.createElement("div"));
 
 
-		this.btnHex = document.createElement("input");
-		this.btnHex.type = "button";
-		this.btnHex.value = "";
-		this.btnHex.disabled = true;
-		this.btnHex.style.position = "absolute";
-		this.btnHex.style.right = "32px";
-		this.btnHex.style.top = "200px";
-		this.btnHex.style.width = "40px";
-		this.btnHex.style.minWidth = "40px";
-		this.btnHex.style.minHeight = "40px";
-		this.btnHex.style.margin = "2px";
-		this.btnHex.style.marginTop = "16px";
-		this.btnHex.style.backgroundImage = "url(mono/hexviewer.svg?light)";
-		this.btnHex.style.backgroundSize = "32px";
-		this.btnHex.style.backgroundPosition = "center";
-		this.btnHex.style.backgroundRepeat = "no-repeat";
-		this.content.appendChild(this.btnHex);
+		this.hexButton = document.createElement("input");
+		this.hexButton.type = "button";
+		this.hexButton.value = "";
+		this.hexButton.disabled = true;
+		this.hexButton.style.position = "absolute";
+		this.hexButton.style.right = "32px";
+		this.hexButton.style.top = "200px";
+		this.hexButton.style.width = "40px";
+		this.hexButton.style.minWidth = "40px";
+		this.hexButton.style.minHeight = "40px";
+		this.hexButton.style.margin = "2px";
+		this.hexButton.style.marginTop = "16px";
+		this.hexButton.style.backgroundImage = "url(mono/hexviewer.svg?light)";
+		this.hexButton.style.backgroundSize = "32px";
+		this.hexButton.style.backgroundPosition = "center";
+		this.hexButton.style.backgroundRepeat = "no-repeat";
+		this.content.appendChild(this.hexButton);
 
 
 		const titleBar = document.createElement("div");
@@ -145,25 +145,25 @@ class DhcpDiscover extends Window {
 
 		let labels = [];
 
-		const lblType = document.createElement("div");
-		lblType.textContent = "Type";
-		labels.push(lblType);
+		const typeLabel = document.createElement("div");
+		typeLabel.textContent = "Type";
+		labels.push(typeLabel);
 
-		const lblId = document.createElement("div");
-		lblId.textContent = "ID";
-		labels.push(lblId);
+		const idLabel = document.createElement("div");
+		idLabel.textContent = "ID";
+		labels.push(idLabel);
 
-		const lblMac = document.createElement("div");
-		lblMac.textContent = "Mac address";
-		labels.push(lblMac);
+		const macLabel = document.createElement("div");
+		macLabel.textContent = "Mac address";
+		labels.push(macLabel);
 
-		const lblServer = document.createElement("div");
-		lblServer.textContent = "Server";
-		labels.push(lblServer);
+		const serverLabel = document.createElement("div");
+		serverLabel.textContent = "Server";
+		labels.push(serverLabel);
 
-		const lblIp = document.createElement("div");
-		lblIp.textContent = "Offer";
-		labels.push(lblIp);
+		const ipLabel = document.createElement("div");
+		ipLabel.textContent = "Offer";
+		labels.push(ipLabel);
 
 		for (let i = 0; i < labels.length; i++) {
 			labels[i].style.display = "inline-block";
@@ -177,7 +177,7 @@ class DhcpDiscover extends Window {
 			labels[i].style.paddingLeft = "4px";
 		}
 
-		titleBar.append(lblType, lblId, lblMac, lblServer, lblIp);
+		titleBar.append(typeLabel, idLabel, macLabel, serverLabel, ipLabel);
 
 		this.result = document.createElement("div");
 		this.result.style.color = "var(--clr-dark)";
@@ -189,25 +189,25 @@ class DhcpDiscover extends Window {
 		this.result.style.userSelect = "text";
 		this.content.appendChild(this.result);
 
-		this.txtTimeout.onchange = ()=> {
-			this.params.timeout = this.txtTimeout.value;
+		this.timeoutInput.onchange = ()=> {
+			this.params.timeout = this.timeoutInput.value;
 		};
 
-		this.txtHostname.onchange = ()=> {
-			this.params.hostname = this.txtHostname.value;
+		this.hostnameInput.onchange = ()=> {
+			this.params.hostname = this.hostnameInput.value;
 		};
 
-		this.txtMacAddress.onchange = ()=> {
-			this.params.mac = this.txtMacAddress.value;
+		this.macInput.onchange = ()=> {
+			this.params.mac = this.macInput.value;
 		};
 
-		this.chkAccept.onchange = ()=> {
-			this.params.accept = this.chkAccept.checked;
+		this.acceptCheckbox.onchange = ()=> {
+			this.params.accept = this.acceptCheckbox.checked;
 		};
 
-		this.btnDiscover.onclick = ()=> this.Discover();
+		this.discoverButton.onclick = ()=> this.Discover();
 
-		this.btnHex.onclick = ()=> {
+		this.hexButton.onclick = ()=> {
 			new HexViewer({exchange: this.hexRecord, protocol:"dhcp"});
 		};
 	}
@@ -218,17 +218,17 @@ class DhcpDiscover extends Window {
 	}
 
 	Discover() {
-		let mac = this.txtMacAddress.value.replaceAll("-", "").replaceAll(":", "");
+		let mac = this.macInput.value.replaceAll("-", "").replaceAll(":", "");
 
 		if (mac.length != 0 && mac.length != 12) {
 			this.ConfirmBox("Invalid MAC address", true);
 			return;
 		}
 
-		this.btnDiscover.disabled = true;
+		this.discoverButton.disabled = true;
 		this.spinner.style.visibility = "visible";
 		this.taskSpinner.style.display = "initial";
-		this.btnHex.disabled = true;
+		this.hexButton.disabled = true;
 		this.hexRecord = [];
 		this.result.textContent = "";
 
@@ -239,7 +239,7 @@ class DhcpDiscover extends Window {
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/dhcp");
 
-		this.ws.onopen = ()=> this.ws.send(`timeout=${this.txtTimeout.value}&mac=${mac}&hostname=${this.txtHostname.value}&accept=${this.chkAccept.checked}`);
+		this.ws.onopen = ()=> this.ws.send(`timeout=${this.timeoutInput.value}&mac=${mac}&hostname=${this.hostnameInput.value}&accept=${this.acceptCheckbox.checked}`);
 
 		this.ws.onmessage = event=> {
 			const json = JSON.parse(event.data);
@@ -257,30 +257,30 @@ class DhcpDiscover extends Window {
 
 			let labels = [];
 
-			const lblType = document.createElement("div");
-			lblType.textContent = `${json.type} - ${json.typeString}`;
-			labels.push(lblType);
+			const typeLabel = document.createElement("div");
+			typeLabel.textContent = `${json.type} - ${json.typeString}`;
+			labels.push(typeLabel);
 
-			const lblId = document.createElement("div");
-			lblId.textContent = json.id;
-			labels.push(lblId);
+			const idLabel = document.createElement("div");
+			idLabel.textContent = json.id;
+			labels.push(idLabel);
 
 			if (json.id !== json.groupId) {
-				lblId.style.color = "var(--clr-error)";
-				lblId.style.fontWeight = "bold";
+				idLabel.style.color = "var(--clr-error)";
+				idLabel.style.fontWeight = "bold";
 			}
 
-			const lblMac = document.createElement("div");
-			lblMac.textContent = json.mac;
-			labels.push(lblMac);
+			const macLabel = document.createElement("div");
+			macLabel.textContent = json.mac;
+			labels.push(macLabel);
 
-			const lblServer = document.createElement("div");
-			lblServer.textContent = json.server;
-			labels.push(lblServer);
+			const serverLabel = document.createElement("div");
+			serverLabel.textContent = json.server;
+			labels.push(serverLabel);
 
-			const lblIp = document.createElement("div");
-			lblIp.textContent = json.ip;
-			labels.push(lblIp);
+			const ipLabel = document.createElement("div");
+			ipLabel.textContent = json.ip;
+			labels.push(ipLabel);
 
 			for (let i = 0; i < labels.length; i++) {
 				labels[i].style.display = "inline-block";
@@ -296,19 +296,19 @@ class DhcpDiscover extends Window {
 
 			this.hexRecord.push({direction:json.typeString, data:json.data});
 
-			message.append(lblType, lblId, lblMac, lblServer, lblIp);
+			message.append(typeLabel, idLabel, macLabel, serverLabel, ipLabel);
 		};
 
 		this.ws.onclose = ()=> {
-			this.btnDiscover.disabled = false;
+			this.discoverButton.disabled = false;
 			this.spinner.style.visibility = "hidden";
 			this.taskSpinner.style.display = "none";
 
-			this.btnHex.disabled = false;
+			this.hexButton.disabled = false;
 		};
 
 		this.ws.onerror = error=> {
-			this.btnDiscover.disabled = false;
+			this.discoverButton.disabled = false;
 			this.spinner.style.visibility = "hidden";
 			this.taskSpinner.style.display = "none";
 

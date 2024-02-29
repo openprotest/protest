@@ -28,13 +28,13 @@ class Tabs extends Window {
 		this.tabsBox.appendChild(newTab);
 		this.tabsList.push(newTab);
 
-		const divIcon = document.createElement("div");
-		if (icon) divIcon.style.backgroundImage = "url(" + icon + ")";
-		newTab.appendChild(divIcon);
+		const iconBox = document.createElement("div");
+		if (icon) iconBox.style.backgroundImage = "url(" + icon + ")";
+		newTab.appendChild(iconBox);
 
-		const divText = document.createElement("div");
-		divText.textContent = text;
-		newTab.appendChild(divText);
+		const textLabel = document.createElement("div");
+		textLabel.textContent = text;
+		newTab.appendChild(textLabel);
 
 		newTab.addEventListener("click", ()=> {
 			this.DeselectAllTabs();

@@ -17,7 +17,7 @@ class PasswordStrength extends List {
 		this.filterButton = this.SetupFilter();
 		this.findInput = this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
-		const btnGandalf = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
+		const gandalfButton = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
 		this.AddSendToChatButton();
 
 		if (this.params.find && this.params.find.length > 0) {
@@ -26,7 +26,7 @@ class PasswordStrength extends List {
 			this.findInput.parentElement.style.width = "200px";
 		}
 
-		btnGandalf.onclick = ()=> new Gandalf();
+		gandalfButton.onclick = ()=> new Gandalf();
 
 		this.GetEntropy();
 	}
@@ -267,43 +267,43 @@ class PasswordStrength extends List {
 		columns.push(this.columnsElements.find(o=>o.textContent === "modified"));
 		columns.push(this.columnsElements.find(o=>o.textContent === "time to crack"));
 
-		const lblName = document.createElement("div");
-		lblName.textContent = entry.name;
-		lblName.className = "lst-strength-lbl-1";
-		lblName.style.left = columns[0].style.left === "0%" ? "36px" : columns[0].style.left;
-		lblName.style.width = columns[0].style.left === "0%" ? `calc(${columns[0].style.width} - 36px)` : columns[0].style.width;
-		element.appendChild(lblName);
+		const nameLabel = document.createElement("div");
+		nameLabel.textContent = entry.name;
+		nameLabel.className = "lst-strength-lbl-1";
+		nameLabel.style.left = columns[0].style.left === "0%" ? "36px" : columns[0].style.left;
+		nameLabel.style.width = columns[0].style.left === "0%" ? `calc(${columns[0].style.width} - 36px)` : columns[0].style.width;
+		element.appendChild(nameLabel);
 
 		const bar = PassGen.StrengthBar(entry.entropy);
 
-		const divBar = document.createElement("div");
-		divBar.className = "lst-strength-bar";
-		divBar.style.boxShadow = `${bar[0]} ${Math.round(bar[1])}px 0 0 inset`;
-		divBar.style.left = columns[1].style.left === "0%" ? "36px" : columns[1].style.left;
-		divBar.style.width = `40px`;
-		element.appendChild(divBar);
+		const barBox = document.createElement("div");
+		barBox.className = "lst-strength-bar";
+		barBox.style.boxShadow = `${bar[0]} ${Math.round(bar[1])}px 0 0 inset`;
+		barBox.style.left = columns[1].style.left === "0%" ? "36px" : columns[1].style.left;
+		barBox.style.width = `40px`;
+		element.appendChild(barBox);
 
-		const lblStrength = document.createElement("div");
-		lblStrength.textContent = `${entry.entropy}-bits ${bar[2]}`;
-		lblStrength.className = "lst-strength-lbl-2";
-		lblStrength.style.left = columns[1].style.left === "0%" ? "84px" : `calc(${columns[1].style.left} + 48px)`;
-		lblStrength.style.width = columns[1].style.left === "0%" ? `calc(${columns[1].style.width} - 84px)` : `calc(${columns[1].style.width} - 48px)`;
-		element.appendChild(lblStrength);
+		const strengthLabel = document.createElement("div");
+		strengthLabel.textContent = `${entry.entropy}-bits ${bar[2]}`;
+		strengthLabel.className = "lst-strength-lbl-2";
+		strengthLabel.style.left = columns[1].style.left === "0%" ? "84px" : `calc(${columns[1].style.left} + 48px)`;
+		strengthLabel.style.width = columns[1].style.left === "0%" ? `calc(${columns[1].style.width} - 84px)` : `calc(${columns[1].style.width} - 48px)`;
+		element.appendChild(strengthLabel);
 
-		const lblModified = document.createElement("div");
+		const modifiedLabel = document.createElement("div");
 		let date = new Date(UI.TicksToUnixDate(entry.date));
-		lblModified.textContent = `${date.toLocaleDateString(UI.regionalFormat, {})} ${date.toLocaleTimeString(UI.regionalFormat, {})}`;
-		lblModified.className = "lst-strength-lbl-3";
-		lblModified.style.left = columns[2].style.left === "0%" ? "36px" : columns[2].style.left;
-		lblModified.style.width = columns[2].style.left === "0%" ? `calc(${columns[2].style.width} - 36px)` : columns[2].style.width;
-		element.appendChild(lblModified);
+		modifiedLabel.textContent = `${date.toLocaleDateString(UI.regionalFormat, {})} ${date.toLocaleTimeString(UI.regionalFormat, {})}`;
+		modifiedLabel.className = "lst-strength-lbl-3";
+		modifiedLabel.style.left = columns[2].style.left === "0%" ? "36px" : columns[2].style.left;
+		modifiedLabel.style.width = columns[2].style.left === "0%" ? `calc(${columns[2].style.width} - 36px)` : columns[2].style.width;
+		element.appendChild(modifiedLabel);
 
-		const lblTtc = document.createElement("div");
-		lblTtc.textContent = entry.ttc;
-		lblTtc.className = "lst-strength-lbl-4";
-		lblTtc.style.left = columns[3].style.left === "0%" ? "36px" : columns[3].style.left;
-		lblTtc.style.width = columns[3].style.left === "0px" ? `calc(${columns[3].style.left} - 36px)` : columns[3].style.width;
-		element.appendChild(lblTtc);
+		const ttcLabel = document.createElement("div");
+		ttcLabel.textContent = entry.ttc;
+		ttcLabel.className = "lst-strength-lbl-4";
+		ttcLabel.style.left = columns[3].style.left === "0%" ? "36px" : columns[3].style.left;
+		ttcLabel.style.width = columns[3].style.left === "0px" ? `calc(${columns[3].style.left} - 36px)` : columns[3].style.width;
+		element.appendChild(ttcLabel);
 
 
 		element.ondblclick = event=> {

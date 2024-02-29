@@ -30,8 +30,8 @@ class TraceRoute extends Console {
 		}
 
 		this.clearButton.addEventListener("click", event=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				this.params.entries = [];
 				this.list.textContent = "";
 				this.hashtable = {};
@@ -127,9 +127,9 @@ class TraceRoute extends Console {
 		element.className = "tool-element";
 		this.list.appendChild(element);
 
-		let btnExpanded = document.createElement("div");
-		btnExpanded.className = "tool-button-expanded";
-		element.appendChild(btnExpanded);
+		let expandedButton = document.createElement("div");
+		expandedButton.className = "tool-button-expanded";
+		element.appendChild(expandedButton);
 
 		let name = document.createElement("div");
 		name.className = "tool-label";
@@ -161,23 +161,23 @@ class TraceRoute extends Console {
 
 		remove.onclick = ()=> this.Remove(hostname);
 
-		btnExpanded.onclick = ()=> {
+		expandedButton.onclick = ()=> {
 			if (this.hashtable[hostname].expanded) {
 				this.hashtable[hostname].expanded = false;
 				element.style.height = "32px";
-				btnExpanded.style.transform = "rotate(-90deg)";
+				expandedButton.style.transform = "rotate(-90deg)";
 				result.className = "tool-result collapsed";
 				result.scrollTop = 0;
 			}
 			else {
 				this.hashtable[hostname].expanded = true;
 				element.style.height = "auto";
-				btnExpanded.style.transform = "rotate(0deg)";
+				expandedButton.style.transform = "rotate(0deg)";
 				result.className = "tool-result expanded enumerated";
 			}
 		};
 
-		btnExpanded.onclick();
+		expandedButton.onclick();
 
 		this.params.entries.push(hostname);
 

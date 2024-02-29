@@ -11,29 +11,29 @@ class SiteCheck extends Window {
 		this.content.style.overflowY = "auto";
 		this.content.style.textAlign = "center";
 
-		this.txtTarget = document.createElement("input");
-		this.txtTarget.placeholder = "URI";
-		this.txtTarget.type = "text";
-		this.txtTarget.maxLength = "64";
-		this.txtTarget.style.fontSize = "larger";
-		this.txtTarget.style.width = "60%";
-		this.txtTarget.style.maxWidth = "720px";
-		this.txtTarget.style.textAlign = "center";
-		this.txtTarget.value = this.params.value;
-		this.content.appendChild(this.txtTarget);
+		this.targetInput = document.createElement("input");
+		this.targetInput.placeholder = "URI";
+		this.targetInput.type = "text";
+		this.targetInput.maxLength = "64";
+		this.targetInput.style.fontSize = "larger";
+		this.targetInput.style.width = "60%";
+		this.targetInput.style.maxWidth = "720px";
+		this.targetInput.style.textAlign = "center";
+		this.targetInput.value = this.params.value;
+		this.content.appendChild(this.targetInput);
 
-		this.defaultElement = this.txtTarget;
-		this.txtTarget.focus();
+		this.defaultElement = this.targetInput;
+		this.targetInput.focus();
 
-		this.btnCheck = document.createElement("input");
-		this.btnCheck.type = "button";
-		this.btnCheck.value = "Check";
-		this.btnCheck.style.display = "block-line";
-		this.btnCheck.style.width = "96px";
-		this.btnCheck.style.height = "40px";
-		this.btnCheck.style.margin = "16px";
-		this.btnCheck.style.borderRadius = "4px";
-		this.content.appendChild(this.btnCheck);
+		this.checkButton = document.createElement("input");
+		this.checkButton.type = "button";
+		this.checkButton.value = "Check";
+		this.checkButton.style.display = "block-line";
+		this.checkButton.style.width = "96px";
+		this.checkButton.style.height = "40px";
+		this.checkButton.style.margin = "16px";
+		this.checkButton.style.borderRadius = "4px";
+		this.content.appendChild(this.checkButton);
 
 		this.result = document.createElement("div");
 		this.result.style.textAlign = "left";
@@ -54,26 +54,26 @@ class SiteCheck extends Window {
 
 		this.ws = null; //websocket
 
-		this.txtTarget.onkeydown = event=> {
-			if (event.keyCode == 13) this.btnCheck.onclick();
+		this.targetInput.onkeydown = event=> {
+			if (event.keyCode == 13) this.checkButton.onclick();
 		};
 
-		this.txtTarget.oninput = event=> {
-			this.params.value = this.txtTarget.value;
+		this.targetInput.oninput = event=> {
+			this.params.value = this.targetInput.value;
 		};
 
-		this.btnCheck.onclick = ()=> {
-			if (this.txtTarget.value.length == 0) {
+		this.checkButton.onclick = ()=> {
+			if (this.targetInput.value.length == 0) {
 				this.ConfirmBox("No uri", true);
 				return;
 			}
 
-			this.txtTarget.value = this.txtTarget.value.trim();
+			this.targetInput.value = this.targetInput.value.trim();
 
-			if (this.txtTarget.value.indexOf("://") == -1) this.txtTarget.value = "http://" + this.txtTarget.value;
+			if (this.targetInput.value.indexOf("://") == -1) this.targetInput.value = "http://" + this.targetInput.value;
 
-			this.txtTarget.disabled = true;
-			this.btnCheck.disabled = true;
+			this.targetInput.disabled = true;
+			this.checkButton.disabled = true;
 			this.spinner.style.visibility = "visible";
 			this.Check();
 		};
@@ -89,7 +89,7 @@ class SiteCheck extends Window {
 
 		this.ws.onopen = ()=> {
 			this.result.textContent = "";
-			this.ws.send(this.txtTarget.value);
+			this.ws.send(this.targetInput.value);
 		};
 
 		this.ws.onmessage = event=> {
@@ -139,8 +139,8 @@ class SiteCheck extends Window {
 		};
 
 		this.ws.onclose = ()=> {
-			this.txtTarget.disabled = false;
-			this.btnCheck.disabled = false;
+			this.targetInput.disabled = false;
+			this.checkButton.disabled = false;
 			this.spinner.style.visibility = "hidden";
 		};
 

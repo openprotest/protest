@@ -154,9 +154,9 @@ class View extends Window {
 				this.content.appendChild(this.attributeAutofill);
 				for (let i = 0; i < DeviceView.DEVICES_GROUP_SCHEMA.length; i++) {
 					if (Array.isArray(DeviceView.DEVICES_GROUP_SCHEMA[i])) continue;
-					const opt = document.createElement("option");
-					opt.value = DeviceView.DEVICES_GROUP_SCHEMA[i];
-					this.attributeAutofill.appendChild(opt);
+					const option = document.createElement("option");
+					option.value = DeviceView.DEVICES_GROUP_SCHEMA[i];
+					this.attributeAutofill.appendChild(option);
 				}
 			}
 
@@ -180,9 +180,9 @@ class View extends Window {
 				this.content.appendChild(this.attributeAutofill);
 				for (let i = 0; i < UserView.USERS_GROUP_SCHEMA.length; i++) {
 					if (Array.isArray(UserView.USERS_GROUP_SCHEMA[i])) continue;
-					const opt = document.createElement("option");
-					opt.value = UserView.USERS_GROUP_SCHEMA[i];
-					this.attributeAutofill.appendChild(opt);
+					const option = document.createElement("option");
+					option.value = UserView.USERS_GROUP_SCHEMA[i];
+					this.attributeAutofill.appendChild(option);
 				}
 			}
 
@@ -222,25 +222,25 @@ class View extends Window {
 			preview.style.display = "none";
 			preview.className = "view-password-preview";
 
-			const btnShow = document.createElement("input");
-			btnShow.type = "button";
-			btnShow.value = "Show";
-			btnShow.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("passwords:read");
+			const showButton = document.createElement("input");
+			showButton.type = "button";
+			showButton.value = "Show";
+			showButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("passwords:read");
 
-			const btnStamp = document.createElement("input");
-			btnStamp.type = "button";
-			btnStamp.value = " ";
-			btnStamp.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("passwords:read");
-			btnStamp.style.minWidth = "40px";
-			btnStamp.style.height = "32px";
-			btnStamp.style.backgroundImage = "url(mono/stamp.svg?light)";
-			btnStamp.style.backgroundSize = "28px 28px";
-			btnStamp.style.backgroundPosition = "center center";
-			btnStamp.style.backgroundRepeat = "no-repeat";
+			const stampButton = document.createElement("input");
+			stampButton.type = "button";
+			stampButton.value = " ";
+			stampButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("passwords:read");
+			stampButton.style.minWidth = "40px";
+			stampButton.style.height = "32px";
+			stampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
+			stampButton.style.backgroundSize = "28px 28px";
+			stampButton.style.backgroundPosition = "center center";
+			stampButton.style.backgroundRepeat = "no-repeat";
 
-			valueContainer.append(preview, btnShow, btnStamp);
+			valueContainer.append(preview, showButton, stampButton);
 
-			btnShow.onclick = async ()=> {
+			showButton.onclick = async ()=> {
 				try {
 					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.params.file}&attribute=${name}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -248,13 +248,13 @@ class View extends Window {
 
 					preview.textContent = password;
 					preview.style.display = "inline-block";
-					btnShow.style.display = "none";
+					showButton.style.display = "none";
 
 					setTimeout(()=> {
 						if (!this.isClosed) {
 							preview.textContent = "";
 							preview.style.display = "none";
-							btnShow.style.display = "inline-block";
+							showButton.style.display = "inline-block";
 						}
 					}, 15000);
 				}
@@ -263,7 +263,7 @@ class View extends Window {
 				}
 			};
 
-			btnStamp.onclick = async ()=> {
+			stampButton.onclick = async ()=> {
 				try {
 					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.params.file}&attribute=${name}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -723,39 +723,39 @@ class View extends Window {
 			}
 		}
 
-		const btnSave = document.createElement("input");
-		btnSave.type = "button";
-		btnSave.value = "Save";
-		btnSave.className = "with-icon";
-		btnSave.style.backgroundImage = "url(mono/floppy.svg?light)";
-		btnSave.style.margin = "6px";
-		this.bar.appendChild(btnSave);
+		const saveButton = document.createElement("input");
+		saveButton.type = "button";
+		saveButton.value = "Save";
+		saveButton.className = "with-icon";
+		saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
+		saveButton.style.margin = "6px";
+		this.bar.appendChild(saveButton);
 
-		const btnRevert = document.createElement("input");
-		btnRevert.type = "button";
-		btnRevert.value = "Revert";
-		btnRevert.className = "with-icon";
-		btnRevert.style.backgroundImage = "url(mono/restart.svg?light)";
-		btnRevert.style.margin = "6px";
-		this.bar.appendChild(btnRevert);
-		if (isNew) btnRevert.disabled = "true";
+		const revertButton = document.createElement("input");
+		revertButton.type = "button";
+		revertButton.value = "Revert";
+		revertButton.className = "with-icon";
+		revertButton.style.backgroundImage = "url(mono/restart.svg?light)";
+		revertButton.style.margin = "6px";
+		this.bar.appendChild(revertButton);
+		if (isNew) revertButton.disabled = "true";
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Cancel";
-		btnCancel.className = "with-icon";
-		btnCancel.style.backgroundImage = "url(mono/clear.svg?light)";
-		btnCancel.style.margin = "6px";
-		this.bar.appendChild(btnCancel);
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Cancel";
+		cancelButton.className = "with-icon";
+		cancelButton.style.backgroundImage = "url(mono/clear.svg?light)";
+		cancelButton.style.margin = "6px";
+		this.bar.appendChild(cancelButton);
 
-		const btnAddAttribute = document.createElement("input");
-		btnAddAttribute.type = "button";
-		btnAddAttribute.value = "Add attribute";
-		btnAddAttribute.className = "with-icon";
-		btnAddAttribute.style.backgroundImage = "url(mono/add.svg?light)";
-		btnAddAttribute.style.margin = "6px";
-		btnAddAttribute.style.float = "right";
-		this.bar.appendChild(btnAddAttribute);
+		const addAttributeButton = document.createElement("input");
+		addAttributeButton.type = "button";
+		addAttributeButton.value = "Add attribute";
+		addAttributeButton.className = "with-icon";
+		addAttributeButton.style.backgroundImage = "url(mono/add.svg?light)";
+		addAttributeButton.style.margin = "6px";
+		addAttributeButton.style.float = "right";
+		this.bar.appendChild(addAttributeButton);
 
 		this.attributes.classList.remove("view-attributes-freeze");
 
@@ -765,7 +765,7 @@ class View extends Window {
 			this.attributes.childNodes[i].childNodes[1].firstChild.removeAttribute("readonly");
 		}
 
-		btnAddAttribute.onclick = ()=> {
+		addAttributeButton.onclick = ()=> {
 			const newAttribute = this.CreateAttribute("", "", KEEP.username, new Date(), true);
 			this.attributes.appendChild(newAttribute);
 			newAttribute.scrollIntoView({ block: "end" });
@@ -773,10 +773,10 @@ class View extends Window {
 		};
 
 		const ExitEdit = ()=> {
-			this.bar.removeChild(btnSave);
-			this.bar.removeChild(btnRevert);
-			this.bar.removeChild(btnCancel);
-			this.bar.removeChild(btnAddAttribute);
+			this.bar.removeChild(saveButton);
+			this.bar.removeChild(revertButton);
+			this.bar.removeChild(cancelButton);
+			this.bar.removeChild(addAttributeButton);
 
 			for (let i = 0; i < this.bar.childNodes.length; i++) {
 				this.bar.childNodes[i].style.display = "initial";
@@ -814,15 +814,15 @@ class View extends Window {
 			}
 		};
 
-		btnSave.onclick = ()=> {
+		saveButton.onclick = ()=> {
 			ExitEdit();
 		};
 
-		btnRevert.onclick = ()=> {
+		revertButton.onclick = ()=> {
 			Revert(true);
 		};
 
-		btnCancel.onclick = ()=> {
+		cancelButton.onclick = ()=> {
 			if (isNew) {
 				this.Close();
 			}
@@ -832,7 +832,7 @@ class View extends Window {
 			}
 		};
 
-		return btnSave;
+		return saveButton;
 	}
 
 	Fetch() {} //overridable

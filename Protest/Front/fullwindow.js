@@ -86,15 +86,15 @@ class Window {
 		buttonBox.style.paddingTop = "16px";
 		confirmBox.appendChild(buttonBox);
 
-		const btnOK = document.createElement("input");
-		btnOK.type = "button";
-		btnOK.value = "OK";
-		buttonBox.appendChild(btnOK);
+		const okButton = document.createElement("input");
+		okButton.type = "button";
+		okButton.value = "OK";
+		buttonBox.appendChild(okButton);
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Cancel";
-		if (!okOnly) buttonBox.appendChild(btnCancel);
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Cancel";
+		if (!okOnly) buttonBox.appendChild(cancelButton);
 
 		if (icon) {
 			messageBox.style.paddingLeft = "64px";
@@ -113,7 +113,7 @@ class Window {
 		};
 
 		let once = false;
-		btnCancel.onclick = ()=> {
+		cancelButton.onclick = ()=> {
 			if (once) return;
 			once = true;
 			dim.style.filter = "opacity(0)";
@@ -130,16 +130,16 @@ class Window {
 			}, WIN.ANIME_DURATION);
 		};
 
-		btnOK.onclick = event=> btnCancel.onclick(event);
-		btnOK.focus();
+		okButton.onclick = event=> cancelButton.onclick(event);
+		okButton.focus();
 
 		confirmBox.onkeydown = event=> {
 			if (event.key === "Escape") {
-				btnCancel.onclick();
+				cancelButton.onclick();
 			}
 		};
 
-		return btnOK;
+		return okButton;
 	}
 
 	DialogBox(height) {
@@ -189,15 +189,15 @@ class Window {
 		buttonBox.style.bottom = "8px";
 		dialogBox.appendChild(buttonBox);
 
-		const btnOK = document.createElement("input");
-		btnOK.type = "button";
-		btnOK.value = "OK";
-		buttonBox.appendChild(btnOK);
+		const okButton = document.createElement("input");
+		okButton.type = "button";
+		okButton.value = "OK";
+		buttonBox.appendChild(okButton);
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Cancel";
-		buttonBox.appendChild(btnCancel);
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Cancel";
+		buttonBox.appendChild(cancelButton);
 
 		this.content.style.filter = "blur(4px)";
 
@@ -225,18 +225,18 @@ class Window {
 
 		innerBox.onkeydown = event=>{
 			if (event.key === "Escape") {
-				btnCancel.onclick();
+				cancelButton.onclick();
 			}
 		};
 
-		btnCancel.onclick = ()=> Close();
-		btnOK.onclick = event=> btnCancel.onclick(event);
+		cancelButton.onclick = ()=> Close();
+		okButton.onclick = event=> cancelButton.onclick(event);
 
 		return {
 			innerBox: innerBox,
 			buttonBox: buttonBox,
-			btnOK: btnOK,
-			btnCancel: btnCancel,
+			okButton: okButton,
+			cancelButton: cancelButton,
 			Close: Close
 		};
 	}

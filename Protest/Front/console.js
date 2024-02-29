@@ -14,25 +14,25 @@ class Console extends Window {
 		this.list.className = "no-results";
 		this.content.appendChild(this.list);
 
-		this.txtInput = document.createElement("input");
-		this.txtInput.type = "text";
-		this.txtInput.placeholder = "hostname or ip";
-		this.txtInput.style.position  = "absolute";
-		this.txtInput.style.left      = "40px";
-		this.txtInput.style.bottom    = "40px";
-		this.txtInput.style.width     = "calc(100% - 80px)";
-		this.txtInput.style.margin    = "0";
-		this.txtInput.style.border    = "0";
-		this.txtInput.style.boxSizing = "border-box";
-		this.content.appendChild(this.txtInput);
+		this.inputBox = document.createElement("input");
+		this.inputBox.type = "text";
+		this.inputBox.placeholder = "hostname or ip";
+		this.inputBox.style.position  = "absolute";
+		this.inputBox.style.left      = "40px";
+		this.inputBox.style.bottom    = "40px";
+		this.inputBox.style.width     = "calc(100% - 80px)";
+		this.inputBox.style.margin    = "0";
+		this.inputBox.style.border    = "0";
+		this.inputBox.style.boxSizing = "border-box";
+		this.content.appendChild(this.inputBox);
 
 		let historyIndex = -1;
-		this.txtInput.onkeydown = event=> {
+		this.inputBox.onkeydown = event=> {
 			if (event.key === "Enter") {
-				if (this.txtInput.value.length == 0) return;
-				this.Push(this.txtInput.value.trim().toLocaleLowerCase());
+				if (this.inputBox.value.length == 0) return;
+				this.Push(this.inputBox.value.trim().toLocaleLowerCase());
 				this.list.scrollTop = this.list.scrollHeight;
-				this.txtInput.value = "";
+				this.inputBox.value = "";
 				event.preventDefault();
 			}
 
@@ -44,7 +44,7 @@ class Console extends Window {
 
 				if (historyIndex < 0) historyIndex = this.history.length - 1;
 				historyIndex %= this.history.length;
-				this.txtInput.value = this.history[historyIndex];
+				this.inputBox.value = this.history[historyIndex];
 
 				event.preventDefault();
 
@@ -54,11 +54,11 @@ class Console extends Window {
 			}
 		};
 
-		this.defaultElement = this.txtInput;
-		this.txtInput.focus();
+		this.defaultElement = this.inputBox;
+		this.inputBox.focus();
 
-		this.txtInput.onfocus = ()=> this.BringToFront();
-		this.escAction = ()=> { this.txtInput.value = ""; };
+		this.inputBox.onfocus = ()=> this.BringToFront();
+		this.escAction = ()=> { this.inputBox.value = ""; };
 	}
 
 	Push(command) { //overridable
@@ -70,9 +70,9 @@ class Console extends Window {
 			return false;
 		}
 
-		this.txtInput.style.left = "8px";
-		this.txtInput.style.bottom = "8px";
-		this.txtInput.style.width = "calc(100% - 16px)";
+		this.inputBox.style.left = "8px";
+		this.inputBox.style.bottom = "8px";
+		this.inputBox.style.width = "calc(100% - 16px)";
 
 		if (this.history.includes(command))
 			this.history.splice(this.history.indexOf(command), 1);

@@ -81,8 +81,8 @@ class Ping extends Console {
 		});
 
 		optionRemoveAll.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?", false, "mono/wing.svg");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to clear the list?", false, "mono/wing.svg");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				this.playButton.disabled = true;
 				this.pauseButton.disabled = true;
 
@@ -95,8 +95,8 @@ class Ping extends Console {
 		});
 
 		optionRemoveReachable.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to remove all reachable hosts?", false, "mono/wing.svg");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to remove all reachable hosts?", false, "mono/wing.svg");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				let split = this.request.split(";");
 				for (let i = 0; i < split.length; i++) {
 					if (split[i].length === 0) continue;
@@ -115,8 +115,8 @@ class Ping extends Console {
 		});
 
 		optionRemoveUnreachable.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to remove all unreachable hosts?", false, "mono/wing.svg");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to remove all unreachable hosts?", false, "mono/wing.svg");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				let split = this.request.split(";");
 				for (let i = 0; i < split.length; i++) {
 					if (split[i].length === 0) continue;
@@ -141,14 +141,14 @@ class Ping extends Console {
 			if (this.popOutWindow) copy.PopOut();
 			const dialog = copy.Options();
 
-			const OriginalCancelClickHandler = dialog.btnCancel.onclick;
-			dialog.btnOK.onclick = ()=> {
+			const OriginalCancelClickHandler = dialog.cancelButton.onclick;
+			dialog.okButton.onclick = ()=> {
 				copy.params.status = "play";
 				copy.Connect();
 				OriginalCancelClickHandler();
 			};
 
-			dialog.btnCancel.onclick = ()=> copy.Close();
+			dialog.cancelButton.onclick = ()=> copy.Close();
 		});
 
 		this.optionsButton.onclick = ()=> this.Options();
@@ -179,95 +179,95 @@ class Ping extends Console {
 		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.parentElement.style.maxWidth = "600px";
 		innerBox.style.padding = "16px 0px 0px 16px";
 
-		const lblTimeout = document.createElement("div");
-		lblTimeout.textContent = "Time out (ms):";
-		lblTimeout.style.display = "inline-block";
-		lblTimeout.style.minWidth = "120px";
-		innerBox.appendChild(lblTimeout);
+		const timeoutLabel = document.createElement("div");
+		timeoutLabel.textContent = "Time out (ms):";
+		timeoutLabel.style.display = "inline-block";
+		timeoutLabel.style.minWidth = "120px";
+		innerBox.appendChild(timeoutLabel);
 
-		const txtTimeout = document.createElement("input");
-		txtTimeout.type = "number";
-		txtTimeout.min = 1;
-		txtTimeout.max = 5000;
-		txtTimeout.value = this.params.timeout;
-		txtTimeout.style.width = "100px";
-		innerBox.appendChild(txtTimeout);
-
-		innerBox.appendChild(document.createElement("br"));
-
-
-		const lblInterval = document.createElement("div");
-		lblInterval.textContent = "Interval (ms):";
-		lblInterval.style.display = "inline-block";
-		lblInterval.style.minWidth = "120px";
-		innerBox.appendChild(lblInterval);
-
-		const txtInterval = document.createElement("input");
-		txtInterval.type = "number";
-		txtInterval.min = 1;
-		txtInterval.max = 5000;
-		txtInterval.value = this.params.interval;
-		txtInterval.style.width = "100px";
-		innerBox.appendChild(txtInterval);
+		const timeoutInput = document.createElement("input");
+		timeoutInput.type = "number";
+		timeoutInput.min = 1;
+		timeoutInput.max = 5000;
+		timeoutInput.value = this.params.timeout;
+		timeoutInput.style.width = "100px";
+		innerBox.appendChild(timeoutInput);
 
 		innerBox.appendChild(document.createElement("br"));
 
-		const lblPingMethod = document.createElement("div");
-		lblPingMethod.textContent = "Ping method:";
-		lblPingMethod.style.display = "inline-block";
-		lblPingMethod.style.minWidth = "120px";
-		innerBox.appendChild(lblPingMethod);
 
-		const selPingMethod = document.createElement("select");
-		selPingMethod.style.minWidth = "100px";
-		innerBox.appendChild(selPingMethod);
+		const intervalLabel = document.createElement("div");
+		intervalLabel.textContent = "Interval (ms):";
+		intervalLabel.style.display = "inline-block";
+		intervalLabel.style.minWidth = "120px";
+		innerBox.appendChild(intervalLabel);
 
-		const optICMP = document.createElement("option");
-		optICMP.textContent = "ICMP";
-		optICMP.value = "icmp";
-		selPingMethod.appendChild(optICMP);
-
-		const optARP = document.createElement("option");
-		optARP.textContent = "ARP";
-		optARP.value = "arp";
-		selPingMethod.appendChild(optARP);
-
-		selPingMethod.value = this.params.method;
+		const intervalInput = document.createElement("input");
+		intervalInput.type = "number";
+		intervalInput.min = 1;
+		intervalInput.max = 5000;
+		intervalInput.value = this.params.interval;
+		intervalInput.style.width = "100px";
+		innerBox.appendChild(intervalInput);
 
 		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
 
-		const chkRollingPing = document.createElement("input");
-		chkRollingPing.type = "checkbox";
-		chkRollingPing.checked = this.params.rolling;
-		chkRollingPing.disabled = true;
+		const pingMethodLabel = document.createElement("div");
+		pingMethodLabel.textContent = "Ping method:";
+		pingMethodLabel.style.display = "inline-block";
+		pingMethodLabel.style.minWidth = "120px";
+		innerBox.appendChild(pingMethodLabel);
 
-		innerBox.appendChild(chkRollingPing);
-		this.AddCheckBoxLabel(innerBox, chkRollingPing, "Rolling ping");
+		const pingMethodInput = document.createElement("select");
+		pingMethodInput.style.minWidth = "100px";
+		innerBox.appendChild(pingMethodInput);
 
+		const icmpOption = document.createElement("option");
+		icmpOption.textContent = "ICMP";
+		icmpOption.value = "icmp";
+		pingMethodInput.appendChild(icmpOption);
+
+		const arpOption = document.createElement("option");
+		arpOption.textContent = "ARP";
+		arpOption.value = "arp";
+		pingMethodInput.appendChild(arpOption);
+
+		pingMethodInput.value = this.params.method;
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const chkMoveToTop = document.createElement("input");
-		chkMoveToTop.type = "checkbox";
-		chkMoveToTop.checked = this.params.moveToTop;
-		innerBox.appendChild(chkMoveToTop);
-		this.AddCheckBoxLabel(innerBox, chkMoveToTop, "Move to the top on rise or fall");
+		const rollingPingCheckBox = document.createElement("input");
+		rollingPingCheckBox.type = "checkbox";
+		rollingPingCheckBox.checked = this.params.rolling;
+		rollingPingCheckBox.disabled = true;
+
+		innerBox.appendChild(rollingPingCheckBox);
+		this.AddCheckBoxLabel(innerBox, rollingPingCheckBox, "Rolling ping");
+
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		if (selPingMethod.value === "arp") {
-			txtTimeout.disabled = true;
-			chkRollingPing.checked = true;
+		const moveToTopCheckbox = document.createElement("input");
+		moveToTopCheckbox.type = "checkbox";
+		moveToTopCheckbox.checked = this.params.moveToTop;
+		innerBox.appendChild(moveToTopCheckbox);
+		this.AddCheckBoxLabel(innerBox, moveToTopCheckbox, "Move to the top on rise or fall");
+
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		if (pingMethodInput.value === "arp") {
+			timeoutInput.disabled = true;
+			rollingPingCheckBox.checked = true;
 		}
 
 		{
@@ -363,11 +363,11 @@ class Ping extends Console {
 		}
 
 		const Apply = ()=> {
-			this.params.timeout = txtTimeout.value;
-			this.params.interval = txtInterval.value;
-			this.params.method = selPingMethod.value;
-			this.params.rolling = chkRollingPing.checked;
-			this.params.moveToTop = chkMoveToTop.checked;
+			this.params.timeout = timeoutInput.value;
+			this.params.interval = intervalInput.value;
+			this.params.method = pingMethodInput.value;
+			this.params.rolling = rollingPingCheckBox.checked;
+			this.params.moveToTop = moveToTopCheckbox.checked;
 
 			if (!this.isClosed && this.ws != null && this.ws.readyState === 1) { //ready
 				this.ws.send(`timeout:${this.params.timeout}`);
@@ -376,46 +376,46 @@ class Ping extends Console {
 				this.ws.send(`rolling:${this.params.rolling}`);
 			}
 
-			this.SetTitle(selPingMethod.value === "arp" ? "ARP ping" : "Ping");
+			this.SetTitle(pingMethodInput.value === "arp" ? "ARP ping" : "Ping");
 			this.InvalidateRecyclerList();
 		};
 
 		const OnKeydown = event=>{
 			if (event.key === "Enter") {
 				Apply();
-				dialog.btnOK.onclick();
+				dialog.okButton.onclick();
 			}
 		};
 
-		txtTimeout.addEventListener("keydown", OnKeydown);
-		txtInterval.addEventListener("keydown", OnKeydown);
-		selPingMethod.addEventListener("keydown", OnKeydown);
+		timeoutInput.addEventListener("keydown", OnKeydown);
+		intervalInput.addEventListener("keydown", OnKeydown);
+		pingMethodInput.addEventListener("keydown", OnKeydown);
 
-		txtTimeout.onchange = txtTimeout.oninput = ()=> {
-			txtInterval.min = txtTimeout.value;
-			if (txtInterval.value < txtTimeout.value) txtInterval.value = txtTimeout.value;
+		timeoutInput.onchange = timeoutInput.oninput = ()=> {
+			intervalInput.min = timeoutInput.value;
+			if (intervalInput.value < timeoutInput.value) intervalInput.value = timeoutInput.value;
 		};
 
-		selPingMethod.onchange = ()=> {
-			if (selPingMethod.value === "arp") {
-				txtTimeout.disabled = true;
-				txtInterval.disabled = true;
-				chkRollingPing.checked = true;
-				//chkRollingPing.disabled = true;
+		pingMethodInput.onchange = ()=> {
+			if (pingMethodInput.value === "arp") {
+				timeoutInput.disabled = true;
+				intervalInput.disabled = true;
+				rollingPingCheckBox.checked = true;
+				//rollingPingCheckBox.disabled = true;
 			}
-			else if (txtTimeout.disabled) {
-				txtTimeout.disabled = false;
-				txtInterval.disabled = false;
-				//chkRollingPing.disabled = false;
-				chkRollingPing.checked = false;
+			else if (timeoutInput.disabled) {
+				timeoutInput.disabled = false;
+				intervalInput.disabled = false;
+				//rollingPingCheckBox.disabled = false;
+				rollingPingCheckBox.checked = false;
 			}
 		};
 
-		btnOK.addEventListener("click", ()=> {
+		okButton.addEventListener("click", ()=> {
 			Apply();
 		});
 
-		txtTimeout.focus();
+		timeoutInput.focus();
 
 		return dialog;
 	}

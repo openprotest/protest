@@ -15,7 +15,7 @@ class MacLookup extends Console {
 		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.AddSendToChatButton();
 
-		this.txtInput.placeholder = "mac address";
+		this.inputBox.placeholder = "mac address";
 
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;
@@ -25,8 +25,8 @@ class MacLookup extends Console {
 		}
 
 		this.clearButton.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
 				this.hashtable = {};
 				this.params.entries = [];

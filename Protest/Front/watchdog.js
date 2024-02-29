@@ -120,7 +120,7 @@ class Watchdog extends Window {
 		if (dialog === null) return;
 
 		const innerBox = dialog.innerBox;
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 
 		innerBox.parentElement.style.maxWidth = "300px";
 
@@ -139,11 +139,11 @@ class Watchdog extends Window {
 
 		dateInput.onkeydown = event=> {
 			if (event.key === "Enter") {
-				btnOK.onclick();
+				okButton.onclick();
 			}
 		};
 
-		btnOK.onclick = ()=> {
+		okButton.onclick = ()=> {
 			this.offset = (this.utcToday - dateInput.valueAsDate) * this.dayPixels / Watchdog.DAY_TICKS;
 			if (this.offset < this.timezonePixelOffset) this.offset = this.timezonePixelOffset;
 			this.Seek();
@@ -233,10 +233,10 @@ class Watchdog extends Window {
 		if (dialog === null) return;
 
 		const innerBox = dialog.innerBox;
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 
-		btnOK.value = isNew ? "Create" : "Save";
+		okButton.value = isNew ? "Create" : "Save";
 
 		innerBox.parentElement.style.transition = ".2s";
 
@@ -269,10 +269,10 @@ class Watchdog extends Window {
 		typeInput.style.gridArea = "2 / 3";
 		typeInput.disabled = !isNew;
 		for (let i = 0; i < types.length; i++) {
-			const newType = document.createElement("option");
-			newType.text = types[i];
-			newType.value = types[i];
-			typeInput.appendChild(newType);
+			const option = document.createElement("option");
+			option.text = types[i];
+			option.value = types[i];
+			typeInput.appendChild(option);
 		}
 
 		const nameLabel = document.createElement("div");
@@ -320,10 +320,10 @@ class Watchdog extends Window {
 
 		const rrTypeInput = document.createElement("select");
 		for (let i = 0; i < dnsRecordTypes.length; i++) {
-			const newType = document.createElement("option");
-			newType.text = dnsRecordTypes[i];
-			newType.value = dnsRecordTypes[i];
-			rrTypeInput.appendChild(newType);
+			const option = document.createElement("option");
+			option.text = dnsRecordTypes[i];
+			option.value = dnsRecordTypes[i];
+			rrTypeInput.appendChild(option);
 		}
 
 
@@ -347,10 +347,10 @@ class Watchdog extends Window {
 
 		const methodInput = document.createElement("select");
 		for (let i = 0; i < methods.length; i++) {
-			const newMethod = document.createElement("option");
-			newMethod.text = methods[i];
-			newMethod.value = methods[i];
-			methodInput.appendChild(newMethod);
+			const option = document.createElement("option");
+			option.text = methods[i];
+			option.value = methods[i];
+			methodInput.appendChild(option);
 		}
 
 		const statusCodesLabel = document.createElement("div");
@@ -502,7 +502,7 @@ class Watchdog extends Window {
 
 		typeInput.onchange();
 
-		btnOK.onclick = async ()=> {
+		okButton.onclick = async ()=> {
 			if (!isNew && this.selected === null) return;
 
 			let requiredFilledMissing = false;
@@ -588,7 +588,7 @@ class Watchdog extends Window {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
 			}
 
-			btnCancel.onclick();
+			cancelButton.onclick();
 		};
 
 		return dialog;
@@ -600,9 +600,9 @@ class Watchdog extends Window {
 
 		const innerBox = dialog.innerBox;
 		const buttonBox = dialog.buttonBox;
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 
-		btnOK.style.display = "none";
+		okButton.style.display = "none";
 
 		const saveButton = document.createElement("input");
 		saveButton.className = "with-icon";
@@ -1152,15 +1152,15 @@ class Watchdog extends Window {
 					bar.setAttribute("mask", "url(#mask_s)");
 				}
 
-				const lblLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				lblLabel.textContent = this.StatusToString(key, watcher);
-				lblLabel.setAttribute("x", x);
-				lblLabel.setAttribute("y", 70);
-				lblLabel.setAttribute("fill", this.StatusToColor(key));
-				lblLabel.setAttribute("font-size", "11px");
-				lblLabel.style.transformOrigin = `${x-1}px ${74}px`;
-				lblLabel.style.transform = "rotate(90deg)";
-				svg.appendChild(lblLabel);
+				const statusLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				statusLabel.textContent = this.StatusToString(key, watcher);
+				statusLabel.setAttribute("x", x);
+				statusLabel.setAttribute("y", 70);
+				statusLabel.setAttribute("fill", this.StatusToColor(key));
+				statusLabel.setAttribute("font-size", "11px");
+				statusLabel.style.transformOrigin = `${x-1}px ${74}px`;
+				statusLabel.style.transform = "rotate(90deg)";
+				svg.appendChild(statusLabel);
 
 				x += key < 0 ? 18 : 14;
 			}
@@ -1484,14 +1484,14 @@ class Watchdog extends Window {
 				if (x - lastX < 40) continue;
 				lastX = x;
 
-				const lblTime = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				lblTime.textContent = `${i.toString().padStart(2, "0")}:00`;
-				lblTime.setAttribute("x", x);
-				lblTime.setAttribute("y", 26);
-				lblTime.setAttribute("fill", "#C0C0C0");
-				lblTime.setAttribute("text-anchor", "middle");
-				lblTime.setAttribute("font-size", "10px");
-				svg.appendChild(lblTime);
+				const timeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				timeLabel.textContent = `${i.toString().padStart(2, "0")}:00`;
+				timeLabel.setAttribute("x", x);
+				timeLabel.setAttribute("y", 26);
+				timeLabel.setAttribute("fill", "#C0C0C0");
+				timeLabel.setAttribute("text-anchor", "middle");
+				timeLabel.setAttribute("font-size", "10px");
+				svg.appendChild(timeLabel);
 			}
 		}
 

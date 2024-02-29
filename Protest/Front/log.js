@@ -51,72 +51,72 @@ class Log extends Window {
 		this.options.style.overflow = "hidden";
 		this.content.appendChild(this.options);
 
-		const divAutoScroll = document.createElement("div");
-		divAutoScroll.style.display = "inline-block";
-		divAutoScroll.style.paddingRight = "32px";
-		divAutoScroll.style.paddingBottom = "8px";
-		this.options.appendChild(divAutoScroll);
-		this.chkAutoScroll = document.createElement("input");
-		this.chkAutoScroll.type = "checkbox";
-		this.chkAutoScroll.checked = this.params.autoScroll;
-		divAutoScroll.appendChild(this.chkAutoScroll);
-		this.AddCheckBoxLabel(divAutoScroll, this.chkAutoScroll, "Auto-scroll");
+		const autoScrollBox = document.createElement("div");
+		autoScrollBox.style.display = "inline-block";
+		autoScrollBox.style.paddingRight = "32px";
+		autoScrollBox.style.paddingBottom = "8px";
+		this.options.appendChild(autoScrollBox);
+		this.autoScrollCheckbox = document.createElement("input");
+		this.autoScrollCheckbox.type = "checkbox";
+		this.autoScrollCheckbox.checked = this.params.autoScroll;
+		autoScrollBox.appendChild(this.autoScrollCheckbox);
+		this.AddCheckBoxLabel(autoScrollBox, this.autoScrollCheckbox, "Auto-scroll");
 
-		this.divOpaque = document.createElement("div");
-		this.divOpaque.style.display = "inline-block";
-		this.divOpaque.style.paddingRight = "32px";
-		this.divOpaque.style.paddingBottom = "8px";
-		this.options.appendChild(this.divOpaque);
-		this.chkOpaque = document.createElement("input");
-		this.chkOpaque.type = "checkbox";
-		this.chkOpaque.checked = this.params.opaque;
-		this.divOpaque.appendChild(this.chkOpaque);
-		this.AddCheckBoxLabel(this.divOpaque, this.chkOpaque, "Opaque");
+		this.opaqueBox = document.createElement("div");
+		this.opaqueBox.style.display = "inline-block";
+		this.opaqueBox.style.paddingRight = "32px";
+		this.opaqueBox.style.paddingBottom = "8px";
+		this.options.appendChild(this.opaqueBox);
+		this.opaqueCheckbox = document.createElement("input");
+		this.opaqueCheckbox.type = "checkbox";
+		this.opaqueCheckbox.checked = this.params.opaque;
+		this.opaqueBox.appendChild(this.opaqueCheckbox);
+		this.AddCheckBoxLabel(this.opaqueBox, this.opaqueCheckbox, "Opaque");
 
-		this.divOnTop = document.createElement("div");
-		this.divOnTop.style.display = "inline-block";
-		this.divOnTop.style.paddingRight = "32px";
-		this.divOnTop.style.paddingBottom = "8px";
-		this.options.appendChild(this.divOnTop);
-		this.chkOnTop = document.createElement("input");
-		this.chkOnTop.type = "checkbox";
-		this.chkOnTop.checked = this.params.onTop;
-		this.divOnTop.appendChild(this.chkOnTop);
-		this.AddCheckBoxLabel(this.divOnTop, this.chkOnTop, "Always on top");
+		this.onTopBox = document.createElement("div");
+		this.onTopBox.style.display = "inline-block";
+		this.onTopBox.style.paddingRight = "32px";
+		this.onTopBox.style.paddingBottom = "8px";
+		this.options.appendChild(this.onTopBox);
+		this.onTopCheckbox = document.createElement("input");
+		this.onTopCheckbox.type = "checkbox";
+		this.onTopCheckbox.checked = this.params.onTop;
+		this.onTopBox.appendChild(this.onTopCheckbox);
+		this.AddCheckBoxLabel(this.onTopBox, this.onTopCheckbox, "Always on top");
 
-		this.chkAutoScroll.onchange = ()=> { this.params.autoScroll = this.chkAutoScroll.checked; };
+		this.autoScrollCheckbox.onchange = ()=> { this.params.autoScroll = this.autoScrollCheckbox.checked; };
 
-		this.chkOpaque.onchange = ()=> {
-			this.params.opaque = this.chkOpaque.checked;
-			this.SetOpaque(this.chkOpaque.checked);
+		this.opaqueCheckbox.onchange = ()=> {
+			this.params.opaque = this.opaqueCheckbox.checked;
+			this.SetOpaque(this.opaqueCheckbox.checked);
 		};
 
-		this.chkOnTop.onchange = ()=> {
-			this.params.onTop = this.chkOnTop.checked;
-			this.SetOnTop(this.chkOnTop.checked);
+		this.onTopCheckbox.onchange = ()=> {
+			this.params.onTop = this.onTopCheckbox.checked;
+			this.SetOnTop(this.onTopCheckbox.checked);
 		};
 
 		this.list.onscroll = event=> this.Log_onscroll(event);
 
-		this.SetOpaque(this.chkOpaque.checked);
-		this.SetOnTop(this.chkOnTop.checked);
+		this.SetOpaque(this.opaqueCheckbox.checked);
+		this.SetOnTop(this.onTopCheckbox.checked);
 
 		this.ListTodaysLog();
 	}
 
 	PopOut() { //override
-		const btnUnPop = super.PopOut();
+		const unPopButton = super.PopOut();
 
-		this.divOpaque.style.visibility = "hidden";
-		this.divOnTop.style.visibility = "hidden";
+		this.opaqueBox.style.visibility = "hidden";
+		this.onTopBox.style.visibility = "hidden";
 
 		if (this.popOutWindow && !this.params.opaque){
 			this.SetOpaque(true);
 		}
 
-		btnUnPop.addEventListener("click", ()=> {
-			this.divOpaque.style.visibility = "visible";
-			this.divOnTop.style.visibility = "visible";
+		unPopButton.addEventListener("click", ()=> {
+			this.opaqueBox.style.visibility = "visible";
+			this.onTopBox.style.visibility = "visible";
 			if (!this.params.opaque) {
 				this.SetOpaque(false);
 			}
@@ -256,10 +256,10 @@ class Log extends Window {
 			this.list.style.color = "var(--clr-select)";
 			this.list.style.backgroundColor = "transparent";
 			this.list.style.boxShadow = "var(--clr-select) 0 0 1px 1px";
-			this.btnClose.style.backgroundColor = "var(--clr-select)";
-			this.btnMaximize.style.backgroundColor = "var(--clr-select)";
-			this.btnMinimize.style.backgroundColor = "var(--clr-select)";
-			this.btnPopOut.style.backgroundColor = "var(--clr-select)";
+			this.closeButton.style.backgroundColor = "var(--clr-select)";
+			this.maximizeButton.style.backgroundColor = "var(--clr-select)";
+			this.minimizeButton.style.backgroundColor = "var(--clr-select)";
+			this.popOutButton.style.backgroundColor = "var(--clr-select)";
 			this.titleIcon.style.opacity = "0";
 			this.options.style.color = "var(--clr-select)";
 
@@ -277,9 +277,9 @@ class Log extends Window {
 			this.list.style.boxShadow = "";
 			this.list.style.color = "var(--clr-dark)";
 			this.list.style.backgroundColor = "var(--clr-pane)";
-			this.btnMaximize.style.backgroundColor = "";
-			this.btnMinimize.style.backgroundColor = "";
-			this.btnPopOut.style.backgroundColor = "";
+			this.maximizeButton.style.backgroundColor = "";
+			this.minimizeButton.style.backgroundColor = "";
+			this.popOutButton.style.backgroundColor = "";
 			this.titleIcon.style.opacity = "";
 			this.options.style.color = "";
 		}

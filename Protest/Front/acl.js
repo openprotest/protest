@@ -11,20 +11,20 @@ class Acl extends Tabs {
 
 		this.tabsPanel.style.padding = "20px";
 
-		this.tabAcl      = this.AddTab("ACL", "mono/acl.svg");
-		this.tabSessions = this.AddTab("Open sessions", "mono/hourglass.svg");
+		this.aclTab      = this.AddTab("ACL", "mono/acl.svg");
+		this.sessionsTab = this.AddTab("Open sessions", "mono/hourglass.svg");
 
-		this.tabAcl.onclick      = ()=> this.ShowAcl();
-		this.tabSessions.onclick = ()=> this.ShowSessions();
+		this.aclTab.onclick      = ()=> this.ShowAcl();
+		this.sessionsTab.onclick = ()=> this.ShowSessions();
 
 		switch (this.params) {
 		case "sessions":
-			this.tabSessions.className = "v-tab-selected";
+			this.sessionsTab.className = "v-tab-selected";
 			this.ShowSessions();
 			break;
 
 		default:
-			this.tabAcl.className = "v-tab-selected";
+			this.aclTab.className = "v-tab-selected";
 			this.ShowAcl();
 		}
 
@@ -123,11 +123,11 @@ class Acl extends Tabs {
 		this.username.style.gridColumn = "2";
 		userDetails.append(usernameLabel, this.username);
 
-		this.chkDomainUser = document.createElement("input");
-		this.chkDomainUser.type = "checkbox";
-		this.chkDomainUser.checked = false;
-		userDetails.appendChild(this.chkDomainUser);
-		const domainUser = this.AddCheckBoxLabel(userDetails, this.chkDomainUser, "Domain user");
+		this.domainUserCheckbox = document.createElement("input");
+		this.domainUserCheckbox.type = "checkbox";
+		this.domainUserCheckbox.checked = false;
+		userDetails.appendChild(this.domainUserCheckbox);
+		const domainUser = this.AddCheckBoxLabel(userDetails, this.domainUserCheckbox, "Domain user");
 		domainUser.style.marginLeft = "8px";
 		domainUser.style.whiteSpace = "nowrap";
 		domainUser.style.gridRow = "1";
@@ -192,8 +192,8 @@ class Acl extends Tabs {
 			this.alias.placeholder = this.username.value;
 		};
 
-		this.chkDomainUser.onchange = ()=> {
-			if (this.chkDomainUser.checked) {
+		this.domainUserCheckbox.onchange = ()=> {
+			if (this.domainUserCheckbox.checked) {
 				this.password.disabled = true;
 				this.domain.disabled = false;
 			}
@@ -233,7 +233,7 @@ class Acl extends Tabs {
 				return;
 			}
 
-			if (this.chkDomainUser.checked) {
+			if (this.domainUserCheckbox.checked) {
 				if (this.domain.value.length === 0) {
 					this.ConfirmBox("Please enter domain.", true).addEventListener("click", ()=>setTimeout(this.domain.focus(), 150));
 					return;
@@ -243,7 +243,7 @@ class Acl extends Tabs {
 			this.username.setAttribute("readonly", true);
 
 			try {
-				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.chkDomainUser.checked}`;
+				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserCheckbox.checked}`;
 				let authorization = [];
 
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -272,7 +272,7 @@ class Acl extends Tabs {
 					}
 				}
 
-				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.chkDomainUser.checked, authorization);
+				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserCheckbox.checked, authorization);
 				newUser.onclick();
 			}
 			catch (ex) {
@@ -378,68 +378,68 @@ class Acl extends Tabs {
 		const container = document.createElement("div");
 		parent.appendChild(container);
 
-		const divName = document.createElement("div");
-		divName.textContent = name;
-		divName.style.display = "inline-block";
-		divName.style.height = "32px";
-		divName.style.lineHeight = "32px";
-		divName.style.width = "150px";
-		divName.style.paddingLeft = "32px";
-		divName.style.backgroundImage = icon;
-		divName.style.backgroundSize = "24px 24px";
-		divName.style.backgroundPosition = "2px center";
-		divName.style.backgroundRepeat = "no-repeat";
-		container.appendChild(divName);
+		const nameLabel = document.createElement("div");
+		nameLabel.textContent = name;
+		nameLabel.style.display = "inline-block";
+		nameLabel.style.height = "32px";
+		nameLabel.style.lineHeight = "32px";
+		nameLabel.style.width = "150px";
+		nameLabel.style.paddingLeft = "32px";
+		nameLabel.style.backgroundImage = icon;
+		nameLabel.style.backgroundSize = "24px 24px";
+		nameLabel.style.backgroundPosition = "2px center";
+		nameLabel.style.backgroundRepeat = "no-repeat";
+		container.appendChild(nameLabel);
 
-		const divRead = document.createElement("div");
-		divRead.style.color = read ? "var(--clr-dark)" : "var(--clr-control)";
-		divRead.style.gridArea = "4 / 2";
-		divRead.style.paddingLeft = "4px";
-		divRead.style.display = "inline-block";
-		const chkRead = document.createElement("input");
-		chkRead.type = "checkbox";
-		chkRead.checked = true;
-		divRead.appendChild(chkRead);
-		this.AddCheckBoxLabel(divRead, chkRead, "Read");
+		const readBox = document.createElement("div");
+		readBox.style.color = read ? "var(--clr-dark)" : "var(--clr-control)";
+		readBox.style.gridArea = "4 / 2";
+		readBox.style.paddingLeft = "4px";
+		readBox.style.display = "inline-block";
+		const readCheckbox = document.createElement("input");
+		readCheckbox.type = "checkbox";
+		readCheckbox.checked = true;
+		readBox.appendChild(readCheckbox);
+		this.AddCheckBoxLabel(readBox, readCheckbox, "Read");
 
-		const divWrite = document.createElement("div");
-		divWrite.style.color = write ? "var(--clr-dark)" : "var(--clr-control)";
-		divWrite.style.gridArea = "4 / 2";
-		divWrite.style.paddingLeft = "4px";
-		divWrite.style.display = "inline-block";
-		const chkWrite = document.createElement("input");
-		chkWrite.type = "checkbox";
-		chkWrite.checked = true;
-		divWrite.appendChild(chkWrite);
-		this.AddCheckBoxLabel(divWrite, chkWrite, !read && write ? "Allow access" : "Write");
+		const writeBox = document.createElement("div");
+		writeBox.style.color = write ? "var(--clr-dark)" : "var(--clr-control)";
+		writeBox.style.gridArea = "4 / 2";
+		writeBox.style.paddingLeft = "4px";
+		writeBox.style.display = "inline-block";
+		const writeCheckBox = document.createElement("input");
+		writeCheckBox.type = "checkbox";
+		writeCheckBox.checked = true;
+		writeBox.appendChild(writeCheckBox);
+		this.AddCheckBoxLabel(writeBox, writeCheckBox, !read && write ? "Allow access" : "Write");
 
-		chkRead.checked = read;
-		chkRead.disabled = !read;
+		readCheckbox.checked = read;
+		readCheckbox.disabled = !read;
 
-		chkWrite.checked = write;
-		chkWrite.disabled = !write;
+		writeCheckBox.checked = write;
+		writeCheckBox.disabled = !write;
 
 		if (!read && write) {
-			container.appendChild(divWrite);
+			container.appendChild(writeBox);
 		}
 		else {
-			container.appendChild(divRead);
-			container.appendChild(divWrite);
+			container.appendChild(readBox);
+			container.appendChild(writeBox);
 		}
 
 		if (linked) {
-			chkRead.onchange = ()=>{
-				if (!chkRead.checked) chkWrite.checked = false;
+			readCheckbox.onchange = ()=>{
+				if (!readCheckbox.checked) writeCheckBox.checked = false;
 			};
-			chkWrite.onchange = ()=>{
-				if (chkWrite.checked) chkRead.checked = true;
+			writeCheckBox.onchange = ()=>{
+				if (writeCheckBox.checked) readCheckbox.checked = true;
 			};
 		}
 
 		return {
 			name: name,
-			read: chkRead,
-			write: chkWrite,
+			read: readCheckbox,
+			write: writeCheckBox,
 		};
 	}
 
@@ -462,24 +462,24 @@ class Acl extends Tabs {
 	}
 
 	AddUser(username, domain, password, alias, color, isDomain, authorization) {
-		const lblUsername = document.createElement("div");
-		lblUsername.textContent = username;
-		lblUsername.style.fontWeight = "600";
-		lblUsername.style.height = "28px";
-		lblUsername.style.lineHeight = "28px";
-		lblUsername.style.paddingLeft = "28px";
-		lblUsername.style.margin = "0 2px";
-		lblUsername.style.borderRadius = "4px";
-		lblUsername.style.whiteSpace = "nowrap";
-		lblUsername.style.overflow = "hidden";
-		lblUsername.style.textOverflow = "ellipsis";
-		lblUsername.style.backgroundImage = "url(mono/user.svg)";
-		lblUsername.style.backgroundPosition = "2px 50%";
-		lblUsername.style.backgroundSize = "24px 24px";
-		lblUsername.style.backgroundRepeat = "no-repeat";
-		this.usersList.appendChild(lblUsername);
+		const usernameLabel = document.createElement("div");
+		usernameLabel.textContent = username;
+		usernameLabel.style.fontWeight = "600";
+		usernameLabel.style.height = "28px";
+		usernameLabel.style.lineHeight = "28px";
+		usernameLabel.style.paddingLeft = "28px";
+		usernameLabel.style.margin = "0 2px";
+		usernameLabel.style.borderRadius = "4px";
+		usernameLabel.style.whiteSpace = "nowrap";
+		usernameLabel.style.overflow = "hidden";
+		usernameLabel.style.textOverflow = "ellipsis";
+		usernameLabel.style.backgroundImage = "url(mono/user.svg)";
+		usernameLabel.style.backgroundPosition = "2px 50%";
+		usernameLabel.style.backgroundSize = "24px 24px";
+		usernameLabel.style.backgroundRepeat = "no-repeat";
+		this.usersList.appendChild(usernameLabel);
 
-		lblUsername.onclick = ()=> {
+		usernameLabel.onclick = ()=> {
 			this.newButton.disabled = false;
 			this.removeButton.disabled = false;
 			this.username.setAttribute("readonly", true);
@@ -487,7 +487,7 @@ class Acl extends Tabs {
 			for (let i = 0; i < this.usersList.childNodes.length; i++) {
 				this.usersList.childNodes[i].style.backgroundColor = "transparent";
 			}
-			lblUsername.style.backgroundColor = "var(--clr-select)";
+			usernameLabel.style.backgroundColor = "var(--clr-select)";
 
 			this.password.placeholder = "unchanged";
 			this.alias.placeholder = username;
@@ -497,9 +497,9 @@ class Acl extends Tabs {
 			this.password.value = "";
 			this.alias.value = alias;
 			this.color.value = color;
-			this.chkDomainUser.checked = isDomain;
+			this.domainUserCheckbox.checked = isDomain;
 
-			this.chkDomainUser.onchange();
+			this.domainUserCheckbox.onchange();
 
 			for (let i=0; i<this.permissionsList.length; i++) {
 				this.permissionsList[i].read.checked = false;
@@ -519,7 +519,7 @@ class Acl extends Tabs {
 			}
 		};
 
-		return lblUsername;
+		return usernameLabel;
 	}
 
 	async ShowSessions() {
@@ -535,21 +535,21 @@ class Acl extends Tabs {
 
 		let labels = [];
 
-		const lblUsername = document.createElement("div");
-		lblUsername.textContent = "Username";
-		labels.push(lblUsername);
+		const usernameLabel = document.createElement("div");
+		usernameLabel.textContent = "Username";
+		labels.push(usernameLabel);
 
-		const lblIp = document.createElement("div");
-		lblIp.textContent = "IP";
-		labels.push(lblIp);
+		const ipLabel = document.createElement("div");
+		ipLabel.textContent = "IP";
+		labels.push(ipLabel);
 
-		const lblTime = document.createElement("div");
-		lblTime.textContent = "Login date";
-		labels.push(lblTime);
+		const timeLabel = document.createElement("div");
+		timeLabel.textContent = "Login date";
+		labels.push(timeLabel);
 
-		const lblTtl = document.createElement("div");
-		lblTtl.textContent = "Expiration date";
-		labels.push(lblTtl);
+		const ttlLabel = document.createElement("div");
+		ttlLabel.textContent = "Expiration date";
+		labels.push(ttlLabel);
 
 		for (let i = 0; i < labels.length; i++) {
 			labels[i].style.display = "inline-block";
@@ -563,7 +563,7 @@ class Acl extends Tabs {
 			labels[i].style.paddingLeft = "4px";
 		}
 
-		titleBar.append(lblUsername, lblIp, lblTime, lblTtl);
+		titleBar.append(usernameLabel, ipLabel, timeLabel, ttlLabel);
 
 		const sessionsList = document.createElement("div");
 		sessionsList.style.position = "absolute";

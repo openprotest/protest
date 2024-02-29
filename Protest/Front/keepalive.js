@@ -63,7 +63,7 @@ const KEEP = {
 			KEEP.username = message.username;
 			KEEP.color = message.color;
 			KEEP.authorization = message.authorization;
-			lblUsername.textContent = KEEP.username;
+			usernameLabel.textContent = KEEP.username;
 			break;
 
 		case "log":
@@ -195,27 +195,27 @@ const KEEP = {
 		case "start-fetch":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
-				WIN.array[i].tabTask.style.visibility = "visible";
-				WIN.array[i].tabTask.style.animation = "slide-in .4s 1";
+				WIN.array[i].taskTab.style.visibility = "visible";
+				WIN.array[i].taskTab.style.animation = "slide-in .4s 1";
 			}
 			break;
 
 		case "cancel-fetch":
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
-				WIN.array[i].lblStatusValue.textContent = "canceling";
+				WIN.array[i].statusValueLabel.textContent = "canceling";
 			}
 			break;
 
 		case "update-fetch":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
-				WIN.array[i].lblStatusValue.textContent = message.task.status;
-				WIN.array[i].lblProgressValue.textContent = `${message.task.completed}/${message.task.total}`;
-				WIN.array[i].lblEtcValue.textContent = message.task.etc;
-				WIN.array[i].divProgress.style.width = `${100 * message.task.completed / message.task.total}%`;
-				WIN.array[i].tabTask.style.visibility = "visible";
-				WIN.array[i].tabTask.style.animation = "slide-in .4s 1";
+				WIN.array[i].statusValueLabel.textContent = message.task.status;
+				WIN.array[i].progressValueLabel.textContent = `${message.task.completed}/${message.task.total}`;
+				WIN.array[i].etcValueLabel.textContent = message.task.etc;
+				WIN.array[i].progressBarInner.style.width = `${100 * message.task.completed / message.task.total}%`;
+				WIN.array[i].taskTab.style.visibility = "visible";
+				WIN.array[i].taskTab.style.animation = "slide-in .4s 1";
 			}
 			break;
 
@@ -233,7 +233,7 @@ const KEEP = {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].ShowDevices();
 				WIN.array[i].tabsList[0].className = "v-tab-selected";
-				WIN.array[i].tabTask.style.visibility = "hidden";
+				WIN.array[i].taskTab.style.visibility = "hidden";
 			}
 			break;
 
@@ -341,24 +341,24 @@ const KEEP = {
 	DisconnectNotification: ()=> {
 		const notification = KEEP.PushNotification("The connection to the server has been lost.");
 
-		const btnReconnect = document.createElement("input");
-		btnReconnect.type = "button";
-		btnReconnect.value = "Connect";
-		btnReconnect.style.height = "30px";
+		const reconnectButton = document.createElement("input");
+		reconnectButton.type = "button";
+		reconnectButton.value = "Connect";
+		reconnectButton.style.height = "30px";
 
-		const btnReload = document.createElement("input");
-		btnReload.type = "button";
-		btnReload.value = "Reload";
-		btnReload.style.height = "30px";
+		const reloadButton = document.createElement("input");
+		reloadButton.type = "button";
+		reloadButton.value = "Reload";
+		reloadButton.style.height = "30px";
 
-		const btnIgnore = document.createElement("input");
-		btnIgnore.type = "button";
-		btnIgnore.value = "Ignore";
-		btnIgnore.style.height = "30px";
+		const ignoreButton = document.createElement("input");
+		ignoreButton.type = "button";
+		ignoreButton.value = "Ignore";
+		ignoreButton.style.height = "30px";
 
-		notification.buttonsBox.append(btnReconnect, btnReload, btnIgnore);
+		notification.buttonsBox.append(reconnectButton, reloadButton, ignoreButton);
 
-		btnReconnect.onclick = ()=> {
+		reconnectButton.onclick = ()=> {
 			KEEP.Initialize();
 
 			notification.notificationBox.style.opacity = "0";
@@ -367,9 +367,9 @@ const KEEP = {
 			}, 400);
 		};
 
-		btnReload.onclick = ()=> location.reload();
+		reloadButton.onclick = ()=> location.reload();
 
-		btnIgnore.onclick = ()=> {
+		ignoreButton.onclick = ()=> {
 			notification.notificationBox.style.opacity = "0";
 			setTimeout(()=> {
 				container.removeChild(notification.notificationBox);

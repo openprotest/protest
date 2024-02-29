@@ -32,7 +32,7 @@
 			transition: .2s;
 		}
 
-		#lblMessage {
+		#messageLabel {
 			display: inline-block;
 			color: #E87600;
 			font-weight: bold;
@@ -111,87 +111,87 @@
 		<path id="lockbody" fill="#E87600" d="M202.167,129H47.833C37.984,129,30,136.211,30,145.104v87.792c0,8.893,7.984,16.104,17.833,16.104h154.334 c9.849,0,17.833-7.211,17.833-16.104v-87.791C220,136.212,212.016,129,202.167,129z" />
 	</svg>
 	<br>
-	<div id="lblMessage">Sorry, I don't like this password.</div>
+	<div id="messageLabel">Sorry, I don't like this password.</div>
 	<br>
 	<div>
 		<img src="mono/user.svg?light" title="username" width="28" height="28">
-		<input type="text" id="txtUsername" aria-label="Username" autocomplete="off" autofocus>
+		<input type="text" id="usernameInput" aria-label="Username" autocomplete="off" autofocus>
 	</div>
 	<div>
 		<img src="mono/lock.svg?light" title="password" width="28" height="28">
-		<input type="password" id="txtPassword" aria-label="Password" autocomplete="off">
+		<input type="password" id="passwordInput" aria-label="Password" autocomplete="off">
 	</div>
-	<input id="btnLogin" type="button" value="Login"/>
+	<input id="loginButton" type="button" value="Login"/>
 
 	<noscript>
 		<div style="position:sticky;padding:16px;text-align:center;background-color:#202020;color:#c0c0c0">Javascript is either disabled or not supported by your browser.</div>
 	</noscript>
 
 	<script>
-		txtUsername.value = localStorage.getItem("last_username");
-		txtUsername.onkeyup = event=> {
-			if (event.key==="Enter") txtPassword.focus();
+		usernameInput.value = localStorage.getItem("last_username");
+		usernameInput.onkeyup = event=> {
+			if (event.key==="Enter") passwordInput.focus();
 		};
 
-		txtPassword.onkeyup = event=> {
-			if (event.key==="Enter") btnLogin.onclick(event);
+		passwordInput.onkeyup = event=> {
+			if (event.key==="Enter") loginButton.onclick(event);
 		};
 
-		txtUsername.oninput = txtUsername.onchange = txtPassword.oninput = txtPassword.onchange = event=> {
-			btnLogin.style.opacity = txtUsername.value === "" || txtPassword.value === "" ? "0" : "1";
+		usernameInput.oninput = usernameInput.onchange = passwordInput.oninput = passwordInput.onchange = event=> {
+			loginButton.style.opacity = usernameInput.value === "" || passwordInput.value === "" ? "0" : "1";
 		};
 
-		txtUsername.onblur = txtPassword.onblur = event=> {
-			txtUsername.parentElement.classList.remove("auth-glow");
-			txtPassword.parentElement.classList.remove("auth-glow");
+		usernameInput.onblur = passwordInput.onblur = event=> {
+			usernameInput.parentElement.classList.remove("auth-glow");
+			passwordInput.parentElement.classList.remove("auth-glow");
 		};
 
-		txtUsername.onfocus = txtPassword.onfocus = event=> {
-			txtPassword.onblur();
+		usernameInput.onfocus = passwordInput.onfocus = event=> {
+			passwordInput.onblur();
 			event.target.parentElement.classList.add("auth-glow");
 		};
 
-		if (txtUsername.value.length == 0) {
-			txtUsername.focus();
+		if (usernameInput.value.length == 0) {
+			usernameInput.focus();
 		}
 		else {
-			txtPassword.focus();
+			passwordInput.focus();
 		}
 
 		let busy = false;
-		btnLogin.onclick = async event=> {
+		loginButton.onclick = async event=> {
 			if (busy) return;
 
-			if (txtUsername.value === "" || txtPassword.value === "") return;
+			if (usernameInput.value === "" || passwordInput.value === "") return;
 			busy = true;
 
 			try {
 				const response = await fetch("auth", {
 					method: "POST",
 					credentials: "same-origin",
-					body: `${txtUsername.value}${String.fromCharCode(127)}${txtPassword.value}`
+					body: `${usernameInput.value}${String.fromCharCode(127)}${passwordInput.value}`
 				});
 
 				if (response.status === 202) {
-					localStorage.setItem("last_username", txtUsername.value);
+					localStorage.setItem("last_username", usernameInput.value);
 					location.reload();
 				}
 				else {
-					txtPassword.value="";
-					lblMessage.style.visibility="visible";
-					lblMessage.style.animation="shake 1s 1";
+					passwordInput.value="";
+					messageLabel.style.visibility="visible";
+					messageLabel.style.animation="shake 1s 1";
 					locklatch.style.animation="fail .4s 1";
 					setTimeout(()=> {
-						lblMessage.style.animation="none";
+						messageLabel.style.animation="none";
 						locklatch.style.animation="none";
 					}, 1000);
 				}
 				busy = false;
 			}
 			catch (ex) {
-				lblMessage.style.visibility = "visible";
-				lblMessage.style.color = "red";
-				lblMessage.textContent = "Server is unreachable.";
+				messageLabel.style.visibility = "visible";
+				messageLabel.style.color = "red";
+				messageLabel.textContent = "Server is unreachable.";
 				console.error(ex);
 				busy = false;
 			}

@@ -23,8 +23,8 @@ class LocateIp extends Console {
 		}
 
 		this.clearButton.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
 				this.hashtable = {};
 				this.params.entries = [];

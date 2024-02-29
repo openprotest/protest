@@ -67,33 +67,33 @@ class CameraTester extends Window {
 		const dialog = this.DialogBox("150px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const chkForce4K = document.createElement("input");
-		chkForce4K.type = "checkbox";
-		innerBox.appendChild(chkForce4K);
-		this.AddCheckBoxLabel(innerBox, chkForce4K, "Force 4K resolution").style.paddingBottom = "16px";
+		const force4KCheckbox = document.createElement("input");
+		force4KCheckbox.type = "checkbox";
+		innerBox.appendChild(force4KCheckbox);
+		this.AddCheckBoxLabel(innerBox, force4KCheckbox, "Force 4K resolution").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		const chkAudio = document.createElement("input");
-		chkAudio.type = "checkbox";
-		innerBox.appendChild(chkAudio);
-		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";
+		const audioCheckbox = document.createElement("input");
+		audioCheckbox.type = "checkbox";
+		innerBox.appendChild(audioCheckbox);
+		this.AddCheckBoxLabel(innerBox, audioCheckbox, "Record audio").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		chkForce4K.checked = this.params.force4K;
-		chkAudio.checked = this.params.audio;
+		force4KCheckbox.checked = this.params.force4K;
+		audioCheckbox.checked = this.params.audio;
 
-		btnOK.onclick = async ()=> {
-			this.params.force4K = chkForce4K.checked;
-			this.params.audio = chkAudio.checked;
+		okButton.onclick = async ()=> {
+			this.params.force4K = force4KCheckbox.checked;
+			this.params.audio = audioCheckbox.checked;
 			dialog.Close();
 		};
 	}
@@ -241,12 +241,12 @@ class CameraTester extends Window {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
-		btnOK.value = "Export";
-		btnCancel.value = "Discard";
+		okButton.value = "Export";
+		cancelButton.value = "Discard";
 
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
@@ -276,7 +276,7 @@ class CameraTester extends Window {
 
 		typeInput.append(webm, mp4, ogg);
 
-		btnOK.onclick = async ()=> {
+		okButton.onclick = async ()=> {
 			const blob = new Blob(this.recordChunks, { type: typeInput.video });
 			const audioURL = URL.createObjectURL(blob);
 			window.open(audioURL, "_blank");
@@ -286,7 +286,7 @@ class CameraTester extends Window {
 			dialog.Close();
 		};
 
-		btnCancel.onclick = ()=> {
+		cancelButton.onclick = ()=> {
 			this.recordChunks = [];
 			this.recorder = null;
 			dialog.Close();

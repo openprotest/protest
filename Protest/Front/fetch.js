@@ -14,77 +14,77 @@ class Fetch extends Tabs {
 		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(12, 36px)";
 		this.tabsPanel.style.alignItems = "center";
 
-		const tabDevice  = this.AddTab("Devices",  "mono/gear.svg");
-		const tabUsers   = this.AddTab("Users",    "mono/user.svg");
-		const tabProtest = this.AddTab("Import",   "mono/logo.svg");
-		this.tabTask     = this.AddTab("Fetching", "mono/ball.svg");
+		const deviceTab  = this.AddTab("Devices",  "mono/gear.svg");
+		const usersTab   = this.AddTab("Users",    "mono/user.svg");
+		const protestTab = this.AddTab("Import",   "mono/logo.svg");
+		this.taskTab     = this.AddTab("Fetching", "mono/ball.svg");
 
-		this.tabTask.style.position = "absolute";
-		this.tabTask.style.left = "0";
-		this.tabTask.style.right = "0";
-		this.tabTask.style.top = "max(140px, 100% - 44px)";
-		this.tabTask.style.visibility = "hidden";
+		this.taskTab.style.position = "absolute";
+		this.taskTab.style.left = "0";
+		this.taskTab.style.right = "0";
+		this.taskTab.style.top = "max(140px, 100% - 44px)";
+		this.taskTab.style.visibility = "hidden";
 
-		tabDevice.onclick    = ()=> this.ShowDevices();
-		tabUsers.onclick     = ()=> this.ShowUsers();
-		tabProtest.onclick   = ()=> this.ShowImport();
-		this.tabTask.onclick = ()=> this.ShowFetching();
+		deviceTab.onclick    = ()=> this.ShowDevices();
+		usersTab.onclick     = ()=> this.ShowUsers();
+		protestTab.onclick   = ()=> this.ShowImport();
+		this.taskTab.onclick = ()=> this.ShowFetching();
 
 		this.InitializeComponents();
 
 		switch (this.params) {
 		case "users":
-			tabUsers.className = "v-tab-selected";
+			usersTab.className = "v-tab-selected";
 			this.ShowUsers();
 			break;
 
 		case "protest":
-			tabProtest.className = "v-tab-selected";
+			protestTab.className = "v-tab-selected";
 			this.ShowImport();
 			break;
 
 		case "fetching":
-			this.tabTask.className = "v-tab-selected";
+			this.taskTab.className = "v-tab-selected";
 			this.ShowFetching();
 			break;
 
 		default:
-			tabDevice.className = "v-tab-selected";
+			deviceTab.className = "v-tab-selected";
 			this.ShowDevices();
 		}
 	}
 
 	InitializeComponents() {
-		this.lblStatusValue = document.createElement("div");
-		this.lblStatusValue.style.textTransform = "capitalize";
-		this.lblStatusValue.style.fontWeight = "600";
+		this.statusValueLabel = document.createElement("div");
+		this.statusValueLabel.style.textTransform = "capitalize";
+		this.statusValueLabel.style.fontWeight = "600";
 
-		this.lblProgressValue = document.createElement("div");
-		this.lblProgressValue.style.textTransform = "capitalize";
-		this.lblProgressValue.style.fontWeight = "600";
-		this.lblProgressValue.textContent = "0/0";
+		this.progressValueLabel = document.createElement("div");
+		this.progressValueLabel.style.textTransform = "capitalize";
+		this.progressValueLabel.style.fontWeight = "600";
+		this.progressValueLabel.textContent = "0/0";
 
-		this.lblEtcValue = document.createElement("div");
-		this.lblEtcValue.style.fontWeight = "600";
-		this.lblEtcValue.textContent = "Calculating";
+		this.etcValueLabel = document.createElement("div");
+		this.etcValueLabel.style.fontWeight = "600";
+		this.etcValueLabel.textContent = "Calculating";
 
-		this.divProgress = document.createElement("div");
-		this.divProgress.style.backgroundColor = "var(--clr-accent)";
-		this.divProgress.style.width = "0";
-		this.divProgress.style.height = "100%";
-		this.divProgress.style.transition = ".4s";
-
-
-		this.rdoUpdate = document.createElement("input");
-		this.rdoUpdate.type = "radio";
-		this.rdoUpdate.name = "option";
-		this.rdoUpdate.checked = false;
+		this.progressBarInner = document.createElement("div");
+		this.progressBarInner.style.backgroundColor = "var(--clr-accent)";
+		this.progressBarInner.style.width = "0";
+		this.progressBarInner.style.height = "100%";
+		this.progressBarInner.style.transition = ".4s";
 
 
-		this.rdoIP = document.createElement("input");
-		this.rdoIP.type = "radio";
-		this.rdoIP.name = "option";
-		this.rdoIP.checked = true;
+		this.updateRadio = document.createElement("input");
+		this.updateRadio.type = "radio";
+		this.updateRadio.name = "option";
+		this.updateRadio.checked = false;
+
+
+		this.ipRadio = document.createElement("input");
+		this.ipRadio.type = "radio";
+		this.ipRadio.name = "option";
+		this.ipRadio.checked = true;
 
 		this.ipFrom = new IpBox();
 		this.ipTo = new IpBox();
@@ -92,238 +92,238 @@ class Fetch extends Tabs {
 		this.ipFrom.exitElement = this.ipTo.textBoxes[0];
 		this.ipTo.enterElement = this.ipFrom.textBoxes[3];
 
-		this.divRange = document.createElement("div");
-		this.divRange.style.gridArea = "2 / 3 / auto / 7";
+		this.rangeBox = document.createElement("div");
+		this.rangeBox.style.gridArea = "2 / 3 / auto / 7";
 
-		this.ipFrom.Attach(this.divRange);
+		this.ipFrom.Attach(this.rangeBox);
 
-		const lblTo = document.createElement("div");
-		lblTo.style.display = "inline-block";
-		lblTo.style.minWidth = "15px";
-		lblTo.style.fontWeight = "bold";
-		lblTo.style.textAlign = "center";
-		lblTo.style.color = "var(--clr-control)";
-		lblTo.textContent = " - ";
-		this.divRange.appendChild(lblTo);
+		const toLabel = document.createElement("div");
+		toLabel.style.display = "inline-block";
+		toLabel.style.minWidth = "15px";
+		toLabel.style.fontWeight = "bold";
+		toLabel.style.textAlign = "center";
+		toLabel.style.color = "var(--clr-control)";
+		toLabel.textContent = " - ";
+		this.rangeBox.appendChild(toLabel);
 
-		this.ipTo.Attach(this.divRange);
-
-
-		this.rdoDomain = document.createElement("input");
-		this.rdoDomain.type = "radio";
-		this.rdoDomain.name = "option";
-		this.rdoDomain.checked = false;
-
-		this.txtDomain = document.createElement("input");
-		this.txtDomain.type = "text";
-		this.txtDomain.disabled = true;
-		this.txtDomain.style.width = "350px";
-		this.txtDomain.style.gridArea = "3 / 3";
-		this.txtDomain.style.marginLeft = "0px";
-		this.txtDomain.style.marginRight = "0px";
+		this.ipTo.Attach(this.rangeBox);
 
 
-		this.chkDns = document.createElement("input");
-		this.chkDns.type = "checkbox";
-		this.chkDns.checked = true;
+		this.domainRadio = document.createElement("input");
+		this.domainRadio.type = "radio";
+		this.domainRadio.name = "option";
+		this.domainRadio.checked = false;
 
-		this.chkWmi = document.createElement("input");
-		this.chkWmi.type = "checkbox";
-		this.chkWmi.checked = true;
-
-		this.chkSnmp = document.createElement("input");
-		this.chkSnmp.type = "checkbox";
-		this.chkSnmp.checked = false;
-		this.chkSnmp.disabled = true; //TODO:
-
-		this.txtSnmp = document.createElement("select");
-		this.txtSnmp.style.width = "180px";
-		this.txtSnmp.style.gridArea = "7 / 5";
-		this.txtSnmp.disabled = true;
-
-		const optVer2 = document.createElement("option");
-		optVer2.value = "2";
-		optVer2.text = "Version 2";
-		this.txtSnmp.appendChild(optVer2);
-
-		const optVer3 = document.createElement("option");
-		optVer3.value = "3";
-		optVer3.text = "Version 3";
-		this.txtSnmp.appendChild(optVer3);
-
-		this.txtSnmp.value = "3";
-
-		this.chkKerberos = document.createElement("input");
-		this.chkKerberos.type = "checkbox";
-		this.chkKerberos.checked = true;
-
-		this.chkPortScan = document.createElement("input");
-		this.chkPortScan.type = "checkbox";
-		this.chkPortScan.checked = true;
-
-		this.txtPortScan = document.createElement("select");
-		this.txtPortScan.style.width = "180px";
-		this.txtPortScan.style.gridArea = "9 / 5";
-
-		this.lblPortScanComment = document.createElement("div");
-		this.lblPortScanComment.style.gridArea = "9 / 6 / auto / 8";
-		this.lblPortScanComment.style.fontSize = "small";
-		this.lblPortScanComment.style.lineHeight = "14px";
-		this.lblPortScanComment.style.minWidth = "150px";
-
-		const optBasic = document.createElement("option");
-		optBasic.value = "basic";
-		optBasic.text = "Basic";
-		this.txtPortScan.appendChild(optBasic);
-
-		const optWellKnown = document.createElement("option");
-		optWellKnown.value = "wellknown";
-		optWellKnown.text = "Well known ports";
-		this.txtPortScan.appendChild(optWellKnown);
-
-		const optExtended = document.createElement("option");
-		optExtended.value = "extended";
-		optExtended.text = "Extended";
-		this.txtPortScan.appendChild(optExtended);
-
-		const optRegistered = document.createElement("option");
-		optRegistered.value = "registered";
-		optRegistered.text = "Registered ports";
-		this.txtPortScan.appendChild(optRegistered);
-
-		const optFull = document.createElement("option");
-		optFull.value = "full";
-		optFull.text = "Full";
-		this.txtPortScan.appendChild(optFull);
-
-		const optDynamic = document.createElement("option");
-		optDynamic.value = "dynamic";
-		optDynamic.text = "Dynamic ports";
-		this.txtPortScan.appendChild(optDynamic);
+		this.domainInput = document.createElement("input");
+		this.domainInput.type = "text";
+		this.domainInput.disabled = true;
+		this.domainInput.style.width = "350px";
+		this.domainInput.style.gridArea = "3 / 3";
+		this.domainInput.style.marginLeft = "0px";
+		this.domainInput.style.marginRight = "0px";
 
 
-		this.lblRetries = document.createElement("div");
-		this.lblRetries.style.gridArea = "11 / 3";
-		this.lblRetries.textContent = "Retries:";
+		this.dnsCheckBox = document.createElement("input");
+		this.dnsCheckBox.type = "checkbox";
+		this.dnsCheckBox.checked = true;
 
-		this.rngRetries = document.createElement("input");
-		this.rngRetries.type = "range";
-		this.rngRetries.min = 0;
-		this.rngRetries.max = 4;
-		this.rngRetries.value = 1;
-		this.rngRetries.style.gridArea = "11 / 5";
-		this.rngRetries.style.width = "180px";
+		this.wmiCheckbox = document.createElement("input");
+		this.wmiCheckbox.type = "checkbox";
+		this.wmiCheckbox.checked = true;
 
-		this.lblRetriesComment = document.createElement("div");
-		this.lblRetriesComment.style.gridArea = "11 / 6 / auto / 8";
-		this.lblRetriesComment.style.fontSize = "small";
-		this.lblRetriesComment.style.lineHeight = "14px";
-		this.lblRetriesComment.style.minWidth = "150px";
+		this.snmpCheckbox = document.createElement("input");
+		this.snmpCheckbox.type = "checkbox";
+		this.snmpCheckbox.checked = false;
+		this.snmpCheckbox.disabled = true; //TODO:
 
-		this.lblInterval = document.createElement("div");
-		this.lblInterval.style.gridArea = "12 / 3";
-		this.lblInterval.textContent = "Retry interval:";
+		this.snmpInput = document.createElement("select");
+		this.snmpInput.style.width = "180px";
+		this.snmpInput.style.gridArea = "7 / 5";
+		this.snmpInput.disabled = true;
 
-		this.rngInterval = document.createElement("input");
-		this.rngInterval.type = "range";
-		this.rngInterval.min = 0;
-		this.rngInterval.max = 8;
-		this.rngInterval.value = 1;
-		this.rngInterval.style.gridArea = "12 / 5";
-		this.rngInterval.style.width = "180px";
+		const ver2Option = document.createElement("option");
+		ver2Option.value = "2";
+		ver2Option.text = "Version 2";
+		this.snmpInput.appendChild(ver2Option);
 
-		this.lblIntervalComment = document.createElement("div");
-		this.lblIntervalComment.style.gridArea = "12 / 6 / auto / 8";
-		this.lblIntervalComment.style.fontSize = "small";
-		this.lblIntervalComment.style.lineHeight = "14px";
-		this.lblIntervalComment.style.minWidth = "150px";
+		const ver3Option = document.createElement("option");
+		ver3Option.value = "3";
+		ver3Option.text = "Version 3";
+		this.snmpInput.appendChild(ver3Option);
 
-		this.buttonsContainer = document.createElement("div");
-		this.buttonsContainer.style.gridArea = "14 / 2 / auto / 7";
-		this.buttonsContainer.style.textAlign = "center";
+		this.snmpInput.value = "3";
 
-		const btnFetch = document.createElement("input");
-		btnFetch.type = "button";
-		btnFetch.value = "Fetch";
-		btnFetch.style.minWidth = "96px";
+		this.kerberosCheckbox = document.createElement("input");
+		this.kerberosCheckbox.type = "checkbox";
+		this.kerberosCheckbox.checked = true;
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Close";
-		btnCancel.style.minWidth = "96px";
+		this.portScanInput = document.createElement("input");
+		this.portScanInput.type = "checkbox";
+		this.portScanInput.checked = true;
 
-		this.buttonsContainer.append(btnFetch, btnCancel);
+		this.portScanInput = document.createElement("select");
+		this.portScanInput.style.width = "180px";
+		this.portScanInput.style.gridArea = "9 / 5";
 
-		this.rdoUpdate.onchange = this.rdoIP.onchange = this.rdoDomain.onchange = ()=> {
-			this.ipFrom.SetEnabled(this.rdoIP.checked);
-			this.ipTo.SetEnabled(this.rdoIP.checked);
-			this.txtDomain.disabled = !this.rdoDomain.checked;
+		this.portScanCommentLabel = document.createElement("div");
+		this.portScanCommentLabel.style.gridArea = "9 / 6 / auto / 8";
+		this.portScanCommentLabel.style.fontSize = "small";
+		this.portScanCommentLabel.style.lineHeight = "14px";
+		this.portScanCommentLabel.style.minWidth = "150px";
+
+		const basicOption = document.createElement("option");
+		basicOption.value = "basic";
+		basicOption.text = "Basic";
+		this.portScanInput.appendChild(basicOption);
+
+		const wellKnownOption = document.createElement("option");
+		wellKnownOption.value = "wellknown";
+		wellKnownOption.text = "Well known ports";
+		this.portScanInput.appendChild(wellKnownOption);
+
+		const extendedOption = document.createElement("option");
+		extendedOption.value = "extended";
+		extendedOption.text = "Extended";
+		this.portScanInput.appendChild(extendedOption);
+
+		const registeredOption = document.createElement("option");
+		registeredOption.value = "registered";
+		registeredOption.text = "Registered ports";
+		this.portScanInput.appendChild(registeredOption);
+
+		const fullOption = document.createElement("option");
+		fullOption.value = "full";
+		fullOption.text = "Full";
+		this.portScanInput.appendChild(fullOption);
+
+		const dynamicOption = document.createElement("option");
+		dynamicOption.value = "dynamic";
+		dynamicOption.text = "Dynamic ports";
+		this.portScanInput.appendChild(dynamicOption);
+
+
+		this.retriesLabel = document.createElement("div");
+		this.retriesLabel.style.gridArea = "11 / 3";
+		this.retriesLabel.textContent = "Retries:";
+
+		this.retriesRange = document.createElement("input");
+		this.retriesRange.type = "range";
+		this.retriesRange.min = 0;
+		this.retriesRange.max = 4;
+		this.retriesRange.value = 1;
+		this.retriesRange.style.gridArea = "11 / 5";
+		this.retriesRange.style.width = "180px";
+
+		this.retriesCommentLabel = document.createElement("div");
+		this.retriesCommentLabel.style.gridArea = "11 / 6 / auto / 8";
+		this.retriesCommentLabel.style.fontSize = "small";
+		this.retriesCommentLabel.style.lineHeight = "14px";
+		this.retriesCommentLabel.style.minWidth = "150px";
+
+		this.intervalLabel = document.createElement("div");
+		this.intervalLabel.style.gridArea = "12 / 3";
+		this.intervalLabel.textContent = "Retry interval:";
+
+		this.intervalRange = document.createElement("input");
+		this.intervalRange.type = "range";
+		this.intervalRange.min = 0;
+		this.intervalRange.max = 8;
+		this.intervalRange.value = 1;
+		this.intervalRange.style.gridArea = "12 / 5";
+		this.intervalRange.style.width = "180px";
+
+		this.intervalCommentLabel = document.createElement("div");
+		this.intervalCommentLabel.style.gridArea = "12 / 6 / auto / 8";
+		this.intervalCommentLabel.style.fontSize = "small";
+		this.intervalCommentLabel.style.lineHeight = "14px";
+		this.intervalCommentLabel.style.minWidth = "150px";
+
+		this.buttonsBox = document.createElement("div");
+		this.buttonsBox.style.gridArea = "14 / 2 / auto / 7";
+		this.buttonsBox.style.textAlign = "center";
+
+		const fetchButton = document.createElement("input");
+		fetchButton.type = "button";
+		fetchButton.value = "Fetch";
+		fetchButton.style.minWidth = "96px";
+
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Close";
+		cancelButton.style.minWidth = "96px";
+
+		this.buttonsBox.append(fetchButton, cancelButton);
+
+		this.updateRadio.onchange = this.ipRadio.onchange = this.domainRadio.onchange = ()=> {
+			this.ipFrom.SetEnabled(this.ipRadio.checked);
+			this.ipTo.SetEnabled(this.ipRadio.checked);
+			this.domainInput.disabled = !this.domainRadio.checked;
 		};
 
-		this.chkSnmp.onchange = ()=> {
-			if (this.chkSnmp.checked) {
-				this.txtSnmp.disabled = false;
+		this.snmpCheckbox.onchange = ()=> {
+			if (this.snmpCheckbox.checked) {
+				this.snmpInput.disabled = false;
 			}
 			else {
-				this.txtSnmp.disabled = true;
+				this.snmpInput.disabled = true;
 			}
 		};
 
-		this.chkPortScan.onchange = ()=> {
-			if (this.chkPortScan.checked) {
-				this.txtPortScan.disabled = false;
-				this.txtPortScan.onchange();
+		this.portScanInput.onchange = ()=> {
+			if (this.portScanInput.checked) {
+				this.portScanInput.disabled = false;
+				this.portScanInput.onchange();
 			}
 			else {
-				this.txtPortScan.disabled = true;
-				this.lblPortScanComment.textContent = "";
+				this.portScanInput.disabled = true;
+				this.portScanCommentLabel.textContent = "";
 			}
 		};
 
-		this.txtPortScan.onchange = ()=> {
-			switch (this.txtPortScan.value) {
-			case "basic"     : this.lblPortScanComment.textContent = "Scan only common protocols"; break;
-			case "wellknown" : this.lblPortScanComment.textContent = "Scan ports 1 to 1023"; break;
-			case "extended"  : this.lblPortScanComment.textContent = "Scan ports 1 to 8191"; break;
-			case "registered": this.lblPortScanComment.textContent = "Scan ports 1024 to 49151 (slow)"; break;
-			case "full"      : this.lblPortScanComment.textContent = "Scan ports 1 to 49151 (slow)"; break;
-			case "dynamic"   : this.lblPortScanComment.textContent = "Scan ports 49152 to 65535 (slow)"; break;
+		this.portScanInput.onchange = ()=> {
+			switch (this.portScanInput.value) {
+			case "basic"     : this.portScanCommentLabel.textContent = "Scan only common protocols"; break;
+			case "wellknown" : this.portScanCommentLabel.textContent = "Scan ports 1 to 1023"; break;
+			case "extended"  : this.portScanCommentLabel.textContent = "Scan ports 1 to 8191"; break;
+			case "registered": this.portScanCommentLabel.textContent = "Scan ports 1024 to 49151 (slow)"; break;
+			case "full"      : this.portScanCommentLabel.textContent = "Scan ports 1 to 49151 (slow)"; break;
+			case "dynamic"   : this.portScanCommentLabel.textContent = "Scan ports 49152 to 65535 (slow)"; break;
 			}
 		};
 
-		this.rngRetries.oninput = ()=> {
-			if (parseInt(this.rngRetries.value) === 0) {
-				this.rngInterval.disabled = true;
-				this.lblIntervalComment.textContent = "";
+		this.retriesRange.oninput = ()=> {
+			if (parseInt(this.retriesRange.value) === 0) {
+				this.intervalRange.disabled = true;
+				this.intervalCommentLabel.textContent = "";
 			}
 			else {
-				this.rngInterval.disabled = false;
-				this.rngInterval.oninput();
+				this.intervalRange.disabled = false;
+				this.intervalRange.oninput();
 			}
 
-			if (parseInt(this.rngRetries.value) === 0)
-				this.lblRetriesComment.textContent = "Don't try again";
-			else if (parseInt(this.rngRetries.value) === 1)
-				this.lblRetriesComment.textContent = `If unreachable, retry ${this.rngRetries.value} more time`;
+			if (parseInt(this.retriesRange.value) === 0)
+				this.retriesCommentLabel.textContent = "Don't try again";
+			else if (parseInt(this.retriesRange.value) === 1)
+				this.retriesCommentLabel.textContent = `If unreachable, retry ${this.retriesRange.value} more time`;
 			else
-				this.lblRetriesComment.textContent = `If unreachable, retry up to ${this.rngRetries.value} times`;
+				this.retriesCommentLabel.textContent = `If unreachable, retry up to ${this.retriesRange.value} times`;
 		};
 
-		this.rngInterval.oninput = ()=> {
-			switch (parseInt(this.rngInterval.value)) {
-			case 0: this.lblIntervalComment.textContent = "If unreachable, retry after half an hour"; break;
-			case 1: this.lblIntervalComment.textContent = "If unreachable, retry after an hour"; break;
-			case 2: this.lblIntervalComment.textContent = "If unreachable, retry after 2 hours"; break;
-			case 3: this.lblIntervalComment.textContent = "If unreachable, retry after 4 hours"; break;
-			case 4: this.lblIntervalComment.textContent = "If unreachable, retry after 6 hours"; break;
-			case 5: this.lblIntervalComment.textContent = "If unreachable, retry after 8 hours"; break;
-			case 6: this.lblIntervalComment.textContent = "If unreachable, retry after 12 hours"; break;
-			case 7: this.lblIntervalComment.textContent = "If unreachable, retry after 24 hours"; break;
-			case 8: this.lblIntervalComment.textContent = "If unreachable, retry after 48 hours"; break;
+		this.intervalRange.oninput = ()=> {
+			switch (parseInt(this.intervalRange.value)) {
+			case 0: this.intervalCommentLabel.textContent = "If unreachable, retry after half an hour"; break;
+			case 1: this.intervalCommentLabel.textContent = "If unreachable, retry after an hour"; break;
+			case 2: this.intervalCommentLabel.textContent = "If unreachable, retry after 2 hours"; break;
+			case 3: this.intervalCommentLabel.textContent = "If unreachable, retry after 4 hours"; break;
+			case 4: this.intervalCommentLabel.textContent = "If unreachable, retry after 6 hours"; break;
+			case 5: this.intervalCommentLabel.textContent = "If unreachable, retry after 8 hours"; break;
+			case 6: this.intervalCommentLabel.textContent = "If unreachable, retry after 12 hours"; break;
+			case 7: this.intervalCommentLabel.textContent = "If unreachable, retry after 24 hours"; break;
+			case 8: this.intervalCommentLabel.textContent = "If unreachable, retry after 48 hours"; break;
 			}
 		};
 
-		btnFetch.onclick = async()=> {
+		fetchButton.onclick = async()=> {
 			let uri;
 			if (this.params === "devices") {
 				uri = "fetch/devices";
@@ -332,35 +332,35 @@ class Fetch extends Tabs {
 				uri = "fetch/users";
 			}
 
-			if (this.rdoUpdate.checked) {
+			if (this.updateRadio.checked) {
 				uri += "?update=true";
 			}
-			else if (this.rdoIP.checked) {
+			else if (this.ipRadio.checked) {
 				uri += `?range=${this.ipFrom.GetIpString()}-${this.ipTo.GetIpString()}`;
 			}
-			else if (this.rdoDomain.checked) {
-				if (this.txtDomain.value.length === 0) {
+			else if (this.domainRadio.checked) {
+				if (this.domainInput.value.length === 0) {
 					this.ConfirmBox("Please enter a domain", true);
 					return;
 				}
-				uri += `?domain=${encodeURIComponent(this.txtDomain.value)}`;
+				uri += `?domain=${encodeURIComponent(this.domainInput.value)}`;
 			}
 
 			if (this.params === "devices") {
-				if (this.chkDns.checked)      uri += "&dns=true";
-				if (this.chkWmi.checked)      uri += "&wmi=true";
-				if (this.chkSnmp.checked)     uri += `&snmp=${this.txtSnmp.value}`;
-				if (this.chkKerberos.checked) uri += "&kerberos=true";
-				if (this.chkPortScan.checked) uri += `&portscan=${this.txtPortScan.value}`;
+				if (this.dnsCheckBox.checked)      uri += "&dns=true";
+				if (this.wmiCheckbox.checked)      uri += "&wmi=true";
+				if (this.snmpCheckbox.checked)     uri += `&snmp=${this.snmpInput.value}`;
+				if (this.kerberosCheckbox.checked) uri += "&kerberos=true";
+				if (this.portScanInput.checked) uri += `&portscan=${this.portScanInput.value}`;
 
-				uri += `&retries=${this.rngRetries.value}`;
-				uri += `&interval=${this.rngInterval.value}`;
+				uri += `&retries=${this.retriesRange.value}`;
+				uri += `&interval=${this.intervalRange.value}`;
 			}
 			else if (this.params === "users") {
-				uri = `fetch/users?domain=${this.txtDomain.value}`;
+				uri = `fetch/users?domain=${this.domainInput.value}`;
 			}
 
-			btnFetch.disabled = btnCancel.disabled = true;
+			fetchButton.disabled = cancelButton.disabled = true;
 
 			try {
 				const response = await fetch(uri);
@@ -371,11 +371,11 @@ class Fetch extends Tabs {
 				if (json.error) throw(json.error);
 
 				if (json.status === "running" || json.status === "idle") {
-					this.tabTask.style.visibility = "visible";
-					this.tabTask.style.animation = "slide-in .4s 1";
+					this.taskTab.style.visibility = "visible";
+					this.taskTab.style.animation = "slide-in .4s 1";
 
 					this.DeselectAllTabs();
-					this.tabTask.className = "v-tab-selected";
+					this.taskTab.className = "v-tab-selected";
 					this.ShowFetching();
 				}
 			}
@@ -383,15 +383,15 @@ class Fetch extends Tabs {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 			finally {
-				btnFetch.disabled = btnCancel.disabled = false;
+				fetchButton.disabled = cancelButton.disabled = false;
 			}
 		};
 
-		btnCancel.onclick = ()=> this.Close();
+		cancelButton.onclick = ()=> this.Close();
 
-		this.txtPortScan.onchange();
-		this.rngRetries.oninput();
-		this.rngInterval.oninput();
+		this.portScanInput.onchange();
+		this.retriesRange.oninput();
+		this.intervalRange.oninput();
 
 		this.GetCurrentNetworkInfo();
 		this.GetFetchStatus();
@@ -412,7 +412,7 @@ class Fetch extends Tabs {
 
 			this.ipFrom.SetIp(firstAddress[0], firstAddress[1], firstAddress[2], firstAddress[3]);
 			this.ipTo.SetIp(lastAddress[0], lastAddress[1], lastAddress[2], lastAddress[3]);
-			this.txtDomain.value = domain;
+			this.domainInput.value = domain;
 		}
 		catch {}
 	}
@@ -428,18 +428,18 @@ class Fetch extends Tabs {
 			this.taskStatus = json;
 
 			if (json.status === "running" || json.status === "idle") {
-				this.tabTask.style.visibility = "visible";
-				this.tabTask.style.animation = "slide-in .4s 1";
+				this.taskTab.style.visibility = "visible";
+				this.taskTab.style.animation = "slide-in .4s 1";
 			}
 			else if (json.status === "pending") {
-				this.tabTask.style.visibility = "visible";
-				this.tabTask.style.animation = "slide-in .4s 1";
+				this.taskTab.style.visibility = "visible";
+				this.taskTab.style.animation = "slide-in .4s 1";
 			}
 
-			if (this.tabTask.style.visibility == "visible" && this.args == "task") {
+			if (this.taskTab.style.visibility == "visible" && this.args == "task") {
 				this.ShowFetching();
 				this.DeselectAllTabs();
-				this.tabTask.className = "v-tab-selected";
+				this.taskTab.className = "v-tab-selected";
 			}
 
 		}
@@ -451,62 +451,62 @@ class Fetch extends Tabs {
 		this.tabsPanel.textContent = "";
 
 
-		this.tabsPanel.appendChild(this.rdoUpdate);
-		const updateOption = this.AddRadioLabel(this.tabsPanel, this.rdoUpdate, "Update, only existing records");
+		this.tabsPanel.appendChild(this.updateRadio);
+		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update, only existing records");
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
-		this.rdoIP.disabled = false;
-		this.tabsPanel.appendChild(this.rdoIP);
-		const ipOption = this.AddRadioLabel(this.tabsPanel, this.rdoIP, "IP range:");
+		this.ipRadio.disabled = false;
+		this.tabsPanel.appendChild(this.ipRadio);
+		const ipOption = this.AddRadioLabel(this.tabsPanel, this.ipRadio, "IP range:");
 		ipOption.style.gridArea = "2 / 2";
 
-		this.tabsPanel.appendChild(this.divRange);
-		this.ipFrom.SetEnabled(this.rdoIP.checked);
-		this.ipTo.SetEnabled(this.rdoIP.checked);
+		this.tabsPanel.appendChild(this.rangeBox);
+		this.ipFrom.SetEnabled(this.ipRadio.checked);
+		this.ipTo.SetEnabled(this.ipRadio.checked);
 
-		this.tabsPanel.appendChild(this.rdoDomain);
-		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain:");
+		this.tabsPanel.appendChild(this.domainRadio);
+		const domainOption = this.AddRadioLabel(this.tabsPanel, this.domainRadio, "Domain:");
 		domainOption.style.gridArea = "3 / 2";
 
-		this.tabsPanel.appendChild(this.txtDomain);
+		this.tabsPanel.appendChild(this.domainInput);
 
-		const lblProtocols = document.createElement("div");
-		lblProtocols.style.gridArea = "5 / 2";
-		lblProtocols.textContent = "Protocols:";
-		this.tabsPanel.appendChild(lblProtocols);
+		const protocolsLabel = document.createElement("div");
+		protocolsLabel.style.gridArea = "5 / 2";
+		protocolsLabel.textContent = "Protocols:";
+		this.tabsPanel.appendChild(protocolsLabel);
 
-		this.tabsPanel.appendChild(this.chkDns);
-		const dns = this.AddCheckBoxLabel(this.tabsPanel, this.chkDns, "DNS");
+		this.tabsPanel.appendChild(this.dnsCheckBox);
+		const dns = this.AddCheckBoxLabel(this.tabsPanel, this.dnsCheckBox, "DNS");
 		dns.style.gridArea = "5 / 3";
 
-		this.tabsPanel.appendChild(this.chkWmi);
-		const wmi = this.AddCheckBoxLabel(this.tabsPanel, this.chkWmi, "WMI");
+		this.tabsPanel.appendChild(this.wmiCheckbox);
+		const wmi = this.AddCheckBoxLabel(this.tabsPanel, this.wmiCheckbox, "WMI");
 		wmi.style.gridArea = "6 / 3";
 
-		this.tabsPanel.appendChild(this.chkSnmp);
-		const snmp = this.AddCheckBoxLabel(this.tabsPanel, this.chkSnmp, "SNMP");
+		this.tabsPanel.appendChild(this.snmpCheckbox);
+		const snmp = this.AddCheckBoxLabel(this.tabsPanel, this.snmpCheckbox, "SNMP");
 		snmp.style.gridArea = "7 / 3";
 
-		this.tabsPanel.appendChild(this.txtSnmp);
+		this.tabsPanel.appendChild(this.snmpInput);
 
-		this.tabsPanel.appendChild(this.chkKerberos);
-		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.chkKerberos, "Kerberos");
+		this.tabsPanel.appendChild(this.kerberosCheckbox);
+		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.kerberosCheckbox, "Kerberos");
 		kerberos.style.gridArea = "8 / 3";
-		this.chkKerberos.disabled = false;
+		this.kerberosCheckbox.disabled = false;
 
-		this.tabsPanel.appendChild(this.chkPortScan);
-		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.chkPortScan, "Port scan");
+		this.tabsPanel.appendChild(this.portScanInput);
+		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.portScanInput, "Port scan");
 		portScan.style.gridArea = "9 / 3";
 
-		this.tabsPanel.appendChild(this.txtPortScan);
-		this.tabsPanel.appendChild(this.lblPortScanComment);
+		this.tabsPanel.appendChild(this.portScanInput);
+		this.tabsPanel.appendChild(this.portScanCommentLabel);
 
-		this.tabsPanel.append(this.lblRetries, this.rngRetries, this.lblRetriesComment);
+		this.tabsPanel.append(this.retriesLabel, this.retriesRange, this.retriesCommentLabel);
 
-		this.tabsPanel.append(this.lblInterval, this.rngInterval, this.lblIntervalComment);
+		this.tabsPanel.append(this.intervalLabel, this.intervalRange, this.intervalCommentLabel);
 
-		this.tabsPanel.appendChild(this.buttonsContainer);
-		this.buttonsContainer.style.gridArea = "14 / 2 / auto / 7";
+		this.tabsPanel.appendChild(this.buttonsBox);
+		this.buttonsBox.style.gridArea = "14 / 2 / auto / 7";
 	}
 
 	ShowUsers() {
@@ -514,179 +514,179 @@ class Fetch extends Tabs {
 		this.tabsPanel.textContent = "";
 
 
-		this.rdoIP.disabled = true;
-		this.txtDomain.disabled = false;
-		if (this.rdoIP.checked) {
-			this.rdoDomain.checked = true;
+		this.ipRadio.disabled = true;
+		this.domainInput.disabled = false;
+		if (this.ipRadio.checked) {
+			this.domainRadio.checked = true;
 		}
 
-		this.tabsPanel.appendChild(this.rdoUpdate);
-		const updateOption = this.AddRadioLabel(this.tabsPanel, this.rdoUpdate, "Update, only existing records");
+		this.tabsPanel.appendChild(this.updateRadio);
+		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update, only existing records");
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
-		this.tabsPanel.appendChild(this.rdoIP);
-		const ipOption = this.AddRadioLabel(this.tabsPanel, this.rdoIP, "IP range:");
+		this.tabsPanel.appendChild(this.ipRadio);
+		const ipOption = this.AddRadioLabel(this.tabsPanel, this.ipRadio, "IP range:");
 		ipOption.style.gridArea = "2 / 2";
 
-		this.tabsPanel.appendChild(this.divRange);
+		this.tabsPanel.appendChild(this.rangeBox);
 		this.ipFrom.SetEnabled(false);
 		this.ipTo.SetEnabled(false);
 
-		this.tabsPanel.appendChild(this.rdoDomain);
-		const domainOption = this.AddRadioLabel(this.tabsPanel, this.rdoDomain, "Domain:");
+		this.tabsPanel.appendChild(this.domainRadio);
+		const domainOption = this.AddRadioLabel(this.tabsPanel, this.domainRadio, "Domain:");
 		domainOption.style.gridArea = "3 / 2";
 
-		this.tabsPanel.appendChild(this.txtDomain);
+		this.tabsPanel.appendChild(this.domainInput);
 
-		const lblProtocols = document.createElement("div");
-		lblProtocols.style.gridArea = "5 / 2";
-		lblProtocols.textContent = "Protocols:";
-		this.tabsPanel.appendChild(lblProtocols);
+		const protocolsLabel = document.createElement("div");
+		protocolsLabel.style.gridArea = "5 / 2";
+		protocolsLabel.textContent = "Protocols:";
+		this.tabsPanel.appendChild(protocolsLabel);
 
-		this.tabsPanel.appendChild(this.chkKerberos);
-		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.chkKerberos, "Kerberos");
+		this.tabsPanel.appendChild(this.kerberosCheckbox);
+		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.kerberosCheckbox, "Kerberos");
 		kerberos.style.gridArea = "5 / 3";
-		this.chkKerberos.checked = true;
-		this.chkKerberos.disabled = true;
+		this.kerberosCheckbox.checked = true;
+		this.kerberosCheckbox.disabled = true;
 
-		this.tabsPanel.appendChild(this.buttonsContainer);
-		this.buttonsContainer.style.gridArea = "7 / 2 / auto / 7";
+		this.tabsPanel.appendChild(this.buttonsBox);
+		this.buttonsBox.style.gridArea = "7 / 2 / auto / 7";
 	}
 
 	ShowImport() {
 		this.params = "protest";
 		this.tabsPanel.textContent = "";
 
-		const lblProtest = document.createElement("div");
-		lblProtest.style.gridArea = "1 / 3";
-		lblProtest.textContent = "Target's IP:";
-		this.tabsPanel.appendChild(lblProtest);
-		const txtTargetContainer = document.createElement("div");
-		txtTargetContainer.style.gridArea = "1 / 5";
-		this.tabsPanel.appendChild(txtTargetContainer);
-		const txtTarget = new IpBox();
-		txtTarget.SetIp(127,0,0,1);
-		txtTarget.Attach(txtTargetContainer);
+		const protestLabel = document.createElement("div");
+		protestLabel.style.gridArea = "1 / 3";
+		protestLabel.textContent = "Target's IP:";
+		this.tabsPanel.appendChild(protestLabel);
+		const targetBox = document.createElement("div");
+		targetBox.style.gridArea = "1 / 5";
+		this.tabsPanel.appendChild(targetBox);
+		const targetInput = new IpBox();
+		targetInput.SetIp(127,0,0,1);
+		targetInput.Attach(targetBox);
 
-		const lblPort = document.createElement("div");
-		lblPort.style.gridArea = "2 / 3";
-		lblPort.textContent = "Port:";
-		this.tabsPanel.appendChild(lblPort);
-		const txtPort = document.createElement("input");
-		txtPort.type = "number";
-		txtPort.min = "1";
-		txtPort.max = "65535";
-		txtPort.value = "443";
-		txtPort.style.gridArea = "2 / 5";
-		txtPort.style.marginLeft = "0";
-		txtPort.style.width = "180px";
-		this.tabsPanel.appendChild(txtPort);
-		txtTarget.exitElement = txtPort;
+		const portLabel = document.createElement("div");
+		portLabel.style.gridArea = "2 / 3";
+		portLabel.textContent = "Port:";
+		this.tabsPanel.appendChild(portLabel);
+		const portInput = document.createElement("input");
+		portInput.type = "number";
+		portInput.min = "1";
+		portInput.max = "65535";
+		portInput.value = "443";
+		portInput.style.gridArea = "2 / 5";
+		portInput.style.marginLeft = "0";
+		portInput.style.width = "180px";
+		this.tabsPanel.appendChild(portInput);
+		targetInput.exitElement = portInput;
 
-		const lblProtocol = document.createElement("div");
-		lblProtocol.style.gridArea = "3 / 3";
-		lblProtocol.textContent = "Protocol:";
-		this.tabsPanel.appendChild(lblProtocol);
-		const txtProtocol = document.createElement("select");
-		txtProtocol.style.gridArea = "3 / 5";
-		txtProtocol.style.marginLeft = "0";
-		txtProtocol.style.width = "180px";
-		txtProtocol.style.boxSizing = "initial";
-		this.tabsPanel.appendChild(txtProtocol);
+		const protocolLabel = document.createElement("div");
+		protocolLabel.style.gridArea = "3 / 3";
+		protocolLabel.textContent = "Protocol:";
+		this.tabsPanel.appendChild(protocolLabel);
+		const protocolInput = document.createElement("select");
+		protocolInput.style.gridArea = "3 / 5";
+		protocolInput.style.marginLeft = "0";
+		protocolInput.style.width = "180px";
+		protocolInput.style.boxSizing = "initial";
+		this.tabsPanel.appendChild(protocolInput);
 
-		const optHttp = document.createElement("option");
-		optHttp.text = "HTTP";
-		optHttp.value = "http";
-		txtProtocol.appendChild(optHttp);
-		const optHttps = document.createElement("option");
-		optHttps.text = "HTTPS";
-		optHttps.value = "https";
-		txtProtocol.appendChild(optHttps);
+		const httpOption = document.createElement("option");
+		httpOption.text = "HTTP";
+		httpOption.value = "http";
+		protocolInput.appendChild(httpOption);
+		const httpsOption = document.createElement("option");
+		httpsOption.text = "HTTPS";
+		httpsOption.value = "https";
+		protocolInput.appendChild(httpsOption);
 
-		txtProtocol.value = "https";
+		protocolInput.value = "https";
 
-		const lblUsername = document.createElement("div");
-		lblUsername.style.gridArea = "4 / 3";
-		lblUsername.textContent = "Username:";
-		this.tabsPanel.appendChild(lblUsername);
+		const usernameLabel = document.createElement("div");
+		usernameLabel.style.gridArea = "4 / 3";
+		usernameLabel.textContent = "Username:";
+		this.tabsPanel.appendChild(usernameLabel);
 
-		const txtUsername = document.createElement("input");
-		txtUsername.type = "text";
-		txtUsername.placeholder = ".\\administrator";
-		txtUsername.disabled = true;
-		txtUsername.style.gridArea = "4 / 5";
-		txtUsername.style.marginLeft = "0";
-		txtUsername.style.width = "180px";
-		this.tabsPanel.appendChild(txtUsername);
+		const usernameInput = document.createElement("input");
+		usernameInput.type = "text";
+		usernameInput.placeholder = ".\\administrator";
+		usernameInput.disabled = true;
+		usernameInput.style.gridArea = "4 / 5";
+		usernameInput.style.marginLeft = "0";
+		usernameInput.style.width = "180px";
+		this.tabsPanel.appendChild(usernameInput);
 
-		const lblPassword = document.createElement("div");
-		lblPassword.style.gridArea = "5 / 3";
-		lblPassword.textContent = "Password:";
-		this.tabsPanel.appendChild(lblPassword);
-		const txtPassword = document.createElement("input");
-		txtPassword.type = "password";
-		txtPassword.disabled = true;
-		txtPassword.style.gridArea = "5 / 5";
-		txtPassword.style.marginLeft = "0";
-		txtPassword.style.width = "180px";
-		this.tabsPanel.appendChild(txtPassword);
+		const passwordLabel = document.createElement("div");
+		passwordLabel.style.gridArea = "5 / 3";
+		passwordLabel.textContent = "Password:";
+		this.tabsPanel.appendChild(passwordLabel);
+		const passwordInput = document.createElement("input");
+		passwordInput.type = "password";
+		passwordInput.disabled = true;
+		passwordInput.style.gridArea = "5 / 5";
+		passwordInput.style.marginLeft = "0";
+		passwordInput.style.width = "180px";
+		this.tabsPanel.appendChild(passwordInput);
 
-		const lblDevice = document.createElement("div");
-		lblDevice.style.gridArea = "6 / 3";
-		lblDevice.textContent = "Import devices:";
-		this.tabsPanel.appendChild(lblDevice);
-		const chkDeviceContainer = document.createElement("div");
-		chkDeviceContainer.style.gridArea = "6 / 5";
-		this.tabsPanel.appendChild(chkDeviceContainer);
-		const chkDevice = document.createElement("input");
-		chkDevice.type = "checkbox";
-		chkDevice.checked = true;
-		chkDeviceContainer.appendChild(chkDevice);
-		this.AddCheckBoxLabel(chkDeviceContainer, chkDevice, ".").style="width:4px; min-width:4px; padding-left:8px;";
+		const deviceLabel = document.createElement("div");
+		deviceLabel.style.gridArea = "6 / 3";
+		deviceLabel.textContent = "Import devices:";
+		this.tabsPanel.appendChild(deviceLabel);
+		const deviceBox = document.createElement("div");
+		deviceBox.style.gridArea = "6 / 5";
+		this.tabsPanel.appendChild(deviceBox);
+		const deviceCheckbox = document.createElement("input");
+		deviceCheckbox.type = "checkbox";
+		deviceCheckbox.checked = true;
+		deviceBox.appendChild(deviceCheckbox);
+		this.AddCheckBoxLabel(deviceBox, deviceCheckbox, ".").style="width:4px; min-width:4px; padding-left:8px;";
 
-		const lblUsers = document.createElement("div");
-		lblUsers.style.gridArea = "7 / 3";
-		lblUsers.textContent = "Import users:";
-		this.tabsPanel.appendChild(lblUsers);
-		const chkUsersContainer = document.createElement("div");
-		chkUsersContainer.style.gridArea = "7 / 5";
-		this.tabsPanel.appendChild(chkUsersContainer);
-		const chkUsers = document.createElement("input");
-		chkUsers.type = "checkbox";
-		chkUsers.checked = true;
-		chkUsersContainer.appendChild(chkUsers);
-		this.AddCheckBoxLabel(chkUsersContainer, chkUsers, ".").style = "width:4px; min-width:4px; padding-left:8px;";
+		const usersLabel = document.createElement("div");
+		usersLabel.style.gridArea = "7 / 3";
+		usersLabel.textContent = "Import users:";
+		this.tabsPanel.appendChild(usersLabel);
+		const usersBox = document.createElement("div");
+		usersBox.style.gridArea = "7 / 5";
+		this.tabsPanel.appendChild(usersBox);
+		const usersCheckBox = document.createElement("input");
+		usersCheckBox.type = "checkbox";
+		usersCheckBox.checked = true;
+		usersBox.appendChild(usersCheckBox);
+		this.AddCheckBoxLabel(usersBox, usersCheckBox, ".").style = "width:4px; min-width:4px; padding-left:8px;";
 
-		const lblDebitNotes = document.createElement("div");
-		lblDebitNotes.style.gridArea = "8 / 3";
-		lblDebitNotes.textContent = "Import debit notes:";
-		this.tabsPanel.appendChild(lblDebitNotes);
-		const chkDebitNotesContainer = document.createElement("div");
-		chkDebitNotesContainer.style.gridArea = "8 / 5";
-		this.tabsPanel.appendChild(chkDebitNotesContainer);
-		const chkDebitNotes = document.createElement("input");
-		chkDebitNotes.type = "checkbox";
-		chkDebitNotes.checked = false;
-		chkDebitNotesContainer.appendChild(chkDebitNotes);
-		this.AddCheckBoxLabel(chkDebitNotesContainer, chkDebitNotes, ".").style = "width:4px; min-width:4px; padding-left:8px;";
+		const debitNotesLabel = document.createElement("div");
+		debitNotesLabel.style.gridArea = "8 / 3";
+		debitNotesLabel.textContent = "Import debit notes:";
+		this.tabsPanel.appendChild(debitNotesLabel);
+		const debitNotesBox = document.createElement("div");
+		debitNotesBox.style.gridArea = "8 / 5";
+		this.tabsPanel.appendChild(debitNotesBox);
+		const debitNotesCheckbox = document.createElement("input");
+		debitNotesCheckbox.type = "checkbox";
+		debitNotesCheckbox.checked = false;
+		debitNotesBox.appendChild(debitNotesCheckbox);
+		this.AddCheckBoxLabel(debitNotesBox, debitNotesCheckbox, ".").style = "width:4px; min-width:4px; padding-left:8px;";
 
 
-		const buttonsContainer = document.createElement("div");
-		buttonsContainer.style.gridArea = "10 / 2 / auto / 7";
-		buttonsContainer.style.textAlign = "center";
-		this.tabsPanel.appendChild(buttonsContainer);
+		const buttonsBox = document.createElement("div");
+		buttonsBox.style.gridArea = "10 / 2 / auto / 7";
+		buttonsBox.style.textAlign = "center";
+		this.tabsPanel.appendChild(buttonsBox);
 
-		const btnImport = document.createElement("input");
-		btnImport.type = "button";
-		btnImport.value = "Import";
-		btnImport.style.minWidth = "96px";
-		buttonsContainer.appendChild(btnImport);
+		const inputButton = document.createElement("input");
+		inputButton.type = "button";
+		inputButton.value = "Import";
+		inputButton.style.minWidth = "96px";
+		buttonsBox.appendChild(inputButton);
 
-		const btnCancel = document.createElement("input");
-		btnCancel.type = "button";
-		btnCancel.value = "Close";
-		btnCancel.style.minWidth = "96px";
-		buttonsContainer.appendChild(btnCancel);
+		const cancelButton = document.createElement("input");
+		cancelButton.type = "button";
+		cancelButton.value = "Close";
+		cancelButton.style.minWidth = "96px";
+		buttonsBox.appendChild(cancelButton);
 
 		const warningBox = document.createElement("div");
 		warningBox.textContent = "Use this utility to import an inventory from another Pro-test. It's recommended to import on a blank database. Conflicts and duplicate records will not be managed.";
@@ -700,17 +700,17 @@ class Fetch extends Tabs {
 		warningBox.style.backgroundRepeat = "no-repeat";
 		this.tabsPanel.appendChild(warningBox);
 
-		btnImport.onclick = async ()=> {
+		inputButton.onclick = async ()=> {
 			try {
-				btnImport.disabled = btnCancel.disabled = true;
+				inputButton.disabled = cancelButton.disabled = true;
 
 				const dialog = this.DialogBox("180px");
 				if (dialog === null) return;
 
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
-				dialog.btnOK.value = "Hide";
-				dialog.btnCancel.style.display = "none";
+				dialog.okButton.value = "Hide";
+				dialog.cancelButton.style.display = "none";
 
 				const spinner = document.createElement("div");
 				spinner.className = "spinner";
@@ -727,7 +727,7 @@ class Fetch extends Tabs {
 				status.style.animation = "delayed-fade-in 1.5s ease-in 1";
 				dialog.innerBox.appendChild(status);
 
-				let uri = `fetch/import?ip=${txtTarget.GetIpString()}&port=${txtPort.value}&protocol=${txtProtocol.value}&username=${encodeURIComponent(txtUsername.value)}&password=${encodeURIComponent(txtPassword.value)}&devices=${chkDevice.checked}&users=${chkUsers.checked}&debitnotes=${chkDebitNotes.checked}`;
+				let uri = `fetch/import?ip=${targetInput.GetIpString()}&port=${portInput.value}&protocol=${protocolInput.value}&username=${encodeURIComponent(usernameInput.value)}&password=${encodeURIComponent(passwordInput.value)}&devices=${deviceCheckbox.checked}&users=${usersCheckBox.checked}&debitnotes=${debitNotesCheckbox.checked}`;
 				const response = await fetch(uri);
 
 				dialog.Close();
@@ -746,79 +746,79 @@ class Fetch extends Tabs {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
 			}
 			finally {
-				btnImport.disabled = btnCancel.disabled = false;
+				inputButton.disabled = cancelButton.disabled = false;
 			}
 		};
 
-		btnCancel.onclick = ()=> this.Close();
+		cancelButton.onclick = ()=> this.Close();
 	}
 
 	async ShowFetching() {
 		this.params = "fetching";
 		this.tabsPanel.textContent = "";
 
-		const lblName = document.createElement("div");
-		lblName.style.gridArea = "2 / 7 / auto / 2";
-		lblName.style.textAlign = "center";
-		lblName.style.fontWeight = "600";
-		lblName.style.textDecoration = "underline";
-		if (this.taskStatus) lblName.textContent = this.taskStatus.name;
-		this.tabsPanel.appendChild(lblName);
+		const nameLabel = document.createElement("div");
+		nameLabel.style.gridArea = "2 / 7 / auto / 2";
+		nameLabel.style.textAlign = "center";
+		nameLabel.style.fontWeight = "600";
+		nameLabel.style.textDecoration = "underline";
+		if (this.taskStatus) nameLabel.textContent = this.taskStatus.name;
+		this.tabsPanel.appendChild(nameLabel);
 
-		const lblStatus = document.createElement("div");
-		lblStatus.style.gridArea = "4 / 3";
-		lblStatus.textContent = "Status:";
-		this.tabsPanel.appendChild(lblStatus);
-		this.lblStatusValue.style.gridArea = "4 / 5";
-		this.tabsPanel.appendChild(this.lblStatusValue);
+		const statusLabel = document.createElement("div");
+		statusLabel.style.gridArea = "4 / 3";
+		statusLabel.textContent = "Status:";
+		this.tabsPanel.appendChild(statusLabel);
+		this.statusValueLabel.style.gridArea = "4 / 5";
+		this.tabsPanel.appendChild(this.statusValueLabel);
 
 
-		const lblDate = document.createElement("div");
-		lblDate.style.gridArea = "5 / 3";
-		lblDate.textContent = "Started date:";
-		this.tabsPanel.appendChild(lblDate);
-		const lblDateValue = document.createElement("div");
-		lblDateValue.style.gridArea = "5 / 5";
-		lblDateValue.style.fontWeight = "600";
+		const dateLabel = document.createElement("div");
+		dateLabel.style.gridArea = "5 / 3";
+		dateLabel.textContent = "Started date:";
+		this.tabsPanel.appendChild(dateLabel);
+		const dateValueLabel = document.createElement("div");
+		dateValueLabel.style.gridArea = "5 / 5";
+		dateValueLabel.style.fontWeight = "600";
 		let startedDate = new Date(UI.TicksToUnixDate(this.taskStatus?.started ?? UNIX_BASE_TICKS));
-		lblDateValue.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
-		this.tabsPanel.appendChild(lblDateValue);
+		dateValueLabel.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
+		this.tabsPanel.appendChild(dateValueLabel);
 
-		const lblProgress = document.createElement("div");
-		lblProgress.style.gridArea = "6 / 3";
-		lblProgress.textContent = "Progress:";
-		this.tabsPanel.appendChild(lblProgress);
-		this.lblProgressValue.style.gridArea = "6 / 5";
-		if (this.taskStatus) this.lblProgressValue.textContent = `${this.taskStatus.completed}/${this.taskStatus.total}`;
-		this.tabsPanel.appendChild(this.lblProgressValue);
+		const progressLabel = document.createElement("div");
+		progressLabel.style.gridArea = "6 / 3";
+		progressLabel.textContent = "Progress:";
+		this.tabsPanel.appendChild(progressLabel);
+		this.progressValueLabel.style.gridArea = "6 / 5";
+		if (this.taskStatus) this.progressValueLabel.textContent = `${this.taskStatus.completed}/${this.taskStatus.total}`;
+		this.tabsPanel.appendChild(this.progressValueLabel);
 
-		const lblEtc = document.createElement("div");
-		lblEtc.style.gridArea = "7 / 3";
-		lblEtc.textContent = "Etc:";
-		this.tabsPanel.appendChild(lblEtc);
-		this.lblEtcValue.style.gridArea = "7 / 5";
-		if (this.taskStatus) this.lblEtcValue.textContent = this.taskStatus.etc;
-		this.tabsPanel.appendChild(this.lblEtcValue);
+		const etcLabel = document.createElement("div");
+		etcLabel.style.gridArea = "7 / 3";
+		etcLabel.textContent = "Etc:";
+		this.tabsPanel.appendChild(etcLabel);
+		this.etcValueLabel.style.gridArea = "7 / 5";
+		if (this.taskStatus) this.etcValueLabel.textContent = this.taskStatus.etc;
+		this.tabsPanel.appendChild(this.etcValueLabel);
 
-		const divProgressBar = document.createElement("div");
-		divProgressBar.style.gridArea = "8 / 3 / auto / 6";
-		divProgressBar.style.height = "18px";
-		divProgressBar.style.border = "var(--clr-dark) 2px solid";
-		divProgressBar.style.borderRadius = "4px";
-		this.tabsPanel.appendChild(divProgressBar);
-		if (this.taskStatus) this.divProgress.style.width = `${100 * this.taskStatus.completed / this.taskStatus.total}%`;
-		divProgressBar.appendChild(this.divProgress);
+		const progressBarOuter = document.createElement("div");
+		progressBarOuter.style.gridArea = "8 / 3 / auto / 6";
+		progressBarOuter.style.height = "18px";
+		progressBarOuter.style.border = "var(--clr-dark) 2px solid";
+		progressBarOuter.style.borderRadius = "4px";
+		this.tabsPanel.appendChild(progressBarOuter);
+		if (this.taskStatus) this.progressBarInner.style.width = `${100 * this.taskStatus.completed / this.taskStatus.total}%`;
+		progressBarOuter.appendChild(this.progressBarInner);
 
-		const buttonsContainer = document.createElement("div");
-		buttonsContainer.style.gridArea = "10 / 3 / auto / 6";
-		buttonsContainer.style.textAlign = "center";
-		this.tabsPanel.appendChild(buttonsContainer);
+		const buttonsBox = document.createElement("div");
+		buttonsBox.style.gridArea = "10 / 3 / auto / 6";
+		buttonsBox.style.textAlign = "center";
+		this.tabsPanel.appendChild(buttonsBox);
 
-		const btnAbort = document.createElement("input");
-		btnAbort.type = "button";
-		btnAbort.value = "Abort";
-		btnAbort.style.minWidth = "96px";
-		buttonsContainer.appendChild(btnAbort);
+		const abortButton = document.createElement("input");
+		abortButton.type = "button";
+		abortButton.value = "Abort";
+		abortButton.style.minWidth = "96px";
+		buttonsBox.appendChild(abortButton);
 
 		try {
 			const response = await fetch("fetch/status");
@@ -833,17 +833,17 @@ class Fetch extends Tabs {
 				this.ShowPending(json);
 			}
 			else if (json.status === "running" || json.status === "idle") {
-				lblName.textContent = json.name;
+				nameLabel.textContent = json.name;
 				let startedDate = new Date(UI.TicksToUnixDate(json.started));
-				lblDateValue.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
-				this.lblStatusValue.textContent = json.status;
-				this.lblProgressValue.textContent = `${json.completed}/${json.total}`;
-				this.lblEtcValue.textContent = json.etc;
-				this.divProgress.style.width = `${(100 * json.completed) / json.total}%`;
+				dateValueLabel.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
+				this.statusValueLabel.textContent = json.status;
+				this.progressValueLabel.textContent = `${json.completed}/${json.total}`;
+				this.etcValueLabel.textContent = json.etc;
+				this.progressBarInner.style.width = `${(100 * json.completed) / json.total}%`;
 			}
 			else {
-				this.tabTask.style.visibility = "hidden";
-				this.tabTask.style.animation = "none";
+				this.taskTab.style.visibility = "hidden";
+				this.taskTab.style.animation = "none";
 				this.DeselectAllTabs();
 				this.tabsList[0].className = "v-tab-selected";
 				this.tabsList[0].onclick();
@@ -851,7 +851,7 @@ class Fetch extends Tabs {
 		}
 		catch {}
 
-		btnAbort.onclick = ()=> {
+		abortButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to abort this task?").addEventListener("click", async()=> {
 				try {
 					const response = await fetch("fetch/abort");
@@ -862,8 +862,8 @@ class Fetch extends Tabs {
 					if (json.error) throw(json.error);
 
 					if (json.status === "ok") {
-						this.lblStatusValue.textContent = "canceling";
-						btnAbort.disabled = true;
+						this.statusValueLabel.textContent = "canceling";
+						abortButton.disabled = true;
 					}
 				}
 				catch (ex) {
@@ -876,175 +876,178 @@ class Fetch extends Tabs {
 	ShowPending(json) {
 		this.tabsPanel.textContent = "";
 
-		const lblName = document.createElement("div");
-		lblName.style.gridArea = "1 / 7 / auto / 2";
-		lblName.style.textAlign = "center";
-		lblName.style.fontWeight = "600";
-		lblName.style.textDecoration = "underline";
-		if (this.taskStatus) lblName.textContent = json.name;
-		this.tabsPanel.appendChild(lblName);
+		const nameLabel = document.createElement("div");
+		nameLabel.style.gridArea = "1 / 7 / auto / 2";
+		nameLabel.style.textAlign = "center";
+		nameLabel.style.fontWeight = "600";
+		nameLabel.style.textDecoration = "underline";
+		if (this.taskStatus) nameLabel.textContent = json.name;
+		this.tabsPanel.appendChild(nameLabel);
 
-		const lblStart = document.createElement("div");
-		lblStart.style.gridArea = "3 / 3";
-		lblStart.textContent = "Started date:";
-		this.tabsPanel.appendChild(lblStart);
-		const lblStartValue = document.createElement("div");
-		lblStartValue.style.gridArea = "3 / 5";
-		lblStartValue.style.fontWeight = "600";
+		const startLabel = document.createElement("div");
+		startLabel.style.gridArea = "3 / 3";
+		startLabel.textContent = "Started date:";
+		this.tabsPanel.appendChild(startLabel);
+		const startValueLabel = document.createElement("div");
+		startValueLabel.style.gridArea = "3 / 5";
+		startValueLabel.style.fontWeight = "600";
 		let startedDate = new Date(UI.TicksToUnixDate(json.started));
-		lblStartValue.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
-		this.tabsPanel.appendChild(lblStartValue);
+		startValueLabel.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
+		this.tabsPanel.appendChild(startValueLabel);
 
-		const lblFinish = document.createElement("div");
-		lblFinish.style.gridArea = "4 / 3";
-		lblFinish.textContent = "Finished date:";
-		this.tabsPanel.appendChild(lblFinish);
-		const lblFinishValue = document.createElement("div");
-		lblFinishValue.style.gridArea = "4 / 5";
-		lblFinishValue.style.fontWeight = "600";
+		const finishLabel = document.createElement("div");
+		finishLabel.style.gridArea = "4 / 3";
+		finishLabel.textContent = "Finished date:";
+		this.tabsPanel.appendChild(finishLabel);
+		const finishValueLabel = document.createElement("div");
+		finishValueLabel.style.gridArea = "4 / 5";
+		finishValueLabel.style.fontWeight = "600";
 		let finishedDate = new Date(UI.TicksToUnixDate(json.finished));
-		lblFinishValue.textContent = `${finishedDate.toLocaleDateString(UI.regionalFormat, {})} ${finishedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
-		this.tabsPanel.appendChild(lblFinishValue);
+		finishValueLabel.textContent = `${finishedDate.toLocaleDateString(UI.regionalFormat, {})} ${finishedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
+		this.tabsPanel.appendChild(finishValueLabel);
 
-		const lblSuccess = document.createElement("div");
-		lblSuccess.style.gridArea = "5 / 3";
-		lblSuccess.textContent = "Successfully fetched:";
-		this.tabsPanel.appendChild(lblSuccess);
-		const lblSuccessValue = document.createElement("div");
-		lblSuccessValue.style.gridArea = "5 / 5";
-		lblSuccessValue.style.fontWeight = "600";
-		if (this.taskStatus) lblSuccessValue.textContent = json.successful;
-		this.tabsPanel.appendChild(lblSuccessValue);
+		const successLabel = document.createElement("div");
+		successLabel.style.gridArea = "5 / 3";
+		successLabel.textContent = "Successfully fetched:";
+		this.tabsPanel.appendChild(successLabel);
+		const successValueLabel = document.createElement("div");
+		successValueLabel.style.gridArea = "5 / 5";
+		successValueLabel.style.fontWeight = "600";
+		if (this.taskStatus) successValueLabel.textContent = json.successful;
+		this.tabsPanel.appendChild(successValueLabel);
 
-		const lblUnsuccess = document.createElement("div");
-		lblUnsuccess.style.gridArea = "6 / 3";
-		lblUnsuccess.textContent = "Unsuccessful:";
-		this.tabsPanel.appendChild(lblUnsuccess);
-		const lblUnsuccessValue = document.createElement("div");
-		lblUnsuccessValue.style.gridArea = "6 / 5";
-		lblUnsuccessValue.style.fontWeight = "600";
-		if (this.taskStatus) lblUnsuccessValue.textContent = json.unsuccessful;
-		this.tabsPanel.appendChild(lblUnsuccessValue);
+		const unsuccessLabel = document.createElement("div");
+		unsuccessLabel.style.gridArea = "6 / 3";
+		unsuccessLabel.textContent = "Unsuccessful:";
+		this.tabsPanel.appendChild(unsuccessLabel);
+		const unsuccessValueLabel = document.createElement("div");
+		unsuccessValueLabel.style.gridArea = "6 / 5";
+		unsuccessValueLabel.style.fontWeight = "600";
+		if (this.taskStatus) unsuccessValueLabel.textContent = json.unsuccessful;
+		this.tabsPanel.appendChild(unsuccessValueLabel);
 
 
-		const lblConflictCondition = document.createElement("div");
-		lblConflictCondition.style.gridArea = "8 / 3";
-		lblConflictCondition.textContent = "Conflict condition:";
-		this.tabsPanel.appendChild(lblConflictCondition);
-		const txtConflictCondition = document.createElement("select");
-		txtConflictCondition.style.gridArea = "8 / 5";
-		txtConflictCondition.style.marginLeft = "0";
-		txtConflictCondition.style.width = "160px";
-		this.tabsPanel.appendChild(txtConflictCondition);
-		const lblConflictConditionComment = document.createElement("div");
-		lblConflictConditionComment.style.gridArea = "8 / 6 / auto / 8";
-		lblConflictConditionComment.style.fontSize = "small";
-		//lblConflictConditionComment.style.width = "240px";
-		lblConflictConditionComment.textContent = "Trigger a conflict when the condition is met";
-		this.tabsPanel.appendChild(lblConflictConditionComment);
+		const conflictConditionLabel = document.createElement("div");
+		conflictConditionLabel.style.gridArea = "8 / 3";
+		conflictConditionLabel.textContent = "Conflict condition:";
+		this.tabsPanel.appendChild(conflictConditionLabel);
+		const conflictConditionInput = document.createElement("select");
+		conflictConditionInput.style.gridArea = "8 / 5";
+		conflictConditionInput.style.marginLeft = "0";
+		conflictConditionInput.style.width = "160px";
+		this.tabsPanel.appendChild(conflictConditionInput);
+		const conflictConditionCommentLabel = document.createElement("div");
+		conflictConditionCommentLabel.style.gridArea = "8 / 6 / auto / 8";
+		conflictConditionCommentLabel.style.fontSize = "small";
+		//conflictConditionCommentLabel.style.width = "240px";
+		conflictConditionCommentLabel.textContent = "Trigger a conflict when the condition is met";
+		this.tabsPanel.appendChild(conflictConditionCommentLabel);
 
 		if (json.type === "devices") {
-			const optIP = document.createElement("option");
-			optIP.text = "Same IP address";
-			optIP.value = "ip";
-			txtConflictCondition.appendChild(optIP);
-			const optMAC = document.createElement("option");
-			optMAC.text = "Same hostname";
-			optMAC.value = "hostname";
-			txtConflictCondition.appendChild(optMAC);
-			const optHostname = document.createElement("option");
-			optHostname.text = "Same MAC address";
-			optHostname.value = "mac address";
-			txtConflictCondition.appendChild(optHostname);
-			const optGuid = document.createElement("option");
-			optGuid.text = "Same GUID";
-			optGuid.value = "guid";
-			txtConflictCondition.appendChild(optGuid);
+			const ipOption = document.createElement("option");
+			ipOption.text = "Same IP address";
+			ipOption.value = "ip";
+			conflictConditionInput.appendChild(ipOption);
 
-			txtConflictCondition.value = "ip";
+			const macOption = document.createElement("option");
+			macOption.text = "Same MAC address";
+			macOption.value = "mac address";
+			conflictConditionInput.appendChild(macOption);
+
+			const hostnameOption = document.createElement("option");
+			hostnameOption.text = "Same hostname";
+			hostnameOption.value = "hostname";
+			conflictConditionInput.appendChild(hostnameOption);
+
+			const guidOption = document.createElement("option");
+			guidOption.text = "Same GUID";
+			guidOption.value = "guid";
+			conflictConditionInput.appendChild(guidOption);
+
+			conflictConditionInput.value = "ip";
 		}
 		else if (json.type === "users") {
-			const optUN = document.createElement("option");
-			optUN.text = "Same username";
-			optUN.value = "username";
-			txtConflictCondition.appendChild(optUN);
-			const optGuid = document.createElement("option");
-			optGuid.text = "Same GUID";
-			optGuid.value = "guid";
-			txtConflictCondition.appendChild(optGuid);
+			const usernameOption = document.createElement("option");
+			usernameOption.text = "Same username";
+			usernameOption.value = "username";
+			conflictConditionInput.appendChild(usernameOption);
+			const guidOption = document.createElement("option");
+			guidOption.text = "Same GUID";
+			guidOption.value = "guid";
+			conflictConditionInput.appendChild(guidOption);
 
-			txtConflictCondition.value = "username";
+			conflictConditionInput.value = "username";
 		}
 
-		const lblConflict = document.createElement("div");
-		lblConflict.style.gridArea = "9 / 3";
-		lblConflict.textContent = "Conflict action:";
-		this.tabsPanel.appendChild(lblConflict);
-		const txtConflict = document.createElement("select");
-		txtConflict.style.gridArea = "9 / 5";
-		txtConflict.style.marginLeft = "0";
-		txtConflict.style.width = "160px";
-		this.tabsPanel.appendChild(txtConflict);
-		const lblConflictComment = document.createElement("div");
-		lblConflictComment.style.gridArea = "9 / 6 / auto / 8";
-		lblConflictComment.style.fontSize = "small";
-		lblConflictComment.style.width = "240px";
-		this.tabsPanel.appendChild(lblConflictComment);
+		const conflictLabel = document.createElement("div");
+		conflictLabel.style.gridArea = "9 / 3";
+		conflictLabel.textContent = "Conflict action:";
+		this.tabsPanel.appendChild(conflictLabel);
+		const conflictInput = document.createElement("select");
+		conflictInput.style.gridArea = "9 / 5";
+		conflictInput.style.marginLeft = "0";
+		conflictInput.style.width = "160px";
+		this.tabsPanel.appendChild(conflictInput);
+		const conflictCommentLabel = document.createElement("div");
+		conflictCommentLabel.style.gridArea = "9 / 6 / auto / 8";
+		conflictCommentLabel.style.fontSize = "small";
+		conflictCommentLabel.style.width = "240px";
+		this.tabsPanel.appendChild(conflictCommentLabel);
 
-		const optSkip = document.createElement("option");
-		optSkip.text = "Skip";
-		optSkip.value = 0;
-		txtConflict.appendChild(optSkip);
-		const optKeepBoth = document.createElement("option");
-		optKeepBoth.text = "Keep both";
-		optKeepBoth.value = 1;
-		txtConflict.appendChild(optKeepBoth);
-		const optOverwrite = document.createElement("option");
-		optOverwrite.text = "Overwrite";
-		optOverwrite.value = 2;
-		txtConflict.appendChild(optOverwrite);
-		const optAppend = document.createElement("option");
-		optAppend.text = "Append";
-		optAppend.value = 3;
-		txtConflict.appendChild(optAppend);
-		const optMerge = document.createElement("option");
-		optMerge.text = "Merge";
-		optMerge.value = 4;
-		txtConflict.appendChild(optMerge);
+		const skipOption = document.createElement("option");
+		skipOption.text = "Skip";
+		skipOption.value = 0;
+		conflictInput.appendChild(skipOption);
+		const keepBothOption = document.createElement("option");
+		keepBothOption.text = "Keep both";
+		keepBothOption.value = 1;
+		conflictInput.appendChild(keepBothOption);
+		const overwriteOption = document.createElement("option");
+		overwriteOption.text = "Overwrite";
+		overwriteOption.value = 2;
+		conflictInput.appendChild(overwriteOption);
+		const appendOption = document.createElement("option");
+		appendOption.text = "Append";
+		appendOption.value = 3;
+		conflictInput.appendChild(appendOption);
+		const mergeOption = document.createElement("option");
+		mergeOption.text = "Merge";
+		mergeOption.value = 4;
+		conflictInput.appendChild(mergeOption);
 
-		txtConflict.value = 4;
+		conflictInput.value = 4;
 
-		const buttonsContainer = document.createElement("div");
-		buttonsContainer.style.gridArea = "11 / 2 / auto / 7";
-		buttonsContainer.style.textAlign = "center";
-		this.tabsPanel.appendChild(buttonsContainer);
+		const buttonsBox = document.createElement("div");
+		buttonsBox.style.gridArea = "11 / 2 / auto / 7";
+		buttonsBox.style.textAlign = "center";
+		this.tabsPanel.appendChild(buttonsBox);
 
-		const btnApprove = document.createElement("input");
-		btnApprove.type = "button";
-		btnApprove.value = "Approve";
-		btnApprove.style.minWidth = "96px";
-		buttonsContainer.appendChild(btnApprove);
+		const approveButton = document.createElement("input");
+		approveButton.type = "button";
+		approveButton.value = "Approve";
+		approveButton.style.minWidth = "96px";
+		buttonsBox.appendChild(approveButton);
 
-		const btnDiscard = document.createElement("input");
-		btnDiscard.type = "button";
-		btnDiscard.value = "Discard";
-		btnDiscard.style.minWidth = "96px";
-		buttonsContainer.appendChild(btnDiscard);
+		const discardButton = document.createElement("input");
+		discardButton.type = "button";
+		discardButton.value = "Discard";
+		discardButton.style.minWidth = "96px";
+		buttonsBox.appendChild(discardButton);
 
-		txtConflict.onchange = ()=> {
-			switch (parseInt(txtConflict.value)) {
-			case 0: lblConflictComment.textContent = "Do nothing, keep original record"; break;
-			case 1: lblConflictComment.textContent = "Create a new record"; break;
-			case 2: lblConflictComment.textContent = "Replace original record"; break;
-			case 3: lblConflictComment.textContent = "Append only new properties"; break;
-			case 4: lblConflictComment.textContent = "Merge with original record"; break;
+		conflictInput.onchange = ()=> {
+			switch (parseInt(conflictInput.value)) {
+			case 0: conflictCommentLabel.textContent = "Do nothing, keep original record"; break;
+			case 1: conflictCommentLabel.textContent = "Create a new record"; break;
+			case 2: conflictCommentLabel.textContent = "Replace original record"; break;
+			case 3: conflictCommentLabel.textContent = "Append only new properties"; break;
+			case 4: conflictCommentLabel.textContent = "Merge with original record"; break;
 			}
 		};
 
-		btnApprove.onclick = ()=> {
+		approveButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to approve the fetched dataset?").addEventListener("click", async()=> {
 				try {
-					let uri = `fetch/approve?condition=${txtConflictCondition.value}&action=${txtConflict.value}`;
+					let uri = `fetch/approve?condition=${conflictConditionInput.value}&action=${conflictInput.value}`;
 
 					const response = await fetch(uri);
 
@@ -1054,8 +1057,8 @@ class Fetch extends Tabs {
 					if (json.error) throw(json.error);
 
 					if (json.status === "ok") {
-						this.tabTask.style.visibility = "hidden";
-						this.tabTask.style.animation = "none";
+						this.taskTab.style.visibility = "hidden";
+						this.taskTab.style.animation = "none";
 						this.DeselectAllTabs();
 						this.tabsList[0].className = "v-tab-selected";
 						this.tabsList[0].onclick();
@@ -1067,7 +1070,7 @@ class Fetch extends Tabs {
 			});
 		};
 
-		btnDiscard.onclick = ()=> {
+		discardButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to discard the fetched dataset?").addEventListener("click", async()=> {
 				try {
 					const response = await fetch("fetch/discard");
@@ -1078,8 +1081,8 @@ class Fetch extends Tabs {
 					if (json.error) throw(json.error);
 
 					if (json.status === "ok") {
-						this.tabTask.style.visibility = "hidden";
-						this.tabTask.style.animation = "none";
+						this.taskTab.style.visibility = "hidden";
+						this.taskTab.style.animation = "none";
 						this.DeselectAllTabs();
 						this.tabsList[0].className = "v-tab-selected";
 						this.tabsList[0].onclick();
@@ -1091,6 +1094,6 @@ class Fetch extends Tabs {
 			});
 		};
 
-		txtConflict.onchange();
+		conflictInput.onchange();
 	}
 }

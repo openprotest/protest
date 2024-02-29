@@ -39,23 +39,23 @@ class ScreenCapture extends Window {
 		const dialog = this.DialogBox("150px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const chkAudio = document.createElement("input");
-		chkAudio.type = "checkbox";
-		innerBox.appendChild(chkAudio);
-		this.AddCheckBoxLabel(innerBox, chkAudio, "Record audio").style.paddingBottom = "16px";
+		const audioCheckbox = document.createElement("input");
+		audioCheckbox.type = "checkbox";
+		innerBox.appendChild(audioCheckbox);
+		this.AddCheckBoxLabel(innerBox, audioCheckbox, "Record audio").style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		chkAudio.checked = this.params.audio;
+		audioCheckbox.checked = this.params.audio;
 
-		btnOK.onclick = async ()=> {
-			this.params.audio = chkAudio.checked;
+		okButton.onclick = async ()=> {
+			this.params.audio = audioCheckbox.checked;
 			dialog.Close();
 		};
 	}
@@ -134,12 +134,12 @@ class ScreenCapture extends Window {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
-		btnOK.value = "Export";
-		btnCancel.value = "Discard";
+		okButton.value = "Export";
+		cancelButton.value = "Discard";
 
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
@@ -155,21 +155,21 @@ class ScreenCapture extends Window {
 		typeInput.style.width = "280px";
 		innerBox.appendChild(typeInput);
 
-		const webm = document.createElement("option");
-		webm.text = "WebM video";
-		webm.value = "video/webm";
+		const webmOption = document.createElement("option");
+		webmOption.text = "WebM video";
+		webmOption.value = "video/webm";
 
-		const mp4 = document.createElement("option");
-		mp4.text = "MP4 -MPEG-4 Part 14";
-		mp4.value = "video/mp4";
+		const mp4Option = document.createElement("option");
+		mp4Option.text = "MP4 -MPEG-4 Part 14";
+		mp4Option.value = "video/mp4";
 
-		const ogg = document.createElement("option");
-		ogg.text = "OGG container format";
-		ogg.value = "video/ogg";
+		const oggOption = document.createElement("option");
+		oggOption.text = "OGG container format";
+		oggOption.value = "video/ogg";
 
-		typeInput.append(webm, mp4, ogg);
+		typeInput.append(webmOption, mp4Option, oggOption);
 
-		btnOK.onclick = async ()=> {
+		okButton.onclick = async ()=> {
 			const blob = new Blob(this.recordChunks, { type: typeInput.value });
 			const audioURL = URL.createObjectURL(blob);
 			window.open(audioURL, "_blank");
@@ -179,7 +179,7 @@ class ScreenCapture extends Window {
 			dialog.Close();
 		};
 
-		btnCancel.onclick = ()=> {
+		cancelButton.onclick = ()=> {
 			this.recordChunks = [];
 			this.recorder = null;
 			dialog.Close();

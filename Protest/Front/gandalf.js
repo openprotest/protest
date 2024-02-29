@@ -16,22 +16,22 @@ class Gandalf extends Window {
 		buttons.className = "gandalf-buttons";
 		this.content.appendChild(buttons);
 
-		this.btnPrevious = document.createElement("input");
-		this.btnPrevious.type = "button";
-		this.btnPrevious.value = "Previous";
-		this.btnPrevious.style.minWidth = "96px";
-		this.btnPrevious.style.height = "32px";
-		buttons.appendChild(this.btnPrevious);
+		this.previousButton = document.createElement("input");
+		this.previousButton.type = "button";
+		this.previousButton.value = "Previous";
+		this.previousButton.style.minWidth = "96px";
+		this.previousButton.style.height = "32px";
+		buttons.appendChild(this.previousButton);
 
-		this.btnNext = document.createElement("input");
-		this.btnNext.type = "button";
-		this.btnNext.value = "Next";
-		this.btnNext.style.minWidth = "96px";
-		this.btnNext.style.height = "32px";
-		buttons.appendChild(this.btnNext);
+		this.nextButton = document.createElement("input");
+		this.nextButton.type = "button";
+		this.nextButton.value = "Next";
+		this.nextButton.style.minWidth = "96px";
+		this.nextButton.style.height = "32px";
+		buttons.appendChild(this.nextButton);
 
-		this.btnPrevious.onclick = ()=> this.Previous();
-		this.btnNext.onclick = ()=> this.Next();
+		this.previousButton.onclick = ()=> this.Previous();
+		this.nextButton.onclick = ()=> this.Next();
 
 		this.InitMenus();
 		this.GetEntropy();
@@ -46,7 +46,7 @@ class Gandalf extends Window {
 			if (json.error) throw(json.error);
 
 			this.entropy = json;
-			this.rngThreshold.oninput();
+			this.thresholdRange.oninput();
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg").addEventListener("click", ()=> this.Close());
@@ -109,58 +109,58 @@ class Gandalf extends Window {
 		}
 
 		{
-			const lblThreshold = document.createElement("div");
-			lblThreshold.textContent = "Threshold:";
-			lblThreshold.style.display = "inline-block";
-			lblThreshold.style.fontWeight = "600";
-			lblThreshold.style.minWidth = "150px";
-			this.menuArray[1].appendChild(lblThreshold);
+			const thresholdLabel = document.createElement("div");
+			thresholdLabel.textContent = "Threshold:";
+			thresholdLabel.style.display = "inline-block";
+			thresholdLabel.style.fontWeight = "600";
+			thresholdLabel.style.minWidth = "150px";
+			this.menuArray[1].appendChild(thresholdLabel);
 
-			this.rngThreshold = document.createElement("input");
-			this.rngThreshold.type = "range";
-			this.rngThreshold.min = 18;
-			this.rngThreshold.max = 128;
-			this.rngThreshold.value = 65;
-			this.rngThreshold.style.width = "200px";
-			this.menuArray[1].appendChild(this.rngThreshold);
+			this.thresholdRange = document.createElement("input");
+			this.thresholdRange.type = "range";
+			this.thresholdRange.min = 18;
+			this.thresholdRange.max = 128;
+			this.thresholdRange.value = 65;
+			this.thresholdRange.style.width = "200px";
+			this.menuArray[1].appendChild(this.thresholdRange);
 
-			const lblThresholdValue = document.createElement("div");
-			lblThresholdValue.textContent = "60-bits";
-			lblThresholdValue.style.display = "inline-block";
-			lblThresholdValue.style.paddingLeft = "8px";
-			this.menuArray[1].appendChild(lblThresholdValue);
-
-			this.menuArray[1].appendChild(document.createElement("br"));
-			this.menuArray[1].appendChild(document.createElement("br"));
-
-			const lblTotal = document.createElement("div");
-			lblTotal.textContent = "Total users:";
-			lblTotal.style.display = "inline-block";
-			lblTotal.style.fontWeight = "600";
-			lblTotal.style.minWidth = "150px";
-			this.menuArray[1].appendChild(lblTotal);
-
-			const lblTotalValue = document.createElement("div");
-			lblTotalValue.textContent = "0";
-			lblTotalValue.style.display = "inline-block";
-			lblTotalValue.style.minWidth = "100px";
-			this.menuArray[1].appendChild(lblTotalValue);
-
-			const lblAsterisk = document.createElement("div");
-			lblAsterisk.textContent = "* Only users with an email address will be counted.";
-			lblAsterisk.style.display = "inline-block";
-			lblAsterisk.style.fontStyle = "italic";
-			this.menuArray[1].appendChild(lblAsterisk);
+			const thresholdValueLabel = document.createElement("div");
+			thresholdValueLabel.textContent = "60-bits";
+			thresholdValueLabel.style.display = "inline-block";
+			thresholdValueLabel.style.paddingLeft = "8px";
+			this.menuArray[1].appendChild(thresholdValueLabel);
 
 			this.menuArray[1].appendChild(document.createElement("br"));
 			this.menuArray[1].appendChild(document.createElement("br"));
 
-			const lblInclude = document.createElement("div");
-			lblInclude.textContent = "Include:";
-			lblInclude.style.display = "inline-block";
-			lblInclude.style.fontWeight = "600";
-			lblInclude.style.minWidth = "150px";
-			this.menuArray[1].appendChild(lblInclude);
+			const totalLabel = document.createElement("div");
+			totalLabel.textContent = "Total users:";
+			totalLabel.style.display = "inline-block";
+			totalLabel.style.fontWeight = "600";
+			totalLabel.style.minWidth = "150px";
+			this.menuArray[1].appendChild(totalLabel);
+
+			const totalValueLabel = document.createElement("div");
+			totalValueLabel.textContent = "0";
+			totalValueLabel.style.display = "inline-block";
+			totalValueLabel.style.minWidth = "100px";
+			this.menuArray[1].appendChild(totalValueLabel);
+
+			const asteriskLabel = document.createElement("div");
+			asteriskLabel.textContent = "* Only users with an email address will be counted.";
+			asteriskLabel.style.display = "inline-block";
+			asteriskLabel.style.fontStyle = "italic";
+			this.menuArray[1].appendChild(asteriskLabel);
+
+			this.menuArray[1].appendChild(document.createElement("br"));
+			this.menuArray[1].appendChild(document.createElement("br"));
+
+			const includeLabel = document.createElement("div");
+			includeLabel.textContent = "Include:";
+			includeLabel.style.display = "inline-block";
+			includeLabel.style.fontWeight = "600";
+			includeLabel.style.minWidth = "150px";
+			this.menuArray[1].appendChild(includeLabel);
 
 			this.divInclude = document.createElement("div");
 			this.menuArray[1].appendChild(this.divInclude);
@@ -168,17 +168,21 @@ class Gandalf extends Window {
 			let parameters = new Set();
 			for (let user in LOADER.users.data) {
 				for (let attr in LOADER.users.data[user]) {
-					if (attr.indexOf("password") > -1 && !parameters.has(attr))
+					if (attr.indexOf("password") > -1 && !parameters.has(attr)) {
 						parameters.add(attr);
+					}
 				}
 			}
 
-			for (let i = 0; i < LOADER.users.data.length; i++)
-				for (let k in LOADER.users.data[i])
-					if (k.indexOf("password") > -1 && !parameters.has(k))
+			for (let i = 0; i < LOADER.users.data.length; i++) {
+				for (let k in LOADER.users.data[i]) {
+					if (k.indexOf("password") > -1 && !parameters.has(k)) {
 						parameters.add(k);
+					}
+				}
+			}
 
-			lblInclude.style.visibility = parameters.size === 1 ? "hidden" : "visible";
+			includeLabel.style.visibility = parameters.size === 1 ? "hidden" : "visible";
 
 			parameters.forEach((key, value, set)=> {
 				if (key === "password") return;
@@ -187,156 +191,156 @@ class Gandalf extends Window {
 				div.style.padding = "4px";
 				this.divInclude.appendChild(div);
 
-				const chkInclude = document.createElement("input");
-				chkInclude.type = "checkbox";
-				chkInclude.checked = true;
-				div.appendChild(chkInclude);
-				this.AddCheckBoxLabel(div, chkInclude, key);
+				const includeCheckbox = document.createElement("input");
+				includeCheckbox.type = "checkbox";
+				includeCheckbox.checked = true;
+				div.appendChild(includeCheckbox);
+				this.AddCheckBoxLabel(div, includeCheckbox, key);
 
-				this.includeList[key] = chkInclude;
+				this.includeList[key] = includeCheckbox;
 
-				chkInclude.onchange = ()=> this.rngThreshold.oninput();
+				includeCheckbox.onchange = ()=> this.thresholdRange.oninput();
 			});
 
-			this.rngThreshold.oninput =
-			this.rngThreshold.onchange = ()=> {
+			this.thresholdRange.oninput =
+			this.thresholdRange.onchange = ()=> {
 				let strength = "";
-				if      (this.rngThreshold.value < 19)  strength = "Forbidden";
-				else if (this.rngThreshold.value < 28)  strength = "Very weak";
-				else if (this.rngThreshold.value < 36)  strength = "Weak";
-				else if (this.rngThreshold.value < 60)  strength = "Reasonable";
-				else if (this.rngThreshold.value < 128) strength = "Strong";
+				if      (this.thresholdRange.value < 19)  strength = "Forbidden";
+				else if (this.thresholdRange.value < 28)  strength = "Very weak";
+				else if (this.thresholdRange.value < 36)  strength = "Weak";
+				else if (this.thresholdRange.value < 60)  strength = "Reasonable";
+				else if (this.thresholdRange.value < 128) strength = "Strong";
 				else                                    strength = "Overkill";
 
-				lblThresholdValue.textContent = `${this.rngThreshold.value}-bits (${strength} or bellow)`;
+				thresholdValueLabel.textContent = `${this.thresholdRange.value}-bits (${strength} or bellow)`;
 
 				if (this.entropy)
-					lblTotalValue.textContent = this.entropy.reduce((sum, entry)=> {
-						if (entry.entropy < this.rngThreshold.value)
+					totalValueLabel.textContent = this.entropy.reduce((sum, entry)=> {
+						if (entry.entropy < this.thresholdRange.value)
 							if ((this.includeList[entry.attr] && this.includeList[entry.attr].checked) || entry.attr === "password")
 								return ++sum;
 						return sum;
 					}, 0);
 			};
 
-			this.rngThreshold.oninput();
+			this.thresholdRange.oninput();
 		}
 
 		{
-			const lblSmtpTitle = document.createElement("div");
-			lblSmtpTitle.textContent = "SMTP client setup";
-			lblSmtpTitle.style.textAlign = "center";
-			lblSmtpTitle.style.textDecoration= "underline";
-			lblSmtpTitle.style.fontSize = "large";
-			lblSmtpTitle.style.fontWeight= "600";
-			this.menuArray[2].appendChild(lblSmtpTitle);
+			const smtpTitleLabel = document.createElement("div");
+			smtpTitleLabel.textContent = "SMTP client setup";
+			smtpTitleLabel.style.textAlign = "center";
+			smtpTitleLabel.style.textDecoration= "underline";
+			smtpTitleLabel.style.fontSize = "large";
+			smtpTitleLabel.style.fontWeight= "600";
+			this.menuArray[2].appendChild(smtpTitleLabel);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblSmtpProfile = document.createElement("div");
-			lblSmtpProfile.textContent = "SMTP profile:";
-			lblSmtpProfile.style.display = "inline-block";
-			lblSmtpProfile.style.fontWeight = "600";
-			lblSmtpProfile.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblSmtpProfile);
-			this.txtSmtpProfile = document.createElement("select");
-			this.txtSmtpProfile.style.width = "250px";
-			this.txtSmtpProfile.style.boxSizing = "content-box";
-			this.menuArray[2].appendChild(this.txtSmtpProfile);
+			const smtpProfileLabel = document.createElement("div");
+			smtpProfileLabel.textContent = "SMTP profile:";
+			smtpProfileLabel.style.display = "inline-block";
+			smtpProfileLabel.style.fontWeight = "600";
+			smtpProfileLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(smtpProfileLabel);
+			this.smtpProfileInput = document.createElement("select");
+			this.smtpProfileInput.style.width = "250px";
+			this.smtpProfileInput.style.boxSizing = "content-box";
+			this.menuArray[2].appendChild(this.smtpProfileInput);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblSmtpServer = document.createElement("div");
-			lblSmtpServer.textContent = "SMTP server:";
-			lblSmtpServer.style.display = "inline-block";
-			lblSmtpServer.style.fontWeight = "600";
-			lblSmtpServer.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblSmtpServer);
-			this.txtSmtpServer = document.createElement("input");
-			this.txtSmtpServer.type = "text";
-			this.txtSmtpServer.disabled = true;
-			this.txtSmtpServer.placeholder = "smtp.gmail.com";
-			this.txtSmtpServer.style.width = "250px";
-			this.menuArray[2].appendChild(this.txtSmtpServer);
+			const smtpServerLabel = document.createElement("div");
+			smtpServerLabel.textContent = "SMTP server:";
+			smtpServerLabel.style.display = "inline-block";
+			smtpServerLabel.style.fontWeight = "600";
+			smtpServerLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(smtpServerLabel);
+			this.smtpServerInput = document.createElement("input");
+			this.smtpServerInput.type = "text";
+			this.smtpServerInput.disabled = true;
+			this.smtpServerInput.placeholder = "smtp.gmail.com";
+			this.smtpServerInput.style.width = "250px";
+			this.menuArray[2].appendChild(this.smtpServerInput);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblSmtpPort = document.createElement("div");
-			lblSmtpPort.textContent = "Port:";
-			lblSmtpPort.style.display = "inline-block";
-			lblSmtpPort.style.fontWeight = "600";
-			lblSmtpPort.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblSmtpPort);
-			this.txtSmtpPort = document.createElement("input");
-			this.txtSmtpPort.type = "number";
-			this.txtSmtpPort.disabled = true;
-			this.txtSmtpPort.min = 1;
-			this.txtSmtpPort.max = 49151;
-			this.txtSmtpPort.value = 587;
-			this.txtSmtpPort.style.width = "250px";
-			this.menuArray[2].appendChild(this.txtSmtpPort);
+			const smtpPortLabel = document.createElement("div");
+			smtpPortLabel.textContent = "Port:";
+			smtpPortLabel.style.display = "inline-block";
+			smtpPortLabel.style.fontWeight = "600";
+			smtpPortLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(smtpPortLabel);
+			this.smtpPortInput = document.createElement("input");
+			this.smtpPortInput.type = "number";
+			this.smtpPortInput.disabled = true;
+			this.smtpPortInput.min = 1;
+			this.smtpPortInput.max = 49151;
+			this.smtpPortInput.value = 587;
+			this.smtpPortInput.style.width = "250px";
+			this.menuArray[2].appendChild(this.smtpPortInput);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblSender = document.createElement("div");
-			lblSender.textContent = "Sender:";
-			lblSender.style.display = "inline-block";
-			lblSender.style.fontWeight = "600";
-			lblSender.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblSender);
-			this.txtSender = document.createElement("input");
-			this.txtSender.type = "text";
-			this.txtSender.disabled = true;
-			this.txtSender.style.width = "250px";
-			this.menuArray[2].appendChild(this.txtSender);
+			const senderLabel = document.createElement("div");
+			senderLabel.textContent = "Sender:";
+			senderLabel.style.display = "inline-block";
+			senderLabel.style.fontWeight = "600";
+			senderLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(senderLabel);
+			this.senderInput = document.createElement("input");
+			this.senderInput.type = "text";
+			this.senderInput.disabled = true;
+			this.senderInput.style.width = "250px";
+			this.menuArray[2].appendChild(this.senderInput);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblUsername = document.createElement("div");
-			lblUsername.textContent = "Username:";
-			lblUsername.style.display = "inline-block";
-			lblUsername.style.fontWeight = "600";
-			lblUsername.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblUsername);
-			this.txtUsername = document.createElement("input");
-			this.txtUsername.type = "text";
-			this.txtUsername.disabled = true;
-			this.txtUsername.style.width = "250px";
-			this.menuArray[2].appendChild(this.txtUsername);
+			const usernameLabel = document.createElement("div");
+			usernameLabel.textContent = "Username:";
+			usernameLabel.style.display = "inline-block";
+			usernameLabel.style.fontWeight = "600";
+			usernameLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(usernameLabel);
+			this.usernameInput = document.createElement("input");
+			this.usernameInput.type = "text";
+			this.usernameInput.disabled = true;
+			this.usernameInput.style.width = "250px";
+			this.menuArray[2].appendChild(this.usernameInput);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblPassword = document.createElement("div");
-			lblPassword.textContent = "Password:";
-			lblPassword.style.display = "inline-block";
-			lblPassword.style.fontWeight = "600";
-			lblPassword.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblPassword);
-			this.txtPassword = document.createElement("input");
-			this.txtPassword.type = "password";
-			this.txtPassword.disabled = true;
-			this.txtPassword.style.width = "250px";
-			this.menuArray[2].appendChild(this.txtPassword);
+			const passwordLabel = document.createElement("div");
+			passwordLabel.textContent = "Password:";
+			passwordLabel.style.display = "inline-block";
+			passwordLabel.style.fontWeight = "600";
+			passwordLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(passwordLabel);
+			this.passwordInput = document.createElement("input");
+			this.passwordInput.type = "password";
+			this.passwordInput.disabled = true;
+			this.passwordInput.style.width = "250px";
+			this.menuArray[2].appendChild(this.passwordInput);
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 
-			const lblSsl = document.createElement("div");
-			lblSsl.textContent = "SSL:";
-			lblSsl.style.display = "inline-block";
-			lblSsl.style.fontWeight = "600";
-			lblSsl.style.minWidth = "150px";
-			this.menuArray[2].appendChild(lblSsl);
-			const divSSL = document.createElement("div");
-			divSSL.style.margin = "4px";
-			divSSL.style.display = "inline-block";
-			this.menuArray[2].appendChild(divSSL);
-			this.chkSsl = document.createElement("input");
-			this.chkSsl.type = "checkbox";
-			this.chkSsl.disabled = true;
-			divSSL.appendChild(this.chkSsl);
-			const sslLabel = this.AddCheckBoxLabel(divSSL, this.chkSsl, ".");
-			sslLabel.style.paddingLeft = "8px";
-			sslLabel.style.color = "transparent";
+			const sslLabel = document.createElement("div");
+			sslLabel.textContent = "SSL:";
+			sslLabel.style.display = "inline-block";
+			sslLabel.style.fontWeight = "600";
+			sslLabel.style.minWidth = "150px";
+			this.menuArray[2].appendChild(sslLabel);
+			const sslBox = document.createElement("div");
+			sslBox.style.margin = "4px";
+			sslBox.style.display = "inline-block";
+			this.menuArray[2].appendChild(sslBox);
+			this.sslCheckBox = document.createElement("input");
+			this.sslCheckBox.type = "checkbox";
+			this.sslCheckBox.disabled = true;
+			sslBox.appendChild(this.sslCheckBox);
+			const sslCheckBoxLabel = this.AddCheckBoxLabel(sslBox, this.sslCheckBox, ".");
+			sslCheckBoxLabel.style.paddingLeft = "8px";
+			sslCheckBoxLabel.style.color = "transparent";
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 			this.menuArray[2].appendChild(document.createElement("br"));
@@ -357,18 +361,18 @@ class Gandalf extends Window {
 			this.menuArray[3].appendChild(document.createElement("br"));
 			this.menuArray[3].appendChild(document.createElement("br"));
 
-			const lblDone = document.createElement("div");
-			lblDone.textContent = "E-mails are on the way!";
-			lblDone.style.fontSize = "large";
-			lblDone.style.fontWeight = "600";
-			lblDone.style.paddingTop = "8px";
-			this.menuArray[3].appendChild(lblDone);
+			const doneLabel = document.createElement("div");
+			doneLabel.textContent = "E-mails are on the way!";
+			doneLabel.style.fontSize = "large";
+			doneLabel.style.fontWeight = "600";
+			doneLabel.style.paddingTop = "8px";
+			this.menuArray[3].appendChild(doneLabel);
 		}
 
 		this.menuArray[0].style.opacity = "1";
 		this.menuArray[0].style.transform = "none";
 		this.menuArray[0].style.visibility = "visible";
-		this.btnPrevious.disabled = true;
+		this.previousButton.disabled = true;
 	}
 
 	Previous() {
@@ -386,12 +390,12 @@ class Gandalf extends Window {
 		this.menuArray[this.index].style.visibility = "visible";
 		this.menuArray[this.index].style.zIndex = 1;
 
-		this.btnNext.disabled = false;
+		this.nextButton.disabled = false;
 
 		if (this.index === 0)
-			this.btnPrevious.disabled = true;
+			this.previousButton.disabled = true;
 
-		this.btnNext.value = this.index === 2 ? "Send" : "Next";
+		this.nextButton.value = this.index === 2 ? "Send" : "Next";
 	}
 
 	Next() {
@@ -401,11 +405,11 @@ class Gandalf extends Window {
 		}
 
 		if (this.index === 2)
-			if (this.txtSmtpServer.value.length === 0 ||
-				this.txtSmtpPort.value.length === 0 ||
-				this.txtSender.value.length === 0 ||
-				this.txtUsername.value.length === 0 ||
-				this.txtPassword.value.length === 0) {
+			if (this.smtpServerInput.value.length === 0 ||
+				this.smtpPortInput.value.length === 0 ||
+				this.senderInput.value.length === 0 ||
+				this.usernameInput.value.length === 0 ||
+				this.passwordInput.value.length === 0) {
 				this.ConfirmBox("Incomplete form. All fields are required.", true);
 				return;
 			}
@@ -418,8 +422,8 @@ class Gandalf extends Window {
 		this.index++;
 
 		if (this.index === 3) {
-			//this.btnPrevious.disabled = true;
-			this.btnNext.disabled = true;
+			//this.previousButton.disabled = true;
+			this.nextButton.disabled = true;
 			this.Send();
 			return;
 		}
@@ -429,8 +433,8 @@ class Gandalf extends Window {
 		this.menuArray[this.index].style.visibility = "visible";
 		this.menuArray[this.index].style.zIndex = 1;
 
-		this.btnPrevious.disabled = false;
-		this.btnNext.value = this.index === 2 ? "Send" : "Next";
+		this.previousButton.disabled = false;
+		this.nextButton.value = this.index === 2 ? "Send" : "Next";
 	}
 
 	async GetSmtpProfiles() {
@@ -446,20 +450,20 @@ class Gandalf extends Window {
 				const newOption = document.createElement("option");
 				newOption.value = i;
 				newOption.text = json[i].server;
-				this.txtSmtpProfile.appendChild(newOption);
+				this.smtpProfileInput.appendChild(newOption);
 			}
 
-			this.txtSmtpProfile.onchange = ()=>{
-				this.txtSmtpServer.value = json[this.txtSmtpProfile.value].server;
-				this.txtSmtpPort.value = json[this.txtSmtpProfile.value].port;
-				this.txtSender.value = json[this.txtSmtpProfile.value].sender;
-				this.txtUsername.value = json[this.txtSmtpProfile.value].username;
-				this.txtPassword.value = "placeholder";
-				this.chkSsl.checked = json[this.txtSmtpProfile.value].ssl;
-				this.smtpGuid = json[this.txtSmtpProfile.value].guid;
+			this.smtpProfileInput.onchange = ()=>{
+				this.smtpServerInput.value = json[this.smtpProfileInput.value].server;
+				this.smtpPortInput.value = json[this.smtpProfileInput.value].port;
+				this.senderInput.value = json[this.smtpProfileInput.value].sender;
+				this.usernameInput.value = json[this.smtpProfileInput.value].username;
+				this.passwordInput.value = "placeholder";
+				this.sslCheckBox.checked = json[this.smtpProfileInput.value].ssl;
+				this.smtpGuid = json[this.smtpProfileInput.value].guid;
 			};
 
-			this.txtSmtpProfile.onchange();
+			this.smtpProfileInput.onchange();
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -468,7 +472,7 @@ class Gandalf extends Window {
 
 	async Send() {
 		let payload = "";
-		payload += `${this.rngThreshold.value}${String.fromCharCode(127)}`;
+		payload += `${this.thresholdRange.value}${String.fromCharCode(127)}`;
 		payload += `${this.smtpGuid}${String.fromCharCode(127)}`;
 
 		for (let k in this.includeList)

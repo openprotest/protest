@@ -47,24 +47,24 @@
 	position: absolute;
 }
 
-.doc-body-outer > .lblTitle {
+.doc-body-outer > .title-label {
 	left: 4px;
 	top: 8px;
 }
 
-.doc-body-outer > .txtTitle {
+.doc-body-outer > .title-input {
 	left: 120px;
 	top: 4px;
 	width: calc(100% - 148px);
 	max-width: 500px;
 }
 
-.doc-body-outer > .lblRelated {
+.doc-body-outer > .related-label {
 	left: 4px;
 	top: 44px;
 }
 
-.doc-body-outer > .divRelated {
+.doc-body-outer > .related-box {
 	left: 120px;
 	right: 36px;
 	z-index: 1;
@@ -78,12 +78,13 @@
 	transition: .4s;
 }
 
-.doc-body-outer > .divRelated > div {
+.doc-body-outer > .related-box > div {
 	display: inline-block;
 	color: var(--clr-dark);
 	border: 1px solid var(--clr-dark);
 	border-radius: 4px;
 	margin: 4px 0 0 4px;
+	
 	width: 150px;
 	height: 42px;
 	overflow: hidden;
@@ -95,20 +96,20 @@
 	padding-left: 44px;
 }
 
-.doc-body-outer > .divRelated > div::before {
+.doc-body-outer > .related-box > div::before {
 	display: block;
 	content: attr(label1);
 }
-.doc-body-outer > .divRelated > div::after {
+.doc-body-outer > .related-box > div::after {
 	display: block;
 	content: attr(label2);
 }
 
-.doc-body-outer > .divRelated > div {
+.doc-body-outer > .related-box > div {
 	transition: .2s;
 }
 
-.doc-body-outer > .divRelated > div:hover {
+.doc-body-outer > .related-box > div:hover {
 	background-color: var(--highlight-color);
 }
 

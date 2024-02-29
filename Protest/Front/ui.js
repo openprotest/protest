@@ -271,7 +271,7 @@ const MENU = {
 		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:params=> new About("about") },
 		{ t:"Legal",          i:"mono/law.svg?light",         g:"manage", h:true,  f:params=> new About("legal") },
 
-		{ t:"Logout", i:"mono/logoff.svg?light", g:"manage", h:true, f:()=> btnLogout.onclick(), },
+		{ t:"Logout", i:"mono/logoff.svg?light", g:"manage", h:true, f:()=> logoutButton.onclick(), },
 	],
 
 	isOpen: false,
@@ -935,9 +935,9 @@ clearmenusearch.onclick = event=> {
 cap.onclick = ()=> MENU.Close();
 
 username.onclick = event=> event.stopPropagation();
-lblUsername.onclick = event=> event.stopPropagation();
+usernameLabel.onclick = event=> event.stopPropagation();
 
-btnLogout.onclick = async event=> {
+logoutButton.onclick = async event=> {
 	event?.stopPropagation();
 
 	MENU.Close();
@@ -956,7 +956,7 @@ btnLogout.onclick = async event=> {
 	}
 };
 
-btnPersonalize.onclick = ()=> {
+personalizeButton.onclick = ()=> {
 	MENU.Close();
 	new Personalize();
 };

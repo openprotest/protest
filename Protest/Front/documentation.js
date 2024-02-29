@@ -16,16 +16,16 @@ class Documentation extends Window {
 		this.sidebar.className = "doc-list-pane";
 		this.content.appendChild(this.sidebar);
 
-		const lblSearch = document.createElement("div");
-		lblSearch.style.gridArea = "1 / 1";
-		lblSearch.textContent = "Search:";
-		this.sidebar.appendChild(lblSearch);
+		const searchLabel = document.createElement("div");
+		searchLabel.style.gridArea = "1 / 1";
+		searchLabel.textContent = "Search:";
+		this.sidebar.appendChild(searchLabel);
 
-		this.txtSearch = document.createElement("input");
-		this.txtSearch.style.gridArea = "1 / 2";
-		this.txtSearch.type = "search";
-		this.txtSearch.value = this.params.keywords;
-		this.sidebar.appendChild(this.txtSearch);
+		this.searchInput = document.createElement("input");
+		this.searchInput.style.gridArea = "1 / 2";
+		this.searchInput.type = "search";
+		this.searchInput.value = this.params.keywords;
+		this.sidebar.appendChild(this.searchInput);
 
 		this.list = document.createElement("div");
 		this.list.className = "no-results";
@@ -41,151 +41,152 @@ class Documentation extends Window {
 		this.options.className = "doc-options";
 		this.content.append(this.options);
 
-		this.btnNew = document.createElement("input");
-		this.btnNew.type = "button";
-		this.btnNew.value = "New";
-		this.btnNew.className = "with-icon";
-		this.btnNew.style.backgroundImage = "url(mono/add.svg?light)";
-		this.options.appendChild(this.btnNew);
+		this.newButton = document.createElement("input");
+		this.newButton.type = "button";
+		this.newButton.value = "New";
+		this.newButton.className = "with-icon";
+		this.newButton.style.backgroundImage = "url(mono/add.svg?light)";
+		this.options.appendChild(this.newButton);
 
-		this.btnEdit = document.createElement("input");
-		this.btnEdit.type = "button";
-		this.btnEdit.value = "Edit";
-		this.btnEdit.className = "with-icon";
-		this.btnEdit.style.backgroundImage = "url(mono/edit.svg?light)";
-		this.options.appendChild(this.btnEdit);
+		this.editButton = document.createElement("input");
+		this.editButton.type = "button";
+		this.editButton.value = "Edit";
+		this.editButton.className = "with-icon";
+		this.editButton.style.backgroundImage = "url(mono/edit.svg?light)";
+		this.options.appendChild(this.editButton);
 
-		this.btnDelete = document.createElement("input");
-		this.btnDelete.type = "button";
-		this.btnDelete.value = "Delete";
-		this.btnDelete.className = "with-icon";
-		this.btnDelete.style.backgroundImage = "url(mono/delete.svg?light)";
-		this.options.appendChild(this.btnDelete);
+		this.deleteButton = document.createElement("input");
+		this.deleteButton.type = "button";
+		this.deleteButton.value = "Delete";
+		this.deleteButton.className = "with-icon";
+		this.deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
+		this.options.appendChild(this.deleteButton);
 
-		this.btnSave = document.createElement("input");
-		this.btnSave.type = "button";
-		this.btnSave.value = "Save";
-		this.btnSave.className = "with-icon";
-		this.btnSave.style.backgroundImage = "url(mono/floppy.svg?light)";
-		this.options.appendChild(this.btnSave);
+		this.saveButton = document.createElement("input");
+		this.saveButton.type = "button";
+		this.saveButton.value = "Save";
+		this.saveButton.className = "with-icon";
+		this.saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
+		this.options.appendChild(this.saveButton);
 
-		this.btnDiscard = document.createElement("input");
-		this.btnDiscard.type = "button";
-		this.btnDiscard.value = "Discard";
-		this.btnDiscard.className = "with-icon";
-		this.btnDiscard.style.backgroundImage = "url(mono/disable.svg?light)";
-		this.options.appendChild(this.btnDiscard);
+		this.discardButton = document.createElement("input");
+		this.discardButton.type = "button";
+		this.discardButton.value = "Discard";
+		this.discardButton.className = "with-icon";
+		this.discardButton.style.backgroundImage = "url(mono/disable.svg?light)";
+		this.options.appendChild(this.discardButton);
 
 		this.body = document.createElement("div");
 		this.body.className = "doc-body-outer";
 
 		this.content.append(this.body);
 
-		this.lblTitle = document.createElement("div");
-		this.lblTitle.textContent = "Title:";
-		this.lblTitle.className = "lblTitle";
-		this.body.appendChild(this.lblTitle);
-		this.txtTitle = document.createElement("input");
-		this.txtTitle.type = "text";
-		this.txtTitle.className = "txtTitle";
-		this.body.appendChild(this.txtTitle);
+		this.titleLabel = document.createElement("div");
+		this.titleLabel.textContent = "Title:";
+		this.titleLabel.className = "title-label";
+		this.body.appendChild(this.titleLabel);
+		this.titleInput = document.createElement("input");
+		this.titleInput.type = "text";
+		this.titleInput.className = "title-input";
+		this.body.appendChild(this.titleInput);
 
 		this.body.appendChild(document.createElement("br"));
 
-		this.lblRelated = document.createElement("div");
-		this.lblRelated.textContent = "Related devices:";
-		this.lblRelated.className = "lblRelated";
-		this.body.appendChild(this.lblRelated);
-		this.divRelated = document.createElement("div");
-		this.divRelated.className = "divRelated";
-		this.body.appendChild(this.divRelated);
+		this.relatedLabel = document.createElement("div");
+		this.relatedLabel.textContent = "Related devices:";
+		this.relatedLabel.className = "related-label";
+
+		this.body.appendChild(this.relatedLabel);
+		this.relatedBox = document.createElement("div");
+		this.relatedBox.className = "related-box";
+		this.body.appendChild(this.relatedBox);
 
 		this.body.appendChild(document.createElement("br"));
 
-		this.btnAddRelated = document.createElement("input");
-		this.btnAddRelated.type = "button";
-		this.btnAddRelated.style.right = "4px";
-		this.btnAddRelated.style.top = "50px";
-		this.btnAddRelated.style.minWidth = "28px";
-		this.btnAddRelated.style.width = "28px";
-		this.btnAddRelated.style.height = "28px";
-		this.btnAddRelated.style.borderRadius = "0 8px 8px 0";
-		this.btnAddRelated.style.backgroundColor = "var(--clr-control)";
-		this.btnAddRelated.style.backgroundImage = "url(mono/newdevice.svg)";
-		this.btnAddRelated.style.backgroundRepeat = "no-repeat";
-		this.btnAddRelated.style.backgroundSize = "24px 24px";
-		this.btnAddRelated.style.backgroundPosition = "center center";
+		this.addRelatedButton = document.createElement("input");
+		this.addRelatedButton.type = "button";
+		this.addRelatedButton.style.right = "4px";
+		this.addRelatedButton.style.top = "50px";
+		this.addRelatedButton.style.minWidth = "28px";
+		this.addRelatedButton.style.width = "28px";
+		this.addRelatedButton.style.height = "28px";
+		this.addRelatedButton.style.borderRadius = "0 8px 8px 0";
+		this.addRelatedButton.style.backgroundColor = "var(--clr-control)";
+		this.addRelatedButton.style.backgroundImage = "url(mono/newdevice.svg)";
+		this.addRelatedButton.style.backgroundRepeat = "no-repeat";
+		this.addRelatedButton.style.backgroundSize = "24px 24px";
+		this.addRelatedButton.style.backgroundPosition = "center center";
 
-		this.body.appendChild(this.btnAddRelated);
+		this.body.appendChild(this.addRelatedButton);
 
-		this.divContentContainer = document.createElement("div");
-		this.divContentContainer.className = "doc-content";
-		this.body.appendChild(this.divContentContainer);
+		this.contentContainer = document.createElement("div");
+		this.contentContainer.className = "doc-content";
+		this.body.appendChild(this.contentContainer);
 
-		this.divContent = document.createElement("div");
-		this.divContent.style.width = "100%";
-		this.divContent.style.minHeight = "100%";
-		this.divContentContainer.appendChild(this.divContent);
+		this.contentBox = document.createElement("div");
+		this.contentBox.style.width = "100%";
+		this.contentBox.style.minHeight = "100%";
+		this.contentContainer.appendChild(this.contentBox);
 
-		this.btnBold = document.createElement("button");
-		this.btnBold.style.backgroundImage = "url(mono/bold.svg?light)";
-		this.btnBold.style.left = "0px";
-		this.btnBold.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnBold);
+		this.boldButton = document.createElement("button");
+		this.boldButton.style.backgroundImage = "url(mono/bold.svg?light)";
+		this.boldButton.style.left = "0px";
+		this.boldButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.boldButton);
 
-		this.btnItalic = document.createElement("button");
-		this.btnItalic.style.backgroundImage = "url(mono/italic.svg?light)";
-		this.btnItalic.style.left = "36px";
-		this.btnItalic.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnItalic);
+		this.italicButton = document.createElement("button");
+		this.italicButton.style.backgroundImage = "url(mono/italic.svg?light)";
+		this.italicButton.style.left = "36px";
+		this.italicButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.italicButton);
 
-		this.btnUnderline = document.createElement("button");
-		this.btnUnderline.style.backgroundImage = "url(mono/underline.svg?light)";
-		this.btnUnderline.style.left = "72px";
-		this.btnUnderline.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnUnderline);
+		this.underlineButton = document.createElement("button");
+		this.underlineButton.style.backgroundImage = "url(mono/underline.svg?light)";
+		this.underlineButton.style.left = "72px";
+		this.underlineButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.underlineButton);
 
-		this.btnOList = document.createElement("button");
-		this.btnOList.style.backgroundImage = "url(mono/orderedlist.svg?light)";
-		this.btnOList.style.left = "108px";
-		this.btnOList.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnOList);
+		this.oListButton = document.createElement("button");
+		this.oListButton.style.backgroundImage = "url(mono/orderedlist.svg?light)";
+		this.oListButton.style.left = "108px";
+		this.oListButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.oListButton);
 
-		this.btnUList = document.createElement("button");
-		this.btnUList.style.backgroundImage = "url(mono/unorderedlist.svg?light)";
-		this.btnUList.style.left = "144px";
-		this.btnUList.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnUList);
+		this.uListButton = document.createElement("button");
+		this.uListButton.style.backgroundImage = "url(mono/unorderedlist.svg?light)";
+		this.uListButton.style.left = "144px";
+		this.uListButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.uListButton);
 
-		this.btnCode = document.createElement("button");
-		this.btnCode.style.backgroundImage = "url(mono/code.svg?light)";
-		this.btnCode.style.left = "180px";
-		this.btnCode.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnCode);
+		this.codeButton = document.createElement("button");
+		this.codeButton.style.backgroundImage = "url(mono/code.svg?light)";
+		this.codeButton.style.left = "180px";
+		this.codeButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.codeButton);
 
-		this.btnLink = document.createElement("button");
-		this.btnLink.style.backgroundImage = "url(mono/link.svg?light)";
-		this.btnLink.style.left = "216px";
-		this.btnLink.classList.add("doc-edit-button");
-		this.body.appendChild(this.btnLink);
+		this.linkButton = document.createElement("button");
+		this.linkButton.style.backgroundImage = "url(mono/link.svg?light)";
+		this.linkButton.style.left = "216px";
+		this.linkButton.classList.add("doc-edit-button");
+		this.body.appendChild(this.linkButton);
 
-		this.txtSearch.onchange = ()=> this.ListDocs();
+		this.searchInput.onchange = ()=> this.ListDocs();
 
-		this.btnNew.onclick = ()=> this.New();
-		this.btnEdit.onclick = ()=> this.Edit();
-		this.btnDelete.onclick = ()=> this.Delete();
-		this.btnSave.onclick = ()=> this.Save();
-		this.btnDiscard.onclick = ()=> this.Discard();
+		this.newButton.onclick = ()=> this.New();
+		this.editButton.onclick = ()=> this.Edit();
+		this.deleteButton.onclick = ()=> this.Delete();
+		this.saveButton.onclick = ()=> this.Save();
+		this.discardButton.onclick = ()=> this.Discard();
 
-		this.btnAddRelated.onclick = ()=> this.AddRelatedDialog();
+		this.addRelatedButton.onclick = ()=> this.AddRelatedDialog();
 
-		this.btnBold.onclick = ()=> { document.execCommand("bold", false, null); };
-		this.btnItalic.onclick = ()=> { document.execCommand("italic", false, null); };
-		this.btnUnderline.onclick = ()=> { document.execCommand("underline", false, null); };
-		this.btnOList.onclick = ()=> { document.execCommand("insertOrderedList", false, null); };
-		this.btnUList.onclick = ()=> { document.execCommand("insertUnorderedList", false, null); };
+		this.boldButton.onclick = ()=> { document.execCommand("bold", false, null); };
+		this.italicButton.onclick = ()=> { document.execCommand("italic", false, null); };
+		this.underlineButton.onclick = ()=> { document.execCommand("underline", false, null); };
+		this.oListButton.onclick = ()=> { document.execCommand("insertOrderedList", false, null); };
+		this.uListButton.onclick = ()=> { document.execCommand("insertUnorderedList", false, null); };
 
-		this.btnCode.onclick = ()=> {
+		this.codeButton.onclick = ()=> {
 			let sel, range;
 			if (window.getSelection && (sel = window.getSelection()).rangeCount) {
 				range = sel.getRangeAt(0);
@@ -201,51 +202,51 @@ class Documentation extends Window {
 			}
 		};
 
-		this.btnLink.onclick = ()=> {
+		this.linkButton.onclick = ()=> {
 			let sel = window.getSelection();
 			let range = sel.getRangeAt(0);
 
 			const dialog = this.DialogBox("125px");
 			if (dialog === null) return;
 
-			const btnOK = dialog.btnOK;
-			const btnCancel = dialog.btnCancel;
+			const okButton = dialog.okButton;
+			const cancelButton = dialog.cancelButton;
 			const innerBox = dialog.innerBox;
 
 			innerBox.style.textAlign = "center";
 
 			innerBox.appendChild(document.createElement("br"));
 
-			const lblLink = document.createElement("div");
-			lblLink.textContent = "Link:";
-			lblLink.style.display = "inline-block";
-			innerBox.appendChild(lblLink);
+			const linkLabel = document.createElement("div");
+			linkLabel.textContent = "Link:";
+			linkLabel.style.display = "inline-block";
+			innerBox.appendChild(linkLabel);
 
-			const txtLink = document.createElement("input");
-			txtLink.type = "text";
-			txtLink.placeholder = "https://github.com/openprotest";
-			txtLink.style.width = "calc(80% - 64px)";
-			innerBox.appendChild(txtLink);
+			const linkInput = document.createElement("input");
+			linkInput.type = "text";
+			linkInput.placeholder = "https://github.com/openprotest";
+			linkInput.style.width = "calc(80% - 64px)";
+			innerBox.appendChild(linkInput);
 
-			const Ok_onclick = btnOK.onclick;
-			btnOK.onclick = ()=> {
-				if (txtLink.value.length > 0) {
+			const Ok_onclick = okButton.onclick;
+			okButton.onclick = ()=> {
+				if (linkInput.value.length > 0) {
 					sel.removeAllRanges();
 					sel.addRange(range);
-					document.execCommand("createLink", false, txtLink.value);
+					document.execCommand("createLink", false, linkInput.value);
 					document.getSelection().anchorNode.parentElement.target = '_blank';
 					Ok_onclick();
 				}
 			};
 
-			txtLink.onkeydown = event=> {
+			linkInput.onkeydown = event=> {
 				if (event.key === "Enter") {
-					btnOK.focus();
+					okButton.focus();
 					return;
 				}
 			};
 
-			setTimeout(()=> txtLink.focus(), 10);
+			setTimeout(()=> linkInput.focus(), 10);
 		};
 
 		this.ReadMode();
@@ -275,29 +276,29 @@ class Documentation extends Window {
 		//super.UpdateAuthorization();
 
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("documentation:write")) {
-			this.btnNew.disabled = true;
-			this.btnEdit.disabled = true;
-			this.btnDelete.disabled = true;
-			this.btnSave.disabled = true;
-			this.btnDiscard.disabled = true;
+			this.newButton.disabled = true;
+			this.editButton.disabled = true;
+			this.deleteButton.disabled = true;
+			this.saveButton.disabled = true;
+			this.discardButton.disabled = true;
 			return;
 		}
 
-		this.btnEdit.disabled = false;
-		this.btnDelete.disabled = false;
+		this.editButton.disabled = false;
+		this.deleteButton.disabled = false;
 
-		if (this.txtTitle.value.length === 0) {
-			this.btnEdit.disabled = true;
-			this.btnDelete.disabled = true;
+		if (this.titleInput.value.length === 0) {
+			this.editButton.disabled = true;
+			this.deleteButton.disabled = true;
 		}
 	}
 
 	async ListDocs() {
-		this.params = { keywords: this.txtSearch.value };
+		this.params = { keywords: this.searchInput.value };
 		try {
-			let uri = this.txtSearch.value.length === 0 ?
+			let uri = this.searchInput.value.length === 0 ?
 				"docs/list" :
-				`docs/list?keywords=${encodeURIComponent(this.txtSearch.value)}`;
+				`docs/list?keywords=${encodeURIComponent(this.searchInput.value)}`;
 
 			const response = await fetch(uri);
 
@@ -310,8 +311,8 @@ class Documentation extends Window {
 				this.UpdateList(json);
 			}
 			else {
-				this.txtTitle.value = "";
-				this.divRelated.textContent = "";
+				this.titleInput.value = "";
+				this.relatedBox.textContent = "";
 				this.list.textContent = "";
 			}
 		}
@@ -321,8 +322,8 @@ class Documentation extends Window {
 	}
 
 	UpdateList(array) {
-		this.txtTitle.value = "";
-		this.divRelated.textContent = "";
+		this.titleInput.value = "";
+		this.relatedBox.textContent = "";
 		this.list.textContent = "";
 
 		for (let i = 0; i < array.length; i++) {
@@ -358,15 +359,15 @@ class Documentation extends Window {
 
 	async Preview(name) {
 		if (!name) {
-			this.txtTitle.value = "";
-			this.divRelated.textContent = "";
-			this.divContent.textContent = "";
+			this.titleInput.value = "";
+			this.relatedBox.textContent = "";
+			this.contentBox.textContent = "";
 			this.UpdateAuthorization();
 			this.selected = null;
 			return;
 		}
 
-		this.txtTitle.value = name;
+		this.titleInput.value = name;
 		this.UpdateAuthorization();
 
 		try {
@@ -375,8 +376,8 @@ class Documentation extends Window {
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const text = await response.text();
-			this.divRelated.textContent = "";
-			this.divContent.innerHTML = text;
+			this.relatedBox.textContent = "";
+			this.contentBox.innerHTML = text;
 
 			let commentStop = text.indexOf("-->", 0);
 			if (text.startsWith("<!--") && commentStop > -1) {
@@ -400,36 +401,36 @@ class Documentation extends Window {
 		this.options.style.left = "";
 		this.body.style.left = "";
 
-		this.btnNew.style.display = "inline-block";
-		this.btnEdit.style.display = "inline-block";
-		this.btnDelete.style.display = "inline-block";
-		this.btnSave.style.display = "none";
-		this.btnDiscard.style.display = "none";
+		this.newButton.style.display = "inline-block";
+		this.editButton.style.display = "inline-block";
+		this.deleteButton.style.display = "inline-block";
+		this.saveButton.style.display = "none";
+		this.discardButton.style.display = "none";
 
-		this.txtTitle.readOnly = true;
+		this.titleInput.readOnly = true;
 
-		this.divRelated.classList.remove("doc-related-editable");
-		this.divRelated.style.right = "8px";
-		this.btnAddRelated.style.opacity = "0";
-		this.btnAddRelated.style.visibility = "hidden";
-		this.divContent.contentEditable = false;
+		this.relatedBox.classList.remove("doc-related-editable");
+		this.relatedBox.style.right = "8px";
+		this.addRelatedButton.style.opacity = "0";
+		this.addRelatedButton.style.visibility = "hidden";
+		this.contentBox.contentEditable = false;
 
-		this.btnBold.style.opacity = "0";
-		this.btnBold.style.visibility = "hidden";
-		this.btnItalic.style.opacity = "0";
-		this.btnItalic.style.visibility = "hidden";
-		this.btnUnderline.style.opacity = "0";
-		this.btnUnderline.style.visibility = "hidden";
-		this.btnOList.style.opacity = "0";
-		this.btnOList.style.visibility = "hidden";
-		this.btnUList.style.opacity = "0";
-		this.btnUList.style.visibility = "hidden";
-		this.btnCode.style.opacity = "0";
-		this.btnCode.style.visibility = "hidden";
-		this.btnLink.style.opacity = "0";
-		this.btnLink.style.visibility = "hidden";
+		this.boldButton.style.opacity = "0";
+		this.boldButton.style.visibility = "hidden";
+		this.italicButton.style.opacity = "0";
+		this.italicButton.style.visibility = "hidden";
+		this.underlineButton.style.opacity = "0";
+		this.underlineButton.style.visibility = "hidden";
+		this.oListButton.style.opacity = "0";
+		this.oListButton.style.visibility = "hidden";
+		this.uListButton.style.opacity = "0";
+		this.uListButton.style.visibility = "hidden";
+		this.codeButton.style.opacity = "0";
+		this.codeButton.style.visibility = "hidden";
+		this.linkButton.style.opacity = "0";
+		this.linkButton.style.visibility = "hidden";
 
-		this.divContentContainer.style.top = "104px";
+		this.contentContainer.style.top = "104px";
 
 		setTimeout(()=> this.AfterResize(), 400);
 	}
@@ -442,36 +443,36 @@ class Documentation extends Window {
 		this.options.style.left = "4px";
 		this.body.style.left = "4px";
 
-		this.btnNew.style.display = "none";
-		this.btnEdit.style.display = "none";
-		this.btnDelete.style.display = "none";
-		this.btnSave.style.display = "inline-block";
-		this.btnDiscard.style.display = "inline-block";
+		this.newButton.style.display = "none";
+		this.editButton.style.display = "none";
+		this.deleteButton.style.display = "none";
+		this.saveButton.style.display = "inline-block";
+		this.discardButton.style.display = "inline-block";
 
-		this.txtTitle.readOnly = false;
+		this.titleInput.readOnly = false;
 
-		this.divRelated.classList.add("doc-related-editable");
-		this.divRelated.style.right = "36px";
-		this.btnAddRelated.style.opacity = "1";
-		this.btnAddRelated.style.visibility = "visible";
-		this.divContent.contentEditable = true;
+		this.relatedBox.classList.add("doc-related-editable");
+		this.relatedBox.style.right = "36px";
+		this.addRelatedButton.style.opacity = "1";
+		this.addRelatedButton.style.visibility = "visible";
+		this.contentBox.contentEditable = true;
 
-		this.btnBold.style.opacity = "1";
-		this.btnBold.style.visibility = "visible";
-		this.btnItalic.style.opacity = "1";
-		this.btnItalic.style.visibility = "visible";
-		this.btnUnderline.style.opacity = "1";
-		this.btnUnderline.style.visibility = "visible";
-		this.btnOList.style.opacity = "1";
-		this.btnOList.style.visibility = "visible";
-		this.btnUList.style.opacity = "1";
-		this.btnUList.style.visibility = "visible";
-		this.btnCode.style.opacity = "1";
-		this.btnCode.style.visibility = "visible";
-		this.btnLink.style.opacity = "1";
-		this.btnLink.style.visibility = "visible";
+		this.boldButton.style.opacity = "1";
+		this.boldButton.style.visibility = "visible";
+		this.italicButton.style.opacity = "1";
+		this.italicButton.style.visibility = "visible";
+		this.underlineButton.style.opacity = "1";
+		this.underlineButton.style.visibility = "visible";
+		this.oListButton.style.opacity = "1";
+		this.oListButton.style.visibility = "visible";
+		this.uListButton.style.opacity = "1";
+		this.uListButton.style.visibility = "visible";
+		this.codeButton.style.opacity = "1";
+		this.codeButton.style.visibility = "visible";
+		this.linkButton.style.opacity = "1";
+		this.linkButton.style.visibility = "visible";
 
-		this.divContentContainer.style.top = "144px";
+		this.contentContainer.style.top = "144px";
 
 		setTimeout(()=> this.AfterResize(), 400);
 	}
@@ -479,10 +480,10 @@ class Documentation extends Window {
 	New() {
 		this.EditMode();
 
-		this.divContent.textContent = "";
+		this.contentBox.textContent = "";
 
 		const table = document.createElement("table");
-		this.divContent.appendChild(table);
+		this.contentBox.appendChild(table);
 
 		const tr1 = document.createElement("tr");
 		table.appendChild(tr1);
@@ -508,23 +509,23 @@ class Documentation extends Window {
 		const td3_2 = document.createElement("td");
 		tr3.appendChild(td3_2);
 
-		this.divContent.appendChild(document.createElement("br"));
+		this.contentBox.appendChild(document.createElement("br"));
 
 		const desc = document.createElement("div");
 		desc.textContent = "Description:";
 		//desc.style.fontSize = "large";
 		desc.style.fontWeight = 600;
 		desc.style.textDecoration = "underline";
-		this.divContent.appendChild(desc);
+		this.contentBox.appendChild(desc);
 
-		this.divContent.appendChild(document.createElement("br"));
-		this.divContent.appendChild(document.createElement("br"));
-		this.divContent.appendChild(document.createElement("br"));
+		this.contentBox.appendChild(document.createElement("br"));
+		this.contentBox.appendChild(document.createElement("br"));
+		this.contentBox.appendChild(document.createElement("br"));
 
 
-		this.txtTitle.value = "";
-		this.divRelated.textContent = "";
-		this.txtTitle.focus();
+		this.titleInput.value = "";
+		this.relatedBox.textContent = "";
+		this.titleInput.focus();
 	}
 
 	Edit() {
@@ -552,12 +553,12 @@ class Documentation extends Window {
 	}
 
 	async Save() {
-		if (this.txtTitle.value.length == 0) {
-			this.ConfirmBox("Please enter a title", true).addEventListener("click", ()=> this.txtTitle.focus());
+		if (this.titleInput.value.length == 0) {
+			this.ConfirmBox("Please enter a title", true).addEventListener("click", ()=> this.titleInput.focus());
 			return;
 		}
 
-		let nameLower = this.txtTitle.value.toLowerCase();
+		let nameLower = this.titleInput.value.toLowerCase();
 		let exist = false;
 		for (let i=0; i<this.list.childNodes.length; i++) {
 			if (this.list.childNodes[i].textContent.toLowerCase() === nameLower) {
@@ -567,14 +568,14 @@ class Documentation extends Window {
 		}
 
 		let payload = "";
-		payload += this.txtTitle.value + String.fromCharCode(127);
-		payload += this.divContent.innerHTML + String.fromCharCode(127);
+		payload += this.titleInput.value + String.fromCharCode(127);
+		payload += this.contentBox.innerHTML + String.fromCharCode(127);
 
-		for (let i = 0; i < this.divRelated.childNodes.length; i++) {
-			payload += this.divRelated.childNodes[i].getAttribute("file") + String.fromCharCode(127);
-			payload += this.divRelated.childNodes[i].style.backgroundImage + String.fromCharCode(127);
-			payload += this.divRelated.childNodes[i].getAttribute("label1") + String.fromCharCode(127);
-			payload += this.divRelated.childNodes[i].getAttribute("label2") + String.fromCharCode(127);
+		for (let i = 0; i < this.relatedBox.childNodes.length; i++) {
+			payload += this.relatedBox.childNodes[i].getAttribute("file") + String.fromCharCode(127);
+			payload += this.relatedBox.childNodes[i].style.backgroundImage + String.fromCharCode(127);
+			payload += this.relatedBox.childNodes[i].getAttribute("label1") + String.fromCharCode(127);
+			payload += this.relatedBox.childNodes[i].getAttribute("label2") + String.fromCharCode(127);
 		}
 
 		try {
@@ -592,7 +593,7 @@ class Documentation extends Window {
 				this.ReadMode();
 			}
 			else {
-				const entry = this.AddToList(this.txtTitle.value);
+				const entry = this.AddToList(this.titleInput.value);
 				this.ReadMode();
 				setTimeout(()=> entry.onclick(), 0);
 			}
@@ -612,34 +613,35 @@ class Documentation extends Window {
 		const dialog = this.DialogBox("85%");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
-		const btnCancel = dialog.btnCancel;
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.padding = "8px";
 
-		btnOK.style.display = "none";
+		okButton.style.display = "none";
 
-		const txtFind = document.createElement("input");
-		txtFind.type = "text";
-		txtFind.placeholder = "Search";
-		innerBox.appendChild(txtFind);
+		const findInput = document.createElement("input");
+		findInput.type = "text";
+		findInput.placeholder = "Search";
+		innerBox.appendChild(findInput);
 
-		const divDevices = document.createElement("div");
-		divDevices.className = "no-results";
-		divDevices.style.position = "absolute";
-		divDevices.style.left = divDevices.style.right = "0";
-		divDevices.style.top = "48px";
-		divDevices.style.bottom = "0";
-		divDevices.style.overflowY = "auto";
-		innerBox.appendChild(divDevices);
+		const devicesList = document.createElement("div");
+		devicesList.className = "no-results";
+		devicesList.style.position = "absolute";
+		devicesList.style.left = devicesList.style.right = "0";
+		devicesList.style.top = "48px";
+		devicesList.style.bottom = "0";
+		devicesList.style.overflowY = "auto";
+		devicesList.style.overflowX = "hidden";
+		innerBox.appendChild(devicesList);
 
-		txtFind.onchange = txtFind.oninput = ()=> {
-			divDevices.textContent = "";
+		findInput.onchange = findInput.oninput = ()=> {
+			devicesList.textContent = "";
 
 			let keywords = [];
-			if (txtFind.value.trim().length > 0)
-				keywords = txtFind.value.trim().toLowerCase().split(" ");
+			if (findInput.value.trim().length > 0)
+				keywords = findInput.value.trim().toLowerCase().split(" ");
 
 			let devicesColumns;
 			if (localStorage.getItem("deviceslist_columns")) {
@@ -692,7 +694,7 @@ class Documentation extends Window {
 
 				const element = document.createElement("div");
 				element.className = "list-element";
-				divDevices.appendChild(element);
+				devicesList.appendChild(element);
 
 				const icon = document.createElement("div");
 				icon.className = "list-element-icon";
@@ -712,15 +714,15 @@ class Documentation extends Window {
 
 				element.ondblclick = ()=> {
 					this.AddRelated(key, iconUrl, name, unique);
-					btnCancel.onclick();
+					cancelButton.onclick();
 				};
 
-				divDevices.appendChild(element);
+				devicesList.appendChild(element);
 			}
 		};
 
-		txtFind.focus();
-		txtFind.onchange();
+		findInput.focus();
+		findInput.onchange();
 	}
 
 	AddRelated(filename, icon, label1, label2) {
@@ -729,10 +731,10 @@ class Documentation extends Window {
 		related.setAttribute("label1", label1);
 		related.setAttribute("label2", label2);
 		related.style.backgroundImage = icon;
-		this.divRelated.appendChild(related);
+		this.relatedBox.appendChild(related);
 
-		const divRemove = document.createElement("div");
-		related.appendChild(divRemove);
+		const removeButton = document.createElement("div");
+		related.appendChild(removeButton);
 
 		related.onclick = event=> {
 			for (let j = 0; j < $w.array.length; j++)
@@ -745,9 +747,9 @@ class Documentation extends Window {
 			event.stopPropagation();
 		};
 
-		divRemove.onclick = event=> {
+		removeButton.onclick = event=> {
 			event.stopPropagation();
-			this.divRelated.removeChild(related);
+			this.relatedBox.removeChild(related);
 		};
 	}
 }

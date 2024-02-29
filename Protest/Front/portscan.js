@@ -155,8 +155,8 @@ class PortScan extends Console {
 		this.SetIcon("mono/portscan.svg");
 
 		this.SetupToolbar();
-		this.btnClear = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.btnOptions = this.AddToolbarButton("Options", "mono/wrench.svg?light");
+		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
@@ -168,9 +168,9 @@ class PortScan extends Console {
 				this.Push(temp[i]);
 		}
 
-		this.btnClear.addEventListener("click", ()=> {
-			const btnOK = this.ConfirmBox("Are you sure you want to clear the list?");
-			if (btnOK) btnOK.addEventListener("click", ()=> {
+		this.clearButton.addEventListener("click", ()=> {
+			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
+			if (okButton) okButton.addEventListener("click", ()=> {
 				this.params.entries = [];
 				this.list.textContent = "";
 				this.hashtable = {};
@@ -179,7 +179,7 @@ class PortScan extends Console {
 			});
 		});
 
-		this.btnOptions.onclick = ()=> {
+		this.optionsButton.onclick = ()=> {
 			this.Options();
 		};
 
@@ -189,13 +189,13 @@ class PortScan extends Console {
 			const copy = new PortScan(paramsCopy);
 			const dialog = copy.Options();
 
-			dialog.btnOK.addEventListener("click", ()=> {
+			dialog.okButton.addEventListener("click", ()=> {
 				for (let i = 0; i < this.params.entries.length; i++) {
 					copy.Add(this.params.entries[i]);
 				}
 			});
 
-			dialog.btnCancel.addEventListener("click", ()=> {
+			dialog.cancelButton.addEventListener("click", ()=> {
 				copy.Close();
 			});
 		});
@@ -210,59 +210,59 @@ class PortScan extends Console {
 		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
 
-		const btnOK = dialog.btnOK;
+		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
 		innerBox.style.textAlign = "center";
 
-		const lblPortRange = document.createElement("div");
-		lblPortRange.textContent = "Port range: ";
-		lblPortRange.style.padding = "8px 0 4px 0";
-		lblPortRange.style.fontWeight = "600";
-		lblPortRange.style.textDecoration = "underline";
-		innerBox.appendChild(lblPortRange);
+		const portRangeLabel = document.createElement("div");
+		portRangeLabel.textContent = "Port range: ";
+		portRangeLabel.style.padding = "8px 0 4px 0";
+		portRangeLabel.style.fontWeight = "600";
+		portRangeLabel.style.textDecoration = "underline";
+		innerBox.appendChild(portRangeLabel);
 
-		const lblFrom = document.createElement("div");
-		lblFrom.textContent = "From ";
-		lblFrom.style.display = "inline";
-		innerBox.appendChild(lblFrom);
+		const fromLabel = document.createElement("div");
+		fromLabel.textContent = "From ";
+		fromLabel.style.display = "inline";
+		innerBox.appendChild(fromLabel);
 
-		const txtFrom = document.createElement("input");
-		txtFrom.type = "number";
-		txtFrom.min = 1;
-		txtFrom.max = 65534;
-		txtFrom.value = this.params.rangeFrom;
-		txtFrom.style.display = "inline";
-		txtFrom.style.width = "100px";
-		innerBox.appendChild(txtFrom);
+		const fromInput = document.createElement("input");
+		fromInput.type = "number";
+		fromInput.min = 1;
+		fromInput.max = 65534;
+		fromInput.value = this.params.rangeFrom;
+		fromInput.style.display = "inline";
+		fromInput.style.width = "100px";
+		innerBox.appendChild(fromInput);
 
-		const lblTo = document.createElement("div");
-		lblTo.textContent = " to ";
-		lblTo.style.display = "inline";
-		innerBox.appendChild(lblTo);
+		const toLabel = document.createElement("div");
+		toLabel.textContent = " to ";
+		toLabel.style.display = "inline";
+		innerBox.appendChild(toLabel);
 
-		const txtTo = document.createElement("input");
-		txtTo.type = "number";
-		txtTo.min = 2;
-		txtTo.max = 65535;
-		txtTo.value = this.params.rangeTo;
-		txtTo.style.display = "inline";
-		txtTo.style.width = "100px";
-		innerBox.appendChild(txtTo);
+		const toInput = document.createElement("input");
+		toInput.type = "number";
+		toInput.min = 2;
+		toInput.max = 65535;
+		toInput.value = this.params.rangeTo;
+		toInput.style.display = "inline";
+		toInput.style.width = "100px";
+		innerBox.appendChild(toInput);
 
-		txtFrom.onchange = ()=> {
-			if (parseInt(txtFrom.value) >= parseInt(txtTo.value)) txtTo.value = parseInt(txtFrom.value) + 1;
+		fromInput.onchange = ()=> {
+			if (parseInt(fromInput.value) >= parseInt(toInput.value)) toInput.value = parseInt(fromInput.value) + 1;
 		};
 
-		txtTo.onchange = ()=> {
-			if (parseInt(txtFrom.value) >= parseInt(txtTo.value)) txtFrom.value = parseInt(txtTo.value) - 1;
+		toInput.onchange = ()=> {
+			if (parseInt(fromInput.value) >= parseInt(toInput.value)) fromInput.value = parseInt(toInput.value) - 1;
 		};
 
-		const ok_click = btnOK.onclick;
+		const ok_click = okButton.onclick;
 
-		btnOK.onclick = ()=> {
-			this.params.rangeFrom = parseInt(txtFrom.value);
-			this.params.rangeTo = parseInt(txtTo.value);
+		okButton.onclick = ()=> {
+			this.params.rangeFrom = parseInt(fromInput.value);
+			this.params.rangeTo = parseInt(toInput.value);
 			ok_click();
 		};
 
@@ -351,9 +351,9 @@ class PortScan extends Console {
 		element.className = "tool-element";
 		this.list.appendChild(element);
 
-		const btnExpanded = document.createElement("div");
-		btnExpanded.className = "tool-button-expanded";
-		element.appendChild(btnExpanded);
+		const expandedButton = document.createElement("div");
+		expandedButton.className = "tool-button-expanded";
+		element.appendChild(expandedButton);
 
 		const name = document.createElement("div");
 		name.className = "tool-label";
@@ -385,18 +385,18 @@ class PortScan extends Console {
 
 		remove.onclick = ()=> this.Remove(hostname);
 
-		btnExpanded.onclick = ()=> {
+		expandedButton.onclick = ()=> {
 			if (this.hashtable[hostname].expanded) {
 				this.hashtable[hostname].expanded = false;
 				element.style.height = "32px";
-				btnExpanded.style.transform = "rotate(-90deg)";
+				expandedButton.style.transform = "rotate(-90deg)";
 				result.className = "tool-result collapsed";
 				result.scrollTop = 0;
 			}
 			else {
 				this.hashtable[hostname].expanded = true;
 				element.style.height = "auto";
-				btnExpanded.style.transform = "rotate(0deg)";
+				expandedButton.style.transform = "rotate(0deg)";
 				result.className = "tool-result expanded";
 			}
 		};
