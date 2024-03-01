@@ -74,7 +74,7 @@ internal sealed class TaskWrapper : IDisposable {
         cancellationTokenSource.Cancel();
     }
 
-    public void Sleep(int millisecond, int interval = 360_000) {
+    public void Sleep(int millisecond, int interval = 300_000) {
         long start = DateTime.UtcNow.Ticks;
         while (!cancellationToken.IsCancellationRequested) {
             long elapsed = (DateTime.UtcNow.Ticks - start) / 10_000; //to milliseconds
@@ -90,7 +90,7 @@ internal sealed class TaskWrapper : IDisposable {
         }
     }
 
-    public async Task asyncSleep(int millisecond, int interval = 360_000) {
+    public async Task asyncSleep(int millisecond, int interval = 300_000) {
         long start = DateTime.UtcNow.Ticks;
         while (!cancellationToken.IsCancellationRequested) {
             long elapsed = (DateTime.UtcNow.Ticks - start) / 10_000; //to milliseconds

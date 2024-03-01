@@ -141,10 +141,6 @@ class Monitor extends Window {
 			this.socket.send(this.params.file);
 			this.ConsoleLog("Web-socket connection established", "info");
 
-			//this.socket.send("ping=true");
-			//this.socket.send("cpu=true");
-			//this.socket.send("cores=true");
-
 			if (this.hideConsoleOnce) {
 				this.hideConsoleOnce = false;
 				setTimeout(()=>this.toggleConsoleButton.onclick(), 400);
@@ -161,13 +157,7 @@ class Monitor extends Window {
 
 			for (let i=0; i<this.chartsList.length; i++) {
 				if (this.chartsList[i].index !== message.index) { continue; }
-
-				if (this.chartsList[i].options.type === "percents") {
-					this.chartsList[i].Update(message.data);
-				}
-				else {
-					this.chartsList[i].Update(parseInt(message.data));
-				}
+				this.chartsList[i].Update(message.data);
 				break;
 			}
 		};
@@ -425,7 +415,11 @@ class Monitor extends Window {
 				{
 					format: "Line chart",
 					prefix: "Usage",
-					unit: "%"
+					unit: "%",
+					min: 0,
+					max: 100,
+					value: "PercentIdleTime",
+					isComplement: true
 				}
 			));
 
@@ -437,7 +431,11 @@ class Monitor extends Window {
 				{
 					format: "Line charts (grid)",
 					prefix: "Usage",
-					unit: "%"
+					unit: "%",
+					min: 0,
+					max: 100,
+					value: "PercentIdleTime",
+					isComplement: true,
 				}
 			));
 
@@ -449,7 +447,11 @@ class Monitor extends Window {
 				{
 					format: "Line chart",
 					prefix: "Usage",
-					unit: "%"
+					unit: "%",
+					min: 0,
+					max: "TotalVisibleMemorySize",
+					value: "FreePhysicalMemory",
+					isComplement: true,
 				}
 			));
 
@@ -461,19 +463,41 @@ class Monitor extends Window {
 				{
 					format: "Delta chart",
 					prefix: "Usage",
-					unit: "%"
+					unit: "%",
+					min: 0,
+					max: 100,
+					value: "PercentIdleTime",
+					isComplement: true,
 				}
 			));
 
 			templatesBox.appendChild(CreateTemplate(
-				"Network usage",
+				"NIC downstream",
 				"mono/portscan.svg",
 				"wmi",
-				"SELECT BytesReceivedPersec, BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
+				"SELECT BytesReceivedPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
 				{
 					format: "Delta chart",
 					prefix: "Usage",
-					unit: "%"
+					unit: "bps",
+					min: 0,
+					value: "BytesReceivedPersec",
+					isComplement: false,
+				}
+			));
+
+			templatesBox.appendChild(CreateTemplate(
+				"NIC upstream",
+				"mono/portscan.svg",
+				"wmi",
+				"SELECT BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
+				{
+					format: "Delta chart",
+					prefix: "Usage",
+					unit: "bps",
+					min: 0,
+					value: "BytesSentPersec",
+					isComplement: false,
 				}
 			));
 
@@ -725,7 +749,7 @@ class Monitor extends Window {
 		case "Line chart"      : return this.CreateLineChart(inner, valueLabel, name, height, options);
 		case "Grid line chart" : return this.CreateGridLineChart(inner, valueLabel, name, height, options);
 		case "Delta chart"     : return this.CreateDeltaChart(inner, valueLabel, name, height, options);
-		case "Single value"    : return this.CreateSingleValue(inner, valueLabel, name, options);
+		case "Single value"    : return this.CreateSingleValue(inner, name, options);
 		case "List"            : return this.CreateList(inner, valueLabel, name, height, options);
 		case "Table"           : return this.CreateTable(inner, valueLabel, name, height, options);
 		}
@@ -1015,11 +1039,23 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateSingleValue(inner, valueLabel, name, options) {
-			//TODO:
+	CreateSingleValue(inner, name, options) {
+		inner.style.height = "56px";
+
+		const valueBox = document.createElement("div");
+		valueBox.style.position = "absolute";
+		valueBox.style.left = "20px";
+		valueBox.style.right = "20px";
+		valueBox.style.top = "24px";
+		valueBox.style.fontSize = "20px";
+		valueBox.style.fontFamily = "monospace";
+		valueBox.style.overflow = "hidden";
+		valueBox.style.whiteSpace = "nowrap";
+		valueBox.style.userSelect = "text";
+		inner.appendChild(valueBox);
 
 		const Update = value=>{
-			//TODO:
+			valueBox.textContent = Object.values(value)[0][0];
 		};
 
 		return {

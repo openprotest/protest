@@ -333,7 +333,7 @@ class Telnet extends Window {
 			this.list.scrollTop = this.list.scrollHeight;
 		};
 
-		//this.ws.onerror = error=> console.log(error);
+		//this.ws.onerror = error=> console.error(error);
 	}
 
 	PushText(text, front, back, bold = false, underline = false) {

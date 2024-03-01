@@ -551,7 +551,7 @@ internal static class Fetch {
 
                     KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
 
-                    await task.asyncSleep((int)(interval * 3_600_000));
+                    await task.asyncSleep((int)(interval * 3_600_000), 60_000);
                     if (task.cancellationToken.IsCancellationRequested) {
                         break;
                     }

@@ -310,7 +310,7 @@ const KEEP = {
 			break;
 
 		default:
-			console.log("none register action: " + message.action);
+			console.warn("none register action: " + message.action);
 			break;
 		}
 	},

@@ -416,6 +416,9 @@ class Settings extends Tabs {
 				nameLabel.style.top = "0";
 				nameLabel.style.left = "0";
 				nameLabel.style.width = "33%";
+				nameLabel.style.whiteSpace = "nowrap";
+				nameLabel.style.overflow = "hidden";
+				nameLabel.style.textOverflow = "ellipsis";
 				nameLabel.style.lineHeight = "32px";
 				nameLabel.style.paddingLeft = "4px";
 				nameLabel.textContent = json[i].name;
@@ -425,6 +428,8 @@ class Settings extends Tabs {
 				networkLabel.style.top = "0";
 				networkLabel.style.left = "33%";
 				networkLabel.style.width = "33%";
+				networkLabel.style.whiteSpace = "nowrap";
+				networkLabel.style.overflow = "hidden";
 				networkLabel.style.lineHeight = "32px";
 				networkLabel.textContent = json[i].network;
 
