@@ -126,7 +126,7 @@ class Ping extends Console {
 						this.Remove(this.hashtable[split[i]].host);
 					}
 				}
-				
+
 				if (Object.keys(this.hashtable).length === 0) {
 					this.playButton.disabled = true;
 					this.pauseButton.disabled = true;

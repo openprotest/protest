@@ -100,14 +100,14 @@ class DeviceView extends View {
 	AutoUpdateBudges() {
 		setTimeout(async ()=>{
 			if (this.isClosed) return;
-			
+
 			const query = this.pingIndicators.map(indicator => indicator.target).join(';');
 
 			try {
 				const response = await fetch(`tools/bulkping?query=${query}`);
-	
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) return;
 				for (let i = 0; i < json.length; i++) {

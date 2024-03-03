@@ -819,7 +819,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("agent_key", this.presharedKeyInput.value);
 			localStorage.setItem("prefer_rdp_file", this.preferRdpFileCheckbox.checked);
 			localStorage.setItem("prefer_cnv_file", this.preferVncFileCheckbox.checked);
-		
+
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "agent" && WIN.array[i] !== this) {
 					WIN.array[i].presharedKeyInput.value = this.presharedKeyInput.value;

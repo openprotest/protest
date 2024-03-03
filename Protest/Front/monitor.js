@@ -414,11 +414,11 @@ class Monitor extends Window {
 				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'",
 				{
 					format: "Line chart",
-					prefix: "Usage",
+					prefix: "Utilization",
 					unit: "%",
-					min: 0,
-					max: 100,
-					value: "PercentIdleTime",
+					low: 0,
+					high: 100,
+					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true
 				}
 			));
@@ -429,12 +429,12 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name != '_Total'",
 				{
-					format: "Line charts (grid)",
-					prefix: "Usage",
+					format: "Grid line chart",
+					prefix: "Utilization",
 					unit: "%",
-					min: 0,
-					max: 100,
-					value: "PercentIdleTime",
+					low: 0,
+					high: 100,
+					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
 				}
 			));
@@ -446,11 +446,11 @@ class Monitor extends Window {
 				"SELECT FreePhysicalMemory, TotalVisibleMemorySize FROM Win32_OperatingSystem",
 				{
 					format: "Line chart",
-					prefix: "Usage",
-					unit: "%",
-					min: 0,
-					max: "TotalVisibleMemorySize",
-					value: "FreePhysicalMemory",
+					prefix: "In use",
+					unit: "KB",
+					low: 0,
+					high: "TotalVisibleMemorySize".toLowerCase(),
+					value: "FreePhysicalMemory".toLowerCase(),
 					isComplement: true,
 				}
 			));
@@ -461,12 +461,12 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk",
 				{
-					format: "Delta chart",
-					prefix: "Usage",
+					format: "Line chart",
+					prefix: "Activity",
 					unit: "%",
-					min: 0,
-					max: 100,
-					value: "PercentIdleTime",
+					low: 0,
+					high: 100,
+					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
 				}
 			));
@@ -477,11 +477,13 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT BytesReceivedPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
 				{
-					format: "Delta chart",
-					prefix: "Usage",
-					unit: "bps",
-					min: 0,
-					value: "BytesReceivedPersec",
+					format: "Line chart",
+					prefix: "Receive",
+					unit: "Bps",
+					low: 0,
+					high: 1000,
+					value: "BytesReceivedPersec".toLowerCase(),
+					isDynamic: true,
 					isComplement: false,
 				}
 			));
@@ -492,11 +494,13 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT BytesSentPersec FROM Win32_PerfFormattedData_Tcpip_NetworkInterface",
 				{
-					format: "Delta chart",
-					prefix: "Usage",
-					unit: "bps",
-					min: 0,
-					value: "BytesSentPersec",
+					format: "Line chart",
+					prefix: "Send",
+					unit: "Bps",
+					low: 0,
+					high: 1000,
+					value: "BytesSentPersec".toLowerCase(),
+					isDynamic: true,
 					isComplement: false,
 				}
 			));
@@ -725,6 +729,21 @@ class Monitor extends Window {
 		this.pauseButton.disabled = true;
 	}
 
+	ConsoleLog(text, level) {
+		const line = document.createElement("div");
+		line.className = "monitor-console-line";
+		line.innerText = `${new Date().toLocaleTimeString(UI.regionalFormat, {})} - ${text}`;
+
+		switch (level) {
+			case "info"   : line.style.backgroundImage = "url(mono/info.svg?light)"; break;
+			case "warning": line.style.backgroundImage = "url(mono/warning.svg?light)"; break;
+			case "error"  : line.style.backgroundImage = "url(mono/error.svg?light)"; break;
+		}
+
+		this.consoleBox.appendChild(line);
+		line.scrollIntoView();
+	}
+
 	CreateChart(name, height, options) {
 		const container = document.createElement("div");
 		container.className = "monitor-graph-container";
@@ -754,7 +773,7 @@ class Monitor extends Window {
 		case "Table"           : return this.CreateTable(inner, valueLabel, name, height, options);
 		}
 	}
-	
+
 	CreatePingChart(inner, valueLabel, name, height, options) {
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
@@ -828,7 +847,7 @@ class Monitor extends Window {
 				valueLabel.textContent = `${options.prefix}: ${data}${options.unit}`;
 			}
 
-			if (max >= 0) {
+			if (max >=0 && min !== max) {
 				valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
 			}
 
@@ -854,22 +873,28 @@ class Monitor extends Window {
 		canvas.height = height;
 		inner.appendChild(canvas);
 
-		let min = Number.MAX_SAFE_INTEGER;
-		let max = Number.MIN_SAFE_INTEGER;
 		const list = [];
 		const gap = 5;
+		let min = Number.MAX_SAFE_INTEGER;
+		let max = Number.MIN_SAFE_INTEGER;
+		let low = 0;
+		let high = 100;
 
 		const ctx = canvas.getContext("2d");
 		ctx.lineWidth = 2;
 		ctx.fillStyle = "#C0C0C020";
 		ctx.strokeStyle = "#F0F0F0";
 
-		const DrawGraph = ()=>{
+		const DrawGraph = ()=> {
 			ctx.clearRect(0, 0, canvas.width, height);
+
+			let spectrum = Math.abs(low - high);
 
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
-				ctx.lineTo(canvas.width - (list.length-i-1)*gap, height - height * list[i] / 100);
+				const x = canvas.width - (list.length-i-1)*gap;
+				const y = height - height * list[i] / spectrum;
+				ctx.lineTo(x, y);
 			}
 			ctx.stroke();
 
@@ -879,15 +904,26 @@ class Monitor extends Window {
 			ctx.fill();
 		};
 
-		const Update = value=> {
-			if (list.length * gap > canvas.width) list.shift();
-			list.push(value);
+		const Update = obj=> {
+			let value = parseFloat(obj[options.value][0]);
+
+			low = isNaN(options.low) ? obj[options.low][0] : options.low;
+			high = isNaN(options.high) ? obj[options.high][0] : options.high;
+
+			if (options.isComplement) { value = high - value; }
 
 			if (min > value) { min = value; }
 			if (max < value) { max = value; }
 
-			valueLabel.textContent = `${options.prefix}: ${value}${options.unit}`;
-			valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+			if (options.isDynamic) {
+				low = min;
+				high = max;
+			}
+
+			if (list.length * gap > canvas.width) list.shift();
+			list.push(value);
+
+			valueLabel.textContent = `${options.prefix}: ${this.FormatUnits(value, options.unit)}`;
 
 			DrawGraph();
 		};
@@ -907,14 +943,20 @@ class Monitor extends Window {
 		let gap = 4;
 		let min = Number.MAX_SAFE_INTEGER;
 		let max = Number.MIN_SAFE_INTEGER;
+		let low = 0;
+		let high = 100;
 
 		const DrawGraph = ()=> {
+			let spectrum = Math.abs(low - high);
+
 			for (let j=0; j<ctx.length; j++) {
 				ctx[j].clearRect(0, 0, canvases[j].width, height);
 				ctx[j].beginPath();
 
 				for (let i=list.length-1; i>=0; i--) {
-					ctx[j].lineTo(canvases[j].width - (list.length-i-1)*gap, height - height * list[i][j] / 100);
+					const x = canvases[j].width - (list.length-i-1)*gap;
+					const y = height - height * list[i][j] / spectrum;
+					ctx[j].lineTo(x, y);
 				}
 				ctx[j].stroke();
 
@@ -925,14 +967,33 @@ class Monitor extends Window {
 			}
 		};
 
-		const Update = valuesArray=> {
+		const Update = obj=> {
+			let array = obj[options.value];
+
+			let low = isNaN(options.low) ? obj[options.low][0] : options.low;
+			let high = isNaN(options.high) ? obj[options.high][0] : options.high;
+			let spectrum = Math.abs(low - high);
+
+			if (options.isComplement) { array = array.map(v=>high - parseInt(v)); }
+
+			for (let i=0; i<array.length; i++) {
+				if (min > array[i]) { min = array[i]; }
+				if (max < array[i]) { max = array[i]; }
+			}
+
+			if (options.isDynamic) {
+				low = min;
+				high = max;
+				spectrum = Math.abs(low - high);
+			}
+
 			if (canvases.length === 0) {
-				let normalizedLength = Math.min(valuesArray.length, 4);
+				let normalizedLength = Math.min(array.length, 4);
 				gap = 8 / normalizedLength;
 				inner.style.backgroundColor = "transparent";
-				inner.style.height = `${(height+6) * Math.ceil(valuesArray.length / normalizedLength)}px`;
+				inner.style.height = `${(height+6) * Math.ceil(array.length / normalizedLength)}px`;
 
-				for (let i=0; i<valuesArray.length; i++) {
+				for (let i=0; i<array.length; i++) {
 					const container = document.createElement("div");
 					container.className = "monitor-graph-inner";
 					container.style.position = "absolute";
@@ -957,14 +1018,9 @@ class Monitor extends Window {
 			}
 
 			if (list.length * gap > 400) list.shift();
-			list.push(valuesArray);
+			list.push(array.map(v=>v * 100 / spectrum));
 
-			for (let i=0; i<valuesArray.length; i++) {
-				if (min > valuesArray[i]) { min = valuesArray[i]; }
-				if (max < valuesArray[i]) { max = valuesArray[i]; }
-			}
-
-			valueLabel.textContent = `Min-max: ${min}-${max}${options.unit}`;
+			//valueLabel.textContent = `\nMin-max: ${this.FormatUnits(min, options.unit)}-${this.FormatUnits(max, options.unit)}`;
 
 			DrawGraph();
 		};
@@ -983,11 +1039,13 @@ class Monitor extends Window {
 		canvas.height = height;
 		inner.appendChild(canvas);
 
-		const last = null;
-		let min = Number.MAX_SAFE_INTEGER;
-		let max = Number.MIN_SAFE_INTEGER;
 		const list = [];
 		const gap = 5;
+		let min = Number.MAX_SAFE_INTEGER;
+		let max = Number.MIN_SAFE_INTEGER;
+		let low = 0;
+		let high = 100;
+		let last = null;
 
 		const ctx = canvas.getContext("2d");
 		ctx.lineWidth = 2;
@@ -997,9 +1055,13 @@ class Monitor extends Window {
 		const DrawGraph = ()=>{
 			ctx.clearRect(0, 0, canvas.width, height);
 
+			let spectrum = Math.abs(low - high);
+
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
-				ctx.lineTo(canvas.width - (list.length-i-1)*gap, height - height * list[i] / 100);
+				const x = canvas.width - (list.length-i-1)*gap;
+				const y = height - height * list[i] / spectrum;
+				ctx.lineTo(x, y);
 			}
 			ctx.stroke();
 
@@ -1009,7 +1071,22 @@ class Monitor extends Window {
 			ctx.fill();
 		};
 
-		const Update = value=> {
+		const Update = obj=> {
+			let value = parseFloat(obj[options.value][0]);
+
+			const low = isNaN(options.low) ? obj[options.low][0] : options.low;
+			const high = isNaN(options.high) ? obj[options.high][0] : options.high;
+
+			if (options.isComplement) { value = high - value; }
+
+			if (min > delta) { min = delta; }
+			if (max < delta) { max = delta; }
+
+			if (options.isDynamic) {
+				low = min;
+				high = max;
+			}
+
 			if (last === null) {
 				last = value;
 				return;
@@ -1020,11 +1097,7 @@ class Monitor extends Window {
 			if (list.length * gap > canvas.width) list.shift();
 			list.push(delta);
 
-			if (min > delta) { min = delta; }
-			if (max < delta) { max = delta; }
-
-			valueLabel.textContent = `${options.prefix}: ${delta}${options.unit}`;
-			valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+			valueLabel.textContent = `${options.prefix}: ${this.FormatUnits(value, options.unit)}`;
 
 			DrawGraph();
 
@@ -1096,18 +1169,13 @@ class Monitor extends Window {
 		};
 	}
 
-	ConsoleLog(text, level) {
-		const line = document.createElement("div");
-		line.className = "monitor-console-line";
-		line.innerText = `${new Date().toLocaleTimeString(UI.regionalFormat, {})} - ${text}`;
-
-		switch (level) {
-			case "info"   : line.style.backgroundImage = "url(mono/info.svg?light)"; break;
-			case "warning": line.style.backgroundImage = "url(mono/warning.svg?light)"; break;
-			case "error"  : line.style.backgroundImage = "url(mono/error.svg?light)"; break;
+	FormatUnits(value, unit) {
+		switch (unit) {
+		case "B"    : return UI.SizeToString(value);
+		case "KB"   : return UI.SizeToString(value*1024);
+		case "Bps"  : return UI.SpeedToString(value);
+		case "KBps" : return UI.SpeedToString(value*1000);
+		default     : return `${value}${unit}`;
 		}
-
-		this.consoleBox.appendChild(line);
-		line.scrollIntoView();
 	}
 }

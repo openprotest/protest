@@ -191,6 +191,18 @@ const UI = {
 		if (size < 8_192 * Math.pow(1024, 8)) return `${Math.floor(10 * size / Math.pow(1024, 8)) / 10}BB`;
 	},
 
+	SpeedToString: speed => {
+		if (speed < 9_000) return `${speed} bps`;
+		if (speed < 9_000 * 1000) return `${Math.floor(speed / 1000)} Kbps`;
+		if (speed < 9_000 * Math.pow(1000, 2)) return `${Math.floor(10 * speed / Math.pow(1000, 2)) / 10}Mbps`;
+		if (speed < 9_000 * Math.pow(1000, 3)) return `${Math.floor(10 * speed / Math.pow(1000, 3)) / 10}Gbps`;
+		if (speed < 9_000 * Math.pow(1000, 4)) return `${Math.floor(10 * speed / Math.pow(1000, 4)) / 10}Tbps`;
+		if (speed < 9_000 * Math.pow(1000, 5)) return `${Math.floor(10 * speed / Math.pow(1000, 5)) / 10}Ebps`;
+		if (speed < 9_000 * Math.pow(1000, 6)) return `${Math.floor(10 * speed / Math.pow(1000, 6)) / 10}Zbps`;
+		if (speed < 9_000 * Math.pow(1000, 7)) return `${Math.floor(10 * speed / Math.pow(1000, 7)) / 10}Ybps`;
+		if (speed < 9_000 * Math.pow(1000, 8)) return `${Math.floor(10 * speed / Math.pow(1000, 8)) / 10}Bbps`;
+	},
+
 	GenerateUuid: prefix=> {
 		if (prefix) {
 			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;

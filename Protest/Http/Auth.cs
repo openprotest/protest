@@ -207,6 +207,7 @@ internal static class Auth {
                 path.Add("/db/device/grid");
                 path.Add("/db/config/save");
                 path.Add("/db/config/fetch");
+                path.Add("/db/config/extract");
                 break;
 
             case "users:read":
@@ -309,6 +310,7 @@ internal static class Auth {
                 break;
 
             case "network utilities:write":
+                path.Add("/tools/bulkping");
                 path.Add("/tools/dnslookup");
                 path.Add("/tools/ntp");
                 path.Add("/tools/locateip");
