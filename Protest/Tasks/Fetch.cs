@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Data;
+using System.DirectoryServices;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
@@ -7,11 +10,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Data;
-using System.DirectoryServices;
 using Protest.Http;
 using Protest.Tools;
-using System.Collections.Concurrent;
 
 namespace Protest.Tasks;
 

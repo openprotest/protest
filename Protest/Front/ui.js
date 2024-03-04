@@ -181,26 +181,38 @@ const UI = {
 
 	SizeToString: size=> {
 		if (size < 8_192) return `${size} bytes`;
-		if (size < 8_192 * 1024) return `${Math.floor(size / 1024)} KB`;
-		if (size < 8_192 * Math.pow(1024, 2)) return `${Math.floor(10 * size / Math.pow(1024, 2)) / 10}MB`;
-		if (size < 8_192 * Math.pow(1024, 3)) return `${Math.floor(10 * size / Math.pow(1024, 3)) / 10}GB`;
-		if (size < 8_192 * Math.pow(1024, 4)) return `${Math.floor(10 * size / Math.pow(1024, 4)) / 10}TB`;
-		if (size < 8_192 * Math.pow(1024, 5)) return `${Math.floor(10 * size / Math.pow(1024, 5)) / 10}EB`;
-		if (size < 8_192 * Math.pow(1024, 6)) return `${Math.floor(10 * size / Math.pow(1024, 6)) / 10}ZB`;
-		if (size < 8_192 * Math.pow(1024, 7)) return `${Math.floor(10 * size / Math.pow(1024, 7)) / 10}YB`;
-		if (size < 8_192 * Math.pow(1024, 8)) return `${Math.floor(10 * size / Math.pow(1024, 8)) / 10}BB`;
+		if (size < 8_192 * 1024) return `${(size / 1024).toFixed(2)} KB`;
+		if (size < 8_192 * Math.pow(1024,2)) return `${(size / Math.pow(1024,2)).toFixed(2)}MB`;
+		if (size < 8_192 * Math.pow(1024,3)) return `${(size / Math.pow(1024,3)).toFixed(2)}GB`;
+		if (size < 8_192 * Math.pow(1024,4)) return `${(size / Math.pow(1024,4)).toFixed(2)}TB`;
+		if (size < 8_192 * Math.pow(1024,5)) return `${(size / Math.pow(1024,5)).toFixed(2)}EB`;
+		if (size < 8_192 * Math.pow(1024,6)) return `${(size / Math.pow(1024,6)).toFixed(2)}ZB`;
+		if (size < 8_192 * Math.pow(1024,7)) return `${(size / Math.pow(1024,7)).toFixed(2)}YB`;
+		if (size < 8_192 * Math.pow(1024,8)) return `${(size / Math.pow(1024,8)).toFixed(2)}BB`;
 	},
 
-	SpeedToString: speed => {
-		if (speed < 9_000) return `${speed} bps`;
-		if (speed < 9_000 * 1000) return `${Math.floor(speed / 1000)} Kbps`;
-		if (speed < 9_000 * Math.pow(1000, 2)) return `${Math.floor(10 * speed / Math.pow(1000, 2)) / 10}Mbps`;
-		if (speed < 9_000 * Math.pow(1000, 3)) return `${Math.floor(10 * speed / Math.pow(1000, 3)) / 10}Gbps`;
-		if (speed < 9_000 * Math.pow(1000, 4)) return `${Math.floor(10 * speed / Math.pow(1000, 4)) / 10}Tbps`;
-		if (speed < 9_000 * Math.pow(1000, 5)) return `${Math.floor(10 * speed / Math.pow(1000, 5)) / 10}Ebps`;
-		if (speed < 9_000 * Math.pow(1000, 6)) return `${Math.floor(10 * speed / Math.pow(1000, 6)) / 10}Zbps`;
-		if (speed < 9_000 * Math.pow(1000, 7)) return `${Math.floor(10 * speed / Math.pow(1000, 7)) / 10}Ybps`;
-		if (speed < 9_000 * Math.pow(1000, 8)) return `${Math.floor(10 * speed / Math.pow(1000, 8)) / 10}Bbps`;
+	BytesPerSecToString: bps=> {
+		if (bps < 8_192) return `${bps} Bps`;
+		if (bps < 8_192 * 1024) return `${(bps / 1024).toFixed(2)} KBps`;
+		if (bps < 8_192 * Math.pow(1024,2)) return `${(bps / Math.pow(1024,2)).toFixed(2)}MBps`;
+		if (bps < 8_192 * Math.pow(1024,3)) return `${(bps / Math.pow(1024,3)).toFixed(2)}GBps`;
+		if (bps < 8_192 * Math.pow(1024,4)) return `${(bps / Math.pow(1024,4)).toFixed(2)}TBps`;
+		if (bps < 8_192 * Math.pow(1024,5)) return `${(bps / Math.pow(1024,5)).toFixed(2)}EBps`;
+		if (bps < 8_192 * Math.pow(1024,6)) return `${(bps / Math.pow(1024,6)).toFixed(2)}ZBps`;
+		if (bps < 8_192 * Math.pow(1024,7)) return `${(bps / Math.pow(1024,7)).toFixed(2)}YBps`;
+		if (bps < 8_192 * Math.pow(1024,8)) return `${(bps / Math.pow(1024,8)).toFixed(2)}BBps`;
+	},
+	
+	BitsPerSecToString: bps=> {
+		if (bps < 8_000) return `${bps} bps`;
+		if (bps < 8_000 * 1000) return `${Math.floor(bps / 1000)} Kbps`;
+		if (bps < 8_000 * Math.pow(1000,2)) return `${(bps / Math.pow(1000,2)).toFixed(2)}Mbps`;
+		if (bps < 8_000 * Math.pow(1000,3)) return `${(bps / Math.pow(1000,3)).toFixed(2)}Gbps`;
+		if (bps < 8_000 * Math.pow(1000,4)) return `${(bps / Math.pow(1000,4)).toFixed(2)}Tbps`;
+		if (bps < 8_000 * Math.pow(1000,5)) return `${(bps / Math.pow(1000,5)).toFixed(2)}Ebps`;
+		if (bps < 8_000 * Math.pow(1000,6)) return `${(bps / Math.pow(1000,6)).toFixed(2)}Zbps`;
+		if (bps < 8_000 * Math.pow(1000,7)) return `${(bps / Math.pow(1000,7)).toFixed(2)}Ybps`;
+		if (bps < 8_000 * Math.pow(1000,8)) return `${(bps / Math.pow(1000,8)).toFixed(2)}Bbps`;
 	},
 
 	GenerateUuid: prefix=> {

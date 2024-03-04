@@ -2,7 +2,7 @@ class Monitor extends Window {
 	constructor(params) {
 		super();
 		this.params = params ?? { file: null};
-		this.params.stats ??= [];
+		this.params.chart ??= [];
 
 		this.SetIcon("mono/resmonitor.svg");
 
@@ -56,13 +56,22 @@ class Monitor extends Window {
 		this.content.append(this.scrollable, this.consoleBox, this.toggleConsoleButton);
 
 		this.connectButton.onclick = ()=> this.InitializeSocketConnection();
-		this.addStatButton.onclick = ()=> this.AddChart();
+		this.addStatButton.onclick = ()=> this.AddChartDialog();
 		this.startButton.onclick = ()=> this.Start();
 		this.pauseButton.onclick = ()=> this.Pause();
 
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
-		this.chartsList.push(this.CreateChart("Ping", 75, { index:0, protocol:"icmp", format:"Ping chart", prefix:"RTT", unit:"ms" }));
+		if (this.params.chart.length === 0) {
+			this.AddChart("Ping", "icmp", { protocol:"icmp", format:"Ping chart", prefix:"RTT", unit:"ms" });
+		}
+		else { //restore charts
+			const copy = this.params.chart;
+			this.params.chart = [];
+			for (let i=0; i<copy.length; i++) {
+				this.AddChart(copy[i].name, copy[i].value, copy[i].options);
+			}
+		}
 
 		this.InitializeSubnetEmblem();
 		this.InitializeSocketConnection();
@@ -145,6 +154,15 @@ class Monitor extends Window {
 				this.hideConsoleOnce = false;
 				setTimeout(()=>this.toggleConsoleButton.onclick(), 400);
 			}
+
+			for (let i=0; i<this.params.chart.length; i++) {
+				const obj = {
+					action: `add${this.params.chart[i].options.protocol}`,
+					value: this.params.chart[i].value,
+					index: i
+				};
+				this.socket.send(JSON.stringify(obj));
+			}
 		};
 
 		this.socket.onmessage = event=> {
@@ -222,7 +240,7 @@ class Monitor extends Window {
 		}
 	}
 
-	async AddChart() {
+	async AddChartDialog() {
 		if (!this.socket) {
 			this.ConfirmBox("Web-socket is disconnected.", "mono/resmonitor.svg", true);
 			return;
@@ -292,8 +310,6 @@ class Monitor extends Window {
 			"Line chart",
 			"Grid line chart",
 			"Delta chart",
-			//"Pie chart",
-			//"Doughnut chart",
 			"Single value",
 			"List",
 			"Table"
@@ -342,7 +358,6 @@ class Monitor extends Window {
 				case "icmp":
 					break;
 				}
-
 			};
 
 			template.ondblclick = ()=> {
@@ -587,7 +602,7 @@ class Monitor extends Window {
 
 			const optionsBox = document.createElement("div");
 			optionsBox.style.display = "grid";
-			optionsBox.style.gridArea = "2 / 2 / 7 / 4";
+			optionsBox.style.gridArea = "1 / 2 / 7 / 4";
 			optionsBox.style.margin = "8px 20px";
 			optionsBox.style.alignItems = "center";
 			optionsBox.style.gridTemplateColumns = "100px auto";
@@ -699,20 +714,31 @@ class Monitor extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-
-			this.count++;
-
-			const chart = {
-				action: "addwmi",
-				value: queryInput.value,
-				index: this.count
-			};
-
-			this.chartsList.push(this.CreateChart(chartOptions.name, 75, chartOptions));
-			this.socket.send(JSON.stringify(chart));
+			this.AddChart(chartOptions.name, queryInput.value, chartOptions);
 		};
 
 		templatesTab.onclick();
+	}
+
+	AddChart(name, value, options) {
+		this.params.chart.push({
+			name: name,
+			value: value,
+			options: options
+		});
+
+		this.chartsList.push(this.CreateChartElement(name, 75, options));
+		
+		if (this.socket) {
+			const obj = {
+				action: "addwmi",
+				value: value,
+				index: this.count
+			};
+			this.socket.send(JSON.stringify(obj));
+		}
+
+		this.count++;
 	}
 
 	Start() {
@@ -744,7 +770,7 @@ class Monitor extends Window {
 		line.scrollIntoView();
 	}
 
-	CreateChart(name, height, options) {
+	CreateChartElement(name, height, options) {
 		const container = document.createElement("div");
 		container.className = "monitor-graph-container";
 		this.scrollable.appendChild(container);
@@ -916,8 +942,8 @@ class Monitor extends Window {
 			if (max < value) { max = value; }
 
 			if (options.isDynamic) {
-				low = min;
-				high = max;
+				low = min * 1.05;
+				high = max * 1.05;
 			}
 
 			if (list.length * gap > canvas.width) list.shift();
@@ -982,8 +1008,8 @@ class Monitor extends Window {
 			}
 
 			if (options.isDynamic) {
-				low = min;
-				high = max;
+				low = min * 1.05;
+				high = max * 1.05;
 				spectrum = Math.abs(low - high);
 			}
 
@@ -1083,8 +1109,8 @@ class Monitor extends Window {
 			if (max < delta) { max = delta; }
 
 			if (options.isDynamic) {
-				low = min;
-				high = max;
+				low = min * 1.05;
+				high = max * 1.05;
 			}
 
 			if (last === null) {
@@ -1173,8 +1199,10 @@ class Monitor extends Window {
 		switch (unit) {
 		case "B"    : return UI.SizeToString(value);
 		case "KB"   : return UI.SizeToString(value*1024);
-		case "Bps"  : return UI.SpeedToString(value);
-		case "KBps" : return UI.SpeedToString(value*1000);
+		case "Bps"  : return UI.BytesPerSecToString(value);
+		case "KBps" : return UI.BytesPerSecToString(value*1000);
+		case "bps"  : return UI.BitsPerSecToString(value);
+		case "Kbps" : return UI.BitsPerSecToString(value*1000);
 		default     : return `${value}${unit}`;
 		}
 	}

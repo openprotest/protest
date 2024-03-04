@@ -460,14 +460,19 @@ file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
                 reader.Read();
 
                 switch (propertyName) {
-                case "action": action.action = Enum.Parse<Monitor.Action>(reader.GetString()); break;
                 case "value" : action.value  = reader.GetString(); break;
                 case "index" : action.index  = reader.GetInt32(); break;
+
+                case "action":
+                    //action.action = Enum.Parse<Monitor.Action>(reader.GetString()); 
+                    Enum.TryParse<Monitor.Action>(reader.GetString(), true, out Monitor.Action act);
+                    action.action = act;
+                    break;
                 }
             }
         }
 
-        return action ;
+        return action;
     }
 
     public override void Write(Utf8JsonWriter writer, Monitor.Query value, JsonSerializerOptions options) {
