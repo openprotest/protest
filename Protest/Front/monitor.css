@@ -79,12 +79,15 @@
 .monitor-graph-title {
 	position: absolute;
 	left: 4px;
-	right: 4px;
-	top: 1px;
+	top: 0;
+	z-index: 1;
+	max-width: calc(100% - 8px);
+	box-sizing: border-box;
 	color: var(--clr-light);
+	border-radius: 2px;
 	font-weight: 600;
 	font-size: small;
-	text-transform: capitalize;
+	text-transform: uppercase;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

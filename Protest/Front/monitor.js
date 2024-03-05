@@ -240,6 +240,35 @@ class Monitor extends Window {
 		}
 	}
 
+	Start() {
+		if (!this.socket) return;
+		this.socket.send("{\"action\":\"start\"}");
+		this.startButton.disabled = true;
+		this.pauseButton.disabled = false;
+	}
+
+	Pause() {
+		if (!this.socket) return;
+		this.socket.send("{\"action\":\"pause\"}");
+		this.startButton.disabled = false;
+		this.pauseButton.disabled = true;
+	}
+
+	ConsoleLog(text, level) {
+		const line = document.createElement("div");
+		line.className = "monitor-console-line";
+		line.innerText = `${new Date().toLocaleTimeString(UI.regionalFormat, {})} - ${text}`;
+
+		switch (level) {
+			case "info"   : line.style.backgroundImage = "url(mono/info.svg?light)"; break;
+			case "warning": line.style.backgroundImage = "url(mono/warning.svg?light)"; break;
+			case "error"  : line.style.backgroundImage = "url(mono/error.svg?light)"; break;
+		}
+
+		this.consoleBox.appendChild(line);
+		line.scrollIntoView();
+	}
+
 	async AddChartDialog() {
 		if (!this.socket) {
 			this.ConfirmBox("Web-socket is disconnected.", "mono/resmonitor.svg", true);
@@ -266,7 +295,7 @@ class Monitor extends Window {
 		status.style.textAlign = "center";
 		status.style.fontWeight = "bold";
 		status.style.animation = "delayed-fade-in 1.5s ease-in 1";
-		dialog.innerBox.append(spinner, status);
+		innerBox.append(spinner, status);
 
 		const wmiClasses = await this.GetWmiClasses();
 		if (!wmiClasses.classes) {
@@ -275,8 +304,8 @@ class Monitor extends Window {
 			return;
 		}
 
-		dialog.innerBox.removeChild(spinner);
-		dialog.innerBox.removeChild(status);
+		innerBox.removeChild(spinner);
+		innerBox.removeChild(status);
 		okButton.disabled = false;
 
 		innerBox.style.margin = "16px";
@@ -295,15 +324,18 @@ class Monitor extends Window {
 		wmiIcon.style.backgroundImage = "url(mono/wmi.svg)";
 		wmiTab.appendChild(wmiIcon);
 
-		dialog.innerBox.parentElement.append(templatesTab, wmiTab);
+		innerBox.parentElement.append(templatesTab, wmiTab);
+
+		const nameInput = document.createElement("input");
+		nameInput.type = "text";
+		nameInput.style.gridArea = "1 / 2 / 1 / 2";
+		nameInput.style.minWidth = "100px";
+		nameInput.style.maxWidth = "160px";
 
 		const formatInput = document.createElement("select");
-		formatInput.style.gridArea = "1 / 2 / 2 / 2";
-		formatInput.style.maxWidth = "200px";
-
-		const queryInput = document.createElement("textarea");
-		queryInput.style.resize = "none";
-		queryInput.style.gridArea = "8 / 1 / 9 / 4";
+		formatInput.style.gridArea = "2 / 2 / 2 / 2";
+		formatInput.style.minWidth = "100px";
+		formatInput.style.maxWidth = "160px";
 
 		const formatOptionsArray = [
 			"Ping",
@@ -316,11 +348,67 @@ class Monitor extends Window {
 		];
 
 		for (let i=0; i<formatOptionsArray.length; i++) {
-			const newOption = document.createElement("option");
-			newOption.value = formatOptionsArray[i];
-			newOption.text = formatOptionsArray[i];
-			formatInput.appendChild(newOption);
+			const option = document.createElement("option");
+			option.value = formatOptionsArray[i];
+			option.text = formatOptionsArray[i];
+			formatInput.appendChild(option);
 		}
+
+		const unitInput = document.createElement("input");
+		unitInput.type = "text";
+		unitInput.style.gridArea = "3 / 2 / 3 / 2";
+		unitInput.style.minWidth = "100px";
+		unitInput.style.maxWidth = "160px";
+
+		const unitDatalist = document.createElement("datalist");
+		unitDatalist.id = "MONITOR_UNIT_OPTIONS";
+		unitInput.setAttribute("list", unitDatalist.id);
+
+		const unitOptionsArray = ["", "%", "ms", "bps", "Kbps", "Bps", "KBps"];
+		for (let i=0; i<unitOptionsArray.length; i++) {
+			const option = document.createElement("option");
+			option.value = unitOptionsArray[i];
+			option.text = unitOptionsArray[i] === "" ? "none" : unitOptionsArray[i];
+			unitDatalist.appendChild(option);
+		}
+
+		const valueInput = document.createElement("select");
+		valueInput.style.gridArea = "4 / 2 / 4 / 2";
+		valueInput.style.minWidth = "100px";
+		valueInput.style.maxWidth = "160px";
+
+		const minInput = document.createElement("input");
+		minInput.type = "text";
+		minInput.style.gridArea = "5 / 2 / 5 / 2";
+		minInput.style.minWidth = "100px";
+		minInput.style.maxWidth = "160px";
+
+		const maxInput = document.createElement("input");
+		maxInput.type = "text";
+		maxInput.style.gridArea = "6 / 2 / 6 / 2";
+		maxInput.style.minWidth = "100px";
+		maxInput.style.maxWidth = "160px";
+
+		const attributesDatalistId = "m" + new Date().getTime();
+		const attributesDatalist = document.createElement("datalist");
+		attributesDatalist.id = attributesDatalistId;
+
+		valueInput.setAttribute("list", attributesDatalistId);
+		minInput.setAttribute("list", attributesDatalistId);
+		maxInput.setAttribute("list", attributesDatalistId);
+
+		const minmaxInput = document.createElement("input");
+		minmaxInput.type = "checkbox";
+		
+		const averageInput = document.createElement("input");
+		averageInput.type = "checkbox";
+
+		const complementingInput = document.createElement("input");
+		complementingInput.type = "checkbox";
+
+		const queryInput = document.createElement("textarea");
+		queryInput.style.resize = "none";
+		queryInput.style.gridArea = "8 / 1 / 9 / 4";
 
 		let chartOptions = {};
 		let selectedElement = null;
@@ -339,11 +427,10 @@ class Monitor extends Window {
 				selectedElement = template;
 				template.style.backgroundColor = "var(--clr-select)";
 
+				nameInput.value = name;
 				formatInput.value = options.format;
 
 				chartOptions = options;
-				chartOptions.name = name;
-				chartOptions.icon = icon;
 				chartOptions.protocol = protocol;
 
 				switch (protocol) {
@@ -579,7 +666,7 @@ class Monitor extends Window {
 			innerBox.textContent = "";
 			innerBox.style.border = "none";
 			innerBox.style.display = "grid";
-			innerBox.style.gridTemplateColumns = "45% 16px auto";
+			innerBox.style.gridTemplateColumns = "35% 16px auto";
 			innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px 8px 64px";
 
 			templatesTab.style.background = "";
@@ -605,37 +692,59 @@ class Monitor extends Window {
 			optionsBox.style.gridArea = "1 / 2 / 7 / 4";
 			optionsBox.style.margin = "8px 20px";
 			optionsBox.style.alignItems = "center";
-			optionsBox.style.gridTemplateColumns = "100px auto";
+			optionsBox.style.gridTemplateColumns = "80px auto 80px auto";
 			optionsBox.style.gridTemplateRows = "repeat(6, 32px)";
 
+			optionsBox.appendChild(attributesDatalist);
+			optionsBox.appendChild(unitDatalist);
+			
 			innerBox.append(classesBox, optionsBox);
+
+			const nameLabel = document.createElement("div");
+			nameLabel.textContent = "Name:";
+			nameLabel.style.gridArea = "1 / 1 / 1 / 2";
+			optionsBox.append(nameLabel, nameInput);
 
 			const formatLabel = document.createElement("div");
 			formatLabel.textContent = "Format:";
-
+			formatLabel.style.gridArea = "2 / 1 / 2 / 2";
 			optionsBox.append(formatLabel, formatInput);
 
+			const unitLabel = document.createElement("div");
+			unitLabel.textContent = "Unit:";
+			unitLabel.style.gridArea = "3 / 1 / 3 / 2";
+			optionsBox.append(unitLabel, unitInput);
+
+			const valueLabel = document.createElement("div");
+			valueLabel.textContent = "Value:";
+			valueLabel.style.gridArea = "4 / 1 / 4 / 2";
+			optionsBox.append(valueLabel, valueInput);
+
+			const minLabel = document.createElement("div");
+			minLabel.textContent = "Min:";
+			minLabel.style.gridArea = "5 / 1 / 5 / 2";
+			optionsBox.append(minLabel, minInput);
+
+			const maxLabel = document.createElement("div");
+			maxLabel.textContent = "Max:";
+			maxLabel.style.gridArea = "6 / 1 / 6 / 2";
+			optionsBox.append(maxLabel, maxInput);
+
 			const minmaxBox = document.createElement("div");
-			minmaxBox.style.gridArea = "2 / 1 / 2 / 3";
+			minmaxBox.style.gridArea = "1 / 3 / 1 / 5";
 			optionsBox.appendChild(minmaxBox);
-			const minmaxInput = document.createElement("input");
-			minmaxInput.type = "checkbox";
 			minmaxBox.appendChild(minmaxInput);
 			this.AddCheckBoxLabel(minmaxBox, minmaxInput, "Show min-max");
 
 			const averageBox = document.createElement("div");
-			averageBox.style.gridArea = "3 / 1 / 3 / 3";
+			averageBox.style.gridArea = "2 / 3 / 2 / 5";
 			optionsBox.appendChild(averageBox);
-			const averageInput = document.createElement("input");
-			averageInput.type = "checkbox";
 			averageBox.appendChild(averageInput);
 			this.AddCheckBoxLabel(averageBox, averageInput, "Show average");
 
 			const complementingBox = document.createElement("div");
-			complementingBox.style.gridArea = "4 / 1 / 4 / 3";
+			complementingBox.style.gridArea = "3 / 3 / 3 / 5";
 			optionsBox.appendChild(complementingBox);
-			const complementingInput = document.createElement("input");
-			complementingInput.type = "checkbox";
 			complementingBox.appendChild(complementingInput);
 			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing mode");
 
@@ -652,10 +761,27 @@ class Monitor extends Window {
 				}
 			}
 
-			let select_index = queryInput.value.indexOf("select");
-			let from_index = queryInput.value.indexOf("from");
+			const query = queryInput.value.toLocaleLowerCase();
+			let select_index = query.indexOf("select");
+			let from_index = query.indexOf("from");
 			let lastProperties = queryInput.value.substring(select_index + 6, from_index).trim();
 			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim());
+
+			attributesDatalist.innerHTML = "";
+			for (let i=0; i<lastPropertiesArray.length; i++) {
+				const option = document.createElement("option");
+				option.value = lastPropertiesArray[i];
+				option.text = lastPropertiesArray[i];
+				attributesDatalist.appendChild(option);
+			}
+
+			valueInput.innerHTML = "";
+			for (let i=0; i<lastPropertiesArray.length; i++) {
+				const option = document.createElement("option");
+				option.value = lastPropertiesArray[i];
+				option.text = lastPropertiesArray[i];
+				valueInput.appendChild(option);
+			}
 
 			classFilterInput.onkeydown = event=>{
 				if (event.code === "Escape") {
@@ -714,7 +840,8 @@ class Monitor extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-			this.AddChart(chartOptions.name, queryInput.value, chartOptions);
+			this.AddChart(nameInput.value, queryInput.value, chartOptions);
+
 		};
 
 		templatesTab.onclick();
@@ -727,7 +854,7 @@ class Monitor extends Window {
 			options: options
 		});
 
-		this.chartsList.push(this.CreateChartElement(name, 75, options));
+		this.chartsList.push(this.CreateChartElement(name, options));
 		
 		if (this.socket) {
 			const obj = {
@@ -741,43 +868,13 @@ class Monitor extends Window {
 		this.count++;
 	}
 
-	Start() {
-		if (!this.socket) return;
-		this.socket.send("{\"action\":\"start\"}");
-		this.startButton.disabled = true;
-		this.pauseButton.disabled = false;
-	}
-
-	Pause() {
-		if (!this.socket) return;
-		this.socket.send("{\"action\":\"pause\"}");
-		this.startButton.disabled = false;
-		this.pauseButton.disabled = true;
-	}
-
-	ConsoleLog(text, level) {
-		const line = document.createElement("div");
-		line.className = "monitor-console-line";
-		line.innerText = `${new Date().toLocaleTimeString(UI.regionalFormat, {})} - ${text}`;
-
-		switch (level) {
-			case "info"   : line.style.backgroundImage = "url(mono/info.svg?light)"; break;
-			case "warning": line.style.backgroundImage = "url(mono/warning.svg?light)"; break;
-			case "error"  : line.style.backgroundImage = "url(mono/error.svg?light)"; break;
-		}
-
-		this.consoleBox.appendChild(line);
-		line.scrollIntoView();
-	}
-
-	CreateChartElement(name, height, options) {
+	CreateChartElement(name, options) {
 		const container = document.createElement("div");
 		container.className = "monitor-graph-container";
 		this.scrollable.appendChild(container);
 
 		const inner = document.createElement("div");
 		inner.className = "monitor-graph-inner";
-		inner.style.height = `${height}px`;
 		container.appendChild(inner);
 
 		const titleLabel = document.createElement("div");
@@ -790,17 +887,20 @@ class Monitor extends Window {
 		container.appendChild(valueLabel);
 
 		switch(options.format) {
-		case "Ping chart"      : return this.CreatePingChart(inner, valueLabel, name, height, options);
-		case "Line chart"      : return this.CreateLineChart(inner, valueLabel, name, height, options);
-		case "Grid line chart" : return this.CreateGridLineChart(inner, valueLabel, name, height, options);
-		case "Delta chart"     : return this.CreateDeltaChart(inner, valueLabel, name, height, options);
+		case "Ping chart"      : return this.CreatePingChart(inner, valueLabel, name, options);
+		case "Line chart"      : return this.CreateLineChart(inner, valueLabel, name, options);
+		case "Grid line chart" : return this.CreateGridLineChart(inner, valueLabel, name, options);
+		case "Delta chart"     : return this.CreateDeltaChart(inner, valueLabel, name, options);
 		case "Single value"    : return this.CreateSingleValue(inner, name, options);
-		case "List"            : return this.CreateList(inner, valueLabel, name, height, options);
-		case "Table"           : return this.CreateTable(inner, valueLabel, name, height, options);
+		case "List"            : return this.CreateList(inner, valueLabel, name, options);
+		case "Table"           : return this.CreateTable(inner, valueLabel, name, options);
 		}
 	}
 
-	CreatePingChart(inner, valueLabel, name, height, options) {
+	CreatePingChart(inner, valueLabel, name, options) {
+		const height = 50;
+		inner.style.height = `${height}px`;
+
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
 		canvas.height = height;
@@ -828,7 +928,7 @@ class Monitor extends Window {
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
 				let x = canvas.width - (list.length-i-1)*gap;
-				let y = list[i] < 0 ? height-10 : 24 + Math.min((height - 24) * list[i] / 1000, height - 10);
+				let y = list[i] < 0 ? height-6 : 18 + Math.min((height - 18) * list[i] / 1000, height-6);
 				ctx.lineTo(x, y);
 			}
 
@@ -840,7 +940,7 @@ class Monitor extends Window {
 
 			for (let i=list.length-1; i>=0; i--) {
 				let x = canvas.width - (list.length-i-1)*gap;
-				let y = list[i] < 0 ? height-10 : 24 + Math.min((height - 24) * list[i] / 1000, height - 10);
+				let y = list[i] < 0 ? height-6 : 18 + Math.min((height - 18) * list[i] / 1000, height-6);
 
 				let color;
 				if (list[i] < 0) { //unreachable/timed out
@@ -893,7 +993,10 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateLineChart(inner, valueLabel, name, height, options) {
+	CreateLineChart(inner, valueLabel, name, options) {
+		const height = 75;
+		inner.style.height = `${height}px`;
+
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
 		canvas.height = height;
@@ -962,7 +1065,10 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateGridLineChart(inner, valueLabel, name, height, options) {
+	CreateGridLineChart(inner, valueLabel, name, options) {
+		const height = 75;
+		inner.style.height = `${height}px`;
+
 		const canvases = [];
 		const ctx = [];
 		const list = [];
@@ -1059,7 +1165,10 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateDeltaChart(inner, valueLabel, name, height, options) {
+	CreateDeltaChart(inner, valueLabel, name, options) {
+		const height = 75;
+		inner.style.height = `${height}px`;
+
 		const canvas = document.createElement("canvas");
 		canvas.width = 750;
 		canvas.height = height;
@@ -1139,7 +1248,7 @@ class Monitor extends Window {
 	}
 
 	CreateSingleValue(inner, name, options) {
-		inner.style.height = "56px";
+		inner.style.height = `${56}px`;
 
 		const valueBox = document.createElement("div");
 		valueBox.style.position = "absolute";
@@ -1165,8 +1274,11 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateList(inner, valueLabel, name, height, options) {
-			//TODO:
+	CreateList(inner, name, options) {
+		const height = 300;
+		inner.style.height = `${height}px`;
+
+		//TODO:
 
 		const Update = value=>{
 			//TODO:
@@ -1180,8 +1292,11 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateTable(inner, valueLabel, name, height, options) {
-			//TODO:
+	CreateTable(inner, name, options) {
+		const height = 300;
+		inner.style.height = `${height}px`;
+
+		//TODO:
 
 		const Update = value=>{
 			//TODO:
