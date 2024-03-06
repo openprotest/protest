@@ -222,7 +222,7 @@ class Wmi extends Window {
 			classesList.textContent = "";
 			propertiesList.textContent = "";
 
-			for (let i = 0; i < this.wmi_classes.classes.length; i++) {
+			for (let i=0; i<this.wmi_classes.classes.length; i++) {
 				let matched = false;
 
 				if (this.wmi_classes.classes[i].class.toLowerCase().indexOf(filter) > -1) {
@@ -249,6 +249,7 @@ class Wmi extends Window {
 						propertyCheckboxes = [];
 
 						propertiesList.textContent = "";
+						
 						for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
 							let value = lastProperties === "*" || className == null ||
 								className.toLowerCase() === this.wmi_classes.classes[i].class.toLowerCase() &&

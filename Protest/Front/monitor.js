@@ -338,7 +338,6 @@ class Monitor extends Window {
 		formatInput.style.maxWidth = "160px";
 
 		const formatOptionsArray = [
-			"Ping",
 			"Line chart",
 			"Grid line chart",
 			"Delta chart",
@@ -372,20 +371,15 @@ class Monitor extends Window {
 			unitDatalist.appendChild(option);
 		}
 
-		const valueInput = document.createElement("select");
+		const valueInput = document.createElement("input");
+		valueInput.type = "text";
 		valueInput.style.gridArea = "4 / 2 / 4 / 2";
 		valueInput.style.minWidth = "100px";
 		valueInput.style.maxWidth = "160px";
 
-		const minInput = document.createElement("input");
-		minInput.type = "text";
-		minInput.style.gridArea = "5 / 2 / 5 / 2";
-		minInput.style.minWidth = "100px";
-		minInput.style.maxWidth = "160px";
-
 		const maxInput = document.createElement("input");
 		maxInput.type = "text";
-		maxInput.style.gridArea = "6 / 2 / 6 / 2";
+		maxInput.style.gridArea = "5 / 2 / 5 / 2";
 		maxInput.style.minWidth = "100px";
 		maxInput.style.maxWidth = "160px";
 
@@ -394,24 +388,96 @@ class Monitor extends Window {
 		attributesDatalist.id = attributesDatalistId;
 
 		valueInput.setAttribute("list", attributesDatalistId);
-		minInput.setAttribute("list", attributesDatalistId);
 		maxInput.setAttribute("list", attributesDatalistId);
 
-		const minmaxInput = document.createElement("input");
-		minmaxInput.type = "checkbox";
-		
-		const averageInput = document.createElement("input");
-		averageInput.type = "checkbox";
+		const showPeakInput = document.createElement("input");
+		showPeakInput.type = "checkbox";
 
 		const complementingInput = document.createElement("input");
 		complementingInput.type = "checkbox";
+
+		const dynamicInput = document.createElement("input");
+		dynamicInput.type = "checkbox";
 
 		const queryInput = document.createElement("textarea");
 		queryInput.style.resize = "none";
 		queryInput.style.gridArea = "8 / 1 / 9 / 4";
 
-		let chartOptions = {};
+		let templateOptions = {};
 		let selectedElement = null;
+		let isCustomized = false;
+
+		const OnChange = ()=> {
+			isCustomized = true;
+		};
+
+		nameInput.onchange = OnChange;
+		unitInput.onchange = OnChange;
+		valueInput.onchange = OnChange;
+		maxInput.onchange = OnChange;
+		showPeakInput.onchange = OnChange;
+		complementingInput.onchange = OnChange;
+		dynamicInput.onchange = OnChange;
+
+		formatInput.onchange = ()=> {
+			OnChange();
+			
+			switch (formatInput.value) {
+			case "Line chart":
+				unitInput.disabled = false;
+				valueInput.disabled = false;
+				maxInput.disabled = false;
+				showPeakInput.disabled = false;
+				complementingInput.disabled = false;
+				dynamicInput.disabled = false;
+				break;
+			
+			case "Grid line chart":
+				unitInput.disabled = false;
+				valueInput.disabled = false;
+				maxInput.disabled = false;
+				showPeakInput.disabled = false;
+				complementingInput.disabled = false;
+				dynamicInput.disabled = false;
+				break;
+			
+			case "Delta chart":
+				unitInput.disabled = false;
+				valueInput.disabled = false;
+				maxInput.disabled = false;
+				showPeakInput.disabled = false;
+				complementingInput.disabled = false;
+				dynamicInput.disabled = false;
+				break;
+			
+			case "Single value":
+				unitInput.disabled = true;
+				valueInput.disabled = false;
+				maxInput.disabled = true;
+				showPeakInput.disabled = true;
+				complementingInput.disabled = true;
+				dynamicInput.disabled = true;
+				break;
+			
+			case "List":
+				unitInput.disabled = true;
+				valueInput.disabled = true;
+				maxInput.disabled = true;
+				showPeakInput.disabled = true;
+				complementingInput.disabled = true;
+				dynamicInput.disabled = true;
+				break;
+			
+			case "Table":
+				unitInput.disabled = true;
+				valueInput.disabled = true;
+				maxInput.disabled = true;
+				showPeakInput.disabled = true;
+				complementingInput.disabled = true;
+				dynamicInput.disabled = true;
+				break;
+			}
+		};
 
 		const CreateTemplate = (name, icon, protocol, query, options) => {
 			const template = document.createElement("div");
@@ -424,14 +490,21 @@ class Monitor extends Window {
 					selectedElement.style.backgroundColor = "";
 				}
 
+				isCustomized = false;
 				selectedElement = template;
 				template.style.backgroundColor = "var(--clr-select)";
 
-				nameInput.value = name;
+				nameInput.value   = name;
 				formatInput.value = options.format;
+				unitInput.value   = "unit"  in options ? options.unit  : "None";
+				valueInput.value  = "value" in options ? options.value : "";
+				maxInput.value    = "max"  in options ? options.max  : 100;
 
-				chartOptions = options;
-				chartOptions.protocol = protocol;
+				complementingInput.checked = options.isComplement;
+				dynamicInput.checked = options.isDynamic;
+
+				templateOptions = options;
+				templateOptions.protocol = protocol;
 
 				switch (protocol) {
 				case "wmi":
@@ -518,8 +591,8 @@ class Monitor extends Window {
 					format: "Line chart",
 					prefix: "Utilization",
 					unit: "%",
-					low: 0,
-					high: 100,
+					min: 0,
+					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true
 				}
@@ -534,8 +607,8 @@ class Monitor extends Window {
 					format: "Grid line chart",
 					prefix: "Utilization",
 					unit: "%",
-					low: 0,
-					high: 100,
+					min: 0,
+					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
 				}
@@ -550,8 +623,8 @@ class Monitor extends Window {
 					format: "Line chart",
 					prefix: "In use",
 					unit: "KB",
-					low: 0,
-					high: "TotalVisibleMemorySize".toLowerCase(),
+					min: 0,
+					max: "TotalVisibleMemorySize".toLowerCase(),
 					value: "FreePhysicalMemory".toLowerCase(),
 					isComplement: true,
 				}
@@ -566,8 +639,8 @@ class Monitor extends Window {
 					format: "Line chart",
 					prefix: "Activity",
 					unit: "%",
-					low: 0,
-					high: 100,
+					min: 0,
+					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
 				}
@@ -582,8 +655,8 @@ class Monitor extends Window {
 					format: "Line chart",
 					prefix: "Receive",
 					unit: "Bps",
-					low: 0,
-					high: 1000,
+					min: 0,
+					max: 1000,
 					value: "BytesReceivedPersec".toLowerCase(),
 					isDynamic: true,
 					isComplement: false,
@@ -599,8 +672,8 @@ class Monitor extends Window {
 					format: "Line chart",
 					prefix: "Send",
 					unit: "Bps",
-					low: 0,
-					high: 1000,
+					min: 0,
+					max: 1000,
 					value: "BytesSentPersec".toLowerCase(),
 					isDynamic: true,
 					isComplement: false,
@@ -666,8 +739,8 @@ class Monitor extends Window {
 			innerBox.textContent = "";
 			innerBox.style.border = "none";
 			innerBox.style.display = "grid";
-			innerBox.style.gridTemplateColumns = "35% 16px auto";
-			innerBox.style.gridTemplateRows = "32px 8px auto 100px 8px 64px 8px 64px";
+			innerBox.style.gridTemplateColumns = "40% 16px auto";
+			innerBox.style.gridTemplateRows = "32px 8px auto 96px 8px 64px 8px 64px";
 
 			templatesTab.style.background = "";
 			templatesTab.style.backgroundColor = "";
@@ -681,15 +754,21 @@ class Monitor extends Window {
 
 			innerBox.append(classFilterInput);
 
-			const classesBox = document.createElement("div");
-			classesBox.className = "wmi-classes-list";
-			classesBox.style.border = "var(--clr-control) solid 1.5px";
-			classesBox.style.gridArea = "3 / 1 / 7 / 2";
-			classesBox.style.overflowY = "scroll";
+			const classesList = document.createElement("div");
+			classesList.className = "wmi-classes-list";
+			classesList.style.border = "var(--clr-control) solid 1.5px";
+			classesList.style.gridArea = "3 / 1 / 7 / 2";
+			classesList.style.overflowY = "scroll";
+
+			const propertiesList = document.createElement("div");
+			propertiesList.className = "wmi-properties-list";
+			propertiesList.style.border = "var(--clr-control) solid 1.5px";
+			propertiesList.style.gridArea = "3 / 4 / 4 / 3";
+			propertiesList.style.overflowY = "scroll";
 
 			const optionsBox = document.createElement("div");
 			optionsBox.style.display = "grid";
-			optionsBox.style.gridArea = "1 / 2 / 7 / 4";
+			optionsBox.style.gridArea = "4 / 2 / 7 / 4";
 			optionsBox.style.margin = "8px 20px";
 			optionsBox.style.alignItems = "center";
 			optionsBox.style.gridTemplateColumns = "80px auto 80px auto";
@@ -698,7 +777,7 @@ class Monitor extends Window {
 			optionsBox.appendChild(attributesDatalist);
 			optionsBox.appendChild(unitDatalist);
 			
-			innerBox.append(classesBox, optionsBox);
+			innerBox.append(classesList, propertiesList, optionsBox);
 
 			const nameLabel = document.createElement("div");
 			nameLabel.textContent = "Name:";
@@ -720,33 +799,28 @@ class Monitor extends Window {
 			valueLabel.style.gridArea = "4 / 1 / 4 / 2";
 			optionsBox.append(valueLabel, valueInput);
 
-			const minLabel = document.createElement("div");
-			minLabel.textContent = "Min:";
-			minLabel.style.gridArea = "5 / 1 / 5 / 2";
-			optionsBox.append(minLabel, minInput);
+			const peakLabel = document.createElement("div");
+			peakLabel.textContent = "Max:";
+			peakLabel.style.gridArea = "5 / 1 / 5 / 2";
+			optionsBox.append(peakLabel, maxInput);
 
-			const maxLabel = document.createElement("div");
-			maxLabel.textContent = "Max:";
-			maxLabel.style.gridArea = "6 / 1 / 6 / 2";
-			optionsBox.append(maxLabel, maxInput);
-
-			const minmaxBox = document.createElement("div");
-			minmaxBox.style.gridArea = "1 / 3 / 1 / 5";
-			optionsBox.appendChild(minmaxBox);
-			minmaxBox.appendChild(minmaxInput);
-			this.AddCheckBoxLabel(minmaxBox, minmaxInput, "Show min-max");
-
-			const averageBox = document.createElement("div");
-			averageBox.style.gridArea = "2 / 3 / 2 / 5";
-			optionsBox.appendChild(averageBox);
-			averageBox.appendChild(averageInput);
-			this.AddCheckBoxLabel(averageBox, averageInput, "Show average");
+			const showPeakBox = document.createElement("div");
+			showPeakBox.style.gridArea = "1 / 3 / 1 / 5";
+			optionsBox.appendChild(showPeakBox);
+			showPeakBox.appendChild(showPeakInput);
+			this.AddCheckBoxLabel(showPeakBox, showPeakInput, "Show peak value");
 
 			const complementingBox = document.createElement("div");
-			complementingBox.style.gridArea = "3 / 3 / 3 / 5";
+			complementingBox.style.gridArea = "2 / 3 / 2 / 5";
 			optionsBox.appendChild(complementingBox);
 			complementingBox.appendChild(complementingInput);
 			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing mode");
+
+			const dynamicBox = document.createElement("div");
+			dynamicBox.style.gridArea = "3 / 3 / 3 / 5";
+			optionsBox.appendChild(dynamicBox);
+			dynamicBox.appendChild(dynamicInput);
+			this.AddCheckBoxLabel(dynamicBox, dynamicInput, "Dynamic limit");
 
 			innerBox.append(queryInput);
 
@@ -767,20 +841,21 @@ class Monitor extends Window {
 			let lastProperties = queryInput.value.substring(select_index + 6, from_index).trim();
 			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim());
 
-			attributesDatalist.innerHTML = "";
+			valueInput.textContent = "";
+			for (let i=0; i<lastPropertiesArray.length; i++) {
+				if (lastPropertiesArray[i] === "*") continue;
+				const option = document.createElement("option");
+				option.value = lastPropertiesArray[i];
+				option.text = lastPropertiesArray[i];
+				valueInput.appendChild(option);
+			}
+
+			attributesDatalist.textContent = "";
 			for (let i=0; i<lastPropertiesArray.length; i++) {
 				const option = document.createElement("option");
 				option.value = lastPropertiesArray[i];
 				option.text = lastPropertiesArray[i];
 				attributesDatalist.appendChild(option);
-			}
-
-			valueInput.innerHTML = "";
-			for (let i=0; i<lastPropertiesArray.length; i++) {
-				const option = document.createElement("option");
-				option.value = lastPropertiesArray[i];
-				option.text = lastPropertiesArray[i];
-				valueInput.appendChild(option);
 			}
 
 			classFilterInput.onkeydown = event=>{
@@ -791,11 +866,15 @@ class Monitor extends Window {
 			};
 
 			let selected = null;
+			let properties = [];
+			let propertyCheckboxes = [];
+
 			classFilterInput.oninput = ()=> {
 				if (!wmiClasses.classes) return;
 				let filter = classFilterInput.value.toLowerCase();
 
-				classesBox.textContent = "";
+				classesList.textContent = "";
+				propertiesList.textContent = "";
 
 				for (let i=0; i<wmiClasses.classes.length; i++) {
 					let matched = false;
@@ -815,7 +894,7 @@ class Monitor extends Window {
 					if (matched) {
 						const newClass = document.createElement("div");
 						newClass.textContent = wmiClasses.classes[i].class;
-						classesBox.appendChild(newClass);
+						classesList.appendChild(newClass);
 
 						if (className && className === wmiClasses.classes[i].class.toLowerCase()) {
 							newClass.scrollIntoView({ behavior: "smooth"});
@@ -826,6 +905,33 @@ class Monitor extends Window {
 
 						newClass.onclick = ()=> {
 							if (selected != null) selected.style.backgroundColor = "";
+
+							properties = [];
+							propertyCheckboxes = [];
+
+							propertiesList.textContent = "";
+
+							for (let j = 0; j < wmiClasses.classes[i].properties.length; j++) { 
+								let value = lastProperties === "*" || className == null ||
+									className.toLowerCase() === wmiClasses.classes[i].class.toLowerCase() &&
+									lastPropertiesArray.includes(wmiClasses.classes[i].properties[j].toLowerCase());
+
+								const propertyBox = document.createElement("div");
+								const propertyCheckbox = document.createElement("input");
+								propertyCheckbox.type = "checkbox";
+								propertyCheckbox.checked = value;
+								propertyCheckboxes.push(propertyCheckbox);
+								propertyBox.appendChild(propertyCheckbox);
+
+								properties.push(value);
+
+								this.AddCheckBoxLabel(propertyBox, propertyCheckbox, wmiClasses.classes[i].properties[j]);
+								propertiesList.appendChild(propertyBox);
+
+								propertyCheckbox.onchange = ()=> {
+									OnChange();
+								};
+							}
 
 							selected = newClass;
 							selected.style.backgroundColor = "var(--clr-select)";
@@ -839,9 +945,23 @@ class Monitor extends Window {
 		};
 
 		okButton.onclick = ()=> {
-			dialog.Close();
-			this.AddChart(nameInput.value, queryInput.value, chartOptions);
+			let options = {
+				protocol: templateOptions.protocol,
+				prefix  : isCustomized ? "" : templateOptions.prefix,
+				name    : nameInput.value,
+				format  : formatInput.value,
+				unit    : unitInput.value,
+				value   : valueInput.value.toLocaleLowerCase(),
+				min     : 0,
+				max     : maxInput.value.toLocaleLowerCase(),
+				showPeak     : showPeakInput.checked,
+				isComplement : complementingInput.checked,
+				isDynamic    : dynamicInput.checked,
+			};
 
+			this.AddChart(nameInput.value, queryInput.value, options);
+
+			dialog.Close();
 		};
 
 		templatesTab.onclick();
@@ -915,8 +1035,8 @@ class Monitor extends Window {
 		dot.style.borderRadius = "5px";
 		inner.parentElement.appendChild(dot);
 
-		let min = Number.MAX_SAFE_INTEGER;
-		let max = Number.MIN_SAFE_INTEGER;
+		let peak = Number.MIN_SAFE_INTEGER;
+		let valley = Number.MAX_SAFE_INTEGER;
 		const list = [];
 		const gap = 5;
 
@@ -962,8 +1082,8 @@ class Monitor extends Window {
 			list.push(data);
 
 			if (data > 0) {
-				if (min > data) { min = data; }
-				if (max < data) { max = data; }
+				if (valley > data) { valley = data; }
+				if (peak < data) { peak = data; }
 			}
 
 			if (data < 0) {
@@ -973,8 +1093,8 @@ class Monitor extends Window {
 				valueLabel.textContent = `${options.prefix}: ${data}${options.unit}`;
 			}
 
-			if (max >=0 && min !== max) {
-				valueLabel.textContent += `\nMin-max: ${min}-${max}${options.unit}`;
+			if (peak >=0 && valley !== peak) {
+				valueLabel.textContent += `\nPeak: ${peak}${options.unit}`;
 			}
 
 			DrawGraph();
@@ -1004,10 +1124,10 @@ class Monitor extends Window {
 
 		const list = [];
 		const gap = 5;
-		let min = Number.MAX_SAFE_INTEGER;
-		let max = Number.MIN_SAFE_INTEGER;
-		let low = 0;
-		let high = 100;
+		let valley = Number.MAX_SAFE_INTEGER;
+		let peak = Number.MIN_SAFE_INTEGER;
+		let min = 0;
+		let max = 100;
 
 		const ctx = canvas.getContext("2d");
 		ctx.lineWidth = 2;
@@ -1017,7 +1137,7 @@ class Monitor extends Window {
 		const DrawGraph = ()=> {
 			ctx.clearRect(0, 0, canvas.width, height);
 
-			let spectrum = Math.abs(low - high);
+			let spectrum = Math.abs(min - max);
 
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
@@ -1036,17 +1156,17 @@ class Monitor extends Window {
 		const Update = obj=> {
 			let value = parseFloat(obj[options.value][0]);
 
-			low = isNaN(options.low) ? obj[options.low][0] : options.low;
-			high = isNaN(options.high) ? obj[options.high][0] : options.high;
+			min = isNaN(options.min) ? obj[options.min][0] : options.min;
+			max = isNaN(options.max) ? obj[options.max][0] : options.max;
 
-			if (options.isComplement) { value = high - value; }
+			if (options.isComplement) { value = max - value; }
 
-			if (min > value) { min = value; }
-			if (max < value) { max = value; }
+			if (valley > value) { valley = value; }
+			if (peak < value) { peak = value; }
 
 			if (options.isDynamic) {
-				low = min * 1.05;
-				high = max * 1.05;
+				min = valley * 1.05;
+				max = peak * 1.05;
 			}
 
 			if (list.length * gap > canvas.width) list.shift();
@@ -1073,13 +1193,13 @@ class Monitor extends Window {
 		const ctx = [];
 		const list = [];
 		let gap = 4;
-		let min = Number.MAX_SAFE_INTEGER;
-		let max = Number.MIN_SAFE_INTEGER;
-		let low = 0;
-		let high = 100;
+		let valley = Number.MAX_SAFE_INTEGER;
+		let peak = Number.MIN_SAFE_INTEGER;
+		let min = 0;
+		let max = 100;
 
 		const DrawGraph = ()=> {
-			let spectrum = Math.abs(low - high);
+			let spectrum = Math.abs(min - max);
 
 			for (let j=0; j<ctx.length; j++) {
 				ctx[j].clearRect(0, 0, canvases[j].width, height);
@@ -1102,21 +1222,21 @@ class Monitor extends Window {
 		const Update = obj=> {
 			let array = obj[options.value];
 
-			let low = isNaN(options.low) ? obj[options.low][0] : options.low;
-			let high = isNaN(options.high) ? obj[options.high][0] : options.high;
-			let spectrum = Math.abs(low - high);
+			min = isNaN(options.min) ? obj[options.min][0] : options.min;
+			max = isNaN(options.max) ? obj[options.max][0] : options.max;
+			let spectrum = Math.abs(min - max);
 
-			if (options.isComplement) { array = array.map(v=>high - parseInt(v)); }
+			if (options.isComplement) { array = array.map(v=>max - parseInt(v)); }
 
 			for (let i=0; i<array.length; i++) {
-				if (min > array[i]) { min = array[i]; }
-				if (max < array[i]) { max = array[i]; }
+				if (valley > array[i]) { valley = array[i]; }
+				if (peak < array[i]) { peak = array[i]; }
 			}
 
 			if (options.isDynamic) {
-				low = min * 1.05;
-				high = max * 1.05;
-				spectrum = Math.abs(low - high);
+				min = valley * 1.05;
+				max = peak * 1.05;
+				spectrum = Math.abs(min - max);
 			}
 
 			if (canvases.length === 0) {
@@ -1152,7 +1272,7 @@ class Monitor extends Window {
 			if (list.length * gap > 400) list.shift();
 			list.push(array.map(v=>v * 100 / spectrum));
 
-			//valueLabel.textContent = `\nMin-max: ${this.FormatUnits(min, options.unit)}-${this.FormatUnits(max, options.unit)}`;
+			valueLabel.textContent = `\nPeak: ${this.FormatUnits(peak, options.unit)}`;
 
 			DrawGraph();
 		};
@@ -1176,10 +1296,10 @@ class Monitor extends Window {
 
 		const list = [];
 		const gap = 5;
-		let min = Number.MAX_SAFE_INTEGER;
-		let max = Number.MIN_SAFE_INTEGER;
-		let low = 0;
-		let high = 100;
+		let valley = Number.MAX_SAFE_INTEGER;
+		let peak = Number.MIN_SAFE_INTEGER;
+		let min = 0;
+		let max = 100;
 		let last = null;
 
 		const ctx = canvas.getContext("2d");
@@ -1190,7 +1310,7 @@ class Monitor extends Window {
 		const DrawGraph = ()=>{
 			ctx.clearRect(0, 0, canvas.width, height);
 
-			let spectrum = Math.abs(low - high);
+			let spectrum = Math.abs(min - max);
 
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
@@ -1209,17 +1329,17 @@ class Monitor extends Window {
 		const Update = obj=> {
 			let value = parseFloat(obj[options.value][0]);
 
-			const low = isNaN(options.low) ? obj[options.low][0] : options.low;
-			const high = isNaN(options.high) ? obj[options.high][0] : options.high;
+			min = isNaN(options.min) ? obj[options.min][0] : options.min;
+			max = isNaN(options.max) ? obj[options.max][0] : options.max;
 
-			if (options.isComplement) { value = high - value; }
+			if (options.isComplement) { value = max - value; }
 
-			if (min > delta) { min = delta; }
-			if (max < delta) { max = delta; }
+			if (valley > delta) { valley = delta; }
+			if (peak < delta) { peak = delta; }
 
 			if (options.isDynamic) {
-				low = min * 1.05;
-				high = max * 1.05;
+				min = valley * 1.05;
+				max = peak * 1.05;
 			}
 
 			if (last === null) {
