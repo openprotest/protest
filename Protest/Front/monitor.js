@@ -594,7 +594,8 @@ class Monitor extends Window {
 					min: 0,
 					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
-					isComplement: true
+					isComplement: true,
+					showPeakInput: true
 				}
 			));
 
@@ -611,6 +612,7 @@ class Monitor extends Window {
 					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
+					showPeakInput: true
 				}
 			));
 
@@ -627,6 +629,7 @@ class Monitor extends Window {
 					max: "TotalVisibleMemorySize".toLowerCase(),
 					value: "FreePhysicalMemory".toLowerCase(),
 					isComplement: true,
+					showPeakInput: true
 				}
 			));
 
@@ -643,6 +646,7 @@ class Monitor extends Window {
 					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
+					showPeakInput: true
 				}
 			));
 
@@ -660,6 +664,7 @@ class Monitor extends Window {
 					value: "BytesReceivedPersec".toLowerCase(),
 					isDynamic: true,
 					isComplement: false,
+					showPeakInput: true
 				}
 			));
 
@@ -677,6 +682,7 @@ class Monitor extends Window {
 					value: "BytesSentPersec".toLowerCase(),
 					isDynamic: true,
 					isComplement: false,
+					showPeakInput: true
 				}
 			));
 
@@ -688,7 +694,8 @@ class Monitor extends Window {
 				{
 					format: "Ping",
 					prefix: "RTT",
-					unit: "ms"
+					unit: "ms",
+					showPeakInput: true
 				}
 			));
 
@@ -706,9 +713,9 @@ class Monitor extends Window {
 				"Battery",
 				"mono/battery.svg",
 				"wmi",
-				"SELECT * FROM Win32_Battery",
+				"SELECT TimeOnBattery FROM Win32_Battery",
 				{
-					format: "List",
+					format: "Single value",
 					prefix: "Usage",
 					unit: "%"
 				}
@@ -947,7 +954,7 @@ class Monitor extends Window {
 		okButton.onclick = ()=> {
 			let options = {
 				protocol: templateOptions.protocol,
-				prefix  : isCustomized ? "" : templateOptions.prefix,
+				prefix  : isCustomized ? "" : `${templateOptions.prefix}:`,
 				name    : nameInput.value,
 				format  : formatInput.value,
 				unit    : unitInput.value,
@@ -1087,14 +1094,14 @@ class Monitor extends Window {
 			}
 
 			if (data < 0) {
-				valueLabel.textContent = `${options.prefix}: --`;
+				valueLabel.textContent = `${options.prefix} --\n`;
 			}
 			else {
-				valueLabel.textContent = `${options.prefix}: ${data}${options.unit}`;
+				valueLabel.textContent = `${options.prefix} ${data}${options.unit}\n`;
 			}
 
-			if (peak >=0 && valley !== peak) {
-				valueLabel.textContent += `\nPeak: ${peak}${options.unit}`;
+			if (options.showPeak && peak >=0 && valley !== peak) {
+				valueLabel.textContent += `Peak: ${peak}${options.unit}\n`;
 			}
 
 			DrawGraph();
@@ -1172,7 +1179,11 @@ class Monitor extends Window {
 			if (list.length * gap > canvas.width) list.shift();
 			list.push(value);
 
-			valueLabel.textContent = `${options.prefix}: ${this.FormatUnits(value, options.unit)}`;
+			valueLabel.textContent = `${options.prefix} ${this.FormatUnits(value, options.unit)}\n`;
+
+			if (options.showPeak && valley !== peak) {
+				valueLabel.textContent += `Peak: ${peak}${options.unit}\n`;
+			}
 
 			DrawGraph();
 		};
@@ -1272,7 +1283,11 @@ class Monitor extends Window {
 			if (list.length * gap > 400) list.shift();
 			list.push(array.map(v=>v * 100 / spectrum));
 
-			valueLabel.textContent = `\nPeak: ${this.FormatUnits(peak, options.unit)}`;
+			valueLabel.textContent = `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
+
+			if (options.showPeak && valley !== peak) {
+				valueLabel.textContent += `Peak: ${peak}${options.unit}\n`;
+			}
 
 			DrawGraph();
 		};
@@ -1352,7 +1367,7 @@ class Monitor extends Window {
 			if (list.length * gap > canvas.width) list.shift();
 			list.push(delta);
 
-			valueLabel.textContent = `${options.prefix}: ${this.FormatUnits(value, options.unit)}`;
+			valueLabel.textContent = `${options.prefix} ${this.FormatUnits(value, options.unit)}\n`;
 
 			DrawGraph();
 
