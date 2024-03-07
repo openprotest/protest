@@ -342,12 +342,7 @@ class Monitor extends Window {
 		formatInput.style.maxWidth = "160px";
 
 		const formatOptionsArray = [
-			"Line chart",
-			"Grid line chart",
-			"Delta chart",
-			"Single value",
-			"List",
-			"Table"
+			"Line chart", "Grid line chart", "Delta chart", "Single value", "List", "Table"
 		];
 
 		for (let i=0; i<formatOptionsArray.length; i++) {
@@ -425,7 +420,7 @@ class Monitor extends Window {
 
 		formatInput.onchange = ()=> {
 			OnChange();
-			
+
 			switch (formatInput.value) {
 			case "Line chart":
 				unitInput.disabled = false;
@@ -435,7 +430,7 @@ class Monitor extends Window {
 				complementingInput.disabled = false;
 				dynamicInput.disabled = false;
 				break;
-			
+
 			case "Grid line chart":
 				unitInput.disabled = false;
 				valueInput.disabled = false;
@@ -444,7 +439,7 @@ class Monitor extends Window {
 				complementingInput.disabled = false;
 				dynamicInput.disabled = false;
 				break;
-			
+
 			case "Delta chart":
 				unitInput.disabled = false;
 				valueInput.disabled = false;
@@ -453,7 +448,7 @@ class Monitor extends Window {
 				complementingInput.disabled = false;
 				dynamicInput.disabled = false;
 				break;
-			
+
 			case "Single value":
 				unitInput.disabled = true;
 				valueInput.disabled = false;
@@ -462,7 +457,7 @@ class Monitor extends Window {
 				complementingInput.disabled = true;
 				dynamicInput.disabled = true;
 				break;
-			
+
 			case "List":
 				unitInput.disabled = true;
 				valueInput.disabled = true;
@@ -471,7 +466,7 @@ class Monitor extends Window {
 				complementingInput.disabled = true;
 				dynamicInput.disabled = true;
 				break;
-			
+
 			case "Table":
 				unitInput.disabled = true;
 				valueInput.disabled = true;
