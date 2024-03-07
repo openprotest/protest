@@ -254,6 +254,8 @@ internal static class Monitor {
                     if (wmiThread is null) {
                         wmiThread = new Thread(() => WmiDelegate());
                         wmiThread.Start();
+
+                        Console.WriteLine(query.value);
                     }
                     break;
 

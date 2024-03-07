@@ -39,6 +39,8 @@ class Monitor extends Window {
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.AddSendToChatButton();
 
 		this.connectButton.disabled = true;
 		this.startButton.disabled = true;
@@ -278,6 +280,8 @@ class Monitor extends Window {
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
+		dialog.innerBox.parentElement.style.maxWidth = "1024px";
+
 		const okButton = dialog.okButton;
 		const innerBox = dialog.innerBox;
 
@@ -383,12 +387,12 @@ class Monitor extends Window {
 		maxInput.style.minWidth = "100px";
 		maxInput.style.maxWidth = "160px";
 
-		const attributesDatalistId = "m" + new Date().getTime();
-		const attributesDatalist = document.createElement("datalist");
-		attributesDatalist.id = attributesDatalistId;
+		const propertiesDatalistId = "m" + new Date().getTime();
+		const propertiesDatalist = document.createElement("datalist");
+		propertiesDatalist.id = propertiesDatalistId;
 
-		valueInput.setAttribute("list", attributesDatalistId);
-		maxInput.setAttribute("list", attributesDatalistId);
+		valueInput.setAttribute("list", propertiesDatalistId);
+		maxInput.setAttribute("list", propertiesDatalistId);
 
 		const showPeakInput = document.createElement("input");
 		showPeakInput.type = "checkbox";
@@ -500,6 +504,7 @@ class Monitor extends Window {
 				valueInput.value  = "value" in options ? options.value : "";
 				maxInput.value    = "max"  in options ? options.max  : 100;
 
+				showPeakInput.checked = options.showPeak;
 				complementingInput.checked = options.isComplement;
 				dynamicInput.checked = options.isDynamic;
 
@@ -595,7 +600,7 @@ class Monitor extends Window {
 					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -612,7 +617,7 @@ class Monitor extends Window {
 					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -629,7 +634,7 @@ class Monitor extends Window {
 					max: "TotalVisibleMemorySize".toLowerCase(),
 					value: "FreePhysicalMemory".toLowerCase(),
 					isComplement: true,
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -646,7 +651,7 @@ class Monitor extends Window {
 					max: 100,
 					value: "PercentIdleTime".toLowerCase(),
 					isComplement: true,
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -664,7 +669,7 @@ class Monitor extends Window {
 					value: "BytesReceivedPersec".toLowerCase(),
 					isDynamic: true,
 					isComplement: false,
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -682,7 +687,7 @@ class Monitor extends Window {
 					value: "BytesSentPersec".toLowerCase(),
 					isDynamic: true,
 					isComplement: false,
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -695,7 +700,7 @@ class Monitor extends Window {
 					format: "Ping",
 					prefix: "RTT",
 					unit: "ms",
-					showPeakInput: true
+					showPeak: true
 				}
 			));
 
@@ -781,7 +786,7 @@ class Monitor extends Window {
 			optionsBox.style.gridTemplateColumns = "80px auto 80px auto";
 			optionsBox.style.gridTemplateRows = "repeat(6, 32px)";
 
-			optionsBox.appendChild(attributesDatalist);
+			optionsBox.appendChild(propertiesDatalist);
 			optionsBox.appendChild(unitDatalist);
 			
 			innerBox.append(classesList, propertiesList, optionsBox);
@@ -827,7 +832,7 @@ class Monitor extends Window {
 			dynamicBox.style.gridArea = "3 / 3 / 3 / 5";
 			optionsBox.appendChild(dynamicBox);
 			dynamicBox.appendChild(dynamicInput);
-			this.AddCheckBoxLabel(dynamicBox, dynamicInput, "Dynamic limit");
+			this.AddCheckBoxLabel(dynamicBox, dynamicInput, "Dynamic limits");
 
 			innerBox.append(queryInput);
 
@@ -846,7 +851,7 @@ class Monitor extends Window {
 			let select_index = query.indexOf("select");
 			let from_index = query.indexOf("from");
 			let lastProperties = queryInput.value.substring(select_index + 6, from_index).trim();
-			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim());
+			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim().toLowerCase());
 
 			valueInput.textContent = "";
 			for (let i=0; i<lastPropertiesArray.length; i++) {
@@ -857,12 +862,12 @@ class Monitor extends Window {
 				valueInput.appendChild(option);
 			}
 
-			attributesDatalist.textContent = "";
+			propertiesDatalist.textContent = "";
 			for (let i=0; i<lastPropertiesArray.length; i++) {
 				const option = document.createElement("option");
 				option.value = lastPropertiesArray[i];
 				option.text = lastPropertiesArray[i];
-				attributesDatalist.appendChild(option);
+				propertiesDatalist.appendChild(option);
 			}
 
 			classFilterInput.onkeydown = event=>{
@@ -875,6 +880,32 @@ class Monitor extends Window {
 			let selected = null;
 			let properties = [];
 			let propertyCheckboxes = [];
+
+			const ListProperties = (classObject, query)=> {
+				properties = [];
+				propertyCheckboxes = [];
+
+				for (let j = 0; j < classObject.properties.length; j++) {
+					let value = lastProperties === "*" || className == null ||
+						className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
+
+					const propertyBox = document.createElement("div");
+					const propertyCheckbox = document.createElement("input");
+					propertyCheckbox.type = "checkbox";
+					propertyCheckbox.checked = value;
+					propertyCheckboxes.push(propertyCheckbox);
+					propertyBox.appendChild(propertyCheckbox);
+
+					properties.push(value);
+
+					this.AddCheckBoxLabel(propertyBox, propertyCheckbox, classObject.properties[j]);
+					propertiesList.appendChild(propertyBox);
+
+					propertyCheckbox.onchange = ()=> {
+						OnChange();
+					};
+				}
+			}
 
 			classFilterInput.oninput = ()=> {
 				if (!wmiClasses.classes) return;
@@ -903,47 +934,27 @@ class Monitor extends Window {
 						newClass.textContent = wmiClasses.classes[i].class;
 						classesList.appendChild(newClass);
 
+						newClass.onclick = event=> {
+							if (selected != null) selected.style.backgroundColor = "";
+
+							propertiesList.textContent = "";
+
+							ListProperties(wmiClasses.classes[i], queryInput.value);
+
+							selected = newClass;
+							selected.style.backgroundColor = "var(--clr-select)";
+							if (event) {
+								queryInput.value = "SELECT * FROM " + wmiClasses.classes[i].class;
+							}
+						};
+
 						if (className && className === wmiClasses.classes[i].class.toLowerCase()) {
 							newClass.scrollIntoView({ behavior: "smooth"});
 
 							selected = newClass;
 							selected.style.backgroundColor = "var(--clr-select)";
+							selected.onclick();
 						}
-
-						newClass.onclick = ()=> {
-							if (selected != null) selected.style.backgroundColor = "";
-
-							properties = [];
-							propertyCheckboxes = [];
-
-							propertiesList.textContent = "";
-
-							for (let j = 0; j < wmiClasses.classes[i].properties.length; j++) { 
-								let value = lastProperties === "*" || className == null ||
-									className.toLowerCase() === wmiClasses.classes[i].class.toLowerCase() &&
-									lastPropertiesArray.includes(wmiClasses.classes[i].properties[j].toLowerCase());
-
-								const propertyBox = document.createElement("div");
-								const propertyCheckbox = document.createElement("input");
-								propertyCheckbox.type = "checkbox";
-								propertyCheckbox.checked = value;
-								propertyCheckboxes.push(propertyCheckbox);
-								propertyBox.appendChild(propertyCheckbox);
-
-								properties.push(value);
-
-								this.AddCheckBoxLabel(propertyBox, propertyCheckbox, wmiClasses.classes[i].properties[j]);
-								propertiesList.appendChild(propertyBox);
-
-								propertyCheckbox.onchange = ()=> {
-									OnChange();
-								};
-							}
-
-							selected = newClass;
-							selected.style.backgroundColor = "var(--clr-select)";
-							queryInput.value = "SELECT * FROM " + wmiClasses.classes[i].class;
-						};
 					}
 				}
 			};
@@ -1182,7 +1193,7 @@ class Monitor extends Window {
 			valueLabel.textContent = `${options.prefix} ${this.FormatUnits(value, options.unit)}\n`;
 
 			if (options.showPeak && valley !== peak) {
-				valueLabel.textContent += `Peak: ${peak}${options.unit}\n`;
+				valueLabel.textContent += `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
 			}
 
 			DrawGraph();
@@ -1286,7 +1297,7 @@ class Monitor extends Window {
 			valueLabel.textContent = `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
 
 			if (options.showPeak && valley !== peak) {
-				valueLabel.textContent += `Peak: ${peak}${options.unit}\n`;
+				valueLabel.textContent += `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
 			}
 
 			DrawGraph();
@@ -1409,14 +1420,40 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateList(inner, name, options) {
-		const height = 300;
+	CreateList(inner, valueLabel, name, options) {
+		const height = 350;
 		inner.style.height = `${height}px`;
+		inner.style.overflowX = "auto";
+		inner.style.overflowY = "auto";
+		inner.style.backgroundColor = "var(--clr-pane)";
 
-		//TODO:
+		const table = document.createElement("table");
+		table.className = "wmi-list";
+		table.style.marginTop = "20px";
+		inner.appendChild(table);
 
 		const Update = value=>{
-			//TODO:
+			const keys = Object.keys(value);
+			const values = Object.values(value);
+			const count = keys.length;
+
+			valueLabel.textContent = `Count: ${count}`;
+			table.textContent = "";
+
+			for (let i=0; i<keys.length; i++) {
+				const tr = document.createElement("tr");
+				table.appendChild(tr);
+
+				const td = document.createElement("td");
+				td.textContent = keys[i];
+				tr.appendChild(td);
+				
+				for (let j=0; j<values[i].length; j++) {
+					const td = document.createElement("td");
+					td.textContent = values[i][j];
+					tr.appendChild(td);
+				}
+			}
 		};
 
 		return {
@@ -1427,14 +1464,49 @@ class Monitor extends Window {
 		};
 	}
 
-	CreateTable(inner, name, options) {
-		const height = 300;
+	CreateTable(inner, valueLabel, name, options) {
+		const height = 350;
 		inner.style.height = `${height}px`;
+		inner.style.overflowX = "auto";
+		inner.style.overflowY = "auto";
+		inner.style.backgroundColor = "var(--clr-pane)";
 
-		//TODO:
+		const table = document.createElement("table");
+		table.className = "wmi-table";
+		table.style.marginTop = "20px";
+		inner.appendChild(table);
 
 		const Update = value=>{
-			//TODO:
+			const keys = Object.keys(value);
+			const values = Object.values(value);
+			const count = values[0].length;
+			
+			valueLabel.textContent = `Count: ${count}`;
+			table.textContent = "";
+
+			const titleTr = document.createElement("tr");
+			table.appendChild(titleTr);
+
+			const whiteSpace = document.createElement("td");
+			titleTr.appendChild(whiteSpace);
+			for (let i=0; i<keys.length; i++) {
+				const td = document.createElement("td");
+				td.textContent = keys[i];
+				titleTr.appendChild(td);
+			}
+
+			for (let i=0; i<count; i++) {
+				const tr = document.createElement("tr");
+				table.appendChild(tr);
+
+				tr.appendChild(document.createElement("td"));
+
+				for (let j=0; j<values.length; j++) {
+					const td = document.createElement("td");
+					td.textContent = values[j][i];
+					tr.appendChild(td);
+				}
+			}
 		};
 
 		return {

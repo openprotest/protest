@@ -84,6 +84,7 @@
 	max-width: calc(100% - 8px);
 	box-sizing: border-box;
 	color: var(--clr-light);
+	text-shadow: black 0 0 2px;
 	border-radius: 2px;
 	font-weight: 600;
 	font-size: small;
@@ -110,7 +111,7 @@
 .monitor-template {
 	display: inline-block;
 	vertical-align: top;
-	width: 125px;
+	width: 124px;
 	height: 64px;
 	line-height: 64px;
 	padding: 8px;

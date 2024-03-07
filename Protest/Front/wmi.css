@@ -102,6 +102,28 @@
 	content: counter(eq-wmi-table-count);
 }
 
+.wmi-list {
+	color: var(--clr-dark);
+	border-collapse: collapse;
+	padding-left: 8px;
+	padding-right: 8px;
+	-webkit-user-select: text; user-select: text;
+}
+
+.wmi-list > tr > * {
+	border: #444 2px solid;
+}
+
+.wmi-list > tr:hover td:nth-child(n+2) {
+	background-color: var(--clr-highlight);
+}
+
+.wmi-list > tr > td:nth-child(1) {
+	color: white;
+	font-weight: bold;
+	background-color: #444;
+}
+
 .wmi-classes-list > div {
 	padding: 4px 8px;
 	white-space: nowrap;
