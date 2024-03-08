@@ -16,15 +16,15 @@ class Personalize extends Tabs {
 		this.chatTab    = this.AddTab("Chat", "mono/chat.svg");
 		this.agentTab   = this.AddTab("Agent", "mono/agent.svg");
 
-		this.guiTab.onclick       = ()=> this.ShowGui();
-		this.regionTab.onclickTab = ()=> this.ShowRegion();
-		this.sessionTab.onclick   = ()=> this.ShowSession();
-		this.chatTab.onclick      = ()=> this.ShowChat();
-		this.agentTab.onclick     = ()=> this.ShowAgent();
+		this.guiTab.onclick     = ()=> this.ShowGui();
+		this.regionTab.onclick  = ()=> this.ShowRegion();
+		this.sessionTab.onclick = ()=> this.ShowSession();
+		this.chatTab.onclick    = ()=> this.ShowChat();
+		this.agentTab.onclick   = ()=> this.ShowAgent();
 
 		switch (this.params) {
 		case "region":
-			thr.classNameTab = "v-tab-selected";
+			this.regionTab.className = "v-tab-selected";
 			this.ShowRegion();
 			break;
 

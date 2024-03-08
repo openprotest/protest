@@ -219,7 +219,7 @@ internal static class Monitor {
             while (ws.State == WebSocketState.Open) {
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "")) {
+                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/monitor")) {
                     await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                     return;
                 }
