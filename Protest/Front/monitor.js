@@ -283,8 +283,8 @@ class Monitor extends Window {
 
 		const intervalInput = document.createElement("input");
 		intervalInput.type = "number";
-		intervalInput.min = 10;
-		intervalInput.max = 5000;
+		intervalInput.min = 100;
+		intervalInput.max = 10_000;
 		intervalInput.value = this.params.interval;
 		intervalInput.style.width = "100px";
 		innerBox.appendChild(intervalInput);

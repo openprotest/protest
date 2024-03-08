@@ -246,7 +246,9 @@ internal static class Monitor {
                     break;
 
                 case Action.interval:
-                    _ = int.TryParse(query.value, out interval);
+                    int newInterval;
+                    _ = int.TryParse(query.value, out newInterval);
+                    interval = Math.Max(newInterval, 100);
                     break;
                 
                 case Action.addwmi:
