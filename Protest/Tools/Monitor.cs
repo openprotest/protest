@@ -254,8 +254,6 @@ internal static class Monitor {
                     if (wmiThread is null) {
                         wmiThread = new Thread(() => WmiDelegate());
                         wmiThread.Start();
-
-                        Console.WriteLine(query.value);
                     }
                     break;
 
@@ -268,6 +266,7 @@ internal static class Monitor {
                     break;
 
                 case Action.remove:
+                    //TODO:
                     break;
                 }
             }
@@ -341,7 +340,14 @@ internal static class Monitor {
         foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
             foreach (PropertyData p in o.Properties) {
                 string name = p.Name.ToString();
-                string value = Protocols.Wmi.FormatProperty(p);
+                string value;
+                
+                try {
+                    value = Protocols.Wmi.FormatProperty(p);
+                }
+                catch {
+                    value = string.Empty;
+                }
 
                 if (!data.ContainsKey(name)) {
                     data.Add(name, new List<string>());

@@ -85,8 +85,11 @@ internal static class Wmi {
             return value;
         }
 
-        if (property.Type.ToString() == "DateTime") {
+        if (property.Type == CimType.DateTime) {
             return DateTimeToString(property.Value?.ToString() ?? String.Empty);
+        }
+        else if (property.Type == CimType.Object) {
+            return "{}";
         }
         else {
             if (format != null && property.Value != null) return format.Invoke(property.Value.ToString());

@@ -58,7 +58,13 @@
 .monitor-graph-container {
 	position: relative;
 	max-width: 960px;
-	padding: 8px 16px;
+	padding: 8px;
+	margin: 8px 16px;
+	border-radius: 4px;
+}
+
+.monitor-graph-container:hover {
+	background-color: rgba(128,128,128,.1);
 }
 
 .monitor-graph-inner {
@@ -99,13 +105,36 @@
 	position: absolute;
 	right: 8px;
 	top: 20px;
-	width: 192px;
+	width: 188px;
 	color: var(--clr-light);
 	font-weight: 600;
 	white-space: break-spaces;
 	line-height: 24px;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	pointer-events: none;
+}
+
+.monitor-graph-container:hover > .monitor-remove {
+	visibility: visible;
+	opacity: 1;
+}
+
+.monitor-remove {
+	visibility: hidden;
+	opacity: 0;
+	position: absolute;
+	right: 8px;
+	width: 24px;
+	height: 24px;
+	top: 50%;
+	transform: translateY(-50%);
+	background-image: url("controls/close.svg");
+	background-size: 24px 24px;
+	background-repeat: no-repeat;
+	background-color: rgb(192,192,192);
+	border-radius: 50%;
+	transition: .2s;
 }
 
 .monitor-template {

@@ -2,6 +2,7 @@ class Monitor extends Window {
 	constructor(params) {
 		super();
 		this.params = params ?? { file: null};
+		this.params.interval ??= 1000;
 		this.params.chart ??= [];
 
 		this.SetIcon("mono/resmonitor.svg");
@@ -39,6 +40,7 @@ class Monitor extends Window {
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
+		this.intervalButton = this.AddToolbarButton("Interval", "mono/metronome.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
 
@@ -58,10 +60,10 @@ class Monitor extends Window {
 		this.content.append(this.scrollable, this.consoleBox, this.toggleConsoleButton);
 
 		this.connectButton.onclick = ()=> this.InitializeSocketConnection();
-		this.addStatButton.onclick = ()=> this.AddChartDialog();
+		this.addStatButton.onclick = ()=> this.ChartDialog();
 		this.startButton.onclick = ()=> this.Start();
 		this.pauseButton.onclick = ()=> this.Pause();
-
+		this.intervalButton.onclick = ()=> this.SetInterval();
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
 		if (this.params.chart.length === 0) {
@@ -157,13 +159,17 @@ class Monitor extends Window {
 				setTimeout(()=>this.toggleConsoleButton.onclick(), 400);
 			}
 
+			this.socket.send(JSON.stringify({
+				action: "interval",
+				value: this.params.interval.toString()
+			}));
+
 			for (let i=0; i<this.params.chart.length; i++) {
-				const obj = {
+				this.socket.send(JSON.stringify({
 					action: `add${this.params.chart[i].options.protocol}`,
 					value: this.params.chart[i].value,
 					index: i
-				};
-				this.socket.send(JSON.stringify(obj));
+				}));
 			}
 		};
 
@@ -256,6 +262,53 @@ class Monitor extends Window {
 		this.pauseButton.disabled = true;
 	}
 
+	SetInterval() {
+		if (!this.socket) return;
+
+		const dialog = this.DialogBox("120px");
+		if (dialog === null) return;
+
+		const okButton = dialog.okButton;
+		const innerBox = dialog.innerBox;
+
+		innerBox.parentElement.style.maxWidth = "400px";
+		innerBox.style.padding = "16px 0px 0px 16px";
+		innerBox.style.textAlign = "center";
+
+		const intervalLabel = document.createElement("div");
+		intervalLabel.textContent = "Interval (ms):";
+		intervalLabel.style.display = "inline-block";
+		intervalLabel.style.minWidth = "120px";
+		innerBox.appendChild(intervalLabel);
+
+		const intervalInput = document.createElement("input");
+		intervalInput.type = "number";
+		intervalInput.min = 10;
+		intervalInput.max = 5000;
+		intervalInput.value = this.params.interval;
+		intervalInput.style.width = "100px";
+		innerBox.appendChild(intervalInput);
+
+		intervalInput.onkeydown = event=> {
+			if (event.key === "Enter") { okButton.click(); }
+		}
+
+		okButton.onclick = ()=> {
+			this.params.interval = intervalInput.value;
+
+			this.socket.send(JSON.stringify({
+				action: "interval",
+				value: intervalInput.value.toString()
+			}));
+			
+			this.startButton.disabled = false;
+			this.pauseButton.disabled = true;
+			dialog.Close();
+		};
+
+		intervalInput.focus();
+	}
+
 	ConsoleLog(text, level) {
 		const line = document.createElement("div");
 		line.className = "monitor-console-line";
@@ -271,7 +324,7 @@ class Monitor extends Window {
 		line.scrollIntoView();
 	}
 
-	async AddChartDialog() {
+	async ChartDialog() {
 		if (!this.socket) {
 			this.ConfirmBox("Web-socket is disconnected.", "mono/resmonitor.svg", true);
 			return;
@@ -588,6 +641,16 @@ class Monitor extends Window {
 			));
 
 			templatesBox.appendChild(CreateTemplate(
+				"System info",
+				"mono/workstation.svg",
+				"wmi",
+				"SELECT * FROM Win32_ComputerSystem",
+				{
+					format: "List"
+				}
+			));
+
+			templatesBox.appendChild(CreateTemplate(
 				"CPU",
 				"mono/cpu.svg",
 				"wmi",
@@ -634,7 +697,7 @@ class Monitor extends Window {
 					max: "TotalVisibleMemorySize".toLowerCase(),
 					value: "FreePhysicalMemory".toLowerCase(),
 					isComplement: true,
-					showPeak: true
+					showPeak: false
 				}
 			));
 
@@ -721,8 +784,6 @@ class Monitor extends Window {
 				"SELECT TimeOnBattery FROM Win32_Battery",
 				{
 					format: "Single value",
-					prefix: "Usage",
-					unit: "%"
 				}
 			));
 
@@ -742,7 +803,7 @@ class Monitor extends Window {
 				"wmi",
 				"SELECT UserName FROM Win32_ComputerSystem",
 				{
-					format: "List"
+					format: "Single value"
 				}
 			));
 		};
@@ -878,14 +939,13 @@ class Monitor extends Window {
 			};
 
 			let selected = null;
-			let properties = [];
-			let propertyCheckboxes = [];
 
-			const ListProperties = (classObject, query)=> {
-				properties = [];
-				propertyCheckboxes = [];
+			const ListProperties = classObject=> {
+				let properties = [];
+				let propertyCheckboxes = [];
 
 				for (let j = 0; j < classObject.properties.length; j++) {
+
 					let value = lastProperties === "*" || className == null ||
 						className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
 
@@ -900,10 +960,38 @@ class Monitor extends Window {
 
 					this.AddCheckBoxLabel(propertyBox, propertyCheckbox, classObject.properties[j]);
 					propertiesList.appendChild(propertyBox);
+				}
 
-					propertyCheckbox.onchange = ()=> {
-						OnChange();
-					};
+				const OnCheckedChange = ()=> {
+					OnChange();
+
+					let selectedList = [];
+					propertiesDatalist.textContent = "";
+
+					for (let j=0; j<classObject.properties.length; j++) {
+						if (propertyCheckboxes[j].checked) {
+							selectedList.push(classObject.properties[j]);
+
+							const option = document.createElement("option");
+							option.value = classObject.properties[j];
+							option.text = classObject.properties[j];
+							propertiesDatalist.appendChild(option);
+						}
+					}
+
+					let query;
+					if (selectedList.length === 0 || selectedList.length === classObject.properties.length) {
+						query = `SELECT * FROM ${classObject.class}`;
+					}
+					else {
+						query = `SELECT ${selectedList.join(", ")} FROM ${classObject.class}`;
+					}
+
+					queryInput.value = query;
+				}
+
+				for (let j=0; j<propertyCheckboxes.length; j++) {
+					propertyCheckboxes[j].onchange = OnCheckedChange;
 				}
 			}
 
@@ -939,7 +1027,7 @@ class Monitor extends Window {
 
 							propertiesList.textContent = "";
 
-							ListProperties(wmiClasses.classes[i], queryInput.value);
+							ListProperties(wmiClasses.classes[i]);
 
 							selected = newClass;
 							selected.style.backgroundColor = "var(--clr-select)";
@@ -995,12 +1083,11 @@ class Monitor extends Window {
 		this.chartsList.push(this.CreateChartElement(name, options));
 		
 		if (this.socket) {
-			const obj = {
+			this.socket.send(JSON.stringify({
 				action: "addwmi",
 				value: value,
 				index: this.count
-			};
-			this.socket.send(JSON.stringify(obj));
+			}));
 		}
 
 		this.count++;
@@ -1024,6 +1111,21 @@ class Monitor extends Window {
 		valueLabel.className = "monitor-graph-value";
 		container.appendChild(valueLabel);
 
+		/*if (options.format !== "Ping chart") {
+			const removeButton = document.createElement("div");
+			removeButton.className = "monitor-remove";
+			container.appendChild(removeButton);
+	
+			removeButton.onclick = ()=> {
+				this.scrollable.removeChild(container);
+
+				this.socket.send(JSON.stringify({
+					action: "remove",
+					index: this.count
+				}));
+			};
+		}*/
+
 		switch(options.format) {
 		case "Ping chart"      : return this.CreatePingChart(inner, valueLabel, name, options);
 		case "Line chart"      : return this.CreateLineChart(inner, valueLabel, name, options);
@@ -1046,7 +1148,7 @@ class Monitor extends Window {
 
 		const dot = document.createElement("div");
 		dot.style.position = "absolute";
-		dot.style.right = "190px";
+		dot.style.right = "187px";
 		dot.style.top = "9px";
 		dot.style.width = "10px";
 		dot.style.height = "10px";
@@ -1148,14 +1250,27 @@ class Monitor extends Window {
 		let max = 100;
 
 		const ctx = canvas.getContext("2d");
-		ctx.lineWidth = 2;
 		ctx.fillStyle = "#C0C0C020";
-		ctx.strokeStyle = "#F0F0F0";
 
 		const DrawGraph = ()=> {
 			ctx.clearRect(0, 0, canvas.width, height);
 
 			let spectrum = Math.abs(min - max);
+
+			if (options.showPeak && peak >=0 && valley !== peak) {
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = "#C0C0C080";
+				ctx.setLineDash([3, 2]);
+				
+				ctx.beginPath();
+				ctx.moveTo(0, height - height * peak / spectrum);
+				ctx.lineTo(canvas.width, height - height * peak / spectrum);
+				ctx.stroke();
+			}
+
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = "#F0F0F0";
+			ctx.setLineDash([]);
 
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
@@ -1225,6 +1340,22 @@ class Monitor extends Window {
 
 			for (let j=0; j<ctx.length; j++) {
 				ctx[j].clearRect(0, 0, canvases[j].width, height);
+
+				if (options.showPeak && peak >=0 && valley !== peak) {
+					ctx[j].lineWidth = 1;
+					ctx[j].strokeStyle = "#C0C0C080";
+					ctx[j].setLineDash([3, 2]);
+					
+					ctx[j].beginPath();
+					ctx[j].moveTo(0, height - height * peak / spectrum);
+					ctx[j].lineTo(canvases[j].width, height - height * peak / spectrum);
+					ctx[j].stroke();
+				}
+
+				ctx[j].lineWidth = 2;
+				ctx[j].strokeStyle = "#F0F0F0";
+				ctx[j].setLineDash([]);
+
 				ctx[j].beginPath();
 
 				for (let i=list.length-1; i>=0; i--) {
@@ -1294,10 +1425,8 @@ class Monitor extends Window {
 			if (list.length * gap > 400) list.shift();
 			list.push(array.map(v=>v * 100 / spectrum));
 
-			valueLabel.textContent = `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
-
 			if (options.showPeak && valley !== peak) {
-				valueLabel.textContent += `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
+				valueLabel.textContent = `Peak: ${this.FormatUnits(peak, options.unit)}\n`;
 			}
 
 			DrawGraph();
@@ -1329,14 +1458,27 @@ class Monitor extends Window {
 		let last = null;
 
 		const ctx = canvas.getContext("2d");
-		ctx.lineWidth = 2;
 		ctx.fillStyle = "#C0C0C020";
-		ctx.strokeStyle = "#F0F0F0";
 
 		const DrawGraph = ()=>{
 			ctx.clearRect(0, 0, canvas.width, height);
 
 			let spectrum = Math.abs(min - max);
+
+			if (options.showPeak && peak >=0 && valley !== peak) {
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = "#C0C0C080";
+				ctx.setLineDash([3, 2]);
+				
+				ctx.beginPath();
+				ctx.moveTo(0, height - height * peak / spectrum);
+				ctx.lineTo(canvas.width, height - height * peak / spectrum);
+				ctx.stroke();
+			}
+
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = "#F0F0F0";
+			ctx.setLineDash([]);
 
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
@@ -1409,7 +1551,13 @@ class Monitor extends Window {
 		inner.appendChild(valueBox);
 
 		const Update = value=>{
-			valueBox.textContent = Object.values(value)[0][0];
+			const values = Object.values(value);
+
+			if (values.length > 0 && values[0].length > 0) {
+				valueBox.textContent = values[0][0];
+			} else {
+				valueBox.textContent = "--";
+			}
 		};
 
 		return {
