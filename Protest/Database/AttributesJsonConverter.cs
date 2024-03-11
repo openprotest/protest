@@ -64,10 +64,11 @@ public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary
         writer.WriteStartObject();
 
         foreach (KeyValuePair<string, Database.Attribute> pair in value) {
-            writer.WritePropertyName(pair.Key);
+            string key = pair.Key.ToLower();
+            writer.WritePropertyName(key);
 
             writer.WriteStartObject();
-            writer.WriteString(_v, pair.Key.Contains("password") && ignorePasswords ? String.Empty : pair.Value.value);
+            writer.WriteString(_v, key.Contains("password") && ignorePasswords ? String.Empty : pair.Value.value);
             writer.WriteString(_o, pair.Value.origin);
             writer.WriteNumber(_d, pair.Value.date);
             writer.WriteEndObject();

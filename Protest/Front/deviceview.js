@@ -1299,7 +1299,7 @@ class DeviceView extends View {
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
-				let name  = this.attributes.childNodes[i].childNodes[0].value;
+				let name  = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
 				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
 				obj[name] = {v:value};
 			}
