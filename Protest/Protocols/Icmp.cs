@@ -57,7 +57,7 @@ internal static class Icmp {
         }
 
         Hashtable hostnames = new Hashtable();
-        object syncSend = new object();
+        object mutex = new object();
 
         int method = 0; //0:icmp, 1:arp
         int timeout = 1000;
@@ -144,7 +144,7 @@ internal static class Icmp {
                         Task<string> s = method == 0 ? PingArrayAsync(name, id, timeout) : ArpPingArrayAsync(name, id);
                         s.Wait();
 
-                        lock (syncSend) { //one send per socket
+                        lock (mutex) { //one send per socket
                             ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(s.Result), 0, s.Result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }).Start();

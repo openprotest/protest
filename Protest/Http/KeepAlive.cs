@@ -19,7 +19,7 @@ internal static class KeepAlive {
         public HttpListenerContext ctx;
         public string sessionId;
         public string username;
-        public object syncLock;
+        public object mutex;
     }
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
@@ -59,7 +59,7 @@ internal static class KeepAlive {
             ctx = ctx,
             sessionId = sessionId,
             username = username,
-            syncLock = new object()
+            mutex = new object()
         };
 
         connections.TryAdd(ws, keepAliveEntry);
@@ -78,7 +78,7 @@ internal static class KeepAlive {
 
             while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticated(ctx)) {
-                    lock(keepAliveEntry.syncLock) {
+                    lock(keepAliveEntry.mutex) {
                         ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
                         ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                         return;
@@ -128,7 +128,7 @@ internal static class KeepAlive {
             if (pair.Value.sessionId != sessionId) continue;
 
             if (pair.Value.ws.State == WebSocketState.Open) {
-                lock(pair.Value.syncLock) {
+                lock(pair.Value.mutex) {
                     pair.Value.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 await pair.Value.ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -157,7 +157,7 @@ internal static class KeepAlive {
             if (entry.ws.State == WebSocketState.Open) {
                 new Thread(() => {
                     try {
-                        lock (entry.syncLock) {
+                        lock (entry.mutex) {
                             entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }
@@ -188,7 +188,7 @@ internal static class KeepAlive {
             if (entry.ws.State == WebSocketState.Open) {
                 new Thread(()=> {
                     try {
-                        lock (entry.syncLock) {
+                        lock (entry.mutex) {
                             entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }

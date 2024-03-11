@@ -47,9 +47,9 @@ public sealed class DatabaseJsonConverter : JsonConverter<Database> {
                         reader.Read();
 
                         Database.Entry entry = new Database.Entry {
-                            filename = entryKey,
+                            filename   = entryKey,
                             attributes = this.converter.Read(ref reader, typeof(Database.Attribute), options),
-                            syncWrite = new object()
+                            mutex      = new object()
                         };
 
                         database.dictionary.TryAdd(entryKey, entry);

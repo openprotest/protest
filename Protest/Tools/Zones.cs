@@ -6,13 +6,13 @@ using System.Text;
 namespace Protest.Tools;
 internal static class Zones {
 
-    private static readonly object syncLock = new object();
+    private static readonly object mutex = new object();
 
     public static byte[] ListZones() {
         if (!File.Exists(Data.FILE_ZONES)) return "[]"u8.ToArray();
 
         try {
-            lock (syncLock) {
+            lock (mutex) {
                 return File.ReadAllBytes(Data.FILE_ZONES);
             }
         }
@@ -26,7 +26,7 @@ internal static class Zones {
             return "[]";
 
         try {
-            lock (syncLock) {
+            lock (mutex) {
                 return File.ReadAllText(Data.FILE_ZONES);
             }
         }
@@ -40,7 +40,7 @@ internal static class Zones {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         payload = reader.ReadToEnd();
 
-        lock (syncLock) {
+        lock (mutex) {
             File.WriteAllText(Data.FILE_ZONES, payload);
         }
 

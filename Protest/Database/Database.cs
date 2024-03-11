@@ -31,7 +31,7 @@ public sealed class Database {
     public record Entry {
         public string filename;
         public ConcurrentDictionary<string, Attribute> attributes;
-        public object syncWrite;
+        public object mutex;
     }
 
     public readonly ConcurrentDictionary<string, Entry> dictionary;
@@ -100,7 +100,7 @@ public sealed class Database {
             return new Entry {
                 filename = file.Name,
                 attributes = attributes,
-                syncWrite = new object()
+                mutex = new object()
             };
         }
         catch (Exception ex) {
@@ -116,7 +116,7 @@ public sealed class Database {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
-            lock (entry.syncWrite) {
+            lock (entry.mutex) {
                 File.WriteAllBytes(filename, cipher);
             }
         }
@@ -248,7 +248,7 @@ public sealed class Database {
         Entry newEntry = new Entry() {
             filename = dictionary.ContainsKey(file) ? GenerateFilename(1) : file,
             attributes = modifications,
-            syncWrite = new object()
+            mutex = new object()
         };
 
         Logger.Action(origin, $"Create new entry on {this.name} database: {file}");

@@ -56,7 +56,7 @@ internal static class Watchdog {
         public long lastCheck;
         public short lastStatus = short.MinValue;
 
-        public object sync;
+        public object mutex;
     }
 
     public record Notification {
@@ -71,7 +71,7 @@ internal static class Watchdog {
     private static readonly ConcurrentDictionary<string, Watcher> watchers = new ConcurrentDictionary<string, Watcher>();
     private static ConcurrentBag<Notification> notifications = new ConcurrentBag<Notification>();
 
-    private static readonly object syncNotification = new object();
+    private static readonly object notificationMutex = new object();
 
     private static readonly JsonSerializerOptions watcherSerializerOptions = new();
     private static readonly JsonSerializerOptions notificationSerializerOptions = new();
@@ -397,7 +397,7 @@ internal static class Watchdog {
         DateTime now = DateTime.UtcNow;
         string dir = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_";
         string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
-        lock (watcher.sync) {
+        lock (watcher.mutex) {
             try {
                 if (!Directory.Exists(dir)) { Directory.CreateDirectory(dir); }
                 using FileStream stream = new FileStream(path, FileMode.Append);
@@ -503,7 +503,7 @@ internal static class Watchdog {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
 
-            lock (watcher.sync) {
+            lock (watcher.mutex) {
                 Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_", true);
                 File.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
             }
@@ -545,7 +545,7 @@ internal static class Watchdog {
         try {
             notifications = JsonSerializer.Deserialize<ConcurrentBag<Notification>>(payload, notificationSerializerOptions);
 
-            lock (syncNotification) {
+            lock (notificationMutex) {
                 File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
             }
 
@@ -866,7 +866,7 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
             }
         }
 
-        watcher.sync = new object();
+        watcher.mutex = new object();
 
         return watcher;
     }

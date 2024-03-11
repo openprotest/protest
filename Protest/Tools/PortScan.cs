@@ -164,7 +164,7 @@ internal static class PortScan {
             return;
         }
 
-        object sendLock = new object();
+        object mutex = new object();
 
 #if !DEBUG
         try {
@@ -221,7 +221,7 @@ internal static class PortScan {
 
                         if (result.Length > 0) {
                             result = host + ((char)127).ToString() + result;
-                            lock (sendLock) { //one send per socket
+                            lock (mutex) { //one send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                             }
                         }

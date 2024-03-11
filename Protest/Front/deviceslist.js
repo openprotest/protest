@@ -20,7 +20,35 @@ class DevicesList extends List {
 		const filterButton = this.SetupFilter();
 		const findInput    = this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
 		this.sentChatButton = this.AddSendToChatButton();
+
+		this.utilitiesDropDown.menu.style.height = "134px";
+
+		const optionPing = document.createElement("div");
+		optionPing.style.backgroundImage = "url(mono/ping.svg)";
+		optionPing.textContent = "Ping";
+		this.utilitiesDropDown.list.append(optionPing);
+
+		const optionDnsLookup = document.createElement("div");
+		optionDnsLookup.style.backgroundImage = "url(mono/dns.svg)";
+		optionDnsLookup.textContent = "DNS Lookup";
+		this.utilitiesDropDown.list.append(optionDnsLookup);
+
+		const optionTraceRoute = document.createElement("div");
+		optionTraceRoute.style.backgroundImage = "url(mono/traceroute.svg)";
+		optionTraceRoute.textContent = "Trace Router";
+		this.utilitiesDropDown.list.append(optionTraceRoute);
+
+		const optionLocateIp = document.createElement("div");
+		optionLocateIp.style.backgroundImage = "url(mono/locate.svg)";
+		optionLocateIp.textContent = "Locate IP";
+		this.utilitiesDropDown.list.append(optionLocateIp);
+
+		const optionMacLookup = document.createElement("div");
+		optionMacLookup.style.backgroundImage = "url(mono/maclookup.svg)";
+		optionMacLookup.textContent = "MAC Lookup";
+		this.utilitiesDropDown.list.append(optionMacLookup);
 
 		if (this.params.find && this.params.find.length > 0) {
 			findInput.value = this.params.find;
@@ -32,6 +60,94 @@ class DevicesList extends List {
 
 		this.addButton.onclick = ()=> this.Add();
 		this.deleteButton.onclick = ()=> this.Delete();
+
+		optionPing.onclick=()=> {
+			let entries = [];
+			for (let i=0; i<this.list.childNodes.length; i++) {
+				const id = this.list.childNodes[i].getAttribute("id");
+				if ("ip" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["ip"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+				else if ("hostname" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["hostname"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+			}
+
+			new Ping({
+				entries: entries,
+				timeout: 1000,
+				interval: 1000,
+				method: "icmp",
+				rolling: false,
+				moveToTop: false,
+				status: "play"
+			});
+		};
+
+		optionDnsLookup.onclick=()=> {
+			let entries = [];
+			for (let i=0; i<this.list.childNodes.length; i++) {
+				const id = this.list.childNodes[i].getAttribute("id");
+				if ("hostname" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["hostname"].v.split(";").map(o => o.trim()).forEach(o => entries.push(`A,${o}`));
+				}
+			}
+
+			new DnsLookup({
+				entries: entries,
+				server       : "",
+				type         : "A",
+				timeout      : 2000,
+				transport    : "Auto",
+				isStandard   : false,
+				isInverse    : false,
+				serverStatus : false,
+				isTruncated  : false,
+				isRecursive  : true
+			});
+		};
+
+		optionTraceRoute.onclick=()=> {
+			let entries = [];
+			for (let i=0; i<this.list.childNodes.length; i++) {
+				const id = this.list.childNodes[i].getAttribute("id");
+				if ("ip" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["ip"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+				else if ("hostname" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["hostname"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+			}
+
+			new TraceRoute({entries: entries});
+		};
+
+		optionLocateIp.onclick=()=> {
+			let entries = [];
+			for (let i=0; i<this.list.childNodes.length; i++) {
+				const id = this.list.childNodes[i].getAttribute("id");
+				if ("ip" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["ip"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+				else if ("hostname" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["hostname"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+			}
+
+			new LocateIp({entries: entries});
+		};
+
+		optionMacLookup.onclick=()=> {
+			let entries = [];
+			for (let i=0; i<this.list.childNodes.length; i++) {
+				const id = this.list.childNodes[i].getAttribute("id");
+				if ("mac address" in LOADER.devices.data[id]) {
+					LOADER.devices.data[id]["mac address"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
+				}
+			}
+
+			new MacLookup({entries: entries});
+		};
 
 		this.UpdateAuthorization();
 

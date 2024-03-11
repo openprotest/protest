@@ -13,7 +13,7 @@ internal static class Chat {
     }
 
     private static readonly List<Message> history = new List<Message>();
-    private static readonly object syncLock = new object();
+    private static readonly object mutex = new object();
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
@@ -46,7 +46,7 @@ internal static class Chat {
             json = json
         };
 
-        lock(syncLock) {
+        lock(mutex) {
             history.Add(message);
         }
     }
@@ -81,7 +81,7 @@ internal static class Chat {
             json = json
         };
 
-        lock (syncLock) {
+        lock (mutex) {
             history.Add(message);
         }
     }
@@ -122,7 +122,7 @@ internal static class Chat {
             json = json
         };
 
-        lock (syncLock) {
+        lock (mutex) {
             history.Add(message);
         }
     }
@@ -233,7 +233,7 @@ internal static class Chat {
             json = json
         };
 
-        lock (syncLock) {
+        lock (mutex) {
             history.Add(message);
         }
     }
@@ -241,7 +241,7 @@ internal static class Chat {
     public static byte[] GetHistory() {
         long yesterday = DateTime.UtcNow.Ticks - 864_000_000_000;
 
-        lock (syncLock) {
+        lock (mutex) {
             while (history.Count > 0 && history[0].timestamp < yesterday) {
                 history.RemoveAt(0);
             }
@@ -252,7 +252,7 @@ internal static class Chat {
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
         bool first = true;
-        lock (syncLock) {
+        lock (mutex) {
             for (int i = 0; i < history.Count; i++) {
                 if (!first) { builder.Append(','); }
                 builder.Append(history[i].json);

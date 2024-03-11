@@ -6,7 +6,7 @@ using System.Text;
 namespace Protest.Tools;
 
 internal static class Documentation {
-    private static readonly object syncLock = new object();
+    private static readonly object mutex = new object();
 
     public static byte[] List(Dictionary<string, string> parameters) {
         string keywords = null;
@@ -25,7 +25,7 @@ internal static class Documentation {
         StringBuilder builder = new StringBuilder();
         
         builder.Append('[');
-        lock (syncLock) {
+        lock (mutex) {
             bool first = true;
             for (int i = 0; i < files.Count; i++) {
                 if (files[i].Name.EndsWith(".html.gz")) continue;
@@ -163,7 +163,7 @@ internal static class Documentation {
                 else
                     idx++;
 
-        lock (syncLock)
+        lock (mutex)
             try {
                 DirectoryInfo dir = new DirectoryInfo(Data.DIR_DOCUMENTATION);
                 if (!dir.Exists)
@@ -197,7 +197,7 @@ internal static class Documentation {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        lock (syncLock)
+        lock (mutex)
             try {
                 FileInfo file = new FileInfo($"{Data.DIR_DOCUMENTATION}\\{name}");
                 if (file.Exists) {

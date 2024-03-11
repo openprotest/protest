@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace Protest.Tools;
 
 internal static class DebitNotes {
-    static private readonly object syncLock = new object();
+    static private readonly object mutex = new object();
 
     static private readonly JsonSerializerOptions debitSerializerOptions;
 
@@ -85,7 +85,7 @@ internal static class DebitNotes {
         builder.Append('[');
 
         bool first = true;
-        lock (syncLock) {
+        lock (mutex) {
             for (int i = 0; i < files.Count; i++) {
                 string data = File.ReadAllText(files[i].FullName);
                 if (String.IsNullOrEmpty(data)) continue;
@@ -220,7 +220,7 @@ internal static class DebitNotes {
             DirectoryInfo dir = new DirectoryInfo(Data.DIR_DEBIT);
             if (!dir.Exists) dir.Create();
 
-            lock (syncLock) {
+            lock (mutex) {
                 if (record.status == "short") {
                     DirectoryInfo dirShort = new DirectoryInfo(Data.DIR_DEBIT_SHORT);
                     if (!dirShort.Exists) dirShort.Create();

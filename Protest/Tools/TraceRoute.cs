@@ -25,7 +25,7 @@ internal static class TraceRoute {
             return;
         }
 
-        object sendLock = new object();
+        object mutex = new object();
 
         try {
             while (ws.State == WebSocketState.Open) {
@@ -89,7 +89,7 @@ internal static class TraceRoute {
                                 break;
                             }
 
-                            lock (sendLock) { //once send per socket
+                            lock (mutex) { //once send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                             }
                         }
@@ -106,14 +106,15 @@ internal static class TraceRoute {
                             hostnames += $"{ipList[i]}{(char)127}{hostnameArray[i]}{(char)127}";
                     if (hostnames.EndsWith(((char)127).ToString())) hostnames = hostnames[..^1];
 
-                    lock (sendLock) {
+                    lock (mutex) {
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, CancellationToken.None);
 
                         string over = $"over{((char)127)}{hostname}";
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(over), 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                        
+                        //ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                     }
 
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 }).Start();
             }
         }

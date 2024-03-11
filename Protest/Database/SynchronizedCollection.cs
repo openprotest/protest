@@ -6,7 +6,7 @@
 
 public sealed class SynchronizedDictionary<TKey, TValue> : Dictionary<TKey, TValue> where TKey : notnull {
 
-    private readonly object syncLock = new object();
+    private readonly object mutex = new object();
     public SynchronizedDictionary() { }
     public SynchronizedDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
     public SynchronizedDictionary(IEqualityComparer<TKey> comparer) : base(comparer) { }
@@ -16,55 +16,55 @@ public sealed class SynchronizedDictionary<TKey, TValue> : Dictionary<TKey, TVal
 
     public new TValue this[TKey key] {
         get {
-            lock (syncLock) {
+            lock (mutex) {
                 return base[key];
             }
         }
         set {
-            lock (syncLock) {
+            lock (mutex) {
                 base[key] = value;
             }
         }
     }
 
     public void Add(KeyValuePair<TKey, TValue> pair) {
-        lock (syncLock) {
+        lock (mutex) {
             base.Add(pair.Key, pair.Value);
         }
     }
 
     public new void Add(TKey key, TValue value) {
-        lock (syncLock) {
+        lock (mutex) {
             base.Add(key, value);
         }
     }
 
     public new void Clear() {
-        lock (syncLock) {
+        lock (mutex) {
             base.Clear();
         }
     }
 
     public new bool ContainsKey(TKey key) {
-        lock (syncLock) {
+        lock (mutex) {
             return base.ContainsKey(key);
         }
     }
 
     public new bool Remove(TKey key) {
-        lock (syncLock) {
+        lock (mutex) {
             return base.Remove(key);
         }
     }
 
     public new bool TryAdd(TKey key, TValue value) {
-        lock (syncLock) {
+        lock (mutex) {
             return base.TryAdd(key, value);
         }
     }
 
     public new bool TryGetValue(TKey key, out TValue value) {
-        lock (syncLock) {
+        lock (mutex) {
             return base.TryGetValue(key, out value);
         }
     }

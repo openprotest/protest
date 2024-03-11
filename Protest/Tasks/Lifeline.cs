@@ -48,7 +48,7 @@ internal static partial class Lifeline {
 
     private static void LifelineLoop() {
         Regex regex = ValidHostnameRegex();
-        ConcurrentDictionary<string, object> lockTable = new ConcurrentDictionary<string, object>();
+        ConcurrentDictionary<string, object> mutex = new ConcurrentDictionary<string, object>();
         HashSet<string> ping = new HashSet<string>();
         HashSet<string[]> wmi = new HashSet<string[]>();
 
@@ -58,7 +58,7 @@ internal static partial class Lifeline {
             long startTimeStamp = DateTime.UtcNow.Ticks;
             
             if (lastVersion != DatabaseInstances.devices.version) {
-                lockTable.Clear();
+                mutex.Clear();
                 ping.Clear();
                 wmi.Clear();
 
@@ -85,12 +85,12 @@ internal static partial class Lifeline {
                         if (!regex.IsMatch(remoteEndPoint[i])) continue;
 
                         ping.Add(remoteEndPoint[i]);
-                        lockTable.TryAdd(remoteEndPoint[i], new Object());
+                        mutex.TryAdd(remoteEndPoint[i], new Object());
 
                         if (wmiOnce && os is not null && os.Contains("windows")) {
                             wmiOnce = false;
                             wmi.Add(new string[] { entry.filename, remoteEndPoint[i] });
-                            lockTable.TryAdd(entry.filename, new Object());
+                            mutex.TryAdd(entry.filename, new Object());
                         }
                     }
 
@@ -101,9 +101,9 @@ internal static partial class Lifeline {
 
             Thread pingThread = new Thread(() => {
                 foreach (string host in ping) {
-                    lockTable.TryGetValue(host, out object lockObject);
+                    mutex.TryGetValue(host, out object obj);
                     try {
-                        lock (lockObject) {
+                        lock (obj) {
                             DoPing(host);
                         }
                     }
@@ -115,9 +115,9 @@ internal static partial class Lifeline {
                 if (!OperatingSystem.IsWindows()) return;
 
                 foreach (string[] data in wmi) {
-                    lockTable.TryGetValue(data[0], out object lockObject);
+                    mutex.TryGetValue(data[0], out object obj);
                     try {
-                        lock (lockObject) {
+                        lock (obj) {
                             bool p = DoPing(data[1]);
                             if (!p) continue;
                             DoWmi(data[0], data[1]);

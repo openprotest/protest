@@ -9,8 +9,8 @@ using System.Runtime.CompilerServices;
 namespace Protest;
 
 internal static class Logger {
-    private static readonly object syncError = new object();
-    private static readonly object syncAction = new object();
+    private static readonly object errorMutex = new object();
+    private static readonly object actionMutex = new object();
 
 #if DEBUG
     public static void Error(Exception ex, [CallerLineNumber] int line = 0, [CallerMemberName] string caller = null, [CallerFilePath] string file = null) {
@@ -30,7 +30,7 @@ internal static class Logger {
 #endif
 
     public static void Error(string ex) {
-        lock (syncError)
+        lock (errorMutex)
             try {
                 using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
                 writer.Write(DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE));
@@ -48,7 +48,7 @@ internal static class Logger {
             DateTime dateTime = DateTime.Now;
             string date = dateTime.ToString(Data.DATETIME_FORMAT_FILE);
             string message = $"{date,-24}{origin,-32}{action}";
-            lock (syncAction)
+            lock (actionMutex)
                 try {
                     using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}{dateTime.ToString(Data.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);
                     writer.WriteLine(message);
@@ -115,7 +115,7 @@ internal static class Logger {
 
         try {
             byte[] bytes;
-            lock (syncAction) {
+            lock (actionMutex) {
                 bytes = File.ReadAllBytes(filename);
             }
             return bytes;
