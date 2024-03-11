@@ -32,45 +32,10 @@ In order to utilizes protocols like WMI and Active Directory services, it is req
 If you use a reverse proxy, for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end.
 
 ### Secure proxy server basic configuration:
-
-#### Option A: netsh
 ```
 netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid=72f5bca3-7752-45e8-8027-2060ebbda456
 ```
 
-#### Option B: nginx
-```
-worker_processes 16;
-events {
-    worker_connections 512;
-}
-
-http {
-    server {
-        listen 443 ssl;
-        ssl_certificate     ../ssl/[filename].crt;
-        ssl_certificate_key ../ssl/[filename].crt;
-
-        location / {
-            proxy_pass http://127.0.0.1:80$request_uri;
-            proxy_pass_header    Set-Cookie;
-            proxy_set_header     Host $host:$server_port;
-            proxy_set_header     Cookie $http_cookie;
-            proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
-        location /ws/ {
-            proxy_pass http://127.0.0.1:80$request_uri;
-            proxy_pass_header    Set-Cookie;
-            proxy_http_version   1.1;
-            proxy_set_header     Host $host:$server_port;
-            proxy_set_header     Cookie $http_cookie;
-            proxy_set_header     Connection "Upgrade";
-            proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header     Upgrade $http_upgrade;
-        }
-    }
-}
-```
 
 * *This product includes IP2Location LITE data available from http://www.ip2location.com.*
 * *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
