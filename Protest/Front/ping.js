@@ -52,6 +52,8 @@ class Ping extends Console {
 		this.playButton.disabled = this.params.status === "play";
 		this.pauseButton.disabled = this.params.status === "pause";
 
+		//this.InitializeMinimap();
+
 		if (this.params.entries) { //restore entries from previous session
 			let temp = this.params.entries;
 			this.params.entries = [];
@@ -156,6 +158,19 @@ class Ping extends Console {
 		this.list.onscroll = ()=> this.InvalidateRecyclerList();
 	}
 
+	InitializeMinimap() {
+		const minimap = document.createElement("div");
+		minimap.style.position = "absolute";
+		minimap.style.left = "8px";
+		minimap.style.top = "8px";
+		minimap.style.zIndex = "0";
+		minimap.style.width = "200px";
+		minimap.style.height = "150px";
+		minimap.style.backgroundColor = "rgba(32,32,32,.8)";
+		minimap.style.borderRadius = "4px";
+		this.content.appendChild(minimap);
+	}
+	
 	Close() { //override
 		if (this.ws != null) this.ws.close();
 		super.Close();

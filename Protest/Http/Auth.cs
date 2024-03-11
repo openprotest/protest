@@ -166,7 +166,7 @@ internal static class Auth {
 
         if (sessions.TryRemove(sessionId, out _)) {
             if (origin != null) Logger.Action(origin, $"User actively logged out");
-            KeepAlive.CloseConnection(sessionId).RunSynchronously();
+            ((Func<System.Threading.Tasks.Task>)(async () => await KeepAlive.CloseConnection(sessionId)))();
             return true;
         }
 
