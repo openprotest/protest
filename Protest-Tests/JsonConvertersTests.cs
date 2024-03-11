@@ -14,7 +14,7 @@ internal class JsonConvertersTests {
 
         Database.Entry john = new Database.Entry {
             filename = Database.GenerateFilename(),
-            syncWrite = new object(),
+            mutex = new object(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
         john.attributes.TryAdd("firstname", new Database.Attribute() {
