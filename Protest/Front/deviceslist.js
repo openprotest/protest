@@ -165,6 +165,7 @@ class DevicesList extends List {
 		super.UpdateAuthorization();
 		this.addButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("devices:write");
 		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("devices:write");
+		this.utilitiesDropDown.button.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("network utilities:write");
 	}
 
 	InflateElement(element, entry, type) { //override

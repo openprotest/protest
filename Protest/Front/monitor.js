@@ -291,7 +291,7 @@ class Monitor extends Window {
 
 		intervalInput.onkeydown = event=> {
 			if (event.key === "Enter") { okButton.click(); }
-		}
+		};
 
 		okButton.onclick = ()=> {
 			this.params.interval = intervalInput.value;
@@ -983,7 +983,7 @@ class Monitor extends Window {
 					}
 
 					queryInput.value = query;
-				}
+				};
 
 				for (let j=0; j<propertyCheckboxes.length; j++) {
 					propertyCheckboxes[j].onchange = OnCheckedChange;
