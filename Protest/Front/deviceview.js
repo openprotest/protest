@@ -1445,22 +1445,22 @@ class DeviceView extends View {
 			for (let i=0; i<lines.length; i++) {
 				lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
 
-				const line = document.createElement("div");
+				const lineElement = document.createElement("div");
 
 				if (lines[i].startsWith("#") || lines[i].startsWith("!")) { //comment
-					line.textContent = lines[i];
-					line.style.color = "#9C6";
-					line.style.fontStyle = "italic";
-					innerBox.appendChild(line);
+					lineElement.textContent = lines[i];
+					lineElement.style.color = "#9C6";
+					lineElement.style.fontStyle = "italic";
+					innerBox.appendChild(lineElement);
 				}
 				else if (lines[i].startsWith("/")) { //location
-					line.textContent = lines[i];
-					line.style.color = "#8FD";
-					line.style.paddingTop = ".5em";
-					innerBox.appendChild(line);
+					lineElement.textContent = lines[i];
+					lineElement.style.color = "#8FD";
+					lineElement.style.paddingTop = ".5em";
+					innerBox.appendChild(lineElement);
 				}
 				else {
-					let line = [];
+					const line = [];
 
 					let temp = lines[i].split("\"");
 					for (let j=0; j<temp.length; j++) {
@@ -1479,20 +1479,19 @@ class DeviceView extends View {
 							const newSpan = document.createElement("span");
 							newSpan.textContent = line[j];
 							newSpan.style.color = "#D98";
-							line.appendChild(newSpan);
+							lineElement.appendChild(newSpan);
 						}
 						else {
 							let p = 0;
 
 							/*if (j == 0) { //verb
-								while (line[0].substring(0, p).trim().length === 0 && p < line[0].length)
-									p++;
+								while (line[0].substring(0, p).trim().length === 0 && p < line[0].length) {p++; }
 								p = line[0].indexOf(" ", p);
 
 								const span = document.createElement("span");
 								span.textContent = line[0].substring(0, p);
 								span.style.color = "#A8F";
-								line.appendChild(span);
+								lineElement.appendChild(span);
 							}*/
 
 							while (p < line[j].length) {
@@ -1505,13 +1504,13 @@ class DeviceView extends View {
 								if (p != sp) {
 									const spanA = document.createElement("span");
 									spanA.textContent = j == 0 ? line[j].substring(p, sp): line[j].substring(p, sp);
-									line.appendChild(spanA);
+									lineElement.appendChild(spanA);
 								}
 
 								const spanB = document.createElement("span");
 								spanB.textContent = j == 0 ? line[j].substring(sp, ep + 1) : line[j].substring(sp, ep + 1);
 								spanB.style.color = "#5BE";
-								line.appendChild(spanB);
+								lineElement.appendChild(spanB);
 
 								p = ep + 1;
 							}
@@ -1519,12 +1518,12 @@ class DeviceView extends View {
 							if (p < line[j].length) {
 								const spanC = document.createElement("span");
 								spanC.textContent = j == 0 ? line[j].substring(p): line[j].substring(p);
-								line.appendChild(spanC);
+								lineElement.appendChild(spanC);
 							}
 						}
 					}
 
-					innerBox.appendChild(line);
+					innerBox.appendChild(lineElement);
 				}
 			}
 		};
