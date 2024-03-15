@@ -235,6 +235,8 @@ internal static class LiveStats {
                 string[] ips = _ip?.value.Split(';').Select(o => o.Trim()).ToArray() ?? Array.Empty<string>();
 
                 for (int i = 0; i < hostnames.Length; i++) {
+                    if (String.IsNullOrEmpty(hostnames[i])) { continue; }
+
                     try {
                         IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
                         for (int j = 0; j < reversed.Length; j++) {
