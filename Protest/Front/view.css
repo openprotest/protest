@@ -366,9 +366,9 @@ button.view-live-button:active {
 	counter-reset: code-enumeration;
 }
 
-.view-config-code-box::selection {
+.view-config-code-box *::selection {
 	color: #000 !important;
-	background-color: #FFF !important;
+	background-color: var(--clr-select) !important;
 }
 
 .view-config-code-box > div {
