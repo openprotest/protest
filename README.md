@@ -13,8 +13,8 @@
 ![macos](https://shields.io/badge/MacOS--9cf?logo=Apple&style=social)
 
 ### This repository contains the source code for:
-  * **Protest:** Front-end interface and back-end application.
-  * **Protest Agent:** Tool to enable communication between the browser and the client-host, via a local protocol (protest://).
+  * **Protest:** The front-end and back-end workings.
+  * **Protest Agent:** A tool to enable the browser talk to the client's computer using a special local method (protest://).
 
 ### Overview:
 Pro-test offers a comprehensive solution for creating and managing an inventory database of your network environment.
