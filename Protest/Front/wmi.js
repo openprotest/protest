@@ -19,6 +19,7 @@ class Wmi extends Window {
 		this.content.appendChild(wmiInput);
 
 		const targetLabel = document.createElement("div");
+		targetLabel.style.lineHeight = "28px";
 		targetLabel.style.gridArea = "1 / 1";
 		targetLabel.textContent = "Target:";
 		wmiInput.appendChild(targetLabel);

@@ -1,0 +1,46 @@
+.snmp-input {
+	position: absolute;
+	left: 8px;
+	right: 40px;
+	max-width: 480px;
+	top: 8px;
+	height: 122px;
+	display: grid;
+	grid-template-columns: 72px auto 80px;
+	grid-template-rows: 32px 32px 32px auto;
+	transition: .2s;
+}
+
+.snmp-toggle-button {
+	all: unset;
+	position: absolute;
+	right: 8px;
+	top: 96px;
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px!important;
+	min-height: 28px !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	background-color: transparent !important;
+	background-image: url(/mono/guitarpick.svg?light);
+	background-size: 20px 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transform: rotate(-180deg);
+}
+.snmp-toggle-button:active {
+	background-size: 22px 22px;
+}
+
+.snmp-plot {
+	background-color: var(--clr-pane);
+	border-radius: 2px;
+	overflow: auto;
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	top: 136px;
+	bottom: 4px;
+	transition: .4s;
+}
