@@ -497,10 +497,12 @@ class Window {
 		this.task.style.transform = "scale(.85)";
 
 		setTimeout(()=> {
-			if (this.popOutWindow)
+			if (this.popOutWindow) {
 				this.popOutWindow.close();
-			else
+			}
+			else {
 				container.removeChild(this.win);
+			}
 
 			taskbar.removeChild(this.task);
 			WIN.array.splice(WIN.array.indexOf(this), 1);
@@ -862,10 +864,12 @@ class Window {
 			confirmBox.style.transform = "scaleY(.2)";
 			this.content.style.filter = "none";
 			setTimeout(()=> {
-				if (this.popOutWindow)
+				if (this.popOutWindow) {
 					this.popOutWindow.document.body.removeChild(dim);
-				else
+				}
+				else {
 					this.win.removeChild(dim);
+				}
 
 				let next = this.messagesQueue.shift();
 				if (next) this.ConfirmBox(next[0], next[1], next[2]);
@@ -949,10 +953,12 @@ class Window {
 		};
 
 		const Abort = ()=> {
-			if (this.popOutWindow)
+			if (this.popOutWindow) {
 				this.popOutWindow.document.body.removeChild(dim);
-			else
+			}
+			else {
 				this.win.removeChild(dim);
+			}
 		};
 
 		let once = false;
@@ -1055,10 +1061,12 @@ class Window {
 		menu.appendChild(list);
 
 		button.addEventListener("focus", ()=> {
-			if (this.popOutWindow)
+			if (this.popOutWindow) {
 				menu.style.maxHeight = `${this.content.clientHeight - 32}px`;
-			else
+			}
+			else {
 				menu.style.maxHeight = `${container.clientHeight - this.win.offsetTop - 96}px`;
+			}
 		});
 
 		return { button: button, menu: menu, list: list };

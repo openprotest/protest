@@ -88,6 +88,8 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
+        bytes = Minify(bytes);
+
         MemoryStream ms = new MemoryStream();
         using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
             zip.Write(bytes, 0, bytes.Length);
@@ -95,4 +97,51 @@ public class Generator : IIncrementalGenerator {
 
         return ms.ToArray();
     }
+    public static byte[] Minify(byte[] bytes) {
+        string text = Encoding.Default.GetString(bytes);
+        StringBuilder result = new StringBuilder();
+
+        string[] lines = text.Split('\n');
+
+        foreach (string line in lines) {
+            string trimmedLine = line.Trim();
+            if (string.IsNullOrEmpty(trimmedLine)) continue;
+
+            if (trimmedLine.StartsWith("//")) continue;
+
+            int commentIndex = trimmedLine.IndexOf("//");
+            if (commentIndex >= 0 && !trimmedLine.Contains("://")) {
+                trimmedLine = trimmedLine.Substring(0, commentIndex).TrimEnd();
+            }
+
+            trimmedLine = trimmedLine.Replace("\t", " ");
+
+            while (trimmedLine.Contains("  ")) {
+                trimmedLine = trimmedLine.Replace("  ", " ");
+            }
+
+            trimmedLine = trimmedLine.Replace(" = ", "=")
+                                     .Replace(" == ", "==")
+                                     .Replace(" === ", "===")
+                                     .Replace(" != ", "!=")
+                                     .Replace(" !== ", "!==")
+                                     .Replace("{ {", "{{")
+                                     .Replace("} }", "}}")
+                                     .Replace(") {", "){");
+
+            trimmedLine = trimmedLine.Replace("; ", ";")
+                                     .Replace(": ", ":");
+
+            result.Append(trimmedLine);
+        }
+
+        int startIndex, endIndex;
+        while ((startIndex = result.ToString().IndexOf("/*")) >= 0 &&
+               (endIndex = result.ToString().IndexOf("*/", startIndex)) >= 0) {
+            result.Remove(startIndex, endIndex - startIndex + 2);
+        }
+
+        return Encoding.UTF8.GetBytes(result.ToString());
+    }
+
 }

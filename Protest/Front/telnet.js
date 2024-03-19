@@ -139,10 +139,12 @@ class Telnet extends Window {
 		setTimeout(()=> hostInput.focus(), 50);
 
 		hostInput.oninput = hostInput.onchange = ()=> {
-			if (hostInput.value.length === 0)
+			if (hostInput.value.length === 0) {
 				okButton.setAttribute("disabled", true);
-			else
+			}
+			else {
 				okButton.removeAttribute("disabled");
+			}
 		};
 
 		hostInput.onkeydown = event=> {
@@ -312,10 +314,12 @@ class Telnet extends Window {
 					}
 				}
 				else { //plain
-					if (front == "#ccc" && back == "transparent")
+					if (front == "#ccc" && back == "transparent") {
 						this.last.textContent += line[i];
-					else
+					}
+					else {
 						this.PushText(line[i], front, back);
+					}
 				}
 
 				if (line[i].endsWith("\r")) {

@@ -258,18 +258,22 @@ class Documentation extends Window {
 	}
 
 	OnUiReady(count = 0) {
-		if (this.content.clientWidth === 0 && count < 200)
+		if (this.content.clientWidth === 0 && count < 200) {
 			setTimeout(()=> this.OnUiReady(++count), 50);
-		else
+		}
+		else {
 			this.UpdateAuthorization();
+		}
 	}
 
 	AfterResize() { //override
 		super.AfterResize();
-		if (this.options.getBoundingClientRect().width < 260)
+		if (this.options.getBoundingClientRect().width < 260) {
 			this.options.classList.add("doc-options-collapsed");
-		else
+		}
+		else {
 			this.options.classList.remove("doc-options-collapsed");
+		}
 	}
 
 	UpdateAuthorization() { //override

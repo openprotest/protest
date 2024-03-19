@@ -173,18 +173,22 @@ class DebitNotes extends Window {
 	}
 
 	OnUiReady(count = 0) {
-		if (this.content.clientWidth === 0 && count < 200)
+		if (this.content.clientWidth === 0 && count < 200) {
 			setTimeout(()=> this.OnUiReady(++count), 50);
-		else
+		}
+		else {
 			this.UpdateAuthorization();
+		}
 	}
 
 	AfterResize() { //override
 		super.AfterResize();
-		if (this.options.getBoundingClientRect().width < 550)
+		if (this.options.getBoundingClientRect().width < 550) {
 			this.options.classList.add("debit-options-collapsed");
-		else
+		}
+		else {
 			this.options.classList.remove("debit-options-collapsed");
+		}
 	}
 
 	UpdateAuthorization() { //override
@@ -909,10 +913,12 @@ class DebitNotes extends Window {
 					keywords = findInput.value.trim().toLowerCase().split(" ");
 
 				let usersColumns;
-				if (localStorage.getItem("userslist_columns"))
+				if (localStorage.getItem("userslist_columns")) {
 					usersColumns = JSON.parse(localStorage.getItem("userslist_columns"));
-				else
+				}
+				else {
 					usersColumns = ["title", "department", "first name", "last name", "username", "email"];
+				}
 
 				for (let file in LOADER.users.data) {
 					let match = true;

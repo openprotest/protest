@@ -171,19 +171,16 @@ internal sealed class Cache {
         using BinaryReader br = new BinaryReader(fs);
 
         byte[] bytes = br.ReadBytes((int)f.Length);
-        
-        /*if (String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+
+#if !DEBUG
+        if (String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
-            long _preMinify = 0;
-            long _postMinify = 0;
-            _preMinify += bytes.LongLength;
-            bytes = Minify(bytes);
-            _postMinify += bytes.LongLength;
-            Console.WriteLine(_postMinify * 100 / _preMinify + "%");
-        }*/
+            bytes = Minify(bytes, false);
+        }
+#endif
 
         files.Add(name, bytes);
     }
@@ -316,64 +313,56 @@ internal sealed class Cache {
         return entry;
     }
 
-    private static byte[] Minify(byte[] bytes) {
-        string[] lines = Encoding.Default.GetString(bytes).Split('\n');
+    public static byte[] Minify(byte[] bytes, bool softMinify) {
+        string text = Encoding.Default.GetString(bytes);
+        StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < lines.Length; i++) {
-            lines[i] = lines[i].Trim();
+        string[] lines = text.Split('\n');
 
-            lines[i] = lines[i].Replace("\t", " ");
+        foreach (string line in lines) {
+            string trimmedLine = line.Trim();
+            if (string.IsNullOrEmpty(trimmedLine)) continue;
 
-            //remove double space
-            while (lines[i].IndexOf("  ") > -1)
-                lines[i] = lines[i].Replace("  ", " ");
+            if (trimmedLine.StartsWith("//")) continue;
 
-            //lines[i] = lines[i].Replace(" + ", "+"); because css calc()
-            //lines[i] = lines[i].Replace(" - ", "-"); because css calc()
-            lines[i] = lines[i].Replace(" = ", "=");
-            lines[i] = lines[i].Replace(" == ", "==");
-            lines[i] = lines[i].Replace(" === ", "===");
-            lines[i] = lines[i].Replace(" != ", "!=");
-            lines[i] = lines[i].Replace(" !== ", "!==");
-
-            lines[i] = lines[i].Replace("{ {", "{{");
-            lines[i] = lines[i].Replace("} }", "}}");
-
-            lines[i] = lines[i].Replace(") {", "){");
-
-            lines[i] = lines[i].Replace(";}", "}"); // <--
-
-            //remove single line comment
-            int p = lines[i].IndexOf("//");
-            if (p > -1) {
-                if (p == 0) {
-                    lines[i] = String.Empty;
-                }
-                else if (lines[i][p - 1] != ':') { //if not a url, e.g: http://...
-                    lines[i] = lines[i][..p];
-                }
+            int commentIndex = trimmedLine.IndexOf("//");
+            if (commentIndex >= 0 && !trimmedLine.Contains("://")) {
+                trimmedLine = trimmedLine.Substring(0, commentIndex).TrimEnd();
             }
 
-            lines[i] = lines[i].Replace("; ", ";");
-            lines[i] = lines[i].Replace(": ", ":");
+            trimmedLine = trimmedLine.Replace("\t", " ");
+
+            while (trimmedLine.Contains("  ")) {
+                trimmedLine = trimmedLine.Replace("  ", " ");
+            }
+
+            trimmedLine = trimmedLine.Replace(" = ", "=")
+                                     .Replace(" == ", "==")
+                                     .Replace(" === ", "===")
+                                     .Replace(" != ", "!=")
+                                     .Replace(" !== ", "!==")
+                                     .Replace("{ {", "{{")
+                                     .Replace("} }", "}}")
+                                     .Replace(") {", "){");
+
+            trimmedLine = trimmedLine.Replace("; ", ";")
+                                     .Replace(": ", ":");
+
+            if (softMinify) {
+                result.AppendLine(trimmedLine);
+            }
+            else {
+                result.Append(trimmedLine);
+            }
         }
 
-        string mini = String.Empty;
-        for (int i = 0; i < lines.Length; i++) {
-            if (lines[i].EndsWith("else")) lines[i] += " ";
-            if (lines.Length > 0) mini += lines[i];
+        int startIndex, endIndex;
+        while ((startIndex = result.ToString().IndexOf("/*")) >= 0 &&
+               (endIndex = result.ToString().IndexOf("*/", startIndex)) >= 0) {
+            result.Remove(startIndex, endIndex - startIndex + 2);
         }
 
-        //remove multi-line comments
-        int p0 = mini.IndexOf("/*");
-        int p1 = mini.IndexOf("*/");
-        while (p0 < p1) {
-            mini = mini.Remove(p0, (p1 + 2) - p0);
-            p0 = mini.IndexOf("/*");
-            p1 = mini.IndexOf("*/");
-        }
-
-        return Encoding.UTF8.GetBytes(mini);
+        return Encoding.UTF8.GetBytes(result.ToString());
     }
 
     public static byte[] GZip(byte[] bytes) {

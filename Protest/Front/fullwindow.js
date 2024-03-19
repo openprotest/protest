@@ -120,10 +120,12 @@ class Window {
 			confirmBox.style.transform = "scaleY(.2)";
 			this.content.style.filter = "none";
 			setTimeout(()=> {
-				if (this.popOutWindow)
+				if (this.popOutWindow) {
 					this.popOutWindow.document.body.removeChild(dim);
-				else
+				}
+				else {
 					this.win.removeChild(dim);
+				}
 
 				let next = this.messagesQueue.shift();
 				if (next) this.ConfirmBox(next[0], next[1]);
@@ -207,10 +209,12 @@ class Window {
 		};
 
 		const Abort = ()=> {
-			if (this.popOutWindow)
+			if (this.popOutWindow) {
 				this.popOutWindow.document.body.removeChild(dim);
-			else
+			}
+			else {
 				this.win.removeChild(dim);
+			}
 		};
 
 		let once = false;

@@ -104,10 +104,12 @@ class PasswordStrength extends List {
 		};
 
 		filterButton.onfocus = ()=> {
-			if (this.popOutWindow)
+			if (this.popOutWindow) {
 				filterButton.firstChild.style.maxHeight = this.content.clientHeight - 32 + "px";
-			else
+			}
+			else {
 				filterButton.firstChild.style.maxHeight = container.clientHeight - this.win.offsetTop - 96 + "px";
+			}
 		};
 
 		filterMenu.onclick = filterMenu.ondblclick = event=> {

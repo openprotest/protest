@@ -988,7 +988,7 @@ class Monitor extends Window {
 				for (let j=0; j<propertyCheckboxes.length; j++) {
 					propertyCheckboxes[j].onchange = OnCheckedChange;
 				}
-			}
+			};
 
 			classFilterInput.oninput = ()=> {
 				if (!wmiClasses.classes) return;

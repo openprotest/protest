@@ -51,10 +51,12 @@ class IpBox {
 				}
 
 				if (event.key == "Backspace")
-					if (event.target.value.length == 0)
+					if (event.target.value.length == 0) {
 						this.FocusPrevious(event.target);
-					else
+					}
+					else {
 						return; //continue with default behavior
+					}
 
 				if (event.key == ".") {
 					event.preventDefault();

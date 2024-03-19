@@ -165,10 +165,12 @@ class LocateIp extends Console {
 				result.style.backgroundImage = `url(flags/${split[0].toLowerCase()}.svg)`;
 			}
 
-			if (split[1] === "Private address" || split[1] === "Local host")
+			if (split[1] === "Private address" || split[1] === "Local host") {
 				result.textContent += split[1];
-			else
+			}
+			else {
 				result.textContent += `${split[1]}, ${split[2]}, ${split[3]}`;
+			}
 
 			if (split[4].length > 0 && split[4] != "0,0") {
 				const divLocation = document.createElement("div");

@@ -500,10 +500,12 @@ class PassGen extends Window {
 
 		if (etc.length === 0) etc = "less then a second";
 
-		if (eon > 999999999999999)
+		if (eon > 999999999999999) {
 			this.ttcLabel.textContent = "TTC: Infinity";
-		else
+		}
+		else {
 			this.ttcLabel.textContent = `TTC: ${etc}`;
+		}
 	}
 
 	static StrengthBar(entropy) {

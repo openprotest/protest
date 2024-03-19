@@ -275,10 +275,12 @@ class List extends Window {
 		};
 
 		filterButton.onfocus = ()=> {
-			if (this.popOutWindow)
+			if (this.popOutWindow) {
 				filterButton.firstChild.style.maxHeight = this.content.clientHeight - 32 + "px";
-			else
+			}
+			else {
 				filterButton.firstChild.style.maxHeight = container.clientHeight - this.win.offsetTop - 96 + "px";
+			}
 		};
 
 		filterMenu.onclick = filterMenu.ondblclick = event=> {
@@ -533,10 +535,12 @@ class List extends Window {
 	}
 
 	OnUiReady(count = 0) {
-		if (this.list.clientHeight === 0 && count < 200)
+		if (this.list.clientHeight === 0 && count < 200) {
 			setTimeout(()=> this.OnUiReady(++count), 50);
-		else
+		}
+		else {
 			this.UpdateViewport();
+		}
 	}
 
 	UpdateViewport(force = false) {

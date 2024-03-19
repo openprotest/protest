@@ -300,12 +300,15 @@ class Fetch extends Tabs {
 				this.intervalRange.oninput();
 			}
 
-			if (parseInt(this.retriesRange.value) === 0)
+			if (parseInt(this.retriesRange.value) === 0) {
 				this.retriesCommentLabel.textContent = "Don't try again";
-			else if (parseInt(this.retriesRange.value) === 1)
+			}
+			else if (parseInt(this.retriesRange.value) === 1) {
 				this.retriesCommentLabel.textContent = `If unreachable, retry ${this.retriesRange.value} more time`;
-			else
+			}
+			else {
 				this.retriesCommentLabel.textContent = `If unreachable, retry up to ${this.retriesRange.value} times`;
+			}
 		};
 
 		this.intervalRange.oninput = ()=> {

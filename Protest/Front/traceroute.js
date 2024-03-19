@@ -284,12 +284,13 @@ class TraceRoute extends Console {
 							}
 				}
 			}
-			else
+			else {
 				if (name in this.hashtable) {
 					const hop = document.createElement("div");
 					hop.textContent = split[1];
 					this.hashtable[name].result.appendChild(hop);
 				}
+			}
 		};
 	}
 

@@ -306,10 +306,12 @@ class DeviceView extends View {
 				servicesButton.onclick = ()=> {
 					const wmi = new Wmi({target: host, query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
 					wmi.SetIcon("mono/service.svg");
-					if (!this.link.name || this.link.name.v.length==0)
+					if (!this.link.name || this.link.name.v.length==0) {
 						wmi.SetTitle("[untitled] - Processes");
-					else
+					}
+					else {
 						wmi.SetTitle(this.link.name.v + " - Services");
+					}
 				};
 
 				const monitorButton = this.CreateSideButton("mono/resmonitor.svg", "Resource monitor");
@@ -2077,10 +2079,12 @@ class DeviceView extends View {
 						keywords = findInput.value.trim().toLowerCase().split(" ");
 
 					let EQUIP_LIST_ORDER;
-					if (localStorage.deviceslist_columns)
+					if (localStorage.deviceslist_columns) {
 						EQUIP_LIST_ORDER = JSON.parse(localStorage.getItem("deviceslist_columns"));
-					else
+					}
+					else {
 						EQUIP_LIST_ORDER = ["name", "type", "hostname", "ip", "manufacturer", "model"];
+					}
 
 					for (let file in LOADER.devices.data) {
 						let match = true;
