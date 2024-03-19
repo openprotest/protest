@@ -33,7 +33,7 @@
             this.box.Dock = System.Windows.Forms.DockStyle.Fill;
             this.box.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.box.Location = new System.Drawing.Point(5, 3);
-            this.box.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.box.Margin = new System.Windows.Forms.Padding(2);
             this.box.Name = "box";
             this.box.Size = new System.Drawing.Size(57, 13);
             this.box.TabIndex = 0;

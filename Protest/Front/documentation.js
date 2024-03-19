@@ -535,21 +535,23 @@ class Documentation extends Window {
 	async Delete() {
 		if (!this.selected) return;
 
-		try {
-			const response = await fetch(`docs/delete?name=${this.selected}`);
+		this.ConfirmBox("Are you sure you want to delete this document?").addEventListener("click", async ()=> {
+			try {
+				const response = await fetch(`docs/delete?name=${this.selected}`);
 
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
-			const json = await response.json();
-			if (json.error) throw(json.error);
+				const json = await response.json();
+				if (json.error) throw(json.error);
 
-			this.selected = null;
-			this.Preview(null);
-			this.ListDocs();
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg");
-		}
+				this.selected = null;
+				this.Preview(null);
+				this.ListDocs();
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+		});
 	}
 
 	async Save() {

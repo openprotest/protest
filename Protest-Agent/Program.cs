@@ -74,11 +74,17 @@ namespace ProtestAgent {
                 if (!Configuration.pse.enabled) return;
                 try {
                     string filename = Path.GetTempPath() + DateTime.Now.Ticks + ".bat";
-                    File.WriteAllText(
-                        filename,
-                        "@ECHO OFF\n" +
-                        Configuration.pse.path + @" \\" + value + " -u " + Configuration.pse.username + " -p " + Configuration.pse.password + " cmd.exe"
-                    );
+
+                    StringBuilder builder = new StringBuilder();
+                    builder.AppendLine("@ECHO OFF");
+                    builder.AppendLine();
+                    builder.Append($"{Configuration.pse.path} \\\\{value}");
+                    if (String.IsNullOrEmpty(Configuration.pse.username)) { builder.Append($" -u {Configuration.pse.username}");}
+                    if (String.IsNullOrEmpty(Configuration.pse.password)) { builder.Append($" -p {Configuration.pse.password}"); }
+                    builder.Append($" cmd.exe");
+
+                    File.WriteAllText(filename, builder.ToString());
+
                     using (Process p = new Process()) {
                         p.StartInfo.FileName = "explorer.exe";
                         p.StartInfo.Arguments = filename;

@@ -580,7 +580,7 @@ class Personalize extends Tabs {
 		clearLocalCacheButton.type = "button";
 		clearLocalCacheButton.value = "Clear local storage";
 		clearLocalCacheButton.style.height = "36px";
-		clearLocalCacheButton.style.padding = "8px";
+		clearLocalCacheButton.style.padding = "8px 16px";
 		this.tabsPanel.appendChild(clearLocalCacheButton);
 
 		this.restoreSessionCheckbox.checked = localStorage.getItem("restore_session") === "true";
@@ -771,7 +771,7 @@ class Personalize extends Tabs {
 		settingsButton.type = "button";
 		settingsButton.value = "Prompt agent settings";
 		settingsButton.style.padding = "8px 16px";
-		settingsButton.style.height = "40px";
+		settingsButton.style.height = "36px";
 		this.tabsPanel.appendChild(settingsButton);
 
 		this.tabsPanel.appendChild(document.createElement("br"));

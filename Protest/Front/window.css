@@ -462,7 +462,7 @@
 
 .no-results:empty::after {
 	display: block;
-	content: "no results found";
+	content: "no content";
 	font-size: 16px;
 	font-family: var(--global-font-family);
 	font-weight: bold;
@@ -481,7 +481,7 @@
 
 .no-results-small:empty::after {
 	display: block;
-	content: "no results found";
+	content: "no content";
 	font-size: 14px;
 	font-family: var(--global-font-family);
 	font-weight: bold;

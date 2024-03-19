@@ -27,21 +27,11 @@ namespace ProtestAgent {
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.pnlTabs = new System.Windows.Forms.Panel();
-            this.tabSetup = new ProtestAgent.TabsControl();
-            this.tabServices = new ProtestAgent.TabsControl();
             this.pnlServices = new System.Windows.Forms.Panel();
-            this.btnApply = new ProtestAgent.Button();
-            this.btnRevert = new ProtestAgent.Button();
-            this.txtPassword = new ProtestAgent.Textbox();
-            this.txtUsername = new ProtestAgent.Textbox();
-            this.txtArgs = new ProtestAgent.Textbox();
-            this.txtExecutable = new ProtestAgent.Textbox();
-            this.btnBrowseExecutable = new ProtestAgent.Button();
             this.lblPassword = new System.Windows.Forms.Label();
             this.lblUsername = new System.Windows.Forms.Label();
             this.lblArguments = new System.Windows.Forms.Label();
             this.lblExecutable = new System.Windows.Forms.Label();
-            this.chkEnable = new System.Windows.Forms.CheckBox();
             this.listProtocols = new System.Windows.Forms.ListBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.lblKey = new System.Windows.Forms.Label();
@@ -53,6 +43,16 @@ namespace ProtestAgent {
             this.lblStep1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.tabSetup = new ProtestAgent.TabsControl();
+            this.tabServices = new ProtestAgent.TabsControl();
+            this.chkEnabled = new ProtestAgent.Checkbox();
+            this.btnApply = new ProtestAgent.Button();
+            this.btnRevert = new ProtestAgent.Button();
+            this.txtPassword = new ProtestAgent.Textbox();
+            this.txtUsername = new ProtestAgent.Textbox();
+            this.txtArgs = new ProtestAgent.Textbox();
+            this.txtExecutable = new ProtestAgent.Textbox();
+            this.btnBrowseExecutable = new ProtestAgent.Button();
             this.btnExport = new ProtestAgent.Button();
             this.btnRegister = new ProtestAgent.Button();
             this.btnSave = new ProtestAgent.Button();
@@ -75,32 +75,13 @@ namespace ProtestAgent {
             this.pnlTabs.Size = new System.Drawing.Size(160, 455);
             this.pnlTabs.TabIndex = 0;
             // 
-            // tabSetup
-            // 
-            this.tabSetup.Icon = global::ProtestAgent.Properties.Resources.wrench;
-            this.tabSetup.Label = "Setup";
-            this.tabSetup.Location = new System.Drawing.Point(0, 57);
-            this.tabSetup.Margin = new System.Windows.Forms.Padding(4);
-            this.tabSetup.Name = "tabSetup";
-            this.tabSetup.Size = new System.Drawing.Size(160, 44);
-            this.tabSetup.TabIndex = 1;
-            // 
-            // tabServices
-            // 
-            this.tabServices.Icon = global::ProtestAgent.Properties.Resources.service;
-            this.tabServices.Label = "Services";
-            this.tabServices.Location = new System.Drawing.Point(0, 9);
-            this.tabServices.Margin = new System.Windows.Forms.Padding(4);
-            this.tabServices.Name = "tabServices";
-            this.tabServices.Size = new System.Drawing.Size(160, 44);
-            this.tabServices.TabIndex = 0;
-            // 
             // pnlServices
             // 
             this.pnlServices.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlServices.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(160)))), ((int)(((byte)(160)))), ((int)(((byte)(160)))));
+            this.pnlServices.Controls.Add(this.chkEnabled);
             this.pnlServices.Controls.Add(this.btnApply);
             this.pnlServices.Controls.Add(this.btnRevert);
             this.pnlServices.Controls.Add(this.txtPassword);
@@ -112,80 +93,12 @@ namespace ProtestAgent {
             this.pnlServices.Controls.Add(this.lblUsername);
             this.pnlServices.Controls.Add(this.lblArguments);
             this.pnlServices.Controls.Add(this.lblExecutable);
-            this.pnlServices.Controls.Add(this.chkEnable);
             this.pnlServices.Controls.Add(this.listProtocols);
             this.pnlServices.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.pnlServices.Location = new System.Drawing.Point(171, 13);
             this.pnlServices.Name = "pnlServices";
             this.pnlServices.Size = new System.Drawing.Size(777, 455);
             this.pnlServices.TabIndex = 1;
-            // 
-            // btnApply
-            // 
-            this.btnApply.Label = "Apply";
-            this.btnApply.Location = new System.Drawing.Point(498, 254);
-            this.btnApply.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(96, 32);
-            this.btnApply.TabIndex = 12;
-            // 
-            // btnRevert
-            // 
-            this.btnRevert.Label = "Revert";
-            this.btnRevert.Location = new System.Drawing.Point(388, 254);
-            this.btnRevert.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.btnRevert.Name = "btnRevert";
-            this.btnRevert.Size = new System.Drawing.Size(96, 32);
-            this.btnRevert.TabIndex = 11;
-            // 
-            // txtPassword
-            // 
-            this.txtPassword.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.txtPassword.Location = new System.Drawing.Point(349, 194);
-            this.txtPassword.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.txtPassword.Name = "txtPassword";
-            this.txtPassword.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
-            this.txtPassword.Size = new System.Drawing.Size(300, 32);
-            this.txtPassword.TabIndex = 10;
-            // 
-            // txtUsername
-            // 
-            this.txtUsername.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.txtUsername.Location = new System.Drawing.Point(349, 152);
-            this.txtUsername.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.txtUsername.Name = "txtUsername";
-            this.txtUsername.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
-            this.txtUsername.Size = new System.Drawing.Size(300, 32);
-            this.txtUsername.TabIndex = 9;
-            // 
-            // txtArgs
-            // 
-            this.txtArgs.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.txtArgs.Location = new System.Drawing.Point(349, 107);
-            this.txtArgs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.txtArgs.Name = "txtArgs";
-            this.txtArgs.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
-            this.txtArgs.Size = new System.Drawing.Size(300, 32);
-            this.txtArgs.TabIndex = 8;
-            // 
-            // txtExecutable
-            // 
-            this.txtExecutable.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.txtExecutable.Location = new System.Drawing.Point(349, 66);
-            this.txtExecutable.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.txtExecutable.Name = "txtExecutable";
-            this.txtExecutable.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
-            this.txtExecutable.Size = new System.Drawing.Size(300, 32);
-            this.txtExecutable.TabIndex = 6;
-            // 
-            // btnBrowseExecutable
-            // 
-            this.btnBrowseExecutable.Label = "...";
-            this.btnBrowseExecutable.Location = new System.Drawing.Point(656, 65);
-            this.btnBrowseExecutable.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.btnBrowseExecutable.Name = "btnBrowseExecutable";
-            this.btnBrowseExecutable.Size = new System.Drawing.Size(36, 32);
-            this.btnBrowseExecutable.TabIndex = 7;
             // 
             // lblPassword
             // 
@@ -222,16 +135,6 @@ namespace ProtestAgent {
             this.lblExecutable.Size = new System.Drawing.Size(84, 20);
             this.lblExecutable.TabIndex = 2;
             this.lblExecutable.Text = "Executable:";
-            // 
-            // chkEnable
-            // 
-            this.chkEnable.AutoSize = true;
-            this.chkEnable.Location = new System.Drawing.Point(223, 25);
-            this.chkEnable.Name = "chkEnable";
-            this.chkEnable.Size = new System.Drawing.Size(73, 24);
-            this.chkEnable.TabIndex = 1;
-            this.chkEnable.Text = "Enable";
-            this.chkEnable.UseVisualStyleBackColor = true;
             // 
             // listProtocols
             // 
@@ -362,6 +265,103 @@ namespace ProtestAgent {
             this.label1.TabIndex = 9;
             this.label1.Text = "1)";
             // 
+            // tabSetup
+            // 
+            this.tabSetup.Icon = global::ProtestAgent.Properties.Resources.wrench;
+            this.tabSetup.Label = "Setup";
+            this.tabSetup.Location = new System.Drawing.Point(0, 57);
+            this.tabSetup.Margin = new System.Windows.Forms.Padding(4);
+            this.tabSetup.Name = "tabSetup";
+            this.tabSetup.Size = new System.Drawing.Size(160, 44);
+            this.tabSetup.TabIndex = 1;
+            // 
+            // tabServices
+            // 
+            this.tabServices.Icon = global::ProtestAgent.Properties.Resources.service;
+            this.tabServices.Label = "Services";
+            this.tabServices.Location = new System.Drawing.Point(0, 9);
+            this.tabServices.Margin = new System.Windows.Forms.Padding(4);
+            this.tabServices.Name = "tabServices";
+            this.tabServices.Size = new System.Drawing.Size(160, 44);
+            this.tabServices.TabIndex = 0;
+            // 
+            // chkEnabled
+            // 
+            this.chkEnabled.Label = "Enable";
+            this.chkEnabled.Location = new System.Drawing.Point(223, 24);
+            this.chkEnabled.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chkEnabled.Name = "chkEnabled";
+            this.chkEnabled.Size = new System.Drawing.Size(119, 22);
+            this.chkEnabled.TabIndex = 2;
+            this.chkEnabled.Value = false;
+            // 
+            // btnApply
+            // 
+            this.btnApply.Label = "Apply";
+            this.btnApply.Location = new System.Drawing.Point(498, 254);
+            this.btnApply.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnApply.Name = "btnApply";
+            this.btnApply.Size = new System.Drawing.Size(96, 32);
+            this.btnApply.TabIndex = 12;
+            // 
+            // btnRevert
+            // 
+            this.btnRevert.Label = "Revert";
+            this.btnRevert.Location = new System.Drawing.Point(388, 254);
+            this.btnRevert.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnRevert.Name = "btnRevert";
+            this.btnRevert.Size = new System.Drawing.Size(96, 32);
+            this.btnRevert.TabIndex = 11;
+            // 
+            // txtPassword
+            // 
+            this.txtPassword.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.txtPassword.Location = new System.Drawing.Point(349, 194);
+            this.txtPassword.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
+            this.txtPassword.Size = new System.Drawing.Size(300, 32);
+            this.txtPassword.TabIndex = 10;
+            // 
+            // txtUsername
+            // 
+            this.txtUsername.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.txtUsername.Location = new System.Drawing.Point(349, 152);
+            this.txtUsername.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
+            this.txtUsername.Size = new System.Drawing.Size(300, 32);
+            this.txtUsername.TabIndex = 9;
+            // 
+            // txtArgs
+            // 
+            this.txtArgs.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.txtArgs.Location = new System.Drawing.Point(349, 107);
+            this.txtArgs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtArgs.Name = "txtArgs";
+            this.txtArgs.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
+            this.txtArgs.Size = new System.Drawing.Size(300, 32);
+            this.txtArgs.TabIndex = 8;
+            // 
+            // txtExecutable
+            // 
+            this.txtExecutable.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.txtExecutable.Location = new System.Drawing.Point(349, 66);
+            this.txtExecutable.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtExecutable.Name = "txtExecutable";
+            this.txtExecutable.Padding = new System.Windows.Forms.Padding(7, 5, 7, 5);
+            this.txtExecutable.Size = new System.Drawing.Size(300, 32);
+            this.txtExecutable.TabIndex = 6;
+            // 
+            // btnBrowseExecutable
+            // 
+            this.btnBrowseExecutable.Label = "...";
+            this.btnBrowseExecutable.Location = new System.Drawing.Point(656, 65);
+            this.btnBrowseExecutable.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnBrowseExecutable.Name = "btnBrowseExecutable";
+            this.btnBrowseExecutable.Size = new System.Drawing.Size(36, 32);
+            this.btnBrowseExecutable.TabIndex = 7;
+            // 
             // btnExport
             // 
             this.btnExport.Label = "Show me the registry file";
@@ -473,12 +473,12 @@ namespace ProtestAgent {
         private System.Windows.Forms.Label lblArguments;
         private System.Windows.Forms.Label lblExecutable;
         private Button btnBrowseExecutable;
-        private System.Windows.Forms.CheckBox chkEnable;
         private Textbox txtArgs;
         private Textbox txtUsername;
         private Textbox txtPassword;
         private Button btnApply;
         private Button btnRevert;
+        private Checkbox chkEnabled;
     }
 }
 

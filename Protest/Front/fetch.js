@@ -157,9 +157,9 @@ class Fetch extends Tabs {
 		this.kerberosCheckbox.type = "checkbox";
 		this.kerberosCheckbox.checked = true;
 
-		this.portScanInput = document.createElement("input");
-		this.portScanInput.type = "checkbox";
-		this.portScanInput.checked = true;
+		this.portScanCheckbox = document.createElement("input");
+		this.portScanCheckbox.type = "checkbox";
+		this.portScanCheckbox.checked = true;
 
 		this.portScanInput = document.createElement("select");
 		this.portScanInput.style.width = "180px";
@@ -261,12 +261,11 @@ class Fetch extends Tabs {
 		};
 
 		this.snmpCheckbox.onchange = ()=> {
-			if (this.snmpCheckbox.checked) {
-				this.snmpInput.disabled = false;
-			}
-			else {
-				this.snmpInput.disabled = true;
-			}
+			this.snmpInput.disabled = !this.snmpCheckbox.checked;
+		};
+
+		this.portScanCheckbox.onchange = ()=>{
+			this.portScanInput.disabled = !this.portScanCheckbox.checked;
 		};
 
 		this.portScanInput.onchange = ()=> {
@@ -351,7 +350,7 @@ class Fetch extends Tabs {
 				if (this.wmiCheckbox.checked)      uri += "&wmi=true";
 				if (this.snmpCheckbox.checked)     uri += `&snmp=${this.snmpInput.value}`;
 				if (this.kerberosCheckbox.checked) uri += "&kerberos=true";
-				if (this.portScanInput.checked) uri += `&portscan=${this.portScanInput.value}`;
+				if (this.portScanCheckbox.checked) uri += `&portscan=${this.portScanInput.value}`;
 
 				uri += `&retries=${this.retriesRange.value}`;
 				uri += `&interval=${this.intervalRange.value}`;
@@ -495,7 +494,9 @@ class Fetch extends Tabs {
 		this.kerberosCheckbox.disabled = false;
 
 		this.tabsPanel.appendChild(this.portScanInput);
-		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.portScanInput, "Port scan");
+
+		this.tabsPanel.appendChild(this.portScanCheckbox);
+		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.portScanCheckbox, "Port scan");
 		portScan.style.gridArea = "9 / 3";
 
 		this.tabsPanel.appendChild(this.portScanInput);

@@ -112,7 +112,7 @@ namespace ProtestAgent {
 
             if (current is null) return;
 
-            this.chkEnable.Checked      = current.enabled;
+            this.chkEnabled.Value       = current.enabled;
             this.txtExecutable.box.Text = current.path;
             this.txtArgs.box.Text       = current.arguments;
             this.txtUsername.box.Text   = current.username;
@@ -281,7 +281,7 @@ namespace ProtestAgent {
 
             if (current is null) return;
 
-            current.enabled    = this.chkEnable.Checked;
+            current.enabled    = this.chkEnabled.Value;
             current.path       = this.txtExecutable.box.Text;
             current.arguments  = this.txtArgs.box.Text;
             current.username   = this.txtUsername.box.Text;

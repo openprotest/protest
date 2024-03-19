@@ -9,7 +9,7 @@ class Wmi extends Window {
 		this.SetTitle("WMI client");
 		this.SetIcon("mono/wmi.svg");
 
-		this.wmi_classes = {};
+		this.wmiClasses = {};
 		this.GetWmiClasses();
 
 		this.content.style.overflow = "hidden";
@@ -20,7 +20,7 @@ class Wmi extends Window {
 
 		const targetLabel = document.createElement("div");
 		targetLabel.style.gridArea = "1 / 1";
-		targetLabel.textContent = "Target: ";
+		targetLabel.textContent = "Target:";
 		wmiInput.appendChild(targetLabel);
 
 		this.targetInput = document.createElement("input");
@@ -37,7 +37,7 @@ class Wmi extends Window {
 		wmiInput.appendChild(targetButton);
 
 		const queryLabel = document.createElement("div");
-		queryLabel.textContent = "Query: ";
+		queryLabel.textContent = "Query:";
 		queryLabel.style.gridArea = "2 / 1";
 		wmiInput.appendChild(queryLabel);
 
@@ -106,7 +106,7 @@ class Wmi extends Window {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.wmi_classes = json;
+			this.wmiClasses = json;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -118,7 +118,7 @@ class Wmi extends Window {
 
 		let words = lastQuery.split(" ");
 		let className = null;
-		if (this.wmi_classes.classes) {
+		if (this.wmiClasses.classes) {
 			for (let i = 0; i < words.length; i++) {
 				if (words[i].toUpperCase() === "FROM" && i !== words.length-1) {
 					className = words[i+1].toLowerCase();
@@ -193,7 +193,7 @@ class Wmi extends Window {
 
 		innerBox.append(classesList, propertiesList, previewInput);
 
-		if (!this.wmi_classes.classes) {
+		if (!this.wmiClasses.classes) {
 			this.ConfirmBox("Failed to load WMI classes.");
 			okButton.onclick();
 			return;
@@ -216,21 +216,21 @@ class Wmi extends Window {
 		let propertyCheckboxes = [];
 
 		classFilterInput.oninput = ()=> {
-			if (!this.wmi_classes.classes) return;
+			if (!this.wmiClasses.classes) return;
 			let filter = classFilterInput.value.toLowerCase();
 
 			classesList.textContent = "";
 			propertiesList.textContent = "";
 
-			for (let i=0; i<this.wmi_classes.classes.length; i++) {
+			for (let i=0; i<this.wmiClasses.classes.length; i++) {
 				let matched = false;
 
-				if (this.wmi_classes.classes[i].class.toLowerCase().indexOf(filter) > -1) {
+				if (this.wmiClasses.classes[i].class.toLowerCase().indexOf(filter) > -1) {
 					matched = true;
 				}
 				else {
-					for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
-						if (this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
+					for (let j = 0; j < this.wmiClasses.classes[i].properties.length; j++) {
+						if (this.wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
 							matched = true;
 							break;
 						}
@@ -239,7 +239,7 @@ class Wmi extends Window {
 
 				if (matched) {
 					const newClass = document.createElement("div");
-					newClass.textContent = this.wmi_classes.classes[i].class;
+					newClass.textContent = this.wmiClasses.classes[i].class;
 					classesList.appendChild(newClass);
 
 					newClass.onclick = ()=> {
@@ -250,10 +250,10 @@ class Wmi extends Window {
 
 						propertiesList.textContent = "";
 						
-						for (let j = 0; j < this.wmi_classes.classes[i].properties.length; j++) {
+						for (let j = 0; j < this.wmiClasses.classes[i].properties.length; j++) {
 							let value = lastProperties === "*" || className == null ||
-								className.toLowerCase() === this.wmi_classes.classes[i].class.toLowerCase() &&
-								lastPropertiesArray.includes(this.wmi_classes.classes[i].properties[j].toLowerCase());
+								className.toLowerCase() === this.wmiClasses.classes[i].class.toLowerCase() &&
+								lastPropertiesArray.includes(this.wmiClasses.classes[i].properties[j].toLowerCase());
 
 							const propertyBox = document.createElement("div");
 							const propertyCheckbox = document.createElement("input");
@@ -274,22 +274,22 @@ class Wmi extends Window {
 								}
 
 								if (count === 0 || count === properties.length) {
-									previewInput.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
+									previewInput.value = "SELECT * FROM " + this.wmiClasses.classes[i].class;
 								}
 								else {
 									let sel = "";
 									for (let k = 0; k < properties.length; k++)
 										if (properties[k])
-											sel += (sel.length == 0) ? this.wmi_classes.classes[i].properties[k] : ", " + this.wmi_classes.classes[i].properties[k];
+											sel += (sel.length == 0) ? this.wmiClasses.classes[i].properties[k] : ", " + this.wmiClasses.classes[i].properties[k];
 
-									previewInput.value = "SELECT " + sel + " FROM " + this.wmi_classes.classes[i].class;
+									previewInput.value = "SELECT " + sel + " FROM " + this.wmiClasses.classes[i].class;
 								}
 							};
 
-							this.AddCheckBoxLabel(propertyBox, propertyCheckbox, this.wmi_classes.classes[i].properties[j]);
+							this.AddCheckBoxLabel(propertyBox, propertyCheckbox, this.wmiClasses.classes[i].properties[j]);
 							propertiesList.appendChild(propertyBox);
 
-							if (filter && this.wmi_classes.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
+							if (filter && this.wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
 								propertyBox.scrollIntoView({ behavior: "smooth"});
 								setTimeout(()=>{propertyBox.style.animation = "highlight .8s 1"}, 500);
 							}
@@ -298,7 +298,7 @@ class Wmi extends Window {
 							selected.style.backgroundColor = "var(--clr-select)";
 						}
 
-						previewInput.value = "SELECT * FROM " + this.wmi_classes.classes[i].class;
+						previewInput.value = "SELECT * FROM " + this.wmiClasses.classes[i].class;
 					};
 
 					newClass.ondblclick = ()=> {
@@ -306,7 +306,7 @@ class Wmi extends Window {
 						okButton.onclick();
 					};
 
-					if (className && className === this.wmi_classes.classes[i].class.toLowerCase()) {
+					if (className && className === this.wmiClasses.classes[i].class.toLowerCase()) {
 						newClass.onclick();
 						newClass.scrollIntoView();
 						className = null;
@@ -400,16 +400,16 @@ class Wmi extends Window {
 		let hasMethods = false;
 		let targetHost = this.targetInput.value;
 
-		if (this.wmi_classes.classes) {
+		if (this.wmiClasses.classes) {
 			for (let i = 0; i < words.length; i++)
 				if (words[i].startsWith("win32_")) {
 					className = words[i];
 					break;
 				}
 
-			for (let i = 0; i < this.wmi_classes.classes.length; i++)
-				if (this.wmi_classes.classes[i].class.toLowerCase().indexOf(className) > -1) {
-					hasMethods = this.wmi_classes.classes[i].methods;
+			for (let i = 0; i < this.wmiClasses.classes.length; i++)
+				if (this.wmiClasses.classes[i].class.toLowerCase().indexOf(className) > -1) {
+					hasMethods = this.wmiClasses.classes[i].methods;
 					break;
 				}
 		}
