@@ -61,7 +61,7 @@ class Snmp extends Window {
 
 		this.executeButton.onclick = ()=> this.Query();
 
-		toggleButton.onclick =()=> {
+		toggleButton.onclick = ()=> {
 			if (snmpInput.style.visibility === "hidden") {
 				toggleButton.style.top = "96px";
 				toggleButton.style.transform = "rotate(-180deg)";
