@@ -6,7 +6,7 @@
 	top: 8px;
 	height: 122px;
 	display: grid;
-	grid-template-columns: 96px auto minmax(96px, 112px) 64px 64px;
+	grid-template-columns: 96px auto 100px 56px 56px;
 	grid-template-rows: 32px 32px 32px 24px;
 	transition: .2s;
 }
