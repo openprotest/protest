@@ -43,7 +43,7 @@ class Wmi extends Window {
 		wmiInput.appendChild(queryLabel);
 
 		this.queryInput = document.createElement("textarea");
-		this.queryInput.placeholder = "e.g.: SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
+		this.queryInput.placeholder = "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
 		this.queryInput.style.gridArea = "2 / 2 / 2 span / auto";
 		//this.queryInput.style.fontFamily = "monospace";
 		this.queryInput.style.resize = "none";

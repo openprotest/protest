@@ -16,7 +16,7 @@ internal static class Polling {
     public const string SYSTEM_LOCATION        = "1.3.6.1.2.1.1.6.0";
     public const string SYSTEM_SERVICES        = "1.3.6.1.2.1.1.7.0";
 
-    public const string TOTAL_INTERFACES      = "1.3.6.1.2.1.2.1.0";
+    public const string INTERFACE_TOTAL      = "1.3.6.1.2.1.2.1.0";
     public const string INTERFACE_DESCRIPTOR  = "1.3.6.1.2.1.2.2.1.2.i";
     public const string INTERFACE_SPEED       = "1.3.6.1.2.1.2.2.1.5.i";
     public const string INTERFACE_STATUS      = "1.3.6.1.2.1.2.2.1.8.i";
