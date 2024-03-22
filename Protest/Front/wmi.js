@@ -81,6 +81,7 @@ class Wmi extends Window {
 				wmiInput.style.opacity = "1";
 				wmiInput.style.transform = "none";
 				this.plotBox.style.top = "136px";
+				this.params.hideInput = false;
 			}
 			else {
 				toggleButton.style.top = "0px";
@@ -89,11 +90,16 @@ class Wmi extends Window {
 				wmiInput.style.opacity = "0";
 				wmiInput.style.transform = "translateY(-64px)";
 				this.plotBox.style.top = "36px";
+				this.params.hideInput = true;
 			}
 		};
 
+		
 		if (this.params.target.length > 0 && this.params.query.length > 0) {
 			this.executeButton.onclick();
+		}
+		
+		if (this.params.hideInput) {
 			toggleButton.onclick();
 		}
 	}
@@ -119,12 +125,13 @@ class Wmi extends Window {
 
 		let words = lastQuery.split(" ");
 		let className = null;
+
 		if (this.wmiClasses.classes) {
 			for (let i = 0; i < words.length; i++) {
-				if (words[i].toUpperCase() === "FROM" && i !== words.length-1) {
-					className = words[i+1].toLowerCase();
-					break;
-				}
+				words[i] = words[i].trim().toUpperCase();
+				if (words[i] !== "FROM" || i === words.length-1) continue;
+				className = words[i+1].toLowerCase();
+				break;
 			}
 		}
 
@@ -216,6 +223,51 @@ class Wmi extends Window {
 		let properties = [];
 		let propertyCheckboxes = [];
 
+		const ListProperties = classObject=> {
+			properties = [];
+			propertyCheckboxes = [];
+
+			for (let j = 0; j < classObject.properties.length; j++) {
+
+				let value = lastProperties === "*" || className == null ||
+					className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
+
+				const propertyBox = document.createElement("div");
+				const propertyCheckbox = document.createElement("input");
+				propertyCheckbox.type = "checkbox";
+				propertyCheckbox.checked = value;
+				propertyCheckboxes.push(propertyCheckbox);
+				propertyBox.appendChild(propertyCheckbox);
+
+				properties.push(value);
+
+				this.AddCheckBoxLabel(propertyBox, propertyCheckbox, classObject.properties[j]);
+				propertiesList.appendChild(propertyBox);
+			}
+
+			const OnCheckedChange = ()=> {
+				let selectedList = [];
+				for (let j=0; j<classObject.properties.length; j++) {
+					if (propertyCheckboxes[j].checked) {
+						selectedList.push(classObject.properties[j]);
+					}
+				}
+
+				let query;
+				if (selectedList.length === 0 || selectedList.length === classObject.properties.length) {
+					query = `SELECT * FROM ${classObject.class}`;
+				}
+				else {
+					query = `SELECT ${selectedList.join(", ")} FROM ${classObject.class}`;
+				}
+				previewInput.value = query;
+			};
+
+			for (let j=0; j<propertyCheckboxes.length; j++) {
+				propertyCheckboxes[j].onchange = OnCheckedChange;
+			}
+		};
+
 		classFilterInput.oninput = ()=> {
 			if (!this.wmiClasses.classes) return;
 			let filter = classFilterInput.value.toLowerCase();
@@ -243,63 +295,28 @@ class Wmi extends Window {
 					newClass.textContent = this.wmiClasses.classes[i].class;
 					classesList.appendChild(newClass);
 
-					newClass.onclick = ()=> {
+					newClass.onclick = event=> {
 						if (selected != null) selected.style.backgroundColor = "";
-
-						properties = [];
-						propertyCheckboxes = [];
 
 						propertiesList.textContent = "";
 						
-						for (let j = 0; j < this.wmiClasses.classes[i].properties.length; j++) {
-							let value = lastProperties === "*" || className == null ||
-								className.toLowerCase() === this.wmiClasses.classes[i].class.toLowerCase() &&
-								lastPropertiesArray.includes(this.wmiClasses.classes[i].properties[j].toLowerCase());
+						ListProperties(this.wmiClasses.classes[i]);
 
-							const propertyBox = document.createElement("div");
-							const propertyCheckbox = document.createElement("input");
-							propertyCheckbox.type = "checkbox";
-							propertyCheckbox.checked = value;
-							propertyCheckboxes.push(propertyCheckbox);
-							propertyBox.appendChild(propertyCheckbox);
+						selected = newClass;
+						selected.style.backgroundColor = "var(--clr-select)";
 
-							properties.push(value);
-
-							propertyCheckbox.onchange = ()=> {
-								properties[j] = propertyCheckbox.checked;
-
-								let count = 0;
-								for (let k = 0; k < properties.length; k++) {
-									if (properties[k])
-										count++;
-								}
-
-								if (count === 0 || count === properties.length) {
-									previewInput.value = "SELECT * FROM " + this.wmiClasses.classes[i].class;
-								}
-								else {
-									let sel = "";
-									for (let k = 0; k < properties.length; k++)
-										if (properties[k])
-											sel += (sel.length == 0) ? this.wmiClasses.classes[i].properties[k] : ", " + this.wmiClasses.classes[i].properties[k];
-
-									previewInput.value = "SELECT " + sel + " FROM " + this.wmiClasses.classes[i].class;
-								}
-							};
-
-							this.AddCheckBoxLabel(propertyBox, propertyCheckbox, this.wmiClasses.classes[i].properties[j]);
-							propertiesList.appendChild(propertyBox);
-
-							if (filter && this.wmiClasses.classes[i].properties[j].toLowerCase().indexOf(filter) > -1) {
-								propertyBox.scrollIntoView({ behavior: "smooth"});
-								setTimeout(()=>{propertyBox.style.animation = "highlight .8s 1"}, 500);
+						let selectedList = [];
+						for (let j=0; j<this.wmiClasses.classes[i].properties.length; j++) {
+							if (propertyCheckboxes[j].checked) {
+								selectedList.push(this.wmiClasses.classes[i].properties[j]);
 							}
-
-							selected = newClass;
-							selected.style.backgroundColor = "var(--clr-select)";
 						}
 
-						previewInput.value = "SELECT * FROM " + this.wmiClasses.classes[i].class;
+						if (selectedList.length === 0 || selectedList.length === this.wmiClasses.classes[i].properties.length) {
+							previewInput.value = `SELECT * FROM ${this.wmiClasses.classes[i].class}`;
+						} else {
+							previewInput.value = `SELECT ${selectedList.join(", ")} FROM ${this.wmiClasses.classes[i].class}`;
+						}
 					};
 
 					newClass.ondblclick = ()=> {
@@ -308,9 +325,11 @@ class Wmi extends Window {
 					};
 
 					if (className && className === this.wmiClasses.classes[i].class.toLowerCase()) {
-						newClass.onclick();
-						newClass.scrollIntoView();
-						className = null;
+						newClass.scrollIntoView({ behavior: "smooth"});
+
+						selected = newClass;
+						selected.style.backgroundColor = "var(--clr-select)";
+						selected.onclick();
 					}
 				}
 			}

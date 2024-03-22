@@ -292,7 +292,7 @@ class DeviceView extends View {
 
 				const processesButton = this.CreateSideButton("mono/console.svg", "Processes");
 				processesButton.onclick = ()=> {
-					const wmi = new Wmi({target:host, query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process"});
+					const wmi = new Wmi({target:host, query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process", hideInput:true});
 					wmi.SetIcon("mono/console.svg");
 					if (!this.link.name || this.link.name.v.length == 0) {
 						wmi.SetTitle("[untitled] - Processes");
@@ -304,7 +304,7 @@ class DeviceView extends View {
 
 				const servicesButton = this.CreateSideButton("mono/service.svg", "Services");
 				servicesButton.onclick = ()=> {
-					const wmi = new Wmi({target: host, query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service"});
+					const wmi = new Wmi({target: host, query:"SELECT DisplayName, Name, ProcessId, State \nFROM Win32_Service", hideInput:true});
 					wmi.SetIcon("mono/service.svg");
 					if (!this.link.name || this.link.name.v.length==0) {
 						wmi.SetTitle("[untitled] - Processes");

@@ -4,7 +4,7 @@ class Snmp extends Window {
 
 		this.AddCssDependencies("snmp.css");
 
-		this.params = params ?? { target: "", oid: "" };
+		this.params = params ?? { target: "", community:"", oid: "" };
 
 		this.SetTitle("SNMP pooling");
 		this.SetIcon("mono/snmp.svg");
@@ -135,6 +135,7 @@ class Snmp extends Window {
 				snmpInput.style.opacity = "1";
 				snmpInput.style.transform = "none";
 				this.plotBox.style.top = "136px";
+				this.params.hideInput = false;
 			}
 			else {
 				toggleButton.style.top = "0px";
@@ -143,11 +144,15 @@ class Snmp extends Window {
 				snmpInput.style.opacity = "0";
 				snmpInput.style.transform = "translateY(-64px)";
 				this.plotBox.style.top = "36px";
+				this.params.hideInput = true;
 			}
 		};
 
 		if (this.params.target.length > 0 && this.params.oid.length > 0) {
 			this.getButton.onclick();
+		}
+
+		if (this.params.hideInput) {
 			toggleButton.onclick();
 		}
 	}

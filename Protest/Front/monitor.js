@@ -819,7 +819,7 @@ class Monitor extends Window {
 			classFilterInput.type = "text";
 			classFilterInput.placeholder = "Find..";
 			classFilterInput.style.gridArea = "1 / 1";
-
+	
 			innerBox.append(classFilterInput);
 
 			const classesList = document.createElement("div");
@@ -896,10 +896,10 @@ class Monitor extends Window {
 			let className = null;
 			if (wmiClasses.classes) {
 				for (let i=0; i<words.length; i++) {
-					if (words[i].toUpperCase() === "FROM" && i !== words.length-1) {
-						className = words[i+1].toLowerCase();
-						break;
-					}
+					words[i] = words[i].trim().toUpperCase();
+					if (words[i] !== "FROM" || i === words.length-1) continue;
+					className = words[i+1].toLowerCase();
+					break;
 				}
 			}
 
@@ -934,15 +934,15 @@ class Monitor extends Window {
 			};
 
 			let selected = null;
+			let properties = [];
+			let propertyCheckboxes = [];
 
 			const ListProperties = classObject=> {
-				let properties = [];
-				let propertyCheckboxes = [];
+				properties = [];
+				propertyCheckboxes = [];
 
 				for (let j = 0; j < classObject.properties.length; j++) {
-
-					let value = lastProperties === "*" || className == null ||
-						className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
+					let value = className && className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
 
 					const propertyBox = document.createElement("div");
 					const propertyCheckbox = document.createElement("input");
@@ -981,7 +981,6 @@ class Monitor extends Window {
 					else {
 						query = `SELECT ${selectedList.join(", ")} FROM ${classObject.class}`;
 					}
-
 					queryInput.value = query;
 				};
 
