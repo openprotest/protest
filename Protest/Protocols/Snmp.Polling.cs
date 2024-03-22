@@ -107,8 +107,8 @@ internal static class Polling {
             catch (OperationCanceledException) {
                 bytes = "{\"error\":\"Operation timed out\"}"u8.ToArray();
             }
-            catch (Exception) {
-                bytes = "{\"error\":\"Unknown error\"}"u8.ToArray();
+            catch (Exception ex) {
+                bytes = Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
             }
         }).GetAwaiter().GetResult();
 
@@ -177,8 +177,9 @@ internal static class Polling {
             catch (OperationCanceledException) {
                 bytes = "{\"error\":\"Operation timed out\"}"u8.ToArray();
             }
-            catch (Exception) {
-                bytes = "{\"error\":\"Unknown error\"}"u8.ToArray();
+            catch (Exception ex) {
+                bytes = Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
+
             }
         }).GetAwaiter().GetResult();
 

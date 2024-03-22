@@ -74,7 +74,7 @@ class Snmp extends Window {
 		snmpInput.appendChild(oidLabel);
 
 		this.oidInput = document.createElement("textarea");
-		this.oidInput.placeholder = "1.3.6.1.2.1.1.5.0";
+		this.oidInput.placeholder = "1.3.6.1.2.1.1.5.0, 1.3.6.1.2.1.1.3.0";
 		this.oidInput.style.gridArea = "3 / 2 / 5 / 4";
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";
@@ -178,7 +178,7 @@ class Snmp extends Window {
 				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}`;
 			}
 			else {
-				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.credentialsInput.value)}`;
+				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}`;
 			}
 
 			const response = await fetch(url, {
@@ -227,7 +227,7 @@ class Snmp extends Window {
 				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}&value=${encodeURIComponent(value)}`;
 			}
 			else {
-				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.credentialsInput.value)}&value=${encodeURIComponent(value)}`;
+				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}&value=${encodeURIComponent(value)}`;
 			}
 
 			const response = await fetch(url, {
