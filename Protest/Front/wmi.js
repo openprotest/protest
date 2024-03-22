@@ -31,12 +31,6 @@ class Wmi extends Window {
 		if (this.params.target != null) this.targetInput.value = this.params.target;
 		wmiInput.appendChild(this.targetInput);
 
-		const targetButton = document.createElement("input");
-		targetButton.type = "button";
-		targetButton.value = "...";
-		targetButton.style.gridArea = "2 / 3";
-		wmiInput.appendChild(targetButton);
-
 		const queryLabel = document.createElement("div");
 		queryLabel.textContent = "Query:";
 		queryLabel.style.gridArea = "2 / 1";
@@ -49,6 +43,12 @@ class Wmi extends Window {
 		this.queryInput.style.resize = "none";
 		if (this.params.query != null) this.queryInput.value = this.params.query;
 		wmiInput.appendChild(this.queryInput);
+
+		const helperButton = document.createElement("input");
+		helperButton.type = "button";
+		helperButton.value = "...";
+		helperButton.style.gridArea = "2 / 3";
+		wmiInput.appendChild(helperButton);
 
 		this.executeButton = document.createElement("input");
 		this.executeButton.type = "button";
@@ -69,7 +69,7 @@ class Wmi extends Window {
 		this.targetInput.oninput = ()=> { this.params.target = this.targetInput.value };
 		this.queryInput.oninput = ()=> { this.params.query = this.queryInput.value };
 
-		targetButton.onclick = ()=> this.SequelAssistant();
+		helperButton.onclick = ()=> this.SequelAssistant();
 
 		this.executeButton.onclick = ()=> this.Query();
 
@@ -438,13 +438,13 @@ class Wmi extends Window {
 			tr.appendChild(tdn);
 
 			for (let j = 0; j < length; j++) {
-				let td = document.createElement("td");
+				const td = document.createElement("td");
 				td.textContent = split[i + j];
 				tr.appendChild(td);
 			}
 
 			if (hasMethods && unique > -1) {
-				let td = document.createElement("td");
+				const td = document.createElement("td");
 				tr.appendChild(td);
 
 				if (i > length) {

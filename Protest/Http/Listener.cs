@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Protest.Http;
@@ -369,6 +370,9 @@ public sealed class Listener {
         case "/tools/maclookup"  : buffer = Tools.MacLookup.Lookup(ctx); break;
         case "/tools/downstream" : buffer = Tools.SpeedTest.DownStream(ctx, parameters); break;
         case "/tools/upstream"   : buffer = Tools.SpeedTest.UpStream(ctx, parameters); break;
+
+        case "/snmp/get": buffer = Protocols.Snmp.Polling.GetHandler(ctx, parameters); break;
+        case "/snmp/set": buffer = Protocols.Snmp.Polling.SetHandler(ctx, parameters); break;
 
         case "/wmi/query"      : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null; break;
         case "/wmi/killprocess": buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(parameters) : null; break;

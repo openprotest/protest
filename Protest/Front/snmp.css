@@ -2,7 +2,7 @@
 	position: absolute;
 	left: 8px;
 	right: 40px;
-	max-width: 640px;
+	max-width: 800px;
 	top: 8px;
 	height: 122px;
 	display: grid;
@@ -43,4 +43,24 @@
 	top: 136px;
 	bottom: 4px;
 	transition: .4s;
+}
+
+.snmp-table {
+	position: relative;
+	color: var(--clr-dark);
+	border-collapse: collapse;
+	margin: 8px;
+	-webkit-user-select: text; user-select: text;
+}
+
+.snmp-table > tr > td {
+	border: #444 2px solid;
+	max-width: 500px;
+	padding: 4px 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.snmp-list > tr > * {
+	border: #444 2px solid;
 }

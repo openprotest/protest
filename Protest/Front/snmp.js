@@ -26,7 +26,7 @@ class Snmp extends Window {
 		this.targetInput.placeholder = "hostname or ip";
 		this.targetInput.style.gridArea = "1 / 2 / 1 / 4";
 		this.targetInput.style.minWidth = "50px";
-		if (this.params.target != null) this.targetInput.value = this.params.target;
+		this.targetInput.value = this.params.target ?? "";
 		snmpInput.appendChild(this.targetInput);
 
 		const authLabel = document.createElement("div");
@@ -41,8 +41,8 @@ class Snmp extends Window {
 		this.communityInput.style.gridArea = "2 / 2";
 		this.communityInput.style.marginRight = "0";
 		this.communityInput.style.minWidth = "50px";
+		this.communityInput.value = this.params.community;
 		snmpInput.appendChild(this.communityInput);
-
 		
 		this.credentialsInput = document.createElement("select");
 		this.credentialsInput.style.gridArea = "2 / 2";
@@ -53,16 +53,19 @@ class Snmp extends Window {
 
 		this.versionInput = document.createElement("select");
 		this.versionInput.style.gridArea = "2 / 3";
-		if (this.params.oid !== null) this.versionInput.value = this.params.oid;
+		if (this.params.version) this.versionInput.value = this.params.version;
 		snmpInput.appendChild(this.versionInput);
 
-		const versionOptions = [1, 2, 3];
+		//const versionOptions = [1, 2, 3];
+		const versionOptions = [2];
 		for (let i=0; i<versionOptions.length; i++) {
 			const option = document.createElement("option");
 			option.value = versionOptions[i];
 			option.textContent = `Version ${versionOptions[i]}`;
 			this.versionInput.appendChild(option);
 		}
+
+		this.versionInput.value = this.params.version ?? 2;
 
 		const oidLabel = document.createElement("div");
 		oidLabel.style.lineHeight = "28px";
@@ -75,7 +78,7 @@ class Snmp extends Window {
 		this.oidInput.style.gridArea = "3 / 2 / 5 / 4";
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";
-		if (this.params.oid !== null) this.oidInput.value = this.params.oid;
+		this.oidInput.value = this.params.oid ?? "";
 		snmpInput.appendChild(this.oidInput);
 
 		this.getButton = document.createElement("input");
@@ -104,9 +107,13 @@ class Snmp extends Window {
 		this.content.appendChild(this.plotBox);
 
 		this.targetInput.oninput = ()=> { this.params.target = this.targetInput.value };
+		this.communityInput.oninput = ()=> { this.params.community = this.communityInput.value };
+		this.credentialsInput.onchange = ()=> { this.params.credentials = this.credentialsInput.value };
 		this.oidInput.oninput = ()=> { this.params.oid = this.oidInput.value };
 
 		this.versionInput.onchange = ()=> {
+			this.params.version = this.versionInput.value;
+
 			if (this.versionInput.value == 3) {
 				authLabel.textContent = "Credentials:";
 				this.credentialsInput.style.display = "block";
@@ -118,7 +125,7 @@ class Snmp extends Window {
 		};
 
 		this.getButton.onclick = ()=> { this.GetQuery() };
-		this.setButton.onclick = ()=> { this.SetQuery() };
+		this.setButton.onclick = ()=> { this.SetQueryDialog() };
 
 		toggleButton.onclick = ()=> {
 			if (snmpInput.style.visibility === "hidden") {
@@ -165,11 +172,9 @@ class Snmp extends Window {
 		this.plotBox.style.display = "none";
 		this.plotBox.textContent = "";
 
-		console.log(this.versionInput.value);
-
 		try {
 			let url;
-			if (this.versionInput.value == 3) {
+			if (this.versionInput.value==3) {
 				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}`;
 			}
 			else {
@@ -183,9 +188,12 @@ class Snmp extends Window {
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
-			const text = await response.text();
-			//TODO:
+			const json = await response.json();
+			if (json.error) throw(json.error);
 
+			if (json instanceof Array) {
+				this.Plot(json);
+			}
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -198,7 +206,61 @@ class Snmp extends Window {
 		}
 	}
 
-	async SetQuery() {
+	async SetQuery(value) {
+		const spinner = document.createElement("div");
+		spinner.className = "spinner";
+		spinner.style.textAlign = "left";
+		spinner.style.marginTop = "160px";
+		spinner.style.marginBottom = "32px";
+		spinner.appendChild(document.createElement("div"));
+		this.content.appendChild(spinner);
+
+		this.targetInput.value = this.targetInput.value.trim();
+		this.getButton.disabled = true;
+		this.setButton.disabled = true;
+		this.plotBox.style.display = "none";
+		this.plotBox.textContent = "";
+
+		try {
+			let url;
+			if (this.versionInput.value==3) {
+				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}&value=${encodeURIComponent(value)}`;
+			}
+			else {
+				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.credentialsInput.value)}&value=${encodeURIComponent(value)}`;
+			}
+
+			const response = await fetch(url, {
+				method: "POST",
+				body: this.oidInput.value.trim()
+			});
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			if (json instanceof Array) {
+				this.Plot(json);
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+		finally {
+			this.getButton.disabled = false;
+			this.setButton.disabled = false;
+			this.plotBox.style.display = "block";
+			this.content.removeChild(spinner);
+		}
+	}
+
+	async SetQueryDialog() {
+		if (this.targetInput.value.length == 0 || this.oidInput.value.length == 0) {
+			this.ConfirmBox("Incomplete query.", true);
+			return;
+		}
+
 		const dialog = this.DialogBox("108px");
 		if (dialog === null) return;
 
@@ -217,7 +279,10 @@ class Snmp extends Window {
 
 		dialog.okButton.onclick = ()=> {
 			dialog.cancelButton.onclick();
-			//TODO:
+
+			setTimeout(()=> {
+				this.SetQuery(valueInput.value);
+			}, 400);
 		};
 
 		valueInput.onkeydown = event=> {
@@ -225,5 +290,25 @@ class Snmp extends Window {
 				dialog.okButton.click();
 			}
 		}
+	}
+
+	Plot(array) {
+		if (array.length === 0) { return; }
+
+		const table = document.createElement("table");
+		table.className = "snmp-table";
+
+		for (let i=0; i<array.length; i++) {
+			const tr = document.createElement("tr");
+			table.appendChild(tr);
+
+			for (let j=0; j<array[i].length; j++) {
+				const td = document.createElement("td");
+				td.textContent = array[i][j];
+				tr.appendChild(td);
+			}
+		}
+
+		this.plotBox.appendChild(table);
 	}
 }
