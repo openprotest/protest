@@ -100,7 +100,7 @@ internal static class Polling {
                     builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
                     builder.Append(']');
                 }
-
+                 
                 builder.Append(']');
                 bytes = Encoding.UTF8.GetBytes(builder.ToString());
             }
@@ -185,5 +185,4 @@ internal static class Polling {
 
         return bytes ?? "[]"u8.ToArray();
     }
-
 }

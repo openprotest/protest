@@ -898,7 +898,7 @@ class Monitor extends Window {
 				for (let i=0; i<words.length; i++) {
 					words[i] = words[i].trim().toUpperCase();
 					if (words[i] !== "FROM" || i === words.length-1) continue;
-					className = words[i+1].toLowerCase();
+					className = words[i+1].trim().toLowerCase();
 					break;
 				}
 			}

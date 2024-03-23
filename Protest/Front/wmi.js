@@ -73,7 +73,7 @@ class Wmi extends Window {
 
 		this.executeButton.onclick = ()=> this.Query();
 
-		toggleButton.onclick =()=> {
+		toggleButton.onclick = ()=> {
 			if (wmiInput.style.visibility === "hidden") {
 				toggleButton.style.top = "96px";
 				toggleButton.style.transform = "rotate(-180deg)";
@@ -130,7 +130,7 @@ class Wmi extends Window {
 			for (let i = 0; i < words.length; i++) {
 				words[i] = words[i].trim().toUpperCase();
 				if (words[i] !== "FROM" || i === words.length-1) continue;
-				className = words[i+1].toLowerCase();
+				className = words[i+1].trim().toLowerCase();
 				break;
 			}
 		}
@@ -314,7 +314,8 @@ class Wmi extends Window {
 
 						if (selectedList.length === 0 || selectedList.length === this.wmiClasses.classes[i].properties.length) {
 							previewInput.value = `SELECT * FROM ${this.wmiClasses.classes[i].class}`;
-						} else {
+						}
+						else {
 							previewInput.value = `SELECT ${selectedList.join(", ")} FROM ${this.wmiClasses.classes[i].class}`;
 						}
 					};
@@ -323,7 +324,7 @@ class Wmi extends Window {
 						this.queryInput.value = previewInput.value;
 						okButton.onclick();
 					};
-
+					
 					if (className && className === this.wmiClasses.classes[i].class.toLowerCase()) {
 						newClass.scrollIntoView({ behavior: "smooth"});
 
