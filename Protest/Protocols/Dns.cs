@@ -12,7 +12,7 @@ namespace Protest.Protocols;
 
 internal static class Dns {
 
-    public enum TransportMethod {
+    public enum TransportMethod : byte {
         auto  = 0,
         udp   = 1,
         tcp   = 2,
@@ -21,7 +21,7 @@ internal static class Dns {
         quic  = 7,
     }
 
-    public enum RecordType {
+    public enum RecordType : byte {
         A     = 1,
         NS    = 2,
         CNAME = 5,
@@ -34,7 +34,7 @@ internal static class Dns {
         ANY   = 255
     }
 
-    enum Class {
+    enum Class : byte {
         IN = 1, //Internet
         CS = 2, //CSNET -Obsolete
         CH = 3, //Chaos -Obsolete

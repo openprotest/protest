@@ -56,8 +56,7 @@ class Snmp extends Window {
 		if (this.params.version) this.versionInput.value = this.params.version;
 		snmpInput.appendChild(this.versionInput);
 
-		//const versionOptions = [1, 2, 3];
-		const versionOptions = [2];
+		const versionOptions = [1, 2, 3];
 		for (let i=0; i<versionOptions.length; i++) {
 			const option = document.createElement("option");
 			option.value = versionOptions[i];
@@ -74,7 +73,7 @@ class Snmp extends Window {
 		snmpInput.appendChild(oidLabel);
 
 		this.oidInput = document.createElement("textarea");
-		this.oidInput.placeholder = "1.3.6.1.2.1.1.5.0, 1.3.6.1.2.1.1.3.0";
+		this.oidInput.placeholder = "1.3.6.1.2.1.1.5.0";
 		this.oidInput.style.gridArea = "3 / 2 / 5 / 4";
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";

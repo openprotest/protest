@@ -18,7 +18,7 @@ using Protest.Http;
 namespace Protest.Tools;
 
 internal static class Monitor {
-    public enum Action {
+    public enum Action : byte {
         none,
         start,
         pause,

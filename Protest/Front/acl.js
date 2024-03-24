@@ -561,6 +561,7 @@ class Acl extends Tabs {
 			labels[i].style.textOverflow = "ellipsis";
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
+			labels[i].style.paddingTop = "1px";
 		}
 
 		titleBar.append(usernameLabel, ipLabel, timeLabel, ttlLabel);

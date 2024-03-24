@@ -16,27 +16,34 @@ class Settings extends Tabs {
 		this.tabsPanel.style.overflowY = "auto";
 
 		this.zonesTab         = this.AddTab("Zones", "mono/router.svg", "Network zones");
-		this.emailProfilesTab = this.AddTab("SMTP profiles", "mono/email.svg");
 		this.adTab            = this.AddTab("Active directory", "mono/directory.svg");
+		this.emailProfilesTab = this.AddTab("SMTP profiles", "mono/email.svg");
+		this.snmp = this.AddTab("SNMP", "mono/snmp.svg");
 		this.graphTab         = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
 		this.zonesTab.onclick         = ()=> this.ShowZones();
-		this.emailProfilesTab.onclick = ()=> this.ShowEmailProfiles();
 		this.adTab.onclick            = ()=> this.ShowActiveDirectory();
+		this.emailProfilesTab.onclick = ()=> this.ShowEmailProfiles();
+		this.snmp.onclick             = ()=> this.ShowSnmp();
 		this.graphTab.onclick         = ()=> this.ShowGraph();
 
 		//TODO:
 		this.graphTab.style.display = "none";
 
 		switch (this.params) {
+		case "ad":
+			this.adTab.className = "v-tab-selected";
+			this.ShowActiveDirectory();
+			break;
+
 		case "smtpprofiles":
 			this.emailProfilesTab.className = "v-tab-selected";
 			this.ShowEmailProfiles();
 			break;
 
-		case "ad":
-			this.adTab.className = "v-tab-selected";
-			this.ShowActiveDirectory();
+		case "snmp":
+			this.snmp.className = "v-tab-selected";
+			this.ShowSnmp();
 			break;
 
 		case "graph":
@@ -138,6 +145,7 @@ class Settings extends Tabs {
 			labels[i].style.textOverflow = "ellipsis";
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
+			labels[i].style.paddingTop = "1px";
 		}
 
 		titleBar.append(nameLabel, networkLabel, colorLabel);
@@ -172,6 +180,53 @@ class Settings extends Tabs {
 
 		this.GetZones();
 		this.AfterResize();
+	}
+
+	async ShowActiveDirectory() {
+		this.params = "ad";
+		this.tabsPanel.textContent = "";
+
+		const domainLabel = document.createElement("div");
+		domainLabel.textContent = "Domain:";
+		domainLabel.style.display = "inline-block";
+		domainLabel.style.paddingRight = "8px";
+		this.tabsPanel.append(domainLabel);
+
+		const domainInput = document.createElement("input");
+		domainInput.type = "text";
+		domainInput.disabled = true;
+		domainInput.style.display = "inline-block";
+		domainInput.style.width = "250px";
+		this.tabsPanel.append(domainInput);
+
+		try {
+			const response = await fetch("fetch/networkinfo");
+
+			if (response.status !== 200) return;
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			let domain = json.domain  ? json.domain : "";
+			domainInput.value = domain;
+
+			this.tabsPanel.appendChild(document.createElement("br"));
+
+			const warningBox = document.createElement("div");
+			warningBox.textContent = "Domain privileges are inherited by the user executing the pro-test.exe executable. To utilize Directory Services, run the executable with the credentials of a Domain Administrator.";
+			warningBox.style.fontSize = "small";
+			warningBox.style.paddingLeft = "56px";
+			warningBox.style.maxWidth = "480px";
+			warningBox.style.minHeight = "40px";
+			warningBox.style.paddingTop = "20px";
+			warningBox.style.paddingBottom = "20px";
+			warningBox.style.backgroundImage = "url(mono/warning.svg)";
+			warningBox.style.backgroundPosition = "2px center";
+			warningBox.style.backgroundSize = "40px 40px";
+			warningBox.style.backgroundRepeat = "no-repeat";
+			this.tabsPanel.appendChild(warningBox);
+		}
+		catch {}
 	}
 
 	ShowEmailProfiles() {
@@ -244,6 +299,7 @@ class Settings extends Tabs {
 			labels[i].style.textOverflow = "ellipsis";
 			labels[i].style.boxSizing = "border-box";
 			labels[i].style.paddingLeft = "4px";
+			labels[i].style.paddingTop = "1px";
 		}
 
 		titleBar.append(serverLabel, portLabel, usernameLabel);
@@ -260,7 +316,7 @@ class Settings extends Tabs {
 		this.tabsPanel.appendChild(this.profilesList);
 
 		this.profilesNewButton.onclick = ()=>{
-			this.PreviewProfile(null);
+			this.PreviewSmtpProfile(null);
 		};
 
 		this.profilesRemoveButton.onclick = ()=>{
@@ -342,51 +398,106 @@ class Settings extends Tabs {
 		this.AfterResize();
 	}
 
-	async ShowActiveDirectory() {
-		this.params = "ad";
+	ShowSnmp() {
+		this.params = "snmp";
 		this.tabsPanel.textContent = "";
 
-		const domainLabel = document.createElement("div");
-		domainLabel.textContent = "Domain:";
-		domainLabel.style.display = "inline-block";
-		domainLabel.style.paddingRight = "8px";
-		this.tabsPanel.append(domainLabel);
+		this.options = document.createElement("div");
+		this.options.className = "acl-options";
+		this.options.style.position = "absolute";
+		this.options.style.left = "20px";
+		this.options.style.right = "8px";
+		this.options.style.top = "8px";
+		this.options.style.overflow = "hidden";
+		this.options.style.whiteSpace = "nowrap";
+		this.tabsPanel.appendChild(this.options);
 
-		const domainInput = document.createElement("input");
-		domainInput.type = "text";
-		domainInput.disabled = true;
-		domainInput.style.display = "inline-block";
-		domainInput.style.width = "250px";
-		this.tabsPanel.append(domainInput);
+		this.profilesNewButton = document.createElement("input");
+		this.profilesNewButton.type = "button";
+		this.profilesNewButton.value = "New";
+		this.profilesNewButton.className = "with-icon";
+		this.profilesNewButton.style.backgroundImage = "url(mono/add.svg?light)";
 
-		try {
-			const response = await fetch("fetch/networkinfo");
+		this.profilesRemoveButton = document.createElement("input");
+		this.profilesRemoveButton.type = "button";
+		this.profilesRemoveButton.value = "Remove";
+		this.profilesRemoveButton.className = "with-icon";
+		this.profilesRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
 
-			if (response.status !== 200) return;
+		this.options.append(this.profilesNewButton, this.profilesRemoveButton);
 
-			const json = await response.json();
-			if (json.error) throw(json.error);
+		const titleBar = document.createElement("div");
+		titleBar.style.position = "absolute";
+		titleBar.style.left = "20px";
+		titleBar.style.right = "20px";
+		titleBar.style.top = "56px";
+		titleBar.style.height = "25px";
+		titleBar.style.borderRadius = "4px 4px 0 0";
+		titleBar.style.background = "var(--grd-toolbar)";
+		titleBar.style.color = "var(--clr-light)";
+		this.tabsPanel.appendChild(titleBar);
 
-			let domain = json.domain  ? json.domain : "";
-			domainInput.value = domain;
+		let labels = [];
 
-			this.tabsPanel.appendChild(document.createElement("br"));
+		const usernameLabel = document.createElement("div");
+		usernameLabel.textContent = "Username";
+		labels.push(usernameLabel);
 
-			const warningBox = document.createElement("div");
-			warningBox.textContent = "Domain privileges are inherited by the user executing the pro-test.exe executable. To utilize Directory Services, run the executable with the credentials of a Domain Administrator.";
-			warningBox.style.fontSize = "small";
-			warningBox.style.paddingLeft = "56px";
-			warningBox.style.maxWidth = "480px";
-			warningBox.style.minHeight = "40px";
-			warningBox.style.paddingTop = "20px";
-			warningBox.style.paddingBottom = "20px";
-			warningBox.style.backgroundImage = "url(mono/warning.svg)";
-			warningBox.style.backgroundPosition = "2px center";
-			warningBox.style.backgroundSize = "40px 40px";
-			warningBox.style.backgroundRepeat = "no-repeat";
-			this.tabsPanel.appendChild(warningBox);
+		const authAlgorithLabel = document.createElement("div");
+		authAlgorithLabel.textContent = "Authentication algorithm";
+		labels.push(authAlgorithLabel);
+
+		const privacyAlgorithmLabel = document.createElement("Sender");
+		privacyAlgorithmLabel.textContent = "Privacy algorithm";
+		labels.push(privacyAlgorithmLabel);
+
+		for (let i = 0; i < labels.length; i++) {
+			labels[i].style.display = "inline-block";
+			labels[i].style.textAlign = "left";
+			labels[i].style.width = "33%";
+			labels[i].style.lineHeight = "24px";
+			labels[i].style.whiteSpace = "nowrap";
+			labels[i].style.overflow = "hidden";
+			labels[i].style.textOverflow = "ellipsis";
+			labels[i].style.boxSizing = "border-box";
+			labels[i].style.paddingLeft = "4px";
+			labels[i].style.paddingTop = "1px";
 		}
-		catch {}
+
+		titleBar.append(usernameLabel, authAlgorithLabel, privacyAlgorithmLabel);
+
+		this.profilesList = document.createElement("div");
+		this.profilesList.className = "no-results";
+		this.profilesList.style.position = "absolute";
+		this.profilesList.style.overflowY = "auto";
+		this.profilesList.style.left = "20px";
+		this.profilesList.style.right = "20px";
+		this.profilesList.style.top = "80px";
+		this.profilesList.style.bottom = "20px";
+		this.profilesList.style.border = "rgb(82,82,82) solid 2px";
+		this.tabsPanel.appendChild(this.profilesList);
+
+		this.profilesNewButton.onclick = ()=>{
+			this.PreviewSnmpProfile(null);
+		};
+
+		this.profilesRemoveButton.onclick = ()=>{
+			if (!this.selectedProfile) return;
+
+			let index = this.profiles.indexOf(this.selectedProfile);
+			if (index === -1) return;
+
+			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
+				this.profiles.splice(index, 1);
+				this.SaveProfiles();
+
+				this.profilesList.removeChild(this.profilesList.childNodes[index]);
+				this.profilesTestButton.disabled = true;
+			});
+		};
+
+		this.GetSnmpProfiles();
+		this.AfterResize();
 	}
 
 	ShowGraph() {
@@ -520,13 +631,17 @@ class Settings extends Tabs {
 				};
 
 				element.ondblclick = ()=> {
-					this.PreviewProfile(json[i]);
+					this.PreviewSmtpProfile(json[i]);
 				};
 			}
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
+	}
+
+	async GetSnmpProfiles() {
+
 	}
 
 	PreviewZone(object=null) {
@@ -614,7 +729,7 @@ class Settings extends Tabs {
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
 
-	async PreviewProfile(object=null) {
+	async PreviewSmtpProfile(object=null) {
 		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
@@ -723,6 +838,123 @@ class Settings extends Tabs {
 		});
 
 		setTimeout(()=>{ serverInput.focus() }, 200);
+	}
+
+	async PreviewSnmpProfile(object=null) {
+		const dialog = this.DialogBox("360px");
+		if (dialog === null) return;
+
+		const okButton = dialog.okButton;
+		const innerBox = dialog.innerBox;
+
+		okButton.value = "Save";
+
+		innerBox.style.padding = "16px 32px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "auto 200px 250px auto";
+		innerBox.style.gridTemplateRows = "38px 16px repeat(3, 38px) 16px repeat(2, 38px)";
+		innerBox.style.alignItems = "center";
+
+		const versionLabel = document.createElement("div");
+		versionLabel.style.gridArea = "1 / 2";
+		versionLabel.textContent = "Version:";
+		const versionInput = document.createElement("select");
+		versionInput.style.gridArea = "1 / 3";
+		versionInput.disabled = true;
+		innerBox.append(versionLabel, versionInput);
+		
+		const optionVer = document.createElement("option");
+		optionVer.value = "Version 3";
+		optionVer.textContent = "Version 3";
+		versionInput.appendChild(optionVer);
+
+		const usernameLabel = document.createElement("div");
+		usernameLabel.style.gridArea = "3 / 2";
+		usernameLabel.textContent = "Username:";
+		const usernameInput = document.createElement("input");
+		usernameInput.style.gridArea = "3 / 3";
+		usernameInput.type = "text";
+		innerBox.append(usernameLabel, usernameInput);
+		
+		const authAlgorithmLabel = document.createElement("div");
+		authAlgorithmLabel.style.gridArea = "4 / 2";
+		authAlgorithmLabel.textContent = "Authentication algorithm:";
+		const authAlgorithmInput = document.createElement("select");
+		authAlgorithmInput.style.gridArea = "4 / 3";
+		innerBox.append(authAlgorithmLabel, authAlgorithmInput);
+		
+		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
+		for (let i=0; i<authAlgorithms.length; i++) {
+			const option = document.createElement("option");
+			option.value = authAlgorithms[i];
+			option.textContent = authAlgorithms[i];
+			authAlgorithmInput.appendChild(option);
+		}
+
+		const authPasswordLabel = document.createElement("div");
+		authPasswordLabel.style.gridArea = "5 / 2";
+		authPasswordLabel.textContent = "Authentication password:";
+		const authPasswordInput = document.createElement("input");
+		authPasswordInput.style.gridArea = "5 / 3";
+		authPasswordInput.type = "password";
+		authPasswordInput.placeholder = "unchanged";
+		innerBox.append(authPasswordLabel, authPasswordInput);
+		
+		const privacyAlgorithmLabel = document.createElement("div");
+		privacyAlgorithmLabel.style.gridArea = "7 / 2";
+		privacyAlgorithmLabel.textContent = "Privacy algorithm:";
+		const privacyAlgorithmInput = document.createElement("select");
+		privacyAlgorithmInput.style.gridArea = "7 / 3";
+		innerBox.append(privacyAlgorithmLabel, privacyAlgorithmInput);
+		
+		const privacyAlgorithms = ["DES", "AES"];
+		for (let i=0; i<privacyAlgorithms.length; i++) {
+			const option = document.createElement("option");
+			option.value = privacyAlgorithms[i];
+			option.textContent = privacyAlgorithms[i];
+			privacyAlgorithmInput.appendChild(option);
+		}
+
+		const privacyPasswordLabel = document.createElement("div");
+		privacyPasswordLabel.style.gridArea = "8 / 2";
+		privacyPasswordLabel.textContent = "Privacy password:";
+		const privacyPasswordInput = document.createElement("input");
+		privacyPasswordInput.style.gridArea = "8 / 3";
+		privacyPasswordInput.type = "password";
+		privacyPasswordInput.placeholder = "unchanged";
+		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
+
+		if (object) {
+			usernameInput.value = object.username;
+			privacyPasswordInput.value = object.password;
+		}
+
+		okButton.addEventListener("click", async ()=> {
+			let isNew = object === null;
+			let index = this.profiles.indexOf(object);
+
+			if (!isNew) {
+				if (index === -1) isNew = true;
+			}
+
+			const newObject = {
+				username   : usernameInput.value,
+			};
+
+			if (object && object.guid) newObject.guid = object.guid;
+
+			if (isNew) {
+				this.profiles.push(newObject);
+			}
+			else {
+				this.profiles[index] = newObject;
+			}
+
+			await this.SaveProfiles();
+			this.ShowEmailProfiles();
+		});
+
+		setTimeout(()=>{ usernameInput.focus() }, 200);
 	}
 
 	async SaveZones() {

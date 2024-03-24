@@ -21,7 +21,7 @@ internal static class Watchdog {
     private const long MINUTE_IN_TICKS = 600_000_000L;
     private const int FIVE_MINUTE_IN_MILLI = 300_000;
 
-    public enum WatcherType {
+    public enum WatcherType : byte {
         icmp,
         tcp,
         dns,
@@ -30,7 +30,7 @@ internal static class Watchdog {
         tls
     }
 
-    public enum NotifyWhen {
+    public enum NotifyWhen : byte {
         rise = 0,
         fall = 1,
         both = 2

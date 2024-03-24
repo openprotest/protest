@@ -17,7 +17,7 @@ namespace Protest.Tasks;
 
 internal static class Fetch {
 
-    enum Type {
+    enum Type : byte {
         none = 0,
         devices = 1,
         users = 2,

@@ -5,7 +5,7 @@ namespace Protest.Tasks;
 
 internal sealed class TaskWrapper : IDisposable {
 
-    public enum TaskStatus {
+    public enum TaskStatus : byte {
         initializing,
         running,
         idle,

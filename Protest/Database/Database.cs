@@ -14,7 +14,7 @@ using Protest.Http;
 namespace Protest;
 
 public sealed class Database {
-    public enum SaveMethod {
+    public enum SaveMethod : byte {
         ignore = 0,
         createnew = 1,
         overwrite = 2,
