@@ -1,4 +1,7 @@
-﻿using SnmpSharpNet;
+﻿using Lextm.SharpSnmpLib;
+using Lextm.SharpSnmpLib.Messaging;
+using Lextm.SharpSnmpLib.Security;
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,20 +55,24 @@ internal static class Polling {
 
     public static byte[] GetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
-
         parameters.TryGetValue("target",      out string target);
-        parameters.TryGetValue("community",   out string community);
+        parameters.TryGetValue("community",   out string communityString);
         parameters.TryGetValue("credentials", out string credentialsString);
         parameters.TryGetValue("version",     out string versionString);
         parameters.TryGetValue("timeout",     out string timeoutString);
 
-        SnmpVersion version = versionString switch {
-            "1" => SnmpVersion.Ver1,
-            "3" => SnmpVersion.Ver3,
-            _ => SnmpVersion.Ver2,
-        };
+        if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+        IPEndPoint endPoint = new IPEndPoint(targetIp, 161);
 
-        if (String.IsNullOrEmpty(community)) { community = "public"; }
+        if (String.IsNullOrEmpty(communityString)) { communityString = "public"; }
+
+        VersionCode version = versionString switch {
+            "1" => VersionCode.V1,
+            "3" => VersionCode.V3,
+            _   => VersionCode.V2
+        };
 
         int timeout = 5000;
         Int32.TryParse(timeoutString, out timeout);
@@ -73,15 +80,19 @@ internal static class Polling {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
 
-        string[] oidArray = payload.Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        if (oidArray.Length == 0) return "{\"error\":\"Invalid request\"}"u8.ToArray();
+        OctetString community = new OctetString(communityString);
+
+        IList<Variable> oidList = payload
+            .Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(o=> new Variable(new ObjectIdentifier(o.Trim())))
+            .ToList();
+
+        if (oidList.Count == 0) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
 
         try {
-            SimpleSnmp snmp = new SimpleSnmp(target, 161, community, timeout, 1);
-            if (!snmp.Valid) return "{\"error\":\"Invalid request\"}"u8.ToArray();
-
-            Dictionary<Oid, AsnType> result = snmp.Get(version, oidArray);
-
+            IList<Variable> result = Messenger.Get(version, endPoint, community, oidList, timeout);
             return ParseResponse(result);
         }
         catch (OperationCanceledException) {
@@ -94,9 +105,8 @@ internal static class Polling {
 
     public static byte[] SetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
-
         parameters.TryGetValue("target",      out string target);
-        parameters.TryGetValue("community",   out string community);
+        parameters.TryGetValue("community",   out string communityString);
         parameters.TryGetValue("credentials", out string credentialsString);
         parameters.TryGetValue("version",     out string versionString);
         parameters.TryGetValue("timeout",     out string timeoutString);
@@ -106,15 +116,18 @@ internal static class Polling {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        OctetString data = new OctetString(valueString);
+        if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+        IPEndPoint endPoint = new IPEndPoint(targetIp, 161);
 
-        SnmpVersion version = versionString switch {
-            "1" => SnmpVersion.Ver1,
-            "3" => SnmpVersion.Ver3,
-            _ => SnmpVersion.Ver2,
+        if (String.IsNullOrEmpty(communityString)) { communityString = "public"; }
+
+        VersionCode version = versionString switch {
+            "1" => VersionCode.V1,
+            "3" => VersionCode.V3,
+            _   => VersionCode.V2
         };
-
-        if (String.IsNullOrEmpty(community)) { community = "public"; }
 
         int timeout = 5000;
         Int32.TryParse(timeoutString, out timeout);
@@ -122,21 +135,20 @@ internal static class Polling {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
 
-        string[] oidArray = payload.Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        if (oidArray.Length == 0) return "{\"error\":\"Invalid request\"}"u8.ToArray();
+        OctetString data = new OctetString(valueString);
+        OctetString community = new OctetString(communityString);
 
-        VbCollection oidCollection = new VbCollection();
-        for (int i = 0; i < oidArray.Length; i++) {
-            Vb oid = new Vb(new Oid(oidArray[i]), new OctetString(valueString));
-            oidCollection.Add(oid);
+        IList<Variable> oidList = payload
+            .Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data))
+            .ToList();
+
+        if (oidList.Count == 0) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
         try {
-            SimpleSnmp snmp = new SimpleSnmp(target, 161, community, timeout, 1);
-            if (!snmp.Valid) return "{\"error\":\"Invalid request\"}"u8.ToArray();
-
-            Dictionary<Oid, AsnType> result = snmp.Set(version, oidCollection.ToArray());
-
+            IList<Variable> result = Messenger.Set(version, endPoint, community, oidList, timeout);
             return ParseResponse(result);
         }
         catch (OperationCanceledException) {
@@ -149,20 +161,24 @@ internal static class Polling {
 
     public static byte[] WalkHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
-
         parameters.TryGetValue("target", out string target);
-        parameters.TryGetValue("community", out string community);
+        parameters.TryGetValue("community", out string communityString);
         parameters.TryGetValue("credentials", out string credentialsString);
         parameters.TryGetValue("version", out string versionString);
         parameters.TryGetValue("timeout", out string timeoutString);
 
-        SnmpVersion version = versionString switch {
-            "1" => SnmpVersion.Ver1,
-            "3" => SnmpVersion.Ver3,
-            _ => SnmpVersion.Ver2,
-        };
+        if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+        IPEndPoint endpoint = new IPEndPoint(targetIp, 161);
 
-        if (String.IsNullOrEmpty(community)) { community = "public"; }
+        if (String.IsNullOrEmpty(communityString)) { communityString = "public"; }
+
+        VersionCode version = versionString switch {
+            "1" => VersionCode.V1,
+            "3" => VersionCode.V3,
+            _   => VersionCode.V2
+        };
 
         int timeout = 5000;
         Int32.TryParse(timeoutString, out timeout);
@@ -171,14 +187,19 @@ internal static class Polling {
         string payload = reader.ReadToEnd().Trim();
 
         string[] oidArray = payload.Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        if (oidArray.Length == 0) return "{\"error\":\"Invalid request\"}"u8.ToArray();
+
+        if (oidArray.Length == 0) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        OctetString community = new OctetString(communityString);
+        ObjectIdentifier oid = new ObjectIdentifier(oidArray[0]);
+
+        List<Variable> result = new List<Variable>();
 
         try {
-            SimpleSnmp snmp = new SimpleSnmp(target, 161, community, timeout, 1);
-            if (!snmp.Valid) return "{\"error\":\"Invalid request\"}"u8.ToArray();
-
-            Dictionary<Oid, AsnType> result = snmp.Walk(version, oidArray[0]);
-
+            //TODO:
+            int count = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
             return ParseResponse(result);
         }
         catch (OperationCanceledException) {
@@ -189,38 +210,18 @@ internal static class Polling {
         }
     }
 
-    private static byte[] ParseResponse(Dictionary<Oid, AsnType> result) {
+    private static byte[] ParseResponse(IList<Variable> result) {
         if (result is null || result.Count == 0) { return "[]"u8.ToArray(); }
 
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
 
-        bool first = true;
-        foreach (KeyValuePair<Oid, AsnType> pair in result) {
-            string type = pair.Value.Type switch {
-                (byte)0x00 => "primitive",
-                (byte)0x01 => "boolean",
-                (byte)0x02 => "integer",
-                (byte)0x03 => "bit-string",
-                (byte)0x04 => "octet-string",
-                (byte)0x05 => "null",
-                (byte)0x06 => "object",
-                (byte)0x10 => "sequence",
-                (byte)0x11 => "set",
-                (byte)0x1F => "extension id",
-                (byte)0x20 => "constructor",
-                (byte)0x40 => "application",
-                (byte)0x80 => "context",
-                _ => "unknown"
-            };
-
-            if (!first) { builder.Append(','); }
+        for (int i = 0; i < result.Count; i++) {
+            if (i>0) { builder.Append(','); }
             builder.Append('[');
-            builder.Append($"\"{Data.EscapeJsonText(pair.Key.ToString())}\",");
-            builder.Append($"\"{type}\",");
-            builder.Append($"\"{Data.EscapeJsonText(pair.Value.ToString())}\"");
+            builder.Append($"\"{Data.EscapeJsonText(result[i].Id.ToString())}\",");
+            builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
             builder.Append(']');
-            first = false;
         }
 
         builder.Append(']');
