@@ -86,6 +86,7 @@ class Snmp extends Window {
 		this.getButton.style.minWidth = "40px";
 		this.getButton.style.height = "auto";
 		this.getButton.style.gridArea = "3 / 4 / 5 / 4";
+		this.getButton.style.padding = "0";
 		snmpInput.appendChild(this.getButton);
 
 		this.setButton = document.createElement("input");
@@ -94,8 +95,21 @@ class Snmp extends Window {
 		this.setButton.style.minWidth = "40px";
 		this.setButton.style.height = "auto";
 		this.setButton.style.gridArea = "3 / 5 / 5 / 5";
+		this.setButton.style.padding = "0";
 		snmpInput.appendChild(this.setButton);
+
+		this.walkButton = document.createElement("input");
+		this.walkButton.type = "button";
+		this.walkButton.value = "Walk";
+		this.walkButton.style.minWidth = "40px";
+		this.walkButton.style.height = "auto";
+		this.walkButton.style.gridArea = "3 / 6 / 5 / 6";
+		this.walkButton.style.padding = "0";
+		snmpInput.appendChild(this.walkButton);
 		
+		//TODO:
+		this.walkButton.style.display = "none";
+
 		const toggleButton = document.createElement("input");
 		toggleButton.type = "button";
 		toggleButton.className = "snmp-toggle-button";
@@ -125,6 +139,7 @@ class Snmp extends Window {
 
 		this.getButton.onclick = ()=> { this.GetQuery() };
 		this.setButton.onclick = ()=> { this.SetQueryDialog() };
+		this.walkButton.onclick = ()=> { this.WalkQuery() };
 
 		toggleButton.onclick = ()=> {
 			if (snmpInput.style.visibility === "hidden") {
@@ -173,6 +188,7 @@ class Snmp extends Window {
 		this.targetInput.value = this.targetInput.value.trim();
 		this.getButton.disabled = true;
 		this.setButton.disabled = true;
+		this.walkButton.disabled = true;
 		this.plotBox.style.display = "none";
 		this.plotBox.textContent = "";
 
@@ -205,6 +221,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
+			this.walkButton.disabled = false;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
@@ -222,6 +239,7 @@ class Snmp extends Window {
 		this.targetInput.value = this.targetInput.value.trim();
 		this.getButton.disabled = true;
 		this.setButton.disabled = true;
+		this.walkButton.disabled = true;
 		this.plotBox.style.display = "none";
 		this.plotBox.textContent = "";
 
@@ -254,6 +272,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
+			this.walkButton.disabled = false;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
@@ -293,6 +312,62 @@ class Snmp extends Window {
 			if (event.key === "Enter") {
 				dialog.okButton.click();
 			}
+		}
+	}
+
+	async WalkQuery() {
+		if (this.targetInput.value.length == 0 || this.oidInput.value.length == 0) {
+			this.ConfirmBox("Incomplete query.", true);
+			return;
+		}
+
+		const spinner = document.createElement("div");
+		spinner.className = "spinner";
+		spinner.style.textAlign = "left";
+		spinner.style.marginTop = "160px";
+		spinner.style.marginBottom = "32px";
+		spinner.appendChild(document.createElement("div"));
+		this.content.appendChild(spinner);
+
+		this.targetInput.value = this.targetInput.value.trim();
+		this.getButton.disabled = true;
+		this.setButton.disabled = true;
+		this.walkButton.disabled = true;
+		this.plotBox.style.display = "none";
+		this.plotBox.textContent = "";
+
+		try {
+			let url;
+			if (this.versionInput.value==3) {
+				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}`;
+			}
+			else {
+				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}`;
+			}
+
+			const response = await fetch(url, {
+				method: "POST",
+				body: this.oidInput.value.trim()
+			});
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			if (json instanceof Array) {
+				this.Plot(json);
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+		finally {
+			this.getButton.disabled = false;
+			this.setButton.disabled = false;
+			this.walkButton.disabled = false;
+			this.plotBox.style.display = "block";
+			this.content.removeChild(spinner);
 		}
 	}
 

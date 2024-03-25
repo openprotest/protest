@@ -275,7 +275,8 @@ const MENU = {
 
 		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:params=> new Settings(), },
 		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:params=> new Settings("zones"), },
-		{ t:"SMTP profiles", i:"mono/email.svg?light",       g:"manage", h:true,  f:params=> new Settings("smtpprofiles") },
+		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:params=> new Settings("smtp") },
+		{ t:"SNMP settings", i:"mono/snmp.svg?light",       g:"manage", h:true,  f:params=> new Settings("snmp") },
 
 		{ t:"ACL",           i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
 		{ t:"Open sessions", i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },

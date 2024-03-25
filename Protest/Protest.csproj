@@ -50,8 +50,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
-    <PackageReference Include="SSH.NET" Version="2023.0.0" />
+    <PackageReference Include="SnmpSharpNet" Version="0.9.6" />
+    <PackageReference Include="SSH.NET" Version="2024.0.0" />
     <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>

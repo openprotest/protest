@@ -10,22 +10,23 @@ class Settings extends Tabs {
 		this.SetIcon("mono/wrench.svg");
 
 		this.zones = [];
-		this.profiles = [];
+		this.smtpProfiles = [];
+		this.snmpProfiles = [];
 
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.zonesTab         = this.AddTab("Zones", "mono/router.svg", "Network zones");
-		this.adTab            = this.AddTab("Active directory", "mono/directory.svg");
-		this.emailProfilesTab = this.AddTab("SMTP profiles", "mono/email.svg");
-		this.snmp = this.AddTab("SNMP", "mono/snmp.svg");
-		this.graphTab         = this.AddTab("Microsoft Graph", "mono/graph.svg");
+		this.zonesTab = this.AddTab("Zones", "mono/router.svg", "Network zones");
+		this.adTab    = this.AddTab("Active directory", "mono/directory.svg");
+		this.smtpTab  = this.AddTab("SMTP profiles", "mono/email.svg");
+		this.snmpTab  = this.AddTab("SNMP", "mono/snmp.svg");
+		this.graphTab = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
-		this.zonesTab.onclick         = ()=> this.ShowZones();
-		this.adTab.onclick            = ()=> this.ShowActiveDirectory();
-		this.emailProfilesTab.onclick = ()=> this.ShowEmailProfiles();
-		this.snmp.onclick             = ()=> this.ShowSnmp();
-		this.graphTab.onclick         = ()=> this.ShowGraph();
+		this.zonesTab.onclick = ()=> this.ShowZones();
+		this.adTab.onclick    = ()=> this.ShowActiveDirectory();
+		this.smtpTab.onclick  = ()=> this.ShowSmtp();
+		this.snmpTab.onclick  = ()=> this.ShowSnmp();
+		this.graphTab.onclick = ()=> this.ShowGraph();
 
 		//TODO:
 		this.graphTab.style.display = "none";
@@ -36,13 +37,13 @@ class Settings extends Tabs {
 			this.ShowActiveDirectory();
 			break;
 
-		case "smtpprofiles":
-			this.emailProfilesTab.className = "v-tab-selected";
-			this.ShowEmailProfiles();
+		case "smtp":
+			this.smtpTab.className = "v-tab-selected";
+			this.ShowSmtp();
 			break;
 
 		case "snmp":
-			this.snmp.className = "v-tab-selected";
+			this.snmpTab.className = "v-tab-selected";
 			this.ShowSnmp();
 			break;
 
@@ -229,8 +230,8 @@ class Settings extends Tabs {
 		catch {}
 	}
 
-	ShowEmailProfiles() {
-		this.params = "smtpprofiles";
+	ShowSmtp() {
+		this.params = "smtp";
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
@@ -327,7 +328,7 @@ class Settings extends Tabs {
 
 			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.profiles.splice(index, 1);
-				this.SaveProfiles();
+				this.SaveSmtpProfiles();
 
 				this.profilesList.removeChild(this.profilesList.childNodes[index]);
 				this.profilesTestButton.disabled = true;
@@ -437,34 +438,22 @@ class Settings extends Tabs {
 		titleBar.style.color = "var(--clr-light)";
 		this.tabsPanel.appendChild(titleBar);
 
-		let labels = [];
-
-		const usernameLabel = document.createElement("div");
-		usernameLabel.textContent = "Username";
-		labels.push(usernameLabel);
-
-		const authAlgorithLabel = document.createElement("div");
-		authAlgorithLabel.textContent = "Authentication algorithm";
-		labels.push(authAlgorithLabel);
-
-		const privacyAlgorithmLabel = document.createElement("Sender");
-		privacyAlgorithmLabel.textContent = "Privacy algorithm";
-		labels.push(privacyAlgorithmLabel);
-
+		let labels = ["Name", "Context name", "Username"];
 		for (let i = 0; i < labels.length; i++) {
-			labels[i].style.display = "inline-block";
-			labels[i].style.textAlign = "left";
-			labels[i].style.width = "33%";
-			labels[i].style.lineHeight = "24px";
-			labels[i].style.whiteSpace = "nowrap";
-			labels[i].style.overflow = "hidden";
-			labels[i].style.textOverflow = "ellipsis";
-			labels[i].style.boxSizing = "border-box";
-			labels[i].style.paddingLeft = "4px";
-			labels[i].style.paddingTop = "1px";
+			const newLabel = document.createElement("div");
+			newLabel.style.display = "inline-block";
+			newLabel.style.textAlign = "left";
+			newLabel.style.width = `${100/labels.length}%`;
+			newLabel.style.lineHeight = "24px";
+			newLabel.style.whiteSpace = "nowrap";
+			newLabel.style.overflow = "hidden";
+			newLabel.style.textOverflow = "ellipsis";
+			newLabel.style.boxSizing = "border-box";
+			newLabel.style.paddingLeft = "4px";
+			newLabel.style.paddingTop = "1px";
+			newLabel.textContent = labels[i];
+			titleBar.appendChild(newLabel);
 		}
-
-		titleBar.append(usernameLabel, authAlgorithLabel, privacyAlgorithmLabel);
 
 		this.profilesList = document.createElement("div");
 		this.profilesList.className = "no-results";
@@ -487,9 +476,9 @@ class Settings extends Tabs {
 			let index = this.profiles.indexOf(this.selectedProfile);
 			if (index === -1) return;
 
-			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
+			this.ConfirmBox("Are you sure you want to remove this SNMP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.profiles.splice(index, 1);
-				this.SaveProfiles();
+				this.SaveSnmpProfiles();
 
 				this.profilesList.removeChild(this.profilesList.childNodes[index]);
 				this.profilesTestButton.disabled = true;
@@ -584,7 +573,7 @@ class Settings extends Tabs {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.profiles = json;
+			this.smtpProfiles = json;
 			this.profilesList.textContent = "";
 
 			for (let i = 0; i < json.length; i++) {
@@ -809,7 +798,7 @@ class Settings extends Tabs {
 
 		okButton.addEventListener("click", async ()=> {
 			let isNew = object === null;
-			let index = this.profiles.indexOf(object);
+			let index = this.smtpProfiles.indexOf(object);
 
 			if (!isNew) {
 				if (index === -1) isNew = true;
@@ -827,21 +816,21 @@ class Settings extends Tabs {
 			if (object && object.guid) newObject.guid = object.guid;
 
 			if (isNew) {
-				this.profiles.push(newObject);
+				this.smtpProfiles.push(newObject);
 			}
 			else {
-				this.profiles[index] = newObject;
+				this.smtpProfiles[index] = newObject;
 			}
 
-			await this.SaveProfiles();
-			this.ShowEmailProfiles();
+			await this.SaveSmtpProfiles();
+			this.ShowSmtp();
 		});
 
 		setTimeout(()=>{ serverInput.focus() }, 200);
 	}
 
 	async PreviewSnmpProfile(object=null) {
-		const dialog = this.DialogBox("360px");
+		const dialog = this.DialogBox("420px");
 		if (dialog === null) return;
 
 		const okButton = dialog.okButton;
@@ -852,14 +841,32 @@ class Settings extends Tabs {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 200px 250px auto";
-		innerBox.style.gridTemplateRows = "38px 16px repeat(3, 38px) 16px repeat(2, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(3, 38px) 16px repeat(3, 38px) 16px repeat(2, 38px)";
 		innerBox.style.alignItems = "center";
 
+		const nameLabel = document.createElement("div");
+		nameLabel.style.gridArea = "1 / 2";
+		nameLabel.textContent = "Name:";
+		const nameInput = document.createElement("input");
+		nameInput.style.gridArea = "1 / 3";
+		nameInput.type = "text";
+		innerBox.append(nameLabel, nameInput);
+
+		const contextLabel = document.createElement("div");
+		contextLabel.style.gridArea = "2 / 2";
+		contextLabel.textContent = "Context name:";
+		const contextInput = document.createElement("input");
+		contextInput.style.gridArea = "2 / 3";
+		contextInput.type = "text";
+		contextInput.placeholder = "optional";
+		innerBox.append(contextLabel, contextInput);
+
+		
 		const versionLabel = document.createElement("div");
-		versionLabel.style.gridArea = "1 / 2";
+		versionLabel.style.gridArea = "3 / 2";
 		versionLabel.textContent = "Version:";
 		const versionInput = document.createElement("select");
-		versionInput.style.gridArea = "1 / 3";
+		versionInput.style.gridArea = "3 / 3";
 		versionInput.disabled = true;
 		innerBox.append(versionLabel, versionInput);
 		
@@ -869,21 +876,21 @@ class Settings extends Tabs {
 		versionInput.appendChild(optionVer);
 
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "3 / 2";
+		usernameLabel.style.gridArea = "5 / 2";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "3 / 3";
+		usernameInput.style.gridArea = "5 / 3";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 		
 		const authAlgorithmLabel = document.createElement("div");
-		authAlgorithmLabel.style.gridArea = "4 / 2";
+		authAlgorithmLabel.style.gridArea = "6 / 2";
 		authAlgorithmLabel.textContent = "Authentication algorithm:";
 		const authAlgorithmInput = document.createElement("select");
-		authAlgorithmInput.style.gridArea = "4 / 3";
+		authAlgorithmInput.style.gridArea = "6 / 3";
 		innerBox.append(authAlgorithmLabel, authAlgorithmInput);
 		
-		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
+		const authAlgorithms = ["Auto", "MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 		for (let i=0; i<authAlgorithms.length; i++) {
 			const option = document.createElement("option");
 			option.value = authAlgorithms[i];
@@ -892,22 +899,22 @@ class Settings extends Tabs {
 		}
 
 		const authPasswordLabel = document.createElement("div");
-		authPasswordLabel.style.gridArea = "5 / 2";
+		authPasswordLabel.style.gridArea = "7 / 2";
 		authPasswordLabel.textContent = "Authentication password:";
 		const authPasswordInput = document.createElement("input");
-		authPasswordInput.style.gridArea = "5 / 3";
+		authPasswordInput.style.gridArea = "7 / 3";
 		authPasswordInput.type = "password";
 		authPasswordInput.placeholder = "unchanged";
 		innerBox.append(authPasswordLabel, authPasswordInput);
 		
 		const privacyAlgorithmLabel = document.createElement("div");
-		privacyAlgorithmLabel.style.gridArea = "7 / 2";
+		privacyAlgorithmLabel.style.gridArea = "9 / 2";
 		privacyAlgorithmLabel.textContent = "Privacy algorithm:";
 		const privacyAlgorithmInput = document.createElement("select");
-		privacyAlgorithmInput.style.gridArea = "7 / 3";
+		privacyAlgorithmInput.style.gridArea = "9 / 3";
 		innerBox.append(privacyAlgorithmLabel, privacyAlgorithmInput);
 		
-		const privacyAlgorithms = ["DES", "AES"];
+		const privacyAlgorithms = ["Auto", "DES", "AES-128", "AES-192", "AES-256"];
 		for (let i=0; i<privacyAlgorithms.length; i++) {
 			const option = document.createElement("option");
 			option.value = privacyAlgorithms[i];
@@ -916,10 +923,10 @@ class Settings extends Tabs {
 		}
 
 		const privacyPasswordLabel = document.createElement("div");
-		privacyPasswordLabel.style.gridArea = "8 / 2";
+		privacyPasswordLabel.style.gridArea = "10 / 2";
 		privacyPasswordLabel.textContent = "Privacy password:";
 		const privacyPasswordInput = document.createElement("input");
-		privacyPasswordInput.style.gridArea = "8 / 3";
+		privacyPasswordInput.style.gridArea = "10 / 3";
 		privacyPasswordInput.type = "password";
 		privacyPasswordInput.placeholder = "unchanged";
 		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
@@ -931,30 +938,37 @@ class Settings extends Tabs {
 
 		okButton.addEventListener("click", async ()=> {
 			let isNew = object === null;
-			let index = this.profiles.indexOf(object);
+			let index = this.snmpProfiles.indexOf(object);
 
 			if (!isNew) {
 				if (index === -1) isNew = true;
 			}
 
 			const newObject = {
-				username   : usernameInput.value,
+				name             : nameInput.value,
+				context          : contextInput.value,
+				version          : versionInput.value,
+				username         : usernameInput.value,
+				authAlgorithm    : authAlgorithmInput.value,
+				authPassword     : authPasswordInput.value,
+				privacyAlgorithm : privacyAlgorithmInput.value,
+				privacyPassword  : privacyPasswordInput.value,
 			};
 
 			if (object && object.guid) newObject.guid = object.guid;
 
 			if (isNew) {
-				this.profiles.push(newObject);
+				this.snmpProfiles.push(newObject);
 			}
 			else {
-				this.profiles[index] = newObject;
+				this.snmpProfiles[index] = newObject;
 			}
 
-			await this.SaveProfiles();
-			this.ShowEmailProfiles();
+			await this.SaveSnmpProfiles();
+			this.ShowSnmpProfiles();
 		});
 
-		setTimeout(()=>{ usernameInput.focus() }, 200);
+		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
 
 	async SaveZones() {
@@ -975,18 +989,34 @@ class Settings extends Tabs {
 		}
 	}
 
-	async SaveProfiles() {
+	async SaveSmtpProfiles() {
 		try {
 			const response = await fetch("config/smtpprofiles/save", {
 				method: "POST",
-				body: JSON.stringify(this.profiles)
+				body: JSON.stringify(this.smtpProfiles)
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
 			if (json.error) throw(json.error);
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
 
+	async SaveSnmpProfiles() {
+		try {
+			const response = await fetch("config/snmpprofiles/save", {
+				method: "POST",
+				body: JSON.stringify(this.snmpProfiles)
+			});
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
