@@ -205,10 +205,50 @@ internal static class Polling {
         builder.Append('[');
 
         for (int i = 0; i < result.Count; i++) {
-            if (i>0) { builder.Append(','); }
+            if (i > 0) { builder.Append(','); }
+
+            string type = result[i].Data.TypeCode switch {
+                SnmpType.EndMarker         => "end marker",
+                SnmpType.Integer32         => "integer",
+                SnmpType.OctetString       => "octet-string",
+                SnmpType.Null              => "null",
+                SnmpType.ObjectIdentifier  => "object id",
+                SnmpType.Sequence          => "sequence",
+                SnmpType.IPAddress         => "ip address",
+                SnmpType.Counter32         => "counter 32",
+                SnmpType.Gauge32           => "gauge 32",
+                SnmpType.TimeTicks         => "time ticks",
+                SnmpType.Opaque            => "opaque",
+                SnmpType.NetAddress        => "net address",
+                SnmpType.Counter64         => "counter 64",
+                SnmpType.Unsigned32        => "unsigned 32",
+                SnmpType.NoSuchObject      => "no such object",
+                SnmpType.NoSuchInstance    => "no such instance",
+                SnmpType.EndOfMibView      => "end of MIB view",
+                SnmpType.GetRequestPdu     => "get request PDU",
+                SnmpType.GetNextRequestPdu => "get next request PDU",
+                SnmpType.ResponsePdu       => "response PDU",
+                SnmpType.SetRequestPdu     => "set request PDU",
+                SnmpType.TrapV1Pdu         => "trap v1 PDU",
+                SnmpType.GetBulkRequestPdu => "get bulk request PDU",
+                SnmpType.InformRequestPdu  => "inform request PDU",
+                SnmpType.TrapV2Pdu         => "trap v2 PDU",
+                SnmpType.ReportPdu         => "report PDU",
+                _=> "Unknown"
+            };
+
             builder.Append('[');
             builder.Append($"\"{Data.EscapeJsonText(result[i].Id.ToString())}\",");
-            builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
+            builder.Append($"\"{type}\",");
+
+            if (result[i].Data.TypeCode == SnmpType.Null ||
+                result[i].Data.TypeCode == SnmpType.NoSuchObject ||
+                result[i].Data.TypeCode == SnmpType.NoSuchInstance) {
+                builder.Append($"\"--\"");
+            }
+            else {
+                builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
+            }
             builder.Append(']');
         }
 

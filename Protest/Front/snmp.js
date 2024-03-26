@@ -403,6 +403,16 @@ class Snmp extends Window {
 		const table = document.createElement("table");
 		table.className = "snmp-table";
 
+		const header = document.createElement("tr");
+		table.appendChild(header);
+
+		const headers = ["OID", "Type", "Value"];
+		for (let i=0; i<headers.length; i++) {
+			const th = document.createElement("th");
+			th.textContent = headers[i];
+			header.appendChild(th);
+		}
+
 		for (let i=0; i<array.length; i++) {
 			const tr = document.createElement("tr");
 			table.appendChild(tr);
