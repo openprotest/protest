@@ -4,7 +4,11 @@ using System.Net;
 namespace Protest.Tools;
 
 internal static class SpeedTest {
-    static readonly byte[] buffer = Cryptography.RandomByteGenerator(65_535);
+    static readonly byte[] buffer;
+
+    static SpeedTest() {
+        buffer = Cryptography.RandomByteGenerator(65_535);
+    }
 
     public static byte[] DownStream(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         if (parameters is null) {

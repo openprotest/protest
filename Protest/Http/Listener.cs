@@ -368,8 +368,8 @@ public sealed class Listener {
         case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;
         case "/tools/locateip"   : buffer = Tools.LocateIp.Locate(ctx); break;
         case "/tools/maclookup"  : buffer = Tools.MacLookup.Lookup(ctx); break;
-        case "/tools/downstream" : buffer = Tools.SpeedTest.DownStream(ctx, parameters); break;
-        case "/tools/upstream"   : buffer = Tools.SpeedTest.UpStream(ctx, parameters); break;
+        //case "/tools/downstream" : buffer = Tools.SpeedTest.DownStream(ctx, parameters); break;
+        //case "/tools/upstream"   : buffer = Tools.SpeedTest.UpStream(ctx, parameters); break;
 
         case "/snmp/get" : buffer = Protocols.Snmp.Polling.GetHandler(ctx, parameters); break;
         case "/snmp/set" : buffer = Protocols.Snmp.Polling.SetHandler(ctx, parameters); break;
@@ -403,10 +403,12 @@ public sealed class Listener {
         case "/log/list": buffer = Logger.List(parameters); break;
         default: return false;
         }
-        
+
+        //ctx.Response.SendChunked = buffer.Length > 8_192;
+
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
-        if (buffer != null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+        if (buffer is not null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
 
         ctx.Response.Close();
         return true;

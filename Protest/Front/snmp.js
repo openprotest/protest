@@ -107,9 +107,6 @@ class Snmp extends Window {
 		this.walkButton.style.padding = "0";
 		snmpInput.appendChild(this.walkButton);
 
-		//TODO:
-		this.walkButton.style.display = "none";
-
 		const toggleButton = document.createElement("input");
 		toggleButton.type = "button";
 		toggleButton.className = "snmp-toggle-button";
@@ -161,10 +158,6 @@ class Snmp extends Window {
 				this.params.hideInput = true;
 			}
 		};
-
-		if (this.params.target.length > 0 && this.params.oid.length > 0) {
-			this.getButton.onclick();
-		}
 
 		if (this.params.hideInput) {
 			toggleButton.onclick();
