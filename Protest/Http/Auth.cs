@@ -369,6 +369,8 @@ internal static class Auth {
                 path.Add("/config/smtpprofiles/list");
                 path.Add("/config/smtpprofiles/save");
                 path.Add("/config/smtpprofiles/test");
+                path.Add("/config/snmpprofiles/list");
+                path.Add("/config/snmpprofiles/save");
                 path.Add("/config/checkupdate");
                 path.Add("/config/upload/iplocation");
                 path.Add("/config/upload/proxy");

@@ -1,10 +1,8 @@
 ﻿using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
-
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -16,14 +14,16 @@ internal static class Polling {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
         parameters.TryGetValue("target",      out string target);
         parameters.TryGetValue("community",   out string communityString);
-        parameters.TryGetValue("credentials", out string credentialsString);
-        parameters.TryGetValue("version",     out string versionString);
+        parameters.TryGetValue("cred",        out string credentialsString);
+        parameters.TryGetValue("ver",         out string versionString);
         parameters.TryGetValue("timeout",     out string timeoutString);
+
+        //TODO: handle hostname
 
         if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
-        IPEndPoint endPoint = new IPEndPoint(targetIp, 161);
+        IPEndPoint endpoint = new IPEndPoint(targetIp, 161);
 
         if (String.IsNullOrEmpty(communityString)) { communityString = "public"; }
 
@@ -33,8 +33,9 @@ internal static class Polling {
             _   => VersionCode.V2
         };
 
-        int timeout = 5000;
-        Int32.TryParse(timeoutString, out timeout);
+        if (Int32.TryParse(timeoutString, out int timeout) || timeout == 0) {
+            timeout = 5000;
+        }
 
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
@@ -51,11 +52,30 @@ internal static class Polling {
         }
 
         try {
-            IList<Variable> result = Messenger.Get(version, endPoint, community, oidList, timeout);
-            return ParseResponse(result);
-        }
-        catch (OperationCanceledException) {
-            return "{\"error\":\"Operation timed out\"}"u8.ToArray();
+            if (version == VersionCode.V3) {
+                OctetString username = new OctetString(String.Empty);
+                OctetString context = new OctetString(String.Empty);
+                string authenticationPassphrase = "authPassphrase";
+                string privacyPassphrase = "privacyPassphrase";
+
+                IAuthenticationProvider authenticationProvider;
+                //authenticationProvider = new SHA1AuthenticationProvider(new OctetString(authenticationPassphrase));
+                authenticationProvider = new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase));
+
+                IPrivacyProvider privacyProvider;
+                //privacyProvider = new DESPrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider);
+                privacyProvider = new AES256PrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider);
+
+                Discovery discovery = Messenger.GetNextDiscovery(SnmpType.GetRequestPdu);
+                ReportMessage report = discovery.GetResponse(timeout, endpoint);
+
+                ISnmpMessage request = new GetRequestMessage(version, Messenger.NextMessageId, Messenger.NextRequestId, username, context, oidList, privacyProvider, Messenger.MaxMessageSize, report);
+                return ParseResponse(request.Variables());
+            }
+            else {
+                IList<Variable> result = Messenger.Get(version, endpoint, community, oidList, timeout);
+                return ParseResponse(result);
+            }
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
@@ -66,8 +86,8 @@ internal static class Polling {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
         parameters.TryGetValue("target",      out string target);
         parameters.TryGetValue("community",   out string communityString);
-        parameters.TryGetValue("credentials", out string credentialsString);
-        parameters.TryGetValue("version",     out string versionString);
+        parameters.TryGetValue("cred",        out string credentialsString);
+        parameters.TryGetValue("ver",         out string versionString);
         parameters.TryGetValue("timeout",     out string timeoutString);
         parameters.TryGetValue("value",       out string valueString);
         
@@ -78,7 +98,7 @@ internal static class Polling {
         if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
-        IPEndPoint endPoint = new IPEndPoint(targetIp, 161);
+        IPEndPoint endpoint = new IPEndPoint(targetIp, 161);
 
         if (String.IsNullOrEmpty(communityString)) { communityString = "public"; }
 
@@ -88,8 +108,9 @@ internal static class Polling {
             _   => VersionCode.V2
         };
 
-        int timeout = 5000;
-        Int32.TryParse(timeoutString, out timeout);
+        if (Int32.TryParse(timeoutString, out int timeout) || timeout == 0) {
+            timeout = 5000;
+        }
 
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
@@ -107,11 +128,15 @@ internal static class Polling {
         }
 
         try {
-            IList<Variable> result = Messenger.Set(version, endPoint, community, oidList, timeout);
-            return ParseResponse(result);
-        }
-        catch (OperationCanceledException) {
-            return "{\"error\":\"Operation timed out\"}"u8.ToArray();
+            if (version == VersionCode.V3) {
+                //TODO:
+                return null;
+            }
+            else {
+                IList<Variable> result = Messenger.Set(version, endpoint, community, oidList, timeout);
+                return ParseResponse(result);
+            }
+
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
@@ -120,11 +145,11 @@ internal static class Polling {
 
     public static byte[] WalkHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
-        parameters.TryGetValue("target", out string target);
+        parameters.TryGetValue("target",    out string target);
         parameters.TryGetValue("community", out string communityString);
-        parameters.TryGetValue("credentials", out string credentialsString);
-        parameters.TryGetValue("version", out string versionString);
-        parameters.TryGetValue("timeout", out string timeoutString);
+        parameters.TryGetValue("cred",      out string credentialsString);
+        parameters.TryGetValue("ver",       out string versionString);
+        parameters.TryGetValue("timeout",   out string timeoutString);
 
         if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -139,8 +164,9 @@ internal static class Polling {
             _   => VersionCode.V2
         };
 
-        int timeout = 5000;
-        Int32.TryParse(timeoutString, out timeout);
+        if (Int32.TryParse(timeoutString, out int timeout) || timeout == 0) {
+            timeout = 5000;
+        }
 
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
@@ -157,12 +183,15 @@ internal static class Polling {
         List<Variable> result = new List<Variable>();
 
         try {
-            //TODO:
-            int count = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
-            return ParseResponse(result);
-        }
-        catch (OperationCanceledException) {
-            return "{\"error\":\"Operation timed out\"}"u8.ToArray();
+            if (version == VersionCode.V3) {
+                //TODO:
+                return null;
+            }
+            else {
+                //TODO:
+                int count = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
+                return ParseResponse(result);
+            }
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");

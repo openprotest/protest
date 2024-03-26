@@ -320,14 +320,14 @@ class Settings extends Tabs {
 			this.PreviewSmtpProfile(null);
 		};
 
-		this.profilesRemoveButton.onclick = ()=>{
-			if (!this.selectedProfile) return;
+		this.profilesRemoveButton.onclick = async ()=>{
+			if (!this.selectedSmtpProfile) return;
 
-			let index = this.profiles.indexOf(this.selectedProfile);
+			let index = this.smtpProfiles.indexOf(this.selectedSmtpProfile);
 			if (index === -1) return;
 
 			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
-				this.profiles.splice(index, 1);
+				this.smtpProfiles.splice(index, 1);
 				this.SaveSmtpProfiles();
 
 				this.profilesList.removeChild(this.profilesList.childNodes[index]);
@@ -375,7 +375,7 @@ class Settings extends Tabs {
 				dialog.innerBox.appendChild(status);
 
 				try {
-					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedProfile.guid}&recipient=${recipientInput.value}`);
+					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedSmtpProfile.guid}&recipient=${recipientInput.value}`);
 					const json = await response.json();
 					if (json.error) throw (json.error);
 					dialog.Close();
@@ -470,18 +470,16 @@ class Settings extends Tabs {
 			this.PreviewSnmpProfile(null);
 		};
 
-		this.profilesRemoveButton.onclick = ()=>{
-			if (!this.selectedProfile) return;
+		this.profilesRemoveButton.onclick = async ()=>{
+			if (!this.selectedSnmpProfile) return;
 
-			let index = this.profiles.indexOf(this.selectedProfile);
+			let index = this.snmpProfiles.indexOf(this.selectedSnmpProfile);
 			if (index === -1) return;
 
 			this.ConfirmBox("Are you sure you want to remove this SNMP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
-				this.profiles.splice(index, 1);
+				this.snmpProfiles.splice(index, 1);
 				this.SaveSnmpProfiles();
-
 				this.profilesList.removeChild(this.profilesList.childNodes[index]);
-				this.profilesTestButton.disabled = true;
 			});
 		};
 
@@ -616,7 +614,7 @@ class Settings extends Tabs {
 						this.profilesList.childNodes[i].style.backgroundColor = "";
 					}
 					element.style.backgroundColor = "var(--clr-select)";
-					this.selectedProfile = json[i];
+					this.selectedSmtpProfile = json[i];
 				};
 
 				element.ondblclick = ()=> {
@@ -630,7 +628,67 @@ class Settings extends Tabs {
 	}
 
 	async GetSnmpProfiles() {
+		try {
+			const response = await fetch("config/snmpprofiles/list");
 
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.snmpProfiles = json;
+			this.profilesList.textContent = "";
+
+			for (let i = 0; i < json.length; i++) {
+				const element = document.createElement("div");
+				element.className = "list-element";
+				this.profilesList.appendChild(element);
+
+				let labels = [];
+
+				const nameLabel = document.createElement("div");
+				nameLabel.textContent = json[i].name;
+				labels.push(nameLabel);
+
+				const contextLabel = document.createElement("div");
+				contextLabel.textContent = json[i].context;
+				labels.push(contextLabel);
+
+				const usernameLabel = document.createElement("Sender");
+				usernameLabel.textContent = json[i].username;
+				labels.push(usernameLabel);
+
+				for (let j = 0; j < labels.length; j++) {
+					labels[j].style.display = "inline-block";
+					labels[j].style.top = "0";
+					labels[j].style.left = `${j*100/labels.length}%`;
+					labels[j].style.width = "33%";
+					labels[j].style.lineHeight = "32px";
+					labels[j].style.whiteSpace = "nowrap";
+					labels[j].style.overflow = "hidden";
+					labels[j].style.textOverflow = "ellipsis";
+					labels[j].style.boxSizing = "border-box";
+					labels[j].style.paddingLeft = "4px";
+				}
+
+				element.append(nameLabel, contextLabel, usernameLabel);
+
+				element.onclick = ()=> {
+					for (let i=0; i<this.profilesList.childNodes.length; i++) {
+						this.profilesList.childNodes[i].style.backgroundColor = "";
+					}
+					element.style.backgroundColor = "var(--clr-select)";
+					this.selectedSnmpProfile = json[i];
+				};
+
+				element.ondblclick = ()=> {
+					this.PreviewSnmpProfile(json[i]);
+				};
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
 	}
 
 	PreviewZone(object=null) {
@@ -852,28 +910,27 @@ class Settings extends Tabs {
 		nameInput.type = "text";
 		innerBox.append(nameLabel, nameInput);
 
-		const contextLabel = document.createElement("div");
-		contextLabel.style.gridArea = "2 / 2";
-		contextLabel.textContent = "Context name:";
-		const contextInput = document.createElement("input");
-		contextInput.style.gridArea = "2 / 3";
-		contextInput.type = "text";
-		contextInput.placeholder = "optional";
-		innerBox.append(contextLabel, contextInput);
-
-		
 		const versionLabel = document.createElement("div");
-		versionLabel.style.gridArea = "3 / 2";
+		versionLabel.style.gridArea = "2 / 2";
 		versionLabel.textContent = "Version:";
 		const versionInput = document.createElement("select");
-		versionInput.style.gridArea = "3 / 3";
+		versionInput.style.gridArea = "2 / 3";
 		versionInput.disabled = true;
 		innerBox.append(versionLabel, versionInput);
 		
 		const optionVer = document.createElement("option");
-		optionVer.value = "Version 3";
+		optionVer.value = 3;
 		optionVer.textContent = "Version 3";
 		versionInput.appendChild(optionVer);
+
+		const contextLabel = document.createElement("div");
+		contextLabel.style.gridArea = "3 / 2";
+		contextLabel.textContent = "Context name:";
+		const contextInput = document.createElement("input");
+		contextInput.style.gridArea = "3 / 3";
+		contextInput.type = "text";
+		contextInput.placeholder = "optional";
+		innerBox.append(contextLabel, contextInput);
 
 		const usernameLabel = document.createElement("div");
 		usernameLabel.style.gridArea = "5 / 2";
@@ -893,7 +950,7 @@ class Settings extends Tabs {
 		const authAlgorithms = ["Auto", "MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 		for (let i=0; i<authAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = authAlgorithms[i];
+			option.value = i;
 			option.textContent = authAlgorithms[i];
 			authAlgorithmInput.appendChild(option);
 		}
@@ -917,7 +974,7 @@ class Settings extends Tabs {
 		const privacyAlgorithms = ["Auto", "DES", "AES-128", "AES-192", "AES-256"];
 		for (let i=0; i<privacyAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = privacyAlgorithms[i];
+			option.value = i;
 			option.textContent = privacyAlgorithms[i];
 			privacyAlgorithmInput.appendChild(option);
 		}
@@ -932,8 +989,14 @@ class Settings extends Tabs {
 		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
 
 		if (object) {
+			nameInput.value = object.name;
+			versionInput.value = object.version;
+			contextInput.value = object.context;
 			usernameInput.value = object.username;
-			privacyPasswordInput.value = object.password;
+			authAlgorithmInput.value = object.authAlgorithm;
+			authPasswordInput.value = "";
+			privacyAlgorithmInput.value = object.privacyAlgorithm;
+			privacyPasswordInput.value = "";
 		}
 
 		okButton.addEventListener("click", async ()=> {
@@ -946,12 +1009,12 @@ class Settings extends Tabs {
 
 			const newObject = {
 				name             : nameInput.value,
+				version          : parseInt(versionInput.value),
 				context          : contextInput.value,
-				version          : versionInput.value,
 				username         : usernameInput.value,
-				authAlgorithm    : authAlgorithmInput.value,
+				authAlgorithm    : parseInt(authAlgorithmInput.value),
 				authPassword     : authPasswordInput.value,
-				privacyAlgorithm : privacyAlgorithmInput.value,
+				privacyAlgorithm : parseInt(privacyAlgorithmInput.value),
 				privacyPassword  : privacyPasswordInput.value,
 			};
 
@@ -965,7 +1028,7 @@ class Settings extends Tabs {
 			}
 
 			await this.SaveSnmpProfiles();
-			this.ShowSnmpProfiles();
+			this.ShowSnmp();
 		});
 
 		setTimeout(()=>{ nameInput.focus() }, 200);

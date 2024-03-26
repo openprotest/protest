@@ -59,6 +59,7 @@
 	text-transform: uppercase;
 	color: var(--clr-dark);
 	background-color: #C0C0C0;
+	cursor: pointer;
 	transition: .2s;
 }
 .address-book-frequent > div:hover {

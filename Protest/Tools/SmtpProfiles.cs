@@ -12,6 +12,7 @@ internal static class SmtpProfiles {
     static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
     public record Profile {
+        public Guid guid;
         public string server;
         public int port;
         public string sender;
@@ -19,7 +20,6 @@ internal static class SmtpProfiles {
         public string password;
         //public string recipients;
         public bool ssl;
-        public Guid guid;
     }
 
     static SmtpProfiles() {
@@ -31,12 +31,12 @@ internal static class SmtpProfiles {
     }
 
     public static Profile[] Load() {
-        if (!File.Exists(Data.FILE_EMAIL_PROFILES)) {
+        if (!File.Exists(Data.SMTP_PROFILES)) {
             return Array.Empty<Profile>();
         }
 
         try {
-            byte[] bytes = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
+            byte[] bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, smtpProfileSerializerOptionsWithPasswords);
             return profiles;
@@ -64,7 +64,7 @@ internal static class SmtpProfiles {
 
         Profile[] oldProfiles;
         try {
-            byte[] bytes = File.ReadAllBytes(Data.FILE_EMAIL_PROFILES);
+            byte[] bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
             oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, smtpProfileSerializerOptionsWithPasswords);
         }
         catch {
@@ -96,7 +96,7 @@ internal static class SmtpProfiles {
 
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, smtpProfileSerializerOptionsWithPasswords);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-            File.WriteAllBytes(Data.FILE_EMAIL_PROFILES, cipher);
+            File.WriteAllBytes(Data.SMTP_PROFILES, cipher);
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;

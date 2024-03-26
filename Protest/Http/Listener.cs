@@ -391,6 +391,8 @@ public sealed class Listener {
         case "/config/smtpprofiles/list" : buffer = Tools.SmtpProfiles.List(); break;
         case "/config/smtpprofiles/save" : buffer = Tools.SmtpProfiles.Save(ctx); break;
         case "/config/smtpprofiles/test" : buffer = Tools.SmtpProfiles.SendTest(parameters); break;
+        case "/config/snmpprofiles/list" : buffer = Tools.SnmpProfiles.List(); break;
+        case "/config/snmpprofiles/save" : buffer = Tools.SnmpProfiles.Save(ctx); break;
 
         case "/config/checkupdate"       : buffer = Update.CheckLatestRelease(); break;
         case "/config/upload/iplocation" : buffer = Update.LocationFormDataHandler(ctx); break;

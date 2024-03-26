@@ -5,8 +5,7 @@ class DeviceView extends View {
 		"type", "name",
 
 		["mono/portscan.svg", "network"],
-		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed",
-		"overwriteprotocol",
+		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed", "overwriteprotocol",
 
 		[".", "device"],
 		"manufacturer", "model", "serial number", "chasse type", "description",
@@ -36,7 +35,7 @@ class DeviceView extends View {
 		"guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
 
 		["mono/credential.svg", "credentials"],
-		"domain", "username", "password", "la password", "ssh username", "ssh password"
+		"domain", "username", "password", "ssh username", "ssh password", "anydesk id", "anydesk password"
 	];
 
 	static regexIPv4 = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;

@@ -12,22 +12,13 @@
 	<link rel="stylesheet" href="textbox.css"/>
 
 	<script>
-		const DayOfYear = ()=> {
-			let now = new Date();
-			let start = new Date(now.getFullYear(), 0, 0);
-			let diff = now - start;
-			let oneDay = 1000 * 60 * 60 * 24;
-			return Math.floor(diff / oneDay);
-		};
-
-		const hsl = [-DayOfYear(), 100, 50];
-
+		const hsl = [29,100,50];
 		document.querySelector(":root").style.setProperty("--clr-select", `hsl(${hsl[0]+5},${hsl[1]}%,${hsl[2]*.9}%)`);
 		document.querySelector(":root").style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1]}%,${hsl[2]}%)`);
 
 		function SetBarColor() {
 			const bar = document.getElementsByClassName("address-book-search-bar")[0];
-			bar.style.background = `linear-gradient(0deg, hsla(${hsl[0]+5},72.5%,42.5%,.66) 0%, hsla(${hsl[0]},75%,45%,1) 100%)`;
+			bar.style.background = `linear-gradient(0deg, hsla(${hsl[0]+5},72.5%,42.5%,.6) 0%, hsla(${hsl[0]},75%,45%,1) 100%)`;
 		}
 	</script>
 

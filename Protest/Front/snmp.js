@@ -106,7 +106,7 @@ class Snmp extends Window {
 		this.walkButton.style.gridArea = "3 / 6 / 5 / 6";
 		this.walkButton.style.padding = "0";
 		snmpInput.appendChild(this.walkButton);
-		
+
 		//TODO:
 		this.walkButton.style.display = "none";
 
@@ -168,6 +168,32 @@ class Snmp extends Window {
 
 		if (this.params.hideInput) {
 			toggleButton.onclick();
+		}
+
+		this.versionInput.onchange();
+		this.GetSnmpProfiles();
+	}
+
+	async GetSnmpProfiles() {
+		try {
+			const response = await fetch("config/snmpprofiles/list");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.snmpProfiles = json;
+			
+			for (let i = 0; i < json.length; i++) {
+				const newOption = document.createElement("option");
+				newOption.value = json[i].guid;
+				newOption.textContent = json[i].name;
+				this.credentialsInput.appendChild(newOption);
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
