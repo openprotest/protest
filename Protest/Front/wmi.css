@@ -55,8 +55,9 @@
 
 .wmi-table > tr:first-child td {
 	position: sticky;
-	top: -2px;
 	z-index: 1;
+	top: -2px;
+	height: 28px;
 }
 
 .wmi-table > tr:first-child td:first-child {
@@ -75,8 +76,8 @@
 
 .wmi-table > tr > td {
 	border: #444 2px solid;
+	padding: 4px 8px;
 	max-width: 500px;
-	padding: 2px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }

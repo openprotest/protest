@@ -123,6 +123,7 @@ class Snmp extends Window {
 
 		this.versionInput.onchange = ()=> {
 			this.params.version = this.versionInput.value;
+			this.walkButton.disabled = this.versionInput.value == 3;
 
 			if (this.versionInput.value == 3) {
 				authLabel.textContent = "Credentials:";
@@ -240,7 +241,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
-			this.walkButton.disabled = false;
+			this.walkButton.disabled = this.versionInput.value == 3;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
@@ -291,7 +292,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
-			this.walkButton.disabled = false;
+			this.walkButton.disabled = this.versionInput.value == 3;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
@@ -384,7 +385,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
-			this.walkButton.disabled = false;
+			this.walkButton.disabled = this.versionInput.value == 3;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}

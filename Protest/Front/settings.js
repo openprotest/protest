@@ -898,7 +898,7 @@ class Settings extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 200px 250px auto";
+		innerBox.style.gridTemplateColumns = "auto 200px 200px 100px auto";
 		innerBox.style.gridTemplateRows = "repeat(3, 38px) 16px repeat(3, 38px) 16px repeat(2, 38px)";
 		innerBox.style.alignItems = "center";
 
@@ -947,7 +947,7 @@ class Settings extends Tabs {
 		authAlgorithmInput.style.gridArea = "6 / 3";
 		innerBox.append(authAlgorithmLabel, authAlgorithmInput);
 		
-		const authAlgorithms = ["Auto", "MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
+		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 		for (let i=0; i<authAlgorithms.length; i++) {
 			const option = document.createElement("option");
 			option.value = i;
@@ -971,7 +971,7 @@ class Settings extends Tabs {
 		privacyAlgorithmInput.style.gridArea = "9 / 3";
 		innerBox.append(privacyAlgorithmLabel, privacyAlgorithmInput);
 		
-		const privacyAlgorithms = ["Auto", "DES", "AES-128", "AES-192", "AES-256"];
+		const privacyAlgorithms = ["DES", "AES-128", "AES-192", "AES-256"];
 		for (let i=0; i<privacyAlgorithms.length; i++) {
 			const option = document.createElement("option");
 			option.value = i;
@@ -988,6 +988,38 @@ class Settings extends Tabs {
 		privacyPasswordInput.placeholder = "unchanged";
 		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
 
+		const authObsoleteBox = document.createElement("div");
+		authObsoleteBox.textContent = "Obsolete";
+		authObsoleteBox.style.gridArea = "6 / 4";
+		authObsoleteBox.style.marginLeft = "4px";
+		authObsoleteBox.style.paddingLeft = "24px";
+		authObsoleteBox.style.borderRadius = "4px";
+		authObsoleteBox.style.border = "1px solid var(--clr-dark)";
+		authObsoleteBox.style.backgroundColor = "var(--clr-warning)";
+		authObsoleteBox.style.backgroundImage = "url(mono/warning.svg)";
+		authObsoleteBox.style.backgroundSize = "16px 16px";
+		authObsoleteBox.style.backgroundPosition = "4px center";
+		authObsoleteBox.style.backgroundRepeat = "no-repeat";
+		authObsoleteBox.style.opacity = "0";
+		authObsoleteBox.style.transition = ".2s";
+
+		const privacyObsoleteBox = document.createElement("div");
+		privacyObsoleteBox.textContent = "Obsolete";
+		privacyObsoleteBox.style.gridArea = "9 / 4";
+		privacyObsoleteBox.style.marginLeft = "4px";
+		privacyObsoleteBox.style.paddingLeft = "24px";
+		privacyObsoleteBox.style.border = "1px solid var(--clr-dark)";
+		privacyObsoleteBox.style.borderRadius = "4px";
+		privacyObsoleteBox.style.backgroundColor = "var(--clr-warning)";
+		privacyObsoleteBox.style.backgroundImage = "url(mono/warning.svg)";
+		privacyObsoleteBox.style.backgroundSize = "16px 16px";
+		privacyObsoleteBox.style.backgroundPosition = "4px center";
+		privacyObsoleteBox.style.backgroundRepeat = "no-repeat";
+		privacyObsoleteBox.style.opacity = "0";
+		privacyObsoleteBox.style.transition = ".2s";
+
+		innerBox.append(authObsoleteBox, privacyObsoleteBox);
+		
 		if (object) {
 			nameInput.value = object.name;
 			versionInput.value = object.version;
@@ -998,6 +1030,14 @@ class Settings extends Tabs {
 			privacyAlgorithmInput.value = object.privacyAlgorithm;
 			privacyPasswordInput.value = "";
 		}
+
+		authAlgorithmInput.onchange = () => {
+			authObsoleteBox.style.opacity = (authAlgorithmInput.value == 0 || authAlgorithmInput.value == 1) ? "1" : "0";
+		};
+
+		privacyAlgorithmInput.onchange = () => {
+			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 0) ? "1" : "0";
+		};
 
 		okButton.addEventListener("click", async ()=> {
 			let isNew = object === null;

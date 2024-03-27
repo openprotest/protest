@@ -8,8 +8,9 @@ using System.Text.Json.Serialization;
 
 namespace Protest.Tools;
 internal static class SmtpProfiles {
-    static readonly JsonSerializerOptions smtpProfileSerializerOptions;
-    static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
+    private static readonly object mutex;
+    private static readonly JsonSerializerOptions smtpProfileSerializerOptions;
+    private static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
     public record Profile {
         public Guid guid;
@@ -18,11 +19,12 @@ internal static class SmtpProfiles {
         public string sender;
         public string username;
         public string password;
-        //public string recipients;
         public bool ssl;
     }
 
     static SmtpProfiles() {
+        mutex = new object();
+
         smtpProfileSerializerOptions = new JsonSerializerOptions();
         smtpProfileSerializerOptionsWithPasswords = new JsonSerializerOptions();
 
@@ -36,7 +38,11 @@ internal static class SmtpProfiles {
         }
 
         try {
-            byte[] bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
+            byte[] bytes;
+            lock (mutex) {
+                bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
+            }
+
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, smtpProfileSerializerOptionsWithPasswords);
             return profiles;
@@ -64,7 +70,11 @@ internal static class SmtpProfiles {
 
         Profile[] oldProfiles;
         try {
-            byte[] bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
+            byte[] bytes;
+            lock (mutex) {
+                bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
+            }
+
             oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, smtpProfileSerializerOptionsWithPasswords);
         }
         catch {
@@ -96,7 +106,9 @@ internal static class SmtpProfiles {
 
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, smtpProfileSerializerOptionsWithPasswords);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-            File.WriteAllBytes(Data.SMTP_PROFILES, cipher);
+            lock (mutex) {
+                File.WriteAllBytes(Data.SMTP_PROFILES, cipher);
+            }
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;

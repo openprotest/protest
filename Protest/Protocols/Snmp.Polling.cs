@@ -1,8 +1,11 @@
 ﻿using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
+using Renci.SshNet.Messages;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,10 +32,7 @@ internal static class Polling {
         parameters.TryGetValue("target",    out string target);
         parameters.TryGetValue("ver",       out string versionString);
         parameters.TryGetValue("community", out string communityString);
-        parameters.TryGetValue("cred",      out string credentialsString);
         parameters.TryGetValue("timeout",   out string timeoutString);
-
-        //TODO: handle hostname
 
         if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -60,6 +60,75 @@ internal static class Polling {
 
         try {
             if (version == VersionCode.V3) {
+                parameters.TryGetValue("cred", out string credentialsString);
+                if (String.IsNullOrEmpty(credentialsString)) {
+                    return Data.CODE_INVALID_ARGUMENT.Array;
+                }
+
+                Tools.SnmpProfiles.Profile[] profiles = Tools.SnmpProfiles.Load();
+                Tools.SnmpProfiles.Profile profile = profiles.First(o=> o.guid.ToString() == credentialsString);
+
+                OctetString username = new OctetString(profile.username);
+                OctetString context = new OctetString(profile.context);
+                string authenticationPassphrase = profile.authPassword;
+                string privacyPassphrase = profile.authPassword;
+
+#pragma warning disable CS0618 //warn end user
+                IAuthenticationProvider authenticationProvider = profile.authAlgorithm switch {
+                    Tools.SnmpProfiles.AuthenticationAlgorithm.MD5    => new MD5AuthenticationProvider(new OctetString(authenticationPassphrase)),
+                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA1   => new SHA1AuthenticationProvider(new OctetString(authenticationPassphrase)),
+                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA256 => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
+                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA384 => new SHA384AuthenticationProvider(new OctetString(authenticationPassphrase)),
+                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA512 => new SHA512AuthenticationProvider(new OctetString(authenticationPassphrase)),
+                    _ => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
+                };
+                IPrivacyProvider privacyProvider = profile.privacyAlgorithm switch {
+                    Tools.SnmpProfiles.PrivacyAlgorithm.DES    => new DESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+                    Tools.SnmpProfiles.PrivacyAlgorithm.AES128 => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+                    Tools.SnmpProfiles.PrivacyAlgorithm.AES192 => new AES192PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+                    Tools.SnmpProfiles.PrivacyAlgorithm.AES256 => new AES256PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+                    _ => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+                };
+#pragma warning restore CS0618
+
+                Discovery discovery = Messenger.GetNextDiscovery(SnmpType.GetRequestPdu);
+                ReportMessage report = discovery.GetResponse(timeout, endpoint);
+
+                if (operation == SnmpOperation.Get) {
+                    var request = new GetRequestMessage(
+                        VersionCode.V3,
+                        Messenger.NextMessageId,
+                        Messenger.NextRequestId,
+                        username,
+                        context,
+                        oidArray.Select(o=> new Variable(new ObjectIdentifier(o.Trim()))).ToList(),
+                        privacyProvider,
+                        Messenger.MaxMessageSize,
+                        report);
+                }
+                else if (operation == SnmpOperation.Set) {
+                    parameters.TryGetValue("value", out string valueString);
+                    if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
+                    OctetString data = new OctetString(valueString);
+
+                    SetRequestMessage request = new SetRequestMessage(
+                        VersionCode.V3,
+                        Messenger.NextMessageId,
+                        Messenger.NextRequestId,
+                        username,
+                        context,
+                        oidArray.Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data)).ToList(),
+                        privacyProvider,
+                        Messenger.MaxMessageSize,
+                        report);
+                }
+                else if (operation == SnmpOperation.Walk) {
+                    return "{\"error\":\"Operarion not supported\"}"u8.ToArray();
+                }
+                else {
+                    return "{\"error\":\"Invalid operation\"}"u8.ToArray();
+                }
+
                 return null; //TODO:
             }
             else {
@@ -136,12 +205,17 @@ internal static class Polling {
                 SnmpType.InformRequestPdu  => "inform request PDU",
                 SnmpType.TrapV2Pdu         => "trap v2 PDU",
                 SnmpType.ReportPdu         => "report PDU",
-                _=> "Unknown"
+                _=> "unknown"
             };
 
             builder.Append('[');
+            //oid
             builder.Append($"\"{Data.EscapeJsonText(result[i].Id.ToString())}\",");
+            
+            //type
             builder.Append($"\"{type}\",");
+            
+            //value
             if (result[i].Data.TypeCode == SnmpType.Null ||
                 result[i].Data.TypeCode == SnmpType.NoSuchObject ||
                 result[i].Data.TypeCode == SnmpType.NoSuchInstance) {
@@ -150,9 +224,10 @@ internal static class Polling {
             else if (result[i].Data.TypeCode == SnmpType.OctetString) {
                 byte[] bytes = result[i].Data.ToBytes();
                 for (int j = 0; j < bytes.Length; j++) {
-                    if (bytes[j] < 32) { bytes[j] = (byte)'?'; }
+                    if (bytes[j] < 32) { bytes[j] = (byte)' '; }
+                    else if (bytes[j] > 126) { bytes[j] = (byte)' '; }
                 }
-                builder.Append($"\"{Data.EscapeJsonText(Encoding.UTF8.GetString(bytes))}\"");
+                builder.Append($"\"{Data.EscapeJsonText(Encoding.UTF8.GetString(bytes).Trim())}\"");
             }
             else {
                 builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
