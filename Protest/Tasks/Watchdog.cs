@@ -170,12 +170,12 @@ internal static class Watchdog {
         watcher.lastCheck = DateTime.UtcNow.Ticks;
 
         short status = watcher.type switch {
-            WatcherType.icmp => CheckIcmp(watcher),
-            WatcherType.tcp => CheckTcp(watcher),
-            WatcherType.dns => CheckDns(watcher),
-            WatcherType.http => CheckHttp(watcher),
+            WatcherType.icmp        => CheckIcmp(watcher),
+            WatcherType.tcp         => CheckTcp(watcher),
+            WatcherType.dns         => CheckDns(watcher),
+            WatcherType.http        => CheckHttp(watcher),
             WatcherType.httpKeyword => CheckHttpKeyword(watcher),
-            WatcherType.tls => CheckTls(watcher),
+            WatcherType.tls         => CheckTls(watcher),
             _ => -9
         };
 

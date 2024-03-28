@@ -9,8 +9,8 @@ using System.Text.Json.Serialization;
 namespace Protest.Tools;
 internal static class SnmpProfiles {
     private static readonly object mutex;
-    private static readonly JsonSerializerOptions snmpProfileSerializerOptions;
-    private static readonly JsonSerializerOptions snmpProfileSerializerOptionsWithPasswords;
+    private static readonly JsonSerializerOptions snmpProfilesSerializerOptions;
+    private static readonly JsonSerializerOptions snmpProfilesSerializerOptionsWithPasswords;
 
     public enum AuthenticationAlgorithm : byte {
         Auto = 0,
@@ -44,11 +44,11 @@ internal static class SnmpProfiles {
     static SnmpProfiles() {
         mutex = new object();
 
-        snmpProfileSerializerOptions = new JsonSerializerOptions();
-        snmpProfileSerializerOptionsWithPasswords = new JsonSerializerOptions();
+        snmpProfilesSerializerOptions = new JsonSerializerOptions();
+        snmpProfilesSerializerOptionsWithPasswords = new JsonSerializerOptions();
 
-        snmpProfileSerializerOptions.Converters.Add(new SnmpProfilesJsonConverter(true));
-        snmpProfileSerializerOptionsWithPasswords.Converters.Add(new SnmpProfilesJsonConverter(false));
+        snmpProfilesSerializerOptions.Converters.Add(new SnmpProfilesJsonConverter(true));
+        snmpProfilesSerializerOptionsWithPasswords.Converters.Add(new SnmpProfilesJsonConverter(false));
     }
 
     public static Profile[] Load() {
@@ -63,7 +63,7 @@ internal static class SnmpProfiles {
             }
 
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-            Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, snmpProfileSerializerOptionsWithPasswords);
+            Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, snmpProfilesSerializerOptionsWithPasswords);
             return profiles;
         }
         catch {
@@ -74,7 +74,7 @@ internal static class SnmpProfiles {
     public static byte[] List() {
         try {
             Profile[] profiles = Load();
-            byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, snmpProfileSerializerOptions);
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, snmpProfilesSerializerOptions);
 
             return json;
         }
@@ -95,14 +95,14 @@ internal static class SnmpProfiles {
                 bytes = File.ReadAllBytes(Data.SNMP_PROFILES);
             }
 
-            oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, snmpProfileSerializerOptionsWithPasswords);
+            oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, snmpProfilesSerializerOptionsWithPasswords);
         }
         catch {
             oldProfiles = Array.Empty<Profile>();
         }
 
         try {
-            Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, snmpProfileSerializerOptionsWithPasswords);
+            Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, snmpProfilesSerializerOptionsWithPasswords);
 
             for (int i = 0; i < newProfiles.Length; i++) {
                 if (newProfiles[i].guid == default(Guid)) {
@@ -126,7 +126,7 @@ internal static class SnmpProfiles {
                 }
             }
 
-            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, snmpProfileSerializerOptionsWithPasswords);
+            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, snmpProfilesSerializerOptionsWithPasswords);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             lock (mutex) {
                 File.WriteAllBytes(Data.SNMP_PROFILES, cipher);

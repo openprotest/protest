@@ -95,7 +95,7 @@ internal static class Polling {
                 ReportMessage report = discovery.GetResponse(timeout, endpoint);
 
                 if (operation == SnmpOperation.Get) {
-                    var request = new GetRequestMessage(
+                    GetRequestMessage request = new GetRequestMessage(
                         VersionCode.V3,
                         Messenger.NextMessageId,
                         Messenger.NextRequestId,
@@ -105,6 +105,8 @@ internal static class Polling {
                         privacyProvider,
                         Messenger.MaxMessageSize,
                         report);
+
+                    return ParseResponse(request.Variables());
                 }
                 else if (operation == SnmpOperation.Set) {
                     parameters.TryGetValue("value", out string valueString);
@@ -121,6 +123,8 @@ internal static class Polling {
                         privacyProvider,
                         Messenger.MaxMessageSize,
                         report);
+
+                    return ParseResponse(request.Variables());
                 }
                 else if (operation == SnmpOperation.Walk) {
                     return "{\"error\":\"Operarion not supported\"}"u8.ToArray();
@@ -128,8 +132,6 @@ internal static class Polling {
                 else {
                     return "{\"error\":\"Invalid operation\"}"u8.ToArray();
                 }
-
-                return null; //TODO:
             }
             else {
                 if (operation == SnmpOperation.Get) {

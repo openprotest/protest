@@ -950,7 +950,7 @@ class Settings extends Tabs {
 		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 		for (let i=0; i<authAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = i;
+			option.value = i+1;
 			option.textContent = authAlgorithms[i];
 			authAlgorithmInput.appendChild(option);
 		}
@@ -974,7 +974,7 @@ class Settings extends Tabs {
 		const privacyAlgorithms = ["DES", "AES-128", "AES-192", "AES-256"];
 		for (let i=0; i<privacyAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = i;
+			option.value = i+1;
 			option.textContent = privacyAlgorithms[i];
 			privacyAlgorithmInput.appendChild(option);
 		}
@@ -1030,13 +1030,17 @@ class Settings extends Tabs {
 			privacyAlgorithmInput.value = object.privacyAlgorithm;
 			privacyPasswordInput.value = "";
 		}
+		else {
+			authAlgorithmInput.value = 3;
+			privacyAlgorithmInput.value = 2;
+		}
 
 		authAlgorithmInput.onchange = () => {
-			authObsoleteBox.style.opacity = (authAlgorithmInput.value == 0 || authAlgorithmInput.value == 1) ? "1" : "0";
+			authObsoleteBox.style.opacity = (authAlgorithmInput.value == 1 || authAlgorithmInput.value == 2) ? "1" : "0";
 		};
 
 		privacyAlgorithmInput.onchange = () => {
-			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 0) ? "1" : "0";
+			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 1) ? "1" : "0";
 		};
 
 		okButton.addEventListener("click", async ()=> {
@@ -1070,6 +1074,9 @@ class Settings extends Tabs {
 			await this.SaveSnmpProfiles();
 			this.ShowSnmp();
 		});
+
+		authAlgorithmInput.onchange();
+		privacyAlgorithmInput.onchange();
 
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}

@@ -369,19 +369,26 @@ class Monitor extends Window {
 
 		const templatesTab = document.createElement("button");
 		templatesTab.className = "win-dialog-tab";
-		templatesTab.style.top = "16px";
+		templatesTab.style.top = "8px";
 		const templatesIcon = document.createElement("div");
 		templatesIcon.style.backgroundImage = "url(mono/chart.svg)";
 		templatesTab.appendChild(templatesIcon);
 
 		const wmiTab = document.createElement("button");
 		wmiTab.className = "win-dialog-tab";
-		wmiTab.style.top = "72px";
+		wmiTab.style.top = "62px";
 		const wmiIcon = document.createElement("div");
 		wmiIcon.style.backgroundImage = "url(mono/wmi.svg)";
 		wmiTab.appendChild(wmiIcon);
 
-		innerBox.parentElement.append(templatesTab, wmiTab);
+		const snmpTab = document.createElement("button");
+		snmpTab.className = "win-dialog-tab";
+		snmpTab.style.top = "116px";
+		const snmpIcon = document.createElement("div");
+		snmpIcon.style.backgroundImage = "url(mono/snmp.svg)";
+		snmpTab.appendChild(snmpIcon);
+
+		innerBox.parentElement.append(templatesTab, wmiTab, snmpTab);
 
 		const nameInput = document.createElement("input");
 		nameInput.type = "text";
@@ -604,6 +611,8 @@ class Monitor extends Window {
 			templatesTab.style.backgroundColor = "var(--clr-pane)";
 			wmiTab.style.background = "";
 			wmiTab.style.backgroundColor = "";
+			snmpTab.style.background = "";
+			snmpTab.style.backgroundColor = "";
 
 			templatesBox.appendChild(CreateTemplate(
 				"Boot time",
@@ -814,6 +823,8 @@ class Monitor extends Window {
 			templatesTab.style.backgroundColor = "";
 			wmiTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
 			wmiTab.style.backgroundColor = "var(--clr-pane)";
+			snmpTab.style.background = "";
+			snmpTab.style.backgroundColor = "";
 
 			const classFilterInput = document.createElement("input");
 			classFilterInput.type = "text";
@@ -1044,6 +1055,21 @@ class Monitor extends Window {
 			classFilterInput.oninput();
 		};
 
+		snmpTab.onclick = ()=> {
+			innerBox.textContent = "";
+			innerBox.style.border = "none";
+			innerBox.style.display = "grid";
+			innerBox.style.gridTemplateColumns = "40% 16px auto";
+			innerBox.style.gridTemplateRows = "32px 8px auto 96px 8px 64px 8px 64px";
+
+			templatesTab.style.background = "";
+			templatesTab.style.backgroundColor = "";
+			wmiTab.style.background = "";
+			wmiTab.style.backgroundColor = "";
+			snmpTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
+			snmpTab.style.backgroundColor = "var(--clr-pane)";
+		};
+
 		okButton.onclick = ()=> {
 			let options = {
 				protocol: templateOptions.protocol,
@@ -1054,9 +1080,9 @@ class Monitor extends Window {
 				value   : valueInput.value.toLocaleLowerCase(),
 				min     : 0,
 				max     : maxInput.value.toLocaleLowerCase(),
-				showPeak     : showPeakInput.checked,
-				isComplement : complementingInput.checked,
-				isDynamic    : dynamicInput.checked,
+				showPeak: showPeakInput.checked,
+				isComplement: complementingInput.checked,
+				isDynamic: dynamicInput.checked,
 			};
 
 			this.AddChart(nameInput.value, queryInput.value, options);
