@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace ProtestAgent {
     public partial class Checkbox : UserControl {
-        private static readonly Pen selectPen = new Pen(Color.FromArgb(255, 102, 0), 2);
+        private static readonly Pen selectPen = new Pen(Color.FromArgb(255, 102, 0), 6);
         private static readonly SolidBrush backgroundBrush = new SolidBrush(Color.FromArgb(128, 128, 128));
         private static readonly SolidBrush foregroundBrush = new SolidBrush(Color.FromArgb(32, 32, 32));
         private static readonly SolidBrush onBrush = new SolidBrush(Color.FromArgb(255, 102, 0));
@@ -97,7 +97,10 @@ namespace ProtestAgent {
             _value = !_value;
             this.Invalidate();
 
-            if (OnChange is null) return;
+            if (OnChange is null) {
+                return;
+            }
+
             OnChange(sender, e);
         }
 
@@ -106,7 +109,10 @@ namespace ProtestAgent {
                 _value = !_value;
                 this.Invalidate();
 
-                if (OnChange is null) return;
+                if (OnChange is null) {
+                    return;
+                }
+
                 OnChange(sender, new EventArgs());
             }
         }
@@ -124,6 +130,10 @@ namespace ProtestAgent {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
+            if (isFocused) {
+                e.Graphics.DrawPath(selectPen, path);
+            }
+
             e.Graphics.FillPath(backgroundBrush, path);
 
             if (_value) {
@@ -131,10 +141,6 @@ namespace ProtestAgent {
             }
             else {
                 e.Graphics.FillPath(offBrush, pathOff);
-            }
-
-            if (isFocused) {
-                e.Graphics.DrawPath(selectPen, path);
             }
 
             e.Graphics.DrawString(this.Label, this.Font, foregroundBrush, 40, 1);
