@@ -248,6 +248,23 @@ class Monitor extends Window {
 		}
 	}
 
+	async GetSnmpProfiles() {
+		try {
+			const response = await fetch("config/snmpprofiles/list");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			return json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return {};
+		}
+	}
+
 	Start() {
 		if (!this.socket) return;
 		this.socket.send("{\"action\":\"start\"}");
@@ -348,16 +365,20 @@ class Monitor extends Window {
 		spinner.appendChild(document.createElement("div"));
 
 		const status = document.createElement("div");
-		status.textContent = "Fetching WMI classes...";
 		status.style.textAlign = "center";
 		status.style.fontWeight = "bold";
 		status.style.animation = "delayed-fade-in 1.5s ease-in 1";
 		innerBox.append(spinner, status);
 
+		status.textContent = "Fetching WMI classes...";
 		const wmiClasses = await this.GetWmiClasses();
-		if (!wmiClasses.classes) {
+
+		status.textContent = "Fetching SNMP profiles...";
+		const snmpProfiles = await this.GetSnmpProfiles();
+
+		if (!wmiClasses.classes || !snmpProfiles) {
 			okButton.onclick();
-			setTimeout(()=> this.ConfirmBox("Unable to load WMI classes.", true, "mono/resmonitor.svg"), 250);
+			setTimeout(()=> this.ConfirmBox("Unable to the fetch resources.", true, "mono/resmonitor.svg"), 250);
 			return;
 		}
 
@@ -390,15 +411,45 @@ class Monitor extends Window {
 
 		innerBox.parentElement.append(templatesTab, wmiTab, snmpTab);
 
+		const snmpVersionInput = document.createElement("select");
+		snmpVersionInput.style.gridArea = "1 / 2";
+		snmpVersionInput.style.minWidth = "50px";
+
+		const snmpCommunityInput = document.createElement("select");
+		snmpCommunityInput.style.minWidth = "50px";
+		snmpCommunityInput.style.gridArea = "2 / 2";
+
+		const snmpCredentialsInput = document.createElement("select");
+		snmpCredentialsInput.style.minWidth = "50px";
+		snmpCredentialsInput.style.gridArea = "2 / 2";
+		snmpCredentialsInput.style.display = "none";
+
+		const versionOptions = [1, 2, 3];
+		for (let i=0; i<versionOptions.length; i++) {
+			const option = document.createElement("option");
+			option.value = versionOptions[i];
+			option.textContent = `Version ${versionOptions[i]}`;
+			snmpVersionInput.appendChild(option);
+		}
+
+		if (snmpProfiles instanceof Array) {
+			for (let i=0; i<snmpProfiles.length; i++) {
+				const option = document.createElement("option");
+				option.value = snmpProfiles[i].guid;
+				option.textContent = snmpProfiles[i].name;
+				snmpCommunityInput.appendChild(option);
+			}
+		}
+
 		const nameInput = document.createElement("input");
 		nameInput.type = "text";
 		nameInput.style.gridArea = "1 / 2 / 1 / 2";
-		nameInput.style.minWidth = "100px";
+		nameInput.style.minWidth = "80px";
 		nameInput.style.maxWidth = "160px";
 
 		const formatInput = document.createElement("select");
 		formatInput.style.gridArea = "2 / 2 / 2 / 2";
-		formatInput.style.minWidth = "100px";
+		formatInput.style.minWidth = "80px";
 		formatInput.style.maxWidth = "160px";
 
 		const formatOptionsArray = ["Line chart", "Grid line chart", "Delta chart", "Single value", "List", "Table"];
@@ -413,7 +464,7 @@ class Monitor extends Window {
 		const unitInput = document.createElement("input");
 		unitInput.type = "text";
 		unitInput.style.gridArea = "3 / 2 / 3 / 2";
-		unitInput.style.minWidth = "100px";
+		unitInput.style.minWidth = "80px";
 		unitInput.style.maxWidth = "160px";
 
 		const unitDatalist = document.createElement("datalist");
@@ -431,13 +482,13 @@ class Monitor extends Window {
 		const valueInput = document.createElement("input");
 		valueInput.type = "text";
 		valueInput.style.gridArea = "4 / 2 / 4 / 2";
-		valueInput.style.minWidth = "100px";
+		valueInput.style.minWidth = "80px";
 		valueInput.style.maxWidth = "160px";
 
 		const maxInput = document.createElement("input");
 		maxInput.type = "text";
 		maxInput.style.gridArea = "5 / 2 / 5 / 2";
-		maxInput.style.minWidth = "100px";
+		maxInput.style.minWidth = "80px";
 		maxInput.style.maxWidth = "160px";
 
 		const propertiesDatalistId = "m" + new Date().getTime();
@@ -874,6 +925,8 @@ class Monitor extends Window {
 			const valueLabel = document.createElement("div");
 			valueLabel.textContent = "Value:";
 			valueLabel.style.gridArea = "4 / 1 / 4 / 2";
+			valueInput.disabled = false;
+			valueInput.value = templateOptions.value ?? "";
 			optionsBox.append(valueLabel, valueInput);
 
 			const peakLabel = document.createElement("div");
@@ -902,6 +955,11 @@ class Monitor extends Window {
 			queryInput.style.height = "52px";
 			queryInput.style.gridArea = "8 / 1 / 9 / 4";
 			innerBox.append(queryInput);
+
+			if (templateOptions.protocol !== "wmi") {
+				queryInput.value = "";
+
+			}
 
 			let words = queryInput.value.split(" ");
 			let className = null;
@@ -1059,7 +1117,7 @@ class Monitor extends Window {
 			innerBox.textContent = "";
 			innerBox.style.border = "none";
 			innerBox.style.display = "grid";
-			innerBox.style.gridTemplateColumns = "40% 16px auto";
+			innerBox.style.gridTemplateColumns = "40% 40px auto";
 			innerBox.style.gridTemplateRows = "auto";
 
 			templatesTab.style.background = "";
@@ -1072,37 +1130,20 @@ class Monitor extends Window {
 			const snmpBox = document.createElement("div");
 			snmpBox.style.display = "grid";
 			snmpBox.style.gridArea = "1 / 1";
-			snmpBox.style.margin = "8px 20px";
+			snmpBox.style.marginTop = "8px";
 			snmpBox.style.alignItems = "center";
-			snmpBox.style.gridTemplateColumns = "88 auto";
+			snmpBox.style.gridTemplateColumns = "96px auto";
 			snmpBox.style.gridTemplateRows = "repeat(6, 32px)";
 
 			const snmpVersionLabel = document.createElement("div");
 			snmpVersionLabel.textContent = "Version:";
 			snmpVersionLabel.style.gridArea = "1 / 1";
-			const snmpVersionInput = document.createElement("select");
-			snmpVersionInput.style.gridArea = "1 / 2";
-			snmpVersionInput.style.minWidth = "50px";
 			snmpBox.append(snmpVersionLabel, snmpVersionInput);
-
-			const versionOptions = [1, 2, 3];
-			for (let i=0; i<versionOptions.length; i++) {
-				const option = document.createElement("option");
-				option.value = versionOptions[i];
-				option.textContent = `Version ${versionOptions[i]}`;
-				snmpVersionInput.appendChild(option);
-			}
 
 			const snmpAuthLabel = document.createElement("div");
 			snmpAuthLabel.textContent = "Community:";
 			snmpAuthLabel.style.gridArea = "2 / 1";
-			const snmpCommunityInput = document.createElement("select");
-			snmpCommunityInput.style.minWidth = "50px";
-			snmpCommunityInput.style.gridArea = "2 / 2";
-			const snmpCredentialsInput = document.createElement("select");
-			snmpCredentialsInput.style.minWidth = "50px";
-			snmpCredentialsInput.style.gridArea = "2 / 2";
-			snmpCredentialsInput.style.display = "none";
+
 			snmpBox.append(snmpAuthLabel, snmpCommunityInput, snmpCredentialsInput);
 
 			const oidLabel = document.createElement("div");
@@ -1118,7 +1159,7 @@ class Monitor extends Window {
 			const optionsBox = document.createElement("div");
 			optionsBox.style.display = "grid";
 			optionsBox.style.gridArea = "1 / 3";
-			optionsBox.style.margin = "8px 20px";
+			optionsBox.style.marginTop = "8px";
 			optionsBox.style.alignItems = "center";
 			optionsBox.style.gridTemplateColumns = "64px auto 20% auto";
 			optionsBox.style.gridTemplateRows = "repeat(6, 32px)";
@@ -1141,6 +1182,8 @@ class Monitor extends Window {
 			const valueLabel = document.createElement("div");
 			valueLabel.textContent = "Value:";
 			valueLabel.style.gridArea = "4 / 1 / 4 / 2";
+			valueInput.value = "value";
+			valueInput.disabled = true;
 			optionsBox.append(valueLabel, valueInput);
 
 			const peakLabel = document.createElement("div");
@@ -1167,6 +1210,10 @@ class Monitor extends Window {
 			this.AddCheckBoxLabel(dynamicBox, dynamicInput, "Dynamic limits");
 
 			innerBox.append(snmpBox, optionsBox);
+
+			if (templateOptions.protocol !== "snmp") {
+				queryInput.value = "";
+			}
 		};
 
 		okButton.onclick = ()=> {
