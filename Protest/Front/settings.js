@@ -28,8 +28,7 @@ class Settings extends Tabs {
 		this.snmpTab.onclick  = ()=> this.ShowSnmp();
 		this.graphTab.onclick = ()=> this.ShowGraph();
 
-		//TODO:
-		this.graphTab.style.display = "none";
+		this.graphTab.style.display = "none"; //TODO:
 
 		switch (this.params) {
 		case "ad":
@@ -1001,6 +1000,7 @@ class Settings extends Tabs {
 		authObsoleteBox.style.backgroundPosition = "4px center";
 		authObsoleteBox.style.backgroundRepeat = "no-repeat";
 		authObsoleteBox.style.opacity = "0";
+		authObsoleteBox.style.transform = "translateX(-8px)";
 		authObsoleteBox.style.transition = ".2s";
 
 		const privacyObsoleteBox = document.createElement("div");
@@ -1016,6 +1016,7 @@ class Settings extends Tabs {
 		privacyObsoleteBox.style.backgroundPosition = "4px center";
 		privacyObsoleteBox.style.backgroundRepeat = "no-repeat";
 		privacyObsoleteBox.style.opacity = "0";
+		privacyObsoleteBox.style.transform = "translateX(-8px)";
 		privacyObsoleteBox.style.transition = ".2s";
 
 		innerBox.append(authObsoleteBox, privacyObsoleteBox);
@@ -1037,10 +1038,12 @@ class Settings extends Tabs {
 
 		authAlgorithmInput.onchange = () => {
 			authObsoleteBox.style.opacity = (authAlgorithmInput.value == 1 || authAlgorithmInput.value == 2) ? "1" : "0";
+			authObsoleteBox.style.transform = (authAlgorithmInput.value == 1 || authAlgorithmInput.value == 2) ? "none" : "translateX(-8px)";
 		};
 
 		privacyAlgorithmInput.onchange = () => {
 			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 1) ? "1" : "0";
+			privacyObsoleteBox.style.transform = (privacyAlgorithmInput.value == 1) ? "none" : "translateX(-8px)";
 		};
 
 		okButton.addEventListener("click", async ()=> {

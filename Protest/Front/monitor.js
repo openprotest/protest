@@ -401,9 +401,7 @@ class Monitor extends Window {
 		formatInput.style.minWidth = "100px";
 		formatInput.style.maxWidth = "160px";
 
-		const formatOptionsArray = [
-			"Line chart", "Grid line chart", "Delta chart", "Single value", "List", "Table"
-		];
+		const formatOptionsArray = ["Line chart", "Grid line chart", "Delta chart", "Single value", "List", "Table"];
 
 		for (let i=0; i<formatOptionsArray.length; i++) {
 			const option = document.createElement("option");
@@ -893,7 +891,7 @@ class Monitor extends Window {
 			complementingBox.style.gridArea = "2 / 3 / 2 / 5";
 			optionsBox.appendChild(complementingBox);
 			complementingBox.appendChild(complementingInput);
-			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing mode");
+			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing");
 
 			const dynamicBox = document.createElement("div");
 			dynamicBox.style.gridArea = "3 / 3 / 3 / 5";
@@ -901,6 +899,8 @@ class Monitor extends Window {
 			dynamicBox.appendChild(dynamicInput);
 			this.AddCheckBoxLabel(dynamicBox, dynamicInput, "Dynamic limits");
 
+			queryInput.style.height = "52px";
+			queryInput.style.gridArea = "8 / 1 / 9 / 4";
 			innerBox.append(queryInput);
 
 			let words = queryInput.value.split(" ");
@@ -1060,7 +1060,7 @@ class Monitor extends Window {
 			innerBox.style.border = "none";
 			innerBox.style.display = "grid";
 			innerBox.style.gridTemplateColumns = "40% 16px auto";
-			innerBox.style.gridTemplateRows = "32px 8px auto 96px 8px 64px 8px 64px";
+			innerBox.style.gridTemplateRows = "auto";
 
 			templatesTab.style.background = "";
 			templatesTab.style.backgroundColor = "";
@@ -1068,6 +1068,105 @@ class Monitor extends Window {
 			wmiTab.style.backgroundColor = "";
 			snmpTab.style.background = "linear-gradient(90deg, transparent 80%, var(--clr-pane) 100%)";
 			snmpTab.style.backgroundColor = "var(--clr-pane)";
+
+			const snmpBox = document.createElement("div");
+			snmpBox.style.display = "grid";
+			snmpBox.style.gridArea = "1 / 1";
+			snmpBox.style.margin = "8px 20px";
+			snmpBox.style.alignItems = "center";
+			snmpBox.style.gridTemplateColumns = "88 auto";
+			snmpBox.style.gridTemplateRows = "repeat(6, 32px)";
+
+			const snmpVersionLabel = document.createElement("div");
+			snmpVersionLabel.textContent = "Version:";
+			snmpVersionLabel.style.gridArea = "1 / 1";
+			const snmpVersionInput = document.createElement("select");
+			snmpVersionInput.style.gridArea = "1 / 2";
+			snmpVersionInput.style.minWidth = "50px";
+			snmpBox.append(snmpVersionLabel, snmpVersionInput);
+
+			const versionOptions = [1, 2, 3];
+			for (let i=0; i<versionOptions.length; i++) {
+				const option = document.createElement("option");
+				option.value = versionOptions[i];
+				option.textContent = `Version ${versionOptions[i]}`;
+				snmpVersionInput.appendChild(option);
+			}
+
+			const snmpAuthLabel = document.createElement("div");
+			snmpAuthLabel.textContent = "Community:";
+			snmpAuthLabel.style.gridArea = "2 / 1";
+			const snmpCommunityInput = document.createElement("select");
+			snmpCommunityInput.style.minWidth = "50px";
+			snmpCommunityInput.style.gridArea = "2 / 2";
+			const snmpCredentialsInput = document.createElement("select");
+			snmpCredentialsInput.style.minWidth = "50px";
+			snmpCredentialsInput.style.gridArea = "2 / 2";
+			snmpCredentialsInput.style.display = "none";
+			snmpBox.append(snmpAuthLabel, snmpCommunityInput, snmpCredentialsInput);
+
+			const oidLabel = document.createElement("div");
+			oidLabel.textContent = "OID:";
+			oidLabel.style.gridArea = "3 / 1";
+			snmpBox.append(oidLabel);
+
+			queryInput.style.minWidth = "50px";
+			queryInput.style.height = "84px";
+			queryInput.style.gridArea = "3 / 2 / 6 / 2";
+			snmpBox.append(queryInput);
+
+			const optionsBox = document.createElement("div");
+			optionsBox.style.display = "grid";
+			optionsBox.style.gridArea = "1 / 3";
+			optionsBox.style.margin = "8px 20px";
+			optionsBox.style.alignItems = "center";
+			optionsBox.style.gridTemplateColumns = "64px auto 20% auto";
+			optionsBox.style.gridTemplateRows = "repeat(6, 32px)";
+
+			const nameLabel = document.createElement("div");
+			nameLabel.textContent = "Name:";
+			nameLabel.style.gridArea = "1 / 1 / 1 / 2";
+			optionsBox.append(nameLabel, nameInput);
+
+			const formatLabel = document.createElement("div");
+			formatLabel.textContent = "Format:";
+			formatLabel.style.gridArea = "2 / 1 / 2 / 2";
+			optionsBox.append(formatLabel, formatInput);
+
+			const unitLabel = document.createElement("div");
+			unitLabel.textContent = "Unit:";
+			unitLabel.style.gridArea = "3 / 1 / 3 / 2";
+			optionsBox.append(unitLabel, unitInput);
+
+			const valueLabel = document.createElement("div");
+			valueLabel.textContent = "Value:";
+			valueLabel.style.gridArea = "4 / 1 / 4 / 2";
+			optionsBox.append(valueLabel, valueInput);
+
+			const peakLabel = document.createElement("div");
+			peakLabel.textContent = "Max:";
+			peakLabel.style.gridArea = "5 / 1 / 5 / 2";
+			optionsBox.append(peakLabel, maxInput);
+
+			const showPeakBox = document.createElement("div");
+			showPeakBox.style.gridArea = "1 / 3 / 1 / 5";
+			optionsBox.appendChild(showPeakBox);
+			showPeakBox.appendChild(showPeakInput);
+			this.AddCheckBoxLabel(showPeakBox, showPeakInput, "Show peak value");
+
+			const complementingBox = document.createElement("div");
+			complementingBox.style.gridArea = "2 / 3 / 2 / 5";
+			optionsBox.appendChild(complementingBox);
+			complementingBox.appendChild(complementingInput);
+			this.AddCheckBoxLabel(complementingBox, complementingInput, "Complementing");
+
+			const dynamicBox = document.createElement("div");
+			dynamicBox.style.gridArea = "3 / 3 / 3 / 5";
+			optionsBox.appendChild(dynamicBox);
+			dynamicBox.appendChild(dynamicInput);
+			this.AddCheckBoxLabel(dynamicBox, dynamicInput, "Dynamic limits");
+
+			innerBox.append(snmpBox, optionsBox);
 		};
 
 		okButton.onclick = ()=> {

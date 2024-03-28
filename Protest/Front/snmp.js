@@ -56,7 +56,7 @@ class Snmp extends Window {
 		if (this.params.version) this.versionInput.value = this.params.version;
 		snmpInput.appendChild(this.versionInput);
 
-		const versionOptions = [1, 2, 3];
+		const versionOptions = [1,2,3];
 		for (let i=0; i<versionOptions.length; i++) {
 			const option = document.createElement("option");
 			option.value = versionOptions[i];
