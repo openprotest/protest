@@ -2,6 +2,16 @@
 <h1 align="center">Pro-test</h1>
 <h2 align="center">A management base for System Admins</h2>
 
+### Continuous Integration
+![back-end](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-cs.yml?label=back-end&style=for-the-badge)
+![front-end](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-js.yml?label=front-end&style=for-the-badge)
+
+### Release
+![license](https://img.shields.io/github/license/openprotest/protest?style=for-the-badge)
+![release](https://img.shields.io/github/release/openprotest/protest?style=for-the-badge)
+![commits since](https://img.shields.io/github/commits-since/openprotest/protest/latest?style=for-the-badge)
+![downloads](https://img.shields.io/github/downloads/openprotest/protest/total?style=for-the-badge)
+
 ### Platform support
 ![windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&style=for-the-badge)
 ![linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black&style=for-the-badge)
