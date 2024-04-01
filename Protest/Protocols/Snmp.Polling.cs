@@ -2,13 +2,16 @@
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
 using Renci.SshNet.Messages;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace Protest.Protocols.Snmp;
 
@@ -34,8 +37,12 @@ internal static class Polling {
         parameters.TryGetValue("community", out string communityString);
         parameters.TryGetValue("timeout",   out string timeoutString);
 
-        if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+        IPAddress targetIp;
+        try {
+            targetIp = System.Net.Dns.GetHostEntry(target).AddressList[0];
+        }
+        catch {
+            return "{\"error\":\"No such host is known\"}"u8.ToArray();
         }
         IPEndPoint endpoint = new IPEndPoint(targetIp, 161);
 
@@ -68,34 +75,97 @@ internal static class Polling {
                 Tools.SnmpProfiles.Profile[] profiles = Tools.SnmpProfiles.Load();
                 Tools.SnmpProfiles.Profile profile = profiles.First(o=> o.guid.ToString() == credentialsString);
 
-                OctetString username = new OctetString(profile.username);
-                OctetString context = new OctetString(profile.context);
-                string authenticationPassphrase = profile.authPassword;
-                string privacyPassphrase = profile.authPassword;
+                if (operation == SnmpOperation.Set) {
+                    parameters.TryGetValue("value", out string valueString);
+                    if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
+                    OctetString data = new OctetString(valueString);
+
+                    IList<Variable> result = SnmpRequestV3(endpoint, timeout, profile, oidArray, operation, data);
+                    return ParseResponse(result);
+                }
+                else {
+                    IList<Variable> result = SnmpRequestV3(endpoint, timeout, profile, oidArray, operation);
+                    return ParseResponse(result);
+                }
+            }
+            else {
+                if (operation == SnmpOperation.Set) {
+                    parameters.TryGetValue("value", out string valueString);
+                    if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
+                    OctetString data = new OctetString(valueString);
+
+                    IList<Variable> result = SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
+                    return ParseResponse(result);
+                }
+                else {
+                    IList<Variable> result = SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation);
+                    return ParseResponse(result);
+                }
+            }
+        }
+        catch (Exception ex) {
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
+        }
+    }
+
+    public static IList<Variable> SnmpRequestV1V2(IPEndPoint endpoint, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+        if (operation == SnmpOperation.Get) {
+            IList<Variable> oidList = oidArray
+                        .Select(o=> new Variable(new ObjectIdentifier(o.Trim())))
+                        .ToList();
+
+            IList<Variable> result = Messenger.Get(version, endpoint, community, oidList, timeout);
+            return result;
+        }
+        else if (operation == SnmpOperation.Set) {
+            IList<Variable> oidList = oidArray
+                        .Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data))
+                        .ToList();
+
+            IList<Variable> result = Messenger.Set(version, endpoint, community, oidList, timeout);
+            return result;
+        }
+        else if (operation == SnmpOperation.Walk) {
+            ObjectIdentifier oid = new ObjectIdentifier(oidArray[0]);
+
+            List<Variable> result = new List<Variable>();
+            int count = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
+            return result;
+        }
+        else {
+            throw new Exception("Invalid operation");
+        }
+    }
+
+    public static IList<Variable> SnmpRequestV3(IPEndPoint endpoint, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+        OctetString username = new OctetString(profile.username);
+        OctetString context = new OctetString(profile.context);
+        string authenticationPassphrase = profile.authPassword;
+        string privacyPassphrase = profile.authPassword;
 
 #pragma warning disable CS0618 //warn end user
-                IAuthenticationProvider authenticationProvider = profile.authAlgorithm switch {
-                    Tools.SnmpProfiles.AuthenticationAlgorithm.MD5    => new MD5AuthenticationProvider(new OctetString(authenticationPassphrase)),
-                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA1   => new SHA1AuthenticationProvider(new OctetString(authenticationPassphrase)),
-                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA256 => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
-                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA384 => new SHA384AuthenticationProvider(new OctetString(authenticationPassphrase)),
-                    Tools.SnmpProfiles.AuthenticationAlgorithm.SHA512 => new SHA512AuthenticationProvider(new OctetString(authenticationPassphrase)),
-                    _ => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
-                };
-                IPrivacyProvider privacyProvider = profile.privacyAlgorithm switch {
-                    Tools.SnmpProfiles.PrivacyAlgorithm.DES    => new DESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-                    Tools.SnmpProfiles.PrivacyAlgorithm.AES128 => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-                    Tools.SnmpProfiles.PrivacyAlgorithm.AES192 => new AES192PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-                    Tools.SnmpProfiles.PrivacyAlgorithm.AES256 => new AES256PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-                    _ => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-                };
+        IAuthenticationProvider authenticationProvider = profile.authAlgorithm switch {
+            Tools.SnmpProfiles.AuthenticationAlgorithm.MD5    => new MD5AuthenticationProvider(new OctetString(authenticationPassphrase)),
+            Tools.SnmpProfiles.AuthenticationAlgorithm.SHA1   => new SHA1AuthenticationProvider(new OctetString(authenticationPassphrase)),
+            Tools.SnmpProfiles.AuthenticationAlgorithm.SHA256 => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
+            Tools.SnmpProfiles.AuthenticationAlgorithm.SHA384 => new SHA384AuthenticationProvider(new OctetString(authenticationPassphrase)),
+            Tools.SnmpProfiles.AuthenticationAlgorithm.SHA512 => new SHA512AuthenticationProvider(new OctetString(authenticationPassphrase)),
+            _ => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
+        };
+        IPrivacyProvider privacyProvider = profile.privacyAlgorithm switch {
+            Tools.SnmpProfiles.PrivacyAlgorithm.DES    => new DESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.AES128 => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.AES192 => new AES192PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.AES256 => new AES256PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+            _ => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+        };
 #pragma warning restore CS0618
 
-                Discovery discovery = Messenger.GetNextDiscovery(SnmpType.GetRequestPdu);
-                ReportMessage report = discovery.GetResponse(timeout, endpoint);
+        Discovery discovery = Messenger.GetNextDiscovery(SnmpType.GetRequestPdu);
+        ReportMessage report = discovery.GetResponse(timeout, endpoint);
 
-                if (operation == SnmpOperation.Get) {
-                    GetRequestMessage request = new GetRequestMessage(
+        if (operation == SnmpOperation.Get) {
+            GetRequestMessage request = new GetRequestMessage(
                         VersionCode.V3,
                         Messenger.NextMessageId,
                         Messenger.NextRequestId,
@@ -106,14 +176,10 @@ internal static class Polling {
                         Messenger.MaxMessageSize,
                         report);
 
-                    return ParseResponse(request.Variables());
-                }
-                else if (operation == SnmpOperation.Set) {
-                    parameters.TryGetValue("value", out string valueString);
-                    if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
-                    OctetString data = new OctetString(valueString);
-
-                    SetRequestMessage request = new SetRequestMessage(
+            return request.Variables();
+        }
+        else if (operation == SnmpOperation.Set) {
+            SetRequestMessage request = new SetRequestMessage(
                         VersionCode.V3,
                         Messenger.NextMessageId,
                         Messenger.NextRequestId,
@@ -124,50 +190,13 @@ internal static class Polling {
                         Messenger.MaxMessageSize,
                         report);
 
-                    return ParseResponse(request.Variables());
-                }
-                else if (operation == SnmpOperation.Walk) {
-                    return "{\"error\":\"Operarion not supported\"}"u8.ToArray();
-                }
-                else {
-                    return "{\"error\":\"Invalid operation\"}"u8.ToArray();
-                }
-            }
-            else {
-                if (operation == SnmpOperation.Get) {
-                    IList<Variable> oidList = oidArray
-                        .Select(o=> new Variable(new ObjectIdentifier(o.Trim())))
-                        .ToList();
-
-                    IList<Variable> result = Messenger.Get(version, endpoint, community, oidList, timeout);
-                    return ParseResponse(result);
-                }
-                else if (operation == SnmpOperation.Set) {
-                    parameters.TryGetValue("value", out string valueString);
-                    if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
-                    OctetString data = new OctetString(valueString);
-
-                    IList<Variable> oidList = oidArray
-                        .Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data))
-                        .ToList();
-
-                    IList<Variable> result = Messenger.Set(version, endpoint, community, oidList, timeout);
-                    return ParseResponse(result);
-                }
-                else if (operation == SnmpOperation.Walk) {
-                    ObjectIdentifier oid = new ObjectIdentifier(oidArray[0]);
-
-                    List<Variable> result = new List<Variable>();
-                    int count = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
-                    return ParseResponse(result);
-                }
-                else {
-                    return "{\"error\":\"Invalid operation\"}"u8.ToArray();
-                }
-            }
+            return request.Variables();
         }
-        catch (Exception ex) {
-            return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
+        else if (operation == SnmpOperation.Walk) {
+            throw new Exception("Operation not supported");
+        }
+        else {
+            throw new Exception("Invalid operation");
         }
     }
 

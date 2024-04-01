@@ -12,8 +12,8 @@ using System.Net.NetworkInformation;
 using System.Management;
 using System.Runtime.Versioning;
 using System.Diagnostics.CodeAnalysis;
-using System.DirectoryServices.ActiveDirectory;
 using Protest.Http;
+using System.Diagnostics.Metrics;
 
 namespace Protest.Tools;
 
@@ -33,6 +33,8 @@ internal static class Monitor {
         public int index;
         public Action action;
         public string value;
+        public int version;
+        public string auth;
     }
 
     public struct Answer {
@@ -40,10 +42,16 @@ internal static class Monitor {
         public Dictionary<string, List<string>> data;
     }
 
+    private static readonly object mutex;
+
     private static JsonSerializerOptions actionSerializerOptions;
     private static JsonSerializerOptions answerSerializerOptions;
 
+    private static SnmpProfiles.Profile[] snmpProfiles;
+
     static Monitor() {
+        mutex = new object();
+
         actionSerializerOptions = new JsonSerializerOptions();
         actionSerializerOptions.Converters.Add(new ActionJsonConverter());
 
@@ -51,13 +59,17 @@ internal static class Monitor {
         answerSerializerOptions.Converters.Add(new AnswerJsonConverter());
     }
 
-    private static async Task WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
-        if (ws.State != WebSocketState.Open) { return; }
-        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
+        lock (mutex) {
+            if (ws.State != WebSocketState.Open) { return; }
+            ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
     }
-    private static async Task WsWriteText(WebSocket ws, byte[] bytes) {
-        if (ws.State != WebSocketState.Open) { return; }
-        await ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+    private static void WsWriteText(WebSocket ws, byte[] bytes) {
+        lock (mutex) {
+            if (ws.State != WebSocketState.Open) { return; }
+            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
@@ -78,14 +90,16 @@ internal static class Monitor {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
             return;
         }
+        
+        snmpProfiles = SnmpProfiles.Load();
 
         string target = null!;
         bool paused = false;
         bool ping = true;
         int interval = 1000;
-        ConcurrentDictionary<int, Query> wmi = new ConcurrentDictionary<int, Query>();
-        ConcurrentDictionary<int, Query> snmp = new ConcurrentDictionary<int, Query>();
+        ConcurrentDictionary<int, Query> queries = new ConcurrentDictionary<int, Query>();
         byte[] buff = new byte[2048];
+        IPEndPoint snmpEndpoint = null;
 
         try {
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -105,9 +119,13 @@ internal static class Monitor {
                 target = hostnameAttribute?.value.Split(";")[0].Trim();
             }
             else {
-                await WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
+                WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
                 await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 return;
+            }
+
+            if (IPAddress.TryParse(target, out IPAddress targetIP)) {
+                snmpEndpoint = new IPEndPoint(targetIP, 161);
             }
         }
         catch (WebSocketException) {
@@ -128,7 +146,7 @@ internal static class Monitor {
 
                 if (ping) {
                     long icmpResult = HandlePing(target, Math.Min(interval, 1000));
-                    await WsWriteText(ws, $"{{\"index\":0,\"data\":{icmpResult}}}");
+                    WsWriteText(ws, $"{{\"index\":0,\"data\":{icmpResult}}}");
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -142,25 +160,25 @@ internal static class Monitor {
         Func<Task> WmiDelegate = async () => {
             ManagementScope scope = null;
             if (!OperatingSystem.IsWindows()) {
-                await WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"WMI is not supported\"}"u8.ToArray());
+                WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"WMI is not supported\"}"u8.ToArray());
                 return;
             }
 
             new Thread(async() => {
                 await Task.Delay(2000);
                 if (scope is null) {
-                    await WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
+                    WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
                 }
             }).Start();
 
             scope = Protocols.Wmi.Scope(target);
 
             if (scope is null || !scope.IsConnected) {
-                await WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
+                WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
                 return;
             }
 
-            await WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
+            WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
 
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
@@ -169,14 +187,14 @@ internal static class Monitor {
                 }
 
                 if (scope is not null && !scope.IsConnected) {
-                    await WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
+                    WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
                     //TODO: reconnect WMI
                 }
 
                 long startTime = DateTime.UtcNow.Ticks;
 
                 if (OperatingSystem.IsWindows()) {
-                    await HandleWmi(ws, scope, wmi);
+                    HandleWmi(ws, scope, queries);
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -196,8 +214,8 @@ internal static class Monitor {
 
                 long startTime = DateTime.UtcNow.Ticks;
 
-                if (OperatingSystem.IsWindows()) {
-                    HandleSnmp(ws, snmp);
+                if (snmpEndpoint is not null) {
+                    HandleSnmp(ws, snmpEndpoint, queries);
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -252,7 +270,7 @@ internal static class Monitor {
                     break;
                 
                 case Action.addwmi:
-                    wmi.TryAdd(query.index, query);
+                    queries.TryAdd(query.index, query);
                     if (wmiThread is null) {
                         wmiThread = new Thread(() => WmiDelegate());
                         wmiThread.Start();
@@ -260,7 +278,7 @@ internal static class Monitor {
                     break;
 
                 case Action.addsnmp:
-                    snmp.TryAdd(query.index, query);
+                    queries.TryAdd(query.index, query);
                     if (smtpThread is null) {
                         smtpThread = new Thread(() => SnmpDelegate());
                         smtpThread.Start();
@@ -325,17 +343,18 @@ internal static class Monitor {
     }
 
     [SupportedOSPlatform("windows")]
-    private static async Task HandleWmi(WebSocket ws, ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
+    private static void HandleWmi(WebSocket ws, ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
         foreach (Query query in queries.Values) {
+            if (query.action != Action.addwmi) { continue; }
             try {
-                await HandleWmiQuery(ws, scope, query);
+                HandleWmiQuery(ws, scope, query);
             }
             catch  { }
         }
     }
 
     [SupportedOSPlatform("windows")]
-    async private static Task HandleWmiQuery(WebSocket ws, ManagementScope scope, Query query) {
+    private static void HandleWmiQuery(WebSocket ws, ManagementScope scope, Query query) {
         using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery(query.value)).Get();
         Dictionary<string, List<string>> data = new Dictionary<string, List<string>>();
 
@@ -365,22 +384,69 @@ internal static class Monitor {
         };
 
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<Answer>(answer, answerSerializerOptions);
-        await WsWriteText(ws, bytes);
+        WsWriteText(ws, bytes);
 
         data.Clear();
     }
 
-    private static void HandleSnmp(WebSocket ws, ConcurrentDictionary<int, Query> queries) {
-        try {
-            foreach (Query query in queries.Values) {
-                HandleSnmpQuery(query.value);
+    private static void HandleSnmp(WebSocket ws, IPEndPoint endpoint, ConcurrentDictionary<int, Query> queries) {
+        foreach (Query query in queries.Values) {
+            if (query.action != Action.addsnmp) { continue; }
+            try {
+                HandleSnmpQuery(ws, endpoint, query);
             }
+            catch { }
         }
-        catch { }
     }
 
-    private static void HandleSnmpQuery(string query) {
-        //TODO:
+    private static void HandleSnmpQuery(WebSocket ws, IPEndPoint endpoint, Query query) {
+        IList <Lextm.SharpSnmpLib.Variable> result = null;
+
+        if (query.version == 3) {
+            string credentialsGuid = query.auth;
+            if (String.IsNullOrEmpty(credentialsGuid)) {
+                return;
+            }
+            SnmpProfiles.Profile profile = snmpProfiles.First(o=> o.guid.ToString() == credentialsGuid);
+            try {
+                result = Protocols.Snmp.Polling.SnmpRequestV3(
+                    endpoint,
+                    3000,
+                    profile,
+                    new string[] { query.value },
+                    Protocols.Snmp.Polling.SnmpOperation.Get);
+            }
+            catch { }
+        }
+        else {
+            string community = String.IsNullOrEmpty(query.auth) ? "public" : query.auth;
+            try {
+                result = Protocols.Snmp.Polling.SnmpRequestV1V2(
+                    endpoint,
+                    Lextm.SharpSnmpLib.VersionCode.V2,
+                    3000,
+                    new Lextm.SharpSnmpLib.OctetString(community),
+                    new string[] { query.value },
+                    Protocols.Snmp.Polling.SnmpOperation.Get);
+            }
+            catch { }
+        }
+
+        if (result is null || result.Count == 0) return;
+
+        Dictionary<string, List<string>> data = new Dictionary<string, List<string>>() {{ "value", new List<string>() }};
+
+        for (int i = 0; i < result.Count; i++) {
+            data["value"].Add(result[i].Data.ToString());
+        }
+
+        Answer answer = new Answer() {
+            data = data,
+            index = query.index
+        };
+
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<Answer>(answer, answerSerializerOptions);
+        WsWriteText(ws, bytes);
     }
 }
 
@@ -478,6 +544,13 @@ file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
                     Enum.TryParse<Monitor.Action>(reader.GetString(), true, out Monitor.Action act);
                     action.action = act;
                     break;
+
+                case "version":
+                    Int32.TryParse(reader.GetString(), out int version);
+                    action.version = version;
+                    break;
+
+                case "auth": action.auth = reader.GetString(); break;
                 }
             }
         }
@@ -486,14 +559,18 @@ file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
     }
 
     public override void Write(Utf8JsonWriter writer, Monitor.Query value, JsonSerializerOptions options) {
-        ReadOnlySpan<char> _action = "action".AsSpan();
-        ReadOnlySpan<char> _value  = "value".AsSpan();
-        ReadOnlySpan<char> _index  = "index".AsSpan();
+        ReadOnlySpan<char> _action   = "action".AsSpan();
+        ReadOnlySpan<char> _value    = "value".AsSpan();
+        ReadOnlySpan<char> _index    = "index".AsSpan();
+        ReadOnlySpan<char> _version  = "version".AsSpan();
+        ReadOnlySpan<char> _auth     = "auth".AsSpan();
 
         writer.WriteStartObject();
-        writer.WriteString(_action, value.action.ToString());
-        writer.WriteString(_value, value.value);
-        writer.WriteNumber(_index, value.index);
+        writer.WriteString(_action,  value.action.ToString());
+        writer.WriteString(_value,   value.value);
+        writer.WriteNumber(_index,   value.index);
+        writer.WriteNumber(_version, value.version);
+        writer.WriteString(_auth,    value.auth);
         writer.WriteEndObject();
     }
 }

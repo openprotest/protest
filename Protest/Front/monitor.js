@@ -66,15 +66,12 @@ class Monitor extends Window {
 		this.intervalButton.onclick = ()=> this.SetInterval();
 		this.toggleConsoleButton.onclick = ()=> this.ToggleConsole();
 
-		if (this.params.chart.length === 0) {
-			this.AddChart("Ping", "icmp", { protocol:"icmp", format:"Ping chart", prefix:"RTT", unit:"ms" });
-		}
-		else { //restore charts
-			const copy = this.params.chart;
-			this.params.chart = [];
-			for (let i=0; i<copy.length; i++) {
-				this.AddChart(copy[i].name, copy[i].value, copy[i].options);
-			}
+		this.AddChart("Ping", "icmp", { protocol:"icmp", format:"Ping chart", prefix:"RTT", unit:"ms", max: 1000});
+
+		const copy = this.params.chart;
+		this.params.chart = [];
+		for (let i=0; i<copy.length; i++) {
+			this.AddChart(copy[i].name, copy[i].value, copy[i].options);
 		}
 
 		this.InitializeSubnetEmblem();
@@ -165,11 +162,29 @@ class Monitor extends Window {
 			}));
 
 			for (let i=0; i<this.params.chart.length; i++) {
-				this.socket.send(JSON.stringify({
-					action: `add${this.params.chart[i].options.protocol}`,
-					value: this.params.chart[i].value,
-					index: i
-				}));
+				if (this.params.chart[i].options.protocol === "wmi") {
+					this.socket.send(JSON.stringify({
+						action: "addwmi",
+						value: this.params.chart[i].value,
+						index: i+1
+					}));
+				}
+				else if (this.params.chart[i].options.protocol === "snmp") {
+					this.socket.send(JSON.stringify({
+						action: "addsnmp",
+						value: this.params.chart[i].value,
+						index: i+1,
+						version: this.params.chart[i].version,
+						auth: this.params.chart[i].auth
+					}));
+				}
+				else if (this.params.chart[i].options.protocol === "icmp") {
+					this.socket.send(JSON.stringify({
+						action: "addicmp",
+						value: "icmp",
+						index: 0
+					}));
+				}
 			}
 		};
 
@@ -415,7 +430,9 @@ class Monitor extends Window {
 		snmpVersionInput.style.gridArea = "1 / 2";
 		snmpVersionInput.style.minWidth = "50px";
 
-		const snmpCommunityInput = document.createElement("select");
+		const snmpCommunityInput = document.createElement("input");
+		snmpCommunityInput.type = "text";
+		snmpCommunityInput.placeholder = "public";
 		snmpCommunityInput.style.minWidth = "50px";
 		snmpCommunityInput.style.gridArea = "2 / 2";
 
@@ -437,7 +454,7 @@ class Monitor extends Window {
 				const option = document.createElement("option");
 				option.value = snmpProfiles[i].guid;
 				option.textContent = snmpProfiles[i].name;
-				snmpCommunityInput.appendChild(option);
+				snmpCredentialsInput.appendChild(option);
 			}
 		}
 
@@ -526,6 +543,19 @@ class Monitor extends Window {
 		showPeakInput.onchange = OnChange;
 		complementingInput.onchange = OnChange;
 		dynamicInput.onchange = OnChange;
+
+		snmpVersionInput.onchange = ()=>{
+			if (snmpVersionInput.value == "3") {
+				snmpCommunityInput.style.display = "none";
+				snmpCredentialsInput.style.display = "initial";
+			}
+			else {
+				snmpCommunityInput.style.display = "initial";
+				snmpCredentialsInput.style.display = "none";
+			}
+		};
+
+		snmpVersionInput.onchange();
 
 		formatInput.onchange = ()=> {
 			OnChange();
@@ -623,9 +653,6 @@ class Monitor extends Window {
 				case "snmp":
 					queryInput.value = query;
 					break;
-
-				case "icmp":
-					break;
 				}
 			};
 
@@ -636,9 +663,6 @@ class Monitor extends Window {
 					break;
 
 				case "snmp":
-					break;
-
-				case "icmp":
 					break;
 				}
 			};
@@ -808,19 +832,6 @@ class Monitor extends Window {
 			));
 
 			templatesBox.appendChild(CreateTemplate(
-				"Ping",
-				"mono/ping.svg",
-				"icmp",
-				"",
-				{
-					format: "Ping",
-					prefix: "RTT",
-					unit: "ms",
-					showPeak: true
-				}
-			));
-
-			templatesBox.appendChild(CreateTemplate(
 				"Processes",
 				"mono/console.svg",
 				"wmi",
@@ -958,8 +969,9 @@ class Monitor extends Window {
 
 			if (templateOptions.protocol !== "wmi") {
 				queryInput.value = "";
-
 			}
+
+			templateOptions.protocol = "wmi";
 
 			let words = queryInput.value.split(" ");
 			let className = null;
@@ -973,9 +985,9 @@ class Monitor extends Window {
 			}
 
 			const query = queryInput.value.toLocaleLowerCase();
-			let select_index = query.indexOf("select");
-			let from_index = query.indexOf("from");
-			let lastProperties = queryInput.value.substring(select_index + 6, from_index).trim();
+			let selectIndex = query.indexOf("select");
+			let fromIndex = query.indexOf("from");
+			let lastProperties = queryInput.value.substring(selectIndex + 6, fromIndex).trim();
 			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim().toLowerCase());
 
 			valueInput.textContent = "";
@@ -1214,22 +1226,39 @@ class Monitor extends Window {
 			if (templateOptions.protocol !== "snmp") {
 				queryInput.value = "";
 			}
+
+			templateOptions.protocol = "snmp";
 		};
 
 		okButton.onclick = ()=> {
-			let options = {
+			let prefix;
+			if (templateOptions.protocol === "wmi") {
+				prefix = isCustomized ? "" : `${templateOptions.prefix}:`;
+			}
+			else if (templateOptions.protocol === "snmp") {
+				prefix = ""
+			}
+
+			const options = {
 				protocol: templateOptions.protocol,
-				prefix  : isCustomized ? "" : `${templateOptions.prefix}:`,
+				version : snmpVersionInput.value,
+				auth    : snmpVersionInput.value == "3" ? snmpCredentialsInput.value : snmpCommunityInput.value,
+				prefix  : prefix,
 				name    : nameInput.value,
 				format  : formatInput.value,
 				unit    : unitInput.value,
 				value   : valueInput.value.toLocaleLowerCase(),
 				min     : 0,
-				max     : maxInput.value.toLocaleLowerCase(),
+				max     : parseFloat(maxInput.value.toLocaleLowerCase()),
 				showPeak: showPeakInput.checked,
 				isComplement: complementingInput.checked,
 				isDynamic: dynamicInput.checked,
 			};
+
+			if (option.max === null || option.max.length === 0) {
+				options.max = 100;
+				option.isDynamic = true;
+			}
 
 			this.AddChart(nameInput.value, queryInput.value, options);
 
@@ -1240,20 +1269,42 @@ class Monitor extends Window {
 	}
 
 	AddChart(name, value, options) {
-		this.params.chart.push({
-			name: name,
-			value: value,
-			options: options
-		});
+		if (options.protocol === "wmi") {
+			this.params.chart.push({
+				name: name,
+				value: value,
+				options: options
+			});
+		}
+		else if (options.protocol === "snmp") {
+			this.params.chart.push({
+				name: name,
+				value: value,
+				version: options.version,
+				auth: options.auth,
+				options: options
+			});
+		}
 
 		this.chartsList.push(this.CreateChartElement(name, options));
 		
 		if (this.socket) {
-			this.socket.send(JSON.stringify({
-				action: "addwmi",
-				value: value,
-				index: this.count
-			}));
+			if (options.protocol === "wmi") {
+				this.socket.send(JSON.stringify({
+					action: "addwmi",
+					value: value,
+					index: this.count
+				}));
+			}
+			else if (options.protocol === "snmp") {
+				this.socket.send(JSON.stringify({
+					action: "addsnmp",
+					value: value,
+					index: this.count,
+					version: options.version,
+					auth: options.auth
+				}));
+			}
 		}
 
 		this.count++;
@@ -1426,7 +1477,7 @@ class Monitor extends Window {
 			if (options.showPeak && peak >=0 && valley !== peak) {
 				ctx.lineWidth = 1;
 				ctx.strokeStyle = "#C0C0C080";
-				ctx.setLineDash([3, 2]);
+				ctx.setLineDash([2, 2]);
 				
 				ctx.beginPath();
 				ctx.moveTo(0, height - height * peak / spectrum);
@@ -1510,7 +1561,7 @@ class Monitor extends Window {
 				if (options.showPeak && peak >=0 && valley !== peak) {
 					ctx[j].lineWidth = 1;
 					ctx[j].strokeStyle = "#C0C0C080";
-					ctx[j].setLineDash([3, 2]);
+					ctx[j].setLineDash([2, 2]);
 					
 					ctx[j].beginPath();
 					ctx[j].moveTo(0, height - height * peak / spectrum);
@@ -1634,7 +1685,7 @@ class Monitor extends Window {
 			if (options.showPeak && peak >=0 && valley !== peak) {
 				ctx.lineWidth = 1;
 				ctx.strokeStyle = "#C0C0C080";
-				ctx.setLineDash([3, 2]);
+				ctx.setLineDash([2, 2]);
 				
 				ctx.beginPath();
 				ctx.moveTo(0, height - height * peak / spectrum);
