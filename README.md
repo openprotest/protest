@@ -3,8 +3,9 @@
 <h2 align="center">A management base for System Admins</h2>
 
 ### Continuous Integration
-![code-analyze](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql.yml?label=CODE-ANALYZE)
-![build](https://img.shields.io/github/actions/workflow/status/openprotest/protest/dotnet.yml?label=BUILD)
+![code-analyze](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql.yml?label=analyze%20back-end)
+![code-analyze](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-front.yml?label=analyze%20front-end)
+![build](https://img.shields.io/github/actions/workflow/status/openprotest/protest/dotnet.yml?label=build)
 
 ### Release
 ![license](https://img.shields.io/github/license/openprotest/protest)
