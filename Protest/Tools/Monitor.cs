@@ -13,7 +13,6 @@ using System.Management;
 using System.Runtime.Versioning;
 using System.Diagnostics.CodeAnalysis;
 using Protest.Http;
-using System.Diagnostics.Metrics;
 
 namespace Protest.Tools;
 

@@ -229,17 +229,17 @@ internal sealed class Cache {
         _raw += entry.bytes.LongLength;
         _gzip += entry.gzip.LongLength;
 #if DEFLATE
-            _deflate += entry.deflate.LongLength;
+        _deflate += entry.deflate.LongLength;
 #endif
 #if BROTLI
-            _brotli += entry.brotli.LongLength;
+        _brotli += entry.brotli.LongLength;
 #endif
 #endif
 
 #if SVG_TO_SVGZ //svgz
-            if (name.EndsWith(".svg") && !files.ContainsKey($"{pair.Key}z")) {
-                toSvg.Add($"{name}z", entry.gzip);
-            }
+        if (name.EndsWith(".svg") && !files.ContainsKey($"{pair.Key}z")) {
+            toSvg.Add($"{name}z", entry.gzip);
+        }
 #endif
 
 #if SVG_TO_LIGHT
@@ -254,11 +254,10 @@ internal sealed class Cache {
                 cache.AddOrUpdate(lightName, key => lightEntry, (key, existingValue) => lightEntry);
 
 #if SVG_TO_SVGZ //svgz
-                    if (!files.ContainsKey($"{name}z?light")) {
-                        toSvg.Add($"{name}z?light", lightEntry.gzip);
-                    }
+                if (!files.ContainsKey($"{name}z?light")) {
+                    toSvg.Add($"{name}z?light", lightEntry.gzip);
+                }
 #endif
-
             }
         }
 #endif
