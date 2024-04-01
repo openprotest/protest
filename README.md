@@ -3,7 +3,7 @@
 <h2 align="center">A management base for System Admins</h2>
 
 ### Continuous Integration
-![back-end](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-cs.yml?label=back-end&style=for-the-badge)
+![build](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-cs.yml?label=build&style=for-the-badge)
 ![front-end](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-js.yml?label=front-end&style=for-the-badge)
 
 ### Release
