@@ -3,19 +3,19 @@
 <h2 align="center">A management base for System Admins</h2>
 
 ### Continuous Integration
-![build](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-cs.yml?label=build&style=for-the-badge)
-![front-end](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql-js.yml?label=front-end&style=for-the-badge)
+![code-analyze](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql.yml?label=CODE-ANALYZE)
+![build](https://img.shields.io/github/actions/workflow/status/openprotest/protest/dotnet.yml?label=BUILD)
 
 ### Release
-![license](https://img.shields.io/github/license/openprotest/protest?style=for-the-badge)
-![release](https://img.shields.io/github/release/openprotest/protest?style=for-the-badge)
-![commits since](https://img.shields.io/github/commits-since/openprotest/protest/latest?style=for-the-badge)
-![downloads](https://img.shields.io/github/downloads/openprotest/protest/total?style=for-the-badge)
+![license](https://img.shields.io/github/license/openprotest/protest)
+![release](https://img.shields.io/github/release/openprotest/protest)
+![commits since](https://img.shields.io/github/commits-since/openprotest/protest/latest)
+![downloads](https://img.shields.io/github/downloads/openprotest/protest/total)
 
 ### Platform support
-![windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&style=for-the-badge)
-![linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black&style=for-the-badge)
-![macos](https://shields.io/badge/MacOS-777?logo=Apple&style=for-the-badge)
+![windows](https://img.shields.io/badge/Windows-0078D6?logo=windows)
+![linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
+![macos](https://shields.io/badge/MacOS-777?logo=Apple)
 
 ### This repository contains the source code for:
   * **Protest:** The front-end and back-end workings.
@@ -46,5 +46,5 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid=72f5bca3-7
 * *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
 
 ### Sponsor:
-*[![Sponsor](https://img.shields.io/badge/Sponsor%20on%20GitHub-374046?style=for-the-badge&logo=github)](https://github.com/sponsors/veniware)*
-*[![Donate](https://img.shields.io/badge/Donate-00457C?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/veniware)*
+*[![Sponsor](https://img.shields.io/badge/Sponsor%20on%20GitHub-374046?logo=github)](https://github.com/sponsors/veniware)*
+*[![Donate](https://img.shields.io/badge/Donate-00457C?logo=paypal)](https://www.paypal.com/paypalme/veniware)*

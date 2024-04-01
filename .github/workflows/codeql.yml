@@ -1,4 +1,4 @@
-name: "CodeQL: C#"
+name: "CodeQL (C# and JS)"
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze code
 
     runs-on: ${{ matrix.os }}
 
@@ -22,8 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest] # ubuntu-latest, macos-latest
-        language: [ 'csharp' ]
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
+        language: [ 'csharp', 'javascript' ]
 
     steps:
     - name: Checkout repository
