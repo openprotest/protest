@@ -1,7 +1,6 @@
 ﻿using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
-using Renci.SshNet.Messages;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;

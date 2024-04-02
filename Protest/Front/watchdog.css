@@ -82,6 +82,7 @@
 	top: 48px;
 	bottom: 4px;
 	text-align: center;
+	overflow-x: hidden;
 	overflow-y: auto;
 }
 

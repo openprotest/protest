@@ -1172,7 +1172,7 @@ class Watchdog extends Window {
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
 		const high = this.utcToday + Watchdog.DAY_TICKS;
-		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
+		let low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - daysInViewport * Watchdog.DAY_TICKS;
 
 		let delta = this.offset / this.dayPixels;
 		if (delta > 1) {
@@ -1193,13 +1193,23 @@ class Watchdog extends Window {
 		}
 
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
+			const dateHours = new Date(date).getHours();
+			if (dateHours > 12) {
+				date += (24 - dateHours) * Watchdog.HOUR_TICKS;
+			}
+			else {
+				date -= dateHours * Watchdog.HOUR_TICKS;
+			}
+
 			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right < -this.dayPixels*2) break;
 
 			let day = new Date(date);
 			let dayString = `${day.getFullYear()}${`${day.getMonth()+1}`.padStart(2,"0")}${`${day.getDate()}`.padStart(2,"0")}`;
 
-			if (!(date in this.cache)) { this.cache[date] = {}; }
+			if (!(date in this.cache)) {
+				this.cache[date] = {};
+			}
 
 			for (let file in this.watchers) {
 				if (file in this.cache[date]) {
@@ -1242,6 +1252,8 @@ class Watchdog extends Window {
 			previous[watcher.element.childNodes[2].childNodes[i].getAttribute("date")] = watcher.element.childNodes[2].childNodes[i];
 		}
 
+		console.log(watcher);
+
 		watcher.element.childNodes[2].textContent = "";
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
@@ -1249,6 +1261,14 @@ class Watchdog extends Window {
 		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport+1) * Watchdog.DAY_TICKS;
 
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
+			const dateHours = new Date(date).getHours();
+			if (dateHours > 12) {
+				date += (24 - dateHours) * Watchdog.HOUR_TICKS;
+			}
+			else {
+				date -= dateHours * Watchdog.HOUR_TICKS;
+			}
+
 			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels) break;
 
@@ -1436,6 +1456,14 @@ class Watchdog extends Window {
 		const low = this.utcToday - (this.offset - this.offset % this.dayPixels) / this.dayPixels * Watchdog.DAY_TICKS - (daysInViewport + 1) * Watchdog.DAY_TICKS;
 
 		for (let date = low; date < high; date += Watchdog.DAY_TICKS) {
+			const dateHours = new Date(date).getHours();
+			if (dateHours > 12) {
+				date += (24 - dateHours) * Watchdog.HOUR_TICKS;
+			}
+			else {
+				date -= dateHours * Watchdog.HOUR_TICKS;
+			}
+			
 			let right = (this.utcToday - date - this.timezoneOffset) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels*2) break;
 
