@@ -88,7 +88,14 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
-        bytes = Minify(bytes);
+        if ( filePath.EndsWith(".htm") ||
+             filePath.EndsWith(".html") ||
+             filePath.EndsWith(".svg") ||
+             filePath.EndsWith(".css") ||
+             filePath.EndsWith(".js")) {
+            
+            bytes = Minify(bytes, false);
+        }
 
         MemoryStream ms = new MemoryStream();
         using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
@@ -97,7 +104,7 @@ public class Generator : IIncrementalGenerator {
 
         return ms.ToArray();
     }
-    public static byte[] Minify(byte[] bytes) {
+    public static byte[] Minify(byte[] bytes, bool softMinify) {
         string text = Encoding.Default.GetString(bytes);
         StringBuilder result = new StringBuilder();
 
@@ -105,9 +112,11 @@ public class Generator : IIncrementalGenerator {
 
         foreach (string line in lines) {
             string trimmedLine = line.Trim();
-            if (string.IsNullOrEmpty(trimmedLine)) continue;
+            if (string.IsNullOrEmpty(trimmedLine))
+                continue;
 
-            if (trimmedLine.StartsWith("//")) continue;
+            if (trimmedLine.StartsWith("//"))
+                continue;
 
             int commentIndex = trimmedLine.IndexOf("//");
             if (commentIndex >= 0 && !trimmedLine.Contains("://")) {
@@ -132,7 +141,12 @@ public class Generator : IIncrementalGenerator {
             trimmedLine = trimmedLine.Replace("; ", ";")
                                      .Replace(": ", ":");
 
-            result.Append(trimmedLine);
+            if (softMinify) {
+                result.AppendLine(trimmedLine);
+            }
+            else {
+                result.Append(trimmedLine);
+            }
         }
 
         int startIndex, endIndex;
