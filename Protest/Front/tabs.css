@@ -97,7 +97,7 @@
 
 @container tabs-container (max-width: 720px) {
 	.tabs-box {
-		width: 45px;
+		width: 46px;
 	}
 	.tabs-box > button > div:nth-child(n+2) {
 		visibility: hidden;

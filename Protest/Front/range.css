@@ -40,7 +40,11 @@ input[type="range"]:disabled {
 	box-shadow: var(--clr-control) 0 0 0 2px inset !important;
 }
 
-input[type="range"]:disabled::-webkit-slider-thumb,
+input[type="range"]:disabled::-webkit-slider-thumb {
+	background-color: var(--clr-control) !important;
+	box-shadow: none;
+}
+
 input[type="range"]:disabled::-moz-range-thumb {
 	background-color: var(--clr-control) !important;
 	box-shadow: none;

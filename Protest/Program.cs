@@ -32,7 +32,7 @@ internal class Program {
         Console.WriteLine(@"  |  __/ '__/ _ \___| __/ _ \/ __| __|");
         Console.WriteLine(@"  | |  | | | (_) |  | ||  __/\__ \ |_");
         Console.WriteLine(@"  \_|  |_|  \___/   \__ \___||___/\__|");
-        Console.WriteLine($"{Data.VersionToString(),38}");
+        Console.WriteLine($"{Data.VersionToString(), 38}");
         Console.WriteLine();
 
 #if DEBUG

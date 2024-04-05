@@ -278,14 +278,14 @@ const MENU = {
 		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:params=> new Settings("smtp") },
 		{ t:"SNMP settings", i:"mono/snmp.svg?light",       g:"manage", h:true,  f:params=> new Settings("snmp") },
 
-		{ t:"ACL",           i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
-		{ t:"Open sessions", i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },
-
 		{ t:"Personalize",    i:"mono/personalize.svg?light", g:"manage", h:false, f:params=> new Personalize() },
 		{ t:"Appearance",     i:"mono/tv.svg?light",          g:"manage", h:true,  f:params=> new Personalize("appearance") },
 		{ t:"Reginal format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:params=> new Personalize("region") },
 		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Personalize("session") },
 		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:params=> new Personalize("agent") },
+
+		{ t:"ACL",           i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
+		{ t:"Open sessions", i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },
 
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:params=> new Automation(), k:"" },
 

@@ -539,7 +539,7 @@
 	}
 }
 
-@media only screen and (max-height: 400px) {
+@media only screen and (max-height: 440px) {
 	#menufilter {
 		opacity: 0 !important;
 		visibility: hidden !important;
