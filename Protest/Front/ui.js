@@ -634,6 +634,14 @@ const MENU = {
 		menubox.style.visibility = MENU.isOpen ? "visible" : "hidden";
 		cap.style.visibility = MENU.isOpen ? "visible" : "hidden";
 
+		if (!MENU.isDetached) {
+			menubox.style.left = "20px";
+			menubox.style.top = "25%";
+			menubox.style.bottom = "20px";
+			menubox.style.transform = MENU.isOpen ? "none" : "translateY(100%)";
+			return;
+		}
+
 		let left = menubutton.style.left ? parseInt(menubutton.style.left) : 0;
 
 		if (left < 10) {
@@ -647,7 +655,6 @@ const MENU = {
 			menubox.style.top = "20px";
 			menubox.style.bottom = "20px";
 			menubox.style.transform = MENU.isOpen ? "none" : "translateX(100%)";
-
 		}
 		else {
 			menubox.style.left = `max(20px, min(calc(${left}% - var(--sidemenu-width) / 2) + 32px, calc(100% - var(--sidemenu-width) - 20px)))`;
