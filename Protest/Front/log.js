@@ -104,7 +104,7 @@ class Log extends Window {
 		this.ListTodaysLog();
 	}
 
-	PopOut() { //override
+	PopOut() { //overrides
 		const unPopButton = super.PopOut();
 
 		this.opaqueBox.style.visibility = "hidden";

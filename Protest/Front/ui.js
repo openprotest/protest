@@ -289,10 +289,10 @@ const MENU = {
 
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:params=> new Automation(), k:"" },
 
-		//{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:params=> {} },
+		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:params=> new Backup() },
 		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:params=> new Log(params) },
-		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true, f:params=> new About("update") },
-		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true, f:params=> new About("updatemod") },
+		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true,  f:params=> new About("update") },
+		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true,  f:params=> new About("updatemod") },
 		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:params=> new About("about") },
 		{ t:"Legal",          i:"mono/law.svg?light",         g:"manage", h:true,  f:params=> new About("legal") },
 

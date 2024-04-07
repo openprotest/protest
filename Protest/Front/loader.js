@@ -117,6 +117,7 @@ const LOADER = {
 		"cameratester.js",
 		"screencapture.js",
 		"automation.js",
+		"backup.js",
 		"log.js"
 	],
 
@@ -146,13 +147,15 @@ const LOADER = {
 			loadingbar.style.width = 100 * ++count / total + "%";
 
 			if (LOADER.baseStyles.length + LOADER.baseScripts.length === count) { //load primary
-				for (let i = 0; i < LOADER.primaryScripts.length; i++)
+				for (let i = 0; i < LOADER.primaryScripts.length; i++) {
 					LOADER.LoadScript(LOADER.primaryScripts[i], callbackHandle);
+				}
 			}
 			else if (LOADER.baseStyles.length + LOADER.baseScripts.length + LOADER.primaryScripts.length === count) { //load secondary
 				UI.Initialize();
-				for (let i = 0; i < LOADER.secondaryScripts.length; i++)
+				for (let i = 0; i < LOADER.secondaryScripts.length; i++) {
 					LOADER.LoadScript(LOADER.secondaryScripts[i], callbackHandle);
+				}
 			}
 			else if (LOADER.baseStyles.length + LOADER.baseScripts.length + LOADER.primaryScripts.length + LOADER.secondaryScripts.length === count) { //load tertiary
 				for (let i = 0; i < LOADER.tertiaryScripts.length; i++)
@@ -173,11 +176,13 @@ const LOADER = {
 			}
 		};
 
-		for (let i = 0; i < LOADER.baseStyles.length; i++)
+		for (let i = 0; i < LOADER.baseStyles.length; i++) {
 			LOADER.LoadStyle(LOADER.baseStyles[i], callbackHandle);
+		}
 
-		for (let i = 0; i < LOADER.baseScripts.length; i++)
+		for (let i = 0; i < LOADER.baseScripts.length; i++) {
 			LOADER.LoadScript(LOADER.baseScripts[i], callbackHandle);
+		}
 	},
 
 	LoadStyle: (filename, callback)=> {
@@ -304,7 +309,7 @@ const LOADER = {
 		case "PasswordStrength" : return new PasswordStrength(command.params);
 		case "Gandalf"          : return new Gandalf(command.params);
 		case "Fetch"            : return new Fetch(command.params);
-		case "Monitor"         : return new Monitor(command.params);
+		case "Monitor"          : return new Monitor(command.params);
 
 		case "AddressBook"   : return new AddressBook(command.params);
 		case "Chat"          : return new Chat(command.params);
@@ -340,8 +345,9 @@ const LOADER = {
 		case "Settings"    : return new Settings(command.params);
 		case "Personalize" : return new Personalize(command.params);
 		case "Acl"         : return new Acl(command.params);
-		case "Automation" : return new Automation(command.params);
-		case "Log"        : return new Log(command.params);
+		case "Automation"  : return new Automation(command.params);
+		case "Backup"      : return new Backup(command.params);
+		case "Log"         : return new Log(command.params);
 		}
 	},
 

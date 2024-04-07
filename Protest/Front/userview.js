@@ -71,7 +71,7 @@ class UserView extends View {
 		}
 	}
 
-	InitializePreview() { //override
+	InitializePreview() { //overrides
 		let type = this.link.type ? this.link.type.v.toLowerCase() : "";
 
 		this.SetTitle(this.link.title ? this.link.title.v : "untitled");
@@ -80,7 +80,7 @@ class UserView extends View {
 		this.InitializeLiveStats();
 	}
 
-	InitializeSideTools() { //override
+	InitializeSideTools() { //overrides
 		super.InitializeSideTools();
 		this.sideTools.textContent = "";
 
@@ -169,7 +169,7 @@ class UserView extends View {
 		//this.liveStatsWebSockets.onerror = error=> {};
 	}
 
-	Edit(isNew = false) { //override
+	Edit(isNew = false) { //overrides
 		const fetchButton = document.createElement("button");
 		if (isNew && !this.params.copy) {
 			fetchButton.className = "view-fetch-floating-button";
@@ -244,7 +244,7 @@ class UserView extends View {
 		});
 	}
 
-	Fetch(isNew = false, forceTarget = null) { //override
+	Fetch(isNew = false, forceTarget = null) { //overrides
 		let target = null;
 		if (isNew) {
 			target = forceTarget;
@@ -370,11 +370,11 @@ class UserView extends View {
 		dialog.okButton.onclick();
 	}
 
-	Copy() { //override
+	Copy() { //overrides
 		new UserView({ copy: this.params.file });
 	}
 
-	Delete() { //override
+	Delete() { //overrides
 		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
 				const response = await fetch(`db/user/delete?file=${this.params.file}`);

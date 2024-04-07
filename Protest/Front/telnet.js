@@ -70,12 +70,12 @@ class Telnet extends Window {
 		this.ConnectDialog(this.params);
 	}
 
-	Close() { //override
+	Close() { //overrides
 		if (this.ws != null) this.ws.close();
 		super.Close();
 	}
 
-	Push(command) { //override
+	Push(command) { //overrides
 		if (command.length === 0) command = "\n";
 
 		if (command === "!!" && this.history.length === 0) return false;

@@ -59,7 +59,7 @@ class MicTester extends Window {
 		this.settingsButton.onclick = () => this.Settings();
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		this.canvas.width = this.content.clientWidth;
 		this.canvas.height = this.content.clientHeight;
 	}
@@ -485,7 +485,7 @@ class MicTester extends Window {
 		return { note: closestNote, cents: cents > 0 ? `+${cents}` : `${cents}`};
 	}
 
-	Close() { //override
+	Close() { //overrides
 		this.Stop();
 		if (!this.recorder) {
 			super.Close();

@@ -14,7 +14,7 @@ class View extends Window {
 		setTimeout(()=>this.UpdateAuthorization(), 1);
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		if (this.lastWidthValue < 1400 && this.content.clientWidth >= 1400) {
 			this.infoPane.style.display = "initial";
 			this.infoPane.append(this.liveA, this.liveB, this.liveC, this.liveD);
@@ -27,7 +27,7 @@ class View extends Window {
 		this.lastWidthValue = this.content.clientWidth;
 	}
 
-	UpdateAuthorization() { //override
+	UpdateAuthorization() { //overrides
 		super.UpdateAuthorization();
 		this.editButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes(`${this.dbTarget}s:write`);
 		this.fetchButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("fetch:write");

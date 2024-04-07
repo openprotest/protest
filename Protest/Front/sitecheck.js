@@ -151,7 +151,7 @@ class SiteCheck extends Window {
 		};
 	}
 
-	Close() { //override
+	Close() { //overrides
 		super.Close();
 		if (this.ws != null) this.ws.close();
 	}

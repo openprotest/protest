@@ -545,7 +545,7 @@ class Chat extends Window {
 		}
 	}
 
-	BringToFront() { //override
+	BringToFront() { //overrides
 		super.BringToFront();
 		if (this.blinkingDot) {
 			this.blinkingDot.style.backgroundColor = "transparent";

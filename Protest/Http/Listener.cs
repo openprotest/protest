@@ -386,6 +386,10 @@ public sealed class Listener {
 
         case "/automation/list": buffer = Tasks.Automation.ListTasks(); break;
 
+        case "/config/backup/list"  : buffer = Backup.List(); break;
+        case "/config/backup/create": buffer = Backup.Create(parameters); break;
+        case "/config/backup/delete": buffer = Backup.Delete(parameters); break;
+
         case "/config/zones/list"        : buffer = Tools.Zones.ListZones(); break;
         case "/config/zones/save"        : buffer = Tools.Zones.SaveZones(ctx); break;
         case "/config/smtpprofiles/list" : buffer = Tools.SmtpProfiles.List(); break;

@@ -8,14 +8,14 @@ public static class Data {
     public const string GUID = "72f5bca3-7752-45e8-8027-2060ebbda456"; //from Protest.csproj
     public static readonly char DELIMITER = Path.DirectorySeparatorChar;
 
-    public const string TIME_FORMAT = "HH:mm:ss";
-    public const string TIME_FORMAT_MILLI = "HH:mm:ss:fff";
-    public const string DATE_FORMAT = "dd-MM-yyyy";
-    public const string DATE_FORMAT_FILE = "yyyyMMdd";
-    public const string DATETIME_FORMAT = "ddd, dd MMM yyyy HH:mm:ss";
+    public const string TIME_FORMAT              = "HH:mm:ss";
+    public const string TIME_FORMAT_MILLI        = "HH:mm:ss:fff";
+    public const string DATE_FORMAT              = "dd-MM-yyyy";
+    public const string DATE_FORMAT_FILE         = "yyyyMMdd";
+    public const string DATETIME_FORMAT          = "ddd, dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_TIMEZONE = "ddd, dd MMM yyyy HH:mm:ss zzz";
-    public const string DATETIME_FORMAT_LONG = "dddd dd MMM yyyy HH:mm:ss";
-    public const string DATETIME_FORMAT_FILE = "yyyy-MM-dd HH:mm:ss";
+    public const string DATETIME_FORMAT_LONG     = "dddd dd MMM yyyy HH:mm:ss";
+    public const string DATETIME_FORMAT_FILE     = "yyyy-MM-dd HH:mm:ss";
 
     //pre-baked json responses:
     public static readonly ArraySegment<byte> CODE_OK  = new ArraySegment<byte>("{\"status\":\"ok\"}"u8.ToArray());
@@ -34,7 +34,7 @@ public static class Data {
     public static readonly ArraySegment<byte> CODE_OTHER_TASK_IN_PROGRESS = new ArraySegment<byte>("{\"error\":\"another task is already in progress\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_TASK_DONT_EXITSTS      = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
-    public static readonly string DIR_ROOT      = Directory.GetCurrentDirectory();
+    public static readonly string DIR_ROOT      = $"{Directory.GetCurrentDirectory()}{DELIMITER}protest";
     public static readonly string DIR_KNOWLADGE = $"{DIR_ROOT}{DELIMITER}knowledge";
     public static readonly string DIR_ACL       = $"{DIR_ROOT}{DELIMITER}acl";
     public static readonly string DIR_LOG       = $"{DIR_ROOT}{DELIMITER}log";
@@ -62,8 +62,8 @@ public static class Data {
     public static readonly string FILE_MAC          = $"{DIR_KNOWLADGE}\\mac.bin";
 
     public static readonly string FILE_ZONES          = $"{DIR_DATA}{DELIMITER}zones.json";
-    public static readonly string SMTP_PROFILES = $"{DIR_DATA}{DELIMITER}smtpprofiles.json";
-    public static readonly string SNMP_PROFILES = $"{DIR_DATA}{DELIMITER}snmpprofiles.json";
+    public static readonly string SMTP_PROFILES       = $"{DIR_DATA}{DELIMITER}smtpprofiles.json";
+    public static readonly string SNMP_PROFILES       = $"{DIR_DATA}{DELIMITER}snmpprofiles.json";
     public static readonly string FILE_NOTIFICATIONS  = $"{DIR_DATA}{DELIMITER}notifications.json";
 
     public static readonly string FILE_CONFIG = $"{DIR_ROOT}{DELIMITER}protest.cfg";

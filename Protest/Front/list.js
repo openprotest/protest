@@ -368,7 +368,7 @@ class List extends Window {
 		return findInput;
 	}
 
-	PopOut() { //override
+	PopOut() { //overrides
 		super.PopOut();
 		this.UpdateViewport(true);
 
@@ -376,7 +376,7 @@ class List extends Window {
 		this.popOutWindow.addEventListener("mousemove", event=> this.List_mousemove(event));
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		this.UpdateViewport();
 	}
 

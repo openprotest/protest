@@ -266,7 +266,7 @@ class Documentation extends Window {
 		}
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		super.AfterResize();
 		if (this.options.getBoundingClientRect().width < 260) {
 			this.options.classList.add("doc-options-collapsed");
@@ -276,7 +276,7 @@ class Documentation extends Window {
 		}
 	}
 
-	UpdateAuthorization() { //override
+	UpdateAuthorization() { //overrides
 		//super.UpdateAuthorization();
 
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("documentation:write")) {

@@ -78,7 +78,7 @@ class Monitor extends Window {
 		this.InitializeSocketConnection();
 	}
 
-	Close() { //override
+	Close() { //overrides
 		this.autoReconnect = false;
 		if (this.socket) {
 			this.socket.close();

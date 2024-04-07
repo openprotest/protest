@@ -56,7 +56,7 @@ class Automation extends List {
 		}
 	}
 
-	InflateElement(element, entry) { //override
+	InflateElement(element, entry) { //overrides
 		let icon;
 		switch (entry.name.v.toLowerCase()) {
 		case "lifeline": icon = "mono/lifeline.svg"; break;

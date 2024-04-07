@@ -220,12 +220,12 @@ class Grid extends Window {
 		return element;
 	}
 
-	PopOut() { //override
+	PopOut() { //overrides
 		super.PopOut();
 		setTimeout(()=> this.UpdateViewport(), 200);
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		this.UpdateViewport();
 	}
 

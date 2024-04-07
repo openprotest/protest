@@ -40,12 +40,12 @@ class TraceRoute extends Console {
 		});
 	}
 
-	Push(name) { //override
+	Push(name) { //overrides
 		if (!super.Push(name)) return;
 		this.Filter(name);
 	}
 
-	Close() { //override
+	Close() { //overrides
 		super.Close();
 		if (this.ws != null) this.ws.close();
 	}

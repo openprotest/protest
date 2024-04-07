@@ -60,7 +60,7 @@ class Settings extends Tabs {
 		setTimeout(()=> this.AfterResize(), 250);
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		super.AfterResize();
 		if (this.options) {
 			if (this.options.getBoundingClientRect().width < 320) {

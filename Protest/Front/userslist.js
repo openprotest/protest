@@ -45,13 +45,13 @@ class UsersList extends List {
 		});
 	}
 
-	UpdateAuthorization() { //override
+	UpdateAuthorization() { //overrides
 		super.UpdateAuthorization();
 		this.addButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
 		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
 	}
 
-	InflateElement(element, entry, type) { //override
+	InflateElement(element, entry, type) { //overrides
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
 		icon.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"})`;

@@ -39,7 +39,7 @@ internal static class Update {
 
         string data = responseMessage.Content.ReadAsStringAsync().Result;
         string[] split = data.Split('.');
-        
+
         if (split.Length >= 4) {
             return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
         }
@@ -85,7 +85,8 @@ internal static class Update {
 
 
                 if (aBytes[0] == bBytes[0]) {
-                    list[aBytes[0]].Add(new IpEntry {
+                    list[aBytes[0]].Add(new IpEntry
+                    {
                         from = aBytes,
                         to = bBytes,
                         code = fields[2].Length < 2 ? "--" : fields[2],
@@ -114,7 +115,8 @@ internal static class Update {
                             to = new byte[] { bBytes[0], bBytes[1], bBytes[2], bBytes[3] };
                         }
 
-                        list[j].Add(new IpEntry() {
+                        list[j].Add(new IpEntry()
+                        {
                             from = from,
                             to = to,
                             code = fields[2].Length < 2 ? "--" : fields[2],
@@ -250,7 +252,8 @@ internal static class Update {
                 Array.Reverse(bBytes);
 
                 if (aBytes[0] == bBytes[0]) {
-                    list[aBytes[0]].Add(new ProxyEntry {
+                    list[aBytes[0]].Add(new ProxyEntry
+                    {
                         from = aBytes,
                         to = bBytes
                     });
@@ -273,7 +276,8 @@ internal static class Update {
                             to = new byte[] { bBytes[0], bBytes[1], bBytes[2], bBytes[3] };
                         }
 
-                        list[j].Add(new ProxyEntry() {
+                        list[j].Add(new ProxyEntry()
+                        {
                             from = from,
                             to = to
                         });
@@ -414,7 +418,7 @@ internal static class Update {
         string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
 
         List<byte[]> list = new List<byte[]>();
-        
+
         foreach (string part in parts) {
             if (!part.Contains("Content-Disposition")) {
                 continue;
@@ -431,7 +435,7 @@ internal static class Update {
             }
         }
 
-        list.Sort((byte[] a, byte[] b)=> {
+        list.Sort((byte[] a, byte[] b) => {
             if (a[0] != b[0]) return a[0] - b[0];
             if (a[1] != b[1]) return a[1] - b[1];
             if (a[2] != b[2]) return a[2] - b[2];

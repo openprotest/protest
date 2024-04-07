@@ -812,7 +812,7 @@ class KeyboardTester extends Window {
 		setTimeout(()=> this.GamepadLoop(elements), 33);
 	}
 
-	Close() { //override
+	Close() { //overrides
 		super.Close();
 
 		if (this.isGamePadListening) {
@@ -822,7 +822,7 @@ class KeyboardTester extends Window {
 		}
 	}
 
-	PopOut() { //override
+	PopOut() { //overrides
 		super.PopOut();
 		this.popOutWindow.onkeydown = this.win.onkeydown;
 		this.popOutWindow.onkeyup = this.win.onkeyup;

@@ -171,22 +171,22 @@ class Ping extends Console {
 		this.content.appendChild(minimap);
 	}
 	
-	Close() { //override
+	Close() { //overrides
 		if (this.ws != null) this.ws.close();
 		super.Close();
 	}
 
-	Toggle() { //override
+	Toggle() { //overrides
 		super.Toggle();
 		setTimeout(()=> this.InvalidateRecyclerList(), WIN.ANIME_DURATION);
 	}
 
-	Minimize(force) { //override
+	Minimize(force) { //overrides
 		super.Minimize(force);
 		this.content.style.display = (this.isMinimized) ? "none" : "initial"; //hide content when minimize for faster animation.
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		this.InvalidateRecyclerList();
 	}
 
@@ -435,7 +435,7 @@ class Ping extends Console {
 		return dialog;
 	}
 
-	Push(name) { //override
+	Push(name) { //overrides
 		if (!super.Push(name)) return;
 		this.Filter(name);
 	}
@@ -791,7 +791,7 @@ class Ping extends Console {
 		}
 	}
 
-	InvalidateRecyclerList() { //override
+	InvalidateRecyclerList() { //overrides
 		for (let key in this.hashtable)
 			if (this.hashtable[key].element.offsetTop - this.list.scrollTop < -30 ||
 				this.hashtable[key].element.offsetTop - this.list.scrollTop > this.list.clientHeight) {

@@ -181,7 +181,7 @@ class DebitNotes extends Window {
 		}
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		super.AfterResize();
 		if (this.options.getBoundingClientRect().width < 550) {
 			this.options.classList.add("debit-options-collapsed");
@@ -191,7 +191,7 @@ class DebitNotes extends Window {
 		}
 	}
 
-	UpdateAuthorization() { //override
+	UpdateAuthorization() { //overrides
 		//super.UpdateAuthorization();
 
 		if (!KEEP.authorization.includes("*") && !KEEP.authorization.includes("debit notes:write")) {

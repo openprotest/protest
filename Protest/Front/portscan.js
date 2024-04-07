@@ -201,7 +201,7 @@ class PortScan extends Console {
 		});
 	}
 
-	Close() { //override
+	Close() { //overrides
 		super.Close();
 		if (this.ws != null) this.ws.close();
 	}
@@ -269,7 +269,7 @@ class PortScan extends Console {
 		return dialog;
 	}
 
-	Push(name) { //override
+	Push(name) { //overrides
 		if (!super.Push(name)) return;
 		this.Filter(name);
 	}

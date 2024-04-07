@@ -31,7 +31,7 @@ class PasswordStrength extends List {
 		this.GetEntropy();
 	}
 
-	SetupFilter() { //override
+	SetupFilter() { //overrides
 		if (!this.toolbar) return null;
 
 		const filterButton = this.AddToolbarButton(null, "mono/filter.svg?light");
@@ -137,7 +137,7 @@ class PasswordStrength extends List {
 		}
 	}
 
-	RefreshList() {
+	RefreshList() { //overrides
 		this.list.textContent = "";
 
 		let filtered = [];
@@ -189,18 +189,10 @@ class PasswordStrength extends List {
 		if (this.params.sort && this.params.sort.length > 0) {
 			let attr;
 			switch (this.params.sort) {
-			case "name":
-				attr = "name";
-				break;
-			case "strength":
-				attr = "entropy";
-				break;
-			case "modified":
-				attr = "date";
-				break;
-			case "time to crack":
-				attr = "entropy";
-				break;
+			case "name"         : attr = "name";    break;
+			case "strength"     : attr = "entropy"; break;
+			case "modified"     : attr = "date";    break;
+			case "time to crack": attr = "entropy"; break;
 			}
 
 			if (this.sortDescend) {
@@ -231,7 +223,7 @@ class PasswordStrength extends List {
 		this.OnUiReady();
 	}
 
-	UpdateViewport(force = false) {
+	UpdateViewport(force = false) { //overrides
 		if (!this.link) return;
 
 		for (let i = 0; i < this.list.childNodes.length; i++) {
@@ -255,7 +247,7 @@ class PasswordStrength extends List {
 		}
 	}
 
-	InflateElement(element, entry) {
+	InflateElement(element, entry) { //overrides
 		super.InflateElement(element, entry);
 
 		const icon = document.createElement("div");

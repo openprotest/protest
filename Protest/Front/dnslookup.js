@@ -322,7 +322,7 @@ class DnsLookup extends Console {
 		return dialog;
 	}
 
-	Push(name, type=null) { //override
+	Push(name, type=null) { //overrides
 		if (!super.Push(name)) return;
 		this.Filter(name, type);
 	}

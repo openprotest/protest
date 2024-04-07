@@ -32,7 +32,7 @@ class LocateIp extends Console {
 		});
 	}
 
-	Push(name) { //override
+	Push(name) { //overrides
 		if (!super.Push(name)) return;
 		this.Filter(name);
 	}

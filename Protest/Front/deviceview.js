@@ -131,7 +131,7 @@ class DeviceView extends View {
 		}, 180_000);
 	}
 
-	InitializePreview() { //override
+	InitializePreview() { //overrides
 		let type = this.link.type ? this.link.type.v.toLowerCase() : "";
 
 		if (this.link.name && this.link.name.v.length > 0) {
@@ -198,7 +198,7 @@ class DeviceView extends View {
 		this.emblem.appendChild(emblemInner);
 	}
 
-	InitializeSideTools() { //override
+	InitializeSideTools() { //overrides
 		super.InitializeSideTools();
 		this.sideTools.textContent = "";
 
@@ -1258,7 +1258,7 @@ class DeviceView extends View {
 		return "hsl(92, 66%, 50%)";
 	}
 
-	Edit(isNew=false) { //override
+	Edit(isNew=false) { //overrides
 		const fetchButton = document.createElement("button");
 		if (isNew && !this.params.copy) {
 			fetchButton.className = "view-fetch-floating-button";
@@ -2411,7 +2411,7 @@ class DeviceView extends View {
 		return `hsl(${(240 + index * 1.61803398875 * 360) % 360},95%,60%)`;
 	}
 
-	Fetch(isNew=false, forceTarget=null) { //override
+	Fetch(isNew=false, forceTarget=null) { //overrides
 		let target = null;
 		if (isNew) {
 			target = forceTarget;
@@ -2644,11 +2644,11 @@ class DeviceView extends View {
 		dialog.okButton.focus();
 	}
 
-	Copy() { //override
+	Copy() { //overrides
 		new DeviceView({copy: this.params.file});
 	}
 
-	Delete() { //override
+	Delete() { //overrides
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
 				const response = await fetch(`db/device/delete?file=${this.params.file}`);

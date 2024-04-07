@@ -98,7 +98,7 @@ class Watchdog extends Window {
 		this.ListWatchers();
 	}
 
-	AfterResize() { //override
+	AfterResize() { //overrides
 		if (this.content.getBoundingClientRect().width < 720) {
 			this.timeline.style.right = `${4 + this.list.offsetWidth - this.list.clientWidth}px`;
 			this.list.style.right = "4px";
