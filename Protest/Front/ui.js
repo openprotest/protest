@@ -158,15 +158,29 @@ const UI = {
 	},
 
 	PingColor(pingResult, lightness=50) {
-		if (isNaN(pingResult))
+		if (isNaN(pingResult)) {
 			return (pingResult === "Timed out") ? "var(--clr-error)" : "var(--clr-orange)";
+		}
 
 		if (pingResult === -1) {
 			return "rgb(192,192,192)";
 		}
 
-		if (pingResult > 500) pingResult = 500;
-		return `hsl(${Math.round(92 + pingResult / 2.2)},66%,${lightness}%)`;
+		if (pingResult > 500) {
+			pingResult = 500;
+		}
+
+		let calculatedLightness =
+			pingResult > 260 && pingResult <= 400
+			? lightness + (70 - Math.abs(pingResult - 330)) / 3
+			: lightness;
+
+		let calculatedSaturation =
+			pingResult > 260 && pingResult <= 400
+			? 66 + (70 - Math.abs(pingResult - 330)) / 2
+			: 66;
+		
+		return `hsl(${Math.round(92 + pingResult / 2.2)},${calculatedSaturation}%,${calculatedLightness}%)`;
 	},
 
 	TicksToUnixDate: ticks=> {

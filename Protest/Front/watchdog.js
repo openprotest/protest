@@ -1252,8 +1252,6 @@ class Watchdog extends Window {
 			previous[watcher.element.childNodes[2].childNodes[i].getAttribute("date")] = watcher.element.childNodes[2].childNodes[i];
 		}
 
-		console.log(watcher);
-
 		watcher.element.childNodes[2].textContent = "";
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
