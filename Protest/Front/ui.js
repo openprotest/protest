@@ -64,7 +64,8 @@ const UI = {
 			menubutton.style.top = pos.top;
 			menubutton.style.width = pos.width;
 			menubutton.style.height = pos.height;
-
+			menubutton.style.visibility = MENU.isDetached ? "visible" : "hidden";
+			
 			const logo = menubutton.children[0];
 			logo.style.left = pos.l_left;
 			logo.style.top = pos.l_top;
@@ -837,6 +838,8 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.width = "28px";
 		logo.style.height = "28px";
 	}
+
+	menubutton.style.visibility = MENU.isDetached ? "visible" : "hidden";
 
 	if (event.x < 56 && event.y > container.clientHeight - 48 && container.clientHeight - event.y < 0) {
 		attachedmenubutton.style.transform = "none";

@@ -77,6 +77,31 @@ const WIN = {
 		}
 	},
 
+	SetTaskBarPosition: position => {
+		//TODO:
+		switch (position) {
+		case "left":
+			break;
+
+		case "right":
+			break;
+
+		case "top":
+			taskbar.style.top = "0";
+			taskbar.style.bottom = "";
+			container.style.top = `${WIN.iconSize}px`;
+			container.style.bottom = "0";
+			break;
+
+		default:
+			taskbar.style.top = "";
+			taskbar.style.bottom = "0";
+			container.style.top = "0";
+			container.style.bottom = `${WIN.iconSize}px`;
+			break;
+		}
+	},
+
 	GridWindows: ()=> {
 		if (WIN.array.length === 0) return;
 
@@ -139,7 +164,8 @@ const WIN = {
 	},
 
 	EscapeHtml: html=> {
-		return html.replace(/&/g, "&amp;")
+		return html
+			.replace(/&/g, "&amp;")
 			.replace(/</g, "&lt;")
 			.replace(/>/g, "&gt;")
 			.replace(/"/g, "&quot;")
@@ -551,9 +577,6 @@ class Window {
 			this.resize.style.visibility = "visible";
 			this.isMaximized = false;
 
-			this.task.style.top = "2px";
-			this.task.style.borderRadius = "8%";
-
 			if (this.toolbar && !this.popOutWindow) {
 				this.toolbar.style.top = "32px";
 			}
@@ -573,9 +596,6 @@ class Window {
 			this.win.style.borderRadius = "0";
 			this.resize.style.visibility = "hidden";
 			this.isMaximized = true;
-
-			this.task.style.top = "0";
-			this.task.style.borderRadius = "0 0 8% 8%";
 
 			if (this.toolbar) {
 				this.toolbar.style.top = "38px";
@@ -615,9 +635,6 @@ class Window {
 			this.win.style.visibility = "hidden";
 			this.win.style.transform = `scale(.6) translateX(${iconPosition}px) translateY(${container.clientHeight}px)`;
 			this.isMinimized = true;
-
-			this.task.style.top = "2px";
-			this.task.style.borderRadius = "8%";
 
 			this.task.className = "bar-icon";
 			this.task.style.backgroundColor = "transparent";
@@ -755,12 +772,10 @@ class Window {
 			document.getSelection().removeAllRanges();
 
 		for (let i = 0; i < WIN.array.length; i++) {
-			WIN.array[i].task.style.top = "2px";
-			WIN.array[i].task.style.borderRadius = "8%";
+			WIN.array[i].task.className = "bar-icon";
 			WIN.array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
 			WIN.array[i].icon.style.filter = "none";
 
-			WIN.array[i].task.className = "bar-icon";
 		}
 
 		this.task.className = "bar-icon bar-icon-focused";
@@ -770,11 +785,6 @@ class Window {
 		if (this.popOutWindow) {
 			this.popOutWindow.focus();
 			return;
-		}
-
-		if (this.isMaximized) {
-			this.task.style.top = "0";
-			this.task.style.borderRadius = "0 0 8% 8%";
 		}
 
 		if (this.win.style.zIndex < WIN.count) this.win.style.zIndex = ++WIN.count;
