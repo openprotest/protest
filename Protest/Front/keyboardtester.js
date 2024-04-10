@@ -290,6 +290,7 @@ class KeyboardTester extends Window {
 			if (!(code in this.keyElements)) return;
 			this.keyElements[code].style.color = "#000";
 			this.keyElements[code].style.backgroundColor = "var(--clr-accent)";
+			this.keyElements[code].style.border = "1px solid var(--clr-accent)";
 			this.keyElements[code].style.filter = "brightness(2.5)";
 			this.keyElements[code].style.boxShadow = "var(--clr-accent) 0 0 4px";
 		};
@@ -309,6 +310,7 @@ class KeyboardTester extends Window {
 				this.PushHistory(code);
 				this.keyElements["PrintScreen"].style.color = "#000";
 				this.keyElements["PrintScreen"].style.backgroundColor = "var(--clr-accent)";
+				this.keyElements["PrintScreen"].style.border = "1px solid var(--clr-accent)";
 			}
 
 			if (!(code in this.keyElements)) return;
@@ -746,6 +748,7 @@ class KeyboardTester extends Window {
 				if (gamepad.buttons[i].pressed) {
 					anyButton = true;
 					elements[i].style.backgroundColor = "var(--clr-accent)";
+					elements[i].style.style.border = "1px solid var(--clr-accent)";
 					elements[i].style.filter = "brightness(2.5)";
 					elements[i].style.boxShadow = "var(--clr-accent) 0 0 4px";
 				}
