@@ -114,8 +114,6 @@ public static class PasswordStrength {
 
         bool first = true;
         foreach (Database.Entry entry in DatabaseInstances.users.dictionary.Values) {
-            //TODO: hasPassword
-
             List<string> words = new List<string>();
             foreach (KeyValuePair<string, Database.Attribute> pair in entry.attributes) {
                 if (pair.Key.Contains("password"))
@@ -168,8 +166,6 @@ public static class PasswordStrength {
         }
 
         foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
-            //TODO: hasPassword
-
             List<string> words = new List<string>();
             foreach (KeyValuePair<string, Database.Attribute> pair in entry.attributes) {
                 if (pair.Key.Contains("password"))

@@ -19,7 +19,7 @@ internal static partial class Lifeline {
     public static TaskWrapper task;
 
     public static void Initialize() {
-        //TODO: autostart
+        //TODO: auto-start
         StartTask("system");
     }
 

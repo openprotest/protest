@@ -483,13 +483,17 @@ class Wmi extends Window {
 							try {
 								const response = await fetch(`wmi/killprocess?target=${encodeURIComponent(targetHost)}&pid=${pid}`);
 								if (response.status !== 200) return;
-								const text = await response.text();
 
-								if (text === "ok")
+								const json = await response.json();
+								if (json.error) throw(json.error);
+
+
+
+								if (json.status === "ok")
 									table.removeChild(tr);
 								else {
 									td.removeChild(terminateButton);
-									td.textContent = text;
+									td.textContent = json.status;
 								}
 							}
 							catch (ex) {

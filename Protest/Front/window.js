@@ -77,31 +77,6 @@ const WIN = {
 		}
 	},
 
-	SetTaskBarPosition: position => {
-		//TODO:
-		switch (position) {
-		case "left":
-			break;
-
-		case "right":
-			break;
-
-		case "top":
-			taskbar.style.top = "0";
-			taskbar.style.bottom = "";
-			container.style.top = `${WIN.iconSize}px`;
-			container.style.bottom = "0";
-			break;
-
-		default:
-			taskbar.style.top = "";
-			taskbar.style.bottom = "0";
-			container.style.top = "0";
-			container.style.bottom = `${WIN.iconSize}px`;
-			break;
-		}
-	},
-
 	GridWindows: ()=> {
 		if (WIN.array.length === 0) return;
 

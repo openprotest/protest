@@ -13,13 +13,11 @@ namespace Protest.Protocols;
 
 [SupportedOSPlatform("windows")]
 internal static class Wmi {
-    //private static readonly ArraySegment<byte> CODE_OK                     = new ArraySegment<byte>("ok"u8.ToArray());
-    private static readonly ArraySegment<byte> CODE_ACCESS_DENIED          = new ArraySegment<byte>("access denied"u8.ToArray());
-    private static readonly ArraySegment<byte> CODE_INSUFFICIENT_PRIVILEGE = new ArraySegment<byte>("insufficient privilege"u8.ToArray());
-    private static readonly ArraySegment<byte> CODE_UNKNOWN                = new ArraySegment<byte>("unknown failure"u8.ToArray());
-    private static readonly ArraySegment<byte> CODE_PATH_NOT_FOUND         = new ArraySegment<byte>("path not found"u8.ToArray());
-    private static readonly ArraySegment<byte> CODE_AUTHENTICATION_FAILED  = new ArraySegment<byte>("authentication failed"u8.ToArray());
-    //private static readonly ArraySegment<byte> CODE_INVALID                = new ArraySegment<byte>("invalid parameter"u8.ToArray());
+    private static readonly ArraySegment<byte> CODE_ACCESS_DENIED          = new ArraySegment<byte>("{\"error\":\"access denied\"}"u8.ToArray());
+    private static readonly ArraySegment<byte> CODE_INSUFFICIENT_PRIVILEGE = new ArraySegment<byte>("{\"error\":\"insufficient privilege\"}"u8.ToArray());
+    private static readonly ArraySegment<byte> CODE_UNKNOWN                = new ArraySegment<byte>("{\"error\":\"unknown failure\"}"u8.ToArray());
+    private static readonly ArraySegment<byte> CODE_PATH_NOT_FOUND         = new ArraySegment<byte>("{\"error\":\"path not found\"}"u8.ToArray());
+    private static readonly ArraySegment<byte> CODE_AUTHENTICATION_FAILED  = new ArraySegment<byte>("{\"error\":\"authentication failed\"}"u8.ToArray());
 
     /*public static ManagementScope WmiScope(string host, string impersonation, string username, string password) {
         ImpersonationLevel impersonationLevel = impersonation.ToLower() switch {
@@ -432,7 +430,7 @@ internal static class Wmi {
         ManagementObjectCollection moc;
         try {
             moc = new ManagementObjectSearcher(scope.Path.ToString(), "SELECT * FROM Win32_Process WHERE ProcessId = " + pid).Get();
-            if (moc.Count == 0) return "no such process id"u8.ToArray();
+            if (moc.Count == 0) return "{\"error\":\"no such process id\"}"u8.ToArray();
         }
         catch {
             return CODE_UNKNOWN.Array;
