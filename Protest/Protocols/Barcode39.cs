@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace Protest.Protocols;
@@ -50,6 +51,11 @@ public static class Barcode39 {
         0b101001001001,
         0b100101101101
     };
+
+    public static byte[] GenerateSvgHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
+        ctx.Response.ContentType = "image/svg+xml; charset=utf-8";
+        return GenerateSvgHandler(parameters);
+    }
 
     public static byte[] GenerateSvgHandler(Dictionary<string, string> parameters) {
         if (parameters is null) {

@@ -73,7 +73,7 @@ public sealed class Listener {
                 Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.Host, UriKind.Absolute)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
-                return ;
+                return;
             }
 
             UriHostNameType type = Uri.CheckHostName(ctx.Request.UrlReferrer.Host);
@@ -255,6 +255,141 @@ public sealed class Listener {
         return true;
     }
 
+    private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> mux
+    = new Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>>
+    {
+        { "/logout",              (ctx, parameters, username) => Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array },
+        { "/version",             (ctx, parameters, username) => Data.VersionToJson() },
+
+        { "/barcode39",           (ctx, parameters, username) => Protocols.Barcode39.GenerateSvgHandler(ctx, parameters) },
+        { "/barcode128",          (ctx, parameters, username) => Protocols.Barcode128B.GenerateSvgHandler(ctx, parameters) },
+
+        { "/db/user/list",        (ctx, parameters, username) => DatabaseInstances.users.Serialize(ctx) },
+        { "/db/user/timeline",    (ctx, parameters, username) => DatabaseInstances.users.TimelineHandler(parameters) },
+        { "/db/user/save",        (ctx, parameters, username) => DatabaseInstances.users.SaveHandler(ctx, parameters, username) },
+        { "/db/user/delete",      (ctx, parameters, username) => DatabaseInstances.users.DeleteHandler(parameters, username) },
+        { "/db/user/grid",        (ctx, parameters, username) => DatabaseInstances.users.GridHandler(ctx, username) },
+        { "/db/user/attribute",   (ctx, parameters, username) => DatabaseInstances.users.AttributeValue(parameters) },
+
+        { "/db/device/list",      (ctx, parameters, username) => DatabaseInstances.devices.Serialize(ctx) },
+        { "/db/device/timeline",  (ctx, parameters, username) => DatabaseInstances.devices.TimelineHandler(parameters) },
+        { "/db/device/save",      (ctx, parameters, username) => DatabaseInstances.devices.SaveHandler(ctx, parameters, username) },
+        { "/db/device/delete",    (ctx, parameters, username) => DatabaseInstances.devices.DeleteHandler(parameters, username) },
+        { "/db/device/grid",      (ctx, parameters, username) => DatabaseInstances.devices.GridHandler(ctx, username) },
+        { "/db/device/attribute", (ctx, parameters, username) => DatabaseInstances.devices.AttributeValue(parameters) },
+
+        { "/db/config/view",      (ctx, parameters, username) => DeviceConfiguration.View(parameters) },
+        { "/db/config/save",      (ctx, parameters, username) => DeviceConfiguration.Save(parameters, ctx, username) },
+        { "/db/config/fetch",     (ctx, parameters, username) => DeviceConfiguration.Fetch(parameters, ctx, username) },
+        { "/db/config/extract",   (ctx, parameters, username) => DeviceConfiguration.ExtractInterfaces(parameters) },
+
+        { "/db/getentropy",       (ctx, parameters, username) => Tools.PasswordStrength.GetEntropy() },
+        { "/db/gandalf",          (ctx, parameters, username) => Tools.PasswordStrength.GandalfThreadWrapper(ctx, username) },
+
+        { "/fetch/networkinfo",   (ctx, parameters, username) => Protocols.Kerberos.NetworkInfo() },
+        { "/fetch/status",        (ctx, parameters, username) => Tasks.Fetch.Status() },
+        { "/fetch/singledevice",  (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true) },
+        { "/fetch/singleuser",    (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters) },
+        { "/fetch/devices",       (ctx, parameters, username) => Tasks.Fetch.DevicesTask(parameters, username) },
+        { "/fetch/users",         (ctx, parameters, username) => Tasks.Fetch.UsersTask(parameters, username) },
+        { "/fetch/import",        (ctx, parameters, username) => Tasks.Fetch.ImportTask(parameters, username) },
+        { "/fetch/approve",       (ctx, parameters, username) => Tasks.Fetch.ApproveLastTask(parameters, username) },
+        { "/fetch/abort",         (ctx, parameters, username) => Tasks.Fetch.CancelTask(username) },
+        { "/fetch/discard",       (ctx, parameters, username) => Tasks.Fetch.DiscardLastTask(username) },
+
+        { "/manage/device/wol",       (ctx, parameters, username) => Protocols.Wol.Wakeup(parameters) },
+        { "/manage/device/shutdown",  (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null },
+        { "/manage/device/reboot",    (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 6) : null },
+        { "/manage/device/logoff",    (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 4) : null },
+        { "/manage/device/printtest", (ctx, parameters, username) => Proprietary.Printers.Generic.PrintTestPage(parameters) },
+        //{ "/manage/device/getfiles",  (ctx, parameters, username)=> FileBrowser.Get(parameters) },
+
+        { "/manage/user/unlock",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.UnlockUser(parameters) : null },
+        { "/manage/user/enable",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.EnableUser(parameters) : null },
+        { "/manage/user/disable",     (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.DisableUser(parameters) : null },
+
+        { "/docs/list",               (ctx, parameters, username) => Tools.Documentation.List(parameters) },
+        { "/docs/create",             (ctx, parameters, username) => Tools.Documentation.Create(ctx, username) },
+        { "/docs/delete",             (ctx, parameters, username) => Tools.Documentation.Delete(parameters, username) },
+
+        { "/docs/view", (ctx, parameters, username) => {
+            string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
+            bool acceptGZip = acceptEncoding.Contains("gzip");
+            byte[] buffer = Tools.Documentation.View(parameters, acceptGZip);
+            if (acceptGZip) { ctx.Response.AddHeader("Content-Encoding", "gzip"); }
+            return buffer ;
+        }},
+
+        { "/chat/history",            (ctx, parameters, username) => Chat.GetHistory() },
+
+        { "/debit/list",              (ctx, parameters, username) => Tools.DebitNotes.List(parameters) },
+        { "/debit/view",              (ctx, parameters, username) => Tools.DebitNotes.View(parameters) },
+        { "/debit/create",            (ctx, parameters, username) => Tools.DebitNotes.Create(ctx, username) },
+        { "/debit/delete",            (ctx, parameters, username) => Tools.DebitNotes.Delete(parameters, username) },
+        { "/debit/return",            (ctx, parameters, username) => Tools.DebitNotes.Return(parameters, username) },
+        { "/debit/templates",         (ctx, parameters, username) => Tools.DebitNotes.ListTemplate() },
+        { "/debit/banners",           (ctx, parameters, username) => Tools.DebitNotes.ListBanners() },
+
+        { "/watchdog/list",           (ctx, parameters, username) => Tasks.Watchdog.List() },
+        { "/watchdog/view",           (ctx, parameters, username) => Tasks.Watchdog.View(parameters) },
+        { "/watchdog/create",         (ctx, parameters, username) => Tasks.Watchdog.Create(parameters, ctx, username) },
+        { "/watchdog/delete",         (ctx, parameters, username) => Tasks.Watchdog.Delete(parameters, username) },
+
+        { "/notifications/list",      (ctx, parameters, username) => Tasks.Watchdog.ListNotifications() },
+        { "/notifications/save",      (ctx, parameters, username) => Tasks.Watchdog.SaveNotifications(ctx, username) },
+        
+        { "/lifeline/ping/view",      (ctx, parameters, username) => Tasks.Lifeline.ViewPing(parameters) },
+        { "/lifeline/memory/view",    (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "memory") },
+        { "/lifeline/cpu/view",       (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "cpu") },
+        { "/lifeline/disk/view",      (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "disk") },
+        { "/lifeline/diskusage/view", (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskusage") },
+        
+        { "/tools/bulkping",          (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters) },
+        { "/tools/dnslookup",         (ctx, parameters, username) => Protocols.Dns.Resolve(parameters) },
+        { "/tools/ntp",               (ctx, parameters, username) => Protocols.Ntp.Request(parameters) },
+        { "/tools/locateip",          (ctx, parameters, username) => Tools.LocateIp.Locate(ctx) },
+        { "/tools/maclookup",         (ctx, parameters, username) => Tools.MacLookup.Lookup(ctx) },
+        //{ "/tools/downstream",        (ctx, parameters, username) => Tools.SpeedTest.DownStream(ctx, parameters) },
+        //{ "/tools/upstream",          (ctx, parameters, username) => Tools.SpeedTest.UpStream(ctx, parameters) },
+        
+        { "/snmp/get",                (ctx, parameters, username) => Protocols.Snmp.Polling.GetHandler(ctx, parameters) },
+        { "/snmp/set",                (ctx, parameters, username) => Protocols.Snmp.Polling.SetHandler(ctx, parameters) },
+        { "/snmp/walk",               (ctx, parameters, username) => Protocols.Snmp.Polling.WalkHandler(ctx, parameters) },
+        
+        { "/wmi/query",               (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null },
+        { "/wmi/killprocess",         (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(parameters) : null },
+
+        { "/acl/list",                (ctx, parameters, username) => Auth.ListUsers() },
+        { "/acl/create",              (ctx, parameters, username) => Auth.CreateUser(parameters, ctx, username) },
+        { "/acl/delete",              (ctx, parameters, username) => Auth.DeleteUser(parameters, username) },
+        { "/acl/sessions",            (ctx, parameters, username) => Auth.ListSessions() },
+        { "/acl/kickuser",            (ctx, parameters, username) => Auth.KickUser(parameters, username) },
+
+        {"/automation/list",          (ctx, parameters, username) => Tasks.Automation.ListTasks() },
+
+        {"/config/checkupdate",       (ctx, parameters, username) => Update.CheckLatestRelease() },
+
+        {"/config/backup/list",       (ctx, parameters, username) => Backup.List() },
+        {"/config/backup/create",     (ctx, parameters, username) => Backup.Create(parameters) },
+        {"/config/backup/delete",     (ctx, parameters, username) => Backup.Delete(parameters) },
+        
+        {"/config/zones/list",        (ctx, parameters, username) => Tools.Zones.ListZones() },
+        {"/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx) },
+        
+        {"/config/smtpprofiles/list", (ctx, parameters, username) => Tools.SmtpProfiles.List() },
+        {"/config/smtpprofiles/save", (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx) },
+        {"/config/smtpprofiles/test", (ctx, parameters, username) => Tools.SmtpProfiles.SendTest(parameters) },
+        {"/config/snmpprofiles/list", (ctx, parameters, username) => Tools.SnmpProfiles.List() },
+        {"/config/snmpprofiles/save", (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx) },
+
+        {"/config/upload/iplocation", (ctx, parameters, username) => Update.LocationFormDataHandler(ctx) },
+        {"/config/upload/proxy",      (ctx, parameters, username) => Update.ProxyFormDataHandler(ctx) },
+        {"/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
+        {"/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
+
+        { "/log/list",                (ctx, parameters, username) => Logger.List(parameters) }
+    };
+
     private static bool DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
 
@@ -266,156 +401,21 @@ public sealed class Listener {
 
         ctx.Response.AddHeader("Cache-Control", "no-cache");
 
-        byte[] buffer;
+        string path = ctx.Request.Url.AbsolutePath;
+        if (mux.TryGetValue(path, out Func<HttpListenerContext, Dictionary<string, string>, string, byte[]> handler)) {
+            byte[] buffer = handler(ctx, parameters, username);
+            if (buffer is not null) {
+                ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+                ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+                ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
 
-        switch (ctx.Request.Url.AbsolutePath) {
-        case "/logout" : buffer = Auth.RevokeAccess(sessionId, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array; break;
-        case "/version": buffer = Data.VersionToJson(); break;
-
-        //case "/contacts": buffer = DatabaseInstances.users.SerializeContacts(); break;
-
-        case "/barcode39":
-            buffer = Protocols.Barcode39.GenerateSvgHandler(parameters);
-            ctx.Response.ContentType = "image/svg+xml; charset=utf-8";
-            break;
-
-        case "/barcode128":
-            buffer = Protocols.Barcode128B.GenerateSvgHandler(parameters);
-            ctx.Response.ContentType = "image/svg+xml; charset=utf-8";
-            break;
-
-        case "/db/user/list"      : buffer = DatabaseInstances.users.Serialize(ctx); break;
-        case "/db/user/timeline"  : buffer = DatabaseInstances.users.TimelineHandler(parameters); break;
-        case "/db/user/save"      : buffer = DatabaseInstances.users.SaveHandler(ctx, parameters, username); break;
-        case "/db/user/delete"    : buffer = DatabaseInstances.users.DeleteHandler(parameters, username); break;
-        case "/db/user/grid"      : buffer = DatabaseInstances.users.GridHandler(ctx, username); break;
-        case "/db/user/attribute" : buffer = DatabaseInstances.users.AttributeValue(parameters); break;
-
-        case "/db/device/list"      : buffer = DatabaseInstances.devices.Serialize(ctx); break;
-        case "/db/device/timeline"  : buffer = DatabaseInstances.devices.TimelineHandler(parameters); break;
-        case "/db/device/save"      : buffer = DatabaseInstances.devices.SaveHandler(ctx, parameters, username); break;
-        case "/db/device/delete"    : buffer = DatabaseInstances.devices.DeleteHandler(parameters, username); break;
-        case "/db/device/grid"      : buffer = DatabaseInstances.devices.GridHandler(ctx, username); break;
-        case "/db/device/attribute" : buffer = DatabaseInstances.devices.AttributeValue(parameters); break;
-        
-        case "/db/config/view"    : buffer = DeviceConfiguration.View(parameters); break;
-        case "/db/config/save"    : buffer = DeviceConfiguration.Save(parameters, ctx, username); break;
-        case "/db/config/fetch"   : buffer = DeviceConfiguration.Fetch(parameters, ctx, username); break;
-        case "/db/config/extract" : buffer = DeviceConfiguration.ExtractInterfaces(parameters); break;
-
-        case "/db/getentropy" : buffer = Tools.PasswordStrength.GetEntropy(); break;
-        case "/db/gandalf"    : buffer = Tools.PasswordStrength.GandalfThreadWrapper(ctx, username); break;
-
-        case "/fetch/networkinfo"  : buffer = Protocols.Kerberos.NetworkInfo(); break;
-        case "/fetch/status"       : buffer = Tasks.Fetch.Status(); break;
-        case "/fetch/singledevice" : buffer = Tasks.Fetch.SingleDeviceSerialize(parameters, true); break;
-        case "/fetch/singleuser"   : buffer = Tasks.Fetch.SingleUserSerialize(parameters); break;
-        case "/fetch/devices"      : buffer = Tasks.Fetch.DevicesTask(parameters, username); break;
-        case "/fetch/users"        : buffer = Tasks.Fetch.UsersTask(parameters, username); break;
-        case "/fetch/import"       : buffer = Tasks.Fetch.ImportTask(parameters, username); break;
-        case "/fetch/approve"      : buffer = Tasks.Fetch.ApproveLastTask(parameters, username); break;
-        case "/fetch/abort"        : buffer = Tasks.Fetch.CancelTask(username); break;
-        case "/fetch/discard"      : buffer = Tasks.Fetch.DiscardLastTask(username); break;
-
-        case "/manage/device/wol"      : buffer = Protocols.Wol.Wakeup(parameters); break;
-        case "/manage/device/shutdown" : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null; break;
-        case "/manage/device/reboot"   : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 6) : null; break;
-        case "/manage/device/logoff"   : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 4) : null; break;
-        case "/manage/device/printtest": buffer = Proprietary.Printers.Generic.PrintTestPage(parameters); break;
-        //case "/manage/device/getfiles" : buffer = FileBrowser.Get(parameters); break;
-
-        case "/manage/user/unlock" : buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.UnlockUser(parameters) : null; break;
-        case "/manage/user/enable" : buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.EnableUser(parameters) : null; break;
-        case "/manage/user/disable": buffer = OperatingSystem.IsWindows() ? Protocols.Kerberos.DisableUser(parameters) : null; break;
-
-        case "/docs/list"   : buffer = Tools.Documentation.List(parameters); break;
-        case "/docs/create" : buffer = Tools.Documentation.Create(ctx, username); break;
-        case "/docs/delete" : buffer = Tools.Documentation.Delete(parameters, username); break;
-        case "/docs/view":
-            string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
-            bool acceptGZip = acceptEncoding.Contains("gzip");
-            buffer = Tools.Documentation.View(parameters, acceptGZip);
-            if (acceptGZip)
-                ctx.Response.AddHeader("Content-Encoding", "gzip");
-            break;
-
-        case "/chat/history": buffer = Chat.GetHistory(); break;
-
-        case "/debit/list"      : buffer = Tools.DebitNotes.List(parameters); break;
-        case "/debit/view"      : buffer = Tools.DebitNotes.View(parameters); break;
-        case "/debit/create"    : buffer = Tools.DebitNotes.Create(ctx, username); break;
-        case "/debit/delete"    : buffer = Tools.DebitNotes.Delete(parameters, username); break;
-        case "/debit/return"    : buffer = Tools.DebitNotes.Return(parameters, username); break;
-        case "/debit/templates" : buffer = Tools.DebitNotes.ListTemplate(); break;
-        case "/debit/banners"   : buffer = Tools.DebitNotes.ListBanners(); break;
-
-        case "/watchdog/list"   : buffer = Tasks.Watchdog.List(); break;
-        case "/watchdog/view"   : buffer = Tasks.Watchdog.View(parameters); break;
-        case "/watchdog/create" : buffer = Tasks.Watchdog.Create(parameters, ctx, username); break;
-        case "/watchdog/delete" : buffer = Tasks.Watchdog.Delete(parameters, username); break;
-        
-        case "/notifications/list" : buffer = Tasks.Watchdog.ListNotifications(); break;
-        case "/notifications/save" : buffer = Tasks.Watchdog.SaveNotifications(ctx, username); break;
-
-        case "/lifeline/ping/view"  : buffer = Tasks.Lifeline.ViewPing(parameters); break;
-        case "/lifeline/memory/view": buffer = Tasks.Lifeline.ViewFile(parameters, "memory"); break;
-        case "/lifeline/cpu/view"  : buffer = Tasks.Lifeline.ViewFile(parameters, "cpu"); break;
-        case "/lifeline/disk/view"  : buffer = Tasks.Lifeline.ViewFile(parameters, "disk"); break;
-        case "/lifeline/diskusage/view": buffer = Tasks.Lifeline.ViewFile(parameters, "diskusage"); break;
-
-        case "/tools/bulkping"   : buffer = Protocols.Icmp.BulkPing(parameters); break;
-        case "/tools/dnslookup"  : buffer = Protocols.Dns.Resolve(parameters); break;
-        case "/tools/ntp"        : buffer = Protocols.Ntp.Request(parameters); break;
-        case "/tools/locateip"   : buffer = Tools.LocateIp.Locate(ctx); break;
-        case "/tools/maclookup"  : buffer = Tools.MacLookup.Lookup(ctx); break;
-        //case "/tools/downstream" : buffer = Tools.SpeedTest.DownStream(ctx, parameters); break;
-        //case "/tools/upstream"   : buffer = Tools.SpeedTest.UpStream(ctx, parameters); break;
-
-        case "/snmp/get" : buffer = Protocols.Snmp.Polling.GetHandler(ctx, parameters); break;
-        case "/snmp/set" : buffer = Protocols.Snmp.Polling.SetHandler(ctx, parameters); break;
-        case "/snmp/walk": buffer = Protocols.Snmp.Polling.WalkHandler(ctx, parameters); break;
-
-        case "/wmi/query"      : buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null; break;
-        case "/wmi/killprocess": buffer = OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(parameters) : null; break;
-
-        case "/acl/list"     : buffer = Auth.ListUsers(); break;
-        case "/acl/create"   : buffer = Auth.CreateUser(parameters, ctx, username); break;
-        case "/acl/delete"   : buffer = Auth.DeleteUser(parameters, username); break;
-        case "/acl/sessions" : buffer = Auth.ListSessions(); break;
-        case "/acl/kickuser" : buffer = Auth.KickUser(parameters, username); break;
-
-        case "/automation/list": buffer = Tasks.Automation.ListTasks(); break;
-
-        case "/config/backup/list"  : buffer = Backup.List(); break;
-        case "/config/backup/create": buffer = Backup.Create(parameters); break;
-        case "/config/backup/delete": buffer = Backup.Delete(parameters); break;
-
-        case "/config/zones/list"        : buffer = Tools.Zones.ListZones(); break;
-        case "/config/zones/save"        : buffer = Tools.Zones.SaveZones(ctx); break;
-        case "/config/smtpprofiles/list" : buffer = Tools.SmtpProfiles.List(); break;
-        case "/config/smtpprofiles/save" : buffer = Tools.SmtpProfiles.Save(ctx); break;
-        case "/config/smtpprofiles/test" : buffer = Tools.SmtpProfiles.SendTest(parameters); break;
-        case "/config/snmpprofiles/list" : buffer = Tools.SnmpProfiles.List(); break;
-        case "/config/snmpprofiles/save" : buffer = Tools.SnmpProfiles.Save(ctx); break;
-
-        case "/config/checkupdate"       : buffer = Update.CheckLatestRelease(); break;
-        case "/config/upload/iplocation" : buffer = Update.LocationFormDataHandler(ctx); break;
-        case "/config/upload/proxy"      : buffer = Update.ProxyFormDataHandler(ctx); break;
-        case "/config/upload/macresolve" : buffer = Update.MacResolverFormDataHandler(ctx); break;
-        case "/config/upload/tor"        : buffer = Update.TorFormDataHandler(ctx); break;
-
-        case "/log/list": buffer = Logger.List(parameters); break;
-        default: return false;
+            ctx.Response.Close();
+            return true;
         }
-
-        //ctx.Response.SendChunked = buffer.Length > 8_192;
-
-        ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-        ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
-        if (buffer is not null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-
-        ctx.Response.Close();
-        return true;
+        else {
+            return false;
+        }
     }
 
     private static bool WebSocketHandler(HttpListenerContext ctx) {
