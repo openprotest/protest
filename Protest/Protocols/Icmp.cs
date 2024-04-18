@@ -170,7 +170,7 @@ internal static class Icmp {
         return String.Join((char)127, result);
     }
     private static async Task<string> PingAsync(string hostname, string id, int timeout) {
-        Ping p = new Ping();
+        using Ping p = new Ping();
 
         try {
             PingReply reply = await p.SendPingAsync(hostname, timeout, ICMP_PAYLOAD);
@@ -194,9 +194,6 @@ internal static class Icmp {
         }
         catch (Exception) {
             return id + ((char)127).ToString() + "Unknown error";
-        }
-        finally {
-            p.Dispose();
         }
     }
 

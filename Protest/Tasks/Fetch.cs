@@ -569,7 +569,7 @@ internal static class Fetch {
                 KeepAlive.Broadcast("{\"action\":\"abort-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
                 Logger.Action(origin, "Devices fetch task aborted");
 
-                task.Dispose();
+                task?.Dispose();
                 task = null;
                 return;
             }

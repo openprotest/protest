@@ -143,7 +143,6 @@ public sealed class Listener {
         { "/log/list",                (ctx, parameters, username) => Logger.List(parameters) },
     };
 
-
     public Listener(string ip, ushort port, string path) {
         if (!HttpListener.IsSupported) throw new NotSupportedException();
         cache = new Cache(path);

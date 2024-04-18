@@ -367,14 +367,12 @@ internal sealed class Cache {
     public static byte[] GZip(byte[] bytes) {
         if (bytes is null) return Array.Empty<byte>();
 
-        MemoryStream ms = new MemoryStream();
-        using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
-            zip.Write(bytes, 0, bytes.Length);
-        }
+        using MemoryStream ms = new MemoryStream();
+        using GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true);
+        zip.Write(bytes, 0, bytes.Length);        
 
         byte[] array = ms.ToArray();
-        ms.Dispose();
-
+        
         return array;
     }
     public static byte[] UnGZip(byte[] bytes) {

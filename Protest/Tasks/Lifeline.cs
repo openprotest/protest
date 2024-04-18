@@ -136,7 +136,7 @@ internal static partial class Lifeline {
             task.Sleep(Math.Max((int)((FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
-                task.Dispose();
+                task?.Dispose();
                 task = null;
                 return;
             }

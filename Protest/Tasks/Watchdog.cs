@@ -159,7 +159,7 @@ internal static class Watchdog {
             task.Sleep(Math.Max(nextSleep - (int)((DateTime.UtcNow.Ticks - loopStartTimeStamp) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
-                task.Dispose();
+                task?.Dispose();
                 task = null;
                 return;
             }

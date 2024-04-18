@@ -132,7 +132,7 @@ internal static class KeepAlive {
                     pair.Value.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 await pair.Value.ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                pair.Value.ws.Dispose();
+                pair.Value.ws?.Dispose();
             }
 
             connections.TryRemove(pair.Key, out _);

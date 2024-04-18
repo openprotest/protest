@@ -311,7 +311,7 @@ internal static class Monitor {
     }
 
     private static long HandlePing(string host, int timeout) {
-        Ping p = new Ping();
+        using Ping p = new Ping();
         try {
             PingReply reply = p.Send(host, timeout);
 
@@ -335,9 +335,6 @@ internal static class Monitor {
         }
         catch (Exception) {
             return -1;
-        }
-        finally {
-            p.Dispose();
         }
     }
 
