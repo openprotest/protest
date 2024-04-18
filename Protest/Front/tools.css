@@ -160,6 +160,11 @@
 	border-radius: 2px;
 }
 
+.tool-element > .tool-graph > div::after,
+.tool-element > .tool-graph > div::before {
+	transition-delay: 0s !important;
+}
+
 .tool-element > .tool-msg {
 	position: absolute;
 	overflow: hidden;

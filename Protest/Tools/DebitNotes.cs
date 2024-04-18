@@ -87,8 +87,6 @@ internal static class DebitNotes {
         bool first = true;
         lock (mutex) {
             for (int i = 0; i < files.Count; i++) {
-                Console.WriteLine(files[i].FullName);
-
                 string data = File.ReadAllText(files[i].FullName);
                 if (String.IsNullOrEmpty(data)) continue;
 
