@@ -79,7 +79,7 @@ internal static class DebitNotes {
             if (dirReturned.Exists) files.AddRange(dirReturned.GetFiles());
         }
 
-        files.Sort((a, b) => String.Compare(a.Name, b.Name));
+        files.Sort((a, b) => String.Compare(b.Name, a.Name));
 
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
@@ -87,6 +87,8 @@ internal static class DebitNotes {
         bool first = true;
         lock (mutex) {
             for (int i = 0; i < files.Count; i++) {
+                Console.WriteLine(files[i].FullName);
+
                 string data = File.ReadAllText(files[i].FullName);
                 if (String.IsNullOrEmpty(data)) continue;
 

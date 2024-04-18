@@ -57,6 +57,17 @@ internal static class Documentation {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
+    public static byte[] View(HttpListenerContext ctx, Dictionary<string, string> parameters, bool serveGZip = false) {
+        string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
+        bool acceptGZip = acceptEncoding.Contains("gzip");
+
+        if (acceptGZip) {
+            ctx.Response.AddHeader("Content-Encoding", "gzip");
+        }
+
+        return View(parameters, acceptGZip);
+    }
+
     public static byte[] View(Dictionary<string, string> parameters, bool serveGZip = false) {
         parameters.TryGetValue("name", out string name);
         if (String.IsNullOrEmpty(name)) {
@@ -72,9 +83,9 @@ internal static class Documentation {
             if (serveGZip) return bytes;
             return Http.Cache.UnGZip(bytes);
         }
-        catch { }
-
-        return Data.CODE_FAILED.Array;
+        catch {
+            return Data.CODE_FAILED.Array;
+        }
     }
 
     public static byte[] Create(HttpListenerContext ctx, string origin) {

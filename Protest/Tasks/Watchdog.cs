@@ -452,7 +452,7 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Create(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
+    public static byte[] Create(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string watcherString = reader.ReadToEnd();
 

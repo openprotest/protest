@@ -456,7 +456,7 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] CreateUser(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
+    public static byte[] CreateUser(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

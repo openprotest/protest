@@ -1,7 +1,7 @@
 ﻿#if !DEBUG && NET7_0_OR_GREATER
 //#define DEFLATE
 #define BROTLI
-# endif
+#endif
 
 using System.IO;
 using System.Collections.Concurrent;

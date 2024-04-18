@@ -29,7 +29,7 @@ internal static partial class DeviceConfiguration {
         return null;
     }
 
-    public static byte[] Save(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
+    public static byte[] Save(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -52,7 +52,7 @@ internal static partial class DeviceConfiguration {
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] Fetch(Dictionary<string, string> parameters, HttpListenerContext ctx, string origin) {
+    public static byte[] Fetch(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
