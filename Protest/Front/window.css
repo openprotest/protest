@@ -462,7 +462,10 @@
 
 #taskbar.taskbar-left {
 	inset: 0px auto 0px 0px;
-	background: linear-gradient(to left, hsl(20,100%,39%)0%, hsl(31,100%,45%)92%, hsl(20,100%,40%)100%);
+	background: linear-gradient(to left,
+		var(--clr-accent)0%,
+		var(--clr-select)95%,
+		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(12,0,0,1))100%);
 }
 #taskbar.taskbar-left > div.bar-icon:before {
 	transform: translateX(-8px) !important;
@@ -490,7 +493,10 @@
 
 #taskbar.taskbar-right {
 	inset: 0px 0px 0px auto;
-	background: linear-gradient(to right, hsl(20,100%,39%)0%, hsl(31,100%,45%)92%, hsl(20,100%,40%)100%);
+	background: linear-gradient(to right,
+		var(--clr-accent)0%,
+		var(--clr-select)95%,
+		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(12,0,0,1))100%);
 }
 #taskbar.taskbar-right > div.bar-icon:before {
 	transform: translateX(8px) !important;
