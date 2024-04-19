@@ -28,7 +28,8 @@ class Settings extends Tabs {
 		this.snmpTab.onclick  = ()=> this.ShowSnmp();
 		this.graphTab.onclick = ()=> this.ShowGraph();
 
-		this.graphTab.style.display = "none"; //TODO:
+		//TODO:
+		this.graphTab.style.display = "none";
 
 		switch (this.params) {
 		case "ad":
