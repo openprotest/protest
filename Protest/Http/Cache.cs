@@ -79,6 +79,8 @@ internal sealed class Cache {
     public readonly ConcurrentDictionary<string, Entry> cache = new ConcurrentDictionary<string, Entry>();
 
     public Cache(string path) {
+        Console.WriteLine("path: " + path);
+
         birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
         this.path = path;
 #if !DEBUG
@@ -368,11 +370,12 @@ internal sealed class Cache {
         if (bytes is null) return Array.Empty<byte>();
 
         using MemoryStream ms = new MemoryStream();
-        using GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true);
-        zip.Write(bytes, 0, bytes.Length);        
+        using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
+            zip.Write(bytes, 0, bytes.Length);
+        }
 
         byte[] array = ms.ToArray();
-        
+
         return array;
     }
     public static byte[] UnGZip(byte[] bytes) {
