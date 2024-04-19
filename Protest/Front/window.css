@@ -450,7 +450,6 @@
 	transition-delay: .25s;
 }
 
-
 #container.no-popout>.window>.popout-box {
 	display: none;
 }
@@ -463,9 +462,9 @@
 #taskbar.taskbar-left {
 	inset: 0px auto 0px 0px;
 	background: linear-gradient(to left,
-		var(--clr-accent)0%,
-		var(--clr-select)95%,
-		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(12,0,0,1))100%);
+		var(--clr-select)0%,
+		var(--clr-accent)95%,
+		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(8,0,0,1))100%);
 }
 #taskbar.taskbar-left > div.bar-icon:before {
 	transform: translateX(-8px) !important;
@@ -494,9 +493,9 @@
 #taskbar.taskbar-right {
 	inset: 0px 0px 0px auto;
 	background: linear-gradient(to right,
-		var(--clr-accent)0%,
-		var(--clr-select)95%,
-		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(12,0,0,1))100%);
+		var(--clr-select)0%,
+		var(--clr-accent)95%,
+		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(8,0,0,1))100%);
 }
 #taskbar.taskbar-right > div.bar-icon:before {
 	transform: translateX(8px) !important;
