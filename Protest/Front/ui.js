@@ -1066,11 +1066,7 @@ personalizeButton.onclick = ()=> {
 
 taskbar.onmouseup = event=> {
 	if (WIN.array.length === 0) return;
-
 	if (event.button !== 2) return;
-	contextmenu.style.display = "block";
-	contextmenu.style.left = `${event.x}px`;
-	contextmenu.focus();
 
 	contextmenu.textContent = "";
 
@@ -1093,8 +1089,54 @@ taskbar.onmouseup = event=> {
 		}
 	};
 
-	if (contextmenu.offsetLeft + contextmenu.offsetWidth > container.offsetWidth) {
-		contextmenu.style.left = `${container.offsetWidth - contextmenu.offsetWidth - 8}px`;
+	switch (WIN.taskbarPosition) {
+	case "left":
+		contextmenu.style.left   = "8px";
+		contextmenu.style.right  = "unset";
+		contextmenu.style.top    = `${event.y}px`;
+		contextmenu.style.bottom = "unset";
+		break;
+	
+	case "right":
+		contextmenu.style.left   = "unset";
+		contextmenu.style.right  = "8px";
+		contextmenu.style.top    = `${event.y}px`;
+		contextmenu.style.bottom = "unset";
+		break;
+
+	case "top":
+		contextmenu.style.left   = `${event.x}px`;
+		contextmenu.style.right  = "unset";
+		contextmenu.style.top    = "8px";
+		contextmenu.style.bottom = "unset";
+		break;
+
+	default: //bottom
+		contextmenu.style.left   = `${event.x}px`;
+		contextmenu.style.right  = "unset";
+		contextmenu.style.top    = "unset";
+		contextmenu.style.bottom = "8px";
+		break;
+	}
+
+	contextmenu.style.display = "block";
+	contextmenu.focus();
+
+	if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+		if (contextmenu.offsetTop + contextmenu.offsetHeight > container.offsetHeight) {
+			contextmenu.style.top = `${container.offsetHeight - contextmenu.offsetHeight - 8}px`;
+		}
+		else if (contextmenu.offsetTop < 8) {
+			contextmenu.style.top = "8px";
+		}
+	}
+	else {
+		if (contextmenu.offsetLeft + contextmenu.offsetWidth > container.offsetWidth) {
+			contextmenu.style.left = `${container.offsetWidth - contextmenu.offsetWidth - 8}px`;
+		}
+		else if (contextmenu.offsetLeft < 8) {
+			contextmenu.style.left = "8px";
+		}
 	}
 };
 

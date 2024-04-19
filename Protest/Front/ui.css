@@ -9,19 +9,14 @@
 
 #container {
 	position: fixed;
-	left: 0;
-	right: 0;
-	top: 0;
-	bottom: 56px;
+	inset: 0 0 56px 0;
 }
 
 #taskbar {
 	position: fixed;
-	z-index: 16777269;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	inset: auto 0 0 0;
 	height: 56px;
+	z-index: 16777269;
 	background: var(--grd-taskbar);
 }
 

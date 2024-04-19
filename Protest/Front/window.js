@@ -104,55 +104,35 @@ const WIN = {
 
 		switch (position) {
 		case "top":
-			taskbar.style.left = "0px";
-			taskbar.style.right = "0px";
-			taskbar.style.top = "0px";
-			taskbar.style.bottom = "unset";
+			taskbar.style.inset = "0px 0px auto 0px";
 			taskbar.style.width = "unset";
 			taskbar.style.height = `${WIN.iconSize}px`;
-			container.style.left = `${padding}px`;
-			container.style.right = `${padding}px`;
-			container.style.top = `${WIN.iconSize + padding}px`;
-			container.style.bottom = `${padding}px`;
+			taskbar.style.background = "var(--grd-taskbar)";
+			container.style.inset = `${WIN.iconSize + padding}px ${padding}px ${padding}px ${padding}px`;
 			break;
 
 		case "left":
-			taskbar.style.left = "0px";
-			taskbar.style.right = "unset";
-			taskbar.style.top = "0px";
-			taskbar.style.bottom = "0px";
+			taskbar.style.inset = "0px auto 0px 0px";
 			taskbar.style.width = `${WIN.iconSize}px`;
 			taskbar.style.height = "unset";
-			container.style.left = `${WIN.iconSize + padding}px`;
-			container.style.right = `${padding}px`;
-			container.style.top = `${padding}px`;
-			container.style.bottom = `${padding}px`;
+			taskbar.style.background = "linear-gradient(to left, hsl(20,100%,39%)0%, hsl(31,100%,45%)92%, hsl(20,100%,40%)100%)";
+			container.style.inset = `${padding}px ${padding}px ${padding}px ${WIN.iconSize + padding}px`;
 			break;
 
 		case "right":
-			taskbar.style.left = "unset";
-			taskbar.style.right = "0px";
-			taskbar.style.top = "0px";
-			taskbar.style.bottom = "0px";
+			taskbar.style.inset = "0px 0px 0px auto";
 			taskbar.style.width = `${WIN.iconSize}px`;
 			taskbar.style.height = "unset";
-			container.style.left = `${padding}px`;
-			container.style.right = `${WIN.iconSize + padding}px`;
-			container.style.top = `${padding}px`;
-			container.style.bottom = `${padding}px`;
+			taskbar.style.background = "linear-gradient(to right, hsl(20,100%,39%)0%, hsl(31,100%,45%)92%, hsl(20,100%,40%)100%)";
+			container.style.inset = `${padding}px ${WIN.iconSize + padding}px ${padding}px ${padding}px`;
 			break;
 
 		default: //bottom
-			taskbar.style.left = "0px";
-			taskbar.style.right = "0px";
-			taskbar.style.top = "unset";
-			taskbar.style.bottom = "0px";
+			taskbar.style.inset = "auto 0px 0px";
 			taskbar.style.width = "unset";
 			taskbar.style.height = `${WIN.iconSize}px`;
-			container.style.left = `${padding}px`;
-			container.style.right = `${padding}px`;
-			container.style.top = `${padding}px`;
-			container.style.bottom = `${WIN.iconSize + padding}px`;
+			taskbar.style.background = "var(--grd-taskbar)";
+			container.style.inset = `${padding}px ${padding}px ${WIN.iconSize + padding}px ${padding}px`;
 			break;
 		}
 	},
@@ -281,11 +261,20 @@ document.body.onmousemove = event=> {
 		WIN.active.AfterResize();
 	}
 	else if (WIN.isIcoMoving) {
-		let x = WIN.offsetX - (WIN.x0 - event.clientX);
-		x = Math.max(0, x);
-		x = Math.min(taskbar.clientWidth - WIN.active.task.clientWidth, x);
-		WIN.active.task.style.left = `${x}px`;
-		WIN.AlignIcon(true);
+		if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+			let y = WIN.offsetY - (WIN.y0 - event.clientY);
+			y = Math.max(0, y);
+			y = Math.min(taskbar.clientHeight - WIN.active.task.clientHeight, y);
+			WIN.active.task.style.top = `${y}px`;
+			WIN.AlignIcon(true);
+		}
+		else {
+			let x = WIN.offsetX - (WIN.x0 - event.clientX);
+			x = Math.max(0, x);
+			x = Math.min(taskbar.clientWidth - WIN.active.task.clientWidth, x);
+			WIN.active.task.style.left = `${x}px`;
+			WIN.AlignIcon(true);
+		}
 	}
 };
 
@@ -417,9 +406,9 @@ class Window {
 
 		let dblclickCheck = false;
 		this.win.onmousedown = event=> {
-
-			if (!this.popOutWindow)
+			if (!this.popOutWindow) {
 				this.BringToFront();
+			}
 
 			if (event.button === 0 && event.offsetY < 32) { //left click on title bar
 				WIN.offsetX = this.win.offsetLeft;
@@ -456,21 +445,25 @@ class Window {
 			event.stopPropagation();
 		};
 
-		let icoPosition = 0;
+		let iconX = 0;
+		let iconY = 0;
 		this.task.onmousedown = event=> {
 			if (event.button === 0) { //left click
-				icoPosition = this.task.offsetLeft;
+				iconX = this.task.offsetLeft;
+				iconY = this.task.offsetTop;
 
 				this.task.style.zIndex = "5";
 				WIN.offsetX = this.task.offsetLeft;
+				WIN.offsetY = this.task.offsetTop;
 				WIN.x0 = event.clientX;
+				WIN.y0 = event.clientY;
 				WIN.isIcoMoving = true;
 				WIN.active = this;
 			}
 		};
 
 		this.task.onmouseup = event=> {
-			if (event.button === 0 && !MENU.isDragging && (Math.abs(icoPosition - this.task.offsetLeft) < 4)) { //clicked but not moved
+			if (event.button === 0 && !MENU.isDragging && Math.abs(iconX - this.task.offsetLeft) < 4 && Math.abs(iconY - this.task.offsetTop) < 4 ) { //clicked but not moved
 				if (this.popOutWindow) {
 					this.popOutWindow.focus();
 				}
@@ -482,10 +475,6 @@ class Window {
 				event.preventDefault();
 			}
 			else if (event.button === 2) { //right click
-				contextmenu.style.display = "block";
-				contextmenu.style.left = `${event.x}px`;
-
-				contextmenu.focus();
 				event.stopPropagation();
 
 				contextmenu.textContent = "";
@@ -521,10 +510,57 @@ class Window {
 				const closeItem = WIN.CreateContextMenuItem("Close", "controls/close.svg");
 				closeItem.onclick = ()=> this.Close();
 
-
-				if (contextmenu.offsetLeft + contextmenu.offsetWidth > container.offsetWidth) {
-					contextmenu.style.left = `${container.offsetWidth - contextmenu.offsetWidth - 8}px`;
+				switch (WIN.taskbarPosition) {
+				case "left":
+					contextmenu.style.left   = "8px";
+					contextmenu.style.right  = "unset";
+					contextmenu.style.top    = `${event.y}px`;
+					contextmenu.style.bottom = "unset";
+					break;
+					
+				case "right":
+					contextmenu.style.left   = "unset";
+					contextmenu.style.right  = "8px";
+					contextmenu.style.top    = `${event.y}px`;
+					contextmenu.style.bottom = "unset";
+					break;
+				
+				case "top":
+					contextmenu.style.left   = `${event.x}px`;
+					contextmenu.style.right  = "unset";
+					contextmenu.style.top    = "8px";
+					contextmenu.style.bottom = "unset";
+					break;
+				
+				default: //bottom
+					contextmenu.style.left   = `${event.x}px`;
+					contextmenu.style.right  = "unset";
+					contextmenu.style.top    = "unset";
+					contextmenu.style.bottom = "8px";
+					break;
 				}
+
+				contextmenu.style.display = "block";
+				contextmenu.focus();
+
+				if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+					if (contextmenu.offsetTop + contextmenu.offsetHeight > container.offsetHeight) {
+						contextmenu.style.top = `${container.offsetHeight - contextmenu.offsetHeight - 8}px`;
+					}
+					else if (contextmenu.offsetTop < 8) {
+						contextmenu.style.top = "8px";
+					}
+				}
+				else {
+					if (contextmenu.offsetLeft + contextmenu.offsetWidth > container.offsetWidth) {
+						contextmenu.style.left = `${container.offsetWidth - contextmenu.offsetWidth - 8}px`;
+					}
+					else if (contextmenu.offsetLeft < 8) {
+						contextmenu.style.left = "8px";
+					}
+				}
+
+
 			}
 		};
 
