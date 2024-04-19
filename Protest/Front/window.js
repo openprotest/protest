@@ -102,36 +102,31 @@ const WIN = {
 	RearrangeWorkspace: position=> {
 		const padding = 0;
 
+		taskbar.classList.remove("taskbar-top", "taskbar-left", "taskbar-right", "taskbar-bottom");
+		taskbar.classList.add(`taskbar-${position}`);
+
 		switch (position) {
 		case "top":
-			taskbar.style.inset = "0px 0px auto 0px";
 			taskbar.style.width = "unset";
 			taskbar.style.height = `${WIN.iconSize}px`;
-			taskbar.style.background = "var(--grd-taskbar)";
 			container.style.inset = `${WIN.iconSize + padding}px ${padding}px ${padding}px ${padding}px`;
 			break;
 
 		case "left":
-			taskbar.style.inset = "0px auto 0px 0px";
 			taskbar.style.width = `${WIN.iconSize}px`;
 			taskbar.style.height = "unset";
-			taskbar.style.background = "linear-gradient(to left, hsl(20,100%,39%)0%, hsl(31,100%,45%)92%, hsl(20,100%,40%)100%)";
 			container.style.inset = `${padding}px ${padding}px ${padding}px ${WIN.iconSize + padding}px`;
 			break;
 
 		case "right":
-			taskbar.style.inset = "0px 0px 0px auto";
 			taskbar.style.width = `${WIN.iconSize}px`;
 			taskbar.style.height = "unset";
-			taskbar.style.background = "linear-gradient(to right, hsl(20,100%,39%)0%, hsl(31,100%,45%)92%, hsl(20,100%,40%)100%)";
 			container.style.inset = `${padding}px ${WIN.iconSize + padding}px ${padding}px ${padding}px`;
 			break;
 
 		default: //bottom
-			taskbar.style.inset = "auto 0px 0px";
 			taskbar.style.width = "unset";
 			taskbar.style.height = `${WIN.iconSize}px`;
-			taskbar.style.background = "var(--grd-taskbar)";
 			container.style.inset = `${padding}px ${padding}px ${WIN.iconSize + padding}px ${padding}px`;
 			break;
 		}
