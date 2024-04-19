@@ -103,7 +103,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 
 		const scrollBarLabel = document.createElement("div");
-		scrollBarLabel.textContent = "Scroll bar style: ";
+		scrollBarLabel.textContent = "Scroll bar style:";
 		scrollBarLabel.style.display = "inline-block";
 		scrollBarLabel.style.minWidth = "150px";
 		scrollBarLabel.style.fontWeight = "600";
@@ -115,20 +115,34 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const defaultOption = document.createElement("option");
-		defaultOption.value = "default";
-		defaultOption.textContent = "System default";
-		this.scrollBarInput.appendChild(defaultOption);
+		const scrollBarOptions = ["Default", "Thin", "Hidden"];
+		for (let i=0; i<scrollBarOptions.length; i++) {
+			const option = document.createElement("option");
+			option.value = scrollBarOptions[i].toLowerCase();
+			option.textContent = scrollBarOptions[i] === "default" ? "System default" : scrollBarOptions[i];
+			this.scrollBarInput.appendChild(option);
+		}
 
-		const thinOption = document.createElement("option");
-		thinOption.value = "thin";
-		thinOption.textContent = "Thin";
-		this.scrollBarInput.appendChild(thinOption);
+		const taskbarPositionLabel = document.createElement("div");
+		taskbarPositionLabel.textContent = "Taskbar position:";
+		taskbarPositionLabel.style.display = "inline-block";
+		taskbarPositionLabel.style.minWidth = "150px";
+		taskbarPositionLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(taskbarPositionLabel);
 
-		const hiddenOption = document.createElement("option");
-		hiddenOption.value = "hidden";
-		hiddenOption.textContent = "Hidden";
-		this.scrollBarInput.appendChild(hiddenOption);
+		this.taskbarPositionInput = document.createElement("select");
+		this.taskbarPositionInput.style.width = "200px";
+		this.tabsPanel.appendChild(this.taskbarPositionInput);
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		const taskbarPositionOptions = ["Top", "Bottom", "Left", "Right"];
+		for (let i=0; i<taskbarPositionOptions.length; i++) {
+			const option = document.createElement("option");
+			option.value = taskbarPositionOptions[i].toLowerCase();
+			option.textContent = taskbarPositionOptions[i];
+			this.taskbarPositionInput.appendChild(option);
+		}
 
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -171,7 +185,8 @@ class Personalize extends Tabs {
 		this.dateTimeCheckbox.checked      = localStorage.getItem("desk_datetime") !== "false";
 		this.animationsCheckbox.checked    = localStorage.getItem("animations") !== "false";
 		this.glassCheckbox.checked         = localStorage.getItem("glass") === "true";
-		this.scrollBarInput.value     = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
+		this.scrollBarInput.value          = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
+		this.taskbarPositionInput.value    = localStorage.getItem("taskbar_position") ? localStorage.getItem("taskbar_position") : "bottom";
 
 		this.saturation.value = localStorage.getItem("accent_saturation") ? localStorage.getItem("accent_saturation") : 100;
 
@@ -256,12 +271,12 @@ class Personalize extends Tabs {
 		wallpaperDropArea.style.transition   = ".4s";
 		this.tabsPanel.appendChild(wallpaperDropArea);
 
-		const wallpaperLabel = document.createElement("div");
-		wallpaperLabel.textContent = "Drop a picture file here to set as wallpaper";
-		wallpaperLabel.style.color = "var(--clr-dark)";
-		wallpaperLabel.style.fontWeight = "600";
-		wallpaperLabel.style.textAlign = "center";
-		wallpaperDropArea.append(wallpaperLabel);
+		const wallpaperDropLabel = document.createElement("div");
+		wallpaperDropLabel.textContent = "Drop a picture file here to set as wallpaper";
+		wallpaperDropLabel.style.color = "var(--clr-dark)";
+		wallpaperDropLabel.style.fontWeight = "600";
+		wallpaperDropLabel.style.textAlign = "center";
+		wallpaperDropArea.append(wallpaperDropLabel);
 
 		wallpaperDropArea.ondragover = ()=> {
 			wallpaperDropArea.style.backgroundColor = "var(--clr-control)";
@@ -293,7 +308,7 @@ class Personalize extends Tabs {
 		};*/
 
 		const Apply = ()=> {
-			WIN.always_maxed = this.winMaxedCheckbox.checked;
+			WIN.alwaysMaxed = this.winMaxedCheckbox.checked;
 			taskbar.className = this.taskTooltipCheckbox.checked ? "" : "no-tooltip";
 
 			container.className = "";
@@ -306,6 +321,8 @@ class Personalize extends Tabs {
 
 			container.classList.add(`scrollbar-${this.scrollBarInput.value}`);
 
+			WIN.SetTaskbarPosition(this.taskbarPositionInput.value);
+
 			document.body.className = this.animationsCheckbox.checked ? "" : "disable-animations";
 
 			localStorage.setItem("w_always_maxed", this.winMaxedCheckbox.checked);
@@ -316,6 +333,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("animations", this.animationsCheckbox.checked);
 			localStorage.setItem("glass", this.glassCheckbox.checked);
 			localStorage.setItem("scrollbar_style", this.scrollBarInput.value);
+			localStorage.setItem("taskbar_position", this.taskbarPositionInput.value);
 
 			localStorage.setItem("accent_saturation", this.saturation.value);
 
@@ -330,6 +348,8 @@ class Personalize extends Tabs {
 						WIN.array[i].dateTimeCheckbox.checked      = this.dateTimeCheckbox.checked;
 						WIN.array[i].animationsCheckbox.checked    = this.animationsCheckbox.checked;
 						WIN.array[i].glassCheckbox.checked         = this.glassCheckbox.checked;
+						WIN.array[i].scrollBarInput.value          = this.scrollBarInput.value;
+						WIN.array[i].taskbarPositionInput.value    = this.taskbarPositionInput.value;
 
 						WIN.array[i].saturation.value = this.saturation.value;
 						WIN.array[i].saturationValueLabel.textContent = `${this.saturation.value}%`;
@@ -373,8 +393,9 @@ class Personalize extends Tabs {
 		this.dateTimeCheckbox.onchange      = Apply;
 		this.animationsCheckbox.onchange    = Apply;
 		this.glassCheckbox.onchange         = Apply;
-		this.saturation.oninput        = Apply;
-		this.scrollBarInput.onchange   = Apply;
+		this.saturation.oninput             = Apply;
+		this.scrollBarInput.onchange        = Apply;
+		this.taskbarPositionInput.onchange  = Apply;
 
 		Apply();
 	}
@@ -384,7 +405,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.textContent = "";
 
 		const regionLabel = document.createElement("div");
-		regionLabel.textContent = "Region: ";
+		regionLabel.textContent = "Region:";
 		regionLabel.style.display = "inline-block";
 		regionLabel.style.minWidth = "100px";
 		regionLabel.style.fontWeight = "600";

@@ -34,14 +34,32 @@ const WIN = {
 	startX: 10,
 	startY: 10,
 	count: 0,
-	always_maxed: false,
+	alwaysMaxed: false,
+	taskbarPosition: "bottom",
+
+	SetTaskbarPosition: position=> {
+		WIN.taskbarPosition = position;
+
+		WIN.AlignIcon();
+		WIN.RearrangeWorkspace(position);
+
+		MENU.UpdatePosition();
+	},
 
 	AlignIcon: (ignoreActive)=> {
 		const max = onMobile ? 48 : 56;
-		const total = MENU.isDetached ? WIN.array.length : WIN.array.length+1;
-		WIN.iconSize = (taskbar.clientWidth / total > max) ? max : taskbar.clientWidth / total;
+		const total = MENU.isAttached ? WIN.array.length+1 : WIN.array.length;
 
-		if (MENU.isDetached === false) {
+		if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+			WIN.iconSize = (container.clientHeight / total > max) ? max : container.clientHeight / total;
+			WIN.array = WIN.array.sort((a, b)=> a.task.offsetTop - b.task.offsetTop);
+		}
+		else {
+			WIN.iconSize = (container.clientWidth / total > max) ? max : container.clientWidth / total;
+			WIN.array = WIN.array.sort((a, b)=> a.task.offsetLeft - b.task.offsetLeft);
+		}
+
+		if (MENU.isAttached) {
 			attachedmenubutton.style.width = `${WIN.iconSize - 8}px`;
 			attachedmenubutton.style.height = `${WIN.iconSize - 8}px`;
 		}
@@ -51,29 +69,91 @@ const WIN = {
 			WIN.array[i].task.style.height = `${WIN.iconSize - 4}px`;
 		}
 
-		taskbar.style.height = `${WIN.iconSize}px`;
-		container.style.bottom = `${WIN.iconSize}px`;
+		WIN.RearrangeWorkspace(WIN.taskbarPosition);
 
-		WIN.array = WIN.array.sort((a, b)=> a.task.offsetLeft - b.task.offsetLeft);
-
-		if (ignoreActive) {
-			for (let i = 0; i < WIN.array.length; i++)
-				if (WIN.array[i].task != WIN.active.task) {
-					const left = `${2 + (MENU.isDetached ? i : i+1) * WIN.iconSize}px`;
-					WIN.array[i].task.style.left = left;
-					WIN.array[i].task.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
-				}
+		if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+			for (let i = 0; i < WIN.array.length; i++) {
+				if (ignoreActive &&WIN.array[i].task === WIN.active.task) { continue; }
+				const top = `${2 + (MENU.isAttached ? i+1 : i) * WIN.iconSize}px`;
+				WIN.array[i].task.style.left = "2px";
+				WIN.array[i].task.style.top = top;
+				WIN.array[i].task.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
+			}
 		}
 		else {
 			for (let i = 0; i < WIN.array.length; i++) {
-				const left = `${2 + (MENU.isDetached ? i : i+1) * WIN.iconSize}px`;
+				if (ignoreActive &&WIN.array[i].task === WIN.active.task) { continue; }
+				const left = `${2 + (MENU.isAttached ? i+1 : i) * WIN.iconSize}px`;
 				WIN.array[i].task.style.left = left;
+				WIN.array[i].task.style.top = "2px";
 				WIN.array[i].task.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
 			}
+		}
 
+		if (!ignoreActive) {
 			setTimeout(()=> {
-				for (let i = 0; i < WIN.array.length; i++) WIN.array[i].task.style.transition = "0s";
+				for (let i = 0; i < WIN.array.length; i++) {
+					WIN.array[i].task.style.transition = "0s";
+				}
 			}, WIN.ANIME_DURATION);
+		}
+	},
+
+	RearrangeWorkspace: position=> {
+		const padding = 0;
+
+		switch (position) {
+		case "top":
+			taskbar.style.left = "0px";
+			taskbar.style.right = "0px";
+			taskbar.style.top = "0px";
+			taskbar.style.bottom = "unset";
+			taskbar.style.width = "unset";
+			taskbar.style.height = `${WIN.iconSize}px`;
+			container.style.left = `${padding}px`;
+			container.style.right = `${padding}px`;
+			container.style.top = `${WIN.iconSize + padding}px`;
+			container.style.bottom = `${padding}px`;
+			break;
+
+		case "left":
+			taskbar.style.left = "0px";
+			taskbar.style.right = "unset";
+			taskbar.style.top = "0px";
+			taskbar.style.bottom = "0px";
+			taskbar.style.width = `${WIN.iconSize}px`;
+			taskbar.style.height = "unset";
+			container.style.left = `${WIN.iconSize + padding}px`;
+			container.style.right = `${padding}px`;
+			container.style.top = `${padding}px`;
+			container.style.bottom = `${padding}px`;
+			break;
+
+		case "right":
+			taskbar.style.left = "unset";
+			taskbar.style.right = "0px";
+			taskbar.style.top = "0px";
+			taskbar.style.bottom = "0px";
+			taskbar.style.width = `${WIN.iconSize}px`;
+			taskbar.style.height = "unset";
+			container.style.left = `${padding}px`;
+			container.style.right = `${WIN.iconSize + padding}px`;
+			container.style.top = `${padding}px`;
+			container.style.bottom = `${padding}px`;
+			break;
+
+		default: //bottom
+			taskbar.style.left = "0px";
+			taskbar.style.right = "0px";
+			taskbar.style.top = "unset";
+			taskbar.style.bottom = "0px";
+			taskbar.style.width = "unset";
+			taskbar.style.height = `${WIN.iconSize}px`;
+			container.style.left = `${padding}px`;
+			container.style.right = `${padding}px`;
+			container.style.top = `${padding}px`;
+			container.style.bottom = `${WIN.iconSize + padding}px`;
+			break;
 		}
 	},
 
@@ -480,7 +560,7 @@ class Window {
 
 		WIN.AlignIcon(false);
 
-		if (onMobile || WIN.always_maxed) this.Toggle();
+		if (onMobile || WIN.alwaysMaxed) this.Toggle();
 	}
 
 	Close() {
@@ -604,11 +684,12 @@ class Window {
 		else { //minimize
 			if (this.popOutWindow) return;
 
-			let iconPosition = this.task.getBoundingClientRect().x - this.win.offsetLeft - this.win.clientWidth / 2;
+			let iconX = this.task.getBoundingClientRect().x - this.win.offsetLeft - this.win.clientWidth / 2;
+			let iconY = this.task.getBoundingClientRect().y - this.win.offsetTop - this.win.clientHeight / 2;
 
 			this.win.style.opacity = "0";
 			this.win.style.visibility = "hidden";
-			this.win.style.transform = `scale(.6) translateX(${iconPosition}px) translateY(${container.clientHeight}px)`;
+			this.win.style.transform = `scale(.6) translateX(${iconX}px) translateY(${iconY}px)`;
 			this.isMinimized = true;
 
 			this.task.className = "bar-icon";

@@ -21,7 +21,7 @@ const UI = {
 			localStorage.setItem("animations", "false");
 		}
 
-		WIN.always_maxed = localStorage.getItem("w_always_maxed") === "true";
+		WIN.alwaysMaxed = localStorage.getItem("w_always_maxed") === "true";
 		taskbar.className = localStorage.getItem("w_tasktooltip") === "false" ? "no-tooltip" : "";
 		document.body.className = localStorage.getItem("animations") !== "false" ? "" : "disable-animations";
 
@@ -54,8 +54,19 @@ const UI = {
 		localStorage.getItem("scrollbar_style") : "thin";
 		container.classList.add(`scrollbar-${scrollBarStyle}`);
 
+		WIN.SetTaskbarPosition(localStorage.getItem("taskbar_position") ?? "bottom");
+
 		UI.regionalFormat = localStorage.getItem("regional_format") ?
 			localStorage.getItem("regional_format") : "sys";
+
+		MENU.isAttached = localStorage.getItem("menu_attached") !== "false" ?? true;
+
+		if (MENU.isAttached) {
+			MENU.Attach();
+		}
+		else {
+			MENU.Detach();
+		}
 
 		const pos = JSON.parse(localStorage.getItem("menu_button_pos"));
 		if (pos) {
@@ -64,24 +75,14 @@ const UI = {
 			menubutton.style.top = pos.top;
 			menubutton.style.width = pos.width;
 			menubutton.style.height = pos.height;
-			menubutton.style.visibility = MENU.isDetached ? "visible" : "hidden";
-			
+
 			const logo = menubutton.children[0];
 			logo.style.left = pos.l_left;
 			logo.style.top = pos.l_top;
 			logo.style.width = pos.l_width;
 			logo.style.height = pos.l_height;
 
-			if (pos.l_top === "48px") {
-				MENU.isDetached = false;
-				attachedmenubutton.style.transform = "none";
-				attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
-				menubutton.style.transform = "scaleY(0)";
-				menubutton.children[0].style.top = "48px";
-			}
-			else {
-				MENU.isDetached = true;
-			}
+			MENU.UpdatePosition();
 		}
 	},
 
@@ -372,6 +373,71 @@ const MENU = {
 		}
 	},
 
+	Attach: ()=> {
+		const logo = menubutton.children[0];
+
+		menubutton.style.visibility = "hidden";
+
+		attachedmenubutton.style.transform = "none";
+		attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
+		
+		switch (WIN.taskbarPosition) {
+		case "top":
+			logo.style.top = "-24px";
+			menubutton.style.transformOrigin = "0% 0%";
+			menubutton.style.transform = "scaleY(0)";
+			attachedmenubutton.style.transformOrigin = "100% 100%";
+			break;
+
+		case "left":
+			logo.style.left = "-24px";
+			menubutton.style.transformOrigin = "0% 0%";
+			menubutton.style.transform = "scaleX(0)";
+			attachedmenubutton.style.transformOrigin = "100% 100%";
+			break;
+
+		case "right":
+			logo.style.left = "48px";
+			menubutton.style.transformOrigin = "100% 100%";
+			menubutton.style.transform = "scaleX(0)";
+			attachedmenubutton.style.transformOrigin = "0% 0%";
+			break;
+
+		default: //bottom
+			logo.style.top = "48px";
+			menubutton.style.transformOrigin = "100% 100%";
+			menubutton.style.transform = "scaleY(0)";
+			attachedmenubutton.style.transformOrigin = "0% 0%";
+			break;
+		}
+
+		if (!MENU.isAttached) {
+			MENU.isAttached = true;
+			WIN.AlignIcon();
+		}
+		localStorage.setItem("menu_attached", true);
+	},
+
+	Detach: ()=> {
+		menubutton.style.visibility = "visible";
+		menubutton.style.transform = "none";
+
+		switch (WIN.taskbarPosition) {
+		case "top": attachedmenubutton.style.transform = "scaleY(0)"; break;
+		case "left": attachedmenubutton.style.transform = "scaleX(0)"; break;
+		case "right": attachedmenubutton.style.transform = "scaleX(0)"; break;
+		default: attachedmenubutton.style.transform = "scaleY(0)"; break;
+		}
+
+		attachedmenubutton.style.boxShadow = "none";
+
+		if (MENU.isAttached) {
+			MENU.isAttached = false;
+			WIN.AlignIcon();
+		}
+		localStorage.setItem("menu_attached", false);
+	},
+
 	Update: filter=> {
 		menulist.textContent = "";
 		MENU.list = [];
@@ -649,15 +715,13 @@ const MENU = {
 		menubox.style.visibility = MENU.isOpen ? "visible" : "hidden";
 		cap.style.visibility = MENU.isOpen ? "visible" : "hidden";
 
-		if (!MENU.isDetached) {
-			menubox.style.left = "20px";
-			menubox.style.top = "25%";
-			menubox.style.bottom = "20px";
-			menubox.style.transform = MENU.isOpen ? "none" : "translateY(100%)";
-			return;
+		let left;
+		if (MENU.isAttached) {
+			left = WIN.taskbarPosition === "right" ? 91 : 0
 		}
-
-		let left = menubutton.style.left ? parseInt(menubutton.style.left) : 0;
+		else {
+			left = menubutton.style.left ? parseInt(menubutton.style.left) : 0;
+		}
 
 		if (left < 10) {
 			menubox.style.left = "20px";
@@ -731,10 +795,12 @@ document.body.addEventListener("mousemove", event=> {
 
 	const logo = menubutton.children[0];
 
-	let px = event.x / container.clientWidth;
-	let py = event.y / container.clientHeight;
+	let ex = WIN.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x;
+	let ey = WIN.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y;
+	let px = ex / container.clientWidth;
+	let py = ey / container.clientHeight;
 
-	if (event.x < 56 && event.y < 56) {
+	if (ex < 56 && ey < 56) { //top left
 		menubutton.style.borderRadius = "4px 8px 48px 8px";
 		menubutton.style.left = "0px";
 		menubutton.style.top = "0px";
@@ -746,7 +812,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.width = "26px";
 		logo.style.height = "26px";
 	}
-	else if (event.x < 56 && event.y > container.clientHeight - 48) {
+	else if (ex < 56 && ey > container.clientHeight - 48) { //bottom left
 		menubutton.style.borderRadius = "8px 48px 8px 4px";
 		menubutton.style.left = "0px";
 		menubutton.style.top = "calc(100% - 48px)";
@@ -758,7 +824,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.width = "26px";
 		logo.style.height = "26px";
 	}
-	else if (event.x > container.clientWidth - 48 && event.y < 56) {
+	else if (ex > container.clientWidth - 48 && ey < 56) { //top right
 		menubutton.style.borderRadius = "8px 4px 8px 64px";
 		menubutton.style.left = "calc(100% - 48px)";
 		menubutton.style.top = "0px";
@@ -770,7 +836,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.width = "26px";
 		logo.style.height = "26px";
 	}
-	else if (event.x > container.clientWidth - 48 && event.y > container.clientHeight - 48) {
+	else if (ex > container.clientWidth - 48 && ey > container.clientHeight - 48) { //bottom right
 		menubutton.style.borderRadius = "64px 8px 4px 8px";
 		menubutton.style.left = "calc(100% - 48px)";
 		menubutton.style.top = "calc(100% - 48px)";
@@ -783,7 +849,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "26px";
 	}
 	else if (px < py && 1 - px > py) { //left
-		let y = 100 * (event.y - 32) / container.clientHeight;
+		let y = 100 * ((WIN.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y) - 32) / container.clientHeight;
 
 		menubutton.style.borderRadius = "14px 40px 40px 14px";
 		menubutton.style.left = "0px";
@@ -797,7 +863,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 	else if (px > py && 1 - px > py) { //top
-		let x = 100 * (event.x - 32) / container.clientWidth;
+		let x = 100 * ((WIN.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x) - 32) / container.clientWidth;
 
 		menubutton.style.borderRadius = "14px 14px 40px 40px";
 		menubutton.style.left = `${x}%`;
@@ -811,7 +877,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 	else if (px < py && 1 - px < py) { //bottom
-		let x = 100 * (event.x - 32) / container.clientWidth;
+		let x = 100 * ((WIN.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x) - 32) / container.clientWidth;
 
 		menubutton.style.borderRadius = "40px 40px 14px 14px";
 		menubutton.style.left = `${x}%`;
@@ -825,7 +891,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 	else if (px > py && 1 - px < py) { //right
-		let y = 100 * (event.y - 32) / container.clientHeight;
+		let y = 100 * ((WIN.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y) - 32) / container.clientHeight;
 
 		menubutton.style.borderRadius = "40px 14px 14px 40px";
 		menubutton.style.left = "calc(100% - 48px)";
@@ -839,29 +905,17 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 
-	menubutton.style.visibility = MENU.isDetached ? "visible" : "hidden";
-
-	if (event.x < 56 && event.y > container.clientHeight - 48 && container.clientHeight - event.y < 0) {
-		attachedmenubutton.style.transform = "none";
-		attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
-		menubutton.style.transform = "scaleY(0)";
-		logo.style.top = "48px";
-
-		if (MENU.isDetached) {
-			MENU.isDetached = false;
-			WIN.AlignIcon();
-		}
+	if (WIN.taskbarPosition === "top" && event.x < 56 && event.y < 48 && event.y > 2 ||
+		WIN.taskbarPosition === "bottom" && event.x < 56 && event.y > container.clientHeight - 48 && container.clientHeight - event.y < 2 ||
+		WIN.taskbarPosition === "left" && event.y < 56 && event.x < 48 && event.x > 2 ||
+		WIN.taskbarPosition === "right" && event.y < 56 && event.x > container.clientWidth - 48 && container.clientWidth - event.x < 2) {
+		MENU.Attach();
 	}
 	else {
-		attachedmenubutton.style.transform = "scaleY(0)";
-		attachedmenubutton.style.boxShadow = "none";
-		menubutton.style.transform = "none";
-
-		if (!MENU.isDetached) {
-			MENU.isDetached = true;
-			WIN.AlignIcon();
-		}
+		MENU.Detach();
 	}
+
+	menubutton.style.visibility = MENU.isAttached ? "hidden" : "visible";
 
 	MENU.UpdatePosition();
 });

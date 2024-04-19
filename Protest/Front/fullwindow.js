@@ -7,7 +7,7 @@ const WIN = {
 	startX: 10,
 	startY: 10,
 	count: 0,
-	always_maxed: true,
+	alwaysMaxed: true,
 };
 
 class Window {

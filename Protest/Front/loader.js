@@ -274,7 +274,7 @@ const LOADER = {
 				if (session[i].isMinimized) win.Minimize();
 				win.position = session[i].position;
 
-				if (!WIN.always_maxed) {
+				if (!WIN.alwaysMaxed) {
 					win.win.style.left = session[i].left;
 					win.win.style.top = session[i].top;
 					win.win.style.width = session[i].width;
