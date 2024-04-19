@@ -20,7 +20,7 @@
 
 ### This repository contains the source code for:
   * **Protest:** The front-end and back-end workings.
-  * **Protest Agent:** A tool to enable the browser talk to the client's computer using a special local method (protest://).
+  * **Protest Agent:** A tool to enable the browser talk to the client's computer using a local protocol (protest://).
 
 ### Overview:
 Pro-test offers a comprehensive solution for creating and managing an inventory database of your network environment.

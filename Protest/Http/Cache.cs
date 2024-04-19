@@ -79,8 +79,6 @@ internal sealed class Cache {
     public readonly ConcurrentDictionary<string, Entry> cache = new ConcurrentDictionary<string, Entry>();
 
     public Cache(string path) {
-        Console.WriteLine("path: " + path);
-
         birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
         this.path = path;
 #if !DEBUG
