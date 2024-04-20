@@ -1029,6 +1029,7 @@ searchinput.onchange = searchinput.oninput = event=> {
 searchinput.onclick = event=> event.stopPropagation();
 
 searchinput.onkeydown = event=> {
+keyMux:
 	switch (event.key) {
 	case "Escape":
 		event.stopPropagation();
@@ -1042,53 +1043,96 @@ searchinput.onkeydown = event=> {
 			setTimeout(searchinput.focus(), 10);
 		}
 		else {
-			if (MENU.index > -1)
+			if (MENU.index > -1) {
 				MENU.list[MENU.index].onclick(event);
+			}
 		}
 		break;
 
 	case "ArrowUp":
 		event.preventDefault();
-		if (MENU.list.length > 0) {
-			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
+		if (MENU.list.length === 0) break;
+
+		if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
+
+		if (MENU.index === -1 || MENU.list[MENU.index].className === "menu-list-item") { //navigate list items
 			MENU.index--;
 			if (MENU.index < 0) MENU.index = MENU.list.length - 1;
 			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
+		}
+		else { //navigate grid items
+			for (let i=MENU.index-1; i >= 0; i--) {
+				if (MENU.list[i].className === "menu-list-item" || MENU.list[i].offsetLeft === MENU.list[MENU.index].offsetLeft) {
+					MENU.index = i;
+					MENU.list[i].style.backgroundColor = "var(--clr-transparent)";
+					break keyMux;
+				}
 			}
+			MENU.index = MENU.list.length - 1;
+			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
+		}
 		break;
 
 	case "ArrowDown":
 		event.preventDefault();
-		if (MENU.list.length > 0) {
+		if (MENU.list.length === 0) break;
+
+		if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
+
+		if (MENU.index === -1 || MENU.list[MENU.index].className === "menu-list-item") { //navigate list items
+			MENU.index++;
+			if (MENU.index >= MENU.list.length) MENU.index = 0;
+			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
+		}
+		else { //navigate grid items
+			for (let i=MENU.index+1; i < MENU.list.length; i++) {
+				if (MENU.list[i].className === "menu-list-item" || MENU.list[i].offsetLeft === MENU.list[MENU.index].offsetLeft) {
+					MENU.index = i;
+					MENU.list[i].style.backgroundColor = "var(--clr-transparent)";
+					break keyMux;
+				}
+			}
+			MENU.index = 0;
+			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
+		}
+		break;
+
+	case "ArrowLeft":
+		if (searchinput.value.length !== 0) break;
+		event.preventDefault();
+
+		if (searchinput.value.length === 0 && MENU.index === -1) { //navigate filters
+			let index = (MENU.filterIndex - 1) % 5;
+			MENU.Filter(index);
+		}
+		else { //navigate menu
+			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
+			MENU.index--;
+			if (MENU.index < 0) MENU.index = MENU.list.length - 1;
+			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
+		}
+		break;
+
+	case "ArrowRight":
+		if (searchinput.value.length !== 0) break;
+		event.preventDefault();
+
+		if (MENU.index === -1) { //navigate filters
+			let index = (MENU.filterIndex + 1) % 5;
+			MENU.Filter(index);
+		}
+		else { //navigate menu
 			if (MENU.index > -1) MENU.list[MENU.index].style.backgroundColor = "";
 			MENU.index++;
 			if (MENU.index >= MENU.list.length) MENU.index = 0;
 			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
 		}
 		break;
-
-	case "ArrowLeft":
-		if (searchinput.value.length === 0 && MENU.index === -1) {
-			event.preventDefault();
-			let index = (MENU.filterIndex - 1) % 5;
-			MENU.Filter(index);
-		}
-		break;
-
-	case "ArrowRight":
-		if (searchinput.value.length === 0 && MENU.index === -1) {
-			event.preventDefault();
-			let index = (MENU.filterIndex + 1) % 5;
-			MENU.Filter(index);
-		}
-		break;
 	}
 
-	if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-		console.log(MENU.filterIndex);
-	}
-
-	if (MENU.list.length > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown")) { //scroll into view
+	if (MENU.list.length > 0 &&
+		MENU.index > -1 &&
+		(event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowRight")) { //scroll into view
 		MENU.list[MENU.index].scrollIntoView({ behavior: "smooth", block: "center" });
 	}
 };
