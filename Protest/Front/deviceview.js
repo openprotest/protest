@@ -162,7 +162,7 @@ class DeviceView extends View {
 		let ips = this.link.ip.v.split(";").map(o=>o.trim());
 
 		for (let i=0; i<ips.length; i++) {
-			if (!ips[i].match(DeviceView.regexIPv4)) { continue; }
+			if (!ips[i].match(DeviceView.regexIPv4)) continue;
 			let split = ips[i].split(".").map(o=>parseInt(o));
 			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3];
 
@@ -802,7 +802,7 @@ class DeviceView extends View {
 				const split = this.link.owner.v.split(";").map(o=>o.trim());
 
 				for (let i=0; i<split.length; i++) {
-					if (split[i].length === 0) { continue; }
+					if (split[i].length === 0) continue;
 					const userButton = this.CreateInfoButton(split[i], "/mono/user.svg");
 					liveButtons.push(userButton);
 					userButton.secondary.textContent = "Owner";

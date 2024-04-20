@@ -98,7 +98,7 @@ class Monitor extends Window {
 		let ips = this.link.ip.v.split(";").map(o=>o.trim());
 
 		for (let i=0; i<ips.length; i++) {
-			if (!ips[i].match(DeviceView.regexIPv4)) { continue; }
+			if (!ips[i].match(DeviceView.regexIPv4)) continue;
 			let split = ips[i].split(".").map(o=>parseInt(o));
 			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3];
 
@@ -197,7 +197,7 @@ class Monitor extends Window {
 			}
 
 			for (let i=0; i<this.chartsList.length; i++) {
-				if (this.chartsList[i].index !== message.index) { continue; }
+				if (this.chartsList[i].index !== message.index) continue;
 				this.chartsList[i].Update(message.data);
 				break;
 			}

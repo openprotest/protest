@@ -86,11 +86,11 @@ const KEEP = {
 
 			for (let i=0; i<KEEP.zones.length; i++) {
 				const split = KEEP.zones[i].network.split("/");
-				if (split.length !== 2) { continue; }
+				if (split.length !== 2) continue;
 
 				let gw = split[0].split(".").map(o=>parseInt(o));
-				if (gw.length != 4) { continue; }
-				if (gw.find(o => o<0 || o>255)) { continue; }
+				if (gw.length != 4) continue;
+				if (gw.find(o => o<0 || o>255)) continue;
 
 				let cidr = parseInt(split[1]);
 				let octet = Math.floor(cidr / 8);

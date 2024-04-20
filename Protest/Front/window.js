@@ -63,7 +63,7 @@ const WIN = {
 
 		if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
 			for (let i = 0; i < WIN.array.length; i++) {
-				if (ignoreActive &&WIN.array[i].task === WIN.active.task) { continue; }
+				if (ignoreActive &&WIN.array[i].task === WIN.active.task) continue;
 				const top = `${2 + (MENU.isAttached ? i+1 : i) * WIN.iconSize}px`;
 				WIN.array[i].task.style.left = "2px";
 				WIN.array[i].task.style.top = top;
@@ -72,7 +72,7 @@ const WIN = {
 		}
 		else {
 			for (let i = 0; i < WIN.array.length; i++) {
-				if (ignoreActive &&WIN.array[i].task === WIN.active.task) { continue; }
+				if (ignoreActive &&WIN.array[i].task === WIN.active.task) continue;
 				const left = `${2 + (MENU.isAttached ? i+1 : i) * WIN.iconSize}px`;
 				WIN.array[i].task.style.left = left;
 				WIN.array[i].task.style.top = "2px";

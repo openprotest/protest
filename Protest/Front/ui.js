@@ -491,7 +491,6 @@ const MENU = {
 		const showHidden = MENU.filterIndex > -1 || keywords.length > 0;
 
 		if (MENU.filterIndex === 1) { //recent
-
 			if (WIN.array.length > 0) {
 				const groupOpen = document.createElement("div");
 				groupOpen.className = "menu-group";
@@ -532,6 +531,7 @@ const MENU = {
 				newItem.className = "menu-list-item";
 				newItem.textContent = MENU.history[i].title;
 				newItem.style.backgroundImage = MENU.history[i].icon.replace(".svg", ".svg?light");
+				MENU.list.push(newItem);
 				menulist.appendChild(newItem);
 
 				MENU.ItemEvent(newItem, ()=>{
@@ -734,18 +734,20 @@ const MENU = {
 	},
 
 	Filter: index=> {
-		if (index === MENU.filterIndex) {
+		//if (index < -1) { index = 4; }
+
+		if (index === MENU.filterIndex || index < 0) {
 			menufilterdot.style.transform = "scale(0)";
 			menufilterdot.style.width = "8px";
 			menufilterdot.style.height = "8px";
-			menufilterdot.style.left = `${menufilter.offsetLeft + index * 40 + 12 + 1}px`;
+			menufilterdot.style.left = `${menufilter.offsetLeft + Math.max(index, 0) * 40 + 12 + 1}px`;
 			MENU.filterIndex = -1;
 		}
 		else {
 			menufilterdot.style.transform = "scale(1)";
 			menufilterdot.style.width = "32px";
 			menufilterdot.style.height = "4px";
-			menufilterdot.style.left = `${menufilter.offsetLeft + index * 40 + 1}px`;
+			menufilterdot.style.left = `${menufilter.offsetLeft + Math.max(index, 0)  * 40 + 1}px`;
 			MENU.filterIndex = index;
 		}
 
@@ -1064,6 +1066,26 @@ searchinput.onkeydown = event=> {
 			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
 		}
 		break;
+
+	case "ArrowLeft":
+		if (searchinput.value.length === 0 && MENU.index === -1) {
+			event.preventDefault();
+			let index = (MENU.filterIndex - 1) % 5;
+			MENU.Filter(index);
+		}
+		break;
+
+	case "ArrowRight":
+		if (searchinput.value.length === 0 && MENU.index === -1) {
+			event.preventDefault();
+			let index = (MENU.filterIndex + 1) % 5;
+			MENU.Filter(index);
+		}
+		break;
+	}
+
+	if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+		console.log(MENU.filterIndex);
 	}
 
 	if (MENU.list.length > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown")) { //scroll into view

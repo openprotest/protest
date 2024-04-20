@@ -362,7 +362,7 @@ class Chat extends Window {
 
 			case "chat-offer":
 				this.CreateBurstedBubble("SDP: Offer", direction, message.sender, message.alias, message.color, timeString);
-				if (direction === "out") { break; }
+				if (direction === "out") break;
 				this.HandleOffer(message);
 				break;
 
@@ -377,7 +377,7 @@ class Chat extends Window {
 
 			case "chat-stream":
 				this.CreateBurstedBubble(`Starting a stream: ${message.uuid}`, direction, message.sender, message.alias, message.color, timeString);
-				if (direction === "out") { break; }
+				if (direction === "out") break;
 
 				console.log("receive chat-stream:", message.uuid);
 				break;
