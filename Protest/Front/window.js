@@ -35,22 +35,12 @@ const WIN = {
 	startY: 10,
 	count: 0,
 	alwaysMaxed: false,
-	taskbarPosition: "bottom",
-
-	SetTaskbarPosition: position=> {
-		WIN.taskbarPosition = position;
-
-		WIN.AlignIcon();
-		WIN.RearrangeWorkspace(position);
-
-		MENU.UpdatePosition();
-	},
 
 	AlignIcon: (ignoreActive)=> {
 		const max = onMobile ? 48 : 56;
 		const total = MENU.isAttached ? WIN.array.length+1 : WIN.array.length;
 
-		if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+		if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
 			WIN.iconSize = (container.clientHeight / total > max) ? max : container.clientHeight / total;
 			WIN.array = WIN.array.sort((a, b)=> a.task.offsetTop - b.task.offsetTop);
 		}
@@ -69,9 +59,9 @@ const WIN = {
 			WIN.array[i].task.style.height = `${WIN.iconSize - 4}px`;
 		}
 
-		WIN.RearrangeWorkspace(WIN.taskbarPosition);
+		UI.RearrangeWorkspace(UI.taskbarPosition);
 
-		if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+		if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (ignoreActive &&WIN.array[i].task === WIN.active.task) { continue; }
 				const top = `${2 + (MENU.isAttached ? i+1 : i) * WIN.iconSize}px`;
@@ -96,39 +86,6 @@ const WIN = {
 					WIN.array[i].task.style.transition = "0s";
 				}
 			}, WIN.ANIME_DURATION);
-		}
-	},
-
-	RearrangeWorkspace: position=> {
-		const padding = 0;
-
-		taskbar.classList.remove("taskbar-top", "taskbar-left", "taskbar-right", "taskbar-bottom");
-		taskbar.classList.add(`taskbar-${position}`);
-
-		switch (position) {
-		case "top":
-			taskbar.style.width = "unset";
-			taskbar.style.height = `${WIN.iconSize}px`;
-			container.style.inset = `${WIN.iconSize + padding}px ${padding}px ${padding}px ${padding}px`;
-			break;
-
-		case "left":
-			taskbar.style.width = `${WIN.iconSize}px`;
-			taskbar.style.height = "unset";
-			container.style.inset = `${padding}px ${padding}px ${padding}px ${WIN.iconSize + padding}px`;
-			break;
-
-		case "right":
-			taskbar.style.width = `${WIN.iconSize}px`;
-			taskbar.style.height = "unset";
-			container.style.inset = `${padding}px ${WIN.iconSize + padding}px ${padding}px ${padding}px`;
-			break;
-
-		default: //bottom
-			taskbar.style.width = "unset";
-			taskbar.style.height = `${WIN.iconSize}px`;
-			container.style.inset = `${padding}px ${padding}px ${WIN.iconSize + padding}px ${padding}px`;
-			break;
 		}
 	},
 
@@ -256,7 +213,7 @@ document.body.onmousemove = event=> {
 		WIN.active.AfterResize();
 	}
 	else if (WIN.isIcoMoving) {
-		if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+		if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
 			let y = WIN.offsetY - (WIN.y0 - event.clientY);
 			y = Math.max(0, y);
 			y = Math.min(taskbar.clientHeight - WIN.active.task.clientHeight, y);
@@ -344,10 +301,17 @@ class Window {
 
 		this.task = document.createElement("div");
 		this.task.setAttribute("role", "button");
-		//this.task.tabIndex = "0";
 		this.task.className = "bar-icon";
-		this.task.style.left = `${2 + WIN.array.length * (onMobile ? 48 : 56)}px`;
 		taskbar.appendChild(this.task);
+
+		if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
+			this.task.style.left = "2px";
+			this.task.style.top = `${2 + WIN.array.length * (onMobile ? 48 : 56)}px`;
+		}
+		else {
+			this.task.style.left = `${2 + WIN.array.length * (onMobile ? 48 : 56)}px`;
+			this.task.style.top = "2px";
+		}
 
 		this.icon = document.createElement("div");
 		this.icon.className = "icon";
@@ -505,7 +469,7 @@ class Window {
 				const closeItem = WIN.CreateContextMenuItem("Close", "controls/close.svg");
 				closeItem.onclick = ()=> this.Close();
 
-				switch (WIN.taskbarPosition) {
+				switch (UI.taskbarPosition) {
 				case "left":
 					contextmenu.style.left   = "8px";
 					contextmenu.style.right  = "unset";
@@ -538,7 +502,7 @@ class Window {
 				contextmenu.style.display = "block";
 				contextmenu.focus();
 
-				if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+				if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
 					if (contextmenu.offsetTop + contextmenu.offsetHeight > container.offsetHeight) {
 						contextmenu.style.top = `${container.offsetHeight - contextmenu.offsetHeight - 8}px`;
 					}

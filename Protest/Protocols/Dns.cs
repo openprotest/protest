@@ -81,7 +81,7 @@ internal static class Dns {
         if (domainNames is null) return Array.Empty<byte>();
 
         if (dnsServer is not null) dnsServer = Uri.UnescapeDataString(dnsServer);
-        dnsServer ??= GetLocalDnsAddress().ToString();
+        dnsServer ??= GetLocalDnsAddress(true).ToString();
 
         if (domainNames is null) return Array.Empty<byte>();
 
@@ -604,7 +604,7 @@ internal static class Dns {
         return builder.ToString();
     }
 
-    private static IPAddress GetLocalDnsAddress() {
+    private static IPAddress GetLocalDnsAddress(bool forceIPv4 = false) {
         NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
 
         foreach (NetworkInterface networkInterface in networkInterfaces) {
@@ -613,6 +613,7 @@ internal static class Dns {
                 IPAddressCollection dnsAddresses = ipProperties.DnsAddresses;
 
                 foreach (IPAddress dnsAddress in dnsAddresses) {
+                    if (forceIPv4 && dnsAddress.AddressFamily != AddressFamily.InterNetwork) { continue; }
                     return dnsAddress;
                 }
             }

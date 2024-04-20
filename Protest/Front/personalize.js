@@ -321,7 +321,7 @@ class Personalize extends Tabs {
 
 			container.classList.add(`scrollbar-${this.scrollBarInput.value}`);
 
-			WIN.SetTaskbarPosition(this.taskbarPositionInput.value);
+			UI.SetTaskbarPosition(this.taskbarPositionInput.value);
 
 			document.body.className = this.animationsCheckbox.checked ? "" : "disable-animations";
 

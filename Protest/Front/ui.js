@@ -5,6 +5,7 @@ const UI = {
 	lastUpdateFilter: "",
 	regionalFormat: "sys",
 	onMobile: (/Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)),
+	taskbarPosition: "bottom",
 
 	Initialize: ()=> {
 		for (let i = 0; i < 12; i++) { //clock dots
@@ -54,7 +55,7 @@ const UI = {
 		localStorage.getItem("scrollbar_style") : "thin";
 		container.classList.add(`scrollbar-${scrollBarStyle}`);
 
-		WIN.SetTaskbarPosition(localStorage.getItem("taskbar_position") ?? "bottom");
+		UI.SetTaskbarPosition(localStorage.getItem("taskbar_position") ?? "bottom");
 
 		UI.regionalFormat = localStorage.getItem("regional_format") ?
 			localStorage.getItem("regional_format") : "sys";
@@ -129,6 +130,46 @@ const UI = {
 			"</g></svg>";
 
 		favicon.href = "data:image/svg+xml;base64," + btoa(ico);
+	},
+
+	SetTaskbarPosition: position=> {
+		UI.taskbarPosition = position;
+		WIN.AlignIcon();
+		UI.RearrangeWorkspace(position);
+		MENU.UpdatePosition();
+	},
+
+	RearrangeWorkspace: position=> {
+		const padding = 0;
+
+		taskbar.classList.remove("taskbar-top", "taskbar-left", "taskbar-right", "taskbar-bottom");
+		taskbar.classList.add(`taskbar-${position}`);
+
+		switch (position) {
+		case "top":
+			taskbar.style.width = "unset";
+			taskbar.style.height = `${WIN.iconSize}px`;
+			container.style.inset = `${WIN.iconSize + padding}px ${padding}px ${padding}px ${padding}px`;
+			break;
+
+		case "left":
+			taskbar.style.width = `${WIN.iconSize}px`;
+			taskbar.style.height = "unset";
+			container.style.inset = `${padding}px ${padding}px ${padding}px ${WIN.iconSize + padding}px`;
+			break;
+
+		case "right":
+			taskbar.style.width = `${WIN.iconSize}px`;
+			taskbar.style.height = "unset";
+			container.style.inset = `${padding}px ${WIN.iconSize + padding}px ${padding}px ${padding}px`;
+			break;
+
+		default: //bottom
+			taskbar.style.width = "unset";
+			taskbar.style.height = `${WIN.iconSize}px`;
+			container.style.inset = `${padding}px ${padding}px ${WIN.iconSize + padding}px ${padding}px`;
+			break;
+		}
 	},
 
 	RgbToHsl: color=> {
@@ -381,7 +422,7 @@ const MENU = {
 		attachedmenubutton.style.transform = "none";
 		attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
 		
-		switch (WIN.taskbarPosition) {
+		switch (UI.taskbarPosition) {
 		case "top":
 			logo.style.top = "-24px";
 			menubutton.style.transformOrigin = "0% 0%";
@@ -422,7 +463,7 @@ const MENU = {
 		menubutton.style.visibility = "visible";
 		menubutton.style.transform = "none";
 
-		switch (WIN.taskbarPosition) {
+		switch (UI.taskbarPosition) {
 		case "top": attachedmenubutton.style.transform = "scaleY(0)"; break;
 		case "left": attachedmenubutton.style.transform = "scaleX(0)"; break;
 		case "right": attachedmenubutton.style.transform = "scaleX(0)"; break;
@@ -717,7 +758,7 @@ const MENU = {
 
 		let left;
 		if (MENU.isAttached) {
-			left = WIN.taskbarPosition === "right" ? 91 : 0
+			left = UI.taskbarPosition === "right" ? 91 : 0
 		}
 		else {
 			left = menubutton.style.left ? parseInt(menubutton.style.left) : 0;
@@ -795,8 +836,8 @@ document.body.addEventListener("mousemove", event=> {
 
 	const logo = menubutton.children[0];
 
-	let ex = WIN.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x;
-	let ey = WIN.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y;
+	let ex = UI.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x;
+	let ey = UI.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y;
 	let px = ex / container.clientWidth;
 	let py = ey / container.clientHeight;
 
@@ -849,7 +890,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "26px";
 	}
 	else if (px < py && 1 - px > py) { //left
-		let y = 100 * ((WIN.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y) - 32) / container.clientHeight;
+		let y = 100 * ((UI.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y) - 32) / container.clientHeight;
 
 		menubutton.style.borderRadius = "14px 40px 40px 14px";
 		menubutton.style.left = "0px";
@@ -863,7 +904,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 	else if (px > py && 1 - px > py) { //top
-		let x = 100 * ((WIN.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x) - 32) / container.clientWidth;
+		let x = 100 * ((UI.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x) - 32) / container.clientWidth;
 
 		menubutton.style.borderRadius = "14px 14px 40px 40px";
 		menubutton.style.left = `${x}%`;
@@ -877,7 +918,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 	else if (px < py && 1 - px < py) { //bottom
-		let x = 100 * ((WIN.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x) - 32) / container.clientWidth;
+		let x = 100 * ((UI.taskbarPosition === "left" ? event.x - taskbar.clientWidth : event.x) - 32) / container.clientWidth;
 
 		menubutton.style.borderRadius = "40px 40px 14px 14px";
 		menubutton.style.left = `${x}%`;
@@ -891,7 +932,7 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 	else if (px > py && 1 - px < py) { //right
-		let y = 100 * ((WIN.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y) - 32) / container.clientHeight;
+		let y = 100 * ((UI.taskbarPosition === "top" ? event.y - taskbar.clientHeight : event.y) - 32) / container.clientHeight;
 
 		menubutton.style.borderRadius = "40px 14px 14px 40px";
 		menubutton.style.left = "calc(100% - 48px)";
@@ -905,10 +946,10 @@ document.body.addEventListener("mousemove", event=> {
 		logo.style.height = "28px";
 	}
 
-	if (WIN.taskbarPosition === "top" && event.x < 56 && event.y < 48 && event.y > 2 ||
-		WIN.taskbarPosition === "bottom" && event.x < 56 && event.y > container.clientHeight - 48 && container.clientHeight - event.y < 2 ||
-		WIN.taskbarPosition === "left" && event.y < 56 && event.x < 48 && event.x > 2 ||
-		WIN.taskbarPosition === "right" && event.y < 56 && event.x > container.clientWidth - 48 && container.clientWidth - event.x < 2) {
+	if (UI.taskbarPosition === "top" && event.x < 56 && event.y < 48 && event.y > 2 ||
+	UI.taskbarPosition === "bottom" && event.x < 56 && event.y > container.clientHeight - 48 && container.clientHeight - event.y < 2 ||
+	UI.taskbarPosition === "left" && event.y < 56 && event.x < 48 && event.x > 2 ||
+	UI.taskbarPosition === "right" && event.y < 56 && event.x > container.clientWidth - 48 && container.clientWidth - event.x < 2) {
 		MENU.Attach();
 	}
 	else {
@@ -1089,7 +1130,7 @@ taskbar.onmouseup = event=> {
 		}
 	};
 
-	switch (WIN.taskbarPosition) {
+	switch (UI.taskbarPosition) {
 	case "left":
 		contextmenu.style.left   = "8px";
 		contextmenu.style.right  = "unset";
@@ -1122,7 +1163,7 @@ taskbar.onmouseup = event=> {
 	contextmenu.style.display = "block";
 	contextmenu.focus();
 
-	if (WIN.taskbarPosition === "left" || WIN.taskbarPosition === "right") {
+	if (UI.taskbarPosition === "left" || UI.taskbarPosition === "right") {
 		if (contextmenu.offsetTop + contextmenu.offsetHeight > container.offsetHeight) {
 			contextmenu.style.top = `${container.offsetHeight - contextmenu.offsetHeight - 8}px`;
 		}
