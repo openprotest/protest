@@ -16,13 +16,17 @@ internal static class Backup {
     }
 
     internal static byte[] Create(Dictionary<string, string> parameters) {
-        if (parameters is null || !parameters.TryGetValue("name", out string name)) {
+        if (parameters is null || !parameters.TryGetValue("name", out string name) || String.IsNullOrEmpty(name)) {
             name = $"backup-{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}";
         }
+
+        Console.WriteLine(name);
 
         foreach (char c in Path.GetInvalidFileNameChars()) {
             name = name.Replace (c, '_');
         }
+        
+        Console.WriteLine(name);
 
         try {
             DirectoryInfo backupDirectory = new DirectoryInfo(Data.DIR_BACKUP);

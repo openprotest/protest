@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Protest;
@@ -68,20 +69,15 @@ public static class Data {
 
     public static readonly string FILE_CONFIG = $"{DIR_ROOT}{DELIMITER}protest.cfg";
 
+    private static readonly byte[] DEBIT_TEMPLATE = "The aforementioned items are company property and must be returned in pristine condition at the conclusion of the contract. Any loss, damage, or failure to return these items will result in their value being deducted from the employee's salary."u8.ToArray();
+
     public static void InitializeDirectories() {
         DirectoryInfo[] dirs = new DirectoryInfo[] {
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
             new DirectoryInfo(DIR_LIFELINE),
-            new DirectoryInfo(DIR_WATCHDOG),
-            new DirectoryInfo(DIR_DOCUMENTATION),
             new DirectoryInfo(DIR_DEBIT),
-            new DirectoryInfo(DIR_DEBIT_SHORT),
-            new DirectoryInfo(DIR_DEBIT_LONG),
-            new DirectoryInfo(DIR_DEBIT_RETURNED),
-            new DirectoryInfo(DIR_DEBIT_TEMPLATE),
-            new DirectoryInfo(DIR_CONFIG),
-            new DirectoryInfo(DIR_DATA),
+            //new DirectoryInfo(DIR_DEBIT_TEMPLATE),
             new DirectoryInfo(DIR_DEVICES),
             new DirectoryInfo(DIR_USERS)
         };
@@ -95,6 +91,11 @@ public static class Data {
             catch (Exception ex) {
                 Logger.Error(ex);
             }
+        }
+
+        if (!Directory.Exists(DIR_DEBIT_TEMPLATE)) {
+            Directory.CreateDirectory(DIR_DEBIT_TEMPLATE);
+            File.WriteAllBytes($"{DIR_DEBIT_TEMPLATE}{DELIMITER}Company.txt", DEBIT_TEMPLATE);
         }
     }
 

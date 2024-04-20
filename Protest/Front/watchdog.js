@@ -585,7 +585,7 @@ class Watchdog extends Window {
 				this.Seek();
 			}
 			catch (ex) {
-				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 200);
+				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
 			}
 
 			cancelButton.onclick();

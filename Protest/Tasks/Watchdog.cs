@@ -467,6 +467,10 @@ internal static class Watchdog {
 
             byte[] content = JsonSerializer.SerializeToUtf8Bytes(watcher, watcherSerializerOptions);
 
+            if (!Directory.Exists(Data.DIR_WATCHDOG)) {
+                Directory.CreateDirectory(Data.DIR_WATCHDOG);
+            }
+
             File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}", content);
 
             DirectoryInfo dirInfo = new DirectoryInfo($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_");

@@ -39,13 +39,23 @@ internal static partial class DeviceConfiguration {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        string payload = reader.ReadToEnd();
+        try {
+            if (!Directory.Exists(Data.DIR_CONFIG)) {
+                Directory.CreateDirectory(Data.DIR_CONFIG);
+            }
 
-        byte[] plain = Encoding.UTF8.GetBytes(FormatRouterOs(payload));
-        byte[] gzip = Http.Cache.GZip(plain);
-        byte[] cipher = Cryptography.Encrypt(gzip, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-        File.WriteAllBytes($"{Data.DIR_CONFIG}{Data.DELIMITER}{file}", cipher);
+            StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+            string payload = reader.ReadToEnd();
+
+            byte[] plain = Encoding.UTF8.GetBytes(FormatRouterOs(payload));
+            byte[] gzip = Http.Cache.GZip(plain);
+            byte[] cipher = Cryptography.Encrypt(gzip, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+            File.WriteAllBytes($"{Data.DIR_CONFIG}{Data.DELIMITER}{file}", cipher);
+        }
+        catch (Exception ex){
+            Logger.Error(ex);
+            return Data.CODE_FAILED.ToArray();
+        }
 
         Logger.Action(origin, $"Modify the device conficuration for file: {file}");
 

@@ -320,6 +320,10 @@ internal static class DebitNotes {
     public static byte[] ListTemplate() {
         DirectoryInfo dir = new DirectoryInfo(Data.DIR_DEBIT_TEMPLATE);
 
+        if (!dir.Exists) {
+            return "{}"u8.ToArray();
+        }
+
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
         FileInfo[] files = dir.GetFiles();

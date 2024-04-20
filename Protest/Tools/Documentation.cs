@@ -16,9 +16,10 @@ internal static class Documentation {
         string[] keywordsArray = keywords.Split(' ').Where(o=>o.Length > 0).ToArray();
 
         DirectoryInfo dir = new DirectoryInfo(Data.DIR_DOCUMENTATION);
-        if (!dir.Exists)
-            return Data.CODE_FILE_NOT_FOUND.Array;
-
+        if (!dir.Exists) {
+            return "[]"u8.ToArray();
+        }
+        
         List<FileInfo> files = dir.GetFiles().ToList();
         files.Sort((a, b) => String.Compare(a.Name, b.Name));
 
@@ -167,18 +168,23 @@ internal static class Documentation {
         keywords.Sort();
 
         idx = 0;
-        if (keywords.Count > 1)
-            while (idx < keywords.Count - 1)
-                if (keywords[idx + 1].StartsWith(keywords[idx]))
+        if (keywords.Count > 1) {
+            while (idx < keywords.Count - 1) {
+                if (keywords[idx + 1].StartsWith(keywords[idx])) {
                     keywords.RemoveAt(idx);
-                else
+                }
+                else {
                     idx++;
+                }
+            }
+        }
 
-        lock (mutex)
+        lock (mutex) {
             try {
                 DirectoryInfo dir = new DirectoryInfo(Data.DIR_DOCUMENTATION);
-                if (!dir.Exists)
+                if (!dir.Exists) {
                     dir.Create();
+                }
 
                 FileInfo html = new FileInfo($"{Data.DIR_DOCUMENTATION}\\{filename}.html.gz");
 
@@ -190,6 +196,7 @@ internal static class Documentation {
             catch {
                 return Data.CODE_FILE_NOT_FOUND.Array;
             }
+        }
 
         Logger.Action(origin, $"Create documentation: {filename}");
 
