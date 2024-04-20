@@ -129,8 +129,13 @@ internal static class Configuration {
         builder.AppendLine($"db_key = {DB_KEY_STRING}");
         builder.AppendLine();
 
+#if DEBUG
         builder.AppendLine($"front_path = {front_path}");
         builder.AppendLine();
+#else
+        builder.AppendLine($"#front_path = {front_path}");
+        builder.AppendLine();
+#endif
 
         builder.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
         builder.AppendLine("accept_xff_header = false");
@@ -146,10 +151,10 @@ internal static class Configuration {
         builder.AppendLine();
 
         builder.AppendLine();
-        builder.AppendLine("###");
-        builder.AppendLine("###  Use NETSH to bind an SSL certificate with your https endpoint:");
-        builder.AppendLine($"###  netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{Data.GUID}}}");
-        builder.AppendLine("###");
+        builder.AppendLine("##");
+        builder.AppendLine("##  Use NETSH to bind an SSL certificate with your https endpoint:");
+        builder.AppendLine($"##  netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{Data.GUID}}}");
+        builder.AppendLine("##");
 
         File.WriteAllText(Data.FILE_CONFIG, builder.ToString());
     }
