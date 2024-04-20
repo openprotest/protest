@@ -10,6 +10,7 @@
 #container {
 	position: fixed;
 	inset: 0 0 56px 0;
+	transition: .2s;
 }
 
 #taskbar {

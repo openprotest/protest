@@ -1068,8 +1068,7 @@ keyMux:
 					break keyMux;
 				}
 			}
-			MENU.index = MENU.list.length - 1;
-			MENU.list[MENU.index].style.backgroundColor = "var(--clr-transparent)";
+			MENU.index = -1;
 		}
 		break;
 
@@ -1132,8 +1131,8 @@ keyMux:
 
 	if (MENU.list.length > 0 &&
 		MENU.index > -1 &&
-		(event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowRight")) { //scroll into view
-		MENU.list[MENU.index].scrollIntoView({ behavior: "smooth", block: "center" });
+		(event.key==="ArrowUp" || event.key==="ArrowDown" || event.key==="ArrowLeft" || event.key==="ArrowRight")) { //scroll into view
+		MENU.list[MENU.index].scrollIntoView({ behavior:"smooth", block:"center" });
 	}
 };
 

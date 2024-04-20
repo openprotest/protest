@@ -323,7 +323,6 @@ internal sealed class Cache {
         foreach (string line in lines) {
             string trimmedLine = line.Trim();
             if (string.IsNullOrEmpty(trimmedLine)) continue;
-
             if (trimmedLine.StartsWith("//")) continue;
 
             int commentIndex = trimmedLine.IndexOf("//");
@@ -344,10 +343,10 @@ internal sealed class Cache {
                                      .Replace(" !== ", "!==")
                                      .Replace("{ {", "{{")
                                      .Replace("} }", "}}")
-                                     .Replace(") {", "){");
-
-            trimmedLine = trimmedLine.Replace("; ", ";")
-                                     .Replace(": ", ":");
+                                     .Replace(") {", "){")
+                                     .Replace("; ", ";")
+                                     .Replace(": ", ":")
+                                     .Replace(" !impossible;", "!impossible;");
 
             if (softMinify) {
                 result.AppendLine(trimmedLine);

@@ -147,9 +147,7 @@ internal static class KeepAlive {
         List<WebSocket> remove = new List<WebSocket>();
 
         foreach (Entry entry in connections.Values) {
-            if (!includeOrigin && entry.username == origin) {
-                continue;
-            }
+            if (!includeOrigin && entry.username == origin) { continue; }
 
             bool isAuthorized = Auth.IsAuthorized(entry.ctx, accessPath);
             if (!isAuthorized) { continue; }
