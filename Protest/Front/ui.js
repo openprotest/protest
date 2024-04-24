@@ -309,6 +309,7 @@ const MENU = {
 		//{ t:"Scripts",            i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
 		//{ t:"Script reports",     i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:params=> {} },
 		//{ t:"Ongoing scripts",    i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:params=> {} },
+		{ t:"Issues",             i:"mono/issues.svg?light", g:"tools", h:false,  f:params=> new Issues() },
 
 		{ t:"Ping",               i:"mono/ping.svg?light",         g:"utilities", h:false, f:params=> new Ping(params),         k:"roundtrip rtt icmp echo reply" },
 		{ t:"ARP ping",           i:"mono/ping.svg?light",         g:"utilities", h:true,  f:params=> new Ping({ entries: [], timeout:500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },

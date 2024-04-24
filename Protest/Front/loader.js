@@ -94,6 +94,7 @@ const LOADER = {
 		"monitor.js",
 		"fetch.js",
 		"hexviewer.js",
+		"issues.js",
 		"ping.js",
 		"dnslookup.js",
 		"traceroute.js",
@@ -316,6 +317,8 @@ const LOADER = {
 		case "Documentation" : return new Documentation(command.params);
 		case "DebitNotes"    : return new DebitNotes(command.params);
 		case "Watchdog"      : return new Watchdog(command.params);
+
+		case "Issues"    : return new Issues(command.params);
 
 		case "HexViewer" : return new HexViewer(command.params);
 

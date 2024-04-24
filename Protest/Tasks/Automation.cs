@@ -36,6 +36,12 @@ internal static class Automation {
         //builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
         //builder.Append("},");
 
+        builder.Append("\"issues\":{");
+        builder.Append($"\"name\":{{\"v\":\"Issues\"}},");
+        builder.Append($"\"status\":{{\"v\":\"Stopped\"}},");
+        builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
+        builder.Append("},");
+
         builder.Append("\"fetch\":{");
         builder.Append($"\"name\":{{\"v\":\"Fetch\"}},");
         builder.Append($"\"status\":{{\"v\":\"Stopped\"}},");
@@ -45,7 +51,7 @@ internal static class Automation {
 
         builder.Append("},");
 
-        builder.Append("\"length\":3");
+        builder.Append("\"length\":4");
 
         builder.Append('}');
 
