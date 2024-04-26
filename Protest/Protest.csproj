@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Product>Pro-test</Product>
-    <AssemblyName>pro-test</AssemblyName>
+    <AssemblyName>protest</AssemblyName>
     <Company>veniware</Company>
     <Authors>andreas venizelou</Authors>
     <Copyright>2024 veniware. Released into the public domain.</Copyright>

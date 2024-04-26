@@ -342,8 +342,8 @@ const MENU = {
 		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Personalize("session") },
 		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:params=> new Personalize("agent") },
 
-		{ t:"ACL",           i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
-		{ t:"Open sessions", i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },
+		{ t:"ACL",            i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
+		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },
 
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:params=> new Automation(), k:"" },
 
@@ -365,6 +365,7 @@ const MENU = {
 	index: -1,
 	list: [],
 	history: [],
+	cache: {},
 	lastAltPress: 0,
 	filterIndex: -1,
 	lastSearchValue: "",
@@ -506,6 +507,7 @@ const MENU = {
 				const newItem = document.createElement("div");
 				newItem.className = "menu-grid-item";
 				newItem.style.backgroundImage = WIN.array[i].icon.style.backgroundImage.replace(".svg", ".svg?light");
+
 				newItem.textContent = WIN.array[i].header.textContent;
 				MENU.list.push(newItem);
 				menulist.appendChild(newItem);
@@ -565,6 +567,8 @@ const MENU = {
 			return;
 		}
 
+		const cache = {};
+
 		let lastGroup = null;
 		for (let i = 0; i < MENU.items.length; i++) { //menu items
 			if (MENU.items[i].h && !showHidden) continue;
@@ -572,6 +576,7 @@ const MENU = {
 			const match = keywords.every(
 				keyword=> MENU.items[i].t.toLowerCase().includes(keyword) || MENU.items[i].g.includes(keyword) || (MENU.items[i].k && MENU.items[i].k.includes(keyword))
 			);
+
 			if (!match) continue;
 
 			if (MENU.filterIndex > -1) {
@@ -588,14 +593,29 @@ const MENU = {
 				lastGroup = MENU.items[i].g;
 			}
 
-			const newItem = document.createElement("div");
-			newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
-			newItem.textContent = MENU.items[i].t;
-			newItem.style.backgroundImage = `url(${MENU.items[i].i})`;
-			menulist.appendChild(newItem);
+			let item;
+			if (MENU.items[i].t in MENU.cache && !isGrid) {
+				item = MENU.cache[MENU.items[i].t];
+				item.style.backgroundColor = "";
+				item.style.animation = "unset";
+				cache[MENU.items[i].t] = item;
+				MENU.list.push(item);
+				menulist.appendChild(item);
+			}
+			else {
+				item = document.createElement("div");
+				item.className = isGrid ? "menu-grid-item" : "menu-list-item";
+				item.textContent = MENU.items[i].t;
+				item.style.backgroundImage = `url(${MENU.items[i].i})`;
+				menulist.appendChild(item);
+	
+				MENU.list.push(item);
+				MENU.ItemEvent(item, MENU.items[i].f);
 
-			MENU.list.push(newItem);
-			MENU.ItemEvent(newItem, MENU.items[i].f);
+				if (!isGrid) {
+					cache[MENU.items[i].t] = item;
+				}
+			}
 		}
 
 		let count = 0;
@@ -621,39 +641,53 @@ const MENU = {
 				title ??= LOADER.devices.data[file].hostname ? LOADER.devices.data[file].hostname.v : null;
 				title ??= LOADER.devices.data[file].fqdn ? LOADER.devices.data[file].fqdn.v : null;
 
-				const newItem = document.createElement("div");
-				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
-				newItem.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
-				newItem.textContent = title;
+				let item;
+				if (file in MENU.cache) {
+					item = MENU.cache[file];
+					item.style.backgroundColor = "";
+					item.style.animation = "unset";
+					cache[file] = item;
+				}
+				else {
+					item = document.createElement("div");
+					item.className = "menu-list-item";
+					item.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
+					item.textContent = title;
+	
+					if (LOADER.devices.data[file].ip && LOADER.devices.data[file].ip.v.length > 0) {
+						item.style.lineHeight = "26px";
+						const info = document.createElement("div");
+						info.textContent = LOADER.devices.data[file].ip.v;
+						info.style.lineHeight = "16px";
+						info.style.fontWeight = "400";
+						item.appendChild(info);
+					}
 
-				if (LOADER.devices.data[file].ip && LOADER.devices.data[file].ip.v.length > 0) {
-					newItem.style.lineHeight = "26px";
-					const info = document.createElement("div");
-					info.textContent = LOADER.devices.data[file].ip.v;
-					info.style.lineHeight = "16px";
-					info.style.fontWeight = "400";
-					newItem.appendChild(info);
+					MENU.ItemEvent(item, ()=> {
+						for (let j = 0; j < WIN.array.length; j++) {
+							if (WIN.array[j] instanceof DeviceView && WIN.array[j].params.file === file) {
+								WIN.array[j].Pop();
+								return WIN.array[j];
+							}
+						}
+						return new DeviceView({ file: file });
+					});
+	
+					if (!isGrid) {
+						cache[file] = item;
+					}
 				}
 
 				if (exactMatch) {
-					MENU.list.unshift(newItem);
-					menulist.prepend(newItem);
+					MENU.list.unshift(item);
+					menulist.prepend(item);
 				}
 				else {
-					MENU.list.push(newItem);
-					menulist.appendChild(newItem);
+					MENU.list.push(item);
+					menulist.appendChild(item);
 				}
 
-				MENU.ItemEvent(newItem, ()=> {
-					for (let j = 0; j < WIN.array.length; j++)
-						if (WIN.array[j] instanceof DeviceView && WIN.array[j].params.file === file) {
-							WIN.array[j].Pop();
-							return WIN.array[j];
-						}
-					return new DeviceView({ file: file });
-				});
-
-				if (++count > 50) break;
+				if (++count > 32) break;
 			}
 
 			for (const file in LOADER.users.data) {
@@ -676,37 +710,51 @@ const MENU = {
 				title ??= LOADER.users.data[file].title ? LOADER.users.data[file].title.v : null;
 				title ??= LOADER.users.data[file]["e-mail"] ? LOADER.users.data[file]["e-mail"].v : null;
 
-				const newItem = document.createElement("div");
-				newItem.className = isGrid ? "menu-grid-item" : "menu-list-item";
-				newItem.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"}?light)`;
-				newItem.textContent = title;
+				let item;
+				if (file in MENU.cache && !isGrid) {
+					item = MENU.cache[file];
+					item.style.backgroundColor = "";
+					item.style.animation = "unset";
+					cache[file] = item;
+				}
+				else {
+					item = document.createElement("div");
+					item.className = "menu-list-item";
+					item.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"}?light)`;
+					item.textContent = title;
 
-				if (LOADER.users.data[file].username && LOADER.users.data[file].username.v.length > 0) {
-					newItem.style.lineHeight = "26px";
-					const info = document.createElement("div");
-					info.textContent = LOADER.users.data[file].username.v;
-					info.style.lineHeight = "16px";
-					info.style.fontWeight = "400";
-					newItem.appendChild(info);
+					if (LOADER.users.data[file].username && LOADER.users.data[file].username.v.length > 0) {
+						item.style.lineHeight = "26px";
+						const info = document.createElement("div");
+						info.textContent = LOADER.users.data[file].username.v;
+						info.style.lineHeight = "16px";
+						info.style.fontWeight = "400";
+						item.appendChild(info);
+					}
+
+					MENU.ItemEvent(item, ()=> {
+						for (let j = 0; j < WIN.array.length; j++) {
+							if (WIN.array[j] instanceof UserView && WIN.array[j].params.file === file) {
+								WIN.array[j].Pop();
+								return WIN.array[j];
+							}
+						}
+						return new UserView({ file: file });
+					});
+
+					if (!isGrid) {
+						cache[file] = item;
+					}
 				}
 
 				if (exactMatch) {
-					MENU.list.unshift(newItem);
-					menulist.prepend(newItem);
+					MENU.list.unshift(item);
+					menulist.prepend(item);
 				}
 				else {
-					MENU.list.push(newItem);
-					menulist.appendChild(newItem);
+					MENU.list.push(item);
+					menulist.appendChild(item);
 				}
-
-				MENU.ItemEvent(newItem, ()=> {
-					for (let j = 0; j < WIN.array.length; j++)
-						if (WIN.array[j] instanceof UserView && WIN.array[j].params.file === file) {
-							WIN.array[j].Pop();
-							return WIN.array[j];
-						}
-					return new UserView({ file: file });
-				});
 
 				if (++count > 32) break;
 			}
@@ -716,6 +764,8 @@ const MENU = {
 				MENU.list[0].style.backgroundColor = "var(--clr-transparent)";
 			}
 		}
+
+		MENU.cache = cache;
 	},
 
 	ItemEvent: (element, func)=> {
