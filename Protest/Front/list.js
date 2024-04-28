@@ -101,13 +101,13 @@ class List extends Window {
 		this.columnsElements = [];
 		while (this.listTitle.firstChild) this.listTitle.removeChild(this.listTitle.firstChild);
 
-		let isLastActionMeaningful = false;
+		let isLastMouseActionMeaningful = false;
 
 		const Column_onmousedown = event=> {
 			let index = this.columnsElements.indexOf(event.target);
 			this.mouseX0 = event.x;
 
-			isLastActionMeaningful = false;
+			isLastMouseActionMeaningful = false;
 
 			if (event.layerX > event.target.offsetWidth - 8) {
 				if (index >= this.columnsElements.length - 1) return;
@@ -127,19 +127,23 @@ class List extends Window {
 
 		const Column_onmousemove = event=> {
 			let index = this.columnsElements.indexOf(event.target);
-			if (index >= this.columnsElements.length - 1) return;
-			event.target.style.cursor = event.layerX > event.target.offsetWidth - 8 ? "ew-resize" : "inherit";
+
+			if (index < this.columnsElements.length - 1) {
+				event.target.style.cursor = event.layerX > event.target.offsetWidth - 8 ? "ew-resize" : "inherit";
+			}
+
+			if (index >= this.columnsElements.length) return;
 
 			if (event.buttons !== 1) return;
 			let delta = this.mouseX0 - event.x;
 
 			if (Math.abs(delta) !== 0) {
-				isLastActionMeaningful = true;
+				isLastMouseActionMeaningful = true;
 			}
 		};
 
 		const Column_onmouseup = event=> {
-			if (isLastActionMeaningful) return;
+			if (isLastMouseActionMeaningful) return;
 
 			const isAscend = event.target.className === "list-sort-ascend";
 
