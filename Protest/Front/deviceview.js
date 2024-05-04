@@ -758,8 +758,15 @@ class DeviceView extends View {
 				driveButton.secondary.style.height = "10px";
 				driveButton.secondary.style.border = "2px solid var(--clr-dark)";
 				driveButton.secondary.style.borderRadius = "2px";
-				driveButton.secondary.style.boxShadow = `var(--clr-dark) ${json.used * 64 / json.total}px 0 0 inset`;
+				driveButton.secondary.style.transition = ".4s";
 				if (json.used / json.total >= .85) driveButton.button.style.backgroundColor = "var(--clr-warning)";
+
+				driveButton.secondary.style.boxShadow = `var(--clr-dark) 0px 0 0 inset`;
+
+				setTimeout(()=>{
+					driveButton.secondary.style.boxShadow = `var(--clr-dark) ${json.used * 64 / json.total}px 0 0 inset`;
+				}, WIN.ANIME_DURATION);
+
 
 				driveButton.button.onclick = ()=> UI.PromptAgent(this, "smb", json.path);
 			}

@@ -222,7 +222,7 @@ class List extends Window {
 			types = types.sort();
 
 			filtersList.textContent = "";
-			filterMenu.style.height = `${32 + types.length * 27}px`;
+			filterMenu.style.height = `${34 + types.length * 27}px`;
 
 			for (let i = 0; i < types.length; i++) {
 				const newType = document.createElement("div");
@@ -241,7 +241,7 @@ class List extends Window {
 					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 				}
 
-				newType.onclick =()=> {
+				newType.onclick = ()=> {
 					ClearSelection();
 
 					if (this.params.filter === types[i]) {
