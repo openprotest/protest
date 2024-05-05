@@ -180,10 +180,10 @@ internal static class Icmp {
                 (int)IPStatus.DestinationHostUnreachable or
                 (int)IPStatus.DestinationNetworkUnreachable => id + ((char)127).ToString() + "Unreachable",
 
-                (int)IPStatus.Success => id + ((char)127).ToString() + reply.RoundtripTime.ToString(),
+                (int)IPStatus.Success  => id + ((char)127).ToString() + reply.RoundtripTime.ToString(),
                 (int)IPStatus.TimedOut => id + ((char)127).ToString() + "Timed out",
-                11050                 => id + ((char)127).ToString() + "General failure",
-                _                     => id + ((char)127).ToString() + reply.Status.ToString(),
+                11050                  => id + ((char)127).ToString() + "General failure",
+                _                      => id + ((char)127).ToString() + reply.Status.ToString(),
             };
         }
         catch (ArgumentException) {
@@ -223,6 +223,5 @@ internal static class Icmp {
             return id + ((char)127).ToString() + "unknown error";
         }
     }
-
 
 }
