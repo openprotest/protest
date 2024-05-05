@@ -287,21 +287,8 @@ const LOADER = {
 
 	Invoke: (command)=> {
 		switch (command.class) {
-		case "DeviceView":
-			for (let i=0; i<WIN.array.length; i++) {
-				if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === command.params.file) {
-					return WIN.array[i];
-				}
-			}
-			return new DeviceView({ file: command.params.file });
-
-		case "UserView":
-			for (let i=0; i<WIN.array.length; i++) {
-				if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === command.params.file) {
-					return WIN.array[i];
-				}
-			}
-			return new UserView({ file: command.params.file });
+		case "DeviceView": return LOADER.OpenDeviceByFile(command.params.file);
+		case "UserView"  : return LOADER.OpenUserByFile(command.params.file);
 
 		case "DevicesList"      : return new DevicesList(command.params);
 		case "UsersList"        : return new UsersList(command.params);
@@ -352,6 +339,28 @@ const LOADER = {
 		case "Backup"      : return new Backup(command.params);
 		case "Log"         : return new Log(command.params);
 		}
+	},
+
+	OpenDeviceByFile: file=> {
+		for (let i=0; i<WIN.array.length; i++) {
+			if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
+				WIN.array[i].Pop(); //minimize/restore
+				return WIN.array[i];
+			}
+		}
+
+		return new DeviceView({ file: file });
+	},
+
+	OpenUserByFile: file=> {
+		for (let i=0; i<WIN.array.length; i++) {
+			if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
+				WIN.array[i].Pop(); //minimize/restore
+				return WIN.array[i];
+			}
+		}
+		
+		return new UserView({ file: file });
 	},
 
 	HttpErrorHandler: statusCode=> {

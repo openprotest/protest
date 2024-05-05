@@ -540,23 +540,11 @@ const MENU = {
 				MENU.ItemEvent(newItem, ()=>{
 					if (MENU.history[i].class === "DeviceView") {
 						let file = MENU.history[i].params.file;
-						for (let i = 0; i < WIN.array.length; i++) {
-							if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
-								WIN.array[i].Minimize(); //minimize/restore
-								return;
-							}
-						}
-						new DeviceView({ file: file });
+						LOADER.OpenDeviceByFile(file);
 					}
 					else if (MENU.history[i].class === "UserView") {
 						let file = MENU.history[i].params.file;
-						for (let i = 0; i < WIN.array.length; i++) {
-							if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
-								WIN.array[i].Minimize(); //minimize/restore
-								return;
-							}
-						}
-						new DeviceView({ file: file });
+						LOADER.OpenUserByFile(file);
 					}
 					else {
 						LOADER.Invoke(MENU.history[i]);
@@ -664,13 +652,7 @@ const MENU = {
 					}
 
 					MENU.ItemEvent(item, ()=> {
-						for (let j = 0; j < WIN.array.length; j++) {
-							if (WIN.array[j] instanceof DeviceView && WIN.array[j].params.file === file) {
-								WIN.array[j].Pop();
-								return WIN.array[j];
-							}
-						}
-						return new DeviceView({ file: file });
+						LOADER.OpenDeviceByFile(file);
 					});
 	
 					if (!isGrid) {
@@ -733,13 +715,7 @@ const MENU = {
 					}
 
 					MENU.ItemEvent(item, ()=> {
-						for (let j = 0; j < WIN.array.length; j++) {
-							if (WIN.array[j] instanceof UserView && WIN.array[j].params.file === file) {
-								WIN.array[j].Pop();
-								return WIN.array[j];
-							}
-						}
-						return new UserView({ file: file });
+						LOADER.OpenUserByFile(file);
 					});
 
 					if (!isGrid) {

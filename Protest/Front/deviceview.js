@@ -640,13 +640,7 @@ class DeviceView extends View {
 					}
 
 					list[i].frontElement.ondblclick = ()=> {
-						for (let i=0; i<WIN.array.length; i++) {
-							if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
-								WIN.array[i].Minimize(); //minimize/restore
-								return;
-							}
-						}
-						new DeviceView({file: file});
+						LOADER.OpenDeviceByFile(file);
 					};
 				}
 
@@ -791,13 +785,7 @@ class DeviceView extends View {
 					}
 
 					if (found) {
-						for (let k=0; k<WIN.array.length; k++) {
-							if (WIN.array[k] instanceof UserView && WIN.array[k].params.file === found) {
-								WIN.array[k].Minimize();
-								return;
-							}
-						}
-						new UserView({file: found});
+						LOADER.OpenUserByFile(found);
 					}
 				};
 			}

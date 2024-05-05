@@ -64,13 +64,7 @@ class UsersList extends List {
 				event.stopPropagation();
 
 				const file = element.getAttribute("id");
-				for (let i = 0; i < WIN.array.length; i++)
-					if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
-						WIN.array[i].Minimize(); //minimize/restore
-						return;
-					}
-
-				new UserView({ file: file });
+				LOADER.OpenUserByFile(file);
 			};
 		}
 	}

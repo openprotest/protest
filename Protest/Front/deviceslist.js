@@ -181,13 +181,7 @@ class DevicesList extends List {
 				event.stopPropagation();
 
 				const file = element.getAttribute("id");
-				for (let i = 0; i < WIN.array.length; i++)
-					if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
-						WIN.array[i].Minimize(); //minimize/restore
-						return;
-					}
-
-				new DeviceView({ file: file });
+				LOADER.OpenDeviceByFile(file);
 			};
 		}
 	}

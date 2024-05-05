@@ -302,20 +302,10 @@ class PasswordStrength extends List {
 
 		element.ondblclick = event=> {
 			if (entry.type === "device") {
-				for (let k = 0; k < WIN.array.length; k++)
-					if (WIN.array[k] instanceof DeviceView && WIN.array[k].filename == entry.file) {
-						WIN.array[k].Minimize(); //minimize/restore
-						return;
-					}
-				new DeviceView({ file: entry.file });
+				LOADER.OpenDeviceByFile(entry.file);
 			}
 			else { //user
-				for (let k = 0; k < WIN.array.length; k++)
-					if (WIN.array[k] instanceof UserView && WIN.array[k].filename == entry.file) {
-						WIN.array[k].Minimize(); //minimize/restore
-						return;
-					}
-				new UserView({ file: entry.file });
+				LOADER.OpenUserByFile(entry.file);
 			}
 		};
 
