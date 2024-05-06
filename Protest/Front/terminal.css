@@ -3,26 +3,24 @@
 }
 
 .terminal-cursor {
-	visibility: hidden;
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: 10px;
-	height: 18px;
+	width: 3px;
+	height: 24px;
 	border-radius: 1px;
+	opacity: 0;
 	background-color: var(--clr-accent);
 	box-shadow: var(--clr-accent) 0 0 2px;
-
-	animation: terminal-cursor 1.2s infinite;
 }
 
 .terminal-content:focus > .terminal-cursor{
-	visibility: visible;
+	animation: terminal-cursor 1.2s infinite;
 }
 
 @keyframes terminal-cursor {
-	0%  { opacity: .0;}
-	25% { opacity: 1;}
-	75% { opacity: 1;}
-	100%{ opacity: .0;}
+	0%  {opacity:.1;}
+	30% {opacity:1;}
+	70% {opacity:1;}
+	100%{opacity:.1;}
 }
