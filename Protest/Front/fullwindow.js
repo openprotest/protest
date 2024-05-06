@@ -15,7 +15,6 @@ class Window {
 		this.isMaximized = false;
 		this.isMinimized = false;
 		this.isClosed = false;
-		this.themeColor = [64,64,64];
 		this.position = null;
 		this.escAction = null;
 		this.defaultElement = null;
@@ -276,16 +275,7 @@ class Window {
 		document.head.appendChild(favicon_dark);
 	}
 
-	SetThemeColor(color) {
-		this.themeColor = color;
-		this.content.style.backgroundColor = `rgb(${color[0]},${color[1]},${color[2]})`;
-
-		if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 > 127)
-			this.content.style.color = "var(--clr-dark)";
-	}
-
-	BringToFront() {
-	}
+	BringToFront() {}
 
 	AddCheckBoxLabel(parent, checkbox, label) {
 		let id = Date.now() + Math.random() * 1000;

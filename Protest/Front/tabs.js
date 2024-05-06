@@ -1,5 +1,5 @@
 class Tabs extends Window {
-	constructor(themeColor = [64,64,64]) {
+	constructor() {
 		super();
 
 		this.AddCssDependencies("tabs.css");

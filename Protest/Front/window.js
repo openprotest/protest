@@ -266,11 +266,10 @@ document.body.onbeforeunload = ()=> {
 taskbar.oncontextmenu = event=> false;
 
 class Window {
-	constructor(themeColor = [64, 64, 64]) {
+	constructor() {
 		this.isMaximized = false;
 		this.isMinimized = false;
 		this.isClosed = false;
-		this.themeColor = themeColor;
 		this.position = null;
 		this.escAction = null;
 		this.defaultElement = null;
@@ -550,7 +549,6 @@ class Window {
 		this.SetTitle("untitled");
 		WIN.array.push(this);
 
-		//this.SetThemeColor(this.themeColor);
 		this.BringToFront();
 
 		WIN.AlignIcon(false);
@@ -737,10 +735,9 @@ class Window {
 		newWin.document.close();
 
 		newWin.document.body.style.background = "none";
-		newWin.document.body.style.backgroundColor = `rgb(${this.themeColor[0]},${this.themeColor[1]},${this.themeColor[2]})`;
+		newWin.document.body.style.backgroundColor = "rgb(64,64,64)";
 		newWin.document.body.style.padding = "0";
 		newWin.document.body.style.margin = "0";
-		if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 < 128) newWin.document.body.style.color = "var(--clr-light)";
 
 		if (localStorage.getItem("accent_color")) { //apply accent color
 			let accent = JSON.parse(localStorage.getItem("accent_color"));
@@ -826,12 +823,11 @@ class Window {
 			WIN.array[i].task.className = "bar-icon";
 			WIN.array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
 			WIN.array[i].icon.style.filter = "none";
-
 		}
 
 		this.task.className = "bar-icon bar-icon-focused";
-		this.task.style.backgroundColor = `rgb(${this.themeColor[0]},${this.themeColor[1]},${this.themeColor[2]})`;
-		if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 < 128) this.icon.style.filter = "brightness(6)";
+		this.task.style.backgroundColor = "rgb(64,64,64)";
+		this.icon.style.filter = "brightness(6)";
 
 		if (this.popOutWindow) {
 			this.popOutWindow.focus();
@@ -1154,7 +1150,6 @@ class Window {
 					id: `${KEEP.username}${Date.now()}`
 				}));
 			});
-
 		};
 	}
 
@@ -1167,14 +1162,6 @@ class Window {
 		this.icon.style.backgroundImage = `url(${iconPath})`;
 		this.titleIcon.style.backgroundImage = `url(${iconPath})`;
 		this.iconPath = iconPath;
-	}
-
-	SetThemeColor(color) {
-		this.themeColor = color;
-		this.content.style.backgroundColor = `rgb(${color[0]},${color[1]},${color[2]})`;
-
-		if ((this.themeColor[0] + this.themeColor[1] + this.themeColor[2]) / 3 > 127)
-			this.content.style.color = "var(--clr-dark)";
 	}
 
 	AfterResize() { } //overridable

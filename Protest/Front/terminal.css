@@ -1,0 +1,28 @@
+.terminal-content {
+	margin: 20px;
+}
+
+.terminal-cursor {
+	visibility: hidden;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 10px;
+	height: 18px;
+	border-radius: 1px;
+	background-color: var(--clr-accent);
+	box-shadow: var(--clr-accent) 0 0 2px;
+
+	animation: terminal-cursor 1.2s infinite;
+}
+
+.terminal-content:focus > .terminal-cursor{
+	visibility: visible;
+}
+
+@keyframes terminal-cursor {
+	0%  { opacity: .0;}
+	25% { opacity: 1;}
+	75% { opacity: 1;}
+	100%{ opacity: .0;}
+}
