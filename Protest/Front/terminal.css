@@ -1,4 +1,5 @@
 .terminal-content {
+	font-family: consolas, monospace;
 	margin: 20px;
 }
 
@@ -7,7 +8,7 @@
 	top: 0;
 	left: 0;
 	width: 3px;
-	height: 24px;
+	height: 20px;
 	border-radius: 1px;
 	opacity: 0;
 	background-color: var(--clr-accent);

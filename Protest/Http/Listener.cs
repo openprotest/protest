@@ -444,6 +444,10 @@ public sealed class Listener {
             Protocols.Telnet.WebSocketHandler(ctx);
             return true;
 
+        case "/ws/telnet2":
+            Protocols.Telnet.WebSocketHandler2(ctx);
+            return true;
+
         case "/ws/ssh":
             //Ssh.WebSocketHandler(ctx);
             break;

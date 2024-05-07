@@ -9,9 +9,104 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal static class Telnet {
-    private static async Task WsWriteText(WebSocket ws, string text) {
-        if (ws.State == WebSocketState.Open)
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+
+    enum MessageType {
+        error,
+        status,
+        message
+    }
+
+    private static async Task WsWriteText(WebSocket ws, MessageType type, string text) {
+        if (ws.State == WebSocketState.Open) {
+            string message = $"{{\"{type}\":\"{Data.EscapeJsonText(text)}\"}}";
+            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(message), 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+    }
+
+    public static async void WebSocketHandler2(HttpListenerContext ctx) {
+        WebSocketContext wsc;
+        WebSocket ws;
+        try {
+            wsc = await ctx.AcceptWebSocketAsync(null);
+            ws = wsc.WebSocket;
+        }
+        catch (WebSocketException ex) {
+            ctx.Response.Close();
+            Logger.Error(ex);
+            return;
+        }
+
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+            return;
+        }
+
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+
+        try {
+
+            byte[] targetBuff = new byte[1024];
+            WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(targetBuff), CancellationToken.None);
+            string target = Encoding.Default.GetString(targetBuff, 0, targetResult.Count);
+
+            string[] split = target.Split(':');
+            string host = split[0];
+            int port = 23;
+
+            if (split.Length > 1) {
+                _ = int.TryParse(split[1], out port);
+            }
+
+            //TcpClient telnet = new TcpClient(host, port); ;
+
+            Logger.Action(username, $"Establish telnet connection to {host}:{port}");
+
+            await WsWriteText(ws, MessageType.message, $"connected to {host}:{port}\n\r");
+
+            await Task.Delay(400);
+
+            //NetworkStream stream = telnet.GetStream();
+
+            while (ws.State == WebSocketState.Open /*&& telnet.Connected*/) {
+                byte[] wsBuffer = new byte[2048];
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(wsBuffer), CancellationToken.None);
+
+                if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    //telnet.Close();
+                    break;
+                }
+
+                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
+                    ctx.Response.Close();
+                    //telnet.Close();
+                    return;
+                }
+
+                Console.Write(Encoding.UTF8.GetString(wsBuffer));
+
+            }
+
+        }
+        catch (SocketException ex) {
+            await WsWriteText(ws, MessageType.error, ex.Message.ToString());
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            return;
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+        finally {
+            //TODO: cleanup
+        }
+
+        if (ws.State == WebSocketState.Open) {
+            try {
+                await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
+            catch { }
+        }
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
@@ -60,7 +155,7 @@ internal static class Telnet {
                 telnet = new TcpClient(host, port);
             }
             catch (Exception ex) {
-                await WsWriteText(ws, ex.Message);
+                await WsWriteText(ws, MessageType.error, ex.Message);
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 return;
             }
@@ -108,7 +203,6 @@ internal static class Telnet {
             while (ws.State == WebSocketState.Open) { //server to ws loop
                 byte[] data = new byte[2048];
 
-
                 int bytes = stream.Read(data, 0, data.Length);
 
                 string responseData = Encoding.ASCII.GetString(data, 0, bytes);
@@ -120,10 +214,9 @@ internal static class Telnet {
                 }
 
                 try {
-                    await WsWriteText(ws, responseData);
+                    await WsWriteText(ws, MessageType.message, responseData);
                 }
                 catch { }
-
             }
 
         }
@@ -138,7 +231,7 @@ internal static class Telnet {
 
         }
         finally {
-            //TODO: wsToServer?.Abort();
+           //wsToServer?.Abort();
         }
         if (ws.State == WebSocketState.Open) {
             try {

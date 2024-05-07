@@ -21,6 +21,10 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+    <NoWarn>IDE0090</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+
     <!--<Deterministic>false</Deterministic>-->
     <!--<Version>5.0.0</Version>-->
     <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
@@ -31,8 +35,6 @@
     <VersionPrefix>5.0.$(verYear).$(verDoty)</VersionPrefix>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <Version>$(VersionPrefix)</Version>
-
-    <NoWarn>IDE0090</NoWarn>
 
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -48,7 +50,7 @@
     <PublishSingleFile>true</PublishSingleFile>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
     <PackageReference Include="SSH.NET" Version="2024.0.0" />
