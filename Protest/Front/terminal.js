@@ -28,7 +28,8 @@ class Terminal extends Window {
 		this.content.onfocus = () => this.BringToFront();
 		this.content.onkeydown = event => this.Terminal_onkeydown(event);
 
-		this.Connect("127.0.0.1:23");
+		//TODO:
+		this.Connect("telehack.com:23");
 	}
 
 	Close() { //overrides
@@ -68,14 +69,8 @@ class Terminal extends Window {
 		};
 
 		this.ws.onmessage = event=> {
-			const json = JSON.parse(event.data);
-			
-			if (json.message) {
-				this.HandleMessage(json.message);
-			}
-			else if (json.error) {
-				//TODO:
-			}
+			console.log(event.data)
+			this.HandleMessage(event.data);
 		};
 
 		//this.connectButton.disabled = true;
@@ -95,7 +90,7 @@ class Terminal extends Window {
 		}
 		
 		switch(event.key) {
-		case "Enter"     : this.ws.send("\n"); break;
+		case "Enter"     : this.ws.send("\n\r"); break;
 		case "Tab"       : this.ws.send("\t"); break;
 		case "Backspace" : this.ws.send("\x08"); break;
 		case "ArrowLeft" : this.ws.send("\x1b[D"); break;

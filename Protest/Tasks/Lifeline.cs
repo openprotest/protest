@@ -168,13 +168,17 @@ internal static partial class Lifeline {
 
         string dir = $"{Data.DIR_LIFELINE}{Data.DELIMITER}rtt{Data.DELIMITER}{host}";
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-        using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
         try {
+            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
             using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
             writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
             writer.Write(rtt); //2 bytes
             return rtt >= 0;
+        }
+        catch (IOException ex){
+            Logger.Error(ex);
+            return false;
         }
         catch {
             return rtt >= 0;
