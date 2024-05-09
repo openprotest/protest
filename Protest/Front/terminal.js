@@ -42,6 +42,9 @@ class Terminal extends Window {
 		this.content.onfocus = () => this.BringToFront();
 		this.content.onkeydown = event => this.Terminal_onkeydown(event);
 
+		this.connectButton.onclick = ()=> {};
+		this.settingsButton.onclick = ()=> this.SettingsDialog();
+
 		//TODO:
 		this.Connect("telehack.com:23");
 	}
@@ -54,6 +57,15 @@ class Terminal extends Window {
 	AfterResize() { //overrides
 		super.AfterResize();
 		//TODO:
+	}
+
+	SettingsDialog() {
+		const dialog = this.DialogBox("200px");
+		if (dialog === null) return;
+
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
+		const innerBox = dialog.innerBox;
 	}
 
 	Connect(target) {
@@ -119,6 +131,10 @@ class Terminal extends Window {
 	}
 
 	HandleMessage(data) {
+		if (data.length < 20) {
+			console.log(data);
+		}
+
 		for (let i=0; i<data.length; i++) {
 			let char = this.chars[`${this.cursor.x},${this.cursor.y}`];
 	
@@ -311,7 +327,7 @@ class Terminal extends Window {
 			delete this.chars[key];
 		}
 
-		this.cursor = {x:0, y:this.cursor.y};
+		//this.cursor = {x:0, y:this.cursor.y};
 	}
 
 	ClearLineFromCursorToEnd() {
@@ -319,12 +335,10 @@ class Terminal extends Window {
 		for (let i=this.cursor.x; i<w; i++) {
 			const key = `${i},${this.cursor.y}`;
 			if (!this.chars[key]) continue;
-			console.log(this.chars[key]);
+
 			this.content.removeChild(this.chars[key]);
 			delete this.chars[key];
 		}
-
-		this.cursor = {x:0, y:this.cursor.y};
 	}
 
 	ClearScreen() {
@@ -335,13 +349,11 @@ class Terminal extends Window {
 	}
 
 	GetScreenWidth() {
-		//TODO:
-		return 100;
+		return parseInt(this.content.clientWidth / Terminal.CURSOR_WIDTH);
 	}
 
 	GetScreenHeight() {
-		//TODO:
-		return 20;
+		return parseInt(this.content.clientHeight / Terminal.CURSOR_HEIGHT);
 	}
 
 	Beep() {
