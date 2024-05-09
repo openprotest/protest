@@ -13,6 +13,9 @@ namespace Protest.Tasks;
 internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
 
+    private static ConcurrentDictionary<string, object> pingMutexes = new ConcurrentDictionary<string, object>();
+    private static ConcurrentDictionary<string, object> wmiMutexes = new ConcurrentDictionary<string, object>();
+
     [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
 
@@ -93,7 +96,6 @@ internal static partial class Lifeline {
                             mutex.TryAdd(entry.filename, new Object());
                         }
                     }
-
                 }
 
                 lastVersion = DatabaseInstances.devices.version;
@@ -170,10 +172,17 @@ internal static partial class Lifeline {
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
         try {
-            using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
-            using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-            writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-            writer.Write(rtt); //2 bytes
+            if (!pingMutexes.TryGetValue(host, out object mutex)) {
+                mutex = new object();
+                pingMutexes[host] = mutex;
+            }
+
+            lock (mutex) {
+                using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(rtt); //2 bytes
+            }
             return rtt >= 0;
         }
         catch (IOException ex){
@@ -258,65 +267,71 @@ internal static partial class Lifeline {
 
         DateTime now = DateTime.UtcNow;
 
-        if (cpuUsage != 255) {
-            string dirCpu = $"{Data.DIR_LIFELINE}{Data.DELIMITER}cpu{Data.DELIMITER}{file}";
-            if (!Directory.Exists(dirCpu)) Directory.CreateDirectory(dirCpu);
-            using FileStream cpuStream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
-
-            try {
-                using BinaryWriter writer = new BinaryWriter(cpuStream, Encoding.UTF8, false);
-                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write((byte)(100 - cpuUsage)); //1 byte
-            }
-            catch { }
+        if (!wmiMutexes.TryGetValue(host, out object mutex)) {
+            mutex = new object();
+            wmiMutexes[host] = mutex;
         }
 
-        if (diskUsage != 255) {
-            string dirDiskUsage = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskusage{Data.DELIMITER}{file}";
-            if (!Directory.Exists(dirDiskUsage)) Directory.CreateDirectory(dirDiskUsage);
-            using FileStream diskStream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+        lock (mutex) {
+            if (cpuUsage != 255) {
+                string dirCpu = $"{Data.DIR_LIFELINE}{Data.DELIMITER}cpu{Data.DELIMITER}{file}";
+                if (!Directory.Exists(dirCpu)) Directory.CreateDirectory(dirCpu);
+                using FileStream cpuStream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
-            try {
-                using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
-                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write((byte)(100 - diskUsage)); //1 byte
-            }
-            catch { }
-        }
-
-        if (memoryTotal > 0) {
-            string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}";
-            if (!Directory.Exists(dirMemory)) Directory.CreateDirectory(dirMemory);
-            using FileStream memoryStream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
-
-            try {
-                using BinaryWriter writer = new BinaryWriter(memoryStream, Encoding.UTF8, false);
-                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write(memoryTotal - memoryFree); //8 bytes
-                writer.Write(memoryTotal); //8 bytes
-            }
-            catch { }
-        }
-
-        if (diskCaption.Count > 0) {
-            string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{file}";
-            if (!Directory.Exists(dirDisk)) Directory.CreateDirectory(dirDisk);
-            using FileStream diskStream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
-
-            try {
-                using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
-                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write(diskCaption.Count); //4 bytes
-
-                for (int i = 0; i < diskCaption.Count; i++) {
-                    writer.Write(diskCaption[i]); //1 bytes
-                    writer.Write(diskTotal[i] - diskFree[i]); //8 bytes
-                    writer.Write(diskTotal[i]); //8 bytes
+                try {
+                    using BinaryWriter writer = new BinaryWriter(cpuStream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write((byte)(100 - cpuUsage)); //1 byte
                 }
+                catch { }
             }
-            catch { }
-        }
 
+            if (diskUsage != 255) {
+                string dirDiskUsage = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskusage{Data.DELIMITER}{file}";
+                if (!Directory.Exists(dirDiskUsage)) Directory.CreateDirectory(dirDiskUsage);
+                using FileStream diskStream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
+                try {
+                    using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write((byte)(100 - diskUsage)); //1 byte
+                }
+                catch { }
+            }
+
+            if (memoryTotal > 0) {
+                string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}";
+                if (!Directory.Exists(dirMemory)) Directory.CreateDirectory(dirMemory);
+                using FileStream memoryStream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
+                try {
+                    using BinaryWriter writer = new BinaryWriter(memoryStream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write(memoryTotal - memoryFree); //8 bytes
+                    writer.Write(memoryTotal); //8 bytes
+                }
+                catch { }
+            }
+
+            if (diskCaption.Count > 0) {
+                string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{file}";
+                if (!Directory.Exists(dirDisk)) Directory.CreateDirectory(dirDisk);
+                using FileStream diskStream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+
+                try {
+                    using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write(diskCaption.Count); //4 bytes
+
+                    for (int i = 0; i < diskCaption.Count; i++) {
+                        writer.Write(diskCaption[i]); //1 bytes
+                        writer.Write(diskTotal[i] - diskFree[i]); //8 bytes
+                        writer.Write(diskTotal[i]); //8 bytes
+                    }
+                }
+                catch { }
+            }
+        }
     }
 
     public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {
