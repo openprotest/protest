@@ -469,7 +469,7 @@ internal static class Update {
     }
 
     //private static string GetFieldName(string part) {
-    //   return part[(part.IndexOf("name=\"") + 6)..].Split('"')[0]; ;
+    //   return part[(part.IndexOf("name=\"") + 6)..].Split('"')[0];
     //}
 
     private static readonly string[] separator = new[] { "\r\n\r\n" };

@@ -83,7 +83,6 @@ class Terminal extends Window {
 		};
 
 		this.ws.onmessage = event=> {
-			console.log("received", event.data)
 			this.HandleMessage(event.data);
 		};
 
@@ -107,6 +106,7 @@ class Terminal extends Window {
 		case "Enter"     : this.ws.send("\n\r"); break;
 		case "Tab"       : this.ws.send("\t"); break;
 		case "Backspace" : this.ws.send("\x08"); break;
+		case "Delete"    : this.ws.send("\x1b[3~"); break;
 		case "ArrowLeft" : this.ws.send("\x1b[D"); break;
 		case "ArrowRight": this.ws.send("\x1b[C"); break;
 		case "ArrowUp"   : this.ws.send("\x1b[A"); break;
@@ -122,10 +122,7 @@ class Terminal extends Window {
 		for (let i=0; i<data.length; i++) {
 			let char = this.chars[`${this.cursor.x},${this.cursor.y}`];
 	
-			if (char) {
-				//
-			}
-			else {
+			if (!char) {
 				char = document.createElement("span");
 				char.style.left = `${this.cursor.x * Terminal.CURSOR_WIDTH}px`;
 				char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
@@ -147,22 +144,22 @@ class Terminal extends Window {
 				this.cursor.x = Math.max(0, this.cursor.x - 1);
 				break;
 
-			case "\x09": break; //tab
+			//case "\x09": break; //tab
 			case "\x0a": //lf
 				char.innerHTML = "<br>";
 				this.cursor.x = 0;
 				this.cursor.y++;
 				break;
 
-			case "\x0b": break; //vertical tab
-			case "\x0c": break; //new page
-			case "\x0d": break; //cr
+			//case "\x0b": break; //vertical tab
+			//case "\x0c": break; //new page
+			//case "\x0d": break; //cr
 
 			case "\x1b": //esc
-				i += this.HandleEscSequence(data, i);
+				i += this.HandleEscSequence(data, i)-1;
 				break;
 
-			case "\x7f": break; //delete
+			//case "\x7f": break; //delete
 
 			default:
 				char.textContent = data[i];
@@ -179,15 +176,17 @@ class Terminal extends Window {
 		if (data[index+1] === "[" || data[index+1] === "\x9b") {
 			return this.HandleCSI(data, index);
 		}
-		else if (data[index+1] === "P" || data[index+1] === "\x90") {
+
+		if (data[index+1] === "P" || data[index+1] === "\x90") {
 			return this.HandleDCS(data, index);
 		}
-		else if (data[index+1] === "]" || data[index+1] === "\x9d") {
+		
+		if (data[index+1] === "]" || data[index+1] === "\x9d") {
 			return this.HandleOSC(data, index);
 		}
-		else {
-			return 1;
-		}
+
+		console.warn("Unknown escape sequence: " + data[index+1]);
+		return 1;
 	}
 
 	HandleCSI(data, index) { //Control Sequence Introducer
@@ -224,6 +223,52 @@ class Terminal extends Window {
 			else if (data[i] === "G") { //moves cursor to column n
 				this.cursor.x = n;
 			}
+			else if (data[i] === "P") { //delete n chars and shift the following chars left
+				let i = this.cursor.x+n;
+				let sequence = "";
+				while (this.chars[`${i++},${this.cursor.y}`]) {
+					sequence += this.chars[`${i-1},${this.cursor.y}`].textContent;
+				}
+
+				i = this.cursor.x;
+				let key = `${i},${this.cursor.y}`;
+				while (this.chars[key]) {
+					this.content.removeChild(this.chars[key]);
+					delete this.chars[key];
+
+					key = `${++i},${this.cursor.y}`;
+				}
+
+				for (i=0; i<sequence.length; i++) {
+					const char = document.createElement("span");
+					char.style.left = `${(this.cursor.x + i) * Terminal.CURSOR_WIDTH}px`;
+					char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
+					this.content.appendChild(char);
+					this.chars[`${this.cursor.x + i},${this.cursor.y}`] = char;
+				}
+			}
+			else if (data[i] === "J") { //erase screen
+				if (n === 0) { //erase from cursor until end
+					console.warn(`Unknown CSI: 0J`);
+					return 4;
+				}
+				else if (n === 1) { //erase from cursor to beginning of screen
+					console.warn(`Unknown CSI: 1J`);
+					return 4;
+				}
+				else if (n === 2) { //clear entire screen
+					console.log("clear screen");
+					this.ClearScreen();
+					return 4;
+				}
+				else if (n === 3) { //erase saved lines
+					console.warn(`Unknown CSI: 3J`);
+					return 4;
+				}
+			}
+			else {
+				console.warn(`Unknown CSI: ${data[i]} with n=${n}`);
+			}
 
 			return i - index + 1;
 		}
@@ -234,21 +279,59 @@ class Terminal extends Window {
 			return 3;
 		}
 
-		if (data[index+2] === "K") { //erase in line
-			this.cursor.x = Math.max(0, this.cursor.x-1);
-			let char = this.chars[`${this.cursor.x},${this.cursor.y}`];
-			if (char) char.textContent = "";
+		if (data[index+2] === "K") {
+			this.ClearLineFromCursorToEnd();
 			return 3;
 		}
+
+		console.warn("Unknown CSI: " + data[index+2]);
+		return 2;
 	}
 
 	HandleDCS(data, index) { //Device Control String
 		if (index >= data.length) return 2;
+
+		console.warn("Unknown DCS: " + data[index+2]);
+		return 2;
 	}
 
 	HandleOSC(data, index) { //Operating System Command
 		if (index >= data.length) return 2;
 
+		console.warn("Unknown OCS: " + data[index+2]);
+		return 2;
+	}
+
+	ClearLine() {
+		const w = this.GetScreenWidth();
+		for (let i=0; i<w; i++) {
+			const key = `${i},${this.cursor.y}`;
+			if (!this.chars[key]) continue;
+			this.content.removeChild(this.chars[key]);
+			delete this.chars[key];
+		}
+
+		this.cursor = {x:0, y:this.cursor.y};
+	}
+
+	ClearLineFromCursorToEnd() {
+		const w = this.GetScreenWidth();
+		for (let i=this.cursor.x; i<w; i++) {
+			const key = `${i},${this.cursor.y}`;
+			if (!this.chars[key]) continue;
+			console.log(this.chars[key]);
+			this.content.removeChild(this.chars[key]);
+			delete this.chars[key];
+		}
+
+		this.cursor = {x:0, y:this.cursor.y};
+	}
+
+	ClearScreen() {
+		this.chars = {};
+		this.content.innerHTML = "";
+		this.content.appendChild(this.cursorElement);
+		//this.cursor = {x:0, y:0};
 	}
 
 	GetScreenWidth() {

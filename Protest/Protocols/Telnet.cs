@@ -55,14 +55,12 @@ internal static class Telnet {
                 _ = int.TryParse(split[1], out port);
             }
 
-            TcpClient telnet = new TcpClient(host, port); ;
+            TcpClient telnet = new TcpClient(host, port);
             NetworkStream stream = telnet.GetStream();
 
             Logger.Action(username, $"Establish telnet connection to {host}:{port}");
 
             //await WsWriteText(ws, $"connected to {host}:{port}\n\r");
-
-            await Task.Delay(400);
 
             Task daemon = new Task(async ()=>{
                 while (ws.State == WebSocketState.Open && telnet.Connected) { //host read loop
@@ -72,6 +70,9 @@ internal static class Telnet {
                         int bytes = stream.Read(buffer, 0, buffer.Length);
                         responseData = Encoding.UTF8.GetString(buffer, 0, bytes);
                         Console.Write(responseData);
+                    }
+                    catch (System.IO.IOException) {
+                        return;
                     }
                     catch {
                         return;
@@ -89,7 +90,6 @@ internal static class Telnet {
             daemon.Start();
 
             while (ws.State == WebSocketState.Open && telnet.Connected) { //host write loop
-                await Task.Delay(400);
                 byte[] buff = new byte[2048];
 
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -190,7 +190,6 @@ internal static class Telnet {
             NetworkStream stream = telnet.GetStream();
 
             wsToServer = new Thread(async () => {
-                await Task.Delay(500);
                 while (ws.State == WebSocketState.Open) { //ws to server loop
 
                     byte[] buff = new byte[2048];

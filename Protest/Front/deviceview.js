@@ -2454,7 +2454,7 @@ class DeviceView extends View {
 		snmpCheckBox.checked = false;
 		snmpCheckBox.disabled = true; //TODO:
 		grid.appendChild(snmpCheckBox);
-		this.AddCheckBoxLabel(grid, snmpCheckBox, "SNMP").style.gridArea = "3 / 2";;
+		this.AddCheckBoxLabel(grid, snmpCheckBox, "SNMP").style.gridArea = "3 / 2";
 
 		const snmpInput = document.createElement("select");
 		snmpInput.style.marginLeft = "0";

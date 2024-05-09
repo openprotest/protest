@@ -177,11 +177,16 @@ internal static partial class Lifeline {
                 pingMutexes[host] = mutex;
             }
 
+            //Console.WriteLine($"{host} \t - {mutex.GetHashCode()}");
+
             lock (mutex) {
                 using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                 writer.Write(rtt); //2 bytes
+
+                writer.Dispose();
+                stream.Dispose();
             }
             return rtt >= 0;
         }
@@ -276,12 +281,15 @@ internal static partial class Lifeline {
             if (cpuUsage != 255) {
                 string dirCpu = $"{Data.DIR_LIFELINE}{Data.DELIMITER}cpu{Data.DELIMITER}{file}";
                 if (!Directory.Exists(dirCpu)) Directory.CreateDirectory(dirCpu);
-                using FileStream cpuStream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
                 try {
-                    using BinaryWriter writer = new BinaryWriter(cpuStream, Encoding.UTF8, false);
+                    using FileStream stream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - cpuUsage)); //1 byte
+
+                    writer.Dispose();
+                    stream.Dispose();
                 }
                 catch { }
             }
@@ -289,12 +297,15 @@ internal static partial class Lifeline {
             if (diskUsage != 255) {
                 string dirDiskUsage = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskusage{Data.DELIMITER}{file}";
                 if (!Directory.Exists(dirDiskUsage)) Directory.CreateDirectory(dirDiskUsage);
-                using FileStream diskStream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
                 try {
-                    using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
+                    using FileStream stream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - diskUsage)); //1 byte
+
+                    writer.Dispose();
+                    stream.Dispose();
                 }
                 catch { }
             }
@@ -302,13 +313,16 @@ internal static partial class Lifeline {
             if (memoryTotal > 0) {
                 string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}";
                 if (!Directory.Exists(dirMemory)) Directory.CreateDirectory(dirMemory);
-                using FileStream memoryStream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
                 try {
-                    using BinaryWriter writer = new BinaryWriter(memoryStream, Encoding.UTF8, false);
+                    using FileStream stream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(memoryTotal - memoryFree); //8 bytes
                     writer.Write(memoryTotal); //8 bytes
+
+                    writer.Dispose();
+                    stream.Dispose();
                 }
                 catch { }
             }
@@ -316,10 +330,10 @@ internal static partial class Lifeline {
             if (diskCaption.Count > 0) {
                 string dirDisk = $"{Data.DIR_LIFELINE}{Data.DELIMITER}disk{Data.DELIMITER}{file}";
                 if (!Directory.Exists(dirDisk)) Directory.CreateDirectory(dirDisk);
-                using FileStream diskStream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
 
                 try {
-                    using BinaryWriter writer = new BinaryWriter(diskStream, Encoding.UTF8, false);
+                    using FileStream stream = new FileStream($"{dirDisk}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(diskCaption.Count); //4 bytes
 
@@ -328,6 +342,9 @@ internal static partial class Lifeline {
                         writer.Write(diskTotal[i] - diskFree[i]); //8 bytes
                         writer.Write(diskTotal[i]); //8 bytes
                     }
+
+                    writer.Dispose();
+                    stream.Dispose();
                 }
                 catch { }
             }
