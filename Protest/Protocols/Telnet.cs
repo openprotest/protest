@@ -67,12 +67,15 @@ internal static class Telnet {
             Task daemon = new Task(async ()=>{
                 while (ws.State == WebSocketState.Open && telnet.Connected) { //host read loop
                     byte[] buffer = new byte[2048];
-
-                    int bytes = stream.Read(buffer, 0, buffer.Length);
-
-                    string responseData = Encoding.UTF8.GetString(buffer, 0, bytes);
-
-                    Console.Write(responseData);
+                    string responseData;
+                    try {
+                        int bytes = stream.Read(buffer, 0, buffer.Length);
+                        responseData = Encoding.UTF8.GetString(buffer, 0, bytes);
+                        Console.Write(responseData);
+                    }
+                    catch {
+                        return;
+                    }
 
                     if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
                         ctx.Response.Close();

@@ -1,6 +1,14 @@
 .terminal-content {
 	font-family: consolas, monospace;
 	margin: 20px;
+	-webkit-user-select: text; user-select: text;
+}
+
+.terminal-content > span {
+	position: absolute;
+	width: 8px;
+	height: 18px;
+	font-size: 15px;
 }
 
 .terminal-cursor {
@@ -13,9 +21,11 @@
 	opacity: 0;
 	background-color: var(--clr-accent);
 	box-shadow: var(--clr-accent) 0 0 2px;
+
+	transition: .2s;
 }
 
-.terminal-content:focus > .terminal-cursor{
+.terminal-content:focus > .terminal-cursor {
 	animation: terminal-cursor 1.2s infinite;
 }
 
