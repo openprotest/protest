@@ -404,99 +404,133 @@ class Terminal extends Window {
 	HandleCSI(data, index) { //Control Sequence Introducer
 		if (index >= data.length) return 2;
 		
-		if (!isNaN(data[index+2])) {
-			let i = index + 2;
-			let n = parseInt(data[i]);
-			while (!isNaN(data[++i]) && i < data.length) {
-				n *= 10;
-				n += parseInt(data[i]);
-			}
+		let symbol = null;
+		let values = [];
+		let command = null;
 
-			if (data[i] === "A") { //cursor up
-				this.cursor.y = Math.max(0, this.cursor.y - n);
+		let i = index + 2;
+		while (i < data.length) {
+			if (this.IsLetter(data, i)) { //command
+				command = data[i++];
+				break;
 			}
-			else if (data[i] === "B") { //cursor down
-				this.cursor.y += n;
-			}
-			else if (data[i] === "C") { //cursor right
-				this.cursor.x += n;
-			}
-			else if (data[i] === "D") { //cursor left
-				this.cursor.x = Math.max(0, this.cursor.x - n);
-			}
-			else if (data[i] === "E") { //cursor to beginning of next line, n lines down
-				this.cursor.x = 0;
-				this.cursor.y += n;
-			}
-			else if (data[i] === "F") { //cursor to beginning of previous line, n lines up
-				this.cursor.x = 0;
-				this.cursor.y = Math.max(0, this.cursor.y - n);
-			}
-			else if (data[i] === "G") { //moves cursor to column n
-				this.cursor.x = n;
-			}
-			else if (data[i] === "P") { //delete n chars and shift the following chars left
-				let i = this.cursor.x+n;
-				let sequence = "";
-				while (this.chars[`${i++},${this.cursor.y}`]) {
-					sequence += this.chars[`${i-1},${this.cursor.y}`].textContent;
+			
+			if (!isNaN(data[i])) { //number
+				let n = parseInt(data[i]);
+				while (!isNaN(data[++i]) && i < data.length) {
+					n *= 10;
+					n += parseInt(data[i]);
 				}
-
-				i = this.cursor.x;
-				let key = `${i},${this.cursor.y}`;
-				while (this.chars[key]) {
-					this.content.removeChild(this.chars[key]);
-					delete this.chars[key];
-
-					key = `${++i},${this.cursor.y}`;
-				}
-
-				for (i=0; i<sequence.length; i++) {
-					const char = document.createElement("span");
-					char.style.left = `${(this.cursor.x + i) * Terminal.CURSOR_WIDTH}px`;
-					char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
-					this.content.appendChild(char);
-					this.chars[`${this.cursor.x + i},${this.cursor.y}`] = char;
-				}
+				values.push(n);
+				continue;
 			}
-			else if (data[i] === "J") { //erase screen
-				if (n === 0) { //erase from cursor until end
-					console.warn(`Unknown CSI: 0J`);
-					return 4;
-				}
-				else if (n === 1) { //erase from cursor to beginning of screen
-					console.warn(`Unknown CSI: 1J`);
-					return 4;
-				}
-				else if (n === 2) { //clear entire screen
-					this.ClearScreen();
-					return 4;
-				}
-				else if (n === 3) { //erase saved lines
-					console.warn(`Unknown CSI: 3J`);
-					return 4;
-				}
+			
+			switch (data[i]) {
+			case ";": symbol = ";"; break; //delimiter
+			case "=": symbol = "="; break; //screen mode
+			case "?": symbol = "?"; break; //private modes
+			default:
+				console.warn("Unknown token: " + data[i]);
+				break;
 			}
-			else {
-				console.warn(`Unknown CSI: ${n}${data[i]}`);
-			}
-
-			return i - index + 1;
+			i++;
 		}
 
-		if (data[index+2] === "H") { //cursor to home position (0,0)
+		switch (command) {
+		case "A": //cursor up
+			this.cursor.y = Math.max(0, this.cursor.y - values[0] ?? 1);
+			break;
+
+		case "B": //cursor down
+			this.cursor.y += values[0] ?? 1;
+			break;
+
+		case "C": //cursor right
+			this.cursor.x += values[0] ?? 1;
+			break;
+
+		case "D": //cursor left
+			this.cursor.x = Math.max(0, this.cursor.x - values[0] ?? 1);
+			break;
+
+		case "E": //cursor to beginning of next line, n lines down
+			this.cursor.x = 0;
+			this.cursor.y += values[0] ?? 1;
+			break;
+
+		case "F": //cursor to beginning of previous line, n lines up
+			this.cursor.x = 0;
+			this.cursor.y = Math.max(0, this.cursor.y - values[0] ?? 1);
+
+		case "G": //cursor to column n
+			if (values.length > 0) break;
+			this.cursor.x = values[0];
+			break;
+
+		case "P": //delete n chars and shift the following chars left
+			if (values.length === 0) break;
+			let x = this.cursor.x+values[0];
+
+			let sequence = "";
+			while (this.chars[`${x++},${this.cursor.y}`]) {
+				sequence += this.chars[`${x-1},${this.cursor.y}`].textContent;
+			}
+
+			i = this.cursor.x;
+			let key = `${x},${this.cursor.y}`;
+			while (this.chars[key]) {
+				this.content.removeChild(this.chars[key]);
+				delete this.chars[key];
+				key = `${++x},${this.cursor.y}`;
+			}
+
+			for (x=0; i<sequence.length; i++) {
+				const char = document.createElement("span");
+				char.style.left = `${(this.cursor.x + x) * Terminal.CURSOR_WIDTH}px`;
+				char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
+				this.content.appendChild(char);
+				this.chars[`${this.cursor.x + x},${this.cursor.y}`] = char;
+			}
+			break;
+
+		case "J":
+			if (values.length === 0) { //same as n=0
+				console.warn(`Unknown CSI: 0J`);
+				return 3;
+			}
+			if (values[0] == 0) { //erase from cursor until end
+				console.warn(`Unknown CSI: 0J`);
+				return 4;
+			}
+			else if (values[0] == 1) { //erase from cursor to beginning of screen
+				console.warn(`Unknown CSI: 1J`);
+				return 4;
+			}
+			else if (values[0] == 2) { //clear entire screen
+				this.ClearScreen();
+				return 4;
+			}
+			else if (values[0] == 3) { //erase saved lines
+				console.warn(`Unknown CSI: 3J`);
+				return 4;
+			}
+			break;
+
+		case "H": //cursor to home position (0,0)
 			this.cursor.x = 0;
 			this.cursor.y = 0;
 			return 3;
-		}
 
-		if (data[index+2] === "K") {
+		case "K":
 			this.ClearLineFromCursorToEnd();
 			return 3;
+
+		default:
+			console.warn(`Unknown CSI command: ${symbol} ${values.join(";")} ${command}`);
+			break;
 		}
 
-		console.warn("Unknown CSI: " + data[index+2]);
-		return 2;
+		return i - index + 1;
 	}
 
 	HandleDCS(data, index) { //Device Control String
@@ -511,6 +545,13 @@ class Terminal extends Window {
 
 		console.warn("Unknown OCS: " + data[index+2]);
 		return 2;
+	}
+
+	IsLetter(string, index) {
+		const code = string.charCodeAt(index);
+		if (code > 64 && code < 91) return true;
+		if (code > 96 && code < 123) return true;
+		return false;
 	}
 
 	ClearLine() {
