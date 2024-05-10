@@ -28,7 +28,9 @@ class Terminal extends Window {
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
-		//this.AddToolbarSeparator();
+		this.AddToolbarSeparator();
+		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
+		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
 
 		this.content.tabIndex = 1;
 		this.content.classList.add("terminal-content");
@@ -43,9 +45,11 @@ class Terminal extends Window {
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.params.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
+		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
+		this.pasteButton.onclick = ()=> this.ClipboardDialog();
 
 		if (this.params.host.length > 0) {
-			this.ConnectDialog(this.params.host);
+			this.ConnectDialog(this.params.host, true);
 		}
 	}
 
@@ -59,15 +63,13 @@ class Terminal extends Window {
 		//TODO:
 	}
 
-	ConnectDialog(target="") {
+	ConnectDialog(target="", isNew=false) {
 		const dialog = this.DialogBox("112px");
 		if (dialog === null) return;
 
 		const okButton = dialog.okButton;
 		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
-
-		cancelButton.value = "Close";
 
 		innerBox.parentElement.style.maxWidth = "400px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
@@ -91,12 +93,16 @@ class Terminal extends Window {
 			dialog.Close();
 			this.Connect(hostInput.value);
 		};
-
-		cancelButton.onclick = ()=> {
-			dialog.Close();
-			this.Close();
-		};
 		
+		if (isNew) {
+			cancelButton.value = "Close";
+
+			cancelButton.onclick = ()=> {
+				dialog.Close();
+				this.Close();
+			};
+		}
+
 		hostInput.onkeydown = event=> {
 			if (event.key === "Enter") {
 				dialog.okButton.click();
@@ -138,6 +144,121 @@ class Terminal extends Window {
 			this.params.bell = bellCheckbox.checked;
 			dialog.Close();
 		};
+	}
+
+	CustomKeyDialog() {
+		const dialog = this.DialogBox("180px");
+		if (dialog === null) return;
+
+		const okButton = dialog.okButton;
+		const innerBox = dialog.innerBox;
+
+		okButton.value = "Send";
+		okButton.disabled = true;
+
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.maxWidth = "500px";
+		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+
+		const keyLabel = document.createElement("div");
+		keyLabel.style.display = "inline-block";
+		keyLabel.style.minWidth = "50px";
+		keyLabel.textContent = "Key:";
+		innerBox.appendChild(keyLabel);
+
+		const keyInput = document.createElement("input");
+		keyInput.type = "text";
+		keyInput.setAttribute("maxlength", "1");
+		keyInput.style.textAlign = "center";
+		keyInput.style.width = "64px";
+		innerBox.appendChild(keyInput);
+
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const shiftCheckbox = document.createElement("input");
+		shiftCheckbox.type = "checkbox";
+		shiftCheckbox.checked = false;
+		innerBox.appendChild(shiftCheckbox);
+		this.AddCheckBoxLabel(innerBox, shiftCheckbox, "Shift").style.margin = "4px 1px";
+
+		const ctrlCheckbox = document.createElement("input");
+		ctrlCheckbox.type = "checkbox";
+		ctrlCheckbox.checked = false;
+		innerBox.appendChild(ctrlCheckbox);
+		this.AddCheckBoxLabel(innerBox, ctrlCheckbox, "Ctrl").style.margin = "4px 1px";
+
+		const altCheckbox = document.createElement("input");
+		altCheckbox.type = "checkbox";
+		altCheckbox.checked = false;
+		innerBox.appendChild(altCheckbox);
+		this.AddCheckBoxLabel(innerBox, altCheckbox, "Alt").style.margin = "4px 1px";
+
+		const altGrCheckbox = document.createElement("input");
+		altGrCheckbox.type = "checkbox";
+		altGrCheckbox.checked = false;
+		innerBox.appendChild(altGrCheckbox);
+		this.AddCheckBoxLabel(innerBox, altGrCheckbox, "Alt gr").style.margin = "4px 1px";
+
+		keyInput.onchange = keyInput.oninput = ()=> {
+			okButton.disabled = keyInput.value.length === 0;
+		};
+
+		keyInput.onkeydown = event=> {
+			if (event.key === "Enter" && !okButton.disabled) {
+				dialog.okButton.click();
+			}
+		};
+
+		okButton.onclick = ()=> {
+			dialog.Close();
+			//TODO: Send key
+		};
+
+		setTimeout(()=>{ keyInput.focus(); }, 200);
+	}
+
+	async ClipboardDialog() {
+		const dialog = this.DialogBox("320px");
+		if (dialog === null) return;
+
+		const okButton = dialog.okButton;
+		const innerBox = dialog.innerBox;
+
+		okButton.value = "Paste";
+		okButton.disabled = true;
+
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.maxWidth = "560px";
+		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+
+		const keyText = document.createElement("textarea");
+		keyText.style.width = "calc(100% - 8px)";
+		keyText.style.height = "calc(100% - 8px)";
+		keyText.style.boxSizing = "border-box";
+		keyText.style.resize = "none";
+		innerBox.appendChild(keyText);
+
+		try {
+			keyText.value = await navigator.clipboard.readText();
+			okButton.disabled = keyText.value.length === 0;
+		}
+		catch (ex) {
+			dialog.Close();
+			setTimeout(()=>{ this.ConfirmBox(ex, true, "mono/error.svg"); }, 250);
+		}
+
+		keyText.onchange = keyText.oninput = ()=> {
+			okButton.disabled = keyText.value.length === 0;
+		};
+
+		okButton.onclick = ()=> {
+			dialog.Close();
+			console.log(keyText.value);
+			//TODO: Send key
+		};
+
+		setTimeout(()=>{ keyText.focus(); }, 200);
 	}
 
 	Connect(target) {
