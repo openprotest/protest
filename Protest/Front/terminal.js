@@ -26,7 +26,7 @@ class Terminal extends Window {
 
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
-		this.settingsButton = this.AddToolbarButton("Settings", "mono/wrench.svg?light");
+		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
 
 		this.connectButton.disabled = true;
@@ -42,11 +42,14 @@ class Terminal extends Window {
 		this.content.onfocus = () => this.BringToFront();
 		this.content.onkeydown = event => this.Terminal_onkeydown(event);
 
-		this.connectButton.onclick = ()=> {};
-		this.settingsButton.onclick = ()=> this.SettingsDialog();
+		this.connectButton.onclick = ()=> this.ConnectDialog(target="");
+		this.optionsButton.onclick = ()=> this.OptionsDialog();
 
-		//TODO:
-		this.Connect("telehack.com:23");
+		//this.Connect("telehack.com:23");
+
+		if (this.params) {
+			this.ConnectDialog(this.params);
+		}
 	}
 
 	Close() { //overrides
@@ -59,13 +62,64 @@ class Terminal extends Window {
 		//TODO:
 	}
 
-	SettingsDialog() {
+	ConnectDialog(target="") {
+		const dialog = this.DialogBox("112px");
+		if (dialog === null) return;
+
+		const okButton = dialog.okButton;
+		const cancelButton = dialog.cancelButton;
+		const buttonBox = dialog.buttonBox;
+		const innerBox = dialog.innerBox;
+
+		cancelButton.value = "Close";
+
+		innerBox.parentElement.style.maxWidth = "400px";
+		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+
+		innerBox.style.margin = "20px 8px 0 8px";
+		innerBox.style.textAlign = "center";
+
+		const hostLabel = document.createElement("div");
+		hostLabel.style.display = "inline-block";
+		hostLabel.style.minWidth = "50px";
+		hostLabel.textContent = "Host:";
+
+		const hostInput = document.createElement("input");
+		hostInput.type = "text";
+		hostInput.style.width = "calc(100% - 72px)";
+		hostInput.value = target;
+
+		innerBox.append(hostLabel, hostInput);
+
+		okButton.onclick = ()=> {
+			dialog.Close();
+			this.Connect(target);
+		};
+
+		cancelButton.onclick = ()=> {
+			dialog.Close();
+			this.Close();
+		};
+		
+		hostInput.onkeydown = event=> {
+			if (event.key === "Enter") {
+				dialog.okButton.click();
+			}
+		};
+
+		setTimeout(()=> hostInput.focus(), 200);
+	}
+
+	OptionsDialog() {
 		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
 		const okButton = dialog.okButton;
 		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
+
+		innerBox.parentElement.style.maxWidth = "480px";
+		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
 	}
 
 	Connect(target) {
@@ -131,10 +185,6 @@ class Terminal extends Window {
 	}
 
 	HandleMessage(data) {
-		if (data.length < 20) {
-			console.log(data);
-		}
-
 		for (let i=0; i<data.length; i++) {
 			let char = this.chars[`${this.cursor.x},${this.cursor.y}`];
 	
@@ -283,7 +333,7 @@ class Terminal extends Window {
 				}
 			}
 			else {
-				console.warn(`Unknown CSI: ${data[i]} with n=${n}`);
+				console.warn(`Unknown CSI: ${n}${data[i]}`);
 			}
 
 			return i - index + 1;
