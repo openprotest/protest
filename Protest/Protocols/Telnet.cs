@@ -1,6 +1,6 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,8 +60,6 @@ internal static class Telnet {
 
             Logger.Action(username, $"Establish telnet connection to {host}:{port}");
 
-            //await WsWriteText(ws, $"connected to {host}:{port}\n\r");
-
             Task daemon = new Task(async ()=>{
                 while (ws.State == WebSocketState.Open && telnet.Connected) { //host read loop
                     byte[] buffer = new byte[2048];
@@ -114,6 +112,7 @@ internal static class Telnet {
         }
         catch (SocketException ex) {
             await WsWriteText(ws, ex.Message.ToString());
+            await WsWriteText(ws, "\r\n");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }
@@ -251,7 +250,6 @@ internal static class Telnet {
         }
         catch (Exception ex) {
             Logger.Error(ex);
-
         }
         finally {
            //wsToServer?.Abort();

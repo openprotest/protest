@@ -5,9 +5,8 @@ class Terminal extends Window {
 	constructor(params) {
 		super();
 
-		this.params = params ? params : "";
-		this.ws = null;
-		
+		this.params = params ? params : {host:"", isAnsi:true, bell:true};
+
 		this.cursor    = {x:0, y:0};
 		this.chars     = {};
 		this.backColor = null;
@@ -19,6 +18,8 @@ class Terminal extends Window {
 		this.savedLine      = null;
 		this.savedScreen    = null;
 
+		this.ws = null;
+
 		this.SetTitle("Terminal");
 		this.SetIcon("mono/console.svg");
 
@@ -27,9 +28,7 @@ class Terminal extends Window {
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
-		this.AddToolbarSeparator();
-
-		this.connectButton.disabled = true;
+		//this.AddToolbarSeparator();
 
 		this.content.tabIndex = 1;
 		this.content.classList.add("terminal-content");
@@ -38,17 +37,15 @@ class Terminal extends Window {
 		this.cursorElement.className = "terminal-cursor";
 		this.content.appendChild(this.cursorElement);
 
-		this.win.onclick = () => this.content.focus();
-		this.content.onfocus = () => this.BringToFront();
-		this.content.onkeydown = event => this.Terminal_onkeydown(event);
+		this.win.onclick = ()=> this.content.focus();
+		this.content.onfocus = ()=> this.BringToFront();
+		this.content.onkeydown = event=> this.Terminal_onkeydown(event);
 
-		this.connectButton.onclick = ()=> this.ConnectDialog(target="");
+		this.connectButton.onclick = ()=> this.ConnectDialog(this.params.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 
-		//this.Connect("telehack.com:23");
-
-		if (this.params) {
-			this.ConnectDialog(this.params);
+		if (this.params.host.length > 0) {
+			this.ConnectDialog(this.params.host);
 		}
 	}
 
@@ -68,7 +65,6 @@ class Terminal extends Window {
 
 		const okButton = dialog.okButton;
 		const cancelButton = dialog.cancelButton;
-		const buttonBox = dialog.buttonBox;
 		const innerBox = dialog.innerBox;
 
 		cancelButton.value = "Close";
@@ -93,7 +89,7 @@ class Terminal extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-			this.Connect(target);
+			this.Connect(hostInput.value);
 		};
 
 		cancelButton.onclick = ()=> {
@@ -111,19 +107,41 @@ class Terminal extends Window {
 	}
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("200px");
+		const dialog = this.DialogBox("168px");
 		if (dialog === null) return;
 
 		const okButton = dialog.okButton;
 		const cancelButton = dialog.cancelButton;
 		const innerBox = dialog.innerBox;
 
+		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+
+		const ansiCheckbox = document.createElement("input");
+		ansiCheckbox.type = "checkbox";
+		ansiCheckbox.checked = this.params.isAnsi;
+		innerBox.appendChild(ansiCheckbox);
+		this.AddCheckBoxLabel(innerBox, ansiCheckbox, "Escape ANSI codes");
+
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const bellCheckbox = document.createElement("input");
+		bellCheckbox.type = "checkbox";
+		bellCheckbox.checked = this.params.bell;
+		innerBox.appendChild(bellCheckbox);
+		this.AddCheckBoxLabel(innerBox, bellCheckbox, "Play bell sound");
+
+		okButton.onclick = ()=> {
+			this.params.isAnsi = ansiCheckbox.checked;
+			this.params.bell = bellCheckbox.checked;
+			dialog.Close();
+		};
 	}
 
 	Connect(target) {
-		this.params = target;
+		this.params.host = target;
 		
 		let server = window.location.href;
 		server = server.replace("https://", "");
@@ -142,17 +160,18 @@ class Terminal extends Window {
 		}
 		catch {}
 
-		this.ws.onopen = ()=> this.ws.send(target);
-		
+		this.ws.onopen = ()=> {
+			this.connectButton.disabled = true;
+			this.ws.send(target);
+		};
+
 		this.ws.onclose = ()=> {
-			//TODO:
+			this.connectButton.disabled = false;
 		};
 
 		this.ws.onmessage = event=> {
 			this.HandleMessage(event.data);
 		};
-
-		//this.connectButton.disabled = true;
 	}
 
 	Terminal_onkeydown(event) {
@@ -203,7 +222,7 @@ class Terminal extends Window {
 				this.cursor.x++;
 				break;
 
-			case "\x07": this.Beep(); break; //bell
+			case "\x07": if (this.params.bell) { this.Bell(); } break;
 
 			//TODO:
 			case "\x08": //backspace or move left
@@ -222,7 +241,13 @@ class Terminal extends Window {
 			//case "\x0d": break; //cr
 
 			case "\x1b": //esc
-				i += this.HandleEscSequence(data, i)-1;
+				if (this.params.isAnsi) {
+					i += this.HandleEscSequence(data, i) - 1;
+				}
+				else {
+					char.textContent = data[i];
+				}
+				
 				break;
 
 			//case "\x7f": break; //delete
@@ -323,7 +348,6 @@ class Terminal extends Window {
 					return 4;
 				}
 				else if (n === 2) { //clear entire screen
-					console.log("clear screen");
 					this.ClearScreen();
 					return 4;
 				}
@@ -406,7 +430,7 @@ class Terminal extends Window {
 		return parseInt(this.content.clientHeight / Terminal.CURSOR_HEIGHT);
 	}
 
-	Beep() {
+	Bell() {
 		let ctx = new window.AudioContext();
 		let oscillator = ctx.createOscillator();
 		oscillator.type = "sine";

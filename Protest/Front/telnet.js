@@ -61,7 +61,6 @@ class Telnet extends Window {
 			}
 		};
 
-
 		this.defaultElement = this.inputBox;
 
 		this.inputBox.onfocus = ()=>  this.BringToFront();
