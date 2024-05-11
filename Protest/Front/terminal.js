@@ -45,6 +45,23 @@ class Terminal extends Window {
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
 
+		this.statusBox = document.createElement("div");
+		this.statusBox.style.display = "none";
+		this.statusBox.style.position = "absolute";
+		this.statusBox.style.top = "8px";
+		this.statusBox.style.left = "calc(50% - 48px)";
+		this.statusBox.style.zIndex = "1";
+		this.statusBox.style.width = "96px";
+		this.statusBox.style.height = "96px";
+		this.statusBox.style.borderRadius = "4px";
+		this.statusBox.style.boxShadow = "var(--clr-dark) 0 0 4px";
+		this.statusBox.style.color = "var(--clr-dark)";
+		this.statusBox.style.backgroundColor = "var(--clr-pane)";
+		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
+		this.statusBox.style.backgroundSize = "64px 64px";
+		this.statusBox.style.backgroundPosition = "50% 50%";
+		this.statusBox.style.backgroundRepeat = "no-repeat";
+
 		this.win.onclick = ()=> this.content.focus();
 		this.content.onfocus = ()=> this.BringToFront();
 		this.content.onkeydown = event=> this.Terminal_onkeydown(event);
@@ -95,7 +112,7 @@ class Terminal extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-			this.Connect(hostInput.value);
+			this.Connect(hostInput.value.trim());
 		};
 		
 		if (isNew) {
@@ -267,7 +284,11 @@ class Terminal extends Window {
 
 	Connect(target) {
 		this.params.host = target;
-		
+
+		this.statusBox.style.display = "initial";
+		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
+		this.content.appendChild(this.statusBox);
+
 		let server = window.location.href;
 		server = server.replace("https://", "");
 		server = server.replace("http://", "");
@@ -291,18 +312,19 @@ class Terminal extends Window {
 		};
 
 		this.ws.onclose = ()=> {
+			this.statusBox.style.display = "initial";
+			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
+			this.content.appendChild(this.statusBox);
+
 			this.connectButton.disabled = false;
 		};
 
-		let ack = false;
-		this.ws.onmessage = ()=> {
-			if (!ack) {
-				ack = true;
-			}
-			else {
+		this.ws.onmessage = e=> {
+			if (e.data.length > 2 && e.data[0] === "\x3f" && e.data[1] === "\x3f" && e.data[2] === "\x01") {
+				this.statusBox.style.display = "none";
 				this.content.appendChild(this.cursorElement);
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
-			}
+			};
 		};
 	}
 
