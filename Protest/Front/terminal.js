@@ -310,24 +310,58 @@ class Terminal extends Window {
 			return;
 		}
 
+		if (event.ctrlKey && event.key.length === 1) {
+			switch (event.code) {
+			case "KeyA": this.ws.send("\x01"); return;
+			case "KeyB": this.ws.send("\x02"); return;
+			case "KeyC": this.ws.send("\x03"); return;
+			case "KeyD": this.ws.send("\x04"); return;
+			case "KeyE": this.ws.send("\x05"); return;
+			case "KeyF": this.ws.send("\x06"); return;
+			case "KeyG": this.ws.send("\x07"); return;
+			case "KeyH": this.ws.send("\x08"); return;
+			case "KeyI": this.ws.send("\x09"); return;
+			case "KeyJ": this.ws.send("\x10"); return;
+			case "KeyK": this.ws.send("\x11"); return;
+			case "KeyL": this.ws.send("\x12"); return;
+			case "KeyM": this.ws.send("\x13"); return;
+			case "KeyN": this.ws.send("\x14"); return;
+			case "KeyO": this.ws.send("\x15"); return;
+			case "KeyP": this.ws.send("\x16"); return;
+			case "KeyQ": this.ws.send("\x17"); return;
+			case "KeyR": this.ws.send("\x18"); return;
+			case "KeyS": this.ws.send("\x19"); return;
+			case "KeyT": this.ws.send("\x20"); return;
+			case "KeyU": this.ws.send("\x21"); return;
+			case "KeyV": this.ws.send("\x22"); return;
+			case "KeyW": this.ws.send("\x23"); return;
+			case "KeyX": this.ws.send("\x24"); return;
+			case "KeyY": this.ws.send("\x25"); return;
+			case "KeyZ": this.ws.send("\x26"); return;
+			}
+		}
+		else if (event.ctrlKey) {
+			//TODO: ctrl+key
+		}
+
 		if (event.key.length === 1) {
 			this.ws.send(event.key);
 			return;
 		}
 
 		switch(event.key) {
-		case "Enter"     : this.ws.send("\r\n"); break;
-		case "Tab"       : this.ws.send("\t"); break;
-		case "Backspace" : this.ws.send("\x08"); break;
-		case "Delete"    : this.ws.send("\x1b[3~"); break;
-		case "ArrowLeft" : this.ws.send("\x1b[D"); break;
-		case "ArrowRight": this.ws.send("\x1b[C"); break;
-		case "ArrowUp"   : this.ws.send("\x1b[A"); break;
-		case "ArrowDown" : this.ws.send("\x1b[B"); break;
-		case "PageUp"    : this.ws.send(`\x1b[${this.GetScreenHeight()-1}A`); break;
-		case "PageDown"  : this.ws.send(`\x1b[${this.GetScreenHeight()-1}B`); break;
-
-		//default: this.ws.send("\x1b[2J"); return; //erase entire screen
+		case "Enter"     : this.ws.send("\r\n"); return;
+		case "Tab"       : this.ws.send("\t"); return;
+		case "Backspace" : this.ws.send("\x08"); return;
+		case "Delete"    : this.ws.send("\x1b[3~"); return;
+		case "ArrowLeft" : this.ws.send("\x1b[D"); return;
+		case "ArrowRight": this.ws.send("\x1b[C"); return;
+		case "ArrowUp"   : this.ws.send("\x1b[A"); return;
+		case "ArrowDown" : this.ws.send("\x1b[B"); return;
+		case "Home"      : this.ws.send("\x1b[H");  return;
+		case "End"       : this.ws.send("\x1b[F");  return;
+		//case "PageUp"    : this.ws.send(`\x1b[${this.GetScreenHeight()-1}A`); return;
+		//case "PageDown"  : this.ws.send(`\x1b[${this.GetScreenHeight()-1}B`); return;
 		}
 	}
 
@@ -552,7 +586,6 @@ class Terminal extends Window {
 			break;
 
 		case "K":
-			//TODO: K1, K2
 			if (values.length === 0) { //same as K0
 				this.EraseLineFromCursorToEnd();
 				return 3;
@@ -571,30 +604,8 @@ class Terminal extends Window {
 			}
 			break;
 
-		case "P": //delete n chars and shift the following chars left
-			if (values.length === 0) break;
-			let x = this.cursor.x+values[0];
-
-			let sequence = "";
-			while (this.chars[`${x++},${this.cursor.y}`]) {
-				sequence += this.chars[`${x-1},${this.cursor.y}`].textContent;
-			}
-
-			i = this.cursor.x;
-			let key = `${x},${this.cursor.y}`;
-			while (this.chars[key]) {
-				this.content.removeChild(this.chars[key]);
-				delete this.chars[key];
-				key = `${++x},${this.cursor.y}`;
-			}
-
-			for (x=0; i<sequence.length; i++) {
-				const char = document.createElement("span");
-				char.style.left = `${(this.cursor.x + x) * Terminal.CURSOR_WIDTH}px`;
-				char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
-				this.content.appendChild(char);
-				this.chars[`${this.cursor.x + x},${this.cursor.y}`] = char;
-			}
+		case "P": //delete n chars
+			this.EraseLineFromCursorToEnd();
 			break;
 
 		case "m": //graphics modes
@@ -783,23 +794,44 @@ class Terminal extends Window {
 			this.content.removeChild(this.chars[key]);
 			delete this.chars[key];
 		}
-
-		//this.cursor = {x:0, y:this.cursor.y};
 	}
 
 	EraseFromCursorToEndOfScreen() { //0J
-		//TODO:
+		const w = this.GetScreenWidth();
+		const h = this.GetScreenHeight();
+		const c = w * (this.cursor.y) + this.cursor.x;
+
+		for (let y=0; y<h; y++) {
+			for (let x=0; x<w; x++) {
+				if (w*y + x <= c) continue;
+				const key = `${x},${y}`;
+				if (!this.chars[key]) continue;
+				this.content.removeChild(this.chars[key]);
+				delete this.chars[key];
+			}
+		}
 	}
 
 	EraseFromCursorToBeginningOfScreen() { //1J
-		//TODO:
+		const w = this.GetScreenWidth();
+		const h = this.GetScreenHeight();
+		const c = w * (this.cursor.y) + this.cursor.x;
+
+		for (let y=0; y<h; y++) {
+			for (let x=0; x<w; x++) {
+				if (w*y + x > c) continue;
+				const key = `${x},${y}`;
+				if (!this.chars[key]) continue;
+				this.content.removeChild(this.chars[key]);
+				delete this.chars[key];
+			}
+		}
 	}
 
 	ClearScreen() { //2J
 		this.chars = {};
 		this.content.innerHTML = "";
 		this.content.appendChild(this.cursorElement);
-		//this.cursor = {x:0, y:0};
 	}
 
 	EraseLineFromCursorToEnd() { //0K
