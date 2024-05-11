@@ -82,7 +82,10 @@ internal static class Telnet {
                         return;
                     }
 
-                    await WsWriteText(ws, responseData);
+                    try {
+                        await WsWriteText(ws, responseData);
+                    }
+                    catch { }
                 }
             });
             daemon.Start();

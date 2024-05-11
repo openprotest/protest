@@ -44,7 +44,6 @@ class Terminal extends Window {
 
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
-		this.content.appendChild(this.cursorElement);
 
 		this.win.onclick = ()=> this.content.focus();
 		this.content.onfocus = ()=> this.BringToFront();
@@ -55,9 +54,7 @@ class Terminal extends Window {
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
 		this.pasteButton.onclick = ()=> this.ClipboardDialog();
 
-		if (this.params.host.length > 0) {
-			this.ConnectDialog(this.params.host, true);
-		}
+		this.ConnectDialog(this.params.host, true);
 	}
 
 	Close() { //overrides
@@ -297,8 +294,15 @@ class Terminal extends Window {
 			this.connectButton.disabled = false;
 		};
 
-		this.ws.onmessage = event=> {
-			this.HandleMessage(event.data);
+		let ack = false;
+		this.ws.onmessage = ()=> {
+			if (!ack) {
+				ack = true;
+			}
+			else {
+				this.content.appendChild(this.cursorElement);
+				this.ws.onmessage = event=> this.HandleMessage(event.data);
+			}
 		};
 	}
 
@@ -605,7 +609,25 @@ class Terminal extends Window {
 			break;
 
 		case "P": //delete n chars
-			this.EraseLineFromCursorToEnd();
+			if (values.length === 0) break;
+
+			//find last character in current line
+			let x;
+			for (x=this.cursor.x; x<this.GetScreenWidth(); x++) {
+				const key = `${x},${this.cursor.y}`;
+				if (!this.chars[key]) {
+					x--;
+					break;
+				}
+			}
+
+			for (let p=0; p<=values[0]; p++) {
+				const key = `${x-p},${this.cursor.y}`;
+				if (!this.chars[key]) continue;
+				this.content.removeChild(this.chars[key]);
+				delete this.chars[key];
+			}
+	
 			break;
 
 		case "m": //graphics modes
