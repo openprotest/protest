@@ -31,8 +31,15 @@
 }
 
 @keyframes terminal-cursor {
-	0%  {opacity:.1;}
-	30% {opacity:1;}
-	70% {opacity:1;}
-	100%{opacity:.1;}
+	0%  {opacity:.1}
+	30% {opacity:1}
+	70% {opacity:1}
+	100%{opacity:.1}
+}
+
+@keyframes terminal-blinking {
+	0%  {opacity:.1}
+	30% {opacity:1}
+	70% {opacity:1}
+	100%{opacity:.1}
 }

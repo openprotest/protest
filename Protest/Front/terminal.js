@@ -7,16 +7,23 @@ class Terminal extends Window {
 
 		this.params = params ? params : {host:"", isAnsi:true, bell:true};
 
-		this.cursor    = {x:0, y:0};
-		this.chars     = {};
-		this.backColor = null;
-		this.foreColor = null;
-		this.isBold    = false;
-		this.isItalic  = false;
+		this.cursor = {x:0, y:0};
+		this.chars  = {};
 
 		this.savedCursorPos = null;
 		this.savedLine      = null;
 		this.savedScreen    = null;
+
+		this.foreColor       = null;
+		this.backColor       = null;
+		this.isBold          = false;
+		this.isDim           = false;
+		this.isItalic        = false;
+		this.isUnderline     = false;
+		this.isBlinking      = false;
+		this.isInverse       = false;
+		this.isHidden        = false;
+		this.isStrikethrough = false;
 
 		this.ws = null;
 
@@ -309,7 +316,7 @@ class Terminal extends Window {
 		}
 
 		switch(event.key) {
-		case "Enter"     : this.ws.send("\n\r"); break;
+		case "Enter"     : this.ws.send("\r\n"); break;
 		case "Tab"       : this.ws.send("\t"); break;
 		case "Backspace" : this.ws.send("\x08"); break;
 		case "Delete"    : this.ws.send("\x1b[3~"); break;
@@ -343,7 +350,11 @@ class Terminal extends Window {
 				this.cursor.x++;
 				break;
 
-			case "\x07": if (this.params.bell) { this.Bell(); } break;
+			case "\x07":
+				if (this.params.bell) {
+					this.Bell();
+				}
+				break;
 
 			//TODO:
 			case "\x08": //backspace or move left
@@ -351,6 +362,7 @@ class Terminal extends Window {
 				break;
 
 			//case "\x09": break; //tab
+
 			case "\x0a": //lf
 				char.innerHTML = "<br>";
 				this.cursor.x = 0;
@@ -358,8 +370,20 @@ class Terminal extends Window {
 				break;
 
 			//case "\x0b": break; //vertical tab
-			//case "\x0c": break; //new page
-			//case "\x0d": break; //cr
+			//case "\x0c": break; //new page.
+
+			case "\x0d": //cr
+				if (i+1 < data.length && data[i+1] === "\x0a") {
+					char.innerHTML = "<br>";
+					this.cursor.x = 0;
+					this.cursor.y++;
+					i++;
+					break;
+				}
+				else {
+					this.cursor.x = 0;
+				}
+				break;
 
 			case "\x1b": //esc
 				if (this.params.isAnsi) {
@@ -368,16 +392,39 @@ class Terminal extends Window {
 				else {
 					char.textContent = data[i];
 				}
-				
 				break;
 
 			//case "\x7f": break; //delete
 
 			default:
 				char.textContent = data[i];
+				
+				let foreColor, backColor;
+				if (this.isInverse) {
+					foreColor = this.backColor ?? "rgb(32,32,32)";
+					backColor = this.foreColor ?? "rgb(224,224,224)";
+				}
+				else {
+					foreColor = this.foreColor;
+					backColor = this.backColor;
+				}
+
+				if (foreColor) char.style.color = foreColor;
+				if (backColor) char.style.backgroundColor = backColor;
+
+				if (this.isBold)          char.style.fontWeight = "bold";
+				if (this.isDim)           char.style.opacity = "0.6";
+				if (this.isItalic)        char.style.fontStyle = "italic";
+				if (this.isUnderline)     char.style.textDecoration = "underline";
+				if (this.isBlinking)      char.style.animation = "terminal-blinking .5s infinite";
+				if (this.isHidden)        char.style.visibility = "hidden";
+				if (this.isStrikethrough) char.style.textDecoration = "line-through";
+
 				this.cursor.x++;
 				break;
 			}
+
+			this.lastCharacter = data[i];
 		}
 
 		this.cursorElement.style.left = Terminal.CURSOR_WIDTH * this.cursor.x + "px";
@@ -426,7 +473,7 @@ class Terminal extends Window {
 			}
 			
 			switch (data[i]) {
-			case ";": symbol = ";"; break; //delimiter
+			case ";": symbol = ";"; break; //separator
 			case "=": symbol = "="; break; //screen mode
 			case "?": symbol = "?"; break; //private modes
 			default:
@@ -467,6 +514,63 @@ class Terminal extends Window {
 			this.cursor.x = values[0];
 			break;
 
+		case "f":
+		case "H": //cursor to home position (0,0)
+			if (values.length === 0) {
+				this.cursor.x = 0;
+				this.cursor.y = 0;
+				return 3;
+			}
+			else if (values.length > 1) {
+				this.cursor.x = values[0];
+				this.cursor.y = values[1];
+			}
+			break;
+
+		case "J":
+			if (values.length === 0) { //same as J0
+				this.EraseFromCursorToEndOfScreen();
+				return 3;
+			}
+			if (values[0] === 0) {
+				this.EraseFromCursorToEndOfScreen();
+				return 4;
+			}
+			else if (values[0] === 1) {
+				this.EraseFromCursorToBeginningOfScreen();
+				return 4;
+			}
+			else if (values[0] === 2) {
+				this.ClearScreen();
+				return 4;
+			}
+			else if (values[0] === 3) {
+				//TODO: erase saved lines
+				console.warn("Unknown CSI: 3J");
+				return 4;
+			}
+			break;
+
+		case "K":
+			//TODO: K1, K2
+			if (values.length === 0) { //same as K0
+				this.EraseLineFromCursorToEnd();
+				return 3;
+			}
+			if (values[0] === 0) {
+				this.EraseLineFromCursorToEnd();
+				return 4;
+			}
+			if (values[0] === 1) {
+				this.EraseLineFromBeginningToCursor();
+				return 4;
+			}
+			if (values[0] === 2) {
+				this.ClearLine();
+				return 4;
+			}
+			break;
+
 		case "P": //delete n chars and shift the following chars left
 			if (values.length === 0) break;
 			let x = this.cursor.x+values[0];
@@ -493,40 +597,123 @@ class Terminal extends Window {
 			}
 			break;
 
-		case "J":
-			if (values.length === 0) { //same as n=0
-				console.warn(`Unknown CSI: 0J`);
-				return 3;
+		case "m": //graphics modes
+			if (values.length === 0) break;
+
+			for (let p=0; p<values.length; p++) {
+				switch (values[p]) {
+
+				//reset all graphics modes
+				case 0:
+					this.foreColor       = null;
+					this.backColor       = null;
+					this.isBold          = false;
+					this.isDim           = false;
+					this.isItalic        = false;
+					this.isUnderline     = false;
+					this.isBlinking      = false;
+					this.isInverse       = false;
+					this.isHidden        = false;
+					this.isStrikethrough = false;
+					break;
+				
+				//set graphics modes
+				case 1: this.isBold          = true; break;
+				case 2: this.isDim           = true; break;
+				case 3: this.isItalic        = true; break;
+				case 4: this.isUnderline     = true; break;
+				case 5: this.isBlinking      = true; break;
+				case 7: this.isInverse       = true; break;
+				case 8: this.isHidden        = true; break;
+				case 9: this.isStrikethrough = true; break;
+
+				//reset graphics modes
+				case 22: this.isBold = this.isDim = false; break;
+				case 23: this.isItalic        = false; break;
+				case 24: this.isUnderline     = false; break;
+				case 25: this.isBlinking      = false; break;
+				case 27: this.isInverse       = false; break;
+				case 28: this.isHidden        = false; break;
+				case 29: this.isStrikethrough = false; break;
+		
+				//set foreground color
+				case 30: this.foreColor = "#000"; break;
+				case 31: this.foreColor = "#800"; break;
+				case 32: this.foreColor = "#080"; break;
+				case 33: this.foreColor = "#880"; break;
+				case 34: this.foreColor = "#008"; break;
+				case 35: this.foreColor = "#808"; break;
+				case 36: this.foreColor = "#088"; break;
+				case 37: this.foreColor = "#ccc"; break;
+				case 39: this.foreColor = null; break;
+				case 90: this.foreColor = "#888"; break;
+				case 91: this.foreColor = "#f00"; break;
+				case 92: this.foreColor = "#0f0"; break;
+				case 93: this.foreColor = "#ff0"; break;
+				case 94: this.foreColor = "#00f"; break;
+				case 95: this.foreColor = "#f0f"; break;
+				case 96: this.foreColor = "#0ff"; break;
+				case 97: this.foreColor = "#fff"; break;
+
+				//set background color
+				case 40: this.backColor = "#000"; break;
+				case 41: this.backColor = "#800"; break;
+				case 42: this.backColor = "#080"; break;
+				case 43: this.backColor = "#880"; break;
+				case 44: this.backColor = "#008"; break;
+				case 45: this.backColor = "#808"; break;
+				case 46: this.backColor = "#088"; break;
+				case 47: this.backColor = "#ccc"; break;
+				case 49: this.backColor = null; break;
+				case 100: this.backColor = "#888"; break;
+				case 101: this.backColor = "#f00"; break;
+				case 102: this.backColor = "#0f0"; break;
+				case 103: this.backColor = "#ff0"; break;
+				case 104: this.backColor = "#00f"; break;
+				case 105: this.backColor = "#f0f"; break;
+				case 106: this.backColor = "#0ff"; break;
+				case 107: this.backColor = "#fff"; break;
+
+				case 38: //set foreground color
+					if (values.length < 3) break;
+					if (values.length < 3) break;
+
+					if (values[1] === 5) { //id color
+						if (values.length < 3) break;
+						this.foreColor = this.MapColorId(values[2]);
+					}
+					else if (values[1] === 2) { //rgb color
+						if (values.length < 6) break;
+						this.foreColor = `rgb(${values[2]},${values[3]},${values[4]})`;
+					}
+					else {
+						console.warn(`Unknown graphics mode: 38;${values[1]}`);
+					}
+
+				case 48: //set background color
+					if (values.length < 3) break;
+
+					if (values[1] === 5) { //id color
+						if (values.length < 3) break;
+						this.backColor = this.MapColorId(values[2]);
+					}
+					else if (values[1] === 2) { //rgb color
+						if (values.length < 6) break;
+						this.backColor = `rgb(${values[2]},${values[3]},${values[4]})`;
+					}
+					else {
+						console.warn(`Unknown graphics mode: 48;${values[1]}`);
+					}
+
+				default:
+					console.warn(`Unknown graphics mode: ${values[p]}`);
+				}
 			}
-			if (values[0] == 0) { //erase from cursor until end
-				console.warn(`Unknown CSI: 0J`);
-				return 4;
-			}
-			else if (values[0] == 1) { //erase from cursor to beginning of screen
-				console.warn(`Unknown CSI: 1J`);
-				return 4;
-			}
-			else if (values[0] == 2) { //clear entire screen
-				this.ClearScreen();
-				return 4;
-			}
-			else if (values[0] == 3) { //erase saved lines
-				console.warn(`Unknown CSI: 3J`);
-				return 4;
-			}
+
 			break;
 
-		case "H": //cursor to home position (0,0)
-			this.cursor.x = 0;
-			this.cursor.y = 0;
-			return 3;
-
-		case "K":
-			this.ClearLineFromCursorToEnd();
-			return 3;
-
 		default:
-			console.warn(`Unknown CSI command: ${symbol} ${values.join(";")} ${command}`);
+			console.warn(`Unknown CSI command: ${symbol ?? ""}${values.join(";")}${command}`);
 			break;
 		}
 
@@ -545,6 +732,40 @@ class Terminal extends Window {
 
 		console.warn("Unknown OCS: " + data[index+2]);
 		return 2;
+	}
+
+	MapColorId(id) {
+		switch (id) {
+			case 0: return "#000";
+			case 1: return "#800";
+			case 2: return "#080";
+			case 3: return "#880";
+			case 4: return "#008";
+			case 5: return "#808";
+			case 6: return "#088";
+			case 7: return "#ccc";
+		
+			case 8: return "#888";
+			case 9: return "#f00";
+			case 10: return "#0f0";
+			case 11: return "#ff0";
+			case 12: return "#00f";
+			case 13: return "#f0f";
+			case 14: return "#0ff";
+			case 15: return "#fff";
+		}
+
+		if (id > 231) {
+			let hex = (8 + (id - 232) * 10).toString(16).padStart(2, "0");
+			return `#${hex.repeat(3)}`;
+		}
+
+		let v = id - 16;
+		let r = Math.floor(v / 36) * 51;
+		let g = Math.floor((v % 36) / 6) * 51;
+		let b = (v % 6) * 51;
+
+		return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 	}
 
 	IsLetter(string, index) {
@@ -566,22 +787,47 @@ class Terminal extends Window {
 		//this.cursor = {x:0, y:this.cursor.y};
 	}
 
-	ClearLineFromCursorToEnd() {
+	EraseFromCursorToEndOfScreen() { //0J
+		//TODO:
+	}
+
+	EraseFromCursorToBeginningOfScreen() { //1J
+		//TODO:
+	}
+
+	ClearScreen() { //2J
+		this.chars = {};
+		this.content.innerHTML = "";
+		this.content.appendChild(this.cursorElement);
+		//this.cursor = {x:0, y:0};
+	}
+
+	EraseLineFromCursorToEnd() { //0K
 		const w = this.GetScreenWidth();
 		for (let i=this.cursor.x; i<w; i++) {
 			const key = `${i},${this.cursor.y}`;
 			if (!this.chars[key]) continue;
-
 			this.content.removeChild(this.chars[key]);
 			delete this.chars[key];
 		}
 	}
 
-	ClearScreen() {
-		this.chars = {};
-		this.content.innerHTML = "";
-		this.content.appendChild(this.cursorElement);
-		//this.cursor = {x:0, y:0};
+	EraseLineFromBeginningToCursor() { //1K
+		for (let i=0; i<=this.cursor.x; i++) {
+			const key = `${i},${this.cursor.y}`;
+			if (!this.chars[key]) continue;
+			this.chars[key].textContent = " ";
+		}
+	}
+
+	ClearLine() { //2K
+		const w = this.GetScreenWidth();
+		for (let i=0; i<w; i++) {
+			const key = `${i},${this.cursor.y}`;
+			if (!this.chars[key]) continue;
+			this.content.removeChild(this.chars[key]);
+			delete this.chars[key];
+		}
 	}
 
 	GetScreenWidth() {
