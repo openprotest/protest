@@ -48,19 +48,25 @@ class Terminal extends Window {
 		this.statusBox = document.createElement("div");
 		this.statusBox.style.display = "none";
 		this.statusBox.style.position = "absolute";
-		this.statusBox.style.top = "8px";
+		this.statusBox.style.top = "0";
 		this.statusBox.style.left = "calc(50% - 48px)";
 		this.statusBox.style.zIndex = "1";
-		this.statusBox.style.width = "96px";
-		this.statusBox.style.height = "96px";
+		this.statusBox.style.width = "168px";
+		this.statusBox.style.height = "120px";
 		this.statusBox.style.borderRadius = "4px";
 		this.statusBox.style.boxShadow = "var(--clr-dark) 0 0 4px";
+		this.statusBox.style.fontFamily = "var(--global-font-family)";
+		this.statusBox.style.fontWeight = "800";
+		this.statusBox.style.lineHeight = "192px";
+		this.statusBox.style.whiteSpace = "nowrap";
 		this.statusBox.style.color = "var(--clr-dark)";
 		this.statusBox.style.backgroundColor = "var(--clr-pane)";
 		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
 		this.statusBox.style.backgroundSize = "64px 64px";
-		this.statusBox.style.backgroundPosition = "50% 50%";
+		this.statusBox.style.backgroundPosition = "50% 16px";
 		this.statusBox.style.backgroundRepeat = "no-repeat";
+		this.statusBox.style.textAlign = "center";
+		this.statusBox.textContent = "Connecting...";
 
 		this.win.onclick = ()=> this.content.focus();
 		this.content.onfocus = ()=> this.BringToFront();
@@ -72,6 +78,10 @@ class Terminal extends Window {
 		this.pasteButton.onclick = ()=> this.ClipboardDialog();
 
 		this.ConnectDialog(this.params.host, true);
+
+		//preload icon:
+		const disconnectIcon = new Image();
+		disconnectIcon.src = "mono/disconnect.svg";
 	}
 
 	Close() { //overrides
@@ -287,6 +297,7 @@ class Terminal extends Window {
 
 		this.statusBox.style.display = "initial";
 		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
+		this.statusBox.textContent = "Connecting...";
 		this.content.appendChild(this.statusBox);
 
 		let server = window.location.href;
@@ -314,23 +325,26 @@ class Terminal extends Window {
 		this.ws.onclose = ()=> {
 			this.statusBox.style.display = "initial";
 			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
+			this.statusBox.textContent = "Connection closed";
 			this.content.appendChild(this.statusBox);
 
 			this.connectButton.disabled = false;
 		};
 
 		this.ws.onmessage = e=> {
-			if (e.data.length > 2 && e.data[0] === "\x3f" && e.data[1] === "\x3f" && e.data[2] === "\x01") {
+			let json = JSON.parse(e.data);
+			if (json.connected) {
 				this.statusBox.style.display = "none";
-				this.content.appendChild(this.cursorElement);
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
-			};
+			}
+			else if (json.error) {
+				setTimeout(()=>{ this.ConfirmBox(json.error, true, "mono/error.svg"); }, 200);
+			}
 		};
 	}
 
 	Terminal_onkeydown(event) {
 		event.preventDefault();
-		//console.log(event.key, event.ctrlKey, event.altKey, event.shiftKey);
 	
 		if (this.ws === null || this.ws.readyState != 1) {
 			return;
@@ -386,8 +400,6 @@ class Terminal extends Window {
 		case "ArrowDown" : this.ws.send("\x1b[B"); return;
 		case "Home"      : this.ws.send("\x1b[H");  return;
 		case "End"       : this.ws.send("\x1b[F");  return;
-		//case "PageUp"    : this.ws.send(`\x1b[${this.GetScreenHeight()-1}A`); return;
-		//case "PageDown"  : this.ws.send(`\x1b[${this.GetScreenHeight()-1}B`); return;
 		}
 	}
 

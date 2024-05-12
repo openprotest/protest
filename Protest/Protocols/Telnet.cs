@@ -60,6 +60,8 @@ internal static class Telnet {
 
             Logger.Action(username, $"Establish telnet connection to {host}:{port}");
 
+            await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
+
             Task daemon = new Task(async ()=>{
                 while (ws.State == WebSocketState.Open && telnet.Connected) { //host read loop
                     byte[] buffer = new byte[2048];
@@ -114,12 +116,13 @@ internal static class Telnet {
 
         }
         catch (SocketException ex) {
-            await WsWriteText(ws, ex.Message.ToString());
-            await WsWriteText(ws, "\r\n");
+            await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            Logger.Error(ex);
             return;
         }
         catch (Exception ex) {
+            //await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             Logger.Error(ex);
         }
         finally {
