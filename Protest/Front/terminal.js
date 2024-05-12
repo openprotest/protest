@@ -250,7 +250,7 @@ class Terminal extends Window {
 	}
 
 	async ClipboardDialog() {
-		const dialog = this.DialogBox("320px");
+		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
 
 		const okButton = dialog.okButton;
@@ -263,11 +263,10 @@ class Terminal extends Window {
 		innerBox.parentElement.style.maxWidth = "560px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
 
-		const keyText = document.createElement("textarea");
+		const keyText = document.createElement("input");
+		keyText.type = "text";
 		keyText.style.width = "calc(100% - 8px)";
-		keyText.style.height = "calc(100% - 8px)";
 		keyText.style.boxSizing = "border-box";
-		keyText.style.resize = "none";
 		innerBox.appendChild(keyText);
 
 		try {
@@ -285,8 +284,10 @@ class Terminal extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-			console.log(keyText.value);
-			//TODO: Send key
+			if (this.ws === null || this.ws.readyState != 1) {
+				return;
+			}
+			this.ws.send(keyText.value);
 		};
 
 		setTimeout(()=>{ keyText.focus(); }, 200);
@@ -336,6 +337,9 @@ class Terminal extends Window {
 			if (json.connected) {
 				this.statusBox.style.display = "none";
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
+
+				this.content.appendChild(this.cursorElement);
+				this.content.focus();
 			}
 			else if (json.error) {
 				setTimeout(()=>{ this.ConfirmBox(json.error, true, "mono/error.svg"); }, 200);

@@ -64,12 +64,14 @@ internal static class Telnet {
 
             Task daemon = new Task(async ()=>{
                 while (ws.State == WebSocketState.Open && telnet.Connected) { //host read loop
-                    byte[] buffer = new byte[2048];
+                    byte[] data = new byte[2048];
                     string responseData;
                     try {
-                        int bytes = stream.Read(buffer, 0, buffer.Length);
-                        responseData = Encoding.UTF8.GetString(buffer, 0, bytes);
+                        int count = stream.Read(data, 0, data.Length);
+                        responseData = Encoding.UTF8.GetString(data, 0, count);
                         Console.Write(responseData);
+
+                        await WsWriteText(ws, responseData);
                     }
                     catch (System.IO.IOException) {
                         return;
@@ -83,11 +85,6 @@ internal static class Telnet {
                         telnet.Close();
                         return;
                     }
-
-                    try {
-                        await WsWriteText(ws, responseData);
-                    }
-                    catch { }
                 }
             });
             daemon.Start();
@@ -108,10 +105,7 @@ internal static class Telnet {
                     telnet.Close();
                     return;
                 }
-
-                for (int i = 0; i < receiveResult?.Count; i++) {
-                    stream.Write(buff, i, 1);
-                }
+                stream.Write(buff, 0, buff.Length);
             }
 
         }
