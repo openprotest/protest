@@ -151,7 +151,6 @@ internal static class Icmp {
                     break;
                 }
             }
-
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;

@@ -493,7 +493,12 @@ class Telnet extends Window {
 
 	HandleEscSequence(data, index) { //Control Sequence Introducer
 		if (data[index+1] === "[" || data[index+1] === "\x9b") {
-			return this.HandleCSI(data, index);
+			let consumed = this.HandleCSI(data, index);
+			console.log(data.substring(index, index+consumed));
+			//console.log("consumed: " + consumed);
+			console.log(" - - - - - - - - ");
+			return consumed;
+			//return this.HandleCSI(data, index);
 		}
 
 		if (data[index+1] === "P" || data[index+1] === "\x90") {
@@ -540,6 +545,9 @@ class Telnet extends Window {
 				console.warn("Unknown token: " + data[i]);
 				break;
 			}
+
+			console.warn("Token: " + data[i]);
+
 			i++;
 		}
 
@@ -653,7 +661,19 @@ class Telnet extends Window {
 			break;
 
 		case "m": //graphics modes
-			if (values.length === 0) break;
+			if (values.length === 0) { //same as reset?
+				this.foreColor       = null;
+				this.backColor       = null;
+				this.isBold          = false;
+				this.isDim           = false;
+				this.isItalic        = false;
+				this.isUnderline     = false;
+				this.isBlinking      = false;
+				this.isInverse       = false;
+				this.isHidden        = false;
+				this.isStrikethrough = false;
+				return 3;
+			}
 
 			for (let p=0; p<values.length; p++) {
 				switch (values[p]) {
@@ -772,7 +792,7 @@ class Telnet extends Window {
 			break;
 		}
 
-		return i - index + 1;
+		return i - index;
 	}
 
 	HandleDCS(data, index) { //Device Control String

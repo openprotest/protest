@@ -1,10 +1,12 @@
-﻿using System.Net;
+﻿using Protest.Http;
+using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
 
 namespace Protest.Protocols;
 
@@ -62,51 +64,13 @@ internal static class Telnet {
 
             await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            Task fork = new Task(async ()=>{
-                while (ws.State == WebSocketState.Open && telnet.Connected) { //host read loop
-                    byte[] data = new byte[2048];
-                    
-                    try {
-                        int count = stream.Read(data, 0, data.Length);
-
-                        for (int i=0; i<count; i++) {
-                            if (data[i] < 128) continue;
-                            data[i] = 63; //?
-                        }
-
-                        await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
-
-                        if (count == 0) { // Remote host has closed the connection
-                            if (ws.State == WebSocketState.Open) {
-                                try {
-                                    await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                                }
-                                catch { }
-                            }
-                            return;
-                        }
-
-                        //Console.Write(dataString);
-                    }
-                    catch (System.IO.IOException) {
-                        return;
-                    }
-                    catch {
-                        return;
-                    }
-
-                    if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
-                        ctx.Response.Close();
-                        telnet.Close();
-                        return;
-                    }
-                }
+            Thread fork = new Thread(()=>{
+                HandleDownstream(ctx, ws, telnet, stream);
             });
             fork.Start();
 
-            while (ws.State == WebSocketState.Open && telnet.Connected) { //host write loop
-                byte[] buff = new byte[2048];
-
+            byte[] buff = new byte[2048];
+            while (ws.State == WebSocketState.Open && telnet.Connected) { //handle upstream
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
@@ -131,7 +95,6 @@ internal static class Telnet {
             return;
         }
         catch (Exception ex) {
-            //await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             Logger.Error(ex);
         }
         finally {
@@ -143,6 +106,53 @@ internal static class Telnet {
                 await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
             catch { }
+        }
+    }
+
+    private static async void HandleDownstream(HttpListenerContext ctx, WebSocket ws, TcpClient telnet, Stream stream) {
+        byte[] data = new byte[2048];
+
+        while (ws.State == WebSocketState.Open && telnet.Connected) {
+            try {
+                int count = stream.Read(data, 0, data.Length);
+
+                if (count == 0) { // Remote host has closed the connection
+                    if (ws.State == WebSocketState.Open) {
+                        try {
+                            await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                        }
+                        catch { }
+                    }
+                    return;
+                }
+
+                if (count == 1 && data[0] == 0) { //keep alive
+                    continue;
+                }
+
+                for (int i = 0; i < count; i++) {
+                    if (data[i] < 128)
+                        continue;
+                    data[i] = 63; //?
+                }
+
+                await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
+
+                string dataString = Encoding.ASCII.GetString(data, 0, count);
+                Console.Write(dataString);
+            }
+            catch (System.IO.IOException) {
+                return;
+            }
+            catch {
+                return;
+            }
+
+            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
+                ctx.Response.Close();
+                telnet.Close();
+                return;
+            }
         }
     }
 }
