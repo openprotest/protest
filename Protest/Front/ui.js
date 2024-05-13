@@ -301,7 +301,7 @@ const MENU = {
 		{ t:"Watchdog",      i:"mono/watchdog.svg?light",      g:"documentation", h:false, f:params=> new Watchdog(params), k:"" },
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:params=> new Chat(),           k:"messages" },
 
-		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:params=> new Telnet(params) },
+		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:params=> new Telnet({host:"", isAnsi:true, bell:true}) },
 		//{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:true,  f:params=> {} },
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"tools", h:false, f:params=> new Wmi(params), k:"windows management instrumentation viewer" },
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },

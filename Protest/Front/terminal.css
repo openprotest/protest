@@ -1,6 +1,7 @@
 .terminal-content {
 	font-family: consolas, monospace;
 	margin: 20px;
+	overflow-y: scroll;
 	-webkit-user-select: text; user-select: text;
 }
 
@@ -9,6 +10,29 @@
 	width: 8px;
 	height: 18px;
 	font-size: 15px;
+}
+
+.terminal-status-box {
+	display: none;
+	position: sticky;
+	top: 20px;
+	left: calc(50% - 110px);
+	width: 200px;
+	padding: 20px 20px 20px 64px;
+	text-align: center;
+	z-index: 1;
+	border-radius: 4px;
+	box-shadow: var(--clr-dark) 0 0 4px;
+	font-family: var(--global-font-family);
+	font-weight: 800;
+	white-space: nowrap;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	background-image: url(mono/connect.svg);
+	background-size: 48px 48px;
+	background-position: 8px 50%;
+	background-repeat: no-repeat;
+	-webkit-user-select: none; user-select: none;
 }
 
 .terminal-cursor {
