@@ -553,9 +553,22 @@ class Telnet extends Window {
 				break;
 			}
 
-			console.warn("Token: " + data[i]);
-
 			i++;
+		}
+
+		//common private modes
+		if (symbol === "?") {
+			if (values.length === 1 && values[0] === 25) {
+				if (command === "l") {
+					this.cursorElement.style.visibility = "hidden";
+					return 6;
+				}
+
+				if (command === "h") {
+					this.cursorElement.style.visibility = "visible";
+					return 6;
+				}
+			}
 		}
 
 		switch (command) {
