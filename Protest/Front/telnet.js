@@ -610,8 +610,8 @@ class Telnet extends Window {
 				return 3;
 			}
 			else if (values.length > 1) {
-				this.cursor.x = values[0];
-				this.cursor.y = values[1];
+				this.cursor.x = values[1];
+				this.cursor.y = values[0];
 			}
 			break;
 
