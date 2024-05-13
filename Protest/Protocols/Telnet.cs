@@ -64,14 +64,14 @@ internal static class Telnet {
 
             await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            Thread fork = new Thread(()=>{
+            Thread fork = new Thread(() => {
                 HandleDownstream(ctx, ws, telnet, stream);
             });
             fork.Start();
 
             byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open && telnet.Connected) { //handle upstream
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(buff, CancellationToken.None);
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
@@ -84,7 +84,8 @@ internal static class Telnet {
                     telnet.Close();
                     return;
                 }
-                stream.Write(buff, 0, buff.Length);
+                
+                stream.Write(buff, 0, receiveResult.Count);
             }
 
         }
@@ -116,7 +117,7 @@ internal static class Telnet {
             try {
                 int count = stream.Read(data, 0, data.Length);
 
-                if (count == 0) { // Remote host has closed the connection
+                if (count == 0) { //remote host closed the connection
                     if (ws.State == WebSocketState.Open) {
                         try {
                             await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
@@ -131,15 +132,14 @@ internal static class Telnet {
                 }
 
                 for (int i = 0; i < count; i++) {
-                    if (data[i] < 128)
-                        continue;
-                    data[i] = 63; //?
+                    if (data[i] < 128) continue;
+                    data[i] = 46; //.
                 }
 
                 await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
 
-                string dataString = Encoding.ASCII.GetString(data, 0, count);
-                Console.Write(dataString);
+                //string dataString = Encoding.ASCII.GetString(data, 0, count);
+                //Console.Write(dataString);
             }
             catch (System.IO.IOException) {
                 return;

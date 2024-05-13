@@ -493,18 +493,13 @@ class Telnet extends Window {
 
 	HandleEscSequence(data, index) { //Control Sequence Introducer
 		if (data[index+1] === "[" || data[index+1] === "\x9b") {
-			let consumed = this.HandleCSI(data, index);
-			console.log(data.substring(index, index+consumed));
-			//console.log("consumed: " + consumed);
-			console.log(" - - - - - - - - ");
-			return consumed;
-			//return this.HandleCSI(data, index);
+			return this.HandleCSI(data, index);
 		}
 
 		if (data[index+1] === "P" || data[index+1] === "\x90") {
 			return this.HandleDCS(data, index);
 		}
-		
+
 		if (data[index+1] === "]" || data[index+1] === "\x9d") {
 			return this.HandleOSC(data, index);
 		}
