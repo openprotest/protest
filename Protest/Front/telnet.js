@@ -5,7 +5,7 @@ class Telnet extends Window {
 	constructor(params) {
 		super();
 
-		this.params = params ? params : {host:"", isAnsi:true, bell:true};
+		this.params = params ? params : {host:"", ansi:true, autoScroll:true, bell:true};
 
 		this.cursor = {x:0, y:0};
 		this.chars  = {};
@@ -36,8 +36,8 @@ class Telnet extends Window {
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
-		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
+		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 
 		this.content.tabIndex = 1;
 		this.content.classList.add("terminal-content");
@@ -55,8 +55,8 @@ class Telnet extends Window {
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.params.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
-		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
 		this.pasteButton.onclick = ()=> this.ClipboardDialog();
+		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
 
 		this.ConnectDialog(this.params.host, true);
 
@@ -125,7 +125,7 @@ class Telnet extends Window {
 	}
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("168px");
+		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
 		const okButton = dialog.okButton;
@@ -138,7 +138,7 @@ class Telnet extends Window {
 
 		const ansiCheckbox = document.createElement("input");
 		ansiCheckbox.type = "checkbox";
-		ansiCheckbox.checked = this.params.isAnsi;
+		ansiCheckbox.checked = this.params.ansi;
 		innerBox.appendChild(ansiCheckbox);
 		this.AddCheckBoxLabel(innerBox, ansiCheckbox, "Escape ANSI codes");
 
@@ -151,9 +151,19 @@ class Telnet extends Window {
 		innerBox.appendChild(bellCheckbox);
 		this.AddCheckBoxLabel(innerBox, bellCheckbox, "Play bell sound");
 
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const autoScrollCheckbox = document.createElement("input");
+		autoScrollCheckbox.type = "checkbox";
+		autoScrollCheckbox.checked = this.params.autoScroll;
+		innerBox.appendChild(autoScrollCheckbox);
+		this.AddCheckBoxLabel(innerBox, autoScrollCheckbox, "Auto-scroll");
+
 		okButton.onclick = ()=> {
-			this.params.isAnsi = ansiCheckbox.checked;
+			this.params.ansi = ansiCheckbox.checked;
 			this.params.bell = bellCheckbox.checked;
+			this.params.autoScroll = autoScrollCheckbox.checked;
 			dialog.Close();
 		};
 	}
@@ -444,7 +454,7 @@ class Telnet extends Window {
 				break;
 
 			case "\x1b": //esc
-				if (this.params.isAnsi) {
+				if (this.params.ansi) {
 					i += this.HandleEscSequence(data, i) - 1;
 				}
 				else {
@@ -488,7 +498,9 @@ class Telnet extends Window {
 		this.cursorElement.style.left = Telnet.CURSOR_WIDTH * this.cursor.x + "px";
 		this.cursorElement.style.top = Telnet.CURSOR_HEIGHT * this.cursor.y + "px";
 
-		this.cursorElement.scrollIntoView();
+		if (this.params.autoScroll) {
+			this.cursorElement.scrollIntoView();
+		}
 	}
 
 	HandleEscSequence(data, index) { //Control Sequence Introducer
