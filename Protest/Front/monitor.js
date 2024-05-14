@@ -1255,9 +1255,9 @@ class Monitor extends Window {
 				isDynamic: dynamicInput.checked,
 			};
 
-			if (option.max === null || option.max.length === 0) {
+			if (options.max === null || options.max.length === 0) {
 				options.max = 100;
-				option.isDynamic = true;
+				options.isDynamic = true;
 			}
 
 			this.AddChart(nameInput.value, queryInput.value, options);
