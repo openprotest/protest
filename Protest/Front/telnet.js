@@ -505,15 +505,15 @@ class Telnet extends Window {
 	}
 
 	HandleEscSequence(data, index) { //Control Sequence Introducer
-		if (data[index+1] === "[" || data[index+1] === "\x9b") {
+		if (data[index+1] === "[") {
 			return this.HandleCSI(data, index);
 		}
 
-		if (data[index+1] === "P" || data[index+1] === "\x90") {
+		if (data[index+1] === "P") {
 			return this.HandleDCS(data, index);
 		}
 
-		if (data[index+1] === "]" || data[index+1] === "\x9d") {
+		if (data[index+1] === "]") {
 			return this.HandleOSC(data, index);
 		}
 
@@ -524,15 +524,27 @@ class Telnet extends Window {
 	HandleCSI(data, index) { //Control Sequence Introducer
 		if (index >= data.length) return 2;
 		
+//console.log(data[index], data[index+1], data[index+2], data[index+3], data[index+4], data[index+5], data[index+6], data[index+7]);
+
 		let symbol = null;
 		let values = [];
 		let command = null;
 
 		let i = index + 2;
 		while (i < data.length) {
-			if (this.IsLetter(data, i)) { //command
+
+//console.log(i);
+//console.log(data[i], data[i+1], data[i+2], data[i+3], data[i+4], data[i+5], data[i+6], data[i+7]);
+
+			if (data.charCodeAt(i) > 0x3f && data.charCodeAt(i) < 0x7f) { //command byte
 				command = data[i++];
 				break;
+			}
+			
+			if (data[i] === ";") {
+				i++;
+				//values.push(0);
+				continue;
 			}
 			
 			if (!isNaN(data[i])) { //number
@@ -556,6 +568,10 @@ class Telnet extends Window {
 
 			i++;
 		}
+
+		/*if (values.length === 0) {
+			values.push(null);
+		}*/
 
 		//common private modes
 		if (symbol === "?") {
@@ -608,7 +624,6 @@ class Telnet extends Window {
 			if (values.length === 0) {
 				this.cursor.x = 0;
 				this.cursor.y = 0;
-				return 3;
 			}
 			else if (values.length > 1) {
 				this.cursor.x = values[1];
@@ -619,43 +634,34 @@ class Telnet extends Window {
 		case "J":
 			if (values.length === 0) { //same as J0
 				this.EraseFromCursorToEndOfScreen();
-				return 3;
 			}
 			if (values[0] === 0) {
 				this.EraseFromCursorToEndOfScreen();
-				return 4;
 			}
 			else if (values[0] === 1) {
 				this.EraseFromCursorToBeginningOfScreen();
-				return 4;
 			}
 			else if (values[0] === 2) {
 				this.ClearScreen();
-				return 4;
 			}
 			else if (values[0] === 3) {
 				this.ClearScreen();
 				//TODO: clear screen and buffer
-				return 4;
 			}
 			break;
 
 		case "K":
 			if (values.length === 0) { //same as K0
 				this.EraseLineFromCursorToEnd();
-				return 3;
 			}
 			if (values[0] === 0) {
 				this.EraseLineFromCursorToEnd();
-				return 4;
 			}
 			if (values[0] === 1) {
 				this.EraseLineFromBeginningToCursor();
-				return 4;
 			}
 			if (values[0] === 2) {
 				this.ClearLine();
-				return 4;
 			}
 			break;
 
@@ -877,13 +883,6 @@ class Telnet extends Window {
 		let b = (v % 6) * 51;
 
 		return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-	}
-
-	IsLetter(string, index) {
-		const code = string.charCodeAt(index);
-		if (code > 64 && code < 91) return true;
-		if (code > 96 && code < 123) return true;
-		return false;
 	}
 
 	ClearLine() {
