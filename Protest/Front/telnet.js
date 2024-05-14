@@ -21,6 +21,7 @@ class Telnet extends Window {
 		this.isItalic        = false;
 		this.isUnderline     = false;
 		this.isBlinking      = false;
+		this.isFastBlinking  = false;
 		this.isInverse       = false;
 		this.isHidden        = false;
 		this.isStrikethrough = false;
@@ -55,7 +56,7 @@ class Telnet extends Window {
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.params.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
-		this.pasteButton.onclick = ()=> this.ClipboardDialog();
+		this.pasteButton.onclick   = ()=> this.ClipboardDialog();
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
 
 		this.ConnectDialog(this.params.host, true);
@@ -108,7 +109,6 @@ class Telnet extends Window {
 		
 		if (isNew) {
 			cancelButton.value = "Close";
-
 			cancelButton.onclick = ()=> {
 				dialog.Close();
 				this.Close();
@@ -394,8 +394,8 @@ class Telnet extends Window {
 		case "ArrowRight": this.ws.send("\x1b[C"); return;
 		case "ArrowUp"   : this.ws.send("\x1b[A"); return;
 		case "ArrowDown" : this.ws.send("\x1b[B"); return;
-		case "Home"      : this.ws.send("\x1b[H");  return;
-		case "End"       : this.ws.send("\x1b[F");  return;
+		case "Home"      : this.ws.send("\x1b[H"); return;
+		case "End"       : this.ws.send("\x1b[F"); return;
 		}
 	}
 
@@ -484,7 +484,8 @@ class Telnet extends Window {
 				if (this.isDim)           char.style.opacity = "0.6";
 				if (this.isItalic)        char.style.fontStyle = "italic";
 				if (this.isUnderline)     char.style.textDecoration = "underline";
-				if (this.isBlinking)      char.style.animation = "terminal-blinking .5s infinite";
+				if (this.isBlinking)      char.style.animation = "terminal-blinking 1s infinite";
+				if (this.isFastBlinking)  char.style.animation = "terminal-fast-blinking .2s infinite";
 				if (this.isHidden)        char.style.visibility = "hidden";
 				if (this.isStrikethrough) char.style.textDecoration = "line-through";
 
@@ -633,8 +634,8 @@ class Telnet extends Window {
 				return 4;
 			}
 			else if (values[0] === 3) {
-				//TODO: erase saved lines
-				console.warn("Unknown CSI: 3J");
+				this.ClearScreen();
+				//TODO: clear screen and buffer
 				return 4;
 			}
 			break;
@@ -658,6 +659,9 @@ class Telnet extends Window {
 			}
 			break;
 
+		//case "S": break; //not ANSI
+		//case "T": break; //not ANSI
+		
 		case "P": //delete n chars
 			if (values.length === 0) break;
 
@@ -677,7 +681,6 @@ class Telnet extends Window {
 				this.content.removeChild(this.chars[key]);
 				delete this.chars[key];
 			}
-	
 			break;
 
 		case "m": //graphics modes
@@ -689,6 +692,7 @@ class Telnet extends Window {
 				this.isItalic        = false;
 				this.isUnderline     = false;
 				this.isBlinking      = false;
+				this.isFastBlinking  = false;
 				this.isInverse       = false;
 				this.isHidden        = false;
 				this.isStrikethrough = false;
@@ -707,6 +711,7 @@ class Telnet extends Window {
 					this.isItalic        = false;
 					this.isUnderline     = false;
 					this.isBlinking      = false;
+					this.isFastBlinking  = false;
 					this.isInverse       = false;
 					this.isHidden        = false;
 					this.isStrikethrough = false;
@@ -718,6 +723,7 @@ class Telnet extends Window {
 				case 3: this.isItalic        = true; break;
 				case 4: this.isUnderline     = true; break;
 				case 5: this.isBlinking      = true; break;
+				case 6: this.isFastBlinking  = true; break;
 				case 7: this.isInverse       = true; break;
 				case 8: this.isHidden        = true; break;
 				case 9: this.isStrikethrough = true; break;
@@ -727,16 +733,17 @@ class Telnet extends Window {
 				case 23: this.isItalic        = false; break;
 				case 24: this.isUnderline     = false; break;
 				case 25: this.isBlinking      = false; break;
+				case 26: this.isFastBlinking  = false; break;
 				case 27: this.isInverse       = false; break;
 				case 28: this.isHidden        = false; break;
 				case 29: this.isStrikethrough = false; break;
 		
 				//set foreground color
-				case 30: this.foreColor = "#000"; break;
+				case 30: this.foreColor = "#111"; break;
 				case 31: this.foreColor = "#800"; break;
 				case 32: this.foreColor = "#080"; break;
 				case 33: this.foreColor = "#880"; break;
-				case 34: this.foreColor = "#008"; break;
+				case 34: this.foreColor = "#22a"; break;
 				case 35: this.foreColor = "#808"; break;
 				case 36: this.foreColor = "#088"; break;
 				case 37: this.foreColor = "#ccc"; break;
@@ -748,14 +755,14 @@ class Telnet extends Window {
 				case 94: this.foreColor = "#00f"; break;
 				case 95: this.foreColor = "#f0f"; break;
 				case 96: this.foreColor = "#0ff"; break;
-				case 97: this.foreColor = "#fff"; break;
+				case 97: this.foreColor = "#eee"; break;
 
 				//set background color
-				case 40: this.backColor = "#000"; break;
+				case 40: this.backColor = "#111"; break;
 				case 41: this.backColor = "#800"; break;
 				case 42: this.backColor = "#080"; break;
 				case 43: this.backColor = "#880"; break;
-				case 44: this.backColor = "#008"; break;
+				case 44: this.backColor = "#11a"; break;
 				case 45: this.backColor = "#808"; break;
 				case 46: this.backColor = "#088"; break;
 				case 47: this.backColor = "#ccc"; break;
@@ -767,7 +774,7 @@ class Telnet extends Window {
 				case 104: this.backColor = "#00f"; break;
 				case 105: this.backColor = "#f0f"; break;
 				case 106: this.backColor = "#0ff"; break;
-				case 107: this.backColor = "#fff"; break;
+				case 107: this.backColor = "#eee"; break;
 
 				case 38: //set foreground color
 					if (values.length < 3) break;
@@ -805,6 +812,15 @@ class Telnet extends Window {
 				}
 			}
 
+			break;
+
+		case "s": //save cursor position
+			this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
+			break;
+
+		case "u": //restore cursor position
+			this.cursor.x = this.savedCursorPos.x;
+			this.cursor.y = this.savedCursorPos.y;
 			break;
 
 		default:

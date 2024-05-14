@@ -138,8 +138,8 @@ internal static class Telnet {
 
                 await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
 
-                //string dataString = Encoding.ASCII.GetString(data, 0, count);
-                //Console.Write(dataString);
+                string dataString = Encoding.ASCII.GetString(data, 0, count);
+                Console.Write(dataString);
             }
             catch (System.IO.IOException) {
                 return;
