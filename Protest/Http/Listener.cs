@@ -446,7 +446,7 @@ public sealed class Listener {
 
         case "/ws/ssh":
             Protocols.Ssh.WebSocketHandler(ctx);
-            break;
+            return true;
 
         case "/ws/monitor":
             Tools.Monitor.WebSocketHandler(ctx);

@@ -24,10 +24,9 @@ internal static class Ssh {
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -44,12 +43,12 @@ internal static class Ssh {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
-        /*try*/ {
-            byte[] connectionBuffer = new byte[1024];
+        try {
+            byte[] connectionBuffer = new byte[2048];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(connectionBuffer), CancellationToken.None);
             string connectionString = Encoding.Default.GetString(connectionBuffer, 0, targetResult.Count);
 
-            string[] lines = connectionString.Split("\n");
+            string[] lines = connectionString.Split(" ");
             string target = String.Empty;
             string file = null;
             string username = String.Empty;
@@ -65,10 +64,6 @@ internal static class Ssh {
             string host = split[0];
             int port = 22;
 
-            if (!String.IsNullOrEmpty(file)) {
-                //TODO:
-            }
-
             SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
@@ -82,16 +77,16 @@ internal static class Ssh {
             fork.Start();
 
             byte[] buff = new byte[2048];
-            while (ws.State == WebSocketState.Open && ssh.IsConnected) { //handle upstream
+            while (ws.State == WebSocketState.Open && ssh.IsConnected) {
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(buff, CancellationToken.None);
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
                     ssh.Disconnect();
                     break;
                 }
 
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
+                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/ssh")) {
                     ctx.Response.Close();
                     ssh.Disconnect();
                     return;
@@ -100,10 +95,9 @@ internal static class Ssh {
                 shellStream.Write(Encoding.ASCII.GetString(buff, 0, receiveResult.Count));
             }
         }
-        /*catch (SocketException ex) {
+        catch (SocketException ex) {
             await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-            Logger.Error(ex);
             return;
         }
         catch (Exception ex) {
@@ -113,9 +107,10 @@ internal static class Ssh {
             if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                } catch { }
+                }
+                catch { }
             }
-        }*/
+        }
     }
 
     private static async void HandleDownstream(HttpListenerContext ctx, WebSocket ws, SshClient ssh, ShellStream shellStream) {
@@ -135,20 +130,16 @@ internal static class Ssh {
                     return;
                 }
 
-                if (count == 1 && data[0] == 0) { //keep alive
-                    continue;
-                }
+                if (count == 1 && data[0] == 0) continue; //keep alive
 
                 for (int i = 0; i < count; i++) {
-                    if (data[i] < 128)
-                        continue;
-                    data[i] = 46; //.
+                    if (data[i] > 127) data[i] = 46; //.
                 }
 
                 await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
 
-                string dataString = Encoding.ASCII.GetString(data, 0, count);
-                Console.Write(dataString);
+                //string dataString = Encoding.ASCII.GetString(data, 0, count);
+                //Console.Write(dataString);
             }
             catch (IOException) {
                 return;

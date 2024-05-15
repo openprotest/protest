@@ -63,7 +63,7 @@ class Telnet extends Terminal {
 		setTimeout(()=> hostInput.focus(), 200);
 	}
 
-	Connect(target) { //overrides
+	Connect(target) {
 		this.params.host = target;
 
 		this.statusBox.style.display = "initial";
@@ -105,7 +105,7 @@ class Telnet extends Terminal {
 		this.ws.onmessage = e=> {
 			let json = JSON.parse(e.data);
 			if (json.connected) {
-				this.SetTitle(`Telnet - ${target}`);
+				this.SetTitle(`Secure shell - ${target}`);
 				this.statusBox.style.display = "none";
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
 

@@ -235,8 +235,6 @@ class Terminal extends Window {
 		setTimeout(()=>{ keyText.focus(); }, 200);
 	}
 
-	Connect(target) {} //overridable
-
 	Terminal_onkeydown(event) {
 		event.preventDefault();
 	

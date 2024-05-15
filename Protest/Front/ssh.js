@@ -98,12 +98,12 @@ class Ssh extends Terminal {
 	}
 
 	ConnectViaCredentials(target, username, password) {
-		const connectionString = `target=${target}\nun=${username}\npw=${password}`;
+		const connectionString = `target=${target} un=${username} pw=${password}`;
 		this.Connect(target, connectionString);
 	}
 
 	ConnectViaFile(target, file) {
-		const connectionString = `target=${target}\nfile=${file}`;
+		const connectionString = `target=${target} file=${file}`;
 		this.Connect(target, connectionString);
 	}
 
@@ -132,16 +132,22 @@ class Ssh extends Terminal {
 		}
 		catch {}
 
+		console.log(connectionString);
+
 		this.ws.onopen = ()=> {
 			this.connectButton.disabled = true;
 			this.ws.send(connectionString);
+		};
+
+		this.ws.error = err=>{
+			console.log(err);
 		};
 
 		this.ws.onclose = ()=> {
 			this.statusBox.style.display = "initial";
 			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
 			this.statusBox.textContent = "Connection closed";
-			this.content.appendChild(this.statusBox); 
+			this.content.appendChild(this.statusBox);
 
 			this.connectButton.disabled = false;
 		};

@@ -88,7 +88,6 @@ internal static class Telnet {
         catch (SocketException ex) {
             await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-            Logger.Error(ex);
             return;
         }
         catch (Exception ex) {
@@ -121,13 +120,10 @@ internal static class Telnet {
                     return;
                 }
 
-                if (count == 1 && data[0] == 0) { //keep alive
-                    continue;
-                }
+                if (count == 1 && data[0] == 0) continue; //keep alive
 
                 for (int i = 0; i < count; i++) {
-                    if (data[i] < 128) continue;
-                    data[i] = 46; //.
+                    if (data[i] > 127) data[i] = 46; //.
                 }
 
                 await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -135,7 +131,7 @@ internal static class Telnet {
                 //string dataString = Encoding.ASCII.GetString(data, 0, count);
                 //Console.Write(dataString);
             }
-            catch (System.IO.IOException) {
+            catch (IOException) {
                 return;
             }
             catch {
