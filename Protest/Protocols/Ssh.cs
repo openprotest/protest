@@ -117,6 +117,12 @@ internal static class Ssh {
         byte[] data = new byte[2048];
 
         while (ws.State == WebSocketState.Open && ssh.IsConnected) {
+            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/ssh")) { //check session
+                ctx.Response.Close();
+                shellStream.Close();
+                return;
+            }
+
             try {
                 int count = await shellStream.ReadAsync(data, 0, data.Length);
 
@@ -145,12 +151,6 @@ internal static class Ssh {
                 return;
             }
             catch {
-                return;
-            }
-
-            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/ssh")) { //check session
-                ctx.Response.Close();
-                shellStream.Close();
                 return;
             }
         }

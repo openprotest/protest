@@ -107,6 +107,12 @@ internal static class Telnet {
         byte[] data = new byte[2048];
 
         while (ws.State == WebSocketState.Open && telnet.Connected) {
+            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
+                ctx.Response.Close();
+                telnet.Close();
+                return;
+            }
+
             try {
                 int count = stream.Read(data, 0, data.Length);
 
@@ -135,12 +141,6 @@ internal static class Telnet {
                 return;
             }
             catch {
-                return;
-            }
-
-            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
-                ctx.Response.Close();
-                telnet.Close();
                 return;
             }
         }
