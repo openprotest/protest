@@ -607,8 +607,10 @@ const MENU = {
 			}
 		}
 
-		let count = 0;
 		if (keywords.length > 0) { //inventory
+			let count = 0;
+			exactMatchDevices = [];
+
 			for (const file in LOADER.devices.data) {
 				const match = keywords.every(
 					keyword=> Object.values(LOADER.devices.data[file]).some(
@@ -661,8 +663,9 @@ const MENU = {
 				}
 
 				if (exactMatch) {
-					MENU.list.unshift(item);
-					menulist.prepend(item);
+					//MENU.list.unshift(item);
+					//menulist.prepend(item);
+					exactMatchDevices.push(item);
 				}
 				else {
 					MENU.list.push(item);
@@ -671,6 +674,9 @@ const MENU = {
 
 				if (++count > 32) break;
 			}
+
+			count = 0;
+			exactMatchUsers = [];
 
 			for (const file in LOADER.users.data) {
 				const match = keywords.every(
@@ -724,8 +730,9 @@ const MENU = {
 				}
 
 				if (exactMatch) {
-					MENU.list.unshift(item);
-					menulist.prepend(item);
+					//MENU.list.unshift(item);
+					//menulist.prepend(item);
+					exactMatchUsers.push(item);
 				}
 				else {
 					MENU.list.push(item);
@@ -733,6 +740,16 @@ const MENU = {
 				}
 
 				if (++count > 32) break;
+			}
+
+			for (let i=exactMatchUsers.length-1; i >= 0; i--) {
+				MENU.list.unshift(exactMatchUsers[i]);
+				menulist.prepend(exactMatchUsers[i]);
+			}
+
+			for (let i=exactMatchDevices.length-1; i >= 0; i--) {
+				MENU.list.unshift(exactMatchDevices[i]);
+				menulist.prepend(exactMatchDevices[i]);
 			}
 
 			if (MENU.list.length > 0) {
