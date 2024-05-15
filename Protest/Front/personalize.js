@@ -339,7 +339,6 @@ class Personalize extends Tabs {
 
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "appearance") {
-
 					if (WIN.array[i] !== this) {
 						WIN.array[i].winMaxedCheckbox.checked      = this.winMaxedCheckbox.checked;
 						WIN.array[i].popOutCheckbox.checked        = this.popOutCheckbox.checked;

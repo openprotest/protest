@@ -1,5 +1,4 @@
 class Issues extends List {
-
 	constructor() {
 		super();
 		

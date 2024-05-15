@@ -228,7 +228,6 @@ class Wmi extends Window {
 			propertyCheckboxes = [];
 
 			for (let j = 0; j < classObject.properties.length; j++) {
-
 				let value = lastProperties === "*" || className == null ||
 					className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
 

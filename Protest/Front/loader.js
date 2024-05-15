@@ -72,6 +72,7 @@ const LOADER = {
 		"view.js",
 		"grid.js",
 		"console.js",
+		"terminal.js",
 		"ipbox.js"
 	],
 
@@ -104,6 +105,7 @@ const LOADER = {
 		"dhcpdiscover.js",
 		"ntpclient.js",
 		"telnet.js",
+		"ssh.js",
 		"wmi.js",
 		"snmp.js",
 		"speedtest.js",
@@ -320,6 +322,7 @@ const LOADER = {
 		case "NtpClient"    : return new NtpClient(command.params);
 		case "SiteCheck"    : return new SiteCheck(command.params);
 		case "Telnet"       : return new Telnet(command.params);
+		case "Ssh"          : return new Ssh(command.params);
 		case "Wmi"          : return new Wmi(command.params);
 		case "Snmp"         : return new Snmp(command.params);
 

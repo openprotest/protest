@@ -369,7 +369,6 @@ class AddressBook extends Window {
 		};
 
 		for (let i=0; i<this.contacts.length; i++) {
-
 			let isMatched = true;
 			for (let j=0; j<words.length; j++) {
 				let found = false;

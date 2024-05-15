@@ -1,11 +1,12 @@
-﻿using Renci.SshNet;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Renci.SshNet;
 
 namespace Protest;
+
 internal static partial class DeviceConfiguration {
     public static byte[] View(Dictionary<string, string> parameters) {
         if (parameters is null) {

@@ -737,7 +737,6 @@ class Ping extends Console {
 			let value = payload[i+1];
 
 			if (index in this.hashtable) {
-
 				for (let j=0; j<Ping.HISTORY_LIMIT-1; j++) this.hashtable[index].ping[j] = this.hashtable[index].ping[j+1];
 				this.hashtable[index].ping[Ping.HISTORY_LIMIT - 1] = value;
 

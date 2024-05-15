@@ -343,7 +343,6 @@ class View extends Window {
 
 			for (let key in hash) {
 				if (!pushed.includes(key)) {
-
 					if (nextGroup) {
 						this.attributes.appendChild(nextGroup);
 						nextGroup = null;

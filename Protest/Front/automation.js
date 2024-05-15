@@ -114,5 +114,4 @@ class Automation extends List {
 	Entry_ondblclick(event) {
 
 	}
-
 }

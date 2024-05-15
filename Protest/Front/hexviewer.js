@@ -1,5 +1,4 @@
 class HexViewer extends Window {
-
 	static dhcpOptions = [
 		"Pad", //0
 		"Subnet mask",

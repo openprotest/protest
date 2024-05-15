@@ -282,37 +282,38 @@ const UI = {
 
 const MENU = {
 	items: [
-		{ t:"Devices",                      i:"mono/devices.svg?light",     g:"inventory", h:false, f:params=> new DevicesList() },
-		{ t:"Users",                        i:"mono/users.svg?light",       g:"inventory", h:false, f:params=> new UsersList() },
-		{ t:"Devices grid",                 i:"mono/griddevices.svg?light", g:"inventory", h:true,  f:params=> new DevicesGrid() },
-		{ t:"Users grid",                   i:"mono/gridusers.svg?light",   g:"inventory", h:true,  f:params=> new UsersGrid() },
-		{ t:"New device",                   i:"mono/newdevice.svg?light",   g:"inventory", h:true,  f:params=> new DeviceView({file:null}) },
-		{ t:"New user",                     i:"mono/newuser.svg?light",     g:"inventory", h:true,  f:params=> new UserView({file:null}) },
-		{ t:"Fetch",                        i:"mono/fetch.svg?light",       g:"inventory", h:false, f:params=> new Fetch() },
+		{ t:"Devices",                      i:"mono/devices.svg?light",     g:"inventory", h:false, f:()=> new DevicesList() },
+		{ t:"Users",                        i:"mono/users.svg?light",       g:"inventory", h:false, f:()=> new UsersList() },
+		{ t:"Devices grid",                 i:"mono/griddevices.svg?light", g:"inventory", h:true,  f:()=> new DevicesGrid() },
+		{ t:"Users grid",                   i:"mono/gridusers.svg?light",   g:"inventory", h:true,  f:()=> new UsersGrid() },
+		{ t:"New device",                   i:"mono/newdevice.svg?light",   g:"inventory", h:true,  f:()=> new DeviceView({file:null}) },
+		{ t:"New user",                     i:"mono/newuser.svg?light",     g:"inventory", h:true,  f:()=> new UserView({file:null}) },
+		{ t:"Fetch",                        i:"mono/fetch.svg?light",       g:"inventory", h:false, f:()=> new Fetch() },
 		{ t:"Fetch devices",                i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("devices") },
 		{ t:"Fetch users",                  i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("users") },
 		{ t:"Import from another Pro-test", i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("protest") },
 		{ t:"Password strength",            i:"mono/strength.svg?light",    g:"inventory", h:false, f:()=> new PasswordStrength() },
-		{ t:"Gandalf",                      i:"mono/gandalf.svg?light",     g:"inventory", h:true,  f:params=> new Gandalf() },
 
-		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:true,  f:params=> new AddressBook(),    k:"phone email" },
-		{ t:"Documentation", i:"mono/documentation.svg?light", g:"documentation", h:false, f:params=> new Documentation(),  k:"" },
-		{ t:"Debit notes",   i:"mono/notes.svg?light",         g:"documentation", h:false, f:params=> new DebitNotes(),     k:"" },
-		{ t:"Watchdog",      i:"mono/watchdog.svg?light",      g:"documentation", h:false, f:params=> new Watchdog(params), k:"" },
-		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:params=> new Chat(),           k:"messages" },
+		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:false, f:()=> new AddressBook(),   k:"phone email" },
+		{ t:"Documentation", i:"mono/documentation.svg?light", g:"documentation", h:false, f:()=> new Documentation(), k:"" },
+		{ t:"Debit notes",   i:"mono/notes.svg?light",         g:"documentation", h:false, f:()=> new DebitNotes(),    k:"" },
+		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),          k:"messages" },
 
-		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:params=> new Telnet({host:"", ansi:true, autoScroll:true, bell:true}) },
-		//{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:true,  f:params=> {} },
+		{ t:"Issues",   i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
+		{ t:"Watchdog", i:"mono/watchdog.svg?light", g:"tools", h:false, f:()=> new Watchdog(), k:"" },
+		{ t:"Gandalf",  i:"mono/gandalf.svg?light",  g:"tools", h:false, f:()=> new Gandalf() },
+		
+		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:()=> new Telnet({host:"", ansi:true, autoScroll:true, bell:true}) },
+		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:false, f:()=> new Ssh({host:"", ansi:true, autoScroll:true, bell:true})},
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"tools", h:false, f:params=> new Wmi(params), k:"windows management instrumentation viewer" },
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
 		//{ t:"SNMP traps",         i:"mono/trap.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
-		//{ t:"Scripts",            i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
+		{ t:"Scripts",            i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
 		//{ t:"Script reports",     i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:params=> {} },
 		//{ t:"Ongoing scripts",    i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:params=> {} },
-		{ t:"Issues",             i:"mono/issues.svg?light", g:"tools", h:false,  f:params=> new Issues() },
 
 		{ t:"Ping",               i:"mono/ping.svg?light",         g:"utilities", h:false, f:params=> new Ping(params),         k:"roundtrip rtt icmp echo reply" },
-		{ t:"ARP ping",           i:"mono/ping.svg?light",         g:"utilities", h:true,  f:params=> new Ping({ entries: [], timeout:500, method: "arp", interval:1000, moveToBottom: false, status: "play" }) },
+		{ t:"ARP ping",           i:"mono/ping.svg?light",         g:"utilities", h:true,  f:params=> new Ping({entries:[], timeout:500, method:"arp", interval:1000, moveToBottom:false, status:"play"}) },
 		{ t:"DNS lookup",         i:"mono/dns.svg?light",          g:"utilities", h:false, f:params=> new DnsLookup(params),    k:"resolve resolution" },
 		{ t:"Trace route",        i:"mono/traceroute.svg?light",   g:"utilities", h:false, f:params=> new TraceRoute(params),   k:"path" },
 		{ t:"TCP port scan",      i:"mono/portscan.svg?light",     g:"utilities", h:false, f:params=> new PortScan(params),     k:"" },
@@ -331,28 +332,28 @@ const MENU = {
 		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",     g:"utilities", h:true,  f:params=> new KeyboardTester(), k:"keys" },
 		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",      g:"utilities", h:true,  f:params=> new KeyboardTester("gamepad"), k:"joystick" },
 
-		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:params=> new Settings(), },
-		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:params=> new Settings("zones"), },
-		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:params=> new Settings("smtp") },
-		{ t:"SNMP settings", i:"mono/snmp.svg?light",       g:"manage", h:true,  f:params=> new Settings("snmp") },
+		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:()=> new Settings(), },
+		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Settings("zones"), },
+		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:()=> new Settings("smtp") },
+		{ t:"SNMP settings", i:"mono/snmp.svg?light",       g:"manage", h:true,  f:()=> new Settings("snmp") },
 
-		{ t:"Personalize",    i:"mono/personalize.svg?light", g:"manage", h:false, f:params=> new Personalize() },
-		{ t:"Appearance",     i:"mono/tv.svg?light",          g:"manage", h:true,  f:params=> new Personalize("appearance") },
-		{ t:"Reginal format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:params=> new Personalize("region") },
-		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Personalize("session") },
-		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:params=> new Personalize("agent") },
+		{ t:"Personalize",    i:"mono/personalize.svg?light", g:"manage", h:false, f:()=> new Personalize() },
+		{ t:"Appearance",     i:"mono/tv.svg?light",          g:"manage", h:true,  f:()=> new Personalize("appearance") },
+		{ t:"Reginal format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:()=> new Personalize("region") },
+		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Personalize("session") },
+		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:()=> new Personalize("agent") },
 
-		{ t:"ACL",            i:"mono/acl.svg?light",         g:"manage", h:false, f:params=> new Acl("acl"),      k:"users access control list permissions" },
-		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:params=> new Acl("sessions"), k:"alive connections" },
+		{ t:"ACL",            i:"mono/acl.svg?light",         g:"manage", h:false, f:()=> new Acl("acl"),      k:"users access control list permissions" },
+		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Acl("sessions"), k:"alive connections" },
 
-		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:params=> new Automation(), k:"" },
+		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:()=> new Automation(), k:"" },
 
-		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:params=> new Backup() },
-		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:params=> new Log(params) },
-		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true,  f:params=> new About("update") },
-		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true,  f:params=> new About("updatemod") },
-		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:params=> new About("about") },
-		{ t:"Legal",          i:"mono/law.svg?light",         g:"manage", h:true,  f:params=> new About("legal") },
+		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:()=> new Backup() },
+		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:()=> new Log() },
+		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true,  f:()=> new About("update") },
+		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true,  f:()=> new About("updatemod") },
+		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:()=> new About("about") },
+		{ t:"Legal",          i:"mono/law.svg?light",         g:"manage", h:true,  f:()=> new About("legal") },
 
 		{ t:"Logout", i:"mono/logoff.svg?light", g:"manage", h:true, f:()=> logoutButton.onclick(), },
 	],
@@ -609,7 +610,6 @@ const MENU = {
 		let count = 0;
 		if (keywords.length > 0) { //inventory
 			for (const file in LOADER.devices.data) {
-
 				const match = keywords.every(
 					keyword=> Object.values(LOADER.devices.data[file]).some(
 						attr=> attr.v.toLowerCase().includes(keyword)
