@@ -643,42 +643,43 @@ class Terminal extends Window {
 				case 29: this.isStrikethrough = false; break;
 		
 				//set foreground color
-				case 30: this.foreColor = "#111"; break;
-				case 31: this.foreColor = "#800"; break;
-				case 32: this.foreColor = "#080"; break;
-				case 33: this.foreColor = "#880"; break;
-				case 34: this.foreColor = "#22a"; break;
-				case 35: this.foreColor = "#808"; break;
-				case 36: this.foreColor = "#088"; break;
-				case 37: this.foreColor = "#ccc"; break;
+				case 30: this.foreColor = "#111";    break; //black
+				case 31: this.foreColor = "#de382b"; break; //red
+				case 32: this.foreColor = "#39b54a"; break; //green
+				case 33: this.foreColor = "#e1c706"; break; //yellow
+				case 34: this.foreColor = "#3080D8"; break; //blue
+				case 35: this.foreColor = "#bc3fbc"; break; //magenta
+				case 36: this.foreColor = "#2cb5e9"; break; //cyan
+				case 37: this.foreColor = "#ccc"; break;    //white
 				case 39: this.foreColor = null; break;
-				case 90: this.foreColor = "#888"; break;
-				case 91: this.foreColor = "#f00"; break;
-				case 92: this.foreColor = "#0f0"; break;
-				case 93: this.foreColor = "#ff0"; break;
-				case 94: this.foreColor = "#00f"; break;
-				case 95: this.foreColor = "#f0f"; break;
-				case 96: this.foreColor = "#0ff"; break;
-				case 97: this.foreColor = "#eee"; break;
+				case 90: this.foreColor = "#888"; break; //gray
+				case 91: this.foreColor = "#f00"; break; //bright red
+				case 92: this.foreColor = "#0f0"; break; //bright green
+				case 93: this.foreColor = "#ff0"; break; //bright yellow
+				case 94: this.foreColor = "#00f"; break; //bright blue
+				case 95: this.foreColor = "#f0f"; break; //bright magenta
+				case 96: this.foreColor = "#0ff"; break; //bright cyan
+				case 97: this.foreColor = "#eee"; break; //bright white
 
 				//set background color
-				case 40: this.backColor = "#111"; break;
-				case 41: this.backColor = "#800"; break;
-				case 42: this.backColor = "#080"; break;
-				case 43: this.backColor = "#880"; break;
-				case 44: this.backColor = "#11a"; break;
-				case 45: this.backColor = "#808"; break;
-				case 46: this.backColor = "#088"; break;
-				case 47: this.backColor = "#ccc"; break;
+				case 40: this.backColor = "#111";    break; //black
+				case 41: this.backColor = "#de382b"; break; //red
+				case 42: this.backColor = "#39b54a"; break; //green
+				case 43: this.backColor = "#e1c706"; break; //yellow
+				case 44: this.backColor = "#3080D8"; break; //blue
+				case 45: this.backColor = "#bc3fbc"; break; //magenta
+				case 46: this.backColor = "#2cb5e9"; break; //cyan
+				case 47: this.backColor = "#ccc"; break;    //white
 				case 49: this.backColor = null; break;
-				case 100: this.backColor = "#888"; break;
-				case 101: this.backColor = "#f00"; break;
-				case 102: this.backColor = "#0f0"; break;
-				case 103: this.backColor = "#ff0"; break;
-				case 104: this.backColor = "#00f"; break;
-				case 105: this.backColor = "#f0f"; break;
-				case 106: this.backColor = "#0ff"; break;
-				case 107: this.backColor = "#eee"; break;
+				case 100: this.backColor = "#888"; break; //gray
+				case 101: this.backColor = "#f00"; break; //bright red
+				case 102: this.backColor = "#0f0"; break; //bright green
+				case 103: this.backColor = "#ff0"; break; //bright yellow
+				case 104: this.backColor = "#00f"; break; //bright blue
+				case 105: this.backColor = "#f0f"; break; //bright magenta
+				case 106: this.backColor = "#0ff"; break; //bright cyan
+				case 107: this.backColor = "#eee"; break; //bright white
+
 
 				case 38: //set foreground color
 					if (values.length < 3) break;
@@ -751,13 +752,13 @@ class Terminal extends Window {
 
 	MapColorId(id) {
 		switch (id) {
-			case 0: return "#000";
-			case 1: return "#800";
-			case 2: return "#080";
-			case 3: return "#880";
-			case 4: return "#008";
-			case 5: return "#808";
-			case 6: return "#088";
+			case 0: return "#111";
+			case 1: return "#de382b";
+			case 2: return "#39b54a";
+			case 3: return "#e1c706";
+			case 4: return "#3080D8";
+			case 5: return "#bc3fbc";
+			case 6: return "#2cb5e9";
 			case 7: return "#ccc";
 		
 			case 8: return "#888";
