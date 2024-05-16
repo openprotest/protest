@@ -303,8 +303,8 @@ const MENU = {
 		{ t:"Watchdog", i:"mono/watchdog.svg?light", g:"tools", h:false, f:()=> new Watchdog(), k:"" },
 		{ t:"Gandalf",  i:"mono/gandalf.svg?light",  g:"tools", h:false, f:()=> new Gandalf() },
 		
-		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:()=> new Telnet({host:"", ansi:true, autoScroll:true, bell:true}) },
-		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:false, f:()=> new Ssh({host:"", ansi:true, autoScroll:true, bell:true})},
+		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:()=> new Telnet({host:"", ansi:true, autoScroll:true, bell:false}), k:"terminal" },
+		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:false, f:()=> new Ssh({host:"", ansi:true, autoScroll:true, bell:false}), k:"ssh terminal" },
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"tools", h:false, f:params=> new Wmi(params), k:"windows management instrumentation viewer" },
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
 		//{ t:"SNMP traps",         i:"mono/trap.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },

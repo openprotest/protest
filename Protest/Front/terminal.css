@@ -37,20 +37,23 @@
 
 .terminal-cursor {
 	position: absolute;
-	top: 0;
-	left: 0;
 	z-index: 1;
 	width: 3px;
 	height: 20px;
-	border-radius: 1px;
-	opacity: 0;
-	background-color: var(--clr-accent);
-	box-shadow: var(--clr-accent) 0 0 2px;
-
 	transition: .25s;
 }
 
-.terminal-content:focus > .terminal-cursor {
+.terminal-cursor > div {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	border-radius: 1px;
+	background-color: var(--clr-accent);
+	box-shadow: var(--clr-accent) 0 0 2px;
+}
+
+.terminal-content:focus > .terminal-cursor > div {
 	animation: terminal-cursor 1.2s infinite;
 }
 
@@ -66,4 +69,11 @@
 	30% {opacity:1}
 	70% {opacity:1}
 	100%{opacity:.1}
+}
+
+@keyframes terminal-shake {
+	10%, 90%      {transform:translateX(-1px)}
+	20%, 80%      {transform:translateX(2px)}
+	30%, 50%, 70% {transform:translateX(-4px)}
+	40%, 60%      {transform:translateX(4px)}
 }

@@ -5,7 +5,7 @@ class Terminal extends Window {
 	constructor(params) {
 		super();
 
-		this.params = params ? params : {host:"", ansi:true, autoScroll:true, bell:true};
+		this.params = params ? params : {host:"", ansi:true, autoScroll:true, bell:false};
 
 		this.AddCssDependencies("terminal.css");
 
@@ -44,6 +44,8 @@ class Terminal extends Window {
 
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
+
+		this.cursorElement.appendChild(document.createElement("div"));
 
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "terminal-status-box";
@@ -324,9 +326,9 @@ class Terminal extends Window {
 				break;
 
 			case "\x07":
-				if (this.params.bell) {
-					this.Bell();
-				}
+				if (this.params.bell) this.Bell();
+				this.cursorElement.style.animation = "terminal-shake .3s 1";
+				setTimeout(()=>{ this.cursorElement.style.animation = ""; }, 300);
 				break;
 
 			//TODO:
@@ -879,7 +881,7 @@ class Terminal extends Window {
 		let ctx = new window.AudioContext();
 		let oscillator = ctx.createOscillator();
 		oscillator.type = "sine";
-		oscillator.frequency.value = 290;
+		oscillator.frequency.value = 360;
 
 		let gain = ctx.createGain();
 		gain.gain.value = .4;

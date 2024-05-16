@@ -132,8 +132,6 @@ class Ssh extends Terminal {
 		}
 		catch {}
 
-		console.log(connectionString);
-
 		this.ws.onopen = ()=> {
 			this.connectButton.disabled = true;
 			this.ws.send(connectionString);
