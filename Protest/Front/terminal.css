@@ -47,7 +47,7 @@
 	background-color: var(--clr-accent);
 	box-shadow: var(--clr-accent) 0 0 2px;
 
-	transition: .4s;
+	transition: .25s;
 }
 
 .terminal-content:focus > .terminal-cursor {

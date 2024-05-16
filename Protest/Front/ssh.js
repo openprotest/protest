@@ -63,7 +63,7 @@ class Ssh extends Terminal {
 			this.ConnectViaCredentials(
 				hostInput.value.trim(),
 				usernameInput.value.trim(),
-				passwordInput.value.trim()
+				passwordInput.value
 			);
 		};
 		
@@ -89,7 +89,7 @@ class Ssh extends Terminal {
 			okButton.disabled =
 				hostInput.value.trim().length === 0 ||
 				usernameInput.value.trim().length === 0 ||
-				passwordInput.value.trim().length === 0;
+				passwordInput.value.length === 0;
 		};
 
 		hostInput.oninput();
@@ -98,16 +98,16 @@ class Ssh extends Terminal {
 	}
 
 	ConnectViaCredentials(target, username, password) {
-		const connectionString = `target=${target} un=${username} pw=${password}`;
+		const connectionString = `target=${target}\nun=${username}\npw=${password}`;
 		this.Connect(target, connectionString);
 	}
 
 	ConnectViaFile(target, file) {
-		const connectionString = `target=${target} file=${file}`;
+		const connectionString = `target=${target}\nfile=${file}`;
 		this.Connect(target, connectionString);
 	}
 
-	Connect(target, connectionString) { //overrides
+	Connect(target, connectionString) {
 		this.params.host = target;
 
 		this.statusBox.style.display = "initial";

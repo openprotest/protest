@@ -282,7 +282,16 @@ class Terminal extends Window {
 		}
 
 		switch(event.key) {
-		case "Enter"     : this.ws.send("\r\n"); return;
+		case "Enter":
+			if (this instanceof Ssh) {
+				this.ws.send("\n");
+				return;
+			}
+			else {
+				this.ws.send("\r\n");
+				return;
+			}
+
 		case "Tab"       : this.ws.send("\t"); return;
 		case "Backspace" : this.ws.send("\x08"); return;
 		case "Delete"    : this.ws.send("\x1b[3~"); return;
