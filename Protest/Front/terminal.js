@@ -45,8 +45,6 @@ class Terminal extends Window {
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
 
-		this.cursorElement.appendChild(document.createElement("div"));
-
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "terminal-status-box";
 		this.statusBox.textContent = "Connecting...";
@@ -327,8 +325,8 @@ class Terminal extends Window {
 
 			case "\x07":
 				if (this.params.bell) this.Bell();
-				this.cursorElement.style.animation = "terminal-shake .3s 1";
-				setTimeout(()=>{ this.cursorElement.style.animation = ""; }, 300);
+				this.cursorElement.style.animation = "terminal-shake .4s 1";
+				setTimeout(()=>{ this.cursorElement.style.animation = "terminal-blinking 1.2s infinite"; }, 400);
 				break;
 
 			//TODO:
