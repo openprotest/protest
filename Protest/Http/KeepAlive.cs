@@ -33,7 +33,6 @@ internal static class KeepAlive {
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
-
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
@@ -101,12 +100,10 @@ internal static class KeepAlive {
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
             //do nothing
-            //return;
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -115,7 +112,7 @@ internal static class KeepAlive {
             connections.Remove(ws, out _);
         }
 
-        if (ws.State == WebSocketState.Open) {
+        if (ws?.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }

@@ -72,11 +72,9 @@ internal static class Monitor {
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
-
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -293,21 +291,22 @@ internal static class Monitor {
         catch (JsonException) {
             return;
         }
+        catch (ManagementException ex) {
+            Logger.Error(ex);
+        }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
-        }
-        catch (ManagementException ex) {
-            Logger.Error(ex);
+            //do nothing
         }
 
-        try {
-            if (ws.State == WebSocketState.Open) {
+        if (ws?.State == WebSocketState.Open) {
+            try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-        } catch { }
+            catch { }
+        }
     }
 
     private static long HandlePing(string host, int timeout) {

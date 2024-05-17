@@ -13,7 +13,7 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal static class Icmp {
-    private static readonly byte[] ICMP_PAYLOAD = "0000000000000000"u8.ToArray();
+    private static readonly byte[] ICMP_PAYLOAD = "0123456789abcdef"u8.ToArray();
 
     public static byte[] BulkPing(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
@@ -44,10 +44,9 @@ internal static class Icmp {
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -156,10 +155,17 @@ internal static class Icmp {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
+            //do nothing
         }
         catch (Exception ex) {
             Logger.Error(ex);
+        }
+
+        if (ws?.State == WebSocketState.Open) {
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
+            catch { }
         }
     }
     private static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {

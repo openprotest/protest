@@ -151,11 +151,9 @@ internal static class PortScan {
     };
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
-
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -166,9 +164,7 @@ internal static class PortScan {
 
         object mutex = new object();
 
-#if !DEBUG
         try {
-#endif
             while (ws.State == WebSocketState.Open) {
                 byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -232,21 +228,23 @@ internal static class PortScan {
                 }).Start();
 
             }
-#if !DEBUG
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
+            //do nothing
         }
         catch (Exception ex) {
             Logger.Error(ex);
+        }
 
-        } /*finally {
-            ctx.Response.Close();
-        }*/
-#endif
+        if (ws?.State == WebSocketState.Open) {
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
+            catch { }
+        }
     }
 
     public static async Task<bool[]> PortsScanAsync(string host, short[] ports) {

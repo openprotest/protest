@@ -13,11 +13,9 @@ internal static class Dhcp {
     private static readonly byte[] NULL_IP = new byte[] {0,0,0,0};
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
-
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {

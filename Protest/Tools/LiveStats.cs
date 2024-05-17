@@ -21,11 +21,9 @@ internal static class LiveStats {
     }
 
     public static async void DeviceStats(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
-
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -261,13 +259,13 @@ internal static class LiveStats {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
+            //do nothing
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 
-        if (ws.State == WebSocketState.Open) {
+        if (ws?.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
@@ -276,11 +274,9 @@ internal static class LiveStats {
     }
 
     public static async void UserStats(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
-
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -339,13 +335,13 @@ internal static class LiveStats {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
+            //do nothing
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 
-        if (ws.State == WebSocketState.Open) {
+        if (ws?.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }

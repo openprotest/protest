@@ -13,11 +13,9 @@ namespace Protest.Tools;
 
 internal static class SiteCheck {
     public static async void WebSocketHandler(HttpListenerContext ctx) {
-        WebSocketContext wsc;
         WebSocket ws;
-
         try {
-            wsc = await ctx.AcceptWebSocketAsync(null);
+            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -220,13 +218,13 @@ internal static class SiteCheck {
             return;
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            Logger.Error(ex);
+            //do nothing
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 
-        if (ws.State == WebSocketState.Open) {
+        if (ws?.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
