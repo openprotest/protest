@@ -102,7 +102,7 @@ class DeviceView extends View {
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
 		this.bar.insertBefore(this.utilitiesDropDown.button, this.sendChatButton);
 
-		this.utilitiesDropDown.menu.style.height = "134px";
+		this.utilitiesDropDown.menu.style.height = "200px";
 
 		const optionPing = document.createElement("div");
 		optionPing.style.backgroundImage = "url(mono/ping.svg)";
@@ -118,6 +118,11 @@ class DeviceView extends View {
 		optionTraceRoute.style.backgroundImage = "url(mono/traceroute.svg)";
 		optionTraceRoute.textContent = "Trace Router";
 		this.utilitiesDropDown.list.append(optionTraceRoute);
+
+		const optionPortScan = document.createElement("div");
+		optionPortScan.style.backgroundImage = "url(mono/portscan.svg)";
+		optionPortScan.textContent = "Port scan";
+		this.utilitiesDropDown.list.append(optionPortScan);
 
 		const optionLocateIp = document.createElement("div");
 		optionLocateIp.style.backgroundImage = "url(mono/locate.svg)";
@@ -192,6 +197,28 @@ class DeviceView extends View {
 			}
 
 			new TraceRoute().Filter(target);
+		};
+
+		optionPortScan.onclick=()=> {
+			let target;
+			if ("ip" in this.link) {
+				target = this.link.ip.v;
+			}
+			else if ("hostname" in this.link) {
+				target = this.link.hostname.v;
+			}
+			else {
+				this.ConfirmBox("No IP or Hostname", true);
+			}
+
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof PortScan)) continue;
+				WIN.array[i].Filter(target);
+				WIN.array[i].BringToFront();
+				return;
+			}
+
+			new PortScan().Filter(target);
 		};
 
 		optionLocateIp.onclick=()=> {

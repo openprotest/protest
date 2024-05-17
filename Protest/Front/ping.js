@@ -36,16 +36,22 @@ class Ping extends Console {
 
 		const optionRemoveAll = document.createElement("div");
 		optionRemoveAll.style.padding = "4px 8px";
+		optionRemoveAll.style.height = "24px";
+		optionRemoveAll.style.lineHeight = "24px";
 		optionRemoveAll.textContent = "Clear";
 		this.clearDropDown.list.append(optionRemoveAll);
 
 		const optionRemoveReachable = document.createElement("div");
 		optionRemoveReachable.style.padding = "4px 8px";
+		optionRemoveReachable.style.height = "24px";
+		optionRemoveReachable.style.lineHeight = "24px";
 		optionRemoveReachable.textContent = "Remove reachable";
 		this.clearDropDown.list.append(optionRemoveReachable);
 
 		const optionRemoveUnreachable = document.createElement("div");
 		optionRemoveUnreachable.style.padding = "4px 8px";
+		optionRemoveUnreachable.style.height = "24px";
+		optionRemoveUnreachable.style.lineHeight = "24px";
 		optionRemoveUnreachable.textContent = "Remove unreachable";
 		this.clearDropDown.list.append(optionRemoveUnreachable);
 

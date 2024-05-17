@@ -23,7 +23,7 @@ class DevicesList extends List {
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
 		this.sentChatButton = this.AddSendToChatButton();
 
-		this.utilitiesDropDown.menu.style.height = "134px";
+		this.utilitiesDropDown.menu.style.height = "168px";
 
 		const optionPing = document.createElement("div");
 		optionPing.style.backgroundImage = "url(mono/ping.svg)";

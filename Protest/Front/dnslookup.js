@@ -116,6 +116,8 @@ class DnsLookup extends Console {
 			label.style.fontFamily = "monospace";
 			label.style.fontWeight = "600";
 			label.style.marginRight = "4px";
+			label.style.height = "22px";
+			label.style.lineHeight = "22px";
 			label.style.padding = "1px 4px";
 			label.style.borderRadius = "4px";
 
