@@ -285,6 +285,13 @@ class KeyboardTester extends Window {
 				code = "OSRight";
 			}
 
+			if (code==="MediaStop" || code==="MediaTrackPrevious" || code==="MediaPlayPause" || code==="MediaTrackNext") {
+				this.keyElements["MediaStop"].style.opacity = "1";
+				this.keyElements["MediaTrackPrevious"].style.opacity = "1";
+				this.keyElements["MediaPlayPause"].style.opacity = "1";
+				this.keyElements["MediaTrackNext"].style.opacity = "1";
+			}
+
 			this.PushHistory(code);
 
 			if (!(code in this.keyElements)) return;
@@ -293,6 +300,8 @@ class KeyboardTester extends Window {
 			this.keyElements[code].style.border = "1px solid var(--clr-accent)";
 			this.keyElements[code].style.filter = "brightness(2.5)";
 			this.keyElements[code].style.boxShadow = "var(--clr-accent) 0 0 4px";
+
+			this.keyElements[code].scrollIntoView({ behavior: "smooth", block: "nearest"});
 		};
 
 		this.win.onkeyup = event=> {
@@ -877,6 +886,7 @@ class KeyboardTester extends Window {
 
 		if (isMedia) {
 			element.style.borderRadius = "40%";
+			element.style.opacity = "0";
 		}
 
 		switch (key.code) {
