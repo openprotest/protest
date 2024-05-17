@@ -9,7 +9,7 @@ class View extends Window {
 		this.content.style.overflowY = "auto";
 		this.content.style.containerType = "inline-size";
 
-		this.InitializeComponent();
+		this.InitializeComponents();
 
 		setTimeout(()=>this.UpdateAuthorization(), 1);
 	}
@@ -37,7 +37,7 @@ class View extends Window {
 		//this.InitializeAttributesList(this.link);
 	}
 
-	InitializeComponent() {
+	InitializeComponents() {
 		this.bar = document.createElement("div");
 		this.bar.className = "win-toolbar view-toolbar";
 		this.content.appendChild(this.bar);

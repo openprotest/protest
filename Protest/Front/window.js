@@ -1105,8 +1105,7 @@ class Window {
 	}
 
 	AddToolbarDropdown(icon) {
-		if (!this.toolbar) return null;
-
+		//if (!this.toolbar) return null;
 		const button = this.AddToolbarButton(null, icon);
 
 		const menu = document.createElement("div");

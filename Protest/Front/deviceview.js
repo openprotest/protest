@@ -96,6 +96,151 @@ class DeviceView extends View {
 		this.AutoUpdateIndicators();
 	}
 
+	InitializeComponents() {
+		super.InitializeComponents();
+
+		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
+		this.bar.insertBefore(this.utilitiesDropDown.button, this.sendChatButton);
+
+		this.utilitiesDropDown.menu.style.height = "134px";
+
+		const optionPing = document.createElement("div");
+		optionPing.style.backgroundImage = "url(mono/ping.svg)";
+		optionPing.textContent = "Ping";
+		this.utilitiesDropDown.list.append(optionPing);
+
+		const optionDnsLookup = document.createElement("div");
+		optionDnsLookup.style.backgroundImage = "url(mono/dns.svg)";
+		optionDnsLookup.textContent = "DNS Lookup";
+		this.utilitiesDropDown.list.append(optionDnsLookup);
+
+		const optionTraceRoute = document.createElement("div");
+		optionTraceRoute.style.backgroundImage = "url(mono/traceroute.svg)";
+		optionTraceRoute.textContent = "Trace Router";
+		this.utilitiesDropDown.list.append(optionTraceRoute);
+
+		const optionLocateIp = document.createElement("div");
+		optionLocateIp.style.backgroundImage = "url(mono/locate.svg)";
+		optionLocateIp.textContent = "Locate IP";
+		this.utilitiesDropDown.list.append(optionLocateIp);
+
+		const optionMacLookup = document.createElement("div");
+		optionMacLookup.style.backgroundImage = "url(mono/maclookup.svg)";
+		optionMacLookup.textContent = "MAC Lookup";
+		this.utilitiesDropDown.list.append(optionMacLookup);
+
+		optionPing.onclick=()=> {
+			let target;
+			if ("ip" in this.link) {
+				target = this.link.ip.v;
+			}
+			else if ("hostname" in this.link) {
+				target = this.link.hostname.v;
+			}
+			else {
+				this.ConfirmBox("No IP or Hostname", true);
+			}
+			
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof Ping)) continue;
+				WIN.array[i].Filter(target);
+				WIN.array[i].BringToFront();
+				return;
+			}
+			new Ping().Filter(target);
+		};
+
+		optionDnsLookup.onclick=()=> {
+			let target;
+			if ("ip" in this.link) {
+				target = this.link.ip.v;
+			}
+			else if ("hostname" in this.link) {
+				target = this.link.hostname.v;
+			}
+			else {
+				this.ConfirmBox("No IP or Hostname", true);
+			}
+
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof DnsLookup)) continue;
+				WIN.array[i].Filter(target);
+				WIN.array[i].BringToFront();
+				return;
+			}
+
+			new DnsLookup().Filter(target);
+		};
+
+		optionTraceRoute.onclick=()=> {
+			let target;
+			if ("ip" in this.link) {
+				target = this.link.ip.v;
+			}
+			else if ("hostname" in this.link) {
+				target = this.link.hostname.v;
+			}
+			else {
+				this.ConfirmBox("No IP or Hostname", true);
+			}
+
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof TraceRoute)) continue;
+				WIN.array[i].Filter(target);
+				WIN.array[i].BringToFront();
+				return;
+			}
+
+			new TraceRoute().Filter(target);
+		};
+
+		optionLocateIp.onclick=()=> {
+			let target;
+			if ("ip" in this.link) {
+				target = this.link.ip.v;
+			}
+			else if ("hostname" in this.link) {
+				target = this.link.hostname.v;
+			}
+			else {
+				this.ConfirmBox("No IP or Hostname", true);
+			}
+
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof LocateIp)) continue;
+				WIN.array[i].Filter(target);
+				WIN.array[i].BringToFront();
+				return;
+			}
+
+			new LocateIp().Filter(target);
+		};
+
+		optionMacLookup.onclick=()=> {
+			let mac;
+			if ("mac address" in this.link) {
+				mac = this.link["mac address"].v;
+			}
+			else {
+				this.ConfirmBox("No MAC address", true);
+			}
+			
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof MacLookup)) continue;
+				WIN.array[i].Filter(mac);
+				WIN.array[i].BringToFront();
+				return;
+			}
+
+			new MacLookup().Filter(mac);
+		};
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		this.utilitiesDropDown.button.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("network utilities:write");
+	}
+
 	AutoUpdateIndicators() {
 		setTimeout(async ()=>{
 			if (this.isClosed) return;
