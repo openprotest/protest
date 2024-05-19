@@ -341,7 +341,7 @@ class Terminal extends Window {
 
 			//case "\x09": break; //tab
 
-			case "\x0a": //lf
+			case "\n": //lf 0x0a
 				char.innerHTML = "<br>";
 				this.cursor.x = 0;
 				this.cursor.y++;
@@ -350,8 +350,15 @@ class Terminal extends Window {
 			//case "\x0b": break; //vertical tab
 			//case "\x0c": break; //new page.
 
-			case "\x0d": //cr
-				if (i+1 < data.length && data[i+1] === "\x0a") {
+			case "\r": //cr 0x0d
+				if (i+2 < data.length && data[i+1]==="\r" && data[i+2]==="\n") {
+					char.innerHTML = "<br>";
+					this.cursor.x = 0;
+					this.cursor.y++;
+					i+=2;
+					break;
+				}
+				else if (i+1 < data.length && data[i+1]==="\n") {
 					char.innerHTML = "<br>";
 					this.cursor.x = 0;
 					this.cursor.y++;
@@ -539,8 +546,6 @@ class Terminal extends Window {
 			break;
 		}
 
-		console.log(fullSequence);
-
 		return fullSequence.length + 1;
 	}
 
@@ -554,8 +559,38 @@ class Terminal extends Window {
 	HandleOSC(data, index) { //Operating System Command
 		if (index >= data.length) return 2;
 
-		console.warn(`Unknown OCS: ${data[index+2]}`);
-		return 2;
+		const oscEnd = data.indexOf("\x07", index + 2);
+		const stEnd = data.indexOf("\x1b\\", index + 2);
+		let end = Math.min(oscEnd !== -1 ? oscEnd : data.length, stEnd !== -1 ? stEnd : data.length);
+
+		if (end === data.length) {
+			console.warn("Incomplete OSC sequence");
+			return 2;
+		}
+
+		const sequence = data.slice(index + 2, end);
+		const [command, ...params] = sequence.split(";");
+
+		console.log(command, params);
+
+		switch (command) {
+			case "0":
+			case "2": //set title
+				this.SetTitle(`Secure shell - ${this.params.host} - ${params.join(";")}`);
+				break;
+	
+			case "10": //set foreground color
+				break;
+	
+			case "11": //set background color
+				break;
+	
+			default:
+				console.warn(`Unhandled OSC command: ${command}`);
+				break;
+		}
+	
+		return end - index + 1;
 	}
 
 	MapColorId(id) {
