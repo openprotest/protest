@@ -511,11 +511,11 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.ssh) { //ssh
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				sshButton.onclick = ()=> UI.PromptAgent(this, "ssh", `${host}:${overwriteProtocol.ssh}`);
+				sshButton.onclick = ()=> new Ssh({host: `${host}:${overwriteProtocol.ssh}`});
 			}
 			else if (ports.includes(22)) {
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				sshButton.onclick = ()=> UI.PromptAgent(this, "ssh", host);
+				sshButton.onclick = ()=> new Ssh({host: host});
 			}
 
 			if (overwriteProtocol.http) { //http

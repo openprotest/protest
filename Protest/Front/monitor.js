@@ -1249,7 +1249,7 @@ class Monitor extends Window {
 				unit    : unitInput.value,
 				value   : valueInput.value.toLocaleLowerCase(),
 				min     : 0,
-				max     : parseFloat(maxInput.value.toLocaleLowerCase()),
+				max     : isNaN(maxInput.value) ? maxInput.value.toLocaleLowerCase() : parseFloat(maxInput.value),
 				showPeak: showPeakInput.checked,
 				isComplement: complementingInput.checked,
 				isDynamic: dynamicInput.checked,
@@ -1558,7 +1558,7 @@ class Monitor extends Window {
 			for (let j=0; j<ctx.length; j++) {
 				ctx[j].clearRect(0, 0, canvases[j].width, height);
 
-				if (options.showPeak && peak >=0 && valley !== peak) {
+				if (options.showPeak && peak >= 0 && valley !== peak) {
 					ctx[j].lineWidth = 1;
 					ctx[j].strokeStyle = "#C0C0C080";
 					ctx[j].setLineDash([2, 2]);

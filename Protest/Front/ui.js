@@ -299,16 +299,16 @@ const MENU = {
 		{ t:"Debit notes",   i:"mono/notes.svg?light",         g:"documentation", h:false, f:()=> new DebitNotes(),    k:"" },
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),          k:"messages" },
 
-		{ t:"Issues",   i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
+		//{ t:"Issues",   i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
 		{ t:"Watchdog", i:"mono/watchdog.svg?light", g:"tools", h:false, f:()=> new Watchdog(), k:"" },
 		{ t:"Gandalf",  i:"mono/gandalf.svg?light",  g:"tools", h:false, f:()=> new Gandalf() },
 		
-		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:()=> new Telnet({host:"", ansi:true, autoScroll:true, bell:false}), k:"terminal" },
-		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:false, f:()=> new Ssh({host:"", ansi:true, autoScroll:true, bell:false}), k:"ssh terminal" },
+		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"tools", h:true,  f:()=> new Telnet({host:""}), k:"terminal" },
+		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"tools", h:false, f:()=> new Ssh({host:""}), k:"ssh terminal" },
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"tools", h:false, f:params=> new Wmi(params), k:"windows management instrumentation viewer" },
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
 		//{ t:"SNMP traps",         i:"mono/trap.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
-		{ t:"Scripts",            i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
+		//{ t:"Scripts",            i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
 		//{ t:"Script reports",     i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:params=> {} },
 		//{ t:"Ongoing scripts",    i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:params=> {} },
 

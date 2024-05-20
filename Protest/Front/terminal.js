@@ -7,6 +7,10 @@ class Terminal extends Window {
 
 		this.params = params ? params : {host:"", ansi:true, autoScroll:true, bell:false};
 
+		if (!("ansi" in this.params)) this.params.ansi = true;
+		if (!("autoScroll" in this.params)) this.params.autoScroll = true;
+		if (!("bell" in this.params)) this.params.autoScroll = false;
+
 		this.AddCssDependencies("terminal.css");
 
 		this.cursor = {x:0, y:0};
