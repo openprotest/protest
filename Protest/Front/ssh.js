@@ -69,6 +69,8 @@ class Ssh extends Terminal {
 		}
 
 		okButton.onclick = ()=> {
+			this.params.username = usernameInput.value.trim();
+
 			if (rememberPasswordCheckBox.checked) {
 				this.params.password = passwordInput.value;
 			}
@@ -95,7 +97,6 @@ class Ssh extends Terminal {
 		hostInput.onkeydown = usernameInput.onkeydown = passwordInput.onkeydown = event=> {
 			if (dialog.okButton.disabled) return;
 			if (event.key === "Enter") {
-				this.params.username = usernameInput.value.trim();
 				dialog.okButton.click();
 			}
 		};
@@ -178,7 +179,11 @@ class Ssh extends Terminal {
 				this.content.focus();
 			}
 			else if (json.error) {
-				setTimeout(()=>{ this.ConfirmBox(json.error, true, "mono/error.svg"); }, 200);
+				setTimeout(()=>{
+					this.ConfirmBox(json.error, true, "mono/error.svg").addEventListener("click", ()=> {
+						setTimeout(()=>this.ConnectDialog(this.params.host, false), 200);
+					});
+				}, 200);
 			}
 		};
 	}

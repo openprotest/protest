@@ -421,7 +421,7 @@ class Terminal extends Window {
 		this.cursorElement.style.top = Terminal.CURSOR_HEIGHT * this.cursor.y + "px";
 
 		if (this.params.autoScroll) {
-			this.cursorElement.scrollIntoView();
+			setTimeout(()=>this.cursorElement.scrollIntoView(), 250);
 		}
 	}
 
@@ -574,8 +574,6 @@ class Terminal extends Window {
 
 		const sequence = data.slice(index + 2, end);
 		const [command, ...params] = sequence.split(";");
-
-		console.log(command, params);
 
 		switch (command) {
 			case "0":

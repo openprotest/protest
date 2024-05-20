@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 
 namespace Protest.Protocols;
 
@@ -94,6 +95,11 @@ internal static class Ssh {
 
                 shellStream.Write(Encoding.ASCII.GetString(buff, 0, receiveResult.Count));
             }
+        }
+        catch (SshAuthenticationException) {
+            await WsWriteText(ws, "{\"error\":\"Invalid username or password\"}");
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            return;
         }
         catch (SocketException ex) {
             await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
