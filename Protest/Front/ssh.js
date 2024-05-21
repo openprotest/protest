@@ -103,7 +103,7 @@ class Ssh extends Terminal {
 
 		hostInput.onchange = hostInput.oninput =
 		usernameInput.onchange = usernameInput.oninput =
-		passwordInput.onchange = passwordInput.oninput = ()=>{
+		passwordInput.onchange = passwordInput.oninput = ()=> {
 			okButton.disabled =
 				hostInput.value.trim().length === 0 ||
 				usernameInput.value.trim().length === 0 ||

@@ -113,7 +113,7 @@ class Terminal extends Window {
 
 		const autoScrollCheckbox = document.createElement("input");
 		autoScrollCheckbox.type = "checkbox";
-		autoScrollCheckbox.checked = this.params.autoScroll;
+		autoScrollCheckbox.checked = this.params.autoScroll ?? true;
 		innerBox.appendChild(autoScrollCheckbox);
 		this.AddCheckBoxLabel(innerBox, autoScrollCheckbox, "Auto-scroll");
 
