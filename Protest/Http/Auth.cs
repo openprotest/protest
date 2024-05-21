@@ -338,16 +338,18 @@ internal static class Auth {
                 break;
 
             case "snmp pooling:write":
-                //path.Add("");
+                path.Add("/snmp/get");
+                path.Add("/snmp/set");
+                path.Add("/snmp/walk");
                 break;
 
-            case "snmp traps:write":
-                //path.Add("");
-                break;
+            /*case "snmp traps:write":
+                path.Add("");
+                break;*/
 
-            case "scripts:write":
-                //path.Add("");
-                break;
+            /*case "scripts:write":
+                path.Add("");
+                break;*/
 
             case "automation:write":
                 path.Add("/automation/list");
@@ -389,9 +391,10 @@ internal static class Auth {
                 path.Add("/config/backup/delete");
                 break;
 
-            case "update:write":
-                //path.Add("");
+            /*case "update:write":
+                path.Add("");
                 break;
+            */
             }
         }
 

@@ -10,7 +10,6 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal static class Telnet {
-
     private static async Task WsWriteText(WebSocket ws, string data) {
         if (ws.State == WebSocketState.Open) {
             await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
