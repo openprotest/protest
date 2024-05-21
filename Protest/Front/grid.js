@@ -198,21 +198,16 @@ class Grid extends Window {
 		const element = document.createElement("div");
 		this.sideList.appendChild(element);
 
-		const attrCheckbox = document.createElement("input");
-		attrCheckbox.type = "checkbox";
-		attrCheckbox.checked = checked;
-		element.appendChild(attrCheckbox);
-
-		const label = this.AddCheckBoxLabel(element, attrCheckbox, attributesName);
-		label.style.width = "calc(100% - 48px)";
+		const toggle = this.CreateToggle(attributesName, checked, element);
+		toggle.label.style.width = "calc(100% - 48px)";
 
 		this.attributeElements.push({
 			name: attributesName,
 			element: element,
-			checkbox: attrCheckbox
+			checkbox: toggle.checkbox
 		});
 
-		attrCheckbox.onchange = ()=> {
+		toggle.checkbox.onchange = ()=> {
 			this.UpdateHeading();
 			this.UpdateTable();
 		};

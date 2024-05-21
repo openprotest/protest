@@ -56,35 +56,23 @@ class Log extends Window {
 		autoScrollBox.style.paddingRight = "32px";
 		autoScrollBox.style.paddingBottom = "8px";
 		this.options.appendChild(autoScrollBox);
-		this.autoScrollCheckbox = document.createElement("input");
-		this.autoScrollCheckbox.type = "checkbox";
-		this.autoScrollCheckbox.checked = this.params.autoScroll;
-		autoScrollBox.appendChild(this.autoScrollCheckbox);
-		this.AddCheckBoxLabel(autoScrollBox, this.autoScrollCheckbox, "Auto-scroll");
+		this.autoScrollCheckbox = this.CreateToggle("Auto-scroll", this.params.autoScroll, autoScrollBox).checkbox;
 
 		this.opaqueBox = document.createElement("div");
 		this.opaqueBox.style.display = "inline-block";
 		this.opaqueBox.style.paddingRight = "32px";
 		this.opaqueBox.style.paddingBottom = "8px";
 		this.options.appendChild(this.opaqueBox);
-		this.opaqueCheckbox = document.createElement("input");
-		this.opaqueCheckbox.type = "checkbox";
-		this.opaqueCheckbox.checked = this.params.opaque;
-		this.opaqueBox.appendChild(this.opaqueCheckbox);
-		this.AddCheckBoxLabel(this.opaqueBox, this.opaqueCheckbox, "Opaque");
+		this.opaqueCheckbox = this.CreateToggle("Opaque", this.params.opaque, this.opaqueBox).checkbox;
 
 		this.onTopBox = document.createElement("div");
 		this.onTopBox.style.display = "inline-block";
 		this.onTopBox.style.paddingRight = "32px";
 		this.onTopBox.style.paddingBottom = "8px";
 		this.options.appendChild(this.onTopBox);
-		this.onTopCheckbox = document.createElement("input");
-		this.onTopCheckbox.type = "checkbox";
-		this.onTopCheckbox.checked = this.params.onTop;
-		this.onTopBox.appendChild(this.onTopCheckbox);
-		this.AddCheckBoxLabel(this.onTopBox, this.onTopCheckbox, "Always on top");
-
-		this.autoScrollCheckbox.onchange = ()=> { this.params.autoScroll = this.autoScrollCheckbox.checked; };
+		this.onTopCheckbox = this.CreateToggle("Always on top", this.params.onTop, this.onTopBox).checkbox;
+		
+		this.autoScrollCheckbox.onchange = ()=> { this.params.autoScroll = this.onTopBox.checked; };
 
 		this.opaqueCheckbox.onchange = ()=> {
 			this.params.opaque = this.opaqueCheckbox.checked;

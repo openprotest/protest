@@ -45,17 +45,15 @@ class ScreenCapture extends Window {
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const audioCheckbox = document.createElement("input");
-		audioCheckbox.type = "checkbox";
-		innerBox.appendChild(audioCheckbox);
-		this.AddCheckBoxLabel(innerBox, audioCheckbox, "Record audio").style.paddingBottom = "16px";
+		const audioToggle = this.CreateToggle("Record audio", this.params.audio, innerBox);
+		audioToggle.label.style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		audioCheckbox.checked = this.params.audio;
+		audioToggle.checkbox.checked = this.params.audio;
 
 		okButton.onclick = async ()=> {
-			this.params.audio = audioCheckbox.checked;
+			this.params.audio = audioCheckbox.checkbox.checked;
 			dialog.Close();
 		};
 	}

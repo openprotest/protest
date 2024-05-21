@@ -674,11 +674,7 @@ class KeyboardTester extends Window {
 				dialog.innerBox.appendChild(document.createElement("br"));
 				dialog.innerBox.appendChild(document.createElement("br"));
 
-				const vibrateOnPressCheckbox = document.createElement("input");
-				vibrateOnPressCheckbox.type = "checkbox";
-				vibrateOnPressCheckbox.checked = this.vibrateOnPress;
-				dialog.innerBox.appendChild(vibrateOnPressCheckbox);
-				this.AddCheckBoxLabel(dialog.innerBox, vibrateOnPressCheckbox, "Vibrate on button press");
+				const vibrateOnPressToggle = this.CreateToggle("Vibrate on button press", this.vibrateOnPress, dialog.innerBox);
 
 				let gamepads = navigator.getGamepads();
 
@@ -695,9 +691,8 @@ class KeyboardTester extends Window {
 					}
 				};
 
-
 				dialog.okButton.addEventListener("click", ()=>{
-					this.vibrateOnPress = vibrateOnPressCheckbox.checked;
+					this.vibrateOnPress = vibrateOnPressToggle.checkbox.checked;
 				});
 			};
 		}

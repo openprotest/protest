@@ -92,11 +92,8 @@ class DhcpDiscover extends Window {
 		acceptBox.style.gridColumn = "3";
 		grid.appendChild(acceptBox);
 
-		this.acceptCheckbox = document.createElement("input");
-		this.acceptCheckbox.type = "checkbox";
-		this.acceptCheckbox.checked = this.params.accept;
-		acceptBox.appendChild(this.acceptCheckbox);
-		this.AddCheckBoxLabel(acceptBox, this.acceptCheckbox, ".").style.paddingLeft = "8px";
+		this.acceptToggle = this.CreateToggle(".", this.params.accept, acceptBox);
+		this.acceptToggle.label.style.paddingLeft = "8px";
 
 		this.discoverButton = document.createElement("input");
 		this.discoverButton.type = "button";
@@ -202,8 +199,8 @@ class DhcpDiscover extends Window {
 			this.params.mac = this.macInput.value;
 		};
 
-		this.acceptCheckbox.onchange = ()=> {
-			this.params.accept = this.acceptCheckbox.checked;
+		this.acceptToggle.checkbox.onchange = ()=> {
+			this.params.accept = this.acceptToggle.checkbox.checked;
 		};
 
 		this.discoverButton.onclick = ()=> this.Discover();
@@ -240,7 +237,7 @@ class DhcpDiscover extends Window {
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/dhcp");
 
-		this.ws.onopen = ()=> this.ws.send(`timeout=${this.timeoutInput.value}&mac=${mac}&hostname=${this.hostnameInput.value}&accept=${this.acceptCheckbox.checked}`);
+		this.ws.onopen = ()=> this.ws.send(`timeout=${this.timeoutInput.value}&mac=${mac}&hostname=${this.hostnameInput.value}&accept=${this.acceptToggle.checkbox.checked}`);
 
 		this.ws.onmessage = event=> {
 			const json = JSON.parse(event.data);

@@ -2606,27 +2606,21 @@ class DeviceView extends View {
 		grid.style.alignItems = "center";
 		dialog.innerBox.appendChild(grid);
 
-		const dnsCheckbox = document.createElement("input");
-		dnsCheckbox.type = "checkbox";
-		dnsCheckbox.checked = true;
-		dnsCheckbox.disabled = true;
-		grid.appendChild(dnsCheckbox);
-		const dns = this.AddCheckBoxLabel(grid, dnsCheckbox, "DNS");
-		dns.style.gridArea = "1 / 2";
+		const dnsToggle = this.CreateToggle("DNS", true, grid);
+		dnsToggle.label.style.gridArea = "1 / 2";
 
-		const wmiCheckbox = document.createElement("input");
-		wmiCheckbox.type = "checkbox";
-		wmiCheckbox.checked = true;
-		grid.appendChild(wmiCheckbox);
-		const wmi = this.AddCheckBoxLabel(grid, wmiCheckbox, "WMI");
-		wmi.style.gridArea = "2 / 2";
+		const wmiToggle = this.CreateToggle("WMI", true, grid);
+		wmiToggle.label.style.gridArea = "2 / 2";
 
-		const snmpCheckBox = document.createElement("input");
-		snmpCheckBox.type = "checkbox";
-		snmpCheckBox.checked = false;
-		snmpCheckBox.disabled = true; //TODO:
-		grid.appendChild(snmpCheckBox);
-		this.AddCheckBoxLabel(grid, snmpCheckBox, "SNMP").style.gridArea = "3 / 2";
+		const snmpToggle = this.CreateToggle("SNMP", false, grid);
+		snmpToggle.label.style.gridArea = "3 / 2";
+		snmpToggle.checkbox.disabled = true;
+		
+		const kerberosToggle = this.CreateToggle("Kerberos", true, grid);
+		kerberosToggle.label.style.gridArea = "4 / 2";
+
+		const portScanToggle = this.CreateToggle("Port Scan", true, grid);
+		portScanToggle.label.style.gridArea = "5 / 2";
 
 		const snmpInput = document.createElement("select");
 		snmpInput.style.marginLeft = "0";
@@ -2646,20 +2640,6 @@ class DeviceView extends View {
 		snmpInput.appendChild(ver3Option);
 
 		snmpInput.value = "3";
-
-		const kerberosCheckbox = document.createElement("input");
-		kerberosCheckbox.type = "checkbox";
-		kerberosCheckbox.checked = true;
-		grid.appendChild(kerberosCheckbox);
-		const kerberos = this.AddCheckBoxLabel(grid, kerberosCheckbox, "Kerberos");
-		kerberos.style.gridArea = "4 / 2";
-
-		const portScanCheckbox = document.createElement("input");
-		portScanCheckbox.type = "checkbox";
-		portScanCheckbox.checked = true;
-		grid.appendChild(portScanCheckbox);
-		const portScan = this.AddCheckBoxLabel(grid, portScanCheckbox, "Port scan");
-		portScan.style.gridArea = "5 / 2";
 
 		const portScanInput = document.createElement("select");
 		portScanInput.style.marginLeft = "0";
@@ -2682,8 +2662,8 @@ class DeviceView extends View {
 		extendedOption.text = "Extended (1-8191)";
 		portScanInput.appendChild(extendedOption);
 
-		snmpCheckBox.onchange = ()=> {
-			if (snmpCheckBox.checked) {
+		snmpToggle.checkbox.onchange = ()=> {
+			if (snmpToggle.checkbox.checked) {
 				snmpInput.disabled = false;
 			}
 			else {
@@ -2691,8 +2671,8 @@ class DeviceView extends View {
 			}
 		};
 
-		portScanCheckbox.onchange = ()=> {
-			if (portScanCheckbox.checked) {
+		portScanToggle.checkbox.onchange = ()=> {
+			if (portScanToggle.checkbox.checked) {
 				portScanInput.disabled = false;
 			}
 			else {
@@ -2729,10 +2709,10 @@ class DeviceView extends View {
 
 			try {
 				let url = `fetch/singledevice?target=${target}`;
-				if (wmiCheckbox.checked)      url += `&wmi=true`;
-				if (snmpCheckBox.checked)     url += `&snmp=${snmpInput.value}`;
-				if (kerberosCheckbox.checked) url += `&kerberos=true`;
-				if (portScanCheckbox.checked) url += `&portscan=${portScanInput.value}`;
+				if (wmiToggle.checkbox.checked)      url += `&wmi=true`;
+				if (snmpToggle.checkbox.checked)     url += `&snmp=${snmpInput.value}`;
+				if (kerberosToggle.checkbox.checked) url += `&kerberos=true`;
+				if (portScanToggle.checkbox.checked) url += `&portscan=${portScanInput.value}`;
 
 				const response = await fetch(url);
 

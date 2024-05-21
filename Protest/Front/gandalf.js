@@ -191,15 +191,9 @@ class Gandalf extends Window {
 				div.style.padding = "4px";
 				this.divInclude.appendChild(div);
 
-				const includeCheckbox = document.createElement("input");
-				includeCheckbox.type = "checkbox";
-				includeCheckbox.checked = true;
-				div.appendChild(includeCheckbox);
-				this.AddCheckBoxLabel(div, includeCheckbox, key);
-
-				this.includeList[key] = includeCheckbox;
-
-				includeCheckbox.onchange = ()=> this.thresholdRange.oninput();
+				const toggle = this.CreateToggle(key, true, div);
+				this.includeList[key] = toggle.checkbox;
+				toggle.checkbox.onchange = ()=> this.thresholdRange.oninput();
 			});
 
 			this.thresholdRange.oninput =
@@ -334,13 +328,10 @@ class Gandalf extends Window {
 			sslBox.style.margin = "4px";
 			sslBox.style.display = "inline-block";
 			this.menuArray[2].appendChild(sslBox);
-			this.sslCheckBox = document.createElement("input");
-			this.sslCheckBox.type = "checkbox";
-			this.sslCheckBox.disabled = true;
-			sslBox.appendChild(this.sslCheckBox);
-			const sslCheckBoxLabel = this.AddCheckBoxLabel(sslBox, this.sslCheckBox, ".");
-			sslCheckBoxLabel.style.paddingLeft = "8px";
-			sslCheckBoxLabel.style.color = "transparent";
+
+			this.sslToggle = this.CreateToggle(".", true, sslBox);
+			this.sslToggle.label.style.paddingLeft = "8px";
+			this.sslToggle.label.style.color = "transparent";
 
 			this.menuArray[2].appendChild(document.createElement("br"));
 			this.menuArray[2].appendChild(document.createElement("br"));
@@ -459,7 +450,7 @@ class Gandalf extends Window {
 				this.senderInput.value = json[this.smtpProfileInput.value].sender;
 				this.usernameInput.value = json[this.smtpProfileInput.value].username;
 				this.passwordInput.value = "placeholder";
-				this.sslCheckBox.checked = json[this.smtpProfileInput.value].ssl;
+				this.sslToggle.checkbox.checked = json[this.smtpProfileInput.value].ssl;
 				this.smtpGuid = json[this.smtpProfileInput.value].guid;
 			};
 

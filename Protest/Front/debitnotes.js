@@ -75,31 +75,19 @@ class DebitNotes extends Window {
 		shortBox.style.gridArea = "4 / 2";
 		shortBox.style.paddingLeft = "4px";
 		listBox.appendChild(shortBox);
-		this.shortCheckbox = document.createElement("input");
-		this.shortCheckbox.type = "checkbox";
-		this.shortCheckbox.checked = this.params.short;
-		shortBox.appendChild(this.shortCheckbox);
-		this.AddCheckBoxLabel(shortBox, this.shortCheckbox, "Short-term");
+		this.shortToggle = this.CreateToggle("Short-term", this.params.short, shortBox);
 
 		const longBox = document.createElement("div");
 		longBox.style.gridArea = "5 / 2";
 		longBox.style.paddingLeft = "4px";
 		listBox.appendChild(longBox);
-		this.longCheckbox = document.createElement("input");
-		this.longCheckbox.type = "checkbox";
-		this.longCheckbox.checked = this.params.long;
-		longBox.appendChild(this.longCheckbox);
-		this.AddCheckBoxLabel(longBox, this.longCheckbox, "Long-term");
+		this.longToggle = this.CreateToggle("Long-term", this.params.long, longBox);
 
 		const returnedBox = document.createElement("div");
 		returnedBox.style.gridArea = "6 / 2";
 		returnedBox.style.paddingLeft = "4px";
 		listBox.appendChild(returnedBox);
-		this.returnedCheckbox = document.createElement("input");
-		this.returnedCheckbox.type = "checkbox";
-		this.returnedCheckbox.checked = this.params.returned;
-		returnedBox.appendChild(this.returnedCheckbox);
-		this.AddCheckBoxLabel(returnedBox, this.returnedCheckbox, "Returned");
+		this.returnedToggle = this.CreateToggle("Returned", this.params.returned, returnedBox);
 
 		this.list = document.createElement("div");
 		this.list.className = "no-results";
@@ -153,9 +141,9 @@ class DebitNotes extends Window {
 
 		this.searchInput.onchange = ()=> this.ListDebitNotes();
 		this.upToInput.onchange = ()=> this.ListDebitNotes();
-		this.shortCheckbox.onchange = ()=> this.ListDebitNotes();
-		this.longCheckbox.onchange = ()=> this.ListDebitNotes();
-		this.returnedCheckbox.onchange = ()=> this.ListDebitNotes();
+		this.shortToggle.checkbox.onchange = ()=> this.ListDebitNotes();
+		this.longToggle.checkbox.onchange = ()=> this.ListDebitNotes();
+		this.returnedToggle.checkbox.onchange = ()=> this.ListDebitNotes();
 
 		this.newButton.onclick = ()=> this.New();
 		this.printButton.onclick = ()=> this.Print();
@@ -223,9 +211,9 @@ class DebitNotes extends Window {
 	async ListDebitNotes() {
 		this.params.keywords = this.searchInput.value.trim().toLocaleLowerCase();
 		this.params.upto = this.upToInput.value;
-		this.params.short = this.shortCheckbox.checked;
-		this.params.long = this.longCheckbox.checked;
-		this.params.returned = this.returnedCheckbox.checked;
+		this.params.short = this.shortToggle.checkbox.checked;
+		this.params.long = this.longToggle.checkbox.checked;
+		this.params.returned = this.returnedToggle.checkbox.checked;
 
 		try {
 			let uri = this.params.keywords.length === 0 ?
@@ -749,10 +737,8 @@ class DebitNotes extends Window {
 		const statusBox = document.createElement("div");
 		statusBox.style.gridArea = "5 / 5";
 		grid.appendChild(statusBox);
-		const statusCheckbox = document.createElement("input");
-		statusCheckbox.type = "checkbox";
-		statusBox.appendChild(statusCheckbox);
-		this.AddCheckBoxLabel(statusBox, statusCheckbox, "Short-term");
+
+		const statusToggle = this.CreateToggle("Short-term", false, statusBox);
 
 		const addEquipButton = document.createElement("input");
 		addEquipButton.type = "button";
@@ -994,7 +980,7 @@ class DebitNotes extends Window {
 		createButton.addEventListener("click", async ()=>{
 			let body = {
 				date       : UI.UnixDateToTicks(new Date().getTime()),
-				status     : statusCheckbox.checked ? "short" : "long",
+				status     : statusCheckbox.checkbox.checked ? "short" : "long",
 				template   : templateInput.value,
 				banner     : bannerInput.value,
 				firstname  : firstNameInput.value,
@@ -1038,10 +1024,10 @@ class DebitNotes extends Window {
 		});
 
 		return {
-			statusCheckbox     : statusCheckbox,
+			statusCheckbox  : statusToggle.checkbox,
 			firstNameInput  : firstNameInput,
 			lastNameInput   : lastNameInput,
-			titleInput    : titleInput,
+			titleInput      : titleInput,
 			depInput        : depInput,
 			issuerInput     : issuerInput,
 			templateInput   : templateInput,
@@ -1059,11 +1045,11 @@ class DebitNotes extends Window {
 		const obj = this.New();
 		const firstNameInput = obj.firstNameInput;
 		const lastNameInput  = obj.lastNameInput;
-		const titleInput   = obj.titleInput;
+		const titleInput     = obj.titleInput;
 		const depInput       = obj.depInput;
 		const issuerInput    = obj.issuerInput;
 		const templateInput  = obj.templateInput;
-		const statusCheckbox    = obj.statusCheckbox;
+		const statusCheckbox = obj.statusCheckbox;
 		const lstEquip     = obj.lstEquip;
 		const AddEquip     = obj.AddEquip;
 

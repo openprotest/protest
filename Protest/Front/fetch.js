@@ -642,11 +642,9 @@ class Fetch extends Tabs {
 		const deviceBox = document.createElement("div");
 		deviceBox.style.gridArea = "6 / 5";
 		this.tabsPanel.appendChild(deviceBox);
-		const deviceCheckbox = document.createElement("input");
-		deviceCheckbox.type = "checkbox";
-		deviceCheckbox.checked = true;
-		deviceBox.appendChild(deviceCheckbox);
-		this.AddCheckBoxLabel(deviceBox, deviceCheckbox, ".").style="width:4px; min-width:4px; padding-left:8px;";
+
+		const deviceToggle = this.CreateToggle(".", true, deviceBox);
+		deviceToggle.label.style="width:4px; min-width:4px; padding-left:8px;";
 
 		const usersLabel = document.createElement("div");
 		usersLabel.style.gridArea = "7 / 3";
@@ -655,11 +653,9 @@ class Fetch extends Tabs {
 		const usersBox = document.createElement("div");
 		usersBox.style.gridArea = "7 / 5";
 		this.tabsPanel.appendChild(usersBox);
-		const usersCheckBox = document.createElement("input");
-		usersCheckBox.type = "checkbox";
-		usersCheckBox.checked = true;
-		usersBox.appendChild(usersCheckBox);
-		this.AddCheckBoxLabel(usersBox, usersCheckBox, ".").style = "width:4px; min-width:4px; padding-left:8px;";
+		
+		const usersToggle = this.CreateToggle(".", true, usersBox);
+		usersToggle.label.style="width:4px; min-width:4px; padding-left:8px;";
 
 		const debitNotesLabel = document.createElement("div");
 		debitNotesLabel.style.gridArea = "8 / 3";
@@ -668,12 +664,9 @@ class Fetch extends Tabs {
 		const debitNotesBox = document.createElement("div");
 		debitNotesBox.style.gridArea = "8 / 5";
 		this.tabsPanel.appendChild(debitNotesBox);
-		const debitNotesCheckbox = document.createElement("input");
-		debitNotesCheckbox.type = "checkbox";
-		debitNotesCheckbox.checked = false;
-		debitNotesBox.appendChild(debitNotesCheckbox);
-		this.AddCheckBoxLabel(debitNotesBox, debitNotesCheckbox, ".").style = "width:4px; min-width:4px; padding-left:8px;";
-
+		
+		const debitNotesToggle = this.CreateToggle(".", false, debitNotesBox);
+		debitNotesToggle.label.style="width:4px; min-width:4px; padding-left:8px;";
 
 		const buttonsBox = document.createElement("div");
 		buttonsBox.style.gridArea = "10 / 2 / auto / 7";
@@ -705,11 +698,11 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(warningBox);
 
 		inputButton.onclick = async ()=> {
+			const dialog = this.DialogBox("180px");
+			if (dialog === null) return;
+
 			try {
 				inputButton.disabled = cancelButton.disabled = true;
-
-				const dialog = this.DialogBox("180px");
-				if (dialog === null) return;
 
 				dialog.innerBox.parentElement.style.maxWidth = "400px";
 				dialog.innerBox.style.textAlign = "center";
@@ -731,7 +724,7 @@ class Fetch extends Tabs {
 				status.style.animation = "delayed-fade-in 1.5s ease-in 1";
 				dialog.innerBox.appendChild(status);
 
-				let uri = `fetch/import?ip=${targetInput.GetIpString()}&port=${portInput.value}&protocol=${protocolInput.value}&username=${encodeURIComponent(usernameInput.value)}&password=${encodeURIComponent(passwordInput.value)}&devices=${deviceCheckbox.checked}&users=${usersCheckBox.checked}&debitnotes=${debitNotesCheckbox.checked}`;
+				let uri = `fetch/import?ip=${targetInput.GetIpString()}&port=${portInput.value}&protocol=${protocolInput.value}&username=${encodeURIComponent(usernameInput.value)}&password=${encodeURIComponent(passwordInput.value)}&devices=${deviceToggle.checkbox.checked}&users=${usersToggle.checkbox.checked}&debitnotes=${debitNotesToggle.checkbox.checked}`;
 				const response = await fetch(uri);
 
 				dialog.Close();

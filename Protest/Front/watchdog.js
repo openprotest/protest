@@ -250,13 +250,9 @@ class Watchdog extends Window {
 		const enableBox = document.createElement("div");
 		enableBox.style.gridArea = "1 / 2";
 
-		const enableInput = document.createElement("input");
-		enableInput.type = "checkbox";
-		enableBox.appendChild(enableInput);
-		const label = this.AddCheckBoxLabel(enableBox, enableInput, "Enable");
-		label.style.minWidth = "38px";
-		label.style.margin = "2px";
-
+		const enableToggle = this.CreateToggle("Enable", true, enableBox);
+		enableToggle.label.style.minWidth = "38px";
+		enableToggle.label.style.margin = "2px";
 
 		const typeLabel = document.createElement("div");
 		typeLabel.style.gridArea = "2 / 2";
@@ -356,14 +352,8 @@ class Watchdog extends Window {
 
 		let statusCodes = [];
 		for (let i = 1; i < 6; i++) {
-			const checkBox = document.createElement("input");
-			checkBox.type = "checkbox";
-			checkBox.checked = i > 1 && i < 4;
-			statusCodesBox.appendChild(checkBox);
-			const label = this.AddCheckBoxLabel(statusCodesBox, checkBox, `${i}xx`);
-			label.style.minWidth = "38px";
-			label.style.margin = "2px";
-			statusCodes.push(checkBox);
+			const toggle = this.CreateToggle(`${i}xx`, i>1 && i<4, statusCodesBox);
+			statusCodes.push(toggle.checkbox);
 		}
 
 		const intervalLabel = document.createElement("div");
@@ -393,10 +383,10 @@ class Watchdog extends Window {
 		};
 
 		if (isNew) {
-			enableInput.checked = true;
+			enableToggle.checkbox.checked = true;
 		}
 		else {
-			enableInput.checked = this.selected.enable;
+			enableToggle.checkbox.checked = this.selected.enable;
 			typeInput.value     = this.selected.type;
 			nameInput.value     = this.selected.name;
 			targetInput.value   = this.selected.target;
@@ -542,7 +532,7 @@ class Watchdog extends Window {
 			try {
 				const obj = {
 					file       : isNew ? null : this.selected.file,
-					enable     : enableInput.checked,
+					enable     : enableToggle.checkbox.checked,
 					type       : typeInput.value,
 					name       : nameInput.value,
 					target     : targetInput.value,
@@ -595,7 +585,7 @@ class Watchdog extends Window {
 		const dialog = this.DialogBox("520px");
 		if (dialog === null) return;
 
-		const {okButton, innerBox} = dialog;
+		const {okButton, innerBox, buttonBox} = dialog;
 
 		okButton.style.display = "none";
 
@@ -893,20 +883,16 @@ class Watchdog extends Window {
 			watcher.className = "list-element";
 			watchersList.appendChild(watcher);
 
-			const check = document.createElement("input");
-			check.type = "checkbox";
-			check.checked = true;
-			watcher.appendChild(check);
-			const toggle = this.AddCheckBoxLabel(watcher, check, this.watchers[file].name);
-			toggle.style.whiteSpace = "nowrap";
-			toggle.style.overflow = "hidden";
-			toggle.style.textOverflow = "ellipses";
-			toggle.style.left = "8px";
-			toggle.style.top = "5px";
+			const toggle = this.CreateToggle(this.watchers[file].name, true, watcher);
+			toggle.label.style.whiteSpace = "nowrap";
+			toggle.label.style.overflow = "hidden";
+			toggle.label.style.textOverflow = "ellipses";
+			toggle.label.style.left = "8px";
+			toggle.label.style.top = "5px";
 
-			watchersCheckboxes[file] = check;
+			watchersCheckboxes[file] = toggle.checkbox;
 
-			check.onchange = ()=> {
+			toggle.checkbox.onchange = ()=> {
 				if (selected === null) return;
 
 				notifications[selected].watchers = [];
