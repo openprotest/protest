@@ -1536,7 +1536,7 @@ class DeviceView extends View {
 		innerBox.classList.add("view-config-code-box");
 		innerBox.style.margin = "8px";
 
-		innerBox.parentElement.style.maxWidth = "1200px";
+		innerBox.parentElement.style.maxWidth = "unset";
 		innerBox.parentElement.style.left = "40px";
 		innerBox.parentElement.style.right = "40px";
 		innerBox.style.padding = "20px";
