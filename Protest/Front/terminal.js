@@ -755,10 +755,14 @@ class Terminal extends Window {
 		if (this.savedScreen) {
 			this.screen = this.savedScreen;
 			this.savedScreen = null;
-			
-			for (const [key, value] of Object.values(this.screen)) {
-				this.content.appendChild(value);
+
+			this.content.textContent = "";
+
+			for (let o in this.screen) {
+				this.content.appendChild(this.screen[o]);
 			}
+
+			this.content.appendChild(this.cursorElement);
 
 			if (this.savedCursorPos) {
 				this.cursor.x = this.savedCursorPos.x;
