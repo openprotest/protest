@@ -53,52 +53,31 @@ class Personalize extends Tabs {
 		this.params = "appearance";
 		this.tabsPanel.textContent = "";
 
-		this.winMaxedCheckbox = document.createElement("input");
-		this.winMaxedCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.winMaxedCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.winMaxedCheckbox, "Always maximize windows");
+		this.winMaxedCheckbox = this.CreateToggle("Always maximize windows", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.popOutCheckbox = document.createElement("input");
-		this.popOutCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.popOutCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.popOutCheckbox, "Pop-out button on windows");
+		this.popOutCheckbox = this.CreateToggle("Pop-out button on windows", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.taskTooltipCheckbox = document.createElement("input");
-		this.taskTooltipCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.taskTooltipCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.taskTooltipCheckbox, "Tooltip on taskbar icons");
+		this.taskTooltipCheckbox = this.CreateToggle("Tooltip on taskbar icons", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.windowShadowsCheckbox = document.createElement("input");
-		this.windowShadowsCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.windowShadowsCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.windowShadowsCheckbox, "Shadow under windows");
+		this.windowShadowsCheckbox = this.CreateToggle("Shadow under windows", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.dateTimeCheckbox = document.createElement("input");
-		this.dateTimeCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.dateTimeCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.dateTimeCheckbox, "Date and time");
+		this.dateTimeCheckbox = this.CreateToggle("Date and time", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.animationsCheckbox = document.createElement("input");
-		this.animationsCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.animationsCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.animationsCheckbox, "Animations");
+		this.animationsCheckbox = this.CreateToggle("Animations", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.glassCheckbox = document.createElement("input");
-		this.glassCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.glassCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.glassCheckbox, "Glass effect");
+		this.glassCheckbox = this.CreateToggle("Glass effect", false, this.tabsPanel).checkbox;
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
@@ -526,20 +505,16 @@ class Personalize extends Tabs {
 		this.params = "session";
 		this.tabsPanel.textContent = "";
 
-		this.restoreSessionCheckbox = document.createElement("input");
-		this.restoreSessionCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.restoreSessionCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.restoreSessionCheckbox, "Re-open previous windows on page load").style.fontWeight = "600";
+		this.restoreSessionToggle = this.CreateToggle("Re-open previous windows on page load", false, this.tabsPanel);
+		this.restoreSessionToggle.label.style.fontWeight = "600";
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("hr"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		this.aliveOnCloseCheckbox = document.createElement("input");
-		this.aliveOnCloseCheckbox.type = "checkbox";
-		this.tabsPanel.appendChild(this.aliveOnCloseCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.aliveOnCloseCheckbox, "Keep session alive when browser is closed").style.fontWeight = "600";
+		this.aliveOnCloseToggle = this.CreateToggle("Keep session alive when browser is closed", false, this.tabsPanel);
+		this.aliveOnCloseToggle.label.style.fontWeight = "600";
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -564,7 +539,6 @@ class Personalize extends Tabs {
 		this.sessionTimeoutValueLabel.style.paddingLeft = "8px";
 		this.sessionTimeoutValueLabel.style.display = "inline-block";
 		this.tabsPanel.appendChild(this.sessionTimeoutValueLabel);
-
 
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -603,8 +577,8 @@ class Personalize extends Tabs {
 		clearLocalCacheButton.style.padding = "8px 16px";
 		this.tabsPanel.appendChild(clearLocalCacheButton);
 
-		this.restoreSessionCheckbox.checked = localStorage.getItem("restore_session") === "true";
-		this.aliveOnCloseCheckbox.checked = localStorage.getItem("alive_after_close") === "true";
+		this.restoreSessionToggle.checkbox.checked = localStorage.getItem("restore_session") === "true";
+		this.aliveOnCloseToggle.checkbox.checked = localStorage.getItem("alive_after_close") === "true";
 		this.sessionTimeout.value = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
 		this.cookieLife.value = localStorage.getItem("cookie_lifetime") == null ? 5 : parseInt(localStorage.getItem("cookie_lifetime"));
 
@@ -613,15 +587,15 @@ class Personalize extends Tabs {
 
 		const timeMapping = { 1:15, 2:30, 3:60, 4:2*60, 5:4*60, 6:8*60, 7:24*60, 8:Infinity };
 		const Apply = ()=> {
-			localStorage.setItem("restore_session", this.restoreSessionCheckbox.checked);
-			localStorage.setItem("alive_after_close", this.aliveOnCloseCheckbox.checked);
+			localStorage.setItem("restore_session", this.restoreSessionToggle.checkbox.checked);
+			localStorage.setItem("alive_after_close", this.aliveOnCloseToggle.checkbox.checked);
 			localStorage.setItem("session_timeout", this.sessionTimeout.value);
 			localStorage.setItem("cookie_lifetime", this.cookieLife.value);
 
 			for (let i = 0; i < WIN.array.length; i++) //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "session") {
-					WIN.array[i].restoreSessionCheckbox.checked = this.restoreSessionCheckbox.checked;
-					WIN.array[i].aliveOnCloseCheckbox.checked   = this.aliveOnCloseCheckbox.checked;
+					WIN.array[i].restoreSessionToggle.checkbox.checked = this.restoreSessionToggle.checkbox.checked;
+					WIN.array[i].aliveOnCloseToggle.checkbox.checked   = this.aliveOnCloseToggle.checkbox.checked;
 					WIN.array[i].sessionTimeout.value      = this.sessionTimeout.value;
 					WIN.array[i].cookieLife.value          = this.cookieLife.value;
 
@@ -645,8 +619,8 @@ class Personalize extends Tabs {
 				}
 		};
 
-		this.restoreSessionCheckbox.onchange = Apply;
-		this.aliveOnCloseCheckbox.onchange = Apply;
+		this.restoreSessionToggle.checkbox.onchange = Apply;
+		this.aliveOnCloseToggle.checkbox.onchange = Apply;
 		this.sessionTimeout.oninput = Apply;
 
 		this.cookieLife.oninput = ()=> {

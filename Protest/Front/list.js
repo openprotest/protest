@@ -665,24 +665,20 @@ class List extends Window {
 		let checkList = {};
 		const CreateListItem = (attr, value)=> {
 			const newAttr = document.createElement("div");
-			const newCheck = document.createElement("input");
-			newCheck.type = "checkbox";
-			newCheck.checked = attr in checkList ? checkList[attr] : value;
-			newAttr.appendChild(newCheck);
+			const newToggle = this.CreateToggle(attr, attr in checkList ? checkList[attr] : value, newAttr);
 
-			const newLabel = this.AddCheckBoxLabel(newAttr, newCheck, attr);
 			listbox.appendChild(newAttr);
-			checkList[attr] = newCheck.checked;
+			checkList[attr] = newToggle.checkbox.checked;
 
-			newLabel.onmousedown = event=> event.stopPropagation();
+			newToggle.label.onmousedown = event=> event.stopPropagation();
 
 			newAttr.onmousedown = ()=> {
-				newCheck.checked = !newCheck.checked;
-				checkList[attr] = newCheck.checked;
+				newToggle.checkbox.checked = !newToggle.checkbox.checked;
+				checkList[attr] = newToggle.checkbox.checked;
 			};
 
-			newCheck.onchange = ()=> {
-				checkList[attr] = newCheck.checked;
+			newToggle.checkbox.onchange = ()=> {
+				checkList[attr] = newToggle.checkbox.checked;
 			};
 		};
 

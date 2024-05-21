@@ -1176,15 +1176,15 @@ class Window {
 		}
 	}
 
-	CreateToggle(label, checked, parent) {
+	CreateToggle(text, value, parent) {
 		const checkbox = document.createElement("input");
 		checkbox.type = "checkbox";
-		checkbox.checked = checked;
+		checkbox.checked = value;
 
 		parent.appendChild(checkbox);
-		const domElement = this.AddCheckBoxLabel(parent, checkbox, label);
+		const label = this.AddCheckBoxLabel(parent, checkbox, text);
 
-		return {checkbox: checkbox, label: domElement};
+		return {checkbox: checkbox, label: label};
 	}
 
 	AddCheckBoxLabel(parent, checkbox, label) {

@@ -102,62 +102,35 @@ class PassGen extends Window {
 		this.lengthInput.style.gridArea = "3 / 2";
 		grid.appendChild(this.lengthInput);
 
-		const lowerCaseBox = document.createElement("div");
-		lowerCaseBox.style.textAlign = "left";
-		lowerCaseBox.style.gridArea = "2 / 3";
-		grid.appendChild(lowerCaseBox);
-
-		this.lowerCaseCheckbox = document.createElement("input");
-		this.lowerCaseCheckbox.type = "checkbox";
-		this.lowerCaseCheckbox.checked = true;
-		lowerCaseBox.appendChild(this.lowerCaseCheckbox);
-		this.AddCheckBoxLabel(lowerCaseBox, this.lowerCaseCheckbox, "Lowercase");
-
+		const lowercaseBox = document.createElement("div");
+		lowercaseBox.style.textAlign = "left";
+		lowercaseBox.style.gridArea = "2 / 3";
+		grid.appendChild(lowercaseBox);
+		this.lowercaseToggle = this.CreateToggle("Lowercase", true, lowercaseBox);
 
 		const uppercaseBox = document.createElement("div");
 		uppercaseBox.style.textAlign = "left";
 		uppercaseBox.style.gridArea = "3 / 3";
 		grid.appendChild(uppercaseBox);
-
-		this.upperCaseCheckbox = document.createElement("input");
-		this.upperCaseCheckbox.type = "checkbox";
-		this.upperCaseCheckbox.checked = false;
-		uppercaseBox.appendChild(this.upperCaseCheckbox);
-		this.AddCheckBoxLabel(uppercaseBox, this.upperCaseCheckbox, "Uppercase");
-
+		this.uppercaseToggle = this.CreateToggle("Uppercase", true, uppercaseBox);
 
 		const numbersBox = document.createElement("div");
 		numbersBox.style.textAlign = "left";
 		numbersBox.style.gridArea = "4 / 3";
 		grid.appendChild(numbersBox);
-
-		this.numbersCheckbox = document.createElement("input");
-		this.numbersCheckbox.type = "checkbox";
-		this.numbersCheckbox.checked = true;
-		numbersBox.appendChild(this.numbersCheckbox);
-		this.AddCheckBoxLabel(numbersBox, this.numbersCheckbox, "Numbers");
+		this.numbersToggle = this.CreateToggle("Numbers", true, numbersBox);
 
 		const symbolsBox = document.createElement("div");
 		symbolsBox.style.textAlign = "left";
 		symbolsBox.style.gridArea = "5 / 3";
 		grid.appendChild(symbolsBox);
-
-		this.symbolsCheckbox = document.createElement("input");
-		this.symbolsCheckbox.type = "checkbox";
-		this.symbolsCheckbox.checked = false;
-		symbolsBox.appendChild(this.symbolsCheckbox);
-		this.AddCheckBoxLabel(symbolsBox, this.symbolsCheckbox, "Symbols");
+		this.symbolsToggle = this.CreateToggle("Symbols", true, symbolsBox);
 
 		const similarBox = document.createElement("div");
 		similarBox.style.textAlign = "left";
 		similarBox.style.gridArea = "6 / 3";
 		grid.appendChild(similarBox);
-
-		this.similarCheckbox = document.createElement("input");
-		this.similarCheckbox.type = "checkbox";
-		this.similarCheckbox.checked = false;
-		similarBox.appendChild(this.similarCheckbox);
-		this.AddCheckBoxLabel(similarBox, this.similarCheckbox, "Similar characters");
+		this.similarToggle = this.CreateToggle("Similar", true, similarBox);
 
 		const entropyLabel = document.createElement("div");
 		entropyLabel.textContent = "Entropy (bits):";
@@ -219,16 +192,16 @@ class PassGen extends Window {
 				this.lengthRange.min = 4;
 				this.lengthRange.value = 4;
 				this.lengthRange.max = 64;
-				this.numbersCheckbox.checked = true;
-				this.lowerCaseCheckbox.checked = false;
-				this.upperCaseCheckbox.checked = false;
-				this.symbolsCheckbox.checked = false;
-				this.similarCheckbox.checked = false;
-				this.lowerCaseCheckbox.disabled = true;
-				this.upperCaseCheckbox.disabled = true;
-				this.numbersCheckbox.disabled = true;
-				this.symbolsCheckbox.disabled = true;
-				this.similarCheckbox.disabled = true;
+				this.numbersToggle.checkbox.checked = true;
+				this.lowercaseToggle.checkbox.checked = false;
+				this.uppercaseToggle.checkbox.checked = false;
+				this.symbolsToggle.checkbox.checked = false;
+				this.similarToggle.checkbox.checked = false;
+				this.lowercaseToggle.checkbox.disabled = true;
+				this.uppercaseToggle.checkbox.disabled = true;
+				this.numbersToggle.checkbox.disabled = true;
+				this.symbolsToggle.checkbox.disabled = true;
+				this.similarToggle.checkbox.disabled = true;
 				lengthLabel.textContent = "Length:";
 				break;
 
@@ -236,16 +209,16 @@ class PassGen extends Window {
 				this.lengthRange.value = 16;
 				this.lengthRange.min = 6;
 				this.lengthRange.max = 64;
-				this.lowerCaseCheckbox.checked = true;
-				this.upperCaseCheckbox.checked = false;
-				this.numbersCheckbox.checked = true;
-				this.symbolsCheckbox.checked = false;
-				this.similarCheckbox.checked = false;
-				this.lowerCaseCheckbox.disabled = false;
-				this.upperCaseCheckbox.disabled = false;
-				this.numbersCheckbox.disabled = false;
-				this.symbolsCheckbox.disabled = false;
-				this.similarCheckbox.disabled = false;
+				this.lowercaseToggle.checkbox.checked = true;
+				this.uppercaseToggle.checkbox.checked = false;
+				this.numbersToggle.checkbox.checked = true;
+				this.symbolsToggle.checkbox.checked = false;
+				this.similarToggle.checkbox.checked = false;
+				this.lowercaseToggle.checkbox.disabled = false;
+				this.uppercaseToggle.checkbox.disabled = false;
+				this.numbersToggle.checkbox.disabled = false;
+				this.symbolsToggle.checkbox.disabled = false;
+				this.similarToggle.checkbox.disabled = false;
 				lengthLabel.textContent = "Length:";
 				break;
 
@@ -253,16 +226,16 @@ class PassGen extends Window {
 				this.lengthRange.min = 2;
 				this.lengthRange.value = 4;
 				this.lengthRange.max = 32;
-				this.lowerCaseCheckbox.checked = true;
-				this.upperCaseCheckbox.checked = false;
-				this.numbersCheckbox.checked = false;
-				this.symbolsCheckbox.checked = false;
-				this.similarCheckbox.checked = false;
-				this.lowerCaseCheckbox.disabled = false;
-				this.upperCaseCheckbox.disabled = false;
-				this.numbersCheckbox.disabled = false;
-				this.symbolsCheckbox.disabled = true;
-				this.similarCheckbox.disabled = true;
+				this.lowercaseToggle.checkbox.checked = true;
+				this.uppercaseToggle.checkbox.checked = false;
+				this.numbersToggle.checkbox.checked = false;
+				this.symbolsToggle.checkbox.checked = false;
+				this.similarToggle.checkbox.checked = false;
+				this.lowercaseToggle.checkbox.disabled = false;
+				this.uppercaseToggle.checkbox.disabled = false;
+				this.numbersToggle.checkbox.disabled = false;
+				this.symbolsToggle.checkbox.disabled = true;
+				this.similarToggle.checkbox.disabled = true;
 				lengthLabel.textContent = "Words:";
 				break;
 			}
@@ -273,7 +246,7 @@ class PassGen extends Window {
 			this.Generate();
 		};
 
-		this.lowerCaseCheckbox.onchange = this.upperCaseCheckbox.onchange = this.numbersCheckbox.onchange = this.symbolsCheckbox.onchange = this.similarCheckbox.onchange = ()=> this.Generate();
+		this.lowercaseToggle.checkbox.onchange = this.uppercaseToggle.checkbox.onchange = this.numbersToggle.checkbox.onchange = this.symbolsToggle.checkbox.onchange = this.similarToggle.checkbox.onchange = ()=> this.Generate();
 
 		generateButton.onclick = ()=> this.Generate();
 
@@ -309,10 +282,10 @@ class PassGen extends Window {
 				else hasSymbols = true;
 			}
 
-			this.lowerCaseCheckbox.checked = hasLowercase;
-			this.upperCaseCheckbox.checked = hasUppercase;
-			this.numbersCheckbox.checked = hasNumbers;
-			this.symbolsCheckbox.checked = hasSymbols;
+			this.lowercaseToggle.checkbox.checked = hasLowercase;
+			this.uppercaseToggle.checkbox.checked = hasUppercase;
+			this.numbersToggle.checkbox.checked = hasNumbers;
+			this.symbolsToggle.checkbox.checked = hasSymbols;
 
 			this.Strength();
 		};
@@ -343,18 +316,18 @@ class PassGen extends Window {
 	}
 
 	Generate() {
-		if (!this.lowerCaseCheckbox.checked && !this.upperCaseCheckbox.checked && !this.numbersCheckbox.checked && !this.symbolsCheckbox.checked)
-			this.lowerCaseCheckbox.checked = true;
+		if (!this.lowercaseToggle.checkbox.checked && !this.uppercaseToggle.checkbox.checked && !this.numbersToggle.checkbox.checked && !this.symbolsToggle.checkbox.checked)
+			this.lowercaseToggle.checkbox.checked = true;
 
 		if (this.cmbOptions.value === "mem") {
 			let word = "";
 			if (this.words)
 				for (let i = 0; i < this.lengthRange.value; i++) {
-					if (this.lowerCaseCheckbox.checked && this.upperCaseCheckbox.checked) {
+					if (this.lowercaseToggle.checkbox.checked && this.uppercaseToggle.checkbox.checked) {
 						let w = this.words[Math.round(Math.random() * this.words.length)];
 						word += w[0].toUpperCase() + w.substring(1);
 					}
-					else if (this.upperCaseCheckbox.checked){
+					else if (this.uppercaseToggle.checkbox.checked){
 						word += this.words[Math.round(Math.random() * this.words.length)].toUpperCase();
 					}
 					else {
@@ -364,7 +337,7 @@ class PassGen extends Window {
 					if (i+1 < this.lengthRange.value)word += "-";
 				}
 
-			if (this.numbersCheckbox.checked) {
+			if (this.numbersToggle.checkbox.checked) {
 				let temp = word;
 				word = "";
 				for (let i = 0; i < temp.length; i++)
@@ -392,23 +365,23 @@ class PassGen extends Window {
 		let pool = [];
 		let flag = [];
 
-		if (this.lowerCaseCheckbox.checked) {
-			pool.push(this.similarCheckbox.checked ? "abcdefghijklmnopqrstuvwxyz" : "abcdefghijkmnpqrstuvwxyz");
+		if (this.lowercaseToggle.checkbox.checked) {
+			pool.push(this.similarToggle.checkbox.checked ? "abcdefghijklmnopqrstuvwxyz" : "abcdefghijkmnpqrstuvwxyz");
 			flag.push(false);
 		}
 
-		if (this.upperCaseCheckbox.checked) {
-			pool.push(this.similarCheckbox.checked ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHJKLMNPQRSTUVWXYZ");
+		if (this.uppercaseToggle.checkbox.checked) {
+			pool.push(this.similarToggle.checkbox.checked ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHJKLMNPQRSTUVWXYZ");
 			flag.push(false);
 		}
 
-		if (this.symbolsCheckbox.checked) {
+		if (this.symbolsToggle.checkbox.checked) {
 			pool.push("!#$%&()*+-<=>?@^_~,./[\\]{}");
 			flag.push(false);
 		}
 
-		if (this.numbersCheckbox.checked) {
-			pool.push(this.similarCheckbox.checked ? "0123456789" : "23456789");
+		if (this.numbersToggle.checkbox.checked) {
+			pool.push(this.similarToggle.checkbox.checked ? "0123456789" : "23456789");
 			flag.push(false);
 		}
 
@@ -445,10 +418,10 @@ class PassGen extends Window {
 
 	Strength() {
 		let pool = 0;
-		if (this.numbersCheckbox.checked) pool += 10;
-		if (this.upperCaseCheckbox.checked) pool += 26;
-		if (this.lowerCaseCheckbox.checked) pool += 26;
-		if (this.symbolsCheckbox.checked) pool += 30;
+		if (this.numbersToggle.checkbox.checked) pool += 10;
+		if (this.uppercaseToggle.checkbox.checked) pool += 26;
+		if (this.lowercaseToggle.checkbox.checked) pool += 26;
+		if (this.symbolsToggle.checkbox.checked) pool += 30;
 
 		let entropy = Math.log(pool, 2) * this.passwordInput.value.length;
 		//same as     Math.log(Math.pow(pool, this.passwordInput.value.length), 2));

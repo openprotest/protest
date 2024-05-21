@@ -123,15 +123,11 @@ class Acl extends Tabs {
 		this.username.style.gridColumn = "2";
 		userDetails.append(usernameLabel, this.username);
 
-		this.domainUserCheckbox = document.createElement("input");
-		this.domainUserCheckbox.type = "checkbox";
-		this.domainUserCheckbox.checked = false;
-		userDetails.appendChild(this.domainUserCheckbox);
-		const domainUser = this.AddCheckBoxLabel(userDetails, this.domainUserCheckbox, "Domain user");
-		domainUser.style.marginLeft = "8px";
-		domainUser.style.whiteSpace = "nowrap";
-		domainUser.style.gridRow = "1";
-		domainUser.style.gridColumn = "3";
+		this.domainUserToggle = this.CreateToggle("Domain user", false, userDetails);
+		this.domainUserToggle.label.style.marginLeft = "8px";
+		this.domainUserToggle.label.style.whiteSpace = "nowrap";
+		this.domainUserToggle.label.style.gridRow = "1";
+		this.domainUserToggle.label.style.gridColumn = "3";
 
 		const domainLabel = document.createElement("div");
 		domainLabel.textContent = "Domain:";
@@ -192,8 +188,8 @@ class Acl extends Tabs {
 			this.alias.placeholder = this.username.value;
 		};
 
-		this.domainUserCheckbox.onchange = ()=> {
-			if (this.domainUserCheckbox.checked) {
+		this.domainUserToggle.checkbox.onchange = ()=> {
+			if (this.domainUserToggle.checkbox.checked) {
 				this.password.disabled = true;
 				this.domain.disabled = false;
 			}
@@ -233,7 +229,7 @@ class Acl extends Tabs {
 				return;
 			}
 
-			if (this.domainUserCheckbox.checked) {
+			if (this.domainUserToggle.checkbox.checked) {
 				if (this.domain.value.length === 0) {
 					this.ConfirmBox("Please enter domain.", true).addEventListener("click", ()=>setTimeout(this.domain.focus(), 150));
 					return;
@@ -243,7 +239,7 @@ class Acl extends Tabs {
 			this.username.setAttribute("readonly", true);
 
 			try {
-				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserCheckbox.checked}`;
+				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
 				let authorization = [];
 
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -272,7 +268,7 @@ class Acl extends Tabs {
 					}
 				}
 
-				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserCheckbox.checked, authorization);
+				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserToggle.checkbox.checked, authorization);
 				newUser.onclick();
 			}
 			catch (ex) {
@@ -396,28 +392,21 @@ class Acl extends Tabs {
 		readBox.style.gridArea = "4 / 2";
 		readBox.style.paddingLeft = "4px";
 		readBox.style.display = "inline-block";
-		const readCheckbox = document.createElement("input");
-		readCheckbox.type = "checkbox";
-		readCheckbox.checked = true;
-		readBox.appendChild(readCheckbox);
-		this.AddCheckBoxLabel(readBox, readCheckbox, "Read");
 
 		const writeBox = document.createElement("div");
 		writeBox.style.color = write ? "var(--clr-dark)" : "var(--clr-control)";
 		writeBox.style.gridArea = "4 / 2";
 		writeBox.style.paddingLeft = "4px";
 		writeBox.style.display = "inline-block";
-		const writeCheckBox = document.createElement("input");
-		writeCheckBox.type = "checkbox";
-		writeCheckBox.checked = true;
-		writeBox.appendChild(writeCheckBox);
-		this.AddCheckBoxLabel(writeBox, writeCheckBox, !read && write ? "Allow access" : "Write");
 
-		readCheckbox.checked = read;
-		readCheckbox.disabled = !read;
+		const readToggle = this.CreateToggle("Read", true, readBox);
+		const writeToggle = this.CreateToggle(!read && write ? "Allow access" : "Write", true, writeBox);
 
-		writeCheckBox.checked = write;
-		writeCheckBox.disabled = !write;
+		readToggle.checkbox.checked = read;
+		readToggle.checkbox.disabled = !read;
+
+		writeToggle.checkbox.checked = write;
+		writeToggle.checkbox.disabled = !write;
 
 		if (!read && write) {
 			container.appendChild(writeBox);
@@ -428,18 +417,18 @@ class Acl extends Tabs {
 		}
 
 		if (linked) {
-			readCheckbox.onchange = ()=>{
-				if (!readCheckbox.checked) writeCheckBox.checked = false;
+			readToggle.checkbox.onchange = ()=>{
+				if (!readToggle.checkbox.checked) writeToggle.checkbox.checked = false;
 			};
-			writeCheckBox.onchange = ()=>{
-				if (writeCheckBox.checked) readCheckbox.checked = true;
+			writeToggle.checkbox.onchange = ()=>{
+				if (writeToggle.checkbox.checked) readToggle.checkbox.checked = true;
 			};
 		}
 
 		return {
 			name: name,
-			read: readCheckbox,
-			write: writeCheckBox,
+			read: readToggle.checkbox,
+			write: writeToggle.checkbox,
 		};
 	}
 
@@ -497,9 +486,9 @@ class Acl extends Tabs {
 			this.password.value = "";
 			this.alias.value = alias;
 			this.color.value = color;
-			this.domainUserCheckbox.checked = isDomain;
+			this.domainUserToggle.checkbox.checked = isDomain;
 
-			this.domainUserCheckbox.onchange();
+			this.domainUserToggle.checkbox.onchange();
 
 			for (let i=0; i<this.permissionsList.length; i++) {
 				this.permissionsList[i].read.checked = false;

@@ -74,11 +74,6 @@ class Terminal extends Window {
 		super.Close();
 	}
 
-	AfterResize() { //overrides
-		super.AfterResize();
-		//TODO:
-	}
-
 	ConnectDialog(target="", isNew=false) {} //overridable
 
 	OptionsDialog() {

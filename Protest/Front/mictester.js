@@ -73,17 +73,13 @@ class MicTester extends Window {
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const echoCancellationCheckbox = document.createElement("input");
-		echoCancellationCheckbox.type = "checkbox";
-		innerBox.appendChild(echoCancellationCheckbox);
-		this.AddCheckBoxLabel(innerBox, echoCancellationCheckbox, "Echo cancellation").style.paddingBottom = "16px";
+		const echoCancellationToggle = this.CreateToggle("Echo cancellation", false, innerBox);
+		echoCancellationToggle.label.style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		const noiseSuppressionCheckbox = document.createElement("input");
-		noiseSuppressionCheckbox.type = "checkbox";
-		innerBox.appendChild(noiseSuppressionCheckbox);
-		this.AddCheckBoxLabel(innerBox, noiseSuppressionCheckbox, "Noise suppression").style.paddingBottom = "16px";
+		const noiseSuppressionToggle = this.CreateToggle("Noise suppression", false, innerBox);
+		noiseSuppressionToggle.label.style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
@@ -163,16 +159,16 @@ class MicTester extends Window {
 		resUltraOption.text = "Ultra";
 		graphResolutionInput.append(resVeryLowOption, resLowOption, resMedOption, resHighOption, resVeryHighOption, resUltraOption);
 
-		echoCancellationCheckbox.checked = this.params.echoCancellation;
-		noiseSuppressionCheckbox.checked = this.params.noiseSuppression;
+		echoCancellationToggle.checkbox.checked = this.params.echoCancellation;
+		noiseSuppressionToggle.checkbox.checked = this.params.noiseSuppression;
 		sampleSizeInput.value = this.params.sampleSize;
 		sampleRateInput.value = this.params.sampleRate;
 		graphResolutionInput.value = this.params.graphResolution;
 
 		okButton.onclick = async ()=> {
 			this.params.graphResolution = parseInt(graphResolutionInput.value);
-			this.params.echoCancellation = echoCancellationCheckbox.checked;
-			this.params.noiseSuppression = noiseSuppressionCheckbox.checked;
+			this.params.echoCancellation = echoCancellationToggle.checkbox.checked;
+			this.params.noiseSuppression = noiseSuppressionToggle.checkbox.checked;
 			this.params.sampleSize = parseInt(sampleSizeInput.value);
 			this.params.sampleRate = parseInt(sampleRateInput.value);
 

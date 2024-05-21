@@ -730,20 +730,17 @@ class Settings extends Tabs {
 		colorInput.type = "color";
 		innerBox.append(colorLabel, colorInput);
 
-		const trustedCheckbox = document.createElement("input");
-		trustedCheckbox.type = "checkbox";
-		trustedCheckbox.checked = false;
 		const trustedBox = document.createElement("div");
 		trustedBox.style.gridArea = "4 / 2 / 4 / 4";
-		trustedBox.appendChild(trustedCheckbox);
 		innerBox.append(trustedBox);
-		const domainUser = this.AddCheckBoxLabel(trustedBox, trustedCheckbox, "Trusted zone");
+
+		const trustedToggle = this.CreateToggle("Trusted zone", false, trustedBox);
 
 		if (object) {
 			nameInput.value    = object.name;
 			networkInput.value = object.network;
 			colorInput.value   = object.color;
-			trustedCheckbox.checked = object.isTrusted;
+			trustedToggle.checkbox.checked = object.isTrusted;
 		}
 
 		okButton.addEventListener("click", async ()=>{
@@ -758,7 +755,7 @@ class Settings extends Tabs {
 				name     : nameInput.value,
 				network  : networkInput.value,
 				color    : colorInput.value,
-				isTrusted: trustedCheckbox.checked
+				isTrusted: trustedToggle.checkbox.checked
 			};
 
 			if (isNew) {
@@ -838,11 +835,8 @@ class Settings extends Tabs {
 		const sslBox = document.createElement("div");
 		sslBox.style.gridArea = "6 / 2";
 		innerBox.appendChild(sslBox);
-		const sslCheckbox = document.createElement("input");
-		sslCheckbox.type = "checkbox";
-		sslCheckbox.checked = true;
-		sslBox.appendChild(sslCheckbox);
-		this.AddCheckBoxLabel(sslBox, sslCheckbox, "SSL");
+
+		const sslToggle = this.CreateToggle("SSL", true, sslBox);
 
 		if (object) {
 			serverInput.value = object.server
@@ -850,7 +844,7 @@ class Settings extends Tabs {
 			senderInput.value = object.sender;
 			usernameInput.value = object.username;
 			passwordInput.value = object.password;
-			sslCheckbox.checked = object.ssl;
+			sslToggle.checkbox.checked = object.ssl;
 		}
 
 		okButton.addEventListener("click", async ()=> {
@@ -867,7 +861,7 @@ class Settings extends Tabs {
 				sender     : senderInput.value,
 				username   : usernameInput.value,
 				password   : passwordInput.value,
-				ssl        : sslCheckbox.checked,
+				ssl        : sslToggle.checkbox.checked,
 			};
 
 			if (object && object.guid) newObject.guid = object.guid;

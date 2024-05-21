@@ -229,54 +229,31 @@ class DnsLookup extends Console {
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const standardCheckbox = document.createElement("input");
-		standardCheckbox.type = "checkbox";
-		standardCheckbox.checked = this.params.isStandard;
-		innerBox.appendChild(standardCheckbox);
-		this.AddCheckBoxLabel(innerBox, standardCheckbox, "Standard");
-
+		const standardToggle = this.CreateToggle("Standard", this.params.isStandard, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const inverseCheckbox = document.createElement("input");
-		inverseCheckbox.type = "checkbox";
-		inverseCheckbox.checked = this.params.isInverse;
-		innerBox.appendChild(inverseCheckbox);
-		this.AddCheckBoxLabel(innerBox, inverseCheckbox, "Inverse lookup");
-
+		const inverseToggle = this.CreateToggle("Inverse lookup", this.params.isInverse, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const serverStatusCheckbox = document.createElement("input");
-		serverStatusCheckbox.type = "checkbox";
-		serverStatusCheckbox.checked = this.params.serverStatus;
-		innerBox.appendChild(serverStatusCheckbox);
-		this.AddCheckBoxLabel(innerBox, serverStatusCheckbox, "Request server status");
-
+		const serverStatusToggle = this.CreateToggle("Request server status", this.params.serverStatus, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const truncatedCheckbox = document.createElement("input");
-		truncatedCheckbox.type = "checkbox";
-		truncatedCheckbox.checked = this.params.isTruncated;
-		innerBox.appendChild(truncatedCheckbox);
-		this.AddCheckBoxLabel(innerBox, truncatedCheckbox, "Truncated");
-
+		const truncatedToggle = this.CreateToggle("Truncated", this.params.isTruncated, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const recursiveCheckbox = document.createElement("input");
-		recursiveCheckbox.type = "checkbox";
-		recursiveCheckbox.checked = this.params.isRecursive;
-		innerBox.appendChild(recursiveCheckbox);
-		this.AddCheckBoxLabel(innerBox, recursiveCheckbox, "Recursive");
+		const recursiveToggle = this.CreateToggle("Recursive", this.params.isRecursive, innerBox);
+		innerBox.appendChild(document.createElement("br"));
 
 		const Apply = ()=> {
 			this.params.server       = dnsServerInput.value;
 			this.params.type         = recordTypeInput.value;
 			this.params.timeout      = timeoutInput.value;
 			this.params.transport    = transportMethodInput.value;
-			this.params.isStandard   = standardCheckbox.checked;
-			this.params.isInverse    = inverseCheckbox.checked;
-			this.params.serverStatus = serverStatusCheckbox.checked;
-			this.params.isTruncated  = truncatedCheckbox.checked;
-			this.params.isRecursive  = recursiveCheckbox.checked;
+			this.params.isStandard   = standardToggle.checkbox.checked;
+			this.params.isInverse    = inverseToggle.checkbox.checked;
+			this.params.serverStatus = serverStatusToggle.checkbox.checked;
+			this.params.isTruncated  = truncatedToggle.checkbox.checked;
+			this.params.isRecursive  = recursiveToggle.checkbox.checked;
 
 			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=> o[0] === this.params.type)[2])}`;
 			this.SetTitle(this.params.server === "" ? "DNS lookup" : `DNS lookup: ${this.params.server}`);
@@ -297,19 +274,19 @@ class DnsLookup extends Console {
 		transportMethodInput.onchange = ()=> {
 			if (transportMethodInput.value === "HTTPS") {
 				timeoutInput.disabled      = true;
-				standardCheckbox.disabled     = true;
-				inverseCheckbox.disabled      = true;
-				serverStatusCheckbox.disabled = true;
-				truncatedCheckbox.disabled    = true;
-				recursiveCheckbox.disabled    = true;
+				standardToggle.checkbox.disabled     = true;
+				inverseToggle.checkbox.disabled      = true;
+				serverStatusToggle.checkbox.disabled = true;
+				truncatedToggle.checkbox.disabled    = true;
+				recursiveToggle.checkbox.disabled    = true;
 			}
 			else {
 				timeoutInput.disabled      = false;
-				standardCheckbox.disabled     = false;
-				inverseCheckbox.disabled      = false;
-				serverStatusCheckbox.disabled = false;
-				truncatedCheckbox.disabled    = false;
-				recursiveCheckbox.disabled    = false;
+				standardToggle.checkbox.disabled     = false;
+				inverseToggle.checkbox.disabled      = false;
+				serverStatusToggle.checkbox.disabled = false;
+				truncatedToggle.checkbox.disabled    = false;
+				recursiveToggle.checkbox.disabled    = false;
 			}
 		};
 

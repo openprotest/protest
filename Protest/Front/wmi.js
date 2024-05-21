@@ -231,16 +231,11 @@ class Wmi extends Window {
 					className.toLowerCase() === classObject.class.toLowerCase() && lastPropertiesArray.includes(classObject.properties[j].toLowerCase());
 
 				const propertyBox = document.createElement("div");
-				const propertyCheckbox = document.createElement("input");
-				propertyCheckbox.type = "checkbox";
-				propertyCheckbox.checked = value;
-				propertyCheckboxes.push(propertyCheckbox);
-				propertyBox.appendChild(propertyCheckbox);
-
+				propertiesList.appendChild(propertyBox);
 				properties.push(value);
 
-				this.AddCheckBoxLabel(propertyBox, propertyCheckbox, classObject.properties[j]);
-				propertiesList.appendChild(propertyBox);
+				const propertyToggle = this.CreateToggle(classObject.properties[j], value, propertyBox);
+				propertyCheckboxes.push(propertyToggle.checkbox);
 			}
 
 			const OnCheckedChange = ()=> {

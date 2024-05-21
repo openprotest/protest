@@ -210,7 +210,7 @@ class Gandalf extends Window {
 				else if (this.thresholdRange.value < 36)  strength = "Weak";
 				else if (this.thresholdRange.value < 60)  strength = "Reasonable";
 				else if (this.thresholdRange.value < 128) strength = "Strong";
-				else                                    strength = "Overkill";
+				else                                      strength = "Overkill";
 
 				thresholdValueLabel.textContent = `${this.thresholdRange.value}-bits (${strength} or bellow)`;
 

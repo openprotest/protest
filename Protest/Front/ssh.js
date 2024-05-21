@@ -58,20 +58,18 @@ class Ssh extends Terminal {
 		passwordInput.style.width = "calc(100% - 120px)";
 		innerBox.append(passwordLabel, passwordInput);
 
-		const rememberPasswordCheckBox = document.createElement("input");
-		rememberPasswordCheckBox.type = "checkbox";
-		innerBox.appendChild(rememberPasswordCheckBox);
-		this.AddCheckBoxLabel(innerBox, rememberPasswordCheckBox, "Remember password").style.margin = "8px 0px 0px 4px";
+		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
+		rememberPasswordToggle.label.style.margin = "8px 0px 0px 4px";
 
 		if ("password" in this.params) {
-			rememberPasswordCheckBox.checked = true;
+			rememberPasswordToggle.checkbox.checked = true;
 			passwordInput.value = this.params.password;
 		}
 
 		okButton.onclick = ()=> {
 			this.params.username = usernameInput.value.trim();
 
-			if (rememberPasswordCheckBox.checked) {
+			if (rememberPasswordToggle.checkbox.checked) {
 				this.params.password = passwordInput.value;
 			}
 			else {

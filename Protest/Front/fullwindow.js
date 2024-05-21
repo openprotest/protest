@@ -255,7 +255,6 @@ class Window {
 		return this.floating;
 	}
 
-
 	SetTitle(title = "") {
 		document.title = title;
 	}
@@ -276,6 +275,17 @@ class Window {
 	}
 
 	BringToFront() {}
+
+	CreateToggle(text, value, parent) {
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.checked = value;
+
+		parent.appendChild(checkbox);
+		const label = this.AddCheckBoxLabel(parent, checkbox, text);
+
+		return {checkbox: checkbox, label: label};
+	}
 
 	AddCheckBoxLabel(parent, checkbox, label) {
 		let id = Date.now() + Math.random() * 1000;

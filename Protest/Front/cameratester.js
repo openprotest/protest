@@ -72,26 +72,22 @@ class CameraTester extends Window {
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const force4KCheckbox = document.createElement("input");
-		force4KCheckbox.type = "checkbox";
-		innerBox.appendChild(force4KCheckbox);
-		this.AddCheckBoxLabel(innerBox, force4KCheckbox, "Force 4K resolution").style.paddingBottom = "16px";
+		const force4KToggle = this.CreateToggle("Force 4K resolution", false, innerBox);
+		force4KToggle.label.style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		const audioCheckbox = document.createElement("input");
-		audioCheckbox.type = "checkbox";
-		innerBox.appendChild(audioCheckbox);
-		this.AddCheckBoxLabel(innerBox, audioCheckbox, "Record audio").style.paddingBottom = "16px";
+		const audioToggle = this.CreateToggle("Record audio", false, innerBox);
+		audioToggle.label.style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		force4KCheckbox.checked = this.params.force4K;
-		audioCheckbox.checked = this.params.audio;
+		force4KToggle.checkbox.checked = this.params.force4K;
+		audioToggle.checkbox.checked = this.params.audio;
 
 		okButton.onclick = async ()=> {
-			this.params.force4K = force4KCheckbox.checked;
-			this.params.audio = audioCheckbox.checked;
+			this.params.force4K = force4KToggle.checkbox.checked;
+			this.params.audio = audioToggle.checkbox.checked;
 			dialog.Close();
 		};
 	}
