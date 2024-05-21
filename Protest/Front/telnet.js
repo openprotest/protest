@@ -105,7 +105,7 @@ class Telnet extends Terminal {
 		this.ws.onmessage = e=> {
 			let json = JSON.parse(e.data);
 			if (json.connected) {
-				this.SetTitle(`Secure shell - ${target}`);
+				this.SetTitle(`Telnet - ${target}`);
 				this.statusBox.style.display = "none";
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
 
