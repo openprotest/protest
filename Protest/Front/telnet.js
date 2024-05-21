@@ -38,7 +38,7 @@ class Telnet extends Terminal {
 			dialog.Close();
 			this.Connect(hostInput.value.trim());
 		};
-		
+
 		if (isNew) {
 			cancelButton.value = "Close";
 			cancelButton.onclick = ()=> {

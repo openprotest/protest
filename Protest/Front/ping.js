@@ -176,7 +176,7 @@ class Ping extends Console {
 		minimap.style.borderRadius = "4px";
 		this.content.appendChild(minimap);
 	}
-	
+
 	Close() { //overrides
 		if (this.ws != null) this.ws.close();
 		super.Close();

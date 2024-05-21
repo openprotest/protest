@@ -94,11 +94,11 @@ class Wmi extends Window {
 			}
 		};
 
-		
+
 		if (this.params.target.length > 0 && this.params.query.length > 0) {
 			this.executeButton.onclick();
 		}
-		
+
 		if (this.params.hideInput) {
 			toggleButton.onclick();
 		}
@@ -297,7 +297,7 @@ class Wmi extends Window {
 						if (selected != null) selected.style.backgroundColor = "";
 
 						propertiesList.textContent = "";
-						
+
 						ListProperties(this.wmiClasses.classes[i]);
 
 						selected = newClass;
@@ -322,7 +322,7 @@ class Wmi extends Window {
 						this.queryInput.value = previewInput.value;
 						okButton.onclick();
 					};
-					
+
 					if (className && className === this.wmiClasses.classes[i].class.toLowerCase()) {
 						newClass.scrollIntoView({ behavior: "smooth"});
 

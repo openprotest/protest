@@ -603,7 +603,7 @@ class List extends Window {
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
-		
+
 		innerBox.style.display = "grid";
 		innerBox.style.padding = "8px";
 		innerBox.style.gridGap = "4px";

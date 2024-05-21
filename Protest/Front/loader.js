@@ -362,7 +362,7 @@ const LOADER = {
 				return WIN.array[i];
 			}
 		}
-		
+
 		return new UserView({ file: file });
 	},
 

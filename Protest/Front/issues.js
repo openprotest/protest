@@ -1,7 +1,7 @@
 class Issues extends List {
 	constructor() {
 		super();
-		
+
 		this.AddCssDependencies("list.css");
 
 		const columns = ["Host", "Category", "Issue", "Last Update"];

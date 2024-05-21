@@ -43,7 +43,7 @@ class Snmp extends Window {
 		this.communityInput.style.minWidth = "50px";
 		this.communityInput.value = this.params.community;
 		snmpInput.appendChild(this.communityInput);
-		
+
 		this.credentialsInput = document.createElement("select");
 		this.credentialsInput.style.gridArea = "2 / 2";
 		this.credentialsInput.style.marginRight = "0";
@@ -178,7 +178,7 @@ class Snmp extends Window {
 			if (json.error) throw(json.error);
 
 			this.snmpProfiles = json;
-			
+
 			for (let i = 0; i < json.length; i++) {
 				const newOption = document.createElement("option");
 				newOption.value = json[i].guid;

@@ -250,17 +250,17 @@
 	height: 32px;
 	border-radius: 2px;
 	margin: 4px;
-	
+
 	background: linear-gradient(to bottom,
-    var(--clr-control) 11.11%,
-    transparent 11.11%, transparent 22.22%,
-    var(--clr-control) 22.22%, var(--clr-control) 33.33%,
-    transparent 33.33%, transparent 44.44%,
-    var(--clr-control) 44.44%, var(--clr-control) 55.55%,
-    transparent 55.55%, transparent 66.66%,
-    var(--clr-control) 66.66%, var(--clr-control) 77.77%,
-    transparent 77.77%, transparent 88.88%,
-    var(--clr-control) 88.88%);
+	var(--clr-control) 11.11%,
+	transparent 11.11%, transparent 22.22%,
+	var(--clr-control) 22.22%, var(--clr-control) 33.33%,
+	transparent 33.33%, transparent 44.44%,
+	var(--clr-control) 44.44%, var(--clr-control) 55.55%,
+	transparent 55.55%, transparent 66.66%,
+	var(--clr-control) 66.66%, var(--clr-control) 77.77%,
+	transparent 77.77%, transparent 88.88%,
+	var(--clr-control) 88.88%);
 }
 
 .win-content {

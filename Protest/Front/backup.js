@@ -10,7 +10,7 @@ class Backup extends List {
 		this.defaultColumns = ["name", "date", "size"];
 		this.SetupColumns(this.defaultColumns);
 		this.columnsOptions.style.display = "none";
-	
+
 		this.SetupToolbar();
 		const createButton = this.AddToolbarButton("Create", "mono/add.svg?light");
 		const deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
@@ -69,10 +69,10 @@ class Backup extends List {
 			try {
 				const response = await fetch(`config/backup/create?name=${encodeURIComponent(nameInput.value)}`);
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-	
+
 				this.link = json;
 				this.RefreshList();
 			}
@@ -216,7 +216,7 @@ class Backup extends List {
 		element.style.backgroundSize = "24px 24px";
 		element.style.backgroundPosition = "4px 4px";
 		element.style.backgroundRepeat = "no-repeat";
-		
+
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 

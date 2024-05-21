@@ -1456,7 +1456,7 @@ class Watchdog extends Window {
 			else {
 				date -= dateHours * Watchdog.HOUR_TICKS;
 			}
-			
+
 			let right = (this.utcToday - date - this.timezoneOffset) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels*2) break;
 

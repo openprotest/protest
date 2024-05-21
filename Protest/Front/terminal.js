@@ -206,7 +206,7 @@ class Terminal extends Window {
 			if (this.ws === null || this.ws.readyState != 1) {
 				return;
 			}
-			
+
 			if (this.bracketedMode) {
 				this.ws.send(`\x1b[200~${keyText.value}\x1b[201~`);
 			}
@@ -220,7 +220,7 @@ class Terminal extends Window {
 
 	Terminal_onkeydown(event) {
 		event.preventDefault();
-	
+
 		if (this.ws === null || this.ws.readyState != 1) {
 			return;
 		}
@@ -290,11 +290,11 @@ class Terminal extends Window {
 	HandleMessage(data) {
 		for (let i=0; i<data.length; i++) {
 			let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
-	
+
 			if (!char) {
 				char = document.createElement("span");
 				char.style.left = `${this.cursor.x * Terminal.CURSOR_WIDTH}px`;
-				char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;	
+				char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
 				this.content.appendChild(char);
 				this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
 			}
@@ -359,7 +359,7 @@ class Terminal extends Window {
 
 			default:
 				char.textContent = data[i];
-				
+
 				let foreColor, backColor;
 				if (this.isInverse) {
 					foreColor = this.backColor ?? "rgb(32,32,32)";
@@ -399,7 +399,7 @@ class Terminal extends Window {
 
 	HandleEscSequence(data, index) { //Control Sequence Introducer
 		if (index + 1 >= data.length) return 1;
-		
+
 		switch (data[index+1]) {
 		case "[": return this.HandleCSI(data, index);
 		case "P": return this.HandleDCS(data, index);
@@ -489,7 +489,7 @@ class Terminal extends Window {
 		case "P":this.DeleteN(params[0] || 1); break;
 		//case "S": break; //not ANSI
 		//case "T": break; //not ANSI
-		
+
 		case "h": //show cursor
 			switch (params[0]) {
 			case 25: this.cursorElement.style.visibility = "visible"; break;
@@ -552,18 +552,18 @@ class Terminal extends Window {
 			case "2": //set title
 				this.SetTitle(`Secure shell - ${this.params.host} - ${params.join(";")}`);
 				break;
-	
+
 			case "10": //set foreground color
 				break;
-	
+
 			case "11": //set background color
 				break;
-	
+
 			default:
 				console.warn(`Unhandled OSC command: ${command}`);
 				break;
 		}
-	
+
 		return end - index + 1;
 	}
 
@@ -577,7 +577,7 @@ class Terminal extends Window {
 			case 5: return "#bc3fbc"; //magenta
 			case 6: return "#2cb5e9"; //cyan
 			case 7: return "#ccc";    //white
-		
+
 			case 8: return "#888";  //gray
 			case 9: return "#f00";  //bright red
 			case 10: return "#0f0"; //bright green
@@ -643,7 +643,7 @@ class Terminal extends Window {
 			case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
 				this.foreColor = this.MapColorId(params[i] - 30);
 				break;
-			
+
 			case 38: //set foreground color
 				if (params.length < 3) break;
 
@@ -660,7 +660,6 @@ class Terminal extends Window {
 				}
 				break;
 
-			
 			case 39: //reset foreground color
 				this.foreColor = null;
 				break;
@@ -710,7 +709,7 @@ class Terminal extends Window {
 	EnableAlternateScreen() { //?1049h
 		this.savedScreen = this.screen;
 		this.ClearScreen();
-		
+
 		this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
 	}
 

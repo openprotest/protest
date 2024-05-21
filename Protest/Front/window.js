@@ -475,21 +475,21 @@ class Window {
 					contextmenu.style.top    = `${event.y}px`;
 					contextmenu.style.bottom = "unset";
 					break;
-					
+
 				case "right":
 					contextmenu.style.left   = "unset";
 					contextmenu.style.right  = "8px";
 					contextmenu.style.top    = `${event.y}px`;
 					contextmenu.style.bottom = "unset";
 					break;
-				
+
 				case "top":
 					contextmenu.style.left   = `${event.x}px`;
 					contextmenu.style.right  = "unset";
 					contextmenu.style.top    = "8px";
 					contextmenu.style.bottom = "unset";
 					break;
-				
+
 				default: //bottom
 					contextmenu.style.left   = `${event.x}px`;
 					contextmenu.style.right  = "unset";

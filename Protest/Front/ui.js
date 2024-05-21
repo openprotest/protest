@@ -222,7 +222,7 @@ const UI = {
 			pingResult > 260 && pingResult <= 400
 			? 66 + (70 - Math.abs(pingResult - 330)) / 2
 			: 66;
-		
+
 		return `hsl(${Math.round(92 + pingResult / 2.2)},${calculatedSaturation}%,${calculatedLightness}%)`;
 	},
 
@@ -259,7 +259,7 @@ const UI = {
 		if (bps < 8_192 * Math.pow(1024,7)) return `${(bps / Math.pow(1024,7)).toFixed(2)}YBps`;
 		if (bps < 8_192 * Math.pow(1024,8)) return `${(bps / Math.pow(1024,8)).toFixed(2)}BBps`;
 	},
-	
+
 	BitsPerSecToString: bps=> {
 		if (bps < 8_000) return `${bps} bps`;
 		if (bps < 8_000 * 1000) return `${Math.floor(bps / 1000)} Kbps`;
@@ -424,7 +424,7 @@ const MENU = {
 
 		attachedmenubutton.style.transform = "none";
 		attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
-		
+
 		switch (UI.taskbarPosition) {
 		case "top":
 			logo.style.top = "-24px";
@@ -597,7 +597,7 @@ const MENU = {
 				item.textContent = MENU.items[i].t;
 				item.style.backgroundImage = `url(${MENU.items[i].i})`;
 				menulist.appendChild(item);
-	
+
 				MENU.list.push(item);
 				MENU.ItemEvent(item, MENU.items[i].f);
 
@@ -643,7 +643,7 @@ const MENU = {
 					item.className = "menu-list-item";
 					item.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
 					item.textContent = title;
-	
+
 					if (LOADER.devices.data[file].ip && LOADER.devices.data[file].ip.v.length > 0) {
 						item.style.lineHeight = "26px";
 						const info = document.createElement("div");
@@ -656,7 +656,7 @@ const MENU = {
 					MENU.ItemEvent(item, ()=> {
 						LOADER.OpenDeviceByFile(file);
 					});
-	
+
 					if (!isGrid) {
 						cache[file] = item;
 					}
@@ -1246,7 +1246,7 @@ taskbar.onmouseup = event=> {
 		contextmenu.style.top    = `${event.y}px`;
 		contextmenu.style.bottom = "unset";
 		break;
-	
+
 	case "right":
 		contextmenu.style.left   = "unset";
 		contextmenu.style.right  = "8px";

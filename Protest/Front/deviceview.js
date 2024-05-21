@@ -145,7 +145,7 @@ class DeviceView extends View {
 			else {
 				this.ConfirmBox("No IP or Hostname", true);
 			}
-			
+
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Ping)) continue;
 				WIN.array[i].Filter(target);
@@ -251,7 +251,7 @@ class DeviceView extends View {
 			else {
 				this.ConfirmBox("No MAC address", true);
 			}
-			
+
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof MacLookup)) continue;
 				WIN.array[i].Filter(mac);

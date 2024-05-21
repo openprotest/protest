@@ -331,7 +331,7 @@ class Monitor extends Window {
 				action: "interval",
 				value: intervalInput.value.toString()
 			}));
-			
+
 			this.startButton.disabled = false;
 			this.pauseButton.disabled = true;
 			dialog.Close();
@@ -889,7 +889,7 @@ class Monitor extends Window {
 			classFilterInput.type = "text";
 			classFilterInput.placeholder = "Find..";
 			classFilterInput.style.gridArea = "1 / 1";
-	
+
 			innerBox.append(classFilterInput);
 
 			const classesList = document.createElement("div");
@@ -914,7 +914,7 @@ class Monitor extends Window {
 
 			optionsBox.appendChild(propertiesDatalist);
 			optionsBox.appendChild(unitDatalist);
-			
+
 			innerBox.append(classesList, propertiesList, optionsBox);
 
 			const nameLabel = document.createElement("div");
@@ -1286,7 +1286,7 @@ class Monitor extends Window {
 		}
 
 		this.chartsList.push(this.CreateChartElement(name, options));
-		
+
 		if (this.socket) {
 			if (options.protocol === "wmi") {
 				this.socket.send(JSON.stringify({
@@ -1331,7 +1331,7 @@ class Monitor extends Window {
 			const removeButton = document.createElement("div");
 			removeButton.className = "monitor-remove";
 			container.appendChild(removeButton);
-	
+
 			removeButton.onclick = ()=> {
 				this.scrollable.removeChild(container);
 
@@ -1477,7 +1477,7 @@ class Monitor extends Window {
 				ctx.lineWidth = 1;
 				ctx.strokeStyle = "#C0C0C080";
 				ctx.setLineDash([2, 2]);
-				
+
 				ctx.beginPath();
 				ctx.moveTo(0, height - height * peak / spectrum);
 				ctx.lineTo(canvas.width, height - height * peak / spectrum);
@@ -1561,7 +1561,7 @@ class Monitor extends Window {
 					ctx[j].lineWidth = 1;
 					ctx[j].strokeStyle = "#C0C0C080";
 					ctx[j].setLineDash([2, 2]);
-					
+
 					ctx[j].beginPath();
 					ctx[j].moveTo(0, height - height * peak / spectrum);
 					ctx[j].lineTo(canvases[j].width, height - height * peak / spectrum);
@@ -1685,7 +1685,7 @@ class Monitor extends Window {
 				ctx.lineWidth = 1;
 				ctx.strokeStyle = "#C0C0C080";
 				ctx.setLineDash([2, 2]);
-				
+
 				ctx.beginPath();
 				ctx.moveTo(0, height - height * peak / spectrum);
 				ctx.lineTo(canvas.width, height - height * peak / spectrum);
@@ -1811,7 +1811,7 @@ class Monitor extends Window {
 				const td = document.createElement("td");
 				td.textContent = keys[i];
 				tr.appendChild(td);
-				
+
 				for (let j=0; j<values[i].length; j++) {
 					const td = document.createElement("td");
 					td.textContent = values[i][j];
@@ -1844,7 +1844,7 @@ class Monitor extends Window {
 			const keys = Object.keys(value);
 			const values = Object.values(value);
 			const count = values[0].length;
-			
+
 			valueLabel.textContent = `Count: ${count}`;
 			table.textContent = "";
 

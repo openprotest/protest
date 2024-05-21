@@ -85,7 +85,7 @@ class Ssh extends Terminal {
 				passwordInput.value
 			);
 		};
-		
+
 		if (isNew) {
 			cancelButton.value = "Close";
 			cancelButton.onclick = ()=> {

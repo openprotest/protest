@@ -915,7 +915,7 @@ class Settings extends Tabs {
 		versionInput.style.gridArea = "2 / 3";
 		versionInput.disabled = true;
 		innerBox.append(versionLabel, versionInput);
-		
+
 		const optionVer = document.createElement("option");
 		optionVer.value = 3;
 		optionVer.textContent = "Version 3";
@@ -937,14 +937,14 @@ class Settings extends Tabs {
 		usernameInput.style.gridArea = "5 / 3";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
-		
+
 		const authAlgorithmLabel = document.createElement("div");
 		authAlgorithmLabel.style.gridArea = "6 / 2";
 		authAlgorithmLabel.textContent = "Authentication algorithm:";
 		const authAlgorithmInput = document.createElement("select");
 		authAlgorithmInput.style.gridArea = "6 / 3";
 		innerBox.append(authAlgorithmLabel, authAlgorithmInput);
-		
+
 		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 		for (let i=0; i<authAlgorithms.length; i++) {
 			const option = document.createElement("option");
@@ -961,14 +961,14 @@ class Settings extends Tabs {
 		authPasswordInput.type = "password";
 		authPasswordInput.placeholder = "unchanged";
 		innerBox.append(authPasswordLabel, authPasswordInput);
-		
+
 		const privacyAlgorithmLabel = document.createElement("div");
 		privacyAlgorithmLabel.style.gridArea = "9 / 2";
 		privacyAlgorithmLabel.textContent = "Privacy algorithm:";
 		const privacyAlgorithmInput = document.createElement("select");
 		privacyAlgorithmInput.style.gridArea = "9 / 3";
 		innerBox.append(privacyAlgorithmLabel, privacyAlgorithmInput);
-		
+
 		const privacyAlgorithms = ["DES", "AES-128", "AES-192", "AES-256"];
 		for (let i=0; i<privacyAlgorithms.length; i++) {
 			const option = document.createElement("option");
@@ -1019,7 +1019,7 @@ class Settings extends Tabs {
 		privacyObsoleteBox.style.transition = ".2s";
 
 		innerBox.append(authObsoleteBox, privacyObsoleteBox);
-		
+
 		if (object) {
 			nameInput.value = object.name;
 			versionInput.value = object.version;
