@@ -143,8 +143,7 @@ class Wmi extends Window {
 		const dialog = this.DialogBox("640px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.style.margin = "16px";
 		innerBox.style.display = "grid";

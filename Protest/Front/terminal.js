@@ -9,7 +9,7 @@ class Terminal extends Window {
 
 		if (!("ansi" in this.params)) this.params.ansi = true;
 		if (!("autoScroll" in this.params)) this.params.autoScroll = true;
-		if (!("bell" in this.params)) this.params.autoScroll = false;
+		if (!("bell" in this.params)) this.params.bell = false;
 
 		this.AddCssDependencies("terminal.css");
 
@@ -85,42 +85,28 @@ class Terminal extends Window {
 		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
 
-		const ansiCheckbox = document.createElement("input");
-		ansiCheckbox.type = "checkbox";
-		ansiCheckbox.checked = this.params.ansi;
-		innerBox.appendChild(ansiCheckbox);
-		this.AddCheckBoxLabel(innerBox, ansiCheckbox, "Escape ANSI codes");
+		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.params.ansi, innerBox);
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const bellCheckbox = document.createElement("input");
-		bellCheckbox.type = "checkbox";
-		bellCheckbox.checked = this.params.bell;
-		innerBox.appendChild(bellCheckbox);
-		this.AddCheckBoxLabel(innerBox, bellCheckbox, "Play bell sound");
+		const bellToggle = this.CreateToggle("Play bell sound", this.params.bell, innerBox);
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const autoScrollCheckbox = document.createElement("input");
-		autoScrollCheckbox.type = "checkbox";
-		autoScrollCheckbox.checked = this.params.autoScroll ?? true;
-		innerBox.appendChild(autoScrollCheckbox);
-		this.AddCheckBoxLabel(innerBox, autoScrollCheckbox, "Auto-scroll");
+		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.params.autoScroll, innerBox);
 
 		okButton.onclick = ()=> {
-			this.params.ansi = ansiCheckbox.checked;
-			this.params.bell = bellCheckbox.checked;
-			this.params.autoScroll = autoScrollCheckbox.checked;
+			this.params.ansi = ansiToggle.checkbox.checked;
+			this.params.bell = bellToggle.checkbox.checked;
+			this.params.autoScroll = autoScrollToggle.checkbox.checked;
 			dialog.Close();
 		};
 	}
@@ -155,29 +141,15 @@ class Terminal extends Window {
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const shiftCheckbox = document.createElement("input");
-		shiftCheckbox.type = "checkbox";
-		shiftCheckbox.checked = false;
-		innerBox.appendChild(shiftCheckbox);
-		this.AddCheckBoxLabel(innerBox, shiftCheckbox, "Shift").style.margin = "4px 1px";
+		const shift = this.CreateToggle("Shift", false, innerBox);
+		const ctrl  = this.CreateToggle("Ctrl", false, innerBox);
+		const alt   = this.CreateToggle("Alt", false, innerBox);
+		const altGr = this.CreateToggle("Alt gr", false, innerBox);
 
-		const ctrlCheckbox = document.createElement("input");
-		ctrlCheckbox.type = "checkbox";
-		ctrlCheckbox.checked = false;
-		innerBox.appendChild(ctrlCheckbox);
-		this.AddCheckBoxLabel(innerBox, ctrlCheckbox, "Ctrl").style.margin = "4px 1px";
-
-		const altCheckbox = document.createElement("input");
-		altCheckbox.type = "checkbox";
-		altCheckbox.checked = false;
-		innerBox.appendChild(altCheckbox);
-		this.AddCheckBoxLabel(innerBox, altCheckbox, "Alt").style.margin = "4px 1px";
-
-		const altGrCheckbox = document.createElement("input");
-		altGrCheckbox.type = "checkbox";
-		altGrCheckbox.checked = false;
-		innerBox.appendChild(altGrCheckbox);
-		this.AddCheckBoxLabel(innerBox, altGrCheckbox, "Alt gr").style.margin = "4px 1px";
+		shift.label.style.margin = "4px 1px";
+		ctrl.label.style.margin = "4px 1px";
+		alt.label.style.margin = "4px 1px";
+		altGr.label.style.margin = "4px 1px";
 
 		keyInput.onchange = keyInput.oninput = ()=> {
 			okButton.disabled = keyInput.value.length === 0;
@@ -201,8 +173,7 @@ class Terminal extends Window {
 		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		okButton.value = "Paste";
 		okButton.disabled = true;
@@ -235,6 +206,7 @@ class Terminal extends Window {
 			if (this.ws === null || this.ws.readyState != 1) {
 				return;
 			}
+			
 			if (this.bracketedMode) {
 				this.ws.send(`\x1b[200~${keyText.value}\x1b[201~`);
 			}
@@ -597,23 +569,23 @@ class Terminal extends Window {
 
 	MapColorId(id) {
 		switch (id) {
-			case 0: return "#111";
-			case 1: return "#de382b";
-			case 2: return "#39b54a";
-			case 3: return "#e1c706";
-			case 4: return "#3080D8";
-			case 5: return "#bc3fbc";
-			case 6: return "#2cb5e9";
-			case 7: return "#ccc";
+			case 0: return "#111";    //black
+			case 1: return "#de382b"; //red
+			case 2: return "#39b54a"; //green
+			case 3: return "#e1c706"; //yellow
+			case 4: return "#3080D8"; //blue
+			case 5: return "#bc3fbc"; //magenta
+			case 6: return "#2cb5e9"; //cyan
+			case 7: return "#ccc";    //white
 		
-			case 8: return "#888";
-			case 9: return "#f00";
-			case 10: return "#0f0";
-			case 11: return "#ff0";
-			case 12: return "#00f";
-			case 13: return "#f0f";
-			case 14: return "#0ff";
-			case 15: return "#fff";
+			case 8: return "#888";  //gray
+			case 9: return "#f00";  //bright red
+			case 10: return "#0f0"; //bright green
+			case 11: return "#ff0"; //bright yellow
+			case 12: return "#00f"; //bright blue
+			case 13: return "#f0f"; //bright magenta
+			case 14: return "#0ff"; //bright cyan
+			case 15: return "#fff"; //bright white
 		}
 
 		if (id > 231) {
@@ -667,45 +639,11 @@ class Terminal extends Window {
 			case 28: this.hidden        = false; break;
 			case 29: this.strikethrough = false; break;
 
-
 			//set foreground color
-			case 30: this.foreColor = "#111";    break; //black
-			case 31: this.foreColor = "#de382b"; break; //red
-			case 32: this.foreColor = "#39b54a"; break; //green
-			case 33: this.foreColor = "#e1c706"; break; //yellow
-			case 34: this.foreColor = "#3080D8"; break; //blue
-			case 35: this.foreColor = "#bc3fbc"; break; //magenta
-			case 36: this.foreColor = "#2cb5e9"; break; //cyan
-			case 37: this.foreColor = "#ccc"; break;    //white
-			case 39: this.foreColor = null; break;
-			case 90: this.foreColor = "#888"; break; //gray
-			case 91: this.foreColor = "#f00"; break; //bright red
-			case 92: this.foreColor = "#0f0"; break; //bright green
-			case 93: this.foreColor = "#ff0"; break; //bright yellow
-			case 94: this.foreColor = "#00f"; break; //bright blue
-			case 95: this.foreColor = "#f0f"; break; //bright magenta
-			case 96: this.foreColor = "#0ff"; break; //bright cyan
-			case 97: this.foreColor = "#eee"; break; //bright white
-
-			//set background color
-			case 40: this.backColor = "#111";    break; //black
-			case 41: this.backColor = "#de382b"; break; //red
-			case 42: this.backColor = "#39b54a"; break; //green
-			case 43: this.backColor = "#e1c706"; break; //yellow
-			case 44: this.backColor = "#3080D8"; break; //blue
-			case 45: this.backColor = "#bc3fbc"; break; //magenta
-			case 46: this.backColor = "#2cb5e9"; break; //cyan
-			case 47: this.backColor = "#ccc"; break;    //white
-			case 49: this.backColor = null; break;
-			case 100: this.backColor = "#888"; break; //gray
-			case 101: this.backColor = "#f00"; break; //bright red
-			case 102: this.backColor = "#0f0"; break; //bright green
-			case 103: this.backColor = "#ff0"; break; //bright yellow
-			case 104: this.backColor = "#00f"; break; //bright blue
-			case 105: this.backColor = "#f0f"; break; //bright magenta
-			case 106: this.backColor = "#0ff"; break; //bright cyan
-			case 107: this.backColor = "#eee"; break; //bright white
-
+			case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
+				this.foreColor = this.MapColorId(params[i] - 30);
+				break;
+			
 			case 38: //set foreground color
 				if (params.length < 3) break;
 
@@ -720,6 +658,16 @@ class Terminal extends Window {
 				else {
 					console.warn(`Unknown graphics mode: 38;${params[1]}`);
 				}
+				break;
+
+			
+			case 39: //reset foreground color
+				this.foreColor = null;
+				break;
+
+			//set background color
+			case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47:
+				this.backColor = this.MapColorId(params[i] - 40);
 				break;
 
 			case 48: //set background color
@@ -738,8 +686,23 @@ class Terminal extends Window {
 				}
 				break;
 
+			case 49: //reset foreground color
+				this.backColor = null;
+				break;
+
+			//reset background color (bright variants)
+			case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
+				this.foreColor = this.MapColorId(params[i] - 82);
+				break;
+
+			//set background color (bright variants)
+			case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107:
+				this.backColor = this.MapColorId(params[i] - 92);
+				break;
+
 			default:
 				console.warn(`Unknown graphics mode: ${params[0]}`);
+				break;
 			}
 		}
 	}

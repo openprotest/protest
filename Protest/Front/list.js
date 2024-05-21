@@ -602,11 +602,8 @@ class List extends Window {
 		const dialog = this.DialogBox("500px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const buttonBox = dialog.buttonBox;
-
-		const innerBox = dialog.innerBox;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
+		
 		innerBox.style.display = "grid";
 		innerBox.style.padding = "8px";
 		innerBox.style.gridGap = "4px";

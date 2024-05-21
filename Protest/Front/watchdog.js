@@ -119,8 +119,7 @@ class Watchdog extends Window {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		const innerBox = dialog.innerBox;
-		const okButton = dialog.okButton;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.parentElement.style.maxWidth = "300px";
 
@@ -232,9 +231,7 @@ class Watchdog extends Window {
 		const dialog = this.DialogBox("350px");
 		if (dialog === null) return;
 
-		const innerBox = dialog.innerBox;
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
+		const {okButton, cancelButton, innerBox} = dialog;
 
 		okButton.value = isNew ? "Create" : "Save";
 
@@ -598,9 +595,7 @@ class Watchdog extends Window {
 		const dialog = this.DialogBox("520px");
 		if (dialog === null) return;
 
-		const innerBox = dialog.innerBox;
-		const buttonBox = dialog.buttonBox;
-		const okButton = dialog.okButton;
+		const {okButton, innerBox} = dialog;
 
 		okButton.style.display = "none";
 

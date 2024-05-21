@@ -1048,10 +1048,10 @@ class Window {
 		okButton.onclick = event=> cancelButton.onclick(event);
 
 		return {
-			innerBox: innerBox,
-			buttonBox: buttonBox,
 			okButton: okButton,
 			cancelButton: cancelButton,
+			innerBox: innerBox,
+			buttonBox: buttonBox,
 			Close: Close
 		};
 	}
@@ -1174,6 +1174,17 @@ class Window {
 				this.sendChatButton.disabled = true;
 			}
 		}
+	}
+
+	CreateToggle(label, checked, parent) {
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.checked = checked;
+
+		parent.appendChild(checkbox);
+		const domElement = this.AddCheckBoxLabel(parent, checkbox, label);
+
+		return {checkbox: checkbox, label: domElement};
 	}
 
 	AddCheckBoxLabel(parent, checkbox, label) {

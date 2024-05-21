@@ -695,8 +695,7 @@ class Settings extends Tabs {
 		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		okButton.value = "Save";
 
@@ -891,8 +890,7 @@ class Settings extends Tabs {
 		const dialog = this.DialogBox("420px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		okButton.value = "Save";
 

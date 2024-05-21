@@ -209,9 +209,7 @@ class Documentation extends Window {
 			const dialog = this.DialogBox("125px");
 			if (dialog === null) return;
 
-			const okButton = dialog.okButton;
-			const cancelButton = dialog.cancelButton;
-			const innerBox = dialog.innerBox;
+			const {okButton, innerBox} = dialog;
 
 			innerBox.style.textAlign = "center";
 
@@ -619,9 +617,7 @@ class Documentation extends Window {
 		const dialog = this.DialogBox("85%");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, cancelButton, innerBox} = dialog;
 
 		innerBox.style.padding = "8px";
 

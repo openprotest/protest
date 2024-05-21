@@ -67,9 +67,7 @@ class CameraTester extends Window {
 		const dialog = this.DialogBox("150px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
@@ -241,9 +239,7 @@ class CameraTester extends Window {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, cancelButton, innerBox} = dialog;
 
 		okButton.value = "Export";
 		cancelButton.value = "Discard";

@@ -68,8 +68,7 @@ class MicTester extends Window {
 		const dialog = this.DialogBox("300px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
