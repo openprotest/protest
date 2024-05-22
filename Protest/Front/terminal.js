@@ -762,11 +762,11 @@ class Terminal extends Window {
 
 		const w = this.GetScreenWidth();
 		const h = this.GetScreenHeight();
-		const c = w * (this.cursor.y) + this.cursor.x;
+		const c = w * this.cursor.y + this.cursor.x;
 
 		for (let y=0; y<h; y++) {
 			for (let x=0; x<w; x++) {
-				if (w*y + x <= c) continue;
+				if (w*y + x < c) continue;
 				const key = `${x},${y}`;
 				if (!this.screen[key]) continue;
 				this.content.removeChild(this.screen[key]);
@@ -778,7 +778,7 @@ class Terminal extends Window {
 	EraseFromCursorToBeginningOfScreen() { //1J
 		const w = this.GetScreenWidth();
 		const h = this.GetScreenHeight();
-		const c = w * (this.cursor.y) + this.cursor.x;
+		const c = w * this.cursor.y + this.cursor.x;
 
 		for (let y=0; y<h; y++) {
 			for (let x=0; x<w; x++) {
