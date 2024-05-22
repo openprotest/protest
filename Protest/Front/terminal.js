@@ -747,6 +747,11 @@ class Terminal extends Window {
 	}
 
 	EraseFromCursorToEndOfScreen() { //0J
+		if (this.cursor.x === 0 && this.cursor.y === 0) {
+			this.ClearScreen();
+			return;
+		}
+
 		const w = this.GetScreenWidth();
 		const h = this.GetScreenHeight();
 		const c = w * (this.cursor.y) + this.cursor.x;
