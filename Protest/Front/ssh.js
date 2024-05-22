@@ -17,9 +17,7 @@ class Ssh extends Terminal {
 		const dialog = this.DialogBox("208px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, cancelButton, innerBox} = dialog;
 
 		innerBox.parentElement.style.maxWidth = "400px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };

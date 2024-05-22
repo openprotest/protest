@@ -366,8 +366,7 @@ class Monitor extends Window {
 
 		dialog.innerBox.parentElement.style.maxWidth = "1024px";
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		okButton.disabled = true;
 

@@ -2608,6 +2608,7 @@ class DeviceView extends View {
 
 		const dnsToggle = this.CreateToggle("DNS", true, grid);
 		dnsToggle.label.style.gridArea = "1 / 2";
+		dnsToggle.checkbox.disabled = true;
 
 		const wmiToggle = this.CreateToggle("WMI", true, grid);
 		wmiToggle.label.style.gridArea = "2 / 2";

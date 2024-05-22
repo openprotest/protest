@@ -200,9 +200,7 @@ class Ping extends Console {
 		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.parentElement.style.maxWidth = "600px";
 		innerBox.style.padding = "16px 0px 0px 16px";

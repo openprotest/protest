@@ -12,9 +12,7 @@ class Telnet extends Terminal {
 		const dialog = this.DialogBox("112px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, cancelButton, innerBox} = dialog;
 
 		innerBox.parentElement.style.maxWidth = "360px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
@@ -37,6 +35,10 @@ class Telnet extends Terminal {
 		okButton.onclick = ()=> {
 			dialog.Close();
 			this.Connect(hostInput.value.trim());
+		};
+
+		cancelButton.onclick = ()=> {
+			dialog.Close();
 		};
 
 		if (isNew) {

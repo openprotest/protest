@@ -10,6 +10,7 @@ class Terminal extends Window {
 		if (!("ansi" in this.params)) this.params.ansi = true;
 		if (!("autoScroll" in this.params)) this.params.autoScroll = true;
 		if (!("bell" in this.params)) this.params.bell = false;
+		if (!("smoothCursor" in this.params)) this.params.smoothCursor = false;
 
 		this.AddCssDependencies("terminal.css");
 
@@ -43,13 +44,14 @@ class Terminal extends Window {
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 
-		this.sendKeyButton.disabled = true;
+		this.defaultElement = this.content;
 
 		this.content.tabIndex = 1;
 		this.content.classList.add("terminal-content");
 
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
+		this.cursorElement.style.transition = this.params.smoothCursor ? ".2s" : "0s";
 
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "terminal-status-box";
@@ -77,7 +79,7 @@ class Terminal extends Window {
 	ConnectDialog(target="", isNew=false) {} //overridable
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("200px");
+		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -87,31 +89,37 @@ class Terminal extends Window {
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
 
 		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.params.ansi, innerBox);
-
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
 		const bellToggle = this.CreateToggle("Play bell sound", this.params.bell, innerBox);
-
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
 		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.params.autoScroll, innerBox);
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.params.smoothCursor, innerBox);
 
 		okButton.onclick = ()=> {
-			this.params.ansi = ansiToggle.checkbox.checked;
-			this.params.bell = bellToggle.checkbox.checked;
-			this.params.autoScroll = autoScrollToggle.checkbox.checked;
+			this.params.ansi         = ansiToggle.checkbox.checked;
+			this.params.bell         = bellToggle.checkbox.checked;
+			this.params.autoScroll   = autoScrollToggle.checkbox.checked;
+			this.params.smoothCursor = smoothCursorToggle.checkbox.checked;
 			dialog.Close();
+
+			this.cursorElement.style.transition = this.params.smoothCursor ? ".2s" : "0s";
 		};
+
+		setTimeout(()=>ansiToggle.label.focus(), 200);
 	}
 
 	CustomKeyDialog() {
 		const dialog = this.DialogBox("180px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		okButton.value = "Send";
 		okButton.disabled = true;
@@ -161,7 +169,7 @@ class Terminal extends Window {
 			//TODO: Send key
 		};
 
-		setTimeout(()=>{ keyInput.focus(); }, 200);
+		setTimeout(()=>keyInput.focus(), 200);
 	}
 
 	async ClipboardDialog() {
@@ -210,7 +218,7 @@ class Terminal extends Window {
 			}
 		};
 
-		setTimeout(()=>{ keyText.focus(); }, 200);
+		setTimeout(()=>keyText.focus(), 200);
 	}
 
 	Terminal_onkeydown(event) {

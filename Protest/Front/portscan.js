@@ -210,8 +210,7 @@ class PortScan extends Console {
 		const dialog = this.DialogBox("128px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, innerBox} = dialog;
 
 		innerBox.style.textAlign = "center";
 

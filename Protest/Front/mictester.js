@@ -255,9 +255,7 @@ class MicTester extends Window {
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		const okButton = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const innerBox = dialog.innerBox;
+		const {okButton, cancelButton, innerBox} = dialog;
 
 		okButton.value = "Export";
 		cancelButton.value = "Discard";

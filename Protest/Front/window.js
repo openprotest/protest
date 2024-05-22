@@ -1026,6 +1026,9 @@ class Window {
 			dialogBox.style.transform = "scaleY(.2)";
 			this.content.style.filter = "none";
 			setTimeout(()=> Abort(), WIN.ANIME_DURATION);
+			if (this.defaultElement) {
+				this.defaultElement.focus();
+			}
 		};
 
 		okButton.onkeydown = event=> {

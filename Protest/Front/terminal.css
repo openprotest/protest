@@ -43,8 +43,8 @@
 	background-color: var(--clr-accent);
 	box-shadow: var(--clr-accent) 0 0 2px;
 	display: none;
-
-	transition: .25s;
+	
+	animation: terminal-blinking 1.2s infinite;
 }
 
 .terminal-content:focus > .terminal-cursor {
@@ -58,8 +58,8 @@
 }
 
 @keyframes terminal-shake {
-	15%, 85% {opacity:1; transform:Rotate(-5deg)}
-	30%, 70% {opacity:1; transform:Rotate(10deg)}
-	40%, 60% {opacity:1; transform:Rotate(-18deg)}
-	50% {opacity:1; transform:Rotate(18deg)}
+	15%, 85% {opacity:1; transform:rotate(-5deg)}
+	30%, 70% {opacity:1; transform:rotate(10deg)}
+	40%, 60% {opacity:1; transform:rotate(-18deg)}
+	50% {opacity:1; transform:rotate(18deg)}
 }
