@@ -17,10 +17,14 @@ class Terminal extends Window {
 		this.cursor = {x:0, y:0};
 		this.screen = {};
 
+		this.scrollRegionTop = null;
+		this.scrollRegionBottom = null;
+
 		this.savedCursorPos = null;
 		this.savedLine      = null;
 		this.savedScreen    = null;
-		this.bracketedMode = false;
+		this.savedTitle     = null;
+		this.bracketedMode  = false;
 
 		this.foreColor     = null;
 		this.backColor     = null;
@@ -489,21 +493,25 @@ class Terminal extends Window {
 			}
 			break;
 
-		case "P":this.DeleteN(params[0] || 1); break;
+		case "P": this.DeleteN(params[0] || 1); break;
 		//case "S": break; //not ANSI
 		//case "T": break; //not ANSI
 
-		case "h": //show cursor
+		case "d": //move cursor to the specified line
+			this.cursor.y = params[0] || 1;
+			break;
+
+		case "h": //enable mode
 			switch (params[0]) {
-			case 25: this.cursorElement.style.visibility = "visible"; break;
+			case 25  : this.cursorElement.style.visibility = "visible"; break;
 			case 1049: this.EnableAlternateScreen(); break;
 			case 2004: this.bracketedMode = true; break;
 			}
 			break;
 
-		case "l": //hide cursor
+		case "l": //disable mode
 			switch (params[0]) {
-			case 25: this.cursorElement.style.visibility = "hidden"; break;
+			case 25  : this.cursorElement.style.visibility = "hidden"; break;
 			case 1049: this.DisableAlternateScreen(); break;
 			case 2004: this.bracketedMode = false; break;
 			}
@@ -511,9 +519,31 @@ class Terminal extends Window {
 
 		case "m": this.ParseGraphicsModes(params); break;
 
+		case "r": //set scroll region
+			this.scrollRegionTop = Math.max(params[0], 1);
+			this.scrollRegionBottom = params[1];
+			break;
+
 		case "s": //save cursor position
 			this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
 			break;
+
+		case "t": //window manipulation
+			switch (params[0]) {
+			case 22: //save window title
+				this.savedTitle = this.header.textContent;
+				break;
+
+			case 23: //restore window title
+				if (this.savedTitle) {
+					this.SetTitle(this.savedTitle);
+				}
+				break;
+
+			default:
+				console.warn(`Unhandled window manipulation command: ${params.join(";")}t`);
+				break;
+			}
 
 		case "u": //restore cursor position
 			this.cursor.x = this.savedCursorPos.x;
