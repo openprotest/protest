@@ -1395,7 +1395,7 @@ class Watchdog extends Window {
 		else if (status === -4) {
 			return "not valid";
 		}
-		else if (status >=0) {
+		else if (status >= 0) {
 			switch (watcher.type) {
 			case "ICMP" : return `${status}ms`;
 			case "TCP"  : return `${status}ms`;

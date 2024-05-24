@@ -67,7 +67,7 @@ internal static class Ssh {
             SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
-            Logger.Action(username, $"Establish ssh connection to {host}:{port}");
+            Logger.Action(origin, $"Establish ssh connection to {username}@{host}:{port}");
 
             await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
