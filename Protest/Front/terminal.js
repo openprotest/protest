@@ -35,30 +35,40 @@ class Terminal extends Window {
 		super();
 
 		this.params = params ? params : {host:"", ansi:true, autoScroll:true, bell:false};
-
 		if (!("ansi" in this.params)) this.params.ansi = true;
 		if (!("autoScroll" in this.params)) this.params.autoScroll = true;
 		if (!("bell" in this.params)) this.params.bell = false;
 		if (!("smoothCursor" in this.params)) this.params.smoothCursor = false;
 
 		this.AddCssDependencies("terminal.css");
+		
+		this.InitializeComponents();
+		this.InitializeTerminalState();
+		this.ResetTextAttributes();
 
+		this.ws = null;
+
+		//preload icon:
+		const disconnectIcon = new Image();
+		disconnectIcon.src = "mono/disconnect.svg";
+	}
+
+	InitializeTerminalState() {
 		this.cursor = {x:0, y:0};
 		this.screen = {};
 
 		this.scrollRegionTop = null;
 		this.scrollRegionBottom = null;
 
-		this.savedCursorPos = null;
-		this.savedLine      = null;
-		this.savedScreen    = null;
-		this.savedTitle     = null;
-		this.bracketedMode  = false;
+		this.savedCursorPos        = null;
+		this.savedLine             = null;
+		this.savedScreen           = null;
+		this.savedTitle            = null;
+		this.bracketedMode         = false;
+		this.keypadApplicationMode = false;
+	}
 
-		this.ws = null;
-
-		this.ResetTextAttributes();
-
+	InitializeComponents() {
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
@@ -88,10 +98,6 @@ class Terminal extends Window {
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 		this.pasteButton.onclick   = ()=> this.ClipboardDialog();
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
-
-		//preload icon:
-		const disconnectIcon = new Image();
-		disconnectIcon.src = "mono/disconnect.svg";
 	}
 
 	ResetTextAttributes() {
@@ -262,6 +268,8 @@ class Terminal extends Window {
 		event.preventDefault();
 		if (!this.ws || this.ws.readyState !== 1) return;
 
+		//TODO: if (this.keypadApplicationMode) {}
+
 		if (event.ctrlKey && event.key.length === 1) {
 			this.HandleCtrlKey(event);
 		}
@@ -270,7 +278,7 @@ class Terminal extends Window {
 		}
 		else {
 			switch(event.key) {
-			case "Enter"     : this.ws.send(this instanceof Telnet ? "\r\n" : "\n"); return;
+			case "Enter"     : this.ws.send("\r"); return;
 			case "Tab"       : this.ws.send("\t"); return;
 			case "Backspace" : this.ws.send("\x08"); return;
 			case "Delete"    : this.ws.send("\x1b[3~"); return;
@@ -302,11 +310,6 @@ class Terminal extends Window {
 			}
 
 			switch (data[i]) {
-			case " ":
-				char.innerHTML = "&nbsp;";
-				this.cursor.x++;
-				break;
-
 			case "\x07":
 				if (this.params.bell) this.Bell();
 				this.cursorElement.style.animation = "terminal-shake .4s 1";
@@ -363,7 +366,7 @@ class Terminal extends Window {
 				char.textContent = data[i];
 
 				let foreColor, backColor;
-				if (this.isInverse) {
+				if (this.inverse) {
 					foreColor = this.backColor ?? "rgb(32,32,32)";
 					backColor = this.foreColor ?? "rgb(224,224,224)";
 				}
@@ -399,13 +402,32 @@ class Terminal extends Window {
 		}
 	}
 
-	HandleEscSequence(data, index) { //Control Sequence Introducer
+	HandleEscSequence(data, index) {
 		if (index + 1 >= data.length) return 1;
 
 		switch (data[index+1]) {
 		case "[": return this.HandleCSI(data, index);
 		case "P": return this.HandleDCS(data, index);
 		case "]": return this.HandleOSC(data, index);
+		case "(": return this.HandleCSD(data, index);
+
+		case "=": //application keypad mode
+			this.keypadApplicationMode = true;
+			return 2;
+
+		case ">": //normal keypad mode
+			this.keypadApplicationMode = false;
+			return 2;
+
+		case "7": //save cursor position
+			this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
+			return 2;
+
+		case "8": //restore cursor position
+			this.cursor.x = this.savedCursorPos.x;
+			this.cursor.y = this.savedCursorPos.y;
+			return 2;
+
 		default:
 			console.warn("Unknown escape sequence: " + data[index+1]);
 			return 2;
@@ -488,12 +510,12 @@ class Terminal extends Window {
 			}
 			break;
 
-		case "P": this.DeleteN(params[0] || 1); break;
+		case "P": this.DeleteN((params[0] || 1) - 1); break;
 		//case "S": break; //not ANSI
 		//case "T": break; //not ANSI
 
 		case "d": //move cursor to the specified line
-			this.cursor.y = params[0] || 1;
+			this.cursor.y = (params[0] || 1) - 1;
 			break;
 
 		case "h": //enable mode
@@ -515,6 +537,8 @@ class Terminal extends Window {
 		case "m": this.ParseGraphicsModes(params); break;
 
 		case "r": //set scroll region
+//TODO:
+console.log("scrolling: " + params.join(";"));
 			this.scrollRegionTop = Math.max(params[0], 1);
 			this.scrollRegionBottom = params[1];
 			break;
@@ -582,9 +606,11 @@ class Terminal extends Window {
 				break;
 
 			case "10": //set foreground color
+				//TODO:
 				break;
 
 			case "11": //set background color
+				//TODO:
 				break;
 
 			default:
@@ -593,6 +619,25 @@ class Terminal extends Window {
 		}
 
 		return end - index + 1;
+	}
+
+	HandleCSD(data, index) { //Character Set Designation
+		if (index >= data.length) return 2;
+
+		const command = data[index + 2];
+		switch (command) {
+		//TODO:
+
+		//case "B": //ISO-8859-1
+		//	return 3;
+
+		//case "0":
+		//	return 3;
+
+		default:
+			console.warn(`Unhandled CSD command: ${command}`);
+			return 3;
+		}
 	}
 
 	MapColorId(id) {
