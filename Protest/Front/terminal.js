@@ -2,6 +2,35 @@ class Terminal extends Window {
 	static CURSOR_WIDTH = 8;
 	static CURSOR_HEIGHT = 18;
 
+	static CTRL_KEYS = {
+		"KeyA": "\x01",
+		"KeyB": "\x02",
+		"KeyC": "\x03",
+		"KeyD": "\x04",
+		"KeyE": "\x05",
+		"KeyF": "\x06",
+		"KeyG": "\x07",
+		"KeyH": "\x08",
+		"KeyI": "\x09",
+		"KeyJ": "\x10",
+		"KeyK": "\x11",
+		"KeyL": "\x12",
+		"KeyM": "\x13",
+		"KeyN": "\x14",
+		"KeyO": "\x15",
+		"KeyP": "\x16",
+		"KeyQ": "\x17",
+		"KeyR": "\x18",
+		"KeyS": "\x19",
+		"KeyT": "\x20",
+		"KeyU": "\x21",
+		"KeyV": "\x22",
+		"KeyW": "\x23",
+		"KeyX": "\x24",
+		"KeyY": "\x25",
+		"KeyZ": "\x26"
+	};
+
 	constructor(params) {
 		super();
 
@@ -26,19 +55,9 @@ class Terminal extends Window {
 		this.savedTitle     = null;
 		this.bracketedMode  = false;
 
-		this.foreColor     = null;
-		this.backColor     = null;
-		this.bold          = false;
-		this.faint         = false;
-		this.italic        = false;
-		this.underline     = false;
-		this.blinking      = false;
-		this.fastBlinking  = false;
-		this.inverse       = false;
-		this.hidden        = false;
-		this.strikethrough = false;
-
 		this.ws = null;
+
+		this.ResetTextAttributes();
 
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
@@ -73,6 +92,20 @@ class Terminal extends Window {
 		//preload icon:
 		const disconnectIcon = new Image();
 		disconnectIcon.src = "mono/disconnect.svg";
+	}
+
+	ResetTextAttributes() {
+		this.foreColor     = null;
+		this.backColor     = null;
+		this.bold          = false;
+		this.faint         = false;
+		this.italic        = false;
+		this.underline     = false;
+		this.blinking      = false;
+		this.fastBlinking  = false;
+		this.inverse       = false;
+		this.hidden        = false;
+		this.strikethrough = false;
 	}
 
 	Close() { //overrides
@@ -227,71 +260,33 @@ class Terminal extends Window {
 
 	Terminal_onkeydown(event) {
 		event.preventDefault();
-
-		if (this.ws === null || this.ws.readyState != 1) {
-			return;
-		}
+		if (!this.ws || this.ws.readyState !== 1) return;
 
 		if (event.ctrlKey && event.key.length === 1) {
-			switch (event.code) {
-			case "KeyA": this.ws.send("\x01"); return;
-			case "KeyB": this.ws.send("\x02"); return;
-			case "KeyC": this.ws.send("\x03"); return;
-			case "KeyD": this.ws.send("\x04"); return;
-			case "KeyE": this.ws.send("\x05"); return;
-			case "KeyF": this.ws.send("\x06"); return;
-			case "KeyG": this.ws.send("\x07"); return;
-			case "KeyH": this.ws.send("\x08"); return;
-			case "KeyI": this.ws.send("\x09"); return;
-			case "KeyJ": this.ws.send("\x10"); return;
-			case "KeyK": this.ws.send("\x11"); return;
-			case "KeyL": this.ws.send("\x12"); return;
-			case "KeyM": this.ws.send("\x13"); return;
-			case "KeyN": this.ws.send("\x14"); return;
-			case "KeyO": this.ws.send("\x15"); return;
-			case "KeyP": this.ws.send("\x16"); return;
-			case "KeyQ": this.ws.send("\x17"); return;
-			case "KeyR": this.ws.send("\x18"); return;
-			case "KeyS": this.ws.send("\x19"); return;
-			case "KeyT": this.ws.send("\x20"); return;
-			case "KeyU": this.ws.send("\x21"); return;
-			case "KeyV": this.ws.send("\x22"); return;
-			case "KeyW": this.ws.send("\x23"); return;
-			case "KeyX": this.ws.send("\x24"); return;
-			case "KeyY": this.ws.send("\x25"); return;
-			case "KeyZ": this.ws.send("\x26"); return;
-			}
+			this.HandleCtrlKey(event);
 		}
-		else if (event.ctrlKey) {
-			//TODO: ctrl+key
-		}
-
-		if (event.key.length === 1) {
+		else if (event.key.length === 1) {
 			this.ws.send(event.key);
-			return;
 		}
-
-		switch(event.key) {
-		case "Enter":
-			if (this instanceof Ssh) {
-				this.ws.send("\n");
-				return;
+		else {
+			switch(event.key) {
+			case "Enter"     : this.ws.send(this instanceof Telnet ? "\r\n" : "\n"); return;
+			case "Tab"       : this.ws.send("\t"); return;
+			case "Backspace" : this.ws.send("\x08"); return;
+			case "Delete"    : this.ws.send("\x1b[3~"); return;
+			case "ArrowLeft" : this.ws.send("\x1b[D"); return;
+			case "ArrowRight": this.ws.send("\x1b[C"); return;
+			case "ArrowUp"   : this.ws.send("\x1b[A"); return;
+			case "ArrowDown" : this.ws.send("\x1b[B"); return;
+			case "Home"      : this.ws.send("\x1b[H"); return;
+			case "End"       : this.ws.send("\x1b[F"); return;
 			}
-			else {
-				this.ws.send("\r\n");
-				return;
-			}
-
-		case "Tab"       : this.ws.send("\t"); return;
-		case "Backspace" : this.ws.send("\x08"); return;
-		case "Delete"    : this.ws.send("\x1b[3~"); return;
-		case "ArrowLeft" : this.ws.send("\x1b[D"); return;
-		case "ArrowRight": this.ws.send("\x1b[C"); return;
-		case "ArrowUp"   : this.ws.send("\x1b[A"); return;
-		case "ArrowDown" : this.ws.send("\x1b[B"); return;
-		case "Home"      : this.ws.send("\x1b[H"); return;
-		case "End"       : this.ws.send("\x1b[F"); return;
 		}
+	}
+
+	HandleCtrlKey(event) {
+		const ctrlKey = Terminal.CTRL_KEYS[event.code];
+		if (ctrlKey) this.ws.send(ctrlKey);
 	}
 
 	HandleMessage(data) {
@@ -637,18 +632,8 @@ class Terminal extends Window {
 	ParseGraphicsModes(params) {
 		for (let i=0; i<params.length; i++) {
 			switch (params[i]) {
-			case 0: //reset all graphics modes
-				this.foreColor       = null;
-				this.backColor       = null;
-				this.bold          = false;
-				this.faint           = false;
-				this.italic        = false;
-				this.underline     = false;
-				this.blinking      = false;
-				this.fastBlinking  = false;
-				this.inverse       = false;
-				this.hidden        = false;
-				this.strikethrough = false;
+			case 0:
+				this.ResetTextAttributes();
 				break;
 
 			//set graphics modes
