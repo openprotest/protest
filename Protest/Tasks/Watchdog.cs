@@ -207,7 +207,7 @@ internal static class Watchdog {
     }
 
     private static short CheckIcmp(Watcher watcher) {
-        Ping ping = new Ping();
+        using Ping ping = new Ping();
         short result = -1;
 
         for (int i = 0; i < watcher.retries; i++) {

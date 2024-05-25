@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Lextm.SharpSnmpLib;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Management;
@@ -149,7 +150,7 @@ internal static partial class Lifeline {
         DateTime now = DateTime.UtcNow;
         short rtt = -1;
 
-        Ping ping = new Ping();
+        using Ping ping = new Ping();
         try {
             PingReply reply = ping.Send(host, 1000); //1st try
             if (reply.Status == IPStatus.Success) {
@@ -172,12 +173,7 @@ internal static partial class Lifeline {
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
         try {
-            if (!pingMutexes.TryGetValue(host, out object mutex)) {
-                mutex = new object();
-                pingMutexes[host] = mutex;
-            }
-
-            //Console.WriteLine($"{host} \t - {mutex.GetHashCode()}");
+            object mutex = pingMutexes.GetOrAdd(host, new object());
 
             lock (mutex) {
                 using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
@@ -188,6 +184,7 @@ internal static partial class Lifeline {
                 writer.Dispose();
                 stream.Dispose();
             }
+
             return rtt >= 0;
         }
         catch (IOException ex){
@@ -272,10 +269,7 @@ internal static partial class Lifeline {
 
         DateTime now = DateTime.UtcNow;
 
-        if (!wmiMutexes.TryGetValue(host, out object mutex)) {
-            mutex = new object();
-            wmiMutexes[host] = mutex;
-        }
+        object mutex = wmiMutexes.GetOrAdd(host, new object());
 
         lock (mutex) {
             if (cpuUsage != 255) {

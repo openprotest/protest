@@ -65,9 +65,11 @@ internal static class Fetch {
     public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         PingReply reply = null;
         try {
-            reply = await new Ping().SendPingAsync(target, 1500);
-            if (reply.Status != IPStatus.Success)
-                reply = await new Ping().SendPingAsync(target, 1500);
+            using Ping ping = new Ping();
+            reply = await ping.SendPingAsync(target, 1500);
+            if (reply.Status != IPStatus.Success) {
+                reply = await ping.SendPingAsync(target, 1500);
+            }
         }
         catch { }
 

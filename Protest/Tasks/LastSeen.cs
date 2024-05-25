@@ -11,10 +11,7 @@ namespace Protest.Tasks {
         public static void Seen(in string ip) {
             string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
             try {
-                if (!mutexes.TryGetValue(ip, out object mutex)) {
-                    mutex = new object();
-                    mutexes[ip] = mutex;
-                }
+                object mutex = mutexes.GetOrAdd(ip, new object());
 
                 lock (mutex) {
                     File.WriteAllText(filename, DateTime.Now.ToString(Data.DATETIME_FORMAT_LONG));
@@ -55,10 +52,7 @@ namespace Protest.Tasks {
 
             try {
                 if (File.Exists(filename)) {
-                    if (!mutexes.TryGetValue(ip, out object mutex)) {
-                        mutex = new object();
-                        mutexes[ip] = mutex;
-                    }
+                    object mutex = mutexes.GetOrAdd(ip, new object());
 
                     lock (mutex) {
                         return File.ReadAllText(filename);
