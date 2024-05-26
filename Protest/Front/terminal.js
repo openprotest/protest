@@ -1,6 +1,6 @@
 class Terminal extends Window {
-	static CURSOR_WIDTH = 8;
-	static CURSOR_HEIGHT = 18;
+	static CHAR_WIDTH = 8;
+	static CHAR_HEIGHT = 18;
 
 	static CTRL_KEYS = {
 		"KeyA": "\x01",
@@ -30,6 +30,8 @@ class Terminal extends Window {
 		"KeyY": "\x25",
 		"KeyZ": "\x26"
 	};
+
+	static ALT_KEYS = {};
 
 	constructor(params) {
 		super();
@@ -309,8 +311,8 @@ class Terminal extends Window {
 
 			if (!char) {
 				char = document.createElement("span");
-				char.style.left = `${this.cursor.x * Terminal.CURSOR_WIDTH}px`;
-				char.style.top = `${this.cursor.y * Terminal.CURSOR_HEIGHT}px`;
+				char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
+				char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
 				this.content.appendChild(char);
 				this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
 			}
@@ -368,7 +370,7 @@ class Terminal extends Window {
 
 			//case "\x7f": break; //delete
 
-				default:
+			default:
 				if (data[i] === " ") {
 					char.innerHTML = "&nbsp;";
 				}
@@ -405,8 +407,8 @@ class Terminal extends Window {
 			this.lastCharacter = data[i];
 		}
 
-		this.cursorElement.style.left = Terminal.CURSOR_WIDTH * this.cursor.x + "px";
-		this.cursorElement.style.top = Terminal.CURSOR_HEIGHT * this.cursor.y + "px";
+		this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
+		this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
 
 		if (this.params.autoScroll) {
 			setTimeout(()=>this.cursorElement.scrollIntoView(), 250);
@@ -526,7 +528,7 @@ class Terminal extends Window {
 		//case "T": break; //not ANSI
 
 		case "d": //move cursor to the specified line
-			this.cursor.y = params[0] || 1;
+			this.cursor.y = (params[0] || 1) - 1;
 			break;
 
 		case "h": //enable mode
@@ -558,7 +560,6 @@ class Terminal extends Window {
 		case "m": this.ParseGraphicsModes(params); break;
 
 		case "r": //set scroll region
-console.log("scrolling: " + params.join(";"));
 			this.scrollRegionTop = Math.max(params[0], 1);
 			this.scrollRegionBottom = params[1];
 			break;
@@ -790,14 +791,40 @@ console.log("scrolling: " + params.join(";"));
 	}
 
 	ScrollUp() {
-		for (let i=this.scrollRegionTop; i<this.scrollRegionBottom; i++) {
+		const top    = this.scrollRegionTop || 0;
+		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
+		const todo   = {};
 
+		for (key in this.screen) {
+			[x, y] = key.split(",");
+			if (y < top || y > bottom) continue;
+			todo[key] = this.screen[key];
+		}
+
+		for (key in todo) {
+			[x, y] = key.split(",");
+			delete this.screen[key];
+			this.screen[`${x},${y - 1}`] = todo[key];
+			todo[key].style.top = `${(y-1) * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
 	ScrollDown() {
-		for (let i=this.scrollRegionBottom; i>this.scrollRegionTop; i--) {
-			
+		const top    = this.scrollRegionTop || 0;
+		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
+		const todo   = {};
+
+		for (key in this.screen) {
+			[x, y] = key.split(",");
+			if (y < top || y > bottom) continue;
+			todo[key] = this.screen[key];
+		}
+
+		for (key in todo) {
+			[x, y] = key.split(",");
+			delete this.screen[key];
+			this.screen[`${x},${y + 1}`] = todo[key];
+			todo[key].style.top = `${(y+1) * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
@@ -922,11 +949,11 @@ console.log("scrolling: " + params.join(";"));
 	}
 
 	GetScreenWidth() {
-		return parseInt(this.content.clientWidth / Terminal.CURSOR_WIDTH);
+		return parseInt(this.content.clientWidth / Terminal.CHAR_WIDTH);
 	}
 
 	GetScreenHeight() {
-		return parseInt(this.content.clientHeight / Terminal.CURSOR_HEIGHT);
+		return parseInt(this.content.clientHeight / Terminal.CHAR_HEIGHT);
 	}
 
 	Bell() {
