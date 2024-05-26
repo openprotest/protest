@@ -2,6 +2,62 @@ class Terminal extends Window {
 	static CHAR_WIDTH = 8;
 	static CHAR_HEIGHT = 18;
 
+	static SPECIAL_KEYS = {
+		"Enter"     : "\r",
+		"Tab"       : "\t",
+		"Backspace" : "\x08",
+		"ArrowUp"   : "\x1b[A",
+		"ArrowDown" : "\x1b[B",
+		"ArrowRight": "\x1b[C",
+		"ArrowLeft" : "\x1b[D",
+		"Home"      : "\x1b[H",
+		"End"       : "\x1b[F",
+
+		"F1"  : "\x1b[OP",
+		"F2"  : "\x1b[OQ",
+		"F3"  : "\x1b[OR",
+		"F4"  : "\x1b[OS",
+		"F5"  : "\x1b[15~",
+		"F6"  : "\x1b[17~",
+		"F7"  : "\x1b[18~",
+		"F8"  : "\x1b[19~",
+		"F9"  : "\x1b[20~",
+		"F10" : "\x1b[21~",
+		"F11" : "\x1b[23~",
+		"F12" : "\x1b[24~",
+
+		"Insert"   : "\x1b[2~",
+		"Delete"   : "\x1b[3~",
+		"PageUp"   : "\x1b[5~",
+		"PageDown" : "\x1b[6~"
+	};
+
+	static SHIFT_KEYS = {
+		"F1"        : "\x1B[1;2P",
+		"F2"        : "\x1B[1;2Q",
+		"F3"        : "\x1B[1;2R",
+		"F4"        : "\x1B[1;2S",
+		"F5"        : "\x1B[15;2~",
+		"F6"        : "\x1B[17;2~",
+		"F7"        : "\x1B[18;2~",
+		"F8"        : "\x1B[19;2~",
+		"F9"        : "\x1B[20;2~",
+		"F10"       : "\x1B[21;2~",
+		"F11"       : "\x1B[23;2~",
+		"F12"       : "\x1B[24;2~",
+
+		"Home"      : "\x1B[1;2H",
+		"End"       : "\x1B[1;2F",
+		"ArrowUp"   : "\x1B[1;2A",
+		"ArrowDown" : "\x1B[1;2B",
+		"ArrowRight": "\x1B[1;2C",
+		"ArrowLeft" : "\x1B[1;2D",
+		"Insert"    : "\x1B[2;2~",
+		"Delete"    : "\x1B[3;2~",
+		"PageUp"    : "\x1B[5;2~",
+		"PageDown"  : "\x1B[6;2~",
+	};
+
 	static CTRL_KEYS = {
 		"KeyA": "\x01",
 		"KeyB": "\x02",
@@ -28,10 +84,54 @@ class Terminal extends Window {
 		"KeyW": "\x23",
 		"KeyX": "\x24",
 		"KeyY": "\x25",
-		"KeyZ": "\x26"
+		"KeyZ": "\x26",
+
+		"Backspace": "\x7F",
+
+		"F1" :"\x1B[1;5P",
+		"F2" :"\x1B[1;5Q",
+		"F3" :"\x1B[1;5R",
+		"F4" :"\x1B[1;5S",
+		"F5" :"\x1B[15;5~",
+		"F6" :"\x1B[17;5~",
+		"F7" :"\x1B[18;5~",
+		"F8" :"\x1B[19;5~",
+		"F9" :"\x1B[20;5~",
+		"F10":"\x1B[21;5~",
+		"F11":"\x1B[23;5~",
+		"F12":"\x1B[24;5~",
+
+		"Home"      : "\x1B[1;5H",
+		"End"       : "\x1B[1;5F",
+		"ArrowUp"   : "\x1B[1;5A",
+		"ArrowDown" : "\x1B[1;5B",
+		"ArrowRight": "\x1B[1;5C",
+		"ArrowLeft" : "\x1B[1;5D",
+		"Insert"    : "\x1B[2;5~",
+		"Delete"    : "\x1B[3;5~",
+		"PageUp"    : "\x1B[5;5~",
+		"PageDown"  : "\x1B[6;5~",
 	};
 
-	static ALT_KEYS = {};
+	static ALT_KEYS = {
+		"F1"         : "\x1B[1;3P",
+		"F2"         : "\x1B[1;3Q",
+		"F3"         : "\x1B[1;3R",
+		"F4"         : "\x1B[1;3S",
+		"F5"         : "\x1B[15;3~",
+		"F6"         : "\x1B[17;3~",
+		"F7"         : "\x1B[18;3~",
+		"F8"         : "\x1B[19;3~",
+		"F9"         : "\x1B[20;3~",
+		"F10"        : "\x1B[21;3~",
+		"F11"        : "\x1B[23;3~",
+		"F12"        : "\x1B[24;3~",
+
+		"ArrowUp"    : "\x1B[1;3A",
+		"ArrowDown"  : "\x1B[1;3B",
+		"ArrowRight" : "\x1B[1;3C",
+		"ArrowLeft"  : "\x1B[1;3D",
+	};
 
 	constructor(params) {
 		super();
@@ -278,31 +378,22 @@ class Terminal extends Window {
 
 		//TODO: if (this.keypadApplicationMode) {}
 
-		if (event.ctrlKey && event.key.length === 1) {
-			this.HandleCtrlKey(event);
+		if (event.shift && Terminal.SHIFT_KEYS[event.code]) {
+			this.ws.send(Terminal.SHIFT_KEYS[event.code]);
+		}
+		else if (event.ctrlKey && Terminal.CTRL_KEYS[event.code]) {
+			this.ws.send(Terminal.CTRL_KEYS[event.code]);
+		}
+		else if (event.altKey && Terminal.ALT_KEYS[event.code]) {
+			this.ws.send(Terminal.ALT_KEYS[event.code]);
 		}
 		else if (event.key.length === 1) {
 			this.ws.send(event.key);
 		}
 		else {
-			switch(event.key) {
-			case "Enter"     : this.ws.send("\r"); return;
-			case "Tab"       : this.ws.send("\t"); return;
-			case "Backspace" : this.ws.send("\x08"); return;
-			case "Delete"    : this.ws.send("\x1b[3~"); return;
-			case "ArrowLeft" : this.ws.send("\x1b[D"); return;
-			case "ArrowRight": this.ws.send("\x1b[C"); return;
-			case "ArrowUp"   : this.ws.send("\x1b[A"); return;
-			case "ArrowDown" : this.ws.send("\x1b[B"); return;
-			case "Home"      : this.ws.send("\x1b[H"); return;
-			case "End"       : this.ws.send("\x1b[F"); return;
-			}
+			const key = Terminal.SPECIAL_KEYS[event.code];
+			if (key) this.ws.send(key);
 		}
-	}
-
-	HandleCtrlKey(event) {
-		const ctrlKey = Terminal.CTRL_KEYS[event.code];
-		if (ctrlKey) this.ws.send(ctrlKey);
 	}
 
 	HandleMessage(data) {
