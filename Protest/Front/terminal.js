@@ -34,11 +34,13 @@ class Terminal extends Window {
 	constructor(params) {
 		super();
 
-		this.params = params ? params : {host:"", ansi:true, autoScroll:true, bell:false};
-		if (!("ansi" in this.params)) this.params.ansi = true;
-		if (!("autoScroll" in this.params)) this.params.autoScroll = true;
-		if (!("bell" in this.params)) this.params.bell = false;
-		if (!("smoothCursor" in this.params)) this.params.smoothCursor = false;
+		this.params = Object.assign({
+			host: "",
+			ansi: true,
+			autoScroll: true,
+			bell: false,
+			smoothCursor: false
+		}, params);
 
 		this.AddCssDependencies("terminal.css");
 		
@@ -61,11 +63,15 @@ class Terminal extends Window {
 		this.scrollRegionBottom = null;
 
 		this.savedCursorPos        = null;
-		this.savedLine             = null;
+		this.savedLine             = null; //TODO:
 		this.savedScreen           = null;
 		this.savedTitle            = null;
+
+		this.lineWrappingMode      = false; //TODO:
+		this.insertMode            = false; //TODO:
+		this.localEchoMode         = false; //TODO:
+		this.keypadApplicationMode = false; //TODO:
 		this.bracketedMode         = false;
-		this.keypadApplicationMode = false;
 	}
 
 	InitializeComponents() {
@@ -84,7 +90,7 @@ class Terminal extends Window {
 
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
-		this.cursorElement.style.transition = this.params.smoothCursor ? ".2s" : "0s";
+		this.cursorElement.style.transition = this.params.smoothCursor ? ".1s" : "0s";
 
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "terminal-status-box";
@@ -152,7 +158,7 @@ class Terminal extends Window {
 			this.params.smoothCursor = smoothCursorToggle.checkbox.checked;
 			dialog.Close();
 
-			this.cursorElement.style.transition = this.params.smoothCursor ? ".2s" : "0s";
+			this.cursorElement.style.transition = this.params.smoothCursor ? ".1s" : "0s";
 		};
 
 		setTimeout(()=>ansiToggle.label.focus(), 200);
@@ -362,8 +368,13 @@ class Terminal extends Window {
 
 			//case "\x7f": break; //delete
 
-			default:
-				char.textContent = data[i];
+				default:
+				if (data[i] === " ") {
+					char.innerHTML = "&nbsp;";
+				}
+				else {
+					char.textContent = data[i];
+				}
 
 				let foreColor, backColor;
 				if (this.inverse) {
@@ -510,34 +521,43 @@ class Terminal extends Window {
 			}
 			break;
 
-		case "P": this.DeleteN((params[0] || 1) - 1); break;
+		case "P": this.DeleteN(params[0] || 1); break;
 		//case "S": break; //not ANSI
 		//case "T": break; //not ANSI
 
 		case "d": //move cursor to the specified line
-			this.cursor.y = (params[0] || 1) - 1;
+			this.cursor.y = params[0] || 1;
 			break;
 
 		case "h": //enable mode
 			switch (params[0]) {
+			case 1   : this.appCursorKeys    = true; break;
+			case 4   : this.insertMode       = true; break;
+			case 7   : this.lineWrappingMode = true; break;
+			case 12  : this.localEchoMode    = true; break;
 			case 25  : this.cursorElement.style.visibility = "visible"; break;
 			case 1049: this.EnableAlternateScreen(); break;
 			case 2004: this.bracketedMode = true; break;
+			default  : console.warn(`Unhandled enable mode: ${params.join(";")}h`);
 			}
 			break;
 
 		case "l": //disable mode
 			switch (params[0]) {
+			case 1   : this.appCursorKeys     = false; break;
+			case 4   : this.insertMode        = false; break;
+			case 7   : this.lineWrappingMode  = false; break;
+			case 12  : this.localEchoMode     = false; break;
 			case 25  : this.cursorElement.style.visibility = "hidden"; break;
 			case 1049: this.DisableAlternateScreen(); break;
 			case 2004: this.bracketedMode = false; break;
+			default  : console.warn(`Unhandled disable mode: ${params.join(";")}l`);
 			}
 			break;
 
 		case "m": this.ParseGraphicsModes(params); break;
 
 		case "r": //set scroll region
-//TODO:
 console.log("scrolling: " + params.join(";"));
 			this.scrollRegionTop = Math.max(params[0], 1);
 			this.scrollRegionBottom = params[1];
@@ -600,22 +620,22 @@ console.log("scrolling: " + params.join(";"));
 		const [command, ...params] = sequence.split(";");
 
 		switch (command) {
-			case "0":
-			case "2": //set title
-				this.SetTitle(`Secure shell - ${this.params.host} - ${params.join(";")}`);
-				break;
+		case "0":
+		case "2": //set title
+			this.SetTitle(`Secure shell - ${this.params.host} - ${params.join(";")}`);
+			break;
 
-			case "10": //set foreground color
-				//TODO:
-				break;
+		case "10": //set foreground color
+			//TODO:
+			break;
 
-			case "11": //set background color
-				//TODO:
-				break;
+		case "11": //set background color
+			//TODO:
+			break;
 
-			default:
-				console.warn(`Unhandled OSC command: ${command}`);
-				break;
+		default:
+			console.warn(`Unhandled OSC command: ${command}`);
+			break;
 		}
 
 		return end - index + 1;
@@ -642,23 +662,23 @@ console.log("scrolling: " + params.join(";"));
 
 	MapColorId(id) {
 		switch (id) {
-			case 0: return "#111";    //black
-			case 1: return "#de382b"; //red
-			case 2: return "#39b54a"; //green
-			case 3: return "#e1c706"; //yellow
-			case 4: return "#3080D8"; //blue
-			case 5: return "#bc3fbc"; //magenta
-			case 6: return "#2cb5e9"; //cyan
-			case 7: return "#ccc";    //white
+		case 0: return "#111";    //black
+		case 1: return "#de382b"; //red
+		case 2: return "#39b54a"; //green
+		case 3: return "#e1c706"; //yellow
+		case 4: return "#3080D8"; //blue
+		case 5: return "#bc3fbc"; //magenta
+		case 6: return "#2cb5e9"; //cyan
+		case 7: return "#ccc";    //white
 
-			case 8: return "#888";  //gray
-			case 9: return "#f00";  //bright red
-			case 10: return "#0f0"; //bright green
-			case 11: return "#ff0"; //bright yellow
-			case 12: return "#00f"; //bright blue
-			case 13: return "#f0f"; //bright magenta
-			case 14: return "#0ff"; //bright cyan
-			case 15: return "#fff"; //bright white
+		case 8:  return "#888"; //gray
+		case 9:  return "#f00"; //bright red
+		case 10: return "#0f0"; //bright green
+		case 11: return "#ff0"; //bright yellow
+		case 12: return "#00f"; //bright blue
+		case 13: return "#f0f"; //bright magenta
+		case 14: return "#0ff"; //bright cyan
+		case 15: return "#fff"; //bright white
 		}
 
 		if (id > 231) {
@@ -769,10 +789,21 @@ console.log("scrolling: " + params.join(";"));
 		}
 	}
 
+	ScrollUp() {
+		for (let i=this.scrollRegionTop; i<this.scrollRegionBottom; i++) {
+
+		}
+	}
+
+	ScrollDown() {
+		for (let i=this.scrollRegionBottom; i>this.scrollRegionTop; i--) {
+			
+		}
+	}
+
 	EnableAlternateScreen() { //?1049h
 		this.savedScreen = this.screen;
 		this.ClearScreen();
-
 		this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
 	}
 
@@ -859,7 +890,7 @@ console.log("scrolling: " + params.join(";"));
 
 	ClearScreenAndBuffer() { //3J
 		this.ClearScreen();
-		//TODO: clear buffer
+		//TODO: clear scroll-back buffer
 	}
 
 	EraseLineFromCursorToEnd() { //0K

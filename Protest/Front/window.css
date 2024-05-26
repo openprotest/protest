@@ -310,6 +310,8 @@
 	text-align: center;
 	word-wrap: anywhere;
 	font-weight: 600;
+	max-height: calc(100% - 2px);
+	overflow-y: auto;
 }
 
 .win-dialog {
@@ -700,17 +702,5 @@
 		background: radial-gradient(circle, var(--clr-accent) 0%, transparent 100%);
 		background-repeat: no-repeat;
 		background-position-x: +400px;
-	}
-}
-
-@media screen and (-ms-high-contrast: active) {
-	.window {
-		background-color: #000;
-		color: #fff;
-		border: 1px solid #ff0;
-	}
-
-	.window>.control {
-		filter: brightness(4);
 	}
 }

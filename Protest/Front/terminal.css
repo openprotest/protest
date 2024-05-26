@@ -43,7 +43,8 @@
 	background-color: var(--clr-accent);
 	box-shadow: var(--clr-accent) 0 0 2px;
 	display: none;
-	
+
+	transition-timing-function: ease-out;
 	animation: terminal-blinking 1.2s infinite;
 }
 
