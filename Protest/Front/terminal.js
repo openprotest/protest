@@ -3,15 +3,16 @@ class Terminal extends Window {
 	static CHAR_HEIGHT = 18;
 
 	static SPECIAL_KEYS = {
-		"Enter"     : "\r",
-		"Tab"       : "\t",
-		"Backspace" : "\x08",
-		"ArrowUp"   : "\x1b[A",
-		"ArrowDown" : "\x1b[B",
-		"ArrowRight": "\x1b[C",
-		"ArrowLeft" : "\x1b[D",
-		"Home"      : "\x1b[H",
-		"End"       : "\x1b[F",
+		"Enter"      : "\r",
+		"NumpadEnter": "\r",
+		"Tab"        : "\t",
+		"Backspace"  : "\x08",
+		"ArrowUp"    : "\x1b[A",
+		"ArrowDown"  : "\x1b[B",
+		"ArrowRight" : "\x1b[C",
+		"ArrowLeft"  : "\x1b[D",
+		"Home"       : "\x1b[H",
+		"End"        : "\x1b[F",
 
 		"F1"  : "\x1b[OP",
 		"F2"  : "\x1b[OQ",
@@ -502,7 +503,12 @@ class Terminal extends Window {
 		this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
 
 		if (this.params.autoScroll) {
-			setTimeout(()=>this.cursorElement.scrollIntoView(), 250);
+			if (this.params.smoothCursor) {
+				setTimeout(()=>this.cursorElement.scrollIntoView(), 200);
+			}
+			else {
+				this.cursorElement.scrollIntoView();
+			}
 		}
 	}
 

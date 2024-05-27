@@ -41,7 +41,7 @@
 	height: 20px;
 	border-radius: 1px;
 	background-color: var(--clr-accent);
-	box-shadow: var(--clr-accent) 0 0 2px;
+	box-shadow: var(--clr-accent) 0 0 4px;
 	display: none;
 
 	transition-timing-function: ease-out;

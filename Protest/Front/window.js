@@ -1244,7 +1244,8 @@ class Window {
 			document.head.appendChild(cssLink);
 		}
 
-		if (!this.cssDependencies.includes(filename))
+		if (!this.cssDependencies.includes(filename)) {
 			this.cssDependencies.push(filename);
+		}
 	}
 }
