@@ -901,8 +901,8 @@ class Terminal extends Window {
 		for (key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
-			this.screen[`${x},${y - 1}`] = todo[key];
-			todo[key].style.top = `${(y-1) * Terminal.CHAR_HEIGHT}px`;
+			this.screen[`${x},${y + 1}`] = todo[key];
+			todo[key].style.top = `${(y + 1) * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
@@ -920,8 +920,8 @@ class Terminal extends Window {
 		for (key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
-			this.screen[`${x},${y + 1}`] = todo[key];
-			todo[key].style.top = `${(y+1) * Terminal.CHAR_HEIGHT}px`;
+			this.screen[`${x},${y - 1}`] = todo[key];
+			todo[key].style.top = `${(y - 1) * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
