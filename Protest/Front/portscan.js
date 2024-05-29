@@ -131,10 +131,10 @@ class PortScan extends Console {
 		10001: "UniFi Discovery Service"
 	};
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {
+		this.args = args ?? {
 			entries: [],
 			rangeFrom: 1,
 			rangeTo: 1023
@@ -161,9 +161,9 @@ class PortScan extends Console {
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
 
-		if (this.params.entries) { //restore entries from previous session
-			let temp = this.params.entries;
-			this.params.entries = [];
+		if (this.args.entries) { //restore entries from previous session
+			let temp = this.args.entries;
+			this.args.entries = [];
 			for (let i = 0; i < temp.length; i++)
 				this.Push(temp[i]);
 		}
@@ -171,7 +171,7 @@ class PortScan extends Console {
 		this.clearButton.addEventListener("click", ()=> {
 			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
 			if (okButton) okButton.addEventListener("click", ()=> {
-				this.params.entries = [];
+				this.args.entries = [];
 				this.list.textContent = "";
 				this.hashtable = {};
 				this.pending = [];
@@ -184,14 +184,14 @@ class PortScan extends Console {
 		};
 
 		this.copyButton.addEventListener("click", ()=> {
-			const paramsCopy = structuredClone(this.params);
-			paramsCopy.entries = [];
-			const copy = new PortScan(paramsCopy);
+			const argsCopy = structuredClone(this.args);
+			argsCopy.entries = [];
+			const copy = new PortScan(argsCopy);
 			const dialog = copy.Options();
 
 			dialog.okButton.addEventListener("click", ()=> {
-				for (let i = 0; i < this.params.entries.length; i++) {
-					copy.Add(this.params.entries[i]);
+				for (let i = 0; i < this.args.entries.length; i++) {
+					copy.Add(this.args.entries[i]);
 				}
 			});
 
@@ -230,7 +230,7 @@ class PortScan extends Console {
 		fromInput.type = "number";
 		fromInput.min = 1;
 		fromInput.max = 65534;
-		fromInput.value = this.params.rangeFrom;
+		fromInput.value = this.args.rangeFrom;
 		fromInput.style.display = "inline";
 		fromInput.style.width = "100px";
 		innerBox.appendChild(fromInput);
@@ -244,7 +244,7 @@ class PortScan extends Console {
 		toInput.type = "number";
 		toInput.min = 2;
 		toInput.max = 65535;
-		toInput.value = this.params.rangeTo;
+		toInput.value = this.args.rangeTo;
 		toInput.style.display = "inline";
 		toInput.style.width = "100px";
 		innerBox.appendChild(toInput);
@@ -260,8 +260,8 @@ class PortScan extends Console {
 		const ok_click = okButton.onclick;
 
 		okButton.onclick = ()=> {
-			this.params.rangeFrom = parseInt(fromInput.value);
-			this.params.rangeTo = parseInt(toInput.value);
+			this.args.rangeFrom = parseInt(fromInput.value);
+			this.args.rangeTo = parseInt(toInput.value);
 			ok_click();
 		};
 
@@ -400,12 +400,12 @@ class PortScan extends Console {
 			}
 		};
 
-		this.params.entries.push(hostname);
+		this.args.entries.push(hostname);
 
 		this.pending.push(hostname);
 
 		if (this.ws != null && this.ws.readyState === 1) { //ready
-			this.ws.send(hostname + ";" + this.params.rangeFrom + ";" + this.params.rangeTo);
+			this.ws.send(hostname + ";" + this.args.rangeFrom + ";" + this.args.rangeTo);
 		}
 		else if (this.ws === null || (this.ws != null && this.ws.readyState != 0)) { //not connecting
 			this.Connect();
@@ -424,9 +424,9 @@ class PortScan extends Console {
 		if (this.pending.length === 0)
 			if (this.ws != null && this.ws.readyState === 1) this.ws.close();
 
-		const index = this.params.entries.indexOf(hostname);
+		const index = this.args.entries.indexOf(hostname);
 		if (index > -1)
-			this.params.entries.splice(index, 1);
+			this.args.entries.splice(index, 1);
 
 		this.UpdateTaskSpinner();
 	}
@@ -448,7 +448,7 @@ class PortScan extends Console {
 
 		this.ws.onopen = ()=> {
 			for (let i = 0; i < this.pending.length; i++)
-				this.ws.send(this.pending[i] + ";" + this.params.rangeFrom + ";" + this.params.rangeTo);
+				this.ws.send(this.pending[i] + ";" + this.args.rangeFrom + ";" + this.args.rangeTo);
 
 			for (let i = 0; i < this.list.childNodes.length; i++) //remove warnings, if exist
 				if (this.list.childNodes[i].id == "self_destruct")

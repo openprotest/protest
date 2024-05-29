@@ -1,8 +1,8 @@
 class AddressBook extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {view:"card", search:""};
+		this.args = args ?? {view:"card", search:""};
 
 		this.AddCssDependencies("addressbook.css");
 
@@ -58,9 +58,9 @@ class AddressBook extends Window {
 
 		this.searchBar.append(this.searchBox, this.frequentWords, this.viewButton, this.downloadButton);
 
-		this.searchBox.value = this.params.search;
+		this.searchBox.value = this.args.search;
 
-		if (this.params.view === "list") {
+		if (this.args.view === "list") {
 			this.ViewAsList();
 		}
 
@@ -114,7 +114,7 @@ class AddressBook extends Window {
 			this.RefreshList();
 		}, 200);
 
-		this.params.search = this.searchBox.value;
+		this.args.search = this.searchBox.value;
 	}
 
 	Contact_onclick(element, index) {
@@ -136,12 +136,12 @@ class AddressBook extends Window {
 			this.win.appendChild(dim);
 		}
 
-		if (this.params.view === "card")
+		if (this.args.view === "card")
 			element.style.opacity = "0";
 
 		const preview = document.createElement("div");
 		preview.className = "address-book-preview";
-		if (this.params.view === "card") {
+		if (this.args.view === "card") {
 			preview.style.width = `${element.clientWidth*2}px`;
 			preview.style.height = `${element.clientHeight*2}px`;
 			preview.style.left = `${element.offsetLeft - element.clientWidth/2}px`;
@@ -327,7 +327,7 @@ class AddressBook extends Window {
 			preview.style.transition = ".2s";
 			closeButton.style.opacity = "0";
 
-			if (this.params.view === "card") {
+			if (this.args.view === "card") {
 				preview.style.width = `${element.clientWidth*2}px`;
 				preview.style.height = `${element.clientHeight*2}px`;
 				preview.style.left = `${element.offsetLeft - element.clientWidth/2}px`;
@@ -446,7 +446,7 @@ class AddressBook extends Window {
 
 			element.onclick = ()=>{
 				this.searchBox.value = `${this.searchBox.value} ${keys[i]}`.trim();
-				this.params.search = this.searchBox.value;
+				this.args.search = this.searchBox.value;
 				this.RefreshList();
 			};
 		}
@@ -533,12 +533,12 @@ class AddressBook extends Window {
 	}
 
 	ToggleView() {
-		if (this.params.view === "list") {
-			this.params.view = "card";
+		if (this.args.view === "list") {
+			this.args.view = "card";
 			this.ViewAsCards();
 		}
 		else {
-			this.params.view = "list";
+			this.args.view = "list";
 			this.ViewAsList();
 		}
 	}

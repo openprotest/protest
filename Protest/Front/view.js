@@ -1,5 +1,5 @@
 class View extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
 		this.AddCssDependencies("view.css");
@@ -242,7 +242,7 @@ class View extends Window {
 
 			showButton.onclick = async ()=> {
 				try {
-					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.params.file}&attribute=${name}`);
+					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${name}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const password = await response.text();
 
@@ -265,7 +265,7 @@ class View extends Window {
 
 			stampButton.onclick = async ()=> {
 				try {
-					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.params.file}&attribute=${name}`);
+					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${name}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const password = await response.text();
 					UI.PromptAgent(this, "stamp", password);
@@ -464,7 +464,7 @@ class View extends Window {
 
 		let json;
 		try {
-			const response = await fetch(`db/${this.dbTarget}/timeline?file=${this.params.file}`);
+			const response = await fetch(`db/${this.dbTarget}/timeline?file=${this.args.file}`);
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

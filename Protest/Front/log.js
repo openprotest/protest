@@ -1,8 +1,8 @@
 class Log extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ? params : {
+		this.args = args ? args : {
 			autoScroll: true,
 			opaque: true,
 			onTop: false
@@ -56,31 +56,31 @@ class Log extends Window {
 		autoScrollBox.style.paddingRight = "32px";
 		autoScrollBox.style.paddingBottom = "8px";
 		this.options.appendChild(autoScrollBox);
-		this.autoScrollCheckbox = this.CreateToggle("Auto-scroll", this.params.autoScroll, autoScrollBox).checkbox;
+		this.autoScrollCheckbox = this.CreateToggle("Auto-scroll", this.args.autoScroll, autoScrollBox).checkbox;
 
 		this.opaqueBox = document.createElement("div");
 		this.opaqueBox.style.display = "inline-block";
 		this.opaqueBox.style.paddingRight = "32px";
 		this.opaqueBox.style.paddingBottom = "8px";
 		this.options.appendChild(this.opaqueBox);
-		this.opaqueCheckbox = this.CreateToggle("Opaque", this.params.opaque, this.opaqueBox).checkbox;
+		this.opaqueCheckbox = this.CreateToggle("Opaque", this.args.opaque, this.opaqueBox).checkbox;
 
 		this.onTopBox = document.createElement("div");
 		this.onTopBox.style.display = "inline-block";
 		this.onTopBox.style.paddingRight = "32px";
 		this.onTopBox.style.paddingBottom = "8px";
 		this.options.appendChild(this.onTopBox);
-		this.onTopCheckbox = this.CreateToggle("Always on top", this.params.onTop, this.onTopBox).checkbox;
+		this.onTopCheckbox = this.CreateToggle("Always on top", this.args.onTop, this.onTopBox).checkbox;
 		
-		this.autoScrollCheckbox.onchange = ()=> { this.params.autoScroll = this.onTopBox.checked; };
+		this.autoScrollCheckbox.onchange = ()=> { this.args.autoScroll = this.onTopBox.checked; };
 
 		this.opaqueCheckbox.onchange = ()=> {
-			this.params.opaque = this.opaqueCheckbox.checked;
+			this.args.opaque = this.opaqueCheckbox.checked;
 			this.SetOpaque(this.opaqueCheckbox.checked);
 		};
 
 		this.onTopCheckbox.onchange = ()=> {
-			this.params.onTop = this.onTopCheckbox.checked;
+			this.args.onTop = this.onTopCheckbox.checked;
 			this.SetOnTop(this.onTopCheckbox.checked);
 		};
 
@@ -98,14 +98,14 @@ class Log extends Window {
 		this.opaqueBox.style.visibility = "hidden";
 		this.onTopBox.style.visibility = "hidden";
 
-		if (this.popOutWindow && !this.params.opaque){
+		if (this.popOutWindow && !this.args.opaque){
 			this.SetOpaque(true);
 		}
 
 		unPopButton.addEventListener("click", ()=> {
 			this.opaqueBox.style.visibility = "visible";
 			this.onTopBox.style.visibility = "visible";
-			if (!this.params.opaque) {
+			if (!this.args.opaque) {
 				this.SetOpaque(false);
 			}
 		});
@@ -155,7 +155,7 @@ class Log extends Window {
 			this.isLoading = false;
 			await this.ListNextLog();
 
-			if (this.params.autoScroll) {
+			if (this.args.autoScroll) {
 				this.list.scrollTop = this.list.scrollHeight;
 			}
 		}
@@ -220,7 +220,7 @@ class Log extends Window {
 	Add(log) {
 		const element = this.CreateLog(log);
 		this.list.appendChild(element);
-		if (this.params.autoScroll) element.scrollIntoView();
+		if (this.args.autoScroll) element.scrollIntoView();
 	}
 
 	SetOpaque(opaque) {

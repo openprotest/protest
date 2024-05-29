@@ -357,7 +357,7 @@ class Chat extends Window {
 				break;
 
 			case "chat-command":
-				this.CreateCommandBubble(message.command, message.params, message.icon, message.title, direction, message.sender, message.alias, message.color, timeString);
+				this.CreateCommandBubble(message.command, message.args, message.icon, message.title, direction, message.sender, message.alias, message.color, timeString);
 				break;
 
 			case "chat-offer":
@@ -797,7 +797,7 @@ class Chat extends Window {
 		return bubble;
 	}
 
-	CreateCommandBubble(command, params, icon, title, direction, sender, alias, color, time) {
+	CreateCommandBubble(command, args, icon, title, direction, sender, alias, color, time) {
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 
 		const commandBox = document.createElement("div");
@@ -809,7 +809,7 @@ class Chat extends Window {
 		commandBox.onclick = ()=> {
 			const window = LOADER.Invoke({
 				class: command,
-				params: JSON.parse(params)
+				args: JSON.parse(args)
 			});
 			window.Pop();
 		};

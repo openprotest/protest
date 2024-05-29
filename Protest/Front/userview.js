@@ -18,30 +18,30 @@ class UserView extends View {
 		"sim", "puk", "voicemail"
 	];
 
-	constructor(params) {
+	constructor(args) {
 		super();
-		this.params = params ?? { file: null };
+		this.args = args ?? { file: null };
 
 		this.SetIcon("mono/user.svg");
 
 		this.liveStatsWebSockets = null;
-		this.link = LOADER.users.data[this.params.file];
+		this.link = LOADER.users.data[this.args.file];
 		this.order = "group";
 		this.groupSchema = UserView.USERS_GROUP_SCHEMA;
 		this.dbTarget = "user";
 
-		if (params.file && !this.link) {
+		if (args.file && !this.link) {
 			this.SetTitle("not found");
 			this.ConfirmBox("User no longer exists", true).addEventListener("click", ()=> this.Close());
 			return;
 		}
 
-		if (params.file) {
+		if (args.file) {
 			this.SetTitle(this.link.title ? this.link.title.v : "");
 			this.InitializePreview();
 		}
-		else if (params.copy) {
-			const origin = LOADER.users.data[params.copy];
+		else if (args.copy) {
+			const origin = LOADER.users.data[args.copy];
 			this.SetTitle(origin.title ? `Copy of ${origin.title.v}` : "Copy");
 			this.Edit(true);
 
@@ -90,7 +90,7 @@ class UserView extends View {
 				if (unlockButton.hasAttribute("busy")) return;
 				try {
 					unlockButton.setAttribute("busy", true);
-					const response = await fetch(`manage/user/unlock?file=${this.params.file}`);
+					const response = await fetch(`manage/user/unlock?file=${this.args.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 
@@ -107,7 +107,7 @@ class UserView extends View {
 				if (enableButton.hasAttribute("busy")) return;
 				try {
 					enableButton.setAttribute("busy", true);
-					const response = await fetch(`manage/user/enable?file=${this.params.file}`);
+					const response = await fetch(`manage/user/enable?file=${this.args.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
@@ -120,7 +120,7 @@ class UserView extends View {
 				if (disableButton.hasAttribute("busy")) return;
 				try {
 					disableButton.setAttribute("busy", true);
-					const response = await fetch(`manage/user/disable?file=${this.params.file}`);
+					const response = await fetch(`manage/user/disable?file=${this.args.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
@@ -145,7 +145,7 @@ class UserView extends View {
 			this.liveB.textContent = "";
 			this.liveD.textContent = "";
 
-			this.liveStatsWebSockets.send(this.params.file);
+			this.liveStatsWebSockets.send(this.args.file);
 		};
 
 		this.liveStatsWebSockets.onmessage = event=> {
@@ -171,7 +171,7 @@ class UserView extends View {
 
 	Edit(isNew = false) { //overrides
 		const fetchButton = document.createElement("button");
-		if (isNew && !this.params.copy) {
+		if (isNew && !this.args.copy) {
 			fetchButton.className = "view-fetch-floating-button";
 			fetchButton.setAttribute("tip-below", "Fetch");
 			this.content.appendChild(fetchButton);
@@ -217,7 +217,7 @@ class UserView extends View {
 			}
 
 			try {
-				const response = await fetch(this.params.file ? `db/user/save?file=${this.params.file}` : "db/user/save", {
+				const response = await fetch(this.args.file ? `db/user/save?file=${this.args.file}` : "db/user/save", {
 					method: "POST",
 					body: JSON.stringify(obj)
 				});
@@ -227,7 +227,7 @@ class UserView extends View {
 				const json = await response.json();
 				if (json.error) throw (json.error);
 
-				this.params.file = json.filename;
+				this.args.file = json.filename;
 				this.link = obj;
 				LOADER.users.data[json.filename] = obj;
 
@@ -371,25 +371,25 @@ class UserView extends View {
 	}
 
 	Copy() { //overrides
-		new UserView({ copy: this.params.file });
+		new UserView({ copy: this.args.file });
 	}
 
 	Delete() { //overrides
 		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`db/user/delete?file=${this.params.file}`);
+				const response = await fetch(`db/user/delete?file=${this.args.file}`);
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();
 				if (json.error) throw (json.error);
 
-				delete LOADER.users.data[this.params.file];
+				delete LOADER.users.data[this.args.file];
 				LOADER.users.length--;
 
 				for (let i = 0; i < WIN.array.length; i++) {
 					if (WIN.array[i] instanceof UsersList) {
-						let element = Array.from(WIN.array[i].list.childNodes).filter(o=> o.getAttribute("id") === this.params.file);
+						let element = Array.from(WIN.array[i].list.childNodes).filter(o=> o.getAttribute("id") === this.args.file);
 						element.forEach(o=> WIN.array[i].list.removeChild(o));
 
 						WIN.array[i].UpdateViewport(true);

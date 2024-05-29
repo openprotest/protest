@@ -1,8 +1,8 @@
 class Settings extends Tabs {
-	constructor(params) {
+	constructor(args) {
 		super(null);
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.AddCssDependencies("list.css");
 
@@ -31,7 +31,7 @@ class Settings extends Tabs {
 		//TODO:
 		this.graphTab.style.display = "none";
 
-		switch (this.params) {
+		switch (this.args) {
 		case "ad":
 			this.adTab.className = "v-tab-selected";
 			this.ShowActiveDirectory();
@@ -84,7 +84,7 @@ class Settings extends Tabs {
 	}
 
 	ShowZones() {
-		this.params = "zones";
+		this.args = "zones";
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
@@ -184,7 +184,7 @@ class Settings extends Tabs {
 	}
 
 	async ShowActiveDirectory() {
-		this.params = "ad";
+		this.args = "ad";
 		this.tabsPanel.textContent = "";
 
 		const domainLabel = document.createElement("div");
@@ -231,7 +231,7 @@ class Settings extends Tabs {
 	}
 
 	ShowSmtp() {
-		this.params = "smtp";
+		this.args = "smtp";
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
@@ -400,7 +400,7 @@ class Settings extends Tabs {
 	}
 
 	ShowSnmp() {
-		this.params = "snmp";
+		this.args = "snmp";
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
@@ -488,7 +488,7 @@ class Settings extends Tabs {
 	}
 
 	ShowGraph() {
-		this.params = "graph";
+		this.args = "graph";
 		this.tabsPanel.textContent = "";
 	}
 

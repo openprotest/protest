@@ -1,21 +1,21 @@
 class Monitor extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
-		this.params = params ?? { file: null};
-		this.params.interval ??= 1000;
-		this.params.chart ??= [];
+		this.args = args ?? { file: null};
+		this.args.interval ??= 1000;
+		this.args.chart ??= [];
 
 		this.SetIcon("mono/resmonitor.svg");
 
 		this.socket = null;
-		this.link = LOADER.devices.data[this.params.file];
+		this.link = LOADER.devices.data[this.args.file];
 		this.autoReconnect = true;
 		this.connectRetries = 0;
 		this.hideConsoleOnce = true;
 		this.chartsList = [];
 		this.count = 0;
 
-		if (params.file && !this.link) {
+		if (args.file && !this.link) {
 			this.SetTitle("Resource monitor - not found");
 			this.ConfirmBox("Device no longer exists", true).addEventListener("click", ()=>this.Close());
 			return;
@@ -68,8 +68,8 @@ class Monitor extends Window {
 
 		this.AddChart("Ping", "icmp", { protocol:"icmp", format:"Ping chart", prefix:"RTT", unit:"ms", max: 1000});
 
-		const copy = this.params.chart;
-		this.params.chart = [];
+		const copy = this.args.chart;
+		this.args.chart = [];
 		for (let i=0; i<copy.length; i++) {
 			this.AddChart(copy[i].name, copy[i].value, copy[i].options);
 		}
@@ -148,7 +148,7 @@ class Monitor extends Window {
 
 		this.socket.onopen = event=> {
 			this.connectRetries = 0;
-			this.socket.send(this.params.file);
+			this.socket.send(this.args.file);
 			this.ConsoleLog("Web-socket connection established", "info");
 
 			if (this.hideConsoleOnce) {
@@ -158,27 +158,27 @@ class Monitor extends Window {
 
 			this.socket.send(JSON.stringify({
 				action: "interval",
-				value: this.params.interval.toString()
+				value: this.args.interval.toString()
 			}));
 
-			for (let i=0; i<this.params.chart.length; i++) {
-				if (this.params.chart[i].options.protocol === "wmi") {
+			for (let i=0; i<this.args.chart.length; i++) {
+				if (this.args.chart[i].options.protocol === "wmi") {
 					this.socket.send(JSON.stringify({
 						action: "addwmi",
-						value: this.params.chart[i].value,
+						value: this.args.chart[i].value,
 						index: i+1
 					}));
 				}
-				else if (this.params.chart[i].options.protocol === "snmp") {
+				else if (this.args.chart[i].options.protocol === "snmp") {
 					this.socket.send(JSON.stringify({
 						action: "addsnmp",
-						value: this.params.chart[i].value,
+						value: this.args.chart[i].value,
 						index: i+1,
-						version: this.params.chart[i].version,
-						auth: this.params.chart[i].auth
+						version: this.args.chart[i].version,
+						auth: this.args.chart[i].auth
 					}));
 				}
-				else if (this.params.chart[i].options.protocol === "icmp") {
+				else if (this.args.chart[i].options.protocol === "icmp") {
 					this.socket.send(JSON.stringify({
 						action: "addicmp",
 						value: "icmp",
@@ -316,7 +316,7 @@ class Monitor extends Window {
 		intervalInput.type = "number";
 		intervalInput.min = 100;
 		intervalInput.max = 10_000;
-		intervalInput.value = this.params.interval;
+		intervalInput.value = this.args.interval;
 		intervalInput.style.width = "100px";
 		innerBox.appendChild(intervalInput);
 
@@ -325,7 +325,7 @@ class Monitor extends Window {
 		};
 
 		okButton.onclick = ()=> {
-			this.params.interval = intervalInput.value;
+			this.args.interval = intervalInput.value;
 
 			this.socket.send(JSON.stringify({
 				action: "interval",
@@ -1263,14 +1263,14 @@ class Monitor extends Window {
 
 	AddChart(name, value, options) {
 		if (options.protocol === "wmi") {
-			this.params.chart.push({
+			this.args.chart.push({
 				name: name,
 				value: value,
 				options: options
 			});
 		}
 		else if (options.protocol === "snmp") {
-			this.params.chart.push({
+			this.args.chart.push({
 				name: name,
 				value: value,
 				version: options.version,

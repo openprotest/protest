@@ -1,8 +1,8 @@
 class SiteCheck extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ? params : { value: "" };
+		this.args = args ? args : { value: "" };
 
 		this.SetTitle("Site check");
 		this.SetIcon("mono/websitecheck.svg");
@@ -19,7 +19,7 @@ class SiteCheck extends Window {
 		this.targetInput.style.width = "60%";
 		this.targetInput.style.maxWidth = "720px";
 		this.targetInput.style.textAlign = "center";
-		this.targetInput.value = this.params.value;
+		this.targetInput.value = this.args.value;
 		this.content.appendChild(this.targetInput);
 
 		this.defaultElement = this.targetInput;
@@ -59,7 +59,7 @@ class SiteCheck extends Window {
 		};
 
 		this.targetInput.oninput = event=> {
-			this.params.value = this.targetInput.value;
+			this.args.value = this.targetInput.value;
 		};
 
 		this.checkButton.onclick = ()=> {

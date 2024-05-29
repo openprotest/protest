@@ -87,20 +87,20 @@ class Automation extends List {
 		this.startButton.disabled = true;
 		this.stopButton.disabled = true;
 
-		if (!(this.params.select in this.link.data)) {
+		if (!(this.args.select in this.link.data)) {
 			return;
 		}
 
-		if (this.link.data[this.params.select].name.v.toLowerCase() === "lifeline" ||
-			this.link.data[this.params.select].name.v.toLowerCase() === "watchdog" ||
-			this.link.data[this.params.select].name.v.toLowerCase() === "fetch") {
+		if (this.link.data[this.args.select].name.v.toLowerCase() === "lifeline" ||
+			this.link.data[this.args.select].name.v.toLowerCase() === "watchdog" ||
+			this.link.data[this.args.select].name.v.toLowerCase() === "fetch") {
 			this.deleteButton.disabled = true;
 		}
 		else {
 			//this.deleteButton.disabled = false; //TODO: <-
 		}
 
-		if (this.link.data[this.params.select].status.v.toLowerCase() === "stopped") {
+		if (this.link.data[this.args.select].status.v.toLowerCase() === "stopped") {
 			//this.startButton.disabled = false;
 			this.stopButton.disabled = true;
 		}

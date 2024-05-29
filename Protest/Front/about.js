@@ -1,8 +1,8 @@
 class About extends Tabs {
-	constructor(params) {
+	constructor(args) {
 		super(null);
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.SetTitle("About");
 		this.SetIcon("mono/logo.svg");
@@ -20,7 +20,7 @@ class About extends Tabs {
 		this.updateTab.onclick = ()=> this.ShowUpdate();
 		this.updateModTab.onclick = ()=> this.ShowUpdateModules();
 
-		switch (this.params) {
+		switch (this.args) {
 		case "legal":
 			this.legalTab.className = "v-tab-selected";
 			this.ShowLegal();
@@ -43,7 +43,7 @@ class About extends Tabs {
 	}
 
 	async ShowAbout() {
-		this.params = "about";
+		this.args = "about";
 		this.tabsPanel.textContent = "";
 
 		const aboutBox = document.createElement("div");
@@ -209,7 +209,7 @@ class About extends Tabs {
 	}
 
 	async ShowUpdate() {
-		this.params = "update";
+		this.args = "update";
 		this.tabsPanel.textContent = "";
 
 		const animationBox = document.createElement("div");
@@ -289,7 +289,7 @@ class About extends Tabs {
 	}
 
 	async ShowLegal() {
-		this.params = "legal";
+		this.args = "legal";
 		this.tabsPanel.textContent = "";
 
 		const box = document.createElement("div");
@@ -307,7 +307,7 @@ class About extends Tabs {
 	}
 
 	async ShowUpdateModules() {
-		this.params = "updatemod";
+		this.args = "updatemod";
 		this.tabsPanel.textContent = "";
 
 		const location    = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["csv"]);

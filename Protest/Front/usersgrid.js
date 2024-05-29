@@ -1,5 +1,5 @@
 class UsersGrid extends Grid {
-	constructor(params) {
+	constructor() {
 		super(LOADER.users.data);
 
 		this.SetTitle("Users grid view");

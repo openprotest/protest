@@ -18,7 +18,7 @@ class Window {
 		this.position = null;
 		this.escAction = null;
 		this.defaultElement = null;
-		this.params = {};
+		this.args = {};
 		this.messagesQueue = [];
 		this.cssDependencies = [];
 		this.toolbar = null;

@@ -1,10 +1,10 @@
 class Wmi extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
 		this.AddCssDependencies("wmi.css");
 
-		this.params = params ?? { target: "", query: "" };
+		this.args = args ?? { target: "", query: "" };
 
 		this.SetTitle("WMI client");
 		this.SetIcon("mono/wmi.svg");
@@ -28,7 +28,7 @@ class Wmi extends Window {
 		this.targetInput.type = "text";
 		this.targetInput.placeholder = "hostname or ip";
 		this.targetInput.style.gridArea = "1 / 2";
-		if (this.params.target != null) this.targetInput.value = this.params.target;
+		if (this.args.target != null) this.targetInput.value = this.args.target;
 		wmiInput.appendChild(this.targetInput);
 
 		const queryLabel = document.createElement("div");
@@ -41,7 +41,7 @@ class Wmi extends Window {
 		this.queryInput.style.gridArea = "2 / 2 / 2 span / auto";
 		//this.queryInput.style.fontFamily = "monospace";
 		this.queryInput.style.resize = "none";
-		if (this.params.query != null) this.queryInput.value = this.params.query;
+		if (this.args.query != null) this.queryInput.value = this.args.query;
 		wmiInput.appendChild(this.queryInput);
 
 		const helperButton = document.createElement("input");
@@ -66,8 +66,8 @@ class Wmi extends Window {
 		this.plotBox.className = "wmi-plot no-results";
 		this.content.appendChild(this.plotBox);
 
-		this.targetInput.oninput = ()=> { this.params.target = this.targetInput.value };
-		this.queryInput.oninput = ()=> { this.params.query = this.queryInput.value };
+		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
+		this.queryInput.oninput = ()=> { this.args.query = this.queryInput.value };
 
 		helperButton.onclick = ()=> this.SequelAssistant();
 
@@ -81,7 +81,7 @@ class Wmi extends Window {
 				wmiInput.style.opacity = "1";
 				wmiInput.style.transform = "none";
 				this.plotBox.style.top = "136px";
-				this.params.hideInput = false;
+				this.args.hideInput = false;
 			}
 			else {
 				toggleButton.style.top = "0px";
@@ -90,16 +90,16 @@ class Wmi extends Window {
 				wmiInput.style.opacity = "0";
 				wmiInput.style.transform = "translateY(-64px)";
 				this.plotBox.style.top = "36px";
-				this.params.hideInput = true;
+				this.args.hideInput = true;
 			}
 		};
 
 
-		if (this.params.target.length > 0 && this.params.query.length > 0) {
+		if (this.args.target.length > 0 && this.args.query.length > 0) {
 			this.executeButton.onclick();
 		}
 
-		if (this.params.hideInput) {
+		if (this.args.hideInput) {
 			toggleButton.onclick();
 		}
 	}
@@ -208,7 +208,7 @@ class Wmi extends Window {
 
 		okButton.addEventListener("click", ()=> {
 			this.queryInput.value = previewInput.value;
-			this.params.query = this.queryInput.value;
+			this.args.query = this.queryInput.value;
 		});
 
 		classFilterInput.onkeydown = event=>{

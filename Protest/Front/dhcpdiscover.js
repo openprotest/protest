@@ -1,10 +1,10 @@
 class DhcpDiscover extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 		this.SetTitle("DHCP client");
 		this.SetIcon("mono/dhcp.svg");
 
-		this.params = params ?? {
+		this.args = args ?? {
 			timeout: 5000,
 			hostname: "",
 			mac: "",
@@ -43,7 +43,7 @@ class DhcpDiscover extends Window {
 		this.timeoutInput.type = "number";
 		this.timeoutInput.min = 100;
 		this.timeoutInput.max = 30000;
-		this.timeoutInput.value = this.params.timeout;
+		this.timeoutInput.value = this.args.timeout;
 		this.timeoutInput.style.gridRow = "1";
 		this.timeoutInput.style.gridColumn = "3";
 		grid.appendChild(this.timeoutInput);
@@ -59,7 +59,7 @@ class DhcpDiscover extends Window {
 		this.hostnameInput = document.createElement("input");
 		this.hostnameInput.type = "text";
 		this.hostnameInput.placeholder = "none";
-		this.hostnameInput.value = this.params.hostname;
+		this.hostnameInput.value = this.args.hostname;
 		this.hostnameInput.style.gridRow = "2";
 		this.hostnameInput.style.gridColumn = "3";
 		grid.appendChild(this.hostnameInput);
@@ -75,7 +75,7 @@ class DhcpDiscover extends Window {
 		this.macInput = document.createElement("input");
 		this.macInput.type = "text";
 		this.macInput.placeholder = "system default";
-		this.macInput.value = this.params.mac;
+		this.macInput.value = this.args.mac;
 		this.macInput.style.gridRow = "3";
 		this.macInput.style.gridColumn = "3";
 		grid.appendChild(this.macInput);
@@ -92,7 +92,7 @@ class DhcpDiscover extends Window {
 		acceptBox.style.gridColumn = "3";
 		grid.appendChild(acceptBox);
 
-		this.acceptToggle = this.CreateToggle(".", this.params.accept, acceptBox);
+		this.acceptToggle = this.CreateToggle(".", this.args.accept, acceptBox);
 		this.acceptToggle.label.style.paddingLeft = "8px";
 
 		this.discoverButton = document.createElement("input");
@@ -188,19 +188,19 @@ class DhcpDiscover extends Window {
 		this.content.appendChild(this.result);
 
 		this.timeoutInput.onchange = ()=> {
-			this.params.timeout = this.timeoutInput.value;
+			this.args.timeout = this.timeoutInput.value;
 		};
 
 		this.hostnameInput.onchange = ()=> {
-			this.params.hostname = this.hostnameInput.value;
+			this.args.hostname = this.hostnameInput.value;
 		};
 
 		this.macInput.onchange = ()=> {
-			this.params.mac = this.macInput.value;
+			this.args.mac = this.macInput.value;
 		};
 
 		this.acceptToggle.checkbox.onchange = ()=> {
-			this.params.accept = this.acceptToggle.checkbox.checked;
+			this.args.accept = this.acceptToggle.checkbox.checked;
 		};
 
 		this.discoverButton.onclick = ()=> this.Discover();

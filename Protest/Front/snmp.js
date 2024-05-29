@@ -1,10 +1,10 @@
 class Snmp extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
 		this.AddCssDependencies("snmp.css");
 
-		this.params = params ?? { target: "", community:"", oid: "" };
+		this.args = args ?? { target: "", community:"", oid: "" };
 
 		this.SetTitle("SNMP pooling");
 		this.SetIcon("mono/snmp.svg");
@@ -26,7 +26,7 @@ class Snmp extends Window {
 		this.targetInput.placeholder = "hostname or ip";
 		this.targetInput.style.gridArea = "1 / 2 / 1 / 4";
 		this.targetInput.style.minWidth = "50px";
-		this.targetInput.value = this.params.target ?? "";
+		this.targetInput.value = this.args.target ?? "";
 		snmpInput.appendChild(this.targetInput);
 
 		const authLabel = document.createElement("div");
@@ -41,7 +41,7 @@ class Snmp extends Window {
 		this.communityInput.style.gridArea = "2 / 2";
 		this.communityInput.style.marginRight = "0";
 		this.communityInput.style.minWidth = "50px";
-		this.communityInput.value = this.params.community;
+		this.communityInput.value = this.args.community;
 		snmpInput.appendChild(this.communityInput);
 
 		this.credentialsInput = document.createElement("select");
@@ -53,7 +53,7 @@ class Snmp extends Window {
 
 		this.versionInput = document.createElement("select");
 		this.versionInput.style.gridArea = "2 / 3";
-		if (this.params.version) this.versionInput.value = this.params.version;
+		if (this.args.version) this.versionInput.value = this.args.version;
 		snmpInput.appendChild(this.versionInput);
 
 		const versionOptions = [1,2,3];
@@ -64,7 +64,7 @@ class Snmp extends Window {
 			this.versionInput.appendChild(option);
 		}
 
-		this.versionInput.value = this.params.version ?? 2;
+		this.versionInput.value = this.args.version ?? 2;
 
 		const oidLabel = document.createElement("div");
 		oidLabel.style.lineHeight = "28px";
@@ -77,7 +77,7 @@ class Snmp extends Window {
 		this.oidInput.style.gridArea = "3 / 2 / 5 / 4";
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";
-		this.oidInput.value = this.params.oid ?? "";
+		this.oidInput.value = this.args.oid ?? "";
 		snmpInput.appendChild(this.oidInput);
 
 		this.getButton = document.createElement("input");
@@ -116,13 +116,13 @@ class Snmp extends Window {
 		this.plotBox.className = "snmp-plot no-results";
 		this.content.appendChild(this.plotBox);
 
-		this.targetInput.oninput = ()=> { this.params.target = this.targetInput.value };
-		this.communityInput.oninput = ()=> { this.params.community = this.communityInput.value };
-		this.credentialsInput.onchange = ()=> { this.params.credentials = this.credentialsInput.value };
-		this.oidInput.oninput = ()=> { this.params.oid = this.oidInput.value };
+		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
+		this.communityInput.oninput = ()=> { this.args.community = this.communityInput.value };
+		this.credentialsInput.onchange = ()=> { this.args.credentials = this.credentialsInput.value };
+		this.oidInput.oninput = ()=> { this.args.oid = this.oidInput.value };
 
 		this.versionInput.onchange = ()=> {
-			this.params.version = this.versionInput.value;
+			this.args.version = this.versionInput.value;
 			this.walkButton.disabled = this.versionInput.value == 3;
 
 			if (this.versionInput.value == 3) {
@@ -147,7 +147,7 @@ class Snmp extends Window {
 				snmpInput.style.opacity = "1";
 				snmpInput.style.transform = "none";
 				this.plotBox.style.top = "136px";
-				this.params.hideInput = false;
+				this.args.hideInput = false;
 			}
 			else {
 				toggleButton.style.top = "0px";
@@ -156,11 +156,11 @@ class Snmp extends Window {
 				snmpInput.style.opacity = "0";
 				snmpInput.style.transform = "translateY(-64px)";
 				this.plotBox.style.top = "36px";
-				this.params.hideInput = true;
+				this.args.hideInput = true;
 			}
 		};
 
-		if (this.params.hideInput) {
+		if (this.args.hideInput) {
 			toggleButton.onclick();
 		}
 

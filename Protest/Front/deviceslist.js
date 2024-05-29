@@ -1,6 +1,6 @@
 class DevicesList extends List {
-	constructor(params) {
-		super(params);
+	constructor(args) {
+		super(args);
 
 		this.SetTitle("Devices");
 		this.SetIcon("mono/devices.svg");
@@ -50,8 +50,8 @@ class DevicesList extends List {
 		optionMacLookup.textContent = "MAC Lookup";
 		this.utilitiesDropDown.list.append(optionMacLookup);
 
-		if (this.params.find && this.params.find.length > 0) {
-			findInput.value = this.params.find;
+		if (this.args.find && this.args.find.length > 0) {
+			findInput.value = this.args.find;
 			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
 			findInput.parentElement.style.width = "200px";
 		}
@@ -192,9 +192,9 @@ class DevicesList extends List {
 
 	Delete() {
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
-			if (this.params.select === null) return;
+			if (this.args.select === null) return;
 
-			let file = this.params.select;
+			let file = this.args.select;
 
 			try {
 				const response = await fetch(`db/device/delete?file=${file}`);
@@ -213,12 +213,12 @@ class DevicesList extends List {
 						element.forEach(o=> WIN.array[i].list.removeChild(o));
 						WIN.array[i].UpdateViewport(true);
 					}
-					else if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
+					else if (WIN.array[i] instanceof DeviceView && WIN.array[i].args.file === file) {
 						WIN.array[i].Close();
 					}
 				}
 
-				this.params.select = null;
+				this.args.select = null;
 			}
 			catch (ex) {
 				console.error(ex);

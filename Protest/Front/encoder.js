@@ -1,8 +1,8 @@
 class Encoder extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.SetTitle("Encoder");
 		this.SetIcon("mono/encoder.svg");

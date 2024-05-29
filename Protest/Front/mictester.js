@@ -1,8 +1,8 @@
 class MicTester extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {
+		this.args = args ?? {
 			echoCancellation: true,
 			noiseSuppression: false,
 			sampleSize: 16,
@@ -48,10 +48,10 @@ class MicTester extends Window {
 		this.recordButton.onclick = () => this.Record();
 
 		this.startButton.onclick = () =>  this.Start(
-			this.params.echoCancellation,
-			this.params.noiseSuppression,
-			this.params.sampleSize,
-			this.params.sampleRate
+			this.args.echoCancellation,
+			this.args.noiseSuppression,
+			this.args.sampleSize,
+			this.args.sampleRate
 		);
 
 		this.stopButton.onclick = () => this.Stop();
@@ -159,18 +159,18 @@ class MicTester extends Window {
 		resUltraOption.text = "Ultra";
 		graphResolutionInput.append(resVeryLowOption, resLowOption, resMedOption, resHighOption, resVeryHighOption, resUltraOption);
 
-		echoCancellationToggle.checkbox.checked = this.params.echoCancellation;
-		noiseSuppressionToggle.checkbox.checked = this.params.noiseSuppression;
-		sampleSizeInput.value = this.params.sampleSize;
-		sampleRateInput.value = this.params.sampleRate;
-		graphResolutionInput.value = this.params.graphResolution;
+		echoCancellationToggle.checkbox.checked = this.args.echoCancellation;
+		noiseSuppressionToggle.checkbox.checked = this.args.noiseSuppression;
+		sampleSizeInput.value = this.args.sampleSize;
+		sampleRateInput.value = this.args.sampleRate;
+		graphResolutionInput.value = this.args.graphResolution;
 
 		okButton.onclick = async ()=> {
-			this.params.graphResolution = parseInt(graphResolutionInput.value);
-			this.params.echoCancellation = echoCancellationToggle.checkbox.checked;
-			this.params.noiseSuppression = noiseSuppressionToggle.checkbox.checked;
-			this.params.sampleSize = parseInt(sampleSizeInput.value);
-			this.params.sampleRate = parseInt(sampleRateInput.value);
+			this.args.graphResolution = parseInt(graphResolutionInput.value);
+			this.args.echoCancellation = echoCancellationToggle.checkbox.checked;
+			this.args.noiseSuppression = noiseSuppressionToggle.checkbox.checked;
+			this.args.sampleSize = parseInt(sampleSizeInput.value);
+			this.args.sampleRate = parseInt(sampleRateInput.value);
 
 			dialog.Close();
 		};
@@ -243,10 +243,10 @@ class MicTester extends Window {
 		this.Stop();
 		this.recordButton.disabled = true;
 		this.Start(
-			this.params.echoCancellation,
-			this.params.noiseSuppression,
-			this.params.sampleSize,
-			this.params.sampleRate,
+			this.args.echoCancellation,
+			this.args.noiseSuppression,
+			this.args.sampleSize,
+			this.args.sampleRate,
 			true
 		);
 	}
@@ -321,7 +321,7 @@ class MicTester extends Window {
 		if (this.stream) {
 			this.audioContext = new window.AudioContext();
 			this.analyser = this.audioContext.createAnalyser();
-			this.analyser.fftSize = this.params.graphResolution ?? 512;
+			this.analyser.fftSize = this.args.graphResolution ?? 512;
 			const bufferLength = this.analyser.frequencyBinCount;
 			const dataArray = new Uint8Array(bufferLength);
 
@@ -425,7 +425,7 @@ class MicTester extends Window {
 					}
 				}
 
-				if (peakIndex > -1 && this.params.graphResolution > 64) { //draw peak
+				if (peakIndex > -1 && this.args.graphResolution > 64) { //draw peak
 					ctx.fillStyle = "#c0c0c0";
 					ctx.textBaseline = "bottom";
 					const frequency = Math.round(peakIndex * this.audioContext.sampleRate / bufferLength / 2);
@@ -437,7 +437,7 @@ class MicTester extends Window {
 						ctx.fillRect(x-2, this.canvas.height - 52, 5, 5);
 						ctx.fillRect(x, this.canvas.height - 48, 1, 10);
 						ctx.fillText(`${frequencyString}`, x, this.canvas.height-20);
-						if (frequency >= 220 && this.params.graphResolution > 128) {
+						if (frequency >= 220 && this.args.graphResolution > 128) {
 							let note = this.CalculateNote(frequency);
 							ctx.fillText(`${note.note} ${note.cents}`, x, this.canvas.height);
 						}

@@ -1,8 +1,8 @@
 class PasswordStrength extends List {
-	constructor(params) {
-		super(params);
+	constructor(args) {
+		super(args);
 
-		this.params = params ?? {find:"", filter:"", sort:"", select:null};
+		this.args = args ?? {find:"", filter:"", sort:"", select:null};
 
 		this.SetTitle("Password strength");
 		this.SetIcon("mono/strength.svg");
@@ -20,8 +20,8 @@ class PasswordStrength extends List {
 		const gandalfButton = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
 		this.AddSendToChatButton();
 
-		if (this.params.find && this.params.find.length > 0) {
-			this.findInput.value = this.params.find;
+		if (this.args.find && this.args.find.length > 0) {
+			this.findInput.value = this.args.find;
 			this.findInput.parentElement.style.borderBottom = this.findInput.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
 			this.findInput.parentElement.style.width = "200px";
 		}
@@ -63,7 +63,7 @@ class PasswordStrength extends List {
 				newType.textContent = types[i];
 				filtersList.appendChild(newType);
 
-				if (types[i] === this.params.filter) {
+				if (types[i] === this.args.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
 					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 				}
@@ -71,12 +71,12 @@ class PasswordStrength extends List {
 				newType.onclick = ()=> {
 					ClearSelection();
 
-					if (this.params.filter === types[i]) {
-						this.params.filter = "";
+					if (this.args.filter === types[i]) {
+						this.args.filter = "";
 						filterButton.style.borderBottom = "";
 					}
 					else {
-						this.params.filter = types[i];
+						this.args.filter = types[i];
 						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 						newType.style.backgroundColor = "var(--clr-select)";
 					}
@@ -96,7 +96,7 @@ class PasswordStrength extends List {
 		};
 
 		filterButton.ondblclick = ()=> {
-			this.params.filter = "";
+			this.args.filter = "";
 			filterButton.style.borderBottom = "";
 			ClearSelection();
 			this.RefreshList();
@@ -141,7 +141,7 @@ class PasswordStrength extends List {
 		this.list.textContent = "";
 
 		let filtered = [];
-		if (this.params.filter.length === 0) {
+		if (this.args.filter.length === 0) {
 			for (let i = 0; i < this.link.length; i++) {
 				filtered.push(i);
 			}
@@ -149,18 +149,18 @@ class PasswordStrength extends List {
 		else {
 			for (let i = 0; i < this.link.length; i++) {
 				if (!this.link[i].type) continue;
-				if (this.link[i].type !== this.params.filter) continue;
+				if (this.link[i].type !== this.args.filter) continue;
 				filtered.push(i);
 			}
 		}
 
 		let found;
-		if (this.params.find && this.params.find.length === 0) {
+		if (this.args.find && this.args.find.length === 0) {
 			found = filtered;
 		}
 		else {
 			found = [];
-			const keywords = this.params.find.toLowerCase().split(" ").filter(o=> o.length > 0);
+			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
 
 			for (let i = 0; i < filtered.length; i++) {
 				let name = this.link[filtered[i]].name.toLowerCase();
@@ -186,9 +186,9 @@ class PasswordStrength extends List {
 
 		this.found = found;
 
-		if (this.params.sort && this.params.sort.length > 0) {
+		if (this.args.sort && this.args.sort.length > 0) {
 			let attr;
-			switch (this.params.sort) {
+			switch (this.args.sort) {
 			case "name"         : attr = "name";    break;
 			case "strength"     : attr = "entropy"; break;
 			case "modified"     : attr = "date";    break;

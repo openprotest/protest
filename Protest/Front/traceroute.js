@@ -1,8 +1,8 @@
 class TraceRoute extends Console {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ? params : { entries: [] };
+		this.args = args ? args : { entries: [] };
 
 		this.AddCssDependencies("tools.css");
 
@@ -22,9 +22,9 @@ class TraceRoute extends Console {
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.AddSendToChatButton();
 
-		if (this.params.entries) { //restore entries from previous session
-			let temp = this.params.entries;
-			this.params.entries = [];
+		if (this.args.entries) { //restore entries from previous session
+			let temp = this.args.entries;
+			this.args.entries = [];
 			for (let i = 0; i < temp.length; i++)
 				this.Push(temp[i]);
 		}
@@ -32,7 +32,7 @@ class TraceRoute extends Console {
 		this.clearButton.addEventListener("click", event=> {
 			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
 			if (okButton) okButton.addEventListener("click", ()=> {
-				this.params.entries = [];
+				this.args.entries = [];
 				this.list.textContent = "";
 				this.hashtable = {};
 				this.pending = [];
@@ -179,7 +179,7 @@ class TraceRoute extends Console {
 
 		expandedButton.onclick();
 
-		this.params.entries.push(hostname);
+		this.args.entries.push(hostname);
 
 		this.pending.push(hostname);
 
@@ -203,9 +203,9 @@ class TraceRoute extends Console {
 		if (this.pending.length === 0)
 			if (this.ws != null && this.ws.readyState === 1) this.ws.close();
 
-		const index = this.params.entries.indexOf(hostname);
+		const index = this.args.entries.indexOf(hostname);
 		if (index > -1)
-			this.params.entries.splice(index, 1);
+			this.args.entries.splice(index, 1);
 
 		this.UpdateTaskSpinner();
 	}

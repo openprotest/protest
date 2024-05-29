@@ -1,8 +1,8 @@
 class NtpClient extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ? params : "";
+		this.args = args ? args : "";
 
 		this.SetTitle("NTP client");
 		this.SetIcon("mono/clock.svg");
@@ -23,7 +23,7 @@ class NtpClient extends Window {
 		this.serverInput.style.width = "60%";
 		this.serverInput.style.maxWidth = "480px";
 		this.serverInput.placeholder = "time.nist.gov";
-		this.serverInput.value = params ?? "";
+		this.serverInput.value = args ?? "";
 		this.content.appendChild(this.serverInput);
 
 		const box = document.createElement("div");
@@ -92,11 +92,11 @@ class NtpClient extends Window {
 			if (event.key === "Enter") this.sendButton.onclick();
 		};
 
-		if (params) this.Request(Date.now());
+		if (args) this.Request(Date.now());
 	}
 
 	async Request(id) {
-		this.params = this.serverInput.value;
+		this.args = this.serverInput.value;
 		this.sendButton.disabled = true;
 
 		this.responseLabel.textContent = "";

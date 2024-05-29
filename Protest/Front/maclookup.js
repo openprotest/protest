@@ -1,8 +1,8 @@
 class MacLookup extends Console {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? { entries: [] };
+		this.args = args ?? { entries: [] };
 
 		this.AddCssDependencies("tools.css");
 
@@ -17,9 +17,9 @@ class MacLookup extends Console {
 
 		this.inputBox.placeholder = "mac address";
 
-		if (this.params.entries) { //restore entries from previous session
-			let temp = this.params.entries;
-			this.params.entries = [];
+		if (this.args.entries) { //restore entries from previous session
+			let temp = this.args.entries;
+			this.args.entries = [];
 			for (let i = 0; i < temp.length; i++)
 				this.Push(temp[i]);
 		}
@@ -29,7 +29,7 @@ class MacLookup extends Console {
 			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
 				this.hashtable = {};
-				this.params.entries = [];
+				this.args.entries = [];
 			});
 		});
 	}
@@ -87,7 +87,7 @@ class MacLookup extends Console {
 
 		remove.onclick = ()=> { this.Remove(macaddr); };
 
-		this.params.entries.push(macaddr);
+		this.args.entries.push(macaddr);
 
 		try {
 			const response = await fetch("tools/maclookup", {
@@ -113,8 +113,8 @@ class MacLookup extends Console {
 		this.list.removeChild(this.hashtable[macaddr].element);
 		delete this.hashtable[macaddr];
 
-		const index = this.params.entries.indexOf(macaddr);
+		const index = this.args.entries.indexOf(macaddr);
 		if (index > -1)
-			this.params.entries.splice(index, 1);
+			this.args.entries.splice(index, 1);
 	}
 }

@@ -1,8 +1,8 @@
 class Documentation extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? { keywords: "" };
+		this.args = args ?? { keywords: "" };
 
 		this.AddCssDependencies("documentation.css");
 		this.AddCssDependencies("list.css");
@@ -24,7 +24,7 @@ class Documentation extends Window {
 		this.searchInput = document.createElement("input");
 		this.searchInput.style.gridArea = "1 / 2";
 		this.searchInput.type = "search";
-		this.searchInput.value = this.params.keywords;
+		this.searchInput.value = this.args.keywords;
 		this.sidebar.appendChild(this.searchInput);
 
 		this.list = document.createElement("div");
@@ -296,7 +296,7 @@ class Documentation extends Window {
 	}
 
 	async ListDocs() {
-		this.params = { keywords: this.searchInput.value };
+		this.args = { keywords: this.searchInput.value };
 		try {
 			let uri = this.searchInput.value.length === 0 ?
 				"docs/list" :

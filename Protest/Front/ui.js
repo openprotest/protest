@@ -302,35 +302,35 @@ const MENU = {
 		{ t:"Watchdog",        i:"mono/watchdog.svg?light", g:"tools", h:false, f:()=> new Watchdog(), k:"" },
 		{ t:"Gandalf",         i:"mono/gandalf.svg?light",  g:"tools", h:false, f:()=> new Gandalf() },
 		{ t:"Issues",          i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
-		{ t:"WMI client",      i:"mono/wmi.svg?light",      g:"tools", h:false, f:params=> new Wmi(params), k:"windows management instrumentation viewer" },
-		{ t:"SNMP polling",    i:"mono/snmp.svg?light",     g:"tools", h:false, f:params=> new Snmp(params) },
-		//{ t:"SNMP traps",      i:"mono/trap.svg?light",          g:"tools", h:false, f:params=> new Snmp(params) },
-		//{ t:"Scripts",         i:"mono/scripts.svg?light",       g:"tools", h:false, f:params=> {} },
-		//{ t:"Script reports",  i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:params=> {} },
-		//{ t:"Ongoing scripts", i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:params=> {} },
+		{ t:"WMI client",      i:"mono/wmi.svg?light",      g:"tools", h:false, f:args=> new Wmi(args), k:"windows management instrumentation viewer" },
+		{ t:"SNMP polling",    i:"mono/snmp.svg?light",     g:"tools", h:false, f:args=> new Snmp(args) },
+		//{ t:"SNMP traps",      i:"mono/trap.svg?light",          g:"tools", h:false, f:args=> new Snmp(args) },
+		//{ t:"Scripts",         i:"mono/scripts.svg?light",       g:"tools", h:false, f:args=> {} },
+		//{ t:"Script reports",  i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:args=> {} },
+		//{ t:"Ongoing scripts", i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:args=> {} },
 
-		{ t:"Ping",               i:"mono/ping.svg?light",          g:"utilities", h:false, f:params=> new Ping(params),         k:"roundtrip rtt icmp echo reply" },
-		{ t:"ARP ping",           i:"mono/ping.svg?light",          g:"utilities", h:true,  f:params=> new Ping({entries:[], timeout:500, method:"arp", interval:1000, moveToBottom:false, status:"play"}) },
-		{ t:"DNS lookup",         i:"mono/dns.svg?light",           g:"utilities", h:false, f:params=> new DnsLookup(params),    k:"resolve resolution" },
-		{ t:"Trace route",        i:"mono/traceroute.svg?light",    g:"utilities", h:false, f:params=> new TraceRoute(params),   k:"path" },
-		{ t:"TCP port scan",      i:"mono/portscan.svg?light",      g:"utilities", h:false, f:params=> new PortScan(params),     k:"" },
-		{ t:"Locate IP",          i:"mono/locate.svg?light",        g:"utilities", h:false, f:params=> new LocateIp(params),     k:"location" },
-		{ t:"MAC lookup",         i:"mono/maclookup.svg?light",     g:"utilities", h:false, f:params=> new MacLookup(params),    k:"vendor resolver" },
-		{ t:"DHCP client",        i:"mono/dhcp.svg?light",          g:"utilities", h:false, f:params=> new DhcpDiscover(params), k:"discover" },
-		{ t:"NTP client",         i:"mono/clock.svg?light",         g:"utilities", h:false, f:params=> new NtpClient(params),    k:"network time" },
-		{ t:"Site check",         i:"mono/websitecheck.svg?light",  g:"utilities", h:false, f:params=> new SiteCheck(params),    k:"www website" },
-		//{ t:"Speed test",         i:"mono/speedtest.svg?light",     g:"utilities",  h:false, f:params=> new SpeedTest(params) },
+		{ t:"Ping",               i:"mono/ping.svg?light",          g:"utilities", h:false, f:args=> new Ping(args),         k:"roundtrip rtt icmp echo reply" },
+		{ t:"ARP ping",           i:"mono/ping.svg?light",          g:"utilities", h:true,  f:args=> new Ping({entries:[], timeout:500, method:"arp", interval:1000, moveToBottom:false, status:"play"}) },
+		{ t:"DNS lookup",         i:"mono/dns.svg?light",           g:"utilities", h:false, f:args=> new DnsLookup(args),    k:"resolve resolution" },
+		{ t:"Trace route",        i:"mono/traceroute.svg?light",    g:"utilities", h:false, f:args=> new TraceRoute(args),   k:"path" },
+		{ t:"TCP port scan",      i:"mono/portscan.svg?light",      g:"utilities", h:false, f:args=> new PortScan(args),     k:"" },
+		{ t:"Locate IP",          i:"mono/locate.svg?light",        g:"utilities", h:false, f:args=> new LocateIp(args),     k:"location" },
+		{ t:"MAC lookup",         i:"mono/maclookup.svg?light",     g:"utilities", h:false, f:args=> new MacLookup(args),    k:"vendor resolver" },
+		{ t:"DHCP client",        i:"mono/dhcp.svg?light",          g:"utilities", h:false, f:args=> new DhcpDiscover(args), k:"discover" },
+		{ t:"NTP client",         i:"mono/clock.svg?light",         g:"utilities", h:false, f:args=> new NtpClient(args),    k:"network time" },
+		{ t:"Site check",         i:"mono/websitecheck.svg?light",  g:"utilities", h:false, f:args=> new SiteCheck(args),    k:"www website" },
+		//{ t:"Speed test",         i:"mono/speedtest.svg?light",     g:"utilities",  h:false, f:args=> new SpeedTest(args) },
 		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:false, f:()=> new Ssh({host:""}),       k:"ssh terminal" },
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),    k:"terminal" },
 		//{ t:"RS-232",             i:"mono/serialconsole.svg?light", g:"utilities", h:true,  f:()=>{}, k:"rs 232 serial terminal console" },
-		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:params=> new Encoder(params),  k:"binary hex base64 url html decode" },
-		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:true,  f:params=> new NetCalc(params),  k:"subnet" },
-		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:false, f:params=> new PassGen(params),  k:"code" },
-		{ t:"Screen capture",     i:"mono/screenrecord.svg?light",  g:"utilities", h:true,  f:params=> new ScreenCapture(),  k:"recorder shot" },
-		{ t:"Camera tester",      i:"mono/webcam.svg?light",        g:"utilities", h:true,  f:params=> new CameraTester(),   k:"webcam" },
-		{ t:"Microphone tester",  i:"mono/mic.svg?light",           g:"utilities", h:true,  f:params=> new MicTester(),      k:"audio input" },
-		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:params=> new KeyboardTester(), k:"keys" },
-		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:params=> new KeyboardTester("gamepad"), k:"joystick" },
+		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),  k:"binary hex base64 url html decode" },
+		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:true,  f:args=> new NetCalc(args),  k:"subnet" },
+		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:false, f:args=> new PassGen(args),  k:"code" },
+		{ t:"Screen capture",     i:"mono/screenrecord.svg?light",  g:"utilities", h:true,  f:args=> new ScreenCapture(),  k:"recorder shot" },
+		{ t:"Camera tester",      i:"mono/webcam.svg?light",        g:"utilities", h:true,  f:args=> new CameraTester(),   k:"webcam" },
+		{ t:"Microphone tester",  i:"mono/mic.svg?light",           g:"utilities", h:true,  f:args=> new MicTester(),      k:"audio input" },
+		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:args=> new KeyboardTester(), k:"keys" },
+		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:args=> new KeyboardTester("gamepad"), k:"joystick" },
 
 		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:()=> new Settings(), },
 		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Settings("zones"), },
@@ -540,11 +540,11 @@ const MENU = {
 
 				MENU.ItemEvent(newItem, ()=>{
 					if (MENU.history[i].class === "DeviceView") {
-						let file = MENU.history[i].params.file;
+						let file = MENU.history[i].args.file;
 						LOADER.OpenDeviceByFile(file);
 					}
 					else if (MENU.history[i].class === "UserView") {
-						let file = MENU.history[i].params.file;
+						let file = MENU.history[i].args.file;
 						LOADER.OpenUserByFile(file);
 					}
 					else {

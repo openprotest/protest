@@ -1,8 +1,8 @@
 class Personalize extends Tabs {
-	constructor(params) {
+	constructor(args) {
 		super(null);
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.SetTitle("Personalize");
 		this.SetIcon("mono/personalize.svg");
@@ -22,7 +22,7 @@ class Personalize extends Tabs {
 		this.chatTab.onclick    = ()=> this.ShowChat();
 		this.agentTab.onclick   = ()=> this.ShowAgent();
 
-		switch (this.params) {
+		switch (this.args) {
 		case "region":
 			this.regionTab.className = "v-tab-selected";
 			this.ShowRegion();
@@ -50,7 +50,7 @@ class Personalize extends Tabs {
 	}
 
 	ShowGui() {
-		this.params = "appearance";
+		this.args = "appearance";
 		this.tabsPanel.textContent = "";
 
 		this.winMaxedCheckbox = this.CreateToggle("Always maximize windows", false, this.tabsPanel).checkbox;
@@ -218,7 +218,7 @@ class Personalize extends Tabs {
 				Apply();
 
 				for (let j = 0; j < WIN.array.length; j++) { //update other setting windows
-					if (WIN.array[j] instanceof Personalize && WIN.array[j].params === "appearance") {
+					if (WIN.array[j] instanceof Personalize && WIN.array[j].args === "appearance") {
 						for (let k = 0; k < this.accentIndicators.length; k++) {
 							if (k === i) continue;
 							WIN.array[j].accentIndicators[k].style.width = "8px";
@@ -317,7 +317,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("accent_saturation", this.saturation.value);
 
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
-				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "appearance") {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "appearance") {
 					if (WIN.array[i] !== this) {
 						WIN.array[i].winMaxedCheckbox.checked      = this.winMaxedCheckbox.checked;
 						WIN.array[i].popOutCheckbox.checked        = this.popOutCheckbox.checked;
@@ -379,7 +379,7 @@ class Personalize extends Tabs {
 	}
 
 	ShowRegion() {
-		this.params = "region";
+		this.args = "region";
 		this.tabsPanel.textContent = "";
 
 		const regionLabel = document.createElement("div");
@@ -483,7 +483,7 @@ class Personalize extends Tabs {
 			date_day.textContent = now.toLocaleDateString(UI.regionalFormat, {weekday:"long"});
 
 			for (let i = 0; i < WIN.array.length; i++) //update other setting windows
-				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "region") {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "region") {
 					WIN.array[i].region.value = UI.regionalFormat;
 
 					WIN.array[i].region_date.textContent = "Date: " + now.toLocaleDateString(UI.regionalFormat, {});
@@ -502,7 +502,7 @@ class Personalize extends Tabs {
 	}
 
 	ShowSession() {
-		this.params = "session";
+		this.args = "session";
 		this.tabsPanel.textContent = "";
 
 		this.restoreSessionToggle = this.CreateToggle("Re-open previous windows on page load", false, this.tabsPanel);
@@ -593,7 +593,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("cookie_lifetime", this.cookieLife.value);
 
 			for (let i = 0; i < WIN.array.length; i++) //update other setting windows
-				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "session") {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "session") {
 					WIN.array[i].restoreSessionToggle.checkbox.checked = this.restoreSessionToggle.checkbox.checked;
 					WIN.array[i].aliveOnCloseToggle.checkbox.checked   = this.aliveOnCloseToggle.checkbox.checked;
 					WIN.array[i].sessionTimeout.value      = this.sessionTimeout.value;
@@ -639,7 +639,7 @@ class Personalize extends Tabs {
 	}
 
 	ShowChat() {
-		this.params = "chat";
+		this.args = "chat";
 		this.tabsPanel.textContent = "";
 
 		this.openChatWindowOnMessageCheckbox = document.createElement("input");
@@ -719,7 +719,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("notification_volume", this.notificationVolume.value);
 
 			for (let i = 0; i < WIN.array.length; i++) {
-				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "chat") {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "chat") {
 					WIN.array[i].openChatWindowOnMessageCheckbox.checked = this.openChatWindowOnMessageCheckbox.checked;
 					WIN.array[i].enableNotificationSoundCheckbox.checked = this.enableNotificationSoundCheckbox.checked;
 					WIN.array[i].notificationVolume.value           = this.notificationVolume.value;
@@ -742,7 +742,7 @@ class Personalize extends Tabs {
 	}
 
 	ShowAgent() {
-		this.params = "agent";
+		this.args = "agent";
 		this.tabsPanel.textContent = "";
 
 		const keyLabel = document.createElement("div");
@@ -815,7 +815,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("prefer_cnv_file", this.preferVncFileCheckbox.checked);
 
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
-				if (WIN.array[i] instanceof Personalize && WIN.array[i].params === "agent" && WIN.array[i] !== this) {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "agent" && WIN.array[i] !== this) {
 					WIN.array[i].presharedKeyInput.value = this.presharedKeyInput.value;
 					WIN.array[i].preferRdpFileCheckbox.checked = this.preferRdpFileCheckbox.checked;
 					WIN.array[i].preferVncFileCheckbox.checked = this.preferVncFileCheckbox.checked;

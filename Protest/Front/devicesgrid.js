@@ -1,5 +1,5 @@
 class DevicesGrid extends Grid {
-	constructor(params) {
+	constructor() {
 		super(LOADER.devices.data);
 
 		this.SetTitle("Devices grid view");

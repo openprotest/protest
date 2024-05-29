@@ -249,7 +249,7 @@ const LOADER = {
 			for (let i = 0; i < WIN.array.length; i++)
 				session.push({
 					class: WIN.array[i].constructor.name,
-					params: WIN.array[i].params,
+					args: WIN.array[i].args,
 					isMaximized: WIN.array[i].isMaximized,
 					isMinimized: WIN.array[i].isMinimized,
 					position: WIN.array[i].position,
@@ -289,64 +289,64 @@ const LOADER = {
 
 	Invoke: (command)=> {
 		switch (command.class) {
-		case "DeviceView": return LOADER.OpenDeviceByFile(command.params.file);
-		case "UserView"  : return LOADER.OpenUserByFile(command.params.file);
+		case "DeviceView": return LOADER.OpenDeviceByFile(command.args.file);
+		case "UserView"  : return LOADER.OpenUserByFile(command.args.file);
 
-		case "DevicesList"      : return new DevicesList(command.params);
-		case "UsersList"        : return new UsersList(command.params);
-		case "DevicesGrid"      : return new DevicesGrid(command.params);
-		case "UsersGrid"        : return new UsersGrid(command.params);
-		case "PasswordStrength" : return new PasswordStrength(command.params);
-		case "Gandalf"          : return new Gandalf(command.params);
-		case "Fetch"            : return new Fetch(command.params);
-		case "Monitor"          : return new Monitor(command.params);
+		case "DevicesList"      : return new DevicesList(command.args);
+		case "UsersList"        : return new UsersList(command.args);
+		case "DevicesGrid"      : return new DevicesGrid(command.args);
+		case "UsersGrid"        : return new UsersGrid(command.args);
+		case "PasswordStrength" : return new PasswordStrength(command.args);
+		case "Gandalf"          : return new Gandalf(command.args);
+		case "Fetch"            : return new Fetch(command.args);
+		case "Monitor"          : return new Monitor(command.args);
 
-		case "AddressBook"   : return new AddressBook(command.params);
-		case "Chat"          : return new Chat(command.params);
-		case "Documentation" : return new Documentation(command.params);
-		case "DebitNotes"    : return new DebitNotes(command.params);
-		case "Watchdog"      : return new Watchdog(command.params);
+		case "AddressBook"   : return new AddressBook(command.args);
+		case "Chat"          : return new Chat(command.args);
+		case "Documentation" : return new Documentation(command.args);
+		case "DebitNotes"    : return new DebitNotes(command.args);
+		case "Watchdog"      : return new Watchdog(command.args);
 
-		case "Issues"    : return new Issues(command.params);
+		case "Issues"    : return new Issues(command.args);
 
-		case "HexViewer" : return new HexViewer(command.params);
+		case "HexViewer" : return new HexViewer(command.args);
 
-		case "Ping"         : return new Ping(command.params);
-		case "DnsLookup"    : return new DnsLookup(command.params);
-		case "TraceRoute"   : return new TraceRoute(command.params);
-		case "SpeedTest"    : return new SpeedTest(command.params);
-		case "PortScan"     : return new PortScan(command.params);
-		case "MacLookup"    : return new MacLookup(command.params);
-		case "LocateIp"     : return new LocateIp(command.params);
-		case "DhcpDiscover" : return new DhcpDiscover(command.params);
-		case "NtpClient"    : return new NtpClient(command.params);
-		case "SiteCheck"    : return new SiteCheck(command.params);
-		case "Telnet"       : return new Telnet(command.params);
-		case "Ssh"          : return new Ssh(command.params);
-		case "Wmi"          : return new Wmi(command.params);
-		case "Snmp"         : return new Snmp(command.params);
+		case "Ping"         : return new Ping(command.args);
+		case "DnsLookup"    : return new DnsLookup(command.args);
+		case "TraceRoute"   : return new TraceRoute(command.args);
+		case "SpeedTest"    : return new SpeedTest(command.args);
+		case "PortScan"     : return new PortScan(command.args);
+		case "MacLookup"    : return new MacLookup(command.args);
+		case "LocateIp"     : return new LocateIp(command.args);
+		case "DhcpDiscover" : return new DhcpDiscover(command.args);
+		case "NtpClient"    : return new NtpClient(command.args);
+		case "SiteCheck"    : return new SiteCheck(command.args);
+		case "Telnet"       : return new Telnet(command.args);
+		case "Ssh"          : return new Ssh(command.args);
+		case "Wmi"          : return new Wmi(command.args);
+		case "Snmp"         : return new Snmp(command.args);
 
-		case "PassGen"        : return new PassGen(command.params);
-		case "Encoder"        : return new Encoder(command.params);
-		case "NetCalc"        : return new NetCalc(command.params);
-		case "KeyboardTester" : return new KeyboardTester(command.params);
-		case "MicTester"      : return new MicTester(command.params);
-		case "CameraTester"   : return new CameraTester(command.params);
-		case "ScreenCapture"  : return new ScreenCapture(command.params);
+		case "PassGen"        : return new PassGen(command.args);
+		case "Encoder"        : return new Encoder(command.args);
+		case "NetCalc"        : return new NetCalc(command.args);
+		case "KeyboardTester" : return new KeyboardTester(command.args);
+		case "MicTester"      : return new MicTester(command.args);
+		case "CameraTester"   : return new CameraTester(command.args);
+		case "ScreenCapture"  : return new ScreenCapture(command.args);
 
-		case "About"       : return new About(command.params);
-		case "Settings"    : return new Settings(command.params);
-		case "Personalize" : return new Personalize(command.params);
-		case "Acl"         : return new Acl(command.params);
-		case "Automation"  : return new Automation(command.params);
-		case "Backup"      : return new Backup(command.params);
-		case "Log"         : return new Log(command.params);
+		case "About"       : return new About(command.args);
+		case "Settings"    : return new Settings(command.args);
+		case "Personalize" : return new Personalize(command.args);
+		case "Acl"         : return new Acl(command.args);
+		case "Automation"  : return new Automation(command.args);
+		case "Backup"      : return new Backup(command.args);
+		case "Log"         : return new Log(command.args);
 		}
 	},
 
 	OpenDeviceByFile: file=> {
 		for (let i=0; i<WIN.array.length; i++) {
-			if (WIN.array[i] instanceof DeviceView && WIN.array[i].params.file === file) {
+			if (WIN.array[i] instanceof DeviceView && WIN.array[i].args.file === file) {
 				WIN.array[i].Pop(); //minimize/restore
 				return WIN.array[i];
 			}
@@ -357,7 +357,7 @@ const LOADER = {
 
 	OpenUserByFile: file=> {
 		for (let i=0; i<WIN.array.length; i++) {
-			if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
+			if (WIN.array[i] instanceof UserView && WIN.array[i].args.file === file) {
 				WIN.array[i].Pop(); //minimize/restore
 				return WIN.array[i];
 			}

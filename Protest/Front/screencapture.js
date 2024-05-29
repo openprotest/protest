@@ -1,8 +1,8 @@
 class ScreenCapture extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {
+		this.args = args ?? {
 			audio: true
 		};
 
@@ -44,15 +44,15 @@ class ScreenCapture extends Window {
 		innerBox.style.padding = "20px 20px 0 20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 
-		const audioToggle = this.CreateToggle("Record audio", this.params.audio, innerBox);
+		const audioToggle = this.CreateToggle("Record audio", this.args.audio, innerBox);
 		audioToggle.label.style.paddingBottom = "16px";
 
 		innerBox.appendChild(document.createElement("br"));
 
-		audioToggle.checkbox.checked = this.params.audio;
+		audioToggle.checkbox.checked = this.args.audio;
 
 		okButton.onclick = async ()=> {
-			this.params.audio = audioCheckbox.checkbox.checked;
+			this.args.audio = audioCheckbox.checkbox.checked;
 			dialog.Close();
 		};
 	}
@@ -64,7 +64,7 @@ class ScreenCapture extends Window {
 			});
 
 			let mixedStream = null;
-			if (this.params.audio) {
+			if (this.args.audio) {
 				this.audioStream = await navigator.mediaDevices.getUserMedia({
 					audio: true
 				});

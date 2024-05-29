@@ -1,8 +1,8 @@
 class CameraTester extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {
+		this.args = args ?? {
 			force4K: false,
 			audio: false
 		};
@@ -82,12 +82,12 @@ class CameraTester extends Window {
 
 		innerBox.appendChild(document.createElement("br"));
 
-		force4KToggle.checkbox.checked = this.params.force4K;
-		audioToggle.checkbox.checked = this.params.audio;
+		force4KToggle.checkbox.checked = this.args.force4K;
+		audioToggle.checkbox.checked = this.args.audio;
 
 		okButton.onclick = async ()=> {
-			this.params.force4K = force4KToggle.checkbox.checked;
-			this.params.audio = audioToggle.checkbox.checked;
+			this.args.force4K = force4KToggle.checkbox.checked;
+			this.args.audio = audioToggle.checkbox.checked;
 			dialog.Close();
 		};
 	}
@@ -162,12 +162,12 @@ class CameraTester extends Window {
 	async Start(withRecording=false) {
 		try {
 			this.stream = await navigator.mediaDevices.getUserMedia({
-				audio: this.params.audio ? {
+				audio: this.args.audio ? {
 					echoCancellation: true,
 					noiseSuppression: true
 				} : false,
 
-				video: this.params.force4K ? {
+				video: this.args.force4K ? {
 					width: { ideal: 3840 },
 					height: { ideal: 2160 }
 				} : {

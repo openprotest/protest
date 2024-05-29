@@ -1,10 +1,10 @@
 class Ping extends Console {
 	static HISTORY_LIMIT = 32;
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {
+		this.args = args ?? {
 			entries: [],
 			timeout: 1000,
 			interval: 1000,
@@ -21,7 +21,7 @@ class Ping extends Console {
 		this.request = "";
 		this.ws = null;
 
-		this.SetTitle(this.params.method === "icmp" ? "Ping" : "ARP ping");
+		this.SetTitle(this.args.method === "icmp" ? "Ping" : "ARP ping");
 		this.SetIcon("mono/ping.svg");
 
 		this.SetupToolbar();
@@ -55,14 +55,14 @@ class Ping extends Console {
 		optionRemoveUnreachable.textContent = "Remove unreachable";
 		this.clearDropDown.list.append(optionRemoveUnreachable);
 
-		this.playButton.disabled = this.params.status === "play";
-		this.pauseButton.disabled = this.params.status === "pause";
+		this.playButton.disabled = this.args.status === "play";
+		this.pauseButton.disabled = this.args.status === "pause";
 
 		//this.InitializeMinimap();
 
-		if (this.params.entries) { //restore entries from previous session
-			let temp = this.params.entries;
-			this.params.entries = [];
+		if (this.args.entries) { //restore entries from previous session
+			let temp = this.args.entries;
+			this.args.entries = [];
 			for (let i=0; i<temp.length; i++) {
 				this.Push(temp[i]);
 			}
@@ -70,7 +70,7 @@ class Ping extends Console {
 
 		this.playButton.addEventListener("click", ()=> {
 			if (this.request.length === 0) return;
-			this.params.status = "play";
+			this.args.status = "play";
 			this.playButton.disabled = true;
 			this.pauseButton.disabled = false;
 
@@ -79,7 +79,7 @@ class Ping extends Console {
 		});
 
 		this.pauseButton.addEventListener("click", ()=> {
-			this.params.status = "pause";
+			this.args.status = "pause";
 			this.playButton.disabled = false;
 			this.pauseButton.disabled = true;
 
@@ -143,15 +143,15 @@ class Ping extends Console {
 		});
 
 		this.copyButton.addEventListener("click", ()=> {
-			let paramsCopy = structuredClone(this.params);
-			paramsCopy.status = "pause";
-			const copy = new Ping(paramsCopy);
+			let argsCopy = structuredClone(this.args);
+			argsCopy.status = "pause";
+			const copy = new Ping(argsCopy);
 			if (this.popOutWindow) copy.PopOut();
 			const dialog = copy.Options();
 
 			const OriginalCancelClickHandler = dialog.cancelButton.onclick;
 			dialog.okButton.onclick = ()=> {
-				copy.params.status = "play";
+				copy.args.status = "play";
 				copy.Connect();
 				OriginalCancelClickHandler();
 			};
@@ -215,7 +215,7 @@ class Ping extends Console {
 		timeoutInput.type = "number";
 		timeoutInput.min = 1;
 		timeoutInput.max = 5000;
-		timeoutInput.value = this.params.timeout;
+		timeoutInput.value = this.args.timeout;
 		timeoutInput.style.width = "100px";
 		innerBox.appendChild(timeoutInput);
 
@@ -232,7 +232,7 @@ class Ping extends Console {
 		intervalInput.type = "number";
 		intervalInput.min = 1;
 		intervalInput.max = 5000;
-		intervalInput.value = this.params.interval;
+		intervalInput.value = this.args.interval;
 		intervalInput.style.width = "100px";
 		innerBox.appendChild(intervalInput);
 
@@ -258,14 +258,14 @@ class Ping extends Console {
 		arpOption.value = "arp";
 		pingMethodInput.appendChild(arpOption);
 
-		pingMethodInput.value = this.params.method;
+		pingMethodInput.value = this.args.method;
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
 		const rollingPingCheckBox = document.createElement("input");
 		rollingPingCheckBox.type = "checkbox";
-		rollingPingCheckBox.checked = this.params.rolling;
+		rollingPingCheckBox.checked = this.args.rolling;
 		rollingPingCheckBox.disabled = true;
 
 		innerBox.appendChild(rollingPingCheckBox);
@@ -277,7 +277,7 @@ class Ping extends Console {
 
 		const moveToTopCheckbox = document.createElement("input");
 		moveToTopCheckbox.type = "checkbox";
-		moveToTopCheckbox.checked = this.params.moveToTop;
+		moveToTopCheckbox.checked = this.args.moveToTop;
 		innerBox.appendChild(moveToTopCheckbox);
 		this.AddCheckBoxLabel(innerBox, moveToTopCheckbox, "Move to the top on rise or fall");
 
@@ -382,17 +382,17 @@ class Ping extends Console {
 		}
 
 		const Apply = ()=> {
-			this.params.timeout = timeoutInput.value;
-			this.params.interval = intervalInput.value;
-			this.params.method = pingMethodInput.value;
-			this.params.rolling = rollingPingCheckBox.checked;
-			this.params.moveToTop = moveToTopCheckbox.checked;
+			this.args.timeout = timeoutInput.value;
+			this.args.interval = intervalInput.value;
+			this.args.method = pingMethodInput.value;
+			this.args.rolling = rollingPingCheckBox.checked;
+			this.args.moveToTop = moveToTopCheckbox.checked;
 
 			if (!this.isClosed && this.ws != null && this.ws.readyState === 1) { //ready
-				this.ws.send(`timeout:${this.params.timeout}`);
-				this.ws.send(`interval:${this.params.interval}`);
-				this.ws.send(`method:${this.params.method}`);
-				this.ws.send(`rolling:${this.params.rolling}`);
+				this.ws.send(`timeout:${this.args.timeout}`);
+				this.ws.send(`interval:${this.args.interval}`);
+				this.ws.send(`method:${this.args.method}`);
+				this.ws.send(`rolling:${this.args.rolling}`);
 			}
 
 			this.SetTitle(pingMethodInput.value === "arp" ? "ARP ping" : "Ping");
@@ -610,7 +610,7 @@ class Ping extends Console {
 			this.count += 1;
 		}
 
-		this.params.entries.push(host);
+		this.args.entries.push(host);
 	}
 
 	Remove(host) {
@@ -631,18 +631,18 @@ class Ping extends Console {
 
 		this.AfterResize();
 
-		index = this.params.entries.indexOf(host);
+		index = this.args.entries.indexOf(host);
 		if (index > -1)
-			this.params.entries.splice(index, 1);
+			this.args.entries.splice(index, 1);
 
-		if (this.params.entries.length === 0) {
+		if (this.args.entries.length === 0) {
 			this.playButton.disabled = true;
 			this.pauseButton.disabled = true;
 		}
 	}
 
 	Connect() {
-		if (this.params.status !== "play") return;
+		if (this.args.status !== "play") return;
 
 		let server = window.location.href;
 		server = server.replace("https://", "");
@@ -662,10 +662,10 @@ class Ping extends Console {
 			let split = this.request.split(";");
 			let i = 0;
 
-			this.ws.send("timeout:" + this.params.timeout);
-			this.ws.send("interval:" + this.params.interval);
-			this.ws.send("method:" + this.params.method);
-			this.ws.send("rolling:" + this.params.rolling);
+			this.ws.send("timeout:" + this.args.timeout);
+			this.ws.send("interval:" + this.args.interval);
+			this.ws.send("method:" + this.args.method);
+			this.ws.send("rolling:" + this.args.rolling);
 
 			while (i < split.length) {
 				let req = "";
@@ -688,7 +688,7 @@ class Ping extends Console {
 
 		this.ws.onclose = ()=> {
 			if (this.request.length === 0) return;
-			if (this.params.status === "pause") return;
+			if (this.args.status === "pause") return;
 
 			const error_message = document.createElement("div");
 			error_message.id = "self_destruct";
@@ -724,7 +724,7 @@ class Ping extends Console {
 				if (this.request.length > 0 && !this.isClosed && this.ws != null && this.ws.readyState === 1) {
 					this.ws.send("ping:*");
 				}
-			}, this.params.interval);
+			}, this.args.interval);
 		};
 
 		this.ws.onerror = error=> {
@@ -775,7 +775,7 @@ class Ping extends Console {
 					}
 				}
 
-				if (this.params.moveToTop) {
+				if (this.args.moveToTop) {
 					let p0 = (isNaN(this.hashtable[index].ping[Ping.HISTORY_LIMIT-1])) ? 4 : 5;
 					let p1 = (isNaN(this.hashtable[index].ping[Ping.HISTORY_LIMIT-2])) ? 4 : 5;
 					if (p0 != p1 && this.hashtable[index].element != this.list.childNodes[this.list.childNodes.length - 1]) { //if status changed and not already last

@@ -235,10 +235,10 @@ class HexViewer extends Window {
 		"End"
 	];
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params;
+		this.args = args;
 
 		this.SetIcon("mono/hexviewer.svg");
 		this.SetTitle("Hex viewer");
@@ -271,7 +271,7 @@ class HexViewer extends Window {
 			this.hexBox.scrollTop = this.asciiBox.scrollTop;
 		};
 
-		this.Plot(this.params.exchange, this.params.protocol);
+		this.Plot(this.args.exchange, this.args.protocol);
 	}
 
 	Plot(exchange, protocol) {

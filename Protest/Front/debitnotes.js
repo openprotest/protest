@@ -4,10 +4,10 @@ class DebitNotes extends Window {
 	static MODELS = {};
 	static SERIAL_NUMBERS = {};
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? { keywords:"", upto:4, short:true, long:true, returned:false, selected:null };
+		this.args = args ?? { keywords:"", upto:4, short:true, long:true, returned:false, selected:null };
 		this.selectedDebit = null;
 		this.selectedElement = null;
 
@@ -39,7 +39,7 @@ class DebitNotes extends Window {
 		this.searchInput = document.createElement("input");
 		this.searchInput.style.gridArea = "1 / 2";
 		this.searchInput.type = "search";
-		this.searchInput.value = this.params.keywords;
+		this.searchInput.value = this.args.keywords;
 		listBox.appendChild(this.searchInput);
 
 		const upToLabel = document.createElement("div");
@@ -48,7 +48,7 @@ class DebitNotes extends Window {
 		listBox.appendChild(upToLabel);
 
 		this.upToInput = document.createElement("select");
-		this.upToInput.value = this.params.upto;
+		this.upToInput.value = this.args.upto;
 		this.upToInput.style.gridArea = "2 / 2";
 		listBox.appendChild(this.upToInput);
 
@@ -59,7 +59,7 @@ class DebitNotes extends Window {
 			this.upToInput.appendChild(upToOption);
 		}
 
-		this.upToInput.value = this.params.upto;
+		this.upToInput.value = this.args.upto;
 
 		const allOption = document.createElement("option");
 		allOption.value = "all";
@@ -75,19 +75,19 @@ class DebitNotes extends Window {
 		shortBox.style.gridArea = "4 / 2";
 		shortBox.style.paddingLeft = "4px";
 		listBox.appendChild(shortBox);
-		this.shortToggle = this.CreateToggle("Short-term", this.params.short, shortBox);
+		this.shortToggle = this.CreateToggle("Short-term", this.args.short, shortBox);
 
 		const longBox = document.createElement("div");
 		longBox.style.gridArea = "5 / 2";
 		longBox.style.paddingLeft = "4px";
 		listBox.appendChild(longBox);
-		this.longToggle = this.CreateToggle("Long-term", this.params.long, longBox);
+		this.longToggle = this.CreateToggle("Long-term", this.args.long, longBox);
 
 		const returnedBox = document.createElement("div");
 		returnedBox.style.gridArea = "6 / 2";
 		returnedBox.style.paddingLeft = "4px";
 		listBox.appendChild(returnedBox);
-		this.returnedToggle = this.CreateToggle("Returned", this.params.returned, returnedBox);
+		this.returnedToggle = this.CreateToggle("Returned", this.args.returned, returnedBox);
 
 		this.list = document.createElement("div");
 		this.list.className = "no-results";
@@ -196,7 +196,7 @@ class DebitNotes extends Window {
 		this.deleteButton.disabled = false;
 		this.printButton.disabled = false;
 
-		if (this.params.selected === null) {
+		if (this.args.selected === null) {
 			this.duplicateButton.disabled = true;
 			this.returnedButton.disabled = true;
 			this.deleteButton.disabled = true;
@@ -209,16 +209,16 @@ class DebitNotes extends Window {
 	}
 
 	async ListDebitNotes() {
-		this.params.keywords = this.searchInput.value.trim().toLocaleLowerCase();
-		this.params.upto = this.upToInput.value;
-		this.params.short = this.shortToggle.checkbox.checked;
-		this.params.long = this.longToggle.checkbox.checked;
-		this.params.returned = this.returnedToggle.checkbox.checked;
+		this.args.keywords = this.searchInput.value.trim().toLocaleLowerCase();
+		this.args.upto = this.upToInput.value;
+		this.args.short = this.shortToggle.checkbox.checked;
+		this.args.long = this.longToggle.checkbox.checked;
+		this.args.returned = this.returnedToggle.checkbox.checked;
 
 		try {
-			let uri = this.params.keywords.length === 0 ?
-				`debit/list?upto=${this.params.upto}&short=${this.params.short}&long=${this.params.long}&returned=${this.params.returned}` :
-				`debit/list?upto=${this.params.upto}&short=${this.params.short}&long=${this.params.long}&returned=${this.params.returned}&keywords=${encodeURIComponent(this.params.keywords)}`;
+			let uri = this.args.keywords.length === 0 ?
+				`debit/list?upto=${this.args.upto}&short=${this.args.short}&long=${this.args.long}&returned=${this.args.returned}` :
+				`debit/list?upto=${this.args.upto}&short=${this.args.short}&long=${this.args.long}&returned=${this.args.returned}&keywords=${encodeURIComponent(this.args.keywords)}`;
 
 			const response = await fetch(uri);
 
@@ -333,7 +333,7 @@ class DebitNotes extends Window {
 				this.selectedElement.style.backgroundColor = "";
 
 			element.style.backgroundColor = "var(--clr-select)";
-			this.params.selected = debit.file;
+			this.args.selected = debit.file;
 			this.selectedDebit = debit;
 			this.selectedElement = element;
 
@@ -341,7 +341,7 @@ class DebitNotes extends Window {
 			this.UpdateAuthorization();
 		};
 
-		if (this.params.selected && this.params.selected === debit.file)
+		if (this.args.selected && this.args.selected === debit.file)
 			element.onclick();
 
 		return element;
@@ -1078,7 +1078,7 @@ class DebitNotes extends Window {
 
 		this.ConfirmBox("Are you sure you want to mark this debit note as returned?").addEventListener("click", async()=> {
 			try {
-				const response = await fetch(`debit/return?status=${this.selectedDebit.status}&file=${this.params.selected}`);
+				const response = await fetch(`debit/return?status=${this.selectedDebit.status}&file=${this.args.selected}`);
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -1086,7 +1086,7 @@ class DebitNotes extends Window {
 				if (json.error) throw (json.error);
 
 				let debit = {
-					file: this.params.selected,
+					file: this.args.selected,
 					status: "returned",
 					name: `${this.selectedDebit.firstname} ${this.selectedDebit.lastname}`
 				};
@@ -1111,7 +1111,7 @@ class DebitNotes extends Window {
 
 		this.ConfirmBox("Are you sure you want to delete this debit note?").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`debit/delete?status=${this.selectedDebit.status}&file=${this.params.selected}`);
+				const response = await fetch(`debit/delete?status=${this.selectedDebit.status}&file=${this.args.selected}`);
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -1121,7 +1121,7 @@ class DebitNotes extends Window {
 				this.list.removeChild(this.selectedElement);
 				this.preview.textContent = "";
 
-				this.params.selected = null;
+				this.args.selected = null;
 				this.selectedElement = null;
 				this.selectedDebit = null;
 

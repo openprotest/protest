@@ -40,31 +40,31 @@ class DeviceView extends View {
 
 	static regexIPv4 = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
 
-	constructor(params) {
+	constructor(args) {
 		super();
-		this.params = params ?? { file: null };
+		this.args = args ?? { file: null };
 
 		this.SetIcon("mono/gear.svg");
 
 		this.liveStatsWebSockets = null;
-		this.link = LOADER.devices.data[this.params.file];
+		this.link = LOADER.devices.data[this.args.file];
 		this.order = "group";
 		this.groupSchema = DeviceView.DEVICES_GROUP_SCHEMA;
 		this.dbTarget = "device";
 		this.pingIndicators = [];
 
-		if (params.file && !this.link) {
+		if (args.file && !this.link) {
 			this.SetTitle("not found");
 			this.ConfirmBox("Device no longer exists", true).addEventListener("click", ()=>this.Close());
 			return;
 		}
 
-		if (params.file) {
+		if (args.file) {
 			this.InitializePreview();
 			setTimeout(()=>this.InitializeSubnetEmblem(), 200);
 		}
-		else if (params.copy) {
-			const origin = LOADER.devices.data[params.copy];
+		else if (args.copy) {
+			const origin = LOADER.devices.data[args.copy];
 			this.SetTitle(origin.name ? `Copy of ${origin.name.v}` : "Copy");
 			this.Edit(true);
 
@@ -402,7 +402,7 @@ class DeviceView extends View {
 				if (wolButton.hasAttribute("busy")) return;
 				try {
 					wolButton.setAttribute("busy", true);
-					const response = await fetch(`manage/device/wol?file=${this.params.file}`);
+					const response = await fetch(`manage/device/wol?file=${this.args.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
@@ -422,7 +422,7 @@ class DeviceView extends View {
 						if (powerOffButton.hasAttribute("busy")) return;
 						try {
 							powerOffButton.setAttribute("busy", true);
-							const response = await fetch(`manage/device/shutdown?file=${this.params.file}`);
+							const response = await fetch(`manage/device/shutdown?file=${this.args.file}`);
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
@@ -437,7 +437,7 @@ class DeviceView extends View {
 						if (rebootButton.hasAttribute("busy")) return;
 						try {
 							rebootButton.setAttribute("busy", true);
-							const response = await fetch(`manage/device/reboot?file=${this.params.file}`);
+							const response = await fetch(`manage/device/reboot?file=${this.args.file}`);
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
@@ -452,7 +452,7 @@ class DeviceView extends View {
 						if (logOffButton.hasAttribute("busy")) return;
 						try {
 							logOffButton.setAttribute("busy", true);
-							const response = await fetch(`manage/device/logoff?file=${this.params.file}`);
+							const response = await fetch(`manage/device/logoff?file=${this.args.file}`);
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
@@ -486,7 +486,7 @@ class DeviceView extends View {
 				};
 
 				const monitorButton = this.CreateSideButton("mono/resmonitor.svg", "Resource monitor");
-				monitorButton.onclick = ()=> new Monitor({file: this.params.file});
+				monitorButton.onclick = ()=> new Monitor({file: this.args.file});
 
 				const computerMngButton = this.CreateSideButton("mono/computermanage.svg", "Management");
 				computerMngButton.onclick = ()=> UI.PromptAgent(this, "management", host);
@@ -867,7 +867,7 @@ class DeviceView extends View {
 			this.liveB.textContent = "";
 			this.liveD.textContent = "";
 
-			this.liveStatsWebSockets.send(this.params.file);
+			this.liveStatsWebSockets.send(this.args.file);
 		};
 
 		this.liveStatsWebSockets.onmessage = event=> {
@@ -991,7 +991,7 @@ class DeviceView extends View {
 
 						if (found) {
 							for (let k=0; k<WIN.array.length; k++) {
-								if (WIN.array[k] instanceof UserView && WIN.array[k].params.file === found) {
+								if (WIN.array[k] instanceof UserView && WIN.array[k].args.file === found) {
 									WIN.array[k].Minimize();
 									return;
 								}
@@ -1028,25 +1028,25 @@ class DeviceView extends View {
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/cpu/view?file=${this.params.file}`);
+				const response = await fetch(`lifeline/cpu/view?file=${this.args.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/memory/view?file=${this.params.file}`);
+				const response = await fetch(`lifeline/memory/view?file=${this.args.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/disk/view?file=${this.params.file}`);
+				const response = await fetch(`lifeline/disk/view?file=${this.args.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/diskusage/view?file=${this.params.file}`);
+				const response = await fetch(`lifeline/diskusage/view?file=${this.args.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})()
@@ -1077,25 +1077,25 @@ class DeviceView extends View {
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/cpu/view?file=${this.params.file}&date=${oYear}${oMonth}`);
+					const response = await fetch(`lifeline/cpu/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/memory/view?file=${this.params.file}&date=${oYear}${oMonth}`);
+					const response = await fetch(`lifeline/memory/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/disk/view?file=${this.params.file}&date=${oYear}${oMonth}`);
+					const response = await fetch(`lifeline/disk/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/diskusage/view?file=${this.params.file}&date=${oYear}${oMonth}`);
+					const response = await fetch(`lifeline/diskusage/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})()
@@ -1427,7 +1427,7 @@ class DeviceView extends View {
 
 	Edit(isNew=false) { //overrides
 		const fetchButton = document.createElement("button");
-		if (isNew && !this.params.copy) {
+		if (isNew && !this.args.copy) {
 			fetchButton.className = "view-fetch-floating-button";
 			fetchButton.setAttribute("tip-below", "Fetch");
 			this.content.appendChild(fetchButton);
@@ -1473,7 +1473,7 @@ class DeviceView extends View {
 			}
 
 			try {
-				const response = await fetch(this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save", {
+				const response = await fetch(this.args.file ? `db/device/save?file=${this.args.file}` : "db/device/save", {
 					method: "POST",
 					body: JSON.stringify(obj)
 				});
@@ -1483,7 +1483,7 @@ class DeviceView extends View {
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
-				this.params.file = json.filename;
+				this.args.file = json.filename;
 				this.link = obj;
 				LOADER.devices.data[json.filename] = obj;
 
@@ -1711,7 +1711,7 @@ class DeviceView extends View {
 			fetchToggle = !fetchToggle;
 		};
 
-		const response = await fetch(`db/config/view?file=${this.params.file}`);
+		const response = await fetch(`db/config/view?file=${this.args.file}`);
 		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 		const text = await response.text();
 
@@ -1744,7 +1744,7 @@ class DeviceView extends View {
 			dialog.innerBox.parentElement.parentElement.appendChild(status);
 
 			try {
-				const response = await fetch(`db/config/fetch?file=${this.params.file}`, {
+				const response = await fetch(`db/config/fetch?file=${this.args.file}`, {
 					method: "POST",
 					body: hasCredentials ? "" : `${fetchUsernameInput.value}${String.fromCharCode(127)}${fetchPasswordInput.value}`
 				});
@@ -1786,7 +1786,7 @@ class DeviceView extends View {
 			buttonBox.appendChild(cancelButton);
 
 			saveButton.onclick = async ()=>{
-				const saveResponse = await fetch(`db/config/save?file=${this.params.file}`, {
+				const saveResponse = await fetch(`db/config/save?file=${this.args.file}`, {
 					method: "POST",
 					body: innerBox.innerText
 				});
@@ -2371,7 +2371,7 @@ class DeviceView extends View {
 			dialog.innerBox.parentElement.parentElement.appendChild(status);
 
 			try {
-				const response = await fetch(`db/config/extract?file=${this.params.file}`);
+				const response = await fetch(`db/config/extract?file=${this.args.file}`);
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -2451,7 +2451,7 @@ class DeviceView extends View {
 				obj[".interfaces"] = {v:JSON.stringify(interfaces)};
 
 				try {
-					const response = await fetch(this.params.file ? `db/device/save?file=${this.params.file}` : "db/device/save", {
+					const response = await fetch(this.args.file ? `db/device/save?file=${this.args.file}` : "db/device/save", {
 						method: "POST",
 						body: JSON.stringify(obj)
 					});
@@ -2461,7 +2461,7 @@ class DeviceView extends View {
 					const json = await response.json();
 					if (json.error) throw(json.error);
 
-					this.params.file = json.filename;
+					this.args.file = json.filename;
 					LOADER.devices.data[json.filename] = obj;
 
 					this.InitializePreview();
@@ -2793,25 +2793,25 @@ class DeviceView extends View {
 	}
 
 	Copy() { //overrides
-		new DeviceView({copy: this.params.file});
+		new DeviceView({copy: this.args.file});
 	}
 
 	Delete() { //overrides
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`db/device/delete?file=${this.params.file}`);
+				const response = await fetch(`db/device/delete?file=${this.args.file}`);
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 				const json = await response.json();
 
 				if (json.error) throw(json.error);
 
-				delete LOADER.devices.data[this.params.file];
+				delete LOADER.devices.data[this.args.file];
 				LOADER.devices.length--;
 
 				for (let i=0; i<WIN.array.length; i++) {
 					if (WIN.array[i] instanceof DevicesList) {
-						let element = Array.from(WIN.array[i].list.childNodes).filter(o=>o.getAttribute("id") === this.params.file);
+						let element = Array.from(WIN.array[i].list.childNodes).filter(o=>o.getAttribute("id") === this.args.file);
 						element.forEach(o=> WIN.array[i].list.removeChild(o));
 						WIN.array[i].UpdateViewport(true);
 					}

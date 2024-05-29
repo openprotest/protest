@@ -12,10 +12,10 @@ class DnsLookup extends Console {
 		["ANY",   "All types known",    "hsl(0,85%,100%)",  255]
 	];
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? {
+		this.args = args ?? {
 			entries      : [],
 			server       : "",
 			type         : "A",
@@ -32,7 +32,7 @@ class DnsLookup extends Console {
 
 		this.hashtable = {}; //contains all elements
 
-		this.SetTitle(this.params.server === "" ? "DNS lookup" : `DNS lookup: ${this.params.server}`);
+		this.SetTitle(this.args.server === "" ? "DNS lookup" : `DNS lookup: ${this.args.server}`);
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
@@ -40,14 +40,14 @@ class DnsLookup extends Console {
 		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.copyButton   = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddToolbarSeparator();
-		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=>o[0]===this.params.type)[2]));
+		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, DnsLookup.recordTypes.find(o=>o[0]===this.args.type)[2]));
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
 
-		if (this.params.entries) { //restore entries from previous session
-			let temp = this.params.entries;
-			this.params.entries = [];
+		if (this.args.entries) { //restore entries from previous session
+			let temp = this.args.entries;
+			this.args.entries = [];
 			for (let i = 0; i < temp.length; i++) {
 				let split = temp[i].split(",");
 				if (split.length < 2) continue;
@@ -56,11 +56,11 @@ class DnsLookup extends Console {
 		}
 
 		this.reloadButton.addEventListener("click", ()=> {
-			if (this.params.entries.length === 0) return;
-			let entries = this.params.entries;
+			if (this.args.entries.length === 0) return;
+			let entries = this.args.entries;
 			this.list.textContent = "";
 			this.hashtable = {};
-			this.params.entries = [];
+			this.args.entries = [];
 
 			for (let i = 0; i < entries.length; i++) {
 				let split = entries[i].split(",");
@@ -74,20 +74,20 @@ class DnsLookup extends Console {
 			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
 				this.hashtable = {};
-				this.params.entries = [];
+				this.args.entries = [];
 			});
 		});
 
 		this.copyButton.addEventListener("click", ()=>{
-			const paramsCopy = structuredClone(this.params);
-			paramsCopy.entries = [];
-			const copy = new DnsLookup(paramsCopy);
+			const argsCopy = structuredClone(this.args);
+			argsCopy.entries = [];
+			const copy = new DnsLookup(argsCopy);
 			const dialog = copy.Options();
 
 			const OriginalCancelClickHandler = dialog.cancelButton.onclick;
 			dialog.okButton.onclick = ()=> {
-				for (let i = 0; i < this.params.entries.length; i++) {
-					let split = this.params.entries[i].split(",");
+				for (let i = 0; i < this.args.entries.length; i++) {
+					let split = this.args.entries[i].split(",");
 					if (split.length === 1) continue;
 					copy.Add(split[1], null);
 				}
@@ -129,7 +129,7 @@ class DnsLookup extends Console {
 			this.recordType.list.append(type);
 
 			type.onclick = ()=> {
-				this.params.type = DnsLookup.recordTypes[i][0];
+				this.args.type = DnsLookup.recordTypes[i][0];
 				this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(DnsLookup.recordTypes[i][0], DnsLookup.recordTypes[i][2])})`;
 			};
 		}
@@ -165,7 +165,7 @@ class DnsLookup extends Console {
 		dnsServerInput.type = "text";
 		dnsServerInput.placeholder = "system default";
 		dnsServerInput.style.width = "200px";
-		dnsServerInput.value = this.params.server;
+		dnsServerInput.value = this.args.server;
 		innerBox.appendChild(dnsServerInput);
 
 		innerBox.appendChild(document.createElement("br"));
@@ -186,7 +186,7 @@ class DnsLookup extends Console {
 			option.textContent = `${DnsLookup.recordTypes[i][0]} - ${DnsLookup.recordTypes[i][1]}`;
 			recordTypeInput.appendChild(option);
 		}
-		recordTypeInput.value = this.params.type;
+		recordTypeInput.value = this.args.type;
 
 		innerBox.appendChild(document.createElement("br"));
 
@@ -200,9 +200,9 @@ class DnsLookup extends Console {
 		timeoutInput.type = "number";
 		timeoutInput.min = 1;
 		timeoutInput.max = 5000;
-		timeoutInput.value = this.params.timeout;
+		timeoutInput.value = this.args.timeout;
 		timeoutInput.style.width = "200px";
-		timeoutInput.value = this.params.timeout;
+		timeoutInput.value = this.args.timeout;
 		innerBox.appendChild(timeoutInput);
 
 		innerBox.appendChild(document.createElement("br"));
@@ -224,39 +224,39 @@ class DnsLookup extends Console {
 			option.textContent = transportOptions[i];
 			transportMethodInput.appendChild(option);
 		}
-		transportMethodInput.value = this.params.transport;
+		transportMethodInput.value = this.args.transport;
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const standardToggle = this.CreateToggle("Standard", this.params.isStandard, innerBox);
+		const standardToggle = this.CreateToggle("Standard", this.args.isStandard, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const inverseToggle = this.CreateToggle("Inverse lookup", this.params.isInverse, innerBox);
+		const inverseToggle = this.CreateToggle("Inverse lookup", this.args.isInverse, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const serverStatusToggle = this.CreateToggle("Request server status", this.params.serverStatus, innerBox);
+		const serverStatusToggle = this.CreateToggle("Request server status", this.args.serverStatus, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const truncatedToggle = this.CreateToggle("Truncated", this.params.isTruncated, innerBox);
+		const truncatedToggle = this.CreateToggle("Truncated", this.args.isTruncated, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
-		const recursiveToggle = this.CreateToggle("Recursive", this.params.isRecursive, innerBox);
+		const recursiveToggle = this.CreateToggle("Recursive", this.args.isRecursive, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 
 		const Apply = ()=> {
-			this.params.server       = dnsServerInput.value;
-			this.params.type         = recordTypeInput.value;
-			this.params.timeout      = timeoutInput.value;
-			this.params.transport    = transportMethodInput.value;
-			this.params.isStandard   = standardToggle.checkbox.checked;
-			this.params.isInverse    = inverseToggle.checkbox.checked;
-			this.params.serverStatus = serverStatusToggle.checkbox.checked;
-			this.params.isTruncated  = truncatedToggle.checkbox.checked;
-			this.params.isRecursive  = recursiveToggle.checkbox.checked;
+			this.args.server       = dnsServerInput.value;
+			this.args.type         = recordTypeInput.value;
+			this.args.timeout      = timeoutInput.value;
+			this.args.transport    = transportMethodInput.value;
+			this.args.isStandard   = standardToggle.checkbox.checked;
+			this.args.isInverse    = inverseToggle.checkbox.checked;
+			this.args.serverStatus = serverStatusToggle.checkbox.checked;
+			this.args.isTruncated  = truncatedToggle.checkbox.checked;
+			this.args.isRecursive  = recursiveToggle.checkbox.checked;
 
-			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.params.type, DnsLookup.recordTypes.find(o=> o[0] === this.params.type)[2])}`;
-			this.SetTitle(this.params.server === "" ? "DNS lookup" : `DNS lookup: ${this.params.server}`);
+			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, DnsLookup.recordTypes.find(o=> o[0] === this.args.type)[2])}`;
+			this.SetTitle(this.args.server === "" ? "DNS lookup" : `DNS lookup: ${this.args.server}`);
 		};
 
 		const OnKeydown = event=>{
@@ -322,7 +322,7 @@ class DnsLookup extends Console {
 	async Add(domain, type=null) {
 		if (domain.length === 0) return;
 
-		const entryKey = `${type ?? this.params.type},${domain}`;
+		const entryKey = `${type ?? this.args.type},${domain}`;
 
 		if (entryKey in this.hashtable) {
 			this.list.appendChild(this.hashtable[entryKey].element);
@@ -339,7 +339,7 @@ class DnsLookup extends Console {
 		const name = document.createElement("div");
 		name.className = "tool-label";
 		name.style.paddingLeft = "24px";
-		name.setAttribute("label", type ? type : this.params.type);
+		name.setAttribute("label", type ? type : this.args.type);
 		name.textContent = domain;
 
 		const result = document.createElement("div");
@@ -376,17 +376,17 @@ class DnsLookup extends Console {
 			}
 		};
 
-		this.params.entries.push(entryKey);
+		this.args.entries.push(entryKey);
 
 		try {
-			let url = `tools/dnslookup?domain=${encodeURIComponent(domain)}&type=${type ?? this.params.type}&timeout=${this.params.timeout}`;
-			if (this.params.server.length > 0) url += `&server=${encodeURIComponent(this.params.server)}`;
-			if (this.params.transport != "Auto") url += `&transport=${this.params.transport.toLowerCase()}`;
-			if (this.params.isStandard)   url += "&standard=true";
-			if (this.params.isInverse)    url += "&inverse=true";
-			if (this.params.serverStatus) url += "&status=true";
-			if (this.params.isTruncated)  url += "&truncated=true";
-			if (this.params.isRecursive)  url += "&recursive=true";
+			let url = `tools/dnslookup?domain=${encodeURIComponent(domain)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
+			if (this.args.server.length > 0) url += `&server=${encodeURIComponent(this.args.server)}`;
+			if (this.args.transport != "Auto") url += `&transport=${this.args.transport.toLowerCase()}`;
+			if (this.args.isStandard)   url += "&standard=true";
+			if (this.args.isInverse)    url += "&inverse=true";
+			if (this.args.serverStatus) url += "&status=true";
+			if (this.args.isTruncated)  url += "&truncated=true";
+			if (this.args.isRecursive)  url += "&recursive=true";
 
 			const response = await fetch(url);
 
@@ -496,8 +496,8 @@ class DnsLookup extends Console {
 		this.list.removeChild(this.hashtable[domain].element);
 		delete this.hashtable[domain];
 
-		const index = this.params.entries.indexOf(domain);
+		const index = this.args.entries.indexOf(domain);
 		if (index > -1)
-			this.params.entries.splice(index, 1);
+			this.args.entries.splice(index, 1);
 	}
 }

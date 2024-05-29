@@ -1,6 +1,6 @@
 class UsersList extends List {
-	constructor(params) {
-		super(params);
+	constructor(args) {
+		super(args);
 
 		this.SetTitle("Users");
 		this.SetIcon("mono/users.svg");
@@ -22,8 +22,8 @@ class UsersList extends List {
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.sentChatButton = this.AddSendToChatButton();
 
-		if (this.params.find && this.params.find.length > 0) {
-			findInput.value = this.params.find;
+		if (this.args.find && this.args.find.length > 0) {
+			findInput.value = this.args.find;
 			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
 			findInput.parentElement.style.width = "200px";
 		}
@@ -75,9 +75,9 @@ class UsersList extends List {
 
 	Delete() {
 		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async()=> {
-			if (this.params.select === null) return;
+			if (this.args.select === null) return;
 
-			let file = this.params.select;
+			let file = this.args.select;
 
 			try {
 				const response = await fetch(`db/user/delete?file=${file}`);
@@ -96,12 +96,12 @@ class UsersList extends List {
 						element.forEach(o=> WIN.array[i].list.removeChild(o));
 						WIN.array[i].UpdateViewport(true);
 					}
-					else if (WIN.array[i] instanceof UserView && WIN.array[i].params.file === file) {
+					else if (WIN.array[i] instanceof UserView && WIN.array[i].args.file === file) {
 						WIN.array[i].Close();
 					}
 				}
 
-				this.params.select = null;
+				this.args.select = null;
 			}
 			catch (ex) {
 				console.error(ex);

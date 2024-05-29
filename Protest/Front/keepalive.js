@@ -127,7 +127,7 @@ const KEEP = {
 
 				LOADER.devices.data[message.target] = message.obj;
 
-				const view = WIN.array.find(o=> o instanceof DeviceView && o.params.file === message.target);
+				const view = WIN.array.find(o=> o instanceof DeviceView && o.args.file === message.target);
 				if (view) {
 					view.link = LOADER.devices.data[message.target];
 					view.InitializePreview();
@@ -145,7 +145,7 @@ const KEEP = {
 
 				LOADER.users.data[message.target] = message.obj;
 
-				const view = WIN.array.find(o=> o instanceof UserView && o.params.file === message.target);
+				const view = WIN.array.find(o=> o instanceof UserView && o.args.file === message.target);
 				if (view) {
 					view.link = LOADER.users.data[message.target];
 					view.InitializePreview();
@@ -164,7 +164,7 @@ const KEEP = {
 			if (message.type === "device") {
 				if (LOADER.devices.version === message.version) break;
 
-				const view = WIN.array.find(o=> o instanceof DeviceView && o.params.file === message.target);
+				const view = WIN.array.find(o=> o instanceof DeviceView && o.args.file === message.target);
 				if (view) view.Close();
 
 				delete LOADER.devices.data[message.target];
@@ -178,7 +178,7 @@ const KEEP = {
 			else if (message.type === "user") {
 				if (LOADER.users.version === message.version) break;
 
-				const view = WIN.array.find(o=> o instanceof UserView && o.params.file === message.target);
+				const view = WIN.array.find(o=> o instanceof UserView && o.args.file === message.target);
 				if (view) view.Close();
 
 				delete LOADER.users.data[message.target];

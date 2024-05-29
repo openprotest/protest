@@ -134,16 +134,16 @@ class Terminal extends Window {
 		"ArrowLeft"  : "\x1B[1;3D",
 	};
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = Object.assign({
+		this.args = Object.assign({
 			host: "",
 			ansi: true,
 			autoScroll: true,
 			bell: false,
 			smoothCursor: false
-		}, params);
+		}, args);
 
 		this.AddCssDependencies("terminal.css");
 		
@@ -193,7 +193,7 @@ class Terminal extends Window {
 
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
-		this.cursorElement.style.transition = this.params.smoothCursor ? ".1s" : "0s";
+		this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
 
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "terminal-status-box";
@@ -203,7 +203,7 @@ class Terminal extends Window {
 		this.content.onfocus = ()=> this.BringToFront();
 		this.content.onkeydown = event=> this.Terminal_onkeydown(event);
 
-		this.connectButton.onclick = ()=> this.ConnectDialog(this.params.host);
+		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 		this.pasteButton.onclick   = ()=> this.ClipboardDialog();
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
@@ -240,28 +240,28 @@ class Terminal extends Window {
 		innerBox.parentElement.style.maxWidth = "480px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
 
-		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.params.ansi, innerBox);
+		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.args.ansi, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const bellToggle = this.CreateToggle("Play bell sound", this.params.bell, innerBox);
+		const bellToggle = this.CreateToggle("Play bell sound", this.args.bell, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.params.autoScroll, innerBox);
+		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.params.smoothCursor, innerBox);
+		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.args.smoothCursor, innerBox);
 
 		okButton.onclick = ()=> {
-			this.params.ansi         = ansiToggle.checkbox.checked;
-			this.params.bell         = bellToggle.checkbox.checked;
-			this.params.autoScroll   = autoScrollToggle.checkbox.checked;
-			this.params.smoothCursor = smoothCursorToggle.checkbox.checked;
+			this.args.ansi         = ansiToggle.checkbox.checked;
+			this.args.bell         = bellToggle.checkbox.checked;
+			this.args.autoScroll   = autoScrollToggle.checkbox.checked;
+			this.args.smoothCursor = smoothCursorToggle.checkbox.checked;
 			dialog.Close();
 
-			this.cursorElement.style.transition = this.params.smoothCursor ? ".1s" : "0s";
+			this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
 		};
 
 		setTimeout(()=>ansiToggle.label.focus(), 200);
@@ -411,7 +411,7 @@ class Terminal extends Window {
 
 			switch (data[i]) {
 			case "\x07":
-				if (this.params.bell) this.Bell();
+				if (this.args.bell) this.Bell();
 				this.cursorElement.style.animation = "terminal-shake .4s 1";
 				setTimeout(()=>{ this.cursorElement.style.animation = "terminal-blinking 1.2s infinite"; }, 400);
 				break;
@@ -452,7 +452,7 @@ class Terminal extends Window {
 				break;
 
 			case "\x1b": //esc
-				if (this.params.ansi) {
+				if (this.args.ansi) {
 					i += this.HandleEscSequence(data, i) - 1;
 				}
 				else {
@@ -502,8 +502,8 @@ class Terminal extends Window {
 		this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
 		this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
 
-		if (this.params.autoScroll) {
-			if (this.params.smoothCursor) {
+		if (this.args.autoScroll) {
+			if (this.args.smoothCursor) {
 				setTimeout(()=>this.cursorElement.scrollIntoView(), 200);
 			}
 			else {
@@ -553,83 +553,83 @@ class Terminal extends Window {
 
 		const fullSequence = match[0];
 		const prefix       = match[1] || ""; // ?, = or ""
-		const paramString  = match[2] || "";
+		const argstring  = match[2] || "";
 		const command      = match[4];
 
-		const params = paramString.split(";").map(param => {
+		const args = argstring.split(";").map(param => {
 			return param === "" ? 0 : parseInt(param, 10);
 		});
 
 		switch (command) {
 		case "A": //cursor up
-			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
+			this.cursor.y = Math.max(0, this.cursor.y - (args[0] || 1));
 			break;
 
 		case "B": //cursor down
-			this.cursor.y += params[0] || 1;
+			this.cursor.y += args[0] || 1;
 			break;
 
 		case "C": //cursor right
-			this.cursor.x += params[0] || 1;
+			this.cursor.x += args[0] || 1;
 			break;
 
 		case "D": //cursor left
-			this.cursor.x = Math.max(0, this.cursor.x - (params[0] || 1));
+			this.cursor.x = Math.max(0, this.cursor.x - (args[0] || 1));
 			break;
 
 		case "E": //cursor to beginning of next line, n lines down
 			this.cursor.x = 0;
-			this.cursor.y += params[0] || 1;
+			this.cursor.y += args[0] || 1;
 			break;
 
 		case "F": //cursor to beginning of previous line, n lines up
 			this.cursor.x = 0;
-			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
+			this.cursor.y = Math.max(0, this.cursor.y - (args[0] || 1));
 			break;
 
 		case "G": //cursor to column n
-			this.cursor.x = Math.max(0, (params[0] || 1) - 1);
+			this.cursor.x = Math.max(0, (args[0] || 1) - 1);
 			break;
 
 		case "f":
 		case "H": //move the cursor to row n, column m
-			this.cursor.y = Math.max(0, (params[0] || 1) - 1);
-			this.cursor.x = Math.max(0, (params[1] || 1) - 1);
+			this.cursor.y = Math.max(0, (args[0] || 1) - 1);
+			this.cursor.x = Math.max(0, (args[1] || 1) - 1);
 			break;
 
 		case "J":
-			switch (params[0]) {
+			switch (args[0]) {
 			case 0: this.EraseFromCursorToEndOfScreen(); break;
 			case 1: this.EraseFromCursorToBeginningOfScreen(); break;
 			case 2: this.ClearScreen(); break;
 			case 3: this.ClearScreenAndBuffer(); break;
 			default:
-				console.log(`Unhandled CSI command: ${params.join(";")}J`);
+				console.log(`Unhandled CSI command: ${args.join(";")}J`);
 				break;
 			}
 			break;
 
 		case "K":
-			switch (params[0]) {
+			switch (args[0]) {
 			case 0: this.EraseLineFromCursorToEnd(); break;
 			case 1: this.EraseLineFromBeginningToCursor(); break;
 			case 2: this.ClearLine(); break;
 			default:
-				console.log(`Unhandled CSI command: ${params.join(";")}K`);
+				console.log(`Unhandled CSI command: ${args.join(";")}K`);
 				break;
 			}
 			break;
 
-		case "P": this.DeleteN(params[0] || 1); break;
+		case "P": this.DeleteN(args[0] || 1); break;
 		//case "S": break; //not ANSI
 		//case "T": break; //not ANSI
 
 		case "d": //move cursor to the specified line
-			this.cursor.y = (params[0] || 1) - 1;
+			this.cursor.y = (args[0] || 1) - 1;
 			break;
 
 		case "h": //enable mode
-			switch (params[0]) {
+			switch (args[0]) {
 			case 1   : this.appCursorKeys    = true; break;
 			case 4   : this.insertMode       = true; break;
 			case 7   : this.lineWrappingMode = true; break;
@@ -637,12 +637,12 @@ class Terminal extends Window {
 			case 25  : this.cursorElement.style.visibility = "visible"; break;
 			case 1049: this.EnableAlternateScreen(); break;
 			case 2004: this.bracketedMode = true; break;
-			default  : console.warn(`Unhandled enable mode: ${params.join(";")}h`);
+			default  : console.warn(`Unhandled enable mode: ${args.join(";")}h`);
 			}
 			break;
 
 		case "l": //disable mode
-			switch (params[0]) {
+			switch (args[0]) {
 			case 1   : this.appCursorKeys     = false; break;
 			case 4   : this.insertMode        = false; break;
 			case 7   : this.lineWrappingMode  = false; break;
@@ -650,15 +650,15 @@ class Terminal extends Window {
 			case 25  : this.cursorElement.style.visibility = "hidden"; break;
 			case 1049: this.DisableAlternateScreen(); break;
 			case 2004: this.bracketedMode = false; break;
-			default  : console.warn(`Unhandled disable mode: ${params.join(";")}l`);
+			default  : console.warn(`Unhandled disable mode: ${args.join(";")}l`);
 			}
 			break;
 
-		case "m": this.ParseGraphicsModes(params); break;
+		case "m": this.ParseGraphicsModes(args); break;
 
 		case "r": //set scroll region
-			this.scrollRegionTop = Math.max(params[0], 1);
-			this.scrollRegionBottom = params[1];
+			this.scrollRegionTop = Math.max(args[0], 1);
+			this.scrollRegionBottom = args[1];
 			break;
 
 		case "s": //save cursor position
@@ -666,7 +666,7 @@ class Terminal extends Window {
 			break;
 
 		case "t": //window manipulation
-			switch (params[0]) {
+			switch (args[0]) {
 			case 22: //save window title
 				this.savedTitle = this.header.textContent;
 				break;
@@ -678,7 +678,7 @@ class Terminal extends Window {
 				break;
 
 			default:
-				console.warn(`Unhandled window manipulation command: ${params.join(";")}t`);
+				console.warn(`Unhandled window manipulation command: ${args.join(";")}t`);
 				break;
 			}
 
@@ -715,12 +715,12 @@ class Terminal extends Window {
 		}
 
 		const sequence = data.slice(index + 2, end);
-		const [command, ...params] = sequence.split(";");
+		const [command, ...args] = sequence.split(";");
 
 		switch (command) {
 		case "0":
 		case "2": //set title
-			this.SetTitle(`Secure shell - ${this.params.host} - ${params.join(";")}`);
+			this.SetTitle(`Secure shell - ${this.args.host} - ${args.join(";")}`);
 			break;
 
 		case "10": //set foreground color
@@ -792,9 +792,9 @@ class Terminal extends Window {
 		return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 	}
 
-	ParseGraphicsModes(params) {
-		for (let i=0; i<params.length; i++) {
-			switch (params[i]) {
+	ParseGraphicsModes(args) {
+		for (let i=0; i<args.length; i++) {
+			switch (args[i]) {
 			case 0:
 				this.ResetTextAttributes();
 				break;
@@ -822,22 +822,22 @@ class Terminal extends Window {
 
 			//set foreground color
 			case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
-				this.foreColor = this.MapColorId(params[i] - 30);
+				this.foreColor = this.MapColorId(args[i] - 30);
 				break;
 
 			case 38: //set foreground color
-				if (params.length < 3) break;
+				if (args.length < 3) break;
 
-				if (params[1] === 5) { //id color
-					if (params.length < 3) break;
-					this.foreColor = this.MapColorId(params[2]);
+				if (args[1] === 5) { //id color
+					if (args.length < 3) break;
+					this.foreColor = this.MapColorId(args[2]);
 				}
-				else if (params[1] === 2) { //rgb color
-					if (params.length < 6) break;
-					this.foreColor = `rgb(${params[2]},${params[3]},${params[4]})`;
+				else if (args[1] === 2) { //rgb color
+					if (args.length < 6) break;
+					this.foreColor = `rgb(${args[2]},${args[3]},${args[4]})`;
 				}
 				else {
-					console.warn(`Unknown graphics mode: 38;${params[1]}`);
+					console.warn(`Unknown graphics mode: 38;${args[1]}`);
 				}
 				break;
 
@@ -847,22 +847,22 @@ class Terminal extends Window {
 
 			//set background color
 			case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47:
-				this.backColor = this.MapColorId(params[i] - 40);
+				this.backColor = this.MapColorId(args[i] - 40);
 				break;
 
 			case 48: //set background color
-				if (params.length < 3) break;
+				if (args.length < 3) break;
 
-				if (params[1] === 5) { //id color
-					if (params.length < 3) break;
-					this.backColor = this.MapColorId(params[2]);
+				if (args[1] === 5) { //id color
+					if (args.length < 3) break;
+					this.backColor = this.MapColorId(args[2]);
 				}
-				else if (params[1] === 2) { //rgb color
-					if (params.length < 6) break;
-					this.backColor = `rgb(${params[2]},${params[3]},${params[4]})`;
+				else if (args[1] === 2) { //rgb color
+					if (args.length < 6) break;
+					this.backColor = `rgb(${args[2]},${args[3]},${args[4]})`;
 				}
 				else {
-					console.warn(`Unknown graphics mode: 48;${params[1]}`);
+					console.warn(`Unknown graphics mode: 48;${args[1]}`);
 				}
 				break;
 
@@ -872,16 +872,16 @@ class Terminal extends Window {
 
 			//reset background color (bright variants)
 			case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
-				this.foreColor = this.MapColorId(params[i] - 82);
+				this.foreColor = this.MapColorId(args[i] - 82);
 				break;
 
 			//set background color (bright variants)
 			case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107:
-				this.backColor = this.MapColorId(params[i] - 92);
+				this.backColor = this.MapColorId(args[i] - 92);
 				break;
 
 			default:
-				console.warn(`Unknown graphics mode: ${params[0]}`);
+				console.warn(`Unknown graphics mode: ${args[0]}`);
 				break;
 			}
 		}

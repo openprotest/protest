@@ -1,8 +1,8 @@
 class KeyboardTester extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params;
+		this.args = args;
 
 		this.content.style.overflow = "scroll";
 
@@ -10,7 +10,7 @@ class KeyboardTester extends Window {
 
 		this.isGamePadListening = false;
 
-		if (this.params === "gamepad") {
+		if (this.args === "gamepad") {
 			this.SetTitle("Gamepad tester");
 			this.SetIcon("mono/gamepad.svg");
 
@@ -732,7 +732,7 @@ class KeyboardTester extends Window {
 	}
 
 	OnGamePadDisconnected() {
-		if (this.params !== "gamepad") this.gamepad.style.display = "none";
+		if (this.args !== "gamepad") this.gamepad.style.display = "none";
 		this.isGamePadListening = false;
 	}
 

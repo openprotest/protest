@@ -1,8 +1,8 @@
 class Fetch extends Tabs {
-	constructor(params) {
+	constructor(args) {
 		super(null);
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.SetTitle("Fetch");
 		this.SetIcon("mono/fetch.svg");
@@ -32,7 +32,7 @@ class Fetch extends Tabs {
 
 		this.InitializeComponents();
 
-		switch (this.params) {
+		switch (this.args) {
 		case "users":
 			usersTab.className = "v-tab-selected";
 			this.ShowUsers();
@@ -327,10 +327,10 @@ class Fetch extends Tabs {
 
 		fetchButton.onclick = async()=> {
 			let uri;
-			if (this.params === "devices") {
+			if (this.args === "devices") {
 				uri = "fetch/devices";
 			}
-			else if (this.params === "users") {
+			else if (this.args === "users") {
 				uri = "fetch/users";
 			}
 
@@ -348,7 +348,7 @@ class Fetch extends Tabs {
 				uri += `?domain=${encodeURIComponent(this.domainInput.value)}`;
 			}
 
-			if (this.params === "devices") {
+			if (this.args === "devices") {
 				if (this.dnsCheckBox.checked)      uri += "&dns=true";
 				if (this.wmiCheckbox.checked)      uri += "&wmi=true";
 				if (this.snmpCheckbox.checked)     uri += `&snmp=${this.snmpInput.value}`;
@@ -358,7 +358,7 @@ class Fetch extends Tabs {
 				uri += `&retries=${this.retriesRange.value}`;
 				uri += `&interval=${this.intervalRange.value}`;
 			}
-			else if (this.params === "users") {
+			else if (this.args === "users") {
 				uri = `fetch/users?domain=${this.domainInput.value}`;
 			}
 
@@ -449,7 +449,7 @@ class Fetch extends Tabs {
 	}
 
 	ShowDevices() {
-		this.params = "devices";
+		this.args = "devices";
 		this.tabsPanel.textContent = "";
 
 
@@ -514,7 +514,7 @@ class Fetch extends Tabs {
 	}
 
 	ShowUsers() {
-		this.params = "users";
+		this.args = "users";
 		this.tabsPanel.textContent = "";
 
 
@@ -558,7 +558,7 @@ class Fetch extends Tabs {
 	}
 
 	ShowImport() {
-		this.params = "protest";
+		this.args = "protest";
 		this.tabsPanel.textContent = "";
 
 		const protestLabel = document.createElement("div");
@@ -751,7 +751,7 @@ class Fetch extends Tabs {
 	}
 
 	async ShowFetching() {
-		this.params = "fetching";
+		this.args = "fetching";
 		this.tabsPanel.textContent = "";
 
 		const nameLabel = document.createElement("div");

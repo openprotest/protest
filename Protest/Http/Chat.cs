@@ -89,7 +89,7 @@ internal static class Chat {
     public static void CommandHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("command", out string command)) { return; }
-        if (!dictionary.TryGetValue("params", out string param)) { return; }
+        if (!dictionary.TryGetValue("args", out string args)) { return; }
         if (!dictionary.TryGetValue("icon", out string icon)) { return; }
         if (!dictionary.TryGetValue("title", out string title)) { return; }
 
@@ -107,7 +107,7 @@ internal static class Chat {
         builder.Append($"\"alias\":\"{alias}\",");
         builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\",");
         builder.Append($"\"command\":\"{command}\",");
-        builder.Append($"\"params\":\"{Data.EscapeJsonText(param)}\",");
+        builder.Append($"\"args\":\"{Data.EscapeJsonText(args)}\",");
         builder.Append($"\"icon\":\"{Data.EscapeJsonText(icon)}\",");
         builder.Append($"\"title\":\"{Data.EscapeJsonText(title)}\"");
         builder.Append('}');

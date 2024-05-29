@@ -1,9 +1,9 @@
 class List extends Window {
-	constructor(params) {
+	constructor(args) {
 		super();
 		this.MIN_CELL_SIZE = 40;
 
-		this.params = params ?? { select: null, sort: "", filter: "", find: "" };
+		this.args = args ?? { select: null, sort: "", filter: "", find: "" };
 		this.AddCssDependencies("list.css");
 
 		this.link = null;
@@ -157,7 +157,7 @@ class List extends Window {
 				this.sortDescend = false;
 			}
 
-			this.params.sort = event.target.textContent;
+			this.args.sort = event.target.textContent;
 			this.RefreshList();
 		};
 
@@ -167,7 +167,7 @@ class List extends Window {
 			newColumn.style.width = `${100 / columns.length}%`;
 			newColumn.style.textTransform = columns[i] === "ip" ? "uppercase" : "capitalize";
 
-			if (this.params.sort === columns[i]) {
+			if (this.args.sort === columns[i]) {
 				newColumn.className = "list-sort-ascend";
 			}
 
@@ -236,7 +236,7 @@ class List extends Window {
 					newType.style.backgroundImage = `url(${types[i] in LOADER.userIcons ? LOADER.userIcons[types[i]] : "mono/user.svg"})`;
 				}
 
-				if (types[i] === this.params.filter) {
+				if (types[i] === this.args.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
 					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 				}
@@ -244,12 +244,12 @@ class List extends Window {
 				newType.onclick = ()=> {
 					ClearSelection();
 
-					if (this.params.filter === types[i]) {
-						this.params.filter = "";
+					if (this.args.filter === types[i]) {
+						this.args.filter = "";
 						filterButton.style.borderBottom = "";
 					}
 					else {
-						this.params.filter = types[i];
+						this.args.filter = types[i];
 						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 						newType.style.backgroundColor = "var(--clr-select)";
 					}
@@ -271,7 +271,7 @@ class List extends Window {
 		filterButton.onclick = ()=> findFilter.focus();
 
 		filterButton.ondblclick = ()=> {
-			this.params.filter = "";
+			this.args.filter = "";
 			filterButton.style.borderBottom = "";
 			ClearSelection();
 			this.RefreshList();
@@ -321,7 +321,7 @@ class List extends Window {
 
 		findInput.onchange = ()=> {
 			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
-			this.params.find = findInput.value;
+			this.args.find = findInput.value;
 			this.RefreshList();
 		};
 
@@ -420,13 +420,13 @@ class List extends Window {
 	}
 
 	MatchFilters(entry) {
-		if (this.params.filter.length > 0) {
+		if (this.args.filter.length > 0) {
 			if (!entry.type) return false;
-			if (entry.type.v !== this.params.filter) return false;
+			if (entry.type.v !== this.args.filter) return false;
 		}
 
-		if (this.params.find.length > 0) {
-			const keywords = this.params.find.toLowerCase().split(" ");
+		if (this.args.find.length > 0) {
+			const keywords = this.args.find.toLowerCase().split(" ");
 
 			for (let i = 0; i < keywords.length; i++) {
 				if (keywords[i].length === 0) continue;
@@ -449,7 +449,7 @@ class List extends Window {
 		this.list.textContent = "";
 
 		let filtered = [];
-		if (this.params.filter.length === 0) {
+		if (this.args.filter.length === 0) {
 			for (const key in this.link.data) {
 				filtered.push(key);
 			}
@@ -457,18 +457,18 @@ class List extends Window {
 		else {
 			for (const key in this.link.data) {
 				if (!this.link.data[key].type) continue;
-				if (this.link.data[key].type.v.toLowerCase() !== this.params.filter.toLowerCase()) continue;
+				if (this.link.data[key].type.v.toLowerCase() !== this.args.filter.toLowerCase()) continue;
 				filtered.push(key);
 			}
 		}
 
 		let found;
-		if (this.params.find.length === 0) {
+		if (this.args.find.length === 0) {
 			found = filtered;
 		}
 		else {
 			found = [];
-			const keywords = this.params.find.toLowerCase().split(" ").filter(o=> o.length > 0);
+			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
 
 			for (let i = 0; i < filtered.length; i++) {
 				let matched = true;
@@ -494,8 +494,8 @@ class List extends Window {
 			}
 		}
 
-		if (this.params.sort.length > 0) {
-			const attr = this.params.sort;
+		if (this.args.sort.length > 0) {
+			const attr = this.args.sort;
 
 			if (this.sortDescend) {
 				found = found.sort((a, b)=> {
@@ -525,7 +525,7 @@ class List extends Window {
 			newElement.className = "list-element";
 			this.list.appendChild(newElement);
 
-			if (found[i] === this.params.select) {
+			if (found[i] === this.args.select) {
 				this.selected = newElement;
 			}
 		}
@@ -591,7 +591,7 @@ class List extends Window {
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
 
-			this.params.select = element.getAttribute("id");
+			this.args.select = element.getAttribute("id");
 
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";

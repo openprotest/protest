@@ -1,11 +1,11 @@
 class Telnet extends Terminal {
-	constructor(params) {
-		super(params);
+	constructor(args) {
+		super(args);
 
 		this.SetTitle("Telnet");
 		this.SetIcon("mono/telnet.svg");
 
-		this.ConnectDialog(this.params.host, true);
+		this.ConnectDialog(this.args.host, true);
 	}
 
 	ConnectDialog(target, isNew=false) { //overrides
@@ -66,7 +66,7 @@ class Telnet extends Terminal {
 	}
 
 	Connect(target) {
-		this.params.host = target;
+		this.args.host = target;
 
 		this.statusBox.style.display = "initial";
 		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";

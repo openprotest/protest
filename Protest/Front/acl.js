@@ -1,8 +1,8 @@
 class Acl extends Tabs {
-	constructor(params) {
+	constructor(args) {
 		super(null);
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.AddCssDependencies("list.css");
 
@@ -17,7 +17,7 @@ class Acl extends Tabs {
 		this.aclTab.onclick      = ()=> this.ShowAcl();
 		this.sessionsTab.onclick = ()=> this.ShowSessions();
 
-		switch (this.params) {
+		switch (this.args) {
 		case "sessions":
 			this.sessionsTab.className = "v-tab-selected";
 			this.ShowSessions();
@@ -54,7 +54,7 @@ class Acl extends Tabs {
 	}
 
 	ShowAcl() {
-		this.params = "acl";
+		this.args = "acl";
 		this.tabsPanel.textContent = "";
 
 		this.usersList = document.createElement("div");
@@ -512,7 +512,7 @@ class Acl extends Tabs {
 	}
 
 	async ShowSessions() {
-		this.params = "sessions";
+		this.args = "sessions";
 		this.tabsPanel.textContent = "";
 
 		const titleBar = document.createElement("div");

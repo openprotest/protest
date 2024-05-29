@@ -1,8 +1,8 @@
 class Backup extends List {
-	constructor(params) {
-		super(params);
+	constructor(args) {
+		super(args);
 
-		this.params = params ?? {filter:"", find:"", sort:"", select:null};
+		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
 		this.SetTitle("Backup");
 		this.SetIcon("mono/backup.svg");
@@ -89,16 +89,16 @@ class Backup extends List {
 	}
 
 	async Delete() {
-		if (this.params.select === null) return;
+		if (this.args.select === null) return;
 
 		try {
-			const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.params.select)}`);
+			const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.args.select)}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.params.select = null
+			this.args.select = null
 
 			this.link = json;
 			this.RefreshList();
@@ -112,7 +112,7 @@ class Backup extends List {
 		this.list.textContent = "";
 
 		let filtered = [];
-		if (this.params.filter.length === 0) {
+		if (this.args.filter.length === 0) {
 			for (let i = 0; i < this.link.length; i++) {
 				filtered.push(i);
 			}
@@ -120,18 +120,18 @@ class Backup extends List {
 		else {
 			for (let i = 0; i < this.link.length; i++) {
 				if (!this.link[i].type) continue;
-				if (this.link[i].type !== this.params.filter) continue;
+				if (this.link[i].type !== this.args.filter) continue;
 				filtered.push(i);
 			}
 		}
 
 		let found;
-		if (this.params.find && this.params.find.length === 0) {
+		if (this.args.find && this.args.find.length === 0) {
 			found = filtered;
 		}
 		else {
 			found = [];
-			const keywords = this.params.find.toLowerCase().split(" ").filter(o=> o.length > 0);
+			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
 
 			for (let i = 0; i < filtered.length; i++) {
 				let name = this.link[filtered[i]].name.toLowerCase();
@@ -157,8 +157,8 @@ class Backup extends List {
 
 		this.found = found;
 
-		if (this.params.sort && this.params.sort.length > 0) {
-			let attr = this.params.sort;
+		if (this.args.sort && this.args.sort.length > 0) {
+			let attr = this.args.sort;
 			if (this.sortDescend) {
 				found = found.sort((a, b)=> {
 					if (this.link[a][attr] < this.link[b][attr]) return 1;
@@ -246,7 +246,7 @@ class Backup extends List {
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
 
-			this.params.select = entry.name;
+			this.args.select = entry.name;
 
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";

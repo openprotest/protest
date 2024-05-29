@@ -273,7 +273,7 @@ class Window {
 		this.position = null;
 		this.escAction = null;
 		this.defaultElement = null;
-		this.params = {};
+		this.args = {};
 		this.messagesQueue = [];
 		this.cssDependencies = [];
 		this.toolbar = null;
@@ -589,7 +589,7 @@ class Window {
 			title: this.header.textContent,
 			icon: this.icon.style.backgroundImage,
 			class: this.constructor.name,
-			params: this.params
+			args: this.args
 		});
 
 		if (MENU.isOpen && MENU.filterIndex === 1) {
@@ -1146,7 +1146,7 @@ class Window {
 					KEEP.socket.send(JSON.stringify({
 					type   : "chat-command",
 					command: this.constructor.name,
-					params : JSON.stringify(this.params),
+					args : JSON.stringify(this.args),
 					icon   : this.iconPath,
 					title  : this.header.textContent,
 					id: `${KEEP.username}${Date.now()}`

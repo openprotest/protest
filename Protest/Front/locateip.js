@@ -1,8 +1,8 @@
 class LocateIp extends Console {
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? { entries: [] };
+		this.args = args ?? { entries: [] };
 
 		this.AddCssDependencies("tools.css");
 
@@ -15,9 +15,9 @@ class LocateIp extends Console {
 		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.AddSendToChatButton();
 
-		if (this.params.entries) { //restore entries from previous session
-			let temp = this.params.entries;
-			this.params.entries = [];
+		if (this.args.entries) { //restore entries from previous session
+			let temp = this.args.entries;
+			this.args.entries = [];
 			for (let i = 0; i < temp.length; i++)
 				this.Push(temp[i]);
 		}
@@ -27,7 +27,7 @@ class LocateIp extends Console {
 			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
 				this.hashtable = {};
-				this.params.entries = [];
+				this.args.entries = [];
 			});
 		});
 	}
@@ -140,7 +140,7 @@ class LocateIp extends Console {
 
 		remove.onclick = ()=> { this.Remove(ipaddr); };
 
-		this.params.entries.push(ipaddr);
+		this.args.entries.push(ipaddr);
 
 		try {
 			const response = await fetch("tools/locateip", {
@@ -228,8 +228,8 @@ class LocateIp extends Console {
 		this.list.removeChild(this.hashtable[ipaddr].element);
 		delete this.hashtable[ipaddr];
 
-		const index = this.params.entries.indexOf(ipaddr);
+		const index = this.args.entries.indexOf(ipaddr);
 		if (index > -1)
-			this.params.entries.splice(index, 1);
+			this.args.entries.splice(index, 1);
 	}
 }

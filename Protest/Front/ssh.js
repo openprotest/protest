@@ -1,15 +1,15 @@
 class Ssh extends Terminal {
-	constructor(params) {
-		super(params);
+	constructor(args) {
+		super(args);
 
 		this.SetTitle("Secure shell");
 		this.SetIcon("mono/ssh.svg");
 
-		if (this.params.file) {
-			this.ConnectViaFile(this.params.host, this.params.file);
+		if (this.args.file) {
+			this.ConnectViaFile(this.args.host, this.args.file);
 		}
 		else {
-			this.ConnectDialog(this.params.host, true);
+			this.ConnectDialog(this.args.host, true);
 		}
 	}
 
@@ -43,7 +43,7 @@ class Ssh extends Terminal {
 		const usernameInput = document.createElement("input");
 		usernameInput.type = "text";
 		usernameInput.style.width = "calc(100% - 120px)";
-		usernameInput.value = this.params.username ?? "";
+		usernameInput.value = this.args.username ?? "";
 		innerBox.append(usernameLabel, usernameInput);
 
 		const passwordLabel = document.createElement("div");
@@ -59,19 +59,19 @@ class Ssh extends Terminal {
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
 		rememberPasswordToggle.label.style.margin = "8px 0px 0px 4px";
 
-		if ("password" in this.params) {
+		if ("password" in this.args) {
 			rememberPasswordToggle.checkbox.checked = true;
-			passwordInput.value = this.params.password;
+			passwordInput.value = this.args.password;
 		}
 
 		okButton.onclick = ()=> {
-			this.params.username = usernameInput.value.trim();
+			this.args.username = usernameInput.value.trim();
 
 			if (rememberPasswordToggle.checkbox.checked) {
-				this.params.password = passwordInput.value;
+				this.args.password = passwordInput.value;
 			}
 			else {
-				delete this.params.password;
+				delete this.args.password;
 			}
 
 			dialog.Close();
@@ -122,7 +122,7 @@ class Ssh extends Terminal {
 	}
 
 	Connect(target, connectionString) {
-		this.params.host = target;
+		this.args.host = target;
 
 		this.statusBox.style.display = "initial";
 		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
@@ -177,7 +177,7 @@ class Ssh extends Terminal {
 			else if (json.error) {
 				setTimeout(()=>{
 					this.ConfirmBox(json.error, true, "mono/error.svg").addEventListener("click", ()=> {
-						setTimeout(()=>this.ConnectDialog(this.params.host, false), 200);
+						setTimeout(()=>this.ConnectDialog(this.args.host, false), 200);
 					});
 				}, 200);
 			}

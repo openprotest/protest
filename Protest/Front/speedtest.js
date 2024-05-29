@@ -1,10 +1,10 @@
 class SpeedTest extends Window {
 	static DURATION = 5;
 
-	constructor(params) {
+	constructor(args) {
 		super();
 
-		this.params = params ?? "";
+		this.args = args ?? "";
 
 		this.SetTitle("Speed test");
 		this.SetIcon("mono/speedtest.svg");
