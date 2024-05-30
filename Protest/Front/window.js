@@ -517,8 +517,6 @@ class Window {
 						contextmenu.style.left = "8px";
 					}
 				}
-
-
 			}
 		};
 

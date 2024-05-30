@@ -32,6 +32,7 @@
 	background-position: 8px 50%;
 	background-repeat: no-repeat;
 	-webkit-user-select: none; user-select: none;
+	pointer-events: none;
 }
 
 .terminal-cursor {

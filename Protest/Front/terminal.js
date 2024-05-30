@@ -244,11 +244,11 @@ class Terminal extends Window {
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const bellToggle = this.CreateToggle("Play bell sound", this.args.bell, innerBox);
+		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, innerBox);
+		const bellToggle = this.CreateToggle("Play bell sound", this.args.bell, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
@@ -400,23 +400,15 @@ class Terminal extends Window {
 	HandleMessage(data) {
 		for (let i=0; i<data.length; i++) {
 			let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
+			let isNew = false;
 
 			if (!char) {
+				isNew = true;
 				char = document.createElement("span");
 				char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
 				char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
 				this.content.appendChild(char);
 				this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
-			}
-			else {
-				if (char.style.color)           char.style.color           = "unset";
-				if (char.style.backgroundColor) char.style.backgroundColor = "unset";
-				if (char.style.fontWeight)      char.style.fontWeight      = "normal";
-				if (char.style.fontStyle)       char.style.fontStyle       = "none";
-				if (char.style.opacity)         char.style.opacity         = "1";
-				if (char.style.textDecoration)  char.style.textDecoration  = "none";
-				if (char.style.animation)       char.style.animation       = "none";
-				if (char.style.visibility)      char.style.visibility      = "visible";
 			}
 
 			switch (data[i]) {
@@ -473,6 +465,17 @@ class Terminal extends Window {
 			//case "\x7f": break; //delete
 
 			default:
+				if (!isNew) {
+					if (char.style.color)           char.style.color           = "unset";
+					if (char.style.backgroundColor) char.style.backgroundColor = "unset";
+					if (char.style.fontWeight)      char.style.fontWeight      = "normal";
+					if (char.style.fontStyle)       char.style.fontStyle       = "none";
+					if (char.style.opacity)         char.style.opacity         = "1";
+					if (char.style.textDecoration)  char.style.textDecoration  = "none";
+					if (char.style.animation)       char.style.animation       = "none";
+					if (char.style.visibility)      char.style.visibility      = "visible";
+				}
+
 				if (data[i] === " ") {
 					char.innerHTML = "&nbsp;";
 				}
@@ -511,6 +514,13 @@ class Terminal extends Window {
 
 		this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
 		this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
+
+		if (this.scrollRegionTop && this.cursor.y < this.scrollRegionTop) {
+			this.ScrollUp();
+		}
+		else if (this.scrollRegionBottom && this.cursor.y >= this.scrollRegionBottom-1) {
+			this.ScrollDown();
+		}
 
 		if (this.args.autoScroll) {
 			if (this.args.smoothCursor) {
@@ -735,11 +745,11 @@ class Terminal extends Window {
 			break;
 
 		case "10": //set foreground color
-			//TODO:
+			this.content.style.color = this.MapColorId(params[0]);
 			break;
 
 		case "11": //set background color
-			//TODO:
+			this.content.style.backgroundColor = this.MapColorId(params[0]);
 			break;
 
 		default:
@@ -902,14 +912,15 @@ class Terminal extends Window {
 		const top    = this.scrollRegionTop || 0;
 		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
 		const todo   = {};
+		let x, y;
 
-		for (key in this.screen) {
+		for (let key in this.screen) {
 			[x, y] = key.split(",");
 			if (y < top || y > bottom) continue;
 			todo[key] = this.screen[key];
 		}
 
-		for (key in todo) {
+		for (let key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
 			this.screen[`${x},${y + 1}`] = todo[key];
@@ -921,14 +932,15 @@ class Terminal extends Window {
 		const top    = this.scrollRegionTop || 0;
 		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
 		const todo   = {};
+		let x, y;
 
-		for (key in this.screen) {
+		for (let key in this.screen) {
 			[x, y] = key.split(",");
 			if (y < top || y > bottom) continue;
 			todo[key] = this.screen[key];
 		}
 
-		for (key in todo) {
+		for (let key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
 			this.screen[`${x},${y - 1}`] = todo[key];
