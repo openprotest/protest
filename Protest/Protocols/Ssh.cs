@@ -96,7 +96,7 @@ internal static class Ssh {
             }
         }
         catch (SshAuthenticationException) {
-            await WsWriteText(ws, "{\"error\":\"Invalid username or password\"}");
+            await WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }

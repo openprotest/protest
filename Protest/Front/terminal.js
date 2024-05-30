@@ -408,6 +408,16 @@ class Terminal extends Window {
 				this.content.appendChild(char);
 				this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
 			}
+			else {
+				if (char.style.color)           char.style.color           = "unset";
+				if (char.style.backgroundColor) char.style.backgroundColor = "unset";
+				if (char.style.fontWeight)      char.style.fontWeight      = "normal";
+				if (char.style.fontStyle)       char.style.fontStyle       = "none";
+				if (char.style.opacity)         char.style.opacity         = "1";
+				if (char.style.textDecoration)  char.style.textDecoration  = "none";
+				if (char.style.animation)       char.style.animation       = "none";
+				if (char.style.visibility)      char.style.visibility      = "visible";
+			}
 
 			switch (data[i]) {
 			case "\x07":
@@ -487,10 +497,10 @@ class Terminal extends Window {
 				if (this.faint)         char.style.opacity = "0.6";
 				if (this.italic)        char.style.fontStyle = "italic";
 				if (this.underline)     char.style.textDecoration = "underline";
+				if (this.strikethrough) char.style.textDecoration = "line-through";
 				if (this.blinking)      char.style.animation = "terminal-blinking 1s infinite";
 				if (this.fastBlinking)  char.style.animation = "terminal-fast-blinking .2s infinite";
 				if (this.hidden)        char.style.visibility = "hidden";
-				if (this.strikethrough) char.style.textDecoration = "line-through";
 
 				this.cursor.x++;
 				break;
@@ -553,83 +563,83 @@ class Terminal extends Window {
 
 		const fullSequence = match[0];
 		const prefix       = match[1] || ""; // ?, = or ""
-		const argstring  = match[2] || "";
+		const paramsString = match[2] || "";
 		const command      = match[4];
 
-		const args = argstring.split(";").map(param => {
+		const params = paramsString.split(";").map(param => {
 			return param === "" ? 0 : parseInt(param, 10);
 		});
 
 		switch (command) {
 		case "A": //cursor up
-			this.cursor.y = Math.max(0, this.cursor.y - (args[0] || 1));
+			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
 			break;
 
 		case "B": //cursor down
-			this.cursor.y += args[0] || 1;
+			this.cursor.y += params[0] || 1;
 			break;
 
 		case "C": //cursor right
-			this.cursor.x += args[0] || 1;
+			this.cursor.x += params[0] || 1;
 			break;
 
 		case "D": //cursor left
-			this.cursor.x = Math.max(0, this.cursor.x - (args[0] || 1));
+			this.cursor.x = Math.max(0, this.cursor.x - (params[0] || 1));
 			break;
 
 		case "E": //cursor to beginning of next line, n lines down
 			this.cursor.x = 0;
-			this.cursor.y += args[0] || 1;
+			this.cursor.y += params[0] || 1;
 			break;
 
 		case "F": //cursor to beginning of previous line, n lines up
 			this.cursor.x = 0;
-			this.cursor.y = Math.max(0, this.cursor.y - (args[0] || 1));
+			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
 			break;
 
 		case "G": //cursor to column n
-			this.cursor.x = Math.max(0, (args[0] || 1) - 1);
+			this.cursor.x = Math.max(0, (params[0] || 1) - 1);
 			break;
 
 		case "f":
 		case "H": //move the cursor to row n, column m
-			this.cursor.y = Math.max(0, (args[0] || 1) - 1);
-			this.cursor.x = Math.max(0, (args[1] || 1) - 1);
+			this.cursor.y = Math.max(0, (params[0] || 1) - 1);
+			this.cursor.x = Math.max(0, (params[1] || 1) - 1);
 			break;
 
 		case "J":
-			switch (args[0]) {
+			switch (params[0]) {
 			case 0: this.EraseFromCursorToEndOfScreen(); break;
 			case 1: this.EraseFromCursorToBeginningOfScreen(); break;
 			case 2: this.ClearScreen(); break;
 			case 3: this.ClearScreenAndBuffer(); break;
 			default:
-				console.log(`Unhandled CSI command: ${args.join(";")}J`);
+				console.log(`Unhandled CSI command: ${params.join(";")}J`);
 				break;
 			}
 			break;
 
 		case "K":
-			switch (args[0]) {
+			switch (params[0]) {
 			case 0: this.EraseLineFromCursorToEnd(); break;
 			case 1: this.EraseLineFromBeginningToCursor(); break;
 			case 2: this.ClearLine(); break;
 			default:
-				console.log(`Unhandled CSI command: ${args.join(";")}K`);
+				console.log(`Unhandled CSI command: ${params.join(";")}K`);
 				break;
 			}
 			break;
 
-		case "P": this.DeleteN(args[0] || 1); break;
+		case "P": this.DeleteN(params[0] || 1); break;
 		//case "S": break; //not ANSI
 		//case "T": break; //not ANSI
 
 		case "d": //move cursor to the specified line
-			this.cursor.y = (args[0] || 1) - 1;
+			this.cursor.y = (params[0] || 1) - 1;
 			break;
 
 		case "h": //enable mode
-			switch (args[0]) {
+			switch (params[0]) {
 			case 1   : this.appCursorKeys    = true; break;
 			case 4   : this.insertMode       = true; break;
 			case 7   : this.lineWrappingMode = true; break;
@@ -637,12 +647,12 @@ class Terminal extends Window {
 			case 25  : this.cursorElement.style.visibility = "visible"; break;
 			case 1049: this.EnableAlternateScreen(); break;
 			case 2004: this.bracketedMode = true; break;
-			default  : console.warn(`Unhandled enable mode: ${args.join(";")}h`);
+			default  : console.warn(`Unhandled enable mode: ${params.join(";")}h`);
 			}
 			break;
 
 		case "l": //disable mode
-			switch (args[0]) {
+			switch (params[0]) {
 			case 1   : this.appCursorKeys     = false; break;
 			case 4   : this.insertMode        = false; break;
 			case 7   : this.lineWrappingMode  = false; break;
@@ -650,15 +660,15 @@ class Terminal extends Window {
 			case 25  : this.cursorElement.style.visibility = "hidden"; break;
 			case 1049: this.DisableAlternateScreen(); break;
 			case 2004: this.bracketedMode = false; break;
-			default  : console.warn(`Unhandled disable mode: ${args.join(";")}l`);
+			default  : console.warn(`Unhandled disable mode: ${params.join(";")}l`);
 			}
 			break;
 
-		case "m": this.ParseGraphicsModes(args); break;
+		case "m": this.ParseGraphicsModes(params); break;
 
 		case "r": //set scroll region
-			this.scrollRegionTop = Math.max(args[0], 1);
-			this.scrollRegionBottom = args[1];
+			this.scrollRegionTop = parseInt(params[0]) || 1;
+			this.scrollRegionBottom = parseInt(params[1]);
 			break;
 
 		case "s": //save cursor position
@@ -666,7 +676,7 @@ class Terminal extends Window {
 			break;
 
 		case "t": //window manipulation
-			switch (args[0]) {
+			switch (params[0]) {
 			case 22: //save window title
 				this.savedTitle = this.header.textContent;
 				break;
@@ -678,9 +688,10 @@ class Terminal extends Window {
 				break;
 
 			default:
-				console.warn(`Unhandled window manipulation command: ${args.join(";")}t`);
+				console.warn(`Unhandled window manipulation command: ${params.join(";")}t`);
 				break;
 			}
+			break;
 
 		case "u": //restore cursor position
 			this.cursor.x = this.savedCursorPos.x;
@@ -715,12 +726,12 @@ class Terminal extends Window {
 		}
 
 		const sequence = data.slice(index + 2, end);
-		const [command, ...args] = sequence.split(";");
+		const [command, ...params] = sequence.split(";");
 
 		switch (command) {
 		case "0":
 		case "2": //set title
-			this.SetTitle(`Secure shell - ${this.args.host} - ${args.join(";")}`);
+			this.SetTitle(`Secure shell - ${this.args.host} - ${params.join(";")}`);
 			break;
 
 		case "10": //set foreground color
@@ -792,9 +803,9 @@ class Terminal extends Window {
 		return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 	}
 
-	ParseGraphicsModes(args) {
-		for (let i=0; i<args.length; i++) {
-			switch (args[i]) {
+	ParseGraphicsModes(params) {
+		for (let i=0; i<params.length; i++) {
+			switch (params[i]) {
 			case 0:
 				this.ResetTextAttributes();
 				break;
@@ -822,22 +833,22 @@ class Terminal extends Window {
 
 			//set foreground color
 			case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
-				this.foreColor = this.MapColorId(args[i] - 30);
+				this.foreColor = this.MapColorId(params[i] - 30);
 				break;
 
 			case 38: //set foreground color
-				if (args.length < 3) break;
+				if (params.length < 3) break;
 
-				if (args[1] === 5) { //id color
-					if (args.length < 3) break;
-					this.foreColor = this.MapColorId(args[2]);
+				if (params[1] === 5) { //id color
+					if (params.length < 3) break;
+					this.foreColor = this.MapColorId(params[2]);
 				}
-				else if (args[1] === 2) { //rgb color
-					if (args.length < 6) break;
-					this.foreColor = `rgb(${args[2]},${args[3]},${args[4]})`;
+				else if (params[1] === 2) { //rgb color
+					if (params.length < 6) break;
+					this.foreColor = `rgb(${params[2]},${params[3]},${params[4]})`;
 				}
 				else {
-					console.warn(`Unknown graphics mode: 38;${args[1]}`);
+					console.warn(`Unknown graphics mode: 38;${params[1]}`);
 				}
 				break;
 
@@ -847,22 +858,22 @@ class Terminal extends Window {
 
 			//set background color
 			case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47:
-				this.backColor = this.MapColorId(args[i] - 40);
+				this.backColor = this.MapColorId(params[i] - 40);
 				break;
 
 			case 48: //set background color
-				if (args.length < 3) break;
+				if (params.length < 3) break;
 
-				if (args[1] === 5) { //id color
-					if (args.length < 3) break;
-					this.backColor = this.MapColorId(args[2]);
+				if (params[1] === 5) { //id color
+					if (params.length < 3) break;
+					this.backColor = this.MapColorId(params[2]);
 				}
-				else if (args[1] === 2) { //rgb color
-					if (args.length < 6) break;
-					this.backColor = `rgb(${args[2]},${args[3]},${args[4]})`;
+				else if (params[1] === 2) { //rgb color
+					if (params.length < 6) break;
+					this.backColor = `rgb(${params[2]},${params[3]},${params[4]})`;
 				}
 				else {
-					console.warn(`Unknown graphics mode: 48;${args[1]}`);
+					console.warn(`Unknown graphics mode: 48;${params[1]}`);
 				}
 				break;
 
@@ -872,16 +883,16 @@ class Terminal extends Window {
 
 			//reset background color (bright variants)
 			case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
-				this.foreColor = this.MapColorId(args[i] - 82);
+				this.foreColor = this.MapColorId(params[i] - 82);
 				break;
 
 			//set background color (bright variants)
 			case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107:
-				this.backColor = this.MapColorId(args[i] - 92);
+				this.backColor = this.MapColorId(params[i] - 92);
 				break;
 
 			default:
-				console.warn(`Unknown graphics mode: ${args[0]}`);
+				console.warn(`Unknown graphics mode: ${params[0]}`);
 				break;
 			}
 		}
