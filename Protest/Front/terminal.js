@@ -374,8 +374,10 @@ class Terminal extends Window {
 	}
 
 	Terminal_onkeydown(event) {
-		event.preventDefault();
+		if (event.ctrlKey && event.shiftKey) return;
 		if (!this.ws || this.ws.readyState !== 1) return;
+		
+		event.preventDefault();
 
 		//TODO: if (this.keypadApplicationMode) {}
 
@@ -765,13 +767,10 @@ class Terminal extends Window {
 
 		const command = data[index + 2];
 		switch (command) {
+
 		//TODO:
-
-		//case "B": //ISO-8859-1
-		//	return 3;
-
-		//case "0":
-		//	return 3;
+		//case "B": return 3;//ISO-8859-1
+		//case "0": return 3;
 
 		default:
 			console.warn(`Unhandled CSD command: ${command}`);
@@ -923,8 +922,10 @@ class Terminal extends Window {
 		for (let key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
-			this.screen[`${x},${y + 1}`] = todo[key];
-			todo[key].style.top = `${(y + 1) * Terminal.CHAR_HEIGHT}px`;
+			let y1 = y+1;
+			if (this.scrollRegionBottom && y1 > this.scrollRegionBottom) continue;
+			this.screen[`${x},${y1}`] = todo[key];
+			todo[key].style.top = `${(y1) * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
@@ -943,8 +944,10 @@ class Terminal extends Window {
 		for (let key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
-			this.screen[`${x},${y - 1}`] = todo[key];
-			todo[key].style.top = `${(y - 1) * Terminal.CHAR_HEIGHT}px`;
+			let y1 = y-1;
+			if (this.scrollRegionTop && y1 < this.scrollRegionTop) continue;
+			this.screen[`${x},${y1}`] = todo[key];
+			todo[key].style.top = `${(y1) * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
