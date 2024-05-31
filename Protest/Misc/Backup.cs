@@ -20,14 +20,10 @@ internal static class Backup {
             name = $"backup-{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}";
         }
 
-        Console.WriteLine(name);
-
         foreach (char c in Path.GetInvalidFileNameChars()) {
             name = name.Replace (c, '_');
         }
         
-        Console.WriteLine(name);
-
         try {
             DirectoryInfo backupDirectory = new DirectoryInfo(Data.DIR_BACKUP);
     

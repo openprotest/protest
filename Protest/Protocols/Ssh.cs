@@ -64,6 +64,30 @@ internal static class Ssh {
             string host = split[0];
             int port = 22;
 
+            if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
+                Database.Attribute usernameAttribute;
+                if (entry.attributes.TryGetValue("ssh username", out usernameAttribute)) {
+                    username = usernameAttribute.value;
+                }
+                else if (entry.attributes.TryGetValue("username", out usernameAttribute)) {
+                    username = usernameAttribute.value;
+                }
+
+                Database.Attribute passwordAttribute;
+                if (entry.attributes.TryGetValue("ssh password", out passwordAttribute)) {
+                    password = passwordAttribute.value;
+                }
+                else if (entry.attributes.TryGetValue("password", out passwordAttribute)) {
+                    password = passwordAttribute.value;
+                }
+            }
+
+            if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password)) {
+                await WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                return;
+            }
+
             SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 

@@ -500,7 +500,7 @@ class DeviceView extends View {
 				}
 			}
 
-			if (overwriteProtocol.telnet) { //tenet
+			if (overwriteProtocol.telnet) { //telnet
 				const telnetButton = this.CreateSideButton("mono/telnet.svg", "Telnet");
 				telnetButton.onclick = ()=> new Telnet(host + ":" + overwriteProtocol.telnet);
 			}
@@ -509,13 +509,30 @@ class DeviceView extends View {
 				telnetButton.onclick = ()=> new Telnet(host);
 			}
 
-			if (overwriteProtocol.ssh) { //ssh
+			if (overwriteProtocol.ssh || ports.includes(22)) {
+				let sshHost = null;
+				if (overwriteProtocol.ssh) {
+					sshHost = `${host}:${overwriteProtocol.ssh}`;
+				}
+				else if (ports.includes(22)) {
+					sshHost = host;
+				}
+
+				let username = null;
+				if ("ssh username" in this.link) {
+					username = this.link["ssh username"].v;
+				}
+				else if ("username" in this.link) {
+					username = this.link.username.v;
+				}
+
+				let file = null;
+				if ("ssh password" in this.link || "password" in this.link) {
+					file = this.args.file;
+				}
+
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				sshButton.onclick = ()=> new Ssh({host: `${host}:${overwriteProtocol.ssh}`});
-			}
-			else if (ports.includes(22)) {
-				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				sshButton.onclick = ()=> new Ssh({host: host});
+				sshButton.onclick = ()=> new Ssh({host:sshHost,  username:username, file:file});
 			}
 
 			if (overwriteProtocol.http) { //http

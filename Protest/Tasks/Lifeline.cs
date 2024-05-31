@@ -217,7 +217,7 @@ internal static partial class Lifeline {
             using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                ulong idle = (ulong)o.GetPropertyValue("PercentIdleTime");
                 cpuUsage = (byte)idle;
                 break;
             }
@@ -228,7 +228,7 @@ internal static partial class Lifeline {
             using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name = '_Total'")).Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                ulong idle = (ulong)o!.GetPropertyValue("PercentIdleTime");
+                ulong idle = (ulong)o.GetPropertyValue("PercentIdleTime");
                 diskUsage = (byte)idle;
                 break;
             }
@@ -239,8 +239,8 @@ internal static partial class Lifeline {
             using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
-                memoryFree += (ulong)o!.GetPropertyValue("FreePhysicalMemory");
-                memoryTotal += (ulong)o!.GetPropertyValue("TotalVisibleMemorySize");
+                memoryFree += (ulong)o.GetPropertyValue("FreePhysicalMemory");
+                memoryTotal += (ulong)o.GetPropertyValue("TotalVisibleMemorySize");
             }
         }
         catch { }
@@ -250,9 +250,9 @@ internal static partial class Lifeline {
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
 
-                string caption = o!.GetPropertyValue("Caption")?.ToString();
-                object free = o!.GetPropertyValue("FreeSpace");
-                object size = o!.GetPropertyValue("Size");
+                string caption = o.GetPropertyValue("Caption")?.ToString();
+                object free = o.GetPropertyValue("FreeSpace");
+                object size = o.GetPropertyValue("Size");
 
                 if (String.IsNullOrEmpty(caption)) continue;
                 if (free is null || size is null) continue;
