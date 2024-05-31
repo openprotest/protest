@@ -13,7 +13,6 @@ class Terminal extends Window {
 		"ArrowLeft"  : "\x1b[D",
 		"Home"       : "\x1b[H",
 		"End"        : "\x1b[F",
-
 		"F1"  : "\x1b[OP",
 		"F2"  : "\x1b[OQ",
 		"F3"  : "\x1b[OR",
@@ -26,7 +25,6 @@ class Terminal extends Window {
 		"F10" : "\x1b[21~",
 		"F11" : "\x1b[23~",
 		"F12" : "\x1b[24~",
-
 		"Insert"   : "\x1b[2~",
 		"Delete"   : "\x1b[3~",
 		"PageUp"   : "\x1b[5~",
@@ -46,13 +44,12 @@ class Terminal extends Window {
 		"F10"       : "\x1B[21;2~",
 		"F11"       : "\x1B[23;2~",
 		"F12"       : "\x1B[24;2~",
-
-		"Home"      : "\x1B[1;2H",
-		"End"       : "\x1B[1;2F",
 		"ArrowUp"   : "\x1B[1;2A",
 		"ArrowDown" : "\x1B[1;2B",
 		"ArrowRight": "\x1B[1;2C",
 		"ArrowLeft" : "\x1B[1;2D",
+		"Home"      : "\x1B[1;2H",
+		"End"       : "\x1B[1;2F",
 		"Insert"    : "\x1B[2;2~",
 		"Delete"    : "\x1B[3;2~",
 		"PageUp"    : "\x1B[5;2~",
@@ -86,9 +83,6 @@ class Terminal extends Window {
 		"KeyX": "\x24",
 		"KeyY": "\x25",
 		"KeyZ": "\x26",
-
-		"Backspace": "\x7F",
-
 		"F1" :"\x1B[1;5P",
 		"F2" :"\x1B[1;5Q",
 		"F3" :"\x1B[1;5R",
@@ -101,17 +95,18 @@ class Terminal extends Window {
 		"F10":"\x1B[21;5~",
 		"F11":"\x1B[23;5~",
 		"F12":"\x1B[24;5~",
-
-		"Home"      : "\x1B[1;5H",
-		"End"       : "\x1B[1;5F",
+		"Backspace": "\x7F",
 		"ArrowUp"   : "\x1B[1;5A",
 		"ArrowDown" : "\x1B[1;5B",
 		"ArrowRight": "\x1B[1;5C",
 		"ArrowLeft" : "\x1B[1;5D",
+		"Home"      : "\x1B[1;5H",
+		"End"       : "\x1B[1;5F",
 		"Insert"    : "\x1B[2;5~",
 		"Delete"    : "\x1B[3;5~",
 		"PageUp"    : "\x1B[5;5~",
 		"PageDown"  : "\x1B[6;5~",
+
 	};
 
 	static ALT_KEYS = {
@@ -127,7 +122,6 @@ class Terminal extends Window {
 		"F10"        : "\x1B[21;3~",
 		"F11"        : "\x1B[23;3~",
 		"F12"        : "\x1B[24;3~",
-
 		"ArrowUp"    : "\x1B[1;3A",
 		"ArrowDown"  : "\x1B[1;3B",
 		"ArrowRight" : "\x1B[1;3C",
@@ -182,9 +176,9 @@ class Terminal extends Window {
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
-		this.saveText = this.AddToolbarButton("Save text", "mono/floppy.svg?light");
-		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
+		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
+		//this.saveText = this.AddToolbarButton("Save text", "mono/floppy.svg?light");
 
 		this.defaultElement = this.content;
 
@@ -205,8 +199,8 @@ class Terminal extends Window {
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
-		this.pasteButton.onclick   = ()=> this.ClipboardDialog();
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
+		this.pasteButton.onclick   = ()=> this.TextFromClipboard();
 	}
 
 	ResetTextAttributes() {
@@ -274,10 +268,9 @@ class Terminal extends Window {
 		const {okButton, innerBox} = dialog;
 
 		okButton.value = "Send";
-		okButton.disabled = true;
 
 		innerBox.style.padding = "20px";
-		innerBox.parentElement.style.maxWidth = "500px";
+		innerBox.parentElement.style.maxWidth = "400px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
 
 		const keyLabel = document.createElement("div");
@@ -286,11 +279,8 @@ class Terminal extends Window {
 		keyLabel.textContent = "Key:";
 		innerBox.appendChild(keyLabel);
 
-		const keyInput = document.createElement("input");
-		keyInput.type = "text";
-		keyInput.setAttribute("maxlength", "1");
-		keyInput.style.textAlign = "center";
-		keyInput.style.width = "64px";
+		const keyInput = document.createElement("select");
+		keyInput.style.width = "150px";
 		innerBox.appendChild(keyInput);
 
 		innerBox.appendChild(document.createElement("br"));
@@ -299,15 +289,58 @@ class Terminal extends Window {
 		const shift = this.CreateToggle("Shift", false, innerBox);
 		const ctrl  = this.CreateToggle("Ctrl", false, innerBox);
 		const alt   = this.CreateToggle("Alt", false, innerBox);
-		const altGr = this.CreateToggle("Alt gr", false, innerBox);
 
 		shift.label.style.margin = "4px 1px";
 		ctrl.label.style.margin = "4px 1px";
 		alt.label.style.margin = "4px 1px";
-		altGr.label.style.margin = "4px 1px";
 
-		keyInput.onchange = keyInput.oninput = ()=> {
-			okButton.disabled = keyInput.value.length === 0;
+		const ListKeys = ()=> {
+			let set;
+			if (shift.checkbox.checked) {
+				set = Terminal.SHIFT_KEYS;
+			}
+			else if (ctrl.checkbox.checked) {
+				set = Terminal.CTRL_KEYS;
+			}
+			else if (alt.checkbox.checked) {
+				set = Terminal.ALT_KEYS;
+			}
+			else {
+				set = Terminal.SPECIAL_KEYS;
+			}
+
+			keyInput.textContent = "";
+
+			for (let key in set) {
+				const option = document.createElement("option");
+				option.value = set[key];
+				option.textContent = key;
+				keyInput.appendChild(option);
+			}
+		};
+
+		shift.checkbox.onchange = ()=> {
+			if (shift.checkbox.checked) {
+				ctrl.checkbox.checked = false;
+				alt.checkbox.checked = false;
+			}
+			ListKeys();
+		};
+
+		ctrl.checkbox.onchange = ()=> {
+			if (ctrl.checkbox.checked) {
+				shift.checkbox.checked = false;
+				alt.checkbox.checked = false;
+			}
+			ListKeys();
+		};
+		
+		alt.checkbox.onchange = ()=> {
+			if (alt.checkbox.checked) {
+				shift.checkbox.checked = false;
+				ctrl.checkbox.checked = false;
+			}
+			ListKeys();
 		};
 
 		keyInput.onkeydown = event=> {
@@ -318,59 +351,38 @@ class Terminal extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-			//TODO: Send key
+			if (this.ws && this.ws.readyState === 1) {
+				this.ws.send(keyInput.value);
+			}
 		};
 
+		ListKeys();
 		setTimeout(()=>keyInput.focus(), 200);
 	}
 
-	async ClipboardDialog() {
-		const dialog = this.DialogBox("128px");
-		if (dialog === null) return;
-
-		const {okButton, innerBox} = dialog;
-
-		okButton.value = "Paste";
-		okButton.disabled = true;
-
-		innerBox.style.padding = "20px";
-		innerBox.parentElement.style.maxWidth = "560px";
-		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
-
-		const keyText = document.createElement("input");
-		keyText.type = "text";
-		keyText.style.width = "calc(100% - 8px)";
-		keyText.style.boxSizing = "border-box";
-		innerBox.appendChild(keyText);
-
+	async TextFromClipboard() {
+		let text = null;
 		try {
-			keyText.value = await navigator.clipboard.readText();
-			okButton.disabled = keyText.value.length === 0;
+			text = await navigator.clipboard.readText();
 		}
 		catch (ex) {
-			dialog.Close();
-			setTimeout(()=>{ this.ConfirmBox(ex, true, "mono/error.svg"); }, 250);
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return;
 		}
 
-		keyText.onchange = keyText.oninput = ()=> {
-			okButton.disabled = keyText.value.length === 0;
-		};
+		if (text === null) return;
+		if (text.length === 0) return;
 
-		okButton.onclick = ()=> {
-			dialog.Close();
-			if (this.ws === null || this.ws.readyState != 1) {
-				return;
-			}
+		if (this.ws === null || this.ws.readyState != 1) {
+			return;
+		}
 
-			if (this.bracketedMode) {
-				this.ws.send(`\x1b[200~${keyText.value}\x1b[201~`);
-			}
-			else {
-				this.ws.send(keyText.value);
-			}
-		};
-
-		setTimeout(()=>keyText.focus(), 200);
+		if (this.bracketedMode) {
+			this.ws.send(`\x1b[200~${text}\x1b[201~`);
+		}
+		else {
+			this.ws.send(text);
+		}
 	}
 
 	Terminal_onkeydown(event) {
@@ -767,7 +779,6 @@ class Terminal extends Window {
 
 		const command = data[index + 2];
 		switch (command) {
-
 		//TODO:
 		//case "B": return 3;//ISO-8859-1
 		//case "0": return 3;
