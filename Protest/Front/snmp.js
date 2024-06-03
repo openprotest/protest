@@ -181,10 +181,10 @@ class Snmp extends Window {
 
 			for (let i = 0; i < json.length; i++) {
 				if (json[i].version !== 3) continue;
-				const newOption = document.createElement("option");
-				newOption.value = json[i].guid;
-				newOption.textContent = json[i].name;
-				this.credentialsInput.appendChild(newOption);
+				const option = document.createElement("option");
+				option.value = json[i].guid;
+				option.textContent = json[i].name;
+				this.credentialsInput.appendChild(option);
 			}
 		}
 		catch (ex) {

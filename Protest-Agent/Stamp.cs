@@ -29,19 +29,22 @@ public partial class Stamp : Form {
         if (e.Button == MouseButtons.Left) {
             this.Hide();
 
-            uint X = (uint)Cursor.Position.X;
-            uint Y = (uint)Cursor.Position.Y;
+            uint x = (uint)Cursor.Position.X;
+            uint y = (uint)Cursor.Position.Y;
             System.Threading.Thread.Sleep(1);
-            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, x, y, 0, 0);
 
             System.Threading.Thread.Sleep(200);
 
             string escaped = String.Empty;
-            for (int i = 0; i < strokes.Length; i++)
-                if (strokes[i] > 47 && strokes[i] < 58 || strokes[i] > 64 && strokes[i] < 91 || strokes[i] > 96 && strokes[i] < 123)
+            for (int i = 0; i < strokes.Length; i++) {
+                if (strokes[i] > 47 && strokes[i] < 58 || strokes[i] > 64 && strokes[i] < 91 || strokes[i] > 96 && strokes[i] < 123) {
                     escaped += strokes[i];
-                else
+                }
+                else {
                     escaped += "{" + strokes[i] + "}";
+                }
+            }
 
             SendKeys.SendWait(escaped);
             escaped = String.Empty;
@@ -59,7 +62,7 @@ public partial class Stamp : Form {
     
     private void Stamp_Paint(object sender, PaintEventArgs e) {
         e.Graphics.DrawRectangle(outline, 4, 6, 184, 28);
-               
+
         e.Graphics.DrawLine(cross, 96, 6, 96, 34);
         e.Graphics.DrawLine(cross, 82, 20, 110, 20);
         e.Graphics.FillRectangle(Brushes.Black, 91, 15, 10, 10);

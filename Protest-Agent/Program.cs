@@ -13,7 +13,6 @@ namespace ProtestAgent {
 
         [STAThread]
         static void Main() {
-
             string[] arguments = Environment.GetCommandLineArgs();
 
             if (arguments.Length == 1) {
@@ -54,6 +53,7 @@ namespace ProtestAgent {
 
             case "stamp":
                 if (!Configuration.stamp.enabled) return;
+                if (value.length == 0) return;
                 Application.Run(new Stamp(value));
                 break;
 
@@ -96,11 +96,6 @@ namespace ProtestAgent {
                     }).Start();
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
-                break;
-
-            case "ssh":
-                //if (!Configuration.ssh.enabled) return;
-                //TODO: handle frontend
                 break;
 
             case "smb":

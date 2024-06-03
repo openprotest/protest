@@ -175,11 +175,23 @@ class PassGen extends Window {
 		copyButton.value = "Copy";
 		buttonsBox.appendChild(copyButton);
 
-		generateButton.style.width = copyButton.style.width = "96px";
-		generateButton.style.height = copyButton.style.height = "40px";
-		generateButton.style.margin = copyButton.style.margin = "2px";
+		const stampButton = document.createElement("input");
+		stampButton.type = "button";
+		buttonsBox.appendChild(stampButton);
+
+		generateButton.style.width  = copyButton.style.width = "96px";
+		generateButton.style.height = copyButton.style.height = stampButton.style.height = "40px";
+		generateButton.style.margin = copyButton.style.margin = stampButton.style.margin = "2px";
+
+		stampButton.style.width = stampButton.style.minWidth = "56px";
+		stampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
+		stampButton.style.backgroundSize = "28px 28px";
+		stampButton.style.backgroundPosition = "50% 50%";
+		stampButton.style.backgroundRepeat = "no-repeat";
+
 		generateButton.style.borderRadius = "4px 0 0 4px";
-		copyButton.style.borderRadius = "0 4px 4px 0";
+		copyButton.style.borderRadius     = "0 0 0 0";
+		stampButton.style.borderRadius    = "0 4px 4px 0";
 
 		this.ttcLabel = document.createElement("div");
 		this.ttcLabel.style.color = "var(--clr-light)";
@@ -254,6 +266,11 @@ class PassGen extends Window {
 			this.passwordInput.focus();
 			this.passwordInput.select();
 			document.execCommand("copy");
+		};
+
+		stampButton.onclick = ()=> {
+			if (this.passwordInput.value.length < 1) return;
+			UI.PromptAgent(this, "stamp", this.passwordInput.value);
 		};
 
 		this.passwordInput.oninput = ()=> {
