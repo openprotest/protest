@@ -906,13 +906,14 @@ class Settings extends Tabs {
 		versionLabel.textContent = "Version:";
 		const versionInput = document.createElement("select");
 		versionInput.style.gridArea = "2 / 3";
-		versionInput.disabled = true;
 		innerBox.append(versionLabel, versionInput);
 
-		const optionVer = document.createElement("option");
-		optionVer.value = 3;
-		optionVer.textContent = "Version 3";
-		versionInput.appendChild(optionVer);
+		for (let i = 1; i <= 3; i++) {
+			const option = document.createElement("option");
+			option.value = i;
+			option.textContent = `Version ${i}`;
+			versionInput.appendChild(option);
+		}
 
 		const contextLabel = document.createElement("div");
 		contextLabel.style.gridArea = "3 / 2";
@@ -922,6 +923,14 @@ class Settings extends Tabs {
 		contextInput.type = "text";
 		contextInput.placeholder = "optional";
 		innerBox.append(contextLabel, contextInput);
+
+		const communityLabel = document.createElement("div");
+		communityLabel.style.gridArea = "3 / 2";
+		communityLabel.textContent = "Community:";
+		const communityInput = document.createElement("input");
+		communityInput.style.gridArea = "3 / 3";
+		communityInput.type = "text";
+		innerBox.append(communityLabel, communityInput);
 
 		const usernameLabel = document.createElement("div");
 		usernameLabel.style.gridArea = "5 / 2";
@@ -1016,6 +1025,7 @@ class Settings extends Tabs {
 		if (object) {
 			nameInput.value = object.name;
 			versionInput.value = object.version;
+			communityInput.value = object.community;
 			contextInput.value = object.context;
 			usernameInput.value = object.username;
 			authAlgorithmInput.value = object.authAlgorithm;
@@ -1038,8 +1048,29 @@ class Settings extends Tabs {
 			privacyObsoleteBox.style.transform = (privacyAlgorithmInput.value == 1) ? "none" : "translateX(-8px)";
 		};
 
-		okButton.addEventListener("click", async ()=> {
-			let isNew = object === null;
+		let isNew = object === null;
+
+		if (!isNew) {
+			versionInput.disabled = true;
+		}
+
+		versionInput.onchange = versionInput.oninput = ()=> {
+			let isV3 = versionInput.value == 3;
+
+			communityLabel.style.visibility = !isV3 ? "visible" : "hidden";
+			communityInput.style.visibility = !isV3 ? "visible" : "hidden";
+			contextLabel.style.visibility = isV3 ? "visible" : "hidden";
+			contextInput.style.visibility = isV3 ? "visible" : "hidden";
+
+			usernameInput.disabled = !isV3;
+			authAlgorithmInput.disabled = !isV3;
+			authPasswordInput.disabled = !isV3;
+			privacyAlgorithmInput.disabled = !isV3;
+			privacyPasswordInput.disabled = !isV3;
+		};
+
+
+		okButton.onclick = async ()=>{
 			let index = this.snmpProfiles.indexOf(object);
 
 			if (!isNew) {
@@ -1049,6 +1080,7 @@ class Settings extends Tabs {
 			const newObject = {
 				name             : nameInput.value,
 				version          : parseInt(versionInput.value),
+				community        : communityInput.value,
 				context          : contextInput.value,
 				username         : usernameInput.value,
 				authAlgorithm    : parseInt(authAlgorithmInput.value),
@@ -1067,9 +1099,11 @@ class Settings extends Tabs {
 			}
 
 			await this.SaveSnmpProfiles();
+			dialog.Close();
 			this.ShowSnmp();
-		});
+		};
 
+		versionInput.onchange();
 		authAlgorithmInput.onchange();
 		privacyAlgorithmInput.onchange();
 

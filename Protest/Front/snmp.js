@@ -180,6 +180,7 @@ class Snmp extends Window {
 			this.snmpProfiles = json;
 
 			for (let i = 0; i < json.length; i++) {
+				if (json[i].version !== 3) continue;
 				const newOption = document.createElement("option");
 				newOption.value = json[i].guid;
 				newOption.textContent = json[i].name;
