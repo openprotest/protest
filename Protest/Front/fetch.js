@@ -11,7 +11,6 @@ class Fetch extends Tabs {
 		this.tabsPanel.style.overflow = "auto";
 		this.tabsPanel.style.display = "grid";
 		this.tabsPanel.style.gridTemplateColumns = "auto 150px 150px 12px 200px 40px minmax(20px, 300px) auto";
-		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(12, 36px)";
 		this.tabsPanel.style.alignItems = "center";
 
 		const deviceTab  = this.AddTab("Devices",  "mono/gear.svg");
@@ -127,31 +126,31 @@ class Fetch extends Tabs {
 		this.dnsCheckBox.type = "checkbox";
 		this.dnsCheckBox.checked = true;
 
+		this.snmp2Checkbox = document.createElement("input");
+		this.snmp2Checkbox.type = "checkbox";
+		this.snmp2Checkbox.checked = false;
+
+		this.snmp3Checkbox = document.createElement("input");
+		this.snmp3Checkbox.type = "checkbox";
+		this.snmp3Checkbox.checked = false;
+
 		this.wmiCheckbox = document.createElement("input");
 		this.wmiCheckbox.type = "checkbox";
 		this.wmiCheckbox.checked = true;
 
-		this.snmpCheckbox = document.createElement("input");
-		this.snmpCheckbox.type = "checkbox";
-		this.snmpCheckbox.checked = false;
-		this.snmpCheckbox.disabled = true; //TODO:
+		this.snmp2Button = document.createElement("input");
+		this.snmp2Button.type = "button";
+		this.snmp2Button.value = "V1/V2 options";
+		this.snmp2Button.style.width = "180px";
+		this.snmp2Button.style.gridArea = "6 / 5";
+		this.snmp2Button.style.visibility = "hidden";
 
-		this.snmpInput = document.createElement("select");
-		this.snmpInput.style.width = "180px";
-		this.snmpInput.style.gridArea = "7 / 5";
-		this.snmpInput.disabled = true;
-
-		const ver2Option = document.createElement("option");
-		ver2Option.value = "2";
-		ver2Option.text = "Version 2";
-		this.snmpInput.appendChild(ver2Option);
-
-		const ver3Option = document.createElement("option");
-		ver3Option.value = "3";
-		ver3Option.text = "Version 3";
-		this.snmpInput.appendChild(ver3Option);
-
-		this.snmpInput.value = "3";
+		this.snmp3Button = document.createElement("input");
+		this.snmp3Button.type = "button";
+		this.snmp3Button.value = "V3 options";
+		this.snmp3Button.style.width = "180px";
+		this.snmp3Button.style.gridArea = "7 / 5";
+		this.snmp3Button.style.visibility = "hidden";
 
 		this.kerberosCheckbox = document.createElement("input");
 		this.kerberosCheckbox.type = "checkbox";
@@ -163,10 +162,10 @@ class Fetch extends Tabs {
 
 		this.portScanInput = document.createElement("select");
 		this.portScanInput.style.width = "180px";
-		this.portScanInput.style.gridArea = "9 / 5";
+		this.portScanInput.style.gridArea = "10 / 5";
 
 		this.portScanCommentLabel = document.createElement("div");
-		this.portScanCommentLabel.style.gridArea = "9 / 6 / auto / 8";
+		this.portScanCommentLabel.style.gridArea = "10 / 6 / auto / 8";
 		this.portScanCommentLabel.style.fontSize = "small";
 		this.portScanCommentLabel.style.lineHeight = "14px";
 		this.portScanCommentLabel.style.minWidth = "150px";
@@ -203,7 +202,7 @@ class Fetch extends Tabs {
 
 
 		this.retriesLabel = document.createElement("div");
-		this.retriesLabel.style.gridArea = "11 / 3";
+		this.retriesLabel.style.gridArea = "12 / 3";
 		this.retriesLabel.textContent = "Retries:";
 
 		this.retriesRange = document.createElement("input");
@@ -211,17 +210,17 @@ class Fetch extends Tabs {
 		this.retriesRange.min = 0;
 		this.retriesRange.max = 4;
 		this.retriesRange.value = 1;
-		this.retriesRange.style.gridArea = "11 / 5";
+		this.retriesRange.style.gridArea = "12 / 5";
 		this.retriesRange.style.width = "180px";
 
 		this.retriesCommentLabel = document.createElement("div");
-		this.retriesCommentLabel.style.gridArea = "11 / 6 / auto / 8";
+		this.retriesCommentLabel.style.gridArea = "12 / 6 / auto / 8";
 		this.retriesCommentLabel.style.fontSize = "small";
 		this.retriesCommentLabel.style.lineHeight = "14px";
 		this.retriesCommentLabel.style.minWidth = "150px";
 
 		this.intervalLabel = document.createElement("div");
-		this.intervalLabel.style.gridArea = "12 / 3";
+		this.intervalLabel.style.gridArea = "13 / 3";
 		this.intervalLabel.textContent = "Retry interval:";
 
 		this.intervalRange = document.createElement("input");
@@ -229,17 +228,17 @@ class Fetch extends Tabs {
 		this.intervalRange.min = 0;
 		this.intervalRange.max = 8;
 		this.intervalRange.value = 1;
-		this.intervalRange.style.gridArea = "12 / 5";
+		this.intervalRange.style.gridArea = "13 / 5";
 		this.intervalRange.style.width = "180px";
 
 		this.intervalCommentLabel = document.createElement("div");
-		this.intervalCommentLabel.style.gridArea = "12 / 6 / auto / 8";
+		this.intervalCommentLabel.style.gridArea = "13 / 6 / auto / 8";
 		this.intervalCommentLabel.style.fontSize = "small";
 		this.intervalCommentLabel.style.lineHeight = "14px";
 		this.intervalCommentLabel.style.minWidth = "150px";
 
 		this.buttonsBox = document.createElement("div");
-		this.buttonsBox.style.gridArea = "14 / 2 / auto / 7";
+		this.buttonsBox.style.gridArea = "15 / 2 / auto / 7";
 		this.buttonsBox.style.textAlign = "center";
 
 		const fetchButton = document.createElement("input");
@@ -260,8 +259,42 @@ class Fetch extends Tabs {
 			this.domainInput.disabled = !this.domainRadio.checked;
 		};
 
-		this.snmpCheckbox.onchange = ()=> {
-			this.snmpInput.disabled = !this.snmpCheckbox.checked;
+		this.snmp2Checkbox.onchange = ()=> {
+			this.snmp2Button.style.visibility = this.snmp2Checkbox.checked ? "visible" : "hidden";
+			this.snmp2Button.style.opacity = this.snmp2Checkbox.checked ? "1" : "0";
+		};
+
+		this.snmp3Checkbox.onchange = ()=> {
+			this.snmp3Button.style.visibility = this.snmp3Checkbox.checked ? "visible" : "hidden";
+			this.snmp3Button.style.opacity = this.snmp3Checkbox.checked ? "1" : "0";
+		};
+
+		this.snmp2Button.onclick = ()=> {
+			const dialog = this.DialogBox("360px");
+			if (dialog === null) return;
+	
+			const {okButton, innerBox} = dialog;
+
+			innerBox.parentElement.style.maxWidth = "540px";
+
+			okButton.onclick = ()=> {
+				//TODO:
+				dialog.Close();
+			};
+		};
+
+		this.snmp3Button.onclick = ()=> {
+			const dialog = this.DialogBox("360px");
+			if (dialog === null) return;
+	
+			const {okButton, innerBox} = dialog;
+
+			innerBox.parentElement.style.maxWidth = "540px";
+
+			okButton.onclick = ()=> {
+				//TODO:
+				dialog.Close();
+			};
 		};
 
 		this.portScanCheckbox.onchange = ()=>{
@@ -351,7 +384,8 @@ class Fetch extends Tabs {
 			if (this.args === "devices") {
 				if (this.dnsCheckBox.checked)      uri += "&dns=true";
 				if (this.wmiCheckbox.checked)      uri += "&wmi=true";
-				if (this.snmpCheckbox.checked)     uri += `&snmp=${this.snmpInput.value}`;
+				if (this.snmp2Checkbox.checked)     uri += `&snmp2=${this.snmpInput.value}`;
+				if (this.snmp3Checkbox.checked)     uri += `&snmp3=${this.snmpInput.value}`;
 				if (this.kerberosCheckbox.checked) uri += "&kerberos=true";
 				if (this.portScanCheckbox.checked) uri += `&portscan=${this.portScanInput.value}`;
 
@@ -451,7 +485,7 @@ class Fetch extends Tabs {
 	ShowDevices() {
 		this.args = "devices";
 		this.tabsPanel.textContent = "";
-
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(12, 36px)";
 
 		this.tabsPanel.appendChild(this.updateRadio);
 		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update, only existing records");
@@ -481,26 +515,34 @@ class Fetch extends Tabs {
 		const dns = this.AddCheckBoxLabel(this.tabsPanel, this.dnsCheckBox, "DNS");
 		dns.style.gridArea = "5 / 3";
 
+		//TODO: mDNS, SSDP
+
+		this.tabsPanel.appendChild(this.snmp2Checkbox);
+		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP V1/V2");
+		snmp2.style.gridArea = "6 / 3";
+
+		this.tabsPanel.appendChild(this.snmp2Button);
+
+		this.tabsPanel.appendChild(this.snmp3Checkbox);
+		const snmp3 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp3Checkbox, "SNMP V3");
+		snmp3.style.gridArea = "7 / 3";
+
+		this.tabsPanel.appendChild(this.snmp3Button);
+
 		this.tabsPanel.appendChild(this.wmiCheckbox);
 		const wmi = this.AddCheckBoxLabel(this.tabsPanel, this.wmiCheckbox, "WMI");
-		wmi.style.gridArea = "6 / 3";
-
-		this.tabsPanel.appendChild(this.snmpCheckbox);
-		const snmp = this.AddCheckBoxLabel(this.tabsPanel, this.snmpCheckbox, "SNMP");
-		snmp.style.gridArea = "7 / 3";
-
-		this.tabsPanel.appendChild(this.snmpInput);
+		wmi.style.gridArea = "8 / 3";
 
 		this.tabsPanel.appendChild(this.kerberosCheckbox);
 		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.kerberosCheckbox, "Kerberos");
-		kerberos.style.gridArea = "8 / 3";
+		kerberos.style.gridArea = "9 / 3";
 		this.kerberosCheckbox.disabled = false;
 
 		this.tabsPanel.appendChild(this.portScanInput);
 
 		this.tabsPanel.appendChild(this.portScanCheckbox);
 		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.portScanCheckbox, "Port scan");
-		portScan.style.gridArea = "9 / 3";
+		portScan.style.gridArea = "10 / 3";
 
 		this.tabsPanel.appendChild(this.portScanInput);
 		this.tabsPanel.appendChild(this.portScanCommentLabel);
@@ -510,13 +552,13 @@ class Fetch extends Tabs {
 		this.tabsPanel.append(this.intervalLabel, this.intervalRange, this.intervalCommentLabel);
 
 		this.tabsPanel.appendChild(this.buttonsBox);
-		this.buttonsBox.style.gridArea = "14 / 2 / auto / 7";
+		this.buttonsBox.style.gridArea = "15 / 2 / auto / 7";
 	}
 
 	ShowUsers() {
 		this.args = "users";
 		this.tabsPanel.textContent = "";
-
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(4, 36px)";
 
 		this.ipRadio.disabled = true;
 		this.domainInput.disabled = false;
@@ -560,6 +602,7 @@ class Fetch extends Tabs {
 	ShowImport() {
 		this.args = "protest";
 		this.tabsPanel.textContent = "";
+		this.tabsPanel.style.gridTemplateRows = "repeat(12, 40px)";
 
 		const protestLabel = document.createElement("div");
 		protestLabel.style.gridArea = "1 / 3";
