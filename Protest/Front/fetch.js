@@ -140,17 +140,25 @@ class Fetch extends Tabs {
 
 		this.snmp2Button = document.createElement("input");
 		this.snmp2Button.type = "button";
-		this.snmp2Button.value = "V1/V2 options";
-		this.snmp2Button.style.width = "180px";
+		this.snmp2Button.style.width = this.snmp2Button.style.minWidth = "32px";
 		this.snmp2Button.style.gridArea = "6 / 5";
+		this.snmp2Button.style.backgroundImage = "url(mono/wrench.svg?light)";
+		this.snmp2Button.style.backgroundSize = "24px 24px";
+		this.snmp2Button.style.backgroundPosition = "center";
+		this.snmp2Button.style.backgroundRepeat = "no-repeat";
 		this.snmp2Button.style.visibility = "hidden";
+		this.snmp2Button.style.opacity = "0";
 
 		this.snmp3Button = document.createElement("input");
 		this.snmp3Button.type = "button";
-		this.snmp3Button.value = "V3 options";
-		this.snmp3Button.style.width = "180px";
+		this.snmp3Button.style.width = this.snmp3Button.style.minWidth = "32px";
 		this.snmp3Button.style.gridArea = "7 / 5";
+		this.snmp3Button.style.backgroundImage = "url(mono/wrench.svg?light)";
+		this.snmp3Button.style.backgroundSize = "24px 24px";
+		this.snmp3Button.style.backgroundPosition = "center";
+		this.snmp3Button.style.backgroundRepeat = "no-repeat";
 		this.snmp3Button.style.visibility = "hidden";
+		this.snmp3Button.style.opacity = "0";
 
 		this.kerberosCheckbox = document.createElement("input");
 		this.kerberosCheckbox.type = "checkbox";
@@ -518,13 +526,13 @@ class Fetch extends Tabs {
 		//TODO: mDNS, SSDP
 
 		this.tabsPanel.appendChild(this.snmp2Checkbox);
-		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP V1/V2");
+		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP v1/2");
 		snmp2.style.gridArea = "6 / 3";
 
 		this.tabsPanel.appendChild(this.snmp2Button);
 
 		this.tabsPanel.appendChild(this.snmp3Checkbox);
-		const snmp3 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp3Checkbox, "SNMP V3");
+		const snmp3 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp3Checkbox, "SNMP v3");
 		snmp3.style.gridArea = "7 / 3";
 
 		this.tabsPanel.appendChild(this.snmp3Button);
