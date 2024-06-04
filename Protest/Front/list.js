@@ -574,16 +574,11 @@ class List extends Window {
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
-			const newAttr = document.createElement("div");
 			let value = entry[this.columnsElements[i].textContent].v;
-			if (value.length > 0) {
-				newAttr.textContent = value;
-			}
-			else {
-				newAttr.textContent = "empty";
-				newAttr.style.color = "#666";
-				newAttr.style.fontStyle = "italic";
-			}
+			if (value.length === 0) continue;
+
+			const newAttr = document.createElement("div");
+			newAttr.textContent = value;
 			element.appendChild(newAttr);
 
 			if (i === 0) {
@@ -598,9 +593,7 @@ class List extends Window {
 
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
-
 			this.args.select = element.getAttribute("id");
-
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
 		};
