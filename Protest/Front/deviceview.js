@@ -2642,26 +2642,16 @@ class DeviceView extends View {
 
 		const snmpInput = document.createElement("select");
 		snmpInput.style.marginLeft = "0";
-		snmpInput.style.width = "160px";
+		snmpInput.style.width = "200px";
 		snmpInput.style.gridArea = "3 / 3";
 		snmpInput.disabled = true;
 		grid.appendChild(snmpInput);
 
-		const ver2Option = document.createElement("option");
-		ver2Option.value = "2";
-		ver2Option.text = "Version 2";
-		snmpInput.appendChild(ver2Option);
-
-		const ver3Option = document.createElement("option");
-		ver3Option.value = "3";
-		ver3Option.text = "Version 3";
-		snmpInput.appendChild(ver3Option);
-
-		snmpInput.value = "3";
+		//TODO: implement SNMP
 
 		const portScanInput = document.createElement("select");
 		portScanInput.style.marginLeft = "0";
-		portScanInput.style.width = "160px";
+		portScanInput.style.width = "200px";
 		portScanInput.style.gridArea = "5 / 3";
 		grid.appendChild(portScanInput);
 
@@ -2681,21 +2671,11 @@ class DeviceView extends View {
 		portScanInput.appendChild(extendedOption);
 
 		snmpToggle.checkbox.onchange = ()=> {
-			if (snmpToggle.checkbox.checked) {
-				snmpInput.disabled = false;
-			}
-			else {
-				snmpInput.disabled = true;
-			}
+			snmpInput.disabled = !snmpToggle.checkbox.checked;
 		};
 
 		portScanToggle.checkbox.onchange = ()=> {
-			if (portScanToggle.checkbox.checked) {
-				portScanInput.disabled = false;
-			}
-			else {
-				portScanInput.disabled = true;
-			}
+			portScanInput.disabled = !portScanToggle.checkbox.checked;
 		};
 
 		dialog.okButton.onclick = async ()=> {

@@ -179,7 +179,8 @@ class PassGen extends Window {
 		stampButton.type = "button";
 		buttonsBox.appendChild(stampButton);
 
-		generateButton.style.width  = copyButton.style.width = "96px";
+		copyButton.style.width  = "72px";
+		generateButton.style.width = "96px";
 		generateButton.style.height = copyButton.style.height = stampButton.style.height = "40px";
 		generateButton.style.margin = copyButton.style.margin = stampButton.style.margin = "2px";
 
@@ -307,6 +308,7 @@ class PassGen extends Window {
 			this.Strength();
 		};
 
+		this.cmbOptions.onchange();
 		this.Generate();
 
 		this.LoadWords();

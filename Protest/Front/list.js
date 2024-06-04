@@ -575,7 +575,15 @@ class List extends Window {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
 			const newAttr = document.createElement("div");
-			newAttr.textContent = entry[this.columnsElements[i].textContent].v;
+			let value = entry[this.columnsElements[i].textContent].v;
+			if (value.length > 0) {
+				newAttr.textContent = value;
+			}
+			else {
+				newAttr.textContent = "empty";
+				newAttr.style.color = "#666";
+				newAttr.style.fontStyle = "italic";
+			}
 			element.appendChild(newAttr);
 
 			if (i === 0) {
