@@ -88,7 +88,7 @@ class Settings extends Tabs {
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
-		this.options.className = "acl-options";
+		this.options.className = "rbac-options";
 		this.options.style.position = "absolute";
 		this.options.style.left = "20px";
 		this.options.style.right = "8px";
@@ -235,7 +235,7 @@ class Settings extends Tabs {
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
-		this.options.className = "acl-options";
+		this.options.className = "rbac-options";
 		this.options.style.position = "absolute";
 		this.options.style.left = "20px";
 		this.options.style.right = "8px";
@@ -404,7 +404,7 @@ class Settings extends Tabs {
 		this.tabsPanel.textContent = "";
 
 		this.options = document.createElement("div");
-		this.options.className = "acl-options";
+		this.options.className = "rbac-options";
 		this.options.style.position = "absolute";
 		this.options.style.left = "20px";
 		this.options.style.right = "8px";

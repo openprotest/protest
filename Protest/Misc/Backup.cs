@@ -43,7 +43,7 @@ internal static class Backup {
                 DirectoryInfo[] directories = [
                     new DirectoryInfo(Data.DIR_DATA),
                     new DirectoryInfo(Data.DIR_LOG),
-                    new DirectoryInfo(Data.DIR_ACL)
+                    new DirectoryInfo(Data.DIR_RBAC)
                 ];
 
                 for (int i = 0; i < directories.Length; i++) {

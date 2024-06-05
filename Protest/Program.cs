@@ -59,8 +59,8 @@ internal class Program {
         DatabaseInstances.Initialize();
         Console.WriteLine("        OK");
 
-        bool loadAcl = Http.Auth.LoadAcl();
-        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading ACL", loadAcl ? "OK  " : "Failed"));
+        bool loadRbac = Http.Auth.LoadRbac();
+        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "OK  " : "Failed"));
 
         Console.Write("Launching tasks");
         Tasks.Automation.Initialize();

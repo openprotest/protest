@@ -112,11 +112,11 @@ public sealed class Listener {
         { "/wmi/query",               (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null },
         { "/wmi/killprocess",         (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(parameters) : null },
 
-        { "/acl/list",                (ctx, parameters, username) => Auth.ListUsers() },
-        { "/acl/create",              (ctx, parameters, username) => Auth.CreateUser(ctx, parameters, username) },
-        { "/acl/delete",              (ctx, parameters, username) => Auth.DeleteUser(parameters, username) },
-        { "/acl/sessions",            (ctx, parameters, username) => Auth.ListSessions() },
-        { "/acl/kickuser",            (ctx, parameters, username) => Auth.KickUser(parameters, username) },
+        { "/rbac/list",                (ctx, parameters, username) => Auth.ListUsers() },
+        { "/rbac/create",              (ctx, parameters, username) => Auth.CreateUser(ctx, parameters, username) },
+        { "/rbac/delete",              (ctx, parameters, username) => Auth.DeleteUser(parameters, username) },
+        { "/rbac/sessions",            (ctx, parameters, username) => Auth.ListSessions() },
+        { "/rbac/kickuser",            (ctx, parameters, username) => Auth.KickUser(parameters, username) },
 
         {"/automation/list",          (ctx, parameters, username) => Tasks.Automation.ListTasks() },
 

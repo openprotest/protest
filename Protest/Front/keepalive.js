@@ -74,7 +74,7 @@ const KEEP = {
 			location.reload();
 			break;
 
-		case "update-acl":
+		case "update-rbac":
 			KEEP.authorization = message.authorization;
 			for (let i=0; i<WIN.array.length; i++) {
 				WIN.array[i].UpdateAuthorization();

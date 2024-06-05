@@ -37,7 +37,7 @@ public static class Data {
 
     public static readonly string DIR_ROOT      = $"{Directory.GetCurrentDirectory()}{DELIMITER}protest";
     public static readonly string DIR_KNOWLADGE = $"{DIR_ROOT}{DELIMITER}knowledge";
-    public static readonly string DIR_ACL       = $"{DIR_ROOT}{DELIMITER}acl";
+    public static readonly string DIR_RBAC      = $"{DIR_ROOT}{DELIMITER}rbac";
     public static readonly string DIR_LOG       = $"{DIR_ROOT}{DELIMITER}log";
     public static readonly string DIR_BACKUP    = $"{DIR_ROOT}{DELIMITER}backup";
 

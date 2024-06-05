@@ -51,7 +51,7 @@ internal static class KeepAlive {
 //      string username = Auth.GetUsername(sessionId);
 //#endif
 
-        string[] accessArray = Auth.acl.TryGetValue(username, out Auth.AccessControl accessControl) ? accessControl.authorization : new string[] { "*" };
+        string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) ? accessControl.authorization : new string[] { "*" };
 
         Entry keepAliveEntry = new Entry{
             ws = ws,

@@ -16,13 +16,13 @@ internal static class Chat {
     private static readonly object mutex = new object();
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("text", out string text)) { return; }
 
         dictionary.TryGetValue("id", out string id);
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = rbac?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(rbac?.alias) ? rbac.alias : username;
         string sanitised = Data.EscapeJsonText(text);
 
         StringBuilder builder = new StringBuilder();
@@ -32,7 +32,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\",");
+        builder.Append($"\"color\":\"{rbac?.color ?? "#A0A0A0"}\",");
         builder.Append($"\"text\":\"{sanitised}\"");
         builder.Append('}');
 
@@ -41,7 +41,7 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = acl?.username ?? "loopback",
+            sender = rbac?.username ?? "loopback",
             timestamp = DateTime.UtcNow.Ticks,
             json = json
         };
@@ -52,13 +52,13 @@ internal static class Chat {
     }
 
     public static void EmojiHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("url", out string url)) { return; }
 
         dictionary.TryGetValue("id", out string id);
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
@@ -67,7 +67,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\",");
+        builder.Append($"\"color\":\"{access?.color ?? "#A0A0A0"}\",");
         builder.Append($"\"url\":\"{url}\"");
         builder.Append('}');
 
@@ -76,7 +76,7 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = acl?.username ?? "loopback",
+            sender = access?.username ?? "loopback",
             timestamp = DateTime.UtcNow.Ticks,
             json = json
         };
@@ -87,7 +87,7 @@ internal static class Chat {
     }
 
     public static void CommandHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("command", out string command)) { return; }
         if (!dictionary.TryGetValue("args", out string args)) { return; }
         if (!dictionary.TryGetValue("icon", out string icon)) { return; }
@@ -95,8 +95,8 @@ internal static class Chat {
 
         dictionary.TryGetValue("id", out string id);
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
@@ -105,7 +105,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\",");
+        builder.Append($"\"color\":\"{access?.color ?? "#A0A0A0"}\",");
         builder.Append($"\"command\":\"{command}\",");
         builder.Append($"\"args\":\"{Data.EscapeJsonText(args)}\",");
         builder.Append($"\"icon\":\"{Data.EscapeJsonText(icon)}\",");
@@ -117,7 +117,7 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = acl?.username ?? "loopback",
+            sender = access?.username ?? "loopback",
             timestamp = DateTime.UtcNow.Ticks,
             json = json
         };
@@ -128,12 +128,12 @@ internal static class Chat {
     }
 
     public static void SdpHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("type", out string type)) { return; }
         if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         string sdp = null;
         string action = null;
@@ -153,7 +153,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\",");
+        builder.Append($"\"color\":\"{access?.color ?? "#A0A0A0"}\",");
         builder.Append($"\"sdp\":\"{Data.EscapeJsonText(sdp)}\"");
         builder.Append('}');
 
@@ -163,12 +163,12 @@ internal static class Chat {
     }
 
     public static void IceHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("candidate", out string candidate)) { return; }
         if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
@@ -177,7 +177,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\",");
+        builder.Append($"\"color\":\"{access?.color ?? "#A0A0A0"}\",");
         builder.Append($"\"candidate\":\"{Data.EscapeJsonText(candidate)}\"");
         builder.Append('}');
 
@@ -187,10 +187,10 @@ internal static class Chat {
     }
 
     public static void JoinHandler(string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
@@ -198,7 +198,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\"");
+        builder.Append($"\"color\":\"{access?.color ?? "#A0A0A0"}\"");
         builder.Append('}');
 
         string json = builder.ToString();
@@ -207,11 +207,11 @@ internal static class Chat {
     }
 
     public static void StreamHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.acl.TryGetValue(origin, out Auth.AccessControl acl) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
         if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
 
-        string username = acl?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(acl?.alias) ? acl.alias : username;
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
@@ -220,7 +220,7 @@ internal static class Chat {
         builder.Append($"\"time\":\"{DateTime.UtcNow.Ticks}\",");
         builder.Append($"\"sender\":\"{username}\",");
         builder.Append($"\"alias\":\"{alias}\",");
-        builder.Append($"\"color\":\"{acl?.color ?? "#A0A0A0"}\"");
+        builder.Append($"\"color\":\"{access?.color ?? "#A0A0A0"}\"");
         builder.Append('}');
 
         string json = builder.ToString();
@@ -228,7 +228,7 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = acl?.username ?? "loopback",
+            sender = access?.username ?? "loopback",
             timestamp = DateTime.UtcNow.Ticks,
             json = json
         };

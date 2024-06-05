@@ -14,7 +14,7 @@ internal static class Auth {
 
     private static readonly JsonSerializerOptions serializerOptions;
     
-    internal static readonly ConcurrentDictionary<string, AccessControl> acl = new();
+    internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
     public record AccessControl {
@@ -106,7 +106,7 @@ internal static class Auth {
         string username = payload[..index].ToString().ToLower();
         string password = payload[(index+1)..].ToString();
 
-        if (!acl.TryGetValue(username, out AccessControl access)) {
+        if (!rbac.TryGetValue(username, out AccessControl access)) {
             sessionId = null;
             return false;
         }
@@ -141,7 +141,7 @@ internal static class Auth {
 #endif
 
         Session newSession = new Session() {
-            access    = acl.TryGetValue(username, out AccessControl value) ? value : default(AccessControl)!,
+            access    = rbac.TryGetValue(username, out AccessControl value) ? value : default(AccessControl)!,
             ip        = ctx.Request.RemoteEndPoint.Address,
             sessionId = sessionId,
             loginDate = DateTime.UtcNow.Ticks,
@@ -357,12 +357,12 @@ internal static class Auth {
                 path.Add("/automation/stop");
                 break;
 
-            case "access control lists:write":
-                path.Add("/acl/list");
-                path.Add("/acl/create");
-                path.Add("/acl/delete");
-                path.Add("/acl/sessions");
-                path.Add("/acl/kickuser");
+            case "rbac:write":
+                path.Add("/rbac/list");
+                path.Add("/rbac/create");
+                path.Add("/rbac/delete");
+                path.Add("/rbac/sessions");
+                path.Add("/rbac/kickuser");
                 break;
 
             case "settings:write":
@@ -401,13 +401,13 @@ internal static class Auth {
         return path;
     }
 
-    public static bool LoadAcl() {
-        DirectoryInfo dirAcl = new DirectoryInfo(Data.DIR_ACL);
-        if (!dirAcl.Exists) return false;
+    public static bool LoadRbac() {
+        DirectoryInfo dirRbac = new DirectoryInfo(Data.DIR_RBAC);
+        if (!dirRbac.Exists) return false;
 
-        acl.Clear();
+        rbac.Clear();
 
-        FileInfo[] files = dirAcl.GetFiles();
+        FileInfo[] files = dirRbac.GetFiles();
         for (int i = 0; i < files.Length; i++) {
             byte[] cipher;
             try {
@@ -416,7 +416,7 @@ internal static class Auth {
 
                 AccessControl access = JsonSerializer.Deserialize<AccessControl>(plain, serializerOptions);
                 access.accessPath = PopulateAccessPath(access.authorization);
-                acl.TryAdd(access.username, access);
+                rbac.TryAdd(access.username, access);
             }
             catch {
                 continue;
@@ -431,7 +431,7 @@ internal static class Auth {
         builder.Append('[');
 
         bool first = true;
-        foreach (KeyValuePair<string, AccessControl> access in acl) {
+        foreach (KeyValuePair<string, AccessControl> access in rbac) {
             if (!first) builder.Append(',');
 
             builder.Append('{');
@@ -488,7 +488,7 @@ internal static class Auth {
         if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
         AccessControl access;
-        if (acl.TryRemove(username, out AccessControl exists)) {
+        if (rbac.TryRemove(username, out AccessControl exists)) {
             access = exists;
             access.username = username;
             access.domain = domain;
@@ -517,7 +517,7 @@ internal static class Auth {
         access.authorization = permissionsString.Length == 0 ? Array.Empty<string>() : permissionsString.Split(',').Select(o => o.Trim()[1..^1]).ToArray();
         access.accessPath = PopulateAccessPath(access.authorization);
 
-        if (!acl.TryAdd(username, access)) {
+        if (!rbac.TryAdd(username, access)) {
             return "{\"error\":\"failed to create user.\"}"u8.ToArray();
         }
 
@@ -525,20 +525,20 @@ internal static class Auth {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
-            if (!Directory.Exists(Data.DIR_ACL)) {
-                Directory.CreateDirectory(Data.DIR_ACL);
+            if (!Directory.Exists(Data.DIR_RBAC)) {
+                Directory.CreateDirectory(Data.DIR_RBAC);
             }
 
-            File.WriteAllBytes($"{Data.DIR_ACL}{Data.DELIMITER}{access.username}", cipher);
+            File.WriteAllBytes($"{Data.DIR_RBAC}{Data.DELIMITER}{access.username}", cipher);
         }
         catch (Exception ex) {
             Logger.Error(ex);
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(origin, $"Save access control for {username}");
+        Logger.Action(origin, $"Save RBAC for {username}");
 
-        KeepAlive.Unicast(username, $"{{\"action\":\"update-acl\",\"authorization\":[{permissionsString}]}}", "/global");
+        KeepAlive.Unicast(username, $"{{\"action\":\"update-rbac\",\"authorization\":[{permissionsString}]}}", "/global");
 
         return plain;
     }
@@ -556,7 +556,7 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        acl.TryRemove(username, out _);
+        rbac.TryRemove(username, out _);
 
         foreach (KeyValuePair<string, Session> pair in sessions) {
             if (pair.Value.access.username == username) {
@@ -565,14 +565,14 @@ internal static class Auth {
         }
 
         try {
-            File.Delete($"{Data.DIR_ACL}{Data.DELIMITER}{username}");
+            File.Delete($"{Data.DIR_RBAC}{Data.DELIMITER}{username}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(origin, $"Delete access control for {username}");
+        Logger.Action(origin, $"Delete RBAC for {username}");
 
         return "{\"status\":\"ok\"}"u8.ToArray();
     }

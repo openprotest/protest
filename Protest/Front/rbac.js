@@ -1,4 +1,4 @@
-class Acl extends Tabs {
+class AccessControl extends Tabs {
 	constructor(args) {
 		super(null);
 
@@ -6,15 +6,15 @@ class Acl extends Tabs {
 
 		this.AddCssDependencies("list.css");
 
-		this.SetTitle("Access control list");
-		this.SetIcon("mono/acl.svg");
+		this.SetTitle("Access control");
+		this.SetIcon("mono/rbac.svg");
 
 		this.tabsPanel.style.padding = "20px";
 
-		this.aclTab      = this.AddTab("ACL", "mono/acl.svg");
+		this.rbacTab      = this.AddTab("RBAC", "mono/rbac.svg");
 		this.sessionsTab = this.AddTab("Open sessions", "mono/hourglass.svg");
 
-		this.aclTab.onclick      = ()=> this.ShowAcl();
+		this.rbacTab.onclick      = ()=> this.ShowRbac();
 		this.sessionsTab.onclick = ()=> this.ShowSessions();
 
 		switch (this.args) {
@@ -24,8 +24,8 @@ class Acl extends Tabs {
 			break;
 
 		default:
-			this.aclTab.className = "v-tab-selected";
-			this.ShowAcl();
+			this.rbacTab.className = "v-tab-selected";
+			this.ShowRbac();
 		}
 
 		setTimeout(()=> this.AfterResize(), 250);
@@ -53,8 +53,8 @@ class Acl extends Tabs {
 		}
 	}
 
-	ShowAcl() {
-		this.args = "acl";
+	ShowRbac() {
+		this.args = "rbac";
 		this.tabsPanel.textContent = "";
 
 		this.usersList = document.createElement("div");
@@ -69,7 +69,7 @@ class Acl extends Tabs {
 		this.usersList.style.bottom = "8px";
 
 		this.options = document.createElement("div");
-		this.options.className = "acl-options";
+		this.options.className = "rbac-options";
 		this.options.style.position = "absolute";
 		this.options.style.left = "266px";
 		this.options.style.right = "8px";
@@ -239,7 +239,7 @@ class Acl extends Tabs {
 			this.username.setAttribute("readonly", true);
 
 			try {
-				let url = `acl/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
+				let url = `rbac/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
 				let authorization = [];
 
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -279,7 +279,7 @@ class Acl extends Tabs {
 		this.removeButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to remove this user?").addEventListener("click", async()=>{
 				try {
-					const response = await fetch(`acl/delete?username=${encodeURIComponent(this.username.value)}`);
+					const response = await fetch(`rbac/delete?username=${encodeURIComponent(this.username.value)}`);
 
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -334,7 +334,7 @@ class Acl extends Tabs {
 
 		const manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Settings", "url(mono/wrench.svg)", manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Access control lists", "url(mono/acl.svg)", manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("RBAC", "url(mono/rbac.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Log", "url(mono/log.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Backup", "url(mono/backup.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Update", "url(mono/update.svg)", manageGroup, false, true, false));
@@ -434,7 +434,7 @@ class Acl extends Tabs {
 
 	async GetUsers() {
 		try {
-			const response = await fetch("acl/list");
+			const response = await fetch("rbac/list");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -566,7 +566,7 @@ class Acl extends Tabs {
 		this.tabsPanel.appendChild(sessionsList);
 
 		try {
-			const response = await fetch("acl/sessions");
+			const response = await fetch("rbac/sessions");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -635,7 +635,7 @@ class Acl extends Tabs {
 				kickButton.onclick = ()=> {
 					this.ConfirmBox(`Are you sure you want to kick ${json[i].username}?`).addEventListener("click", async ()=>{
 						try {
-							const response = await fetch(`acl/kickuser?username=${encodeURIComponent(json[i].username)}&ip=${json[i].ip}&id=${json[i].id}`);
+							const response = await fetch(`rbac/kickuser?username=${encodeURIComponent(json[i].username)}&ip=${json[i].ip}&id=${json[i].id}`);
 
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

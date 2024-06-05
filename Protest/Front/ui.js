@@ -343,8 +343,8 @@ const MENU = {
 		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Personalize("session") },
 		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:()=> new Personalize("agent") },
 
-		{ t:"ACL",            i:"mono/acl.svg?light",         g:"manage", h:false, f:()=> new Acl("acl"),      k:"users access control list permissions" },
-		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Acl("sessions"), k:"alive connections" },
+		{ t:"RBAC",           i:"mono/rbac.svg?light",        g:"manage", h:false, f:()=> new AccessControl("rbac"),     k:"rbac acl role based users access control list permissions" },
+		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },
 
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:()=> new Automation(), k:"" },
 
