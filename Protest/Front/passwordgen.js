@@ -177,6 +177,7 @@ class PassGen extends Window {
 
 		const stampButton = document.createElement("input");
 		stampButton.type = "button";
+		stampButton.value = " ";
 		buttonsBox.appendChild(stampButton);
 
 		copyButton.style.width  = "72px";
