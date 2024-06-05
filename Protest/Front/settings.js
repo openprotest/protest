@@ -908,10 +908,10 @@ class Settings extends Tabs {
 		versionInput.style.gridArea = "2 / 3";
 		innerBox.append(versionLabel, versionInput);
 
-		for (let i = 1; i <= 3; i++) {
+		for (let i=2; i<=3; i++) {
 			const option = document.createElement("option");
 			option.value = i;
-			option.textContent = `Version ${i}`;
+			option.textContent = i === 2 ? "Version 1/2" : "Version 3";
 			versionInput.appendChild(option);
 		}
 

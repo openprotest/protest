@@ -277,35 +277,113 @@ class Fetch extends Tabs {
 			this.snmp3Button.style.opacity = this.snmp3Checkbox.checked ? "1" : "0";
 		};
 
-		this.snmp2Button.onclick = ()=> {
+		this.snmp2Button.onclick = async ()=> {
 			const dialog = this.DialogBox("360px");
 			if (dialog === null) return;
 	
 			const {okButton, innerBox} = dialog;
 
-			innerBox.parentElement.style.maxWidth = "540px";
+			innerBox.parentElement.style.maxWidth = "480px";
+
+			const profilesList = document.createElement("div");
+			profilesList.style.position = "absolute";
+			profilesList.style.inset = "20px";
+			profilesList.style.overflow = "auto";
+			profilesList.style.border = "2px solid var(--clr-control)";
+			profilesList.style.borderRadius = "4px";
+			innerBox.appendChild(profilesList);
+
+			const profiles = await this.GetSnmpProfiles();
+			const attributeElements = [];
+
+			for (let i=0; i<profiles.length; i++) {
+				if (profiles[i].version === 3) continue;
+
+				const element = document.createElement("div");
+				element.className = "list-element";
+				profilesList.appendChild(element);
+
+				let checked;
+				if (this.snmpV2Profiles) {
+					let found = this.snmpV2Profiles.find(o=> o.profile.guid === profiles[i].guid);
+					checked = found ? found.checkbox.checked : false;
+				}
+				else {
+					checked = true;
+				}
+
+				const toggle = this.CreateToggle(profiles[i].name, checked, element);
+				toggle.label.style.width = "calc(100% - 48px)";
+				toggle.label.style.left = "8px";
+				toggle.label.style.top = "5px";
+
+				attributeElements.push({
+					element: element,
+					profile: profiles[i],
+					checkbox: toggle.checkbox
+				});
+			}
 
 			okButton.onclick = ()=> {
-				//TODO:
+				this.snmpV2Profiles = attributeElements;
 				dialog.Close();
 			};
 		};
 
-		this.snmp3Button.onclick = ()=> {
+		this.snmp3Button.onclick = async ()=> {
 			const dialog = this.DialogBox("360px");
 			if (dialog === null) return;
 	
 			const {okButton, innerBox} = dialog;
 
-			innerBox.parentElement.style.maxWidth = "540px";
+			innerBox.parentElement.style.maxWidth = "480px";
+
+			const profilesList = document.createElement("div");
+			profilesList.style.position = "absolute";
+			profilesList.style.inset = "20px";
+			profilesList.style.overflow = "auto";
+			profilesList.style.border = "2px solid var(--clr-control)";
+			profilesList.style.borderRadius = "4px";
+			innerBox.appendChild(profilesList);
+
+			const profiles = await this.GetSnmpProfiles();
+			const attributeElements = [];
+
+			for (let i=0; i<profiles.length; i++) {
+				if (profiles[i].version !== 3) continue;
+
+				const element = document.createElement("div");
+				element.className = "list-element";
+				profilesList.appendChild(element);
+
+				let checked;
+				if (this.snmpV3Profiles) {
+					let found = this.snmpV3Profiles.find(o=> o.profile.guid === profiles[i].guid);
+					checked = found ? found.checkbox.checked : false;
+				}
+				else {
+					checked = true;
+				}
+
+				const toggle = this.CreateToggle(profiles[i].name, checked, element);
+				toggle.label.style.width = "calc(100% - 48px)";
+				toggle.label.style.left = "8px";
+				toggle.label.style.top = "5px";
+
+				attributeElements.push({
+					element: element,
+					profile: profiles[i],
+					checkbox: toggle.checkbox
+				});
+			}
 
 			okButton.onclick = ()=> {
-				//TODO:
+				this.snmpV3Profiles = attributeElements;
 				dialog.Close();
 			};
 		};
 
-		this.portScanCheckbox.onchange = ()=>{
+		this.portScanCheckbox.onchange = ()=> {
 			this.portScanInput.disabled = !this.portScanCheckbox.checked;
 		};
 
@@ -488,6 +566,22 @@ class Fetch extends Tabs {
 
 		}
 		catch {}
+	}
+
+	async GetSnmpProfiles() {
+		try {
+			const response = await fetch("config/snmpprofiles/list");
+			
+			if (response.status !== 200) return;
+			
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			return json;
+		}
+		catch (ex) {
+			return [];
+		}
 	}
 
 	ShowDevices() {

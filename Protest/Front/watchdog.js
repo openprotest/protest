@@ -909,7 +909,6 @@ class Watchdog extends Window {
 			notifications[obj.id].element = obj.element;
 			notifications[obj.id].id = obj.id;
 		}
-
 	}
 
 	CreateWatcherElement(watcher) {
