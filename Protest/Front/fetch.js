@@ -285,9 +285,16 @@ class Fetch extends Tabs {
 
 			innerBox.parentElement.style.maxWidth = "480px";
 
+			const title = document.createElement("div");
+			title.textContent = "SNMP V1/2 profiles";
+			title.style.textAlign = "center";
+			title.style.lineHeight = "32px";
+			title.style.fontWeight = "800";
+			innerBox.appendChild(title);
+
 			const profilesList = document.createElement("div");
 			profilesList.style.position = "absolute";
-			profilesList.style.inset = "20px";
+			profilesList.style.inset = "32px 20px 20px 20px";
 			profilesList.style.overflow = "auto";
 			profilesList.style.border = "2px solid var(--clr-control)";
 			profilesList.style.borderRadius = "4px";
@@ -304,8 +311,8 @@ class Fetch extends Tabs {
 				profilesList.appendChild(element);
 
 				let checked;
-				if (this.snmpV2Profiles) {
-					let found = this.snmpV2Profiles.find(o=> o.profile.guid === profiles[i].guid);
+				if (this.snmp2Profiles) {
+					let found = this.snmp2Profiles.find(o=> o.profile.guid === profiles[i].guid);
 					checked = found ? found.checkbox.checked : false;
 				}
 				else {
@@ -325,7 +332,7 @@ class Fetch extends Tabs {
 			}
 
 			okButton.onclick = ()=> {
-				this.snmpV2Profiles = attributeElements;
+				this.snmp2Profiles = attributeElements;
 				dialog.Close();
 			};
 		};
@@ -338,9 +345,16 @@ class Fetch extends Tabs {
 
 			innerBox.parentElement.style.maxWidth = "480px";
 
+			const title = document.createElement("div");
+			title.textContent = "SNMP V3 profiles";
+			title.style.textAlign = "center";
+			title.style.lineHeight = "32px";
+			title.style.fontWeight = "800";
+			innerBox.appendChild(title);
+
 			const profilesList = document.createElement("div");
 			profilesList.style.position = "absolute";
-			profilesList.style.inset = "20px";
+			profilesList.style.inset = "32px 20px 20px 20px";
 			profilesList.style.overflow = "auto";
 			profilesList.style.border = "2px solid var(--clr-control)";
 			profilesList.style.borderRadius = "4px";
@@ -357,8 +371,8 @@ class Fetch extends Tabs {
 				profilesList.appendChild(element);
 
 				let checked;
-				if (this.snmpV3Profiles) {
-					let found = this.snmpV3Profiles.find(o=> o.profile.guid === profiles[i].guid);
+				if (this.snmp3Profiles) {
+					let found = this.snmp3Profiles.find(o=> o.profile.guid === profiles[i].guid);
 					checked = found ? found.checkbox.checked : false;
 				}
 				else {
@@ -378,7 +392,7 @@ class Fetch extends Tabs {
 			}
 
 			okButton.onclick = ()=> {
-				this.snmpV3Profiles = attributeElements;
+				this.snmp3Profiles = attributeElements;
 				dialog.Close();
 			};
 		};
@@ -469,11 +483,19 @@ class Fetch extends Tabs {
 
 			if (this.args === "devices") {
 				if (this.dnsCheckBox.checked)      uri += "&dns=true";
+				if (this.snmp2Checkbox.checked)    uri += `&snmp2=${this.snmp2Checkbox.checked}`;
+				if (this.snmp3Checkbox.checked)    uri += `&snmp3=${this.snmp3Checkbox.checked}`;
 				if (this.wmiCheckbox.checked)      uri += "&wmi=true";
-				if (this.snmp2Checkbox.checked)     uri += `&snmp2=${this.snmpInput.value}`;
-				if (this.snmp3Checkbox.checked)     uri += `&snmp3=${this.snmpInput.value}`;
 				if (this.kerberosCheckbox.checked) uri += "&kerberos=true";
 				if (this.portScanCheckbox.checked) uri += `&portscan=${this.portScanInput.value}`;
+
+				if (this.snmp2Profiles) {
+					//TODO:
+				}
+
+				if (this.snmp3Profiles) {
+					//TODO:
+				}
 
 				uri += `&retries=${this.retriesRange.value}`;
 				uri += `&interval=${this.intervalRange.value}`;
@@ -620,13 +642,13 @@ class Fetch extends Tabs {
 		//TODO: mDNS, SSDP
 
 		this.tabsPanel.appendChild(this.snmp2Checkbox);
-		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP v1/2");
+		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP V1/2");
 		snmp2.style.gridArea = "6 / 3";
 
 		this.tabsPanel.appendChild(this.snmp2Button);
 
 		this.tabsPanel.appendChild(this.snmp3Checkbox);
-		const snmp3 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp3Checkbox, "SNMP v3");
+		const snmp3 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp3Checkbox, "SNMP V3");
 		snmp3.style.gridArea = "7 / 3";
 
 		this.tabsPanel.appendChild(this.snmp3Button);
