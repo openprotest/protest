@@ -294,7 +294,7 @@ class Fetch extends Tabs {
 
 			const profilesList = document.createElement("div");
 			profilesList.style.position = "absolute";
-			profilesList.style.inset = "32px 20px 20px 20px";
+			profilesList.style.inset = "32px 20px 8px 20px";
 			profilesList.style.overflow = "auto";
 			profilesList.style.border = "2px solid var(--clr-control)";
 			profilesList.style.borderRadius = "4px";
@@ -354,7 +354,7 @@ class Fetch extends Tabs {
 
 			const profilesList = document.createElement("div");
 			profilesList.style.position = "absolute";
-			profilesList.style.inset = "32px 20px 20px 20px";
+			profilesList.style.inset = "32px 20px 8px 20px";
 			profilesList.style.overflow = "auto";
 			profilesList.style.border = "2px solid var(--clr-control)";
 			profilesList.style.borderRadius = "4px";

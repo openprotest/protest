@@ -880,7 +880,7 @@ class Settings extends Tabs {
 	}
 
 	async PreviewSnmpProfile(object=null) {
-		const dialog = this.DialogBox("420px");
+		const dialog = this.DialogBox("480px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -890,7 +890,7 @@ class Settings extends Tabs {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 200px 200px 100px auto";
-		innerBox.style.gridTemplateRows = "repeat(3, 38px) 16px repeat(3, 38px) 16px repeat(2, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(3, 38px) 16px repeat(3, 38px) 16px repeat(2, 38px) 16px 38px";
 		innerBox.style.alignItems = "center";
 
 		const nameLabel = document.createElement("div");
@@ -1022,6 +1022,18 @@ class Settings extends Tabs {
 
 		innerBox.append(authObsoleteBox, privacyObsoleteBox);
 
+		if (object.guid) {
+			const guidLabel = document.createElement("div");
+			guidLabel.style.gridArea = "12 / 2";
+			guidLabel.textContent = "GUID:";
+	
+			const guidValue = document.createElement("div");
+			guidValue.textContent = object.guid;
+			guidValue.style.gridArea = "12 / 3 / 12 / 5";
+			guidValue.style.userSelect = "text";
+			innerBox.append(guidLabel, guidValue);
+		}
+
 		if (object) {
 			nameInput.value = object.name;
 			versionInput.value = object.version;
@@ -1068,7 +1080,6 @@ class Settings extends Tabs {
 			privacyAlgorithmInput.disabled = !isV3;
 			privacyPasswordInput.disabled = !isV3;
 		};
-
 
 		okButton.onclick = async ()=>{
 			let index = this.snmpProfiles.indexOf(object);
