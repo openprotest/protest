@@ -208,13 +208,13 @@ class Settings extends Tabs {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			let domain = json.domain  ? json.domain : "";
+			let domain = json.domain ? json.domain : "";
 			domainInput.value = domain;
 
 			this.tabsPanel.appendChild(document.createElement("br"));
 
 			const warningBox = document.createElement("div");
-			warningBox.textContent = "Domain privileges are inherited by the user executing the pro-test.exe executable. To utilize Directory Services, run the executable with the credentials of a Domain Administrator.";
+			warningBox.textContent = "Domain privileges are inherited by the user executing the protest.exe executable. To utilize Directory Services, run the executable with the credentials of a Domain Administrator.";
 			warningBox.style.fontSize = "small";
 			warningBox.style.paddingLeft = "56px";
 			warningBox.style.maxWidth = "480px";

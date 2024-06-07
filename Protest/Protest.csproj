@@ -6,8 +6,8 @@
     <Authors>andreas venizelou</Authors>
     <Copyright>2024 veniware. Released into the public domain.</Copyright>
     <Description>A management base for System Admins</Description>
-    <ApplicationIcon>pro-test.ico</ApplicationIcon>
-    <PackageIcon>pro-test.png</PackageIcon>
+    <ApplicationIcon>protest.ico</ApplicationIcon>
+    <PackageIcon>protest.png</PackageIcon>
     <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
     <OutputType>Exe</OutputType>
