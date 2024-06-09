@@ -42,10 +42,8 @@ internal static class Auth {
     }
 
     public static bool IsAuthenticated(HttpListenerContext ctx) {
-//#if DEBUG
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
-//#endif
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -61,10 +59,8 @@ internal static class Auth {
     }
 
     public static bool IsAuthorized(HttpListenerContext ctx, string path) {
-//#if DEBUG
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
-//#endif
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -75,10 +71,8 @@ internal static class Auth {
     }
 
     public static bool IsAuthenticatedAndAuthorized(HttpListenerContext ctx, string path) {
-//#if DEBUG
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp)) return true;
-//#endif
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -133,7 +127,7 @@ internal static class Auth {
     public static string GrandAccess(HttpListenerContext ctx, string username) {
         string sessionId = Cryptography.RandomStringGenerator(64);
 
-        //RFC6265: no port allowd in the Domain attribute
+        //RFC6265: no port allowed in the Domain attribute
 #if DEBUG
         ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict;");
 #else
@@ -418,8 +412,8 @@ internal static class Auth {
                 access.accessPath = PopulateAccessPath(access.authorization);
                 rbac.TryAdd(access.username, access);
             }
-            catch {
-                continue;
+            catch (Exception ex) {
+                Logger.Error(ex);
             }
         }
 

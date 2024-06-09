@@ -16,7 +16,7 @@ public sealed class Listener {
     private readonly HttpListener listener;
     private readonly Cache cache;
 
-    private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> mux
+    private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> routing
     = new Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> {
         { "/logout",              (ctx, parameters, username) => Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array },
         { "/version",             (ctx, parameters, username) => Data.VersionToJson() },
@@ -62,7 +62,6 @@ public sealed class Listener {
         { "/manage/device/reboot",    (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 6) : null },
         { "/manage/device/logoff",    (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 4) : null },
         { "/manage/device/printtest", (ctx, parameters, username) => Proprietary.Printers.Generic.PrintTestPage(parameters) },
-        //{ "/manage/device/getfiles",  (ctx, parameters, username)=> FileBrowser.Get(parameters) },
 
         { "/manage/user/unlock",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.UnlockUser(parameters) : null },
         { "/manage/user/enable",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.EnableUser(parameters) : null },
@@ -394,7 +393,7 @@ public sealed class Listener {
         ctx.Response.AddHeader("Cache-Control", "no-cache");
 
         string path = ctx.Request.Url.AbsolutePath;
-        if (mux.TryGetValue(path, out Func<HttpListenerContext, Dictionary<string, string>, string, byte[]> handler)) {
+        if (routing.TryGetValue(path, out Func<HttpListenerContext, Dictionary<string, string>, string, byte[]> handler)) {
             byte[] buffer = handler(ctx, parameters, username);
             if (buffer is not null) {
                 ctx.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -416,49 +415,17 @@ public sealed class Listener {
         }
 
         switch (ctx.Request.Url.AbsolutePath) {
-        case "/ws/keepalive":
-            KeepAlive.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/ping":
-            Protocols.Icmp.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/dhcp":
-            Protocols.Dhcp.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/portscan":
-            Tools.PortScan.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/traceroute":
-            Tools.TraceRoute.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/sitecheck":
-            Tools.SiteCheck.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/telnet":
-            Protocols.Telnet.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/ssh":
-            Protocols.Ssh.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/monitor":
-            Tools.Monitor.WebSocketHandler(ctx);
-            return true;
-
-        case "/ws/livestats/device":
-            Tools.LiveStats.DeviceStats(ctx);
-            return true;
-
-        case "/ws/livestats/user":
-            Tools.LiveStats.UserStats(ctx);
-            return true;
+        case "/ws/keepalive":        KeepAlive.WebSocketHandler(ctx);        return true;
+        case "/ws/ping":             Protocols.Icmp.WebSocketHandler(ctx);   return true;
+        case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx);   return true;
+        case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);   return true;
+        case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx); return true;
+        case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);  return true;
+        case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx); return true;
+        case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx);    return true;
+        case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);    return true;
+        case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);       return true;
+        case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx);         return true;
         }
 
         return false;
