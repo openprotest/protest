@@ -472,7 +472,7 @@ class View extends Window {
 			if (json.error) throw (json.error);
 		}
 		catch (ex) {
-			console.error(ex);
+			console.error(`timeline error: ${ex}`);
 			return;
 		}
 

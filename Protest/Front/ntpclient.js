@@ -159,7 +159,6 @@ class NtpClient extends Window {
 				this.hexButton.onclick = ()=>{
 					new HexViewer({exchange:[{direction:"query", data:json.req},{direction:"response", data:json.res}], protocol:"ntp"});
 				};
-
 			}
 			else {
 				this.id = null;
