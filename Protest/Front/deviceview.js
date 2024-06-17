@@ -535,6 +535,11 @@ class DeviceView extends View {
 				sshButton.onclick = ()=> new Ssh({host:sshHost,  username:username, file:file});
 			}
 
+			if (ports.includes(53)) {
+				const dnsButton = this.CreateSideButton("mono/dns.svg", "DNS lookup");
+				dnsButton.onclick = ()=> new DnsLookup({entries:[], server:host, type:"A", timeout:2000, transport:"Auto", isRecursive:true});
+			}
+
 			if (overwriteProtocol.http) { //http
 				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
 				actionButton.onclick = ()=> {
