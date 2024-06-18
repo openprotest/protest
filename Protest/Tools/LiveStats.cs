@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Management;
 using System.Net;
@@ -33,7 +34,7 @@ internal static class LiveStats {
         }
 
         try {
-            byte[] buff = new byte[256];
+            byte[] buff = new byte[512];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
             string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
 
@@ -58,30 +59,37 @@ internal static class LiveStats {
             }
 
             if (pingArray.Length > 0) {
+                var pingTasks = new List<Task>();
+
                 for (int i = 0; i < pingArray.Length; i++) {
-                    try {
-                        using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
-                        PingReply reply = p.Send(pingArray[i], 200);
-                        if (reply.Status == IPStatus.Success) {
-                            if (firstAlive is null) {
-                                firstAlive = pingArray[i];
-                                firstReply = reply;
+                    int index = i;
+                    pingTasks.Add(Task.Run(async () => {
+                        try {
+                            using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
+                            PingReply reply = await p.SendPingAsync(pingArray[index], 200);
+                            if (reply.Status == IPStatus.Success) {
+                                if (firstAlive is null) {
+                                    firstAlive = pingArray[index];
+                                    firstReply = reply;
+                                }
+                                await WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
+                                await WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[index]}: Just now\",\"source\":\"ICMP\"}}");
+                                LastSeen.Seen(pingArray[index]);
                             }
-                            await WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
-                            await WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: Just now\",\"source\":\"ICMP\"}}");
-                            LastSeen.Seen(pingArray[i]);
+                            else if (reply.Status == IPStatus.TimedOut) {
+                                await WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
+                            }
+                            else {
+                                await WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
+                            }
                         }
-                        else if (reply.Status == IPStatus.TimedOut) {
-                            await WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
+                        catch {
+                            await WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[index])}\",\"source\":\"ICMP\"}}");
                         }
-                        else {
-                            await WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
-                        }
-                    }
-                    catch {
-                        await WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[i])}\",\"source\":\"ICMP\"}}");
-                    }
+                    }));
                 }
+
+                await Task.WhenAll(pingTasks);
 
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
@@ -89,7 +97,7 @@ internal static class LiveStats {
                         await WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}");
                     }
                 }
-            }
+            }        
 
             string wmiHostname = null, adHostname = null, netbios = null, dns = null;
 
@@ -180,8 +188,8 @@ internal static class LiveStats {
                             }
                         }
 
-                        if (result.Properties["dNSHostName"].Count > 0) {
-                            adHostname = result.Properties["dNSHostName"][0].ToString();
+                        if (result.Properties["dnsHostName"].Count > 0) {
+                            adHostname = result.Properties["dnsHostName"][0].ToString();
                         }
                     }
                 }
@@ -286,7 +294,7 @@ internal static class LiveStats {
         }
 
         try {
-            byte[] buff = new byte[256];
+            byte[] buff = new byte[512];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
             string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
 
@@ -304,16 +312,19 @@ internal static class LiveStats {
                                 await WsWriteText(ws, $"{{\"info\":\"Last logon: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
+
                         if (result.Properties["lastLogoff"].Count > 0) {
                             if (Int64.TryParse(result.Properties["lastLogoff"][0].ToString(), out long time) && time > 0) {
                                 await WsWriteText(ws, $"{{\"info\":\"Last logoff: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
                             }
                         }
+
                         if (result.Properties["badPasswordTime"].Count > 0) {
                             if (Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long time) && time > 0) {
                                 await WsWriteText(ws, $"{{\"info\":\"Bad password time: {(DateTime.FromFileTime(time))}\",\"source\":\"Kerberos\"}}");
                             }
                         }
+
                         if (result.Properties["lockoutTime"].Count > 0) {
                             if (Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out long time) && time > 0) {
                                 await WsWriteText(ws, $"{{\"lockedOut\":\"{DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}");
