@@ -32,7 +32,7 @@ internal static class Icmp {
                     return reply.Status == IPStatus.Success ? (int)reply.RoundtripTime : -1;
                 }
                 catch {
-                    return -1;
+                    return -2;
                 }
             }));
         }

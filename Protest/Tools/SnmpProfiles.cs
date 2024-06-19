@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,6 +10,20 @@ internal static class SnmpProfiles {
     private static readonly object mutex;
     private static readonly JsonSerializerOptions snmpProfilesSerializerOptions;
     private static readonly JsonSerializerOptions snmpProfilesSerializerOptionsWithPasswords;
+
+    private static readonly string DEFAULT_PROFILE = """
+    [{
+        "name":"Public",
+        "version":2,
+        "community":"public",
+        "username":"",
+        "authAlgorithm":3,
+        "authPassword":"",
+        "privacyAlgorithm":3,
+        "privacyPassword":"",
+        "guid":"00000000-0000-0000-0000-000000000000"
+    }]
+    """;
 
     public enum AuthenticationAlgorithm : byte {
         Auto = 0,
@@ -54,7 +67,8 @@ internal static class SnmpProfiles {
 
     public static Profile[] Load() {
         if (!File.Exists(Data.SNMP_PROFILES)) {
-            return Array.Empty<Profile>();
+            Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(DEFAULT_PROFILE, snmpProfilesSerializerOptionsWithPasswords);
+            return profiles;
         }
 
         try {
@@ -142,7 +156,6 @@ internal static class SnmpProfiles {
 
         return Data.CODE_OK.Array;
     }
-
 }
 
 internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Profile[]> {

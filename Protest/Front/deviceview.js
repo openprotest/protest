@@ -282,13 +282,19 @@ class DeviceView extends View {
 				const json = await response.json();
 				if (json.error) return;
 				for (let i = 0; i < json.length; i++) {
-					if (json[i] < 0) {
+					if (json[i] === -1) {
 						this.pingIndicators[i].dot.style.borderBottomColor = "var(--clr-error)";
 						this.pingIndicators[i].dot.style.transform = "rotate(180deg)";
 						this.pingIndicators[i].button.secondary.style.color = "var(--clr-error)";
 						this.pingIndicators[i].button.secondary.textContent = "Timed out";
 					}
-					else {
+					else if (json[i] === -2) {
+						this.pingIndicators[i].dot.style.borderBottomColor = "var(--clr-orange);";
+						this.pingIndicators[i].dot.style.transform = "rotate(180deg)";
+						this.pingIndicators[i].button.secondary.style.color = "var(--clr-orange);";
+						this.pingIndicators[i].button.secondary.textContent = "Error";
+					}
+					else if (json[i] > -1) {
 						const color = UI.PingColor(json[i]);
 						this.pingIndicators[i].dot.style.borderBottomColor = color;
 						this.pingIndicators[i].dot.style.transform = "none";
@@ -936,7 +942,7 @@ class DeviceView extends View {
 					new Ping().Filter(json.for);
 				};
 
-				this.pingIndicators.push({target:json.for, dot:dot, button: pingButton});
+				this.pingIndicators.push({target:json.for, dot:dot, button:pingButton});
 			}
 			else if (json.drive) {
 				const driveButton = this.CreateInfoButton(json.drive, "/mono/hdd.svg");
@@ -954,7 +960,6 @@ class DeviceView extends View {
 				setTimeout(()=>{
 					driveButton.secondary.style.boxShadow = `var(--clr-dark) ${json.used * 64 / json.total}px 0 0 inset`;
 				}, WIN.ANIME_DURATION);
-
 
 				driveButton.button.onclick = ()=> UI.PromptAgent(this, "smb", json.path);
 			}
@@ -1527,10 +1532,7 @@ class DeviceView extends View {
 		const dialog = this.DialogBox("calc(100% - 34px)");
 		if (dialog === null) return;
 
-		const okButton     = dialog.okButton;
-		const cancelButton = dialog.cancelButton;
-		const buttonBox = dialog.buttonBox;
-		const innerBox  = dialog.innerBox;
+		const {okButton, cancelButton, buttonBox, innerBox} = dialog;
 
 		okButton.value = "Close";
 
@@ -1842,9 +1844,7 @@ class DeviceView extends View {
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
-		const okButton    = dialog.okButton;
-		const innerBox = dialog.innerBox;
-		const buttonBox = dialog.buttonBox;
+		const {okButton, innerBox, buttonBox} = dialog;
 
 		innerBox.parentElement.style.maxWidth = "1110px";
 		innerBox.parentElement.style.left = "40px";

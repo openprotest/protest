@@ -438,7 +438,7 @@ class Settings extends Tabs {
 		titleBar.style.color = "var(--clr-light)";
 		this.tabsPanel.appendChild(titleBar);
 
-		let labels = ["Name", "Context name", "Username"];
+		let labels = ["Name", "Community / Context", "Username"];
 		for (let i = 0; i < labels.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.style.display = "inline-block";
@@ -651,7 +651,7 @@ class Settings extends Tabs {
 				labels.push(nameLabel);
 
 				const contextLabel = document.createElement("div");
-				contextLabel.textContent = json[i].context;
+				contextLabel.textContent = json.version === 3 ? json[i].json[i].context : json[i].community;
 				labels.push(contextLabel);
 
 				const usernameLabel = document.createElement("Sender");
@@ -1022,7 +1022,7 @@ class Settings extends Tabs {
 
 		innerBox.append(authObsoleteBox, privacyObsoleteBox);
 
-		if (object.guid) {
+		if (object && object.guid) {
 			const guidLabel = document.createElement("div");
 			guidLabel.style.gridArea = "12 / 2";
 			guidLabel.textContent = "GUID:";
