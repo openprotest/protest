@@ -38,7 +38,6 @@ internal static class Polling {
         catch {
             return "{\"error\":\"No such host is known\"}"u8.ToArray();
         }
-        IPEndPoint endpoint = new IPEndPoint(targetIp, 161);
 
         VersionCode version = versionString switch {
             "1" => VersionCode.V1,
@@ -74,11 +73,11 @@ internal static class Polling {
                     if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
                     OctetString data = new OctetString(valueString);
 
-                    IList<Variable> result = SnmpRequestV3(endpoint, timeout, profile, oidArray, operation, data);
+                    IList<Variable> result = SnmpRequestV3(targetIp, timeout, profile, oidArray, operation, data);
                     return ParseResponse(result);
                 }
                 else {
-                    IList<Variable> result = SnmpRequestV3(endpoint, timeout, profile, oidArray, operation);
+                    IList<Variable> result = SnmpRequestV3(targetIp, timeout, profile, oidArray, operation);
                     return ParseResponse(result);
                 }
             }
@@ -88,11 +87,11 @@ internal static class Polling {
                     if (valueString is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
                     OctetString data = new OctetString(valueString);
 
-                    IList<Variable> result = SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
+                    IList<Variable> result = SnmpRequestV1V2(targetIp, version, timeout, community, oidArray, operation, data);
                     return ParseResponse(result);
                 }
                 else {
-                    IList<Variable> result = SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation);
+                    IList<Variable> result = SnmpRequestV1V2(targetIp, version, timeout, community, oidArray, operation);
                     return ParseResponse(result);
                 }
             }
@@ -100,6 +99,18 @@ internal static class Polling {
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
         }
+    }
+
+    public static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, string communityString, string[] oidArray, SnmpOperation operation, string dataString = null) {
+        IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
+        OctetString community = new OctetString(communityString);
+        OctetString data = new OctetString(dataString);
+        return SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
+    }
+
+    public static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+        IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
+        return SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
     }
 
     public static IList<Variable> SnmpRequestV1V2(IPEndPoint endpoint, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
@@ -129,6 +140,11 @@ internal static class Polling {
         else {
             throw new Exception("Invalid operation");
         }
+    }
+
+    public static IList<Variable> SnmpRequestV3(IPAddress ipAddress, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+        IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
+        return SnmpRequestV3(endpoint, timeout, profile, oidArray, operation, data);
     }
 
     public static IList<Variable> SnmpRequestV3(IPEndPoint endpoint, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {

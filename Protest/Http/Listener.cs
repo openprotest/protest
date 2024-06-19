@@ -52,10 +52,10 @@ public sealed class Listener {
         { "/fetch/singleuser",    (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters) },
         { "/fetch/devices",       (ctx, parameters, username) => Tasks.Fetch.DevicesTask(parameters, username) },
         { "/fetch/users",         (ctx, parameters, username) => Tasks.Fetch.UsersTask(parameters, username) },
-        { "/fetch/import",        (ctx, parameters, username) => Tasks.Fetch.ImportTask(parameters, username) },
         { "/fetch/approve",       (ctx, parameters, username) => Tasks.Fetch.ApproveLastTask(parameters, username) },
         { "/fetch/abort",         (ctx, parameters, username) => Tasks.Fetch.CancelTask(username) },
         { "/fetch/discard",       (ctx, parameters, username) => Tasks.Fetch.DiscardLastTask(username) },
+        { "/fetch/import",        (ctx, parameters, username) => Tasks.Import.ImportTask(parameters, username) },
 
         { "/manage/device/wol",       (ctx, parameters, username) => Protocols.Wol.Wakeup(parameters) },
         { "/manage/device/shutdown",  (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null },

@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Protest.Tools;
+
 internal static class SnmpProfiles {
     private static readonly object mutex;
     private static readonly JsonSerializerOptions snmpProfilesSerializerOptions;
@@ -13,15 +14,15 @@ internal static class SnmpProfiles {
 
     private static readonly string DEFAULT_PROFILE = """
     [{
-        "name":"Public",
-        "version":2,
-        "community":"public",
-        "username":"",
-        "authAlgorithm":3,
-        "authPassword":"",
-        "privacyAlgorithm":3,
-        "privacyPassword":"",
-        "guid":"00000000-0000-0000-0000-000000000000"
+        "name"             : "Public",
+        "version"          : 2,
+        "community"        : "public",
+        "username"         : "",
+        "authAlgorithm"    : 3,
+        "authPassword"     : "",
+        "privacyAlgorithm" : 3,
+        "privacyPassword"  : "",
+        "guid"             : "00000000-0000-0000-0000-000000000000"
     }]
     """;
 
