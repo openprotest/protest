@@ -64,9 +64,8 @@ internal static class SmtpProfiles {
     }
 
     public static byte[] Save(HttpListenerContext ctx) {
-        string payload;
-        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
-            payload = reader.ReadToEnd();
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
 
         Profile[] oldProfiles;
         try {

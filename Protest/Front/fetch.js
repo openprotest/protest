@@ -73,12 +73,10 @@ class Fetch extends Tabs {
 		this.progressBarInner.style.height = "100%";
 		this.progressBarInner.style.transition = ".4s";
 
-
 		this.updateRadio = document.createElement("input");
 		this.updateRadio.type = "radio";
 		this.updateRadio.name = "option";
 		this.updateRadio.checked = false;
-
 
 		this.ipRadio = document.createElement("input");
 		this.ipRadio.type = "radio";
@@ -107,7 +105,6 @@ class Fetch extends Tabs {
 
 		this.ipTo.Attach(this.rangeBox);
 
-
 		this.domainRadio = document.createElement("input");
 		this.domainRadio.type = "radio";
 		this.domainRadio.name = "option";
@@ -120,7 +117,6 @@ class Fetch extends Tabs {
 		this.domainInput.style.gridArea = "3 / 3";
 		this.domainInput.style.marginLeft = "0px";
 		this.domainInput.style.marginRight = "0px";
-
 
 		this.dnsCheckBox = document.createElement("input");
 		this.dnsCheckBox.type = "checkbox";
@@ -413,14 +409,15 @@ class Fetch extends Tabs {
 		};
 
 		this.portScanInput.onchange = ()=> {
-			switch (this.portScanInput.value) {
-			case "basic"     : this.portScanCommentLabel.textContent = "Scan only common protocols"; break;
-			case "wellknown" : this.portScanCommentLabel.textContent = "Scan ports 1 to 1023"; break;
-			case "extended"  : this.portScanCommentLabel.textContent = "Scan ports 1 to 8191"; break;
-			case "registered": this.portScanCommentLabel.textContent = "Scan ports 1024 to 49151 (slow)"; break;
-			case "full"      : this.portScanCommentLabel.textContent = "Scan ports 1 to 49151 (slow)"; break;
-			case "dynamic"   : this.portScanCommentLabel.textContent = "Scan ports 49152 to 65535 (slow)"; break;
-			}
+
+			this.portScanCommentLabel.textContent = {
+				"basic"      : "Scan only common protocols",
+				"wellknown"  : "Scan ports 1 to 1023",
+				"extended"   : "Scan ports 1 to 8191",
+				"registered" : "Scan ports 1024 to 49151 (slow)",
+				"full"       : "Scan ports 1 to 49151 (slow)",
+				"dynamic"    : "Scan ports 49152 to 65535 (slow)"
+			  } [this.portScanInput.value];
 		};
 
 		this.retriesRange.oninput = ()=> {
@@ -445,21 +442,21 @@ class Fetch extends Tabs {
 		};
 
 		this.intervalRange.oninput = ()=> {
-			switch (parseInt(this.intervalRange.value)) {
-			case 0: this.intervalCommentLabel.textContent = "If unreachable, retry after half an hour"; break;
-			case 1: this.intervalCommentLabel.textContent = "If unreachable, retry after an hour"; break;
-			case 2: this.intervalCommentLabel.textContent = "If unreachable, retry after 2 hours"; break;
-			case 3: this.intervalCommentLabel.textContent = "If unreachable, retry after 4 hours"; break;
-			case 4: this.intervalCommentLabel.textContent = "If unreachable, retry after 6 hours"; break;
-			case 5: this.intervalCommentLabel.textContent = "If unreachable, retry after 8 hours"; break;
-			case 6: this.intervalCommentLabel.textContent = "If unreachable, retry after 12 hours"; break;
-			case 7: this.intervalCommentLabel.textContent = "If unreachable, retry after 24 hours"; break;
-			case 8: this.intervalCommentLabel.textContent = "If unreachable, retry after 48 hours"; break;
-			}
+			this.intervalCommentLabel.textContent = {
+				"0" : "If unreachable, retry after half an hour",
+				"1" : "If unreachable, retry after an hour",
+				"2" : "If unreachable, retry after 2 hours",
+				"3" : "If unreachable, retry after 4 hours",
+				"4" : "If unreachable, retry after 6 hours",
+				"5" : "If unreachable, retry after 8 hours",
+				"6" : "If unreachable, retry after 12 hours",
+				"7" : "If unreachable, retry after 24 hours",
+				"8" : "If unreachable, retry after 48 hours"
+			} [this.intervalRange.value];
 		};
 
 		fetchButton.onclick = async()=> {
-			let uri;
+			let uri, body;
 			if (this.args === "devices") {
 				uri = "fetch/devices";
 			}
@@ -478,36 +475,58 @@ class Fetch extends Tabs {
 					this.ConfirmBox("Please enter a domain", true);
 					return;
 				}
-				uri += `?domain=${encodeURIComponent(this.domainInput.value)}`;
+				uri += `?domain=${this.domainInput.value}`;
 			}
 
 			if (this.args === "devices") {
-				if (this.dnsCheckBox.checked)      uri += "&dns=true";
-				if (this.snmp2Checkbox.checked)    uri += `&snmp2=${this.snmp2Checkbox.checked}`;
-				if (this.snmp3Checkbox.checked)    uri += `&snmp3=${this.snmp3Checkbox.checked}`;
-				if (this.wmiCheckbox.checked)      uri += "&wmi=true";
-				if (this.kerberosCheckbox.checked) uri += "&kerberos=true";
-				if (this.portScanCheckbox.checked) uri += `&portscan=${this.portScanInput.value}`;
+				body = "";
+				if (this.dnsCheckBox.checked)      body += "dns=true\n";
+				if (this.snmp2Checkbox.checked)    body += `snmp2=${this.snmp2Checkbox.checked}\n`;
+				if (this.snmp3Checkbox.checked)    body += `snmp3=${this.snmp3Checkbox.checked}\n`;
+				if (this.wmiCheckbox.checked)      body += "wmi=true\n";
+				if (this.kerberosCheckbox.checked) body += "kerberos=true\n";
+				if (this.portScanCheckbox.checked) body += `portscan=${this.portScanInput.value}\n`;
 
-				if (this.snmp2Profiles) {
-					//TODO:
+				if (this.snmp2Checkbox.checked && this.snmp2Profiles) {
+					let profiles = [];
+					for (let i=0; i<this.snmp2Profiles.length; i++) {
+						if (this.snmp2Profiles[i].checkbox.checked) {
+							profiles.push(this.snmp2Profiles[i].profile.guid);
+						}
+					}
+
+					if (profiles.length > 0) {
+						body += `\nsnmp2profiles=${profiles.join(",")}\n`;
+					}
 				}
 
-				if (this.snmp3Profiles) {
-					//TODO:
+				if (this.snmp3Checkbox.checked && this.snmp3Profiles) {
+					let profiles = [];
+					for (let i=0; i<this.snmp3Profiles.length; i++) {
+						if (this.snmp3Profiles[i].checkbox.checked) {
+							profiles.push(this.snmp3Profiles[i].profile.guid);
+						}
+					}
+
+					if (profiles.length > 0) {
+						body += `snmp3profiles=${profiles.join(",")}\n`;
+					}
 				}
 
-				uri += `&retries=${this.retriesRange.value}`;
-				uri += `&interval=${this.intervalRange.value}`;
+				body += `retries=${this.retriesRange.value}\n`;
+				body += `interval=${this.intervalRange.value}\n`;
 			}
 			else if (this.args === "users") {
-				uri = `fetch/users?domain=${this.domainInput.value}`;
+				body = `fetch/users?domain=${this.domainInput.value}`;
 			}
 
 			fetchButton.disabled = cancelButton.disabled = true;
 
 			try {
-				const response = await fetch(uri);
+				const response = await fetch(uri, {
+					method: "POST",
+					body: body
+				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

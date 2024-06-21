@@ -980,7 +980,7 @@ class DebitNotes extends Window {
 		createButton.addEventListener("click", async ()=>{
 			let body = {
 				date       : UI.UnixDateToTicks(new Date().getTime()),
-				status     : statusCheckbox.checkbox.checked ? "short" : "long",
+				status     : statusToggle.checkbox.checked ? "short" : "long",
 				template   : templateInput.value,
 				banner     : bannerInput.value,
 				firstname  : firstNameInput.value,

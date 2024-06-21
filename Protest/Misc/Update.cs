@@ -54,7 +54,7 @@ internal static class Update {
         string boundary = request.ContentType.Split('=')[1]; //boundary value
         Stream body = request.InputStream;
         Encoding encoding = request.ContentEncoding;
-        StreamReader reader = new StreamReader(body, encoding);
+        using StreamReader reader = new StreamReader(body, encoding);
 
         string formData = reader.ReadToEnd();
 
@@ -221,7 +221,7 @@ internal static class Update {
         string boundary = request.ContentType.Split('=')[1]; //boundary value
         Stream body = request.InputStream;
         Encoding encoding = request.ContentEncoding;
-        StreamReader reader = new StreamReader(body, encoding);
+        using StreamReader reader = new StreamReader(body, encoding);
 
         string formData = reader.ReadToEnd();
 
@@ -319,7 +319,7 @@ internal static class Update {
         string boundary = request.ContentType.Split('=')[1]; //boundary value
         Stream body = request.InputStream;
         Encoding encoding = request.ContentEncoding;
-        StreamReader reader = new StreamReader(body, encoding);
+        using StreamReader reader = new StreamReader(body, encoding);
 
         string formData = reader.ReadToEnd();
 
@@ -411,7 +411,7 @@ internal static class Update {
         string boundary = request.ContentType.Split('=')[1]; //boundary value
         Stream body = request.InputStream;
         Encoding encoding = request.ContentEncoding;
-        StreamReader reader = new StreamReader(body, encoding);
+        using StreamReader reader = new StreamReader(body, encoding);
 
         string formData = reader.ReadToEnd();
 

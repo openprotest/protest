@@ -296,9 +296,8 @@ public static class PasswordStrength {
     }
 
     public static byte[] GandalfThreadWrapper(HttpListenerContext ctx, string origin) {
-        string payload;
-        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
-            payload = reader.ReadToEnd();
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
 
         string[] split = payload.Split((char)127);
         if (split.Length < 4)

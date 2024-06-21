@@ -497,8 +497,8 @@ class AccessControl extends Tabs {
 
 			for (let i=0; i<authorization.length; i++) {
 				let split = authorization[i].split(":");
-
 				let permission = this.permissionsList.find(o=>o.name.toLowerCase() === split[0]);
+
 				if (split[1] === "read") {
 					permission.read.checked = true;
 				}

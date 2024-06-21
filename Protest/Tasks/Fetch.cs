@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Data;
 using System.DirectoryServices;
 using System.Net;
@@ -47,14 +48,15 @@ internal static class Fetch {
         parameters.TryGetValue("target", out string target);
         parameters.TryGetValue("wmi", out string wmi);
         parameters.TryGetValue("kerberos", out string kerberos);
-        parameters.TryGetValue("snmp", out string snmp);
+        parameters.TryGetValue("snmp2", out string snmp2);
+        parameters.TryGetValue("snmp3", out string snmp3);
         parameters.TryGetValue("portscan", out string portScan);
 
         if (target is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        ConcurrentDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp, portScan, asynchronous, CancellationToken.None);
+        ConcurrentDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp2=="true", null, snmp3=="true", null, portScan, asynchronous, CancellationToken.None);
 
         if (data is null || data.IsEmpty) {
             return "{\"error\":\"Failed to fetch data.\"}"u8.ToArray();
@@ -62,7 +64,7 @@ internal static class Fetch {
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
-    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, bool snmp2, string[] snmp2Profiles, bool snmp3, string[] snmp3Profiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         PingReply reply = null;
         try {
             using Ping ping = new Ping();
@@ -74,13 +76,13 @@ internal static class Fetch {
         catch { }
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, argSnmp, argPortScan, asynchronous, cancellationToken);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, snmp2, snmp2Profiles, snmp3, snmp3Profiles, argPortScan, asynchronous, cancellationToken);
             return data;
         }
 
         return null;
     }
-    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, string argSnmp, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, bool snmp2, string[] snmp2Profiles, bool snmp3, string[] snmp3Profiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
@@ -360,7 +362,7 @@ internal static class Fetch {
             return null;
         }
 
-        if (argSnmp is not null) {
+        if (snmp2) {
             if (data.TryGetValue("type", out string[] type)) {
                 switch (type[0]) {
                 case "fax":
@@ -374,7 +376,7 @@ internal static class Fetch {
                         "public",
                         new string[] { Protocols.Snmp.Oid.PRINTER_MODEL },
                         Protocols.Snmp.Polling.SnmpOperation.Get
-                        );
+                    );
 
                     //TODO:
                     break;
@@ -388,6 +390,10 @@ internal static class Fetch {
             }
 
             //TODO: generic OID
+        }
+
+        if (snmp3) {
+            //TODO:
         }
 
         if (cancellationToken.IsCancellationRequested) {
@@ -430,7 +436,7 @@ internal static class Fetch {
         return data;
     }
 
-    public static byte[] DevicesTask(Dictionary<string, string> parameters, string origin) {
+    public static byte[] DevicesTask(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -438,22 +444,86 @@ internal static class Fetch {
         parameters.TryGetValue("range", out string range);
         parameters.TryGetValue("domain", out string domain);
 
-        parameters.TryGetValue("dns", out string dns);
-        parameters.TryGetValue("wmi", out string wmi);
-        parameters.TryGetValue("kerberos", out string kerberos);
-        parameters.TryGetValue("snmp", out string snmp);
-        parameters.TryGetValue("portscan", out string portscan);
-        parameters.TryGetValue("retries", out string retries);
-        parameters.TryGetValue("interval", out string interval);
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
+        string[] payloadLines = payload.Split("\n");
+
+        string dns = null;
+        string wmi = null;
+        string kerberos = null;
+        string portscan = null;
+        string retriesStr = null;
+        string intervalStr = null;
+        string snmp2 = null;
+        string snmp3 = null;
+        string[] snmp2Profiles = null;
+        string[] snmp3Profiles = null;
+
+        for (int i = 0; i < payloadLines.Length; i++) {
+            if (payloadLines[i].StartsWith("dns=")) {
+                dns = payloadLines[i].Substring(4).Trim();
+            }
+            else if (payloadLines[i].StartsWith("wmi=")) {
+                wmi = payloadLines[i].Substring(4).Trim();
+            }
+            else if (payloadLines[i].StartsWith("kerberos=")) {
+                kerberos = payloadLines[i].Substring(9).Trim();
+            }
+            else if (payloadLines[i].StartsWith("portscan=")) {
+                portscan = payloadLines[i].Substring(9).Trim();
+            }
+            else if (payloadLines[i].StartsWith("retries=")) {
+                retriesStr = payloadLines[i].Substring(8).Trim();
+            }
+            else if (payloadLines[i].StartsWith("interval=")) {
+                intervalStr = payloadLines[i].Substring(9).Trim();
+            }
+            else if (payloadLines[i].StartsWith("snmp2=")) {
+                snmp2 = payloadLines[i].Substring(6).Trim();
+            }
+            else if (payloadLines[i].StartsWith("snmp3=")) {
+                snmp3 = payloadLines[i].Substring(6).Trim();
+            }
+            else if (payloadLines[i].StartsWith("snmp2profiles=")) {
+                snmp2Profiles = payloadLines[i].Substring(14).Trim().Split(',');
+            }
+            else if (payloadLines[i].StartsWith("snmp3profiles=")) {
+                snmp3Profiles = payloadLines[i].Substring(14).Trim().Split(',');
+            }
+        }
+
+        dns           ??= "false";
+        wmi           ??= "false";
+        kerberos      ??= "false";
+        snmp2         ??= "false";
+        snmp3         ??= "false";
+        portscan      ??= "false";
+        retriesStr    ??= "0";
+        intervalStr   ??= "-1";
+        snmp2Profiles ??= Array.Empty<string>();
+        snmp3Profiles ??= Array.Empty <string>();
+
+        if (!int.TryParse(retriesStr, out int retries)) { retries = 0; }
+
+        float interval = intervalStr switch {
+            "0" => .5f,
+            "1" => 1,
+            "2" => 2,
+            "3" => 4,
+            "4" => 6,
+            "5" => 8,
+            "6" => 12,
+            "7" => 24,
+            "8" => 48,
+            _ => 0
+        };
 
         string[] hosts;
 
-        if (range is not null) {
+        if (String.IsNullOrEmpty(range)) {
             string[] split = range.Split('-');
-            if (split.Length != 2)
-                return Data.CODE_INVALID_ARGUMENT.Array;
-            if (split[0] is null || split[1] is null)
-                return Data.CODE_INVALID_ARGUMENT.Array;
+            if (split.Length != 2) return Data.CODE_INVALID_ARGUMENT.Array;
+            if (split[0] is null || split[1] is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
             byte[] arrFrom = IPAddress.Parse(split[0]).GetAddressBytes();
             byte[] arrTo = IPAddress.Parse(split[1]).GetAddressBytes();
@@ -462,8 +532,7 @@ internal static class Fetch {
 
             uint intFrom = BitConverter.ToUInt32(arrFrom, 0);
             uint intTo = BitConverter.ToUInt32(arrTo, 0);
-            if (intFrom > intTo)
-                return Data.CODE_INVALID_ARGUMENT.Array;
+            if (intFrom > intTo) return Data.CODE_INVALID_ARGUMENT.Array;
 
             hosts = new string[intTo - intFrom + 1];
 
@@ -473,7 +542,7 @@ internal static class Fetch {
                 hosts[i - intFrom] = string.Join(".", bytes);
             }
         }
-        else if (domain is not null) {
+        else if (String.IsNullOrEmpty(domain)) {
             hosts = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllWorkstations(domain) : Array.Empty<string>();
             if (hosts is null) return Data.CODE_FAILED.Array;
         }
@@ -502,26 +571,17 @@ internal static class Fetch {
             dns == "true",
             wmi == "true",
             kerberos == "true",
-            snmp,
+            snmp2 == "true",
+            snmp2Profiles,
+            snmp3 == "true",
+            snmp3Profiles,
             portscan,
-            int.Parse(retries),
-
-            float.Parse(interval) switch {
-                0 => .5f,
-                1 => 1,
-                2 => 2,
-                3 => 4,
-                4 => 6,
-                5 => 8,
-                6 => 12,
-                7 => 24,
-                8 => 48,
-                _ => 0
-            },
-
-            origin);
+            retries,
+            interval,
+            origin
+        );
     }
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, string snmp, string portscan, int retries, float interval, string origin) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, bool snmp2, string[] snmp2Profiles, bool snmp3, string[] snmp3Profiles, string portscan, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -544,7 +604,7 @@ internal static class Fetch {
 
                     List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>();
                     for (int i = 0; i < size; i++) {
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmp, portscan, false, task.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmp2, snmp2Profiles, snmp3, snmp3Profiles, portscan, false, task.cancellationToken));
                     }
 
                     ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
@@ -646,6 +706,7 @@ internal static class Fetch {
                 if (username.value is null) continue;
                 users.Add(username.value);
             }
+
             return UsersTask(users.ToArray(), origin);
         }
         else if (parameters.TryGetValue("domain", out string domain)) {
@@ -654,8 +715,8 @@ internal static class Fetch {
             }
 
             string[] users = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllUsers(domain) : Array.Empty<string>();
-            if (users is null)
-                return Data.CODE_FAILED.Array;
+            if (users is null) return Data.CODE_FAILED.Array;
+
             return UsersTask(users, origin);
         }
 
@@ -782,7 +843,7 @@ internal static class Fetch {
             "2" => Database.SaveMethod.overwrite,
             "3" => Database.SaveMethod.append,
             "4" => Database.SaveMethod.merge,
-            _ => Database.SaveMethod.createnew
+            _   => Database.SaveMethod.createnew
         };
 
         Database database;
@@ -811,10 +872,8 @@ internal static class Fetch {
             string[] key = attribute.value.Split(';').Select(o => o.Trim().ToLower()).ToArray();
 
             for (int i = 0; i < key.Length; i++) {
-                if (key[i].Length == 0)
-                    continue;
-                if (values.ContainsKey(key[i]))
-                    continue;
+                if (key[i].Length == 0) continue;
+                if (values.ContainsKey(key[i])) continue;
                 values.Add(key[i], entry.Value.filename);
             }
         }
@@ -851,7 +910,6 @@ internal static class Fetch {
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Users fetched data approved");
         }
-
 
         result = null;
         task = null;

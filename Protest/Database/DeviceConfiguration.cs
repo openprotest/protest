@@ -45,7 +45,7 @@ internal static partial class DeviceConfiguration {
                 Directory.CreateDirectory(Data.DIR_CONFIG);
             }
 
-            StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+            using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
             string payload = reader.ReadToEnd();
 
             byte[] plain = Encoding.UTF8.GetBytes(FormatRouterOs(payload));

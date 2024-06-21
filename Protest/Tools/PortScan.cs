@@ -308,7 +308,7 @@ internal static class PortScan {
 
             Thread.Sleep(50);
 
-            StreamReader output = p.StandardOutput;
+            using StreamReader output = p.StandardOutput;
             List<int> ports = new List<int>();
 
             string line;

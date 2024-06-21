@@ -6,9 +6,8 @@ namespace Protest.Tools;
 
 internal static class MacLookup {
     public static byte[] Lookup(HttpListenerContext ctx) {
-        string payload;
-        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
-            payload = reader.ReadToEnd();
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
 
         if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
         return Lookup(payload);

@@ -90,7 +90,7 @@ internal static class Documentation {
     }
 
     public static byte[] Create(HttpListenerContext ctx, string origin) {
-        StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string[] payload = reader.ReadToEnd().Split((char)127);
 
         if (payload.Length < 3)

@@ -50,7 +50,7 @@ public sealed class Listener {
         { "/fetch/status",        (ctx, parameters, username) => Tasks.Fetch.Status() },
         { "/fetch/singledevice",  (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true) },
         { "/fetch/singleuser",    (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters) },
-        { "/fetch/devices",       (ctx, parameters, username) => Tasks.Fetch.DevicesTask(parameters, username) },
+        { "/fetch/devices",       (ctx, parameters, username) => Tasks.Fetch.DevicesTask(ctx, parameters, username) },
         { "/fetch/users",         (ctx, parameters, username) => Tasks.Fetch.UsersTask(parameters, username) },
         { "/fetch/approve",       (ctx, parameters, username) => Tasks.Fetch.ApproveLastTask(parameters, username) },
         { "/fetch/abort",         (ctx, parameters, username) => Tasks.Fetch.CancelTask(username) },

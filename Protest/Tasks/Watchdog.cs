@@ -453,7 +453,7 @@ internal static class Watchdog {
     }
 
     public static byte[] Create(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
-        StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string watcherString = reader.ReadToEnd();
 
         if (parameters is null || !parameters.TryGetValue("file", out string file) || file is null) {
@@ -537,10 +537,8 @@ internal static class Watchdog {
     }
 
     public static byte[] SaveNotifications(HttpListenerContext ctx, string origin) {
-        string payload;
-        using (StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding)) {
-            payload = reader.ReadToEnd();
-        }
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
 
         if (string.IsNullOrEmpty(payload)) {
             return Data.CODE_INVALID_ARGUMENT.Array;

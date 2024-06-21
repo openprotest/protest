@@ -25,7 +25,7 @@ internal static class Configuration {
 
         List<string> httpPrefixes = new List<string>();
 
-        StreamReader fileReader = new StreamReader(Data.FILE_CONFIG);
+        using StreamReader fileReader = new StreamReader(Data.FILE_CONFIG);
         while (!fileReader.EndOfStream) {
             ReadOnlySpan<char> line = fileReader.ReadLine().AsSpan().Trim();
             if (line.StartsWith("#")) continue;
