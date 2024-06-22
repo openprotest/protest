@@ -137,9 +137,25 @@ class View extends Window {
 		newAttribute.appendChild(infoBox);
 
 		if (date && origin) {
-			let modDate = new Date(UI.TicksToUnixDate(date));
+			const nowDate = new Date();
+			const modDate = new Date(UI.TicksToUnixDate(date));
+
+			let dateString, timeString;
+			if (nowDate - modDate < 300000) {
+				dateString = "Just now";
+				timeString = null;
+			}
+			else if (nowDate.getUTCFullYear() === modDate.getUTCFullYear() && nowDate.getUTCMonth() === modDate.getUTCMonth() && nowDate.getUTCDate() === modDate.getUTCDate()) {
+				dateString = "Today";
+				timeString = modDate.toLocaleTimeString(UI.regionalFormat, {hour:"2-digit", minute:"2-digit"});
+			}
+			else {
+				dateString = modDate.toLocaleDateString(UI.regionalFormat, {});
+				timeString = modDate.toLocaleTimeString(UI.regionalFormat, {hour:"2-digit", minute:"2-digit"});
+			}
+
 			const dateBox = document.createElement("div");
-			dateBox.textContent = `${modDate.toLocaleDateString(UI.regionalFormat, {})}`;
+			dateBox.textContent = `${dateString}${timeString ? ", " + timeString : ""}`;
 			infoBox.appendChild(dateBox);
 
 			const originBox = document.createElement("div");
@@ -845,13 +861,9 @@ class View extends Window {
 			}
 		};
 
-		saveButton.onclick = ()=> {
-			ExitEdit();
-		};
+		saveButton.onclick = ()=> ExitEdit();
 
-		revertButton.onclick = ()=> {
-			Revert(true);
-		};
+		revertButton.onclick = ()=> Revert(true);
 
 		cancelButton.onclick = ()=> {
 			if (isNew) {

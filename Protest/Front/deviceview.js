@@ -1490,6 +1490,7 @@ class DeviceView extends View {
 		}
 
 		const saveButton = super.Edit(isNew);
+		
 		saveButton.addEventListener("click", async ()=> {
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
@@ -1506,6 +1507,20 @@ class DeviceView extends View {
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const origin = KEEP.username;
+				const date = UI.UnixDateToTicks(new Date().getTime());
+
+				for (let key in obj) {
+					if (!isNew && key in this.link && this.link[key].v === obj[key].v) {
+						obj[key].o = this.link[key].o;
+						obj[key].d = this.link[key].d;
+					}
+					else {
+						obj[key].o = origin;
+						obj[key].d = date;
+					}
+				}
 
 				const json = await response.json();
 				if (json.error) throw(json.error);
@@ -2753,7 +2768,6 @@ class DeviceView extends View {
 								element.childNodes[1].firstChild.style.backgroundImage = "url(mono/checked.svg)";
 								element.childNodes[1].firstChild.style.paddingLeft = "32px";
 							}
-
 						}
 						else {
 							if (element.childNodes[1].firstChild.value.length > 0) {

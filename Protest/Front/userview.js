@@ -207,13 +207,14 @@ class UserView extends View {
 		}
 
 		const saveButton = super.Edit(isNew);
+
 		saveButton.addEventListener("click", async ()=> {
 			let obj = {};
-			for (let i = 0; i < this.attributes.childNodes.length; i++) {
+			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
 				let name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
 				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
-				obj[name] = { v: value };
+				obj[name] = {v: value};
 			}
 
 			try {
@@ -223,6 +224,20 @@ class UserView extends View {
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const origin = KEEP.username;
+				const date = UI.UnixDateToTicks(new Date().getTime());
+
+				for (let key in obj) {
+					if (!isNew && key in this.link && this.link[key].v === obj[key].v) {
+						obj[key].o = this.link[key].o;
+						obj[key].d = this.link[key].d;
+					}
+					else {
+						obj[key].o = origin;
+						obj[key].d = date;
+					}
+				}
 
 				const json = await response.json();
 				if (json.error) throw (json.error);
