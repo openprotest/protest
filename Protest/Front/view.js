@@ -351,7 +351,7 @@ class View extends Window {
 					const newAttr = this.CreateAttribute(key, hash[key].v, hash[key].o, hash[key].d);
 					if (key.startsWith(".")) {
 						if (!editMode) newAttr.style.display = "none";
-						newAttr.style.opacity = ".66";
+						newAttr.style.color = "#404040";
 					}
 					this.attributes.appendChild(newAttr);
 				}

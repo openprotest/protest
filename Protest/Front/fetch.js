@@ -274,123 +274,11 @@ class Fetch extends Tabs {
 		};
 
 		this.snmp2Button.onclick = async ()=> {
-			const dialog = this.DialogBox("360px");
-			if (dialog === null) return;
-	
-			const {okButton, innerBox} = dialog;
-
-			innerBox.parentElement.style.maxWidth = "480px";
-
-			const title = document.createElement("div");
-			title.textContent = "SNMP V1/2 profiles";
-			title.style.textAlign = "center";
-			title.style.lineHeight = "32px";
-			title.style.fontWeight = "800";
-			innerBox.appendChild(title);
-
-			const profilesList = document.createElement("div");
-			profilesList.style.position = "absolute";
-			profilesList.style.inset = "32px 20px 8px 20px";
-			profilesList.style.overflow = "auto";
-			profilesList.style.border = "2px solid var(--clr-control)";
-			profilesList.style.borderRadius = "4px";
-			innerBox.appendChild(profilesList);
-
-			const profiles = await this.GetSnmpProfiles();
-			const attributeElements = [];
-
-			for (let i=0; i<profiles.length; i++) {
-				if (profiles[i].version === 3) continue;
-
-				const element = document.createElement("div");
-				element.className = "list-element";
-				profilesList.appendChild(element);
-
-				let checked;
-				if (this.snmp2Profiles) {
-					let found = this.snmp2Profiles.find(o=> o.profile.guid === profiles[i].guid);
-					checked = found ? found.checkbox.checked : false;
-				}
-				else {
-					checked = true;
-				}
-
-				const toggle = this.CreateToggle(profiles[i].name, checked, element);
-				toggle.label.style.width = "calc(100% - 48px)";
-				toggle.label.style.left = "8px";
-				toggle.label.style.top = "5px";
-
-				attributeElements.push({
-					element: element,
-					profile: profiles[i],
-					checkbox: toggle.checkbox
-				});
-			}
-
-			okButton.onclick = ()=> {
-				this.snmp2Profiles = attributeElements;
-				dialog.Close();
-			};
+			this.ShowSnmpDialog(2);
 		};
 
 		this.snmp3Button.onclick = async ()=> {
-			const dialog = this.DialogBox("360px");
-			if (dialog === null) return;
-	
-			const {okButton, innerBox} = dialog;
-
-			innerBox.parentElement.style.maxWidth = "480px";
-
-			const title = document.createElement("div");
-			title.textContent = "SNMP V3 profiles";
-			title.style.textAlign = "center";
-			title.style.lineHeight = "32px";
-			title.style.fontWeight = "800";
-			innerBox.appendChild(title);
-
-			const profilesList = document.createElement("div");
-			profilesList.style.position = "absolute";
-			profilesList.style.inset = "32px 20px 8px 20px";
-			profilesList.style.overflow = "auto";
-			profilesList.style.border = "2px solid var(--clr-control)";
-			profilesList.style.borderRadius = "4px";
-			innerBox.appendChild(profilesList);
-
-			const profiles = await this.GetSnmpProfiles();
-			const attributeElements = [];
-
-			for (let i=0; i<profiles.length; i++) {
-				if (profiles[i].version !== 3) continue;
-
-				const element = document.createElement("div");
-				element.className = "list-element";
-				profilesList.appendChild(element);
-
-				let checked;
-				if (this.snmp3Profiles) {
-					let found = this.snmp3Profiles.find(o=> o.profile.guid === profiles[i].guid);
-					checked = found ? found.checkbox.checked : false;
-				}
-				else {
-					checked = true;
-				}
-
-				const toggle = this.CreateToggle(profiles[i].name, checked, element);
-				toggle.label.style.width = "calc(100% - 48px)";
-				toggle.label.style.left = "8px";
-				toggle.label.style.top = "5px";
-
-				attributeElements.push({
-					element: element,
-					profile: profiles[i],
-					checkbox: toggle.checkbox
-				});
-			}
-
-			okButton.onclick = ()=> {
-				this.snmp3Profiles = attributeElements;
-				dialog.Close();
-			};
+			this.ShowSnmpDialog(3);
 		};
 
 		this.portScanCheckbox.onchange = ()=> {
@@ -623,6 +511,75 @@ class Fetch extends Tabs {
 		catch (ex) {
 			return [];
 		}
+	}
+
+	async ShowSnmpDialog(version) {
+		const dialog = this.DialogBox("360px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		innerBox.parentElement.style.maxWidth = "480px";
+
+		const title = document.createElement("div");
+		title.textContent = version===3 ? "SNMP V3 profiles": "SNMP V1/2 profiles";
+		title.style.textAlign = "center";
+		title.style.lineHeight = "32px";
+		title.style.fontWeight = "800";
+		innerBox.appendChild(title);
+
+		const profilesList = document.createElement("div");
+		profilesList.className = "no-results";
+		profilesList.style.position = "absolute";
+		profilesList.style.inset = "32px 20px 8px 20px";
+		profilesList.style.overflow = "auto";
+		profilesList.style.border = "2px solid var(--clr-control)";
+		profilesList.style.borderRadius = "4px";
+		innerBox.appendChild(profilesList);
+
+		const attributeElements = [];
+		const profiles = await this.GetSnmpProfiles();
+
+		for (let i=0; i<profiles.length; i++) {
+			if (profiles[i].version != version) continue;
+
+			const element = document.createElement("div");
+			element.className = "list-element";
+			profilesList.appendChild(element);
+
+			let checked;
+			const snmpProfiles = version===3 ? this.snmp3Profiles : this.snmp2Profiles;
+			if (snmpProfiles) {
+				let found = snmpProfiles.find(o=> o.profile.guid === profiles[i].guid);
+				checked = found ? found.checkbox.checked : false;
+			}
+			else {
+				checked = true;
+			}
+
+			const toggle = this.CreateToggle(profiles[i].name, checked, element);
+			toggle.label.style.width = "calc(100% - 48px)";
+			toggle.label.style.left = "8px";
+			toggle.label.style.top = "5px";
+
+			attributeElements.push({
+				element: element,
+				profile: profiles[i],
+				checkbox: toggle.checkbox
+			});
+		}
+
+		okButton.onclick = ()=> {
+			if (version===3) {
+				this.snmp3Profiles = attributeElements;
+			}
+			else {
+				this.snmp2Profiles = attributeElements;
+			}
+			dialog.Close();
+		};
+
+		profilesList.firstChild?.childNodes[1].focus();
 	}
 
 	ShowDevices() {

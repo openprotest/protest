@@ -117,27 +117,27 @@ public sealed class Listener {
         { "/rbac/sessions",            (ctx, parameters, username) => Auth.ListSessions() },
         { "/rbac/kickuser",            (ctx, parameters, username) => Auth.KickUser(parameters, username) },
 
-        {"/automation/list",          (ctx, parameters, username) => Tasks.Automation.ListTasks() },
+        { "/automation/list",          (ctx, parameters, username) => Tasks.Automation.ListTasks() },
 
-        {"/config/checkupdate",       (ctx, parameters, username) => Update.CheckLatestRelease() },
+        { "/config/checkupdate",       (ctx, parameters, username) => Update.CheckLatestRelease() },
 
-        {"/config/backup/list",       (ctx, parameters, username) => Backup.List() },
-        {"/config/backup/create",     (ctx, parameters, username) => Backup.Create(parameters) },
-        {"/config/backup/delete",     (ctx, parameters, username) => Backup.Delete(parameters) },
+        { "/config/backup/list",       (ctx, parameters, username) => Backup.List() },
+        { "/config/backup/create",     (ctx, parameters, username) => Backup.Create(parameters) },
+        { "/config/backup/delete",     (ctx, parameters, username) => Backup.Delete(parameters) },
 
-        {"/config/zones/list",        (ctx, parameters, username) => Tools.Zones.ListZones() },
-        {"/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx) },
+        { "/config/zones/list",        (ctx, parameters, username) => Tools.Zones.ListZones() },
+        { "/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx) },
 
-        {"/config/smtpprofiles/list", (ctx, parameters, username) => Tools.SmtpProfiles.List() },
-        {"/config/smtpprofiles/save", (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx) },
-        {"/config/smtpprofiles/test", (ctx, parameters, username) => Tools.SmtpProfiles.SendTest(parameters) },
-        {"/config/snmpprofiles/list", (ctx, parameters, username) => Tools.SnmpProfiles.List() },
-        {"/config/snmpprofiles/save", (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx) },
+        { "/config/smtpprofiles/list", (ctx, parameters, username) => Tools.SmtpProfiles.List() },
+        { "/config/smtpprofiles/save", (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx) },
+        { "/config/smtpprofiles/test", (ctx, parameters, username) => Tools.SmtpProfiles.SendTest(parameters) },
+        { "/config/snmpprofiles/list", (ctx, parameters, username) => Tools.SnmpProfiles.List() },
+        { "/config/snmpprofiles/save", (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx) },
 
-        {"/config/upload/iplocation", (ctx, parameters, username) => Update.LocationFormDataHandler(ctx) },
-        {"/config/upload/proxy",      (ctx, parameters, username) => Update.ProxyFormDataHandler(ctx) },
-        {"/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
-        {"/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
+        { "/config/upload/iplocation", (ctx, parameters, username) => Update.LocationFormDataHandler(ctx) },
+        { "/config/upload/proxy",      (ctx, parameters, username) => Update.ProxyFormDataHandler(ctx) },
+        { "/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
+        { "/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
 
         { "/log/list",                (ctx, parameters, username) => Logger.List(parameters) },
     };

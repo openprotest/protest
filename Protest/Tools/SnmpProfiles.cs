@@ -15,6 +15,7 @@ internal static class SnmpProfiles {
     private static readonly string DEFAULT_PROFILE = """
     [{
         "name"             : "Public",
+        "priority"         : 100,
         "version"          : 2,
         "community"        : "public",
         "username"         : "",
@@ -22,7 +23,7 @@ internal static class SnmpProfiles {
         "authPassword"     : "",
         "privacyAlgorithm" : 3,
         "privacyPassword"  : "",
-        "guid"             : "00000000-0000-0000-0000-000000000000"
+        "guid"             : "00000000-0000-0000-0000-000000000001"
     }]
     """;
 
@@ -46,6 +47,7 @@ internal static class SnmpProfiles {
     public record Profile {
         public Guid guid;
         public string name;
+        public int priority = 0;
         public int version = 2;
         public string community = String.Empty;
         public string context = String.Empty;
@@ -190,6 +192,7 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
 
                         switch (propertyName) {
                         case "name"            : profile.name = reader.GetString(); break;
+                        case "priority"        : profile.priority = reader.GetInt32(); break;
                         case "version"         : profile.version = reader.GetInt32(); break;
                         case "community"       : profile.community = reader.GetString(); break;
                         case "context"         : profile.context = reader.GetString(); break;
@@ -213,6 +216,7 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
 
     public override void Write(Utf8JsonWriter writer, SnmpProfiles.Profile[] value, JsonSerializerOptions options) {
         ReadOnlySpan<byte> _name = "name"u8;
+        ReadOnlySpan<byte> _priority = "priority"u8;
         ReadOnlySpan<byte> _version = "version"u8;
         ReadOnlySpan<byte> _community = "community"u8;
         ReadOnlySpan<byte> _context = "context"u8;
@@ -228,6 +232,7 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
         for (int i = 0; i < value.Length; i++) {
             writer.WriteStartObject();
             writer.WriteString(_name, value[i].name);
+            writer.WriteNumber(_priority, value[i].priority);
             writer.WriteNumber(_version, value[i].version);
             writer.WriteString(_community, value[i].community);
             writer.WriteString(_context, value[i].context);

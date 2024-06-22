@@ -282,6 +282,10 @@
 	max-width: initial;
 }
 
+.view-attributes-with-info > div {
+	display: block !important;
+}
+
 .view-attributes-with-info > div > div:nth-child(4) {
 	visibility: visible;
 	opacity: 1;

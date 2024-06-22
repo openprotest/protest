@@ -438,7 +438,7 @@ class Settings extends Tabs {
 		titleBar.style.color = "var(--clr-light)";
 		this.tabsPanel.appendChild(titleBar);
 
-		let labels = ["Name", "Community / Context", "Username"];
+		let labels = ["Name", "Priority", "Community / Context", "Username"];
 		for (let i = 0; i < labels.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.style.display = "inline-block";
@@ -450,6 +450,7 @@ class Settings extends Tabs {
 			newLabel.style.textOverflow = "ellipsis";
 			newLabel.style.boxSizing = "border-box";
 			newLabel.style.paddingLeft = "4px";
+			newLabel.style.paddingLeft = i==0 ? "32px" : "4px";
 			newLabel.style.paddingTop = "1px";
 			newLabel.textContent = labels[i];
 			titleBar.appendChild(newLabel);
@@ -606,7 +607,7 @@ class Settings extends Tabs {
 					labels[j].style.paddingLeft = "4px";
 				}
 
-				element.append(serverLabel, portLabel, usernameLabel);
+				element.append(...labels);
 
 				element.onclick = ()=> {
 					this.profilesTestButton.disabled = false;
@@ -636,6 +637,8 @@ class Settings extends Tabs {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
+			json.sort((a, b)=> a.priority - b.priority);
+
 			this.snmpProfiles = json;
 			this.profilesList.textContent = "";
 
@@ -650,28 +653,42 @@ class Settings extends Tabs {
 				nameLabel.textContent = json[i].name;
 				labels.push(nameLabel);
 
+				const priorityLabel = document.createElement("div");
+				priorityLabel.textContent = json[i].priority;
+				labels.push(priorityLabel);
+
 				const contextLabel = document.createElement("div");
-				contextLabel.textContent = json.version === 3 ? json[i].json[i].context : json[i].community;
+				contextLabel.textContent = json[i].version === 3 ? json[i].context : json[i].community;
 				labels.push(contextLabel);
 
-				const usernameLabel = document.createElement("Sender");
+				const usernameLabel = document.createElement("div");
 				usernameLabel.textContent = json[i].username;
 				labels.push(usernameLabel);
 
-				for (let j = 0; j < labels.length; j++) {
+				for (let j=0; j<labels.length; j++) {
 					labels[j].style.display = "inline-block";
 					labels[j].style.top = "0";
 					labels[j].style.left = `${j*100/labels.length}%`;
-					labels[j].style.width = "33%";
+					labels[j].style.width = "25%";
 					labels[j].style.lineHeight = "32px";
 					labels[j].style.whiteSpace = "nowrap";
 					labels[j].style.overflow = "hidden";
 					labels[j].style.textOverflow = "ellipsis";
 					labels[j].style.boxSizing = "border-box";
-					labels[j].style.paddingLeft = "4px";
+					labels[j].style.paddingLeft = j==0 ? "32px" : "4px";
 				}
 
-				element.append(nameLabel, contextLabel, usernameLabel);
+				const versionLabel = document.createElement("div");
+				versionLabel.style.color = "var(--clr-light)";
+				versionLabel.style.backgroundColor = "var(--clr-dark)";
+				versionLabel.style.fontSize = "smaller";
+				versionLabel.style.margin = "6px 4px";
+				versionLabel.style.padding = "2px 4px";
+				versionLabel.style.borderRadius = "2px";
+				versionLabel.textContent = json[i].version === 3 ? "v3" : "v2";
+				element.appendChild(versionLabel);
+
+				element.append(...labels);
 
 				element.onclick = ()=> {
 					for (let i=0; i<this.profilesList.childNodes.length; i++) {
@@ -880,7 +897,7 @@ class Settings extends Tabs {
 	}
 
 	async PreviewSnmpProfile(object=null) {
-		const dialog = this.DialogBox("480px");
+		const dialog = this.DialogBox("512px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -890,7 +907,7 @@ class Settings extends Tabs {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 200px 200px 100px auto";
-		innerBox.style.gridTemplateRows = "repeat(3, 38px) 16px repeat(3, 38px) 16px repeat(2, 38px) 16px 38px";
+		innerBox.style.gridTemplateRows = "repeat(4, 38px) 16px repeat(3, 38px) 16px repeat(2, 38px) 16px 38px";
 		innerBox.style.alignItems = "center";
 
 		const nameLabel = document.createElement("div");
@@ -901,11 +918,21 @@ class Settings extends Tabs {
 		nameInput.type = "text";
 		innerBox.append(nameLabel, nameInput);
 
+		const priorityLabel = document.createElement("div");
+		priorityLabel.style.gridArea = "2 / 2";
+		priorityLabel.textContent = "Priority:";
+		const priorityInput = document.createElement("input");
+		priorityInput.style.gridArea = "2 / 3";
+		priorityInput.type = "number";
+		priorityInput.min = "0";
+		priorityInput.max = "9999";
+		innerBox.append(priorityLabel, priorityInput);
+
 		const versionLabel = document.createElement("div");
-		versionLabel.style.gridArea = "2 / 2";
+		versionLabel.style.gridArea = "3 / 2";
 		versionLabel.textContent = "Version:";
 		const versionInput = document.createElement("select");
-		versionInput.style.gridArea = "2 / 3";
+		versionInput.style.gridArea = "3 / 3";
 		innerBox.append(versionLabel, versionInput);
 
 		for (let i=2; i<=3; i++) {
@@ -916,35 +943,35 @@ class Settings extends Tabs {
 		}
 
 		const contextLabel = document.createElement("div");
-		contextLabel.style.gridArea = "3 / 2";
+		contextLabel.style.gridArea = "4 / 2";
 		contextLabel.textContent = "Context name:";
 		const contextInput = document.createElement("input");
-		contextInput.style.gridArea = "3 / 3";
+		contextInput.style.gridArea = "4 / 3";
 		contextInput.type = "text";
 		contextInput.placeholder = "optional";
 		innerBox.append(contextLabel, contextInput);
 
 		const communityLabel = document.createElement("div");
-		communityLabel.style.gridArea = "3 / 2";
+		communityLabel.style.gridArea = "4 / 2";
 		communityLabel.textContent = "Community:";
 		const communityInput = document.createElement("input");
-		communityInput.style.gridArea = "3 / 3";
+		communityInput.style.gridArea = "4 / 3";
 		communityInput.type = "text";
 		innerBox.append(communityLabel, communityInput);
 
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "5 / 2";
+		usernameLabel.style.gridArea = "6 / 2";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "5 / 3";
+		usernameInput.style.gridArea = "6 / 3";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 
 		const authAlgorithmLabel = document.createElement("div");
-		authAlgorithmLabel.style.gridArea = "6 / 2";
+		authAlgorithmLabel.style.gridArea = "7 / 2";
 		authAlgorithmLabel.textContent = "Authentication algorithm:";
 		const authAlgorithmInput = document.createElement("select");
-		authAlgorithmInput.style.gridArea = "6 / 3";
+		authAlgorithmInput.style.gridArea = "7 / 3";
 		innerBox.append(authAlgorithmLabel, authAlgorithmInput);
 
 		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
@@ -956,19 +983,19 @@ class Settings extends Tabs {
 		}
 
 		const authPasswordLabel = document.createElement("div");
-		authPasswordLabel.style.gridArea = "7 / 2";
+		authPasswordLabel.style.gridArea = "8 / 2";
 		authPasswordLabel.textContent = "Authentication password:";
 		const authPasswordInput = document.createElement("input");
-		authPasswordInput.style.gridArea = "7 / 3";
+		authPasswordInput.style.gridArea = "8 / 3";
 		authPasswordInput.type = "password";
 		authPasswordInput.placeholder = "unchanged";
 		innerBox.append(authPasswordLabel, authPasswordInput);
 
 		const privacyAlgorithmLabel = document.createElement("div");
-		privacyAlgorithmLabel.style.gridArea = "9 / 2";
+		privacyAlgorithmLabel.style.gridArea = "10 / 2";
 		privacyAlgorithmLabel.textContent = "Privacy algorithm:";
 		const privacyAlgorithmInput = document.createElement("select");
-		privacyAlgorithmInput.style.gridArea = "9 / 3";
+		privacyAlgorithmInput.style.gridArea = "10 / 3";
 		innerBox.append(privacyAlgorithmLabel, privacyAlgorithmInput);
 
 		const privacyAlgorithms = ["DES", "AES-128", "AES-192", "AES-256"];
@@ -980,17 +1007,17 @@ class Settings extends Tabs {
 		}
 
 		const privacyPasswordLabel = document.createElement("div");
-		privacyPasswordLabel.style.gridArea = "10 / 2";
+		privacyPasswordLabel.style.gridArea = "11 / 2";
 		privacyPasswordLabel.textContent = "Privacy password:";
 		const privacyPasswordInput = document.createElement("input");
-		privacyPasswordInput.style.gridArea = "10 / 3";
+		privacyPasswordInput.style.gridArea = "11 / 3";
 		privacyPasswordInput.type = "password";
 		privacyPasswordInput.placeholder = "unchanged";
 		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
 
 		const authObsoleteBox = document.createElement("div");
 		authObsoleteBox.textContent = "Obsolete";
-		authObsoleteBox.style.gridArea = "6 / 4";
+		authObsoleteBox.style.gridArea = "7 / 4";
 		authObsoleteBox.style.marginLeft = "4px";
 		authObsoleteBox.style.paddingLeft = "24px";
 		authObsoleteBox.style.borderRadius = "4px";
@@ -1006,7 +1033,7 @@ class Settings extends Tabs {
 
 		const privacyObsoleteBox = document.createElement("div");
 		privacyObsoleteBox.textContent = "Obsolete";
-		privacyObsoleteBox.style.gridArea = "9 / 4";
+		privacyObsoleteBox.style.gridArea = "10 / 4";
 		privacyObsoleteBox.style.marginLeft = "4px";
 		privacyObsoleteBox.style.paddingLeft = "24px";
 		privacyObsoleteBox.style.border = "1px solid var(--clr-dark)";
@@ -1024,18 +1051,19 @@ class Settings extends Tabs {
 
 		if (object && object.guid) {
 			const guidLabel = document.createElement("div");
-			guidLabel.style.gridArea = "12 / 2";
+			guidLabel.style.gridArea = "13 / 2";
 			guidLabel.textContent = "GUID:";
 	
 			const guidValue = document.createElement("div");
 			guidValue.textContent = object.guid;
-			guidValue.style.gridArea = "12 / 3 / 12 / 5";
+			guidValue.style.gridArea = "13 / 3 / 13 / 5";
 			guidValue.style.userSelect = "text";
 			innerBox.append(guidLabel, guidValue);
 		}
 
 		if (object) {
 			nameInput.value = object.name;
+			priorityInput.value = object.priority;
 			versionInput.value = object.version;
 			communityInput.value = object.community;
 			contextInput.value = object.context;
@@ -1046,6 +1074,7 @@ class Settings extends Tabs {
 			privacyPasswordInput.value = "";
 		}
 		else {
+			priorityInput.value = 1;
 			authAlgorithmInput.value = 3;
 			privacyAlgorithmInput.value = 2;
 		}
@@ -1090,6 +1119,7 @@ class Settings extends Tabs {
 
 			const newObject = {
 				name             : nameInput.value,
+				priority         : parseInt(priorityInput.value),
 				version          : parseInt(versionInput.value),
 				community        : communityInput.value,
 				context          : contextInput.value,

@@ -2632,27 +2632,27 @@ class DeviceView extends View {
 		dnsToggle.label.style.gridArea = "1 / 2";
 		dnsToggle.checkbox.disabled = true;
 
-		const wmiToggle = this.CreateToggle("WMI", true, grid);
-		wmiToggle.label.style.gridArea = "2 / 2";
-
 		const snmpToggle = this.CreateToggle("SNMP", false, grid);
-		snmpToggle.label.style.gridArea = "3 / 2";
+		snmpToggle.label.style.gridArea = "2 / 2";
 		snmpToggle.checkbox.disabled = true;
 		
+		const snmpInput = document.createElement("select");
+		snmpInput.style.marginLeft = "0";
+		snmpInput.style.width = "200px";
+		snmpInput.style.gridArea = "2 / 3";
+		snmpInput.disabled = true;
+		grid.appendChild(snmpInput);
+
+		//TODO: implement SNMP
+
+		const wmiToggle = this.CreateToggle("WMI", true, grid);
+		wmiToggle.label.style.gridArea = "3 / 2";
+
 		const kerberosToggle = this.CreateToggle("Kerberos", true, grid);
 		kerberosToggle.label.style.gridArea = "4 / 2";
 
 		const portScanToggle = this.CreateToggle("Port Scan", true, grid);
 		portScanToggle.label.style.gridArea = "5 / 2";
-
-		const snmpInput = document.createElement("select");
-		snmpInput.style.marginLeft = "0";
-		snmpInput.style.width = "200px";
-		snmpInput.style.gridArea = "3 / 3";
-		snmpInput.disabled = true;
-		grid.appendChild(snmpInput);
-
-		//TODO: implement SNMP
 
 		const portScanInput = document.createElement("select");
 		portScanInput.style.marginLeft = "0";
