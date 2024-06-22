@@ -684,7 +684,7 @@ class View extends Window {
 		}
 	}
 
-	Edit(isNew = false) { //overridable
+	Edit(isNew=false) { //overridable
 		if (this.attributes.classList.contains("view-attributes-with-info")) {
 			this.Info();
 		}
@@ -706,19 +706,45 @@ class View extends Window {
 		this.liveC.style.display = "none";
 		this.liveD.style.display = "none";
 
+		const UpdateIndicators = (nameInput, valueInput)=> {
+			let key = nameInput.value.toLowerCase();
+			if (key in this.link) {
+				if (valueInput.value === this.link[key].v) { //same
+					valueInput.style.backgroundImage = "none";
+					valueInput.style.paddingLeft = "8px";
+				}
+				else { //changed
+					valueInput.style.backgroundImage = "url(mono/edit.svg)";
+					valueInput.style.paddingLeft = "32px";
+				}
+			}
+			else { //new
+				valueInput.style.backgroundImage = "url(mono/add.svg)";
+				valueInput.style.paddingLeft = "32px";
+			}
+		}
+		
 		for (let i = 0; i < this.attributes.childNodes.length; i++) {
-			this.attributes.childNodes[i].style.display = "inherit";
+			const attribute = this.attributes.childNodes[i];
+			attribute.style.display = "inherit";
 
-			if (this.attributes.childNodes[i].childNodes.length < 2) {
-				this.attributes.childNodes[i].textContent = "";
-				this.attributes.childNodes[i].style.height = "0px";
-				this.attributes.childNodes[i].style.marginTop = "0px";
+			if (attribute.childNodes.length < 2) {
+				attribute.textContent = "";
+				attribute.style.height = "0px";
+				attribute.style.marginTop = "0px";
 			}
 			else {
-				while (this.attributes.childNodes[i].childNodes[1].childNodes.length > 1) {
-					this.attributes.childNodes[i].childNodes[1].removeChild(this.attributes.childNodes[i].childNodes[1].lastChild);
+				while (attribute.childNodes[1].childNodes.length > 1) {
+					attribute.childNodes[1].removeChild(attribute.childNodes[1].lastChild);
 				}
-				this.attributes.childNodes[i].childNodes[1].firstChild.style.display = "initial";
+				attribute.childNodes[1].firstChild.style.display = "initial";
+			}
+
+			//update indicators on value-change
+			if (!isNew && attribute.childNodes.length > 1) {
+				const nameInput = attribute.firstChild;
+				const valueInput = attribute.childNodes[1].firstChild;
+				nameInput.onchange = valueInput.onchange = ()=> UpdateIndicators(nameInput, valueInput);
 			}
 		}
 
@@ -769,6 +795,12 @@ class View extends Window {
 			this.attributes.appendChild(newAttribute);
 			newAttribute.scrollIntoView({ block: "end" });
 			newAttribute.childNodes[0].focus();
+
+			if (!isNew) {
+				const nameInput = newAttribute.firstChild;
+				const valueInput = newAttribute.childNodes[1].firstChild;
+				nameInput.onchange = valueInput.onchange = ()=> UpdateIndicators(nameInput, valueInput);
+			}
 		};
 
 		const ExitEdit = ()=> {
