@@ -94,6 +94,7 @@
 }
 
 .view-attributes-list > div {
+	height: 33px;
 	min-height: 33px;
 	transition: height .2s;
 
@@ -719,6 +720,11 @@ button.view-live-button:active {
 	0%   { background-position: calc(100% - 12px) center; background-size: 0px 0px; }
 	80%  { background-position: calc(100% - 2px) center; background-size: 20px 20px; }
 	100% { background-position: calc(100% - 4px) center; background-size: 16px 16px; }
+}
+
+@keyframes attribute-in {
+	0%{   opacity:0; transform: scaleY(.8);}
+	100%{ opacity:1; transform: scaleY(1);}
 }
 
 @keyframes password-countdown {

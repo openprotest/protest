@@ -808,6 +808,7 @@ class View extends Window {
 
 		addAttributeButton.onclick = ()=> {
 			const newAttribute = this.CreateAttribute("", "", KEEP.username, new Date(), true);
+			newAttribute.style.animation = "attribute-in .2s 1";
 			this.attributes.appendChild(newAttribute);
 			newAttribute.scrollIntoView({ block: "end" });
 			newAttribute.childNodes[0].focus();
