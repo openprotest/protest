@@ -611,12 +611,12 @@ class List extends Window {
 		innerBox.style.gridTemplateColumns = "auto min(400px, 76%) min(108px, 16%) auto";
 		innerBox.style.gridTemplateRows = "32px auto";
 
-		const filter = document.createElement("input");
-		filter.type = "text";
-		filter.placeholder = "Find";
-		filter.style.gridColumn = "2";
-		filter.style.gridRow = "1";
-		innerBox.appendChild(filter);
+		const filterInput = document.createElement("input");
+		filterInput.type = "text";
+		filterInput.placeholder = "Find";
+		filterInput.style.gridColumn = "2";
+		filterInput.style.gridRow = "1";
+		innerBox.appendChild(filterInput);
 
 		const listbox = document.createElement("div");
 		listbox.className = "check-list";
@@ -686,7 +686,7 @@ class List extends Window {
 		const Refresh = ()=> {
 			let attributes = [];
 			listbox.textContent = "";
-			let keyword = filter.value.toLowerCase();
+			let keyword = filterInput.value.toLowerCase();
 			for (let i = 0; i < this.columnsElements.length; i++) { //selected
 				let attr = this.columnsElements[i].textContent;
 				if (attributes.includes(attr)) continue;
@@ -727,7 +727,7 @@ class List extends Window {
 			this.UpdateViewport(true);
 		};
 
-		filter.onchange = ()=> {
+		filterInput.onchange = ()=> {
 			Refresh();
 		};
 
@@ -765,5 +765,7 @@ class List extends Window {
 		});
 
 		Refresh();
+
+		setTimeout(()=>filterInput.focus(), 200);
 	}
 }

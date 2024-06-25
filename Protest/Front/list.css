@@ -67,16 +67,17 @@
 /*make room for the options button*/
 .list-title:hover > .list-sort-ascend:nth-last-child(2)::before,
 .list-title:hover > .list-sort-descend:nth-last-child(2)::before {
-	left: calc(100% - 36px);
+	left: calc(100% - 40px);
 }
 
 .list-columns-options {
 	position: absolute;
-	right: 2px;
-	top: 2px;
+	right: 0;
+	top: 0;
 	width: 20px;
 	height: 20px;
 	border-radius: 2px;
+	padding: 2px;
 	opacity: 0;
 
 	background-image: url(mono/selecttoogle.svg?light);
