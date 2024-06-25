@@ -101,7 +101,7 @@
 	border-bottom: rgb(128,128,128) 1px solid;
 }
 
-.list-element:hover{
+.list-element:hover {
 	background-color: var(--clr-highlight);
 }
 

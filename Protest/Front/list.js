@@ -753,14 +753,14 @@ class List extends Window {
 		buttonBox.appendChild(okButton);
 		buttonBox.appendChild(cancelButton);
 
-		applyAllButton.addEventListener("click", event=> {
+		applyAllButton.addEventListener("click", ()=> {
 			Apply();
 
 			cancelButton.onclick();
 			localStorage.setItem(`${this.constructor.name.toLowerCase()}_columns`, JSON.stringify(this.columnsElements.map(o=> o.textContent)));
 		});
 
-		okButton.addEventListener("click", event=> {
+		okButton.addEventListener("click", ()=> {
 			Apply();
 		});
 
