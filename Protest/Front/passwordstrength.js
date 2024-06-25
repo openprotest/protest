@@ -247,8 +247,8 @@ class PasswordStrength extends List {
 		}
 	}
 
-	InflateElement(element, entry) { //overrides
-		super.InflateElement(element, entry);
+	InflateElement(element, entry, c_type) { //overrides
+		//super.InflateElement(element, entry, null);
 
 		const icon = document.createElement("div");
 		icon.className = "lst-strength-ico";
@@ -299,8 +299,14 @@ class PasswordStrength extends List {
 		ttcLabel.style.width = columns[3].style.left === "0px" ? `calc(${columns[3].style.left} - 36px)` : columns[3].style.width;
 		element.appendChild(ttcLabel);
 
+		element.onclick = ()=> {
+			if (this.selected) this.selected.style.backgroundColor = "";
+			this.args.select = element.getAttribute("id");
+			this.selected = element;
+			element.style.backgroundColor = "var(--clr-select)";
+		};
 
-		element.ondblclick = event=> {
+		element.ondblclick = ()=> {
 			if (entry.type === "device") {
 				LOADER.OpenDeviceByFile(entry.file);
 			}
