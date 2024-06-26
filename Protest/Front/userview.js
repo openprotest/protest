@@ -12,7 +12,7 @@ class UserView extends View {
 		"e-mail", "secondary e-mail", "telephone number", "office number", "mobile number", "internal extension", "mobile extension", "fax",
 
 		["mono/directory.svg", "Domain information"],
-		"guid", "distinguished name",
+		"object guid", "distinguished name",
 
 		["mono/sim.svg", "sim information"],
 		"sim", "puk", "voicemail"

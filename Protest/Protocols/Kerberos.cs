@@ -308,7 +308,7 @@ internal static class Kerberos {
 
         ContentBuilderAddValue(result, "facsimiletelephonenumber", "fax", data, null);
 
-        data.Add("guid", new Guid((byte[])result.Properties["objectGuid"][0]).ToString());
+        data.Add("object guid", new Guid((byte[])result.Properties["objectGuid"][0]).ToString());
 
         return data;
     }

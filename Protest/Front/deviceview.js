@@ -32,7 +32,7 @@ class DeviceView extends View {
 		"owner", "owner name", "location",
 
 		["mono/directory.svg", "Domain information"],
-		"guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
+		"object guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
 
 		["mono/credential.svg", "credentials"],
 		"domain", "username", "password", "ssh username", "ssh password", "anydesk id", "anydesk password"
@@ -2658,8 +2658,6 @@ class DeviceView extends View {
 		snmpInput.disabled = true;
 		grid.appendChild(snmpInput);
 
-		//TODO: implement SNMP
-
 		const wmiToggle = this.CreateToggle("WMI", true, grid);
 		wmiToggle.label.style.gridArea = "3 / 2";
 
@@ -2689,6 +2687,31 @@ class DeviceView extends View {
 		extendedOption.value = "extended";
 		extendedOption.text = "Extended (1-8191)";
 		portScanInput.appendChild(extendedOption);
+
+		setTimeout(async ()=>{
+			const snmpProfiles = await this.GetSnmpProfiles();
+			if (snmpProfiles === null || snmpProfiles.length === 0) return;
+			
+			snmpToggle.checkbox.disabled = false;
+	
+			for (let i = 0; i < snmpProfiles.length; i++) {
+				const option = document.createElement("option");
+				option.value = snmpProfiles[i].guid;
+				option.text = snmpProfiles[i].name;
+				snmpInput.appendChild(option);
+			}
+
+			if (this.link && "snmp profile" in this.link) {
+				snmpToggle.checkbox.checked = true;
+				snmpInput.disabled = false;
+				snmpInput.value = this.link["snmp profile"].v;
+			}
+			else if (this.link && ".snmp profile" in this.link) {
+				snmpToggle.checkbox.checked = true;
+				snmpInput.disabled = false;
+				snmpInput.value = this.link[".snmp profile"].v;
+			}
+		}, 0);
 
 		snmpToggle.checkbox.onchange = ()=> {
 			snmpInput.disabled = !snmpToggle.checkbox.checked;
@@ -2806,6 +2829,22 @@ class DeviceView extends View {
 		};
 
 		dialog.okButton.focus();
+	}
+
+	async GetSnmpProfiles() {
+		try {
+			const response = await fetch("config/snmpprofiles/list");
+
+			if (response.status !== 200) return null;
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			return json;
+		}
+		catch (ex) {
+			return null;
+		}
 	}
 
 	Copy() { //overrides

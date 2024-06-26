@@ -1101,7 +1101,7 @@ class Fetch extends Tabs {
 
 			const guidOption = document.createElement("option");
 			guidOption.text = "Same GUID";
-			guidOption.value = "guid";
+			guidOption.value = "object guid";
 			conflictConditionInput.appendChild(guidOption);
 
 			conflictConditionInput.value = "ip";
@@ -1113,7 +1113,7 @@ class Fetch extends Tabs {
 			conflictConditionInput.appendChild(usernameOption);
 			const guidOption = document.createElement("option");
 			guidOption.text = "Same GUID";
-			guidOption.value = "guid";
+			guidOption.value = "object guid";
 			conflictConditionInput.appendChild(guidOption);
 
 			conflictConditionInput.value = "username";

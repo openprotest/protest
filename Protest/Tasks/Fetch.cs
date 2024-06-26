@@ -19,9 +19,9 @@ namespace Protest.Tasks;
 internal static class Fetch {
 
     enum Type : byte {
-        none = 0,
+        none    = 0,
         devices = 1,
-        users = 2,
+        users   = 2,
     }
 
     struct Result {
@@ -48,15 +48,36 @@ internal static class Fetch {
         parameters.TryGetValue("target", out string target);
         parameters.TryGetValue("wmi", out string wmi);
         parameters.TryGetValue("kerberos", out string kerberos);
-        parameters.TryGetValue("snmp2", out string snmp2);
-        parameters.TryGetValue("snmp3", out string snmp3);
+        parameters.TryGetValue("snmp", out string snmp);
         parameters.TryGetValue("portscan", out string portScan);
 
         if (target is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        ConcurrentDictionary<string, string[]> data = SingleDevice(target, true, wmi == "true", kerberos == "true", snmp2=="true", null, snmp3=="true", null, portScan, asynchronous, CancellationToken.None);
+        SnmpProfiles.Profile snmpProfile = null;
+        if (snmp is not null && Guid.TryParse(snmp, out Guid guid)) {
+            SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
+            for (int i = 0; i< profiles.Length; i++) {
+                if (profiles[i].guid == guid) {
+                    snmpProfile = profiles[i];
+                    break;
+                }
+            }
+        }
+
+        SnmpProfiles.Profile[] snmpProfiles = snmpProfile is null ? null : new SnmpProfiles.Profile[] { snmpProfile };
+
+        ConcurrentDictionary<string, string[]> data = SingleDevice(
+            target,
+            true,
+            wmi=="true",
+            kerberos=="true",
+            snmpProfiles,
+            portScan,
+            asynchronous,
+            CancellationToken.None
+        );
 
         if (data is null || data.IsEmpty) {
             return "{\"error\":\"Failed to fetch data.\"}"u8.ToArray();
@@ -64,7 +85,7 @@ internal static class Fetch {
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
-    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, bool snmp2, string[] snmp2Profiles, bool snmp3, string[] snmp3Profiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         PingReply reply = null;
         try {
             using Ping ping = new Ping();
@@ -76,13 +97,13 @@ internal static class Fetch {
         catch { }
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, snmp2, snmp2Profiles, snmp3, snmp3Profiles, argPortScan, asynchronous, cancellationToken);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, snmpProfiles , argPortScan, asynchronous, cancellationToken);
             return data;
         }
 
         return null;
     }
-    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, bool snmp2, string[] snmp2Profiles, bool snmp3, string[] snmp3Profiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
@@ -186,7 +207,7 @@ internal static class Fetch {
                     if (value.Length > 0) ad.Add("CHANGED ON DC", value);
                 }*/
 
-                ad.Add("guid", new Guid((byte[])result.Properties["objectGuid"][0]).ToString());
+                ad.Add("object guid", new Guid((byte[])result.Properties["objectGuid"][0]).ToString());
             });
         }
 
@@ -247,7 +268,6 @@ internal static class Fetch {
 
         foreach (KeyValuePair<string, string> o in ad) {
             string key = o.Key;
-
             if (key == "operating system") { //os not found in ad, use wmi
                 if (!wmi.ContainsKey("operating system")) {
                     data.TryAdd(key, new string[] { o.Value, "Kerberos", string.Empty });
@@ -362,7 +382,7 @@ internal static class Fetch {
             return null;
         }
 
-        if (snmp2) {
+        if (snmpProfiles is not null) {
             if (data.TryGetValue("type", out string[] type)) {
                 switch (type[0]) {
                 case "fax":
@@ -390,10 +410,6 @@ internal static class Fetch {
             }
 
             //TODO: generic OID
-        }
-
-        if (snmp3) {
-            //TODO:
         }
 
         if (cancellationToken.IsCancellationRequested) {
@@ -454,9 +470,11 @@ internal static class Fetch {
         string portscan = null;
         string retriesStr = null;
         string intervalStr = null;
+
         string snmp2 = null;
-        string snmp3 = null;
         string[] snmp2Profiles = null;
+        
+        string snmp3 = null;
         string[] snmp3Profiles = null;
 
         for (int i = 0; i < payloadLines.Length; i++) {
@@ -571,17 +589,14 @@ internal static class Fetch {
             dns == "true",
             wmi == "true",
             kerberos == "true",
-            snmp2 == "true",
-            snmp2Profiles,
-            snmp3 == "true",
-            snmp3Profiles,
+            null,
             portscan,
             retries,
             interval,
             origin
         );
     }
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, bool snmp2, string[] snmp2Profiles, bool snmp3, string[] snmp3Profiles, string portscan, int retries, float interval, string origin) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, SnmpProfiles.Profile[] snmpProfiles, string portscan, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -604,7 +619,7 @@ internal static class Fetch {
 
                     List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>();
                     for (int i = 0; i < size; i++) {
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmp2, snmp2Profiles, snmp3, snmp3Profiles, portscan, false, task.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmpProfiles, portscan, false, task.cancellationToken));
                     }
 
                     ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
