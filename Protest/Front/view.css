@@ -169,7 +169,7 @@
 	width: calc(100% - max(100px, 25%) - 44px);
 }
 
-.view-attributes-list > div > div:nth-child(2)[previous]:focus-within {
+.view-attributes-list > div:has(> div[previous]):focus-within {
 	height: 56px;
 }
 .view-attributes-list > div > div:nth-child(2)[previous]:focus-within::after { /*fetch previous value*/

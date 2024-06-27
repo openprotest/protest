@@ -438,7 +438,7 @@ class Settings extends Tabs {
 		titleBar.style.color = "var(--clr-light)";
 		this.tabsPanel.appendChild(titleBar);
 
-		let labels = ["Name", "Priority", "Community / Context", "Username"];
+		let labels = ["Name", "Priority", "Community", "Username"];
 		for (let i = 0; i < labels.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.style.display = "inline-block";
@@ -658,7 +658,7 @@ class Settings extends Tabs {
 				labels.push(priorityLabel);
 
 				const contextLabel = document.createElement("div");
-				contextLabel.textContent = json[i].version === 3 ? json[i].context : json[i].community;
+				contextLabel.textContent = json[i].version !== 3 ? json[i].community : "";
 				labels.push(contextLabel);
 
 				const usernameLabel = document.createElement("div");
@@ -685,7 +685,7 @@ class Settings extends Tabs {
 				versionLabel.style.margin = "6px 4px";
 				versionLabel.style.padding = "2px 4px";
 				versionLabel.style.borderRadius = "2px";
-				versionLabel.textContent = json[i].version === 3 ? "v3" : "v2";
+				versionLabel.textContent = `v${json[i].version}`;
 				element.appendChild(versionLabel);
 
 				element.append(...labels);
@@ -698,9 +698,7 @@ class Settings extends Tabs {
 					this.selectedSnmpProfile = json[i];
 				};
 
-				element.ondblclick = ()=> {
-					this.PreviewSnmpProfile(json[i]);
-				};
+				element.ondblclick = ()=> this.PreviewSnmpProfile(json[i]);
 			}
 		}
 		catch (ex) {
@@ -935,10 +933,10 @@ class Settings extends Tabs {
 		versionInput.style.gridArea = "3 / 3";
 		innerBox.append(versionLabel, versionInput);
 
-		for (let i=2; i<=3; i++) {
+		for (let i=1; i<=3; i++) {
 			const option = document.createElement("option");
 			option.value = i;
-			option.textContent = i === 2 ? "Version 1/2" : "Version 3";
+			option.textContent = `Version ${i}`;
 			versionInput.appendChild(option);
 		}
 

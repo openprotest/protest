@@ -44,12 +44,12 @@ class Snmp extends Window {
 		this.communityInput.value = this.args.community;
 		snmpInput.appendChild(this.communityInput);
 
-		this.credentialsInput = document.createElement("select");
-		this.credentialsInput.style.gridArea = "2 / 2";
-		this.credentialsInput.style.marginRight = "0";
-		this.credentialsInput.style.minWidth = "50px";
-		this.credentialsInput.style.display = "none";
-		snmpInput.appendChild(this.credentialsInput);
+		this.credentialsProfileInput = document.createElement("select");
+		this.credentialsProfileInput.style.gridArea = "2 / 2";
+		this.credentialsProfileInput.style.marginRight = "0";
+		this.credentialsProfileInput.style.minWidth = "50px";
+		this.credentialsProfileInput.style.display = "none";
+		snmpInput.appendChild(this.credentialsProfileInput);
 
 		this.versionInput = document.createElement("select");
 		this.versionInput.style.gridArea = "2 / 3";
@@ -118,7 +118,7 @@ class Snmp extends Window {
 
 		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
 		this.communityInput.oninput = ()=> { this.args.community = this.communityInput.value };
-		this.credentialsInput.onchange = ()=> { this.args.credentials = this.credentialsInput.value };
+		this.credentialsProfileInput.onchange = ()=> { this.args.credentials = this.credentialsProfileInput.value };
 		this.oidInput.oninput = ()=> { this.args.oid = this.oidInput.value };
 
 		this.versionInput.onchange = ()=> {
@@ -126,12 +126,12 @@ class Snmp extends Window {
 			this.walkButton.disabled = this.versionInput.value == 3;
 
 			if (this.versionInput.value == 3) {
-				authLabel.textContent = "Credentials:";
-				this.credentialsInput.style.display = "block";
+				authLabel.textContent = "Profile:";
+				this.credentialsProfileInput.style.display = "block";
 			}
 			else {
 				authLabel.textContent = "Community:";
-				this.credentialsInput.style.display = "none";
+				this.credentialsProfileInput.style.display = "none";
 			}
 		};
 
@@ -184,7 +184,7 @@ class Snmp extends Window {
 				const option = document.createElement("option");
 				option.value = json[i].guid;
 				option.textContent = json[i].name;
-				this.credentialsInput.appendChild(option);
+				this.credentialsProfileInput.appendChild(option);
 			}
 		}
 		catch (ex) {
@@ -216,7 +216,7 @@ class Snmp extends Window {
 		try {
 			let url;
 			if (this.versionInput.value==3) {
-				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}`;
+				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsProfileInput.value}`;
 			}
 			else {
 				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}`;
@@ -267,7 +267,7 @@ class Snmp extends Window {
 		try {
 			let url;
 			if (this.versionInput.value==3) {
-				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}&value=${encodeURIComponent(value)}`;
+				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsProfileInput.value}&value=${encodeURIComponent(value)}`;
 			}
 			else {
 				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}&value=${encodeURIComponent(value)}`;
@@ -360,7 +360,7 @@ class Snmp extends Window {
 		try {
 			let url;
 			if (this.versionInput.value==3) {
-				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsInput.value}`;
+				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsProfileInput.value}`;
 			}
 			else {
 				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}`;

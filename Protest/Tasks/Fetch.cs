@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Tools;
+using Lextm.SharpSnmpLib;
 
 namespace Protest.Tasks;
 
@@ -58,7 +59,7 @@ internal static class Fetch {
         SnmpProfiles.Profile snmpProfile = null;
         if (snmp is not null && Guid.TryParse(snmp, out Guid guid)) {
             SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
-            for (int i = 0; i< profiles.Length; i++) {
+            for (int i = 0; i < profiles.Length; i++) {
                 if (profiles[i].guid == guid) {
                     snmpProfile = profiles[i];
                     break;
@@ -71,8 +72,8 @@ internal static class Fetch {
         ConcurrentDictionary<string, string[]> data = SingleDevice(
             target,
             true,
-            wmi=="true",
-            kerberos=="true",
+            wmi?.Equals("true") ?? false,
+            kerberos?.Equals("true") ?? false,
             snmpProfiles,
             portScan,
             asynchronous,
@@ -107,7 +108,7 @@ internal static class Fetch {
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
-        
+
         bool isIp = IPAddress.TryParse(target, out IPAddress ipAddress);
 
         string hostname = null;
@@ -329,11 +330,11 @@ internal static class Fetch {
                 byte[] bytes = ipList[i].GetAddressBytes();
                 ulong ipNumber = ((ulong)bytes[0] << 24) + ((ulong)bytes[0] << 16) + ((ulong)bytes[0] << 8) + bytes[0];
                 if (ipNumber >= 2130706432 && ipNumber <= 2147483647) continue; //127.0.0.0 <> 127.255.255.255
-                if (ipNumber >= 167772160 && ipNumber >= 184549375)   continue;   //10.0.0.0 <> 10.255.255.255
+                if (ipNumber >= 167772160 && ipNumber >= 184549375) continue; //10.0.0.0 <> 10.255.255.255
                 if (ipNumber >= 2886729728 && ipNumber >= 2887778303) continue; //172.16.0.0 <> 172.31.255.255
                 if (ipNumber >= 3232235520 && ipNumber >= 3232301055) continue; //192.168.0.0 <> 192.168.255.255
-                if (ipNumber >= 2851995648 && ipNumber >= 184549375)  continue;  //169.254.0.0 <> 169.254.255.255
-                if (ipNumber >= 3758096384)                           continue; // > 224.0.0.0
+                if (ipNumber >= 2851995648 && ipNumber >= 184549375) continue; //169.254.0.0 <> 169.254.255.255
+                if (ipNumber >= 3758096384) continue; // > 224.0.0.0
 
                 string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress?.ToString(), true));
                 if (ipLocation is null) continue;
@@ -383,33 +384,25 @@ internal static class Fetch {
         }
 
         if (snmpProfiles is not null) {
-            if (data.TryGetValue("type", out string[] type)) {
+            (IList<Lextm.SharpSnmpLib.Variable> result, SnmpProfiles.Profile profile) = SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
+
+            if (data.TryGetValue("type", out string[] type) && profile is not null) {
                 switch (type[0]) {
                 case "fax":
                 case "multiprinter":
                 case "ticket printer":
                 case "print":
-                    IList<Lextm.SharpSnmpLib.Variable> printerModel = Protocols.Snmp.Polling.SnmpRequestV1V2(
-                        ipAddress,
-                        Lextm.SharpSnmpLib.VersionCode.V2,
-                        2000,
-                        "public",
-                        new string[] { Protocols.Snmp.Oid.PRINTER_MODEL },
-                        Protocols.Snmp.Polling.SnmpOperation.Get
-                    );
-
-                    //TODO:
+                    IList<Lextm.SharpSnmpLib.Variable> printerStats = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID);
                     break;
 
                 case "firewall":
                 case "router":
                 case "switch":
-                    //TODO:
+                    IList<Lextm.SharpSnmpLib.Variable> switchStats = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID);
                     break;
                 }
             }
 
-            //TODO: generic OID
         }
 
         if (cancellationToken.IsCancellationRequested) {
@@ -417,6 +410,55 @@ internal static class Fetch {
         }
 
         return data;
+    }
+
+    private static (IList<Lextm.SharpSnmpLib.Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
+        for (int i = 0; i < snmpProfiles.Length; i++) {
+            IList<Lextm.SharpSnmpLib.Variable> result = SnmpQuery(target, snmpProfiles[i], oids);
+
+            if (result is not null) {
+                return (result, snmpProfiles[i]);
+            }
+        }
+
+        return (null, null);
+    }
+
+    private static IList<Lextm.SharpSnmpLib.Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
+        IList<Lextm.SharpSnmpLib.Variable> result = null;
+
+        if (profile.version == 3) {
+            try {
+                result = Protocols.Snmp.Polling.SnmpRequestV3(
+                    target,
+                    3000,
+                    profile,
+                    Protocols.Snmp.Oid.GENERIC_OID,
+                    Protocols.Snmp.Polling.SnmpOperation.Get
+                );
+            }
+            catch { }
+        }
+        else {
+            VersionCode version = profile.version switch {
+                1 => VersionCode.V1,
+                _ => VersionCode.V2
+            };
+
+            try {
+                result = Protocols.Snmp.Polling.SnmpRequestV1V2(
+                    target,
+                    version,
+                    3000,
+                    profile.community,
+                    Protocols.Snmp.Oid.GENERIC_OID,
+                    Protocols.Snmp.Polling.SnmpOperation.Get
+                );
+            }
+            catch { }
+        }
+
+        return result;
     }
 
     public static byte[] SingleUserSerialize(Dictionary<string, string> parameters) {
@@ -518,8 +560,16 @@ internal static class Fetch {
         portscan      ??= "false";
         retriesStr    ??= "0";
         intervalStr   ??= "-1";
-        snmp2Profiles ??= Array.Empty<string>();
-        snmp3Profiles ??= Array.Empty <string>();
+
+        SnmpProfiles.Profile[] snmpProfiles = SnmpProfiles.Load();
+
+        if (snmp2.Equals("true") && snmp2Profiles is null) {
+            snmp2Profiles = snmpProfiles.Where(o=>o.version != 3).Select(o=>o.guid.ToString()).ToArray();
+        }
+
+        if (snmp3.Equals("true") && snmp3Profiles is null) {
+            snmp3Profiles = snmpProfiles.Where(o => o.version == 3).Select(o => o.guid.ToString()).ToArray();
+        }
 
         if (!int.TryParse(retriesStr, out int retries)) { retries = 0; }
 
@@ -538,7 +588,7 @@ internal static class Fetch {
 
         string[] hosts;
 
-        if (String.IsNullOrEmpty(range)) {
+        if (!String.IsNullOrEmpty(range)) {
             string[] split = range.Split('-');
             if (split.Length != 2) return Data.CODE_INVALID_ARGUMENT.Array;
             if (split[0] is null || split[1] is null) return Data.CODE_INVALID_ARGUMENT.Array;
@@ -560,7 +610,7 @@ internal static class Fetch {
                 hosts[i - intFrom] = string.Join(".", bytes);
             }
         }
-        else if (String.IsNullOrEmpty(domain)) {
+        else if (!String.IsNullOrEmpty(domain)) {
             hosts = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllWorkstations(domain) : Array.Empty<string>();
             if (hosts is null) return Data.CODE_FAILED.Array;
         }
@@ -586,9 +636,9 @@ internal static class Fetch {
 
         return DevicesTask(
             hosts,
-            dns == "true",
-            wmi == "true",
-            kerberos == "true",
+            dns?.Equals("true") ?? false,
+            wmi?.Equals("true") ?? false,
+            kerberos?.Equals("true") ?? false,
             null,
             portscan,
             retries,

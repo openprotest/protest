@@ -3,6 +3,28 @@
 namespace Protest.Protocols.Snmp;
 
 public static class Oid {
+
+    public static string[] GENERIC_OID = new string[] {
+        SYSTEM_DESCRIPTOR,
+        SYSTEM_OBJECT_ID,
+        SYSTEM_UPTIME,
+        SYSTEM_CONTACT,
+        SYSTEM_NAME,
+        SYSTEM_LOCATION
+    };
+
+    public static string[] PRINTERS_OID = new string[] {
+        PRINTER_MODEL,
+        PRINTER_TONERS,
+        PRINTER_TRAYS_TYPE,
+    };
+
+    public static string[] SWITCH_OID = new string[] {
+        INTERFACE_TOTAL,
+        INTERFACE_DESCRIPTOR,
+        INTERFACE_SPEED,
+    };
+
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";
     public const string SYSTEM_OBJECT_ID  = "1.3.6.1.2.1.1.2.0";
     public const string SYSTEM_UPTIME     = "1.3.6.1.2.1.1.3.0";
@@ -45,16 +67,16 @@ public static class Oid {
     public const string AUTHENTICATION_PROTOCOL = "1.3.6.1.6.3.10.1.1.1.0";
     public const string PRIVACY_PROTOCOL        = "1.3.6.1.6.3.10.1.2.1.0";
 
-    public const string PRINTER_STATUS = "1.3.6.1.2.1.25.3.5.1.1.1";
-    public const string PRINTER_MODEL  = "1.3.6.1.2.1.25.3.2.1.3.1";
-    public const string PRINTER_MESSAGE  = "1.3.6.1.2.1.43.16.5";
+    public const string PRINTER_STATUS        = "1.3.6.1.2.1.25.3.5.1.1.1";
+    public const string PRINTER_MODEL         = "1.3.6.1.2.1.25.3.2.1.3.1";
+    public const string PRINTER_MESSAGE       = "1.3.6.1.2.1.43.16.5";
     public const string PRINTER_TONERS        = "1.3.6.1.2.1.43.11.1.1.6.i";
     public const string PRINTER_TONERS_MAX    = "1.3.6.1.2.1.43.11.1.1.8.i";
     public const string PRINTER_TONER_CURRENT = "1.3.6.1.2.1.43.11.1.1.9.i";
 
-    public const string PRINTER_TRAYS = "1.3.6.1.2.1.43.8.2.1.18";
+    public const string PRINTER_TRAYS       = "1.3.6.1.2.1.43.8.2.1.18";
     public const string PRINTER_TRAYS_LEVEL = "1.3.6.1.2.1.43.8.2.1.10.i";
-    public const string PRINTER_TRAYS_TYPE = "1.3.6.1.2.1.43.8.2.1.2";
+    public const string PRINTER_TRAYS_TYPE  = "1.3.6.1.2.1.43.8.2.1.2";
     
     public const string PRINTER_JOBS = "1.3.6.1.4.1.11.2.3.9.4.2.1.1.6.5.1";
 

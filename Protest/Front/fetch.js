@@ -570,7 +570,7 @@ class Fetch extends Tabs {
 		}
 
 		okButton.onclick = ()=> {
-			if (version===3) {
+			if (version === 3) {
 				this.snmp3Profiles = attributeElements;
 			}
 			else {
