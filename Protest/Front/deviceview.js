@@ -902,7 +902,7 @@ class DeviceView extends View {
 			const json = JSON.parse(event.data);
 
 			if (json.info) {
-				this.CreateInfo(json.info);
+				this.CreateInfo(json.info, json.source);
 			}
 			else if (json.warning) {
 				this.CreateWarning(json.warning);
@@ -985,6 +985,9 @@ class DeviceView extends View {
 
 					if (found) {
 						LOADER.OpenUserByFile(found);
+					}
+					else {
+						this.ConfirmBox("User don't exist in users list", true, "mono/user.svg");
 					}
 				};
 			}

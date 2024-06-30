@@ -602,7 +602,7 @@ button.view-live-button:active {
 .view-warning-box {
 	font-weight: 600;
 	margin: 0 0 4px 0;
-	padding: 6px 0px 6px 36px;
+	padding: 6px 0 6px 36px;
 	border-radius: 4px;
 	background-position: 4px center;
 	background-size: 24px 24px;
@@ -620,6 +620,21 @@ button.view-live-button:active {
 	color: var(--clr-dark);
 	background-color: var(--clr-warning);
 	background-image: url(mono/warning.svg);
+}
+
+.view-info-box[source]::before,
+.view-warning-box[source]::before { /*source*/
+	content: attr(source);
+	right: 8px;
+	width: 80px;
+	color: var(--clr-dark);
+	background-color: #c0c0c0;
+	border-radius: 4px;
+	padding: 0 4px;
+	margin: 0 8px 0 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .view-side-tools {

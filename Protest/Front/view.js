@@ -411,18 +411,20 @@ class View extends Window {
 		};
 	}
 
-	CreateInfo(text) {
+	CreateInfo(text, source) {
 		const info = document.createElement("div");
 		info.className = "view-info-box";
 		info.textContent = text;
+		info.setAttribute("source", source);
 		this.liveB.append(info);
 		return info;
 	}
 
-	CreateWarning(text) {
+	CreateWarning(text, source) {
 		const warning = document.createElement("div");
 		warning.className = "view-warning-box";
 		warning.textContent = text;
+		warning.setAttribute("source", source);
 		this.liveB.prepend(warning);
 		return warning;
 	}

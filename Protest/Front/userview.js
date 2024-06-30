@@ -152,7 +152,7 @@ class UserView extends View {
 			const json = JSON.parse(event.data);
 
 			if (json.info) {
-				this.CreateInfo(json.info);
+				this.CreateInfo(json.info, json.source);
 			}
 			else if (json.warning) {
 				this.CreateWarning(json.warning);
