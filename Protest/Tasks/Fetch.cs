@@ -384,7 +384,34 @@ internal static class Fetch {
         }
 
         if (snmpProfiles is not null) {
-            (IList<Lextm.SharpSnmpLib.Variable> result, SnmpProfiles.Profile profile) = SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
+            IList<Variable> result;
+            SnmpProfiles.Profile profile;
+
+            if (snmpProfiles.Length == 0) {
+                result = null;
+                profile = null;
+            }
+            else if (snmpProfiles.Length == 1) {
+                result = SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID);
+                profile = snmpProfiles[0];
+            }
+            else {
+                (result, profile) = SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
+            }
+
+            for (int i = 0; i < result?.Count; i++) {
+                string dataString = result[i].Data.ToString();
+                if (String.IsNullOrEmpty(dataString)) { continue; }
+                switch (result[i].Id.ToString()) {
+                case Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR : data.TryAdd("descriptor", new string[] { dataString, "SNMP", string.Empty }); break;
+                case Protocols.Snmp.Oid.SYSTEM_NAME       : data.TryAdd("name", new string[] { dataString, "SNMP", string.Empty }); break;
+                case Protocols.Snmp.Oid.SYSTEM_LOCATION   : data.TryAdd("location", new string[] { dataString, "SNMP", string.Empty }); break;
+                }
+            }
+
+            if (result is not null) {
+                data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", string.Empty });
+            }
 
             if (data.TryGetValue("type", out string[] type) && profile is not null) {
                 switch (type[0]) {
@@ -392,17 +419,30 @@ internal static class Fetch {
                 case "multiprinter":
                 case "ticket printer":
                 case "print":
-                    IList<Lextm.SharpSnmpLib.Variable> printerStats = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID);
+                    IList<Variable> printerResult = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID);
+                    for (int i = 0; i < printerResult?.Count; i++) {
+                        string dataString = printerResult[i].Data.ToString();
+                        if (String.IsNullOrEmpty(dataString)) { continue; }
+                        switch (result[i].Id.ToString()) {
+                        case Protocols.Snmp.Oid.PRINTER_MODEL: data.TryAdd("model", new string[] { dataString, "SNMP", string.Empty }); break;
+                        }
+                    }
                     break;
 
                 case "firewall":
                 case "router":
                 case "switch":
-                    IList<Lextm.SharpSnmpLib.Variable> switchStats = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID);
+                    IList<Variable> switchResult = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID);
+                    for (int i = 0; i < switchResult?.Count; i++) {
+                        string dataString = switchResult[i].Data.ToString();
+                        if (String.IsNullOrEmpty(dataString)) { continue; }
+                        switch (result[i].Id.ToString()) {
+                        case Protocols.Snmp.Oid.INTERFACE_TOTAL: data.TryAdd("total interfaces", new string[] { dataString, "SNMP", string.Empty }); break;
+                        }
+                    }
                     break;
                 }
             }
-
         }
 
         if (cancellationToken.IsCancellationRequested) {
@@ -412,9 +452,9 @@ internal static class Fetch {
         return data;
     }
 
-    private static (IList<Lextm.SharpSnmpLib.Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
+    private static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
         for (int i = 0; i < snmpProfiles.Length; i++) {
-            IList<Lextm.SharpSnmpLib.Variable> result = SnmpQuery(target, snmpProfiles[i], oids);
+            IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids);
 
             if (result is not null) {
                 return (result, snmpProfiles[i]);
@@ -424,8 +464,8 @@ internal static class Fetch {
         return (null, null);
     }
 
-    private static IList<Lextm.SharpSnmpLib.Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
-        IList<Lextm.SharpSnmpLib.Variable> result = null;
+    private static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
+        IList<Variable> result = null;
 
         if (profile.version == 3) {
             try {

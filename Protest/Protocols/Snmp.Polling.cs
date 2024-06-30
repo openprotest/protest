@@ -104,7 +104,7 @@ internal static class Polling {
     public static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, string communityString, string[] oidArray, SnmpOperation operation, string dataString = null) {
         IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
         OctetString community = new OctetString(communityString);
-        OctetString data = new OctetString(dataString);
+        OctetString data = dataString is null ? null : new OctetString(dataString);
         return SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
     }
 
@@ -250,6 +250,7 @@ internal static class Polling {
             };
 
             builder.Append('[');
+
             //oid
             builder.Append($"\"{Data.EscapeJsonText(result[i].Id.ToString())}\",");
             

@@ -1,28 +1,19 @@
-﻿using System.Collections.Generic;
-
-namespace Protest.Protocols.Snmp;
+﻿namespace Protest.Protocols.Snmp;
 
 public static class Oid {
 
     public static string[] GENERIC_OID = new string[] {
         SYSTEM_DESCRIPTOR,
-        SYSTEM_OBJECT_ID,
-        SYSTEM_UPTIME,
-        SYSTEM_CONTACT,
         SYSTEM_NAME,
         SYSTEM_LOCATION
     };
 
     public static string[] PRINTERS_OID = new string[] {
-        PRINTER_MODEL,
-        PRINTER_TONERS,
-        PRINTER_TRAYS_TYPE,
+        PRINTER_MODEL
     };
 
     public static string[] SWITCH_OID = new string[] {
-        INTERFACE_TOTAL,
-        INTERFACE_DESCRIPTOR,
-        INTERFACE_SPEED,
+        INTERFACE_TOTAL
     };
 
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";
