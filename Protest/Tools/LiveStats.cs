@@ -180,7 +180,7 @@ internal static class LiveStats {
 
             if (_snmpProfile is not null) {
                 SnmpProfiles.Profile profile = null;
-                if (String.IsNullOrEmpty(_snmpProfile.value) && Guid.TryParse(_snmpProfile.value, out Guid guid)) {
+                if (!String.IsNullOrEmpty(_snmpProfile.value) && Guid.TryParse(_snmpProfile.value, out Guid guid)) {
                     SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
                     for (int i = 0; i < profiles.Length; i++) {
                         if (profiles[i].guid == guid) {
@@ -194,6 +194,7 @@ internal static class LiveStats {
                     && firstAlive is not null
                     && firstReply.Status == IPStatus.Success
                     && IPAddress.TryParse(firstAlive, out IPAddress ipAddress)) {
+
                     IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID);
 
                     for (int i = 0; i < result?.Count; i++) {
@@ -201,11 +202,31 @@ internal static class LiveStats {
                         if (String.IsNullOrEmpty(dataString)) { continue; }
                         switch (result[i].Id.ToString()) {
                         case Protocols.Snmp.Oid.SYSTEM_UPTIME      : WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                        case Protocols.Snmp.Oid.SYSTEM_TEMPERATURE : WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                        case Protocols.Snmp.Oid.PRINTER_STATUS     : WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                        case Protocols.Snmp.Oid.PRINTER_MESSAGE    : WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                        case Protocols.Snmp.Oid.PRINTER_JOBS       : WsWriteText(ws, $"{{\"info\":\"Printer jobs: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
+                        case Protocols.Snmp.Oid.SYSTEM_TEMPERATURE : WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break; }
+                    }
+
+                    switch (_type.value) {
+                    case "fax":
+                    case "multiprinter":
+                    case "ticket printer":
+                    case "print":
+                        IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID);
+                        for (int i = 0; i < printerResult?.Count; i++) {
+                            string dataPrintString = printerResult[i].Data.ToString();
+                            if (String.IsNullOrEmpty(dataPrintString)) { continue; }
+                            switch (result[i].Id.ToString()) {
+                            case Protocols.Snmp.Oid.PRINTER_STATUS  : WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
+                            case Protocols.Snmp.Oid.PRINTER_MESSAGE : WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
+                            case Protocols.Snmp.Oid.PRINTER_JOBS    : WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
+                            }
                         }
+                        break;
+
+                    case "firewall":
+                    case "router":
+                    case "switch":
+                        //TODO:
+                        break;
                     }
                 }
             }

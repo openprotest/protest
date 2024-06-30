@@ -295,40 +295,48 @@ internal static class Polling {
     }
 
     public static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
-        IList<Variable> result = null;
-
         if (profile.version == 3) {
             try {
-                result = Protocols.Snmp.Polling.SnmpRequestV3(
+                IList<Variable> result = result = Protocols.Snmp.Polling.SnmpRequestV3(
                     target,
                     3000,
                     profile,
-                    Protocols.Snmp.Oid.GENERIC_OID,
+                    oids,
                     Protocols.Snmp.Polling.SnmpOperation.Get
                 );
+                return result;
             }
-            catch { }
+            catch {
+                return null;
+            }
         }
         else {
-            VersionCode version = profile.version switch
-            {
+            VersionCode version = profile.version switch {
                 1 => VersionCode.V1,
                 _ => VersionCode.V2
             };
 
-            try {
-                result = Protocols.Snmp.Polling.SnmpRequestV1V2(
-                    target,
-                    version,
-                    3000,
-                    profile.community,
-                    Protocols.Snmp.Oid.GENERIC_OID,
-                    Protocols.Snmp.Polling.SnmpOperation.Get
-                );
-            }
-            catch { }
-        }
+            List<Variable> result = new List<Variable>();
 
-        return result;
+            for (int i = 0; i < oids.Length; i++) {
+                try {
+                    IList<Variable> single = Protocols.Snmp.Polling.SnmpRequestV1V2(
+                        target,
+                        version,
+                        3000,
+                        profile.community,
+                        new string[] { oids[i] },
+                        Protocols.Snmp.Polling.SnmpOperation.Get
+                    );
+
+                    for (int j = 0; j < single.Count; j++) {
+                        result.Add(single[j]);
+                    }
+                }
+                catch { }
+            }
+
+            return result.Count > 0 ? result : null;
+        }
     }
 }

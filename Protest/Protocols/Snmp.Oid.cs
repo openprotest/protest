@@ -18,13 +18,14 @@ public static class Oid {
 
     public static string[] LIVESTATS_OID = new string[] {
         SYSTEM_UPTIME,
-        SYSTEM_TEMPERATURE,
+        SYSTEM_TEMPERATURE
+    };
+
+    public static string[] LIVESTATS_PRINTER_OID = new string[] {
         PRINTER_STATUS,
         PRINTER_MESSAGE,
         PRINTER_JOBS
     };
-
-
 
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";
     public const string SYSTEM_OBJECT_ID  = "1.3.6.1.2.1.1.2.0";
