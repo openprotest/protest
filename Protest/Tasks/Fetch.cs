@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
+using Protest.Protocols.Snmp;
 
 namespace Protest.Tasks;
 
@@ -392,11 +393,11 @@ internal static class Fetch {
                 profile = null;
             }
             else if (snmpProfiles.Length == 1) {
-                result = SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID);
+                result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID);
                 profile = snmpProfiles[0];
             }
             else {
-                (result, profile) = SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
+                (result, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
             }
 
             for (int i = 0; i < result?.Count; i++) {
@@ -419,7 +420,7 @@ internal static class Fetch {
                 case "multiprinter":
                 case "ticket printer":
                 case "print":
-                    IList<Variable> printerResult = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID);
+                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID);
                     for (int i = 0; i < printerResult?.Count; i++) {
                         string dataString = printerResult[i].Data.ToString();
                         if (String.IsNullOrEmpty(dataString)) { continue; }
@@ -432,7 +433,7 @@ internal static class Fetch {
                 case "firewall":
                 case "router":
                 case "switch":
-                    IList<Variable> switchResult = SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID);
+                    IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID);
                     for (int i = 0; i < switchResult?.Count; i++) {
                         string dataString = switchResult[i].Data.ToString();
                         if (String.IsNullOrEmpty(dataString)) { continue; }
@@ -452,54 +453,7 @@ internal static class Fetch {
         return data;
     }
 
-    private static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
-        for (int i = 0; i < snmpProfiles.Length; i++) {
-            IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids);
 
-            if (result is not null) {
-                return (result, snmpProfiles[i]);
-            }
-        }
-
-        return (null, null);
-    }
-
-    private static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
-        IList<Variable> result = null;
-
-        if (profile.version == 3) {
-            try {
-                result = Protocols.Snmp.Polling.SnmpRequestV3(
-                    target,
-                    3000,
-                    profile,
-                    Protocols.Snmp.Oid.GENERIC_OID,
-                    Protocols.Snmp.Polling.SnmpOperation.Get
-                );
-            }
-            catch { }
-        }
-        else {
-            VersionCode version = profile.version switch {
-                1 => VersionCode.V1,
-                _ => VersionCode.V2
-            };
-
-            try {
-                result = Protocols.Snmp.Polling.SnmpRequestV1V2(
-                    target,
-                    version,
-                    3000,
-                    profile.community,
-                    Protocols.Snmp.Oid.GENERIC_OID,
-                    Protocols.Snmp.Polling.SnmpOperation.Get
-                );
-            }
-            catch { }
-        }
-
-        return result;
-    }
 
     public static byte[] SingleUserSerialize(Dictionary<string, string> parameters) {
         parameters.TryGetValue("target", out string target);

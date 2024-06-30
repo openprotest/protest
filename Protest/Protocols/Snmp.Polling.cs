@@ -6,6 +6,7 @@ using System.Text;
 using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
+using Protest.Tools;
 
 namespace Protest.Protocols.Snmp;
 
@@ -279,5 +280,55 @@ internal static class Polling {
 
         builder.Append(']');
         return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    public static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
+        for (int i = 0; i < snmpProfiles.Length; i++) {
+            IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids);
+
+            if (result is not null) {
+                return (result, snmpProfiles[i]);
+            }
+        }
+
+        return (null, null);
+    }
+
+    public static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
+        IList<Variable> result = null;
+
+        if (profile.version == 3) {
+            try {
+                result = Protocols.Snmp.Polling.SnmpRequestV3(
+                    target,
+                    3000,
+                    profile,
+                    Protocols.Snmp.Oid.GENERIC_OID,
+                    Protocols.Snmp.Polling.SnmpOperation.Get
+                );
+            }
+            catch { }
+        }
+        else {
+            VersionCode version = profile.version switch
+            {
+                1 => VersionCode.V1,
+                _ => VersionCode.V2
+            };
+
+            try {
+                result = Protocols.Snmp.Polling.SnmpRequestV1V2(
+                    target,
+                    version,
+                    3000,
+                    profile.community,
+                    Protocols.Snmp.Oid.GENERIC_OID,
+                    Protocols.Snmp.Polling.SnmpOperation.Get
+                );
+            }
+            catch { }
+        }
+
+        return result;
     }
 }

@@ -16,6 +16,16 @@ public static class Oid {
         INTERFACE_TOTAL
     };
 
+    public static string[] LIVESTATS_OID = new string[] {
+        SYSTEM_UPTIME,
+        SYSTEM_TEMPERATURE,
+        PRINTER_STATUS,
+        PRINTER_MESSAGE,
+        PRINTER_JOBS
+    };
+
+
+
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";
     public const string SYSTEM_OBJECT_ID  = "1.3.6.1.2.1.1.2.0";
     public const string SYSTEM_UPTIME     = "1.3.6.1.2.1.1.3.0";
