@@ -393,17 +393,19 @@ internal static class Fetch {
                 profile = null;
             }
             else if (snmpProfiles.Length == 1) {
-                result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID);
+                result = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Polling.SnmpOperation.Get);
                 profile = snmpProfiles[0];
             }
             else {
                 (result, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
             }
 
-            for (int i = 0; i < result?.Count; i++) {
-                string dataString = result[i].Data.ToString();
+            string[][] normalized = Protocols.Snmp.Polling.ParseResponse(result);
+
+            for (int i = 0; i < normalized?.Length; i++) {
+                string dataString = normalized[i][1];
                 if (String.IsNullOrEmpty(dataString)) { continue; }
-                switch (result[i].Id.ToString()) {
+                switch (normalized[i][0]) {
                 case Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR : data.TryAdd("descriptor", new string[] { dataString, "SNMP", string.Empty }); break;
                 case Protocols.Snmp.Oid.SYSTEM_NAME       : data.TryAdd("name", new string[] { dataString, "SNMP", string.Empty }); break;
                 case Protocols.Snmp.Oid.SYSTEM_LOCATION   : data.TryAdd("location", new string[] { dataString, "SNMP", string.Empty }); break;
@@ -415,16 +417,16 @@ internal static class Fetch {
             }
 
             if (data.TryGetValue("type", out string[] type) && profile is not null) {
-                switch (type[0]) {
+                switch (type[0].ToLower().Trim()) {
                 case "fax":
                 case "multiprinter":
                 case "ticket printer":
-                case "print":
-                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID);
-                    for (int i = 0; i < printerResult?.Count; i++) {
-                        string dataString = printerResult[i].Data.ToString();
-                        if (String.IsNullOrEmpty(dataString)) { continue; }
-                        switch (result[i].Id.ToString()) {
+                case "printer":
+                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Polling.SnmpOperation.Get);
+                    string[][] printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
+                    for (int i = 0; i < printerNormalized?.Length; i++) {
+                        string dataString = printerNormalized[i][1];
+                        switch (printerNormalized[i][0]) {
                         case Protocols.Snmp.Oid.PRINTER_MODEL: data.TryAdd("model", new string[] { dataString, "SNMP", string.Empty }); break;
                         }
                     }
@@ -433,11 +435,11 @@ internal static class Fetch {
                 case "firewall":
                 case "router":
                 case "switch":
-                    IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID);
-                    for (int i = 0; i < switchResult?.Count; i++) {
-                        string dataString = switchResult[i].Data.ToString();
-                        if (String.IsNullOrEmpty(dataString)) { continue; }
-                        switch (result[i].Id.ToString()) {
+                    IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID, Polling.SnmpOperation.Get);
+                    string[][] switchNormalized = Protocols.Snmp.Polling.ParseResponse(switchResult);
+                    for (int i = 0; i < switchNormalized?.Length; i++) {
+                        string dataString = switchNormalized[i][1];
+                        switch (switchNormalized[i][0]) {
                         case Protocols.Snmp.Oid.INTERFACE_TOTAL: data.TryAdd("total interfaces", new string[] { dataString, "SNMP", string.Empty }); break;
                         }
                     }
@@ -453,7 +455,9 @@ internal static class Fetch {
         return data;
     }
 
+    private static void ParseSnmpAttributes() {
 
+    }
 
     public static byte[] SingleUserSerialize(Dictionary<string, string> parameters) {
         parameters.TryGetValue("target", out string target);

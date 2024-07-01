@@ -33,11 +33,14 @@ internal static class Polling {
         parameters.TryGetValue("timeout",   out string timeoutString);
 
         IPAddress targetIp;
-        try {
-            targetIp = System.Net.Dns.GetHostEntry(target).AddressList[0];
-        }
-        catch {
-            return "{\"error\":\"No such host is known\"}"u8.ToArray();
+
+        if (!IPAddress.TryParse(target, out targetIp)) {
+            try {
+                targetIp = System.Net.Dns.GetHostEntry(target).AddressList[0];
+            }
+            catch {
+                return "{\"error\":\"No such host is known\"}"u8.ToArray();
+            }
         }
 
         VersionCode version = versionString switch {
@@ -75,11 +78,11 @@ internal static class Polling {
                     OctetString data = new OctetString(valueString);
 
                     IList<Variable> result = SnmpRequestV3(targetIp, timeout, profile, oidArray, operation, data);
-                    return ParseResponse(result);
+                    return ParseResponseToBytes(result);
                 }
                 else {
                     IList<Variable> result = SnmpRequestV3(targetIp, timeout, profile, oidArray, operation);
-                    return ParseResponse(result);
+                    return ParseResponseToBytes(result);
                 }
             }
             else {
@@ -89,11 +92,11 @@ internal static class Polling {
                     OctetString data = new OctetString(valueString);
 
                     IList<Variable> result = SnmpRequestV1V2(targetIp, version, timeout, community, oidArray, operation, data);
-                    return ParseResponse(result);
+                    return ParseResponseToBytes(result);
                 }
                 else {
                     IList<Variable> result = SnmpRequestV1V2(targetIp, version, timeout, community, oidArray, operation);
-                    return ParseResponse(result);
+                    return ParseResponseToBytes(result);
                 }
             }
         }
@@ -211,8 +214,47 @@ internal static class Polling {
         }
     }
 
-    private static byte[] ParseResponse(IList<Variable> result) {
-        if (result is null || result.Count == 0) { return "[]"u8.ToArray(); }
+    public static string[][] ParseResponse(IList<Variable> result) {
+        if (result is null || result.Count == 0) {
+            return null;
+        }
+
+        List<string[]> list = new List<string[]>();
+
+        for (int i = 0; i < result.Count; i++) {
+            string value;
+            if (result[i].Data.TypeCode == SnmpType.Null ||
+                result[i].Data.TypeCode == SnmpType.NoSuchObject ||
+                result[i].Data.TypeCode == SnmpType.NoSuchInstance) {
+                continue;
+            }
+            else if (result[i].Data.TypeCode == SnmpType.OctetString) {
+                byte[] bytes = result[i].Data.ToBytes();
+                for (int j = 0; j < bytes.Length; j++) {
+                    if (bytes[j] < 32) { bytes[j] = (byte)' '; }
+                    else if (bytes[j] > 126) { bytes[j] = (byte)' '; }
+                }
+
+                value = Encoding.UTF8.GetString(bytes).Trim();
+            }
+            else {
+                value = result[i].Data.ToString().Trim();
+            }
+
+            if (String.IsNullOrEmpty(value)) {
+                continue;
+            }
+
+            list.Add(new string[] { result[i].Id.ToString(), value });
+        }
+
+        return list.ToArray();
+    }
+
+    private static byte[] ParseResponseToBytes(IList<Variable> result) {
+        if (result is null || result.Count == 0) {
+            return "[]"u8.ToArray();
+        }
 
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
@@ -262,7 +304,7 @@ internal static class Polling {
             if (result[i].Data.TypeCode == SnmpType.Null ||
                 result[i].Data.TypeCode == SnmpType.NoSuchObject ||
                 result[i].Data.TypeCode == SnmpType.NoSuchInstance) {
-                builder.Append($"\"--\"");
+                builder.Append("\"--\"");
             }
             else if (result[i].Data.TypeCode == SnmpType.OctetString) {
                 byte[] bytes = result[i].Data.ToBytes();
@@ -284,7 +326,7 @@ internal static class Polling {
 
     public static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
         for (int i = 0; i < snmpProfiles.Length; i++) {
-            IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids);
+            IList<Variable> result = SnmpGetQuery(target, snmpProfiles[i], oids, Polling.SnmpOperation.Get);
 
             if (result is not null) {
                 return (result, snmpProfiles[i]);
@@ -294,7 +336,7 @@ internal static class Polling {
         return (null, null);
     }
 
-    public static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids) {
+    public static IList<Variable> SnmpGetQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids, SnmpOperation operation) {
         if (profile.version == 3) {
             try {
                 IList<Variable> result = result = Protocols.Snmp.Polling.SnmpRequestV3(
@@ -302,7 +344,7 @@ internal static class Polling {
                     3000,
                     profile,
                     oids,
-                    Protocols.Snmp.Polling.SnmpOperation.Get
+                    operation
                 );
                 return result;
             }
@@ -326,7 +368,7 @@ internal static class Polling {
                         3000,
                         profile.community,
                         new string[] { oids[i] },
-                        Protocols.Snmp.Polling.SnmpOperation.Get
+                        operation
                     );
 
                     for (int j = 0; j < single.Count; j++) {
@@ -339,4 +381,5 @@ internal static class Polling {
             return result.Count > 0 ? result : null;
         }
     }
+
 }

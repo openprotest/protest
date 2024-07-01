@@ -411,6 +411,8 @@ class DeviceView extends View {
 					const response = await fetch(`manage/device/wol?file=${this.args.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
+
+					this.ConfirmBox("Magic packet has been sent successfully.", true, "mono/wol.svg");
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/wol.svg"); }
 				wolButton.removeAttribute("busy");
@@ -905,7 +907,10 @@ class DeviceView extends View {
 				this.CreateInfo(json.info, json.source);
 			}
 			else if (json.warning) {
-				this.CreateWarning(json.warning);
+				this.CreateWarning(json.warning, json.source);
+			}
+			else if (json.critical) {
+				this.CreateCritical(json.critical, json.source);
 			}
 			else if (json.echoReply) {
 				let dot = null;
@@ -2705,6 +2710,7 @@ class DeviceView extends View {
 			}
 
 			if (this.link && "snmp profile" in this.link) {
+				wmiToggle.checkbox.checked = false;
 				snmpToggle.checkbox.checked = true;
 				snmpInput.disabled = false;
 				snmpInput.value = this.link["snmp profile"].v;

@@ -155,7 +155,10 @@ class UserView extends View {
 				this.CreateInfo(json.info, json.source);
 			}
 			else if (json.warning) {
-				this.CreateWarning(json.warning);
+				this.CreateWarning(json.warning, json.source);
+			}
+			else if (json.critical) {
+				this.CreateCritical(json.critical, json.source);
 			}
 			else if (json.lockedOut) {
 				this.lockedUserWarning = this.CreateWarning(`User is locked out (${json.lockedOut})`);

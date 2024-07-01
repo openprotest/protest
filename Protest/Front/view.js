@@ -429,6 +429,15 @@ class View extends Window {
 		return warning;
 	}
 
+	CreateCritical(text, source) {
+		const critical = document.createElement("div");
+		critical.className = "view-critical-box";
+		critical.textContent = text;
+		critical.setAttribute("source", source);
+		this.liveB.prepend(critical);
+		return critical;
+	}
+
 	CreateSideButton(icon, label) {
 		const button = document.createElement("button");
 		button.style.backgroundImage = "url(" + icon + ")";

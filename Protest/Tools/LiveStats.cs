@@ -137,6 +137,9 @@ internal static class LiveStats {
 
                             WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
+                            if (percent <= 5) {
+                                WsWriteText(ws, $"{{\"critical\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
+                            }
                             if (percent < 15) {
                                 WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
                             }
@@ -195,31 +198,67 @@ internal static class LiveStats {
                     && firstReply.Status == IPStatus.Success
                     && IPAddress.TryParse(firstAlive, out IPAddress ipAddress)) {
 
-                    IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID);
+                    IList<Variable> result = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+                    string[][] normalized = Protocols.Snmp.Polling.ParseResponse(result);
 
-                    for (int i = 0; i < result?.Count; i++) {
-                        string dataString = result[i].Data.ToString();
-                        if (String.IsNullOrEmpty(dataString)) { continue; }
-                        switch (result[i].Id.ToString()) {
+                    for (int i = 0; i < normalized?.Length; i++) {
+                        string dataString = normalized[i][1];
+                        switch (normalized[i][0]) {
                         case Protocols.Snmp.Oid.SYSTEM_UPTIME      : WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
                         case Protocols.Snmp.Oid.SYSTEM_TEMPERATURE : WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break; }
                     }
 
-                    switch (_type.value) {
+                    switch (_type.value.ToLower().Trim()) {
                     case "fax":
                     case "multiprinter":
                     case "ticket printer":
-                    case "print":
-                        IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID);
-                        for (int i = 0; i < printerResult?.Count; i++) {
-                            string dataPrintString = printerResult[i].Data.ToString();
+                    case "printer":
+                        IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+                        string[][] printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
+
+                        for (int i = 0; i < printerNormalized?.Length; i++) {
+                            string dataPrintString = printerNormalized[i][1];
                             if (String.IsNullOrEmpty(dataPrintString)) { continue; }
-                            switch (result[i].Id.ToString()) {
-                            case Protocols.Snmp.Oid.PRINTER_STATUS  : WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                            case Protocols.Snmp.Oid.PRINTER_MESSAGE : WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
+
+                            switch (printerNormalized[i][0]) {
+                            case Protocols.Snmp.Oid.PRINTER_STATUS:
+                                string status = dataPrintString switch {
+                                    "1" => "Other",
+                                    "2" => "Processing",
+                                    "3" => "Idle",
+                                    "4" => "Printing",
+                                    "5" => "Warmup",
+                                    _   => dataPrintString
+                                };
+                                WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
+                                break;
+
+                            case Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE: WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
                             case Protocols.Snmp.Oid.PRINTER_JOBS    : WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
                             }
                         }
+
+                        string[][] componentName  = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                        string[][] componentLevel = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                        string[][] componentMax   = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+
+                        if (componentName is not null && componentLevel is not null && componentMax is not null) {
+                            for (int i = 0; i< componentName.Length; i++) {
+                                if (componentLevel.Length < i) { continue; }
+                                if (componentMax.Length < i) { continue; }
+                                if (!int.TryParse(componentLevel[i][1], out int level)) { continue; }
+                                if (!int.TryParse(componentMax[i][1], out int max)) { continue; }
+
+                                int cartridgeLevel = 100 * level / max;
+                                if (cartridgeLevel < 5) {
+                                    WsWriteText(ws, $"{{\"critical\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                                }
+                                else if (cartridgeLevel < 15) {
+                                    WsWriteText(ws, $"{{\"warning\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                                }
+                            }
+                        }
+
                         break;
 
                     case "firewall":

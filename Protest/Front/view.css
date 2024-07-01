@@ -94,14 +94,11 @@
 }
 
 .view-attributes-list > div {
-	height: 33px;
-	min-height: 33px;
-	transition: height .2s;
-
 	background-position: calc(100% - 4px) center;
 	background-size: 16px 16px;
 	background-repeat: no-repeat;
 	animation: zoom-in-background 1 .4s;
+	transition: height .2s;
 }
 
 .view-attributes-list > div:first-child {
@@ -177,6 +174,9 @@
 	display: block;
 	content: attr(previous);
 	left: calc(max(100px, 25%) + 40px);
+	width: calc(100% - max(100px, 25%) - 44px);
+	overflow: hidden;
+	text-overflow: ellipsis;
 	text-decoration: line-through;
 	white-space: nowrap;
 	animation: previous-fall-in .2s 1;
@@ -599,7 +599,8 @@ button.view-live-button:active {
 }
 
 .view-info-box,
-.view-warning-box {
+.view-warning-box,
+.view-critical-box {
 	font-weight: 600;
 	margin: 0 0 4px 0;
 	padding: 6px 0 6px 36px;
@@ -622,19 +623,36 @@ button.view-live-button:active {
 	background-image: url(mono/warning.svg);
 }
 
-.view-info-box[source]::before,
-.view-warning-box[source]::before { /*source*/
-	content: attr(source);
-	right: 8px;
-	width: 80px;
+.view-critical-box {
 	color: var(--clr-dark);
-	background-color: #c0c0c0;
+	background-color: var(--clr-error);
+	background-image: url(mono/error.svg);
+}
+
+.view-info-box[source]::before,
+.view-warning-box[source]::before,
+.view-critical-box[source]::before { /*source*/
+	content: attr(source);
 	border-radius: 4px;
 	padding: 0 4px;
 	margin: 0 8px 0 0;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.view-info-box[source]::before {
+	color: var(--clr-dark);
+	background-color: #c0c0c0;
+}
+
+.view-warning-box[source]::before {
+	color: var(--clr-warning);
+	background-color: #202020;
+}
+
+.view-critical-box[source]::before {
+	color: var(--clr-error);
+	background-color: #202020;
 }
 
 .view-side-tools {

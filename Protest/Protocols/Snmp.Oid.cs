@@ -23,7 +23,7 @@ public static class Oid {
 
     public static string[] LIVESTATS_PRINTER_OID = new string[] {
         PRINTER_STATUS,
-        PRINTER_MESSAGE,
+        PRINTER_DISPLAY_MESSAGE,
         PRINTER_JOBS
     };
 
@@ -69,12 +69,13 @@ public static class Oid {
     public const string AUTHENTICATION_PROTOCOL = "1.3.6.1.6.3.10.1.1.1.0";
     public const string PRIVACY_PROTOCOL        = "1.3.6.1.6.3.10.1.2.1.0";
 
-    public const string PRINTER_STATUS        = "1.3.6.1.2.1.25.3.5.1.1.1";
-    public const string PRINTER_MODEL         = "1.3.6.1.2.1.25.3.2.1.3.1";
-    public const string PRINTER_MESSAGE       = "1.3.6.1.2.1.43.16.5";
-    public const string PRINTER_TONERS        = "1.3.6.1.2.1.43.11.1.1.6.i";
-    public const string PRINTER_TONERS_MAX    = "1.3.6.1.2.1.43.11.1.1.8.i";
-    public const string PRINTER_TONER_CURRENT = "1.3.6.1.2.1.43.11.1.1.9.i";
+    public const string PRINTER_STATUS          = "1.3.6.1.2.1.25.3.5.1.1.1";
+    public const string PRINTER_MODEL           = "1.3.6.1.2.1.25.3.2.1.3.1";
+    public const string PRINTER_DISPLAY_MESSAGE = "1.3.6.1.2.1.43.16.5";
+
+    public const string PRINTER_TONERS        = "1.3.6.1.2.1.43.11.1.1.6";
+    public const string PRINTER_TONER_CURRENT = "1.3.6.1.2.1.43.11.1.1.9";
+    public const string PRINTER_TONERS_MAX    = "1.3.6.1.2.1.43.11.1.1.8";
 
     public const string PRINTER_TRAYS       = "1.3.6.1.2.1.43.8.2.1.18";
     public const string PRINTER_TRAYS_LEVEL = "1.3.6.1.2.1.43.8.2.1.10.i";
