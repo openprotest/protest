@@ -909,6 +909,9 @@ class DeviceView extends View {
 			else if (json.warning) {
 				this.CreateWarning(json.warning, json.source);
 			}
+			else if (json.error) {
+				this.CreateError(json.error, json.source);
+			}
 			else if (json.critical) {
 				this.CreateCritical(json.critical, json.source);
 			}

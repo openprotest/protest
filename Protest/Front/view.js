@@ -429,6 +429,15 @@ class View extends Window {
 		return warning;
 	}
 
+	CreateError(text, source) {
+		const error = document.createElement("div");
+		error.className = "view-error-box";
+		error.textContent = text;
+		error.setAttribute("source", source);
+		this.liveB.prepend(error);
+		return error;
+	}
+
 	CreateCritical(text, source) {
 		const critical = document.createElement("div");
 		critical.className = "view-critical-box";

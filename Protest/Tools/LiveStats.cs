@@ -138,7 +138,7 @@ internal static class LiveStats {
                             WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
                             if (percent <= 5) {
-                                WsWriteText(ws, $"{{\"critical\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
+                                WsWriteText(ws, $"{{\"error\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
                             }
                             if (percent < 15) {
                                 WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
@@ -251,7 +251,7 @@ internal static class LiveStats {
 
                                 int cartridgeLevel = 100 * level / max;
                                 if (cartridgeLevel < 5) {
-                                    WsWriteText(ws, $"{{\"critical\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                                    WsWriteText(ws, $"{{\"error\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
                                 }
                                 else if (cartridgeLevel < 15) {
                                     WsWriteText(ws, $"{{\"warning\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);

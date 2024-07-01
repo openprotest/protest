@@ -600,6 +600,7 @@ button.view-live-button:active {
 
 .view-info-box,
 .view-warning-box,
+.view-error-box,
 .view-critical-box {
 	font-weight: 600;
 	margin: 0 0 4px 0;
@@ -608,7 +609,8 @@ button.view-live-button:active {
 	background-position: 4px center;
 	background-size: 24px 24px;
 	background-repeat: no-repeat;
-	-webkit-user-select: text; user-select: text;
+	-webkit-user-select: text;
+	user-select: text;
 }
 
 .view-info-box {
@@ -623,14 +625,21 @@ button.view-live-button:active {
 	background-image: url(mono/warning.svg);
 }
 
-.view-critical-box {
+.view-error-box {
 	color: var(--clr-dark);
 	background-color: var(--clr-error);
 	background-image: url(mono/error.svg);
 }
 
+.view-critical-box {
+	color: var(--clr-dark);
+	background-color: var(--clr-critical);
+	background-image: url(mono/error.svg);
+}
+
 .view-info-box[source]::before,
 .view-warning-box[source]::before,
+.view-error-box[source]::before,
 .view-critical-box[source]::before { /*source*/
 	content: attr(source);
 	border-radius: 4px;
@@ -650,8 +659,13 @@ button.view-live-button:active {
 	background-color: #202020;
 }
 
-.view-critical-box[source]::before {
+.view-error-box[source]::before {
 	color: var(--clr-error);
+	background-color: #202020;
+}
+
+.view-critical-box[source]::before {
+	color: var(--clr-critical);
 	background-color: #202020;
 }
 
