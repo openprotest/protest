@@ -10,11 +10,15 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
+using System.Linq;
 
 namespace Protest.Tasks;
 
 internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
+
+    private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer"};
+    private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall"};
 
     private static ConcurrentDictionary<string, object> pingMutexes = new ConcurrentDictionary<string, object>();
     private static ConcurrentDictionary<string, object> wmiMutexes = new ConcurrentDictionary<string, object>();
@@ -58,8 +62,6 @@ internal static partial class Lifeline {
         HashSet<string[]> wmi = new HashSet<string[]>();
         HashSet<string[]> snmp = new HashSet<string[]>();
 
-        Tools.SnmpProfiles.Profile[] snmpProfiles = Tools.SnmpProfiles.Load();
-
         long lastVersion = 0;
 
         while (true) {
@@ -72,68 +74,48 @@ internal static partial class Lifeline {
                 snmp.Clear();
 
                 foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
-                    string[] remoteEndPoint;
-
-                    entry.attributes.TryGetValue("type", out Database.Attribute type);
-
+                    string[] remoteHost;
                     if (entry.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) {
-                        remoteEndPoint = ipAttr.value.Split(';');
+                        remoteHost = ipAttr.value.Split(';');
                     }
                     else if (entry.attributes.TryGetValue("hostname", out Database.Attribute hostnameAttr)) {
-                        remoteEndPoint = hostnameAttr.value.Split(';');
+                        remoteHost = hostnameAttr.value.Split(';');
                     }
                     else {
                         continue;
                     }
 
                     string os = entry.attributes.TryGetValue("operating system", out Database.Attribute osAttr) ?
-                    osAttr.value.ToLower() :
-                    null;
+                        osAttr.value.ToLower() :
+                        null;
 
-                    bool wmiOnce = true;
-                    for (int i = 0; i < remoteEndPoint.Length; i++) {
-                        if (remoteEndPoint[i].Length == 0) continue;
-                        if (!regex.IsMatch(remoteEndPoint[i])) continue;
+                    bool wmiOnce = true, snmpOnce = true;
 
-                        ping.Add(remoteEndPoint[i]);
-                        mutex.TryAdd(remoteEndPoint[i], new Object());
+                    for (int i = 0; i < remoteHost.Length; i++) {
+                        if (remoteHost[i].Length == 0) continue;
+                        if (!regex.IsMatch(remoteHost[i])) continue;
+
+                        ping.Add(remoteHost[i]);
+                        mutex.TryAdd(remoteHost[i], new Object());
 
                         if (wmiOnce && os is not null && os.Contains("windows")) {
                             wmiOnce = false;
-                            wmi.Add(new string[] { entry.filename, remoteEndPoint[i] });
+                            wmi.Add(new string[] { entry.filename, remoteHost[i] });
+                            mutex.TryAdd(entry.filename, new Object());
+                        }
+
+                        if (snmpOnce && entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpProfile)) {
+                            snmpOnce = false;
+                            snmp.Add(new string[] { entry.filename, remoteHost[i], snmpProfile?.value });
                             mutex.TryAdd(entry.filename, new Object());
                         }
                     }
-
-                    if (type is not null) {
-                        switch (type.value.ToLower().Trim()) {
-                        case "fax":
-                        case "multiprinter":
-                        case "ticket printer":
-                        case "printer":
-                            IPAddress ipAddress;
-                            if (!IPAddress.TryParse(remoteEndPoint[0], out ipAddress)) {
-                                try {
-                                    ipAddress = System.Net.Dns.GetHostEntry(remoteEndPoint[0]).AddressList[0];
-                                }
-                                catch { }
-                            }
-
-                            entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpProfile);
-
-                            snmp.Add(new string[] { entry.filename, ipAddress.ToString(), snmpProfile?.value });
-                            mutex.TryAdd(entry.filename, new Object());
-
-                            break;
-                        }
-                    }
-
                 }
 
                 lastVersion = DatabaseInstances.devices.version;
             }
 
-            Thread pingThread = new Thread(() => {
+            Thread pingThread = new Thread(() => { //icmp
                 foreach (string host in ping) {
                     mutex.TryGetValue(host, out object obj);
                     try {
@@ -147,7 +129,7 @@ internal static partial class Lifeline {
 
             Thread wmiThread = null, snmpThread = null;
 
-            if (OperatingSystem.IsWindows()) {
+            if (OperatingSystem.IsWindows()) { //wmi
                 wmiThread = new Thread(() => {
                     if (!OperatingSystem.IsWindows()) {
                         return;
@@ -167,24 +149,32 @@ internal static partial class Lifeline {
                 });
             }
 
-            if (true) {
+            if (snmp.Count > 0) { //snmp
                 snmpThread = new Thread(() => {
+                    Tools.SnmpProfiles.Profile[] profiles = Tools.SnmpProfiles.Load();
+
                     foreach (string[] data in snmp) {
-                        mutex.TryGetValue(data[0], out object obj);
-                        try {
-                            lock (obj) {
-                                bool p = IcmpQuery(data[1]);
-                                if (!p) continue;
-                                SnmpQuery(data[0], data[1], data[2], snmpProfiles);
+                        if (!DatabaseInstances.devices.dictionary.TryGetValue(data[0], out Database.Entry entry)) { continue; }
+                        if (!entry.attributes.TryGetValue("type", out Database.Attribute type)) { continue; }
+
+                        if (PRINTER_TYPES.Contains(type.value)) {
+                            mutex.TryGetValue(data[0], out object obj);
+                            try {
+                                lock (obj) {
+                                    bool p = IcmpQuery(data[1]);
+                                    if (!p) continue;
+                                    SnmpPrinterQuery(data[0], data[1], data[2], profiles);
+                                }
                             }
+                            catch { }
                         }
-                        catch { }
+                        else if (SWITCH_TYPES.Contains(type.value)) {
+                            //mutex.TryGetValue(data[0], out object obj);
+                            //TODO:
+                        }
                     }
-
-
                 });
             }
-
 
             pingThread.Start();
             wmiThread?.Start();
@@ -403,8 +393,14 @@ internal static partial class Lifeline {
         }
     }
 
-    private static void SnmpQuery(string file, string _ipAddress, string _profile, SnmpProfiles.Profile[] snmpProfiles) {
-        if (!IPAddress.TryParse(_ipAddress, out IPAddress ipAddress)) { return; }
+    private static void SnmpPrinterQuery(string file, string host, string _profile, SnmpProfiles.Profile[] snmpProfiles) {
+        IPAddress ipAddress;
+        if (!IPAddress.TryParse(host, out ipAddress)) {
+            try {
+                ipAddress = System.Net.Dns.GetHostEntry(host).AddressList[0];
+            }
+            catch { }
+        }
 
         SnmpProfiles.Profile profile = null;
         if (!String.IsNullOrEmpty(_profile) && Guid.TryParse(_profile, out Guid guid)) {
@@ -426,7 +422,7 @@ internal static partial class Lifeline {
             return;
         }
 
-        object mutex = wmiMutexes.GetOrAdd(_ipAddress, new object());
+        object mutex = wmiMutexes.GetOrAdd(ipAddress.ToString(), new object());
 
         lock (mutex) {
             //TODO: store to file

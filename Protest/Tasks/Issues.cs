@@ -14,7 +14,7 @@ internal static class Issues {
     public static bool StartTask(string origin) {
         if (task is not null) return false;
 
-        Thread thread = new Thread(() => IssuesScanner());
+        Thread thread = new Thread(() => Scan());
 
         task = new TaskWrapper("Issues") {
             thread = thread,
@@ -34,7 +34,7 @@ internal static class Issues {
         return true;
     }
 
-    private static void IssuesScanner() {
+    private static void Scan() {
 
     }
 }
