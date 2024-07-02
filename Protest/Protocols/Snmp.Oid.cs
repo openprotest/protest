@@ -9,11 +9,20 @@ public static class Oid {
     };
 
     public static string[] PRINTERS_OID = new string[] {
-        PRINTER_MODEL
+        PRINTER_MODEL,
+        PRINTER_SERIAL_NO
     };
 
     public static string[] SWITCH_OID = new string[] {
         INTERFACE_TOTAL
+    };
+
+    public static string[] LIFELINE_PRINTER_OID = new string[] {
+        PRINTER_MARKER_COUNTER_LIFE,
+        PRINTER_MARKER_COUNTER_PRINTS,
+        PRINTER_MARKER_COUNTER_MARKERS,
+        PRINTER_MARKER_COUNTER_MONO,
+        PRINTER_MARKER_COUNTER_COLOR,
     };
 
     public static string[] LIVESTATS_OID = new string[] {
@@ -71,16 +80,26 @@ public static class Oid {
 
     public const string PRINTER_STATUS          = "1.3.6.1.2.1.25.3.5.1.1.1";
     public const string PRINTER_MODEL           = "1.3.6.1.2.1.25.3.2.1.3.1";
+    public const string PRINTER_SERIAL_NO       = "1.3.6.1.2.1.43.5.1.1.17.1";
     public const string PRINTER_DISPLAY_MESSAGE = "1.3.6.1.2.1.43.16.5";
 
-    public const string PRINTER_TONERS        = "1.3.6.1.2.1.43.11.1.1.6";
-    public const string PRINTER_TONER_CURRENT = "1.3.6.1.2.1.43.11.1.1.9";
-    public const string PRINTER_TONERS_MAX    = "1.3.6.1.2.1.43.11.1.1.8";
+    public const string PRINTER_MARKER_COUNTER_LIFE    = "1.3.6.1.2.1.43.10.2.1.4.1.1";
+    public const string PRINTER_MARKER_COUNTER_PRINTS  = "1.3.6.1.2.1.43.10.2.1.5.1.1";
+    public const string PRINTER_MARKER_COUNTER_MARKERS = "1.3.6.1.2.1.43.10.2.1.6.1.1";
+    public const string PRINTER_MARKER_COUNTER_MONO    = "1.3.6.1.2.1.43.10.2.1.8.1.1";
+    public const string PRINTER_MARKER_COUNTER_COLOR   = "1.3.6.1.2.1.43.10.2.1.9.1.1";
 
-    public const string PRINTER_TRAYS       = "1.3.6.1.2.1.43.8.2.1.18";
-    public const string PRINTER_TRAYS_LEVEL = "1.3.6.1.2.1.43.8.2.1.10.i";
-    public const string PRINTER_TRAYS_TYPE  = "1.3.6.1.2.1.43.8.2.1.2";
+    public const string PRINTER_TONERS        = "1.3.6.1.2.1.43.11.1.1.6";
+    public const string PRINTER_TONERS_MAX    = "1.3.6.1.2.1.43.11.1.1.8";
+    public const string PRINTER_TONER_CURRENT = "1.3.6.1.2.1.43.11.1.1.9";
+
+    public const string PRINTER_TRAYS_TYPE   = "1.3.6.1.2.1.43.8.2.1.2";
+    public const string PRINTER_TRAYS_LEVEL  = "1.3.6.1.2.1.43.8.2.1.10";
+    public const string PRINTER_TRAYS_STATUS = "1.3.6.1.2.1.43.8.2.1.11";
+    public const string PRINTER_TRAYS        = "1.3.6.1.2.1.43.8.2.1.18";
     
     public const string PRINTER_JOBS = "1.3.6.1.4.1.11.2.3.9.4.2.1.1.6.5.1";
+
+
 
 }

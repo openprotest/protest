@@ -427,7 +427,8 @@ internal static class Fetch {
                     for (int i = 0; i < printerNormalized?.Length; i++) {
                         string dataString = printerNormalized[i][1];
                         switch (printerNormalized[i][0]) {
-                        case Protocols.Snmp.Oid.PRINTER_MODEL: data.TryAdd("model", new string[] { dataString, "SNMP", string.Empty }); break;
+                        case Protocols.Snmp.Oid.PRINTER_MODEL     : data.TryAdd("model", new string[] { dataString, "SNMP", string.Empty }); break;
+                        case Protocols.Snmp.Oid.PRINTER_SERIAL_NO : data.TryAdd("serial number", new string[] { dataString, "SNMP", string.Empty }); break;
                         }
                     }
                     break;

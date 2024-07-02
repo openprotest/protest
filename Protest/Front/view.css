@@ -634,7 +634,7 @@ button.view-live-button:active {
 .view-critical-box {
 	color: var(--clr-dark);
 	background-color: var(--clr-critical);
-	background-image: url(mono/error.svg);
+	background-image: url(mono/critical.svg);
 }
 
 .view-info-box[source]::before,

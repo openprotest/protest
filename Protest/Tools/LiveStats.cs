@@ -136,11 +136,14 @@ internal static class LiveStats {
                             double percent = Math.Round(100.0 * nFree / nSize, 1);
 
                             WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
-
-                            if (percent <= 5) {
+                            
+                            if (percent < 1) {
+                                WsWriteText(ws, $"{{\"critical\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
+                            }
+                            else if (percent <= 5) {
                                 WsWriteText(ws, $"{{\"error\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
                             }
-                            if (percent < 15) {
+                            else if (percent < 15) {
                                 WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
                             }
                         }
@@ -239,22 +242,32 @@ internal static class LiveStats {
                         }
 
                         string[][] componentName  = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-                        string[][] componentLevel = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
                         string[][] componentMax   = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                        string[][] componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
 
-                        if (componentName is not null && componentLevel is not null && componentMax is not null) {
-                            for (int i = 0; i< componentName.Length; i++) {
-                                if (componentLevel.Length < i) { continue; }
-                                if (componentMax.Length < i) { continue; }
-                                if (!int.TryParse(componentLevel[i][1], out int level)) { continue; }
+                        if (componentName is not null && componentCurrent is not null && componentMax is not null) {
+                            for (int i = 0; i < componentName.Length; i++) {
+                                if (componentCurrent.Length <= i) { continue; }
+                                if (componentMax.Length <= i) { continue; }
                                 if (!int.TryParse(componentMax[i][1], out int max)) { continue; }
+                                if (!int.TryParse(componentCurrent[i][1], out int current)) { continue; }
 
-                                int cartridgeLevel = 100 * level / max;
-                                if (cartridgeLevel < 5) {
-                                    WsWriteText(ws, $"{{\"error\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                                if (current == -2 || max == -2) { //undefined
+                                    continue;
                                 }
-                                else if (cartridgeLevel < 15) {
-                                    WsWriteText(ws, $"{{\"warning\":\"{cartridgeLevel}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+
+                                if (current == -3) { //full
+                                    current = max;
+                                }
+
+                                componentName[i][1] = componentName[i][1].TrimStart(new char[] { ' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~' });
+
+                                int used = 100 * current / max;
+                                if (used < 5) {
+                                    WsWriteText(ws, $"{{\"error\":\"{used}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                                }
+                                else if (used < 15) {
+                                    WsWriteText(ws, $"{{\"warning\":\"{used}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
                                 }
                             }
                         }

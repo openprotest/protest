@@ -1,13 +1,15 @@
-﻿using Lextm.SharpSnmpLib;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Management;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Protest.Tools;
+using Lextm.SharpSnmpLib;
 
 namespace Protest.Tasks;
 
@@ -54,6 +56,9 @@ internal static partial class Lifeline {
         ConcurrentDictionary<string, object> mutex = new ConcurrentDictionary<string, object>();
         HashSet<string> ping = new HashSet<string>();
         HashSet<string[]> wmi = new HashSet<string[]>();
+        HashSet<string[]> snmp = new HashSet<string[]>();
+
+        Tools.SnmpProfiles.Profile[] snmpProfiles = Tools.SnmpProfiles.Load();
 
         long lastVersion = 0;
 
@@ -64,9 +69,12 @@ internal static partial class Lifeline {
                 mutex.Clear();
                 ping.Clear();
                 wmi.Clear();
+                snmp.Clear();
 
                 foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
                     string[] remoteEndPoint;
+
+                    entry.attributes.TryGetValue("type", out Database.Attribute type);
 
                     if (entry.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) {
                         remoteEndPoint = ipAttr.value.Split(';');
@@ -96,6 +104,30 @@ internal static partial class Lifeline {
                             mutex.TryAdd(entry.filename, new Object());
                         }
                     }
+
+                    if (type is not null) {
+                        switch (type.value.ToLower().Trim()) {
+                        case "fax":
+                        case "multiprinter":
+                        case "ticket printer":
+                        case "printer":
+                            IPAddress ipAddress;
+                            if (!IPAddress.TryParse(remoteEndPoint[0], out ipAddress)) {
+                                try {
+                                    ipAddress = System.Net.Dns.GetHostEntry(remoteEndPoint[0]).AddressList[0];
+                                }
+                                catch { }
+                            }
+
+                            entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpProfile);
+
+                            snmp.Add(new string[] { entry.filename, ipAddress.ToString(), snmpProfile?.value });
+                            mutex.TryAdd(entry.filename, new Object());
+
+                            break;
+                        }
+                    }
+
                 }
 
                 lastVersion = DatabaseInstances.devices.version;
@@ -106,34 +138,61 @@ internal static partial class Lifeline {
                     mutex.TryGetValue(host, out object obj);
                     try {
                         lock (obj) {
-                            DoPing(host);
+                            IcmpQuery(host);
                         }
                     }
                     catch { }
                 }
             });
 
-            Thread wmiThread = new Thread(() => {
-                if (!OperatingSystem.IsWindows()) return;
+            Thread wmiThread = null, snmpThread = null;
 
-                foreach (string[] data in wmi) {
-                    mutex.TryGetValue(data[0], out object obj);
-                    try {
-                        lock (obj) {
-                            bool p = DoPing(data[1]);
-                            if (!p) continue;
-                            DoWmi(data[0], data[1]);
-                        }
+            if (OperatingSystem.IsWindows()) {
+                wmiThread = new Thread(() => {
+                    if (!OperatingSystem.IsWindows()) {
+                        return;
                     }
-                    catch { }
-                }
-            });
+
+                    foreach (string[] data in wmi) {
+                        mutex.TryGetValue(data[0], out object obj);
+                        try {
+                            lock (obj) {
+                                bool p = IcmpQuery(data[1]);
+                                if (!p) { continue; }
+                                WmiQuery(data[0], data[1]);
+                            }
+                        }
+                        catch { }
+                    }
+                });
+            }
+
+            if (true) {
+                snmpThread = new Thread(() => {
+                    foreach (string[] data in snmp) {
+                        mutex.TryGetValue(data[0], out object obj);
+                        try {
+                            lock (obj) {
+                                bool p = IcmpQuery(data[1]);
+                                if (!p) continue;
+                                SnmpQuery(data[0], data[1], data[2], snmpProfiles);
+                            }
+                        }
+                        catch { }
+                    }
+
+
+                });
+            }
+
 
             pingThread.Start();
-            wmiThread.Start();
+            wmiThread?.Start();
+            snmpThread?.Start();
 
             pingThread.Join();
-            wmiThread.Join();
+            wmiThread?.Join();
+            snmpThread?.Join();
 
             task.Sleep(Math.Max((int)((FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
@@ -145,7 +204,7 @@ internal static partial class Lifeline {
         }
     }
 
-    private static bool DoPing(string host) {
+    private static bool IcmpQuery(string host) {
         DateTime now = DateTime.UtcNow;
         short rtt = -1;
 
@@ -196,7 +255,7 @@ internal static partial class Lifeline {
     }
 
     [SupportedOSPlatform("windows")]
-    private static void DoWmi(string file, string host) {
+    private static void WmiQuery(string file, string host) {
         byte cpuUsage = 255, diskUsage = 255;
         ulong memoryFree = 0, memoryTotal = 0;
 
@@ -344,6 +403,40 @@ internal static partial class Lifeline {
         }
     }
 
+    private static void SnmpQuery(string file, string _ipAddress, string _profile, SnmpProfiles.Profile[] snmpProfiles) {
+        if (!IPAddress.TryParse(_ipAddress, out IPAddress ipAddress)) { return; }
+
+        SnmpProfiles.Profile profile = null;
+        if (!String.IsNullOrEmpty(_profile) && Guid.TryParse(_profile, out Guid guid)) {
+            for (int i = 0; i < snmpProfiles.Length; i++) {
+                if (snmpProfiles[i].guid == guid) {
+                    profile = snmpProfiles[i];
+                    break;
+                }
+            }
+        }
+
+        if (profile is null) {
+            return;
+        }
+
+        string[][] printerConsumable = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
+
+        if (printerConsumable is null || printerConsumable.Length == 0) {
+            return;
+        }
+
+        object mutex = wmiMutexes.GetOrAdd(_ipAddress, new object());
+
+        lock (mutex) {
+            //TODO: store to file
+            for (int i = 0; i < printerConsumable?.Length; i++) {
+                Console.WriteLine(printerConsumable[i][0] + "\t" + printerConsumable[i][1]);
+            }
+            Console.WriteLine(" - - - ");
+        }
+    }
+
     public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {
         if (parameters is null) { return null; }
 
@@ -384,4 +477,8 @@ internal static partial class Lifeline {
         }
     }
 
+    public static byte[] ViewPrintCounter() {
+        //TODO: view print counter
+        return null;
+    }
 }

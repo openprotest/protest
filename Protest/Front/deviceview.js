@@ -961,7 +961,16 @@ class DeviceView extends View {
 				driveButton.secondary.style.border = "2px solid var(--clr-dark)";
 				driveButton.secondary.style.borderRadius = "2px";
 				driveButton.secondary.style.transition = ".4s";
-				if (json.used / json.total >= .85) driveButton.button.style.backgroundColor = "var(--clr-warning)";
+
+				if (json.used / json.total >= .99) {
+					driveButton.button.style.backgroundColor = "var(--clr-critical)";
+				}
+				else if (json.used / json.total >= .95) {
+					driveButton.button.style.backgroundColor = "var(--clr-error)";
+				}
+				else if (json.used / json.total >= .85) {
+					driveButton.button.style.backgroundColor = "var(--clr-warning)";
+				}
 
 				driveButton.secondary.style.boxShadow = `var(--clr-dark) 0px 0 0 inset`;
 
@@ -1449,18 +1458,20 @@ class DeviceView extends View {
 
 	VolumeToColor(value, total) {
 		let p = value / total;
+		if (p > .98) return "var(--clr-critical)";
 		if (p > .9) return "var(--clr-error)";
 		if (p > .85) return "var(--clr-orange)";
-		if (p > .80) return "var(--clr-warning)";
-		return "hsl(92, 66%, 50%)";
+		if (p > .8) return "var(--clr-warning)";
+		return "hsl(92,66%,50%)";
 	}
 
 	PercentToColor(value, total) {
 		let p = value / total;
+		if (p > .98) return "var(--clr-critical)";
 		if (p > .9) return "var(--clr-error)";
 		if (p > .75) return "var(--clr-orange)";
 		if (p > .6) return "var(--clr-warning)";
-		return "hsl(92, 66%, 50%)";
+		return "hsl(92,66%,50%)";
 	}
 
 	Edit(isNew=false) { //overrides
