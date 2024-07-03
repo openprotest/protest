@@ -393,23 +393,22 @@ internal static class Fetch {
                 profile = null;
             }
             else if (snmpProfiles.Length == 1) {
-                result = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Polling.SnmpOperation.Get);
+                result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Polling.SnmpOperation.Get);
                 profile = snmpProfiles[0];
             }
             else {
                 (result, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
             }
 
-            string[][] normalized = Protocols.Snmp.Polling.ParseResponse(result);
-
-            for (int i = 0; i < normalized?.Length; i++) {
-                string dataString = normalized[i][1];
-                if (String.IsNullOrEmpty(dataString)) { continue; }
-                switch (normalized[i][0]) {
-                case Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR : data.TryAdd("descriptor", new string[] { dataString, "SNMP", string.Empty }); break;
-                case Protocols.Snmp.Oid.SYSTEM_NAME       : data.TryAdd("name", new string[] { dataString, "SNMP", string.Empty }); break;
-                case Protocols.Snmp.Oid.SYSTEM_LOCATION   : data.TryAdd("location", new string[] { dataString, "SNMP", string.Empty }); break;
-                }
+            Dictionary<string, string> normalized = Protocols.Snmp.Polling.ParseResponse(result);
+            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR, out string snmpDescription)) {
+                data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", string.Empty });
+            }
+            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname)) {
+                data.TryAdd("hostname", new string[] { snmpHostname, "SNMP", string.Empty });
+            }
+            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation)) {
+                data.TryAdd("location", new string[] { snmpLocation, "SNMP", string.Empty });
             }
 
             if (result is not null) {
@@ -422,27 +421,23 @@ internal static class Fetch {
                 case "multiprinter":
                 case "ticket printer":
                 case "printer":
-                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Polling.SnmpOperation.Get);
-                    string[][] printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
-                    for (int i = 0; i < printerNormalized?.Length; i++) {
-                        string dataString = printerNormalized[i][1];
-                        switch (printerNormalized[i][0]) {
-                        case Protocols.Snmp.Oid.PRINTER_MODEL     : data.TryAdd("model", new string[] { dataString, "SNMP", string.Empty }); break;
-                        case Protocols.Snmp.Oid.PRINTER_SERIAL_NO : data.TryAdd("serial number", new string[] { dataString, "SNMP", string.Empty }); break;
-                        }
+                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Polling.SnmpOperation.Get);
+                    Dictionary<string, string> printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
+                    if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_MODEL, out string snmpModel)) {
+                        data.TryAdd("model", new string[] { snmpModel, "SNMP", string.Empty });
+                    }
+                    if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_SERIAL_NO, out string snmpSerialNo)) {
+                        data.TryAdd("serial number", new string[] { snmpSerialNo, "SNMP", string.Empty });
                     }
                     break;
 
                 case "firewall":
                 case "router":
                 case "switch":
-                    IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID, Polling.SnmpOperation.Get);
-                    string[][] switchNormalized = Protocols.Snmp.Polling.ParseResponse(switchResult);
-                    for (int i = 0; i < switchNormalized?.Length; i++) {
-                        string dataString = switchNormalized[i][1];
-                        switch (switchNormalized[i][0]) {
-                        case Protocols.Snmp.Oid.INTERFACE_TOTAL: data.TryAdd("total interfaces", new string[] { dataString, "SNMP", string.Empty }); break;
-                        }
+                    IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID, Polling.SnmpOperation.Get);
+                    Dictionary<string, string> switchNormalized = Protocols.Snmp.Polling.ParseResponse(switchResult);
+                    if (switchNormalized is not null && switchNormalized.TryGetValue(Protocols.Snmp.Oid.INTERFACE_TOTAL, out string snmpSwitchSerialNo)) {
+                        data.TryAdd("total interfaces", new string[] { snmpSwitchSerialNo, "SNMP", string.Empty });
                     }
                     break;
                 }

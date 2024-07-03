@@ -88,6 +88,7 @@ public static class Oid {
     public const string PRINTER_MARKER_COUNTER_MARKERS = "1.3.6.1.2.1.43.10.2.1.6.1.1";
     public const string PRINTER_MARKER_COUNTER_MONO    = "1.3.6.1.2.1.43.10.2.1.8.1.1";
     public const string PRINTER_MARKER_COUNTER_COLOR   = "1.3.6.1.2.1.43.10.2.1.9.1.1";
+    public const string PRINTER_MARKER_COLORANT_ENTRY  = "1.3.6.1.2.1.43.12.1.1.4";
 
     public const string PRINTER_TONERS        = "1.3.6.1.2.1.43.11.1.1.6";
     public const string PRINTER_TONERS_MAX    = "1.3.6.1.2.1.43.11.1.1.8";
@@ -99,7 +100,5 @@ public static class Oid {
     public const string PRINTER_TRAYS        = "1.3.6.1.2.1.43.8.2.1.18";
     
     public const string PRINTER_JOBS = "1.3.6.1.4.1.11.2.3.9.4.2.1.1.6.5.1";
-
-
 
 }

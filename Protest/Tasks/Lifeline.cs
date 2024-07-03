@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
-using System.Linq;
 
 namespace Protest.Tasks;
 
@@ -155,9 +154,9 @@ internal static partial class Lifeline {
 
                     foreach (string[] data in snmp) {
                         if (!DatabaseInstances.devices.dictionary.TryGetValue(data[0], out Database.Entry entry)) { continue; }
-                        if (!entry.attributes.TryGetValue("type", out Database.Attribute type)) { continue; }
-
-                        if (PRINTER_TYPES.Contains(type.value)) {
+                        if (!entry.attributes.TryGetValue("type", out Database.Attribute typeAttr)) { continue; }
+                        string type = typeAttr.value.ToLower();
+                        if (PRINTER_TYPES.Contains(type)) {
                             mutex.TryGetValue(data[0], out object obj);
                             try {
                                 lock (obj) {
@@ -168,7 +167,7 @@ internal static partial class Lifeline {
                             }
                             catch { }
                         }
-                        else if (SWITCH_TYPES.Contains(type.value)) {
+                        else if (SWITCH_TYPES.Contains(type)) {
                             //mutex.TryGetValue(data[0], out object obj);
                             //TODO:
                         }
@@ -322,7 +321,7 @@ internal static partial class Lifeline {
         lock (mutex) {
             if (cpuUsage != 255) {
                 string dirCpu = $"{Data.DIR_LIFELINE}{Data.DELIMITER}cpu{Data.DELIMITER}{file}";
-                if (!Directory.Exists(dirCpu)) Directory.CreateDirectory(dirCpu);
+                if (!Directory.Exists(dirCpu)) { Directory.CreateDirectory(dirCpu); }
 
                 try {
                     using FileStream stream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
@@ -338,7 +337,7 @@ internal static partial class Lifeline {
 
             if (diskUsage != 255) {
                 string dirDiskUsage = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskusage{Data.DELIMITER}{file}";
-                if (!Directory.Exists(dirDiskUsage)) Directory.CreateDirectory(dirDiskUsage);
+                if (!Directory.Exists(dirDiskUsage)) { Directory.CreateDirectory(dirDiskUsage); }
 
                 try {
                     using FileStream stream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
@@ -354,7 +353,7 @@ internal static partial class Lifeline {
 
             if (memoryTotal > 0) {
                 string dirMemory = $"{Data.DIR_LIFELINE}{Data.DELIMITER}memory{Data.DELIMITER}{file}";
-                if (!Directory.Exists(dirMemory)) Directory.CreateDirectory(dirMemory);
+                if (!Directory.Exists(dirMemory)) { Directory.CreateDirectory(dirMemory); }
 
                 try {
                     using FileStream stream = new FileStream($"{dirMemory}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
@@ -405,10 +404,9 @@ internal static partial class Lifeline {
         SnmpProfiles.Profile profile = null;
         if (!String.IsNullOrEmpty(_profile) && Guid.TryParse(_profile, out Guid guid)) {
             for (int i = 0; i < snmpProfiles.Length; i++) {
-                if (snmpProfiles[i].guid == guid) {
-                    profile = snmpProfiles[i];
-                    break;
-                }
+                if (snmpProfiles[i].guid != guid) { continue; }
+                profile = snmpProfiles[i];
+                break;
             }
         }
 
@@ -416,9 +414,16 @@ internal static partial class Lifeline {
             return;
         }
 
-        string[][] printerConsumable = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
+/*
+        Dictionary<string, string> colorantEntity = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[]{ Protocols.Snmp.Oid.PRINTER_MARKER_COLORANT_ENTRY }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+        if (colorantEntity is null || colorantEntity.Count == 0) {
+            return;
+        }
+        bool isColor = colorantEntity.Count > 1;
+*/
 
-        if (printerConsumable is null || printerConsumable.Length == 0) {
+        Dictionary<string, string> printerCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
+        if (printerCounters is null || printerCounters.Count == 0) {
             return;
         }
 
@@ -426,10 +431,34 @@ internal static partial class Lifeline {
 
         lock (mutex) {
             //TODO: store to file
-            for (int i = 0; i < printerConsumable?.Length; i++) {
-                Console.WriteLine(printerConsumable[i][0] + "\t" + printerConsumable[i][1]);
+
+            //for (int i = 0; i < printerCounters?.Length; i++) {
+            //    Console.WriteLine(printerCounters[i][0] + "\t" + printerCounters[i][1]);
+            //}
+            Console.WriteLine(" ");
+
+            int blackCounter = 0;
+
+            string dirPrintCounter = $"{Data.DIR_LIFELINE}{Data.DELIMITER}print_counter{Data.DELIMITER}{file}";
+            if (!Directory.Exists(dirPrintCounter)) {
+                Directory.CreateDirectory(dirPrintCounter);
             }
-            Console.WriteLine(" - - - ");
+
+            DateTime now = DateTime.UtcNow;
+
+            try {
+                using FileStream stream = new FileStream($"{dirPrintCounter}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(blackCounter); //4 bytes
+                writer.Write((int)0); //4 bytes
+
+                writer.Dispose();
+                stream.Dispose();
+            }
+            catch { }
+
+
         }
     }
 

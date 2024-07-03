@@ -6,6 +6,7 @@ using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -318,6 +319,7 @@ internal static class LiveStats {
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private static void WmiQuery(WebSocket ws, object mutex, string firstAlive, ref string wmiHostname) {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive);
@@ -387,7 +389,7 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, Database.Attribute _type, Database.Attribute _snmpProfile) {
+    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, Database.Attribute typeAttr, Database.Attribute _snmpProfile) {
         SnmpProfiles.Profile profile = null;
         if (!String.IsNullOrEmpty(_snmpProfile.value) && Guid.TryParse(_snmpProfile.value, out Guid guid)) {
             SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
@@ -399,79 +401,79 @@ internal static class LiveStats {
             }
         }
 
-        if (profile is not null
-            && IPAddress.TryParse(firstAlive, out IPAddress ipAddress)) {
+        if (profile is not null && IPAddress.TryParse(firstAlive, out IPAddress ipAddress)) {
 
-            IList<Variable> result = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
-            string[][] normalized = Protocols.Snmp.Polling.ParseResponse(result);
+            IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+            Dictionary<string, string> normalized = Protocols.Snmp.Polling.ParseResponse(result);
 
-            for (int i = 0; i < normalized?.Length; i++) {
-                string dataString = normalized[i][1];
-                switch (normalized[i][0]) {
-                case Protocols.Snmp.Oid.SYSTEM_UPTIME: WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                case Protocols.Snmp.Oid.SYSTEM_TEMPERATURE: WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(dataString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                }
+            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
+                WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
             }
 
-            if (PRINTER_TYPES.Contains(_type.value)) {
-                IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
-                string[][] printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
+            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_TEMPERATURE, out string snmpTemperatura)) {
+                WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(snmpTemperatura)}\",\"source\":\"SNMP\"}}", mutex);
+            }
 
-                for (int i = 0; i < printerNormalized?.Length; i++) {
-                    string dataPrintString = printerNormalized[i][1];
-                    if (String.IsNullOrEmpty(dataPrintString)) { continue; }
+            string type = typeAttr.value.ToLower();
+            if (PRINTER_TYPES.Contains(type)) {
+                IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+                Dictionary<string, string> printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
 
-                    switch (printerNormalized[i][0]) {
-                    case Protocols.Snmp.Oid.PRINTER_STATUS:
-                        string status = dataPrintString switch
-                        {
-                            "1" => "Other",
-                            "2" => "Processing",
-                            "3" => "Idle",
-                            "4" => "Printing",
-                            "5" => "Warmup",
-                            _   => dataPrintString
-                        };
-                        WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
-                        break;
-
-                    case Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE: WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                    case Protocols.Snmp.Oid.PRINTER_JOBS: WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(dataPrintString)}\",\"source\":\"SNMP\"}}", mutex); break;
-                    }
+                if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
+                    string status = snmpPrinterStatus switch {
+                        "1" => "Other",
+                        "2" => "Processing",
+                        "3" => "Idle",
+                        "4" => "Printing",
+                        "5" => "Warmup",
+                        _   => snmpPrinterStatus
+                    };
+                    WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
                 }
 
-                string[][] componentName  = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-                string[][] componentMax   = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-                string[][] componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpGetQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
+                    WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
+                }
 
-                if (componentName is not null && componentCurrent is not null && componentMax is not null) {
-                    for (int i = 0; i < componentName.Length; i++) {
-                        if (componentCurrent.Length <= i) { continue; }
-                        if (componentMax.Length <= i) { continue; }
-                        if (!int.TryParse(componentMax[i][1], out int max)) { continue; }
-                        if (!int.TryParse(componentCurrent[i][1], out int current)) { continue; }
+                if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
+                    WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
+                }
 
-                        if (current == -2 || max == -2) { //undefined
-                            continue;
-                        }
+                Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
 
-                        if (current == -3) { //full
-                            current = max;
-                        }
+                if (componentName is not null && componentCurrent is not null && componentMax is not null &&
+                    componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {
 
-                        componentName[i][1] = componentName[i][1].TrimStart(new char[] { ' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~' });
+                    string[][] componentNameArray     = componentName.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+                    string[][] componentMaxArray      = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+                    string[][] componentCurrentArray = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+
+                    Array.Sort(componentNameArray, (x, y) => string.Compare(x[0], y[0]));
+                    Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
+                    Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
+
+                    for (int i = 0; i < componentNameArray.Length; i++) {
+                        if (!int.TryParse(componentMaxArray[i][1], out int max)) { continue; }
+                        if (!int.TryParse(componentCurrentArray[i][1], out int current)) { continue; }
+
+                        if (current == -2 || max == -2) { continue; } //undefined
+                        if (current == -3) { current = max; } //full
+
+                        componentNameArray[i][1] = componentNameArray[i][1].TrimStart(' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~');
 
                         int used = 100 * current / max;
                         if (used < 5) {
-                            WsWriteText(ws, $"{{\"error\":\"{used}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                            WsWriteText(ws, $"{{\"error\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
                         }
                         else if (used < 15) {
-                            WsWriteText(ws, $"{{\"warning\":\"{used}% {componentName[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                            WsWriteText(ws, $"{{\"warning\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
                         }
                     }
                 }
             }
-            else if (SWITCH_TYPES.Contains(_type.value)) {
+            else if (SWITCH_TYPES.Contains(type)) {
                 //TODO:
             }
         }

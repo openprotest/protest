@@ -214,14 +214,15 @@ internal static class Polling {
         }
     }
 
-    public static string[][] ParseResponse(IList<Variable> result) {
+    public static Dictionary<string, string> ParseResponse(IList<Variable> result) {
         if (result is null || result.Count == 0) {
             return null;
         }
 
-        List<string[]> list = new List<string[]>();
+        Dictionary<string, string> data = new Dictionary<string, string>();
 
         for (int i = 0; i < result.Count; i++) {
+
             string value;
             if (result[i].Data.TypeCode == SnmpType.Null ||
                 result[i].Data.TypeCode == SnmpType.NoSuchObject ||
@@ -241,14 +242,12 @@ internal static class Polling {
                 value = result[i].Data.ToString().Trim();
             }
 
-            if (String.IsNullOrEmpty(value)) {
-                continue;
-            }
+            if (String.IsNullOrEmpty(value)) { continue; }
 
-            list.Add(new string[] { result[i].Id.ToString(), value });
+            data.Add(result[i].Id.ToString(), value);
         }
 
-        return list.ToArray();
+        return data;
     }
 
     private static byte[] ParseResponseToBytes(IList<Variable> result) {
@@ -326,7 +325,7 @@ internal static class Polling {
 
     public static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
         for (int i = 0; i < snmpProfiles.Length; i++) {
-            IList<Variable> result = SnmpGetQuery(target, snmpProfiles[i], oids, Polling.SnmpOperation.Get);
+            IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids, Polling.SnmpOperation.Get);
 
             if (result is not null) {
                 return (result, snmpProfiles[i]);
@@ -336,7 +335,7 @@ internal static class Polling {
         return (null, null);
     }
 
-    public static IList<Variable> SnmpGetQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids, SnmpOperation operation) {
+    public static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids, SnmpOperation operation) {
         if (profile.version == 3) {
             try {
                 IList<Variable> result = result = Protocols.Snmp.Polling.SnmpRequestV3(
