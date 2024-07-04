@@ -289,6 +289,5 @@ namespace ProtestAgent {
 
             Configuration.Save();
         }
-
     }
 }

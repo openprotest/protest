@@ -22,42 +22,39 @@
         /// the contents of this method with the code editor.
         /// </summary>
     private void InitializeComponent() {
-            this.components = new System.ComponentModel.Container();
-            this.tmrFollow = new System.Windows.Forms.Timer(this.components);
-            this.SuspendLayout();
-            // 
-            // tmrFollow
-            // 
-            this.tmrFollow.Enabled = true;
-            this.tmrFollow.Interval = 1;
-            this.tmrFollow.Tick += new System.EventHandler(this.TmrFollow_Tick);
-            // 
-            // Stamp
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Fuchsia;
-            this.ClientSize = new System.Drawing.Size(288, 62);
-            this.ControlBox = false;
-            this.Cursor = System.Windows.Forms.Cursors.Cross;
-            this.DoubleBuffered = true;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "Stamp";
-            this.Opacity = 0.8D;
-            this.RightToLeftLayout = true;
-            this.ShowIcon = false;
-            this.ShowInTaskbar = false;
-            this.Text = "Stamp";
-            this.TopMost = true;
-            this.TransparencyKey = System.Drawing.Color.Fuchsia;
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Stamp_Paint);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Stamp_KeyDown);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Stamp_MouseUp);
-            this.ResumeLayout(false);
-
+        this.components = new System.ComponentModel.Container();
+        this.tmrFollow = new System.Windows.Forms.Timer(this.components);
+        this.SuspendLayout();
+        // 
+        // tmrFollow
+        // 
+        this.tmrFollow.Enabled = true;
+        this.tmrFollow.Interval = 1;
+        this.tmrFollow.Tick += new System.EventHandler(this.TmrFollow_Tick);
+        // 
+        // Stamp
+        // 
+        this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+        this.BackColor = System.Drawing.Color.Fuchsia;
+        this.ClientSize = new System.Drawing.Size(192, 40);
+        this.ControlBox = false;
+        this.Cursor = System.Windows.Forms.Cursors.Cross;
+        this.DoubleBuffered = true;
+        this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+        this.MaximizeBox = false;
+        this.MinimizeBox = false;
+        this.Name = "Stamp";
+        this.Opacity = 0.8D;
+        this.RightToLeftLayout = true;
+        this.ShowIcon = false;
+        this.Text = "Stamp";
+        this.TopMost = true;
+        this.TransparencyKey = System.Drawing.Color.Fuchsia;
+        this.Paint += new System.Windows.Forms.PaintEventHandler(this.Stamp_Paint);
+        this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Stamp_KeyDown);
+        this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Stamp_MouseUp);
+        this.ResumeLayout(false);
     }
 
     #endregion

@@ -53,7 +53,7 @@ namespace ProtestAgent {
 
             case "stamp":
                 if (!Configuration.stamp.enabled) return;
-                if (value.length == 0) return;
+                if (value.Length == 0) return;
                 Application.Run(new Stamp(value));
                 break;
 

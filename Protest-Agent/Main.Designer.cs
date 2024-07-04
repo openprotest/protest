@@ -124,7 +124,7 @@ namespace ProtestAgent {
             // 
             this.chkEnabled.Label = "Enable";
             this.chkEnabled.Location = new System.Drawing.Point(223, 24);
-            this.chkEnabled.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chkEnabled.Margin = new System.Windows.Forms.Padding(2);
             this.chkEnabled.Name = "chkEnabled";
             this.chkEnabled.Size = new System.Drawing.Size(119, 24);
             this.chkEnabled.TabIndex = 2;
