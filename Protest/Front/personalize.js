@@ -831,7 +831,14 @@ class Personalize extends Tabs {
 			if (event.key === "Enter") Apply();
 		};
 
-		settingsButton.onclick = ()=> UI.PromptAgent(this, "settings", "--");
+		settingsButton.onclick = ()=> {
+			if (this.presharedKeyInput.value === "") {
+				this.ConfirmBox("Agent is not configured. Please set a preshared key.", true, "mono/agent.svg");
+			}
+			else {
+				UI.PromptAgent(this, "settings", "--");
+			}
+		};
 	}
 
 	ClearCache() {
