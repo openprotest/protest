@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using static System.Windows.Forms.AxHost;
 
 public partial class Stamp : Form {
     static readonly Pen outline = new Pen(Color.FromArgb(232, 118, 0), 4);
@@ -34,8 +33,6 @@ public partial class Stamp : Form {
         }
 
         if (e.Button == MouseButtons.Left) {
-            //this.Hide();
-
             progress = 100;
             this.Refresh();
 
@@ -66,7 +63,8 @@ public partial class Stamp : Form {
             escaped = String.Empty;
             strokes = String.Empty;
 
-            this.Hide();
+            //this.Hide();
+            Application.Exit();
         }
     }
     private void Stamp_KeyDown(object sender, KeyEventArgs e) {
