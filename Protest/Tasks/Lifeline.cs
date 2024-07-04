@@ -227,9 +227,6 @@ internal static partial class Lifeline {
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                 writer.Write(rtt); //2 bytes
-
-                writer.Dispose();
-                stream.Dispose();
             }
 
             return rtt >= 0;
@@ -328,9 +325,6 @@ internal static partial class Lifeline {
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - cpuUsage)); //1 byte
-
-                    writer.Dispose();
-                    stream.Dispose();
                 }
                 catch { }
             }
@@ -344,9 +338,6 @@ internal static partial class Lifeline {
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - diskUsage)); //1 byte
-
-                    writer.Dispose();
-                    stream.Dispose();
                 }
                 catch { }
             }
@@ -361,9 +352,6 @@ internal static partial class Lifeline {
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(memoryTotal - memoryFree); //8 bytes
                     writer.Write(memoryTotal); //8 bytes
-
-                    writer.Dispose();
-                    stream.Dispose();
                 }
                 catch { }
             }
@@ -383,9 +371,6 @@ internal static partial class Lifeline {
                         writer.Write(diskTotal[i] - diskFree[i]); //8 bytes
                         writer.Write(diskTotal[i]); //8 bytes
                     }
-
-                    writer.Dispose();
-                    stream.Dispose();
                 }
                 catch { }
             }
@@ -422,24 +407,20 @@ internal static partial class Lifeline {
         bool isColor = colorantEntity.Count > 1;
 */
 
-        Dictionary<string, string> printerCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
-        if (printerCounters is null || printerCounters.Count == 0) {
+        Dictionary<string, string> printCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
+        if (printCounters is null || printCounters.Count == 0) {
             return;
+        }
+
+        uint blackCounter = 0;
+        if (printCounters.TryGetValue("1.3.6.1.2.1.43.10.2.1.4.1.1", out string blackCountString)) {
+            uint.TryParse(blackCountString, out blackCounter);
         }
 
         object mutex = wmiMutexes.GetOrAdd(ipAddress.ToString(), new object());
 
         lock (mutex) {
-            //TODO: store to file
-
-            //for (int i = 0; i < printerCounters?.Length; i++) {
-            //    Console.WriteLine(printerCounters[i][0] + "\t" + printerCounters[i][1]);
-            //}
-            Console.WriteLine(" ");
-
-            int blackCounter = 0;
-
-            string dirPrintCounter = $"{Data.DIR_LIFELINE}{Data.DELIMITER}print_counter{Data.DELIMITER}{file}";
+            string dirPrintCounter = $"{Data.DIR_LIFELINE}{Data.DELIMITER}printcount{Data.DELIMITER}{file}";
             if (!Directory.Exists(dirPrintCounter)) {
                 Directory.CreateDirectory(dirPrintCounter);
             }
@@ -447,18 +428,16 @@ internal static partial class Lifeline {
             DateTime now = DateTime.UtcNow;
 
             try {
-                using FileStream stream = new FileStream($"{dirPrintCounter}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
-                using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write(blackCounter); //4 bytes
-                writer.Write((int)0); //4 bytes
-
-                writer.Dispose();
-                stream.Dispose();
+                if (blackCounter > 0) {
+                    using FileStream stream = new FileStream($"{dirPrintCounter}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write(blackCounter); //4 bytes
+                    writer.Write((uint)0); //4 bytes, color placeholder
+                    writer.Write((uint)0); //4 bytes, dublex placeholder
+                }
             }
             catch { }
-
-
         }
     }
 
@@ -500,10 +479,5 @@ internal static partial class Lifeline {
         catch {
             return null;
         }
-    }
-
-    public static byte[] ViewPrintCounter() {
-        //TODO: view print counter
-        return null;
     }
 }

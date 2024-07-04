@@ -90,11 +90,12 @@ public sealed class Listener {
         { "/notifications/list",      (ctx, parameters, username) => Tasks.Watchdog.ListNotifications() },
         { "/notifications/save",      (ctx, parameters, username) => Tasks.Watchdog.SaveNotifications(ctx, username) },
 
-        { "/lifeline/ping/view",      (ctx, parameters, username) => Tasks.Lifeline.ViewPing(parameters) },
-        { "/lifeline/memory/view",    (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "memory") },
-        { "/lifeline/cpu/view",       (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "cpu") },
-        { "/lifeline/disk/view",      (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "disk") },
-        { "/lifeline/diskusage/view", (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskusage") },
+        { "/lifeline/ping/view",       (ctx, parameters, username) => Tasks.Lifeline.ViewPing(parameters) },
+        { "/lifeline/memory/view",     (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "memory") },
+        { "/lifeline/cpu/view",        (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "cpu") },
+        { "/lifeline/disk/view",       (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "disk") },
+        { "/lifeline/diskusage/view",  (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskusage") },
+        { "/lifeline/printcount/view", (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "printcount") },
 
         { "/tools/bulkping",          (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters) },
         { "/tools/dnslookup",         (ctx, parameters, username) => Protocols.Dns.Resolve(parameters) },
