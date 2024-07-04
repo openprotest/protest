@@ -240,7 +240,7 @@
 }
 
 .view-attributes-list > div > div:nth-child(4) > div:nth-child(1) {
-	max-width: 150px;
+	max-width: 160px;
 }
 .view-attributes-list > div > div:nth-child(4) > div:nth-child(2) {
 	max-width: 100px;
@@ -567,8 +567,8 @@ button.view-live-button:active {
 	z-index: 1;
 	left: 8px;
 	top: 20px;
-	width: 48px;
-	height: 48px;
+	width: 32px;
+	height: 32px;
 	background-size: cover;
 	filter: drop-shadow(var(--clr-dark) 0 0 2px);
 	transition: .4s;

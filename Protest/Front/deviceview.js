@@ -1036,8 +1036,6 @@ class DeviceView extends View {
 			if (spinnerBox) {
 				spinnerBox.style.height = "0";
 				spinnerBox.style.opacity = "0";
-				spinner.style.marginTop = "0";
-				spinner.style.marginBottom = "0";
 				setTimeout(()=>this.liveB.removeChild(spinnerBox), 200);
 			}
 
