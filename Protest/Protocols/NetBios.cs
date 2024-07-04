@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Protest.Protocols;
 
 internal static class NetBios {
-    static readonly byte[] BIOS_NAME_REQUEST = new byte[] {
+    private static readonly byte[] BIOS_NAME_REQUEST = new byte[] {
             0x80, 0x94, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x20, 0x43, 0x4b, 0x41,
             0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
@@ -31,12 +31,11 @@ internal static class NetBios {
             int receivedByteCount = socket.ReceiveFrom(receiveBuffer, ref remoteEndpoint);
             if (receivedByteCount >= 90) {
                 Encoding enc = new ASCIIEncoding();
-
                 if (receiveBuffer[72] == 0) {
-                    return enc.GetString(receiveBuffer, 57, 15).Trim();
+                    return enc.GetString(receiveBuffer, 57, 15).Trim('\0').Trim();
                 }
                 else {
-                    return enc.GetString(receiveBuffer, 57, 16).Trim();
+                    return enc.GetString(receiveBuffer, 57, 16).Trim('\0').Trim();
                 }
             }
         }
@@ -58,13 +57,12 @@ internal static class NetBios {
                 byte[] buffer = client.EndReceive(asyncResult, ref remoteEP);
 
                 Encoding enc = new ASCIIEncoding();
-                string biosName = enc.GetString(buffer, 57, 16).Trim();
+                string biosName = enc.GetString(buffer, 57, 16).Trim('\0').Trim();
 
                 int nameIndex = biosName.IndexOf(" ");
                 if (nameIndex > -1) biosName = biosName[..nameIndex];
 
                 return biosName;
-
             }
             else { //time out
                 return String.Empty;

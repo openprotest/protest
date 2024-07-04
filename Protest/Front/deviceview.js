@@ -879,6 +879,7 @@ class DeviceView extends View {
 
 		let dotPingCounter = 0;
 		let liveButtons = [];
+		let spinnerBox = null;
 		this.pingIndicators = [];
 
 		this.liveStatsWebSockets.onopen = ()=> {
@@ -897,11 +898,32 @@ class DeviceView extends View {
 			this.liveB.textContent = "";
 			this.liveD.textContent = "";
 
+			spinnerBox = document.createElement("div");
+			spinnerBox.style.height = "88px";
+			spinnerBox.style.transition = ".2s";
+			this.liveB.appendChild(spinnerBox);
+			
+			const spinner = document.createElement("div");
+			spinner.className = "spinner";
+			spinner.style.textAlign = "left";
+			spinner.style.marginTop = "8px";
+			spinner.style.marginBottom = "8px";
+			spinner.style.transform = "scale(.85)";
+			spinner.appendChild(document.createElement("div"));
+
+			const status = document.createElement("div");
+			status.textContent = "Retrieving device metrics...";
+			status.style.textAlign = "center";
+			status.style.fontWeight = "bold";
+			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+
+			spinnerBox.append(spinner, status);
+	
 			this.liveStatsWebSockets.send(this.args.file);
 		};
 
-		this.liveStatsWebSockets.onmessage = event=> {
-			const json = JSON.parse(event.data);
+		this.liveStatsWebSockets.onmessage = async event=> {
+			const json = await JSON.parse(event.data);
 
 			if (json.info) {
 				this.CreateInfo(json.info, json.source);
@@ -1011,6 +1033,14 @@ class DeviceView extends View {
 		};
 
 		this.liveStatsWebSockets.onclose = ()=> {
+			if (spinnerBox) {
+				spinnerBox.style.height = "0";
+				spinnerBox.style.opacity = "0";
+				spinner.style.marginTop = "0";
+				spinner.style.marginBottom = "0";
+				setTimeout(()=>this.liveB.removeChild(spinnerBox), 200);
+			}
+
 			const loggedIn = liveButtons.find(o=> o.secondary.textContent === "Logged in");
 			if (!loggedIn && this.link.owner) {
 				const split = this.link.owner.v.split(";").map(o=>o.trim());
@@ -1054,8 +1084,6 @@ class DeviceView extends View {
 				this.InitializeGraphs();
 			}
 		};
-
-		//this.liveStatsWebSockets.onerror = error=> {};
 	}
 
 	async InitializeGraphs() {

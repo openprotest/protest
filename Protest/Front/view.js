@@ -413,38 +413,65 @@ class View extends Window {
 
 	CreateInfo(text, source) {
 		const info = document.createElement("div");
+		info.setAttribute("priority", "40");
 		info.className = "view-info-box";
 		info.textContent = text;
 		info.setAttribute("source", source);
-		this.liveB.append(info);
+		this.liveB.appendChild(info);
+		this.SortWarningBoxes();
 		return info;
 	}
-
 	CreateWarning(text, source) {
 		const warning = document.createElement("div");
+		warning.setAttribute("priority", "30");
 		warning.className = "view-warning-box";
 		warning.textContent = text;
 		warning.setAttribute("source", source);
-		this.liveB.prepend(warning);
+		this.liveB.appendChild(warning);
+		this.SortWarningBoxes();
 		return warning;
 	}
-
 	CreateError(text, source) {
 		const error = document.createElement("div");
+		error.setAttribute("priority", "20");
 		error.className = "view-error-box";
 		error.textContent = text;
 		error.setAttribute("source", source);
-		this.liveB.prepend(error);
+		this.liveB.appendChild(error);
+		this.SortWarningBoxes();
 		return error;
 	}
-
 	CreateCritical(text, source) {
 		const critical = document.createElement("div");
+		critical.setAttribute("priority", "10");
 		critical.className = "view-critical-box";
 		critical.textContent = text;
 		critical.setAttribute("source", source);
-		this.liveB.prepend(critical);
+		this.liveB.appendChild(critical);
+		this.SortWarningBoxes();
 		return critical;
+	}
+
+	SortWarningBoxes() {
+		let boxes = [];
+
+		for (let i=0; i<this.liveB.children.length; i++) {
+			const priority = this.liveB.children[i].getAttribute("priority");
+			if (!priority) continue;
+			boxes.push(this.liveB.children[i]);
+		}
+
+		for (let i=0; i<boxes.length; i++) {
+			this.liveB.removeChild(boxes[i]);
+		}
+
+		boxes.sort((a, b)=> {
+			return parseInt(a.getAttribute("priority")) - parseInt(b.getAttribute("priority"));
+		});
+
+		for (let i=0; i<boxes.length; i++) {
+			this.liveB.appendChild(boxes[i]);
+		}
 	}
 
 	CreateSideButton(icon, label) {

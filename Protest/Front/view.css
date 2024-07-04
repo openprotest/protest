@@ -642,6 +642,7 @@ button.view-live-button:active {
 .view-error-box[source]::before,
 .view-critical-box[source]::before { /*source*/
 	content: attr(source);
+	font-weight: bold;
 	border-radius: 4px;
 	padding: 0 4px;
 	margin: 0 8px 0 0;
@@ -650,20 +651,17 @@ button.view-live-button:active {
 }
 
 .view-info-box[source]::before {
-	color: var(--clr-dark);
+	color: #404040;
 	background-color: #c0c0c0;
 }
-
 .view-warning-box[source]::before {
 	color: var(--clr-warning);
 	background-color: #202020;
 }
-
 .view-error-box[source]::before {
 	color: var(--clr-error);
 	background-color: #202020;
 }
-
 .view-critical-box[source]::before {
 	color: var(--clr-critical);
 	background-color: #202020;
