@@ -27,9 +27,7 @@ internal static partial class Lifeline {
 
     public static TaskWrapper task;
 
-    public static void Initialize() {
-        StartTask("system");
-    }
+    public static void Initialize() => StartTask("system");
 
     public static bool StartTask(string origin) {
         if (task is not null) return false;
@@ -413,7 +411,7 @@ internal static partial class Lifeline {
         }
 
         uint blackCounter = 0;
-        if (printCounters.TryGetValue("1.3.6.1.2.1.43.10.2.1.4.1.1", out string blackCountString)) {
+        if (printCounters.TryGetValue(Protocols.Snmp.Oid.PRINTER_MARKER_COUNTER_LIFE, out string blackCountString)) {
             uint.TryParse(blackCountString, out blackCounter);
         }
 
@@ -433,8 +431,8 @@ internal static partial class Lifeline {
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(blackCounter); //4 bytes
-                    writer.Write((uint)0); //4 bytes, color placeholder
-                    writer.Write((uint)0); //4 bytes, dublex placeholder
+                    //writer.Write((uint)0); //4 bytes, color placeholder
+                    //writer.Write((uint)0); //4 bytes, duplex placeholder
                 }
             }
             catch { }

@@ -39,6 +39,7 @@ class DeviceView extends View {
 	];
 
 	static regexIPv4 = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
+	static printerTypes = ["fax", "multiprinter", "ticket printer", "printer"];
 
 	constructor(args) {
 		super();
@@ -1094,7 +1095,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 
-		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskUsageArray] = await Promise.all([
+		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskUsageArray, printCounterArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
@@ -1123,6 +1124,17 @@ class DeviceView extends View {
 				const response = await fetch(`lifeline/diskusage/view?file=${this.args.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
+			})(),
+
+			(async ()=> {
+				if (this.link.type && DeviceView.printerTypes.includes(this.link.type.v.toLowerCase())) {
+					const response = await fetch(`lifeline/printcount/view?file=${this.args.file}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				}
+				else {
+					return [];
+				}
 			})()
 		]);
 
@@ -1143,7 +1155,7 @@ class DeviceView extends View {
 
 			oMonth = (oMonth+1).toString().padStart(2,0);
 
-			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskUsageArray] = await Promise.all([
+			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskUsageArray, oldPrintCounterArray] = await Promise.all([
 				(async ()=> {
 					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
@@ -1172,6 +1184,17 @@ class DeviceView extends View {
 					const response = await fetch(`lifeline/diskusage/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
+				})(),
+
+				(async ()=> {
+					if (this.link.type && DeviceView.printerTypes.includes(this.link.type.v.toLowerCase())) {
+						const response = await fetch(`lifeline/printcount/view?file=${this.args.file}&date=${oYear}${oMonth}`);
+						const buffer = await response.arrayBuffer();
+						return new Uint8Array(buffer);
+					}
+					else {
+						return [];
+					}
 				})()
 			]);
 
@@ -1180,6 +1203,7 @@ class DeviceView extends View {
 			if (oldMemoryArray.length > 0) memoryArray = [...oldMemoryArray, ...memoryArray];
 			if (oldDiskCapacityArray.length > 0) diskCapacityArray = [...oldDiskCapacityArray, ...diskCapacityArray];
 			if (oldDiskUsageArray.length > 0) diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
+			if (oldPrintCounterArray.length > 0) printCounterArray = [...oldPrintCounterArray, ...printCounterArray];
 		}
 
 		const GenerateTimeline = ()=> {
@@ -1505,6 +1529,20 @@ class DeviceView extends View {
 			}
 
 			GenerateGraph(data, "Disk usage", "percent", "mono/hdd.svg");
+		}
+
+		if (printCounterArray.length > 0) {
+			let data = [];
+			for (let i=0; i<diskUsageArray.length-8; i+=12) {
+				const dateBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+
+				const counterBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
+				const counter =  Number(new DataView(counterBuffer).getUint32(0, true));
+				data.push({d:date, v:counter});
+			}
+
+			GenerateGraph(data, "Print counter", "vol", "mono/print.svg");
 		}
 	}
 

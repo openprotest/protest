@@ -136,8 +136,8 @@ internal static class Fetch {
 
         Dictionary<string, string> wmi = new Dictionary<string, string>();
         Dictionary<string, string> ad = new Dictionary<string, string>();
-        string netbios = Protocols.NetBios.GetBiosName(ipList.First()?.ToString());
-        string portscan = string.Empty;
+        string netBios = Protocols.NetBios.GetBiosName(ipList.First()?.ToString());
+        string portScan = string.Empty;
 
         Thread tWmi = null, tAd = null, tPortScan = null;
 
@@ -223,12 +223,12 @@ internal static class Fetch {
 
                 for (int i = 0; i < portsPool.Length; i++) {
                     if (ports[i]) {
-                        portscan += $"{portsPool[i]}; ";
+                        portScan += $"{portsPool[i]}; ";
                     }
                 }
 
-                if (portscan.EndsWith("; ")) {
-                    portscan = portscan[..^2];
+                if (portScan.EndsWith("; ")) {
+                    portScan = portScan[..^2];
                 }
             });
         }
@@ -280,8 +280,8 @@ internal static class Fetch {
             }
         }
 
-        if (portscan.Length > 0) {
-            data.TryAdd("ports", new string[] { portscan, "Port-scan", string.Empty });
+        if (portScan.Length > 0) {
+            data.TryAdd("ports", new string[] { portScan, "Port-scan", string.Empty });
         }
 
         if (wmi.TryGetValue("mac address", out string mac)) {
@@ -305,8 +305,8 @@ internal static class Fetch {
         }
 
         if (!wmi.ContainsKey("hostname")) {
-            if (netbios is not null && netbios.Length > 0) { //use netbios
-                data.TryAdd("hostname", new string[] { netbios, "NetBIOS", string.Empty });
+            if (netBios is not null && netBios.Length > 0) { //use netbios
+                data.TryAdd("hostname", new string[] { netBios, "NetBIOS", string.Empty });
             }
             else if (useDns && hostname is not null && hostname.Length > 0) { //use dns
                 data.TryAdd("hostname", new string[] { hostname, "DNS", string.Empty });
@@ -356,8 +356,8 @@ internal static class Fetch {
         }
 
         //if no type found, try to guess from ports
-        if (!data.ContainsKey("type") && portscan.Length > 0) {
-            int[] ports = portscan.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
+        if (!data.ContainsKey("type") && portScan.Length > 0) {
+            int[] ports = portScan.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
 
             if (ports.Contains(445) && ports.Contains(3389) && (ports.Contains(53) || ports.Contains(67) || ports.Contains(389) || ports.Contains(636) || ports.Contains(853))) { //SMB, RDP, DNS, DHCP, LDAP
                 data.TryAdd("type", new string[] { "Server", "Port-scan", string.Empty });
