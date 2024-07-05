@@ -23,7 +23,7 @@ namespace ProtestAgent {
             //AttachConsole(-1); //attach output to parent
 
             if (arguments[1].StartsWith("protest://")) arguments[1] = arguments[1].Substring(10);
-            if (arguments[1].EndsWith("/")) arguments[1] = arguments[1].Substring(0, arguments[1].Length - 1);
+            //if (arguments[1].EndsWith("/")) arguments[1] = arguments[1].Substring(0, arguments[1].Length - 1);
 
             byte[] data = Convert.FromBase64String(arguments[1]);
 

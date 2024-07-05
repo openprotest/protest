@@ -785,7 +785,7 @@ class View extends Window {
 				valueInput.style.backgroundImage = "url(mono/add.svg)";
 				valueInput.style.paddingLeft = "32px";
 			}
-		}
+		};
 		
 		for (let i = 0; i < this.attributes.childNodes.length; i++) {
 			const attribute = this.attributes.childNodes[i];

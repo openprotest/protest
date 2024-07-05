@@ -93,7 +93,7 @@ namespace ProtestAgent {
                 rdp.arguments = "-f";
 
                 uvnc.enabled   = false;
-                uvnc.arguments = "-autoscaling";
+                uvnc.arguments = "-autoscaling -normalcursor";
 
                 pse.enabled = false;
                 pse.path    = "psexec.exe";
