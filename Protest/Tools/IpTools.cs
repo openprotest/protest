@@ -6,7 +6,21 @@ using System.Net.NetworkInformation;
 namespace Protest;
 
 public static class IpTools {
-    public static bool OnSameNetwork(IPAddress host) {
+ 
+    public static bool IsIpAddressPrivate(this IPAddress host) {
+        if (host.AddressFamily != AddressFamily.InterNetwork) return false;
+
+        byte[] bytes = host.GetAddressBytes();
+        switch (bytes[0]) {
+        case 10: return true;
+        case 127: return true;
+        case 172: return bytes[1] < 32 && bytes[1] >= 16;
+        case 192: return bytes[1] == 168;
+        default: return false;
+        }
+    }
+
+    public static bool OnSameBroadcastDomain(this IPAddress host) {
         foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces()) {
             IPInterfaceProperties properties = adapter.GetIPProperties();
 

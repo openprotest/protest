@@ -215,7 +215,7 @@ internal static class Icmp {
             if (ips.Length == 0) return id + ((char)127).ToString() + "unknown host";
 
             IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!IpTools.OnSameNetwork(ips[0])) return id + ((char)127).ToString() + "unknown net.";
+            if (!ips[0].OnSameBroadcastDomain()) return id + ((char)127).ToString() + "unknown net.";
 
             string response = Arp.ArpRequest(ip.ToString());
 

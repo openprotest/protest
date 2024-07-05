@@ -248,8 +248,8 @@ const KEEP = {
 				KEEP.chatNotificationSound.volume = volume / 100;
 			}
 
-			if (document.hidden &&
-				localStorage.getItem("enable_notification_sound") !== "false") {
+			if (document.hidden
+				&& localStorage.getItem("enable_notification_sound") !== "false") {
 				KEEP.chatNotificationSound.play();
 			}
 
@@ -267,9 +267,9 @@ const KEEP = {
 				WIN.array[i].HandleMessage(message);
 				chatCount++;
 
-				if (WIN.focused !== WIN.array[i] &&
-					message.sender !== KEEP.username &&
-					localStorage.getItem("enable_notification_sound") !== "false") {
+				if (WIN.focused !== WIN.array[i]
+					&& message.sender !== KEEP.username
+					&& localStorage.getItem("enable_notification_sound") !== "false") {
 					KEEP.chatNotificationSound.play();
 				}
 			}
@@ -301,9 +301,7 @@ const KEEP = {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message);
 
-				/*if (WIN.focused !== WIN.array[i] &&
-					message.sender !== KEEP.username &&
-					localStorage.getItem("enable_notification_sound") !== "false") {
+				/*if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username && localStorage.getItem("enable_notification_sound") !== "false") {
 					KEEP.chatNotificationSound.play();
 				}*/
 			}

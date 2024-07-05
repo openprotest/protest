@@ -16,11 +16,11 @@ internal static class NetBios {
             0x00, 0x01
     };
 
-    public static string GetBiosName(in string ip) {
+    public static string GetBiosName(in string ip, int timeout = 1000) {
         if (ip is null) return null;
 
         using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
+        socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, timeout);
 
         try {
             EndPoint remoteEndpoint = new IPEndPoint(IPAddress.Parse(ip), 137);
@@ -44,13 +44,16 @@ internal static class NetBios {
         return null;
     }
 
-    public static async Task<string> GetBiosNameAsync(string host) {
+    public static async Task<string> GetBiosNameAsync(string host, int timeout = 1000) {
+        IPAddress ip = IPAddress.Parse(host);
+        if (!ip.IsIpAddressPrivate()) { return String.Empty; }
+
         using UdpClient client = new UdpClient();
         try {
-            await client.SendAsync(BIOS_NAME_REQUEST, BIOS_NAME_REQUEST.Length, host, 137);
+            await client.SendAsync(BIOS_NAME_REQUEST, BIOS_NAME_REQUEST.Length, new IPEndPoint(ip, 137));
 
             IAsyncResult asyncResult = client.BeginReceive(null, null);
-            asyncResult.AsyncWaitHandle.WaitOne(TimeSpan.FromMilliseconds(2000));
+            asyncResult.AsyncWaitHandle.WaitOne(TimeSpan.FromMilliseconds(timeout));
 
             if (asyncResult.IsCompleted) {
                 IPEndPoint remoteEP = null;

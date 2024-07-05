@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.DirectoryServices;
@@ -139,11 +140,9 @@ internal static class LiveStats {
             string firstAlive = null;
             PingReply firstReply = null;
 
-            entry.attributes.TryGetValue("type", out Database.Attribute _type);
             entry.attributes.TryGetValue("ip", out Database.Attribute _ip);
             entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname);
             entry.attributes.TryGetValue("operating system", out Database.Attribute _os);
-            entry.attributes.TryGetValue("snmp profile", out Database.Attribute _snmpProfile);
 
             if (_ip?.value?.Length > 0) {
                 pingArray = _ip.value.Split(';').Select(o => o.Trim()).ToArray();
@@ -197,14 +196,17 @@ internal static class LiveStats {
 
             string wmiHostname = null, adHostname = null, netBios = null, dns = null;
 
-            if (OperatingSystem.IsWindows() &&
-                _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true &&
-                firstAlive is not null && firstReply.Status == IPStatus.Success) {
+            if (OperatingSystem.IsWindows()
+                && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true
+                && firstAlive is not null && firstReply.Status == IPStatus.Success) {
                 WmiQuery(ws, mutex, firstAlive, ref wmiHostname);
             }
 
-            if (_snmpProfile is not null && firstAlive is not null && firstReply.Status == IPStatus.Success) {
-                SnmpQuery(ws, mutex, firstAlive, _type, _snmpProfile);
+            if (firstAlive is not null
+                && firstReply.Status == IPStatus.Success
+                && entry.attributes.TryGetValue("type", out Database.Attribute _type)
+                && entry.attributes.TryGetValue("snmp profile", out Database.Attribute _snmpProfile)) {
+                SnmpQuery(ws, mutex, firstAlive, _type?.value.ToLower(), _snmpProfile);
             }
 
             if (OperatingSystem.IsWindows() && _hostname?.value?.Length > 0) {
@@ -245,7 +247,7 @@ internal static class LiveStats {
                     dns = dns?.Split('.')[0].ToUpper();
                     bool mismatch = false;
 
-                    if (!mismatch &&  !String.IsNullOrEmpty(wmiHostname)) {
+                    if (!mismatch && !String.IsNullOrEmpty(wmiHostname)) {
                         wmiHostname = wmiHostname?.Split('.')[0].ToUpper();
                         if (wmiHostname != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}", mutex);
@@ -261,8 +263,10 @@ internal static class LiveStats {
                         }
                     }
 
-                    if (!mismatch && wmiHostname is null && adHostname is null)
-                        netBios = await NetBios.GetBiosNameAsync(firstAlive);
+                    if (!mismatch && wmiHostname is null && adHostname is null) {
+
+                        netBios = await NetBios.GetBiosNameAsync(firstAlive, 500);
+                    }
 
                     if (!mismatch && !String.IsNullOrEmpty(netBios)) {
                         netBios = netBios?.Split('.')[0].ToUpper();
@@ -275,7 +279,7 @@ internal static class LiveStats {
                 catch { }
             }
 
-            if (String.IsNullOrEmpty(_hostname?.value) && String.IsNullOrEmpty(_ip?.value)) { //check revese dns mismatch
+            if (String.IsNullOrEmpty(_hostname?.value) && String.IsNullOrEmpty(_ip?.value)) { //check reverse dns mismatch
                 string[] hostnames = _hostname?.value.Split(';').Select(o => o.Trim()).ToArray() ?? Array.Empty<string>();
                 string[] ips = _ip?.value.Split(';').Select(o => o.Trim()).ToArray() ?? Array.Empty<string>();
 
@@ -286,7 +290,7 @@ internal static class LiveStats {
                         IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
                         for (int j = 0; j < reversed.Length; j++) {
                             if (!ips.Contains(reversed[j].ToString())) {
-                                WsWriteText(ws, $"{{\"warning\":\"Revese DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}", mutex);
+                                WsWriteText(ws, $"{{\"warning\":\"Reverse DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}", mutex);
                                 break;
                             }
                         }
@@ -390,93 +394,91 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, Database.Attribute typeAttr, Database.Attribute _snmpProfile) {
+    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, string type, Database.Attribute _snmpProfile) {
         SnmpProfiles.Profile profile = null;
         if (!String.IsNullOrEmpty(_snmpProfile.value) && Guid.TryParse(_snmpProfile.value, out Guid guid)) {
             SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
             for (int i = 0; i < profiles.Length; i++) {
-                if (profiles[i].guid == guid) {
-                    profile = profiles[i];
-                    break;
-                }
+                if (profiles[i].guid != guid) continue;
+                profile = profiles[i];
+                break;
             }
         }
 
-        if (profile is not null && IPAddress.TryParse(firstAlive, out IPAddress ipAddress)) {
+        if (profile is null) { return; }
+        if (!IPAddress.TryParse(firstAlive, out IPAddress ipAddress)) { return; }
 
-            IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
-            Dictionary<string, string> normalized = Protocols.Snmp.Polling.ParseResponse(result);
+        IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+        Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(result);
 
-            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
-                WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
+        if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
+            WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
+        }
+
+        if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_TEMPERATURE, out string snmpTemperature)) {
+            WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(snmpTemperature)}\",\"source\":\"SNMP\"}}", mutex);
+        }
+
+        if (PRINTER_TYPES.Contains(type)) {
+            IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+            Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(printerResult);
+
+            if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
+                string status = snmpPrinterStatus switch {
+                    "1" => "Other",
+                    "2" => "Processing",
+                    "3" => "Idle",
+                    "4" => "Printing",
+                    "5" => "Warmup",
+                    _   => snmpPrinterStatus
+                };
+                WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
             }
 
-            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_TEMPERATURE, out string snmpTemperatura)) {
-                WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(snmpTemperatura)}\",\"source\":\"SNMP\"}}", mutex);
+            if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
+                WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
             }
 
-            string type = typeAttr.value.ToLower();
-            if (PRINTER_TYPES.Contains(type)) {
-                IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
-                Dictionary<string, string> printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
+            if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
+                WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
+            }
 
-                if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
-                    string status = snmpPrinterStatus switch {
-                        "1" => "Other",
-                        "2" => "Processing",
-                        "3" => "Idle",
-                        "4" => "Printing",
-                        "5" => "Warmup",
-                        _   => snmpPrinterStatus
-                    };
-                    WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
-                }
+            Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+            Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+            Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
 
-                if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
-                    WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
-                }
+            if (componentName is not null && componentCurrent is not null && componentMax is not null &&
+                componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {
 
-                if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
-                    WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
-                }
+                string[][] componentNameArray     = componentName.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+                string[][] componentMaxArray      = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+                string[][] componentCurrentArray  = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
 
-                Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-                Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-                Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                Array.Sort(componentNameArray, (x, y) => string.Compare(x[0], y[0]));
+                Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
+                Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
 
-                if (componentName is not null && componentCurrent is not null && componentMax is not null &&
-                    componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {
+                for (int i = 0; i < componentNameArray.Length; i++) {
+                    if (!int.TryParse(componentMaxArray[i][1], out int max)) { continue; }
+                    if (!int.TryParse(componentCurrentArray[i][1], out int current)) { continue; }
 
-                    string[][] componentNameArray     = componentName.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-                    string[][] componentMaxArray      = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-                    string[][] componentCurrentArray = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+                    if (current == -2 || max == -2) { continue; } //undefined
+                    if (current == -3) { current = max; } //full
 
-                    Array.Sort(componentNameArray, (x, y) => string.Compare(x[0], y[0]));
-                    Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
-                    Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
+                    componentNameArray[i][1] = componentNameArray[i][1].TrimStart(' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~');
 
-                    for (int i = 0; i < componentNameArray.Length; i++) {
-                        if (!int.TryParse(componentMaxArray[i][1], out int max)) { continue; }
-                        if (!int.TryParse(componentCurrentArray[i][1], out int current)) { continue; }
-
-                        if (current == -2 || max == -2) { continue; } //undefined
-                        if (current == -3) { current = max; } //full
-
-                        componentNameArray[i][1] = componentNameArray[i][1].TrimStart(' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~');
-
-                        int used = 100 * current / max;
-                        if (used < 5) {
-                            WsWriteText(ws, $"{{\"error\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
-                        }
-                        else if (used < 15) {
-                            WsWriteText(ws, $"{{\"warning\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
-                        }
+                    int used = 100 * current / max;
+                    if (used < 5) {
+                        WsWriteText(ws, $"{{\"error\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
+                    }
+                    else if (used < 15) {
+                        WsWriteText(ws, $"{{\"warning\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
                     }
                 }
             }
-            else if (SWITCH_TYPES.Contains(type)) {
-                //TODO:
-            }
+        }
+        else if (SWITCH_TYPES.Contains(type)) {
+            //TODO:
         }
     }
 

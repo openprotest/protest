@@ -47,7 +47,7 @@ internal static partial class Arp {
     [SupportedOSPlatform("windows")]
     private static string ArpRequest_Windows(IPAddress ip) {
         try {
-            if (!IpTools.OnSameNetwork(ip)) return String.Empty;
+            if (!ip.OnSameBroadcastDomain()) return String.Empty;
 
             int len = 6;
             byte[] mac = new byte[len];
@@ -65,7 +65,7 @@ internal static partial class Arp {
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("osx")]
     private static string ArpRequest_Linux(IPAddress ip) {
-        if (!IpTools.OnSameNetwork(ip)) return String.Empty;
+        if (!ip.OnSameBroadcastDomain()) return String.Empty;
 
         try {
             using FileStream arpFile = new FileStream("/proc/net/arp", FileMode.Open, FileAccess.Read);
@@ -104,7 +104,7 @@ internal static partial class Arp {
             if (ips.Length == 0) { return false; }
 
             IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!IpTools.OnSameNetwork(ips[0])) {
+            if (!ips[0].OnSameBroadcastDomain()) {
                 return false;
             }
 

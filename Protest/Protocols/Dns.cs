@@ -409,8 +409,8 @@ internal static class Dns {
         for (int i = 0; i < labels.Length; i++) {
             labels[i] = domainNames[i].Split(".");
 
-            if (type == RecordType.PTR && labels[i].Length == 4 &&
-                labels[i].All(o => int.TryParse(o, out int n) && n >= 0 && n <= 255)) {
+            if (type == RecordType.PTR && labels[i].Length == 4
+                && labels[i].All(o => int.TryParse(o, out int n) && n >= 0 && n <= 255)) {
                 replaced = $"{String.Join(".", labels[i].Reverse())}.in-addr.arpa";
                 labels[i] = replaced.Split(".");
             }

@@ -185,9 +185,9 @@ public sealed class Database {
 
             //if password is empty-string, keep old value
             foreach (KeyValuePair<string, Attribute> pair in modifications) {
-                if (pair.Key.Contains("password", StringComparison.OrdinalIgnoreCase) &&
-                    String.IsNullOrEmpty(pair.Value.value) &&
-                    oldEntry.attributes.TryGetValue(pair.Key, out Attribute oldPassword)) {
+                if (pair.Key.Contains("password", StringComparison.OrdinalIgnoreCase)
+                    && String.IsNullOrEmpty(pair.Value.value)
+                    && oldEntry.attributes.TryGetValue(pair.Key, out Attribute oldPassword)) {
                     modifications[pair.Key] = oldPassword;
                 }
             }

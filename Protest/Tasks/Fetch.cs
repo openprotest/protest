@@ -139,7 +139,7 @@ internal static class Fetch {
         string netbios = Protocols.NetBios.GetBiosName(ipList.First()?.ToString());
         string portscan = string.Empty;
 
-        Thread tWmi = null, tAd = null, tPortscan = null;
+        Thread tWmi = null, tAd = null, tPortScan = null;
 
         if (useWmi) {
             tWmi = new Thread(() => {
@@ -214,7 +214,7 @@ internal static class Fetch {
         }
 
         if (argPortScan is not null) {
-            tPortscan = new Thread(() => {
+            tPortScan = new Thread(() => {
                 if (argPortScan is null) return;
 
                 short[] portsPool = argPortScan == "full" ? PortScan.BASIC_PORTS : PortScan.BASIC_PORTS;
@@ -236,11 +236,11 @@ internal static class Fetch {
         if (asynchronous) {
             tWmi?.Start();
             tAd?.Start();
-            tPortscan?.Start();
+            tPortScan?.Start();
 
             tWmi?.Join();
             tAd?.Join();
-            tPortscan?.Join();
+            tPortScan?.Join();
         }
         else {
             tWmi?.Start();
@@ -255,8 +255,8 @@ internal static class Fetch {
                 return null;
             }
 
-            tPortscan?.Start();
-            tPortscan?.Join();
+            tPortScan?.Start();
+            tPortScan?.Join();
             if (cancellationToken.IsCancellationRequested) {
                 return null;
             }
@@ -400,14 +400,14 @@ internal static class Fetch {
                 (result, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
             }
 
-            Dictionary<string, string> normalized = Protocols.Snmp.Polling.ParseResponse(result);
-            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR, out string snmpDescription)) {
+            Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(result);
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR, out string snmpDescription)) {
                 data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", string.Empty });
             }
-            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname)) {
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname)) {
                 data.TryAdd("hostname", new string[] { snmpHostname, "SNMP", string.Empty });
             }
-            if (normalized is not null && normalized.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation)) {
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation)) {
                 data.TryAdd("location", new string[] { snmpLocation, "SNMP", string.Empty });
             }
 
@@ -422,11 +422,11 @@ internal static class Fetch {
                 case "ticket printer":
                 case "printer":
                     IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Polling.SnmpOperation.Get);
-                    Dictionary<string, string> printerNormalized = Protocols.Snmp.Polling.ParseResponse(printerResult);
-                    if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_MODEL, out string snmpModel)) {
+                    Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(printerResult);
+                    if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MODEL, out string snmpModel)) {
                         data.TryAdd("model", new string[] { snmpModel, "SNMP", string.Empty });
                     }
-                    if (printerNormalized is not null && printerNormalized.TryGetValue(Protocols.Snmp.Oid.PRINTER_SERIAL_NO, out string snmpSerialNo)) {
+                    if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_SERIAL_NO, out string snmpSerialNo)) {
                         data.TryAdd("serial number", new string[] { snmpSerialNo, "SNMP", string.Empty });
                     }
                     break;
@@ -435,8 +435,8 @@ internal static class Fetch {
                 case "router":
                 case "switch":
                     IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID, Polling.SnmpOperation.Get);
-                    Dictionary<string, string> switchNormalized = Protocols.Snmp.Polling.ParseResponse(switchResult);
-                    if (switchNormalized is not null && switchNormalized.TryGetValue(Protocols.Snmp.Oid.INTERFACE_TOTAL, out string snmpSwitchSerialNo)) {
+                    Dictionary<string, string> switchFormatted = Protocols.Snmp.Polling.ParseResponse(switchResult);
+                    if (switchFormatted is not null && switchFormatted.TryGetValue(Protocols.Snmp.Oid.INTERFACE_TOTAL, out string snmpSwitchSerialNo)) {
                         data.TryAdd("total interfaces", new string[] { snmpSwitchSerialNo, "SNMP", string.Empty });
                     }
                     break;
@@ -503,7 +503,7 @@ internal static class Fetch {
         string dns = null;
         string wmi = null;
         string kerberos = null;
-        string portscan = null;
+        string portScan = null;
         string retriesStr = null;
         string intervalStr = null;
 
@@ -524,7 +524,7 @@ internal static class Fetch {
                 kerberos = payloadLines[i].Substring(9).Trim();
             }
             else if (payloadLines[i].StartsWith("portscan=")) {
-                portscan = payloadLines[i].Substring(9).Trim();
+                portScan = payloadLines[i].Substring(9).Trim();
             }
             else if (payloadLines[i].StartsWith("retries=")) {
                 retriesStr = payloadLines[i].Substring(8).Trim();
@@ -551,7 +551,7 @@ internal static class Fetch {
         kerberos      ??= "false";
         snmp2         ??= "false";
         snmp3         ??= "false";
-        portscan      ??= "false";
+        portScan      ??= "false";
         retriesStr    ??= "0";
         intervalStr   ??= "-1";
 
@@ -634,13 +634,13 @@ internal static class Fetch {
             wmi?.Equals("true") ?? false,
             kerberos?.Equals("true") ?? false,
             null,
-            portscan,
+            portScan,
             retries,
             interval,
             origin
         );
     }
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, SnmpProfiles.Profile[] snmpProfiles, string portscan, int retries, float interval, string origin) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, SnmpProfiles.Profile[] snmpProfiles, string portScan, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -663,7 +663,7 @@ internal static class Fetch {
 
                     List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>();
                     for (int i = 0; i < size; i++) {
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmpProfiles, portscan, false, task.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmpProfiles, portScan, false, task.cancellationToken));
                     }
 
                     ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);

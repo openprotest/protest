@@ -1173,9 +1173,9 @@ keyMux:
 		break;
 	}
 
-	if (MENU.list.length > 0 &&
-		MENU.index > -1 &&
-		(event.key==="ArrowUp" || event.key==="ArrowDown" || event.key==="ArrowLeft" || event.key==="ArrowRight")) { //scroll into view
+	if (MENU.list.length > 0
+		&& MENU.index > -1
+		&& (event.key==="ArrowUp" || event.key==="ArrowDown" || event.key==="ArrowLeft" || event.key==="ArrowRight")) { //scroll into view
 		MENU.list[MENU.index].scrollIntoView({ behavior:"smooth", block:"center" });
 	}
 };

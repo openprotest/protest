@@ -357,8 +357,8 @@ internal sealed class Cache {
         }
 
         int startIndex, endIndex;
-        while ((startIndex = result.ToString().IndexOf("/*")) >= 0 &&
-               (endIndex = result.ToString().IndexOf("*/", startIndex)) >= 0) {
+        while ((startIndex = result.ToString().IndexOf("/*")) >= 0
+            && (endIndex = result.ToString().IndexOf("*/", startIndex)) >= 0) {
             result.Remove(startIndex, endIndex - startIndex + 2);
         }
 
