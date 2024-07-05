@@ -1181,12 +1181,54 @@ class DeviceView extends View {
 			if (oldDiskUsageArray.length > 0) diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
 		}
 
+		const GenerateTimeline = ()=> {
+			const graphBox = document.createElement("div");
+			graphBox.className = "view-lifeline-graph";
+			graphBox.style.height = `${28}px`;
+			this.liveD.appendChild(graphBox);
+
+			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute("width", 800);
+			svg.setAttribute("height", `${28}px`);
+			graphBox.appendChild(svg);
+
+			const today = new Date(Date.now() - Date.now() % DeviceView.DAY_TICKS);
+
+			for (let i=0; i<14; i++) {
+				let x = 750 - i*50;
+
+				const timeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+				timeLabel.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short", day:"numeric"});
+				timeLabel.setAttribute("x", x);
+				timeLabel.setAttribute("y", 16);
+				timeLabel.setAttribute("fill", "var(--clr-light)");
+				timeLabel.setAttribute("text-anchor", "middle");
+				timeLabel.setAttribute("font-size", "10px");
+				svg.appendChild(timeLabel);
+
+				const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				dot.setAttribute("cx", x);
+				dot.setAttribute("cy", 24);
+				dot.setAttribute("r", 2);
+				dot.setAttribute("fill", "var(--clr-light)");
+				svg.appendChild(dot);
+
+				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				line.setAttribute("x1", x);
+				line.setAttribute("y1", 24);
+				line.setAttribute("x2", x);
+				line.setAttribute("y2", 44);
+				line.setAttribute("stroke", "color-mix(in hsl, var(--clr-light) 25%, transparent)");
+				svg.appendChild(line);
+			}
+		};
+
 		const GenerateGraph = (data, label, type, icon)=> {
 			const height = 64;
 
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
-			graphBox.style.height = `${height+32}px`;
+			graphBox.style.height = `${height + 28}px`;
 			this.liveD.appendChild(graphBox);
 
 			const labelBox = document.createElement("div");
@@ -1205,7 +1247,7 @@ class DeviceView extends View {
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 800);
-			svg.setAttribute("height", `${height+28}px`);
+			svg.setAttribute("height", `${height + 28}px`);
 			graphBox.appendChild(svg);
 
 			const line = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -1219,27 +1261,19 @@ class DeviceView extends View {
 			const today = new Date(Date.now() - Date.now() % DeviceView.DAY_TICKS);
 
 			for (let i=0; i<14; i++) {
-				let x = 750 - i*50;
+				let x = 750 - i * 50;
 
-				const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-				dot.setAttribute("cx", x);
-				dot.setAttribute("cy", height + 10);
-				dot.setAttribute("r", 1.5);
-				dot.setAttribute("fill", "var(--clr-light)");
-				svg.appendChild(dot);
-
-				const timeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-				timeLabel.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short", day:"numeric"});
-				timeLabel.setAttribute("x", x);
-				timeLabel.setAttribute("y", height + 20);
-				timeLabel.setAttribute("fill", "var(--clr-light)");
-				timeLabel.setAttribute("text-anchor", "middle");
-				timeLabel.setAttribute("font-size", "10px");
-				svg.appendChild(timeLabel);
+				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				line.setAttribute("x1", x);
+				line.setAttribute("y1", 0);
+				line.setAttribute("x2", x);
+				line.setAttribute("y2", height + 32);
+				line.setAttribute("stroke", "color-mix(in hsl, var(--clr-light) 25%, transparent)");
+				svg.appendChild(line);
 			}
 
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-			path.setAttribute("fill", "rgba(192,192,192,.125)");
+			path.setAttribute("fill", "rgba(192,192,192,.3)");
 			svg.appendChild(path);
 
 			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} ${height + 5} `;
@@ -1379,6 +1413,10 @@ class DeviceView extends View {
 			return svg;
 		};
 
+		if (pingArray.length > 0 || cpuArray.length > 0 || memoryArray.length > 0 || diskCapacityArray.length > 0 || diskUsageArray.length > 0) {
+			GenerateTimeline();
+		}
+
 		if (pingArray.length > 0) {
 			let data = [];
 			for (let i=0; i<pingArray.length-9; i+=10) {
@@ -1446,18 +1484,14 @@ class DeviceView extends View {
 					const totalBuffer = new Uint8Array(diskCapacityArray.slice(index + j*17+9, index + j*17+17)).buffer;
 					const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 
-					if (!data.has(caption)) {
-						data.set(caption, []);
-					}
+					if (!data.has(caption)) { data.set(caption, []); }
 
 					data.get(caption).push({d:date, v:used, t:total, c:caption});
 				}
 				index += 17 * count;
 			}
 
-			data.forEach ((value, key)=> {
-				GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg");
-			});
+			data.forEach ((value, key)=> GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg"));
 		}
 
 		if (diskUsageArray.length > 0) {
