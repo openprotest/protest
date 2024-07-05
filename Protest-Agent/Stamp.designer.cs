@@ -48,6 +48,7 @@
         this.Opacity = 0.8D;
         this.RightToLeftLayout = true;
         this.ShowIcon = false;
+        this.ShowInTaskbar = false;
         this.Text = "Stamp";
         this.TopMost = true;
         this.TransparencyKey = System.Drawing.Color.Fuchsia;

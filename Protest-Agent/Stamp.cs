@@ -23,8 +23,8 @@ public partial class Stamp : Form {
     }
 
     private void TmrFollow_Tick(object sender, EventArgs e) {
-        this.Left = Cursor.Position.X - 96;
-        this.Top = Cursor.Position.Y - 20;
+        this.Left = Cursor.Position.X - 95;
+        this.Top = Cursor.Position.Y - 19;
     }
 
     private void Stamp_MouseUp(object sender, MouseEventArgs e) {
@@ -41,7 +41,7 @@ public partial class Stamp : Form {
             System.Threading.Thread.Sleep(1);
             mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, x, y, 0, 0);
 
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(50);
 
             string escaped = String.Empty;
             for (int i = 0; i < strokes.Length && strokes.Length > 0; i++) {
@@ -55,7 +55,7 @@ public partial class Stamp : Form {
                     SendKeys.SendWait("{" + strokes[i] + "}");
                 }
 
-                System.Threading.Thread.Sleep(5);
+                System.Threading.Thread.Sleep(2);
                 progress = 1 + (100 - 100 * i / strokes.Length);
                 this.Refresh();
             }
@@ -63,7 +63,6 @@ public partial class Stamp : Form {
             escaped = String.Empty;
             strokes = String.Empty;
 
-            //this.Hide();
             Application.Exit();
         }
     }
@@ -84,8 +83,8 @@ public partial class Stamp : Form {
         }
         else {
             int w = progress * 2;
-            int x = (this.Width-w) / 2;
-            e.Graphics.DrawRectangle(outline, x , 38, w, 2);
+            int x = (this.Width - w) / 2;
+            e.Graphics.DrawRectangle(outline, x , 36, w, 2);
         }
     }
 

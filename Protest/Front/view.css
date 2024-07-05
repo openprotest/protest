@@ -641,11 +641,15 @@ button.view-live-button:active {
 .view-warning-box[source]::before,
 .view-error-box[source]::before,
 .view-critical-box[source]::before { /*source*/
+	display: inline-block;
 	content: attr(source);
 	font-weight: bold;
-	border-radius: 4px;
+	vertical-align: bottom;
+	min-width: 50px;
 	padding: 0 4px;
 	margin: 0 8px 0 0;
+	border-radius: 4px;
+	text-align: center;
 	overflow: hidden;
 	white-space: nowrap;
 }
