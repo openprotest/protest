@@ -1133,7 +1133,7 @@ class DeviceView extends View {
 					return new Uint8Array(buffer);
 				}
 				else {
-					return [];
+					return new Uint8Array([]);
 				}
 			})()
 		]);
@@ -1193,7 +1193,7 @@ class DeviceView extends View {
 						return new Uint8Array(buffer);
 					}
 					else {
-						return [];
+						return new Uint8Array([]);
 					}
 				})()
 			]);
@@ -1384,6 +1384,37 @@ class DeviceView extends View {
 					lastX = x, lastY = y;
 				}
 			}
+			else if (type === "delta") {
+				if (data.length > 0) {
+					data[0].delta = 0;
+				}
+
+				let max = 100;
+				for (let i=1; i<data.length; i++) {
+					let delta = data[i].v - data[i - 1].v;
+					data[i].delta = Math.max(delta, 0);
+					if (delta > max) max = delta;
+				}
+
+				for (let i=1; i<data.length; i++) {
+					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let y = (height + 4) - Math.round(height * data[i].delta / max);
+
+					d += `L ${x} ${y} `;
+
+					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
+
+					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+					dot.setAttribute("cx", x);
+					dot.setAttribute("cy", y);
+					dot.setAttribute("r", 3);
+					dot.setAttribute("fill", "hsl(92,66%,50%)");
+					svg.appendChild(dot);
+
+					if (x < -50) continue;
+					lastX = x, lastY = y;
+				}
+			}
 
 			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} ${height + 5} Z`;
 			path.setAttribute("d", d);
@@ -1433,6 +1464,9 @@ class DeviceView extends View {
 				else if (type === "percent") {
 					infoBox.textContent = `${data[closestIndex].v}%`;
 				}
+				else if (type === "delta") {
+					infoBox.textContent = data[closestIndex].delta;
+				}
 			};
 
 			return svg;
@@ -1464,7 +1498,7 @@ class DeviceView extends View {
 			for (let i=0; i<cpuArray.length-8; i+=9) {
 				const dateBuffer = new Uint8Array(cpuArray.slice(i, i+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
-				const usage =  cpuArray[i+8];
+				const usage = cpuArray[i+8];
 				data.push({d:date, v:usage});
 			}
 
@@ -1524,7 +1558,7 @@ class DeviceView extends View {
 			for (let i=0; i<diskUsageArray.length-8; i+=9) {
 				const dateBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
-				const usage =  diskUsageArray[i+8];
+				const usage = diskUsageArray[i+8];
 				data.push({d:date, v:usage});
 			}
 
@@ -1533,16 +1567,16 @@ class DeviceView extends View {
 
 		if (printCounterArray.length > 0) {
 			let data = [];
-			for (let i=0; i<diskUsageArray.length-8; i+=12) {
-				const dateBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
+			for (let i=0; i<printCounterArray.length-11; i+=12) {
+				const dateBuffer = new Uint8Array(printCounterArray.slice(i, i+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
 
-				const counterBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
-				const counter =  Number(new DataView(counterBuffer).getUint32(0, true));
+				const counterBuffer = new Uint8Array(printCounterArray.slice(i+8, i+12)).buffer;
+				const counter = Number(new DataView(counterBuffer).getUint32(0, true));
 				data.push({d:date, v:counter});
 			}
 
-			GenerateGraph(data, "Print counter", "vol", "mono/print.svg");
+			GenerateGraph(data, "Print counter", "delta", "mono/printer.svg");
 		}
 	}
 
