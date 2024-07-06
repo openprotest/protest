@@ -43,8 +43,8 @@ public sealed class Database {
     private Cache.Entry lastCached;
 
     private readonly JsonSerializerOptions databaseSerializerOptions;
-    private readonly JsonSerializerOptions attrubutesSerializerOptions;
-    private readonly JsonSerializerOptions attrubutesSerializerOptionsWithPassword;
+    private readonly JsonSerializerOptions attributesSerializerOptions;
+    private readonly JsonSerializerOptions attributesSerializerOptionsWithPassword;
     private readonly JsonSerializerOptions contactsSerializerOptions;
 
     public Database(string name, string location) {
@@ -53,13 +53,13 @@ public sealed class Database {
         dictionary = new ConcurrentDictionary<string, Entry>();
 
         databaseSerializerOptions = new JsonSerializerOptions();
-        attrubutesSerializerOptions = new JsonSerializerOptions();
-        attrubutesSerializerOptionsWithPassword = new JsonSerializerOptions();
+        attributesSerializerOptions = new JsonSerializerOptions();
+        attributesSerializerOptionsWithPassword = new JsonSerializerOptions();
         contactsSerializerOptions = new JsonSerializerOptions();
 
         databaseSerializerOptions.Converters.Add(new DatabaseJsonConverter(name, location, true));
-        attrubutesSerializerOptions.Converters.Add(new AttributesJsonConverter(true));
-        attrubutesSerializerOptionsWithPassword.Converters.Add(new AttributesJsonConverter(false));
+        attributesSerializerOptions.Converters.Add(new AttributesJsonConverter(true));
+        attributesSerializerOptionsWithPassword.Converters.Add(new AttributesJsonConverter(false));
         contactsSerializerOptions.Converters.Add(new ContactsJsonConverter());
 
         ReadAll();
@@ -77,7 +77,7 @@ public sealed class Database {
         FileInfo[] files = dir.GetFiles();
 
         for (int i = 0; i < files.Length; i++) {
-            Entry entry = Read(files[i], attrubutesSerializerOptionsWithPassword);
+            Entry entry = Read(files[i], attributesSerializerOptionsWithPassword);
             if (entry is null) continue;
 
             dictionary.Remove(files[i].Name, out _);
@@ -112,7 +112,7 @@ public sealed class Database {
     private bool Write(Entry entry) {
         string filename = $"{location}{Data.DELIMITER}{entry.filename}";
 
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry.attributes, attrubutesSerializerOptionsWithPassword);
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry.attributes, attributesSerializerOptionsWithPassword);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
@@ -199,7 +199,7 @@ public sealed class Database {
                         timelineDir.Create();
                     }
 
-                    byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attrubutesSerializerOptions); //remove password from timeline
+                    byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attributesSerializerOptions); //remove password from timeline
                     byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
                     File.WriteAllBytes($"{timelineDir.FullName}{Data.DELIMITER}{lastModTimestamp}", cipher);
                 }
@@ -238,7 +238,7 @@ public sealed class Database {
         broadcastMessage.Append($"\"version\":\"{version}\",");
 
         broadcastMessage.Append("\"obj\":");
-        broadcastMessage.Append(JsonSerializer.Serialize(newEntry.attributes, attrubutesSerializerOptions));
+        broadcastMessage.Append(JsonSerializer.Serialize(newEntry.attributes, attributesSerializerOptions));
 
         broadcastMessage.Append('}');
 
@@ -348,7 +348,7 @@ public sealed class Database {
 
             if (String.IsNullOrEmpty(payload)) return Data.CODE_INVALID_ARGUMENT.Array;
 
-            ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, attrubutesSerializerOptionsWithPassword);
+            ConcurrentDictionary<string, Attribute> modifications = JsonSerializer.Deserialize<ConcurrentDictionary<string, Attribute>>(payload, attributesSerializerOptionsWithPassword);
 
             long date = DateTime.UtcNow.Ticks;
 
