@@ -61,10 +61,9 @@ internal static class Fetch {
         if (snmp is not null && Guid.TryParse(snmp, out Guid guid)) {
             SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
             for (int i = 0; i < profiles.Length; i++) {
-                if (profiles[i].guid == guid) {
-                    snmpProfile = profiles[i];
-                    break;
-                }
+                if (profiles[i].guid != guid) { continue; }
+                snmpProfile = profiles[i];
+                break;
             }
         }
 

@@ -186,7 +186,7 @@ public sealed class Database {
             //if password is empty-string, keep old value
             foreach (KeyValuePair<string, Attribute> pair in modifications) {
                 if (pair.Key.Contains("password", StringComparison.OrdinalIgnoreCase)
-                    && String.IsNullOrEmpty(pair.Value.value)
+                    && pair.Value.value?.Length == 0
                     && oldEntry.attributes.TryGetValue(pair.Key, out Attribute oldPassword)) {
                     modifications[pair.Key] = oldPassword;
                 }
@@ -217,6 +217,11 @@ public sealed class Database {
             SaveMethod.merge     => SaveMerge(file, modifications, oldEntry, origin),     //merge all attributes
             _ => null
         };
+
+        string[] attributesWithNull = newEntry.attributes.Where(attr => attr.Value.value is null).Select(attr => attr.Key).ToArray();
+        foreach (string key in attributesWithNull) {
+            newEntry.attributes.TryRemove(key, out _);
+        }
 
         if (newEntry is null) return true;
 

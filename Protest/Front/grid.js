@@ -564,8 +564,10 @@ class Grid extends Window {
 			let id = element.getAttribute("id");
 			if (!id) continue;
 
+			if (!this.data[id][this.selectedColumn]) continue;
+
 			if (!(id in this.mods)) this.mods[id] = {};
-			this.mods[id][this.selectedColumn] = "";
+			this.mods[id][this.selectedColumn] = null;
 		}
 
 		this.UpdateTable();

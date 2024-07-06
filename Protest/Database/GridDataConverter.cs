@@ -29,7 +29,7 @@ internal sealed class GridDataConverter : JsonConverter<Dictionary<string, Concu
             }
 
             string file = reader.GetString();
-            reader.Read(); // Move to the inner object's start
+            reader.Read();
 
             ConcurrentDictionary<string, Database.Attribute> mod = new ConcurrentDictionary<string, Database.Attribute>();
             while (reader.Read()) {
@@ -42,7 +42,7 @@ internal sealed class GridDataConverter : JsonConverter<Dictionary<string, Concu
                 }
 
                 string key = reader.GetString();
-                reader.Read(); // Move to the attribute's value
+                reader.Read();
 
                 Database.Attribute attribute = new Database.Attribute {
                     value = reader.GetString(),

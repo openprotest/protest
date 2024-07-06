@@ -8,7 +8,7 @@ const UI = {
 	taskbarPosition: "bottom",
 
 	Initialize: ()=> {
-		for (let i = 0; i < 12; i++) { //clock dots
+		for (let i=0; i<12; i++) { //clock dots
 			const newDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 			newDot.setAttribute("r", i % 3 == 0 ? 2.5 : 1.5);
 			newDot.setAttribute("cx", 48 + Math.sin(i * 30 / 57.29577951) * 36);
@@ -239,37 +239,37 @@ const UI = {
 	SizeToString: size=> {
 		if (size < 8_192) return `${size} bytes`;
 		if (size < 8_192 * 1024) return `${(size / 1024).toFixed(2)} KB`;
-		if (size < 8_192 * Math.pow(1024,2)) return `${(size / Math.pow(1024,2)).toFixed(2)}MB`;
-		if (size < 8_192 * Math.pow(1024,3)) return `${(size / Math.pow(1024,3)).toFixed(2)}GB`;
-		if (size < 8_192 * Math.pow(1024,4)) return `${(size / Math.pow(1024,4)).toFixed(2)}TB`;
-		if (size < 8_192 * Math.pow(1024,5)) return `${(size / Math.pow(1024,5)).toFixed(2)}EB`;
-		if (size < 8_192 * Math.pow(1024,6)) return `${(size / Math.pow(1024,6)).toFixed(2)}ZB`;
-		if (size < 8_192 * Math.pow(1024,7)) return `${(size / Math.pow(1024,7)).toFixed(2)}YB`;
-		if (size < 8_192 * Math.pow(1024,8)) return `${(size / Math.pow(1024,8)).toFixed(2)}BB`;
+		if (size < 8_192 * Math.pow(1024,2)) return `${(size / Math.pow(1024,2)).toFixed(2)} MB`;
+		if (size < 8_192 * Math.pow(1024,3)) return `${(size / Math.pow(1024,3)).toFixed(2)} GB`;
+		if (size < 8_192 * Math.pow(1024,4)) return `${(size / Math.pow(1024,4)).toFixed(2)} TB`;
+		if (size < 8_192 * Math.pow(1024,5)) return `${(size / Math.pow(1024,5)).toFixed(2)} EB`;
+		if (size < 8_192 * Math.pow(1024,6)) return `${(size / Math.pow(1024,6)).toFixed(2)} ZB`;
+		if (size < 8_192 * Math.pow(1024,7)) return `${(size / Math.pow(1024,7)).toFixed(2)} YB`;
+		if (size < 8_192 * Math.pow(1024,8)) return `${(size / Math.pow(1024,8)).toFixed(2)} BB`;
 	},
 
 	BytesPerSecToString: bps=> {
 		if (bps < 8_192) return `${bps} Bps`;
 		if (bps < 8_192 * 1024) return `${(bps / 1024).toFixed(2)} KBps`;
-		if (bps < 8_192 * Math.pow(1024,2)) return `${(bps / Math.pow(1024,2)).toFixed(2)}MBps`;
-		if (bps < 8_192 * Math.pow(1024,3)) return `${(bps / Math.pow(1024,3)).toFixed(2)}GBps`;
-		if (bps < 8_192 * Math.pow(1024,4)) return `${(bps / Math.pow(1024,4)).toFixed(2)}TBps`;
-		if (bps < 8_192 * Math.pow(1024,5)) return `${(bps / Math.pow(1024,5)).toFixed(2)}EBps`;
-		if (bps < 8_192 * Math.pow(1024,6)) return `${(bps / Math.pow(1024,6)).toFixed(2)}ZBps`;
-		if (bps < 8_192 * Math.pow(1024,7)) return `${(bps / Math.pow(1024,7)).toFixed(2)}YBps`;
-		if (bps < 8_192 * Math.pow(1024,8)) return `${(bps / Math.pow(1024,8)).toFixed(2)}BBps`;
+		if (bps < 8_192 * Math.pow(1024,2)) return `${(bps / Math.pow(1024,2)).toFixed(2)} MBps`;
+		if (bps < 8_192 * Math.pow(1024,3)) return `${(bps / Math.pow(1024,3)).toFixed(2)} GBps`;
+		if (bps < 8_192 * Math.pow(1024,4)) return `${(bps / Math.pow(1024,4)).toFixed(2)} TBps`;
+		if (bps < 8_192 * Math.pow(1024,5)) return `${(bps / Math.pow(1024,5)).toFixed(2)} EBps`;
+		if (bps < 8_192 * Math.pow(1024,6)) return `${(bps / Math.pow(1024,6)).toFixed(2)} ZBps`;
+		if (bps < 8_192 * Math.pow(1024,7)) return `${(bps / Math.pow(1024,7)).toFixed(2)} YBps`;
+		if (bps < 8_192 * Math.pow(1024,8)) return `${(bps / Math.pow(1024,8)).toFixed(2)} BBps`;
 	},
 
 	BitsPerSecToString: bps=> {
 		if (bps < 8_000) return `${bps} bps`;
 		if (bps < 8_000 * 1000) return `${Math.floor(bps / 1000)} Kbps`;
-		if (bps < 8_000 * Math.pow(1000,2)) return `${(bps / Math.pow(1000,2)).toFixed(2)}Mbps`;
-		if (bps < 8_000 * Math.pow(1000,3)) return `${(bps / Math.pow(1000,3)).toFixed(2)}Gbps`;
-		if (bps < 8_000 * Math.pow(1000,4)) return `${(bps / Math.pow(1000,4)).toFixed(2)}Tbps`;
-		if (bps < 8_000 * Math.pow(1000,5)) return `${(bps / Math.pow(1000,5)).toFixed(2)}Ebps`;
-		if (bps < 8_000 * Math.pow(1000,6)) return `${(bps / Math.pow(1000,6)).toFixed(2)}Zbps`;
-		if (bps < 8_000 * Math.pow(1000,7)) return `${(bps / Math.pow(1000,7)).toFixed(2)}Ybps`;
-		if (bps < 8_000 * Math.pow(1000,8)) return `${(bps / Math.pow(1000,8)).toFixed(2)}Bbps`;
+		if (bps < 8_000 * Math.pow(1000,2)) return `${(bps / Math.pow(1000,2)).toFixed(2)} Mbps`;
+		if (bps < 8_000 * Math.pow(1000,3)) return `${(bps / Math.pow(1000,3)).toFixed(2)} Gbps`;
+		if (bps < 8_000 * Math.pow(1000,4)) return `${(bps / Math.pow(1000,4)).toFixed(2)} Tbps`;
+		if (bps < 8_000 * Math.pow(1000,5)) return `${(bps / Math.pow(1000,5)).toFixed(2)} Ebps`;
+		if (bps < 8_000 * Math.pow(1000,6)) return `${(bps / Math.pow(1000,6)).toFixed(2)} Zbps`;
+		if (bps < 8_000 * Math.pow(1000,7)) return `${(bps / Math.pow(1000,7)).toFixed(2)} Ybps`;
+		if (bps < 8_000 * Math.pow(1000,8)) return `${(bps / Math.pow(1000,8)).toFixed(2)} Bbps`;
 	},
 
 	GenerateUuid: prefix=> {
@@ -301,7 +301,7 @@ const MENU = {
 
 		{ t:"Watchdog",        i:"mono/watchdog.svg?light", g:"tools", h:false, f:()=> new Watchdog(), k:"" },
 		{ t:"Gandalf",         i:"mono/gandalf.svg?light",  g:"tools", h:false, f:()=> new Gandalf() },
-		{ t:"Issues",          i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
+		//{ t:"Issues",          i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
 		{ t:"WMI client",      i:"mono/wmi.svg?light",      g:"tools", h:false, f:args=> new Wmi(args), k:"windows management instrumentation viewer" },
 		{ t:"SNMP polling",    i:"mono/snmp.svg?light",     g:"tools", h:false, f:args=> new Snmp(args) },
 		//{ t:"SNMP traps",      i:"mono/trap.svg?light",          g:"tools", h:false, f:args=> new Snmp(args) },
