@@ -47,9 +47,9 @@ public sealed class Listener {
         { "/db/gandalf",          (ctx, parameters, username) => Tools.PasswordStrength.GandalfThreadWrapper(ctx, username) },
 
         { "/fetch/networkinfo",   (ctx, parameters, username) => Protocols.Kerberos.NetworkInfo() },
-        { "/fetch/status",        (ctx, parameters, username) => Tasks.Fetch.Status() },
         { "/fetch/singledevice",  (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true) },
         { "/fetch/singleuser",    (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters) },
+        { "/fetch/status",        (ctx, parameters, username) => Tasks.Fetch.Status() },
         { "/fetch/devices",       (ctx, parameters, username) => Tasks.Fetch.DevicesTask(ctx, parameters, username) },
         { "/fetch/users",         (ctx, parameters, username) => Tasks.Fetch.UsersTask(parameters, username) },
         { "/fetch/approve",       (ctx, parameters, username) => Tasks.Fetch.ApproveLastTask(parameters, username) },

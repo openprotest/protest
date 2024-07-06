@@ -226,13 +226,13 @@ internal static class Auth {
                 path.Add("/fetch/networkinfo");
                 path.Add("/fetch/singledevice");
                 path.Add("/fetch/singleuser");
+                path.Add("/fetch/status");
                 path.Add("/fetch/devices");
                 path.Add("/fetch/users");
-                path.Add("/fetch/import");
-                path.Add("/fetch/status");
                 path.Add("/fetch/approve");
                 path.Add("/fetch/abort");
                 path.Add("/fetch/discard");
+                path.Add("/fetch/import");
                 break;
 
             case "manage hosts:write":
@@ -247,6 +247,7 @@ internal static class Auth {
                 path.Add("/lifeline/memory/view");
                 path.Add("/lifeline/disk/view");
                 path.Add("/lifeline/diskusage/view");
+                path.Add("/lifeline/printcount/view");
                 path.Add("/ws/livestats/device");
                 path.Add("/ws/monitor");
                 break;
@@ -309,8 +310,8 @@ internal static class Auth {
                 path.Add("/tools/ntp");
                 path.Add("/tools/locateip");
                 path.Add("/tools/maclookup");
-                path.Add("/tools/downstream");
-                path.Add("/tools/upstream");
+                //path.Add("/tools/downstream");
+                //path.Add("/tools/upstream");
                 path.Add("/ws/ping");
                 path.Add("/ws/dhcp");
                 path.Add("/ws/portscan");
