@@ -1,11 +1,10 @@
-<svg width="48px" height="48px" version="1.1" xmlns="http://www.w3.org/2000/svg" style="fill-rule:evenodd">
+<svg width="48px" height="48px" version="1.1" xmlns="http://www.w3.org/2000/svg">
 <g fill="#202020">
 <rect x="26" y="26.019" width="8" height="4"/>
 <rect x="34" y="30.019" width="4" height="8"/>
 <rect x="26" y="34.019" width="4" height="4"/>
-<path d="M26,11l0,12l12,0l0,-12l-12,0Zm4,4l0,4l4,0l0,-4l-4,0Z"/>
-<path d="M11,11l0,12l12,0l0,-12l-12,0Zm4,4l0,4l4,0l0,-4l-4,0Z"/>
-<path d="M26,11l0,12l12,0l0,-12l-12,0Zm4,4l0,4l4,0l0,-4l-4,0Z"/>
-<path d="M11,26.019l0,12l12,0l0,-12l-12,0Zm4,4l0,4l4,0l0,-4l-4,0Z"/>
-<path d="M2,46l12,0l0,-4l-8,0l0,-8l-4,0l0,12Zm32,0l12,0l0,-12l-4,0l0,8l-8,0l0,4Zm12,-32l0,-12l-12,0l0,4l8,0l0,8l4,0Zm-44,-12l0,12l4,-0l0,-8l8,0l-0,-4l-12,0Z"/>
+<path d="M11,11l0,12l12,0l0,-12l-12,0Zm4,4l4,0l0,4l-4,0l0,-4Z"/>
+<path d="M26,11l0,12l12,0l0,-12l-12,0Zm4,4l4,0l0,4l-4,0l0,-4Z"/>
+<path d="M11,26.019l0,12l12,-0l0,-12l-12,-0Zm4,4l4,-0l0,4l-4,-0l0,-4Z"/>
+<path d="M2,46l12,0l0,-4l-8,0l0,-8l-4,0l0,12Zm32,0l12,0l0,-12l-4,0l0,8l-8,0l0,4Zm12,-32l0,-12l-12,0l0,4l8,0l0,8l4,0Zm-44,-12l0,12l4,0l0,-8l8,0l0,-4l-12,0Z"/>
 </g></svg>
