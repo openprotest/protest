@@ -42,7 +42,7 @@
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
 
-    <SelfContained>true</SelfContained>
+    <SelfContained>false</SelfContained>
 
     <PublisherName>Pro-test</PublisherName>
     <PublishAot>false</PublishAot>
