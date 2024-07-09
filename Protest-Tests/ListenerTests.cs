@@ -7,12 +7,16 @@ public class ListenerTests {
     private readonly DirectoryInfo front;
 
     public ListenerTests() {
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsWindows()) {
             front = new DirectoryInfo(@"..\..\..\..\..\Protest\front");
-        else
+        }
+        else {
             front = new DirectoryInfo(@"../../../../../Protest/front");
+        }
 
-        if (!front.Exists) Assert.Fail($"\"front\" directory not found: {front.FullName}");
+        if (!front.Exists) {
+            Assert.Fail($"\"front\" directory not found: {front.FullName}");
+        }
     }
 
     [SetUp]
@@ -21,8 +25,6 @@ public class ListenerTests {
             Http.Listener listener = new Http.Listener("127.0.0.1", 8080, front.FullName);
             listener.Start();
         });
-
-        //Thread.Sleep(100);
     }
 
     [Test]
@@ -46,7 +48,7 @@ public class ListenerTests {
     }
 
     [Test]
-    public void CsrfCheck_NoHostInReferer_ReturnOk() {
+    public void CsrfCheck_NoHostInReferrer_ReturnOk() {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
 
         using HttpClient httpClient = new HttpClient();
@@ -56,7 +58,7 @@ public class ListenerTests {
     }
 
     [Test]
-    public void CsrfCheck_SameHostInReferer_ReturnOk() {
+    public void CsrfCheck_SameHostInReferrer_ReturnOk() {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
         requestMessage.Headers.Add("Referer", "http://127.0.0.1:8080/");
 
@@ -67,9 +69,9 @@ public class ListenerTests {
     }
 
     [Test]
-    public void CsrfCheck_DifferentHostInReferer_ReturnImaTeapot() {
+    public void CsrfCheck_DifferentHostInReferrer_ReturnImaTeapot() {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
-        requestMessage.Headers.Add("Referer", "http://127.0.0.2:8080");
+        requestMessage.Headers.Add("Referer", "http://127.0.0.2:8080/");
 
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);

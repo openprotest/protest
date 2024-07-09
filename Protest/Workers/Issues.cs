@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Protest.Tasks;
+namespace Protest.Workers;
 
 internal static class Issues {
 

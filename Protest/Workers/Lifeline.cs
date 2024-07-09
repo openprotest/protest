@@ -11,7 +11,7 @@ using System.Threading;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
 
-namespace Protest.Tasks;
+namespace Protest.Workers;
 
 internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;

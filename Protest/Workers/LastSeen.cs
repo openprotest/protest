@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Net.NetworkInformation;
 using System.Threading;
 
-namespace Protest.Tasks {
+namespace Protest.Workers {
     internal static class LastSeen {
 
         private static ConcurrentDictionary<string, object> mutexes = new ConcurrentDictionary<string, object>();

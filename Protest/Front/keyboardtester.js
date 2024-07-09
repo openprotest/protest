@@ -742,7 +742,7 @@ class KeyboardTester extends Window {
 
 		let gamepads = navigator.getGamepads();
 
-		for (var j = 0; j < gamepads.length; j++) {
+		for (let j=0; j<gamepads.length; j++) {
 			let gamepad = gamepads[j];
 			if (!gamepad) continue;
 

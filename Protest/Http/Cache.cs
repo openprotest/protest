@@ -292,11 +292,16 @@ internal sealed class Cache {
         headers.Add(new KeyValuePair<string, string>("Last-Modified", birthdate));
         headers.Add(new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"));
 
+        if (name == "/" || name == "/login") {
+            headers.Add(new KeyValuePair<string, string>("Cache-Control", "no-store"));
+        }
+        else {
 #if DEBUG
-        headers.Add(new KeyValuePair<string, string>("Cache-Control", "no-store"));
+            headers.Add(new KeyValuePair<string, string>("Cache-Control", "no-store"));
 #else
-        headers.Add(new KeyValuePair<string, string>("Cache-Control", name == "//" ? "no-store" : $"max-age={CACHE_CONTROL_MAX_AGE}"));
+            headers.Add(new KeyValuePair<string, string>("Cache-Control", $"max-age={CACHE_CONTROL_MAX_AGE}"));
 #endif
+        }
 
         Entry entry = new Entry() {
             bytes = raw,

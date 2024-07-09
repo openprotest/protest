@@ -42,7 +42,7 @@
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
 
-    <SelfContained>false</SelfContained>
+    <SelfContained>true</SelfContained>
 
     <PublisherName>Pro-test</PublisherName>
     <PublishAot>false</PublishAot>
@@ -52,10 +52,11 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
-    <PackageReference Include="SSH.NET" Version="2024.0.0" />
     <PackageReference Include="System.DirectoryServices" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.1.0" />
+    <PackageReference Include="SSH.NET" Version="2024.0.0" />
+    <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.2" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'RELEASE'">

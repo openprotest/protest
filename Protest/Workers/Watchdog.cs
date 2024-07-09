@@ -13,7 +13,7 @@ using System.Net.Security;
 using System.Net.Mail;
 using Protest.Tools;
 
-namespace Protest.Tasks;
+namespace Protest.Workers;
 
 internal static class Watchdog {
     private const long WEEK_IN_TICKS = 6_048_000_000_000L;

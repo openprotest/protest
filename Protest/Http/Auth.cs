@@ -126,12 +126,13 @@ internal static class Auth {
 
     public static string GrandAccess(HttpListenerContext ctx, string username) {
         string sessionId = Cryptography.RandomStringGenerator(64);
+        string userHostName = ctx.Request.UserHostName.Split(':')[0];
 
-        //RFC6265: no port allowed in the Domain attribute
+        //RFC6265: no port in the "Domain" attribute
 #if DEBUG
-        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict;");
+        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={userHostName}; Max-age=604800; HttpOnly; SameSite=Strict;");
 #else
-        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={ctx.Request.UserHostName.Split(':')[0]}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
+        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={userHostName}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
 #endif
 
         Session newSession = new Session() {

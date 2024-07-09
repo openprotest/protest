@@ -21,9 +21,7 @@ global using System.Linq;
 
 namespace Protest;
 internal class Program {
-    internal static readonly string[] alternativeUriPrefixes = new string[] { "http://127.0.0.1:8080/" };
-
-    static void Main(string[] args) {
+        static void Main(string[] args) {
         Console.Title = "Pro-test";
 
         Console.WriteLine(@"   _____");
@@ -63,25 +61,34 @@ internal class Program {
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "OK  " : "Failed"));
 
         Console.Write("Launching tasks");
-        Tasks.Automation.Initialize();
+        Workers.Automation.Initialize();
         Console.WriteLine("         OK");
 
         Console.WriteLine();
 
+        new System.Threading.Thread(() => {
+            Protest.Http.ReverseProxy rp = new Protest.Http.ReverseProxy(
+            new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 8443),
+            new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 8080),
+            $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}certificate.pfx",
+            "your_password"
+            );
+        }).Start();
+
         try {
-            Http.Listener listener = new Http.Listener(Configuration.http_prefixes, Configuration.front_path);
-            Console.WriteLine(listener.ToString());
-            Console.WriteLine();
-            listener.Start();
+            StartServer(Configuration.http_prefixes);
         }
         catch (System.Net.HttpListenerException ex) {
             if (ex.ErrorCode != 5) return; //access denied
             Console.WriteLine("Switching to alternative prefix");
-
-            Http.Listener listener = new Http.Listener(alternativeUriPrefixes, Configuration.front_path);
-            Console.WriteLine(listener.ToString());
-            Console.WriteLine();
-            listener.Start();
+            StartServer(Configuration.alternativeUriPrefixes);
         }
+    }
+
+    private static void StartServer(string[] prefixes) {
+        Http.Listener listener = new Http.Listener(prefixes, Configuration.front_path);
+        Console.WriteLine(listener.ToString());
+        Console.WriteLine();
+        listener.Start();
     }
 }

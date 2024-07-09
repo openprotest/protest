@@ -1,18 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace Protest.Tasks;
-
-internal static class Automation {
-
-    //static readonly ConcurrentDictionary<string, TaskWrapper> tasks = new ConcurrentDictionary<string, TaskWrapper>();
-
-    static public void Initialize() {
-        Tasks.Watchdog.Initialize();
-        Tasks.Lifeline.Initialize();
-    }
-
-    public static byte[] ListTasks() {
+namespace Protest.Workers; 
+internal class Tasks {
+        public static byte[] ListTasks() {
         StringBuilder builder = new StringBuilder();
 
         builder.Append('{');
@@ -57,4 +51,5 @@ internal static class Automation {
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
+
 }

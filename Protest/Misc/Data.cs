@@ -35,11 +35,12 @@ public static class Data {
     public static readonly ArraySegment<byte> CODE_OTHER_TASK_IN_PROGRESS = new ArraySegment<byte>("{\"error\":\"another task is already in progress\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_TASK_DONT_EXITSTS      = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
-    public static readonly string DIR_ROOT      = $"{Directory.GetCurrentDirectory()}{DELIMITER}protest";
-    public static readonly string DIR_KNOWLADGE = $"{DIR_ROOT}{DELIMITER}knowledge";
-    public static readonly string DIR_RBAC      = $"{DIR_ROOT}{DELIMITER}rbac";
-    public static readonly string DIR_LOG       = $"{DIR_ROOT}{DELIMITER}log";
-    public static readonly string DIR_BACKUP    = $"{DIR_ROOT}{DELIMITER}backup";
+    public static readonly string DIR_ROOT         = $"{Directory.GetCurrentDirectory()}{DELIMITER}protest";
+    public static readonly string DIR_KNOWLADGE    = $"{DIR_ROOT}{DELIMITER}knowledge";
+    public static readonly string DIR_RBAC         = $"{DIR_ROOT}{DELIMITER}rbac";
+    public static readonly string DIR_LOG          = $"{DIR_ROOT}{DELIMITER}log";
+    public static readonly string DIR_BACKUP       = $"{DIR_ROOT}{DELIMITER}backup";
+    public static readonly string DIR_CERTIFICATES = $"{DIR_ROOT}{DELIMITER}certificates";
 
     public static readonly string DIR_DATA    = $"{DIR_ROOT}{DELIMITER}data";
     public static readonly string DIR_DEVICES = $"{DIR_DATA}{DELIMITER}devices";

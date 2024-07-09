@@ -47,15 +47,15 @@ public sealed class Listener {
         { "/db/gandalf",          (ctx, parameters, username) => Tools.PasswordStrength.GandalfThreadWrapper(ctx, username) },
 
         { "/fetch/networkinfo",   (ctx, parameters, username) => Protocols.Kerberos.NetworkInfo() },
-        { "/fetch/singledevice",  (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true) },
-        { "/fetch/singleuser",    (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters) },
-        { "/fetch/status",        (ctx, parameters, username) => Tasks.Fetch.Status() },
-        { "/fetch/devices",       (ctx, parameters, username) => Tasks.Fetch.DevicesTask(ctx, parameters, username) },
-        { "/fetch/users",         (ctx, parameters, username) => Tasks.Fetch.UsersTask(parameters, username) },
-        { "/fetch/approve",       (ctx, parameters, username) => Tasks.Fetch.ApproveLastTask(parameters, username) },
-        { "/fetch/abort",         (ctx, parameters, username) => Tasks.Fetch.CancelTask(username) },
-        { "/fetch/discard",       (ctx, parameters, username) => Tasks.Fetch.DiscardLastTask(username) },
-        { "/fetch/import",        (ctx, parameters, username) => Tasks.Import.ImportTask(parameters, username) },
+        { "/fetch/singledevice",  (ctx, parameters, username) => Workers.Fetch.SingleDeviceSerialize(parameters, true) },
+        { "/fetch/singleuser",    (ctx, parameters, username) => Workers.Fetch.SingleUserSerialize(parameters) },
+        { "/fetch/status",        (ctx, parameters, username) => Workers.Fetch.Status() },
+        { "/fetch/devices",       (ctx, parameters, username) => Workers.Fetch.DevicesTask(ctx, parameters, username) },
+        { "/fetch/users",         (ctx, parameters, username) => Workers.Fetch.UsersTask(parameters, username) },
+        { "/fetch/approve",       (ctx, parameters, username) => Workers.Fetch.ApproveLastTask(parameters, username) },
+        { "/fetch/abort",         (ctx, parameters, username) => Workers.Fetch.CancelTask(username) },
+        { "/fetch/discard",       (ctx, parameters, username) => Workers.Fetch.DiscardLastTask(username) },
+        { "/fetch/import",        (ctx, parameters, username) => Workers.Import.ImportTask(parameters, username) },
 
         { "/manage/device/wol",       (ctx, parameters, username) => Protocols.Wol.Wakeup(parameters) },
         { "/manage/device/shutdown",  (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null },
@@ -82,20 +82,20 @@ public sealed class Listener {
         { "/debit/templates",         (ctx, parameters, username) => Tools.DebitNotes.ListTemplate() },
         { "/debit/banners",           (ctx, parameters, username) => Tools.DebitNotes.ListBanners() },
 
-        { "/watchdog/list",           (ctx, parameters, username) => Tasks.Watchdog.List() },
-        { "/watchdog/view",           (ctx, parameters, username) => Tasks.Watchdog.View(parameters) },
-        { "/watchdog/create",         (ctx, parameters, username) => Tasks.Watchdog.Create(ctx, parameters, username) },
-        { "/watchdog/delete",         (ctx, parameters, username) => Tasks.Watchdog.Delete(parameters, username) },
+        { "/watchdog/list",           (ctx, parameters, username) => Workers.Watchdog.List() },
+        { "/watchdog/view",           (ctx, parameters, username) => Workers.Watchdog.View(parameters) },
+        { "/watchdog/create",         (ctx, parameters, username) => Workers.Watchdog.Create(ctx, parameters, username) },
+        { "/watchdog/delete",         (ctx, parameters, username) => Workers.Watchdog.Delete(parameters, username) },
 
-        { "/notifications/list",      (ctx, parameters, username) => Tasks.Watchdog.ListNotifications() },
-        { "/notifications/save",      (ctx, parameters, username) => Tasks.Watchdog.SaveNotifications(ctx, username) },
+        { "/notifications/list",      (ctx, parameters, username) => Workers.Watchdog.ListNotifications() },
+        { "/notifications/save",      (ctx, parameters, username) => Workers.Watchdog.SaveNotifications(ctx, username) },
 
-        { "/lifeline/ping/view",       (ctx, parameters, username) => Tasks.Lifeline.ViewPing(parameters) },
-        { "/lifeline/memory/view",     (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "memory") },
-        { "/lifeline/cpu/view",        (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "cpu") },
-        { "/lifeline/disk/view",       (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "disk") },
-        { "/lifeline/diskusage/view",  (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskusage") },
-        { "/lifeline/printcount/view", (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "printcount") },
+        { "/lifeline/ping/view",       (ctx, parameters, username) => Workers.Lifeline.ViewPing(parameters) },
+        { "/lifeline/memory/view",     (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "memory") },
+        { "/lifeline/cpu/view",        (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "cpu") },
+        { "/lifeline/disk/view",       (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "disk") },
+        { "/lifeline/diskusage/view",  (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "diskusage") },
+        { "/lifeline/printcount/view", (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "printcount") },
 
         { "/tools/bulkping",          (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters) },
         { "/tools/dnslookup",         (ctx, parameters, username) => Protocols.Dns.Resolve(parameters) },
@@ -118,7 +118,7 @@ public sealed class Listener {
         { "/rbac/sessions",            (ctx, parameters, username) => Auth.ListSessions() },
         { "/rbac/kickuser",            (ctx, parameters, username) => Auth.KickUser(parameters, username) },
 
-        { "/automation/list",          (ctx, parameters, username) => Tasks.Automation.ListTasks() },
+        { "/tasks/list",               (ctx, parameters, username) => Workers.Tasks.ListTasks() },
 
         { "/config/checkupdate",       (ctx, parameters, username) => Update.CheckLatestRelease() },
 
@@ -195,15 +195,21 @@ public sealed class Listener {
         HttpListenerContext ctx = listener.EndGetContext(result);
 
         //Cross Site Request Forgery protection
-        if (ctx.Request.UrlReferrer != null) {
-            if (!String.Equals(ctx.Request.UrlReferrer.Host, ctx.Request.UserHostName.Split(':')[0], StringComparison.Ordinal) ||
-                Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.Host, UriKind.Absolute)) {
+        if (ctx.Request.UrlReferrer is not null) {
+            string userHostName = ctx.Request.UserHostName;
+            string referrerHost = ctx.Request.UrlReferrer.Host;
+            int    referrerPort = ctx.Request.UrlReferrer.Port;
+
+            bool isSameHost = String.Equals(referrerHost, userHostName, StringComparison.Ordinal);
+            bool isWellFormedUri = Uri.IsWellFormedUriString(referrerHost, UriKind.Absolute);
+
+            if (!isSameHost && !String.Equals($"{referrerHost}:{referrerPort}", userHostName, StringComparison.Ordinal) || isWellFormedUri) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
                 return;
             }
 
-            UriHostNameType type = Uri.CheckHostName(ctx.Request.UrlReferrer.Host);
+            UriHostNameType type = Uri.CheckHostName(referrerHost);
             if (type != UriHostNameType.Dns && type != UriHostNameType.IPv4 && type != UriHostNameType.IPv6) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
@@ -213,16 +219,22 @@ public sealed class Listener {
 
         //handle X-Forwarded-For header
         if (Configuration.accept_xff_header) {
-            string xff = ctx.Request.Headers.Get("X-Forwarded-For");
-            if (IPAddress.TryParse(xff, out IPAddress xffIp)) {
-                if (!IPAddress.IsLoopback(xffIp) &&
-                    (Configuration.accept_xff_only_from is null || IPAddress.Equals(ctx.Request.RemoteEndPoint.Address, Configuration.accept_xff_only_from))) {
-                    ctx.Request.RemoteEndPoint.Address = xffIp;
-                }
-                else {
-                    ctx.Response.StatusCode = 418; //I'm a teapot
-                    ctx.Response.Close();
-                    return;
+            string xffHeader = ctx.Request.Headers.Get("X-Forwarded-For");
+
+            if (xffHeader != null) {
+                int delimiterIndex = xffHeader.LastIndexOf(',');
+                if (delimiterIndex > 0) { xffHeader.Substring(delimiterIndex + 1).Trim(); }
+
+                if (IPAddress.TryParse(xffHeader, out IPAddress xffIp)) {
+                    if (!IPAddress.IsLoopback(xffIp) &&
+                        (Configuration.accept_xff_only_from is null || IPAddress.Equals(ctx.Request.RemoteEndPoint.Address, Configuration.accept_xff_only_from))) {
+                        ctx.Response.StatusCode = 418; //I'm a teapot
+                        ctx.Response.Close();
+                        return;
+                    }
+                    else {
+                        ctx.Request.RemoteEndPoint.Address = xffIp;
+                    }
                 }
             }
         }
@@ -243,7 +255,7 @@ public sealed class Listener {
             ctx.Response.Close();
             return;
         }
-
+        
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;

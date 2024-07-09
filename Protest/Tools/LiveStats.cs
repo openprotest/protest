@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Protest.Protocols;
-using Protest.Tasks;
+using Protest.Workers;
 using Lextm.SharpSnmpLib;
 
 namespace Protest.Tools;
