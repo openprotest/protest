@@ -13,8 +13,8 @@ const UI = {
 			newDot.setAttribute("r", i % 3 == 0 ? 2.5 : 1.5);
 			newDot.setAttribute("cx", 48 + Math.sin(i * 30 / 57.29577951) * 36);
 			newDot.setAttribute("cy", 48 - Math.cos(i * 30 / 57.29577951) * 36);
-			newDot.setAttribute("fill", "var(--clr-contrast)");
-			analog_clock.appendChild(newDot);
+			newDot.setAttribute("fill", "#000");
+			analog_clock_mask.appendChild(newDot);
 		}
 
 		//automatically disable animations if prefers-reduced-motion

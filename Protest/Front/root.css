@@ -40,7 +40,7 @@
 	--clr-control: rgb(160,160,160);
 	--clr-highlight: rgb(204,204,204);
 	--clr-pane: rgb(192,192,192);
-	--clr-contrast: rgb(32,32,32);
+	--clr-contrast: rgb(40,40,40);
 
 	--grd-taskbar: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)92%, rgb(199,64,0)100%);
 	--grd-taskbar-rev: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)2%, rgb(199,64,0)100%);
