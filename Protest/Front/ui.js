@@ -248,6 +248,10 @@ const UI = {
 		if (size < 8_192 * Math.pow(1024,8)) return `${(size / Math.pow(1024,8)).toFixed(2)} BB`;
 	},
 
+	SizeToGB: size=> {
+		return (size / Math.pow(1024,3)).toFixed(2);
+	},
+
 	BytesPerSecToString: bps=> {
 		if (bps < 8_192) return `${bps} Bps`;
 		if (bps < 8_192 * 1024) return `${(bps / 1024).toFixed(2)} KBps`;

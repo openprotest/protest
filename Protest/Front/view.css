@@ -577,23 +577,6 @@ button.view-live-button:active {
 	transition: .4s;
 }
 
-.view-lifeline-graph > .view-lifeline-info {
-	position: absolute;
-	z-index: 2;
-	min-Width: 50px;
-	min-Height: 20px;
-	padding: 0 4px;
-	box-sizing: border-box;
-	color: var(--clr-dark);
-	background-color: var(--clr-pane);
-	border-radius: 2px;
-	box-sizing: rgba(32,32,32,.5) 0 0 4px;
-	opacity: 0;
-	pointer-events: none;
-	white-space: nowrap;
-	transition: opacity .25s, top .2s;
-}
-
 .view-lifeline-graph:hover > .view-lifeline-label,
 .view-lifeline-graph:hover > .view-lifeline-icon{
 	opacity: 0;

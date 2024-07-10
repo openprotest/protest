@@ -900,28 +900,34 @@ class DeviceView extends View {
 			this.liveD.textContent = "";
 
 			spinnerBox = document.createElement("div");
-			spinnerBox.style.height = "88px";
+			spinnerBox.style.height = "0";
 			spinnerBox.style.transition = ".2s";
 			this.liveB.appendChild(spinnerBox);
-			
+
 			const spinner = document.createElement("div");
 			spinner.className = "spinner";
 			spinner.style.textAlign = "left";
 			spinner.style.marginTop = "8px";
 			spinner.style.marginBottom = "8px";
 			spinner.style.transform = "scale(.85)";
-			spinner.style.animation = "delayed-fade-in 1s ease-in 1";
+			spinner.style.animation = "delayed-fade-in .65s ease-in 1";
 			spinner.appendChild(document.createElement("div"));
 
 			const status = document.createElement("div");
 			status.textContent = "Retrieving device metrics...";
 			status.style.textAlign = "center";
 			status.style.fontWeight = "bold";
-			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+			status.style.animation = "delayed-fade-in 1s ease-in 1";
 
 			spinnerBox.append(spinner, status);
 	
 			this.liveStatsWebSockets.send(this.args.file);
+
+			setTimeout(()=> {
+				if (this.liveStatsWebSockets && !this.liveStatsWebSockets.isClosed) {
+					spinnerBox.style.height = "88px";
+				}
+			}, 400);
 		};
 
 		this.liveStatsWebSockets.onmessage = async event=> {
@@ -1234,7 +1240,7 @@ class DeviceView extends View {
 				const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 				dot.setAttribute("cx", x);
 				dot.setAttribute("cy", 24);
-				dot.setAttribute("r", 2);
+				dot.setAttribute("r", 1);
 				dot.setAttribute("fill", "var(--clr-light)");
 				svg.appendChild(dot);
 
@@ -1266,10 +1272,6 @@ class DeviceView extends View {
 			iconBox.style.backgroundImage = `url(${icon}?light)`;
 			graphBox.appendChild(iconBox);
 
-			const infoBox = document.createElement("div");
-			infoBox.className = "view-lifeline-info";
-			graphBox.appendChild(infoBox);
-
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", 800);
 			svg.setAttribute("height", `${height + 28}px`);
@@ -1287,7 +1289,6 @@ class DeviceView extends View {
 
 			for (let i=0; i<14; i++) {
 				let x = 750 - i * 50;
-
 				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 				line.setAttribute("x1", x);
 				line.setAttribute("y1", 0);
@@ -1419,28 +1420,39 @@ class DeviceView extends View {
 			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} ${height + 5} Z`;
 			path.setAttribute("d", d);
 
+			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			circle.setAttribute("cx", 750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50);
+			circle.setAttribute("cy", height + 5);
+			circle.setAttribute("r", 4);
+			circle.setAttribute("stroke", "#fff");
+			circle.setAttribute("stroke-width", 2);
+			circle.setAttribute("fill", "none");
+			circle.style.opacity = "0";
+			circle.style.transition = ".25s cx, .25s cy, .1s opacity";
+			svg.appendChild(circle);
+
+			const valueLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+			valueLabel.setAttribute("x", 750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50);
+			valueLabel.setAttribute("y", height + 5);
+			valueLabel.setAttribute("fill", "#fff");
+			valueLabel.setAttribute("text-anchor", "end");
+			valueLabel.style.fontSize = "12px";
+			valueLabel.style.fontWeight = "700";
+			valueLabel.style.opacity = "0";
+			valueLabel.style.transition = ".25s x, .25s y, .1s opacity";
+			svg.appendChild(valueLabel);
 
 			graphBox.onmouseenter = ()=>{
-				infoBox.style.opacity = "1";
+				circle.style.opacity = "1";
+				valueLabel.style.opacity = "1";
 			};
 
 			graphBox.onmouseleave = ()=>{
-				infoBox.style.opacity = "0";
+				circle.style.opacity = "0";
+				valueLabel.style.opacity = "0";
 			};
 
 			graphBox.onmousemove = event=>{
-				let right = graphBox.clientWidth - event.layerX + 12 - (graphBox.clientWidth - svg.clientWidth);
-				right = Math.max(right, 8);
-				right = Math.min(right, graphBox.clientWidth - infoBox.clientWidth - 8);
-				infoBox.style.right = `${right}px`;
-
-				if (event.layerY > height / 2) {
-					infoBox.style.top = "4px";
-				}
-				else {
-					infoBox.style.top = `${height-16}px`;
-				}
-
 				let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
 				let closestIndex = 0;
 				for (let i=0; i<data.length; i++) {
@@ -1451,22 +1463,36 @@ class DeviceView extends View {
 					}
 				}
 
+				let cx, cy;
+				cx = closestX;
+
 				if (type === "ping") {
-					infoBox.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
+					valueLabel.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
+					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : 24 + Math.min((height - 24) * data[closestIndex].v / 1000, height - 10))
 				}
 				if (type === "line") {
-					infoBox.textContent = data[closestIndex].v;
+					valueLabel.textContent = data[closestIndex].v;
+					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : Math.min(data[closestIndex].v / 10, height - 10));
 				}
 				else if (type === "vol") {
 					let percent = data[closestIndex].t > 0? Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10 : 0;
-					infoBox.textContent = `${UI.SizeToString(data[closestIndex].v)} / ${UI.SizeToString(data[closestIndex].t)} (${percent}%)`;
+					valueLabel.textContent = `${UI.SizeToGB(data[closestIndex].v)} / ${UI.SizeToGB(data[closestIndex].t)} GB (${percent}%)`;
+					cy = (height + 4) - Math.round(height * data[closestIndex].v / data[closestIndex].t);
 				}
 				else if (type === "percent") {
-					infoBox.textContent = `${data[closestIndex].v}%`;
+					valueLabel.textContent = `${data[closestIndex].v}%`;
+					cy = (height + 4) - Math.round(height * data[closestIndex].v / 100);
 				}
 				else if (type === "delta") {
-					infoBox.textContent = data[closestIndex].delta;
+					valueLabel.textContent = data[closestIndex].delta;
+					cy = (height + 4) - Math.round(height * data[closestIndex].delta / max);
 				}
+
+				circle.setAttribute("cx", cx);
+				circle.setAttribute("cy", cy);
+
+				valueLabel.setAttribute("x", cx - 8);
+				valueLabel.setAttribute("y", Math.max(cy - 8, 10));
 			};
 
 			return svg;
