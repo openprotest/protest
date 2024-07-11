@@ -317,7 +317,7 @@ class Settings extends Tabs {
 		this.tabsPanel.appendChild(this.profilesList);
 
 		this.profilesNewButton.onclick = ()=>{
-			this.PreviewSmtpProfile(null);
+			this.SmtpProfileDialog(null);
 		};
 
 		this.profilesRemoveButton.onclick = async ()=>{
@@ -468,7 +468,7 @@ class Settings extends Tabs {
 		this.tabsPanel.appendChild(this.profilesList);
 
 		this.profilesNewButton.onclick = ()=>{
-			this.PreviewSnmpProfile(null);
+			this.SnmpProfileDialog(null);
 		};
 
 		this.profilesRemoveButton.onclick = async ()=>{
@@ -619,7 +619,7 @@ class Settings extends Tabs {
 				};
 
 				element.ondblclick = ()=> {
-					this.PreviewSmtpProfile(json[i]);
+					this.SmtpProfileDialog(json[i]);
 				};
 			}
 		}
@@ -698,7 +698,7 @@ class Settings extends Tabs {
 					this.selectedSnmpProfile = json[i];
 				};
 
-				element.ondblclick = ()=> this.PreviewSnmpProfile(json[i]);
+				element.ondblclick = ()=> this.SnmpProfileDialog(json[i]);
 			}
 		}
 		catch (ex) {
@@ -787,7 +787,7 @@ class Settings extends Tabs {
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
 
-	async PreviewSmtpProfile(object=null) {
+	async SmtpProfileDialog(object=null) {
 		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
@@ -894,7 +894,7 @@ class Settings extends Tabs {
 		setTimeout(()=>{ serverInput.focus() }, 200);
 	}
 
-	async PreviewSnmpProfile(object=null) {
+	async SnmpProfileDialog(object=null) {
 		const dialog = this.DialogBox("512px");
 		if (dialog === null) return;
 

@@ -381,6 +381,13 @@ internal static class Auth {
                 path.Add("/log/list");
                 break;
 
+            case "cert:write":
+                path.Add("/config/cert/list");
+                path.Add("/config/cert/upload");
+                path.Add("/config/cert/create");
+                path.Add("/config/cert/delete");
+                break;
+
             case "backup:write":
                 path.Add("/config/backup/list");
                 path.Add("/config/backup/create");

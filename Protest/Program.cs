@@ -66,14 +66,14 @@ internal class Program {
 
         Console.WriteLine();
 
-        new System.Threading.Thread(() => {
+        /*new System.Threading.Thread(() => {
             Protest.Http.ReverseProxy rp = new Protest.Http.ReverseProxy(
             new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 8443),
             new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 8080),
             $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}certificate.pfx",
             "your_password"
             );
-        }).Start();
+        }).Start();*/
 
         try {
             StartServer(Configuration.http_prefixes);

@@ -336,6 +336,7 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Settings", "url(mono/wrench.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RBAC", "url(mono/rbac.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Log", "url(mono/log.svg)", manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Certificates", "url(mono/certificate.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Backup", "url(mono/backup.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Update", "url(mono/update.svg)", manageGroup, false, true, false));
 

@@ -140,7 +140,12 @@ public sealed class Listener {
         { "/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
         { "/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
 
-        { "/log/list",                (ctx, parameters, username) => Logger.List(parameters) },
+        { "/config/cert/list",         (ctx, parameters, username) => Tools.Cert.ListHandler() },
+        { "/config/cert/upload",       (ctx, parameters, username) => Tools.Cert.UploadHandler(ctx) },
+        { "/config/cert/create",       (ctx, parameters, username) => Tools.Cert.CreateHandler(ctx) },
+        { "/config/cert/delete",       (ctx, parameters, username) => Tools.Cert.DeleteHandler(ctx) },
+
+        { "/log/list",                 (ctx, parameters, username) => Logger.List(parameters) },
     };
 
     public Listener(string ip, ushort port, string path) {
