@@ -41,6 +41,34 @@ class List extends Window {
 
 		this.win.addEventListener("mouseup", event=> { this.List_mouseup(event); });
 		this.win.addEventListener("mousemove", event=> { this.List_mousemove(event); });
+	
+		this.content.addEventListener("keydown", event=> {
+			if (event.code === "KeyF" && event.ctrlKey) {
+				event.preventDefault();
+				findInput.focus();
+			}
+			else if (event.code === "ArrowUp" && this.selected) {
+				const previousElement = this.selected.previousElementSibling;
+				if (previousElement) {
+					this.selected.style.backgroundColor = "";
+					this.selected = previousElement;
+					this.selected.style.backgroundColor = "var(--clr-select)";
+					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+				}
+			}
+			else if (event.code === "ArrowDown" && this.selected) {
+				const nextElement = this.selected.nextElementSibling;
+				if (nextElement) {
+					this.selected.style.backgroundColor = "";
+					this.selected = nextElement;
+					this.selected.style.backgroundColor = "var(--clr-select)";
+					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+				}
+			}
+			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
+				this.selected?.ondblclick(event);
+			}
+		});
 	}
 
 	List_mouseup(event) {
@@ -340,34 +368,6 @@ class List extends Window {
 				event.preventDefault();
 			}
 		};
-
-		this.content.addEventListener("keydown", event=> {
-			if (event.code === "KeyF" && event.ctrlKey) {
-				event.preventDefault();
-				findInput.focus();
-			}
-			else if (event.code === "ArrowUp" && this.selected) {
-				const previousElement = this.selected.previousElementSibling;
-				if (previousElement) {
-					this.selected.style.backgroundColor = "";
-					this.selected = previousElement;
-					this.selected.style.backgroundColor = "var(--clr-select)";
-					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
-				}
-			}
-			else if (event.code === "ArrowDown" && this.selected) {
-				const nextElement = this.selected.nextElementSibling;
-				if (nextElement) {
-					this.selected.style.backgroundColor = "";
-					this.selected = nextElement;
-					this.selected.style.backgroundColor = "var(--clr-select)";
-					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
-				}
-			}
-			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
-				this.selected?.ondblclick(event);
-			}
-		});
 
 		return findInput;
 	}

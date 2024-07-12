@@ -123,8 +123,9 @@ public sealed class Listener {
         { "/config/checkupdate",       (ctx, parameters, username) => Update.CheckLatestRelease() },
 
         { "/config/backup/list",       (ctx, parameters, username) => Backup.List() },
-        { "/config/backup/create",     (ctx, parameters, username) => Backup.Create(parameters) },
-        { "/config/backup/delete",     (ctx, parameters, username) => Backup.Delete(parameters) },
+        { "/config/backup/create",     (ctx, parameters, username) => Backup.Create(parameters, username) },
+        { "/config/backup/delete",     (ctx, parameters, username) => Backup.Delete(parameters, username) },
+        { "/config/backup/download",   (ctx, parameters, username) => Backup.Download(ctx, parameters, username) },
 
         { "/config/zones/list",        (ctx, parameters, username) => Tools.Zones.ListZones() },
         { "/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx) },
@@ -135,15 +136,16 @@ public sealed class Listener {
         { "/config/snmpprofiles/list", (ctx, parameters, username) => Tools.SnmpProfiles.List() },
         { "/config/snmpprofiles/save", (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx) },
 
+        { "/config/cert/list",         (ctx, parameters, username) => Tools.Cert.List() },
+        { "/config/cert/upload",       (ctx, parameters, username) => Tools.Cert.Upload(ctx, username) },
+        { "/config/cert/create",       (ctx, parameters, username) => Tools.Cert.Create(ctx, username) },
+        { "/config/cert/delete",       (ctx, parameters, username) => Tools.Cert.Delete(parameters, username) },
+        { "/config/cert/download",     (ctx, parameters, username) => Tools.Cert.Download(ctx, parameters, username) },
+
         { "/config/upload/iplocation", (ctx, parameters, username) => Update.LocationFormDataHandler(ctx) },
         { "/config/upload/proxy",      (ctx, parameters, username) => Update.ProxyFormDataHandler(ctx) },
         { "/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
         { "/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
-
-        { "/config/cert/list",         (ctx, parameters, username) => Tools.Cert.ListHandler() },
-        { "/config/cert/upload",       (ctx, parameters, username) => Tools.Cert.UploadHandler(ctx) },
-        { "/config/cert/create",       (ctx, parameters, username) => Tools.Cert.CreateHandler(ctx) },
-        { "/config/cert/delete",       (ctx, parameters, username) => Tools.Cert.DeleteHandler(ctx) },
 
         { "/log/list",                 (ctx, parameters, username) => Logger.List(parameters) },
     };

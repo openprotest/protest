@@ -392,6 +392,7 @@ internal static class Auth {
                 path.Add("/config/backup/list");
                 path.Add("/config/backup/create");
                 path.Add("/config/backup/delete");
+                path.Add("/config/backup/download");
                 break;
 
             /*case "update:write":

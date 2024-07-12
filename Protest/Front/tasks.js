@@ -1,16 +1,17 @@
 class Tasks extends List {
-	constructor() {
-		super();
+	constructor(args) {
+		super(args);
+
+		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["name", "status", "progress"];
-		this.SetupColumns(columns);
-
-		this.columnsOptions.style.display = "none";
-
 		this.SetTitle("Tasks");
 		this.SetIcon("mono/task.svg");
+		
+		const columns = ["name", "status", "progress"];
+		this.SetupColumns(columns);
+		this.columnsOptions.style.display = "none";
 
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create task", "mono/add.svg?light");
@@ -48,6 +49,11 @@ class Tasks extends List {
 				this.InflateElement(element, this.link.data[task]);
 
 				element.addEventListener("click", event=>this.Entry_onclick(event));
+
+				if (this.args.select && this.args.select === task) {
+					this.selected = element;
+					element.style.backgroundColor = "var(--clr-select)";
+				}
 			}
 		}
 		catch (ex) {

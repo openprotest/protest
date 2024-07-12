@@ -1,30 +1,68 @@
 class Certificates extends List {
-	constructor() {
-		super();
+	constructor(args) {
+		super(args);
+
+		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
 		this.AddCssDependencies("list.css");
-
-		const columns = ["name", "status", "start", "task"];
-		this.SetupColumns(columns);
-
-		this.columnsOptions.style.display = "none";
 
 		this.SetTitle("Certificates");
 		this.SetIcon("mono/certificate.svg");
 
+		const columns = ["name", "date", "size"];
+		this.SetupColumns(columns);
+		this.columnsOptions.style.display = "none";
+
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create task", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
-		this.downloadButton = this.AddToolbarButton("Delete", "mono/download.svg?light");
+		this.AddToolbarSeparator();
+		this.uploadButton = this.AddToolbarButton("Upload", "mono/upload.svg?light");
+		this.downloadButton = this.AddToolbarButton("Download", "mono/download.svg?light");
 
-		//this.createButton.disabled = true;
-		this.deleteButton.disabled = true;
-		this.downloadButton.disabled = true;
+		this.createButton.onclick = () => this.CreateDialog();
+		this.deleteButton.onclick = () => this.Delete();
+		this.uploadButton.onclick = () => this.UploadDialog();
+		this.downloadButton.onclick = () => this.Download();
 
-		this.createButton.onclick = () => this.CertDialog(null);
+		this.GetCertFiles();
 	}
 
-	CertDialog() {
+	async GetCertFiles() {
+		try {
+			const response = await fetch("config/cert/list");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.link = json;
+			this.ListCerts();
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg")
+		}
+	}
+
+	ListCerts() {
+		this.list.textContent = "";
+
+		for (let key in this.link.data) {
+			const element =  document.createElement("div");
+			element.id = key;
+			element.className = "list-element";
+			this.list.appendChild(element);
+
+			this.InflateElement(element, this.link.data[key]);
+
+			if (this.args.select && this.args.select === key) {
+				this.selected = element;
+				element.style.backgroundColor = "var(--clr-select)";
+			}
+		}
+	}
+
+	CreateDialog() {
 		const dialog = this.DialogBox("420px");
 		if (dialog === null) return;
 
@@ -119,12 +157,193 @@ class Certificates extends List {
 				const json = await response.json();
 				if (json.error) throw (json.error);
 
-				//TODO: list certificates
-
+				this.link = json;
+				this.ListCerts();
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}
+
+	Delete() {
+		if (this.args.select === null) return;
+
+		this.ConfirmBox("Are you sure you want delete this certificate?").addEventListener("click", async()=> {
+			try {
+				const response = await fetch(`config/cert/delete?name=${encodeURIComponent(this.args.select)}`);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	
+				const json = await response.json();
+				if (json.error) throw(json.error);
+	
+				this.selected = null;
+				this.args.select = null;
+	
+				this.link = json;
+				this.ListCerts();
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg")
+			}
+		});
+	}
+
+	UploadDialog() {
+		const dialog = this.DialogBox("280px");
+		if (dialog === null) return;
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		okButton.value = "Done";
+		cancelButton.style.display = "none";
+
+		const dropArea = document.createElement("div");
+		dropArea.style.minHeight    = "20px";
+		dropArea.style.margin       = "16px";
+		dropArea.style.padding      = "64px";
+		dropArea.style.border       = "2px dashed var(--clr-dark)";
+		dropArea.style.borderRadius = "8px";
+		dropArea.style.transition   = ".4s";
+
+		const message = document.createElement("div");
+		message.textContent = "Drop a certificate file here to upload it";
+		message.style.color = "var(--clr-dark)";
+		message.style.fontWeight = "600";
+		message.style.textAlign = "center";
+		dropArea.append(message);
+
+		let isBusy = false;
+
+		
+		dropArea.ondragover = ()=> {
+			if (isBusy) return;
+			dropArea.style.backgroundColor = "var(--clr-control)";
+			dropArea.style.border = "2px solid var(--clr-dark)";
+			return false;
+		};
+		dropArea.ondragleave = ()=> {
+			if (isBusy) return;
+			dropArea.style.backgroundColor = "";
+			dropArea.style.border = "2px dashed var(--clr-dark)";
+		};
+		dropArea.ondrop = async event=> {
+			event.preventDefault();
+
+			if (isBusy) return;
+
+			dropArea.style.backgroundColor = "";
+			dropArea.style.border = "2px dashed var(--clr-dark)";
+
+			/*if (event.dataTransfer.files.length !== 1) {
+				this.ConfirmBox("Please upload a single file.", true);
+				return;
+			}*/
+
+			let file = event.dataTransfer.files[0];
+			let extension = file.name.split(".");
+			extension = extension[extension.length-1].toLowerCase();
+
+			if (extension != "pfx") {
+				//this.ConfirmBox("Unsupported file", true);
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append('file', file);
+
+			isBusy = true;
+			message.textContent = "Uploading file... This might take a second.";
+			dropArea.style.border = "2px solid var(--clr-dark)";
+
+			const spinner = document.createElement("div");
+			spinner.className = "spinner";
+			spinner.style.textAlign = "left";
+			spinner.style.marginTop = "32px";
+			spinner.style.marginBottom = "16px";
+			spinner.appendChild(document.createElement("div"));
+			dropArea.appendChild(spinner);
+
+			try {
+				const response = await fetch("config/cert/upload", {
+					method: "POST",
+					body: formData
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw (json.error);
+
+				this.link = json;
+				this.ListCerts();
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+			finally {
+				isBusy = false;
+				message.textContent = "Drop a certificate file here to upload it";
+				dropArea.style.border = "2px dashed var(--clr-dark)";
+				dropArea.removeChild(spinner);
+			}
+		};
+
+		innerBox.appendChild(dropArea);
+
+		okButton.onclick = ()=> {
+			this.GetCertFiles();
+			dialog.Close();
+		};
+	}
+
+	Download() {
+		let link = document.createElement("a");
+		link.download = 'name';
+		link.href = `config/cert/download?name=${encodeURIComponent(this.args.select)}`;
+		link.click();
+		link.remove();
+	}
+
+	InflateElement(element, entry) { //overrides
+		element.style.backgroundImage = "url(mono/certificate.svg)";
+		element.style.backgroundSize = "24px 24px";
+		element.style.backgroundPosition = "4px 4px";
+		element.style.backgroundRepeat = "no-repeat";
+
+		for (let i = 0; i < this.columnsElements.length; i++) {
+			if (!(this.columnsElements[i].textContent in entry)) continue;
+
+			const newAttr = document.createElement("div");
+			element.appendChild(newAttr);
+
+			switch (this.columnsElements[i].textContent) {
+				case "name": newAttr.textContent = entry["name"].v; break;
+				case "date": newAttr.textContent = new Date(UI.TicksToUnixDate(entry["date"].v)).toLocaleDateString(regionalFormat);break;
+				case "size": newAttr.textContent = UI.SizeToString(entry["size"].v); break;
+			}
+
+			if (i === 0) {
+				newAttr.style.top = "5px";
+				newAttr.style.left = "36px";
+				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
+				newAttr.style.whiteSpace = "nowrap";
+				newAttr.style.overflow = "hidden";
+				newAttr.style.textOverflow = "ellipsis";
+			}
+			else {
+				newAttr.style.left = this.columnsElements[i].style.left;
+				newAttr.style.width = this.columnsElements[i].style.width;
+			}
+		}
+
+		element.onclick = ()=> {
+			if (this.selected) this.selected.style.backgroundColor = "";
+
+			this.args.select = entry.name.v;
+
+			this.selected = element;
+			element.style.backgroundColor = "var(--clr-select)";
+		};
+	}
+
 }

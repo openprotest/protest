@@ -4,6 +4,8 @@ class Backup extends List {
 
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
+		this.AddCssDependencies("list.css");
+
 		this.SetTitle("Backup");
 		this.SetIcon("mono/backup.svg");
 
@@ -14,15 +16,18 @@ class Backup extends List {
 		this.SetupToolbar();
 		const createButton = this.AddToolbarButton("Create", "mono/add.svg?light");
 		const deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.AddToolbarSeparator();
+		const downloadButton = this.AddToolbarButton("Download", "mono/download.svg?light");
 
 		createButton.onclick = ()=> this.Create();
 		deleteButton.onclick = ()=> this.Delete();
+		downloadButton.onclick = ()=> this.Download();
 
 		this.GetBackupFiles();
 	}
 
 	async GetBackupFiles() {
-		/*try*/ {
+		try {
 			const response = await fetch("config/backup/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -30,11 +35,30 @@ class Backup extends List {
 			if (json.error) throw(json.error);
 
 			this.link = json;
-			this.RefreshList();
+
+			this.ListBackup();
 		}
-		/*catch (ex) {
+		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg")
-		}*/
+		}
+	}
+
+	ListBackup() {
+		this.list.textContent = "";
+
+		for (let key in this.link.data) {
+			const element =  document.createElement("div");
+			element.id = key;
+			element.className = "list-element";
+			this.list.appendChild(element);
+
+			this.InflateElement(element, this.link.data[key]);
+
+			if (this.args.select && this.args.select === key) {
+				this.selected = element;
+				element.style.backgroundColor = "var(--clr-select)";
+			}
+		}
 	}
 
 	Create() {
@@ -74,7 +98,7 @@ class Backup extends List {
 				if (json.error) throw(json.error);
 
 				this.link = json;
-				this.RefreshList();
+				this.ListBackup();
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg")
@@ -91,124 +115,34 @@ class Backup extends List {
 	async Delete() {
 		if (this.args.select === null) return;
 
-		try {
-			const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.args.select)}`);
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-			const json = await response.json();
-			if (json.error) throw(json.error);
-
-			this.args.select = null
-
-			this.link = json;
-			this.RefreshList();
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
-		}
+		this.ConfirmBox("Are you sure you want delete this backup?").addEventListener("click", async()=> {
+			try {
+				const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.args.select)}`);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	
+				const json = await response.json();
+				if (json.error) throw(json.error);
+	
+				this.selected = null;
+				this.args.select = null;
+	
+				this.link = json;
+				this.ListBackup();
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg")
+			}
+		});
 	}
 
-	RefreshList() { //overrides
-		this.list.textContent = "";
+	Download() {
+		if (this.args.select === null) return;
 
-		let filtered = [];
-		if (this.args.filter.length === 0) {
-			for (let i = 0; i < this.link.length; i++) {
-				filtered.push(i);
-			}
-		}
-		else {
-			for (let i = 0; i < this.link.length; i++) {
-				if (!this.link[i].type) continue;
-				if (this.link[i].type !== this.args.filter) continue;
-				filtered.push(i);
-			}
-		}
-
-		let found;
-		if (this.args.find && this.args.find.length === 0) {
-			found = filtered;
-		}
-		else {
-			found = [];
-			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
-
-			for (let i = 0; i < filtered.length; i++) {
-				let name = this.link[filtered[i]].name.toLowerCase();
-				let matched = true;
-
-				for (let j = 0; j < keywords.length; j++) {
-					let wordIncluded = false;
-					if (name.includes(keywords[j])) {
-						wordIncluded = true;
-					}
-
-					if (!wordIncluded) {
-						matched = false;
-						break;
-					}
-				}
-
-				if (matched) {
-					found.push(filtered[i]);
-				}
-			}
-		}
-
-		this.found = found;
-
-		if (this.args.sort && this.args.sort.length > 0) {
-			let attr = this.args.sort;
-			if (this.sortDescend) {
-				found = found.sort((a, b)=> {
-					if (this.link[a][attr] < this.link[b][attr]) return 1;
-					if (this.link[a][attr] > this.link[b][attr]) return -1;
-					return 0;
-				});
-			}
-			else {
-				found = found.sort((a, b)=> {
-					if (this.link[a][attr] < this.link[b][attr]) return -1;
-					if (this.link[a][attr] > this.link[b][attr]) return 1;
-					return 0;
-				});
-			}
-		}
-
-		this.list.style.display = "none";
-		for (let i = 0; i < found.length; i++) { //display
-			const element = document.createElement("div");
-			element.id = found[i];
-			element.className = "list-element";
-			this.list.appendChild(element);
-		}
-		this.list.style.display = "block";
-
-		this.OnUiReady();
-	}
-
-	UpdateViewport(force = false) { //overrides
-		if (!this.link) return;
-
-		for (let i = 0; i < this.list.childNodes.length; i++) {
-			if (force) this.list.childNodes[i].textContent = "";
-
-			if (this.list.childNodes[i].offsetTop - this.list.scrollTop < -32 ||
-				this.list.childNodes[i].offsetTop - this.list.scrollTop > this.list.clientHeight) {
-				this.list.childNodes[i].textContent = "";
-			}
-			else {
-				if (this.list.childNodes[i].childNodes.length > 0) continue;
-				const id = this.list.childNodes[i].getAttribute("id");
-				this.InflateElement(this.list.childNodes[i], this.link[id]);
-			}
-		}
-
-		if (this.link) {
-			this.counter.textContent = this.list.childNodes.length === this.link.length ?
-				this.link.length :
-				`${this.list.childNodes.length} / ${this.link.length}`;
-		}
+		let link = document.createElement("a");
+		link.download = 'name';
+		link.href = `config/backup/download?name=${encodeURIComponent(this.args.select)}`;
+		link.click();
+		link.remove();
 	}
 
 	InflateElement(element, entry) { //overrides
@@ -222,11 +156,11 @@ class Backup extends List {
 
 			const newAttr = document.createElement("div");
 			element.appendChild(newAttr);
-
-			switch (i) {
-				case 0: newAttr.textContent = entry[this.columnsElements[i].textContent]; break;
-				case 1: newAttr.textContent = new Date(UI.TicksToUnixDate(entry[this.columnsElements[i].textContent])).toLocaleDateString(regionalFormat); break;
-				case 2: newAttr.textContent = UI.SizeToString(entry[this.columnsElements[i].textContent]); break;
+			
+			switch (this.columnsElements[i].textContent) {
+				case "name": newAttr.textContent = entry["name"].v; break;
+				case "date": newAttr.textContent = new Date(UI.TicksToUnixDate(entry["date"].v)).toLocaleDateString(regionalFormat);break;
+				case "size": newAttr.textContent = UI.SizeToString(entry["size"].v); break;
 			}
 
 			if (i === 0) {
@@ -246,10 +180,11 @@ class Backup extends List {
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
 
-			this.args.select = entry.name;
+			this.args.select = entry.name.v;
 
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
 		};
 	}
+
 }

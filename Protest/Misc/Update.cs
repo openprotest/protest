@@ -473,7 +473,7 @@ internal static class Update {
     //}
 
     private static readonly string[] separator = new[] { "\r\n\r\n" };
-    private static string GetFieldValue(string part) {
+    public static string GetFieldValue(string part) {
         return part.Split(separator, StringSplitOptions.RemoveEmptyEntries)[1].Trim();
     }
 
