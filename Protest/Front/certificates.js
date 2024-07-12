@@ -24,7 +24,7 @@ class Certificates extends List {
 		this.createButton.onclick = () => this.CertDialog(null);
 	}
 
-	CertDialog(object=null) {
+	CertDialog() {
 		const dialog = this.DialogBox("420px");
 		if (dialog === null) return;
 
@@ -75,15 +75,15 @@ class Certificates extends List {
 		}
 		rsaKeyInput.value = 2048;
 
-		const hashAlgorithms = [ "MD5", "SHA1", "SHA256", "SHA384", "SHA512", "SHA3-256", "SHA3-384", "SHA3-512"];
+		const hashAlgorithms = [ "MD5", "SHA1", "SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512"];
 		const hashAlgorithmInput = AddParameter("Hash algorithm", "select", null);
 		for (let i=0; i<hashAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = hashAlgorithms[i];
+			option.value = hashAlgorithms[i].toLowerCase();
 			option.text = hashAlgorithms[i];
 			hashAlgorithmInput.appendChild(option);
 		}
-		hashAlgorithmInput.value = "SHA256";
+		hashAlgorithmInput.value = "sha-256";
 
 		const now = new Date();
 		const validAfter = AddParameter("Valid after", "input", "date", {value: now.toISOString().substring(0, 10)});
