@@ -150,27 +150,26 @@ public static class Cert {
                         continue;
                     }
 
-                    string filename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{name}.pfx";
-
                     int counter = 2;
-                    while (File.Exists(filename)) {
-                        filename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{name} {counter++}.pfx";
+                    string newName = $"{name}.pfx";
+                    while (File.Exists($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{newName}")) {
+                        newName = $"{name} {counter++}.pfx";
                     }
 
                     int startIndex = part.IndexOf("\r\n\r\n") + 4;
 
                     byte[] fileContent = encoding.GetBytes(part.Substring(startIndex).TrimEnd('\r', '\n', '-'));
 
-                    File.WriteAllBytes(filename, fileContent);
+                    File.WriteAllBytes($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{newName}", fileContent);
 
-                    Logger.Action(origin, $"Upload certificate: {filename}");
+                    Logger.Action(origin, $"Upload certificate: {newName}");
                     break;
                 }
                 catch { }
             }
         }
 
-        return null;
+        return List();
     }
 
     public static byte[] List() {

@@ -568,6 +568,9 @@ class List extends Window {
 				this.link.length :
 				`${this.list.childNodes.length} / ${this.link.length}`;
 		}
+		else {
+			this.counter.textContent = "0";
+		}
 	}
 
 	InflateElement(element, entry, c_type) { //overridable

@@ -110,6 +110,7 @@ const LOADER = {
 		"snmp.js",
 		"speedtest.js",
 		"sitecheck.js",
+		"reverseproxy.js",
 		"passwordgen.js",
 		"passwordstrength.js",
 		"gandalf.js",
@@ -323,6 +324,7 @@ const LOADER = {
 		case "DhcpDiscover" : return new DhcpDiscover(command.args);
 		case "NtpClient"    : return new NtpClient(command.args);
 		case "SiteCheck"    : return new SiteCheck(command.args);
+		case "ReverseProxy" : return new ReverseProxy(command.args);
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
 		case "Wmi"          : return new Wmi(command.args);

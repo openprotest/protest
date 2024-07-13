@@ -200,7 +200,7 @@ class Certificates extends List {
 		const dropArea = document.createElement("div");
 		dropArea.style.minHeight    = "20px";
 		dropArea.style.margin       = "16px";
-		dropArea.style.padding      = "64px";
+		dropArea.style.padding      = "32px 0";
 		dropArea.style.border       = "2px dashed var(--clr-dark)";
 		dropArea.style.borderRadius = "8px";
 		dropArea.style.transition   = ".4s";
@@ -213,7 +213,6 @@ class Certificates extends List {
 		dropArea.append(message);
 
 		let isBusy = false;
-
 		
 		dropArea.ondragover = ()=> {
 			if (isBusy) return;
@@ -234,17 +233,17 @@ class Certificates extends List {
 			dropArea.style.backgroundColor = "";
 			dropArea.style.border = "2px dashed var(--clr-dark)";
 
-			/*if (event.dataTransfer.files.length !== 1) {
-				this.ConfirmBox("Please upload a single file.", true);
+			if (event.dataTransfer.files.length !== 1) {
+				message.textContent = "Please drop a single file.";
 				return;
-			}*/
+			}
 
 			let file = event.dataTransfer.files[0];
 			let extension = file.name.split(".");
 			extension = extension[extension.length-1].toLowerCase();
 
-			if (extension != "pfx") {
-				//this.ConfirmBox("Unsupported file", true);
+			if (extension !== "pfx") {
+				message.textContent = "Unsupported file type.";
 				return;
 			}
 
@@ -289,11 +288,6 @@ class Certificates extends List {
 		};
 
 		innerBox.appendChild(dropArea);
-
-		okButton.onclick = ()=> {
-			this.GetCertFiles();
-			dialog.Close();
-		};
 	}
 
 	Download() {

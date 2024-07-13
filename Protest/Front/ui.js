@@ -306,13 +306,11 @@ const MENU = {
 		{ t:"Watchdog",        i:"mono/watchdog.svg?light", g:"tools", h:false, f:()=> new Watchdog(), k:"" },
 		{ t:"Gandalf",         i:"mono/gandalf.svg?light",  g:"tools", h:false, f:()=> new Gandalf() },
 		//{ t:"Issues",          i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
-		{ t:"WMI client",      i:"mono/wmi.svg?light",      g:"tools", h:false, f:args=> new Wmi(args), k:"windows management instrumentation viewer" },
-		{ t:"SNMP polling",    i:"mono/snmp.svg?light",     g:"tools", h:false, f:args=> new Snmp(args) },
 		//{ t:"SNMP traps",      i:"mono/trap.svg?light",          g:"tools", h:false, f:args=> new Snmp(args) },
 		//{ t:"Scripts",         i:"mono/scripts.svg?light",       g:"tools", h:false, f:args=> {} },
 		//{ t:"Script reports",  i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:args=> {} },
 		//{ t:"Ongoing scripts", i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:args=> {} },
-
+		
 		{ t:"Ping",               i:"mono/ping.svg?light",          g:"utilities", h:false, f:args=> new Ping(args),         k:"roundtrip rtt icmp echo reply" },
 		{ t:"ARP ping",           i:"mono/ping.svg?light",          g:"utilities", h:true,  f:args=> new Ping({entries:[], timeout:500, method:"arp", interval:1000, moveToBottom:false, status:"play"}) },
 		{ t:"DNS lookup",         i:"mono/dns.svg?light",           g:"utilities", h:false, f:args=> new DnsLookup(args),    k:"resolve resolution" },
@@ -323,7 +321,10 @@ const MENU = {
 		{ t:"DHCP client",        i:"mono/dhcp.svg?light",          g:"utilities", h:false, f:args=> new DhcpDiscover(args), k:"discover" },
 		{ t:"NTP client",         i:"mono/clock.svg?light",         g:"utilities", h:false, f:args=> new NtpClient(args),    k:"network time" },
 		{ t:"Site check",         i:"mono/websitecheck.svg?light",  g:"utilities", h:false, f:args=> new SiteCheck(args),    k:"www website" },
+		{ t:"Reverse proxt",      i:"mono/reverseproxy.svg?light",  g:"utilities", h:false, f:args=> new ReverseProxy(args), k:"man in the middle" },
 		//{ t:"Speed test",         i:"mono/speedtest.svg?light",     g:"utilities",  h:false, f:args=> new SpeedTest(args) },
+		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"utilities", h:false, f:args=> new Snmp(args) },
+		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"utilities", h:false, f:args=> new Wmi(args), k:"windows management instrumentation viewer" },
 		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:false, f:()=> new Ssh({host:""}),       k:"ssh terminal" },
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),    k:"terminal" },
 		//{ t:"RS-232",             i:"mono/serialconsole.svg?light", g:"utilities", h:true,  f:()=>{}, k:"rs 232 serial terminal console" },
@@ -353,9 +354,9 @@ const MENU = {
 		{ t:"Tasks",          i:"mono/task.svg?light",        g:"manage", h:false, f:()=> new Tasks(), k:"" },
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:()=> new Automation(), k:"" },
 		{ t:"Certificates",   i:"mono/certificate.svg?light", g:"manage", h:false, f:()=> new Certificates(), k: "" },
-
 		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:()=> new Backup() },
 		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:()=> new Log() },
+		
 		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true,  f:()=> new About("update") },
 		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true,  f:()=> new About("updatemod") },
 		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:()=> new About("about") },
