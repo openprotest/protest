@@ -9,12 +9,14 @@ class ReverseProxy extends List {
 		this.SetTitle("Reverse proxy");
 		this.SetIcon("mono/reverseproxy.svg");
 
-		const columns = ["name", "traffic"];
+		this.ws = null;
+
+		const columns = ["name", "status"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
 
 		this.SetupToolbar();
-		this.createButton = this.AddToolbarButton("Create task", "mono/add.svg?light");
+		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
@@ -35,6 +37,45 @@ class ReverseProxy extends List {
 		this.stats.style.bottom = "28px";
 		this.stats.style.overflowY = "auto";
 		this.content.appendChild(this.stats);
+
+	}
+
+	Connect() {
+		let server = window.location.href;
+		server = server.replace("https://", "");
+		server = server.replace("http://", "");
+		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+
+		if (this.ws != null) {
+			try {
+				this.ws.close();
+			}
+			catch (ex) { };
+		}
+
+		
+		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ping");
+
+		this.ws.onopen = ()=> {
+
+		};
+
+		this.ws.onclose = ()=> {
+
+		};
+
+		this.ws.onerror = error=> {
+			
+		};
+
+	}
+
+	Close() { //overrides
+		if (this.ws != null) this.ws.close();
+		super.Close();
+	}
+
+	EditDialog(entry=null) {
 
 	}
 

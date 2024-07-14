@@ -1,8 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+
     <Product>Pro-test</Product>
     <AssemblyName>protest</AssemblyName>
     <Company>veniware</Company>
+    <PublisherName>veniware</PublisherName>
     <Authors>andreas venizelou</Authors>
     <Copyright>2024 veniware. Released into the public domain.</Copyright>
     <Description>A management base for System Admins</Description>
@@ -10,11 +18,11 @@
     <PackageIcon>protest.png</PackageIcon>
     <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>12</LangVersion>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
+    <verYear>$([System.DateTime]::UtcNow.ToString(yyyy))</verYear>
+    <verDoty>$([System.DateTime]::UtcNow.DayOfYear)</verDoty>
+    <VersionPrefix>5.0.$(verYear).$(verDoty)</VersionPrefix>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <Version>$(VersionPrefix)</Version>
 
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <Nullable>disable</Nullable>
@@ -25,17 +33,6 @@
     <WarningLevel>9999</WarningLevel>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 
-    <!--<Deterministic>false</Deterministic>-->
-    <!--<Version>5.0.0</Version>-->
-    <!--<AssemblyVersion>5.0.*</AssemblyVersion>-->
-
-    <verYear>$([System.DateTime]::UtcNow.ToString(yyyy))</verYear>
-    <verDoty>$([System.DateTime]::UtcNow.DayOfYear)</verDoty>
-    
-    <VersionPrefix>5.0.$(verYear).$(verDoty)</VersionPrefix>
-    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
-    <Version>$(VersionPrefix)</Version>
-
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
@@ -43,12 +40,11 @@
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
 
     <SelfContained>false</SelfContained>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
-    <PublisherName>Pro-test</PublisherName>
     <PublishAot>false</PublishAot>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   
   <ItemGroup>

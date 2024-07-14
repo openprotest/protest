@@ -118,11 +118,12 @@ class About extends Tabs {
 		credits.style.textAlign = "left";
 		credits.style.userSelect = "text";
 		credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
+		credits.innerHTML += "<b>-</b> Renci.SshNet               <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
+		credits.innerHTML += "<b>-</b> Lextm.SharpSnmpLib         <a target='_blank' href='https://www.nuget.org/packages/Lextm.SharpSnmpLib'>by Lextm</a><br>";
+		credits.innerHTML += "<b>-</b> Open Sans typeface         <a>by Steve Matteson</a><br>";
 		credits.innerHTML += "<b>-</b> MAC addresses lookup table <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
 		credits.innerHTML += "<b>-</b> IP2Location LITE           <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
 		credits.innerHTML += "<b>-</b> IP2Proxy LITE              <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-		credits.innerHTML += "<b>-</b> Renci.SshNet.SshClient     <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
-		credits.innerHTML += "<b>-</b> Open Sans typeface         <a>by Steve Matteson</a><br>";
 		center.appendChild(credits);
 
 		center.appendChild(document.createElement("br"));
@@ -328,24 +329,24 @@ class About extends Tabs {
 		link1.style.display = "block";
 		link1.style.margin = "8px";
 		link1.target = "_blank";
-		link1.href = "https://lite.ip2location.com/database/db5-ip-country-region-city-latitude-longitude";
-		link1.textContent = "IP2Location - Location list";
+		link1.href = "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html";
+		link1.textContent = "IEEE - MAC address block";
 		resources.append(link1);
 
 		const link2 = document.createElement("a");
 		link2.style.display = "block";
 		link2.style.margin = "8px";
 		link2.target = "_blank";
-		link2.href = "https://lite.ip2location.com/database/px1-ip-country";
-		link2.textContent = "IP2Location - Proxy list";
+		link2.href = "https://lite.ip2location.com/database/db5-ip-country-region-city-latitude-longitude";
+		link2.textContent = "IP2Location - Location list";
 		resources.append(link2);
 
 		const link3 = document.createElement("a");
 		link3.style.display = "block";
 		link3.style.margin = "8px";
 		link3.target = "_blank";
-		link3.href = "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html";
-		link3.textContent = "IEEE - MAC address block";
+		link3.href = "https://lite.ip2location.com/database/px1-ip-country";
+		link3.textContent = "IP2Location - Proxy list";
 		resources.append(link3);
 
 		resources.append(resourcesText, link1, link2, link3);
