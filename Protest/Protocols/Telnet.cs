@@ -54,7 +54,16 @@ internal static class Telnet {
                 _ = int.TryParse(split[1], out port);
             }
 
-            TcpClient telnet = new TcpClient(host, port);
+            TcpClient telnet;
+
+            if (IPAddress.TryParse(host, out IPAddress ip)) {
+                telnet = new TcpClient();
+                telnet.Connect(ip, port);
+            }
+            else {
+                telnet = new TcpClient(host, port);
+            }
+
             NetworkStream stream = telnet.GetStream();
 
             Logger.Action(username, $"Establish telnet connection to {host}:{port}");
@@ -84,8 +93,13 @@ internal static class Telnet {
             }
         }
         catch (SocketException ex) {
-            await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            if (ws.State == WebSocketState.Open) {
+                try {
+                    await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                }
+                catch {}
+            }
             return;
         }
         catch (Exception ex) {
