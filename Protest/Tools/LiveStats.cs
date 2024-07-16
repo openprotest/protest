@@ -327,7 +327,7 @@ internal static class LiveStats {
     [SupportedOSPlatform("windows")]
     private static void WmiQuery(WebSocket ws, object mutex, string firstAlive, ref string wmiHostname) {
         try {
-            ManagementScope scope = Protocols.Wmi.Scope(firstAlive);
+            ManagementScope scope = Protocols.Wmi.Scope(firstAlive, 3_000);
             if (scope is not null && scope.IsConnected) {
                 using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
                 foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {

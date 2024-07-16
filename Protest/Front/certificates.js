@@ -70,6 +70,8 @@ class Certificates extends List {
 
 		okButton.value = "Create";
 
+		innerBox.parentElement.style.maxWidth = "640px";
+
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 150px 275px auto";
@@ -77,7 +79,6 @@ class Certificates extends List {
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
-
 		const AddParameter = (name, tag, type, properties) => {
 			counter++;
 
@@ -113,12 +114,11 @@ class Certificates extends List {
 		}
 		rsaKeyInput.value = 2048;
 
-		const hashAlgorithms = [ "MD5", "SHA1", "SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512"];
 		const hashAlgorithmInput = AddParameter("Hash algorithm", "select", null);
-		for (let i=0; i<hashAlgorithms.length; i++) {
+		for (const algorithm of ["MD5", "SHA1", "SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512"]) {
 			const option = document.createElement("option");
-			option.value = hashAlgorithms[i].toLowerCase();
-			option.text = hashAlgorithms[i];
+			option.value = algorithm.toLowerCase();
+			option.text = algorithm;
 			hashAlgorithmInput.appendChild(option);
 		}
 		hashAlgorithmInput.value = "sha-256";
@@ -129,21 +129,21 @@ class Certificates extends List {
 		const after5y = new Date(now.setFullYear(now.getFullYear() + 5));
 		const validBefore = AddParameter("Valid before", "input", "date", {value: after5y.toISOString().substring(0, 10)});
 
-		const subjectAlternativeNames = AddParameter("Alternative names", "textarea", null, {placeholder: "comma separated list"});
-		subjectAlternativeNames.style.resize = "none";
-		
+		const subjectAlternativeInput = AddParameter("Alternative names", "textarea", null, {placeholder: "comma separated list"});
+		subjectAlternativeInput.style.resize = "none";
+
 		const passwordInput = AddParameter("Password", "input", "password");
 
-		setTimeout(()=>{ nameInput.focus() }, 200);
+		setTimeout(()=>nameInput.focus(), 200);
 
-		okButton.addEventListener("click", async ()=>{
+		okButton.addEventListener("click", async ()=> {
 			let body = `name=${nameInput.value}\n`;
 			body += `domain=${domainInput.value}\n`;
 			body += `keysize=${rsaKeyInput.value}\n`;
 			body += `hash=${hashAlgorithmInput.value}\n`;
 			body += `validafter=${validAfter.value}\n`;
 			body += `validbefore=${validBefore.value}\n`;
-			body += `alternative=${subjectAlternativeNames.value}\n`;
+			body += `alternative=${subjectAlternativeInput.value}\n`;
 			body += `password=${passwordInput.value}\n`;
 
 			try {

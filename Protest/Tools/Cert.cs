@@ -174,7 +174,7 @@ public static class Cert {
 
     public static byte[] List() {
         DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
-        if (!directory.Exists) return "{\"data\":{}}"u8.ToArray();
+        if (!directory.Exists) return "{\"data\":{},\"length\":0}"u8.ToArray();
 
         FileInfo[] files = directory.GetFiles();
 
@@ -280,6 +280,15 @@ public static class Cert {
         X509KeyUsageFlags keyUsageFlags,
         string friendlyName) {
 
+        try {
+            DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
+            if (!directory.Exists) {
+                directory.Create();
+            }
+        } catch (Exception) {
+            throw;
+        }
+
         using RSA rsa = RSA.Create(rsaKeySize);
 
         CertificateRequest request = new CertificateRequest($"CN={domain}", rsa, hashAlgorithm, RSASignaturePadding.Pkcs1);
@@ -289,6 +298,7 @@ public static class Cert {
         if (subjectAlternativeNames is not null && subjectAlternativeNames.Length > 0) {
             SubjectAlternativeNameBuilder sanBuilder = new SubjectAlternativeNameBuilder();
             foreach (string san in subjectAlternativeNames) {
+                if (String.IsNullOrEmpty(san)) { continue; }
                 if (IPAddress.TryParse(san, out IPAddress ip)) {
                     sanBuilder.AddIpAddress(ip);
                 }

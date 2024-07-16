@@ -150,7 +150,7 @@ internal static class Backup {
 
     internal static byte[] List() {
         DirectoryInfo directory = new DirectoryInfo(Data.DIR_BACKUP);
-        if (!directory.Exists) return "{\"data\":{}}"u8.ToArray();
+        if (!directory.Exists) return "{\"data\":{},\"length\":0}"u8.ToArray();
 
         FileInfo[] files = directory.GetFiles();
 

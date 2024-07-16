@@ -1438,18 +1438,33 @@ class DeviceView extends View {
 			valueLabel.setAttribute("text-anchor", "end");
 			valueLabel.style.fontSize = "12px";
 			valueLabel.style.fontWeight = "700";
+			valueLabel.style.filter = "drop-shadow(0 0 2px #000)";
 			valueLabel.style.opacity = "0";
 			valueLabel.style.transition = ".25s x, .25s y, .1s opacity";
 			svg.appendChild(valueLabel);
 
+			const currentTimeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+			currentTimeLabel.setAttribute("x", 0);
+			currentTimeLabel.setAttribute("y", 16);
+			currentTimeLabel.setAttribute("fill", "#fff");
+			currentTimeLabel.setAttribute("text-anchor", "end");
+			currentTimeLabel.style.fontSize = "12px";
+			currentTimeLabel.style.fontWeight = "600";
+			currentTimeLabel.style.filter = "drop-shadow(0 0 2px #000)";
+			currentTimeLabel.style.opacity = "0";
+			currentTimeLabel.style.transition = ".25s x, .25s y, .1s opacity";
+			svg.appendChild(currentTimeLabel);
+
 			graphBox.onmouseenter = ()=>{
 				circle.style.opacity = "1";
 				valueLabel.style.opacity = "1";
+				currentTimeLabel.style.opacity = "1";
 			};
 
 			graphBox.onmouseleave = ()=>{
 				circle.style.opacity = "0";
 				valueLabel.style.opacity = "0";
+				currentTimeLabel.style.opacity = "0";
 			};
 
 			graphBox.onmousemove = event=>{
@@ -1470,7 +1485,7 @@ class DeviceView extends View {
 					valueLabel.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
 					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : 24 + Math.min((height - 24) * data[closestIndex].v / 1000, height - 10))
 				}
-				if (type === "line") {
+				else if (type === "line") {
 					valueLabel.textContent = data[closestIndex].v;
 					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : Math.min(data[closestIndex].v / 10, height - 10));
 				}
@@ -1492,7 +1507,15 @@ class DeviceView extends View {
 				circle.setAttribute("cy", cy);
 
 				valueLabel.setAttribute("x", cx - 8);
-				valueLabel.setAttribute("y", Math.max(cy - 8, 10));
+				valueLabel.setAttribute("y", Math.max(cy - 8, 10) + 4);
+
+				currentTimeLabel.setAttribute("x", cx - 8);
+				currentTimeLabel.setAttribute("y", Math.max(cy - 8, 10) + 16);
+				
+				const time = new Date(UI.TicksToUnixDate(data[closestIndex].d));
+				const timeString = time.toLocaleTimeString(UI.regionalFormat, {});
+				currentTimeLabel.textContent = timeString;	
+
 			};
 
 			return svg;

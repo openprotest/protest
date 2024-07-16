@@ -4,6 +4,8 @@ using System.Management;
 using System.Net;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Protocols;
 
@@ -28,10 +30,10 @@ internal static class Wmi {
         };
         return Scope(host, impersonationLevel, username, password);
     }*/
-    public static ManagementScope Scope(string host) {
-        return Scope(host, ImpersonationLevel.Impersonate, String.Empty, String.Empty);
+    public static ManagementScope Scope(string host, int timeout = 0) {
+        return Scope(host, ImpersonationLevel.Impersonate, String.Empty, String.Empty, timeout);
     }
-    public static ManagementScope Scope(string host, ImpersonationLevel impersonation, string username, string password) {
+    public static ManagementScope Scope(string host, ImpersonationLevel impersonation, string username, string password, int timeout = 0) {
         ConnectionOptions options = new ConnectionOptions();
         if (username?.Length > 0) options.Username = username;
         if (password?.Length > 0) options.Password = password;
@@ -42,7 +44,18 @@ internal static class Wmi {
         ManagementScope scope;
         try {
             scope = new ManagementScope($"\\\\{host}\\root\\cimv2", options);
-            scope.Connect();
+
+            if (timeout > 0) {
+                CancellationTokenSource tokenSource = new CancellationTokenSource();
+                tokenSource.CancelAfter(timeout);
+
+                Task task = Task.Run( () => scope.Connect(), tokenSource.Token);
+                task.Wait(timeout, tokenSource.Token);
+            }
+            else {
+                scope.Connect();
+            }
+
             if (!scope.IsConnected) return null;
             return scope;
         }

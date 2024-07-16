@@ -16,6 +16,7 @@ using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
 using Protest.Protocols;
 using System.Threading;
+using Yarp.ReverseProxy.LoadBalancing;
 
 namespace Protest.Http;
 
