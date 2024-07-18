@@ -477,7 +477,7 @@
 		var(--clr-accent)95%,
 		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(8,0,0,1))100%);
 }
-#taskbar.taskbar-left > div.bar-icon:before {
+#taskbar.taskbar-left > div.bar-icon::before {
 	transform: translateX(-8px) !important;
 	left: calc(100% + 12px) !important;
 	right: unset;
@@ -491,7 +491,7 @@
 	border-width: 6px 6px 6px 0 !important;
 	border-color: transparent rgb(52,52,52) !important;
 }
-#taskbar.taskbar-left > div.bar-icon:hover:before,
+#taskbar.taskbar-left > div.bar-icon:hover::before,
 #taskbar.taskbar-left > div.bar-icon:hover::after {
 	transform: none !important;
 }
@@ -508,7 +508,7 @@
 		var(--clr-accent)95%,
 		color-mix(in hsl shorter hue, var(--clr-select)66%, rgba(8,0,0,1))100%);
 }
-#taskbar.taskbar-right > div.bar-icon:before {
+#taskbar.taskbar-right > div.bar-icon::before {
 	transform: translateX(8px) !important;
 	left: unset;
 	right: calc(100% + 12px) !important;
@@ -522,7 +522,7 @@
 	border-width: 6px 0 6px 6px !important;
 	border-color: transparent rgb(52,52,52) !important;
 }
-#taskbar.taskbar-right > div.bar-icon:hover:before,
+#taskbar.taskbar-right > div.bar-icon:hover::before,
 #taskbar.taskbar-right > div.bar-icon:hover::after {
 	transform: none !important;
 }
@@ -536,7 +536,7 @@
 	inset: 0px 0px auto 0px;
 	background: var(--grd-taskbar);
 }
-#taskbar.taskbar-top > div.bar-icon:before {
+#taskbar.taskbar-top > div.bar-icon::before {
 	transform: translateY(-8px) !important;
 	top: calc(100% + 11px) !important;
 }
@@ -545,7 +545,7 @@
 	top: calc(100% + 5px) !important;
 	border-width: 0 6px 6px 6px !important;
 }
-#taskbar.taskbar-top > div.bar-icon:hover:before,
+#taskbar.taskbar-top > div.bar-icon:hover::before,
 #taskbar.taskbar-top > div.bar-icon:hover::after {
 	transform: none !important;
 }

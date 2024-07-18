@@ -19,6 +19,32 @@
 	background-size: 24px 24px;
 }
 
+.tool-element > .tool-icon[tip]::before {
+	position: absolute;
+	transform: translateX(-8px) !important;
+	left: calc(100% + 8px) !important;
+	right: unset;
+	top: calc(50% - 12px) !important;
+}
+.tool-element > .tool-icon[tip]::after {
+	transform: translateX(-8px) !important;
+	left: calc(100% + 2px) !important;
+	right: unset;
+	top: calc(50% - 6px) !important;
+	border-width: 6px 6px 6px 0 !important;
+	border-color: transparent rgb(52,52,52) !important;
+}
+.tool-element > .tool-icon[tip]:hover::before,
+.tool-element > .tool-icon[tip]:hover::after {
+	max-width: unset !important;
+	transform: none !important;
+}
+.tool-element > .tool-icon[tip]:active::before,
+.tool-element > .tool-icon[tip]:active::after {
+	transition-delay: .25s !important;
+	transform: translateX(8px) !important;
+}
+
 .tool-element > .tool-label {
 	max-width: 30%;
 	overflow: hidden;

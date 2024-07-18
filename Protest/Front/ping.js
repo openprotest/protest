@@ -579,9 +579,12 @@ class Ping extends Console {
 				icon.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
 				div.appendChild(icon);
 
-				icon.ondblclick = ()=> {
-					LOADER.OpenDeviceByFile(key);
-				};
+				let label = LOADER.devices.data[key].name?.v ?? LOADER.devices.data[key].ip?.v;
+				if (label) {
+					icon.setAttribute("tip", label);
+				}
+
+				icon.ondblclick = ()=> LOADER.OpenDeviceByFile(key);
 
 				break;
 			}
