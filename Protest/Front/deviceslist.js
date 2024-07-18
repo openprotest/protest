@@ -179,7 +179,6 @@ class DevicesList extends List {
 		if (!element.ondblclick) {
 			element.ondblclick = event=> {
 				event.stopPropagation();
-
 				const file = element.getAttribute("id");
 				LOADER.OpenDeviceByFile(file);
 			};

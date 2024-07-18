@@ -56,12 +56,17 @@ class PasswordStrength extends List {
 			let types = ["device", "user"];
 
 			filtersList.textContent = "";
-			filterMenu.style.height = `${32 + types.length * 26}px`;
+			filterMenu.style.height = `${32 + types.length * 33}px`;
 
 			for (let i = 0; i < types.length; i++) {
 				const newType = document.createElement("div");
 				newType.textContent = types[i];
 				filtersList.appendChild(newType);
+
+				newType.style.backgroundImage = {
+					"device":"url(mono/gear.svg)",
+					"user"  :"url(mono/user.svg)"
+				}[types[i]];
 
 				if (types[i] === this.args.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
@@ -86,7 +91,7 @@ class PasswordStrength extends List {
 			}
 		};
 
-		findFilter.onchange = ()=> Refresh();
+		findFilter.onchange = findFilter.oninput = ()=> Refresh();
 
 		findFilter.onkeydown = event=> {
 			if (event.key === "Escape") {

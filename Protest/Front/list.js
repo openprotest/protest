@@ -250,7 +250,7 @@ class List extends Window {
 			types = types.sort();
 
 			filtersList.textContent = "";
-			filterMenu.style.height = `${34 + types.length * 27}px`;
+			filterMenu.style.height = `${32 + types.length * 33}px`;
 
 			for (let i = 0; i < types.length; i++) {
 				const newType = document.createElement("div");
@@ -281,18 +281,24 @@ class List extends Window {
 						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 						newType.style.backgroundColor = "var(--clr-select)";
 					}
-
 					this.RefreshList();
 				};
 			}
 		};
 
-		findFilter.onchange = ()=> Refresh();
+		filterMenu.onclick = ()=> findFilter.focus();
+
+		findFilter.onchange = findFilter.oninput = ()=> Refresh();
 
 		findFilter.onkeydown = event=> {
 			if (event.key === "Escape") {
-				findFilter.value = "";
-				findFilter.onchange();
+				if (findFilter.value === "") {
+					this.list.focus();
+				}
+				else {
+					findFilter.value = "";
+					findFilter.onchange();
+				}
 			}
 		};
 
@@ -303,7 +309,6 @@ class List extends Window {
 			filterButton.style.borderBottom = "";
 			ClearSelection();
 			this.RefreshList();
-
 		};
 
 		filterButton.onfocus = ()=> {

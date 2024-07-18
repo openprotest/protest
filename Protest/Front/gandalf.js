@@ -33,9 +33,14 @@ class Gandalf extends Window {
 		this.previousButton.onclick = ()=> this.Previous();
 		this.nextButton.onclick = ()=> this.Next();
 
+		
 		this.InitMenus();
-		this.GetEntropy();
-		this.GetSmtpProfiles();
+
+		setTimeout(async ()=>{
+			await this.GetEntropy();
+			this.GetSmtpProfiles();
+		},0);
+
 	}
 
 	async GetEntropy(callback) {
@@ -445,6 +450,7 @@ class Gandalf extends Window {
 			}
 
 			this.smtpProfileInput.onchange = ()=>{
+				if (!this.smtpProfileInput.value) return;
 				this.smtpServerInput.value = json[this.smtpProfileInput.value].server;
 				this.smtpPortInput.value = json[this.smtpProfileInput.value].port;
 				this.senderInput.value = json[this.smtpProfileInput.value].sender;
