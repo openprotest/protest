@@ -40,7 +40,6 @@ class Gandalf extends Window {
 			await this.GetEntropy();
 			this.GetSmtpProfiles();
 		},0);
-
 	}
 
 	async GetEntropy(callback) {

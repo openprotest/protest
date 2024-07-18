@@ -320,9 +320,7 @@ class List extends Window {
 			}
 		};
 
-		filterMenu.onclick = filterMenu.ondblclick = event=> {
-			event.stopPropagation();
-		};
+		filterMenu.onclick = filterMenu.ondblclick = event=> event.stopPropagation();
 
 		Refresh();
 
