@@ -65,7 +65,7 @@ input[type="email"]:required,
 input[type="number"]:required,
 input[type="date"]:required {
 	background-image: url(mono/required.svg);
-	background-size: 24px 24px;
+	background-size: 20px 20px;
 	background-repeat: no-repeat;
 	animation: required .4s ease-in;
 }
