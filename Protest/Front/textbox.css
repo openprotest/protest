@@ -67,6 +67,7 @@ input[type="date"]:required {
 	background-image: url(mono/required.svg);
 	background-size: 24px 24px;
 	background-repeat: no-repeat;
+	animation: required .4s ease-in;
 }
 
 input[type=number]:not(:focus) {
@@ -76,4 +77,9 @@ input[type=number]:not(:focus) {
 select > option {
 	font-size: var(--global-font-size);
 	font-family: var(--global-font-family);
+}
+
+@keyframes required {
+	0%   { background-position: calc(100% + 40px); }
+	100% { background-position: calc(100%); }
 }

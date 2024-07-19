@@ -20,7 +20,13 @@ class ReverseProxy extends List {
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
+		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+
+		this.deleteButton.disabled = true;
+		this.startButton.disabled = true;
+		this.pauseButton.disabled = true;
+		this.stopButton.disabled = true;
 
 		this.list.style.right = "unset";
 		this.list.style.width = "min(40%, 480px)";
@@ -112,7 +118,7 @@ class ReverseProxy extends List {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 175px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(7, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(8, 38px)";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
@@ -138,7 +144,7 @@ class ReverseProxy extends List {
 			return input;
 		};
 
-		const nameInput          = AddParameter("Name", "input", "text");
+		const nameInput = AddParameter("Name", "input", "text");
 
 		const protocolInput = AddParameter("Protocol", "select", null);
 		for (const protocol of ["TCP", "UDP", "HTTP", "HTTPS"]) {
@@ -170,6 +176,13 @@ class ReverseProxy extends List {
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
 		const destinationPortInput    = AddParameter("Destination port", "input", "number", {"min":1, "max":65535, value:80});
 
+		counter++;
+		const autostartBox = document.createElement("div");
+		autostartBox.style.gridArea = `${counter} / 2 / ${counter} / 4`;
+		innerBox.append(autostartBox);
+
+		const autostartToggle = this.CreateToggle("Autostart", false, autostartBox);
+
 		setTimeout(()=>nameInput.focus(), 200);
 
 		protocolInput.onchange = ()=> {
@@ -177,6 +190,53 @@ class ReverseProxy extends List {
 		};
 
 		protocolInput.onchange();
+
+		okButton.onclick = async ()=> {
+			let requiredFieldMissing = false;
+			let requiredFields = [nameInput, listenAddressInput, listenPostInput, destinationAddressInput, destinationPortInput];
+
+			for (let i=0; i<requiredFields.length; i++) {
+				if (requiredFields[i].value.length === 0) {
+					if (!requiredFieldMissing) requiredFields[i].focus();
+					requiredFields[i].required = true;
+					requiredFieldMissing = true;
+					requiredFields[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredFields[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
+
+			try {
+				let body = `name=${nameInput.value}\n`;
+				body += `protocol=${protocolInput.value}\n`;
+				body += `cert=${certsInput.value}\n`;
+				body += `listenaddr=${listenAddressInput.value}\n`;
+				body += `listenport=${listenPostInput.value}\n`;
+				body += `destaddr=${destinationAddressInput.value}\n`;
+				body += `destport=${destinationPortInput.value}\n`;
+				body += `autostart=${autostartToggle.checkbox.checked}`;
+
+				const response = await fetch("/todo", {
+					method: "POST",
+					body: body
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw (json.error);
+
+				//TODO:
+			}
+			catch (ex) {
+				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
+			}
+
+			dialog.Close();
+		};
 	}
 
 	Delete() {

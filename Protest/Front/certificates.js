@@ -136,7 +136,24 @@ class Certificates extends List {
 
 		setTimeout(()=>nameInput.focus(), 200);
 
-		okButton.addEventListener("click", async ()=> {
+		okButton.onclick =  async ()=> {
+			let requiredFieldMissing = false;
+			let requiredFields = [nameInput, domainInput];
+
+			for (let i=0; i<requiredFields.length; i++) {
+				if (requiredFields[i].value.length === 0) {
+					if (!requiredFieldMissing) requiredFields[i].focus();
+					requiredFields[i].required = true;
+					requiredFieldMissing = true;
+					requiredFields[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredFields[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
+
 			let body = `name=${nameInput.value}\n`;
 			body += `domain=${domainInput.value}\n`;
 			body += `keysize=${rsaKeyInput.value}\n`;
@@ -163,7 +180,9 @@ class Certificates extends List {
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
-		});
+
+			dialog.Close();
+		};
 	}
 
 	Delete() {

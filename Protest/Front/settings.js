@@ -163,7 +163,7 @@ class Settings extends Tabs {
 		this.tabsPanel.appendChild(this.zonesList);
 
 		this.zonesNewButton.onclick = ()=>{
-			this.PreviewZone(null);
+			this.ZoneDialog(null);
 		};
 
 		this.zonesRemoveButton.onclick = ()=> {
@@ -382,9 +382,7 @@ class Settings extends Tabs {
 				}
 				catch (ex) {
 					dialog.Close();
-					setTimeout(()=>{
-						this.ConfirmBox(ex, true, "mono/error.svg");
-					},250);
+					setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
 				}
 			};
 
@@ -554,7 +552,7 @@ class Settings extends Tabs {
 				};
 
 				element.ondblclick = ()=>{
-					this.PreviewZone(json[i]);
+					this.ZoneDialog(json[i]);
 				};
 			}
 		}
@@ -706,7 +704,7 @@ class Settings extends Tabs {
 		}
 	}
 
-	PreviewZone(object=null) {
+	ZoneDialog(object=null) {
 		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
@@ -758,13 +756,30 @@ class Settings extends Tabs {
 			trustedToggle.checkbox.checked = object.isTrusted;
 		}
 
-		okButton.addEventListener("click", async ()=>{
+		okButton.onclick = async()=> {
 			let isNew = object === null;
 			let index = this.zones.indexOf(object);
 
 			if (!isNew) {
 				if (index === -1) isNew = true;
 			}
+
+			let requiredFieldMissing = false;
+			let requiredFields = [nameInput, networkInput];
+
+			for (let i=0; i<requiredFields.length; i++) {
+				if (requiredFields[i].value.length === 0) {
+					if (!requiredFieldMissing) requiredFields[i].focus();
+					requiredFields[i].required = true;
+					requiredFieldMissing = true;
+					requiredFields[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredFields[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
 
 			const newObject = {
 				name     : nameInput.value,
@@ -781,8 +796,9 @@ class Settings extends Tabs {
 			}
 
 			await this.SaveZones();
+			dialog.Close();
 			this.ShowZones();
-		});
+		};
 
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
@@ -861,13 +877,30 @@ class Settings extends Tabs {
 			sslToggle.checkbox.checked = object.ssl;
 		}
 
-		okButton.addEventListener("click", async ()=> {
+		okButton.onclick = async ()=>{
 			let isNew = object === null;
 			let index = this.smtpProfiles.indexOf(object);
 
 			if (!isNew) {
 				if (index === -1) isNew = true;
 			}
+
+			let requiredFieldMissing = false;
+			let requiredFields = [serverInput, portInput, senderInput, usernameInput, passwordInput];
+
+			for (let i=0; i<requiredFields.length; i++) {
+				if (requiredFields[i].value.length === 0) {
+					if (!requiredFieldMissing) requiredFields[i].focus();
+					requiredFields[i].required = true;
+					requiredFieldMissing = true;
+					requiredFields[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredFields[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
 
 			const newObject = {
 				server     : serverInput.value,
@@ -888,8 +921,9 @@ class Settings extends Tabs {
 			}
 
 			await this.SaveSmtpProfiles();
+			dialog.Close();
 			this.ShowSmtp();
-		});
+		};
 
 		setTimeout(()=>{ serverInput.focus() }, 200);
 	}
@@ -1114,6 +1148,27 @@ class Settings extends Tabs {
 			if (!isNew) {
 				if (index === -1) isNew = true;
 			}
+
+			let isV3 = versionInput.value == 3;
+
+			let requiredFieldMissing = false;
+			let requiredFields = isV3
+				? [nameInput, priorityInput, usernameInput, authPasswordInput, privacyPasswordInput]
+				: [nameInput, priorityInput, communityInput];
+
+			for (let i=0; i<requiredFields.length; i++) {
+				if (requiredFields[i].value.length === 0) {
+					if (!requiredFieldMissing) requiredFields[i].focus();
+					requiredFields[i].required = true;
+					requiredFieldMissing = true;
+					requiredFields[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredFields[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
 
 			const newObject = {
 				name             : nameInput.value,

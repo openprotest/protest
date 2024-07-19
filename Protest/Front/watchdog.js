@@ -492,38 +492,38 @@ class Watchdog extends Window {
 		okButton.onclick = async ()=> {
 			if (!isNew && this.selected === null) return;
 
-			let requiredFilledMissing = false;
+			let requiredFieldMissing = false;
 
 			if (targetInput.value.length === 0) {
-				if (!requiredFilledMissing) targetInput.focus();
+				if (!requiredFieldMissing) targetInput.focus();
 				targetInput.required = true;
-				requiredFilledMissing = true;
+				requiredFieldMissing = true;
 			}
 
 			if (typeInput.value === "TCP" && portInput.value.length === 0) {
-				if (!requiredFilledMissing) portInput.focus();
+				if (!requiredFieldMissing) portInput.focus();
 				portInput.required = true;
-				requiredFilledMissing = true;
+				requiredFieldMissing = true;
 			}
 
 			if (typeInput.value === "DNS" && portInput.value.length === 0) {
-				if (!requiredFilledMissing) portInput.focus();
+				if (!requiredFieldMissing) portInput.focus();
 				portInput.required = true;
-				requiredFilledMissing = true;
+				requiredFieldMissing = true;
 			}
 			if (typeInput.value === "DNS" && queryInput.value.length === 0) {
-				if (!requiredFilledMissing) queryInput.focus();
+				if (!requiredFieldMissing) queryInput.focus();
 				queryInput.required = true;
-				requiredFilledMissing = true;
+				requiredFieldMissing = true;
 			}
 
 			if (typeInput.value === "HTTP keyword" && keywordInput.value.length === 0) {
-				if (!requiredFilledMissing) keywordInput.focus();
+				if (!requiredFieldMissing) keywordInput.focus();
 				keywordInput.required = true;
-				requiredFilledMissing = true;
+				requiredFieldMissing = true;
 			}
 
-			if (requiredFilledMissing) return;
+			if (requiredFieldMissing) return;
 
 			if (nameInput.value.length === 0) {
 				nameInput.value = targetInput.value;

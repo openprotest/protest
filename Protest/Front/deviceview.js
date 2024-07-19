@@ -2638,7 +2638,6 @@ class DeviceView extends View {
 
 					fetchButton.onclick();
 				}
-
 			}
 			catch {}
 			finally {

@@ -451,6 +451,8 @@ class List extends Window {
 	RefreshList() {
 		this.list.textContent = "";
 
+		if (this.link === null || this.link.data === null) { return; }
+
 		let filtered = [];
 		if (this.args.filter.length === 0) {
 			for (const key in this.link.data) {
