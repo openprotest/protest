@@ -218,7 +218,7 @@ internal static class Fetch {
 
                 short[] portsPool = argPortScan == "full" ? PortScan.BASIC_PORTS : PortScan.BASIC_PORTS;
 
-                bool[] ports = PortScan.PortsScanAsync(target, portsPool).Result;
+                bool[] ports = PortScan.PortsScanAsync(target, portsPool).GetAwaiter().GetResult();
 
                 for (int i = 0; i < portsPool.Length; i++) {
                     if (ports[i]) {

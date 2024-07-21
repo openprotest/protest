@@ -29,21 +29,26 @@ internal static class Update {
         public string vendor;
     }
 
-    public static byte[] CheckLatestRelease() {
-        string url = "https://raw.githubusercontent.com/openprotest/protest/master/RELEASE";
+    private static readonly string RELEASE_URL = "https://raw.githubusercontent.com/openprotest/protest/master/RELEASE";
 
+    public static byte[] CheckLatestRelease() {
         using HttpClient client = new HttpClient();
 
-        HttpResponseMessage responseMessage = client.GetAsync(url).Result;
-        responseMessage.EnsureSuccessStatusCode();
+        try {
+            HttpResponseMessage responseMessage = client.GetAsync(RELEASE_URL).GetAwaiter().GetResult();
+            responseMessage.EnsureSuccessStatusCode();
 
-        string data = responseMessage.Content.ReadAsStringAsync().Result;
-        string[] split = data.Split('.');
+            string data = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            string[] split = data.Split('.');
 
-        if (split.Length >= 4) {
-            return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
+            if (split.Length >= 4) {
+                return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
+            }
+            else {
+                return Data.CODE_FAILED.Array;
+            }
         }
-        else {
+        catch {
             return Data.CODE_FAILED.Array;
         }
     }

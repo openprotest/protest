@@ -7,6 +7,7 @@
 #define SVG_TO_LIGHT
 
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -36,7 +37,8 @@ internal sealed class Cache {
     //public const uint CACHE_CONTROL_MAX_AGE = 86_400; //24h
     public const uint CACHE_CONTROL_MAX_AGE = 15_768_000; //6m
 
-    private readonly static Dictionary<string, string> CONTENT_TYPE = new Dictionary<string, string>() {
+
+    private readonly static FrozenDictionary<string, string> CONTENT_TYPE = new Dictionary<string, string>() {
         {"htm",  "text/html; charset=utf-8"},
         {"html", "text/html; charset=utf-8"},
         {"css",  "text/css; charset=utf-8"},
@@ -71,7 +73,7 @@ internal sealed class Cache {
         {"zip",  "application/application/zip"},
         //{"7z",  "application/x-7z-compressed"},
         //{"rar",  "application/x-rar-compressed"}
-    };
+    }.ToFrozenDictionary();
 
     private string birthdate;
     private readonly string path;

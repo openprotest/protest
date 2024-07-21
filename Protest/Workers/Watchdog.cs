@@ -280,12 +280,12 @@ internal static class Watchdog {
                 using HttpClient client = new HttpClient();
                 HttpResponseMessage response = watcher.method switch
                 {
-                    "GET" => client.GetAsync(watcher.target).Result,
-                    "POST" => client.PostAsync(watcher.target, null).Result,
-                    "PUT" => client.PutAsync(watcher.target, null).Result,
-                    "PATCH" => client.PatchAsync(watcher.target, null).Result,
-                    "DELETE" => client.DeleteAsync(watcher.target).Result,
-                    _ => client.GetAsync(watcher.target).Result,
+                    "GET" => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "POST" => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PUT" => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PATCH" => client.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "DELETE" => client.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
+                    _ => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
                 };
 
                 int statusCode = (int)response.StatusCode;
@@ -319,12 +319,12 @@ internal static class Watchdog {
             try {
                 HttpResponseMessage response = watcher.method switch
                 {
-                    "GET" => client.GetAsync(watcher.target).Result,
-                    "POST" => client.PostAsync(watcher.target, null).Result,
-                    "PUT" => client.PutAsync(watcher.target, null).Result,
-                    "PATCH" => client.PatchAsync(watcher.target, null).Result,
-                    "DELETE" => client.DeleteAsync(watcher.target).Result,
-                    _ => client.GetAsync(watcher.target).Result,
+                    "GET" => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "POST" => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PUT" => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PATCH" => client.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "DELETE" => client.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
+                    _ => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
                 };
 
                 int statusCode = (int)response.StatusCode;
@@ -335,7 +335,7 @@ internal static class Watchdog {
                 //if (!watcher.httpstatus[category]) continue;
 
                 if (watcher.httpstatus[category]) {
-                    byte[] buffer = response.Content.ReadAsByteArrayAsync().Result;
+                    byte[] buffer = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
                     for (int j = 0; j < buffer.Length; j++) { //to lower case
                         if (buffer[j] > 64 && buffer[j] < 91) { buffer[j] -= 32; }
                     }
@@ -381,7 +381,7 @@ internal static class Watchdog {
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 using HttpClient client = new HttpClient(handler);
-                using HttpResponseMessage response = client.GetAsync(watcher.target).Result;
+                using HttpResponseMessage response = client.GetAsync(watcher.target).GetAwaiter().GetResult();
             }
             catch { }
 

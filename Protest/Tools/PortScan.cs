@@ -200,7 +200,7 @@ internal static class PortScan {
 
                 new Thread(() => {
                     for (int i = portFrom; i <= portTo; i += 256) {
-                        if (ws.State != WebSocketState.Open) return;
+                        if (ws.State != WebSocketState.Open) { return; }
 
                         string result = String.Empty;
 
@@ -211,8 +211,9 @@ internal static class PortScan {
                         s.Wait();
 
                         for (int port = 0; port < s.Result.Length; port++) {
-                            if (s.Result[port])
+                            if (s.Result[port]) {
                                 result += (port + from) + ((char)127).ToString();
+                            }
                         }
 
                         if (result.Length > 0) {
@@ -251,13 +252,16 @@ internal static class PortScan {
         int[] q = RemoteNetstat(host);
         if (q is not null) {
             bool[] p = new bool[ports.Length];
-            for (int i = 0; i < p.Length; i++)
+            for (int i = 0; i < p.Length; i++) {
                 p[i] = q.Contains(ports[i]);
+            }
             return p;
         }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
-        for (int i = 0; i < ports.Length; i++) tasks.Add(PortScanAsync(host, ports[i]));
+        for (int i = 0; i < ports.Length; i++) {
+            tasks.Add(PortScanAsync(host, ports[i]));
+        }
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
@@ -266,13 +270,16 @@ internal static class PortScan {
         int[] q = RemoteNetstat(host);
         if (q is not null) {
             bool[] p = new bool[to - from];
-            for (int i = 0; i < p.Length; i++)
+            for (int i = 0; i < p.Length; i++) {
                 p[i] = q.Contains(i + from);
+            }
             return p;
         }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
-        for (int port = from; port < to; port++) tasks.Add(PortScanAsync(host, port));
+        for (int port = from; port < to; port++) {
+            tasks.Add(PortScanAsync(host, port));
+        }
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }

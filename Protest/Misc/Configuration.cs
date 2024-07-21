@@ -15,8 +15,6 @@ internal static class Configuration {
     internal static bool accept_xff_header = true;
     internal static IPAddress accept_xff_only_from = null;
 
-    internal static readonly string[] alternativeUriPrefixes = new string[] { "http://127.0.0.1:8080/" };
-
     internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
 

@@ -182,10 +182,10 @@ internal static class LocateIp {
             using HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Add("Accept", "application/dns-json");
 
-            HttpResponseMessage responseMessage = client.GetAsync(url).Result;
+            HttpResponseMessage responseMessage = client.GetAsync(url).GetAwaiter().GetResult();
             responseMessage.EnsureSuccessStatusCode();
 
-            string data = responseMessage.Content.ReadAsStringAsync().Result;
+            string data = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             string access = JsonSerializer.Deserialize<string>(data, onlyLocation ? locationDerializerOptionsOnlyLocation : locationDerializerOptions) ;
             return Encoding.UTF8.GetBytes(access);
         }

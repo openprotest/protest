@@ -52,13 +52,13 @@ internal class Import {
 
             HttpResponseMessage versionResponse;
             try {
-                versionResponse = versionClient.GetAsync("/version").Result; //ver. 5
+                versionResponse = versionClient.GetAsync("/version").GetAwaiter().GetResult(); //ver. 5
 
                 if (versionResponse.StatusCode == HttpStatusCode.NotFound) {
                     version = 3.2f;
                 }
                 else {
-                    string[] ver = versionResponse.Content.ReadAsStringAsync().Result
+                    string[] ver = versionResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult()
                                    .Replace("{", string.Empty)
                                    .Replace("}", string.Empty)
                                    .Replace("\"", string.Empty)
@@ -171,7 +171,7 @@ internal class Import {
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> res = client.GetAsync("db/getequiptable");
-        string payload = res.Result.Content.ReadAsStringAsync().Result;
+        string payload = res.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         string[] split = payload.Split((char)127);
 
         long filenameCount = DateTime.UtcNow.Ticks;
@@ -248,7 +248,7 @@ internal class Import {
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> res = client.GetAsync("db/getuserstable");
-        string payload = res.Result.Content.ReadAsStringAsync().Result;
+        string payload = res.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         string[] split = payload.Split((char)127);
 
         long filenameCount = DateTime.UtcNow.Ticks;
@@ -325,7 +325,7 @@ internal class Import {
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> res = client.GetAsync($"debitnotes/get&keywords=&from=2000-01-01&to={DateTime.Now:yyyy-MM-dd}&filters=111");
-        string payload = res.Result.Content.ReadAsStringAsync().Result;
+        string payload = res.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         string[] split = payload.Split((char)127);
 
         for (int i = 0; i < split.Length - 9; i += 10) {
@@ -396,7 +396,7 @@ internal class Import {
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> res = client.GetAsync("/db/device/list");
-        byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().Result;
+        byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
 
 #pragma warning disable CA1869 // Cache and reuse
         JsonSerializerOptions options = new JsonSerializerOptions();
@@ -456,13 +456,13 @@ internal class Import {
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> listResponse = client.GetAsync($"debit/list?upto=all&short=true&long=true&returned=true");
-        string listPayload = listResponse.Result.Content.ReadAsStringAsync().Result;
+        string listPayload = listResponse.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
         try {
             DebitParseHelper[] records = JsonSerializer.Deserialize<DebitParseHelper[]>(listPayload);
             for (int i = 0; i < records.Length; i++) {
                 Task<HttpResponseMessage> viewResponse = client.GetAsync($"debit/view?status={records[i].Status}&file={records[i].File}");
-                string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().Result;
+                string viewPayload = viewResponse.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 DebitNotes.Create(viewPayload, "Import task");
             }
         }
@@ -478,7 +478,7 @@ internal class Import {
         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("pro-test", "4.0"));
 
         Task<HttpResponseMessage> res = client.GetAsync(path);
-        string value = res.Result.Content.ReadAsStringAsync().Result;
+        string value = res.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return value;
     }
 }

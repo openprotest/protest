@@ -98,10 +98,10 @@ internal sealed class TaskWrapper : IDisposable {
 
             int remain = (int)(millisecond - elapsed);
             if (remain < interval) {
-                await Task.Delay(remain);
+                await Task.Delay(remain, cancellationToken);
             }
             else {
-                await Task.Delay(interval);
+                await Task.Delay(interval, cancellationToken);
             }
         }
     }

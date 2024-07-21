@@ -910,7 +910,7 @@ class DeviceView extends View {
 			spinner.style.marginTop = "8px";
 			spinner.style.marginBottom = "8px";
 			spinner.style.transform = "scale(.85)";
-			spinner.style.animation = "delayed-fade-in .65s ease-in 1";
+			spinner.style.animation = "delayed-fade-in .66s ease-in 1";
 			spinner.appendChild(document.createElement("div"));
 
 			const status = document.createElement("div");

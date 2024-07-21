@@ -60,28 +60,19 @@ internal class Program {
         bool loadRbac = Http.Auth.LoadRbac();
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "OK  " : "Failed"));
 
-        Console.Write("Launching tasks");
+        Console.Write("Starting workers");
         Workers.Automation.Initialize();
-        Console.WriteLine("         OK");
+        Console.WriteLine("        OK");
 
         Console.WriteLine();
-
-        /*new System.Threading.Thread(() => {
-            Protest.Http.ReverseProxy rp = new Protest.Http.ReverseProxy(
-            new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 8443),
-            new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 8080),
-            $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}certificate.pfx",
-            "your_password"
-            );
-        }).Start();*/
 
         try {
             StartServer(Configuration.http_prefixes);
         }
         catch (System.Net.HttpListenerException ex) {
             if (ex.ErrorCode != 5) return; //access denied
-            Console.WriteLine("Switching to alternative prefix");
-            StartServer(Configuration.alternativeUriPrefixes);
+            Console.WriteLine("Switching to fallback uri prefix");
+            StartServer(new string[] { "http://127.0.0.1:8080/" });
         }
     }
 

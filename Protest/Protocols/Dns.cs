@@ -148,14 +148,14 @@ internal static class Dns {
                 using HttpClient client = new HttpClient();
                 client.DefaultRequestHeaders.Add("Accept", "application/dns-json");
 
-                HttpResponseMessage responseMessage = client.GetAsync(url).Result;
+                HttpResponseMessage responseMessage = client.GetAsync(url).GetAwaiter().GetResult();
                 responseMessage.EnsureSuccessStatusCode();
 
                 answerCount = 1;
                 authorityCount = 0;
                 additionalCount = 0;
 
-                string data = responseMessage.Content.ReadAsStringAsync().Result;
+                string data = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 return Encoding.UTF8.GetBytes(data);
             }
 

@@ -37,7 +37,7 @@ internal static class Icmp {
             }));
         }
 
-        int[] result = Task.WhenAll(tasks).Result;
+        int[] result = Task.WhenAll(tasks).GetAwaiter().GetResult();
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(result);
 
         return json;

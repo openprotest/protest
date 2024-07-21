@@ -49,7 +49,8 @@ internal static class Wmi {
                 CancellationTokenSource tokenSource = new CancellationTokenSource();
                 tokenSource.CancelAfter(timeout);
 
-                Task task = Task.Run( () => scope.Connect(), tokenSource.Token);
+                Task task = Task.Run(() => scope.Connect(), tokenSource.Token);
+                //task.RunSynchronously();
                 task.Wait(timeout, tokenSource.Token);
             }
             else {
