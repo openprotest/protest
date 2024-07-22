@@ -584,6 +584,11 @@ button.view-live-button:active {
 	transform: translateX(-24px);
 }
 
+.view-lifeline-graph > svg > text {
+	filter: drop-shadow(0 0 2px #000);
+	transition: .2s transform, .1s opacity;
+}
+
 .view-info-box,
 .view-warning-box,
 .view-error-box,

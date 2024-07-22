@@ -95,6 +95,8 @@ class DeviceView extends View {
 		}
 
 		this.AutoUpdateIndicators();
+
+		setTimeout(()=>this.AfterResize(), WIN.ANIME_DURATION);
 	}
 
 	InitializeComponents() {
@@ -1438,43 +1440,59 @@ class DeviceView extends View {
 			circle.setAttribute("stroke-width", 2);
 			circle.setAttribute("fill", "none");
 			circle.style.opacity = "0";
-			circle.style.transition = ".25s cx, .25s cy, .1s opacity";
+			circle.style.transition = ".2s cx, .2s cy, .1s opacity";
 			svg.appendChild(circle);
 
 			const valueLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			valueLabel.setAttribute("x", 750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50);
-			valueLabel.setAttribute("y", height + 5);
+			valueLabel.setAttribute("x", 0);
+			valueLabel.setAttribute("y", 0);
 			valueLabel.setAttribute("fill", "#fff");
 			valueLabel.setAttribute("text-anchor", "end");
 			valueLabel.style.fontSize = "12px";
 			valueLabel.style.fontWeight = "700";
-			valueLabel.style.filter = "drop-shadow(0 0 2px #000)";
-			valueLabel.style.opacity = "0";
-			valueLabel.style.transition = ".25s x, .25s y, .1s opacity";
 			svg.appendChild(valueLabel);
 
 			const currentTimeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 			currentTimeLabel.setAttribute("x", 0);
-			currentTimeLabel.setAttribute("y", 16);
+			currentTimeLabel.setAttribute("y", 0);
 			currentTimeLabel.setAttribute("fill", "#fff");
-			currentTimeLabel.setAttribute("text-anchor", "end");
+			currentTimeLabel.setAttribute("text-anchor", "middle");
 			currentTimeLabel.style.fontSize = "12px";
-			currentTimeLabel.style.fontWeight = "600";
-			currentTimeLabel.style.filter = "drop-shadow(0 0 2px #000)";
-			currentTimeLabel.style.opacity = "0";
-			currentTimeLabel.style.transition = ".25s x, .25s y, .1s opacity";
 			svg.appendChild(currentTimeLabel);
+
+			const timeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+			timeLine.setAttribute("x1", 0);
+			timeLine.setAttribute("y1", 0);
+			timeLine.setAttribute("x2", 0);
+			timeLine.setAttribute("y2", height + 5);
+			timeLine.setAttribute("stroke", "#fff");
+			timeLine.setAttribute("stroke-width", 1);
+			timeLine.setAttribute("x1", 0);
+			timeLine.setAttribute("x2", 0);
+			timeLine.style.transition = ".2s";
+			svg.appendChild(timeLine);
+
+			const timeDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			timeDot.setAttribute("r", 2);
+			timeDot.setAttribute("fill", "#fff");
+			timeDot.style.opacity = "0";
+			timeDot.style.transition = ".2s cx, .2s cy, .1s opacity";
+			svg.appendChild(timeDot);
 
 			graphBox.onmouseenter = ()=>{
 				circle.style.opacity = "1";
 				valueLabel.style.opacity = "1";
 				currentTimeLabel.style.opacity = "1";
+				timeLine.style.opacity = "1";
+				timeDot.style.opacity = "1";
 			};
 
 			graphBox.onmouseleave = ()=>{
 				circle.style.opacity = "0";
 				valueLabel.style.opacity = "0";
 				currentTimeLabel.style.opacity = "0";
+				timeLine.style.opacity = "0";
+				timeDot.style.opacity = "0";
 			};
 
 			graphBox.onmousemove = event=>{
@@ -1516,16 +1534,20 @@ class DeviceView extends View {
 				circle.setAttribute("cx", cx);
 				circle.setAttribute("cy", cy);
 
-				valueLabel.setAttribute("x", cx - 8);
-				valueLabel.setAttribute("y", Math.max(cy - 8, 10) + 4);
+				valueLabel.style.transform = `translate(${cx - 8}px,${Math.max(cy - 4, 10)}px)`;
+				currentTimeLabel.style.transform = `translate(${cx}px,${height + 20}px)`;
 
-				currentTimeLabel.setAttribute("x", cx - 8);
-				currentTimeLabel.setAttribute("y", Math.max(cy - 8, 10) + 16);
-				
-				const time = new Date(UI.TicksToUnixDate(data[closestIndex].d));
-				const timeString = time.toLocaleTimeString(UI.regionalFormat, {});
-				currentTimeLabel.textContent = timeString;	
+				timeLine.setAttribute("y1", cy + 4);
+				timeLine.setAttribute("y2", height + 6);
+				timeLine.style.transform = `translateX(${cx}px)`;
 
+				timeDot.setAttribute("cx", cx);
+				timeDot.setAttribute("cy", height + 6);
+				timeDot.setAttribute("fill", cy < height - 4 ? "#fff" : "transparent");
+
+				const time = new Date(data[closestIndex].d);
+				const timeString = time.toLocaleTimeString(UI.regionalFormat, {hour12:false, hour:"2-digit", minute:"2-digit"});
+				currentTimeLabel.textContent = timeString;
 			};
 
 			return svg;
