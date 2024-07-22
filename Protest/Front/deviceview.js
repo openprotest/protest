@@ -1433,7 +1433,7 @@ class DeviceView extends View {
 			path.setAttribute("d", d);
 
 			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-			circle.setAttribute("cx", 750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50);
+			circle.setAttribute("cx", 0);
 			circle.setAttribute("cy", height + 5);
 			circle.setAttribute("r", 4);
 			circle.setAttribute("stroke", "#fff");
@@ -1457,7 +1457,7 @@ class DeviceView extends View {
 			currentTimeLabel.setAttribute("y", 0);
 			currentTimeLabel.setAttribute("fill", "#fff");
 			currentTimeLabel.setAttribute("text-anchor", "middle");
-			currentTimeLabel.style.fontSize = "12px";
+			currentTimeLabel.style.fontSize = "11px";
 			svg.appendChild(currentTimeLabel);
 
 			const timeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -1467,8 +1467,6 @@ class DeviceView extends View {
 			timeLine.setAttribute("y2", height + 5);
 			timeLine.setAttribute("stroke", "#fff");
 			timeLine.setAttribute("stroke-width", 1);
-			timeLine.setAttribute("x1", 0);
-			timeLine.setAttribute("x2", 0);
 			timeLine.style.transition = ".2s";
 			svg.appendChild(timeLine);
 
@@ -1520,15 +1518,15 @@ class DeviceView extends View {
 				else if (type === "vol") {
 					let percent = data[closestIndex].t > 0? Math.round(1000 * data[closestIndex].v / data[closestIndex].t) / 10 : 0;
 					valueLabel.textContent = `${UI.SizeToGB(data[closestIndex].v)} / ${UI.SizeToGB(data[closestIndex].t)} GB (${percent}%)`;
-					cy = (height + 4) - Math.round(height * data[closestIndex].v / data[closestIndex].t);
+					cy = height + 4 - Math.round(height * data[closestIndex].v / data[closestIndex].t);
 				}
 				else if (type === "percent") {
 					valueLabel.textContent = `${data[closestIndex].v}%`;
-					cy = (height + 4) - Math.round(height * data[closestIndex].v / 100);
+					cy = height + 4 - Math.round(height * data[closestIndex].v / 100);
 				}
 				else if (type === "delta") {
 					valueLabel.textContent = data[closestIndex].delta;
-					cy = (height + 4) - Math.round(height * data[closestIndex].delta / max);
+					cy = height + 4 - Math.round(height * data[closestIndex].delta / max);
 				}
 
 				circle.setAttribute("cx", cx);

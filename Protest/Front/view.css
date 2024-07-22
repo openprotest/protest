@@ -589,6 +589,10 @@ button.view-live-button:active {
 	transition: .2s transform, .1s opacity;
 }
 
+.view-lifeline-graph > svg > * {
+	pointer-events: none;
+}
+
 .view-info-box,
 .view-warning-box,
 .view-error-box,
