@@ -153,16 +153,20 @@ class DeviceView extends View {
 				WIN.array[i].BringToFront();
 				return;
 			}
+
 			new Ping().Filter(target);
 		};
 
 		optionDnsLookup.onclick=()=> {
 			let target;
+			let type;
 			if ("ip" in this.link) {
 				target = this.link.ip.v;
+				type = "PTR";
 			}
 			else if ("hostname" in this.link) {
 				target = this.link.hostname.v;
+				type = "A";
 			}
 			else {
 				this.ConfirmBox("No IP or Hostname", true);
@@ -170,12 +174,18 @@ class DeviceView extends View {
 
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof DnsLookup)) continue;
+
+				const previousType = WIN.array[i].args.type;
+				WIN.array[i].args.type = type;
 				WIN.array[i].Filter(target);
+				WIN.array[i].args.type = previousType;
 				WIN.array[i].BringToFront();
 				return;
 			}
 
-			new DnsLookup().Filter(target);
+			const newDNS = new DnsLookup();
+			newDNS.args.type = type;
+			newDNS.Filter(target);
 		};
 
 		optionTraceRoute.onclick=()=> {
