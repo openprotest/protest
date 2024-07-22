@@ -1,57 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
-using Protest.Protocols;
-using System.Threading;
-using Yarp.ReverseProxy.LoadBalancing;
 
-namespace Protest.Http;
+namespace Protest.Proxy;
 
-internal sealed class ReverseProxy : IDisposable {
+internal class HttpReverseProxy : ReverseProxy, IDisposable {
     private IHostBuilder hostBuilder;
     private IHost host;
 
-    public ReverseProxy(IPEndPoint listener, IPEndPoint destination, string certificate = null, string password = null)
-        : this(listener, new IPEndPoint[] { destination }, certificate, password) {
-    }
+    public override bool Start(IPEndPoint listener, string destination, string certificate, string password) {        
+        hostBuilder = Host.CreateDefaultBuilder();
 
-    public ReverseProxy(IPEndPoint listener, IPEndPoint[] destinations, string certificate = null, string password = null) {
-        int counter = 0;
-        Dictionary<string, DestinationConfig> dictionary = destinations.ToDictionary(
-            key=> $"d{++counter}",
-            value => new DestinationConfig { Address = $"http://{value.Address}:{value.Port}" }
-            );
+        hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
 
         ClusterConfig cluster = new ClusterConfig {
             ClusterId = "c1",
             //LoadBalancingPolicy = "",
-            Destinations = dictionary
+            Destinations = new Dictionary<string, DestinationConfig> {
+                { "d1", new DestinationConfig { Address = destination } }
+            }
         };
-
-        Initialize(listener, cluster, certificate, password);
-    }
-
-    public ReverseProxy(IPEndPoint listener, ClusterConfig cluster, string certificate = null, string password = null) {
-        Initialize(listener, cluster, certificate, password);
-    }
-
-    private bool Initialize(IPEndPoint listener, ClusterConfig cluster, string certificate, string password) {
-        hostBuilder = Host.CreateDefaultBuilder();
-
-        hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
 
         hostBuilder.ConfigureWebHostDefaults(webHost => {
             webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, listener, certificate, password));
@@ -59,9 +38,9 @@ internal sealed class ReverseProxy : IDisposable {
 
             RouteConfig[] routes = new RouteConfig[] {
                 new RouteConfig {
-                    RouteId = "r1",
+                    RouteId   = "r1",
                     ClusterId = "c1",
-                    Match = new RouteMatch { Path = "/{**all}" }
+                    Match     = new RouteMatch { Path = "/{**all}" }
                 }
             };
 
@@ -71,7 +50,7 @@ internal sealed class ReverseProxy : IDisposable {
         string destinations = cluster.Destinations.Values
             .Select(o=>o.Address.ToString())
             .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
-        
+
         Console.WriteLine($"Start proxying from {listener} to {destinations}");
 
         this.host = hostBuilder.Build();
@@ -82,9 +61,14 @@ internal sealed class ReverseProxy : IDisposable {
         return true;
     }
 
-    public void Stop() {
-        this.host?.StopAsync();
+    public override bool Pause() {
+        throw new NotImplementedException();
+    }
+
+    public override bool Stop() {
+        this.host?.StopAsync().GetAwaiter().GetResult();
         this.host = null;
+        return true;
     }
 
     private void ConfigureLogging(ILoggingBuilder logger) {
@@ -122,9 +106,9 @@ internal sealed class ReverseProxy : IDisposable {
 
         rpBuilder.AddTransforms(builderContext => {
             builderContext.AddRequestTransform(transformContext => {
-                string remoteIpAddress = transformContext.HttpContext.Connection.RemoteIpAddress?.ToString();
+                string remoteIpAddress       = transformContext.HttpContext.Connection.RemoteIpAddress?.ToString();
                 string existingXForwardedFor = transformContext.HttpContext.Request.Headers["X-Forwarded-For"].ToString();
-                string newXForwardedFor = string.IsNullOrEmpty(existingXForwardedFor) ? remoteIpAddress : $"{existingXForwardedFor}, {remoteIpAddress}";
+                string newXForwardedFor      = string.IsNullOrEmpty(existingXForwardedFor) ? remoteIpAddress : $"{existingXForwardedFor}, {remoteIpAddress}";
 
                 transformContext.ProxyRequest.Headers.Remove("X-Forwarded-For");
                 transformContext.ProxyRequest.Headers.Add("X-Forwarded-For", newXForwardedFor);
