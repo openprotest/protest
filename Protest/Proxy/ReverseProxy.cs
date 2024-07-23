@@ -4,12 +4,10 @@ using System.IO;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
-using System.Threading;
-using System.Text.Json.Serialization;
-using Protest.Http;
 using System.Text.Json;
-using Microsoft.Win32;
-using Microsoft.Net.Http.Headers;
+using System.Text.Json.Serialization;
+using System.Threading;
+using Protest.Http;
 
 
 namespace Protest.Proxy;
@@ -71,7 +69,6 @@ internal abstract class ReverseProxy {
         catch (WebSocketException) {
 
         }
-
     }
 
     public static byte[] List() {
@@ -87,20 +84,10 @@ internal abstract class ReverseProxy {
             bool first = true;
             foreach (FileInfo file in files) {
                 try {
-                    byte[] bytes = File.ReadAllBytes(file.FullName);
-                    ReverseProxyObject entry = JsonSerializer.Deserialize<ReverseProxyObject>(bytes, serializerOptions);
-
+                    string content= File.ReadAllText(file.FullName);
                     if (!first) { builder.Append(','); }
-
-                    builder.Append($"\"{entry.guid}\":{{");
-                    builder.Append($"\"guid\":{{\"v\":\"{entry.guid}\"}},");
-                    builder.Append($"\"status\":{{\"v\":\"stopped\"}},");
-                    builder.Append($"\"name\":{{\"v\":\"{Data.EscapeJsonText(entry.name)}\"}},");
-                    builder.Append($"\"protocol\":{{\"v\":\"{Data.EscapeJsonText(entry.protocol.ToString().ToLower())}\"}},");
-                    builder.Append($"\"source\":{{\"v\":\"{Data.EscapeJsonText(entry.proxyaddr)}:{entry.proxyport}\"}},");
-                    builder.Append($"\"destination\":{{\"v\":\"{Data.EscapeJsonText(entry.destaddr)}:{entry.destport}\"}}");
-
-                    builder.Append('}');
+                    builder.Append($"\"{file.Name}\":");
+                    builder.Append(content);
                 }
                 catch {
                     continue;
@@ -203,8 +190,8 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
                 case "name":        name        = reader.GetString();  break;
                 case "protocol":    protocol    = Enum.Parse<ReverseProxy.ProxyProtocol>(reader.GetString(), true); break;
                 case "certificate": certificate = reader.GetString();  break;
-                case "proxyaddr":  proxyaddr  = reader.GetString();  break;
-                case "proxyport":  proxyport  = reader.GetInt32();   break;
+                case "proxyaddr":   proxyaddr  = reader.GetString();  break;
+                case "proxyport":   proxyport  = reader.GetInt32();   break;
                 case "destaddr":    destaddr    = reader.GetString();  break;
                 case "destport":    destport    = reader.GetInt32();   break;
                 case "autostart":   autostart   = reader.GetBoolean(); break;
@@ -239,7 +226,7 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         writer.WriteStartObject();
         writer.WriteString(_guid, value.guid.ToString());
         writer.WriteString(_name, value.name);
-        writer.WriteString(_protocol, value.protocol.ToString().ToLower());
+        writer.WriteString(_protocol, value.protocol.ToString());
         writer.WriteString(_certificate, value.certificate);
         writer.WriteString(_proxyaddr, value.proxyaddr);
         writer.WriteNumber(_proxyport, value.proxyport);

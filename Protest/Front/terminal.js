@@ -106,7 +106,6 @@ class Terminal extends Window {
 		"Delete"    : "\x1B[3;5~",
 		"PageUp"    : "\x1B[5;5~",
 		"PageDown"  : "\x1B[6;5~",
-
 	};
 
 	static ALT_KEYS = {
@@ -370,12 +369,8 @@ class Terminal extends Window {
 			return;
 		}
 
-		if (text === null) return;
-		if (text.length === 0) return;
-
-		if (this.ws === null || this.ws.readyState != 1) {
-			return;
-		}
+		if (text === null || text.length === 0) return;
+		if (this.ws === null || this.ws.readyState != 1) return;
 
 		if (this.bracketedMode) {
 			this.ws.send(`\x1b[200~${text}\x1b[201~`);

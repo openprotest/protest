@@ -9,9 +9,17 @@ class ReverseProxy extends List {
 		this.SetTitle("Reverse proxy");
 		this.SetIcon("mono/reverseproxy.svg");
 
-		const columns = ["name", "protocol", "destination"];
+		const columns = ["name", "protocol", "proxy", "destination"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
+
+		this.columnsElements[1].style.width = "15%";
+
+		this.columnsElements[2].style.left = "40%";
+		this.columnsElements[2].style.width = "30%";
+
+		this.columnsElements[3].style.left = "70%";
+		this.columnsElements[3].style.width = "30%";
 
 		this.ws = null;
 
@@ -29,15 +37,15 @@ class ReverseProxy extends List {
 		this.stopButton.disabled = true;
 
 		this.list.style.right = "unset";
-		this.list.style.width = "min(50%, 560px)";
+		this.list.style.width = "min(50%, 640px)";
 		this.list.style.overflowY = "auto";
 
 		this.listTitle.style.right = "unset";
-		this.listTitle.style.width = "min(50%, 560px)";
+		this.listTitle.style.width = "min(50%, 640px)";
 
 		this.stats = document.createElement("div");
 		this.stats.style.position = "absolute";
-		this.stats.style.left = "calc(min(50%, 560px) + 8px)";
+		this.stats.style.left = "calc(min(50%, 640px) + 8px)";
 		this.stats.style.right = "0";
 		this.stats.style.top = "0";
 		this.stats.style.bottom = "28px";
@@ -110,7 +118,26 @@ class ReverseProxy extends List {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.link = json;
+			let length = 0;
+			let data = {};
+
+			for (const key in json.data) {
+				length++;
+				data[key] = {
+					status      : {v: "stopped"},
+					guid        : {v: json.data[key].guid},
+					name        : {v: json.data[key].name},
+					protocol    : {v: json.data[key].protocol},
+					certificate : {v: json.data[key].certificate},
+					proxyaddr   : {v: json.data[key].proxyaddr},
+					proxyport   : {v: json.data[key].proxyport},
+					destaddr    : {v: json.data[key].destaddr},
+					destport    : {v: json.data[key].destport},
+					autostart   : {v: json.data[key].autostart},
+				};
+			}
+
+			this.link = {data:data, length:length};
 			this.ListProxies();
 
 			return json;
@@ -145,12 +172,7 @@ class ReverseProxy extends List {
 
 		const {okButton, innerBox} = dialog;
 
-		if (entry) {
-			okButton.value = "Save";
-		}
-		else {
-			okButton.value = "Create";
-		}
+		okButton.value = entry ? "Save" : "Create";
 
 		innerBox.parentElement.style.maxWidth = "640px";
 
@@ -188,11 +210,11 @@ class ReverseProxy extends List {
 		const protocolInput = AddParameter("Protocol", "select", null);
 		for (const protocol of ["TCP", "UDP", "HTTP", "HTTPS"]) {
 			const option = document.createElement("option");
-			option.value = protocol.toLowerCase();
+			option.value = protocol;
 			option.text = protocol;
 			protocolInput.appendChild(option);
 		}
-		protocolInput.value = "tcp";
+		protocolInput.value = "TCP";
 
 		const certsInput = AddParameter("Certificate", "select", null);
 		setTimeout(async()=>{
@@ -221,6 +243,17 @@ class ReverseProxy extends List {
 		innerBox.append(autostartBox);
 
 		const autostartToggle = this.CreateToggle("Autostart", false, autostartBox);
+
+		if (entry) {
+			nameInput.value                  = entry.name.v;
+			protocolInput.value              = entry.protocol.v;
+			certsInput.value                 = entry.certificate.v;
+			proxyAddressInput.value          = entry.proxyaddr.v;
+			proxyPostInput.value             = entry.proxyport.v;
+			destinationAddressInput.value    = entry.destaddr.v;
+			destinationPortInput.value       = entry.destport.v;
+			autostartToggle.checkbox.checked = entry.autostart.v;
+		}
 
 		setTimeout(()=>nameInput.focus(), 200);
 
@@ -252,7 +285,7 @@ class ReverseProxy extends List {
 				const response = await fetch("/rproxy/create", {
 					method: "POST",
 					body: JSON.stringify({
-						guid: null,
+						guid: entry ? entry.guid.v : null,
 						name: nameInput.value,
 						protocol: protocolInput.value,
 						cert: certsInput.value,
@@ -269,7 +302,8 @@ class ReverseProxy extends List {
 				const json = await response.json();
 				if (json.error) throw (json.error);
 
-				console.log(json);
+				this.args.select = json.guid;
+				this.GetReverseProxies();
 			}
 			catch (ex) {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
@@ -308,15 +342,18 @@ class ReverseProxy extends List {
 		}[entry.status.v];
 
 		for (let i = 0; i < this.columnsElements.length; i++) {
-			if (!(this.columnsElements[i].textContent in entry)) continue;
-
 			const newAttr = document.createElement("div");
 			element.appendChild(newAttr);
-
-			switch (this.columnsElements[i].textContent) {
-				case "name": newAttr.textContent = entry.name.v; break;
-				case "protocol": newAttr.textContent = entry.protocol.v.toUpperCase(); break;
-				case "destination": newAttr.textContent = entry.destination.v; break;
+			
+			const attr = this.columnsElements[i].textContent;
+			if (attr === "proxy") {
+				newAttr.textContent = `${entry.proxyaddr.v}:${entry.proxyport.v}`;
+			}
+			else if (attr === "destination") {
+				newAttr.textContent = `${entry.destaddr.v}:${entry.destport.v}`;
+			}
+			else {
+				newAttr.textContent = entry[attr].v;
 			}
 
 			if (i === 0) {
@@ -335,12 +372,16 @@ class ReverseProxy extends List {
 
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
-
-			this.args.select = entry.name.v;
-
+			this.args.select = entry.guid.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
 		};
-	}
 
+		element.ondblclick = ()=> {
+			let key = entry.guid.v;
+			if (key in this.link.data) {
+				this.EditDialog(this.link.data[key]);
+			}
+		};
+	}
 }
