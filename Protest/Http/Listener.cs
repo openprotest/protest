@@ -449,7 +449,7 @@ public sealed class Listener {
         case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);    return true;
         case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);       return true;
         case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx);         return true;
-        case "/ws/reverseproxy":     ReverseProxy.WebSocketHandler(ctx);     return true;
+        case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx);     return true;
         }
 
         return false;

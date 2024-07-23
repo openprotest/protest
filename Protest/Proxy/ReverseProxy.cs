@@ -97,6 +97,7 @@ internal abstract class ReverseProxy {
                     builder.Append($"\"status\":{{\"v\":\"stopped\"}},");
                     builder.Append($"\"name\":{{\"v\":\"{Data.EscapeJsonText(entry.name)}\"}},");
                     builder.Append($"\"protocol\":{{\"v\":\"{Data.EscapeJsonText(entry.protocol.ToString().ToLower())}\"}},");
+                    builder.Append($"\"source\":{{\"v\":\"{Data.EscapeJsonText(entry.proxyaddr)}:{entry.proxyport}\"}},");
                     builder.Append($"\"destination\":{{\"v\":\"{Data.EscapeJsonText(entry.destaddr)}:{entry.destport}\"}}");
 
                     builder.Append('}');
