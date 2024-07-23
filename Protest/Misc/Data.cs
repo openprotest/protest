@@ -51,6 +51,7 @@ public static class Data {
     public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
     public static readonly string DIR_LIFELINE       = $"{DIR_DATA}{DELIMITER}lifeline";
     public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DELIMITER}watchdog";
+    public static readonly string DIR_REVERSE_PROXY  = $"{DIR_DATA}{DELIMITER}reverseproxy";
     public static readonly string DIR_SCRIPTS        = $"{DIR_DATA}{DELIMITER}scripts";
     public static readonly string DIR_DEBIT          = $"{DIR_DATA}{DELIMITER}debit";
     public static readonly string DIR_DEBIT_SHORT    = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}short";

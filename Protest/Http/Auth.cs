@@ -292,17 +292,14 @@ internal static class Auth {
                 path.Add("/debit/banners");
                 break;
 
-            case "watchdog:read":
+            case "watchdog:write":
+                path.Add("/ws/watchdog");
                 path.Add("/watchdog/list");
                 path.Add("/watchdog/view");
                 path.Add("/watchdog/create");
                 path.Add("/watchdog/delete");
                 path.Add("/notifications/list");
                 path.Add("/notifications/save");
-                break;
-
-            case "watchdog:write":
-                path.Add("/ws/watchdog");
                 break;
 
             case "network utilities:write":
@@ -359,6 +356,13 @@ internal static class Auth {
                 path.Add("/rbac/delete");
                 path.Add("/rbac/sessions");
                 path.Add("/rbac/kickuser");
+                break;
+
+            case "reverse proxy":
+                path.Add("/ws/reverseproxy");
+                path.Add("/rproxy/list");
+                path.Add("/rproxy/create");
+                path.Add("/rproxy/delete");
                 break;
 
             case "settings:write":

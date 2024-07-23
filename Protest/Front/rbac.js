@@ -317,19 +317,20 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Fetch", "url(mono/fetch.svg)", inventoryGroup, false, true, false));
 
 		const documentationGroup = this.AddPermissionGroup("Documentation", "url(mono/documentation.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Chat", "url(mono/chat.svg)", documentationGroup, true, true, true));
 		this.permissionsList.push(this.AddPermissionObject("Documentation", "url(mono/documentation.svg)", documentationGroup, true, true, true));
 		this.permissionsList.push(this.AddPermissionObject("Debit notes", "url(mono/notes.svg)", documentationGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Watchdog", "url(mono/watchdog.svg)", documentationGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("Chat", "url(mono/chat.svg)", documentationGroup, true, true, true));
 
 		const toolsGroup = this.AddPermissionGroup("Tools and utilities", "url(mono/hammer.svg)");
+		this.permissionsList.push(this.AddPermissionObject("Watchdog", "url(mono/watchdog.svg)", toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Reverse proxy", "url(mono/reverseproxy.svg)", toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Scripts", "url(mono/scripts.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Telnet", "url(mono/telnet.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Secure shell", "url(mono/ssh.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("WMI", "url(mono/wmi.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP pooling", "url(mono/snmp.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP traps", "url(mono/trap.svg)", toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Scripts", "url(mono/scripts.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Automation", "url(mono/automation.svg)", toolsGroup, false, true, false));
 
 		const manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");

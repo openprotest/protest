@@ -1365,15 +1365,24 @@ class Monitor extends Window {
 		dot.style.borderRadius = "5px";
 		inner.parentElement.appendChild(dot);
 
-		let peak = Number.MIN_SAFE_INTEGER;
-		let valley = Number.MAX_SAFE_INTEGER;
 		const list = [];
 		const gap = 5;
+		let peak = Number.MIN_SAFE_INTEGER;
+		let valley = Number.MAX_SAFE_INTEGER;
+		let count = -1;
 
 		const ctx = canvas.getContext("2d");
 
 		const DrawGraph = ()=> {
 			ctx.clearRect(0, 0, canvas.width, height);
+
+			const lineOffset = (count*gap) % (gap*10);
+			ctx.strokeStyle = "#c0c0c008";
+			for (let i=canvas.width; i>=0; i-=gap*10) {
+				ctx.moveTo(i - lineOffset, 4);
+				ctx.lineTo(i - lineOffset, height);
+				ctx.stroke();
+			}
 
 			ctx.beginPath();
 			for (let i=list.length-1; i>=0; i--) {
@@ -1408,6 +1417,8 @@ class Monitor extends Window {
 		};
 
 		const Update = data=> {
+			count++;
+
 			if (list.length * gap > 800) list.shift();
 			list.push(data);
 
@@ -1431,8 +1442,8 @@ class Monitor extends Window {
 
 			dot.style.backgroundColor = (list[list.length-1] < 0) ? "rgb(240,16,16)" : UI.PingColor(list[list.length-1]);
 			dot.style.boxShadow = `${dot.style.backgroundColor} 0 0 2px`;
-			dot.style.animation = "";
-			setTimeout(()=>{ dot.style.animation = "heart-beat .1s ease-out 1"; }, 0);
+			//dot.style.animation = "";
+			//setTimeout(()=>{ dot.style.animation = "heart-beat .1s ease-out 1"; }, 0);
 		};
 
 		return {
@@ -1458,12 +1469,21 @@ class Monitor extends Window {
 		let peak = Number.MIN_SAFE_INTEGER;
 		let min = 0;
 		let max = 100;
+		let count = -1;
 
 		const ctx = canvas.getContext("2d");
 		ctx.fillStyle = "#C0C0C020";
 
 		const DrawGraph = ()=> {
 			ctx.clearRect(0, 0, canvas.width, height);
+
+			const lineOffset = (count*gap) % (gap*10);
+			ctx.strokeStyle = "#c0c0c008";
+			for (let i=canvas.width; i>=0; i-=gap*10) {
+				ctx.moveTo(i - lineOffset, 4);
+				ctx.lineTo(i - lineOffset, height);
+				ctx.stroke();
+			}
 
 			let spectrum = Math.abs(min - max);
 
@@ -1497,6 +1517,8 @@ class Monitor extends Window {
 		};
 
 		const Update = obj=> {
+			count++;
+
 			let value = parseFloat(obj[options.value][0]);
 
 			min = isNaN(options.min) ? obj[options.min][0] : options.min;
@@ -1544,12 +1566,21 @@ class Monitor extends Window {
 		let peak = Number.MIN_SAFE_INTEGER;
 		let min = 0;
 		let max = 100;
+		let count = -1;
 
 		const DrawGraph = ()=> {
 			let spectrum = Math.abs(min - max);
 
 			for (let j=0; j<ctx.length; j++) {
 				ctx[j].clearRect(0, 0, canvases[j].width, height);
+
+				const lineOffset = (count*gap) % (gap*24);
+				ctx[j].strokeStyle = "#c0c0c008";
+				for (let i=canvases[j].width; i>=0; i-=gap*24) {
+					ctx[j].moveTo(i - lineOffset, 4);
+					ctx[j].lineTo(i - lineOffset, height);
+					ctx[j].stroke();
+				}
 
 				if (options.showPeak && peak >= 0 && valley !== peak) {
 					ctx[j].lineWidth = 1;
@@ -1583,6 +1614,8 @@ class Monitor extends Window {
 		};
 
 		const Update = obj=> {
+			count++;
+
 			let array = obj[options.value];
 
 			min = isNaN(options.min) ? obj[options.min][0] : options.min;
@@ -1666,12 +1699,21 @@ class Monitor extends Window {
 		let min = 0;
 		let max = 100;
 		let last = null;
+		let count = -1;
 
 		const ctx = canvas.getContext("2d");
 		ctx.fillStyle = "#C0C0C020";
 
 		const DrawGraph = ()=>{
 			ctx.clearRect(0, 0, canvas.width, height);
+
+			const lineOffset = (count*gap) % (gap*10);
+			ctx.strokeStyle = "#c0c0c008";
+			for (let i=canvas.width; i>=0; i-=gap*10) {
+				ctx.moveTo(i - lineOffset, 4);
+				ctx.lineTo(i - lineOffset, height);
+				ctx.stroke();
+			}
 
 			let spectrum = Math.abs(min - max);
 
@@ -1705,6 +1747,8 @@ class Monitor extends Window {
 		};
 
 		const Update = obj=> {
+			count++;
+
 			let value = parseFloat(obj[options.value][0]);
 
 			min = isNaN(options.min) ? obj[options.min][0] : options.min;

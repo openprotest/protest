@@ -358,5 +358,4 @@ class Certificates extends List {
 			element.style.backgroundColor = "var(--clr-select)";
 		};
 	}
-
 }

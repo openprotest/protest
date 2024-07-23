@@ -35,28 +35,28 @@ public static class Cert {
             lines[i] = lines[i].Trim();
 
             if (lines[i].StartsWith("name=")) {
-                name = Uri.UnescapeDataString(lines[i][5..].ToString());
+                name = Uri.UnescapeDataString(lines[i][5..]);
             }
             else if (lines[i].StartsWith("domain=")) {
-                domain = Uri.UnescapeDataString(lines[i][7..].ToString());
+                domain = Uri.UnescapeDataString(lines[i][7..]);
             }
             else if (lines[i].StartsWith("keysize=")) {
-                keySizeString = Uri.UnescapeDataString(lines[i][8..].ToString());
+                keySizeString = Uri.UnescapeDataString(lines[i][8..]);
             }
             else if (lines[i].StartsWith("hash=")) {
-                hashString = Uri.UnescapeDataString(lines[i][5..].ToString());
+                hashString = Uri.UnescapeDataString(lines[i][5..]);
             }
             else if (lines[i].StartsWith("validafter=")) {
-                validAfterString = Uri.UnescapeDataString(lines[i][11..].ToString());
+                validAfterString = Uri.UnescapeDataString(lines[i][11..]);
             }
             else if (lines[i].StartsWith("validbefore=")) {
-                validBeforeString = Uri.UnescapeDataString(lines[i][12..].ToString());
+                validBeforeString = Uri.UnescapeDataString(lines[i][12..]);
             }
             else if (lines[i].StartsWith("alternative=")) {
-                altNamesString = Uri.UnescapeDataString(lines[i][12..].ToString());
+                altNamesString = Uri.UnescapeDataString(lines[i][12..]);
             }
             else if (lines[i].StartsWith("password=")) {
-                password = Uri.UnescapeDataString(lines[i][9..].ToString());
+                password = Uri.UnescapeDataString(lines[i][9..]);
             }
         }
 

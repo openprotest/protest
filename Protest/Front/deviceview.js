@@ -1457,7 +1457,7 @@ class DeviceView extends View {
 			currentTimeLabel.setAttribute("y", 0);
 			currentTimeLabel.setAttribute("fill", "#fff");
 			currentTimeLabel.setAttribute("text-anchor", "middle");
-			currentTimeLabel.style.fontSize = "11px";
+			currentTimeLabel.style.fontSize = "10px";
 			svg.appendChild(currentTimeLabel);
 
 			const timeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");

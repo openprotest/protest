@@ -9,7 +9,7 @@ class ReverseProxy extends List {
 		this.SetTitle("Reverse proxy");
 		this.SetIcon("mono/reverseproxy.svg");
 
-		const columns = ["name", "status"];
+		const columns = ["name", "protocol", "destination"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
 
@@ -29,14 +29,15 @@ class ReverseProxy extends List {
 		this.stopButton.disabled = true;
 
 		this.list.style.right = "unset";
-		this.list.style.width = "min(40%, 480px)";
+		this.list.style.width = "min(50%, 560px)";
+		this.list.style.overflowY = "auto";
 
 		this.listTitle.style.right = "unset";
-		this.listTitle.style.width = "min(40%, 480px)";
+		this.listTitle.style.width = "min(50%, 560px)";
 
 		this.stats = document.createElement("div");
 		this.stats.style.position = "absolute";
-		this.stats.style.left = "calc(min(40%, 480px) + 8px)";
+		this.stats.style.left = "calc(min(50%, 560px) + 8px)";
 		this.stats.style.right = "0";
 		this.stats.style.top = "0";
 		this.stats.style.bottom = "28px";
@@ -47,6 +48,8 @@ class ReverseProxy extends List {
 		this.deleteButton.onclick = () => this.Delete();
 		this.startButton.onclick = () => this.Start();
 		this.stopButton.onclick = () => this.Stop();
+
+		this.GetReverseProxies();
 	}
 
 	Connect() {
@@ -62,7 +65,6 @@ class ReverseProxy extends List {
 			catch (ex) { };
 		}
 
-		
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ping");
 
 		this.ws.onopen = ()=> {
@@ -97,6 +99,43 @@ class ReverseProxy extends List {
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg")
 			return {data:{}, length:0};
+		}
+	}
+
+	async GetReverseProxies() {
+		try {
+			const response = await fetch("rproxy/list");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.link = json;
+			this.ListProxies();
+
+			return json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg")
+			return {data:{}, length:0};
+		}
+	}
+
+	ListProxies() {
+		this.list.textContent = "";
+
+		for (let key in this.link.data) {
+			const element =  document.createElement("div");
+			element.id = key;
+			element.className = "list-element";
+			this.list.appendChild(element);
+
+			this.InflateElement(element, this.link.data[key]);
+
+			if (this.args.select && this.args.select === key) {
+				this.selected = element;
+				element.style.backgroundColor = "var(--clr-select)";
+			}
 		}
 	}
 
@@ -171,8 +210,8 @@ class ReverseProxy extends List {
 			}
 		}, 0);
 
-		const listenAddressInput      = AddParameter("Listening address", "input", "text", {placeholder: "127.0.0.1"});
-		const listenPostInput         = AddParameter("Listening port", "input", "number", {"min":1, "max":65535, value:443});
+		const proxyAddressInput       = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
+		const proxyPostInput          = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
 		const destinationPortInput    = AddParameter("Destination port", "input", "number", {"min":1, "max":65535, value:80});
 
@@ -193,7 +232,7 @@ class ReverseProxy extends List {
 
 		okButton.onclick = async ()=> {
 			let requiredFieldMissing = false;
-			let requiredFields = [nameInput, listenAddressInput, listenPostInput, destinationAddressInput, destinationPortInput];
+			let requiredFields = [nameInput, proxyAddressInput, proxyPostInput, destinationAddressInput, destinationPortInput];
 
 			for (let i=0; i<requiredFields.length; i++) {
 				if (requiredFields[i].value.length === 0) {
@@ -210,18 +249,19 @@ class ReverseProxy extends List {
 			if (requiredFieldMissing) return;
 
 			try {
-				let body = `name=${nameInput.value}\n`;
-				body += `protocol=${protocolInput.value}\n`;
-				body += `cert=${certsInput.value}\n`;
-				body += `listenaddr=${listenAddressInput.value}\n`;
-				body += `listenport=${listenPostInput.value}\n`;
-				body += `destaddr=${destinationAddressInput.value}\n`;
-				body += `destport=${destinationPortInput.value}\n`;
-				body += `autostart=${autostartToggle.checkbox.checked}`;
-
-				const response = await fetch("/todo", {
+				const response = await fetch("/rproxy/create", {
 					method: "POST",
-					body: body
+					body: JSON.stringify({
+						guid: null,
+						name: nameInput.value,
+						protocol: protocolInput.value,
+						cert: certsInput.value,
+						proxyaddr: proxyAddressInput.value,
+						proxyport: parseInt(proxyPostInput.value),
+						destaddr: destinationAddressInput.value,
+						destport: parseInt(destinationPortInput.value),
+						autostart: autostartToggle.checkbox.checked
+					})
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -229,7 +269,7 @@ class ReverseProxy extends List {
 				const json = await response.json();
 				if (json.error) throw (json.error);
 
-				//TODO:
+				console.log(json);
 			}
 			catch (ex) {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
@@ -254,6 +294,53 @@ class ReverseProxy extends List {
 	Stop() {
 		if (this.args.select === null) return;
 
+	}
+
+	InflateElement(element, entry) { //overrides
+		element.style.backgroundSize = "20px 20px";
+		element.style.backgroundPosition = "6px 6px";
+		element.style.backgroundRepeat = "no-repeat";
+
+		element.style.backgroundImage = {
+			"running": "url(mono/play.svg)",
+			"paused": "url(mono/pause.svg)",
+			"stopped": "url(mono/stop.svg)",
+		}[entry.status.v];
+
+		for (let i = 0; i < this.columnsElements.length; i++) {
+			if (!(this.columnsElements[i].textContent in entry)) continue;
+
+			const newAttr = document.createElement("div");
+			element.appendChild(newAttr);
+
+			switch (this.columnsElements[i].textContent) {
+				case "name": newAttr.textContent = entry.name.v; break;
+				case "protocol": newAttr.textContent = entry.protocol.v.toUpperCase(); break;
+				case "destination": newAttr.textContent = entry.destination.v; break;
+			}
+
+			if (i === 0) {
+				newAttr.style.top = "5px";
+				newAttr.style.left = "36px";
+				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
+				newAttr.style.whiteSpace = "nowrap";
+				newAttr.style.overflow = "hidden";
+				newAttr.style.textOverflow = "ellipsis";
+			}
+			else {
+				newAttr.style.left = this.columnsElements[i].style.left;
+				newAttr.style.width = this.columnsElements[i].style.width;
+			}
+		}
+
+		element.onclick = ()=> {
+			if (this.selected) this.selected.style.backgroundColor = "";
+
+			this.args.select = entry.name.v;
+
+			this.selected = element;
+			element.style.backgroundColor = "var(--clr-select)";
+		};
 	}
 
 }

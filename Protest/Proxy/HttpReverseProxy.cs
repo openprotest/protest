@@ -19,7 +19,7 @@ internal class HttpReverseProxy : ReverseProxy, IDisposable {
     private IHostBuilder hostBuilder;
     private IHost host;
 
-    public override bool Start(IPEndPoint listener, string destination, string certificate, string password) {        
+    public override bool Start(IPEndPoint proxy, string destination, string certificate, string password) {
         hostBuilder = Host.CreateDefaultBuilder();
 
         hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
@@ -33,7 +33,7 @@ internal class HttpReverseProxy : ReverseProxy, IDisposable {
         };
 
         hostBuilder.ConfigureWebHostDefaults(webHost => {
-            webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, listener, certificate, password));
+            webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, proxy, certificate, password));
             webHost.Configure(application => this.Configure(application));
 
             RouteConfig[] routes = new RouteConfig[] {
@@ -51,12 +51,12 @@ internal class HttpReverseProxy : ReverseProxy, IDisposable {
             .Select(o=>o.Address.ToString())
             .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
-        Console.WriteLine($"Start proxying from {listener} to {destinations}");
+        Console.WriteLine($"Start proxying from {proxy} to {destinations}");
 
         this.host = hostBuilder.Build();
         this.host.Run();
 
-        //Console.WriteLine($"Stop proxying from {listener} to {destinations}");
+        //Console.WriteLine($"Stop proxying from {proxy} to {destinations}");
 
         return true;
     }
