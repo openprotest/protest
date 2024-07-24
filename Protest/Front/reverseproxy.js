@@ -28,12 +28,10 @@ class ReverseProxy extends List {
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
-		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 
 		this.deleteButton.disabled = true;
 		this.startButton.disabled = true;
-		this.pauseButton.disabled = true;
 		this.stopButton.disabled = true;
 
 		this.list.style.right = "unset";
@@ -129,6 +127,7 @@ class ReverseProxy extends List {
 					name        : {v: json.data[key].name},
 					protocol    : {v: json.data[key].protocol},
 					certificate : {v: json.data[key].certificate},
+					password    : {v: ""},
 					proxyaddr   : {v: json.data[key].proxyaddr},
 					proxyport   : {v: json.data[key].proxyport},
 					destaddr    : {v: json.data[key].destaddr},
@@ -167,7 +166,7 @@ class ReverseProxy extends List {
 	}
 
 	EditDialog(entry=null) {
-		const dialog = this.DialogBox("420px");
+		const dialog = this.DialogBox("460px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -179,7 +178,7 @@ class ReverseProxy extends List {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 175px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(8, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(4, 38px) 16px repeat(2, 38px) 16px repeat(2, 38px) 40px";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
@@ -232,8 +231,13 @@ class ReverseProxy extends List {
 			}
 		}, 0);
 
+		const passwordInput = AddParameter("Password", "input", "password", {placeholder: entry ? "unchanged" : ""});
+
+		counter++; //separator
+
 		const proxyAddressInput       = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
 		const proxyPostInput          = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
+		counter++; //separator
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
 		const destinationPortInput    = AddParameter("Destination port", "input", "number", {"min":1, "max":65535, value:80});
 
@@ -245,20 +249,22 @@ class ReverseProxy extends List {
 		const autostartToggle = this.CreateToggle("Autostart", false, autostartBox);
 
 		if (entry) {
-			nameInput.value                  = entry.name.v;
-			protocolInput.value              = entry.protocol.v;
-			certsInput.value                 = entry.certificate.v;
-			proxyAddressInput.value          = entry.proxyaddr.v;
-			proxyPostInput.value             = entry.proxyport.v;
-			destinationAddressInput.value    = entry.destaddr.v;
-			destinationPortInput.value       = entry.destport.v;
+			nameInput.value               = entry.name.v;
+			protocolInput.value           = entry.protocol.v;
+			certsInput.value              = entry.certificate.v;
+			passwordInput.value           = "";
+			proxyAddressInput.value       = entry.proxyaddr.v;
+			proxyPostInput.value          = entry.proxyport.v;
+			destinationAddressInput.value = entry.destaddr.v;
+			destinationPortInput.value    = entry.destport.v;
 			autostartToggle.checkbox.checked = entry.autostart.v;
 		}
 
 		setTimeout(()=>nameInput.focus(), 200);
 
 		protocolInput.onchange = ()=> {
-			certsInput.disabled = protocolInput.value !== "https";
+			certsInput.disabled = protocolInput.value !== "HTTPS";
+			passwordInput.disabled = protocolInput.value !== "HTTPS";
 		};
 
 		protocolInput.onchange();
@@ -285,15 +291,16 @@ class ReverseProxy extends List {
 				const response = await fetch("/rproxy/create", {
 					method: "POST",
 					body: JSON.stringify({
-						guid: entry ? entry.guid.v : null,
-						name: nameInput.value,
-						protocol: protocolInput.value,
-						cert: certsInput.value,
-						proxyaddr: proxyAddressInput.value,
-						proxyport: parseInt(proxyPostInput.value),
-						destaddr: destinationAddressInput.value,
-						destport: parseInt(destinationPortInput.value),
-						autostart: autostartToggle.checkbox.checked
+						guid      : entry ? entry.guid.v : null,
+						name      : nameInput.value,
+						protocol  : protocolInput.value,
+						cert      : certsInput.value,
+						password  : passwordInput.value,
+						proxyaddr : proxyAddressInput.value,
+						proxyport : parseInt(proxyPostInput.value),
+						destaddr  : destinationAddressInput.value,
+						destport  : parseInt(destinationPortInput.value),
+						autostart : autostartToggle.checkbox.checked
 					})
 				});
 
@@ -337,7 +344,6 @@ class ReverseProxy extends List {
 
 		element.style.backgroundImage = {
 			"running": "url(mono/play.svg)",
-			"paused": "url(mono/pause.svg)",
 			"stopped": "url(mono/stop.svg)",
 		}[entry.status.v];
 

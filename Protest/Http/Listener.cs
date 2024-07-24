@@ -438,18 +438,18 @@ public sealed class Listener {
         }
 
         switch (ctx.Request.Url.AbsolutePath) {
-        case "/ws/keepalive":        KeepAlive.WebSocketHandler(ctx);        return true;
-        case "/ws/ping":             Protocols.Icmp.WebSocketHandler(ctx);   return true;
-        case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx);   return true;
-        case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx); return true;
-        case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx);    return true;
-        case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);   return true;
-        case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx); return true;
-        case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);  return true;
-        case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);    return true;
-        case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);       return true;
-        case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx);         return true;
-        case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx);     return true;
+        case "/ws/keepalive":        KeepAlive.WebSocketHandler(ctx);          return true;
+        case "/ws/ping":             Protocols.Icmp.WebSocketHandler(ctx);     return true;
+        case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx);     return true;
+        case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx);   return true;
+        case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx);      return true;
+        case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
+        case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);     return true;
+        case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx);   return true;
+        case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);    return true;
+        case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);      return true;
+        case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);         return true;
+        case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx);           return true;
         }
 
         return false;

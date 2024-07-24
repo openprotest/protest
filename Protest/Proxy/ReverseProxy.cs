@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using Protest.Http;
-
+using Protest.Workers;
 
 namespace Protest.Proxy;
 
@@ -26,6 +26,7 @@ internal abstract class ReverseProxy {
         public string name;
         public ProxyProtocol protocol;
         public string certificate;
+        public string password;
         public string proxyaddr;
         public int proxyport;
         public string destaddr;
@@ -35,11 +36,15 @@ internal abstract class ReverseProxy {
 
     public static ConcurrentDictionary<string, ReverseProxy> ReverseProxies = new ConcurrentDictionary<string, ReverseProxy>();
 
-    private static JsonSerializerOptions serializerOptions;
+    private static readonly JsonSerializerOptions serializerOptions;
+    private static readonly JsonSerializerOptions serializerOptionsWithPassword;
 
     static ReverseProxy() {
         serializerOptions = new JsonSerializerOptions();
-        serializerOptions.Converters.Add(new ReverseProxyObjectJsonConverter());
+        serializerOptions.Converters.Add(new ReverseProxyObjectJsonConverter(true));
+
+        serializerOptionsWithPassword = new JsonSerializerOptions();
+        serializerOptionsWithPassword.Converters.Add(new ReverseProxyObjectJsonConverter(false));
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
@@ -65,10 +70,30 @@ internal abstract class ReverseProxy {
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
             string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
 
-        }
-        catch (WebSocketException) {
 
+
+            //while (true) { }
         }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            return;
+        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
+            //do nothing
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        if (ws?.State == WebSocketState.Open) {
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+            }
+            catch { }
+        }
+    }
+
+    private static byte[] Status() {
+        return null;
     }
 
     public static byte[] List() {
@@ -84,10 +109,13 @@ internal abstract class ReverseProxy {
             bool first = true;
             foreach (FileInfo file in files) {
                 try {
-                    string content= File.ReadAllText(file.FullName);
+                    string fileContent = File.ReadAllText(file.FullName);
+                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+                    string json = JsonSerializer.Serialize<ReverseProxyObject>(obj, serializerOptions);
+
                     if (!first) { builder.Append(','); }
                     builder.Append($"\"{file.Name}\":");
-                    builder.Append(content);
+                    builder.Append(json);
                 }
                 catch {
                     continue;
@@ -121,16 +149,24 @@ internal abstract class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
-        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        string payload = reader.ReadToEnd();
-
         try {
-            ReverseProxyObject entry = JsonSerializer.Deserialize<ReverseProxyObject>(payload, serializerOptions);
+            using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+            string payload = reader.ReadToEnd();
+
+            ReverseProxyObject entry = JsonSerializer.Deserialize<ReverseProxyObject>(payload, serializerOptionsWithPassword);
             if (entry.guid == Guid.Empty) {
                 entry.guid = Guid.NewGuid();
             }
+            else if (String.IsNullOrEmpty(entry.password)
+                    && File.Exists($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}")) {
+                string oldFileContent = File.ReadAllText($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}");
+                ReverseProxyObject oldEntry = JsonSerializer.Deserialize<ReverseProxyObject>(oldFileContent, serializerOptionsWithPassword);
+                if (!String.IsNullOrEmpty(oldEntry.password)) {
+                    entry.password = oldEntry.password;
+                }
+            }
 
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(entry, serializerOptions);
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(entry, serializerOptionsWithPassword);
 
             File.WriteAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}", bytes);
 
@@ -147,24 +183,35 @@ internal abstract class ReverseProxy {
         return null;
     }
 
-    public ulong GetTotalUpstream { get; }
-    public ulong GetTotalDownstream { get; }
 
-    public virtual bool Start(IPEndPoint proxy, string destination) {
-        return Start(proxy, destination, null, null);
+    public TaskWrapper task;
+    public ulong totalUpstream, totalDownstream;
+
+    public virtual bool Start(IPEndPoint proxy, string destination, string origin) {
+        return Start(proxy, destination, null, null, origin);
     }
 
-    public abstract bool Start(IPEndPoint proxy, string destination, string certificate, string password);
-    public abstract bool Pause();
-    public abstract bool Stop();
+    public abstract bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin);
+    public abstract bool Stop(string origin);
 }
 
 file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.ReverseProxyObject> {
+    private readonly bool ignorePasswords;
+
+    public ReverseProxyObjectJsonConverter() {
+        this.ignorePasswords = false;
+    }
+
+    public ReverseProxyObjectJsonConverter(bool ignorePasswords) {
+        this.ignorePasswords = ignorePasswords;
+    }
+
     public override ReverseProxy.ReverseProxyObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         Guid guid = Guid.Empty;
         string name = null;
         ReverseProxy.ProxyProtocol protocol = ReverseProxy.ProxyProtocol.TCP;
         string certificate = null;
+        string password = String.Empty;
         string proxyaddr = null;
         int proxyport = 0;
         string destaddr = null;
@@ -187,14 +234,15 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
                         guid = Guid.Empty;
                     }
                     break;
-                case "name":        name        = reader.GetString();  break;
-                case "protocol":    protocol    = Enum.Parse<ReverseProxy.ProxyProtocol>(reader.GetString(), true); break;
-                case "certificate": certificate = reader.GetString();  break;
-                case "proxyaddr":   proxyaddr  = reader.GetString();  break;
-                case "proxyport":   proxyport  = reader.GetInt32();   break;
-                case "destaddr":    destaddr    = reader.GetString();  break;
-                case "destport":    destport    = reader.GetInt32();   break;
-                case "autostart":   autostart   = reader.GetBoolean(); break;
+                case "name"        : name        = reader.GetString();  break;
+                case "protocol"    : protocol    = Enum.Parse<ReverseProxy.ProxyProtocol>(reader.GetString(), true); break;
+                case "certificate" : certificate = reader.GetString();  break;
+                case "password"    : password    = ignorePasswords ? String.Empty : reader.GetString(); break;
+                case "proxyaddr"   : proxyaddr   = reader.GetString();  break;
+                case "proxyport"   : proxyport   = reader.GetInt32();   break;
+                case "destaddr"    : destaddr    = reader.GetString();  break;
+                case "destport"    : destport    = reader.GetInt32();   break;
+                case "autostart"   : autostart   = reader.GetBoolean(); break;
                 }
             }
         }
@@ -204,6 +252,7 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
             name = name,
             protocol = protocol,
             certificate = certificate,
+            password = password,
             proxyaddr = proxyaddr,
             proxyport = proxyport,
             destaddr = destaddr,
@@ -217,8 +266,9 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         ReadOnlySpan<byte> _name        = "name"u8;
         ReadOnlySpan<byte> _protocol    = "protocol"u8;
         ReadOnlySpan<byte> _certificate = "certificate"u8;
-        ReadOnlySpan<byte> _proxyaddr  = "proxyaddr"u8;
-        ReadOnlySpan<byte> _proxyport  = "proxyport"u8;
+        ReadOnlySpan<byte> _password    = "password"u8;
+        ReadOnlySpan<byte> _proxyaddr   = "proxyaddr"u8;
+        ReadOnlySpan<byte> _proxyport   = "proxyport"u8;
         ReadOnlySpan<byte> _destaddr    = "destaddr"u8;
         ReadOnlySpan<byte> _destport    = "destport"u8;
         ReadOnlySpan<byte> _autostart   = "autostart"u8;
@@ -227,6 +277,7 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         writer.WriteString(_guid, value.guid.ToString());
         writer.WriteString(_name, value.name);
         writer.WriteString(_protocol, value.protocol.ToString());
+        writer.WriteString(_password, ignorePasswords ? String.Empty : value.password);
         writer.WriteString(_certificate, value.certificate);
         writer.WriteString(_proxyaddr, value.proxyaddr);
         writer.WriteNumber(_proxyport, value.proxyport);

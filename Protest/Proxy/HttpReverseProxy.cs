@@ -15,18 +15,20 @@ using Yarp.ReverseProxy.Transforms;
 
 namespace Protest.Proxy;
 
-internal class HttpReverseProxy : ReverseProxy, IDisposable {
+internal sealed class HttpReverseProxy : ReverseProxy {
     private IHostBuilder hostBuilder;
     private IHost host;
 
-    public override bool Start(IPEndPoint proxy, string destination, string certificate, string password) {
+    public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
+        this.totalUpstream = 0;
+        this.totalDownstream = 0;
+        
         hostBuilder = Host.CreateDefaultBuilder();
 
         hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
 
         ClusterConfig cluster = new ClusterConfig {
             ClusterId = "c1",
-            //LoadBalancingPolicy = "",
             Destinations = new Dictionary<string, DestinationConfig> {
                 { "d1", new DestinationConfig { Address = destination } }
             }
@@ -61,13 +63,13 @@ internal class HttpReverseProxy : ReverseProxy, IDisposable {
         return true;
     }
 
-    public override bool Pause() {
-        throw new NotImplementedException();
-    }
+    public override bool Stop(string origin) {
+        this.totalUpstream = 0;
+        this.totalDownstream = 0;
 
-    public override bool Stop() {
         this.host?.StopAsync().GetAwaiter().GetResult();
         this.host = null;
+
         return true;
     }
 
@@ -121,10 +123,6 @@ internal class HttpReverseProxy : ReverseProxy, IDisposable {
                 return ValueTask.CompletedTask;
             });
         });
-    }
-
-    public void Dispose() {
-        this.Stop();
     }
 }
 
