@@ -1,7 +1,6 @@
 class ReverseProxy extends List {
 	constructor(args) {
 		super(args);
-
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
 		this.AddCssDependencies("list.css");
@@ -56,6 +55,7 @@ class ReverseProxy extends List {
 		this.stopButton.onclick = () => this.Stop();
 
 		this.GetReverseProxies();
+		this.Connect();
 	}
 
 	Connect() {
@@ -71,20 +71,40 @@ class ReverseProxy extends List {
 			catch (ex) { };
 		}
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ping");
+		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/reverseproxy");
 
 		this.ws.onopen = ()=> {
 
 		};
 
+		this.ws.onmessage = event=> {
+			let json = JSON.parse(event.data);
+
+			if (json.running) {
+				const nodes = this.list.childNodes;
+				for (let i=0; i<nodes.length; i++) {
+					nodes[i].style.backgroundImage = "url(mono/stop.svg)";
+				}
+				
+				for (let i=0; i<json.running.length; i++) {
+					let node = nodes.find(o=>o.id === json.running[i]);
+					if (node) {
+						node.style.backgroundImage = "url(mono/play.svg)";
+					}
+				}
+			}
+			else if (json.traffic) {
+				for (let i=0; i<json.traffic.length; i++) {
+
+				}
+			}
+		};
+
 		this.ws.onclose = ()=> {
-
+			//TODO:
 		};
 
-		this.ws.onerror = error=> {
-			
-		};
-
+		this.ws.onerror = error=> {};
 	}
 
 	Close() { //overrides

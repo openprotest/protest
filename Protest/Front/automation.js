@@ -6,13 +6,15 @@ class Automation extends List {
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["name", "status", "start"];
+		const columns = ["name", "status", "progress"];
 		this.SetupColumns(columns);
 
 		this.columnsOptions.style.display = "none";
 
 		this.SetTitle("Automation");
 		this.SetIcon("mono/automation.svg");
+
+		this.list.style.overflowY = "auto";
 
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create worker", "mono/add.svg?light");

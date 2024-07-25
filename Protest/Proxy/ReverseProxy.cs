@@ -7,12 +7,14 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 using Protest.Http;
 using Protest.Workers;
 
 namespace Protest.Proxy;
 
-internal abstract class ReverseProxy {
+internal static class ReverseProxy {
 
     public enum ProxyProtocol {
         TCP,
@@ -34,7 +36,7 @@ internal abstract class ReverseProxy {
         public bool autostart;
     }
 
-    public static ConcurrentDictionary<string, ReverseProxy> ReverseProxies = new ConcurrentDictionary<string, ReverseProxy>();
+    public static ConcurrentDictionary<string, ReverseProxyAbstract> running = new ConcurrentDictionary<string, ReverseProxyAbstract>();
 
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly JsonSerializerOptions serializerOptionsWithPassword;
@@ -45,6 +47,17 @@ internal abstract class ReverseProxy {
 
         serializerOptionsWithPassword = new JsonSerializerOptions();
         serializerOptionsWithPassword.Converters.Add(new ReverseProxyObjectJsonConverter(false));
+    }
+
+    private static async Task WsWriteText(WebSocket ws, string data) {
+        if (ws.State == WebSocketState.Open) {
+            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+    }
+    private static async Task WsWriteText(WebSocket ws, byte[] data) {
+        if (ws.State == WebSocketState.Open) {
+            await ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
     }
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
@@ -64,15 +77,20 @@ internal abstract class ReverseProxy {
             return;
         }
 
-        byte[] buff = new byte[1024];
+        //byte[] buff = new byte[1024];
 
         try {
-            WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-            string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            //WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+            //string msgsdfsdf = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            
+            await Task.Delay(1_000);
 
+            await WsWriteText(ws, GetRunningProxies());
 
-
-            //while (true) { }
+            while (true) {
+                await WsWriteText(ws, GetTraffic());
+                await Task.Delay(5_000);
+            }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
@@ -92,8 +110,40 @@ internal abstract class ReverseProxy {
         }
     }
 
-    private static byte[] Status() {
-        return null;
+    private static byte[] GetTraffic() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.Append("{\"traffic\":");
+        builder.Append('[');
+
+        bool first = true;
+        foreach (ReverseProxyAbstract proxy in running.Values) {
+            if (!first) { builder.Append(','); }
+            builder.Append($"{{\"{proxy.guid}\":[{proxy.totalDownstream},{proxy.totalUpstream}]}}");
+            first = false;
+        }
+        builder.Append(']');
+        builder.Append('}');
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] GetRunningProxies() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.Append("{\"running\":");
+        builder.Append('[');
+
+        bool first = true;
+        foreach (string key in running.Keys) {
+            if (!first) { builder.Append(','); }
+            builder.Append($"\"{key}\"");
+            first = false;
+        }
+        builder.Append(']');
+        builder.Append('}');
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
     public static byte[] List() {
@@ -183,16 +233,6 @@ internal abstract class ReverseProxy {
         return null;
     }
 
-
-    public TaskWrapper task;
-    public ulong totalUpstream, totalDownstream;
-
-    public virtual bool Start(IPEndPoint proxy, string destination, string origin) {
-        return Start(proxy, destination, null, null, origin);
-    }
-
-    public abstract bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin);
-    public abstract bool Stop(string origin);
 }
 
 file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.ReverseProxyObject> {

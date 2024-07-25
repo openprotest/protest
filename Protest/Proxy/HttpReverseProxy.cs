@@ -15,9 +15,12 @@ using Yarp.ReverseProxy.Transforms;
 
 namespace Protest.Proxy;
 
-internal sealed class HttpReverseProxy : ReverseProxy {
+internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private IHostBuilder hostBuilder;
     private IHost host;
+
+    public HttpReverseProxy(Guid guid) : base(guid) {
+    }
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
         this.totalUpstream   = 0;
@@ -53,13 +56,10 @@ internal sealed class HttpReverseProxy : ReverseProxy {
             .Select(o=>o.Address.ToString())
             .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
-        Console.WriteLine($"Start proxying from {proxy} to {destinations}");
-
         this.host = hostBuilder.Build();
         this.host.Run();
 
-        //Console.WriteLine($"Stop proxying from {proxy} to {destinations}");
-
+        isRunning = true;
         return true;
     }
 
@@ -70,6 +70,7 @@ internal sealed class HttpReverseProxy : ReverseProxy {
         this.host?.StopAsync().GetAwaiter().GetResult();
         this.host = null;
 
+        isRunning = false;
         return true;
     }
 
@@ -126,7 +127,7 @@ internal sealed class HttpReverseProxy : ReverseProxy {
     }
 }
 
-file class CustomHostLifetime : IHostLifetime {
+file sealed class CustomHostLifetime : IHostLifetime {
     //Custom Host Lifetime: overrides the default behavior, so the reverse proxy will not terminate on Ctrl+C
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public Task WaitForStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;

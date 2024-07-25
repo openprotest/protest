@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Protest.Workers; 
-internal class Tasks {
-        public static byte[] ListTasks() {
+namespace Protest.Workers;
+internal static class Tasks {
+    public static byte[] ListTasks() {
         StringBuilder builder = new StringBuilder();
 
         builder.Append('{');
@@ -51,5 +51,4 @@ internal class Tasks {
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
-
 }
