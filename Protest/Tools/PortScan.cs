@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -165,8 +166,8 @@ internal static class PortScan {
         object mutex = new object();
 
         try {
+            byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open) {
-                byte[] buff = new byte[2048];
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
@@ -183,15 +184,25 @@ internal static class PortScan {
 
                 string host = message[0].Trim();
                 if (host.Length == 0) {
-                    await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                    lock (mutex) {
+                        ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
                     continue;
                 }
 
                 int portFrom = 1;
                 int portTo = 1023;
+                int timeout = 2000;
+                bool useRemoteNetstat = false;
+
                 if (message.Length > 2) {
                     portFrom = int.Parse(message[1]);
                     portTo = int.Parse(message[2]);
+                }
+
+                if (message.Length > 4) {
+                    timeout = int.Parse(message[3]);
+                    useRemoteNetstat = message[4].Equals("true", StringComparison.OrdinalIgnoreCase);
                 }
 
                 if (portFrom > portTo) {
@@ -207,7 +218,7 @@ internal static class PortScan {
                         int from = i;
                         int to = Math.Min(i + 255, portTo);
 
-                        Task<bool[]> s = PortsScanAsync(host, from, to);
+                        Task<bool[]> s = PortsScanAsync(host, from, to, timeout, useRemoteNetstat);
                         s.Wait();
 
                         for (int port = 0; port < s.Result.Length; port++) {
@@ -225,9 +236,10 @@ internal static class PortScan {
                     }
 
                     string done = "done" + ((char)127).ToString() + host;
-                    ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                    lock (mutex) {
+                        ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
                 }).Start();
-
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -248,56 +260,70 @@ internal static class PortScan {
         }
     }
 
-    public static async Task<bool[]> PortsScanAsync(string host, short[] ports) {
-        int[] q = RemoteNetstat(host);
-        if (q is not null) {
-            bool[] p = new bool[ports.Length];
-            for (int i = 0; i < p.Length; i++) {
-                p[i] = q.Contains(ports[i]);
+    public static async Task<bool[]> PortsScanAsync(string host, short[] ports, int timeout, bool useRemoteNetstat) {
+        if (useRemoteNetstat && OperatingSystem.IsWindows()) {
+            int[] q = RemoteNetstat(host);
+            if (q is not null) {
+                bool[] p = new bool[ports.Length];
+                for (int i = 0; i < p.Length; i++) {
+                    p[i] = q.Contains(ports[i]);
+                }
+                return p;
             }
-            return p;
         }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
         for (int i = 0; i < ports.Length; i++) {
-            tasks.Add(PortScanAsync(host, ports[i]));
+            tasks.Add(PortScanAsync(host, ports[i], timeout));
         }
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
 
-    public static async Task<bool[]> PortsScanAsync(string host, int from, int to) {
-        int[] q = RemoteNetstat(host);
-        if (q is not null) {
-            bool[] p = new bool[to - from];
-            for (int i = 0; i < p.Length; i++) {
-                p[i] = q.Contains(i + from);
+    public static async Task<bool[]> PortsScanAsync(string host, int from, int to, int timeout, bool useRemoteNetstat) {
+        if (useRemoteNetstat && OperatingSystem.IsWindows()) {
+            int[] q = RemoteNetstat(host);
+            if (q is not null) {
+                bool[] p = new bool[to - from];
+                for (int i = 0; i < p.Length; i++) {
+                    p[i] = q.Contains(i + from);
+                }
+                return p;
             }
-            return p;
         }
 
         List<Task<bool>> tasks = new List<Task<bool>>();
-        for (int port = from; port < to; port++) {
-            tasks.Add(PortScanAsync(host, port));
+        for (int port = from; port <= to; port++) {
+            tasks.Add(PortScanAsync(host, port, timeout));
         }
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
 
-    public static async Task<bool> PortScanAsync(string host, int port) {
+    public static async Task<bool> PortScanAsync(string host, int port, int timeout) {
+        CancellationTokenSource tokenSource = new CancellationTokenSource(timeout);
+
         try {
             using TcpClient client = new TcpClient();
-            await client.ConnectAsync(host, port);
-            bool result = client.Connected;
-            client.Close();
-            return result;
+            Task connectTask = client.ConnectAsync(host, port);
+            Task completedTask = await Task.WhenAny(connectTask, Task.Delay(timeout, tokenSource.Token));
+
+            if (completedTask == connectTask) {
+                await connectTask;
+                return client.Connected;
+            }
+            else {
+                return false;
+            }
         }
         catch {
             return false;
         }
     }
 
+    [SupportedOSPlatform("windows")]
     public static int[] RemoteNetstat(string host) {
+       
         try {
             ProcessStartInfo info = new ProcessStartInfo {
                 FileName = "psexec",
@@ -340,5 +366,4 @@ internal static class PortScan {
             return null;
         }
     }
-
 }

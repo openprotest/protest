@@ -137,7 +137,9 @@ class PortScan extends Console {
 		this.args = args ?? {
 			entries: [],
 			rangeFrom: 1,
-			rangeTo: 1023
+			rangeTo: 1023,
+			timeout: 2000,
+			useNetstat: false
 		};
 
 		this.AddCssDependencies("tools.css");
@@ -180,14 +182,14 @@ class PortScan extends Console {
 		});
 
 		this.optionsButton.onclick = ()=> {
-			this.Options();
+			this.OptionsDialog();
 		};
 
 		this.copyButton.addEventListener("click", ()=> {
 			const argsCopy = structuredClone(this.args);
 			argsCopy.entries = [];
 			const copy = new PortScan(argsCopy);
-			const dialog = copy.Options();
+			const dialog = copy.OptionsDialog();
 
 			dialog.okButton.addEventListener("click", ()=> {
 				for (let i = 0; i < this.args.entries.length; i++) {
@@ -206,55 +208,74 @@ class PortScan extends Console {
 		if (this.ws != null) this.ws.close();
 	}
 
-	Options() {
-		const dialog = this.DialogBox("128px");
+	OptionsDialog() {
+		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
 
-		innerBox.style.textAlign = "center";
+		innerBox.style.padding = "20px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "auto 120px 110px 20px 110px auto";
+		innerBox.style.gridTemplateRows = "repeat(3, 44px)";
+		innerBox.style.alignItems = "center";
 
-		const portRangeLabel = document.createElement("div");
-		portRangeLabel.textContent = "Port range: ";
-		portRangeLabel.style.padding = "8px 0 4px 0";
-		portRangeLabel.style.fontWeight = "600";
-		portRangeLabel.style.textDecoration = "underline";
-		innerBox.appendChild(portRangeLabel);
+		//innerBox.style.textAlign = "center";
+
+		innerBox.parentElement.style.maxWidth = "520px";
 
 		const fromLabel = document.createElement("div");
-		fromLabel.textContent = "From ";
-		fromLabel.style.display = "inline";
-		innerBox.appendChild(fromLabel);
-
+		fromLabel.textContent = "Port range:";
+		fromLabel.style.gridArea = "1 / 2";
+		
 		const fromInput = document.createElement("input");
 		fromInput.type = "number";
 		fromInput.min = 1;
 		fromInput.max = 65534;
 		fromInput.value = this.args.rangeFrom;
-		fromInput.style.display = "inline";
-		fromInput.style.width = "100px";
-		innerBox.appendChild(fromInput);
+		fromInput.style.gridArea = "1 / 3";
 
 		const toLabel = document.createElement("div");
 		toLabel.textContent = " to ";
-		toLabel.style.display = "inline";
-		innerBox.appendChild(toLabel);
+		toLabel.style.gridArea = "1 / 4";
 
 		const toInput = document.createElement("input");
 		toInput.type = "number";
 		toInput.min = 2;
 		toInput.max = 65535;
 		toInput.value = this.args.rangeTo;
-		toInput.style.display = "inline";
-		toInput.style.width = "100px";
-		innerBox.appendChild(toInput);
+		toInput.style.gridArea = "1 / 5";
+		innerBox.append(fromLabel, fromInput, toLabel, toInput);
+
+		const timeoutLabel = document.createElement("div");
+		timeoutLabel.textContent = "Timeout (ms):";
+		timeoutLabel.style.gridArea = "2 / 2";
+
+		const timeoutInput = document.createElement("input");
+		timeoutInput.type = "number";
+		timeoutInput.value = this.args.timeout;
+		timeoutInput.min = 50;
+		timeoutInput.max = 30_000;
+		timeoutInput.style.gridArea = "2 / 3";
+
+		innerBox.append(timeoutLabel, timeoutInput);
+
+		const remoteNetStatBox = document.createElement("div");
+		remoteNetStatBox.style.gridArea = "3 / 6 / 3 / 2";
+		innerBox.append(remoteNetStatBox);
+		
+		const remoteNetStaToggle = this.CreateToggle("Use remote netstat", this.args.useNetstat, remoteNetStatBox);
 
 		fromInput.onchange = ()=> {
-			if (parseInt(fromInput.value) >= parseInt(toInput.value)) toInput.value = parseInt(fromInput.value) + 1;
+			if (parseInt(fromInput.value) >= parseInt(toInput.value)) {
+				toInput.value = parseInt(fromInput.value);
+			}
 		};
 
 		toInput.onchange = ()=> {
-			if (parseInt(fromInput.value) >= parseInt(toInput.value)) fromInput.value = parseInt(toInput.value) - 1;
+			if (parseInt(fromInput.value) >= parseInt(toInput.value)) {
+				fromInput.value = parseInt(toInput.value);
+			}
 		};
 
 		const ok_click = okButton.onclick;
@@ -262,8 +283,12 @@ class PortScan extends Console {
 		okButton.onclick = ()=> {
 			this.args.rangeFrom = parseInt(fromInput.value);
 			this.args.rangeTo = parseInt(toInput.value);
+			this.args.timeout = parseInt(timeoutInput.value);
+			this.args.useNetstat = remoteNetStaToggle.checkbox.checked;
 			ok_click();
 		};
+
+		setTimeout(()=>fromInput.focus(), 200);
 
 		return dialog;
 	}
@@ -405,7 +430,7 @@ class PortScan extends Console {
 		this.pending.push(hostname);
 
 		if (this.ws != null && this.ws.readyState === 1) { //ready
-			this.ws.send(hostname + ";" + this.args.rangeFrom + ";" + this.args.rangeTo);
+			this.ws.send(`${hostname};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout};${this.args.useNetstat}`);
 		}
 		else if (this.ws === null || (this.ws != null && this.ws.readyState != 0)) { //not connecting
 			this.Connect();
@@ -421,8 +446,9 @@ class PortScan extends Console {
 
 		if (this.pending.includes(hostname)) this.pending.splice(this.pending.indexOf(hostname), 1);
 
-		if (this.pending.length === 0)
-			if (this.ws != null && this.ws.readyState === 1) this.ws.close();
+		if (this.pending.length === 0 && this.ws != null && this.ws.readyState === 1) {
+			this.ws.close();
+		}
 
 		const index = this.args.entries.indexOf(hostname);
 		if (index > -1)
@@ -447,12 +473,14 @@ class PortScan extends Console {
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/portscan");
 
 		this.ws.onopen = ()=> {
-			for (let i = 0; i < this.pending.length; i++)
-				this.ws.send(this.pending[i] + ";" + this.args.rangeFrom + ";" + this.args.rangeTo);
-
-			for (let i = 0; i < this.list.childNodes.length; i++) //remove warnings, if exist
+			for (let i = 0; i < this.pending.length; i++) {
+				this.ws.send(`${this.pending[i]};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout};${this.args.useNetstat}`);
+			}
+			
+			for (let i = 0; i < this.list.childNodes.length; i++) { //remove warnings, if any
 				if (this.list.childNodes[i].id == "self_destruct")
 					this.list.removeChild(this.list.childNodes[i]);
+			}
 		};
 
 		this.ws.onclose = ()=> {
@@ -473,9 +501,22 @@ class PortScan extends Console {
 			this.list.appendChild(error_message);
 			this.list.scrollTop = this.list.scrollHeight;
 
+			for (const key in this.hashtable) {
+				this.hashtable[key].status.style.visibility = "hidden";
+			}
+
+			this.taskSpinner.style.display = "none";
+
 			error_message.onclick = ()=> {
 				this.list.querySelectorAll("#self_destruct").forEach(o=> this.list.removeChild(o));
 				this.Connect();
+				
+				this.UpdateTaskSpinner();
+				for (const key in this.hashtable) {
+					if (this.pending.includes(key)) {
+						this.hashtable[key].status.style.visibility = "visible";
+					}
+				}
 			};
 		};
 

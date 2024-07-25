@@ -147,7 +147,7 @@ class Ping extends Console {
 			argsCopy.status = "pause";
 			const copy = new Ping(argsCopy);
 			if (this.popOutWindow) copy.PopOut();
-			const dialog = copy.Options();
+			const dialog = copy.OptionsDialog();
 
 			const OriginalCancelClickHandler = dialog.cancelButton.onclick;
 			dialog.okButton.onclick = ()=> {
@@ -159,7 +159,7 @@ class Ping extends Console {
 			dialog.cancelButton.onclick = ()=> copy.Close();
 		});
 
-		this.optionsButton.onclick = ()=> this.Options();
+		this.optionsButton.onclick = ()=> this.OptionsDialog();
 
 		this.list.onscroll = ()=> this.InvalidateRecyclerList();
 	}
@@ -196,7 +196,7 @@ class Ping extends Console {
 		this.InvalidateRecyclerList();
 	}
 
-	Options() {
+	OptionsDialog() {
 		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 
