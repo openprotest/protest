@@ -84,6 +84,7 @@ class Log extends Window {
 			this.SetOnTop(this.onTopCheckbox.checked);
 		};
 
+		this.list.onwheel = event=> this.Log_onwheel(event);
 		this.list.onscroll = event=> this.Log_onscroll(event);
 
 		this.SetOpaque(this.opaqueCheckbox.checked);
@@ -109,6 +110,15 @@ class Log extends Window {
 				this.SetOpaque(false);
 			}
 		});
+	}
+
+	Log_onwheel(event) {
+		if (this.hasEnded) return;
+		if (event.deltaY > -1) return;
+
+		if (this.list.scrollTop === 0) {
+			this.ListNextLog();
+		}
 	}
 
 	Log_onscroll(event) {
