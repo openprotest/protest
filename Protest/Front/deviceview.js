@@ -1435,7 +1435,7 @@ class DeviceView extends View {
 			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 			circle.setAttribute("cx", 0);
 			circle.setAttribute("cy", height + 5);
-			circle.setAttribute("r", 4);
+			circle.setAttribute("r", 3.5);
 			circle.setAttribute("stroke", "#fff");
 			circle.setAttribute("stroke-width", 2);
 			circle.setAttribute("fill", "none");
@@ -1530,7 +1530,7 @@ class DeviceView extends View {
 				}
 
 				circle.setAttribute("cx", cx);
-				circle.setAttribute("cy", cy);
+				circle.setAttribute("cy", Math.max(cy, 4.5));
 
 				valueLabel.style.transform = `translate(${cx - 8}px,${Math.max(cy - 4, 10)}px)`;
 				currentTimeLabel.style.transform = `translate(${cx}px,${height + 20}px)`;

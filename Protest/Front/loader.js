@@ -121,7 +121,6 @@ const LOADER = {
 		"cameratester.js",
 		"screencapture.js",
 		"automation.js",
-		"tasks.js",
 		"certificates.js",
 		"backup.js",
 		"log.js"
@@ -343,7 +342,6 @@ const LOADER = {
 		case "Personalize"  : return new Personalize(command.args);
 		case "AccessControl": return new AccessControl(command.args);
 		case "Automation"   : return new Automation(command.args);
-		case "Tasks"        : return new Tasks(command.args);
 		case "Certificates" : return new Certificates(command.args);
 		case "Backup"       : return new Backup(command.args);
 		case "Log"          : return new Log(command.args);

@@ -119,8 +119,8 @@ internal static class Ssh {
                 shellStream.Write(Encoding.ASCII.GetString(buff, 0, receiveResult.Count));
             }
         }
-        catch (SshAuthenticationException) {
-            await WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
+        catch (SshAuthenticationException ex) {
+            await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }

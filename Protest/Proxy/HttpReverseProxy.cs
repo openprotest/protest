@@ -20,7 +20,7 @@ internal sealed class HttpReverseProxy : ReverseProxy {
     private IHost host;
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
-        this.totalUpstream = 0;
+        this.totalUpstream   = 0;
         this.totalDownstream = 0;
         
         hostBuilder = Host.CreateDefaultBuilder();
@@ -28,7 +28,7 @@ internal sealed class HttpReverseProxy : ReverseProxy {
         hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
 
         ClusterConfig cluster = new ClusterConfig {
-            ClusterId = "c1",
+            ClusterId    = "c1",
             Destinations = new Dictionary<string, DestinationConfig> {
                 { "d1", new DestinationConfig { Address = destination } }
             }
@@ -127,12 +127,7 @@ internal sealed class HttpReverseProxy : ReverseProxy {
 }
 
 file class CustomHostLifetime : IHostLifetime {
-    /* Custom Host Lifetime: overrides the default behavior,
-     * so the reverse proxy will not terminate on Ctrl+C
-     */
-    public Task StopAsync(CancellationToken cancellationToken) =>
-        Task.CompletedTask;
-
-    public Task WaitForStartAsync(CancellationToken cancellationToken) =>
-         Task.CompletedTask;
+    //Custom Host Lifetime: overrides the default behavior, so the reverse proxy will not terminate on Ctrl+C
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task WaitForStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
