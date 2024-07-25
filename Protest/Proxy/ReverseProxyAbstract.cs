@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ internal abstract class ReverseProxyAbstract {
     public Guid guid;
     public bool isRunning = false;
     public ulong totalUpstream, totalDownstream;
+    protected Thread thread;
     protected readonly CancellationTokenSource cancellationTokenSource;
     protected readonly CancellationToken cancellationToken;
 
@@ -23,7 +23,18 @@ internal abstract class ReverseProxyAbstract {
         return Start(proxy, destination, null, null, origin);
     }
 
-    public abstract bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin);
-    public abstract bool Stop(string origin);
+    public virtual bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
+        this.totalUpstream = 0;
+        this.totalDownstream = 0;
+        isRunning = true;
+        return true;
+    }
+    
+    public virtual bool Stop(string origin) {
+        this.totalUpstream = 0;
+        this.totalDownstream = 0;
+        isRunning = false;
+        return true;
+    }
 
 }

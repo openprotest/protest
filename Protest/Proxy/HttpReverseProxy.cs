@@ -1,8 +1,8 @@
 ﻿using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,13 +19,9 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private IHostBuilder hostBuilder;
     private IHost host;
 
-    public HttpReverseProxy(Guid guid) : base(guid) {
-    }
+    public HttpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
-        this.totalUpstream   = 0;
-        this.totalDownstream = 0;
-        
         hostBuilder = Host.CreateDefaultBuilder();
 
         hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
@@ -57,21 +53,16 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
         this.host = hostBuilder.Build();
-        this.host.Run();
+        this.host.RunAsync(cancellationToken).GetAwaiter().GetResult();
 
-        isRunning = true;
-        return true;
+        return base.Start(proxy, destination, certificate, password, origin);
     }
 
     public override bool Stop(string origin) {
-        this.totalUpstream = 0;
-        this.totalDownstream = 0;
-
-        this.host?.StopAsync().GetAwaiter().GetResult();
+        this.host?.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
         this.host = null;
 
-        isRunning = false;
-        return true;
+        return base.Stop(origin);
     }
 
     private void ConfigureLogging(ILoggingBuilder logger) {

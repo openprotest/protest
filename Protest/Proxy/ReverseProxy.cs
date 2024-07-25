@@ -232,7 +232,6 @@ internal static class ReverseProxy {
     public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
         return null;
     }
-
 }
 
 file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.ReverseProxyObject> {
