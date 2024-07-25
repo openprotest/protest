@@ -143,7 +143,7 @@ class Log extends Window {
 			}
 			if (!this.last) {
 				const now = new Date();
-				this.last = `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}`;
+				this.last = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,"0")}${now.getDate().toString().padStart(2,"0")}`;
 			}
 
 			this.list.scrollTop = 2;
