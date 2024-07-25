@@ -9,6 +9,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Http;
 using Protest.Http;
 using Protest.Workers;
 
@@ -231,6 +232,33 @@ internal static class ReverseProxy {
 
     public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
         return null;
+    }
+
+    public static byte[] Start(Dictionary<string, string> parameters, string origin) {
+        if (!parameters.TryGetValue("guid", out string guid)) {
+            return Data.CODE_FAILED.ToArray();
+        }
+
+        if (running.TryAdd(guid, null!)) {
+            //TODO:
+            return Data.CODE_OK.ToArray();
+        }
+
+        return Data.CODE_FAILED.ToArray();
+        
+    }
+
+    public static byte[] Stop(Dictionary<string, string> parameters, string origin) {
+        if (!parameters.TryGetValue("guid", out string guid)) {
+            return Data.CODE_FAILED.ToArray();
+        }
+
+        if (running.TryRemove(guid, out _)) {
+            //TODO:
+            return Data.CODE_OK.ToArray();
+        }
+
+        return Data.CODE_FAILED.ToArray();
     }
 }
 

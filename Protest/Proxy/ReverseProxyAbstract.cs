@@ -36,5 +36,4 @@ internal abstract class ReverseProxyAbstract {
         isRunning = false;
         return true;
     }
-
 }

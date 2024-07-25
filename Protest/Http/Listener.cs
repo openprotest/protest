@@ -114,6 +114,8 @@ public sealed class Listener {
         { "/rproxy/list",             (ctx, parameters, username)=> Proxy.ReverseProxy.List() },
         { "/rproxy/create",           (ctx, parameters, username)=> Proxy.ReverseProxy.Create(ctx, parameters, username) },
         { "/rproxy/delete",           (ctx, parameters, username)=> Proxy.ReverseProxy.Delete(parameters, username) },
+        { "/rproxy/start",            (ctx, parameters, username)=> Proxy.ReverseProxy.Start(parameters, username) },
+        { "/rproxy/stop",             (ctx, parameters, username)=> Proxy.ReverseProxy.Stop(parameters, username) },
 
         { "/rbac/list",                (ctx, parameters, username) => Auth.ListUsers() },
         { "/rbac/create",              (ctx, parameters, username) => Auth.CreateUser(ctx, parameters, username) },

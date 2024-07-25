@@ -22,22 +22,23 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     public HttpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
-        hostBuilder = Host.CreateDefaultBuilder();
+        this.thread = new Thread(async () => {
+            hostBuilder = Host.CreateDefaultBuilder();
 
-        hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
+            hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
 
-        ClusterConfig cluster = new ClusterConfig {
-            ClusterId    = "c1",
-            Destinations = new Dictionary<string, DestinationConfig> {
-                { "d1", new DestinationConfig { Address = destination } }
-            }
-        };
+            ClusterConfig cluster = new ClusterConfig {
+                ClusterId    = "c1",
+                Destinations = new Dictionary<string, DestinationConfig> {
+                    { "d1", new DestinationConfig { Address = destination } }
+                }
+            };
 
-        hostBuilder.ConfigureWebHostDefaults(webHost => {
-            webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, proxy, certificate, password));
-            webHost.Configure(application => this.Configure(application));
+            hostBuilder.ConfigureWebHostDefaults(webHost => {
+                webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, proxy, certificate, password));
+                webHost.Configure(application => this.Configure(application));
 
-            RouteConfig[] routes = new RouteConfig[] {
+                RouteConfig[] routes = new RouteConfig[] {
                 new RouteConfig {
                     RouteId   = "r1",
                     ClusterId = "c1",
@@ -45,15 +46,18 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 }
             };
 
-            webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
-        });
+                webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
+            });
 
-        string destinations = cluster.Destinations.Values
+            string destinations = cluster.Destinations.Values
             .Select(o=>o.Address.ToString())
             .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
-        this.host = hostBuilder.Build();
-        this.host.RunAsync(cancellationToken).GetAwaiter().GetResult();
+            this.host = hostBuilder.Build();
+            await this.host.RunAsync(cancellationToken);
+        });
+
+        this.thread.Start();
 
         return base.Start(proxy, destination, certificate, password, origin);
     }
