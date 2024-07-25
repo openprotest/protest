@@ -92,7 +92,7 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
                 string value = password.value;
                 if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"warnings\":\"Weak password\"}"u8.ToArray(), mutex);
+                    WsWriteText(ws, "{\"warning\":\"Weak password\"}"u8.ToArray(), mutex);
                 }
             }
         }
@@ -302,7 +302,7 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
                 string value = password.value;
                 if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"warnings\":\"Weak password\"}"u8.ToArray(), mutex);
+                    WsWriteText(ws, "{\"warning\":\"Weak password\"}"u8.ToArray(), mutex);
                 }
             }
         }
@@ -347,7 +347,7 @@ internal static class LiveStats {
 
                     WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
-                    if (percent < 1) {
+                    if (percent <= 1) {
                         WsWriteText(ws, $"{{\"critical\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
                     }
                     else if (percent <= 5) {
