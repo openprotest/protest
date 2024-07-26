@@ -1,5 +1,6 @@
 class Ping extends Console {
 	static HISTORY_LIMIT = 32;
+	static MINIMAP_SIZE = 192;
 
 	constructor(args) {
 		super();
@@ -58,7 +59,9 @@ class Ping extends Console {
 		this.playButton.disabled = this.args.status === "play";
 		this.pauseButton.disabled = this.args.status === "pause";
 
-		//this.InitializeMinimap();
+		if (this.args.minimap === true) {
+			this.InitializeMinimap();
+		}
 
 		if (this.args.entries) { //restore entries from previous session
 			let temp = this.args.entries;
@@ -161,20 +164,100 @@ class Ping extends Console {
 
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 
-		this.list.onscroll = ()=> this.InvalidateRecyclerList();
+		this.list.onscroll = ()=> { 
+			this.InvalidateRecyclerList();
+			this.InvalidateMinimap();
+		};
 	}
 
 	InitializeMinimap() {
-		const minimap = document.createElement("div");
-		minimap.style.position = "absolute";
-		minimap.style.left = "8px";
-		minimap.style.top = "8px";
-		minimap.style.zIndex = "0";
-		minimap.style.width = "200px";
-		minimap.style.height = "150px";
-		minimap.style.backgroundColor = "rgba(32,32,32,.8)";
-		minimap.style.borderRadius = "4px";
-		this.content.appendChild(minimap);
+		this.minimap = document.createElement("div");
+		this.minimap.style.position = "absolute";
+		this.minimap.style.left = "4px";
+		this.minimap.style.top = "4px";
+		this.minimap.style.zIndex = "1";
+		this.minimap.style.width = `${Ping.MINIMAP_SIZE + 8}px`;
+		this.minimap.style.height = `${Ping.MINIMAP_SIZE + 8}px`;
+		this.minimap.style.backgroundColor = "rgba(32,32,32,.85)";
+		this.minimap.style.borderRadius = "4px";
+		this.minimap.style.overflow = "hidden";
+		this.content.appendChild(this.minimap);
+
+		const canvas = document.createElement("canvas");
+		canvas.style.padding = "4px";
+		canvas.width = Ping.MINIMAP_SIZE;
+		canvas.height = Ping.MINIMAP_SIZE;
+		this.minimap.appendChild(canvas);
+
+		this.minimapCtx = canvas.getContext("2d");
+
+		let ox = 0, oy = 0;
+		let mx = 0, my = 0;
+		let isMoving = false;
+		this.minimap.onmousedown = event=> {
+			isMoving = true;
+			ox = this.minimap.offsetLeft;
+			oy = this.minimap.offsetTop;
+			mx = event.clientX;
+			my = event.clientY;
+		};
+
+		const minimap_onmousemove = event=> {
+			if (!isMoving) return;
+
+			if (event.buttons === 1) {
+				this.minimap.style.transition = "0s";
+				this.minimap.style.right = "unset";
+				this.minimap.style.bottom = "unset";
+				this.minimap.style.left = `${ox - (mx - event.clientX)}px`;
+				this.minimap.style.top = `${oy - (my - event.clientY)}px`;
+			}
+			else {
+				minimap_onmouseup();
+			}
+		};
+		
+		const minimap_onmouseup = ()=> {
+			isMoving = false;
+			this.minimap.style.transition = ".2s";
+
+			if (this.minimap.offsetLeft < 4) {
+				this.minimap.style.right = "unset";
+				this.minimap.style.left = "4px";
+			}
+			else if (this.minimap.offsetLeft > this.content.clientWidth - this.minimap.clientWidth - 4) {
+				this.minimap.style.left = "unset";
+				this.minimap.style.right = "4px";
+			}
+
+			if (this.minimap.offsetTop < 4) {
+				this.minimap.style.bottom = "unset";
+				this.minimap.style.top = "4px";
+			}
+			else if (this.minimap.offsetTop > this.content.clientHeight - this.minimap.clientHeight - 4) {
+				this.minimap.style.top = "unset";
+				this.minimap.style.bottom = "4px";
+			}
+		};
+
+		this.content.addEventListener("mousemove", event=> minimap_onmousemove(event));
+		this.content.addEventListener("mouseup", event=> minimap_onmouseup());
+
+		this.AfterResize = ()=> {
+			this.InvalidateRecyclerList();
+			minimap_onmouseup();
+
+			if (this.content.clientWidth < this.minimap.clientWidth * 1.5 || this.content.clientHeight < this.minimap.clientHeight * 1.5) {
+				this.minimap.style.visibility = "hidden";
+				this.minimap.style.opacity = "0";
+			}
+			else {
+				this.minimap.style.visibility = "visible";
+				this.minimap.style.opacity = "1";
+			}
+		};
+
+		setTimeout(()=>this.AfterResize(), 200);
 	}
 
 	Close() { //overrides
@@ -197,7 +280,7 @@ class Ping extends Console {
 	}
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("260px");
+		const dialog = this.DialogBox("300px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -220,7 +303,6 @@ class Ping extends Console {
 		innerBox.appendChild(timeoutInput);
 
 		innerBox.appendChild(document.createElement("br"));
-
 
 		const intervalLabel = document.createElement("div");
 		intervalLabel.textContent = "Interval (ms):";
@@ -271,9 +353,19 @@ class Ping extends Console {
 		innerBox.appendChild(rollingPingCheckBox);
 		this.AddCheckBoxLabel(innerBox, rollingPingCheckBox, "Rolling ping");
 
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const minimapCheckBox = document.createElement("input");
+		minimapCheckBox.type = "checkbox";
+		minimapCheckBox.checked = this.args.minimap;
+
+		innerBox.appendChild(minimapCheckBox);
+		this.AddCheckBoxLabel(innerBox, minimapCheckBox, "Show mini-map");
 
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
+
 
 		const moveToTopCheckbox = document.createElement("input");
 		moveToTopCheckbox.type = "checkbox";
@@ -387,12 +479,25 @@ class Ping extends Console {
 			this.args.method = pingMethodInput.value;
 			this.args.rolling = rollingPingCheckBox.checked;
 			this.args.moveToTop = moveToTopCheckbox.checked;
+			this.args.minimap = minimapCheckBox.checked;
 
 			if (!this.isClosed && this.ws != null && this.ws.readyState === 1) { //ready
 				this.ws.send(`timeout:${this.args.timeout}`);
 				this.ws.send(`interval:${this.args.interval}`);
 				this.ws.send(`method:${this.args.method}`);
 				this.ws.send(`rolling:${this.args.rolling}`);
+			}
+
+			if (minimapCheckBox.checked) {
+				if (!this.minimap) {
+					this.InitializeMinimap();
+				}
+			}
+			else {
+				if (this.minimap) {
+					this.content.removeChild(this.minimap);
+					this.minimap = null;
+				}
 			}
 
 			this.SetTitle(pingMethodInput.value === "arp" ? "ARP ping" : "Ping");
@@ -430,9 +535,7 @@ class Ping extends Console {
 			}
 		};
 
-		okButton.addEventListener("click", ()=> {
-			Apply();
-		});
+		okButton.addEventListener("click", ()=> Apply());
 
 		timeoutInput.focus();
 
@@ -690,6 +793,10 @@ class Ping extends Console {
 		};
 
 		this.ws.onclose = ()=> {
+			if (this.minimapCtx) {
+				this.minimapCtx.clearRect(0, 0, 200, 200);
+			}
+
 			if (this.request.length === 0) return;
 			if (this.args.status === "pause") return;
 
@@ -734,6 +841,40 @@ class Ping extends Console {
 			this.playButton.disabled = false;
 			this.pauseButton.disabled = true;
 		};
+	}
+
+	InvalidateMinimap() {
+		if (!this.minimapCtx) return;
+		if (this.minimap.style.visibility === "hidden") return;
+
+		this.minimapCtx.clearRect(0, 0, Ping.MINIMAP_SIZE, Ping.MINIMAP_SIZE);
+		this.minimapCtx.fillStyle = "rgba(224,224,224,.5)";
+		this.minimapCtx.fillRect(
+			0,
+			Ping.MINIMAP_SIZE * this.list.scrollTop / this.list.scrollHeight,
+			Ping.MINIMAP_SIZE,
+			Ping.MINIMAP_SIZE * this.list.clientHeight / this.list.scrollHeight
+		);
+
+		const size = Math.max(Ping.MINIMAP_SIZE / Object.keys(this.hashtable).length, 1);
+
+		for (const key in this.hashtable) {
+			const nodes = this.hashtable[key].graph.childNodes;
+			for (let j = 0; j < nodes.length; j++) {
+				const y = Ping.MINIMAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
+	
+				if (nodes[j].style.backgroundColor) {
+					if (nodes[j].style.backgroundColor === "transparent") {
+						this.minimapCtx.fillStyle = "rgb(240,64,24)";
+					}
+					else {
+						this.minimapCtx.fillStyle = nodes[j].style.backgroundColor;
+					}
+					this.minimapCtx.fillRect(j * 6, y, 4, size);
+				}
+			}
+		}
+
 	}
 
 	InvalidateList(payload) {
@@ -789,6 +930,8 @@ class Ping extends Console {
 				}
 			}
 		}
+
+		this.InvalidateMinimap();
 	}
 
 	InvalidateRecyclerList() { //overrides

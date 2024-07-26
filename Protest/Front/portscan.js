@@ -231,7 +231,7 @@ class PortScan extends Console {
 		const fromInput = document.createElement("input");
 		fromInput.type = "number";
 		fromInput.min = 1;
-		fromInput.max = 65534;
+		fromInput.max = 65535;
 		fromInput.value = this.args.rangeFrom;
 		fromInput.style.gridArea = "1 / 3";
 
@@ -241,7 +241,7 @@ class PortScan extends Console {
 
 		const toInput = document.createElement("input");
 		toInput.type = "number";
-		toInput.min = 2;
+		toInput.min = 1;
 		toInput.max = 65535;
 		toInput.value = this.args.rangeTo;
 		toInput.style.gridArea = "1 / 5";
@@ -278,14 +278,12 @@ class PortScan extends Console {
 			}
 		};
 
-		const ok_click = okButton.onclick;
-
 		okButton.onclick = ()=> {
 			this.args.rangeFrom = parseInt(fromInput.value);
 			this.args.rangeTo = parseInt(toInput.value);
 			this.args.timeout = parseInt(timeoutInput.value);
 			this.args.useNetstat = remoteNetStaToggle.checkbox.checked;
-			ok_click();
+			dialog.Close();
 		};
 
 		setTimeout(()=>fromInput.focus(), 200);
