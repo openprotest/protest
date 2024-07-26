@@ -15,6 +15,11 @@ namespace Protest.Protocols;
 internal static class Icmp {
     private static readonly byte[] ICMP_PAYLOAD = "0123456789abcdef"u8.ToArray();
 
+    private enum Method {
+        ICMP = 0,
+        ARP  = 1
+    }
+
     public static byte[] BulkPing(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
 
@@ -55,10 +60,11 @@ internal static class Icmp {
             return;
         }
 
+        if (ws == null) { return; }
+
         Hashtable hostnames = new Hashtable();
         object mutex = new object();
-
-        int method = 0; //0:icmp, 1:arp
+        Method method = Method.ICMP;
         int timeout = 1000;
         int interval = 1000;
         bool rolling = false;
@@ -125,7 +131,7 @@ internal static class Icmp {
                     break;
 
                 case "method":
-                    method = msg[1] == "arp" ? 1 : 0;
+                    method = msg[1] == "arp" ? Method.ARP : Method.ICMP;
                     break;
 
                 case "ping":
@@ -140,7 +146,7 @@ internal static class Icmp {
                             i++;
                         }
 
-                        Task<string> s = method == 0 ? PingArrayAsync(name, id, timeout) : ArpPingArrayAsync(name, id);
+                        Task<string> s = method == Method.ICMP ? PingArrayAsync(name, id, timeout) : ArpPingArrayAsync(name, id);
                         s.Wait();
 
                         lock (mutex) { //one send per socket
@@ -212,21 +218,21 @@ internal static class Icmp {
     private static async Task<string> ArpPingAsync(string name, string id) {
         try {
             IPAddress[] ips = await System.Net.Dns.GetHostAddressesAsync(name);
-            if (ips.Length == 0) return id + ((char)127).ToString() + "unknown host";
+            if (ips.Length == 0) return id + ((char)127).ToString() + "Unknown host";
 
             IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!ips[0].OnSameBroadcastDomain()) return id + ((char)127).ToString() + "unknown net.";
+            if (!ips[0].OnSameBroadcastDomain()) return id + ((char)127).ToString() + "Unknown net.";
 
             string response = Arp.ArpRequest(ip.ToString());
 
-            if (response is not null && response.Length > 0)
+            if (response is not null && response.Length > 0) {
                 return id + ((char)127).ToString() + "0";
+            }
 
-            return id + ((char)127).ToString() + "unreachable";
+            return id + ((char)127).ToString() + "Unreachable";
         }
         catch (Exception) {
-            return id + ((char)127).ToString() + "unknown error";
+            return id + ((char)127).ToString() + "Unknown error";
         }
     }
-
 }
