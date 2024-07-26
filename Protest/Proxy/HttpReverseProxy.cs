@@ -1,8 +1,8 @@
 ﻿using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,29 +19,26 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private IHostBuilder hostBuilder;
     private IHost host;
 
-    public HttpReverseProxy(Guid guid) : base(guid) {
-    }
+    public HttpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
-        this.totalUpstream   = 0;
-        this.totalDownstream = 0;
-        
-        hostBuilder = Host.CreateDefaultBuilder();
+        this.thread = new Thread(async () => {
+            hostBuilder = Host.CreateDefaultBuilder();
 
-        hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
+            hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
 
-        ClusterConfig cluster = new ClusterConfig {
-            ClusterId    = "c1",
-            Destinations = new Dictionary<string, DestinationConfig> {
-                { "d1", new DestinationConfig { Address = destination } }
-            }
-        };
+            ClusterConfig cluster = new ClusterConfig {
+                ClusterId    = "c1",
+                Destinations = new Dictionary<string, DestinationConfig> {
+                    { "d1", new DestinationConfig { Address = destination } }
+                }
+            };
 
-        hostBuilder.ConfigureWebHostDefaults(webHost => {
-            webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, proxy, certificate, password));
-            webHost.Configure(application => this.Configure(application));
+            hostBuilder.ConfigureWebHostDefaults(webHost => {
+                webHost.ConfigureKestrel(options => this.ConfigureKestrel(options, proxy, certificate, password));
+                webHost.Configure(application => this.Configure(application));
 
-            RouteConfig[] routes = new RouteConfig[] {
+                RouteConfig[] routes = new RouteConfig[] {
                 new RouteConfig {
                     RouteId   = "r1",
                     ClusterId = "c1",
@@ -49,29 +46,27 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 }
             };
 
-            webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
-        });
+                webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
+            });
 
-        string destinations = cluster.Destinations.Values
+            string destinations = cluster.Destinations.Values
             .Select(o=>o.Address.ToString())
             .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
-        this.host = hostBuilder.Build();
-        this.host.Run();
+            this.host = hostBuilder.Build();
+            await this.host.RunAsync(cancellationToken);
+        });
 
-        isRunning = true;
-        return true;
+        this.thread.Start();
+
+        return base.Start(proxy, destination, certificate, password, origin);
     }
 
     public override bool Stop(string origin) {
-        this.totalUpstream = 0;
-        this.totalDownstream = 0;
-
-        this.host?.StopAsync().GetAwaiter().GetResult();
+        this.host?.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
         this.host = null;
 
-        isRunning = false;
-        return true;
+        return base.Stop(origin);
     }
 
     private void ConfigureLogging(ILoggingBuilder logger) {

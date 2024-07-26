@@ -363,6 +363,8 @@ internal static class Auth {
                 path.Add("/rproxy/list");
                 path.Add("/rproxy/create");
                 path.Add("/rproxy/delete");
+                path.Add("/rproxy/start");
+                path.Add("/rproxy/stop");
                 break;
 
             case "settings:write":

@@ -1004,13 +1004,14 @@ class DeviceView extends View {
 				driveButton.secondary.style.borderRadius = "2px";
 				driveButton.secondary.style.transition = ".4s";
 
-				if (json.used / json.total >= .99) {
+				const percent = 100 - (100 * json.used / json.total).toFixed(1);
+				if (percent <= 1) {
 					driveButton.button.style.backgroundColor = "var(--clr-critical)";
 				}
-				else if (json.used / json.total >= .95) {
+				else if (percent <= 5) {
 					driveButton.button.style.backgroundColor = "var(--clr-error)";
 				}
-				else if (json.used / json.total >= .85) {
+				else if (percent < 15) {
 					driveButton.button.style.backgroundColor = "var(--clr-warning)";
 				}
 
