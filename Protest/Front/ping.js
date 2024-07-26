@@ -851,24 +851,27 @@ class Ping extends Console {
 		if (this.minimap.style.visibility === "hidden") return;
 
 		this.minimapCtx.clearRect(0, 0, Ping.MINIMAP_SIZE, Ping.MINIMAP_SIZE);
-		this.minimapCtx.fillStyle = "rgba(224,224,224,.5)";
-		this.minimapCtx.fillRect(
-			0,
-			Ping.MINIMAP_SIZE * this.list.scrollTop / this.list.scrollHeight,
-			Ping.MINIMAP_SIZE,
-			Ping.MINIMAP_SIZE * this.list.clientHeight / this.list.scrollHeight
-		);
 
-		const size = Math.max(Ping.MINIMAP_SIZE / Object.keys(this.hashtable).length, 1);
+		if (this.list.scrollHeight > this.list.clientHeight) {
+			this.minimapCtx.fillStyle = "rgba(224,224,224,.5)";
+			this.minimapCtx.fillRect(
+				0,
+				Ping.MINIMAP_SIZE * this.list.scrollTop / this.list.scrollHeight,
+				Ping.MINIMAP_SIZE,
+				Ping.MINIMAP_SIZE * this.list.clientHeight / this.list.scrollHeight
+			);
+		}
+
+		const size = Math.min(Math.max(Ping.MINIMAP_SIZE / Object.keys(this.hashtable).length, 1), 4);
 
 		for (const key in this.hashtable) {
 			const nodes = this.hashtable[key].graph.childNodes;
+			const y = Ping.MINIMAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
+			
 			for (let j = 0; j < nodes.length; j++) {
-				const y = Ping.MINIMAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
-	
 				if (nodes[j].style.backgroundColor) {
 					if (nodes[j].style.backgroundColor === "transparent") {
-						this.minimapCtx.fillStyle = "rgb(240,64,24)";
+						this.minimapCtx.fillStyle = "rgba(240,64,24,.5)";
 					}
 					else {
 						this.minimapCtx.fillStyle = nodes[j].style.backgroundColor;
