@@ -194,6 +194,7 @@ class Ping extends Console {
 		let ox = 0, oy = 0;
 		let mx = 0, my = 0;
 		let isMoving = false;
+
 		this.minimap.onmousedown = event=> {
 			isMoving = true;
 			ox = this.minimap.offsetLeft;
@@ -256,6 +257,8 @@ class Ping extends Console {
 				this.minimap.style.opacity = "1";
 			}
 		};
+
+		this.minimap.onwheel = event=> this.list.scrollTo(0, this.list.scrollTop + event.deltaY);
 
 		setTimeout(()=>this.AfterResize(), 200);
 	}
@@ -874,7 +877,6 @@ class Ping extends Console {
 				}
 			}
 		}
-
 	}
 
 	InvalidateList(payload) {
