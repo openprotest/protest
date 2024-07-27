@@ -1,6 +1,6 @@
 class Ping extends Console {
 	static HISTORY_LIMIT = 32;
-	static MINIMAP_SIZE = 192;
+	static MAP_SIZE = 192;
 
 	constructor(args) {
 		super();
@@ -164,9 +164,9 @@ class Ping extends Console {
 
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 
-		this.list.onscroll = ()=> { 
+		this.list.onscroll = ()=> {
 			this.InvalidateRecyclerList();
-			this.InvalidateMinimap();
+			this.DrawScrollIndicator();
 		};
 	}
 
@@ -176,23 +176,43 @@ class Ping extends Console {
 		this.minimap.style.left = "4px";
 		this.minimap.style.top = "4px";
 		this.minimap.style.zIndex = "1";
-		this.minimap.style.width = `${Ping.MINIMAP_SIZE + 8}px`;
-		this.minimap.style.height = `${Ping.MINIMAP_SIZE + 8}px`;
-		this.minimap.style.backgroundColor = "rgba(32,32,32,.85)";
+		this.minimap.style.width = `${Ping.MAP_SIZE + 8}px`;
+		this.minimap.style.height = `${Ping.MAP_SIZE + 8}px`;
+		this.minimap.style.backgroundColor = "rgba(48,48,48,.85)";
+		this.minimap.style.boxShadow = "0px 0px 1px var(--clr-light)";
 		this.minimap.style.borderRadius = "4px";
 		this.minimap.style.overflow = "hidden";
 		this.content.appendChild(this.minimap);
 
 		const canvas = document.createElement("canvas");
 		canvas.style.padding = "4px";
-		canvas.width = Ping.MINIMAP_SIZE;
-		canvas.height = Ping.MINIMAP_SIZE;
+		canvas.width = Ping.MAP_SIZE;
+		canvas.height = Ping.MAP_SIZE;
 		this.minimap.appendChild(canvas);
 
 		this.minimapCtx = canvas.getContext("2d");
 
-		let ox = 0, oy = 0;
-		let mx = 0, my = 0;
+		this.mapScope1 = document.createElement("div");
+		this.mapScope1.style.position = "absolute";
+		this.mapScope1.style.left = "0px";
+		this.mapScope1.style.right = "0px";
+		this.mapScope1.style.top = "0px";
+		this.mapScope1.style.height = "0px";
+		this.mapScope1.style.backgroundColor = "rgba(0,0,0,.25)";
+		this.mapScope1.style.transition = ".1s";
+		this.minimap.appendChild(this.mapScope1);
+
+		this.mapScope2 = document.createElement("div");
+		this.mapScope2.style.position = "absolute";
+		this.mapScope2.style.left = "0px";
+		this.mapScope2.style.right = "0px";
+		this.mapScope2.style.bottom = "0px";
+		this.mapScope2.style.height = "0px";
+		this.mapScope2.style.backgroundColor = "rgba(0,0,0,.25)";
+		this.mapScope2.style.transition = ".1s";
+		this.minimap.appendChild(this.mapScope2);
+
+		let ox=0, oy=0, mx=0, my=0;
 		let isMoving = false;
 
 		this.minimap.onmousedown = event=> {
@@ -256,6 +276,7 @@ class Ping extends Console {
 				this.minimap.style.visibility = "visible";
 				this.minimap.style.opacity = "1";
 			}
+			this.DrawScrollIndicator();
 		};
 
 		this.minimap.onwheel = event=> this.list.scrollTo(0, this.list.scrollTop + event.deltaY);
@@ -846,27 +867,25 @@ class Ping extends Console {
 		};
 	}
 
+	DrawScrollIndicator() {
+		if (!this.minimapCtx || !this.minimap) return;
+		this.mapScope1.style.height = `${Ping.MAP_SIZE * this.list.scrollTop / this.list.scrollHeight}px`;
+		this.mapScope2.style.height = `${Ping.MAP_SIZE * (this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight) / this.list.scrollHeight}px`;
+	}
+
 	InvalidateMinimap() {
-		if (!this.minimapCtx) return;
+		if (!this.minimapCtx || !this.minimap) return;
 		if (this.minimap.style.visibility === "hidden") return;
 
-		this.minimapCtx.clearRect(0, 0, Ping.MINIMAP_SIZE, Ping.MINIMAP_SIZE);
+		this.DrawScrollIndicator();
 
-		if (this.list.scrollHeight > this.list.clientHeight) {
-			this.minimapCtx.fillStyle = "rgba(224,224,224,.5)";
-			this.minimapCtx.fillRect(
-				0,
-				Ping.MINIMAP_SIZE * this.list.scrollTop / this.list.scrollHeight,
-				Ping.MINIMAP_SIZE,
-				Ping.MINIMAP_SIZE * this.list.clientHeight / this.list.scrollHeight
-			);
-		}
+		this.minimapCtx.clearRect(0, 0, Ping.MAP_SIZE, Ping.MAP_SIZE);
 
-		const size = Math.min(Math.max(Ping.MINIMAP_SIZE / Object.keys(this.hashtable).length, 1), 4);
+		const size = Math.min(Math.max(Ping.MAP_SIZE / Object.keys(this.hashtable).length, 1), 4);
 
 		for (const key in this.hashtable) {
 			const nodes = this.hashtable[key].graph.childNodes;
-			const y = Ping.MINIMAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
+			const y = Ping.MAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
 			
 			for (let j = 0; j < nodes.length; j++) {
 				if (nodes[j].style.backgroundColor) {
@@ -876,7 +895,7 @@ class Ping extends Console {
 					else {
 						this.minimapCtx.fillStyle = nodes[j].style.backgroundColor;
 					}
-					this.minimapCtx.fillRect(j * 6, y, 4, size);
+					this.minimapCtx.fillRect(1 + j * 6, y, 4, size);
 				}
 			}
 		}

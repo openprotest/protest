@@ -19,8 +19,8 @@ using Lextm.SharpSnmpLib;
 namespace Protest.Tools;
 
 internal static class LiveStats {
-    private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer"};
-    private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall"};
+    private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer" };
+    private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall" };
 
     private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, object mutex) {
         lock (mutex) {
