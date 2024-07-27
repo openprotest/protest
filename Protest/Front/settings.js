@@ -859,7 +859,7 @@ class Settings extends Tabs {
 		const passwordInput = document.createElement("input");
 		passwordInput.style.gridArea = "5 / 3";
 		passwordInput.type = "password";
-		passwordInput.placeholder = "unchanged";
+		passwordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(passwordLabel, passwordInput);
 
 		const sslBox = document.createElement("div");
@@ -1020,7 +1020,7 @@ class Settings extends Tabs {
 		const authPasswordInput = document.createElement("input");
 		authPasswordInput.style.gridArea = "8 / 3";
 		authPasswordInput.type = "password";
-		authPasswordInput.placeholder = "unchanged";
+		authPasswordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(authPasswordLabel, authPasswordInput);
 
 		const privacyAlgorithmLabel = document.createElement("div");
@@ -1044,7 +1044,7 @@ class Settings extends Tabs {
 		const privacyPasswordInput = document.createElement("input");
 		privacyPasswordInput.style.gridArea = "11 / 3";
 		privacyPasswordInput.type = "password";
-		privacyPasswordInput.placeholder = "unchanged";
+		privacyPasswordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
 
 		const authObsoleteBox = document.createElement("div");

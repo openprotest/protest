@@ -6,7 +6,7 @@ class AccessControl extends Tabs {
 
 		this.AddCssDependencies("list.css");
 
-		this.SetTitle("Access control");
+		this.SetTitle("Role-based access control");
 		this.SetIcon("mono/rbac.svg");
 
 		this.tabsPanel.style.padding = "20px";

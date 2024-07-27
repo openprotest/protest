@@ -92,7 +92,7 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
                 string value = password.value;
                 if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"warning\":\"Weak password\"}"u8.ToArray(), mutex);
+                    WsWriteText(ws, "{\"critical\":\"Weak password\",\"source\":\"Internal check\"}"u8.ToArray(), mutex);
                 }
             }
         }
@@ -302,7 +302,7 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
                 string value = password.value;
                 if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"warning\":\"Weak password\"}"u8.ToArray(), mutex);
+                    WsWriteText(ws, "{\"critical\":\"Weak password\",\"source\":\"Internal check\"}"u8.ToArray(), mutex);
                 }
             }
         }

@@ -179,11 +179,20 @@ class View extends Window {
 			nameBox.setAttribute("list", this.attributeAutofill.id);
 
 			nameBox.oninput = ()=> {
-				if (nameBox.value.toLowerCase() === "type") {
+				const nameLowerCase = nameBox.value.toLowerCase();
+
+				if (nameLowerCase === "type") {
 					valueBox.setAttribute("list", "device_type_autofill");
 				}
 				else {
 					valueBox.removeAttribute("list");
+				}
+
+				if (nameLowerCase.includes("password") && this.link && nameLowerCase in this.link) {
+					valueBox.placeholder = "unchanged";
+				}
+				else {
+					valueBox.placeholder = "";
 				}
 			};
 			nameBox.oninput();
@@ -206,6 +215,7 @@ class View extends Window {
 
 			nameBox.oninput = ()=> {
 				const nameLowerCase = nameBox.value.toLowerCase();
+				
 				if (nameLowerCase === "type") {
 					valueBox.setAttribute("list", "user_type_autofill");
 				}
@@ -213,7 +223,7 @@ class View extends Window {
 					valueBox.removeAttribute("list");
 				}
 
-				if (nameLowerCase.includes("password")) {
+				if (nameLowerCase.includes("password") && this.link && nameLowerCase in this.link) {
 					valueBox.placeholder = "unchanged";
 				}
 				else {
