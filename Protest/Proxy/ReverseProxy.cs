@@ -258,6 +258,7 @@ internal static class ReverseProxy {
         try {
             string fileContent = File.ReadAllText($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
             obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+            if (!obj.guid.Equals(new Guid(guid))) { return Data.CODE_FAILED.ToArray(); }
         }
         catch {
             return Data.CODE_FAILED.ToArray();
@@ -293,11 +294,12 @@ internal static class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
-        if (!running.ContainsKey(guid)) {
+        if (!running.TryGetValue(guid, out ReverseProxyAbstract obj)) {
             return "{\"error\":\"This proxy is not running\"}"u8.ToArray();
         }
 
-        //TODO:
+        if (obj.isRunning) { obj.Stop(origin); }
+
         return Data.CODE_OK.ToArray();
     }
 }
