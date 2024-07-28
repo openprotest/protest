@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -239,13 +241,47 @@ internal static class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
-        if (running.TryAdd(guid, null!)) {
-            //TODO:
-            return Data.CODE_OK.ToArray();
+        if (!running.TryAdd(guid, null!)) {
+            return Data.CODE_FAILED.ToArray();
         }
 
-        return Data.CODE_FAILED.ToArray();
-        
+        if (running.ContainsKey(guid)) {
+            return "{\"error\":\"This proxy is already running\"}"u8.ToArray();
+        }
+
+        DirectoryInfo directory = new DirectoryInfo(Data.DIR_REVERSE_PROXY);
+        if (!directory.Exists) {
+            return Data.CODE_FAILED.ToArray();
+        }
+
+        ReverseProxyObject obj;
+        try {
+            string fileContent = File.ReadAllText($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
+            obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+        }
+        catch {
+            return Data.CODE_FAILED.ToArray();
+        }
+
+        ReverseProxyAbstract proxy = obj.protocol switch {
+            ProxyProtocol.TCP   => new TcpReverseProxy(obj.guid),
+            ProxyProtocol.UDP   => new UdpReverseProxy(obj.guid),
+            ProxyProtocol.HTTP  => new HttpReverseProxy(obj.guid),
+            ProxyProtocol.HTTPS => new HttpReverseProxy(obj.guid),
+            _=> new TcpReverseProxy(obj.guid)
+        };
+
+        try {
+            IPEndPoint localEndpoint = new IPEndPoint(IPAddress.Parse(obj.proxyaddr), obj.proxyport);
+            proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", origin);
+        }
+        catch {
+            return Data.CODE_FAILED.ToArray();
+        }
+
+        running.TryAdd(guid, proxy);
+
+        return Data.CODE_OK.ToArray();
     }
 
     public static byte[] Stop(Dictionary<string, string> parameters, string origin) {
@@ -254,11 +290,15 @@ internal static class ReverseProxy {
         }
 
         if (running.TryRemove(guid, out _)) {
-            //TODO:
-            return Data.CODE_OK.ToArray();
+            return Data.CODE_FAILED.ToArray();
         }
 
-        return Data.CODE_FAILED.ToArray();
+        if (!running.ContainsKey(guid)) {
+            return "{\"error\":\"This proxy is not running\"}"u8.ToArray();
+        }
+
+        //TODO:
+        return Data.CODE_OK.ToArray();
     }
 }
 
