@@ -268,7 +268,7 @@ class Ping extends Console {
 			this.InvalidateRecyclerList();
 			minimap_onmouseup();
 
-			if (this.content.clientWidth < this.minimap.clientWidth * 1.5 || this.content.clientHeight < this.minimap.clientHeight * 1.5) {
+			if (this.content.clientWidth < this.minimap.clientWidth + 32 || this.content.clientHeight < this.minimap.clientHeight + 32) {
 				this.minimap.style.visibility = "hidden";
 				this.minimap.style.opacity = "0";
 			}
@@ -296,7 +296,7 @@ class Ping extends Console {
 
 	Minimize(force) { //overrides
 		super.Minimize(force);
-		this.content.style.display = (this.isMinimized) ? "none" : "initial"; //hide content when minimize for faster animation.
+		this.content.style.display = (this.isMinimized) ? "none" : "initial"; //hide content when minimize to increase performance
 	}
 
 	AfterResize() { //overrides
@@ -678,7 +678,7 @@ class Ping extends Console {
 		let ping_e = [];
 		for (let i = 0; i < Ping.HISTORY_LIMIT; i++) {
 			let p = document.createElement("div");
-			p.style.left = 3 * i + "%";
+			p.style.right = 3.125 * (Ping.HISTORY_LIMIT-i-1) + "%";
 			graph.appendChild(p);
 			ping_e.push(p);
 			ping.push(-1);
@@ -895,7 +895,7 @@ class Ping extends Console {
 					else {
 						this.minimapCtx.fillStyle = nodes[j].style.backgroundColor;
 					}
-					this.minimapCtx.fillRect(1 + j * 6, y, 4, size);
+					this.minimapCtx.fillRect(1 + j*6, y, 4, size);
 				}
 			}
 		}

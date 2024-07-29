@@ -170,7 +170,7 @@
 .tool-element > .tool-graph {
 	position: absolute;
 	left: calc(30% + 34px);
-	right: 100px;
+	right: 140px;
 	top: 0;
 	height: 100%;
 }
@@ -197,10 +197,10 @@
 	text-overflow: ellipsis;
 	line-height: 28px;
 	max-height: 32px;
-	bottom: 0;
+	bottom: 2px;
 	right: 32px;
 	width: 96px;
-	text-align: right;
+	text-align: left;
 }
 
 .tool-element:hover > .tool-remove {

@@ -157,6 +157,7 @@ class PortScan extends Console {
 		this.SetIcon("mono/portscan.svg");
 
 		this.SetupToolbar();
+		this.rescanButton = this.AddToolbarButton("Re-scan", "mono/restart.svg?light");
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
@@ -166,25 +167,20 @@ class PortScan extends Console {
 		if (this.args.entries) { //restore entries from previous session
 			let temp = this.args.entries;
 			this.args.entries = [];
-			for (let i = 0; i < temp.length; i++)
+			for (let i = 0; i < temp.length; i++) {
 				this.Push(temp[i]);
+			}
 		}
+
+		this.rescanButton.onclick = ()=> this.Rescan();
 
 		this.clearButton.addEventListener("click", ()=> {
 			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
-			if (okButton) okButton.addEventListener("click", ()=> {
-				this.args.entries = [];
-				this.list.textContent = "";
-				this.hashtable = {};
-				this.pending = [];
-				this.UpdateTaskSpinner();
-			});
+			if (okButton) okButton.addEventListener("click", ()=> this.ClearAll());
 		});
 
-		this.optionsButton.onclick = ()=> {
-			this.OptionsDialog();
-		};
-
+		this.optionsButton.onclick = ()=> this.OptionsDialog();
+		
 		this.copyButton.addEventListener("click", ()=> {
 			const argsCopy = structuredClone(this.args);
 			argsCopy.entries = [];
@@ -453,6 +449,29 @@ class PortScan extends Console {
 			this.args.entries.splice(index, 1);
 
 		this.UpdateTaskSpinner();
+	}
+
+	ClearAll(){
+		this.args.entries = [];
+		this.list.textContent = "";
+		this.hashtable = {};
+		this.pending = [];
+		this.UpdateTaskSpinner();
+	}
+
+	Rescan() {
+		let temp = this.args.entries;
+		this.ClearAll();
+
+		if (this.ws != null && this.ws.readyState === 1) {
+			this.ws.close();
+		}
+
+		setTimeout(()=>{
+			for (let i=0; i<temp.length; i++) {
+				this.Push(temp[i]);
+			}
+		}, 250);
 	}
 
 	Connect() {

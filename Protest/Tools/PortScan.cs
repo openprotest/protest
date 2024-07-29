@@ -301,7 +301,7 @@ internal static class PortScan {
     }
 
     public static async Task<bool> PortScanAsync(string host, int port, int timeout) {
-        CancellationTokenSource tokenSource = new CancellationTokenSource(timeout);
+        using CancellationTokenSource tokenSource = new CancellationTokenSource(timeout);
 
         try {
             using TcpClient client = new TcpClient();

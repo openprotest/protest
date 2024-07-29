@@ -46,7 +46,7 @@ internal static class Wmi {
             scope = new ManagementScope($"\\\\{host}\\root\\cimv2", options);
 
             if (timeout > 0) {
-                CancellationTokenSource tokenSource = new CancellationTokenSource();
+                using CancellationTokenSource tokenSource = new CancellationTokenSource();
                 tokenSource.CancelAfter(timeout);
 
                 Task task = Task.Run(() => scope.Connect(), tokenSource.Token);
