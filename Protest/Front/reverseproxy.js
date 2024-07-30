@@ -195,7 +195,7 @@ class ReverseProxy extends List {
 		}
 	}
 
-	EditDialog(entry=null) {
+	EditDialog(entry=null, isRunning=false) {
 		const dialog = this.DialogBox("460px");
 		if (dialog === null) return;
 
@@ -246,7 +246,7 @@ class ReverseProxy extends List {
 		protocolInput.value = "TCP";
 
 		const certsInput = AddParameter("Certificate", "select", null);
-		setTimeout(async()=>{
+		setTimeout(async()=> {
 			const optionNone = document.createElement("option");
 			optionNone.value = null;
 			optionNone.text = "none";
@@ -299,6 +299,10 @@ class ReverseProxy extends List {
 
 		protocolInput.onchange();
 
+		if (isRunning) {
+			dialog.okButton.disabled = true;
+		}
+
 		okButton.onclick = async ()=> {
 			let requiredFieldMissing = false;
 			let requiredFields = [nameInput, proxyAddressInput, proxyPostInput, destinationAddressInput, destinationPortInput];
@@ -341,6 +345,9 @@ class ReverseProxy extends List {
 
 				this.args.select = json.guid;
 				this.GetReverseProxies();
+
+				this.startButton.disabled = false;
+				this.stopButton.disabled = true;
 			}
 			catch (ex) {
 				setTimeout(()=>this.ConfirmBox(ex, true, "mono/error.svg"), 250);
@@ -363,6 +370,10 @@ class ReverseProxy extends List {
 				this.args.select = null;
 				this.selected = null;
 				this.GetReverseProxies();
+
+				this.deleteButton.disabled = true;
+				this.startButton.disabled = true;
+				this.stopButton.disabled = true;
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg")
@@ -475,7 +486,8 @@ class ReverseProxy extends List {
 		element.ondblclick = ()=> {
 			let key = entry.guid.v;
 			if (key in this.link.data) {
-				this.EditDialog(this.link.data[key]);
+				const isRunning = element.style.backgroundImage.includes("play");
+				this.EditDialog(this.link.data[key], isRunning);
 			}
 		};
 	}

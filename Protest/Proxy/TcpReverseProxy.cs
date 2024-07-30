@@ -11,17 +11,25 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
     public TcpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint listener, string destination, string certificate, string password, string origin) {
-        this.thread = new Thread(async () => {
+        try {
             tcpListener = new TcpListener(listener.Address, listener.Port);
             tcpListener.Start();
+        }
+        catch (SocketException) {
+            throw;
+        }
+        catch (Exception) {
+            throw;
+        }
 
+        this.thread = new Thread(async () => {
             while (this.isRunning) {
                 try {
                     TcpClient client = await tcpListener.AcceptTcpClientAsync(cancellationToken);
-
+                    ServeClient(client);
                 }
                 catch {
-                    this.error++;
+                    this.errors++;
                 }
             }
         });
@@ -29,6 +37,10 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
         this.thread.Start();
 
         return base.Start(listener, destination, certificate, password, origin);
+    }
+
+    private void ServeClient(TcpClient client) {
+
     }
 
     public override bool Stop(string origin) {

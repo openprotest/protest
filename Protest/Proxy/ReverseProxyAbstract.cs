@@ -8,7 +8,7 @@ namespace Protest.Proxy;
 internal abstract class ReverseProxyAbstract {
     public Guid guid;
     public bool isRunning = false;
-    public ulong rx, tx, error;
+    public ulong rx, tx, errors;
     protected Thread thread;
     protected readonly CancellationTokenSource cancellationTokenSource;
     protected readonly CancellationToken cancellationToken;

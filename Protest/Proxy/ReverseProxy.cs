@@ -201,6 +201,11 @@ internal static class ReverseProxy {
             string payload = reader.ReadToEnd();
 
             ReverseProxyObject entry = JsonSerializer.Deserialize<ReverseProxyObject>(payload, serializerOptionsWithPassword);
+            
+            if (running.ContainsKey(entry.guid.ToString())) {
+                return "{\"error\":\"Unable to modify this proxy while it's running.\"}"u8.ToArray();
+            }
+            
             if (entry.guid == Guid.Empty) {
                 entry.guid = Guid.NewGuid();
             }
@@ -229,6 +234,10 @@ internal static class ReverseProxy {
     public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
         if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
+        }
+
+        if (running.ContainsKey(guid)) {
+            return "{\"error\":\"Unable to delete this proxy while it's running.\"}"u8.ToArray();
         }
 
         try {

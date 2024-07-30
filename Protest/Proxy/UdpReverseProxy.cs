@@ -11,16 +11,25 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     public UdpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint listener, string destination, string certificate, string password, string origin) {
-        this.thread = new Thread(/*async*/ () => {
+        try {
             udpListener = new UdpClient(listener);
+        }
+        catch (SocketException) {
+            throw;
+        }
+        catch (Exception) {
+            throw;
+        }
 
+
+        this.thread = new Thread(/*async*/ () => {
             while (this.isRunning) {
                 try {
                     //TODO:
 
                 }
                 catch {
-                    this.error++;
+                    this.errors++;
                 }
             }
         });
