@@ -8,7 +8,7 @@ namespace Protest.Proxy;
 internal abstract class ReverseProxyAbstract {
     public Guid guid;
     public bool isRunning = false;
-    public ulong totalUpstream, totalDownstream;
+    public ulong rx, tx, error;
     protected Thread thread;
     protected readonly CancellationTokenSource cancellationTokenSource;
     protected readonly CancellationToken cancellationToken;
@@ -24,16 +24,16 @@ internal abstract class ReverseProxyAbstract {
     }
 
     public virtual bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
-        this.totalUpstream = 0;
-        this.totalDownstream = 0;
+        this.tx = 0;
+        this.rx = 0;
         isRunning = true;
         return true;
     }
     
     public virtual bool Stop(string origin) {
-        this.totalUpstream = 0;
-        this.totalDownstream = 0;
         isRunning = false;
+        this.tx = 0;
+        this.rx = 0;
         return true;
     }
 }

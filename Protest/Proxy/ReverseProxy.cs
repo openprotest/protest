@@ -1,17 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using Microsoft.AspNetCore.Http;
 using Protest.Http;
 
 namespace Protest.Proxy;
@@ -121,7 +117,7 @@ internal static class ReverseProxy {
         bool first = true;
         foreach (ReverseProxyAbstract proxy in running.Values) {
             if (!first) { builder.Append(','); }
-            builder.Append($"{{\"{proxy.guid}\":[{proxy.totalDownstream},{proxy.totalUpstream}]}}");
+            builder.Append($"{{\"{proxy.guid}\":[{proxy.rx},{proxy.tx}]}}");
             first = false;
         }
         builder.Append(']');
@@ -183,7 +179,6 @@ internal static class ReverseProxy {
             builder.Append('}');
 
             return Encoding.UTF8.GetBytes(builder.ToString());
-
         }
         catch {
             return Data.CODE_FAILED.ToArray();
@@ -232,15 +227,21 @@ internal static class ReverseProxy {
     }
 
     public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
-        return null;
-    }
-
-    public static byte[] Start(Dictionary<string, string> parameters, string origin) {
-        if (!parameters.TryGetValue("guid", out string guid)) {
+        if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
         }
 
-        if (!running.TryAdd(guid, null!)) {
+        try {
+            File.Delete($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
+            return Data.CODE_OK.ToArray();
+        }
+        catch {
+            return Data.CODE_FAILED.ToArray();
+        }
+    }
+
+    public static byte[] Start(Dictionary<string, string> parameters, string origin) {
+        if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
         }
 
@@ -287,16 +288,18 @@ internal static class ReverseProxy {
     }
 
     public static byte[] Stop(Dictionary<string, string> parameters, string origin) {
-        if (!parameters.TryGetValue("guid", out string guid)) {
-            return Data.CODE_FAILED.ToArray();
-        }
-
-        if (running.TryRemove(guid, out _)) {
+        if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
         }
 
         if (!running.TryGetValue(guid, out ReverseProxyAbstract obj) || !obj.isRunning) {
             return "{\"error\":\"This proxy is not running\"}"u8.ToArray();
+        }
+
+        obj.Stop(origin);
+
+        if (!running.TryRemove(guid, out _)) {
+            return Data.CODE_FAILED.ToArray();
         }
 
         if (!obj.Stop(origin)) {

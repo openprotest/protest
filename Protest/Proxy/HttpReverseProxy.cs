@@ -39,12 +39,12 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 webHost.Configure(application => this.Configure(application));
 
                 RouteConfig[] routes = new RouteConfig[] {
-                new RouteConfig {
-                    RouteId   = "r1",
-                    ClusterId = "c1",
-                    Match     = new RouteMatch { Path = "/{**all}" }
-                }
-            };
+                    new RouteConfig {
+                        RouteId   = "r1",
+                        ClusterId = "c1",
+                        Match     = new RouteMatch { Path = "/{**all}" }
+                    }
+                };
 
                 webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
             });

@@ -68,20 +68,19 @@ class ReverseProxy extends List {
 			try {
 				this.ws.close();
 			}
-			catch (ex) { };
+			catch (ex) {};
 		}
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/reverseproxy");
 
-		this.ws.onopen = ()=> {
-
-		};
+		this.ws.onopen = ()=> {};
 
 		this.ws.onmessage = event=> {
 			let json = JSON.parse(event.data);
 
 			if (json.running) {
-				const nodes = this.list.childNodes;
+				const nodes = Array.from(this.list.childNodes);
+
 				for (let i=0; i<nodes.length; i++) {
 					nodes[i].style.backgroundImage = "url(mono/stop.svg)";
 				}
@@ -92,6 +91,18 @@ class ReverseProxy extends List {
 						node.style.backgroundImage = "url(mono/play.svg)";
 					}
 				}
+
+				if (this.selected) {
+					const isRunning = this.selected.style.backgroundImage.includes("play");
+					this.deleteButton.disabled = false;
+					this.startButton.disabled = isRunning;
+					this.stopButton.disabled = !isRunning;
+				}
+				else {
+					this.deleteButton.disabled = true;
+					this.startButton.disabled = true;
+					this.stopButton.disabled = true;
+				}
 			}
 			else if (json.traffic) {
 				for (let i=0; i<json.traffic.length; i++) {
@@ -100,9 +111,7 @@ class ReverseProxy extends List {
 			}
 		};
 
-		this.ws.onclose = ()=> {
-			//TODO:
-		};
+		this.ws.onclose = ()=> {};
 
 		this.ws.onerror = error=> {};
 	}
@@ -181,6 +190,7 @@ class ReverseProxy extends List {
 			if (this.args.select && this.args.select === key) {
 				this.selected = element;
 				element.style.backgroundColor = "var(--clr-select)";
+				this.deleteButton.disabled = false;
 			}
 		}
 	}
@@ -340,21 +350,74 @@ class ReverseProxy extends List {
 		};
 	}
 
-	Delete() {
+	async Delete() {
 		if (this.args.select === null) return;
 		this.ConfirmBox("Are you sure you want delete this reverse proxy?").addEventListener("click", async()=> {
-
+			try {
+				const response = await fetch(`/rproxy/delete?guid=${this.args.select}`);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	
+				const json = await response.json();
+				if (json.error) throw(json.error);
+	
+				this.args.select = null;
+				this.selected = null;
+				this.GetReverseProxies();
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg")
+			}
 		});
 	}
 
-	Start() {
+	async Start() {
 		if (this.args.select === null) return;
 
+		const selected = this.selected;
+		try {
+			const response = await fetch(`/rproxy/start?guid=${this.args.select}`);
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			if (selected) {
+				selected.style.backgroundImage = "url(mono/play.svg)";
+				this.deleteButton.disabled = false;
+				this.startButton.disabled = true;
+				this.stopButton.disabled = false;
+			}
+
+			return json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg")
+		}
 	}
 
-	Stop() {
+	async Stop() {
 		if (this.args.select === null) return;
 
+		const selected = this.selected;
+		try {
+			const response = await fetch(`/rproxy/stop?guid=${this.args.select}`);
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			if (selected) {
+				selected.style.backgroundImage = "url(mono/stop.svg)";
+				this.deleteButton.disabled = false;
+				this.startButton.disabled = false;
+				this.stopButton.disabled = true;
+			}
+
+			return json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg")
+		}
 	}
 
 	InflateElement(element, entry) { //overrides
@@ -401,6 +464,12 @@ class ReverseProxy extends List {
 			this.args.select = entry.guid.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
+
+			
+			const isRunning = element.style.backgroundImage.includes("play");
+			this.deleteButton.disabled = false;
+			this.startButton.disabled = isRunning;
+			this.stopButton.disabled = !isRunning;
 		};
 
 		element.ondblclick = ()=> {
