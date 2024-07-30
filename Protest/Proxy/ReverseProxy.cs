@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Http;
 using Protest.Http;
-using Protest.Workers;
 
 namespace Protest.Proxy;
 
@@ -274,7 +273,9 @@ internal static class ReverseProxy {
 
         try {
             IPEndPoint localEndpoint = new IPEndPoint(IPAddress.Parse(obj.proxyaddr), obj.proxyport);
-            proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", origin);
+            if (!proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", origin)) {
+                return Data.CODE_FAILED.ToArray();
+            }
         }
         catch {
             return Data.CODE_FAILED.ToArray();
@@ -294,11 +295,13 @@ internal static class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
-        if (!running.TryGetValue(guid, out ReverseProxyAbstract obj)) {
+        if (!running.TryGetValue(guid, out ReverseProxyAbstract obj) || !obj.isRunning) {
             return "{\"error\":\"This proxy is not running\"}"u8.ToArray();
         }
 
-        if (obj.isRunning) { obj.Stop(origin); }
+        if (!obj.Stop(origin)) {
+            return Data.CODE_FAILED.ToArray();
+        }
 
         return Data.CODE_OK.ToArray();
     }
