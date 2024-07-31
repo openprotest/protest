@@ -21,6 +21,7 @@ class ReverseProxy extends List {
 		this.columnsElements[3].style.width = "30%";
 
 		this.ws = null;
+		this.history = {};
 
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
@@ -49,10 +50,21 @@ class ReverseProxy extends List {
 		this.stats.style.overflowY = "auto";
 		this.content.appendChild(this.stats);
 
-		this.createButton.onclick = () => this.EditDialog();
-		this.deleteButton.onclick = () => this.Delete();
-		this.startButton.onclick = () => this.Start();
-		this.stopButton.onclick = () => this.Stop();
+		this.createButton.onclick = ()=> this.EditDialog();
+		this.deleteButton.onclick = ()=> this.Delete();
+		this.startButton.onclick = ()=> this.Start();
+		this.stopButton.onclick = ()=> this.Stop();
+
+		this.canvas = document.createElement("canvas");
+		this.canvas.style.position = "absolute";
+		this.canvas.style.left = "0"
+		this.canvas.style.top = "0";
+		this.canvas.style.width = "720px";
+		this.canvas.style.height = "200px";
+		this.canvas.style.borderRadius = "4px";
+		this.stats.appendChild(this.canvas);
+
+		this.ctx = this.canvas.getContext("2d");
 
 		this.GetReverseProxies();
 		this.Connect();
@@ -73,7 +85,11 @@ class ReverseProxy extends List {
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/reverseproxy");
 
-		this.ws.onopen = ()=> {};
+		this.ws.onopen = ()=> {
+			if (this.args.select) {
+				this.UpdateSelected(this.args.select);
+			}
+		};
 
 		this.ws.onmessage = event=> {
 			let json = JSON.parse(event.data);
@@ -109,11 +125,33 @@ class ReverseProxy extends List {
 
 				}
 			}
+			else if (json.hosts) {
+				this.DrawGraph(json.hosts);
+			}
 		};
 
 		this.ws.onclose = ()=> {};
 
 		this.ws.onerror = error=> {};
+	}
+
+	DrawGraph(hosts) {
+		for (let i=0; i<hosts.length; i++) {
+			console.log(hosts[i]);
+		}
+
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+		this.ctx.fillStyle = "rgba(255,255,255,.1)";
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+	}
+
+	UpdateSelected(guid) {
+		if (this.isClosed || this.ws === null || this.ws.readyState !== 1) {
+			return;
+		}
+
+		this.ws.send(`select=${guid}`);
 	}
 
 	Close() { //overrides
@@ -471,6 +509,10 @@ class ReverseProxy extends List {
 		}
 
 		element.onclick = ()=> {
+			if (this.args.select !== entry.guid.v) {
+				this.UpdateSelected(entry.guid.v);
+			}
+
 			if (this.selected) this.selected.style.backgroundColor = "";
 			this.args.select = entry.guid.v;
 			this.selected = element;

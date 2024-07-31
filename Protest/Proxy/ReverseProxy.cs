@@ -1,8 +1,11 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -77,17 +80,36 @@ internal static class ReverseProxy {
 
         //byte[] buff = new byte[1024];
 
-        try {
-            //WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-            //string msgsdfsdf = Encoding.Default.GetString(buff, 0, receiveResult.Count);
-            
-            await Task.Delay(1_000);
+        Guid select = Guid.Empty;
 
+        new Thread(async () => {
+            byte[] buff = new byte[512];
+            while (ws.State == WebSocketState.Open) {
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+                string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+                string[] split = message.Split('=');
+                
+                if (split.Length < 2) { continue; }
+
+                switch (split[0]) {
+                case "select": Guid.TryParse(split[1], out select); break;
+                }
+            }
+        }).Start();
+
+        await Task.Delay(1_000);
+
+        try {
             await WsWriteText(ws, GetRunningProxies());
 
-            while (true) {
-                await WsWriteText(ws, GetTraffic());
-                await Task.Delay(5_000);
+            while (ws.State == WebSocketState.Open) {
+                await WsWriteText(ws, GetTotalTraffic());
+
+                if (select != Guid.Empty) {
+                    await WsWriteText(ws, GetProxyTraffic(select));
+                }
+
+                await Task.Delay(3_000);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -108,40 +130,34 @@ internal static class ReverseProxy {
         }
     }
 
-    private static byte[] GetTraffic() {
-        StringBuilder builder = new StringBuilder();
-
-        builder.Append("{\"traffic\":");
-        builder.Append('[');
-
-        bool first = true;
-        foreach (ReverseProxyAbstract proxy in running.Values) {
-            if (!first) { builder.Append(','); }
-            builder.Append($"{{\"{proxy.guid}\":[{proxy.rx},{proxy.tx}]}}");
-            first = false;
-        }
-        builder.Append(']');
-        builder.Append('}');
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
+    private static byte[] GetRunningProxies() {
+        return JsonSerializer.SerializeToUtf8Bytes(new {
+            running = running.Keys.Select(key => key.ToString())
+        });
     }
 
-    private static byte[] GetRunningProxies() {
-        StringBuilder builder = new StringBuilder();
+    public static byte[] GetTotalTraffic() {
+        return JsonSerializer.SerializeToUtf8Bytes(new {
+            traffic = running.Values.Select(proxy => new {
+                guid = proxy.guid,
+                tx = proxy.bytesTx.Values.Sum(),
+                rx = proxy.bytesRx.Values.Sum()
+            })
+        });
+    }
 
-        builder.Append("{\"running\":");
-        builder.Append('[');
-
-        bool first = true;
-        foreach (string key in running.Keys) {
-            if (!first) { builder.Append(','); }
-            builder.Append($"\"{key}\"");
-            first = false;
+    public static byte[] GetProxyTraffic(Guid guid) {
+        if (!running.TryGetValue(guid.ToString(), out ReverseProxyAbstract proxy)) {
+            return "{\"hosts\":[]}"u8.ToArray();
         }
-        builder.Append(']');
-        builder.Append('}');
 
-        return Encoding.UTF8.GetBytes(builder.ToString());
+        return JsonSerializer.SerializeToUtf8Bytes(new {
+            hosts = proxy.bytesTx.Keys.Select(ip => new {
+                ip = ip,
+                tx = proxy.bytesTx.GetValueOrDefault(ip, 0),
+                rx = proxy.bytesRx.GetValueOrDefault(ip, 0)
+            })
+        });
     }
 
     public static byte[] List() {

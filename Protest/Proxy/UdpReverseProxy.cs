@@ -21,7 +21,6 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
             throw;
         }
 
-
         this.thread = new Thread(/*async*/ () => {
             while (this.isRunning) {
                 try {
@@ -40,6 +39,10 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     }
 
     public override bool Stop(string origin) {
+        cancellationTokenSource.Cancel();
+        udpListener?.Close();
+        udpListener?.Dispose();
+        udpListener = null;
         return base.Stop(origin);
     }
 }
