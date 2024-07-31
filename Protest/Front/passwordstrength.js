@@ -15,7 +15,7 @@ class PasswordStrength extends List {
 
 		this.SetupToolbar();
 		this.filterButton = this.SetupFilter();
-		this.findInput = this.SetupFind();
+		this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		const gandalfButton = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
 		this.AddSendToChatButton();

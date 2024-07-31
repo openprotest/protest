@@ -19,7 +19,7 @@ class Issues extends List {
 		this.scanButton = this.AddToolbarButton("Scan network", "mono/scannet.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		const filterButton = this.SetupFilter();
-		const findInput = this.SetupFind();
+		this.SetupFind();
 
 	}
 }

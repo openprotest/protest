@@ -18,7 +18,7 @@ class DevicesList extends List {
 		this.addButton     = this.AddToolbarButton("Add", "mono/add.svg?light");
 		this.deleteButton  = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		const filterButton = this.SetupFilter();
-		const findInput    = this.SetupFind();
+		this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
 		this.sentChatButton = this.AddSendToChatButton();
@@ -51,9 +51,9 @@ class DevicesList extends List {
 		this.utilitiesDropDown.list.append(optionMacLookup);
 
 		if (this.args.find && this.args.find.length > 0) {
-			findInput.value = this.args.find;
-			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
-			findInput.parentElement.style.width = "200px";
+			this.findInput.value = this.args.find;
+			this.findInput.parentElement.style.borderBottom = this.findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
+			this.findInput.parentElement.style.width = "200px";
 		}
 
 		this.RefreshList();

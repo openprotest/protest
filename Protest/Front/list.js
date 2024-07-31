@@ -44,8 +44,10 @@ class List extends Window {
 	
 		this.content.addEventListener("keydown", event=> {
 			if (event.code === "KeyF" && event.ctrlKey) {
-				event.preventDefault();
-				findInput.focus();
+				if (this.findInput) {
+					event.preventDefault();
+					this.findInput.focus();
+				}
 			}
 			else if (event.code === "ArrowUp" && this.selected) {
 				const previousElement = this.selected.previousElementSibling;
@@ -338,6 +340,8 @@ class List extends Window {
 		const findInput = document.createElement("input");
 		findInput.type = "text";
 		findButton.appendChild(findInput);
+
+		this.findInput = findInput;
 
 		findButton.onfocus = ()=> {
 			findInput.focus();

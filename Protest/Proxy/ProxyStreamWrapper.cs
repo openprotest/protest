@@ -36,9 +36,9 @@ internal sealed class ProxyStreamWrapper : Stream {
     public override void SetLength(long value) => baseStream.SetLength(value);
 
     public override int Read(byte[] buffer, int offset, int count) {
-        int bytes = baseStream.Read(buffer, offset, count);
-        bytesRx.AddOrUpdate(key, bytes, (_, old) => old + bytes);
-        return bytes;
+        int length = baseStream.Read(buffer, offset, count);
+        bytesRx.AddOrUpdate(key, length, (_, old) => old + length);
+        return length;
     }
 
     public override void Write(byte[] buffer, int offset, int count) {
@@ -47,9 +47,9 @@ internal sealed class ProxyStreamWrapper : Stream {
     }
 
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-        int bytes = await baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-        bytesRx.AddOrUpdate(key, bytes, (_, old) => old + bytes);
-        return bytes;
+        int length = await baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        bytesRx.AddOrUpdate(key, length, (_, old) => old + length);
+        return length;
     }
 
     public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
