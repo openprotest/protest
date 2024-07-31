@@ -109,7 +109,7 @@ internal static class ReverseProxy {
                     await WsWriteText(ws, GetProxyTraffic(select));
                 }
 
-                await Task.Delay(3_000);
+                await Task.Delay(2_000);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {

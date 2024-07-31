@@ -1,4 +1,9 @@
 class ReverseProxy extends List {
+	static CANVAS_W = 800;
+	static CANVAS_H = 200;
+	static GRID = 50;
+	static GAP = 5;
+
 	constructor(args) {
 		super(args);
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
@@ -21,7 +26,10 @@ class ReverseProxy extends List {
 		this.columnsElements[3].style.width = "30%";
 
 		this.ws = null;
+
+		this.graphCount  = 0;
 		this.history = {};
+		this.maximum = 8192;
 
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
@@ -44,27 +52,49 @@ class ReverseProxy extends List {
 		this.stats = document.createElement("div");
 		this.stats.style.position = "absolute";
 		this.stats.style.left = "calc(min(50%, 640px) + 8px)";
-		this.stats.style.right = "0";
+		this.stats.style.right = "4px";
 		this.stats.style.top = "0";
 		this.stats.style.bottom = "28px";
 		this.stats.style.overflowY = "auto";
 		this.content.appendChild(this.stats);
+
+		const graph = document.createElement("div");
+		graph.style.position = "absolute";
+		graph.style.left = "0";
+		graph.style.right = "0";
+		graph.style.top = "0";
+		graph.style.maxWidth = `${ReverseProxy.CANVAS_W + 4}px`;
+		graph.style.height = `${ReverseProxy.CANVAS_H + 4}px`;
+		graph.style.borderRadius = "4px";
+		graph.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
+		this.stats.appendChild(graph);
+
+		this.canvas = document.createElement("canvas");
+		this.canvas.width = ReverseProxy.CANVAS_W;
+		this.canvas.height = ReverseProxy.CANVAS_H;
+		this.canvas.style.position = "absolute";
+		this.canvas.style.right = "2px"
+		this.canvas.style.top = "0";
+		this.canvas.style.width = `${ReverseProxy.CANVAS_W}px`;
+		this.canvas.style.height = `${ReverseProxy.CANVAS_H}px`;
+		graph.appendChild(this.canvas);
+
+		this.ctx = this.canvas.getContext("2d");
 
 		this.createButton.onclick = ()=> this.EditDialog();
 		this.deleteButton.onclick = ()=> this.Delete();
 		this.startButton.onclick = ()=> this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
 
-		this.canvas = document.createElement("canvas");
-		this.canvas.style.position = "absolute";
-		this.canvas.style.left = "0"
-		this.canvas.style.top = "0";
-		this.canvas.style.width = "720px";
-		this.canvas.style.height = "200px";
-		this.canvas.style.borderRadius = "4px";
-		this.stats.appendChild(this.canvas);
-
-		this.ctx = this.canvas.getContext("2d");
+		this.content.addEventListener("keydown", event=> {
+			if (!this.args.select) return;
+			if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+				const isRunning = this.selected.style.backgroundImage.includes("play");
+				this.deleteButton.disabled = false;
+				this.startButton.disabled = isRunning;
+				this.stopButton.disabled = !isRunning;
+			}
+		});
 
 		this.GetReverseProxies();
 		this.Connect();
@@ -122,11 +152,19 @@ class ReverseProxy extends List {
 			}
 			else if (json.traffic) {
 				for (let i=0; i<json.traffic.length; i++) {
-
+					if (!this.history[json.traffic[i].guid]) {
+						this.history[json.traffic[i].guid] = [];
+					}
+					this.history[json.traffic[i].guid].push(json.traffic[i]);
+					if (this.history[json.traffic[i].guid].length > 100) {
+						this.history[json.traffic[i].guid].shift();
+					}
 				}
+				this.DrawGraph();
+
 			}
 			else if (json.hosts) {
-				this.DrawGraph(json.hosts);
+				//this.DrawGraph(json.hosts);
 			}
 		};
 
@@ -135,15 +173,48 @@ class ReverseProxy extends List {
 		this.ws.onerror = error=> {};
 	}
 
-	DrawGraph(hosts) {
-		for (let i=0; i<hosts.length; i++) {
-			console.log(hosts[i]);
+	DrawGraph() {
+		if (!this.args.select || !this.history[this.args.select]) {
+			return;
 		}
 
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.canvas.width = this.canvas.width; //clear canvas
 
-		this.ctx.fillStyle = "rgba(255,255,255,.1)";
-		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		this.graphCount++;
+		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*10)
+		this.ctx.lineWidth = 1;
+		this.ctx.strokeStyle = "#c0c0c008";
+		for (let i = ReverseProxy.CANVAS_W; i >= 0; i -= ReverseProxy.GRID) {
+			this.ctx.moveTo(i - lineOffset, 4);
+			this.ctx.lineTo(i - lineOffset, ReverseProxy.CANVAS_H);
+			this.ctx.stroke();
+		}
+
+		const history = this.history[this.args.select];
+
+		this.ctx.lineWidth = 2;
+		this.ctx.strokeStyle = "#F00000";
+		this.ctx.beginPath();
+		for (let i = history.length-1; i >= 1; i--) {
+			const delta = history[i].rx - history[i - 1].rx;
+			const x = ReverseProxy.CANVAS_W - (history.length - i - 1) * ReverseProxy.GAP;
+			const y = ReverseProxy.CANVAS_H - ReverseProxy.CANVAS_H * delta / this.maximum;
+			this.ctx.lineTo(x, y);
+		}
+		this.ctx.stroke();
+		this.ctx.closePath();
+
+		this.ctx.strokeStyle = "#00F000";
+		this.ctx.beginPath();
+		for (let i = history.length-1; i >= 1; i--) {
+			const delta = history[i].tx - history[i - 1].tx;
+			const x = ReverseProxy.CANVAS_W - (history.length - i - 1) * ReverseProxy.GAP;
+			const y = ReverseProxy.CANVAS_H - ReverseProxy.CANVAS_H * delta / this.maximum;
+			this.ctx.lineTo(x, y);
+		}
+		this.ctx.stroke();
+		this.ctx.closePath();
+
 	}
 
 	UpdateSelected(guid) {
@@ -197,8 +268,10 @@ class ReverseProxy extends List {
 					password    : {v: ""},
 					proxyaddr   : {v: json.data[key].proxyaddr},
 					proxyport   : {v: json.data[key].proxyport},
+					proxy       : {v: `${json.data[key].proxyaddr}:${json.data[key].proxyport}`},
 					destaddr    : {v: json.data[key].destaddr},
 					destport    : {v: json.data[key].destport},
+					destination : {v: `${json.data[key].destaddr}:${json.data[key].destport}`},
 					autostart   : {v: json.data[key].autostart},
 				};
 			}
@@ -476,37 +549,17 @@ class ReverseProxy extends List {
 
 		element.style.backgroundImage = {
 			"running": "url(mono/play.svg)",
-			"stopped": "url(mono/stop.svg)",
+			"stopped": "url(mono/stop.svg)"
 		}[entry.status.v];
 
-		for (let i = 0; i < this.columnsElements.length; i++) {
-			const newAttr = document.createElement("div");
-			element.appendChild(newAttr);
-			
-			const attr = this.columnsElements[i].textContent;
-			if (attr === "proxy") {
-				newAttr.textContent = `${entry.proxyaddr.v}:${entry.proxyport.v}`;
-			}
-			else if (attr === "destination") {
-				newAttr.textContent = `${entry.destaddr.v}:${entry.destport.v}`;
-			}
-			else {
-				newAttr.textContent = entry[attr].v;
-			}
+		super.InflateElement(element, entry);
 
-			if (i === 0) {
-				newAttr.style.top = "5px";
-				newAttr.style.left = "36px";
-				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
-				newAttr.style.whiteSpace = "nowrap";
-				newAttr.style.overflow = "hidden";
-				newAttr.style.textOverflow = "ellipsis";
-			}
-			else {
-				newAttr.style.left = this.columnsElements[i].style.left;
-				newAttr.style.width = this.columnsElements[i].style.width;
-			}
-		}
+		element.childNodes[0].style.top = "5px";
+		element.childNodes[0].style.left = "36px";
+		element.childNodes[0].style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
+		element.childNodes[0].style.whiteSpace = "nowrap";
+		element.childNodes[0].style.overflow = "hidden";
+		element.childNodes[0].style.textOverflow = "ellipsis";
 
 		element.onclick = ()=> {
 			if (this.args.select !== entry.guid.v) {
@@ -518,7 +571,6 @@ class ReverseProxy extends List {
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
 
-			
 			const isRunning = element.style.backgroundImage.includes("play");
 			this.deleteButton.disabled = false;
 			this.startButton.disabled = isRunning;
