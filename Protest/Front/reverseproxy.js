@@ -611,6 +611,10 @@ class ReverseProxy extends List {
 				option.text = cert;
 				certsInput.appendChild(option);
 			}
+
+			if (entry) {
+				certsInput.value = entry.certificate.v;
+			}
 		}, 0);
 
 		const passwordInput = AddParameter("Password", "input", "password", {placeholder: entry ? "unchanged" : ""});
@@ -633,7 +637,7 @@ class ReverseProxy extends List {
 		if (entry) {
 			nameInput.value               = entry.name.v;
 			protocolInput.value           = entry.protocol.v;
-			certsInput.value              = entry.certificate.v;
+			//certsInput.value              = entry.certificate.v;
 			passwordInput.value           = "";
 			proxyAddressInput.value       = entry.proxyaddr.v;
 			proxyPostInput.value          = entry.proxyport.v;
@@ -647,6 +651,10 @@ class ReverseProxy extends List {
 		protocolInput.onchange = ()=> {
 			certsInput.disabled = protocolInput.value !== "HTTPS";
 			passwordInput.disabled = protocolInput.value !== "HTTPS";
+
+			const isHttp = protocolInput.value === "HTTP" || protocolInput.value === "HTTPS";
+			destinationAddressInput.placeholder = isHttp ? "https://example.com" : "127.0.0.1";
+			destinationPortInput.disabled = isHttp;
 		};
 
 		protocolInput.onchange();
@@ -677,16 +685,16 @@ class ReverseProxy extends List {
 				const response = await fetch("/rproxy/create", {
 					method: "POST",
 					body: JSON.stringify({
-						guid      : entry ? entry.guid.v : null,
-						name      : nameInput.value,
-						protocol  : protocolInput.value,
-						cert      : certsInput.value,
-						password  : passwordInput.value,
-						proxyaddr : proxyAddressInput.value,
-						proxyport : parseInt(proxyPostInput.value),
-						destaddr  : destinationAddressInput.value,
-						destport  : parseInt(destinationPortInput.value),
-						autostart : autostartToggle.checkbox.checked
+						guid        : entry ? entry.guid.v : null,
+						name        : nameInput.value,
+						protocol    : protocolInput.value,
+						certificate : certsInput.value === null || certsInput.value === "null" ? null : certsInput.value,
+						password    : passwordInput.value,
+						proxyaddr   : proxyAddressInput.value,
+						proxyport   : parseInt(proxyPostInput.value),
+						destaddr    : destinationAddressInput.value,
+						destport    : parseInt(destinationPortInput.value),
+						autostart   : autostartToggle.checkbox.checked
 					})
 				});
 

@@ -293,7 +293,7 @@ internal static class ReverseProxy {
         ReverseProxyObject obj;
         try {
             string fileContent = File.ReadAllText($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
-            obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+            obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptionsWithPassword);
             if (!obj.guid.Equals(new Guid(guid))) { return Data.CODE_FAILED.ToArray(); }
         }
         catch {
@@ -309,8 +309,13 @@ internal static class ReverseProxy {
         };
 
         try {
+            string certificateFilename = null;
+            if (obj.certificate is not null) {
+                certificateFilename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{obj.certificate}";
+            }
+
             IPEndPoint localEndpoint = new IPEndPoint(IPAddress.Parse(obj.proxyaddr), obj.proxyport);
-            if (!proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", origin)) {
+            if (!proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", certificateFilename, obj.password, origin)) {
                 return Data.CODE_FAILED.ToArray();
             }
         }
