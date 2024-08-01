@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Protest.Http;
 
 namespace Protest.Proxy;
@@ -78,9 +79,8 @@ internal static class ReverseProxy {
             return;
         }
 
-        //byte[] buff = new byte[1024];
-
         Guid select = Guid.Empty;
+        int interval = 2000;
 
         new Thread(async () => {
             byte[] buff = new byte[512];
@@ -93,11 +93,12 @@ internal static class ReverseProxy {
 
                 switch (split[0]) {
                 case "select": Guid.TryParse(split[1], out select); break;
+                case "interval": int.TryParse(split[1], out interval); break;
                 }
             }
         }).Start();
 
-        await Task.Delay(1_000);
+        await Task.Delay(500);
 
         try {
             await WsWriteText(ws, GetRunningProxies());
@@ -109,7 +110,7 @@ internal static class ReverseProxy {
                     await WsWriteText(ws, GetProxyTraffic(select));
                 }
 
-                await Task.Delay(2_000);
+                await Task.Delay(interval);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {

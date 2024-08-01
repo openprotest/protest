@@ -1,11 +1,9 @@
-﻿using System.Net;
-using System.Collections.Generic;
-using System.Threading;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using System.Diagnostics.Metrics;
-using System.Collections.Concurrent;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Proxy;
 internal sealed class TcpReverseProxy : ReverseProxyAbstract {
@@ -19,10 +17,12 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
             tcpListener = new TcpListener(listener.Address, listener.Port);
             tcpListener.Start();
         }
-        catch (SocketException) {
+        catch (SocketException ex) {
+            Logger.Error(ex);
             throw;
         }
-        catch (Exception) {
+        catch (Exception ex) {
+            Logger.Error(ex);
             throw;
         }
 
@@ -42,8 +42,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
                 TcpClient client = await tcpListener.AcceptTcpClientAsync();
                 _ = Task.Run(() => ServeClient(client));
             }
-            catch (Exception ex) {
-                Console.WriteLine($"Exception: {ex.Message}");
+            catch (Exception) {
                 this.errors++;
             }
         }
@@ -54,18 +53,18 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
             using TcpClient destinationClient = new TcpClient();
             await destinationClient.ConnectAsync(destinationEndPoint, cancellationToken);
 
-            uint clientIp = BitConverter.ToUInt32(((IPEndPoint)proxyClient.GetStream().Socket.RemoteEndPoint).Address.GetAddressBytes(), 0);
+            uint clientIp = BitConverter.ToUInt32(((IPEndPoint)proxyClient.Client.RemoteEndPoint).Address.GetAddressBytes(), 0);
 
             //using ProxyStreamWrapper countingClientStream = new ProxyStreamWrapper(proxyClient.GetStream(), clientIp, bytesRx, bytesTx);
-            using ProxyStreamWrapper countingDestinationStream = new ProxyStreamWrapper(destinationClient.GetStream(), clientIp, bytesRx, bytesTx);
+            using NetworkStream proxyStream = proxyClient.GetStream();
+            using ProxyStreamWrapper destinationStream = new ProxyStreamWrapper(destinationClient.GetStream(), clientIp, bytesRx, bytesTx);
 
-            using Task clientToDestination = proxyClient.GetStream().CopyToAsync(countingDestinationStream, cancellationToken);
-            using Task destinationToClient = countingDestinationStream.CopyToAsync(proxyClient.GetStream(), cancellationToken);
+            using Task clientToDestination = proxyStream.CopyToAsync(destinationStream, cancellationToken);
+            using Task destinationToClient = destinationStream.CopyToAsync(proxyStream, cancellationToken);
 
             await Task.WhenAll(clientToDestination, destinationToClient);
         }
-        catch (Exception ex) {
-            Console.WriteLine($"ServeClient Exception: {ex.Message}");
+        catch (Exception) {
             this.errors++;
         }
         finally {
@@ -76,7 +75,6 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
     public override bool Stop(string origin) {
         cancellationTokenSource.Cancel();
         tcpListener?.Stop();
-        tcpListener?.Dispose();
         tcpListener = null;
         return base.Stop(origin);
     }

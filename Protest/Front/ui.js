@@ -264,6 +264,18 @@ const UI = {
 		if (bps < 8_192 * Math.pow(1024,8)) return `${(bps / Math.pow(1024,8)).toFixed(2)} BBps`;
 	},
 
+	BytesPerSecToShortString: bps=> {
+		if (bps < 8_192) return `${Math.round(bps)} Bps`;
+		if (bps < 8_192 * 1024) return `${Math.round(bps / 1024)} KBps`;
+		if (bps < 8_192 * Math.pow(1024,2)) return `${Math.round(bps / Math.pow(1024,2))} MBps`;
+		if (bps < 8_192 * Math.pow(1024,3)) return `${Math.round(bps / Math.pow(1024,3))} GBps`;
+		if (bps < 8_192 * Math.pow(1024,4)) return `${Math.round(bps / Math.pow(1024,4))} TBps`;
+		if (bps < 8_192 * Math.pow(1024,5)) return `${Math.round(bps / Math.pow(1024,5))} EBps`;
+		if (bps < 8_192 * Math.pow(1024,6)) return `${Math.round(bps / Math.pow(1024,6))} ZBps`;
+		if (bps < 8_192 * Math.pow(1024,7)) return `${Math.round(bps / Math.pow(1024,7))} YBps`;
+		if (bps < 8_192 * Math.pow(1024,8)) return `${Math.round(bps / Math.pow(1024,8))} BBps`;
+	},
+
 	BitsPerSecToString: bps=> {
 		if (bps < 8_000) return `${bps} bps`;
 		if (bps < 8_000 * 1000) return `${Math.floor(bps / 1000)} Kbps`;

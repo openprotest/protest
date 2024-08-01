@@ -41,7 +41,7 @@ class Monitor extends Window {
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.intervalButton = this.AddToolbarButton("Interval", "mono/metronome.svg?light");
-		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.AddToolbarSeparator();
 		this.AddSendToChatButton();
 
 		this.connectButton.disabled = true;
@@ -1377,8 +1377,9 @@ class Monitor extends Window {
 			ctx.clearRect(0, 0, canvas.width, height);
 
 			const lineOffset = (count*gap) % (gap*10);
-			ctx.strokeStyle = "#c0c0c008";
+			ctx.strokeStyle = "#c0c0c00f";
 			for (let i=canvas.width; i>=0; i-=gap*10) {
+				ctx.beginPath();
 				ctx.moveTo(i - lineOffset, 4);
 				ctx.lineTo(i - lineOffset, height);
 				ctx.stroke();
@@ -1478,8 +1479,9 @@ class Monitor extends Window {
 			ctx.clearRect(0, 0, canvas.width, height);
 
 			const lineOffset = (count*gap) % (gap*10);
-			ctx.strokeStyle = "#c0c0c008";
+			ctx.strokeStyle = "#c0c0c00f";
 			for (let i=canvas.width; i>=0; i-=gap*10) {
+				ctx.beginPath();
 				ctx.moveTo(i - lineOffset, 4);
 				ctx.lineTo(i - lineOffset, height);
 				ctx.stroke();
@@ -1575,8 +1577,9 @@ class Monitor extends Window {
 				ctx[j].clearRect(0, 0, canvases[j].width, height);
 
 				const lineOffset = (count*gap) % (gap*24);
-				ctx[j].strokeStyle = "#c0c0c008";
+				ctx[j].strokeStyle = "#c0c0c00f";
 				for (let i=canvases[j].width; i>=0; i-=gap*24) {
+					ctx[j].beginPath();
 					ctx[j].moveTo(i - lineOffset, 4);
 					ctx[j].lineTo(i - lineOffset, height);
 					ctx[j].stroke();
@@ -1708,8 +1711,9 @@ class Monitor extends Window {
 			ctx.clearRect(0, 0, canvas.width, height);
 
 			const lineOffset = (count*gap) % (gap*10);
-			ctx.strokeStyle = "#c0c0c008";
+			ctx.strokeStyle = "#c0c0c00f";
 			for (let i=canvas.width; i>=0; i-=gap*10) {
+				ctx.beginPath();
 				ctx.moveTo(i - lineOffset, 4);
 				ctx.lineTo(i - lineOffset, height);
 				ctx.stroke();

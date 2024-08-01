@@ -56,6 +56,9 @@ class List extends Window {
 					this.selected = previousElement;
 					this.selected.style.backgroundColor = "var(--clr-select)";
 					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+					
+					const id = this.selected.getAttribute("id");
+					if (id) this.args.select = id;
 				}
 			}
 			else if (event.code === "ArrowDown" && this.selected) {
@@ -65,6 +68,9 @@ class List extends Window {
 					this.selected = nextElement;
 					this.selected.style.backgroundColor = "var(--clr-select)";
 					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+					const id = this.selected.getAttribute("id");
+					if (id) this.args.select = id;
 				}
 			}
 			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {

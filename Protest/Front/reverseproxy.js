@@ -3,10 +3,11 @@ class ReverseProxy extends List {
 	static CANVAS_H = 200;
 	static GRID = 50;
 	static GAP = 5;
+	static RUNNING = [];
 
 	constructor(args) {
 		super(args);
-		this.args = args ?? {filter:"", find:"", sort:"", select:null};
+		this.args = args ?? {filter:"", find:"", sort:"", select:null, interval:2000};
 
 		this.AddCssDependencies("list.css");
 
@@ -27,9 +28,9 @@ class ReverseProxy extends List {
 
 		this.ws = null;
 
-		this.graphCount  = 0;
+		this.graphCount = 0;
 		this.history = {};
-		this.maximum = 8192;
+		this.maximum = 1024;
 
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
@@ -37,6 +38,7 @@ class ReverseProxy extends List {
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+		this.intervalButton = this.AddToolbarButton("Interval", "mono/metronome.svg?light");
 
 		this.deleteButton.disabled = true;
 		this.startButton.disabled = true;
@@ -63,28 +65,135 @@ class ReverseProxy extends List {
 		graph.style.left = "0";
 		graph.style.right = "0";
 		graph.style.top = "0";
-		graph.style.maxWidth = `${ReverseProxy.CANVAS_W + 4}px`;
-		graph.style.height = `${ReverseProxy.CANVAS_H + 4}px`;
+		graph.style.maxWidth = `${ReverseProxy.CANVAS_W+4}px`;
+		graph.style.height = `${ReverseProxy.CANVAS_H+8}px`;
 		graph.style.borderRadius = "4px";
 		graph.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.stats.appendChild(graph);
 
 		this.canvas = document.createElement("canvas");
 		this.canvas.width = ReverseProxy.CANVAS_W;
-		this.canvas.height = ReverseProxy.CANVAS_H;
+		this.canvas.height = ReverseProxy.CANVAS_H+4;
 		this.canvas.style.position = "absolute";
 		this.canvas.style.right = "2px"
 		this.canvas.style.top = "0";
 		this.canvas.style.width = `${ReverseProxy.CANVAS_W}px`;
-		this.canvas.style.height = `${ReverseProxy.CANVAS_H}px`;
+		this.canvas.style.height = `${ReverseProxy.CANVAS_H+4}px`;
 		graph.appendChild(this.canvas);
 
 		this.ctx = this.canvas.getContext("2d");
+
+		this.totalRxLabel = document.createElement("div");
+		this.totalRxLabel.textContent = "Received:";
+		this.totalRxLabel.style.position = "absolute";
+		this.totalRxLabel.style.left = "8px";
+		this.totalRxLabel.style.top = "220px";
+		this.totalRxLabel.style.width = "96px";
+		this.totalRxLabel.style.color = "rgb(122,212,43)";
+		this.totalRxLabel.style.textAlign = "right";
+		this.totalRxLabel.style.lineHeight = "20px";
+		
+		this.totalTxLabel = document.createElement("div");
+		this.totalTxLabel.textContent = "Transmitted:";
+		this.totalTxLabel.style.position = "absolute";
+		this.totalTxLabel.style.left = "8px";
+		this.totalTxLabel.style.top = "245px";
+		this.totalTxLabel.style.width = "96px";
+		this.totalTxLabel.style.color = "rgb(232,118,0)";
+		this.totalTxLabel.style.textAlign = "right";
+		this.totalTxLabel.style.lineHeight = "20px";
+
+		this.totalRxValue = document.createElement("div");
+		this.totalRxValue.style.position = "absolute";
+		this.totalRxValue.style.left = "114px";
+		this.totalRxValue.style.top = "220px";
+		this.totalRxValue.style.width = "100px";
+		this.totalRxValue.style.color = "rgb(122,212,43)";
+		this.totalRxValue.style.backgroundColor = "var(--clr-dark)";
+		this.totalRxValue.style.borderRadius = "4px";
+		this.totalRxValue.style.padding = "0 4px";
+		this.totalRxValue.style.fontFamily = "monospace";
+		this.totalRxValue.style.textAlign = "right";
+		this.totalRxValue.style.lineHeight = "20px";
+
+		this.totalTxValue = document.createElement("div");
+		this.totalTxValue.style.position = "absolute";
+		this.totalTxValue.style.left = "114px";
+		this.totalTxValue.style.top = "245px";
+		this.totalTxValue.style.width = "100px";
+		this.totalTxValue.style.color = "rgb(232,118,0)";
+		this.totalTxValue.style.backgroundColor = "var(--clr-dark)";
+		this.totalTxValue.style.borderRadius = "4px";
+		this.totalTxValue.style.padding = "0 4px";
+		this.totalTxValue.style.fontFamily = "monospace";
+		this.totalTxValue.style.textAlign = "right";
+		this.totalTxValue.style.lineHeight = "20px";
+
+		this.stats.append(this.totalRxLabel, this.totalTxLabel, this.totalRxValue, this.totalTxValue);
+
+		this.rxRateLabel = document.createElement("div");
+		this.rxRateLabel.textContent = "Rx rate:";
+		this.rxRateLabel.style.position = "absolute";
+		this.rxRateLabel.style.left = "260px";
+		this.rxRateLabel.style.top = "220px";
+		this.rxRateLabel.style.width = "80px";
+		this.rxRateLabel.style.color = "rgb(122,212,43)";
+		this.rxRateLabel.style.textAlign = "right";
+		this.rxRateLabel.style.lineHeight = "20px";
+		
+		this.txRateLabel = document.createElement("div");
+		this.txRateLabel.textContent = "Tx rate:";
+		this.txRateLabel.style.position = "absolute";
+		this.txRateLabel.style.left = "260px";
+		this.txRateLabel.style.top = "245px";
+		this.txRateLabel.style.width = "80px";
+		this.txRateLabel.style.color = "rgb(232,118,0)";
+		this.txRateLabel.style.textAlign = "right";
+		this.txRateLabel.style.lineHeight = "20px";
+
+		this.rxRateValue = document.createElement("div");
+		this.rxRateValue.style.position = "absolute";
+		this.rxRateValue.style.left = "350px";
+		this.rxRateValue.style.top = "220px";
+		this.rxRateValue.style.width = "100px";
+		this.rxRateValue.style.color = "rgb(122,212,43)";
+		this.rxRateValue.style.backgroundColor = "var(--clr-dark)";
+		this.rxRateValue.style.borderRadius = "4px";
+		this.rxRateValue.style.padding = "0 4px";
+		this.rxRateValue.style.fontFamily = "monospace";
+		this.rxRateValue.style.textAlign = "right";
+		this.rxRateValue.style.lineHeight = "20px";
+		
+		this.txRateValue = document.createElement("div");
+		this.txRateValue.style.position = "absolute";
+		this.txRateValue.style.left = "350px";
+		this.txRateValue.style.top = "245px";
+		this.txRateValue.style.width = "100px";
+		this.txRateValue.style.color = "rgb(232,118,0)";
+		this.txRateValue.style.backgroundColor = "var(--clr-dark)";
+		this.txRateValue.style.borderRadius = "4px";
+		this.txRateValue.style.padding = "0 4px";
+		this.txRateValue.style.fontFamily = "monospace";
+		this.txRateValue.style.textAlign = "right";
+		this.txRateValue.style.lineHeight = "20px";
+
+		this.stats.append(this.rxRateLabel, this.txRateLabel, this.rxRateValue, this.txRateValue);
+
+		this.clientsList = document.createElement("div");
+		this.clientsList.style.position = "absolute";
+		this.clientsList.style.left = "0";
+		this.clientsList.style.right = "0";
+		this.clientsList.style.top = "300px";
+		this.clientsList.style.bottom = "0";
+		this.clientsList.style.maxWidth = "800px";
+		this.clientsList.style.overflowY = "auto";
+		this.stats.append(this.clientsList);
 
 		this.createButton.onclick = ()=> this.EditDialog();
 		this.deleteButton.onclick = ()=> this.Delete();
 		this.startButton.onclick = ()=> this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
+		this.intervalButton.onclick = ()=> this.SetInterval();
 
 		this.content.addEventListener("keydown", event=> {
 			if (!this.args.select) return;
@@ -93,6 +202,7 @@ class ReverseProxy extends List {
 				this.deleteButton.disabled = false;
 				this.startButton.disabled = isRunning;
 				this.stopButton.disabled = !isRunning;
+				this.UpdateSelected();
 			}
 		});
 
@@ -116,28 +226,28 @@ class ReverseProxy extends List {
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/reverseproxy");
 
 		this.ws.onopen = ()=> {
+			if (this.args.interval) {
+				this.ws.send(`interval=${this.args.interval}`);
+			}
+
 			if (this.args.select) {
-				this.UpdateSelected(this.args.select);
+				this.UpdateSelected();
 			}
 		};
 
 		this.ws.onmessage = event=> {
 			let json = JSON.parse(event.data);
-
+			
 			if (json.running) {
+				ReverseProxy.RUNNING = json.running;
+
 				const nodes = Array.from(this.list.childNodes);
 
 				for (let i=0; i<nodes.length; i++) {
-					nodes[i].style.backgroundImage = "url(mono/stop.svg)";
+					const isRunning = json.running.includes(nodes[i].id);
+					nodes[i].style.backgroundImage = isRunning ? "url(mono/play.svg)" : "url(mono/stop.svg)";
 				}
 				
-				for (let i=0; i<json.running.length; i++) {
-					let node = nodes.find(o=>o.id === json.running[i]);
-					if (node) {
-						node.style.backgroundImage = "url(mono/play.svg)";
-					}
-				}
-
 				if (this.selected) {
 					const isRunning = this.selected.style.backgroundImage.includes("play");
 					this.deleteButton.disabled = false;
@@ -155,16 +265,79 @@ class ReverseProxy extends List {
 					if (!this.history[json.traffic[i].guid]) {
 						this.history[json.traffic[i].guid] = [];
 					}
+
 					this.history[json.traffic[i].guid].push(json.traffic[i]);
-					if (this.history[json.traffic[i].guid].length > 100) {
+					if (this.history[json.traffic[i].guid].length > 164) {
 						this.history[json.traffic[i].guid].shift();
 					}
 				}
-				this.DrawGraph();
-
+				this.UpdateGraph();
 			}
 			else if (json.hosts) {
-				//this.DrawGraph(json.hosts);
+				for (let i=0; i<json.hosts.length; i++) {
+					
+					if (this.clients[json.hosts[i].ip]) {
+						const element = this.clients[json.hosts[i].ip];
+
+						const received = element.children[1];
+						received.textContent = UI.SizeToString(json.hosts[i].rx);
+
+						const transmitted = element.children[2];
+						transmitted.textContent = UI.SizeToString(json.hosts[i].tx);
+					}
+					else {
+						const element = document.createElement("div");
+						element.style.height = "28px";
+						element.style.padding = "2px 0";
+						element.style.lineHeight = "28px";
+						element.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
+						this.clientsList.appendChild(element);
+
+						let ipBytes = [];
+						for (let j=0; j<4; j++) {
+							ipBytes[j] = (json.hosts[i].ip >> (24 - j * 8)) & 0xFF;
+						}
+
+						const name = document.createElement("div");
+						name.textContent = ipBytes.reverse().join(".");
+						name.style.position = "absolute";
+						name.style.left = "0";
+						name.style.width = "33%";
+						name.style.paddingLeft = "8px";
+						name.style.overflow = "hidden";
+						name.style.textOverflow = "ellipses";
+						name.style.whiteSpace = "nowrap";
+						element.appendChild(name);
+
+						const received = document.createElement("div");
+						received.textContent = UI.SizeToString(json.hosts[i].rx);
+						received.style.color = "rgb(122,212,43)";
+						received.style.fontFamily = "monospace";
+						received.style.position = "absolute";
+						received.style.left = "33%";
+						received.style.width = "33%";
+						received.style.textAlign = "right";
+						received.style.overflow = "hidden";
+						received.style.textOverflow = "ellipses";
+						received.style.whiteSpace = "nowrap";
+						element.appendChild(received);
+
+						const transmitted = document.createElement("div");
+						transmitted.textContent = UI.SizeToString(json.hosts[i].tx);
+						transmitted.style.color = "rgb(232,118,0)";
+						transmitted.style.fontFamily = "monospace";
+						transmitted.style.position = "absolute";
+						transmitted.style.left = "66%";
+						transmitted.style.width = "33%";
+						transmitted.style.textAlign = "right";
+						transmitted.style.overflow = "hidden";
+						transmitted.style.textOverflow = "ellipses";
+						transmitted.style.whiteSpace = "nowrap";
+						element.appendChild(transmitted);
+
+						this.clients[json.hosts[i].ip] = element;
+					}
+				}
 			}
 		};
 
@@ -173,51 +346,115 @@ class ReverseProxy extends List {
 		this.ws.onerror = error=> {};
 	}
 
-	DrawGraph() {
+	UpdateGraph() {
+		this.canvas.width = this.canvas.width; //clear canvas
+
 		if (!this.args.select || !this.history[this.args.select]) {
+			this.totalRxValue.textContent = "";
+			this.totalTxValue.textContent = "";
+			this.rxRateValue.textContent = "";
+			this.txRateValue.textContent = "";
 			return;
 		}
-
-		this.canvas.width = this.canvas.width; //clear canvas
 
 		this.graphCount++;
 		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*10)
 		this.ctx.lineWidth = 1;
-		this.ctx.strokeStyle = "#c0c0c008";
-		for (let i = ReverseProxy.CANVAS_W; i >= 0; i -= ReverseProxy.GRID) {
+		this.ctx.strokeStyle = "#c0c0c020";
+		for (let i=ReverseProxy.CANVAS_W; i>=0; i-=ReverseProxy.GRID) {
+			this.ctx.beginPath();
 			this.ctx.moveTo(i - lineOffset, 4);
 			this.ctx.lineTo(i - lineOffset, ReverseProxy.CANVAS_H);
 			this.ctx.stroke();
 		}
 
+		this.ctx.fillStyle = "#c0c0c080";
+		this.ctx.textAlign = "right";
+		for (let i=1; i<5; i++) {
+			const y = ReverseProxy.CANVAS_H * i / 5;
+			this.ctx.beginPath();
+			this.ctx.moveTo(0, y);
+			this.ctx.lineTo(ReverseProxy.CANVAS_W, y);
+			this.ctx.stroke();
+
+			this.ctx.fillText(UI.BytesPerSecToShortString(this.maximum * (5-i) / 5), ReverseProxy.CANVAS_W - 4, y+3);
+		}
+
 		const history = this.history[this.args.select];
 
+		this.totalRxValue.textContent = UI.SizeToString(history[history.length-1].rx);
+		this.totalTxValue.textContent = UI.SizeToString(history[history.length-1].tx);
+
 		this.ctx.lineWidth = 2;
-		this.ctx.strokeStyle = "#F00000";
+
+		if (history.length > 1) {
+			const deltaRx = history[history.length-1].rx - history[history.length-2].rx;
+			const deltaTx = history[history.length-1].tx - history[history.length-2].tx;
+			const rxRate = Math.round(deltaRx / (this.args.interval / 1000));
+			const txRate = Math.round(deltaTx / (this.args.interval / 1000));
+
+			this.rxRateValue.textContent = UI.BytesPerSecToString(rxRate);
+			this.txRateValue.textContent = UI.BytesPerSecToString(txRate);
+
+			this.maximum = Math.max(this.maximum, rxRate, txRate);
+
+			this.ctx.fillStyle = "rgb(122,212,43)";
+			this.ctx.beginPath();
+			this.ctx.arc(ReverseProxy.CANVAS_W - 40, ReverseProxy.CANVAS_H * (1 - rxRate / this.maximum), 3, 0, 2*Math.PI, false);
+			this.ctx.closePath();
+			this.ctx.fill();
+	
+			this.ctx.fillStyle = "rgb(232,118,0)";
+			this.ctx.beginPath();
+			this.ctx.arc(ReverseProxy.CANVAS_W - 40, ReverseProxy.CANVAS_H * (1 - txRate / this.maximum), 3, 0, 2*Math.PI, false);
+			this.ctx.closePath();
+			this.ctx.fill();
+		}
+
+		this.ctx.strokeStyle = "rgb(122,212,43)";
 		this.ctx.beginPath();
 		for (let i = history.length-1; i >= 1; i--) {
 			const delta = history[i].rx - history[i - 1].rx;
-			const x = ReverseProxy.CANVAS_W - (history.length - i - 1) * ReverseProxy.GAP;
-			const y = ReverseProxy.CANVAS_H - ReverseProxy.CANVAS_H * delta / this.maximum;
+			const rate = Math.round(delta / (this.args.interval / 1000));
+			const x = ReverseProxy.CANVAS_W - 40 - (history.length - i - 1) * ReverseProxy.GAP - 2;
+			const y = ReverseProxy.CANVAS_H * (1 - rate / this.maximum);
 			this.ctx.lineTo(x, y);
 		}
 		this.ctx.stroke();
 		this.ctx.closePath();
 
-		this.ctx.strokeStyle = "#00F000";
+		this.ctx.strokeStyle = "rgb(232,118,0)";
 		this.ctx.beginPath();
 		for (let i = history.length-1; i >= 1; i--) {
-			const delta = history[i].tx - history[i - 1].tx;
-			const x = ReverseProxy.CANVAS_W - (history.length - i - 1) * ReverseProxy.GAP;
-			const y = ReverseProxy.CANVAS_H - ReverseProxy.CANVAS_H * delta / this.maximum;
+			const delta = history[i].tx - history[i-1].tx;
+			const rate = Math.round(delta / (this.args.interval / 1000));
+			const x = ReverseProxy.CANVAS_W - 40 - (history.length - i - 1) * ReverseProxy.GAP - 2;
+			const y = ReverseProxy.CANVAS_H * (1 - rate / this.maximum);
 			this.ctx.lineTo(x, y);
 		}
 		this.ctx.stroke();
 		this.ctx.closePath();
-
 	}
 
-	UpdateSelected(guid) {
+	UpdateSelected() {
+		const guid = this.args.select;
+		this.maximum = 1024;
+		if (this.history[guid] && this.history[guid].length > 1) {
+			const history = this.history[guid];
+			for (let i=1; i<history.length; i++) {
+				const deltaRx = history[i].rx - history[i-1].rx;
+				const deltaTx = history[i].tx - history[i-1].tx;
+				const rxRate = deltaRx / (this.args.interval / 1000);
+				const txRate = deltaRx / (this.args.interval / 1000);
+				this.maximum = Math.max(this.maximum, rxRate, txRate);
+			}
+		}
+
+		this.clients = {};
+		this.clientsList.textContent = "";
+
+		this.UpdateGraph();
+
 		if (this.isClosed || this.ws === null || this.ws.readyState !== 1) {
 			return;
 		}
@@ -493,11 +730,12 @@ class ReverseProxy extends List {
 	}
 
 	async Start() {
-		if (this.args.select === null) return;
+		const guid = this.args.select;
+		if (guid === null) return;
 
 		const selected = this.selected;
 		try {
-			const response = await fetch(`/rproxy/start?guid=${this.args.select}`);
+			const response = await fetch(`/rproxy/start?guid=${guid}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
@@ -510,6 +748,8 @@ class ReverseProxy extends List {
 				this.stopButton.disabled = false;
 			}
 
+			ReverseProxy.RUNNING.push(guid);
+
 			return json;
 		}
 		catch (ex) {
@@ -518,11 +758,12 @@ class ReverseProxy extends List {
 	}
 
 	async Stop() {
-		if (this.args.select === null) return;
+		const guid = this.args.select;
+		if (guid === null) return;
 
 		const selected = this.selected;
 		try {
-			const response = await fetch(`/rproxy/stop?guid=${this.args.select}`);
+			const response = await fetch(`/rproxy/stop?guid=${guid}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
@@ -535,6 +776,11 @@ class ReverseProxy extends List {
 				this.stopButton.disabled = true;
 			}
 
+			const index = ReverseProxy.RUNNING.indexOf(guid);
+			if (index > -1) {
+				ReverseProxy.RUNNING.splice(index, 1);
+			}
+
 			return json;
 		}
 		catch (ex) {
@@ -542,15 +788,52 @@ class ReverseProxy extends List {
 		}
 	}
 
+	SetInterval() {
+		if (!this.ws) return;
+
+		const dialog = this.DialogBox("120px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		innerBox.parentElement.style.maxWidth = "400px";
+		innerBox.style.padding = "16px 0px 0px 16px";
+		innerBox.style.textAlign = "center";
+
+		const intervalLabel = document.createElement("div");
+		intervalLabel.textContent = "Interval (ms):";
+		intervalLabel.style.display = "inline-block";
+		intervalLabel.style.minWidth = "120px";
+		innerBox.appendChild(intervalLabel);
+
+		const intervalInput = document.createElement("input");
+		intervalInput.type = "number";
+		intervalInput.min = 100;
+		intervalInput.max = 10_000;
+		intervalInput.value = this.args.interval;
+
+		intervalInput.style.width = "100px";
+		innerBox.appendChild(intervalInput);
+
+		intervalInput.onkeydown = event=> {
+			if (event.key === "Enter") { okButton.click(); }
+		};
+
+		okButton.onclick = ()=> {
+			this.args.interval = intervalInput.value;
+			this.ws.send(`interval=${this.args.interval}`);
+			dialog.Close();
+		};
+
+		intervalInput.focus();
+	}
+
 	InflateElement(element, entry) { //overrides
+		const isProxyRunning = ReverseProxy.RUNNING.includes(entry.guid.v);
+		element.style.backgroundImage = isProxyRunning ? "url(mono/play.svg)" : "url(mono/stop.svg)";
 		element.style.backgroundSize = "20px 20px";
 		element.style.backgroundPosition = "6px 6px";
 		element.style.backgroundRepeat = "no-repeat";
-
-		element.style.backgroundImage = {
-			"running": "url(mono/play.svg)",
-			"stopped": "url(mono/stop.svg)"
-		}[entry.status.v];
 
 		super.InflateElement(element, entry);
 
@@ -562,14 +845,12 @@ class ReverseProxy extends List {
 		element.childNodes[0].style.textOverflow = "ellipsis";
 
 		element.onclick = ()=> {
-			if (this.args.select !== entry.guid.v) {
-				this.UpdateSelected(entry.guid.v);
-			}
-
 			if (this.selected) this.selected.style.backgroundColor = "";
 			this.args.select = entry.guid.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
+
+			this.UpdateSelected();
 
 			const isRunning = element.style.backgroundImage.includes("play");
 			this.deleteButton.disabled = false;
