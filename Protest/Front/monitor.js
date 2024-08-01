@@ -325,11 +325,14 @@ class Monitor extends Window {
 		};
 
 		okButton.onclick = ()=> {
-			this.args.interval = intervalInput.value;
+			let value = parseInt(intervalInput.value);
+			if (isNaN(value)) { return; }
+
+			this.args.interval = value;
 
 			this.socket.send(JSON.stringify({
 				action: "interval",
-				value: intervalInput.value.toString()
+				value: value.toString()
 			}));
 
 			this.startButton.disabled = false;

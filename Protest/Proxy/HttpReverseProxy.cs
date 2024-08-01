@@ -1,9 +1,7 @@
 ﻿using System.Net;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -71,6 +69,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
     private void ConfigureLogging(ILoggingBuilder logger) {
         logger.ClearProviders();
+        
         //logger.AddConsole();
         //logger.SetMinimumLevel(LogLevel.Warning);
         //logger.AddFilter("Microsoft", LogLevel.Warning);

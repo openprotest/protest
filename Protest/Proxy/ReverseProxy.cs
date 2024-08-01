@@ -80,7 +80,7 @@ internal static class ReverseProxy {
         }
 
         Guid select = Guid.Empty;
-        int interval = 2000;
+        int interval = 1000;
 
         new Thread(async () => {
             byte[] buff = new byte[512];
@@ -92,22 +92,32 @@ internal static class ReverseProxy {
                 if (split.Length < 2) { continue; }
 
                 switch (split[0]) {
-                case "select": Guid.TryParse(split[1], out select); break;
-                case "interval": int.TryParse(split[1], out interval); break;
+                case "select":
+                    Guid.TryParse(split[1], out select);
+                    break;
+
+                case "interval":
+                    int.TryParse(split[1], out interval);
+                    interval = Math.Max(interval, 100);
+                    break;
                 }
             }
         }).Start();
 
         await Task.Delay(500);
 
+        bool clientsToogle = true;
         try {
             await WsWriteText(ws, GetRunningProxies());
 
             while (ws.State == WebSocketState.Open) {
                 await WsWriteText(ws, GetTotalTraffic());
 
+                clientsToogle = !clientsToogle;
                 if (select != Guid.Empty) {
-                    await WsWriteText(ws, GetProxyTraffic(select));
+                    if (interval > 500 || interval <= 500 && clientsToogle) {
+                        await WsWriteText(ws, GetProxyTraffic(select));
+                    }
                 }
 
                 await Task.Delay(interval);

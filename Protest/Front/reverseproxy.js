@@ -1,13 +1,13 @@
 class ReverseProxy extends List {
 	static CANVAS_W = 800;
 	static CANVAS_H = 200;
-	static GRID = 50;
-	static GAP = 5;
+	static GRID = 60;
+	static GAP = 3;
 	static RUNNING = [];
 
 	constructor(args) {
 		super(args);
-		this.args = args ?? {filter:"", find:"", sort:"", select:null, interval:2000};
+		this.args = args ?? {filter:"", find:"", sort:"", select:null, interval:1000};
 
 		this.AddCssDependencies("list.css");
 
@@ -30,7 +30,7 @@ class ReverseProxy extends List {
 
 		this.graphCount = 0;
 		this.history = {};
-		this.maximum = 1024;
+		this.maximum = 2560;
 
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
@@ -267,11 +267,14 @@ class ReverseProxy extends List {
 					}
 
 					this.history[json.traffic[i].guid].push(json.traffic[i]);
-					if (this.history[json.traffic[i].guid].length > 164) {
+					if (this.history[json.traffic[i].guid].length > 248) {
 						this.history[json.traffic[i].guid].shift();
 					}
+
+					if (json.traffic[i].guid === this.args.select) {
+						this.UpdateGraph();
+					}
 				}
-				this.UpdateGraph();
 			}
 			else if (json.hosts) {
 				for (let i=0; i<json.hosts.length; i++) {
@@ -358,7 +361,8 @@ class ReverseProxy extends List {
 		}
 
 		this.graphCount++;
-		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*10)
+
+		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*20)
 		this.ctx.lineWidth = 1;
 		this.ctx.strokeStyle = "#c0c0c020";
 		for (let i=ReverseProxy.CANVAS_W; i>=0; i-=ReverseProxy.GRID) {
@@ -377,19 +381,19 @@ class ReverseProxy extends List {
 			this.ctx.lineTo(ReverseProxy.CANVAS_W, y);
 			this.ctx.stroke();
 
-			this.ctx.fillText(UI.BytesPerSecToShortString(this.maximum * (5-i) / 5), ReverseProxy.CANVAS_W - 4, y+3);
+			this.ctx.fillText(UI.BytesPerSecToShortString(this.maximum * (5-i) / 5), ReverseProxy.CANVAS_W - 4, y - 6);
 		}
 
 		const history = this.history[this.args.select];
 
-		this.totalRxValue.textContent = UI.SizeToString(history[history.length-1].rx);
-		this.totalTxValue.textContent = UI.SizeToString(history[history.length-1].tx);
+		this.totalRxValue.textContent = UI.SizeToString(history[history.length - 1].rx);
+		this.totalTxValue.textContent = UI.SizeToString(history[history.length - 1].tx);
 
 		this.ctx.lineWidth = 2;
 
 		if (history.length > 1) {
-			const deltaRx = history[history.length-1].rx - history[history.length-2].rx;
-			const deltaTx = history[history.length-1].tx - history[history.length-2].tx;
+			const deltaRx = history[history.length - 1].rx - history[history.length - 2].rx;
+			const deltaTx = history[history.length - 1].tx - history[history.length - 2].tx;
 			const rxRate = Math.round(deltaRx / (this.args.interval / 1000));
 			const txRate = Math.round(deltaTx / (this.args.interval / 1000));
 
@@ -400,13 +404,13 @@ class ReverseProxy extends List {
 
 			this.ctx.fillStyle = "rgb(122,212,43)";
 			this.ctx.beginPath();
-			this.ctx.arc(ReverseProxy.CANVAS_W - 40, ReverseProxy.CANVAS_H * (1 - rxRate / this.maximum), 3, 0, 2*Math.PI, false);
+			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - rxRate / this.maximum), 3, 0, 2*Math.PI, false);
 			this.ctx.closePath();
 			this.ctx.fill();
 	
 			this.ctx.fillStyle = "rgb(232,118,0)";
 			this.ctx.beginPath();
-			this.ctx.arc(ReverseProxy.CANVAS_W - 40, ReverseProxy.CANVAS_H * (1 - txRate / this.maximum), 3, 0, 2*Math.PI, false);
+			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - txRate / this.maximum), 3, 0, 2*Math.PI, false);
 			this.ctx.closePath();
 			this.ctx.fill();
 		}
@@ -416,7 +420,7 @@ class ReverseProxy extends List {
 		for (let i = history.length-1; i >= 1; i--) {
 			const delta = history[i].rx - history[i - 1].rx;
 			const rate = Math.round(delta / (this.args.interval / 1000));
-			const x = ReverseProxy.CANVAS_W - 40 - (history.length - i - 1) * ReverseProxy.GAP - 2;
+			const x = ReverseProxy.CANVAS_W - 56 - (history.length - i - 1) * ReverseProxy.GAP - 2;
 			const y = ReverseProxy.CANVAS_H * (1 - rate / this.maximum);
 			this.ctx.lineTo(x, y);
 		}
@@ -428,7 +432,7 @@ class ReverseProxy extends List {
 		for (let i = history.length-1; i >= 1; i--) {
 			const delta = history[i].tx - history[i-1].tx;
 			const rate = Math.round(delta / (this.args.interval / 1000));
-			const x = ReverseProxy.CANVAS_W - 40 - (history.length - i - 1) * ReverseProxy.GAP - 2;
+			const x = ReverseProxy.CANVAS_W - 56 - (history.length - i - 1) * ReverseProxy.GAP - 2;
 			const y = ReverseProxy.CANVAS_H * (1 - rate / this.maximum);
 			this.ctx.lineTo(x, y);
 		}
@@ -438,14 +442,14 @@ class ReverseProxy extends List {
 
 	UpdateSelected() {
 		const guid = this.args.select;
-		this.maximum = 1024;
+		this.maximum = 2560;
 		if (this.history[guid] && this.history[guid].length > 1) {
 			const history = this.history[guid];
 			for (let i=1; i<history.length; i++) {
 				const deltaRx = history[i].rx - history[i-1].rx;
 				const deltaTx = history[i].tx - history[i-1].tx;
 				const rxRate = deltaRx / (this.args.interval / 1000);
-				const txRate = deltaRx / (this.args.interval / 1000);
+				const txRate = deltaTx / (this.args.interval / 1000);
 				this.maximum = Math.max(this.maximum, rxRate, txRate);
 			}
 		}
@@ -820,8 +824,12 @@ class ReverseProxy extends List {
 		};
 
 		okButton.onclick = ()=> {
+			let value = parseInt(intervalInput.value);
+			if (isNaN(value)) { return; }
+
 			this.args.interval = intervalInput.value;
-			this.ws.send(`interval=${this.args.interval}`);
+			this.ws.send(`interval=${value}`);
+			this.UpdateSelected();
 			dialog.Close();
 		};
 
