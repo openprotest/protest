@@ -10,7 +10,14 @@ namespace Protest.Proxy;
 internal sealed class TrafficCountingStreamWrapper : Stream {
     private readonly Stream baseStream;
     private readonly uint key;
-    public ConcurrentDictionary<uint, long> bytesRx, bytesTx;
+    private ConcurrentDictionary<uint, long> bytesRx, bytesTx;
+
+    public TrafficCountingStreamWrapper(Stream stream, uint clientIp, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
+        this.baseStream = stream;
+        this.key = clientIp;
+        this.bytesRx = bytesRx;
+        this.bytesTx = bytesTx;
+    }
 
     public override bool CanRead => baseStream.CanRead;
     public override bool CanSeek => baseStream.CanSeek;
@@ -20,13 +27,6 @@ internal sealed class TrafficCountingStreamWrapper : Stream {
     public override long Position {
         get => baseStream.Position;
         set => baseStream.Position = value;
-    }
-
-    public TrafficCountingStreamWrapper(NetworkStream stream, uint clientIp, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
-        this.baseStream = stream;
-        this.key = clientIp;
-        this.bytesRx = bytesRx;
-        this.bytesTx = bytesTx;
     }
 
     public override void Flush() => baseStream.Flush();
