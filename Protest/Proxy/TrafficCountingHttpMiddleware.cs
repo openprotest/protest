@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Net;
 using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
-using Microsoft.Extensions.Primitives;
 
 namespace Protest.Proxy;
-internal class TrafficCountingHttpMiddleware {
+internal sealed class TrafficCountingHttpMiddleware {
     private readonly RequestDelegate _next;
     private readonly ConcurrentDictionary<uint, long> bytesRx;
     private readonly ConcurrentDictionary<uint, long> bytesTx;
@@ -23,41 +21,80 @@ internal class TrafficCountingHttpMiddleware {
         IPAddress remoteIp = context.Connection.RemoteIpAddress;
         uint key = BitConverter.ToUInt32(remoteIp.GetAddressBytes(), 0);
 
-        long requestHeadersSize = CalculateHeadersSize(context.Request.Headers);
-        long responseHeadersSize;
+        Stream requestStream = context.Request.Body;
+        Stream responseStream = context.Response.Body;
 
-        Stream originalRequestBody = context.Request.Body;
-        Stream originalResponseBody = context.Response.Body;
+        using StreamWrapper requestWrapper = new StreamWrapper(requestStream, key, bytesTx, bytesRx);
+        using StreamWrapper responseWrapper = new StreamWrapper(responseStream, key, bytesTx, bytesRx);
 
-        using MemoryStream requestBodyStream = new MemoryStream();
-        using MemoryStream responseBodyStream = new MemoryStream();
+        context.Request.Body = requestWrapper;
+        context.Response.Body = responseWrapper;
 
-        context.Request.Body = requestBodyStream;
-        context.Response.Body = responseBodyStream;
+        try {
+            await _next(context);
+        }
+        finally {
+            context.Request.Body = requestStream;
+            context.Response.Body = responseStream;
+        }
+    }
+}
 
-        await originalRequestBody.CopyToAsync(requestBodyStream);
-        bytesRx.AddOrUpdate(key, requestBodyStream.Length + requestHeadersSize, (_, old) => old + requestBodyStream.Length + requestHeadersSize);
+file sealed class StreamWrapper : Stream {
+    private readonly Stream baseStream;
+    private readonly uint key;
+    private readonly ConcurrentDictionary<uint, long> bytesRx;
+    private readonly ConcurrentDictionary<uint, long> bytesTx;
 
-        requestBodyStream.Seek(0, SeekOrigin.Begin);
-        context.Request.Body = requestBodyStream;
-
-        await _next(context);
-
-        responseHeadersSize = CalculateHeadersSize(context.Response.Headers);
-
-        responseBodyStream.Seek(0, SeekOrigin.Begin);
-        await responseBodyStream.CopyToAsync(originalResponseBody);
-        bytesTx.AddOrUpdate(key, responseBodyStream.Length + responseHeadersSize, (_, old) => old + responseBodyStream.Length + responseHeadersSize);
-
-        context.Request.Body = originalRequestBody;
-        context.Response.Body = originalResponseBody;
+    public StreamWrapper(Stream stream, uint clientIp, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
+        this.baseStream = stream;
+        this.key = clientIp;
+        this.bytesRx = bytesRx;
+        this.bytesTx = bytesTx;
     }
 
-    private long CalculateHeadersSize(IHeaderDictionary headers) {
-        long size = 0;
-        foreach (KeyValuePair<string, StringValues> header in headers) {
-            size += header.Key.Length + header.Value.Sum(value => value.Length) + 4;
+    public override bool CanRead => baseStream.CanRead;
+    public override bool CanSeek => baseStream.CanSeek;
+    public override bool CanWrite => baseStream.CanWrite;
+    public override long Length => baseStream.Length;
+
+    public override long Position {
+        get => baseStream.Position;
+        set => baseStream.Position = value;
+    }
+
+    public override void Flush() => baseStream.Flush();
+
+    public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
+
+    public override void SetLength(long value) => baseStream.SetLength(value);
+
+    public override int Read(byte[] buffer, int offset, int count) {
+        int length = baseStream.Read(buffer, offset, count);
+        bytesRx.AddOrUpdate(key, length, (_, old) => old + length);
+        return length;
+    }
+
+    public override void Write(byte[] buffer, int offset, int count) {
+        baseStream.Write(buffer, offset, count);
+        bytesTx.AddOrUpdate(key, count, (_, old) => old + count);
+    }
+
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+        int length = await baseStream.ReadAsync(buffer, offset, count, cancellationToken);
+        bytesRx.AddOrUpdate(key, length, (_, old) => old + length);
+        return length;
+    }
+
+    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+        await baseStream.WriteAsync(buffer, offset, count, cancellationToken);
+        bytesTx.AddOrUpdate(key, count, (_, old) => old + count);
+    }
+
+    protected override void Dispose(bool disposing) {
+        if (disposing) {
+            baseStream.Dispose();
         }
-        return size;
+        base.Dispose(disposing);
     }
 }

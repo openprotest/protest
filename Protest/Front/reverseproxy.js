@@ -426,8 +426,8 @@ class ReverseProxy extends List {
 		if (history.length > 1) {
 			const deltaRx = history[history.length - 1].rx - history[history.length - 2].rx;
 			const deltaTx = history[history.length - 1].tx - history[history.length - 2].tx;
-			const rxRate = Math.round(deltaRx / (this.args.interval / 1000));
-			const txRate = Math.round(deltaTx / (this.args.interval / 1000));
+			const rxRate = Math.max(Math.round(deltaRx / (this.args.interval / 1000)), 0);
+			const txRate = Math.max(Math.round(deltaTx / (this.args.interval / 1000)), 0);
 
 			this.rxRateValue.textContent = UI.BytesPerSecToString(rxRate);
 			this.txRateValue.textContent = UI.BytesPerSecToString(txRate);
@@ -539,6 +539,11 @@ class ReverseProxy extends List {
 
 			for (const key in json.data) {
 				length++;
+
+				let destination = json.data[key].protocol === "TCP" || json.data[key].protocol === "UDP"
+					? `${json.data[key].destaddr}:${json.data[key].destport}`
+					: json.data[key].destaddr;
+
 				data[key] = {
 					status      : {v: "stopped"},
 					guid        : {v: json.data[key].guid},
@@ -551,7 +556,7 @@ class ReverseProxy extends List {
 					proxy       : {v: `${json.data[key].proxyaddr}:${json.data[key].proxyport}`},
 					destaddr    : {v: json.data[key].destaddr},
 					destport    : {v: json.data[key].destport},
-					destination : {v: `${json.data[key].destaddr}:${json.data[key].destport}`},
+					destination : {v: destination},
 					autostart   : {v: json.data[key].autostart},
 				};
 			}
@@ -691,9 +696,9 @@ class ReverseProxy extends List {
 			certsInput.disabled = protocolInput.value !== "HTTPS";
 			passwordInput.disabled = protocolInput.value !== "HTTPS";
 
-			const isHttp = protocolInput.value === "HTTP" || protocolInput.value === "HTTPS";
-			destinationAddressInput.placeholder = isHttp ? "https://example.com" : "127.0.0.1";
-			destinationPortInput.disabled = isHttp;
+			const isL3 = protocolInput.value === "TCP" || protocolInput.value === "UDP";
+			destinationAddressInput.placeholder = isL3 ? "127.0.0.1" : "https://example.com";
+			destinationPortInput.disabled = !isL3;
 		};
 
 		protocolInput.onchange();
@@ -785,6 +790,8 @@ class ReverseProxy extends List {
 		if (guid === null) return;
 
 		const selected = this.selected;
+		this.startButton.disabled = true;
+
 		try {
 			const response = await fetch(`/rproxy/start?guid=${guid}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -804,6 +811,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
+			this.startButton.disabled = false;
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
@@ -813,6 +821,8 @@ class ReverseProxy extends List {
 		if (guid === null) return;
 
 		const selected = this.selected;
+		this.stopButton.disabled = true;
+
 		try {
 			const response = await fetch(`/rproxy/stop?guid=${guid}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -835,6 +845,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
+			this.stopButton.disabled = false;
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
