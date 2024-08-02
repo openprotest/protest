@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
+using Protest.Protocols;
 
 namespace Protest.Proxy;
 
@@ -20,7 +21,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     public HttpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
-        this.thread = new Thread(async () => {
+        try {
             hostBuilder = Host.CreateDefaultBuilder();
 
             hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
@@ -48,21 +49,47 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             });
 
             string destinations = cluster.Destinations.Values
-            .Select(o=>o.Address.ToString())
-            .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
+                .Select(o=>o.Address.ToString())
+                .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
             this.host = hostBuilder.Build();
-            await this.host.RunAsync(cancellationToken);
-        });
 
-        this.thread.Start();
+            this.thread = new Thread(async () => {
+                try {
+                    await this.host.RunAsync(cancellationToken);
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                    this.errors++;
+                }
+            });
+
+            this.thread.Start();
+
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            throw;
+        }
 
         return base.Start(proxy, destination, certificate, password, origin);
     }
 
     public override bool Stop(string origin) {
-        this.host?.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
-        this.host = null;
+        try {
+            if (this.host is not null) {
+                cancellationTokenSource.Cancel();
+                this.host.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            throw;
+        }
+        finally {
+            this.host?.Dispose();
+            this.host = null;
+        }
 
         return base.Stop(origin);
     }
@@ -90,12 +117,15 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     }
 
     private void Configure(IApplicationBuilder application) {
+        application.UseMiddleware<TrafficCountingHttpMiddleware>(bytesRx, bytesTx);
         application.UseRouting();
         application.UseEndpoints(endpoints => endpoints.MapReverseProxy());
     }
 
     private void ConfigureServices(IServiceCollection services, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) {
         services.AddSingleton<IHostLifetime, CustomHostLifetime>();
+        //services.AddSingleton(bytesRx);
+        //services.AddSingleton(bytesTx);
 
         IReverseProxyBuilder rpBuilder = services.AddReverseProxy();
 
@@ -105,7 +135,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             builderContext.AddRequestTransform(transformContext => {
                 string remoteIpAddress       = transformContext.HttpContext.Connection.RemoteIpAddress?.ToString();
                 string existingXForwardedFor = transformContext.HttpContext.Request.Headers["X-Forwarded-For"].ToString();
-                string newXForwardedFor      = string.IsNullOrEmpty(existingXForwardedFor) ? remoteIpAddress : $"{existingXForwardedFor}, {remoteIpAddress}";
+                string newXForwardedFor      = String.IsNullOrEmpty(existingXForwardedFor) ? remoteIpAddress : $"{existingXForwardedFor}, {remoteIpAddress}";
 
                 transformContext.ProxyRequest.Headers.Remove("X-Forwarded-For");
                 transformContext.ProxyRequest.Headers.Add("X-Forwarded-For", newXForwardedFor);

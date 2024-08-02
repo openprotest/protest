@@ -205,7 +205,7 @@ internal static partial class DeviceConfiguration {
         }
 
         parameters.TryGetValue("file", out string file);
-        if (string.IsNullOrEmpty(file)) {
+        if (String.IsNullOrEmpty(file)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

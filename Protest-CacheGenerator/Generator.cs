@@ -112,7 +112,7 @@ public class Generator : IIncrementalGenerator {
 
         foreach (string line in lines) {
             string trimmedLine = line.Trim();
-            if (string.IsNullOrEmpty(trimmedLine)) continue;
+            if (String.IsNullOrEmpty(trimmedLine)) continue;
             if (trimmedLine.StartsWith("//")) continue;
 
             int commentIndex = trimmedLine.IndexOf("//");

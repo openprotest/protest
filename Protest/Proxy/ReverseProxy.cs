@@ -60,7 +60,7 @@ internal static class ReverseProxy {
             foreach (FileInfo file in files) {
                 try {
                     string fileContent = File.ReadAllText(file.FullName);
-                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptionsWithPassword);
 
                     if (obj.autostart) {
                         StartProxy(obj, "system");
@@ -336,14 +336,22 @@ internal static class ReverseProxy {
         };
 
         try {
-            string certificateFilename = null;
-            if (obj.certificate is not null) {
-                certificateFilename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{obj.certificate}";
-            }
-
             IPEndPoint localEndpoint = new IPEndPoint(IPAddress.Parse(obj.proxyaddr), obj.proxyport);
-            if (!proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", certificateFilename, obj.password, origin)) {
-                return Data.CODE_FAILED.ToArray();
+
+            if (obj.protocol == ProxyProtocol.TCP || obj.protocol == ProxyProtocol.UDP) {
+                if (!proxy.Start(localEndpoint, $"{obj.destaddr}:{obj.destport}", null, null, origin)) {
+                    return Data.CODE_FAILED.ToArray();
+                }
+            }
+            else if (obj.protocol == ProxyProtocol.HTTP || obj.protocol == ProxyProtocol.HTTPS) {
+                string certificateFilename = null;
+                if (obj.certificate is not null) {
+                    certificateFilename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{obj.certificate}";
+                }
+
+                if (!proxy.Start(localEndpoint, $"{obj.destaddr}", certificateFilename, obj.password, origin)) {
+                    return Data.CODE_FAILED.ToArray();
+                }
             }
         }
         catch {

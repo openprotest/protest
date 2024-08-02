@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Protest.Proxy;
-internal sealed class ProxyStreamWrapper : Stream {
+internal sealed class TrafficCountingStreamWrapper : Stream {
     private readonly Stream baseStream;
     private readonly uint key;
     public ConcurrentDictionary<uint, long> bytesRx, bytesTx;
@@ -22,7 +22,7 @@ internal sealed class ProxyStreamWrapper : Stream {
         set => baseStream.Position = value;
     }
 
-    public ProxyStreamWrapper(NetworkStream stream, uint clientIp, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
+    public TrafficCountingStreamWrapper(NetworkStream stream, uint clientIp, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
         this.baseStream = stream;
         this.key = clientIp;
         this.bytesRx = bytesRx;

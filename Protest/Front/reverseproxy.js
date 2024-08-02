@@ -46,6 +46,8 @@ class ReverseProxy extends List {
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 		this.intervalButton = this.AddToolbarButton("Interval", "mono/metronome.svg?light");
+		this.reconnectSeparator = this.AddToolbarSeparator();
+		this.reconnectButton = this.AddToolbarButton("Reconnect", "mono/connect.svg?light");
 
 		this.deleteButton.disabled = true;
 		this.startButton.disabled = true;
@@ -89,6 +91,17 @@ class ReverseProxy extends List {
 		graph.appendChild(this.canvas);
 
 		this.ctx = this.canvas.getContext("2d");
+
+		this.disconnectIcon = document.createElement("div");
+		this.disconnectIcon.style.position = "absolute";
+		this.disconnectIcon.style.left = "8px";
+		this.disconnectIcon.style.top = "8px";
+		this.disconnectIcon.style.width = "32px";
+		this.disconnectIcon.style.height = "32px";
+		this.disconnectIcon.style.backgroundImage = "url(mono/disconnect.svg?light)";
+		this.disconnectIcon.style.backgroundSize = "32px 32px";
+		this.disconnectIcon.style.transition = ".2s";
+		graph.appendChild(this.disconnectIcon);
 
 		this.totalRxLabel = document.createElement("div");
 		this.totalRxLabel.textContent = "Received:";
@@ -201,6 +214,7 @@ class ReverseProxy extends List {
 		this.startButton.onclick = ()=> this.Start();
 		this.stopButton.onclick = ()=> this.Stop();
 		this.intervalButton.onclick = ()=> this.SetInterval();
+		this.reconnectButton.onclick = ()=> this.Connect();
 
 		this.content.addEventListener("keydown", event=> {
 			if (!this.args.select) return;
@@ -227,6 +241,9 @@ class ReverseProxy extends List {
 			catch (ex) {};
 		}
 
+		this.reconnectSeparator.style.display = "none";
+		this.reconnectButton.style.display = "none";
+
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/reverseproxy");
 
 		this.ws.onopen = ()=> {
@@ -237,6 +254,11 @@ class ReverseProxy extends List {
 			if (this.args.select) {
 				this.UpdateSelected();
 			}
+
+			this.reconnectSeparator.style.display = "none";
+			this.reconnectButton.style.display = "none";
+			this.disconnectIcon.style.visibility = "hidden";
+			this.disconnectIcon.style.opacity = "0";
 		};
 
 		this.ws.onmessage = event=> {
@@ -351,7 +373,12 @@ class ReverseProxy extends List {
 			}
 		};
 
-		this.ws.onclose = ()=> {};
+		this.ws.onclose = ()=> {
+			this.reconnectSeparator.style.display = "initial";
+			this.reconnectButton.style.display = "initial";
+			this.disconnectIcon.style.visibility = "visible";
+			this.disconnectIcon.style.opacity = "1";
+		};
 
 		this.ws.onerror = error=> {};
 	}
@@ -366,8 +393,6 @@ class ReverseProxy extends List {
 			this.txRateValue.textContent = "";
 			return;
 		}
-
-		this.graphCount++;
 
 		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*20);
 		this.ctx.lineWidth = 1;
@@ -445,6 +470,10 @@ class ReverseProxy extends List {
 		}
 		this.ctx.stroke();
 		this.ctx.closePath();
+
+		if (this.ws !== null && this.ws.readyState === 1) {
+			this.graphCount++;
+		}
 	}
 
 	UpdateSelected() {

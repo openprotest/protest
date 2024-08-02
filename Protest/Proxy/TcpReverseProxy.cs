@@ -57,7 +57,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
 
             //using ProxyStreamWrapper countingClientStream = new ProxyStreamWrapper(proxyClient.GetStream(), clientIp, bytesRx, bytesTx);
             using NetworkStream proxyStream = proxyClient.GetStream();
-            using ProxyStreamWrapper destinationStream = new ProxyStreamWrapper(destinationClient.GetStream(), clientIp, bytesRx, bytesTx);
+            using TrafficCountingStreamWrapper destinationStream = new TrafficCountingStreamWrapper(destinationClient.GetStream(), clientIp, bytesRx, bytesTx);
 
             using Task clientToDestination = proxyStream.CopyToAsync(destinationStream, cancellationToken);
             using Task destinationToClient = destinationStream.CopyToAsync(proxyStream, cancellationToken);
