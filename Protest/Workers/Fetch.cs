@@ -887,6 +887,9 @@ internal static class Fetch {
         task.RequestCancel(origin);
         //wrapper = null;
 
+        result = null;
+        task = null;
+
         return Data.CODE_OK.Array;
     }
 
