@@ -49,7 +49,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             });
 
             string destinations = cluster.Destinations.Values
-                .Select(o=>o.Address.ToString())
+                .Select(o=> o.Address.ToString())
                 .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
             this.host = hostBuilder.Build();
@@ -58,9 +58,13 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 try {
                     await this.host.RunAsync(cancellationToken);
                 }
-                catch (Exception ex) {
-                    Logger.Error(ex);
+                catch (Exception) {
                     this.errors++;
+                }
+                finally {
+                    await Task.Delay(50);
+                    ReverseProxy.running.TryRemove(this.guid.ToString(), out _);
+                    Stop(origin);
                 }
             });
 
@@ -105,14 +109,22 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     }
 
     private void ConfigureKestrel(KestrelServerOptions options, IPEndPoint endPoint, string certificate = null, string password = null) {
-        if (String.IsNullOrEmpty(certificate)) {
-            options.Listen(endPoint);
+        try {
+            if (String.IsNullOrEmpty(certificate)) {
+                options.Listen(endPoint);
+            }
+            else if (String.IsNullOrEmpty(password)) {
+                options.Listen(endPoint, options => options.UseHttps(certificate));
+            }
+            else {
+                options.Listen(endPoint, options => options.UseHttps(certificate, password));
+            }
         }
-        else if (String.IsNullOrEmpty(password)) {
-            options.Listen(endPoint, options => options.UseHttps(certificate));
-        }
-        else {
-            options.Listen(endPoint, options => options.UseHttps(certificate, password));
+        catch (Exception ex) {
+            Thread.Sleep(50);
+            Logger.Error(ex);
+            ReverseProxy.running.TryRemove(this.guid.ToString(), out _);
+            Stop("system");
         }
     }
 

@@ -808,6 +808,18 @@ class ReverseProxy extends List {
 		catch (ex) {
 			this.startButton.disabled = false;
 			this.ConfirmBox(ex, true, "mono/error.svg");
+
+			if (ex === "This proxy is already running") {
+				const index = ReverseProxy.RUNNING.indexOf(guid);
+				ReverseProxy.RUNNING.push(guid);
+
+				if (selected) {
+					selected.style.backgroundImage = "url(mono/play.svg)";
+					this.deleteButton.disabled = false;
+					this.startButton.disabled = true;
+					this.stopButton.disabled = false;
+				}
+			}
 		}
 	}
 
@@ -842,6 +854,20 @@ class ReverseProxy extends List {
 		catch (ex) {
 			this.stopButton.disabled = false;
 			this.ConfirmBox(ex, true, "mono/error.svg");
+
+			if (ex === "This proxy is not running") {
+				const index = ReverseProxy.RUNNING.indexOf(guid);
+				if (index > -1) {
+					ReverseProxy.RUNNING.splice(index, 1);
+				}
+
+				if (selected) {
+					selected.style.backgroundImage = "url(mono/stop.svg)";
+					this.deleteButton.disabled = false;
+					this.startButton.disabled = false;
+					this.stopButton.disabled = true;
+				}
+			}
 		}
 	}
 

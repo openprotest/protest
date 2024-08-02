@@ -372,8 +372,6 @@ internal static class ReverseProxy {
             return "{\"error\":\"This proxy is not running\"}"u8.ToArray();
         }
 
-        obj.Stop(origin);
-
         if (!running.TryRemove(guid, out _)) {
             return Data.CODE_FAILED.ToArray();
         }
