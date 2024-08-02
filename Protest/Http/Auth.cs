@@ -48,7 +48,9 @@ internal static class Auth {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
 
-        if (!sessions.TryGetValue(sessionId, out Session session)) return false;
+        if (!sessions.TryGetValue(sessionId, out Session session)) {
+            return false;
+        }
 
         if (DateTime.UtcNow.Ticks - session.loginDate > session.ttl) { //expired
             RevokeAccess(sessionId);
@@ -63,9 +65,13 @@ internal static class Auth {
         if (IPAddress.IsLoopback(remoteIp)) return true;
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-        if (sessionId is null) return false;
+        if (sessionId is null) {
+            return false;
+        }
 
-        if (!sessions.TryGetValue(sessionId, out Session session)) return false;
+        if (!sessions.TryGetValue(sessionId, out Session session)) {
+            return false;
+        }
 
         return session.access.accessPath.Contains(path);
     }
@@ -75,9 +81,13 @@ internal static class Auth {
         if (IPAddress.IsLoopback(remoteIp)) return true;
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-        if (sessionId is null) return false;
+        if (sessionId is null) {
+            return false;
+        }
 
-        if (!sessions.TryGetValue(sessionId, out Session session)) return false;
+        if (!sessions.TryGetValue(sessionId, out Session session)) {
+            return false;
+        }
 
         if (DateTime.UtcNow.Ticks - session.loginDate > session.ttl) { //expired
             RevokeAccess(sessionId);
@@ -171,8 +181,9 @@ internal static class Auth {
     public static string GetUsername(string sessionId) {
         if (sessionId is null) return null;
 
-        if (sessions.TryGetValue(sessionId, out Session session))
+        if (sessions.TryGetValue(sessionId, out Session session)) {
             return session.access.username;
+        }
 
         return null;
     }
@@ -358,7 +369,7 @@ internal static class Auth {
                 path.Add("/rbac/kickuser");
                 break;
 
-            case "reverse proxy":
+            case "reverse proxy:write":
                 path.Add("/ws/reverseproxy");
                 path.Add("/rproxy/list");
                 path.Add("/rproxy/create");
@@ -387,7 +398,7 @@ internal static class Auth {
                 path.Add("/log/list");
                 break;
 
-            case "cert:write":
+            case "certificates:write":
                 path.Add("/config/cert/list");
                 path.Add("/config/cert/upload");
                 path.Add("/config/cert/create");

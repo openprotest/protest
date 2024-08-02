@@ -51,6 +51,27 @@ internal static class ReverseProxy {
         serializerOptionsWithPassword.Converters.Add(new ReverseProxyObjectJsonConverter(false));
     }
 
+    public static void Initialize() {
+        try {
+            DirectoryInfo directory = new DirectoryInfo(Data.DIR_REVERSE_PROXY);
+            if (!directory.Exists) return;
+
+            FileInfo[] files = directory.GetFiles();
+            foreach (FileInfo file in files) {
+                try {
+                    string fileContent = File.ReadAllText(file.FullName);
+                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+
+                    if (obj.autostart) {
+                        StartProxy(obj, "system");
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
+    }
+
     private static async Task WsWriteText(WebSocket ws, string data) {
         if (ws.State == WebSocketState.Open) {
             await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -88,7 +109,7 @@ internal static class ReverseProxy {
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
                 string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
                 string[] split = message.Split('=');
-                
+
                 if (split.Length < 2) { continue; }
 
                 switch (split[0]) {
@@ -228,11 +249,11 @@ internal static class ReverseProxy {
             string payload = reader.ReadToEnd();
 
             ReverseProxyObject entry = JsonSerializer.Deserialize<ReverseProxyObject>(payload, serializerOptionsWithPassword);
-            
+
             if (running.ContainsKey(entry.guid.ToString())) {
                 return "{\"error\":\"Unable to modify this proxy while it's running.\"}"u8.ToArray();
             }
-            
+
             if (entry.guid == Guid.Empty) {
                 entry.guid = Guid.NewGuid();
             }
@@ -300,6 +321,12 @@ internal static class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
+        return StartProxy(obj, origin);
+    }
+
+    public static byte[] StartProxy(ReverseProxyObject obj, string origin) {
+
+
         ReverseProxyAbstract proxy = obj.protocol switch {
             ProxyProtocol.TCP   => new TcpReverseProxy(obj.guid),
             ProxyProtocol.UDP   => new UdpReverseProxy(obj.guid),
@@ -323,7 +350,7 @@ internal static class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
-        running.TryAdd(guid, proxy);
+        running.TryAdd(obj.guid.ToString(), proxy);
 
         return Data.CODE_OK.ToArray();
     }

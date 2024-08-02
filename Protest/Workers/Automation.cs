@@ -1,7 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
-
-namespace Protest.Workers;
+﻿namespace Protest.Workers;
 
 internal static class Automation {
 
@@ -10,5 +7,6 @@ internal static class Automation {
     static public void Initialize() {
         Watchdog.Initialize();
         Lifeline.Initialize();
+        Proxy.ReverseProxy.Initialize();
     }
 }

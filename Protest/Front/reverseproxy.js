@@ -32,6 +32,13 @@ class ReverseProxy extends List {
 		this.history = {};
 		this.maximum = 2560;
 
+		this.InitializeComponents();
+
+		this.GetReverseProxies();
+		this.Connect();
+	}
+
+	InitializeComponents() {
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
@@ -75,7 +82,7 @@ class ReverseProxy extends List {
 		this.canvas.width = ReverseProxy.CANVAS_W;
 		this.canvas.height = ReverseProxy.CANVAS_H+4;
 		this.canvas.style.position = "absolute";
-		this.canvas.style.right = "2px"
+		this.canvas.style.right = "2px";
 		this.canvas.style.top = "0";
 		this.canvas.style.width = `${ReverseProxy.CANVAS_W}px`;
 		this.canvas.style.height = `${ReverseProxy.CANVAS_H+4}px`;
@@ -109,7 +116,7 @@ class ReverseProxy extends List {
 		this.totalRxValue.style.top = "220px";
 		this.totalRxValue.style.width = "100px";
 		this.totalRxValue.style.color = "rgb(122,212,43)";
-		this.totalRxValue.style.backgroundColor = "var(--clr-dark)";
+		this.totalRxValue.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.totalRxValue.style.borderRadius = "4px";
 		this.totalRxValue.style.padding = "0 4px";
 		this.totalRxValue.style.fontFamily = "monospace";
@@ -122,7 +129,7 @@ class ReverseProxy extends List {
 		this.totalTxValue.style.top = "245px";
 		this.totalTxValue.style.width = "100px";
 		this.totalTxValue.style.color = "rgb(232,118,0)";
-		this.totalTxValue.style.backgroundColor = "var(--clr-dark)";
+		this.totalTxValue.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.totalTxValue.style.borderRadius = "4px";
 		this.totalTxValue.style.padding = "0 4px";
 		this.totalTxValue.style.fontFamily = "monospace";
@@ -157,7 +164,7 @@ class ReverseProxy extends List {
 		this.rxRateValue.style.top = "220px";
 		this.rxRateValue.style.width = "100px";
 		this.rxRateValue.style.color = "rgb(122,212,43)";
-		this.rxRateValue.style.backgroundColor = "var(--clr-dark)";
+		this.rxRateValue.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.rxRateValue.style.borderRadius = "4px";
 		this.rxRateValue.style.padding = "0 4px";
 		this.rxRateValue.style.fontFamily = "monospace";
@@ -170,7 +177,7 @@ class ReverseProxy extends List {
 		this.txRateValue.style.top = "245px";
 		this.txRateValue.style.width = "100px";
 		this.txRateValue.style.color = "rgb(232,118,0)";
-		this.txRateValue.style.backgroundColor = "var(--clr-dark)";
+		this.txRateValue.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.txRateValue.style.borderRadius = "4px";
 		this.txRateValue.style.padding = "0 4px";
 		this.txRateValue.style.fontFamily = "monospace";
@@ -205,9 +212,6 @@ class ReverseProxy extends List {
 				this.UpdateSelected();
 			}
 		});
-
-		this.GetReverseProxies();
-		this.Connect();
 	}
 
 	Connect() {
@@ -293,7 +297,10 @@ class ReverseProxy extends List {
 						element.style.height = "28px";
 						element.style.padding = "2px 0";
 						element.style.lineHeight = "28px";
+						element.style.marginBottom = "2px";
+						element.style.borderRadius = "2px";
 						element.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
+						element.style.animation = "rise-in 0.2s ease-out 1";
 						this.clientsList.appendChild(element);
 
 						let ipBytes = [];
@@ -362,7 +369,7 @@ class ReverseProxy extends List {
 
 		this.graphCount++;
 
-		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*20)
+		const lineOffset = (this.graphCount*ReverseProxy.GAP) % (ReverseProxy.GAP*20);
 		this.ctx.lineWidth = 1;
 		this.ctx.strokeStyle = "#c0c0c020";
 		for (let i=ReverseProxy.CANVAS_W; i>=0; i-=ReverseProxy.GRID) {
@@ -454,9 +461,12 @@ class ReverseProxy extends List {
 			}
 		}
 
-		this.clients = {};
-		this.clientsList.textContent = "";
-
+		if (this._tempSelect !== guid) {
+			this.clients = {};
+			this.clientsList.textContent = "";
+			this._tempSelect = guid;
+		}
+		
 		this.UpdateGraph();
 
 		if (this.isClosed || this.ws === null || this.ws.readyState !== 1) {
@@ -482,7 +492,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
+			this.ConfirmBox(ex, true, "mono/error.svg");
 			return {data:{}, length:0};
 		}
 	}
@@ -523,7 +533,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
+			this.ConfirmBox(ex, true, "mono/error.svg");
 			return {data:{}, length:0};
 		}
 	}
@@ -736,7 +746,7 @@ class ReverseProxy extends List {
 				this.stopButton.disabled = true;
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg")
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}
@@ -765,7 +775,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -796,7 +806,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
