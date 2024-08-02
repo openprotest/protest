@@ -51,7 +51,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     private async Task ServeClient(UdpReceiveResult udpResult) {
         try {
             using UdpClient destinationClient = new UdpClient();
-            uint clientIp = BitConverter.ToUInt32(udpResult.RemoteEndPoint.Address.GetAddressBytes(), 0);
+            string clientIp = udpResult.RemoteEndPoint.Address.ToString();
 
             bytesRx.AddOrUpdate(clientIp, udpResult.Buffer.Length, (_, oldValue) => oldValue + udpResult.Buffer.Length);
 

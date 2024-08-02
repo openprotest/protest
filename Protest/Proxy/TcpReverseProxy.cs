@@ -53,7 +53,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
             using TcpClient destinationClient = new TcpClient();
             await destinationClient.ConnectAsync(destinationEndPoint, cancellationToken);
 
-            uint clientIp = BitConverter.ToUInt32(((IPEndPoint)proxyClient.Client.RemoteEndPoint).Address.GetAddressBytes(), 0);
+            string  clientIp = ((IPEndPoint)proxyClient.Client.RemoteEndPoint).Address.ToString();
 
             //using ProxyStreamWrapper countingClientStream = new ProxyStreamWrapper(proxyClient.GetStream(), clientIp, bytesRx, bytesTx);
             using NetworkStream proxyStream = proxyClient.GetStream();

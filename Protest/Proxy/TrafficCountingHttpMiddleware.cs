@@ -8,18 +8,17 @@ using Microsoft.AspNetCore.Http;
 namespace Protest.Proxy;
 internal sealed class TrafficCountingHttpMiddleware {
     private readonly RequestDelegate _next;
-    private readonly ConcurrentDictionary<uint, long> bytesRx;
-    private readonly ConcurrentDictionary<uint, long> bytesTx;
+    private readonly ConcurrentDictionary<string, long> bytesRx;
+    private readonly ConcurrentDictionary<string, long> bytesTx;
 
-    public TrafficCountingHttpMiddleware(RequestDelegate next, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
+    public TrafficCountingHttpMiddleware(RequestDelegate next, ConcurrentDictionary<string, long> bytesRx, ConcurrentDictionary<string, long> bytesTx) {
         _next = next;
         this.bytesRx = bytesRx;
         this.bytesTx = bytesTx;
     }
 
     public async Task InvokeAsync(HttpContext context) {
-        IPAddress remoteIp = context.Connection.RemoteIpAddress;
-        uint key = BitConverter.ToUInt32(remoteIp.GetAddressBytes(), 0);
+        string key = context.Connection.RemoteIpAddress.ToString();
 
         Stream requestStream = context.Request.Body;
         Stream responseStream = context.Response.Body;

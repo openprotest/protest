@@ -325,13 +325,8 @@ class ReverseProxy extends List {
 						element.style.animation = "rise-in 0.2s ease-out 1";
 						this.clientsList.appendChild(element);
 
-						let ipBytes = [];
-						for (let j=0; j<4; j++) {
-							ipBytes[j] = (json.hosts[i].ip >> (24 - j * 8)) & 0xFF;
-						}
-
 						const name = document.createElement("div");
-						name.textContent = ipBytes.reverse().join(".");
+						name.textContent = json.hosts[i].ip;
 						name.style.position = "absolute";
 						name.style.left = "0";
 						name.style.width = "33%";

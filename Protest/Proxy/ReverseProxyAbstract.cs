@@ -15,13 +15,13 @@ internal abstract class ReverseProxyAbstract {
     public ulong errors;
     protected Thread thread;
 
-    public ConcurrentDictionary<uint, long> bytesRx;
-    public ConcurrentDictionary<uint, long> bytesTx;
+    public ConcurrentDictionary<string, long> bytesRx;
+    public ConcurrentDictionary<string, long> bytesTx;
 
     public ReverseProxyAbstract(Guid guid) {
         this.guid = guid;
-        bytesRx = new ConcurrentDictionary<uint, long>();
-        bytesTx = new ConcurrentDictionary<uint, long>();
+        bytesRx = new ConcurrentDictionary<string, long>();
+        bytesTx = new ConcurrentDictionary<string, long>();
         cancellationTokenSource = new CancellationTokenSource();
         cancellationToken = cancellationTokenSource.Token;
     }

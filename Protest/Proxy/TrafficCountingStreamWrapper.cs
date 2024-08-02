@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 namespace Protest.Proxy;
 internal sealed class TrafficCountingStreamWrapper : Stream {
     private readonly Stream baseStream;
-    private readonly uint key;
-    private ConcurrentDictionary<uint, long> bytesRx, bytesTx;
+    private readonly string key;
+    private ConcurrentDictionary<string, long> bytesRx, bytesTx;
 
-    public TrafficCountingStreamWrapper(Stream stream, uint clientIp, ConcurrentDictionary<uint, long> bytesRx, ConcurrentDictionary<uint, long> bytesTx) {
+    public TrafficCountingStreamWrapper(Stream stream, string clientIp, ConcurrentDictionary<string, long> bytesRx, ConcurrentDictionary<string, long> bytesTx) {
         this.baseStream = stream;
         this.key = clientIp;
         this.bytesRx = bytesRx;

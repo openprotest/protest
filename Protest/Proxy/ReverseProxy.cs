@@ -127,16 +127,16 @@ internal static class ReverseProxy {
 
         await Task.Delay(500);
 
-        bool clientsToogle = true;
+        bool clientsToggle = true;
         try {
             await WsWriteText(ws, GetRunningProxies());
 
             while (ws.State == WebSocketState.Open) {
                 await WsWriteText(ws, GetTotalTraffic());
 
-                clientsToogle = !clientsToogle;
+                clientsToggle = !clientsToggle;
                 if (select != Guid.Empty) {
-                    if (interval > 500 || interval <= 500 && clientsToogle) {
+                    if (interval > 500 || interval <= 500 && clientsToggle) {
                         await WsWriteText(ws, GetProxyTraffic(select));
                     }
                 }
@@ -184,7 +184,7 @@ internal static class ReverseProxy {
         }
 
         return JsonSerializer.SerializeToUtf8Bytes(new {
-            hosts = proxy.bytesTx.Keys.Select(ip => new {
+            hosts = proxy.bytesRx.Keys.Select(ip => new {
                 ip = ip,
                 tx = proxy.bytesTx.GetValueOrDefault(ip, 0),
                 rx = proxy.bytesRx.GetValueOrDefault(ip, 0)
