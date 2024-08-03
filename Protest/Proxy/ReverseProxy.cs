@@ -104,54 +104,60 @@ internal static class ReverseProxy {
         int interval = 1000;
 
         new Thread(async () => {
-            byte[] buff = new byte[512];
-            while (ws.State == WebSocketState.Open) {
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-                string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
-                string[] split = message.Split('=');
+            await Task.Delay(500);
 
-                if (split.Length < 2) { continue; }
+            bool clientsToggle = true;
+            try {
+                await WsWriteText(ws, GetRunningProxies());
 
-                switch (split[0]) {
-                case "select":
-                    Guid.TryParse(split[1], out select);
-                    break;
+                while (ws.State == WebSocketState.Open) {
+                    await WsWriteText(ws, GetTotalTraffic());
 
-                case "interval":
-                    int.TryParse(split[1], out interval);
-                    interval = Math.Max(interval, 100);
-                    break;
+                    clientsToggle = !clientsToggle;
+                    if (select != Guid.Empty) {
+                        if (interval > 500 || interval <= 500 && clientsToggle) {
+                            await WsWriteText(ws, GetProxyTraffic(select));
+                        }
+                    }
+
+                    await Task.Delay(interval);
                 }
+            }
+            catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+                return;
+            }
+            catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
+                //do nothing
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
             }
         }).Start();
 
-        await Task.Delay(500);
+        byte[] buff = new byte[512];
+        while (ws.State == WebSocketState.Open) {
+            WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-        bool clientsToggle = true;
-        try {
-            await WsWriteText(ws, GetRunningProxies());
-
-            while (ws.State == WebSocketState.Open) {
-                await WsWriteText(ws, GetTotalTraffic());
-
-                clientsToggle = !clientsToggle;
-                if (select != Guid.Empty) {
-                    if (interval > 500 || interval <= 500 && clientsToggle) {
-                        await WsWriteText(ws, GetProxyTraffic(select));
-                    }
-                }
-
-                await Task.Delay(interval);
+            if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                break;
             }
-        }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
-            return;
-        }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            //do nothing
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
+
+            string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            string[] split = message.Split('=');
+
+            if (split.Length < 2) { continue; }
+
+            switch (split[0]) {
+            case "select":
+                Guid.TryParse(split[1], out select);
+                break;
+
+            case "interval":
+                int.TryParse(split[1], out interval);
+                interval = Math.Max(interval, 100);
+                break;
+            }
         }
 
         if (ws?.State == WebSocketState.Open) {

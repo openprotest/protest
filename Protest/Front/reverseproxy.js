@@ -663,8 +663,23 @@ class ReverseProxy extends List {
 		const proxyAddressInput       = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
 		const proxyPostInput          = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
 		counter++; //separator
+		
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
-		const destinationPortInput    = AddParameter("Destination port", "input", "number", {"min":1, "max":65535, value:80});
+
+		counter++;
+		const destinationPortLabel = document.createElement("div");
+		destinationPortLabel.style.gridArea = `${counter} / 2`;
+		destinationPortLabel.textContent = `Destination port:`;
+
+		const destinationPortInput = document.createElement("input");
+		destinationPortInput.type = "number";
+		destinationPortInput.min = 1;
+		destinationPortInput.max = 65535;
+		destinationPortInput.value = 80;
+		destinationPortInput.style.gridArea = `${counter} / 3`;
+
+		innerBox.append(destinationPortLabel, destinationPortInput);
+
 
 		counter++;
 		const autostartBox = document.createElement("div");
@@ -676,7 +691,6 @@ class ReverseProxy extends List {
 		if (entry) {
 			nameInput.value               = entry.name.v;
 			protocolInput.value           = entry.protocol.v;
-			//certsInput.value              = entry.certificate.v;
 			passwordInput.value           = "";
 			proxyAddressInput.value       = entry.proxyaddr.v;
 			proxyPostInput.value          = entry.proxyport.v;
@@ -685,21 +699,37 @@ class ReverseProxy extends List {
 			autostartToggle.checkbox.checked = entry.autostart.v;
 		}
 
-		setTimeout(()=>nameInput.focus(), 200);
-
 		protocolInput.onchange = ()=> {
 			certsInput.disabled = protocolInput.value !== "HTTPS";
 			passwordInput.disabled = protocolInput.value !== "HTTPS";
 
 			const isL3 = protocolInput.value === "TCP" || protocolInput.value === "UDP";
 			destinationAddressInput.placeholder = isL3 ? "127.0.0.1" : "https://example.com";
-			destinationPortInput.disabled = !isL3;
+
+			destinationPortLabel.style.display = isL3 ? "initial" : "none";
+			destinationPortInput.style.display = isL3 ? "initial" : "none";
 		};
 
 		protocolInput.onchange();
 
 		if (isRunning) {
+			nameInput.disabled = true;
+			protocolInput.disabled = true;
+			certsInput.disabled = true;
+			passwordInput.disabled = true;
+			proxyAddressInput.disabled = true;
+			proxyPostInput.disabled = true;
+			destinationAddressInput.disabled = true;
+			destinationPortInput.disabled = true;
+			autostartToggle.checkbox.disabled = true;
+
 			dialog.okButton.disabled = true;
+			dialog.cancelButton.value = "Close";
+		
+			setTimeout(()=>dialog.cancelButton.focus(), 200);
+		}
+		else {
+			setTimeout(()=>nameInput.focus(), 200);
 		}
 
 		okButton.onclick = async ()=> {
