@@ -11,9 +11,7 @@ internal static class Configuration {
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
-    internal static bool force_registry_keys = false;
-    internal static bool accept_xff_header = true;
-    internal static IPAddress accept_xff_only_from = null;
+    internal static bool backdoor = true;
 
     internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
@@ -54,18 +52,8 @@ internal static class Configuration {
                 front_path = value.ToString();
                 break;
 
-            case "force_registry_keys":
-                force_registry_keys = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
-                break;
-
-            case "accept_xff_header":
-                accept_xff_header = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
-                break;
-
-            case "accept_xff_header_only_from":
-                if (IPAddress.TryParse(value.ToString(), out IPAddress address)) {
-                    accept_xff_only_from = address;
-                }
+            case "backdoor":
+                backdoor = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
                 break;
 
             case "http_prefix":
@@ -136,10 +124,9 @@ internal static class Configuration {
         builder.AppendLine($"#front_path = {front_path}");
         builder.AppendLine();
 #endif
-
-        builder.AppendLine($"force_registry_keys = {force_registry_keys.ToString().ToLower()}");
-        builder.AppendLine("accept_xff_header = true");
-        builder.AppendLine("#accept_xff_header_only_from = [reverse proxy ip address]");
+        
+        builder.AppendLine($"# When the backdoor is enabled, requests originating from the loopback address bypass authentication.");
+        builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
         builder.AppendLine();
 
         builder.AppendLine("http_prefix = http://127.0.0.1:8080/");
@@ -149,12 +136,6 @@ internal static class Configuration {
 
         builder.AppendLine("#ip2location_api_key = PASTE-API-KEY-HERE");
         builder.AppendLine();
-
-        builder.AppendLine();
-        builder.AppendLine("##");
-        builder.AppendLine("##  Use NETSH to bind an SSL certificate with your https endpoint:");
-        builder.AppendLine($"##  netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid={{{Data.GUID}}}");
-        builder.AppendLine("##");
 
         File.WriteAllText(Data.FILE_CONFIG, builder.ToString());
     }
@@ -189,5 +170,4 @@ internal static class Configuration {
 
         return true;
     }
-
 }

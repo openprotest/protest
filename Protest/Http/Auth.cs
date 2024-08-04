@@ -43,7 +43,7 @@ internal static class Auth {
 
     public static bool IsAuthenticated(HttpListenerContext ctx) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
-        if (IPAddress.IsLoopback(remoteIp)) return true;
+        if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
@@ -62,7 +62,7 @@ internal static class Auth {
 
     public static bool IsAuthorized(HttpListenerContext ctx, string path) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
-        if (IPAddress.IsLoopback(remoteIp)) return true;
+        if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) {
@@ -78,7 +78,7 @@ internal static class Auth {
 
     public static bool IsAuthenticatedAndAuthorized(HttpListenerContext ctx, string path) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
-        if (IPAddress.IsLoopback(remoteIp)) return true;
+        if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) {

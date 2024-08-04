@@ -208,14 +208,17 @@ public sealed class Listener {
 
         //Cross Site Request Forgery protection
         if (ctx.Request.UrlReferrer is not null) {
+            if (!Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.ToString(), UriKind.Absolute)) {
+                ctx.Response.StatusCode = 418; //I'm a teapot
+                ctx.Response.Close();
+                return;
+            }
+
             string userHostName = ctx.Request.UserHostName;
             string referrerHost = ctx.Request.UrlReferrer.Host;
             int    referrerPort = ctx.Request.UrlReferrer.Port;
-
             bool isSameHost = String.Equals(referrerHost, userHostName, StringComparison.Ordinal);
-            bool isWellFormedUri = Uri.IsWellFormedUriString(referrerHost, UriKind.Absolute);
-
-            if (!isSameHost && !String.Equals($"{referrerHost}:{referrerPort}", userHostName, StringComparison.Ordinal) || isWellFormedUri) {
+            if (!isSameHost && !String.Equals($"{referrerHost}:{referrerPort}", userHostName, StringComparison.Ordinal)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
                 return;
@@ -229,25 +232,10 @@ public sealed class Listener {
             }
         }
 
-        //handle X-Forwarded-For header
-        if (Configuration.accept_xff_header) {
-            string xffHeader = ctx.Request.Headers.Get("X-Forwarded-For");
-
-            if (xffHeader != null) {
-                int delimiterIndex = xffHeader.LastIndexOf(',');
-                if (delimiterIndex > 0) { xffHeader.Substring(delimiterIndex + 1).Trim(); }
-
-                if (IPAddress.TryParse(xffHeader, out IPAddress xffIp)) {
-                    if (!IPAddress.IsLoopback(xffIp) &&
-                        (Configuration.accept_xff_only_from is null || IPAddress.Equals(ctx.Request.RemoteEndPoint.Address, Configuration.accept_xff_only_from))) {
-                        ctx.Response.StatusCode = 418; //I'm a teapot
-                        ctx.Response.Close();
-                        return;
-                    }
-                    else {
-                        ctx.Request.RemoteEndPoint.Address = xffIp;
-                    }
-                }
+        string xRealIpHeader = ctx.Request.Headers.Get("X-Real-IP");
+        if (xRealIpHeader is not null) {
+            if (IPAddress.TryParse(xRealIpHeader, out IPAddress realIp)) {
+                ctx.Request.RemoteEndPoint.Address = realIp;
             }
         }
 
@@ -267,11 +255,11 @@ public sealed class Listener {
             ctx.Response.Close();
             return;
         }
-        
+
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+            ctx.Response.AddHeader("Content-Length", buffer?.Length.ToString() ?? "0");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
             ctx.Response.Close();
             return;
@@ -408,12 +396,7 @@ public sealed class Listener {
 
     private static bool DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-
-//#if DEBUG
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
-//#else
-//        string username = Auth.GetUsername(sessionId);
-//#endif
 
         ctx.Response.AddHeader("Cache-Control", "no-cache");
 

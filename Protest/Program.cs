@@ -42,27 +42,22 @@ internal class Program {
         Data.InitializeDirectories();
 
         bool loadConfig = Configuration.Load();
-        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "OK  " : "Failed"));
+        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "Done" : "Failed"));
         if (!loadConfig) {
             Console.WriteLine("Creating default configuration file");
             Configuration.CreateDefault();
         }
 
-        if (OperatingSystem.IsWindows() && Configuration.force_registry_keys) {
-            bool disableHeader = Configuration.DisableServerHeaderRegKey();
-            Console.WriteLine(String.Format("{0, -23} {1, -10}", "Force registry keys", disableHeader ? "OK  " : "Failed"));
-        }
-
         Console.Write("Loading database");
         DatabaseInstances.Initialize();
-        Console.WriteLine("        OK");
+        Console.WriteLine("        Done");
 
         bool loadRbac = Http.Auth.LoadRbac();
-        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "OK  " : "Failed"));
+        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "Done" : "Failed"));
 
         Console.Write("Starting workers");
         Workers.Automation.Initialize();
-        Console.WriteLine("        OK");
+        Console.WriteLine("        Done");
 
         Console.WriteLine();
 

@@ -145,12 +145,23 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
         rpBuilder.AddTransforms(builderContext => {
             builderContext.AddRequestTransform(transformContext => {
-                string remoteIpAddress       = transformContext.HttpContext.Connection.RemoteIpAddress?.ToString();
-                string existingXForwardedFor = transformContext.HttpContext.Request.Headers["X-Forwarded-For"].ToString();
-                string newXForwardedFor      = String.IsNullOrEmpty(existingXForwardedFor) ? remoteIpAddress : $"{existingXForwardedFor}, {remoteIpAddress}";
 
-                transformContext.ProxyRequest.Headers.Remove("X-Forwarded-For");
-                transformContext.ProxyRequest.Headers.Add("X-Forwarded-For", newXForwardedFor);
+                /*
+                !!! DONT RELAY THE X-REAL-IP FROM OTHER PROXIES ON THE CHAIN !!!
+                Any intermediary proxy or client can modify the X-Real-IP header to spool their IP.
+                */
+
+                string realIp = transformContext.HttpContext.Connection.RemoteIpAddress?.ToString();
+                if (realIp is not null) {
+                    transformContext.ProxyRequest.Headers.Remove("X-Real-IP");
+                    transformContext.ProxyRequest.Headers.Add("X-Real-IP", realIp);
+
+                    //string existingXForwardedFor = transformContext.HttpContext.Request.Headers["X-Forwarded-For"].ToString();
+                    //string newXForwardedFor      = String.IsNullOrEmpty(existingXForwardedFor) ? realIp : $"{existingXForwardedFor}, {realIp}";
+                    //transformContext.ProxyRequest.Headers.Remove("X-Forwarded-For");
+                    //transformContext.ProxyRequest.Headers.Add("X-Forwarded-For", newXForwardedFor);
+                }
+
                 //transformContext.ProxyRequest.Headers.Add("X-Forwarded-Host", transformContext.HttpContext.Request.Host.Value);
                 //transformContext.ProxyRequest.Headers.Add("X-Forwarded-Proto", transformContext.HttpContext.Request.Scheme);
 
