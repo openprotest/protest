@@ -14,16 +14,24 @@ class Backup extends List {
 		this.columnsOptions.style.display = "none";
 
 		this.SetupToolbar();
-		const createButton = this.AddToolbarButton("Create", "mono/add.svg?light");
-		const deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.createButton = this.AddToolbarButton("Create", "mono/add.svg?light");
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
-		const downloadButton = this.AddToolbarButton("Download", "mono/download.svg?light");
+		this.downloadButton = this.AddToolbarButton("Download", "mono/download.svg?light");
 
-		createButton.onclick = ()=> this.Create();
-		deleteButton.onclick = ()=> this.Delete();
-		downloadButton.onclick = ()=> this.Download();
+		this.createButton.onclick = ()=> this.Create();
+		this.deleteButton.onclick = ()=> this.Delete();
+		this.downloadButton.onclick = ()=> this.Download();
 
+		this.UpdateAuthorization();
 		this.GetBackupFiles();
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("backup:write");
+		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("backup:write");
+		this.downloadButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("backup:write");
 	}
 
 	async GetBackupFiles() {

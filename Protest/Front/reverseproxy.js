@@ -33,9 +33,18 @@ class ReverseProxy extends List {
 		this.maximum = 2560;
 
 		this.InitializeComponents();
+		this.UpdateAuthorization();
 
 		this.GetReverseProxies();
 		this.Connect();
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
+		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
+		this.startButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
+		this.stopButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
 	}
 
 	InitializeComponents() {

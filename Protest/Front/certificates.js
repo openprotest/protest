@@ -25,7 +25,17 @@ class Certificates extends List {
 		this.uploadButton.onclick = () => this.UploadDialog();
 		this.downloadButton.onclick = () => this.Download();
 
+		this.UpdateAuthorization();
+
 		this.GetCertFiles();
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
+		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
+		this.uploadButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
+		this.downloadButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
 	}
 
 	async GetCertFiles() {

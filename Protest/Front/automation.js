@@ -24,14 +24,25 @@ class Automation extends List {
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
 		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 
+		this.createButton.onclick = () => this.EditDialog();
+
+		this.UpdateAuthorization();
+
 		this.deleteButton.disabled = true;
 		this.startButton.disabled = true;
 		this.pauseButton.disabled = true;
 		this.stopButton.disabled = true;
 
-		this.createButton.onclick = () => this.EditDialog();
-
 		this.ListWorkers();
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
+		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
+		this.startButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
+		this.pauseButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
+		this.stopButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
 	}
 
 	async ListWorkers() {
