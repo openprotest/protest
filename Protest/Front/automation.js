@@ -37,12 +37,13 @@ class Automation extends List {
 	}
 
 	UpdateAuthorization() { //overrides
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("automation:write");
+		this.createButton.disabled = !this.canWrite;
+		this.deleteButton.disabled = !this.canWrite;
+		this.startButton.disabled = !this.canWrite;
+		this.pauseButton.disabled = !this.canWrite;
+		this.stopButton.disabled = !this.canWrite;
 		super.UpdateAuthorization();
-		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
-		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
-		this.startButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
-		this.pauseButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
-		this.stopButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("automation:write");
 	}
 
 	async ListWorkers() {
@@ -131,16 +132,16 @@ class Automation extends List {
 			this.deleteButton.disabled = true;
 		}
 		else {
-			//this.deleteButton.disabled = false; //TODO: <-
+			//this.deleteButton.disabled = !this.canWrite; //TODO: <-
 		}
 
 		if (this.link.data[this.args.select].status.v.toLowerCase() === "stopped") {
-			//this.startButton.disabled = false;
+			//this.startButton.disabled = !this.canWrite;
 			this.stopButton.disabled = true;
 		}
 		else {
 			this.startButton.disabled = true;
-			//this.stopButton.disabled = false;
+			//this.stopButton.disabled = !this.canWrite;
 		}
 	}
 

@@ -187,11 +187,12 @@ class Watchdog extends Window {
 	}
 
 	UpdateAuthorization() {
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("watchdog:write");
+		this.newButton.disabled = !this.canWrite;
+		this.editButton.disabled = !this.canWrite;
+		this.deleteButton.disabled = !this.canWrite;
+		this.notificationButton.disabled = !this.canWrite;
 		//super.UpdateAuthorization();
-		this.newButton.disabled          = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
-		this.editButton.disabled         = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
-		this.deleteButton.disabled       = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
-		this.notificationButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("watchdog:write");
 	}
 
 	async ListWatchers() {

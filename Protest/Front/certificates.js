@@ -31,11 +31,12 @@ class Certificates extends List {
 	}
 
 	UpdateAuthorization() { //overrides
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("certificates:write");
+		this.createButton.disabled = !this.canWrite;
+		this.deleteButton.disabled = !this.canWrite;
+		this.uploadButton.disabled = !this.canWrite;
+		this.downloadButton.disabled = !this.canWrite;
 		super.UpdateAuthorization();
-		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
-		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
-		this.uploadButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
-		this.downloadButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("certificates:write");
 	}
 
 	async GetCertFiles() {

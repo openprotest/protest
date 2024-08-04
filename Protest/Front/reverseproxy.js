@@ -40,11 +40,12 @@ class ReverseProxy extends List {
 	}
 
 	UpdateAuthorization() { //overrides
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("reverse proxy:write");
+		this.createButton.disabled = !this.canWrite;
+		this.deleteButton.disabled = !this.canWrite || this.args.select === null;
+		this.startButton.disabled  = !this.canWrite || this.args.select === null;
+		this.stopButton.disabled   = !this.canWrite || this.args.select === null;
 		super.UpdateAuthorization();
-		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
-		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
-		this.startButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
-		this.stopButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("reverse proxy:write");
 	}
 
 	InitializeComponents() {
@@ -57,10 +58,6 @@ class ReverseProxy extends List {
 		this.intervalButton = this.AddToolbarButton("Interval", "mono/metronome.svg?light");
 		this.reconnectSeparator = this.AddToolbarSeparator();
 		this.reconnectButton = this.AddToolbarButton("Reconnect", "mono/connect.svg?light");
-
-		this.deleteButton.disabled = true;
-		this.startButton.disabled = true;
-		this.stopButton.disabled = true;
 
 		this.list.style.right = "unset";
 		this.list.style.width = "min(50%, 640px)";
@@ -229,9 +226,9 @@ class ReverseProxy extends List {
 			if (!this.args.select) return;
 			if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 				const isRunning = this.selected.style.backgroundImage.includes("play");
-				this.deleteButton.disabled = false;
-				this.startButton.disabled = isRunning;
-				this.stopButton.disabled = !isRunning;
+				this.deleteButton.disabled = !this.canWrite;
+				this.startButton.disabled = !this.canWrite || isRunning;
+				this.stopButton.disabled = !this.canWrite || !isRunning;
 				this.UpdateSelected();
 			}
 		});
@@ -285,9 +282,9 @@ class ReverseProxy extends List {
 				
 				if (this.selected) {
 					const isRunning = this.selected.style.backgroundImage.includes("play");
-					this.deleteButton.disabled = false;
-					this.startButton.disabled = isRunning;
-					this.stopButton.disabled = !isRunning;
+					this.deleteButton.disabled = !this.canWrite;
+					this.startButton.disabled = !this.canWrite || isRunning;
+					this.stopButton.disabled = !this.canWrite || !isRunning;
 				}
 				else {
 					this.deleteButton.disabled = true;
@@ -590,7 +587,7 @@ class ReverseProxy extends List {
 			if (this.args.select && this.args.select === key) {
 				this.selected = element;
 				element.style.backgroundColor = "var(--clr-select)";
-				this.deleteButton.disabled = false;
+				this.deleteButton.disabled = !this.canWrite;
 			}
 		}
 	}
@@ -784,7 +781,7 @@ class ReverseProxy extends List {
 				this.args.select = json.guid;
 				this.GetReverseProxies();
 
-				this.startButton.disabled = false;
+				this.startButton.disabled = !this.canWrite;
 				this.stopButton.disabled = true;
 			}
 			catch (ex) {
@@ -835,9 +832,9 @@ class ReverseProxy extends List {
 
 			if (selected) {
 				selected.style.backgroundImage = "url(mono/play.svg)";
-				this.deleteButton.disabled = false;
+				this.deleteButton.disabled = !this.canWrite;
 				this.startButton.disabled = true;
-				this.stopButton.disabled = false;
+				this.stopButton.disabled = !this.canWrite;
 			}
 
 			ReverseProxy.RUNNING.push(guid);
@@ -845,7 +842,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
-			this.startButton.disabled = false;
+			this.startButton.disabled = !this.canWrite;
 			this.ConfirmBox(ex, true, "mono/error.svg");
 
 			if (ex === "This proxy is already running") {
@@ -854,9 +851,9 @@ class ReverseProxy extends List {
 
 				if (selected) {
 					selected.style.backgroundImage = "url(mono/play.svg)";
-					this.deleteButton.disabled = false;
+					this.deleteButton.disabled = !this.canWrite;
 					this.startButton.disabled = true;
-					this.stopButton.disabled = false;
+					this.stopButton.disabled = !this.canWrite;
 				}
 			}
 		}
@@ -878,8 +875,8 @@ class ReverseProxy extends List {
 
 			if (selected) {
 				selected.style.backgroundImage = "url(mono/stop.svg)";
-				this.deleteButton.disabled = false;
-				this.startButton.disabled = false;
+				this.deleteButton.disabled = !this.canWrite;
+				this.startButton.disabled = !this.canWrite;
 				this.stopButton.disabled = true;
 			}
 
@@ -891,7 +888,7 @@ class ReverseProxy extends List {
 			return json;
 		}
 		catch (ex) {
-			this.stopButton.disabled = false;
+			this.stopButton.disabled = !this.canWrite;
 			this.ConfirmBox(ex, true, "mono/error.svg");
 
 			if (ex === "This proxy is not running") {
@@ -902,8 +899,8 @@ class ReverseProxy extends List {
 
 				if (selected) {
 					selected.style.backgroundImage = "url(mono/stop.svg)";
-					this.deleteButton.disabled = false;
-					this.startButton.disabled = false;
+					this.deleteButton.disabled = !this.canWrite;
+					this.startButton.disabled = !this.canWrite;
 					this.stopButton.disabled = true;
 				}
 			}
@@ -911,8 +908,6 @@ class ReverseProxy extends List {
 	}
 
 	SetInterval() {
-		if (!this.ws) return;
-
 		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
@@ -946,7 +941,9 @@ class ReverseProxy extends List {
 			if (isNaN(value)) { return; }
 
 			this.args.interval = intervalInput.value;
-			this.ws.send(`interval=${value}`);
+			if (this.ws !== null && this.ws.readyState === 1) {
+				this.ws.send(`interval=${value}`);
+			}
 			this.UpdateSelected();
 			dialog.Close();
 		};
@@ -979,9 +976,9 @@ class ReverseProxy extends List {
 			this.UpdateSelected();
 
 			const isRunning = element.style.backgroundImage.includes("play");
-			this.deleteButton.disabled = false;
-			this.startButton.disabled = isRunning;
-			this.stopButton.disabled = !isRunning;
+			this.deleteButton.disabled = !this.canWrite;
+			this.startButton.disabled = !this.canWrite || isRunning;
+			this.stopButton.disabled = !this.canWrite || !isRunning;
 		};
 
 		element.ondblclick = ()=> {

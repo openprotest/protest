@@ -28,10 +28,11 @@ class Backup extends List {
 	}
 
 	UpdateAuthorization() { //overrides
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("backup:write");
+		this.createButton.disabled = !this.canWrite;
+		this.deleteButton.disabled = !this.canWrite;
+		this.downloadButton.disabled = !this.canWrite;
 		super.UpdateAuthorization();
-		this.createButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("backup:write");
-		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("backup:write");
-		this.downloadButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("backup:write");
 	}
 
 	async GetBackupFiles() {

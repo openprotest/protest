@@ -135,30 +135,35 @@ internal static class ReverseProxy {
         }).Start();
 
         byte[] buff = new byte[512];
-        while (ws.State == WebSocketState.Open) {
-            WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+        try {
+            while (ws.State == WebSocketState.Open) {
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
-            if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                break;
-            }
+                if (receiveResult.MessageType == WebSocketMessageType.Close) {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    break;
+                }
 
-            string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
-            string[] split = message.Split('=');
+                string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+                string[] split = message.Split('=');
 
-            if (split.Length < 2) { continue; }
+                if (split.Length < 2) { continue; }
 
-            switch (split[0]) {
-            case "select":
-                Guid.TryParse(split[1], out select);
-                break;
+                switch (split[0]) {
+                case "select":
+                    Guid.TryParse(split[1], out select);
+                    break;
 
-            case "interval":
-                int.TryParse(split[1], out interval);
-                interval = Math.Max(interval, 100);
-                break;
+                case "interval":
+                    int.TryParse(split[1], out interval);
+                    interval = Math.Max(interval, 100);
+                    break;
+                }
             }
         }
+        catch {
+        }
+
 
         if (ws?.State == WebSocketState.Open) {
             try {
