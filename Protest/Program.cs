@@ -21,7 +21,7 @@ global using System.Linq;
 
 namespace Protest;
 internal class Program {
-        static void Main(string[] args) {
+    static void Main(string[] args) {
         Console.Title = "Pro-test";
 
         Console.WriteLine(@"   _____");

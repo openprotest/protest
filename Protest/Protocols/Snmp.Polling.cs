@@ -27,6 +27,7 @@ internal static class Polling {
 
     private static byte[] SnmpHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, SnmpOperation operation) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
+
         parameters.TryGetValue("target",    out string target);
         parameters.TryGetValue("ver",       out string versionString);
         parameters.TryGetValue("community", out string communityString);

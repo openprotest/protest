@@ -207,7 +207,7 @@ public sealed class Listener {
         HttpListenerContext ctx = listener.EndGetContext(result);
 
         //Cross Site Request Forgery protection
-        if (ctx.Request.UrlReferrer is not null) {
+        if (ctx.Request?.UrlReferrer is not null) {
             if (!Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.ToString(), UriKind.Absolute)) {
                 ctx.Response.StatusCode = 418; //I'm a teapot
                 ctx.Response.Close();
@@ -232,11 +232,9 @@ public sealed class Listener {
             }
         }
 
-        string xRealIpHeader = ctx.Request.Headers.Get("X-Real-IP");
-        if (xRealIpHeader is not null) {
-            if (IPAddress.TryParse(xRealIpHeader, out IPAddress realIp)) {
-                ctx.Request.RemoteEndPoint.Address = realIp;
-            }
+        string xRealIpHeader = ctx.Request?.Headers?.Get("X-Real-IP");
+        if (xRealIpHeader is not null && IPAddress.TryParse(xRealIpHeader, out IPAddress realIp)) {
+            ctx.Request.RemoteEndPoint.Address = realIp;
         }
 
         string path = ctx.Request.Url.PathAndQuery;
@@ -248,9 +246,9 @@ public sealed class Listener {
                 return;
             }
 
-            ctx.Response.StatusCode = Auth.AttemptAuthentication(ctx, out _) ?
-                (int)HttpStatusCode.Accepted :
-                (int)HttpStatusCode.Unauthorized;
+            ctx.Response.StatusCode = Auth.AttemptAuthentication(ctx, out _)
+                ? (int)HttpStatusCode.Accepted
+                : (int)HttpStatusCode.Unauthorized;
 
             ctx.Response.Close();
             return;
@@ -259,8 +257,8 @@ public sealed class Listener {
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.AddHeader("Content-Length", buffer?.Length.ToString() ?? "0");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            ctx.Response.AddHeader("Content-Length", buffer?.Length.ToString() ?? "0");
             ctx.Response.Close();
             return;
         }

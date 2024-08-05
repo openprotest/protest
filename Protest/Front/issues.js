@@ -4,7 +4,7 @@ class Issues extends List {
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["Host", "Category", "Issue", "Last Update"];
+		const columns = ["host", "category", "issue", "last update"];
 		this.SetupColumns(columns);
 
 		this.columnsOptions.style.display = "none";
@@ -20,6 +20,13 @@ class Issues extends List {
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		const filterButton = this.SetupFilter();
 		this.SetupFind();
+	
+		this.UpdateAuthorization();
+	}
 
+	UpdateAuthorization() { //overrides
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("network utilities:write");
+		this.scanButton.disabled = !this.canWrite;
+		super.UpdateAuthorization();
 	}
 }
