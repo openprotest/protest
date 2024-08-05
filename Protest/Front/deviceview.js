@@ -1403,7 +1403,7 @@ class DeviceView extends View {
 					data[0].delta = 0;
 				}
 
-				let max = 100;
+				let max = 50;
 				for (let i=1; i<data.length; i++) {
 					let delta = data[i].v - data[i - 1].v;
 					data[i].delta = Math.max(delta, 0);
@@ -1526,6 +1526,7 @@ class DeviceView extends View {
 					cy = height + 4 - Math.round(height * data[closestIndex].v / 100);
 				}
 				else if (type === "delta") {
+					let max = Math.max(...data.map(d=>d.delta), 50);
 					valueLabel.textContent = data[closestIndex].delta;
 					cy = height + 4 - Math.round(height * data[closestIndex].delta / max);
 				}

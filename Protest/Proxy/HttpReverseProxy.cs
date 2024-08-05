@@ -59,7 +59,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                     await this.host.RunAsync(cancellationToken);
                 }
                 catch (Exception) {
-                    this.errors++;
+                    Interlocked.Increment(ref this.errors);
                 }
                 finally {
                     await Task.Delay(50);

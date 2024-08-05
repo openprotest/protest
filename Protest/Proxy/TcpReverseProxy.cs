@@ -43,7 +43,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
                 _ = Task.Run(() => ServeClient(client));
             }
             catch (Exception) {
-                this.errors++;
+                Interlocked.Increment(ref this.errors);
             }
         }
     }
@@ -65,7 +65,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
             await Task.WhenAll(clientToDestination, destinationToClient);
         }
         catch (Exception) {
-            this.errors++;
+            Interlocked.Increment(ref this.errors);
         }
         finally {
             proxyClient?.Close();

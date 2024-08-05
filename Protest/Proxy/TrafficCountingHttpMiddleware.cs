@@ -20,6 +20,9 @@ internal sealed class TrafficCountingHttpMiddleware {
     public async Task InvokeAsync(HttpContext context) {
         string key = context.Connection.RemoteIpAddress.ToString();
 
+        //TODO: count web-socket traffic
+        //if (context.WebSockets.IsWebSocketRequest) {}
+
         Stream requestStream = context.Request.Body;
         Stream responseStream = context.Response.Body;
 

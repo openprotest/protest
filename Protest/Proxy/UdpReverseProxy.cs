@@ -43,7 +43,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
                 _ = Task.Run(() => ServeClient(result));
             }
             catch (Exception) {
-                this.errors++;
+                Interlocked.Increment(ref this.errors);
             }
         }
     }
@@ -64,7 +64,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
             await udpListener.SendAsync(responseResult.Buffer, responseResult.Buffer.Length, udpResult.RemoteEndPoint);
         }
         catch (Exception) {
-            this.errors++;
+            Interlocked.Increment(ref this.errors);
         }
     }
 
