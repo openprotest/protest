@@ -1,4 +1,4 @@
-class DnsLookup extends Console {
+class Mdns extends Console {
 	static recordTypes = [
 		["A",     "IPv4 Address",       "hsl(20,85%,50%)",  1],
 		["AAAA",  "IPv6 Address",       "hsl(50,85%,50%)",  28],
@@ -17,22 +17,15 @@ class DnsLookup extends Console {
 
 		this.args = args ?? {
 			entries      : [],
-			server       : "",
 			type         : "A",
-			timeout      : 2000,
-			transport    : "Auto",
-			isStandard   : false,
-			isInverse    : false,
-			serverStatus : false,
-			isTruncated  : false,
-			isRecursive  : true
+			timeout      : 3000
 		};
 
 		this.AddCssDependencies("tools.css");
 
 		this.hashtable = {}; //contains all elements
 
-		this.SetTitle(this.args.server === "" ? "DNS lookup" : `DNS lookup: ${this.args.server}`);
+		this.SetTitle("mDNS lookup");
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
@@ -44,6 +37,8 @@ class DnsLookup extends Console {
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
+
+		this.inputBox.placeholder = "query";
 
 		if (this.args.entries) { //restore entries from previous session
 			let temp = this.args.entries;
@@ -147,28 +142,13 @@ class DnsLookup extends Console {
 	}
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("360px");
+		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
 
 		innerBox.parentElement.style.maxWidth = "540px";
-		innerBox.style.padding = "40px 0px 0px 40px";
-
-		const dnsServerServer = document.createElement("div");
-		dnsServerServer.textContent = "DNS server:";
-		dnsServerServer.style.display = "inline-block";
-		dnsServerServer.style.minWidth = "150px";
-		innerBox.appendChild(dnsServerServer);
-
-		const dnsServerInput = document.createElement("input");
-		dnsServerInput.type = "text";
-		dnsServerInput.placeholder = "system default";
-		dnsServerInput.style.width = "200px";
-		dnsServerInput.value = this.args.server;
-		innerBox.appendChild(dnsServerInput);
-
-		innerBox.appendChild(document.createElement("br"));
+		innerBox.style.padding = "20px 0px 0px 40px";
 
 		const recordTypeLabel = document.createElement("div");
 		recordTypeLabel.textContent = "Record type:";
@@ -214,10 +194,11 @@ class DnsLookup extends Console {
 		innerBox.appendChild(transportMethodLabel);
 
 		const transportMethodInput = document.createElement("select");
+		transportMethodInput.disabled = true;
 		transportMethodInput.style.width = "200px";
 		innerBox.appendChild(transportMethodInput);
 
-		const transportOptions = ["Auto", "UDP", "TCP", "TLS", "HTTPS"];
+		const transportOptions = ["UDP"];
 		for (let i = 0; i < transportOptions.length; i++) {
 			const option = document.createElement("option");
 			option.value = transportOptions[i];
@@ -226,29 +207,9 @@ class DnsLookup extends Console {
 		}
 		transportMethodInput.value = this.args.transport;
 
-		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
-
-		const standardToggle = this.CreateToggle("Standard", this.args.isStandard, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-
-		const inverseToggle = this.CreateToggle("Inverse lookup", this.args.isInverse, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-
-		const serverStatusToggle = this.CreateToggle("Request server status", this.args.serverStatus, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-
-		const truncatedToggle = this.CreateToggle("Truncated", this.args.isTruncated, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-
-		const recursiveToggle = this.CreateToggle("Recursive", this.args.isRecursive, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-
 		const Apply = ()=> {
-			this.args.server       = dnsServerInput.value;
 			this.args.type         = recordTypeInput.value;
 			this.args.timeout      = timeoutInput.value;
-			this.args.transport    = transportMethodInput.value;
 			this.args.isStandard   = standardToggle.checkbox.checked;
 			this.args.isInverse    = inverseToggle.checkbox.checked;
 			this.args.serverStatus = serverStatusToggle.checkbox.checked;
@@ -266,10 +227,8 @@ class DnsLookup extends Console {
 			}
 		};
 
-		dnsServerInput.addEventListener("keydown", OnKeydown);
 		recordTypeInput.addEventListener("keydown", OnKeydown);
 		timeoutInput.addEventListener("keydown", OnKeydown);
-		transportMethodInput.addEventListener("keydown", OnKeydown);
 
 		transportMethodInput.onchange = ()=> {
 			if (transportMethodInput.value === "HTTPS") {
@@ -294,7 +253,7 @@ class DnsLookup extends Console {
 			Apply();
 		});
 
-		dnsServerInput.focus();
+		recordTypeInput.focus();
 
 		return dialog;
 	}
@@ -319,10 +278,10 @@ class DnsLookup extends Console {
 		}
 	}
 
-	async Add(domain, type=null) {
-		if (domain.length === 0) return;
+	async Add(query, type=null) {
+		if (query.length === 0) return;
 
-		const entryKey = `${type ?? this.args.type},${domain}`;
+		const entryKey = `${type ?? this.args.type},${query}`;
 
 		if (entryKey in this.hashtable) {
 			this.list.appendChild(this.hashtable[entryKey].element);
@@ -340,7 +299,7 @@ class DnsLookup extends Console {
 		name.className = "tool-label";
 		name.style.paddingLeft = "24px";
 		name.setAttribute("label", type ? type : this.args.type);
-		name.textContent = domain;
+		name.textContent = query;
 
 		const result = document.createElement("div");
 		result.className = "tool-result collapsed";
@@ -379,9 +338,7 @@ class DnsLookup extends Console {
 		this.args.entries.push(entryKey);
 
 		try {
-			let url = `tools/dnslookup?domain=${encodeURIComponent(domain)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
-			if (this.args.server.length > 0) url += `&server=${encodeURIComponent(this.args.server)}`;
-			if (this.args.transport != "Auto") url += `&transport=${this.args.transport.toLowerCase()}`;
+			let url = `tools/mdnslookup?query=${encodeURIComponent(query)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
 			if (this.args.isStandard)   url += "&standard=true";
 			if (this.args.isInverse)    url += "&inverse=true";
 			if (this.args.serverStatus) url += "&status=true";
@@ -431,59 +388,29 @@ class DnsLookup extends Console {
 				name.textContent = json.replace;
 			}
 
-			if (json.answer) {
-				for (let i = 0; i < json.answer.length; i++) {
-					const box = document.createElement("div");
+			for (let i = 0; i < json.answer.length; i++) {
+				const box = document.createElement("div");
+				result.appendChild(box);
 
-					const label = document.createElement("div");
-					label.textContent = json.answer[i].type;
-					label.style.display = "inline-block";
-					label.style.color = DnsLookup.recordTypes.find(o=>o[0]===json.answer[i].type)[2];
-					label.style.backgroundColor = "#222";
-					label.style.fontFamily = "monospace";
-					label.style.fontWeight = "600";
-					label.style.marginRight = "4px";
-					label.style.padding = "1px 4px";
-					label.style.borderRadius = "4px";
-					label.style.height = "18px";
-					label.style.lineHeight = "20px";
-					label.style.userSelect = "none";
+				const label = document.createElement("div");
+				label.textContent = json.answer[i].type;
+				label.style.display = "inline-block";
+				label.style.color = DnsLookup.recordTypes.find(o=>o[0]===json.answer[i].type)[2];
+				label.style.backgroundColor = "#222";
+				label.style.fontFamily = "monospace";
+				label.style.fontWeight = "600";
+				label.style.marginRight = "4px";
+				label.style.padding = "1px 4px";
+				label.style.borderRadius = "4px";
+				label.style.height = "18px";
+				label.style.lineHeight = "20px";
+				label.style.userSelect = "none";
 
-					const string = document.createElement("div");
-					string.style.display = "inline-block";
-					string.textContent = json.answer[i].name;
+				const string = document.createElement("div");
+				string.style.display = "inline-block";
+				string.textContent = json.answer[i].name;
 
-					box.append(label, string);
-					result.appendChild(box);
-				}
-			}
-			else if (json.Answer) { //over https
-				for (let i = 0; i < json.Answer.length; i++) {
-					const box = document.createElement("div");
-
-					let type = DnsLookup.recordTypes.find(o=>o[3]===json.Answer[i].type);
-
-					const label = document.createElement("div");
-					label.textContent = type[0];
-					label.style.display = "inline-block";
-					label.style.color = type[2];
-					label.style.backgroundColor = "#222";
-					label.style.fontFamily = "monospace";
-					label.style.fontWeight = "600";
-					label.style.marginRight = "4px";
-					label.style.padding = "1px 4px";
-					label.style.borderRadius = "4px";
-					label.style.height = "18px";
-					label.style.lineHeight = "20px";
-					label.style.userSelect = "none";
-
-					const string = document.createElement("div");
-					string.style.display = "inline-block";
-					string.textContent = json.Answer[i].data;
-
-					box.append(label, string);
-					result.appendChild(box);
-				}
+				box.append(label, string);
 			}
 		}
 		catch (ex) {

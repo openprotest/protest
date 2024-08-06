@@ -326,6 +326,7 @@ const MENU = {
 		{ t:"Ping",               i:"mono/ping.svg?light",          g:"utilities", h:false, f:args=> new Ping(args),         k:"roundtrip rtt icmp echo reply" },
 		{ t:"ARP ping",           i:"mono/ping.svg?light",          g:"utilities", h:true,  f:args=> new Ping({entries:[], timeout:500, method:"arp", interval:1000, moveToBottom:false, status:"play"}) },
 		{ t:"DNS lookup",         i:"mono/dns.svg?light",           g:"utilities", h:false, f:args=> new DnsLookup(args),    k:"resolve resolution" },
+		{ t:"mDNS lookup",        i:"mono/dns.svg?light",           g:"utilities", h:true,  f:args=> new Mdns(args),    k:"multicast lookup resolve resolution" },
 		{ t:"Trace route",        i:"mono/traceroute.svg?light",    g:"utilities", h:false, f:args=> new TraceRoute(args),   k:"path" },
 		{ t:"TCP port scan",      i:"mono/portscan.svg?light",      g:"utilities", h:false, f:args=> new PortScan(args),     k:"portscan" },
 		{ t:"Locate IP",          i:"mono/locate.svg?light",        g:"utilities", h:false, f:args=> new LocateIp(args),     k:"location" },

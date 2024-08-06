@@ -98,6 +98,7 @@ public sealed class Listener {
 
         { "/tools/bulkping",          (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters) },
         { "/tools/dnslookup",         (ctx, parameters, username) => Protocols.Dns.Resolve(parameters) },
+        { "/tools/mdnslookup",        (ctx, parameters, username) => Protocols.MulticastDns.Resolve(parameters) },
         { "/tools/ntp",               (ctx, parameters, username) => Protocols.Ntp.Request(parameters) },
         { "/tools/locateip",          (ctx, parameters, username) => Tools.LocateIp.Locate(ctx) },
         { "/tools/maclookup",         (ctx, parameters, username) => Tools.MacLookup.Lookup(ctx) },

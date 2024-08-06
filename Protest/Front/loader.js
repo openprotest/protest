@@ -98,6 +98,7 @@ const LOADER = {
 		"issues.js",
 		"ping.js",
 		"dnslookup.js",
+		"mdns.js",
 		"traceroute.js",
 		"portscan.js",
 		"locateip.js",
@@ -315,6 +316,7 @@ const LOADER = {
 
 		case "Ping"         : return new Ping(command.args);
 		case "DnsLookup"    : return new DnsLookup(command.args);
+		case "Mdns"    : return new Mdns(command.args);
 		case "TraceRoute"   : return new TraceRoute(command.args);
 		case "SpeedTest"    : return new SpeedTest(command.args);
 		case "PortScan"     : return new PortScan(command.args);
