@@ -34,7 +34,7 @@ internal static class Dns {
         ANY   = 255
     }
 
-    enum Class : byte {
+    public enum Class : byte {
         IN = 1, //Internet
         CS = 2, //CSNET -Obsolete
         CH = 3, //Chaos -Obsolete
@@ -392,11 +392,11 @@ internal static class Dns {
         string[] domainNames,
         RecordType type,
         out string replaced,
-        bool isStandard = false, //1
-        bool isInverse = false, //2
+        bool isStandard = false,     //1
+        bool isInverse = false,      //2
         bool isServerStatus = false, //3
-        bool isTruncated = false, //6
-        bool isRecursive = true   //7
+        bool isTruncated = false,    //6
+        bool isRecursive = true      //7
     ) {
 
         replaced = null;
@@ -407,18 +407,18 @@ internal static class Dns {
         string[][] labels = new string[domainNames.Length][];
 
         for (int i = 0; i < labels.Length; i++) {
-            labels[i] = domainNames[i].Split(".");
+            labels[i] = domainNames[i].Split('.');
 
             if (type == RecordType.PTR && labels[i].Length == 4
                 && labels[i].All(o => int.TryParse(o, out int n) && n >= 0 && n <= 255)) {
                 replaced = $"{String.Join(".", labels[i].Reverse())}.in-addr.arpa";
-                labels[i] = replaced.Split(".");
+                labels[i] = replaced.Split('.');
             }
 
             if (labels[i].Length == 1) { //append domain prefix id needed
                 string domain = GetDomain();
                 replaced = $"{String.Join(".", labels[i])}.{domain}";
-                labels[i] = replaced.Split(".");
+                labels[i] = replaced.Split('.');
             }
 
             for (int j = 0; j < labels[i].Length; j++) {
@@ -501,7 +501,7 @@ internal static class Dns {
         int index = 12;
 
         for (int i = 0; i < questionCount; i++) { //skip questions
-            while (true) {
+            while (index < response.Length) {
                 byte len = response[index++];
                 if (len == 0) break;
                 index += len;
@@ -539,7 +539,7 @@ internal static class Dns {
             }
 
             a.name = new byte[a.length];
-            for (int i = 0; i < a.length; i++) {
+            for (int i = 0; i < a.length && index < response.Length; i++) {
                 a.name[i] = response[index++];
             }
 
@@ -556,7 +556,7 @@ internal static class Dns {
         return result;
     }
 
-    private static string LabelsToString(byte[] labels, int offset, byte[] response, out bool isNullTerminated) {
+    public static string LabelsToString(byte[] labels, int offset, byte[] response, out bool isNullTerminated) {
         if (labels.Length - offset < 2) {
             isNullTerminated = false;
             return String.Empty;
