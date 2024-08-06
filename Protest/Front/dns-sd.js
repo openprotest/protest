@@ -1,4 +1,4 @@
-class Mdns extends Console {
+class DnsSD extends Console {
 	static recordTypes = [
 		["A",     "IPv4 Address",       "hsl(20,85%,50%)",  1],
 		["AAAA",  "IPv6 Address",       "hsl(50,85%,50%)",  28],
@@ -25,7 +25,7 @@ class Mdns extends Console {
 
 		this.hashtable = {}; //contains all elements
 
-		this.SetTitle("mDNS lookup");
+		this.SetTitle("DNS service discovery");
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
@@ -178,7 +178,7 @@ class Mdns extends Console {
 
 		const timeoutInput = document.createElement("input");
 		timeoutInput.type = "number";
-		timeoutInput.min = 1;
+		timeoutInput.min = 500;
 		timeoutInput.max = 5000;
 		timeoutInput.value = this.args.timeout;
 		timeoutInput.style.width = "200px";
@@ -338,7 +338,7 @@ class Mdns extends Console {
 		this.args.entries.push(entryKey);
 
 		try {
-			let url = `tools/mdnslookup?query=${encodeURIComponent(query)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
+			let url = `tools/dnssdlookup?query=${encodeURIComponent(query)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
 			if (this.args.isStandard)   url += "&standard=true";
 			if (this.args.isInverse)    url += "&inverse=true";
 			if (this.args.serverStatus) url += "&status=true";

@@ -11,7 +11,7 @@ using static Protest.Protocols.Dns;
 
 namespace Protest.Protocols;
 
-internal class MulticastDns {
+internal class Mdns {
 
     public static byte[] Resolve(Dictionary<string, string> parameters) {
         if (parameters is null) {
@@ -25,6 +25,8 @@ internal class MulticastDns {
         if (!int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout)) {
             timeout = 3000;
         }
+
+        timeout = Math.Max(timeout, 500);
 
         RecordType type = type = Uri.UnescapeDataString(typeString) switch {
             "A"     => RecordType.A,
@@ -40,51 +42,56 @@ internal class MulticastDns {
             _       => RecordType.A,
         };
 
-        Console.WriteLine(query);
-        Console.WriteLine(timeout);
-        Console.WriteLine(type);
-        Console.WriteLine();
-
-        return Resolve(query, timeout, type).Result;
+        return Resolve(query, timeout, type);
     }
 
-    public static async Task<byte[]> Resolve(string queryString, int timeout = 3000, RecordType type = RecordType.A) {
-        try {
-            using UdpClient udpClient = new UdpClient();
-            udpClient.EnableBroadcast = true;
-            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+    public static byte[] Resolve(string queryString, int timeout = 3000, RecordType type = RecordType.A) {
+        /*try*/ {
 
-            IPEndPoint multicastEndPoint = new IPEndPoint(IPAddress.Parse("224.0.0.251"), 5353);
-            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 5353);
 
-            udpClient.Client.Bind(localEndPoint);
+            IPEndPoint remote = new IPEndPoint(IPAddress.Parse("224.0.0.251"), 5353);
+            IPEndPoint local = new IPEndPoint(IPAddress.Any, 5353);
 
             byte[] query = ConstructQuery(queryString, type);
+            long timestamp = DateTime.Now.Ticks;
 
-            await udpClient.SendAsync(query, query.Length, multicastEndPoint);
+            using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontRoute, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, timeout);
+            socket.Bind(local);
+
+            socket.SendTo(query, remote);
+
+
+            using UdpClient udpClient = new UdpClient();
+            udpClient.EnableBroadcast = true;
+
 
             List<byte[]> receivedData = new List<byte[]>();
             DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
 
             while (DateTime.Now < endTime) {
-                Task<UdpReceiveResult> receiveTask = udpClient.ReceiveAsync();
-                if (await Task.WhenAny(receiveTask, Task.Delay(timeout)) == receiveTask) {
-                    UdpReceiveResult response = receiveTask.Result;
-                    receivedData.Add(response.Buffer);
+                int length = 0;
+                byte[] reply = new byte[2048];
 
-                    Console.WriteLine(response.ToString());
+                Console.WriteLine(length);
 
+
+                try {
+                    length = socket.Receive(reply);
                 }
-                else {
-                    break;
-                }
+                catch {}
             }
+
 
             return ParseResponses(receivedData);
         }
-        catch {
+        /*catch (Exception ex) {
+            Console.WriteLine($"Error: {ex.Message}");
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
-        }
+        }*/
     }
 
     private static byte[] ConstructQuery(string queryString, RecordType type) {
@@ -118,7 +125,7 @@ internal class MulticastDns {
 
         // Write the type and class
         bw.Write((ushort)type); // Type A
-        bw.Write((ushort)0x8001); // Class IN with unicast response
+        bw.Write((ushort)0x0001); // Class IN with unicast response
 
         byte[] query = ms.ToArray();
 
@@ -130,7 +137,7 @@ internal class MulticastDns {
 
         foreach (byte[] response in responses) {
             ushort answerCount, authorityCount, additionalCount;
-            Answer[] answers = DeconstructResponse(response, out answerCount, out authorityCount, out additionalCount);
+            Answer[] answers = Dns.DeconstructResponse(response, out answerCount, out authorityCount, out additionalCount);
             allAnswers.AddRange(answers);
         }
 

@@ -133,7 +133,6 @@ internal static class Dhcp {
                 break;
             }
         }
-
     }
 
     private static void SendMessage(WebSocket ws, byte[] message, int length, int type, string groupId, string id, string mac, byte[] server, byte[] ip) {
