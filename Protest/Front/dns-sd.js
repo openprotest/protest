@@ -205,7 +205,7 @@ class DnsSD extends Console {
 			option.textContent = transportOptions[i];
 			transportMethodInput.appendChild(option);
 		}
-		transportMethodInput.value = this.args.transport;
+		transportMethodInput.value = "UDP";
 
 		const Apply = ()=> {
 			this.args.type         = recordTypeInput.value;
@@ -305,6 +305,11 @@ class DnsSD extends Console {
 		result.className = "tool-result collapsed";
 		result.textContent = "";
 
+		const status = document.createElement("div");
+		status.className = "tool-status";
+		status.textContent = "";
+		element.appendChild(status);
+
 		const remove = document.createElement("div");
 		remove.className = "tool-remove";
 
@@ -313,6 +318,7 @@ class DnsSD extends Console {
 		this.hashtable[entryKey] = {
 			element: element,
 			result: result,
+			status: status,
 			expand: false,
 			list: []
 		};
@@ -337,7 +343,7 @@ class DnsSD extends Console {
 
 		this.args.entries.push(entryKey);
 
-		try {
+		/*try*/ {
 			let url = `tools/dnssdlookup?query=${encodeURIComponent(query)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
 			if (this.args.isStandard)   url += "&standard=true";
 			if (this.args.isInverse)    url += "&inverse=true";
@@ -362,7 +368,16 @@ class DnsSD extends Console {
 				hexBox.style.backgroundImage = "url(mono/hexviewer.svg?light)";
 				hexBox.style.cursor = "pointer";
 				element.appendChild(hexBox);
-				hexBox.onclick = ()=> new HexViewer({exchange:[{direction:"query", data:json.req},{direction:"response", data:json.res}], protocol:"dns"});
+
+				hexBox.onclick = ()=>{
+					new HexViewer({
+						protocol:"mdns",
+						exchange:[
+							{direction:"query", data:json.req},
+							{direction:"response", data:json.res}
+						]
+					});
+				};
 			}
 
 			if (json.error) {
@@ -388,11 +403,12 @@ class DnsSD extends Console {
 				name.textContent = json.replace;
 			}
 
+			status.style.visibility = "hidden";
+
 			for (let i = 0; i < json.answer.length; i++) {
+
 				const box = document.createElement("div");
 				result.appendChild(box);
-
-console.log(json);
 
 				const label = document.createElement("div");
 				label.textContent = json.answer[i].type;
@@ -415,9 +431,9 @@ console.log(json);
 				box.append(label, string);
 			}
 		}
-		catch (ex) {
+		/*catch (ex) {
 			console.error(ex);
-		}
+		}*/
 	}
 
 	Remove(domain) {

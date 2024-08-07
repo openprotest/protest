@@ -248,123 +248,7 @@ internal static class Dns {
             }
 
             Answer[] deconstructed = DeconstructResponse(response, out answerCount, out authorityCount, out additionalCount);
-            StringBuilder builder = new StringBuilder();
-
-            builder.Append('{');
-
-            if (deconstructed.Length > 0 && deconstructed[0].error > 0) {
-                string errorMessage = deconstructed[0].error switch {
-                    0 => "no error",
-                    1 => "query format error",
-                    2 => "server failure",
-                    3 => "no such name",
-                    4 => "function not implemented",
-                    5 => "refused",
-                    6 => "name should not exist",
-                    7 => "RRset should not exist",
-                    8 => "server not authoritative for the zone",
-                    9 => "name not in zone",
-                    _ => "unknown error"
-                };
-                builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{deconstructed[0].error}\",");
-            }
-
-            builder.Append("\"req\":[");
-            for (int i = 0; i < query.Length; i++) {
-                if (i > 0) builder.Append(',');
-                builder.Append(query[i]);
-            }
-            builder.Append("],");
-
-            builder.Append("\"res\":[");
-            for (int i = 0; i < response.Length; i++) {
-                if (i > 0) builder.Append(',');
-                builder.Append(response[i]);
-            }
-            builder.Append("],");
-
-            if (replaced is not null) {
-                builder.Append($"\"replace\":\"{replaced}\",");
-            }
-
-            builder.Append("\"answer\":[");
-            int count = 0;
-            for (int i = 0; i < deconstructed.Length; i++) {
-                if (deconstructed[i].isAuthoritative || deconstructed[i].isAdditional) continue;
-
-                if (count > 0) builder.Append(',');
-
-                builder.Append('{');
-                switch (deconstructed[i].type) {
-                case RecordType.A:
-                    builder.Append("\"type\":\"A\",");
-                    builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
-                    break;
-
-                case RecordType.NS:
-                    builder.Append("\"type\":\"NS\",");
-                    builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    break;
-
-                case RecordType.CNAME:
-                    builder.Append("\"type\":\"CNAME\",");
-                    builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    break;
-
-                case RecordType.SOA:
-                    builder.Append("\"type\":\"SOA\",");
-                    builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    break;
-
-                case RecordType.PTR:
-                    builder.Append("\"type\":\"PTR\",");
-                    builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    break;
-
-                case RecordType.MX:
-                    builder.Append("\"type\":\"MX\",");
-                    builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    break;
-
-                case RecordType.TXT:
-                    builder.Append("\"type\":\"TXT\",");
-                    builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
-                    break;
-
-                case RecordType.AAAA:
-                    builder.Append("\"type\":\"AAAA\",");
-                    if (deconstructed[i].name.Length != 16) {
-                        builder.Append($"\"name\":\"\"");
-                        break;
-                    }
-
-                    builder.Append($"\"name\":\"");
-                    for (int j = 0; j < 16; j += 2) {
-                        if (j > 0) builder.Append(':');
-                        ushort word = (ushort)((deconstructed[i].name[j] << 8) | deconstructed[i].name[j + 1]);
-                        builder.Append(word.ToString("x4"));
-                    }
-
-                    builder.Append("\",");
-                    break;
-
-                case RecordType.SRV:
-                    builder.Append("\"type\":\"SRV\",");
-                    builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
-                    break;
-                }
-
-                builder.Append($"\"ttl\":\"{deconstructed[i].ttl}\"");
-
-                builder.Append('}');
-
-                count++;
-            }
-            builder.Append(']');
-
-            builder.Append('}');
-
-            return Encoding.UTF8.GetBytes(builder.ToString());
+            return Serialize(query, replaced, response, deconstructed);
         }
         catch (SocketException ex) {
             if (ex.ErrorCode == 10060) {
@@ -386,6 +270,126 @@ internal static class Dns {
             additionalCount = 0;
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
         }
+    }
+
+    private static byte[] Serialize(byte[] query, string replaced, byte[] response, Answer[] deconstructed) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.Append('{');
+
+        if (deconstructed.Length > 0 && deconstructed[0].error > 0) {
+            string errorMessage = deconstructed[0].error switch {
+                0 => "no error",
+                1 => "query format error",
+                2 => "server failure",
+                3 => "no such name",
+                4 => "function not implemented",
+                5 => "refused",
+                6 => "name should not exist",
+                7 => "RRset should not exist",
+                8 => "server not authoritative for the zone",
+                9 => "name not in zone",
+                _ => "unknown error"
+            };
+            builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{deconstructed[0].error}\",");
+        }
+
+        builder.Append("\"req\":[");
+        for (int i = 0; i < query.Length; i++) {
+            if (i > 0) builder.Append(',');
+            builder.Append(query[i]);
+        }
+        builder.Append("],");
+
+        builder.Append("\"res\":[");
+        for (int i = 0; i < response.Length; i++) {
+            if (i > 0) builder.Append(',');
+            builder.Append(response[i]);
+        }
+        builder.Append("],");
+
+        if (replaced is not null) {
+            builder.Append($"\"replace\":\"{replaced}\",");
+        }
+
+        builder.Append("\"answer\":[");
+        int count = 0;
+        for (int i = 0; i < deconstructed.Length; i++) {
+            if (deconstructed[i].isAuthoritative || deconstructed[i].isAdditional) continue;
+
+            if (count > 0) builder.Append(',');
+
+            builder.Append('{');
+            switch (deconstructed[i].type) {
+            case RecordType.A:
+                builder.Append("\"type\":\"A\",");
+                builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
+                break;
+
+            case RecordType.NS:
+                builder.Append("\"type\":\"NS\",");
+                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                break;
+
+            case RecordType.CNAME:
+                builder.Append("\"type\":\"CNAME\",");
+                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                break;
+
+            case RecordType.SOA:
+                builder.Append("\"type\":\"SOA\",");
+                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                break;
+
+            case RecordType.PTR:
+                builder.Append("\"type\":\"PTR\",");
+                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                break;
+
+            case RecordType.MX:
+                builder.Append("\"type\":\"MX\",");
+                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                break;
+
+            case RecordType.TXT:
+                builder.Append("\"type\":\"TXT\",");
+                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                break;
+
+            case RecordType.AAAA:
+                builder.Append("\"type\":\"AAAA\",");
+                if (deconstructed[i].name.Length != 16) {
+                    builder.Append($"\"name\":\"\"");
+                    break;
+                }
+
+                builder.Append($"\"name\":\"");
+                for (int j = 0; j < 16; j += 2) {
+                    if (j > 0) builder.Append(':');
+                    ushort word = (ushort)((deconstructed[i].name[j] << 8) | deconstructed[i].name[j + 1]);
+                    builder.Append(word.ToString("x4"));
+                }
+
+                builder.Append("\",");
+                break;
+
+            case RecordType.SRV:
+                builder.Append("\"type\":\"SRV\",");
+                builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
+                break;
+            }
+
+            builder.Append($"\"ttl\":\"{deconstructed[i].ttl}\"");
+
+            builder.Append('}');
+
+            count++;
+        }
+        builder.Append(']');
+
+        builder.Append('}');
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
     private static byte[] ConstructQuery(
@@ -506,8 +510,7 @@ internal static class Dns {
                 if (len == 0) break;
                 index += len;
             }
-            index += 2; //skip type
-            index += 2; //skip class
+            index += 4; //skip type and class
         }
 
         Answer[] result = new Answer[answerCount + authorityCount + additionalCount];
