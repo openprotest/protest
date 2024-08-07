@@ -18,7 +18,7 @@ class DnsSD extends Console {
 		this.args = args ?? {
 			entries      : [],
 			type         : "A",
-			timeout      : 3000
+			timeout      : 2000
 		};
 
 		this.AddCssDependencies("tools.css");
@@ -343,7 +343,7 @@ class DnsSD extends Console {
 
 		this.args.entries.push(entryKey);
 
-		/*try*/ {
+		try {
 			let url = `tools/dnssdlookup?query=${encodeURIComponent(query)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
 			if (this.args.isStandard)   url += "&standard=true";
 			if (this.args.isInverse)    url += "&inverse=true";
@@ -353,7 +353,9 @@ class DnsSD extends Console {
 
 			const response = await fetch(url);
 
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			if (response.status !== 200) {
+				LOADER.HttpErrorHandler(response.status);
+			}
 
 			const json = await response.json();
 
@@ -403,10 +405,7 @@ class DnsSD extends Console {
 				name.textContent = json.replace;
 			}
 
-			status.style.visibility = "hidden";
-
 			for (let i = 0; i < json.answer.length; i++) {
-
 				const box = document.createElement("div");
 				result.appendChild(box);
 
@@ -431,9 +430,12 @@ class DnsSD extends Console {
 				box.append(label, string);
 			}
 		}
-		/*catch (ex) {
+		catch (ex) {
 			console.error(ex);
-		}*/
+		}
+		finally {
+			status.style.visibility = "hidden";
+		}
 	}
 
 	Remove(domain) {

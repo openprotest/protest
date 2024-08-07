@@ -12,8 +12,9 @@ namespace Protest.Protocols;
 
 internal class Mdns {
 
-    private const string MulticastAddress = "224.0.0.251";
-    private const int MulticastPort = 5353;
+    private static readonly IPAddress MulticastAddressV4 = IPAddress.Parse("224.0.0.251");
+    private static readonly IPAddress MulticastAddressV6 = IPAddress.Parse("ff02::fb");
+    private static readonly int MdnsPort = 5353;
 
     public static byte[] Resolve(Dictionary<string, string> parameters) {
         if (parameters is null) {
@@ -25,7 +26,7 @@ internal class Mdns {
         parameters.TryGetValue("timeout", out string timeoutString);
 
         if (!int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout)) {
-            timeout = 3000;
+            timeout = 2000;
         }
 
         timeout = Math.Max(timeout, 500);
@@ -47,12 +48,8 @@ internal class Mdns {
         return Resolve(query, timeout, type);
     }
 
-    public static byte[] Resolve(string queryString, int timeout = 3000, RecordType type = RecordType.A) {
-        IPAddress multicastAddress = IPAddress.Parse(MulticastAddress);
-        IPEndPoint remoteEndPoint = new IPEndPoint(multicastAddress, MulticastPort);
-
+    public static byte[] Resolve(string queryString, int timeout = 2000, RecordType type = RecordType.A) {
         byte[] query = ConstructQuery(queryString, type);
-
         List<byte[]> receivedData = new List<byte[]>();
 
         IPAddress[] nics = IpTools.GetIpAddresses();
@@ -60,13 +57,28 @@ internal class Mdns {
             if (IPAddress.IsLoopback(nics[i])) { continue; }
 
             IPAddress localAddress = nics[i];
-            IPEndPoint localEndPoint = new IPEndPoint(localAddress, MulticastPort);
+            IPEndPoint localEndPoint = new IPEndPoint(localAddress, MdnsPort);
 
+            IPEndPoint remoteEndPoint;
+            Socket socket = null;
             try {
-                using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                if (localAddress.AddressFamily == AddressFamily.InterNetwork) {
+                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(MulticastAddressV4, localAddress));
+                    remoteEndPoint = new IPEndPoint(MulticastAddressV4, MdnsPort);
+                }
+                else if (localAddress.AddressFamily == AddressFamily.InterNetworkV6) {
+                    socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+                    socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(MulticastAddressV6));
+                    remoteEndPoint = new IPEndPoint(MulticastAddressV6, MdnsPort);
+                }
+                else {
+                    continue;
+                }
+
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 socket.Bind(localEndPoint);
-                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(multicastAddress, localAddress));
+
                 socket.ReceiveTimeout = timeout;
 
                 socket.SendTo(query, remoteEndPoint);
@@ -88,6 +100,9 @@ internal class Mdns {
                 }
             }
             catch { }
+            finally {
+                socket?.Dispose();
+            }
         }
 
         try {
@@ -99,15 +114,13 @@ internal class Mdns {
             }
 
             return Serialize(query, receivedData, answers);
-        } catch {
+        }
+        catch {
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
         }
     }
 
     private static byte[] ConstructQuery(string queryString, RecordType type) {
-        using MemoryStream ms = new MemoryStream();
-        using BinaryWriter bw = new BinaryWriter(ms);
-
         int len = 12;
         string[] label = queryString.Split('.');
 
