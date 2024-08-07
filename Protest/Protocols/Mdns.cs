@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using static Protest.Protocols.Dns;
@@ -12,6 +11,9 @@ using static Protest.Protocols.Dns;
 namespace Protest.Protocols;
 
 internal class Mdns {
+
+    private const string MulticastAddress = "224.0.0.251";
+    private const int MulticastPort = 5353;
 
     public static byte[] Resolve(Dictionary<string, string> parameters) {
         if (parameters is null) {
@@ -28,7 +30,7 @@ internal class Mdns {
 
         timeout = Math.Max(timeout, 500);
 
-        RecordType type = type = Uri.UnescapeDataString(typeString) switch {
+        RecordType type = Uri.UnescapeDataString(typeString) switch {
             "A"     => RecordType.A,
             "NS"    => RecordType.NS,
             "CNAME" => RecordType.CNAME,
@@ -46,8 +48,8 @@ internal class Mdns {
     }
 
     public static byte[] Resolve(string queryString, int timeout = 3000, RecordType type = RecordType.A) {
-        IPAddress multicastAddress = IPAddress.Parse("224.0.0.251");
-        IPEndPoint remoteEndPoint = new IPEndPoint(multicastAddress, 5353);
+        IPAddress multicastAddress = IPAddress.Parse(MulticastAddress);
+        IPEndPoint remoteEndPoint = new IPEndPoint(multicastAddress, MulticastPort);
 
         byte[] query = ConstructQuery(queryString, type);
 
@@ -55,10 +57,10 @@ internal class Mdns {
 
         IPAddress[] nics = IpTools.GetIpAddresses();
         for (int i = 0; i < nics.Length && receivedData.Count == 0; i++) {
-           if (IPAddress.IsLoopback(nics[i])) { continue; }
-            
+            if (IPAddress.IsLoopback(nics[i])) { continue; }
+
             IPAddress localAddress = nics[i];
-            IPEndPoint localEndPoint = new IPEndPoint(localAddress, 5353);
+            IPEndPoint localEndPoint = new IPEndPoint(localAddress, MulticastPort);
 
             try {
                 using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -85,7 +87,7 @@ internal class Mdns {
                     catch { }
                 }
             }
-            catch {}
+            catch { }
         }
 
         try {
@@ -114,7 +116,6 @@ internal class Mdns {
         }
         len += 5; //1[null] + 2[type] + 2[class]
 
-
         byte[] query = new byte[len];
 
         //transaction id
@@ -123,24 +124,24 @@ internal class Mdns {
         query[1] = (byte)rand.Next(0, 255);
 
         //flags
-        query[2] = (byte)0x00;
-        query[3] = (byte)0x00;
+        query[2] = 0x00;
+        query[3] = 0x00;
 
         //questions
-        query[4] = (byte)0x00;
-        query[5] = (byte)0x01;
+        query[4] = 0x00;
+        query[5] = 0x01;
 
         //answer RRs
-        query[6] = (byte)0x00;
-        query[7] = (byte)0x00;
+        query[6] = 0x00;
+        query[7] = 0x00;
 
         //authority RRs
-        query[8] = (byte)0x00;
-        query[9] = (byte)0x00;
+        query[8] = 0x00;
+        query[9] = 0x00;
 
         //additional RRs
-        query[10] = (byte)0x00;
-        query[11] = (byte)0x00;
+        query[10] = 0x00;
+        query[11] = 0x00;
 
         //question
         short index = 12;
@@ -317,7 +318,6 @@ internal class Mdns {
             first = false;
         }
         builder.Append("],");
-
 
         builder.Append("\"answer\":[");
         int count = 0;
