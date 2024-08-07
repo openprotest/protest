@@ -41,7 +41,7 @@ internal static class Dns {
         HS = 4  //Hesiod
     }
 
-    public struct Answer {
+    private struct Answer {
         public RecordType type;
         public int ttl;
         public ushort length;
@@ -486,7 +486,7 @@ internal static class Dns {
         return query;
     }
 
-    public static Answer[] DeconstructResponse(byte[] response, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
+    private static Answer[] DeconstructResponse(byte[] response, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
         //ushort transactionId = BitConverter.ToUInt16(response, 0);
         //ushort query = (ushort)((response[2] << 8) | response[3]);
         ushort questionCount = (ushort)((response[4] << 8) | response[5]);
@@ -559,7 +559,7 @@ internal static class Dns {
         return result;
     }
 
-    public static string LabelsToString(byte[] labels, int offset, byte[] response, out bool isNullTerminated) {
+    private static string LabelsToString(byte[] labels, int offset, byte[] response, out bool isNullTerminated) {
         if (labels.Length - offset < 2) {
             isNullTerminated = false;
             return String.Empty;

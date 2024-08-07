@@ -16,6 +16,17 @@ internal class Mdns {
     private static readonly IPAddress MulticastAddressV6 = IPAddress.Parse("ff02::fb");
     private static readonly int MdnsPort = 5353;
 
+    private struct Answer {
+        public RecordType type;
+        public int ttl;
+        public ushort length;
+        public byte[] name;
+        public string nameString;
+        public bool isAuthoritative;
+        public bool isAdditional;
+        public byte error;
+    }
+
     public static byte[] Resolve(Dictionary<string, string> parameters) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -105,19 +116,26 @@ internal class Mdns {
             }
         }
 
-        try {
-            List<Answer> answers = new List<Answer>();
-            foreach (byte[] response in receivedData) {
-                ushort answerCount, authorityCount, additionalCount;
-                Answer[] answer = DeconstructResponse(response, queryString, type, out answerCount, out authorityCount, out additionalCount);
-                answers.AddRange(answer);
-            }
+        List<byte[]> matchingData = new List<byte[]>();
 
-            return Serialize(query, receivedData, answers);
+        List<Answer> answers = new List<Answer>();
+        foreach (byte[] response in receivedData) {
+            ushort answerCount, authorityCount, additionalCount;
+            Answer[] answer = DeconstructResponse(response, type, out answerCount, out authorityCount, out additionalCount);
+            bool matched = false;
+            for (int i = 0; i < answer.Length; i++) {
+                if (type != RecordType.ANY && answer[i].type != type) { continue; }
+                if (!answer[i].nameString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                answers.Add(answer[i]);
+                if (!matched) {
+                    matched = true;
+                    matchingData.Add(response);
+                }
+            }
         }
-        catch {
-            return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
-        }
+
+        return Serialize(query, matchingData, answers);
     }
 
     private static byte[] ConstructQuery(string queryString, RecordType type) {
@@ -176,9 +194,8 @@ internal class Mdns {
         return query;
     }
 
-    public static Answer[] DeconstructResponse(
+    private static Answer[] DeconstructResponse(
         byte[] response,
-        string queryString,
         RecordType queryType,
         out ushort answerCount,
         out ushort authorityCount,
@@ -246,9 +263,7 @@ internal class Mdns {
 
             //extract name from the response
             string responseName = ExtractName(response, nameStartIndex);
-            if (!responseName.Equals(queryString, StringComparison.OrdinalIgnoreCase) || ans.type != queryType) {
-                continue;
-            }
+            ans.nameString = responseName;
 
             if (i >= answerCount + authorityCount) {
                 ans.isAdditional = true;
@@ -288,7 +303,7 @@ internal class Mdns {
         return name.ToString();
     }
 
-    private static byte[] Serialize(byte[] query, List<byte[]> receivedData, List<Answer> answers) {
+    private static byte[] Serialize(byte[] query, List<byte[]> data, List<Answer> answers) {
         StringBuilder builder = new StringBuilder();
 
         builder.Append('{');
@@ -319,13 +334,13 @@ internal class Mdns {
 
         builder.Append("\"res\":[");
         bool first = true;
-        for (int i = 0; i < receivedData.Count; i++) {
+        for (int i = 0; i < data.Count; i++) {
             if (!first) builder.Append(',');
 
             builder.Append("[");
-            for (int j = 0; j < receivedData[i].Length; j++) {
+            for (int j = 0; j < data[i].Length; j++) {
                 if (j > 0) builder.Append(',');
-                builder.Append(receivedData[i][j]);
+                builder.Append(data[i][j]);
             }
             builder.Append("]");
             first = false;
@@ -349,32 +364,32 @@ internal class Mdns {
 
             case RecordType.NS:
                 builder.Append("\"type\":\"NS\",");
-                builder.Append($"\"name\":\"{Dns.LabelsToString(answers[i].name, 0, receivedData[i], out _)}\",");
+                builder.Append($"\"name\":\"{answers[i].nameString}\",");
                 break;
 
             case RecordType.CNAME:
                 builder.Append("\"type\":\"CNAME\",");
-                builder.Append($"\"name\":\"{Dns.LabelsToString(answers[i].name, 0, receivedData[i], out _)}\",");
+                builder.Append($"\"name\":\"{answers[i].nameString}\",");
                 break;
 
             case RecordType.SOA:
                 builder.Append("\"type\":\"SOA\",");
-                builder.Append($"\"name\":\"{Dns.LabelsToString(answers[i].name, 0, receivedData[i], out _)}\",");
+                builder.Append($"\"name\":\"{answers[i].nameString}\",");
                 break;
 
             case RecordType.PTR:
                 builder.Append("\"type\":\"PTR\",");
-                builder.Append($"\"name\":\"{Dns.LabelsToString(answers[i].name, 0, receivedData[i], out _)}\",");
+                builder.Append($"\"name\":\"{answers[i].nameString}\",");
                 break;
 
             case RecordType.MX:
                 builder.Append("\"type\":\"MX\",");
-                builder.Append($"\"name\":\"{Dns.LabelsToString(answers[i].name, 0, receivedData[i], out _)}\",");
+                builder.Append($"\"name\":\"{answers[i].nameString}\",");
                 break;
 
             case RecordType.TXT:
                 builder.Append("\"type\":\"TXT\",");
-                builder.Append($"\"name\":\"{Dns.LabelsToString(answers[i].name, 0, receivedData[i], out _)}\",");
+                builder.Append($"\"name\":\"{answers[i].nameString}\",");
                 break;
 
             case RecordType.AAAA:
