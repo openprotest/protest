@@ -289,6 +289,7 @@ internal static class Dns {
                 7 => "RRset should not exist",
                 8 => "server not authoritative for the zone",
                 9 => "name not in zone",
+                254 => "invalid response",
                 _ => "unknown error"
             };
             builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{deconstructed[0].error}\",");
@@ -487,6 +488,13 @@ internal static class Dns {
     }
 
     private static Answer[] DeconstructResponse(byte[] response, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
+        if (response.Length < 12) {
+            answerCount = 0;
+            authorityCount = 0;
+            additionalCount = 0;
+            return new Answer[] { new Answer { error = 254 } };
+        }
+
         //ushort transactionId = BitConverter.ToUInt16(response, 0);
         //ushort query = (ushort)((response[2] << 8) | response[3]);
         ushort questionCount = (ushort)((response[4] << 8) | response[5]);
@@ -497,7 +505,6 @@ internal static class Dns {
         //bool isResponse = (response[2] & 0b10000000) == 0b10000000;
 
         byte error = (byte)(response[3] & 0b00001111);
-
         if (error > 0) {
             return new Answer[] { new Answer { error = error } };
         }
@@ -521,39 +528,42 @@ internal static class Dns {
 
         int count = 0;
         while (index < response.Length) {
-            Answer a = new Answer();
+            Answer ans = new Answer();
 
             index += 2; //skip name
 
-            a.type = (RecordType)((response[index] << 8) | response[index + 1]);
+            ans.type = (RecordType)((response[index] << 8) | response[index + 1]);
             index += 2;
 
             index += 2; //skip class
 
-            a.ttl = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
+            ans.ttl = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
             index += 4;
 
-            a.length = (ushort)((response[index] << 8) | response[index + 1]);
+            ans.length = (ushort)((response[index] << 8) | response[index + 1]);
             index += 2;
 
-            if (a.type == RecordType.MX) {
-                a.length -= 2;
+            if (ans.type == RecordType.MX) {
+                ans.length -= 2;
                 index += 2; //skip preference
             }
 
-            a.name = new byte[a.length];
-            for (int i = 0; i < a.length && index < response.Length; i++) {
-                a.name[i] = response[index++];
+            if (ans.length > response.Length - index) {
+                ans.error = 254;
+                break;
             }
+            ans.name = new byte[ans.length];
+            Array.Copy(response, index, ans.name, 0, ans.length);
+            index += ans.length;
 
             if (count > answerCount + authorityCount) {
-                a.isAdditional = true;
+                ans.isAdditional = true;
             }
             else if (count > answerCount) {
-                a.isAuthoritative = true;
+                ans.isAuthoritative = true;
             }
 
-            result[count++] = a;
+            result[count++] = ans;
         }
 
         return result;

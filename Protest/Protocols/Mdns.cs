@@ -117,22 +117,27 @@ internal class Mdns {
         }
 
         List<byte[]> matchingData = new List<byte[]>();
-
         List<Answer> answers = new List<Answer>();
-        foreach (byte[] response in receivedData) {
-            ushort answerCount, authorityCount, additionalCount;
-            Answer[] answer = DeconstructResponse(response, type, out answerCount, out authorityCount, out additionalCount);
-            bool matched = false;
-            for (int i = 0; i < answer.Length; i++) {
-                if (type != RecordType.ANY && answer[i].type != type) { continue; }
-                if (!answer[i].nameString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
 
-                answers.Add(answer[i]);
-                if (!matched) {
-                    matched = true;
-                    matchingData.Add(response);
+        try {
+            foreach (byte[] response in receivedData) {
+                ushort answerCount, authorityCount, additionalCount;
+                Answer[] answer = DeconstructResponse(response, type, out answerCount, out authorityCount, out additionalCount);
+                bool matched = false;
+                for (int i = 0; i < answer.Length; i++) {
+                    if (type != RecordType.ANY && answer[i].type != type) { continue; }
+                    if (!answer[i].nameString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                    answers.Add(answer[i]);
+                    if (!matched) {
+                        matched = true;
+                        matchingData.Add(response);
+                    }
                 }
             }
+        }
+        catch {
+            return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
         }
 
         return Serialize(query, matchingData, answers);
@@ -201,6 +206,13 @@ internal class Mdns {
         out ushort authorityCount,
         out ushort additionalCount) {
 
+        if (response.Length < 12) {
+            answerCount = 0;
+            authorityCount = 0;
+            additionalCount = 0;
+            return new Answer[] { new Answer { error = 254 } };
+        }
+
         //ushort transactionId = BitConverter.ToUInt16(response, 0);
         //ushort flags         = BitConverter.ToUInt16(response, 2);
         ushort questionCount = (ushort)((response[4] << 8) | response[5]);
@@ -227,18 +239,26 @@ internal class Mdns {
         List<Answer> result = new List<Answer>();
 
         for (int i = 0; i < answerCount + authorityCount + additionalCount; i++) {
+            if (index >= response.Length) {
+                break;
+            }
+
             Answer ans = new Answer();
 
             int nameStartIndex = index;
-
+               
             if ((response[index] & 0xC0) == 0xC0) {
                 index += 2;
             }
             else {
-                while (response[index] != 0) {
+                while (index + 1 < response.Length && response[index] != 0) {
                     index += response[index] + 1;
                 }
                 index++;
+            }
+
+            if (index >= response.Length) {
+                break;
             }
 
             ans.type = (RecordType)((response[index] << 8) | response[index + 1]);
@@ -257,6 +277,10 @@ internal class Mdns {
                 index += 2; //skip preference
             }
 
+            if (ans.length > response.Length - index  ) {
+                ans.error = 254;
+                break;
+            }
             ans.name = new byte[ans.length];
             Array.Copy(response, index, ans.name, 0, ans.length);
             index += ans.length;
@@ -320,6 +344,7 @@ internal class Mdns {
                 7 => "RRset should not exist",
                 8 => "server not authoritative for the zone",
                 9 => "name not in zone",
+                254 => "invalid response",
                 _ => "unknown error"
             };
             builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{answers[0].error}\",");
