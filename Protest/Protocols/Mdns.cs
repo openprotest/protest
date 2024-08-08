@@ -100,6 +100,9 @@ internal class Mdns {
                     byte[] reply = new byte[1024];
 
                     try {
+                        //EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                        //int length = socket.ReceiveFrom(reply, ref remoteEP);
+
                         int length = socket.Receive(reply);
                         if (length > 0) {
                             byte[] actualReply = new byte[length];
@@ -246,7 +249,7 @@ internal class Mdns {
             Answer ans = new Answer();
 
             int nameStartIndex = index;
-               
+
             if ((response[index] & 0xC0) == 0xC0) {
                 index += 2;
             }
@@ -277,7 +280,7 @@ internal class Mdns {
                 index += 2; //skip preference
             }
 
-            if (ans.length > response.Length - index  ) {
+            if (ans.length > response.Length - index) {
                 ans.error = 254;
                 break;
             }
