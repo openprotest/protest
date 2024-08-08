@@ -615,7 +615,7 @@ class Fetch extends Tabs {
 		const dns = this.AddCheckBoxLabel(this.tabsPanel, this.dnsCheckBox, "DNS");
 		dns.style.gridArea = "5 / 3";
 
-		//TODO: mDNS, SSDP
+		//TODO: SSDP
 
 		this.tabsPanel.appendChild(this.snmp2Checkbox);
 		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP V1/2");

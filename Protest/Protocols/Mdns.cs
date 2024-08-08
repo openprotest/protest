@@ -12,8 +12,8 @@ namespace Protest.Protocols;
 
 internal class Mdns {
 
-    private static readonly IPAddress MULTICAST_IP_V4 = IPAddress.Parse("224.0.0.251");
-    private static readonly IPAddress MULTICAST_IP_V6 = IPAddress.Parse("ff02::fb");
+    private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V4 = IPAddress.Parse("224.0.0.251");
+    private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V6 = IPAddress.Parse("ff02::fb");
     private static readonly int MDNS_PORT = 5353;
 
     private struct Answer {
@@ -75,13 +75,13 @@ internal class Mdns {
             try {
                 if (localAddress.AddressFamily == AddressFamily.InterNetwork) {
                     socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(MULTICAST_IP_V4, localAddress));
-                    remoteEndPoint = new IPEndPoint(MULTICAST_IP_V4, MDNS_PORT);
+                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(MDNS_MULTICAST_ADDRESS_V4, localAddress));
+                    remoteEndPoint = new IPEndPoint(MDNS_MULTICAST_ADDRESS_V4, MDNS_PORT);
                 }
                 else if (localAddress.AddressFamily == AddressFamily.InterNetworkV6) {
                     socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
-                    socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(MULTICAST_IP_V6));
-                    remoteEndPoint = new IPEndPoint(MULTICAST_IP_V6, MDNS_PORT);
+                    socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(MDNS_MULTICAST_ADDRESS_V6));
+                    remoteEndPoint = new IPEndPoint(MDNS_MULTICAST_ADDRESS_V6, MDNS_PORT);
                 }
                 else {
                     continue;
