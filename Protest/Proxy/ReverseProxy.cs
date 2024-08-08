@@ -59,8 +59,10 @@ internal static class ReverseProxy {
             FileInfo[] files = directory.GetFiles();
             foreach (FileInfo file in files) {
                 try {
-                    string fileContent = File.ReadAllText(file.FullName);
-                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptionsWithPassword);
+                    byte[] cipher = File.ReadAllBytes(file.FullName);
+                    byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(plain, serializerOptionsWithPassword);
 
                     if (obj.autostart) {
                         StartProxy(obj, "system");
@@ -216,8 +218,10 @@ internal static class ReverseProxy {
             bool first = true;
             foreach (FileInfo file in files) {
                 try {
-                    string fileContent = File.ReadAllText(file.FullName);
-                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptions);
+                    byte[] cipher = File.ReadAllBytes(file.FullName);
+                    byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+                    ReverseProxyObject obj = JsonSerializer.Deserialize<ReverseProxyObject>(plain, serializerOptions);
                     string json = JsonSerializer.Serialize<ReverseProxyObject>(obj, serializerOptions);
 
                     if (!first) { builder.Append(','); }
@@ -268,22 +272,24 @@ internal static class ReverseProxy {
             if (entry.guid == Guid.Empty) {
                 entry.guid = Guid.NewGuid();
             }
-            else if (String.IsNullOrEmpty(entry.password)
-                    && File.Exists($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}")) {
-                string oldFileContent = File.ReadAllText($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}");
-                ReverseProxyObject oldEntry = JsonSerializer.Deserialize<ReverseProxyObject>(oldFileContent, serializerOptionsWithPassword);
+            else if (String.IsNullOrEmpty(entry.password) && File.Exists($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}")) {
+                byte[] oldCipher = File.ReadAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}");
+                byte[] oldPlain = Cryptography.Decrypt(oldCipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+                ReverseProxyObject oldEntry = JsonSerializer.Deserialize<ReverseProxyObject>(oldPlain, serializerOptionsWithPassword);
                 if (!String.IsNullOrEmpty(oldEntry.password)) {
                     entry.password = oldEntry.password;
                 }
             }
 
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(entry, serializerOptionsWithPassword);
+            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry, serializerOptionsWithPassword);
+            byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
-            File.WriteAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}", bytes);
+            File.WriteAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}", cipher);
 
             Logger.Action(origin, $"Create reverse proxy server: {entry.name}");
 
-            return bytes;
+            return plain;
         }
         catch {
             return Data.CODE_FAILED.ToArray();
@@ -324,8 +330,10 @@ internal static class ReverseProxy {
 
         ReverseProxyObject obj;
         try {
-            string fileContent = File.ReadAllText($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
-            obj = JsonSerializer.Deserialize<ReverseProxyObject>(fileContent, serializerOptionsWithPassword);
+            byte[] cipher = File.ReadAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
+            byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+            obj = JsonSerializer.Deserialize<ReverseProxyObject>(plain, serializerOptionsWithPassword);
             if (!obj.guid.Equals(new Guid(guid))) { return Data.CODE_FAILED.ToArray(); }
         }
         catch {
@@ -336,8 +344,6 @@ internal static class ReverseProxy {
     }
 
     public static byte[] StartProxy(ReverseProxyObject obj, string origin) {
-
-
         ReverseProxyAbstract proxy = obj.protocol switch {
             ProxyProtocol.TCP   => new TcpReverseProxy(obj.guid),
             ProxyProtocol.UDP   => new UdpReverseProxy(obj.guid),
