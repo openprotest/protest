@@ -54,14 +54,15 @@
 	transform: translateY(8px);
 	content: "";
 	border: solid;
+	border-radius: 2px;
 	border-color: #C0C0C0 transparent;
 	transition: .2s;
 }
 .list-title > .list-sort-ascend::before {
-	border-width: 6px 6px 0 6px;
+	border-width: 7px 5px 0 5px;
 }
 .list-title > .list-sort-descend::before {
-	border-width: 0 6px 6px 6px;
+	border-width: 0 5px 7px 5px;
 }
 
 /*make room for the options button*/

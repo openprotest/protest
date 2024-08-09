@@ -180,6 +180,7 @@ class List extends Window {
 
 		const Column_onmouseup = event=> {
 			if (isLastMouseActionMeaningful) return;
+			if (event.button !== 0) return;
 
 			const isAscend = event.target.className === "list-sort-ascend";
 
