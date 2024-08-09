@@ -165,7 +165,11 @@ class LocateIp extends Console {
 				result.style.backgroundImage = `url(flags/${split[0].toLowerCase()}.svg)`;
 			}
 
-			if (split[1] === "Private address" || split[1] === "Local host") {
+			if (split[1] === "Local domain"
+				|| split[1] === "Private domain"
+				|| split[1] === "Automatic Private IP Addressing"
+				|| split[1] === "Multicast domain"
+				|| "Broadcast") {
 				result.textContent += split[1];
 			}
 			else {
@@ -203,7 +207,6 @@ class LocateIp extends Console {
 				divTor.style.backgroundImage = "url(mono/tor.svg?light)";
 				divTor.setAttribute("tip-below", "Tor");
 				element.appendChild(divTor);
-
 			}
 			else if (split[5] == "true") { //proxy
 				const divProxy = document.createElement("div");
@@ -229,7 +232,6 @@ class LocateIp extends Console {
 		delete this.hashtable[ipaddr];
 
 		const index = this.args.entries.indexOf(ipaddr);
-		if (index > -1)
-			this.args.entries.splice(index, 1);
+		if (index > -1) { this.args.entries.splice(index, 1); }
 	}
 }

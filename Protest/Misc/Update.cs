@@ -66,8 +66,9 @@ internal static class Update {
         string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
 
         List<List<IpEntry>> list = new List<List<IpEntry>>();
-        for (int i = 0; i < 256; i++)
+        for (int i = 0; i < 256; i++) {
             list.Add(new List<IpEntry>());
+        }
 
         foreach (string part in parts) {
             if (!part.Contains("Content-Disposition")) continue;
@@ -88,10 +89,8 @@ internal static class Update {
                 Array.Reverse(aBytes);
                 Array.Reverse(bBytes);
 
-
                 if (aBytes[0] == bBytes[0]) {
-                    list[aBytes[0]].Add(new IpEntry
-                    {
+                    list[aBytes[0]].Add(new IpEntry {
                         from = aBytes,
                         to = bBytes,
                         code = fields[2].Length < 2 ? "--" : fields[2],
@@ -103,7 +102,6 @@ internal static class Update {
                     });
                 }
                 else {
-
                     for (int j = aBytes[0]; j <= bBytes[0]; j++) {
                         byte[] from, to;
 
@@ -137,10 +135,99 @@ internal static class Update {
             }
         }
 
+        list[10].Add(new IpEntry {
+            from = new byte[] { 10, 0, 0, 0 },
+            to = new byte[] { 10, 255, 255, 255 },
+            code = "--",
+            country = "Private domain",
+            region = String.Empty,
+            city = String.Empty,
+            lat = 0,
+            lon = 0
+        });
+
+        list[127].Add(new IpEntry {
+            from = new byte[] { 127, 0, 0, 0 },
+            to = new byte[] { 127, 255, 255, 255 },
+            code = "--",
+            country = "Local domain",
+            region = String.Empty,
+            city = String.Empty,
+            lat = 0,
+            lon = 0
+        });
+
+        list[172].Add(new IpEntry {
+            from = new byte[] { 172, 16, 0, 0 },
+            to = new byte[] { 172, 31, 255, 255 },
+            code = "--",
+            country = "Private domain",
+            region = String.Empty,
+            city = String.Empty,
+            lat = 0,
+            lon = 0
+        });
+
+        list[169].Add(new IpEntry {
+            from = new byte[] { 169, 254, 0, 0 },
+            to = new byte[] { 169, 254, 255, 255 },
+            code = "--",
+            country = "Automatic Private IP Addressing",
+            region = String.Empty,
+            city = String.Empty,
+            lat = 0,
+            lon = 0
+        });
+
+        list[192].Add(new IpEntry {
+            from = new byte[] { 192, 168, 0, 0 },
+            to = new byte[] { 192, 168, 255, 255 },
+            code = "--",
+            country = "Private domain",
+            region = String.Empty,
+            city = String.Empty,
+            lat = 0,
+            lon = 0
+        });
+
+        for (byte i = 224; i < 240; i++) {
+            list[i].Add(new IpEntry {
+                from = new byte[] { i, 0, 0, 0 },
+                to = new byte[] { i, 255, 255, 255 },
+                code = "--",
+                country = "Multicast domain",
+                region = String.Empty,
+                city = String.Empty,
+                lat = 0,
+                lon = 0
+            });
+        }
+
+        list[255].Add(new IpEntry {
+            from = new byte[] { 255, 255, 255, 255 },
+            to = new byte[] { 255, 255, 255, 255 },
+            code = "--",
+            country = "Broadcast",
+            region = String.Empty,
+            city = String.Empty,
+            lat = 0,
+            lon = 0
+        });
+
+        for (int i = 0; i < 256; i++) {
+            list[i].Sort((IpEntry a, IpEntry b) => {
+                if (a.from[0] != b.from[0]) return a.from[0] - b.from[0];
+                if (a.from[1] != b.from[1]) return a.from[1] - b.from[1];
+                if (a.from[2] != b.from[2]) return a.from[2] - b.from[2];
+                if (a.from[3] != b.from[3]) return a.from[3] - b.from[3];
+                return 0;
+            });
+        }
+
         if (!Directory.Exists(Data.DIR_KNOWLADGE)) { Directory.CreateDirectory(Data.DIR_KNOWLADGE); }
         if (!Directory.Exists(Data.DIR_IP_LOCATION)) { Directory.CreateDirectory(Data.DIR_IP_LOCATION); }
 
-        for (int i = 0; i < list.Count; i++) {
+        for (int i = 1; i < list.Count; i++) {
             if (list[i].Count == 0) continue;
 
             using FileStream stream = new FileStream($"{Data.DIR_IP_LOCATION}{Data.DELIMITER}{i}.bin", FileMode.OpenOrCreate);
