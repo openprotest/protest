@@ -97,6 +97,10 @@ class DeviceView extends View {
 		this.AutoUpdateIndicators();
 
 		setTimeout(()=>this.AfterResize(), WIN.ANIME_DURATION);
+
+		if (this.link.ip) {
+			this.InitializeGraphs();
+		}
 	}
 
 	InitializeComponents() {
@@ -1099,9 +1103,6 @@ class DeviceView extends View {
 			}
 
 			this.liveStatsWebSockets = null;
-			if (this.link.ip) {
-				this.InitializeGraphs();
-			}
 		};
 	}
 
@@ -1225,6 +1226,11 @@ class DeviceView extends View {
 			if (oldPrintCounterArray.length > 0) printCounterArray = [...oldPrintCounterArray, ...printCounterArray];
 		}
 
+		const DAY_WIDTH = 64;
+		const GRAPH_WIDTH = DAY_WIDTH * 32;
+		let xOffset = 0;
+		let graphSvgs = [];
+
 		const GenerateTimeline = ()=> {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
@@ -1232,14 +1238,17 @@ class DeviceView extends View {
 			this.liveD.appendChild(graphBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.setAttribute("width", 800);
+			svg.style.transition = ".2s";
+			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
 			svg.setAttribute("height", `${28}px`);
 			graphBox.appendChild(svg);
 
+			graphSvgs.push(svg);
+
 			const today = new Date(Date.now() - Date.now() % DeviceView.DAY_TICKS);
 
-			for (let i=0; i<14; i++) {
-				let x = 750 - i*50;
+			for (let i=0; i<32; i++) {
+				let x = GRAPH_WIDTH - i*DAY_WIDTH;
 
 				const timeLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
 				timeLabel.textContent = new Date(today.getTime() - i*DeviceView.DAY_TICKS).toLocaleDateString(UI.regionalFormat, {month:"short", day:"numeric"});
@@ -1267,7 +1276,7 @@ class DeviceView extends View {
 			}
 		};
 
-		const GenerateGraph = (data, label, type, icon)=> {
+		const GenerateGraph = (data, label, type, icon, opt={})=> {
 			const height = 64;
 
 			const graphBox = document.createElement("div");
@@ -1286,22 +1295,55 @@ class DeviceView extends View {
 			graphBox.appendChild(iconBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.setAttribute("width", 800);
+			svg.style.transition = ".2s";
+			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
 			svg.setAttribute("height", `${height + 28}px`);
 			graphBox.appendChild(svg);
+			
+			graphSvgs.push(svg);
+
+			const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+			svg.appendChild(defs);
+
+			const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+			gradient.setAttribute("id", "view-graph-gradient");
+			gradient.setAttribute("x1", "0%");
+			gradient.setAttribute("x2", "0%");
+			gradient.setAttribute("y1", "0%");
+			gradient.setAttribute("y2", "100%");
+			defs.appendChild(gradient);
+
+			const gradientStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+			gradientStop1.setAttribute("stop-color", "rgba(192,192,192,0)");
+			gradientStop1.setAttribute("offset", "0%");
+			
+			const gradientStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+			gradientStop2.setAttribute("stop-color", "rgba(192,192,192,.3)");
+			gradientStop2.setAttribute("offset", "100%");
+
+			gradient.append(gradientStop1, gradientStop2);
+
+			const dayHighlight = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+			dayHighlight.style.transition = ".15s";
+			dayHighlight.setAttribute("x", 0);
+			dayHighlight.setAttribute("y", 5);
+			dayHighlight.setAttribute("width", DAY_WIDTH);
+			dayHighlight.setAttribute("height", height);
+			dayHighlight.setAttribute("fill", "url(#view-graph-gradient)");
+			svg.appendChild(dayHighlight);
 
 			const line = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 			line.setAttribute("x", 0);
 			line.setAttribute("y", height + 5);
-			line.setAttribute("width", 800);
+			line.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
 			line.setAttribute("height", 1);
 			line.setAttribute("fill", "color-mix(in hsl, var(--clr-light) 25%, transparent)");
 			svg.appendChild(line);
 
 			const today = new Date(Date.now() - Date.now() % DeviceView.DAY_TICKS);
 
-			for (let i=0; i<14; i++) {
-				let x = 750 - i * 50;
+			for (let i=0; i<32; i++) {
+				let x = GRAPH_WIDTH - i * DAY_WIDTH;
 				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 				line.setAttribute("x1", x);
 				line.setAttribute("y1", 0);
@@ -1315,13 +1357,13 @@ class DeviceView extends View {
 			path.setAttribute("fill", "rgba(192,192,192,.3)");
 			svg.appendChild(path);
 
-			let d = `M ${750 - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50} ${height + 5} `;
+			let d = `M ${GRAPH_WIDTH - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * DAY_WIDTH} ${height + 5} `;
 
 			let lastX = -8, lastY = -8;
 
 			if (type === "ping") {
 				for (let i=0; i<data.length; i++) {
-					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 					let y = 3 + Math.round(data[i].v < 0 ? height : 24 + Math.min((height - 24) * data[i].v / 1000, height - 10));
 					d += `L ${x} ${y} `;
 
@@ -1334,13 +1376,13 @@ class DeviceView extends View {
 					dot.setAttribute("fill", this.RttToColor(data[i].v));
 					svg.appendChild(dot);
 
-					if (x < -50) continue;
+					if (x < -DAY_WIDTH) continue;
 					lastX = x, lastY = y;
 				}
 			}
 			else if (type === "line") {
 				for (let i=0; i<data.length; i++) {
-					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 					let y = 3 + Math.round(data[i].v < 0 ? height : Math.min(data[i].v / 10, height - 10));
 					d += `L ${x} ${y} `;
 
@@ -1353,14 +1395,14 @@ class DeviceView extends View {
 					dot.setAttribute("fill", "var(--clr-dark)");
 					svg.appendChild(dot);
 
-					if (x < -50) continue;
+					if (x < -DAY_WIDTH) continue;
 					lastX = x, lastY = y;
 				}
 			}
 			else if (type === "vol") {
 				for (let i=0; i<data.length; i++) {
 					if (data[i].t === 0) continue;
-					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 					let y = (height + 4) - Math.round(height * data[i].v / data[i].t);
 
 					d += `L ${x} ${y} `;
@@ -1374,13 +1416,13 @@ class DeviceView extends View {
 					dot.setAttribute("fill", this.VolumeToColor(data[i].v, data[i].t));
 					svg.appendChild(dot);
 
-					if (x < -50) continue;
+					if (x < -DAY_WIDTH) continue;
 					lastX = x, lastY = y;
 				}
 			}
 			else if (type === "percent") {
 				for (let i=0; i<data.length; i++) {
-					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 					let y = (height + 4) - Math.round(height * data[i].v / 100);
 
 					d += `L ${x} ${y} `;
@@ -1394,7 +1436,7 @@ class DeviceView extends View {
 					dot.setAttribute("fill", this.PercentToColor(data[i].v, 100));
 					svg.appendChild(dot);
 
-					if (x < -50) continue;
+					if (x < -DAY_WIDTH) continue;
 					lastX = x, lastY = y;
 				}
 			}
@@ -1411,7 +1453,7 @@ class DeviceView extends View {
 				}
 
 				for (let i=1; i<data.length; i++) {
-					let x = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 					let y = (height + 4) - Math.round(height * data[i].delta / max);
 
 					d += `L ${x} ${y} `;
@@ -1425,12 +1467,12 @@ class DeviceView extends View {
 					dot.setAttribute("fill", "hsl(92,66%,50%)");
 					svg.appendChild(dot);
 
-					if (x < -50) continue;
+					if (x < -DAY_WIDTH) continue;
 					lastX = x, lastY = y;
 				}
 			}
 
-			d += `L ${750 - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * 50} ${height + 5} Z`;
+			d += `L ${GRAPH_WIDTH - (today.getTime() - data[data.length - 1].d) / DeviceView.DAY_TICKS * DAY_WIDTH} ${height + 5} Z`;
 			path.setAttribute("d", d);
 
 			const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1484,6 +1526,7 @@ class DeviceView extends View {
 				currentTimeLabel.style.opacity = "1";
 				timeLine.style.opacity = "1";
 				timeDot.style.opacity = "1";
+				dayHighlight.style.opacity = "1";
 			};
 
 			graphBox.onmouseleave = ()=>{
@@ -1492,13 +1535,14 @@ class DeviceView extends View {
 				currentTimeLabel.style.opacity = "0";
 				timeLine.style.opacity = "0";
 				timeDot.style.opacity = "0";
+				dayHighlight.style.opacity = "0";
 			};
 
 			graphBox.onmousemove = event=>{
-				let closestX = 750 - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * 50);
+				let closestX = GRAPH_WIDTH - Math.round((today.getTime() - data[0].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 				let closestIndex = 0;
 				for (let i=0; i<data.length; i++) {
-					let currentX = 750 - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * 50);
+					let currentX = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
 					if (Math.abs(currentX - event.layerX) < Math.abs(closestX - event.layerX)) {
 						closestX = currentX;
 						closestIndex = i;
@@ -1507,6 +1551,9 @@ class DeviceView extends View {
 
 				let cx, cy;
 				cx = closestX;
+
+				dayHighlight.setAttribute("x", cx - cx % DAY_WIDTH);
+
 
 				if (type === "ping") {
 					valueLabel.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
@@ -1551,6 +1598,18 @@ class DeviceView extends View {
 			};
 
 			return svg;
+		};
+
+		this.liveD.onwheel = event=>{
+			event.preventDefault();
+
+			xOffset += event.deltaY > 0 ? DAY_WIDTH : -DAY_WIDTH;
+			xOffset = Math.max(xOffset, 0);
+			xOffset = Math.min(xOffset, GRAPH_WIDTH - 800);
+
+			for (let i=0; i<graphSvgs.length; i++) {
+				graphSvgs[i].style.transform = `translateX(${xOffset}px)`;
+			}
 		};
 
 		if (pingArray.length > 0 || cpuArray.length > 0 || memoryArray.length > 0 || diskCapacityArray.length > 0 || diskUsageArray.length > 0) {
