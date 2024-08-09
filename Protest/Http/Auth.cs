@@ -313,7 +313,19 @@ internal static class Auth {
                 path.Add("/notifications/save");
                 break;
 
+            case "issues:write":
+                path.Add("/ws/issues");
+                path.Add("/issues/list");
+                path.Add("/issues/start");
+                path.Add("/issues/status");
+                break;
+
             case "network utilities:write":
+                path.Add("/ws/ping");
+                path.Add("/ws/dhcp");
+                path.Add("/ws/portscan");
+                path.Add("/ws/traceroute");
+                path.Add("/ws/sitecheck");
                 path.Add("/tools/bulkping");
                 path.Add("/tools/dnslookup");
                 path.Add("/tools/ntp");
@@ -321,11 +333,6 @@ internal static class Auth {
                 path.Add("/tools/maclookup");
                 //path.Add("/tools/downstream");
                 //path.Add("/tools/upstream");
-                path.Add("/ws/ping");
-                path.Add("/ws/dhcp");
-                path.Add("/ws/portscan");
-                path.Add("/ws/traceroute");
-                path.Add("/ws/sitecheck");
                 break;
 
             case "telnet:write":
