@@ -210,14 +210,8 @@ class DnsSD extends Console {
 		const Apply = ()=> {
 			this.args.type         = recordTypeInput.value;
 			this.args.timeout      = timeoutInput.value;
-			this.args.isStandard   = standardToggle.checkbox.checked;
-			this.args.isInverse    = inverseToggle.checkbox.checked;
-			this.args.serverStatus = serverStatusToggle.checkbox.checked;
-			this.args.isTruncated  = truncatedToggle.checkbox.checked;
-			this.args.isRecursive  = recursiveToggle.checkbox.checked;
 
 			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, DnsSD.recordTypes.find(o=> o[0] === this.args.type)[2])}`;
-			this.SetTitle(this.args.server === "" ? "DNS lookup" : `DNS lookup: ${this.args.server}`);
 		};
 
 		const OnKeydown = event=>{
@@ -229,25 +223,6 @@ class DnsSD extends Console {
 
 		recordTypeInput.addEventListener("keydown", OnKeydown);
 		timeoutInput.addEventListener("keydown", OnKeydown);
-
-		transportMethodInput.onchange = ()=> {
-			if (transportMethodInput.value === "HTTPS") {
-				timeoutInput.disabled      = true;
-				standardToggle.checkbox.disabled     = true;
-				inverseToggle.checkbox.disabled      = true;
-				serverStatusToggle.checkbox.disabled = true;
-				truncatedToggle.checkbox.disabled    = true;
-				recursiveToggle.checkbox.disabled    = true;
-			}
-			else {
-				timeoutInput.disabled      = false;
-				standardToggle.checkbox.disabled     = false;
-				inverseToggle.checkbox.disabled      = false;
-				serverStatusToggle.checkbox.disabled = false;
-				truncatedToggle.checkbox.disabled    = false;
-				recursiveToggle.checkbox.disabled    = false;
-			}
-		};
 
 		okButton.addEventListener("click", ()=> {
 			Apply();

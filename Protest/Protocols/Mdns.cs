@@ -250,7 +250,7 @@ internal class Mdns {
 
             int nameStartIndex = index;
 
-            if ((response[index] & 0xC0) == 0xC0) {
+            if ((response[index] & 0xFF) == 0xC0) {
                 index += 2;
             }
             else {

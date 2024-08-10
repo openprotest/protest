@@ -1,4 +1,24 @@
 class HexViewer extends Window {
+	static dnsRecordTypes = {
+		1: "A",
+		2: "NS",
+		5: "CNAME",
+		6: "SOA",
+		12: "PTR",
+		15: "MX",
+		16: "TXT",
+		28: "AAAA",
+		33: "SRV",
+		255: "ANY",
+	};
+
+	static dnsClasses = {
+		1: "Internet",
+		2: "CSNET",
+		3: "Chaos",
+		4: "Hesiod",
+	};
+
 	static dhcpOptions = [
 		"Pad", //0
 		"Subnet mask",
@@ -240,6 +260,10 @@ class HexViewer extends Window {
 
 		this.args = args;
 
+		this.listCount = 0;
+		this.lastIndentationValue = 0;
+		this.lastIndentationElement = null;
+
 		this.SetIcon("mono/hexviewer.svg");
 		this.SetTitle("Hex viewer");
 
@@ -247,21 +271,19 @@ class HexViewer extends Window {
 
 		this.content.classList.add("hexviewer-content");
 
+		this.list = document.createElement("div");
+		this.list.className = "hexviewer-list";
+
 		this.hexBox = document.createElement("div");
 		this.hexBox.className = "hexviewer-hexbox";
-		this.content.appendChild(this.hexBox);
 
 		this.asciiBox = document.createElement("div");
 		this.asciiBox.className = "hexviewer-asciibox";
-		this.content.appendChild(this.asciiBox);
-
-		this.list = document.createElement("div");
-		this.list.className = "hexviewer-list";
-		this.content.appendChild(this.list);
 
 		this.details = document.createElement("div");
 		this.details.className = "hexviewer-details";
-		this.content.appendChild(this.details);
+
+		this.content.append(this.list, this.hexBox, this.asciiBox, this.details);
 
 		this.hexBox.onscroll = ()=> {
 			this.asciiBox.scrollTop = this.hexBox.scrollTop;
@@ -333,6 +355,10 @@ class HexViewer extends Window {
 				case "ntp"  : this.PopulateNtpLabels(hexContainer, charContainer, data); break;
 				case "dhcp" : this.PopulateDhcpLabels(hexContainer, charContainer, data); break;
 			}
+
+			this.listCount = 0;
+			this.lastIndentationValue = 0;
+			this.lastIndentationElement = null;
 		};
 
 		for (let i=0; i<exchange.length; i++) {
@@ -351,9 +377,66 @@ class HexViewer extends Window {
 
 	PopulateLabel(label, indentation, hexContainer, charContainer, offset, length) {
 		const element = document.createElement("div");
-		element.textContent = label;
 		element.style.paddingLeft = `${8 + indentation * 20}px`;
 		this.list.appendChild(element);
+
+		const textBox = document.createElement("div");
+		textBox.textContent = label;
+		element.appendChild(textBox);
+
+		this.listCount++;
+
+		if (indentation > 0) {
+			element.style.setProperty("--indentation", `${indentation * 20 - 8}px`);
+			element.className = "hexviewer-label-T";
+		}
+
+		if (this.lastIndentationValue !== indentation) {
+			const d = window.getComputedStyle(this.lastIndentationElement).getPropertyValue("--indentation");
+			if (d) {
+				this.lastIndentationElement.className = "hexviewer-label-L";
+			}
+		}
+
+		if (this.lastIndentationValue < indentation) {
+			const dot = document.createElement("div");
+			dot.style.position = "absolute";
+			dot.style.left = `${indentation * 20 - 10}px`;
+			dot.style.top = "0";
+			dot.style.width = "6px";
+			dot.style.height = "6px";
+			dot.style.borderRadius = "3px";
+			dot.style.backgroundColor = "var(--clr-light)";
+			element.appendChild(dot);
+		}
+
+		if (indentation > 0 && this.lastIndentationValue > indentation) {
+			const connect = document.createElement("div");
+			connect.style.position = "absolute";
+			connect.style.left = `${indentation * 20 - 8}px`;
+			connect.style.bottom = "100%";
+			connect.style.width = "2px";
+			connect.style.height = "50px";
+			connect.style.backgroundColor = "var(--clr-light)";
+			element.appendChild(connect);
+
+			const index = this.listCount;
+			const children = this.list.childNodes;
+
+			for (let i=index-1; i>=0; i--) {
+				const d = window.getComputedStyle(children[i]).getPropertyValue("--indentation");
+				if (!d) continue;
+
+				const v = parseInt(d);
+				if (v === indentation * 20 - 8) {
+					connect.style.height = `${(index - i) * 26 - 16}px`;
+					break;
+				}
+			}
+		}
+
+		this.lastIndentationValue = indentation;
+		this.lastIndentationElement = element;
 
 		element.onclick = event=> {
 			const hexElements  = hexContainer.childNodes;
@@ -388,8 +471,8 @@ class HexViewer extends Window {
 				charElements[i].scrollIntoView({ block:"center", inline:"center" });
 			}
 
-			event.target.style.color = "#000";
-			event.target.style.backgroundColor = "var(--clr-select)";
+			element.style.color = "#000";
+			element.style.backgroundColor = "var(--clr-select)";
 		};
 
 		return element;
@@ -459,11 +542,12 @@ class HexViewer extends Window {
 			offset = end + 1;
 
 			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+
 			offset += 2;
 
 			const element = this.PopulateLabel("Question:", 0, hexContainer, charContainer, start, offset - start);
@@ -485,6 +569,7 @@ class HexViewer extends Window {
 				while (end < stream.length && stream[end] !== 0) {
 					end++;
 				}
+				end++; //null termination
 				break;
 			}
 
@@ -493,11 +578,11 @@ class HexViewer extends Window {
 			offset = end;
 
 			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let ttl = (stream[offset] << 24) | (stream[offset+1] << 16) | (stream[offset+2] << 8) | stream[offset+3];
@@ -622,11 +707,11 @@ class HexViewer extends Window {
 			offset = end + 1;
 
 			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let ttl = (stream[offset] << 24) | (stream[offset+1] << 16) | (stream[offset+2] << 8) | stream[offset+3];

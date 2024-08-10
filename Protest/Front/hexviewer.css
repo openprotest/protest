@@ -7,19 +7,20 @@
 	container-type: inline-size;
 }
 
+.hexviewer-list {
+	position: relative;
+	overflow-y: scroll;
+	grid-column: 1 / 3;
+	background-color: rgba(128,128,128,.2);
+}
 .hexviewer-hexbox {
 	overflow-y: scroll;
-	grid-column: 1 / 5;
+	grid-column: 3 / 7;
 	background-color: rgba(128,128,128,.2);
 	container-name: hexbox;
 	container-type: inline-size;
 }
 .hexviewer-asciibox {
-	overflow-y: scroll;
-	grid-column: 5 / 7;
-	background-color: rgba(128,128,128,.2);
-}
-.hexviewer-list {
 	overflow-y: scroll;
 	grid-column: 7 / 9;
 	background-color: rgba(128,128,128,.2);
@@ -38,7 +39,7 @@
 	margin-bottom: 4px;
 	color: #c0c0c0;
 	background-color: #00000040 !important;
-	border-radius: 4px;
+	border-radius: 2px;
 }
 
 .hexviewer-hexbox > div > div,
@@ -56,7 +57,12 @@
 }
 
 .hexviewer-list > div {
+	position: relative;
+	height: 22px;
 	padding: 2px 8px;
+}
+
+.hexviewer-list > div > div {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -71,16 +77,48 @@
 	font-size: 10px;
 }*/
 
+.hexviewer-label-T::before,
+.hexviewer-label-T::after,
+.hexviewer-label-L::before,
+.hexviewer-label-L::after {
+	content: "";
+	position: absolute;
+	left: var(--indentation);
+	background-color: var(--clr-light);
+}
+
+.hexviewer-label-T::before,
+.hexviewer-label-L::before {
+	top: 0;
+	width: 2px;
+}
+
+.hexviewer-label-T::before {
+	height: 100%;
+}
+
+.hexviewer-label-L::before {
+	height: 50%;
+}
+
+
+.hexviewer-label-T::after,
+.hexviewer-label-L::after {
+	top: 12px;
+	width: 12px;
+	height: 2px;
+}
+
 @container hexviewer (max-width: 720px) {
+	.hexviewer-list {
+		grid-column: 9;
+		display: none;
+	}
 	.hexviewer-hexbox {
 		grid-column: 1 / 6;
 	}
 	.hexviewer-asciibox {
 		grid-column: 6 / 9;
-	}
-	.hexviewer-list {
-		grid-column: 9;
-		display: none;
 	}
 }
 
