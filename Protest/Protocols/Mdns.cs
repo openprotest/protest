@@ -21,7 +21,6 @@ internal class Mdns {
         public RecordType type;
         public int ttl;
         public ushort length;
-        public byte[] data;
         public string questionString;
         public string answerString;
         public IPAddress remote;
@@ -251,12 +250,14 @@ internal class Mdns {
             Answer ans = new Answer();
             ans.remote = remoteEndPoint;
 
-            int nameStartIndex = index;
+            int nameStartIndex;
 
             if ((response[index] & 0xFF) == 0xC0) { //pointer
+                nameStartIndex = response[index+1];
                 index += 2;
             }
             else {
+                nameStartIndex = index;
                 while (index < response.Length && response[index] != 0) {
                     index += response[index] + 1;
                 }
@@ -278,9 +279,6 @@ internal class Mdns {
 
             ans.length = (ushort)((response[index] << 8) | response[index + 1]);
             index += 2;
-
-
-
 
             switch (ans.type) {
             case RecordType.A:
@@ -318,14 +316,10 @@ internal class Mdns {
                 break;
             }
 
-            if (ans.length > response.Length - index) {
-                ans.error = 254;
-                break;
-            }
-
-            ans.data = new byte[ans.length];
-            Array.Copy(response, index, ans.data, 0, ans.length);
-            index += ans.length;
+            //if (ans.length > response.Length - ans.length) {
+            //    ans.error = 254;
+            //    break;
+            //}
 
             ans.questionString = ExtractName(response, nameStartIndex);
 
@@ -424,7 +418,7 @@ internal class Mdns {
             switch (answers[i].type) {
             case RecordType.A:
                 builder.Append("\"type\":\"A\",");
-                builder.Append($"\"name\":\"{String.Join(".", answers[i].data)}\",");
+                builder.Append($"\"name\":\"{answers[i].answerString}\",");
                 break;
 
             case RecordType.NS:
@@ -459,25 +453,12 @@ internal class Mdns {
 
             case RecordType.AAAA:
                 builder.Append("\"type\":\"AAAA\",");
-                if (answers[i].data.Length != 16) {
-                    builder.Append($"\"name\":\"\"");
-                    break;
-                }
-
-                builder.Append($"\"name\":\"");
-                for (int j = 0; j < 16; j += 2) {
-                    if (j > 0)
-                        builder.Append(':');
-                    ushort word = (ushort)((answers[i].data[j] << 8) | answers[i].data[j + 1]);
-                    builder.Append(word.ToString("x4"));
-                }
-
-                builder.Append("\",");
+                builder.Append($"\"name\":\"{answers[i].answerString}\",");
                 break;
 
             case RecordType.SRV:
                 builder.Append("\"type\":\"SRV\",");
-                builder.Append($"\"name\":\"{String.Join(".", answers[i].data)}\",");
+                builder.Append($"\"name\":\"{answers[i].answerString}\",");
                 break;
             }
 
