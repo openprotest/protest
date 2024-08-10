@@ -129,7 +129,7 @@
 
 .tool-element > .expanded .tool-after-label-far[after-label]::after {
 	position: sticky;
-	left: max(60%, 300px);
+	left: max(66%, 250px);
 	right: 64px;
 	content: attr(after-label);
 	color: #c0c0c0;
