@@ -339,7 +339,7 @@ class HexViewer extends Window {
 				}
 
 				hex.onmouseenter = char.onmouseenter = ()=>{
-					hex.style.boxShadow = char.style.boxShadow = "#808080 0 0 0 1px inset";
+					hex.style.boxShadow = char.style.boxShadow = "#000 0 0 0 2px inset";
 					this.details.textContent = `0x${j.toString(16).padStart(4, "0")}`;
 				};
 
@@ -676,7 +676,7 @@ class HexViewer extends Window {
 		this.PopulateLabel(`Questions counter: ${qCount}`, 0, hexContainer, charContainer, 4, 2);
 
 		const anCount = stream[index][6] << 8 | stream[index][7];
-		this.PopulateLabel(`Answers counter:  ${anCount}`, 0, hexContainer, charContainer, 6, 2);
+		this.PopulateLabel(`Answers counter: ${anCount}`, 0, hexContainer, charContainer, 6, 2);
 
 		const auCount = stream[index][8] << 8 | stream[index][9];
 		this.PopulateLabel(`Authority RRs: ${auCount}`, 0, hexContainer, charContainer, 8, 2);
@@ -686,17 +686,17 @@ class HexViewer extends Window {
 
 		let offset = 12;
 		let count = 0;
-		while (offset < stream.length && count < qCount + anCount + auCount + adCount) { //answers
+		while (offset < stream[index].length && count < qCount + anCount + auCount + adCount) { 
 			let start = offset;
 			let end = offset;
 
-			switch (stream[offset]) {
+			switch (stream[index][offset]) {
 			case 0xc0: //pointer
 				end += 2;
 				break;
 
 			default:
-				while (end < stream.length && stream[end] !== 0) {
+				while (end < stream[index].length && stream[index][end] !== 0) {
 					end++;
 				}
 				break;
@@ -706,27 +706,27 @@ class HexViewer extends Window {
 
 			offset = end + 1;
 
-			let type = (stream[offset] << 8) | stream[offset+1];
+			let type = (stream[index][offset] << 8) | stream[index][offset+1];
 			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
-			let class_ = (stream[offset] << 8) | stream[offset+1];
+			let class_ = (stream[index][offset] << 8) | stream[index][offset+1];
 			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
-			let ttl = (stream[offset] << 24) | (stream[offset+1] << 16) | (stream[offset+2] << 8) | stream[offset+3];
+			let ttl = (stream[index][offset] << 24) | (stream[index][offset+1] << 16) | (stream[index][offset+2] << 8) | stream[index][offset+3];
 			this.PopulateLabel(`TTL: ${ttl}`, 1, hexContainer, charContainer, offset, 4);
 			offset += 4;
 
-			let len = (stream[offset] << 8) | stream[offset+1];
+			let len = (stream[index][offset] << 8) | stream[index][offset+1];
 			this.PopulateLabel(`Length: ${len}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
-
+	
 			let data;
 			switch (type) {
 			case 1: //A
 				if (len === 4) {
-					data = `${stream[offset]}.${stream[offset+1]}.${stream[offset+2]}.${stream[offset+3]}`;
+					data = `${stream[index][offset]}.${stream[index][offset+1]}.${stream[index][offset+2]}.${stream[index][offset+3]}`;
 					this.PopulateLabel(data, 1, hexContainer, charContainer, offset, len);
 				}
 				break;
@@ -736,8 +736,8 @@ class HexViewer extends Window {
 					data = "";
 					for (let j = 0; j < 16; j+=2) {
 						if (j > 0) data += ":";
-						data += stream[offset + j].toString(16).padStart(2, "0");
-						data += stream[offset + j + 1].toString(16).padStart(2, "0");
+						data += stream[index][offset + j].toString(16).padStart(2, "0");
+						data += stream[index][offset + j + 1].toString(16).padStart(2, "0");
 					}
 					this.PopulateLabel(data, 1, hexContainer, charContainer, offset, len);
 				}
