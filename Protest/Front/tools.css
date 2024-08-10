@@ -127,6 +127,17 @@
 	text-overflow: ellipsis;
 }
 
+.tool-element > .expanded .tool-after-label-far[after-label]::after {
+	position: sticky;
+	left: max(60%, 300px);
+	right: 64px;
+	content: attr(after-label);
+	color: #c0c0c0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .tool-element > .expanded { overflow-y:auto; }
 .tool-element > .expanded > div { width:33%; }
 .tool-element > .collapsed > div { width:auto; }

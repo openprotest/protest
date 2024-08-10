@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity.UI.Services;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -23,6 +24,7 @@ internal class Mdns {
         public byte[] data;
         public string questionString;
         public string answerString;
+        public IPAddress remote;
         public bool isAuthoritative;
         public bool isAdditional;
         public byte error;
@@ -63,6 +65,7 @@ internal class Mdns {
     public static byte[] Resolve(string queryString, int timeout = 2000, RecordType type = RecordType.A) {
         byte[] query = ConstructQuery(queryString, type);
         List<byte[]> receivedData = new List<byte[]>();
+        List<IPAddress> sender = new List<IPAddress>();
 
         IPAddress[] nics = IpTools.GetIpAddresses();
         for (int i = 0; i < nics.Length && receivedData.Count == 0; i++) {
@@ -101,14 +104,15 @@ internal class Mdns {
                     byte[] reply = new byte[1024];
 
                     try {
-                        //EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                        //int length = socket.ReceiveFrom(reply, ref remoteEP);
+                        EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                        int length = socket.ReceiveFrom(reply, ref remoteEP);
 
-                        int length = socket.Receive(reply);
                         if (length > 0) {
                             byte[] actualReply = new byte[length];
                             Array.Copy(reply, actualReply, length);
+
                             receivedData.Add(actualReply);
+                            sender.Add(((IPEndPoint)remoteEP).Address);
                         }
                     }
                     catch { }
@@ -123,26 +127,29 @@ internal class Mdns {
         List<byte[]> matchingData = new List<byte[]>();
         List<Answer> answers = new List<Answer>();
 
-        /*try*/ {
-            foreach (byte[] response in receivedData) {
+        try {
+            for (int i = 0; i < receivedData.Count; i++) {
+                byte[] response = receivedData[i];
                 ushort answerCount, authorityCount, additionalCount;
-                Answer[] answer = DeconstructResponse(response, type, out answerCount, out authorityCount, out additionalCount);
+                Answer[] answer = DeconstructResponse(response, type, sender[i], out answerCount, out authorityCount, out additionalCount);
                 bool matched = false;
-                for (int i = 0; i < answer.Length; i++) {
-                    if (type != RecordType.ANY && answer[i].type != type) { continue; }
-                    if (!answer[i].questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
 
-                    answers.Add(answer[i]);
+                for (int j = 0; j < answer.Length; j++) {
+                    if (type != RecordType.ANY && answer[j].type != type) { continue; }
+                    if (!answer[j].questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                    answers.Add(answer[j]);
                     if (!matched) {
                         matched = true;
                         matchingData.Add(response);
                     }
                 }
             }
+
         }
-        /*catch {
+        catch {
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
-        }*/
+        }
 
         return Serialize(query, matchingData, answers);
     }
@@ -203,7 +210,7 @@ internal class Mdns {
         return query;
     }
 
-    private static Answer[] DeconstructResponse(byte[] response, RecordType queryType, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
+    private static Answer[] DeconstructResponse(byte[] response, RecordType queryType, IPAddress remoteEndPoint, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
         if (response.Length < 12) {
             answerCount = 0;
             authorityCount = 0;
@@ -242,6 +249,7 @@ internal class Mdns {
             }
 
             Answer ans = new Answer();
+            ans.remote = remoteEndPoint;
 
             int nameStartIndex = index;
 
@@ -394,12 +402,12 @@ internal class Mdns {
         for (int i = 0; i < data.Count; i++) {
             if (!first) builder.Append(',');
 
-            builder.Append("[");
+            builder.Append('[');
             for (int j = 0; j < data[i].Length; j++) {
                 if (j > 0) builder.Append(',');
                 builder.Append(data[i][j]);
             }
-            builder.Append("]");
+            builder.Append(']');
             first = false;
         }
         builder.Append("],");
@@ -473,7 +481,8 @@ internal class Mdns {
                 break;
             }
 
-            builder.Append($"\"ttl\":\"{answers[i].ttl}\"");
+            builder.Append($"\"ttl\":\"{answers[i].ttl}\",");
+            builder.Append($"\"remote\":\"{answers[i].remote.ToString()}\"");
 
             builder.Append('}');
 

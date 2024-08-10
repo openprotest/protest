@@ -17,7 +17,7 @@ class DnsSD extends Console {
 
 		this.args = args ?? {
 			entries      : [],
-			type         : "A",
+			type         : "ANY",
 			timeout      : 2000
 		};
 
@@ -38,7 +38,7 @@ class DnsSD extends Console {
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
 
-		this.inputBox.placeholder = "query";
+		this.inputBox.placeholder = "_http._tcp.local";
 
 		if (this.args.entries) { //restore entries from previous session
 			let temp = this.args.entries;
@@ -382,6 +382,8 @@ class DnsSD extends Console {
 
 			for (let i = 0; i < json.answer.length; i++) {
 				const box = document.createElement("div");
+				box.setAttribute("after-label", json.answer[i].remote);
+				box.className = "tool-after-label-far";
 				result.appendChild(box);
 
 				const label = document.createElement("div");
@@ -400,6 +402,7 @@ class DnsSD extends Console {
 
 				const string = document.createElement("div");
 				string.style.display = "inline-block";
+				string.style.paddingRight = "8px";
 				string.textContent = json.answer[i].name;
 
 				box.append(label, string);
