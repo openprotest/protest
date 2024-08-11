@@ -1,5 +1,5 @@
 class HexViewer extends Window {
-	static dnsRecordTypes = {
+	static DNS_RECORD_TYPES = {
 		1: "A",
 		2: "NS",
 		5: "CNAME",
@@ -12,14 +12,14 @@ class HexViewer extends Window {
 		255: "ANY",
 	};
 
-	static dnsClasses = {
+	static DNS_CLASSES = {
 		1: "Internet",
 		2: "CSNET",
 		3: "Chaos",
 		4: "Hesiod",
 	};
 
-	static dhcpOptions = [
+	static DHCP_OPTIONS = [
 		"Pad", //0
 		"Subnet mask",
 		"Time offset",
@@ -542,11 +542,11 @@ class HexViewer extends Window {
 			offset = end + 1;
 
 			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 
 			offset += 2;
 
@@ -578,11 +578,11 @@ class HexViewer extends Window {
 			offset = end;
 
 			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let ttl = (stream[offset] << 24) | (stream[offset+1] << 16) | (stream[offset+2] << 8) | stream[offset+3];
@@ -707,11 +707,11 @@ class HexViewer extends Window {
 			offset = end + 1;
 
 			let type = (stream[index][offset] << 8) | stream[index][offset+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.dnsRecordTypes[type] ? `(${HexViewer.dnsRecordTypes[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let class_ = (stream[index][offset] << 8) | stream[index][offset+1];
-			this.PopulateLabel(`Class: ${class_} ${HexViewer.dnsClasses[class_] ? `(${HexViewer.dnsClasses[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
 			offset += 2;
 
 			let ttl = (stream[index][offset] << 24) | (stream[index][offset+1] << 16) | (stream[index][offset+2] << 8) | stream[index][offset+3];
@@ -961,8 +961,9 @@ class HexViewer extends Window {
 				this.PopulateLabel(`Parameter request list`, 1, hexContainer, charContainer, index, len);
 
 				for (let i = 0; i < len; i++) {
-					if (stream[index+i] < HexViewer.dhcpOptions.length) {
-						this.PopulateLabel(`(${stream[index+i]}) ${HexViewer.dhcpOptions[stream[index+i]]}`, 2, hexContainer, charContainer, index+i, 1);
+					if (stream[index+i] < HexViewer.DHCP_OPTIONS.length) {
+						this.PopulateLabel(`(${stream[index+i]}) ${HexViewer.DHCP_OPTIONS
+						[stream[index+i]]}`, 2, hexContainer, charContainer, index+i, 1);
 					}
 					else {
 						this.PopulateLabel(`(${stream[index+i]})`, 2, hexContainer, charContainer, index+i, 1);

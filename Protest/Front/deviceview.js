@@ -38,8 +38,8 @@ class DeviceView extends View {
 		"domain", "username", "password", "ssh username", "ssh password", "anydesk id", "anydesk password"
 	];
 
-	static regexIPv4 = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
-	static printerTypes = ["fax", "multiprinter", "ticket printer", "printer"];
+	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
+	static IPv4_REGEX = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
 
 	constructor(args) {
 		super();
@@ -357,7 +357,7 @@ class DeviceView extends View {
 		let ips = this.link.ip.v.split(";").map(o=>o.trim());
 
 		for (let i=0; i<ips.length; i++) {
-			if (!ips[i].match(DeviceView.regexIPv4)) continue;
+			if (!ips[i].match(DeviceView.IPv4_REGEX)) continue;
 			let split = ips[i].split(".").map(o=>parseInt(o));
 			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3];
 
@@ -1147,7 +1147,7 @@ class DeviceView extends View {
 			})(),
 
 			(async ()=> {
-				if (this.link.type && DeviceView.printerTypes.includes(this.link.type.v.toLowerCase())) {
+				if (this.link.type && DeviceView.PRINTER_TYPES.includes(this.link.type.v.toLowerCase())) {
 					const response = await fetch(`lifeline/printcount/view?file=${this.args.file}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
@@ -1207,7 +1207,7 @@ class DeviceView extends View {
 				})(),
 
 				(async ()=> {
-					if (this.link.type && DeviceView.printerTypes.includes(this.link.type.v.toLowerCase())) {
+					if (this.link.type && DeviceView.PRINTER_TYPES.includes(this.link.type.v.toLowerCase())) {
 						const response = await fetch(`lifeline/printcount/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 						const buffer = await response.arrayBuffer();
 						return new Uint8Array(buffer);

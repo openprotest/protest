@@ -144,7 +144,6 @@ internal class Mdns {
                     }
                 }
             }
-
         }
         catch {
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();

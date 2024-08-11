@@ -1,5 +1,5 @@
 class DnsLookup extends Console {
-	static recordTypes = [
+	static RECORD_TYPES = [
 		["A",     "IPv4 Address",       "hsl(20,85%,50%)",  1],
 		["AAAA",  "IPv6 Address",       "hsl(50,85%,50%)",  28],
 		["NS",    "Name Server",        "hsl(80,85%,50%)",  2],
@@ -40,7 +40,7 @@ class DnsLookup extends Console {
 		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.copyButton   = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddToolbarSeparator();
-		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, DnsLookup.recordTypes.find(o=>o[0]===this.args.type)[2]));
+		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, DnsLookup.RECORD_TYPES.find(o=>o[0]===this.args.type)[2]));
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
@@ -104,14 +104,14 @@ class DnsLookup extends Console {
 			this.OptionsDialog();
 		});
 
-		for (let i = 0; i < DnsLookup.recordTypes.length; i++) {
+		for (let i = 0; i < DnsLookup.RECORD_TYPES.length; i++) {
 			const type = document.createElement("div");
 			type.style.padding = "4px 8px";
 
 			const label = document.createElement("div");
-			label.textContent = DnsLookup.recordTypes[i][0];
+			label.textContent = DnsLookup.RECORD_TYPES[i][0];
 			label.style.display = "inline-block";
-			label.style.color = DnsLookup.recordTypes[i][2];
+			label.style.color = DnsLookup.RECORD_TYPES[i][2];
 			label.style.backgroundColor = "#222";
 			label.style.fontFamily = "monospace";
 			label.style.fontWeight = "600";
@@ -123,17 +123,17 @@ class DnsLookup extends Console {
 
 			const string = document.createElement("div");
 			string.style.display = "inline-block";
-			string.textContent = DnsLookup.recordTypes[i][1];
+			string.textContent = DnsLookup.RECORD_TYPES[i][1];
 
 			type.append(label, string);
 			this.recordType.list.append(type);
 
 			type.onclick = ()=> {
-				this.args.type = DnsLookup.recordTypes[i][0];
-				this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(DnsLookup.recordTypes[i][0], DnsLookup.recordTypes[i][2])})`;
+				this.args.type = DnsLookup.RECORD_TYPES[i][0];
+				this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(DnsLookup.RECORD_TYPES[i][0], DnsLookup.RECORD_TYPES[i][2])})`;
 			};
 		}
-		this.recordType.menu.style.height = `${DnsLookup.recordTypes.length * 30}px`;
+		this.recordType.menu.style.height = `${DnsLookup.RECORD_TYPES.length * 30}px`;
 	}
 
 	GetTypeIcon(type, color) {
@@ -180,10 +180,10 @@ class DnsLookup extends Console {
 		recordTypeInput.style.width = "200px";
 		innerBox.appendChild(recordTypeInput);
 
-		for (let i = 0; i < DnsLookup.recordTypes.length; i++) {
+		for (let i = 0; i < DnsLookup.RECORD_TYPES.length; i++) {
 			const option = document.createElement("option");
-			option.value = DnsLookup.recordTypes[i][0];
-			option.textContent = `${DnsLookup.recordTypes[i][0]} - ${DnsLookup.recordTypes[i][1]}`;
+			option.value = DnsLookup.RECORD_TYPES[i][0];
+			option.textContent = `${DnsLookup.RECORD_TYPES[i][0]} - ${DnsLookup.RECORD_TYPES[i][1]}`;
 			recordTypeInput.appendChild(option);
 		}
 		recordTypeInput.value = this.args.type;
@@ -255,7 +255,7 @@ class DnsLookup extends Console {
 			this.args.isTruncated  = truncatedToggle.checkbox.checked;
 			this.args.isRecursive  = recursiveToggle.checkbox.checked;
 
-			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, DnsLookup.recordTypes.find(o=> o[0] === this.args.type)[2])}`;
+			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, DnsLookup.RECORD_TYPES.find(o=> o[0] === this.args.type)[2])}`;
 			this.SetTitle(this.args.server === "" ? "DNS lookup" : `DNS lookup: ${this.args.server}`);
 		};
 
@@ -438,7 +438,7 @@ class DnsLookup extends Console {
 					const label = document.createElement("div");
 					label.textContent = json.answer[i].type;
 					label.style.display = "inline-block";
-					label.style.color = DnsLookup.recordTypes.find(o=>o[0]===json.answer[i].type)[2];
+					label.style.color = DnsLookup.RECORD_TYPES.find(o=>o[0]===json.answer[i].type)[2];
 					label.style.backgroundColor = "#222";
 					label.style.fontFamily = "monospace";
 					label.style.fontWeight = "600";
@@ -461,7 +461,7 @@ class DnsLookup extends Console {
 				for (let i = 0; i < json.Answer.length; i++) {
 					const box = document.createElement("div");
 
-					let type = DnsLookup.recordTypes.find(o=>o[3]===json.Answer[i].type);
+					let type = DnsLookup.RECORD_TYPES.find(o=>o[3]===json.Answer[i].type);
 
 					const label = document.createElement("div");
 					label.textContent = type[0];

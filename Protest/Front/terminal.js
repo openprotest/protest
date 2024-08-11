@@ -32,18 +32,18 @@ class Terminal extends Window {
 	};
 
 	static SHIFT_KEYS = {
-		"F1"        : "\x1B[1;2P",
-		"F2"        : "\x1B[1;2Q",
-		"F3"        : "\x1B[1;2R",
-		"F4"        : "\x1B[1;2S",
-		"F5"        : "\x1B[15;2~",
-		"F6"        : "\x1B[17;2~",
-		"F7"        : "\x1B[18;2~",
-		"F8"        : "\x1B[19;2~",
-		"F9"        : "\x1B[20;2~",
-		"F10"       : "\x1B[21;2~",
-		"F11"       : "\x1B[23;2~",
-		"F12"       : "\x1B[24;2~",
+		"F1" : "\x1B[1;2P",
+		"F2" : "\x1B[1;2Q",
+		"F3" : "\x1B[1;2R",
+		"F4" : "\x1B[1;2S",
+		"F5" : "\x1B[15;2~",
+		"F6" : "\x1B[17;2~",
+		"F7" : "\x1B[18;2~",
+		"F8" : "\x1B[19;2~",
+		"F9" : "\x1B[20;2~",
+		"F10": "\x1B[21;2~",
+		"F11": "\x1B[23;2~",
+		"F12": "\x1B[24;2~",
 		"ArrowUp"   : "\x1B[1;2A",
 		"ArrowDown" : "\x1B[1;2B",
 		"ArrowRight": "\x1B[1;2C",
@@ -109,18 +109,18 @@ class Terminal extends Window {
 	};
 
 	static ALT_KEYS = {
-		"F1"         : "\x1B[1;3P",
-		"F2"         : "\x1B[1;3Q",
-		"F3"         : "\x1B[1;3R",
-		"F4"         : "\x1B[1;3S",
-		"F5"         : "\x1B[15;3~",
-		"F6"         : "\x1B[17;3~",
-		"F7"         : "\x1B[18;3~",
-		"F8"         : "\x1B[19;3~",
-		"F9"         : "\x1B[20;3~",
-		"F10"        : "\x1B[21;3~",
-		"F11"        : "\x1B[23;3~",
-		"F12"        : "\x1B[24;3~",
+		"F1" : "\x1B[1;3P",
+		"F2" : "\x1B[1;3Q",
+		"F3" : "\x1B[1;3R",
+		"F4" : "\x1B[1;3S",
+		"F5" : "\x1B[15;3~",
+		"F6" : "\x1B[17;3~",
+		"F7" : "\x1B[18;3~",
+		"F8" : "\x1B[19;3~",
+		"F9" : "\x1B[20;3~",
+		"F10": "\x1B[21;3~",
+		"F11": "\x1B[23;3~",
+		"F12": "\x1B[24;3~",
 		"ArrowUp"    : "\x1B[1;3A",
 		"ArrowDown"  : "\x1B[1;3B",
 		"ArrowRight" : "\x1B[1;3C",
@@ -145,10 +145,6 @@ class Terminal extends Window {
 		this.ResetTextAttributes();
 
 		this.ws = null;
-
-		//preload icon:
-		const disconnectIcon = new Image();
-		disconnectIcon.src = "mono/disconnect.svg";
 	}
 
 	InitializeTerminalState() {
