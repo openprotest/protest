@@ -402,7 +402,7 @@ class DnsSD extends Console {
 
 				const string = document.createElement("div");
 				string.style.display = "inline-block";
-				string.style.paddingRight = "8px";
+				string.style.paddingRight = "4px";
 				string.textContent = json.answer[i].name;
 
 				box.append(label, string);

@@ -126,7 +126,7 @@ internal class Mdns {
         List<byte[]> matchingData = new List<byte[]>();
         List<Answer> answers = new List<Answer>();
 
-        try {
+        /*try*/ {
             for (int i = 0; i < receivedData.Count; i++) {
                 byte[] response = receivedData[i];
                 ushort answerCount, authorityCount, additionalCount;
@@ -145,9 +145,9 @@ internal class Mdns {
                 }
             }
         }
-        catch {
+        /*catch {
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
-        }
+        }*/
 
         return Serialize(query, matchingData, answers);
     }
@@ -213,19 +213,27 @@ internal class Mdns {
             answerCount = 0;
             authorityCount = 0;
             additionalCount = 0;
-            return new Answer[] { new Answer { error = 254 } };
+            return new Answer[] {  };
         }
 
-        //ushort transactionId = BitConverter.ToUInt16(response, 0);
-        //ushort flags         = BitConverter.ToUInt16(response, 2);
+        byte error = (byte)(response[3] & 0b00001111);
+        if (error > 0) {
+            answerCount = 0;
+            authorityCount = 0;
+            additionalCount = 0;
+            return new Answer[] { };
+        }
+
         ushort questionCount = (ushort)((response[4] << 8) | response[5]);
         answerCount          = (ushort)((response[6] << 8) | response[7]);
         authorityCount       = (ushort)((response[8] << 8) | response[9]);
         additionalCount      = (ushort)((response[10] << 8) | response[11]);
 
-        byte error = (byte)(response[3] & 0b00001111);
-        if (error > 0) {
-            return new Answer[] { new Answer { error = error } };
+        if (remoteEndPoint.ToString() != "192.168.169.51") {
+            answerCount = 0;
+            authorityCount = 0;
+            additionalCount = 0;
+            return new Answer[] { };
         }
 
         int index = 12;
@@ -236,37 +244,49 @@ internal class Mdns {
                 if (len == 0) break;
                 index += len;
             }
-            index += 4; //skip type and class
+            index += 4; //skip type, class amd null byte
         }
 
         List<Answer> result = new List<Answer>();
 
-        for (int i = 0; i < answerCount + authorityCount + additionalCount; i++) {
-            if (index >= response.Length) {
-                break;
+        int totalRecords = answerCount + authorityCount + additionalCount;
+        for (int i = 0; i < totalRecords; i++) {
+
+            Console.WriteLine($"Starting at: {index.ToString("x2")}");
+
+            if (index + 4 >= response.Length) { break; }
+
+            int nameStartIndex;
+            if ((response[index] & 0xFF) == 0xC0) { //pointer
+                nameStartIndex = response[index + 1];
+                index += 2;
+            }
+            else {
+                nameStartIndex = index;
+
+                while (index < response.Length && response[index] != 0 && response[index] != 0xC0) {
+                    index += response[index] + 1;
+                }
+
+                if (index >= response.Length) { break; }
+
+                if (response[index] == 0) { //null-termination byte
+                    index++;
+                }
+                else if (response[index] == 0xC0) { //pointer
+                    index += 2;
+                }
             }
 
             Answer ans = new Answer();
             ans.remote = remoteEndPoint;
 
-            int nameStartIndex;
-
-            if ((response[index] & 0xFF) == 0xC0) { //pointer
-                nameStartIndex = response[index+1];
-                index += 2;
-            }
-            else {
-                nameStartIndex = index;
-                while (index < response.Length && response[index] != 0) {
-                    index += response[index] + 1;
-                }
-                index++; //null-termination byte
-            }
-
             if (index + 10 > response.Length) {
                 ans.error = 254;
                 break;
             }
+
+            ans.questionString = ExtractName(response, nameStartIndex);
 
             ans.type = (RecordType)((response[index] << 8) | response[index + 1]);
             index += 2;
@@ -303,10 +323,17 @@ internal class Mdns {
                 }
                 break;
 
+            case RecordType.TXT:
+                if (index + ans.length < response.Length) {
+                    ans.answerString = Encoding.UTF8.GetString(response, index, ans.length);
+                }
+                break;
+
             case RecordType.CNAME:
             case RecordType.NS:
             case RecordType.PTR:
                 ans.answerString = ExtractName(response, index);
+                index += ans.length;
                 break;
 
             default:
@@ -314,13 +341,6 @@ internal class Mdns {
                 index += ans.length;
                 break;
             }
-
-            //if (ans.length > response.Length - ans.length) {
-            //    ans.error = 254;
-            //    break;
-            //}
-
-            ans.questionString = ExtractName(response, nameStartIndex);
 
             if (i >= answerCount + authorityCount) {
                 ans.isAdditional = true;
@@ -340,8 +360,7 @@ internal class Mdns {
         int index = startIndex;
 
         while (response[index] != 0) {
-            if ((response[index] & 0xC0) == 0xC0) {
-                //compressed name
+            if ((response[index] & 0xFF) == 0xC0) { //compressed name
                 int pointer = ((response[index] & 0x3F) << 8) | response[index + 1];
                 name.Append(ExtractName(response, pointer));
                 break;
@@ -354,9 +373,11 @@ internal class Mdns {
                 name.Append('.');
             }
         }
+
         if (name.Length > 0) {
             name.Length--; //remove trailing dot
         }
+
         return name.ToString();
     }
 

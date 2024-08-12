@@ -205,6 +205,11 @@ public sealed class Listener {
     }
 
     private void ListenerCallback(IAsyncResult result) {
+#if !DEBUG
+        try
+#endif
+        {
+
         HttpListenerContext ctx = listener.EndGetContext(result);
 
         //Cross Site Request Forgery protection
@@ -290,6 +295,11 @@ public sealed class Listener {
 
         ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
         ctx.Response.Close();
+        
+        }
+#if !DEBUG
+        catch { }
+#endif
     }
 
     private static Dictionary<string, string> ParseQuery(string queryString) {
