@@ -3,7 +3,7 @@
 	grid-template-rows: 1fr 28px;
 	grid-template-columns: repeat(8, 1fr);
 	column-gap: 8px;
-	container-name: hexviewer;
+	container-name: hexviewer-container;
 	container-type: inline-size;
 }
 
@@ -14,6 +14,7 @@
 	background-color: rgba(128,128,128,.2);
 }
 .hexviewer-hexbox {
+	overflow-x: hidden;
 	overflow-y: scroll;
 	grid-column: 3 / 7;
 	background-color: rgba(128,128,128,.2);
@@ -21,6 +22,7 @@
 	container-type: inline-size;
 }
 .hexviewer-asciibox {
+	overflow-x: hidden;
 	overflow-y: scroll;
 	grid-column: 7 / 9;
 	background-color: rgba(128,128,128,.2);
@@ -47,6 +49,9 @@
 	display: inline-block;
 	width: 6%;
 	height: 20px;
+	font-size: large;
+	font-family: monospace;
+	line-height: 16px;
 	text-align: center;
 	border-radius: 2px;
 }
@@ -109,9 +114,8 @@
 	height: 2px;
 }
 
-@container hexviewer (max-width: 720px) {
+@container hexviewer-container (max-width: 720px) {
 	.hexviewer-list {
-		grid-column: 9;
 		display: none;
 	}
 	.hexviewer-hexbox {
@@ -122,8 +126,9 @@
 	}
 }
 
-@container hexbox (max-width: 350px) {
-	.hexviewer-hexbox > div > div {
-		font-size: small;
+@container hexviewer-container (max-width: 480px) {
+	.hexviewer-hexbox > div > div,
+	.hexviewer-asciibox > div > div {
+		font-size: small !important;
 	}
 }
