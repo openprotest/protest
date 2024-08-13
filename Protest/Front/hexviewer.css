@@ -51,9 +51,9 @@
 	height: 20px;
 	font-size: large;
 	font-family: monospace;
-	line-height: 16px;
 	text-align: center;
 	border-radius: 2px;
+	margin: 1px 0px;
 }
 
 .hexviewer-hexbox > div > div:nth-child(16n + 8),

@@ -9,6 +9,7 @@ class HexViewer extends Window {
 		16: "TXT",
 		28: "AAAA",
 		33: "SRV",
+		47: "NSEC",
 		255: "ANY",
 	};
 
@@ -375,7 +376,7 @@ class HexViewer extends Window {
 		}
 	}
 
-	PopulateLabel(label, indentation, hexContainer, charContainer, offset, length) {
+	PopulateLabel(label, indentation, hexContainer, charContainer, offset, length, isDnsPointers=false) {
 		const element = document.createElement("div");
 		element.style.paddingLeft = `${8 + indentation * 20}px`;
 		this.list.appendChild(element);
@@ -438,7 +439,7 @@ class HexViewer extends Window {
 		this.lastIndentationValue = indentation;
 		this.lastIndentationElement = element;
 
-		element.onclick = event=> {
+		element.onclick = ()=> {
 			const hexElements  = hexContainer.childNodes;
 			const charElements = charContainer.childNodes;
 			const listElements = this.list.childNodes;
@@ -471,13 +472,25 @@ class HexViewer extends Window {
 				charElements[i].scrollIntoView({ block:"center", inline:"center" });
 			}
 
+			if (isDnsPointers) {
+				if (length === 2) {
+					const byteA = parseInt("0x"+hexElements[offset].textContent, 16);
+					const byteB = parseInt("0x"+hexElements[offset+1].textContent, 16);
+					if ((byteA & 0xC0) === 0xC0) {
+						let pointer = ((byteA & 0x3F) << 8) | byteB;
+						hexElements[pointer].style.color = "#000";
+						hexElements[pointer].style.backgroundColor  = "var(--clr-warning)";
+					}
+				}
+			}
+
 			element.style.color = "#000";
 			element.style.backgroundColor = "var(--clr-select)";
 		};
 
 		return element;
 	}
-	
+
 	PopulateDnsLabels(hexContainer, charContainer, stream) {
 		const transactionId = stream[0].toString(16).padStart(2,"0") + stream[1].toString(16).padStart(2,"0");
 		this.PopulateLabel(`Transaction ID: 0x${transactionId}`, 0, hexContainer, charContainer, 0, 2);
@@ -519,97 +532,104 @@ class HexViewer extends Window {
 		const adCount = stream[10] << 8 | stream[11];
 		this.PopulateLabel(`Additional RRs: ${adCount}`, 0, hexContainer, charContainer, 10, 2);
 
-		let offset = 12;
+		let index = 12;
 		let count = 0;
 
-		while (offset < stream.length && count < qCount) { //questions
-			const start = offset;
+		while (index < stream.length && count < qCount) { //questions
+			const start = index;
 
 			let end = start;
-			if (stream[offset] === 0xC0) { //pointer
+
+			if ((stream[index] & 0xC0) === 0xC0) { //pointer
 				end += 2;
 			}
 			else {
-				while (end < stream.length && stream[end] !== 0 && stream[end] !== 0xC0) {
+				while (end < stream.length && stream[end] !== 0 && (stream[end] & 0xC0) !== 0xC0) {
 					end++;
 				}
 
 				if (stream[end] === 0) { //null termination
 					end++;
 				}
-				else if (stream[end] === 0xC0) { //pointer
+				else if ((stream[end] & 0xC0) === 0xC0) { //pointer
 					end += 2;
 				}
 			}
 
-			const first = this.PopulateLabel("Name", 1, hexContainer, charContainer, start, end - start - 1);
-			offset = end;
+			const first = this.PopulateLabel("Name", 1, hexContainer, charContainer, start, end - start - 1, true);
+			index = end;
 
-			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
-			offset += 2;
+			let type = (stream[index] << 8) | stream[index+1];
+			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, index, 2);
+			index += 2;
 
-			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
+			const cacheFlashFlag = stream[index] & 0x80;
+			if (cacheFlashFlag > 0) {
+				this.PopulateLabel(`Cache-flush: true`, 1, hexContainer, charContainer, index, 2);
+			}
 
-			offset += 2;
+			let class_ = stream[index+1];
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, index, 2);
 
-			const element = this.PopulateLabel("Question:", 0, hexContainer, charContainer, start, offset - start);
+			index += 2;
+
+			const element = this.PopulateLabel("Question:", 0, hexContainer, charContainer, start, index - start, true);
 			this.list.insertBefore(element, first);
 
 			count++;
 		}
 
 		const totalRecords = qCount + anCount + auCount + adCount;
-		while (offset < stream.length && count < totalRecords) { //records
-			let start = offset;
-			let end = offset;
+		while (index < stream.length && count < totalRecords) { //records
+			let start = index;
+			let end = index;
 
-			if (stream[offset] === 0xC0) { //pointer
-				console.log(this.hexBox.childNodes[offset]);
+			if ((stream[index] & 0xC0) === 0xC0) { //pointer
 				end += 2;
 			}
 			else {
-				while (end < stream.length && stream[end] !== 0 && stream[end] !== 0xC0) {
+				while (end < stream.length && stream[end] !== 0 && (stream[end] & 0xC0) !== 0xC0) {
 					end++;
 				}
 
 				if (stream[end] === 0) { //null termination
 					end++;
 				}
-				else if (stream[end] === 0xC0) { //pointer
+				else if ((stream[end] & 0xC0) === 0xC0) { //pointer
 					end += 2;
 				}
 			}
 
-			console.log(offset.toString(16).padStart(2, "0"), end.toString(16).padStart(2, "0"));
+			const first = this.PopulateLabel("Name", 1, hexContainer, charContainer, start, end - start, true);
+			index = end;
 
-			const first = this.PopulateLabel("Name", 1, hexContainer, charContainer, start, end - start);
+			const type = (stream[index] << 8) | stream[index+1];
+			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, index, 2);
+			index += 2;
 
-			offset = end;
+			const cacheFlashFlag = stream[index] & 0x80;
+			if (cacheFlashFlag > 0) {
+				this.PopulateLabel(`Cache-flush: true`, 1, hexContainer, charContainer, index, 2);
+			}
 
-			let type = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
-			offset += 2;
+			const class_ = stream[index+1];
+			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, index, 2);
+			index += 2;
 
-			let class_ = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, offset, 2);
-			offset += 2;
+			const ttl = (stream[index] << 24) | (stream[index+1] << 16) | (stream[index+2] << 8) | stream[index+3];
+			this.PopulateLabel(`TTL: ${ttl}`, 1, hexContainer, charContainer, index, 4);
+			index += 4;
 
-			let ttl = (stream[offset] << 24) | (stream[offset+1] << 16) | (stream[offset+2] << 8) | stream[offset+3];
-			this.PopulateLabel(`TTL: ${ttl}`, 1, hexContainer, charContainer, offset, 4);
-			offset += 4;
-
-			let len = (stream[offset] << 8) | stream[offset+1];
-			this.PopulateLabel(`Length: ${len}`, 1, hexContainer, charContainer, offset, 2);
-			offset += 2;
+			const len = (stream[index] << 8) | stream[index+1];
+			this.PopulateLabel(`Length: ${len}`, 1, hexContainer, charContainer, index, 2);
+			index += 2;
 
 			let data;
 			switch (type) {
 			case 1: //A
 				if (len === 4) {
-					data = `${stream[offset]}.${stream[offset+1]}.${stream[offset+2]}.${stream[offset+3]}`;
-					this.PopulateLabel(data, 1, hexContainer, charContainer, offset, len);
+					data = `${stream[index]}.${stream[index+1]}.${stream[index+2]}.${stream[index+3]}`;
+					this.PopulateLabel(data, 1, hexContainer, charContainer, index, len);
 				}
 				break;
 
@@ -618,22 +638,49 @@ class HexViewer extends Window {
 					data = "";
 					for (let j = 0; j < 16; j+=2) {
 						if (j > 0) data += ":";
-						data += stream[offset + j].toString(16).padStart(2, "0");
-						data += stream[offset + j + 1].toString(16).padStart(2, "0");
+						data += stream[index + j].toString(16).padStart(2, "0");
+						data += stream[index + j + 1].toString(16).padStart(2, "0");
 					}
-					this.PopulateLabel(data, 1, hexContainer, charContainer, offset, len);
+					this.PopulateLabel(data, 1, hexContainer, charContainer, index, len);
 				}
 				break;
 
+			case 33: //SRV
+				const priority = (stream[index] << 8) | stream[index + 1];
+				const weight = (stream[index + 2] << 8) | stream[index + 3];
+				const port = (stream[index + 4] << 8) | stream[index + 5];
+				
+				let targetOffset = index + 6;
+				if ((stream[targetOffset] & 0xC0) === 0xC0) { //pointer
+					targetOffset += 2;
+				}
+				else {
+					while (targetOffset < stream.length && stream[targetOffset] !== 0 && (stream[targetOffset] & 0xC0) !== 0xC0) {
+						targetOffset++;
+					}
+	
+					if (stream[targetOffset] === 0) { //null termination
+						targetOffset++;
+					}
+					else if ((stream[targetOffset] & 0xC0) === 0xC0) { //pointer
+						targetOffset += 2;
+					}
+				}
+				
+				this.PopulateLabel(`Priority: ${priority}`, 1, hexContainer, charContainer, index, 2);
+				this.PopulateLabel(`Weight: ${weight}`, 1, hexContainer, charContainer, index + 2, 2);
+				this.PopulateLabel(`Port: ${port}`, 1, hexContainer, charContainer, index + 4, 2);
+				this.PopulateLabel("Target", 1, hexContainer, charContainer, index + 6, targetOffset - (index + 6), true);
+				break;
+
 			default:
-				this.PopulateLabel("Answer", 1, hexContainer, charContainer, offset, len);
+				this.PopulateLabel("Answer", 1, hexContainer, charContainer, index, len);
 				break;
 			}
 
-//console.log("offset = " + offset + " + " + len);
-			offset += len;
+			index += len;
 
-			end = offset;
+			end = index;
 
 			let element;
 			if (count < qCount + anCount) {

@@ -31,6 +31,7 @@ internal static class Dns {
         TXT   = 16,
         AAAA  = 28,
         SRV   = 33,
+        NSEC  = 47,
         ANY   = 255
     }
 

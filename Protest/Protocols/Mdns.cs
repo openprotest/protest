@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -248,17 +249,16 @@ internal class Mdns {
         }
 
         List<Answer> result = new List<Answer>();
-
         int totalRecords = answerCount + authorityCount + additionalCount;
+
         for (int i = 0; i < totalRecords; i++) {
 
-            Console.WriteLine($"Starting at: {index.ToString("x2")}");
-
-            if (index + 4 >= response.Length) { break; }
+            if (index + 10 >= response.Length) { break; }
 
             int nameStartIndex;
-            if ((response[index] & 0xFF) == 0xC0) { //pointer
-                nameStartIndex = response[index + 1];
+            if ((response[index] & 0xC0) == 0xC0) { //pointer
+                if (index + 1 >= response.Length) { break; }
+                nameStartIndex = ((response[index] & 0x3F) << 8) | response[index + 1];
                 index += 2;
             }
             else {
@@ -278,13 +278,9 @@ internal class Mdns {
                 }
             }
 
-            Answer ans = new Answer();
-            ans.remote = remoteEndPoint;
-
-            if (index + 10 > response.Length) {
-                ans.error = 254;
-                break;
-            }
+            Answer ans = new Answer() {
+                remote = remoteEndPoint
+            };
 
             ans.questionString = ExtractName(response, nameStartIndex);
 
@@ -293,6 +289,10 @@ internal class Mdns {
 
             index += 2; //skip class
 
+            if (index + 4 > response.Length) {
+                ans.error = 254;
+                break;
+            }
             ans.ttl = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
             index += 4;
 
@@ -336,9 +336,19 @@ internal class Mdns {
                 index += ans.length;
                 break;
 
+            case RecordType.SRV:
+                if (index + 6 <= response.Length) {
+                    //ans.priority = (ushort)((response[index] << 8) | response[index + 1]);
+                    //ans.weight = (ushort)((response[index+2] << 8) | response[index + 3]);
+                    //ans.port = (ushort)((response[index+4] << 8) | response[index + 5]);
+                    //index += 6;
+                    ans.answerString = ExtractName(response, index);
+                }
+                index += ans.length;
+                break;
+
             default:
                 ans.answerString = String.Empty; //BitConverter.ToString(response, index, ans.length);
-                index += ans.length;
                 break;
             }
 
@@ -359,15 +369,15 @@ internal class Mdns {
         StringBuilder name = new StringBuilder();
         int index = startIndex;
 
-        while (response[index] != 0) {
-            if ((response[index] & 0xFF) == 0xC0) { //compressed name
+        while (index < response.Length && response[index] != 0) {
+            if ((response[index] & 0xC0) == 0xC0) { //is pointer
                 int pointer = ((response[index] & 0x3F) << 8) | response[index + 1];
                 name.Append(ExtractName(response, pointer));
                 break;
             }
             else {
                 int length = response[index++];
-                for (int i = 0; i < length; i++) {
+                for (int i = 0; i < length && index < response.Length; i++) {
                     name.Append((char)response[index++]);
                 }
                 name.Append('.');
@@ -473,6 +483,11 @@ internal class Mdns {
 
             case RecordType.AAAA:
                 builder.Append("\"type\":\"AAAA\",");
+                builder.Append($"\"name\":\"{answers[i].answerString}\",");
+                break;
+
+            case RecordType.NSEC:
+                builder.Append("\"type\":\"NSEC\",");
                 builder.Append($"\"name\":\"{answers[i].answerString}\",");
                 break;
 
