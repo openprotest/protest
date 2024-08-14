@@ -537,8 +537,7 @@ class HexViewer extends Window {
 
 		while (index < stream.length && count < qCount) { //questions
 			const start = index;
-
-			let end = start;
+			let end = index;
 
 			if ((stream[index] & 0xC0) === 0xC0) { //pointer
 				end += 2;

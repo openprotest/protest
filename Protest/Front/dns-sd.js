@@ -9,6 +9,7 @@ class DnsSD extends Console {
 		["MX",    "Mail Exchange",      "hsl(260,95%,65%)", 15],
 		["TXT",   "Text",               "hsl(290,85%,55%)", 16],
 		["SRV",   "Service",            "hsl(320,85%,50%)", 33],
+		["NSEC",  "Next secure",        "hsl(0,85%,50%)",   47],
 		["ANY",   "All types known",    "hsl(0,85%,100%)",  255]
 	];
 
@@ -16,9 +17,10 @@ class DnsSD extends Console {
 		super();
 
 		this.args = args ?? {
-			entries      : [],
-			type         : "ANY",
-			timeout      : 2000
+			entries       : [],
+			type          : "ANY",
+			timeout       : 2000,
+			additionalRrs : false
 		};
 
 		this.AddCssDependencies("tools.css");
@@ -147,7 +149,7 @@ class DnsSD extends Console {
 
 		const {okButton, innerBox} = dialog;
 
-		innerBox.parentElement.style.maxWidth = "540px";
+		innerBox.parentElement.style.maxWidth = "580px";
 		innerBox.style.padding = "20px 0px 0px 40px";
 
 		const recordTypeLabel = document.createElement("div");
@@ -207,10 +209,16 @@ class DnsSD extends Console {
 		}
 		transportMethodInput.value = "UDP";
 
-		const Apply = ()=> {
-			this.args.type         = recordTypeInput.value;
-			this.args.timeout      = timeoutInput.value;
+		const additionalRecordsBox = document.createElement("div");
+		additionalRecordsBox.style.paddingTop = "8px";
+		innerBox.appendChild(additionalRecordsBox);
 
+		const additionalRecordsToggle = this.CreateToggle("Additional records", this.args.additionalRrs, additionalRecordsBox);
+
+		const Apply = ()=> {
+			this.args.type          = recordTypeInput.value;
+			this.args.timeout       = timeoutInput.value;
+			this.args.additionalRrs = additionalRecordsToggle.checkbox.checked;
 			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, DnsSD.RECORD_TYPES.find(o=> o[0] === this.args.type)[2])}`;
 		};
 
@@ -320,11 +328,7 @@ class DnsSD extends Console {
 
 		try {
 			let url = `tools/dnssdlookup?query=${encodeURIComponent(query)}&type=${type ?? this.args.type}&timeout=${this.args.timeout}`;
-			if (this.args.isStandard)   url += "&standard=true";
-			if (this.args.isInverse)    url += "&inverse=true";
-			if (this.args.serverStatus) url += "&status=true";
-			if (this.args.isTruncated)  url += "&truncated=true";
-			if (this.args.isRecursive)  url += "&recursive=true";
+			if (this.args.additionalRrs)  url += "&additionalrrs=true";
 
 			const response = await fetch(url);
 
@@ -386,10 +390,12 @@ class DnsSD extends Console {
 				box.className = "tool-after-label-far";
 				result.appendChild(box);
 
+				let type = DnsSD.RECORD_TYPES.find(o=>o[0]===json.answer[i].type);
+
 				const label = document.createElement("div");
 				label.textContent = json.answer[i].type;
 				label.style.display = "inline-block";
-				label.style.color = DnsSD.RECORD_TYPES.find(o=>o[0]===json.answer[i].type)[2];
+				label.style.color = type ? type[2] : "hsl(0,85%,100%)";
 				label.style.backgroundColor = "#222";
 				label.style.fontFamily = "monospace";
 				label.style.fontWeight = "600";
@@ -401,7 +407,7 @@ class DnsSD extends Console {
 				label.style.userSelect = "none";
 
 				const string = document.createElement("div");
-				string.style.display = "inline-block";
+				string.style.display = "inline";
 				string.style.paddingRight = "4px";
 				string.textContent = json.answer[i].name;
 

@@ -466,7 +466,7 @@ class DnsLookup extends Console {
 					const label = document.createElement("div");
 					label.textContent = type[0];
 					label.style.display = "inline-block";
-					label.style.color = type[2];
+					label.style.color = type[2] ? type[2] : "hsl(0,85%,100%)";
 					label.style.backgroundColor = "#222";
 					label.style.fontFamily = "monospace";
 					label.style.fontWeight = "600";

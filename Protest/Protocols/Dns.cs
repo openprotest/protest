@@ -248,7 +248,7 @@ internal static class Dns {
                 socket.Close();
             }
 
-            Answer[] deconstructed = DeconstructResponse(response, out answerCount, out authorityCount, out additionalCount);
+            Answer[] deconstructed = ParseAnswers(response, out answerCount, out authorityCount, out additionalCount);
             return Serialize(query, replaced, response, deconstructed);
         }
         catch (SocketException ex) {
@@ -330,32 +330,32 @@ internal static class Dns {
 
             case RecordType.NS:
                 builder.Append("\"type\":\"NS\",");
-                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.CNAME:
                 builder.Append("\"type\":\"CNAME\",");
-                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.SOA:
                 builder.Append("\"type\":\"SOA\",");
-                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.PTR:
                 builder.Append("\"type\":\"PTR\",");
-                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.MX:
                 builder.Append("\"type\":\"MX\",");
-                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.TXT:
                 builder.Append("\"type\":\"TXT\",");
-                builder.Append($"\"name\":\"{LabelsToString(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.AAAA:
@@ -488,7 +488,7 @@ internal static class Dns {
         return query;
     }
 
-    private static Answer[] DeconstructResponse(byte[] response, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
+    private static Answer[] ParseAnswers(byte[] response, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
         if (response.Length < 12) {
             answerCount = 0;
             authorityCount = 0;
@@ -570,7 +570,7 @@ internal static class Dns {
         return result;
     }
 
-    private static string LabelsToString(byte[] labels, int offset, byte[] response, out bool isNullTerminated) {
+    private static string ExtractLabel(byte[] labels, int offset, byte[] response, out bool isNullTerminated) {
         if (labels.Length - offset < 2) {
             isNullTerminated = false;
             return String.Empty;
@@ -581,7 +581,7 @@ internal static class Dns {
         int index = offset;
         while (index < labels.Length) {
 
-            if (index > 0 && labels[index] != 0xc0) builder.Append('.');
+            if (index > 0 && (labels[index ]& 0xC0)  != 0xc0) builder.Append('.');
 
             switch (labels[index]) {
             case 0x00: //null terminated
@@ -591,7 +591,7 @@ internal static class Dns {
                 return domainName;
 
             case 0xc0: //pointer
-                builder.Append(LabelsToString(response, labels[index + 1], response, out bool nt));
+                builder.Append(ExtractLabel(response, labels[index + 1], response, out bool nt));
                 if (nt) {
                     isNullTerminated = true;
                     return builder.ToString();

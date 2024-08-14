@@ -38,6 +38,7 @@ internal class Mdns {
         parameters.TryGetValue("query", out string query);
         parameters.TryGetValue("type", out string typeString);
         parameters.TryGetValue("timeout", out string timeoutString);
+        parameters.TryGetValue("additionalrrs", out string additionalString);
 
         if (!int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout)) {
             timeout = 2000;
@@ -59,10 +60,12 @@ internal class Mdns {
             _       => RecordType.A,
         };
 
-        return Resolve(query, timeout, type);
+        bool includeAdditionalRrs = additionalString?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false;
+
+        return Resolve(query, timeout, type, includeAdditionalRrs);
     }
 
-    public static byte[] Resolve(string queryString, int timeout = 2000, RecordType type = RecordType.A) {
+    public static byte[] Resolve(string queryString, int timeout = 2000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
         byte[] query = ConstructQuery(queryString, type);
         List<byte[]> receivedData = new List<byte[]>();
         List<IPAddress> sender = new List<IPAddress>();
@@ -131,18 +134,15 @@ internal class Mdns {
             for (int i = 0; i < receivedData.Count; i++) {
                 byte[] response = receivedData[i];
                 ushort answerCount, authorityCount, additionalCount;
-                Answer[] answer = DeconstructResponse(response, type, sender[i], out answerCount, out authorityCount, out additionalCount);
-                bool matched = false;
+                Answer[] answer = ParseAnswers(response, type, sender[i], out answerCount, out authorityCount, out additionalCount, includeAdditionalRrs);
 
                 for (int j = 0; j < answer.Length; j++) {
                     if (type != RecordType.ANY && answer[j].type != type) { continue; }
-                    if (!answer[j].questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
-
-                    answers.Add(answer[j]);
-                    if (!matched) {
-                        matched = true;
-                        matchingData.Add(response);
+                    if (!includeAdditionalRrs) {
+                        if (!answer[j].questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
                     }
+                    answers.Add(answer[j]);
+                    matchingData.Add(response);
                 }
             }
         }
@@ -209,12 +209,12 @@ internal class Mdns {
         return query;
     }
 
-    private static Answer[] DeconstructResponse(byte[] response, RecordType queryType, IPAddress remoteEndPoint, out ushort answerCount, out ushort authorityCount, out ushort additionalCount) {
+    private static Answer[] ParseAnswers(byte[] response, RecordType queryType, IPAddress remoteEndPoint, out ushort answerCount, out ushort authorityCount, out ushort additionalCount, bool additionalString) {
         if (response.Length < 12) {
             answerCount = 0;
             authorityCount = 0;
             additionalCount = 0;
-            return new Answer[] {  };
+            return new Answer[] { };
         }
 
         byte error = (byte)(response[3] & 0b00001111);
@@ -226,16 +226,9 @@ internal class Mdns {
         }
 
         ushort questionCount = (ushort)((response[4] << 8) | response[5]);
-        answerCount          = (ushort)((response[6] << 8) | response[7]);
-        authorityCount       = (ushort)((response[8] << 8) | response[9]);
-        additionalCount      = (ushort)((response[10] << 8) | response[11]);
-
-        if (remoteEndPoint.ToString() != "192.168.169.51") {
-            answerCount = 0;
-            authorityCount = 0;
-            additionalCount = 0;
-            return new Answer[] { };
-        }
+        answerCount = (ushort)((response[6] << 8) | response[7]);
+        authorityCount = (ushort)((response[8] << 8) | response[9]);
+        additionalCount = (ushort)((response[10] << 8) | response[11]);
 
         int index = 12;
 
@@ -249,69 +242,82 @@ internal class Mdns {
         }
 
         List<Answer> result = new List<Answer>();
-        int totalRecords = answerCount + authorityCount + additionalCount;
+
+        int totalRecords;
+
+        if (additionalString) {
+            totalRecords = answerCount + authorityCount + additionalCount;
+        }
+        else {
+            totalRecords = answerCount;
+        }
 
         for (int i = 0; i < totalRecords; i++) {
-
             if (index + 10 >= response.Length) { break; }
 
-            int nameStartIndex;
+            int nameStart = index;
+            int nameEnd   = index;
+
             if ((response[index] & 0xC0) == 0xC0) { //pointer
-                if (index + 1 >= response.Length) { break; }
-                nameStartIndex = ((response[index] & 0x3F) << 8) | response[index + 1];
-                index += 2;
+                nameEnd += 2;
             }
             else {
-                nameStartIndex = index;
-
-                while (index < response.Length && response[index] != 0 && response[index] != 0xC0) {
-                    index += response[index] + 1;
+                while (nameEnd < response.Length && response[nameEnd] != 0 && (response[nameEnd] & 0xC0) != 0xC0) {
+                    nameEnd++;
                 }
 
-                if (index >= response.Length) { break; }
-
-                if (response[index] == 0) { //null-termination byte
-                    index++;
+                if (response[nameEnd] == 0) { //null termination
+                    nameEnd++;
                 }
-                else if (response[index] == 0xC0) { //pointer
-                    index += 2;
+                else if ((response[nameEnd] & 0xC0) == 0xC0) { //pointer
+                    nameEnd += 2;
                 }
             }
 
-            Answer ans = new Answer() {
+            index = nameEnd;
+
+            Answer answer = new Answer() {
+                questionString = ExtractName(response, nameStart),
                 remote = remoteEndPoint
             };
 
-            ans.questionString = ExtractName(response, nameStartIndex);
-
-            ans.type = (RecordType)((response[index] << 8) | response[index + 1]);
+            answer.type = (RecordType)((response[index] << 8) | response[index + 1]);
             index += 2;
 
             index += 2; //skip class
 
             if (index + 4 > response.Length) {
-                ans.error = 254;
+                answer.error = 254;
                 break;
             }
-            ans.ttl = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
+            answer.ttl = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
             index += 4;
 
-            ans.length = (ushort)((response[index] << 8) | response[index + 1]);
+            answer.length = (ushort)((response[index] << 8) | response[index + 1]);
             index += 2;
 
-            switch (ans.type) {
+            switch (answer.type) {
             case RecordType.A:
-                if (ans.length == 4 && index + 4 <= response.Length) {
-                    ans.answerString = $"{response[index]}.{response[index + 1]}.{response[index + 2]}.{response[index + 3]}";
-                    index += 4;
+                if (answer.length == 4 && index + 4 <= response.Length) {
+                    answer.answerString = $"{response[index]}.{response[index + 1]}.{response[index + 2]}.{response[index + 3]}";
                 }
                 break;
 
             case RecordType.AAAA:
-                if (ans.length == 16 && index + 16 <= response.Length) {
-                    ans.answerString = string.Join(":", Enumerable.Range(0, 8)
+                if (answer.length == 16 && index + 16 <= response.Length) {
+                    answer.answerString = string.Join(":", Enumerable.Range(0, 8)
                         .Select(j => ((response[index + 2 * j] << 8) | response[index + 2 * j + 1]).ToString("x4")));
-                    index += 16;
+                }
+                break;
+
+            case RecordType.TXT:
+                if (response.Length == 0) {
+                    answer.answerString = "null";
+                    break;
+                }
+
+                if (index + answer.length < response.Length) {
+                    answer.answerString = Encoding.UTF8.GetString(response, index, answer.length);
                 }
                 break;
 
@@ -319,76 +325,93 @@ internal class Mdns {
                 if (index + 2 <= response.Length) {
                     //preference = (ushort)((response[index] << 8) | response[index + 1]);
                     index += 2;
-                    ans.answerString = ExtractName(response, index);
-                }
-                break;
-
-            case RecordType.TXT:
-                if (index + ans.length < response.Length) {
-                    ans.answerString = Encoding.UTF8.GetString(response, index, ans.length);
+                    answer.answerString = ExtractName(response, index);
                 }
                 break;
 
             case RecordType.CNAME:
             case RecordType.NS:
             case RecordType.PTR:
-                ans.answerString = ExtractName(response, index);
-                index += ans.length;
+                answer.answerString = ExtractName(response, index);
                 break;
 
             case RecordType.SRV:
                 if (index + 6 <= response.Length) {
                     //ans.priority = (ushort)((response[index] << 8) | response[index + 1]);
                     //ans.weight = (ushort)((response[index+2] << 8) | response[index + 3]);
-                    //ans.port = (ushort)((response[index+4] << 8) | response[index + 5]);
-                    //index += 6;
-                    ans.answerString = ExtractName(response, index);
+                    ushort port = (ushort)((response[index+4] << 8) | response[index + 5]);
+                    answer.answerString = ExtractName(response, index + 6) + ":" + port;
                 }
-                index += ans.length;
                 break;
 
             default:
-                ans.answerString = String.Empty; //BitConverter.ToString(response, index, ans.length);
+                if (answer.length > 0 && index + answer.length < response.Length) {
+                    answer.answerString = BitConverter.ToString(response, index, answer.length);
+                }
+                else {
+                    answer.answerString = "null";
+                }
                 break;
             }
 
+            index += answer.length;
+
             if (i >= answerCount + authorityCount) {
-                ans.isAdditional = true;
+                answer.isAdditional = true;
             }
             else if (i >= answerCount) {
-                ans.isAuthoritative = true;
+                answer.isAuthoritative = true;
             }
 
-            result.Add(ans);
+            result.Add(answer);
         }
 
         return result.ToArray();
     }
 
     private static string ExtractName(byte[] response, int startIndex) {
-        StringBuilder name = new StringBuilder();
         int index = startIndex;
+        int length = 0;
 
         while (index < response.Length && response[index] != 0) {
-            if ((response[index] & 0xC0) == 0xC0) { //is pointer
+            if ((response[index] & 0xC0) == 0xC0) { // is pointer
                 int pointer = ((response[index] & 0x3F) << 8) | response[index + 1];
-                name.Append(ExtractName(response, pointer));
+                length += ExtractName(response, pointer).Length;
                 break;
             }
             else {
-                int length = response[index++];
-                for (int i = 0; i < length && index < response.Length; i++) {
-                    name.Append((char)response[index++]);
-                }
-                name.Append('.');
+                int labelLength = response[index++];
+                length += labelLength + 1; // label length + dot
+                index += labelLength;
             }
         }
 
-        if (name.Length > 0) {
-            name.Length--; //remove trailing dot
+        Span<char> name = stackalloc char[length];
+        index = startIndex;
+        int nameIndex = 0;
+
+        while (index < response.Length && response[index] != 0) {
+            if ((response[index] & 0xC0) == 0xC0) { //pointer
+                int pointer = ((response[index] & 0x3F) << 8) | response[index + 1];
+                var pointerName = ExtractName(response, pointer);
+                pointerName.AsSpan().CopyTo(name.Slice(nameIndex));
+                nameIndex += pointerName.Length;
+                break;
+            }
+            else {
+                int labelLength = response[index++];
+                for (int i = 0; i < labelLength && index < response.Length; i++) {
+                    name[nameIndex++] = (char)response[index++];
+                }
+                name[nameIndex++] = '.';
+            }
         }
 
-        return name.ToString();
+        if (nameIndex > 0 && name[nameIndex - 1] == '.') {
+            nameIndex--;
+        }
+
+        return new string(name.Slice(0, nameIndex));
     }
 
     private static byte[] Serialize(byte[] query, List<byte[]> data, List<Answer> answers) {
@@ -439,63 +462,48 @@ internal class Mdns {
         builder.Append("\"answer\":[");
         int count = 0;
         for (int i = 0; i < answers.Count; i++) {
-            if (answers[i].isAuthoritative || answers[i].isAdditional) continue;
+            //if (answers[i].isAuthoritative || answers[i].isAdditional) continue;
+
+            string name = answers[i].answerString;
+            if (name is null) { continue; }
+
+            if (answers[i].type == RecordType.TXT) {
+                int delimiter = name.IndexOf((char)65533);
+                if (delimiter > -1) {
+                    name = name.Substring(0, delimiter);
+                }
+                name = name.Trim();
+            }
+
+            for (byte j = 0; j < 32; j++) {
+                name = name.Replace(((char)j).ToString(), "");
+            }
+            for (byte j = 127; j < 255; j++) {
+                name = name.Replace(((char)j).ToString(), "");
+            }
+
+            if (name.Length == 0) { continue; }
+            if (name.Length == 1 && name[0] == 0) { continue; }
 
             if (count > 0) builder.Append(',');
 
             builder.Append('{');
 
-            switch (answers[i].type) {
-            case RecordType.A:
-                builder.Append("\"type\":\"A\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
+            builder.Append(answers[i].type switch {
+                RecordType.A     => "\"type\":\"A\",",
+                RecordType.NS    => "\"type\":\"NS\",",
+                RecordType.CNAME => "\"type\":\"CNAME\",",
+                RecordType.SOA   => "\"type\":\"SOA\",",
+                RecordType.PTR   => "\"type\":\"PTR\",",
+                RecordType.MX    => "\"type\":\"MX\",",
+                RecordType.TXT   => "\"type\":\"TXT\",",
+                RecordType.AAAA  => "\"type\":\"AAAA\",",
+                RecordType.NSEC  => "\"type\":\"NSEC\",",
+                RecordType.SRV   => "\"type\":\"SRV\",",
+                _                => "\"type\":\"unknown\",",
+            });
 
-            case RecordType.NS:
-                builder.Append("\"type\":\"NS\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.CNAME:
-                builder.Append("\"type\":\"CNAME\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.SOA:
-                builder.Append("\"type\":\"SOA\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.PTR:
-                builder.Append("\"type\":\"PTR\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.MX:
-                builder.Append("\"type\":\"MX\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.TXT:
-                builder.Append("\"type\":\"TXT\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.AAAA:
-                builder.Append("\"type\":\"AAAA\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.NSEC:
-                builder.Append("\"type\":\"NSEC\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-
-            case RecordType.SRV:
-                builder.Append("\"type\":\"SRV\",");
-                builder.Append($"\"name\":\"{answers[i].answerString}\",");
-                break;
-            }
+            builder.Append($"\"name\":\"{Data.EscapeJsonText(name)}\",");
 
             builder.Append($"\"ttl\":\"{answers[i].ttl}\",");
             builder.Append($"\"remote\":\"{answers[i].remote.ToString()}\"");
@@ -507,6 +515,7 @@ internal class Mdns {
         builder.Append(']');
 
         builder.Append('}');
+
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 }
