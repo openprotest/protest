@@ -130,7 +130,7 @@ internal class Mdns {
         List<byte[]> matchingData = new List<byte[]>();
         List<Answer> answers = new List<Answer>();
 
-        /*try*/ {
+        try {
             for (int i = 0; i < receivedData.Count; i++) {
                 byte[] response = receivedData[i];
                 ushort answerCount, authorityCount, additionalCount;
@@ -146,9 +146,9 @@ internal class Mdns {
                 }
             }
         }
-        /*catch {
+        catch {
             return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
-        }*/
+        }
 
         return Serialize(query, matchingData, answers);
     }
@@ -337,8 +337,8 @@ internal class Mdns {
 
             case RecordType.SRV:
                 if (index + 6 <= response.Length) {
-                    //ans.priority = (ushort)((response[index] << 8) | response[index + 1]);
-                    //ans.weight = (ushort)((response[index+2] << 8) | response[index + 3]);
+                    //priority = (ushort)((response[index] << 8) | response[index + 1]);
+                    //weight = (ushort)((response[index+2] << 8) | response[index + 3]);
                     ushort port = (ushort)((response[index+4] << 8) | response[index + 5]);
                     answer.answerString = ExtractName(response, index + 6) + ":" + port;
                 }
@@ -374,14 +374,14 @@ internal class Mdns {
         int length = 0;
 
         while (index < response.Length && response[index] != 0) {
-            if ((response[index] & 0xC0) == 0xC0) { // is pointer
+            if ((response[index] & 0xC0) == 0xC0) { //pointer
                 int pointer = ((response[index] & 0x3F) << 8) | response[index + 1];
                 length += ExtractName(response, pointer).Length;
                 break;
             }
             else {
                 int labelLength = response[index++];
-                length += labelLength + 1; // label length + dot
+                length += labelLength + 1; // label + dot
                 index += labelLength;
             }
         }
