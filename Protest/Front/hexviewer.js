@@ -672,6 +672,10 @@ class HexViewer extends Window {
 				this.PopulateLabel("Target", 1, hexContainer, charContainer, index + 6, targetOffset - (index + 6), true);
 				break;
 
+			case 47: //NSEC
+				this.PopulateLabel("Next domain name", 1, hexContainer, charContainer, index, 2, true);
+				break;
+
 			default:
 				this.PopulateLabel("Answer", 1, hexContainer, charContainer, index, len);
 				break;

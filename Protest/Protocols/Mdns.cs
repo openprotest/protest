@@ -344,6 +344,10 @@ internal class Mdns {
                 }
                 break;
 
+            case RecordType.NSEC:
+                answer.answerString = ExtractName(response, index);
+                break;
+
             default:
                 if (answer.length > 0 && index + answer.length < response.Length) {
                     answer.answerString = BitConverter.ToString(response, index, answer.length);
