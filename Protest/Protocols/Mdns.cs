@@ -312,7 +312,7 @@ internal class Mdns {
 
             case RecordType.TXT:
                 if (response.Length == 0) {
-                    answer.answerString = "null";
+                    answer.answerString = null;
                     break;
                 }
 
@@ -349,7 +349,7 @@ internal class Mdns {
                     answer.answerString = BitConverter.ToString(response, index, answer.length);
                 }
                 else {
-                    answer.answerString = "null";
+                    answer.answerString = null;
                 }
                 break;
             }
