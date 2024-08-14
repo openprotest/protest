@@ -506,10 +506,10 @@ class Ping extends Console {
 			this.args.minimap = minimapCheckBox.checked;
 
 			if (!this.isClosed && this.ws != null && this.ws.readyState === 1) { //ready
-				this.ws.send(`timeout:${this.args.timeout}`);
-				this.ws.send(`interval:${this.args.interval}`);
-				this.ws.send(`method:${this.args.method}`);
-				this.ws.send(`rolling:${this.args.rolling}`);
+				this.ws.send(`timeout=${this.args.timeout}`);
+				this.ws.send(`interval=${this.args.interval}`);
+				this.ws.send(`method=${this.args.method}`);
+				this.ws.send(`rolling=${this.args.rolling}`);
 			}
 
 			if (minimapCheckBox.checked) {
@@ -732,7 +732,7 @@ class Ping extends Console {
 			this.count += 1;
 		}
 		else if (this.ws != null && this.ws.readyState === 1) { //ready
-			this.ws.send("add:" + this.count + ";" + host);
+			this.ws.send("add=" + this.count + ";" + host);
 			this.count += 1;
 		}
 		else {
@@ -755,7 +755,7 @@ class Ping extends Console {
 		this.request = this.request.replace(index + ";", "");
 
 		if (this.ws.readyState === 1) {
-			this.ws.send("remove:" + index);
+			this.ws.send("remove=" + index);
 			if (this.request.length === 0) this.ws.close();
 		}
 
@@ -792,10 +792,10 @@ class Ping extends Console {
 			let split = this.request.split(";");
 			let i = 0;
 
-			this.ws.send("timeout:" + this.args.timeout);
-			this.ws.send("interval:" + this.args.interval);
-			this.ws.send("method:" + this.args.method);
-			this.ws.send("rolling:" + this.args.rolling);
+			this.ws.send("timeout=" + this.args.timeout);
+			this.ws.send("interval=" + this.args.interval);
+			this.ws.send("method=" + this.args.method);
+			this.ws.send("rolling=" + this.args.rolling);
 
 			while (i < split.length) {
 				let req = "";
@@ -803,14 +803,14 @@ class Ping extends Console {
 					if (split[i].length > 0) req += split[i] + ";" + this.hashtable[split[i]].host + ";";
 					i++;
 				}
-				this.ws.send("add:" + req);
+				this.ws.send("add=" + req);
 			}
 
 			for (let i = 0; i < this.list.childNodes.length; i++) //remove warnings, if exist
 				if (this.list.childNodes[i].id === "self_destruct")
 					this.list.removeChild(this.list.childNodes[i]);
 
-			this.ws.send("ping:*");
+			this.ws.send("ping=*");
 
 			this.playButton.disabled = true;
 			this.pauseButton.disabled = false;
@@ -856,7 +856,7 @@ class Ping extends Console {
 
 			setTimeout(()=> {
 				if (this.request.length > 0 && !this.isClosed && this.ws != null && this.ws.readyState === 1) {
-					this.ws.send("ping:*");
+					this.ws.send("ping=*");
 				}
 			}, this.args.interval);
 		};
