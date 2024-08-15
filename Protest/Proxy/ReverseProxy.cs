@@ -163,9 +163,7 @@ internal static class ReverseProxy {
                 }
             }
         }
-        catch {
-        }
-
+        catch {}
 
         if (ws?.State == WebSocketState.Open) {
             try {

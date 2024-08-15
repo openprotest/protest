@@ -89,11 +89,8 @@ internal static class LiveStats {
                 catch { }
             }
 
-            if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
-                string value = password.value;
-                if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"critical\":\"Weak password\",\"source\":\"Internal check\"}"u8.ToArray(), mutex);
-                }
+            if (Issues.CheckPasswordStrength(entry, out Issues.Issue? weakPsIssue)) {
+                WsWriteText(ws, weakPsIssue?.ToJsonBytes(), mutex);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -264,7 +261,6 @@ internal static class LiveStats {
                     }
 
                     if (!mismatch && wmiHostname is null && adHostname is null) {
-
                         netBios = await NetBios.GetBiosNameAsync(firstAlive, 500);
                     }
 
@@ -299,11 +295,8 @@ internal static class LiveStats {
                 }
             }
 
-            if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
-                string value = password.value;
-                if (value.Length > 0 && PasswordStrength.Entropy(value) < 28) {
-                    WsWriteText(ws, "{\"critical\":\"Weak password\",\"source\":\"Internal check\"}"u8.ToArray(), mutex);
-                }
+            if (Issues.CheckPasswordStrength(entry, out Issues.Issue? weakPsIssue)) {
+                WsWriteText(ws, weakPsIssue?.ToJsonBytes(), mutex);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -347,14 +340,8 @@ internal static class LiveStats {
 
                     WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
-                    if (percent <= 1) {
-                        WsWriteText(ws, $"{{\"critical\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
-                    }
-                    else if (percent <= 5) {
-                        WsWriteText(ws, $"{{\"error\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
-                    }
-                    else if (percent < 15) {
-                        WsWriteText(ws, $"{{\"warning\":\"{percent}% free space on disk {Data.EscapeJsonText(caption)}\",\"source\":\"WMI\"}}", mutex);
+                    if (Issues.CheckDiskCapacity(percent, caption, out Issues.Issue? diskIssue)) {
+                        WsWriteText(ws, diskIssue?.ToJsonBytes(), mutex);
                     }
                 }
 
@@ -443,39 +430,12 @@ internal static class LiveStats {
                 WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
             }
 
-            Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-            Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-            Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-
-            if (componentName is not null && componentCurrent is not null && componentMax is not null &&
-                componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {
-
-                string[][] componentNameArray     = componentName.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-                string[][] componentMaxArray      = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-                string[][] componentCurrentArray  = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-
-                Array.Sort(componentNameArray, (x, y) => string.Compare(x[0], y[0]));
-                Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
-                Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
-
-                for (int i = 0; i < componentNameArray.Length; i++) {
-                    if (!int.TryParse(componentMaxArray[i][1], out int max)) { continue; }
-                    if (!int.TryParse(componentCurrentArray[i][1], out int current)) { continue; }
-
-                    if (current == -2 || max == -2) { continue; } //undefined
-                    if (current == -3) { current = max; } //full
-
-                    componentNameArray[i][1] = componentNameArray[i][1].TrimStart(' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~');
-
-                    int used = 100 * current / max;
-                    if (used < 5) {
-                        WsWriteText(ws, $"{{\"error\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
-                    }
-                    else if (used < 15) {
-                        WsWriteText(ws, $"{{\"warning\":\"{used}% {componentNameArray[i][1]}\",\"source\":\"SNMP\"}}", mutex);
-                    }
+            if (Issues.CheckPrinterComponent(ipAddress, profile, out Issues.Issue[] issues)) {
+                for (int i = 0; i < issues.Length; i++) {
+                    WsWriteText(ws, issues[i].ToJsonBytes(), mutex);
                 }
             }
+
         }
         else if (SWITCH_TYPES.Contains(type)) {
             //TODO:

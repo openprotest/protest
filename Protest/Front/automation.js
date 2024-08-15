@@ -28,6 +28,7 @@ class Automation extends List {
 
 		this.UpdateAuthorization();
 
+		this.createButton.disabled = true;
 		this.deleteButton.disabled = true;
 		this.startButton.disabled = true;
 		this.pauseButton.disabled = true;
@@ -86,21 +87,19 @@ class Automation extends List {
 		okButton.value = entry ? "Save" : "Create";
 
 		okButton.onclick = async ()=> {
-			
+
 			dialog.Close();
 		};
 	}
 
 	InflateElement(element, entry) { //overrides
-		let icon;
-		switch (entry.name.v.toLowerCase()) {
-		case "lifeline": icon = "mono/lifeline.svg"; break;
-		case "lastseen": icon = "mono/lastseen.svg"; break;
-		case "watchdog": icon = "mono/watchdog.svg"; break;
-		case "issues"  : icon = "mono/issues.svg"; break;
-		case "fetch"   : icon = "mono/fetch.svg"; break;
-		default        : icon = "mono/task.svg"; break;
-		}
+		let icon = {
+			"lifeline": "mono/lifeline.svg",
+			"lastseen": "mono/lastseen.svg",
+			"watchdog": "mono/watchdog.svg",
+			"issues"  : "mono/issues.svg",
+			"fetch"   : "mono/fetch.svg"
+		}[entry.name.v.toLowerCase()] ?? "mono/task.svg";
 
 		const iconBox = document.createElement("div");
 		iconBox.className = "list-element-icon";
