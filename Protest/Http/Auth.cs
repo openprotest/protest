@@ -313,13 +313,6 @@ internal static class Auth {
                 path.Add("/notifications/save");
                 break;
 
-            case "issues:write":
-                path.Add("/ws/issues");
-                path.Add("/issues/list");
-                path.Add("/issues/start");
-                path.Add("/issues/status");
-                break;
-
             case "network utilities:write":
                 path.Add("/ws/ping");
                 path.Add("/ws/dhcp");
@@ -383,6 +376,14 @@ internal static class Auth {
                 path.Add("/rproxy/delete");
                 path.Add("/rproxy/start");
                 path.Add("/rproxy/stop");
+                break;
+
+            case "issues:write":
+                path.Add("/ws/issues");
+                path.Add("/issues/list");
+                path.Add("/issues/start");
+                path.Add("/issues/stop");
+                path.Add("/issues/status");
                 break;
 
             case "settings:write":

@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
-using System.Reflection.Emit;
-using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Lextm.SharpSnmpLib;
-using Lextm.SharpSnmpLib.Security;
+
 using Protest.Http;
 using Protest.Protocols;
 using Protest.Tools;
@@ -36,6 +31,44 @@ internal static class Issues {
     });
 
     public static TaskWrapper task;
+
+    public static byte[] List() {
+        //TODO:
+        return null;
+    }
+
+    public static byte[] Start(string origin) {
+        if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
+
+        Thread thread = new Thread(() => Scan());
+
+        task = new TaskWrapper("Issues")
+        {
+            thread = thread,
+            origin = origin,
+            TotalSteps = 0,
+            CompletedSteps = 0
+        };
+
+        task.thread.Start();
+
+        return "{\"status\":\"running\"}"u8.ToArray(); ;
+    }
+
+    public static byte[] Stop(string origin) {
+        if (task is null) return "{\"error\":\"Scanning task is not running\"}"u8.ToArray();
+        task.RequestCancel(origin);
+        return "{\"status\":\"stopped\"}"u8.ToArray();
+    }
+
+    public static byte[] Status() {
+        if (task is null) {
+            return "{\"status\":\"running\"}"u8.ToArray();
+        }
+        else {
+            return "{\"status\":\"stopped\"}"u8.ToArray();
+        }
+    }
 
     private static async Task WsWriteText(WebSocket ws, string data) {
         if (ws.State == WebSocketState.Open) {
@@ -87,31 +120,8 @@ internal static class Issues {
         }
     }
 
-    public static bool StartTask(string origin) {
-        if (task is not null) return false;
-
-        Thread thread = new Thread(() => Scan());
-
-        task = new TaskWrapper("Issues") {
-            thread = thread,
-            origin = origin,
-            TotalSteps = 0,
-            CompletedSteps = 0
-        };
-
-        task.thread.Start();
-
-        return true;
-    }
-
-    public static bool StopTask(string origin) {
-        if (task is null) return false;
-        task.RequestCancel(origin);
-        return true;
-    }
-
     private static void Scan() {
-
+        //
     }
 
     public static bool CheckPasswordStrength(Database.Entry entry, out Issue? issue) {
