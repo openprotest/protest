@@ -397,7 +397,7 @@ internal class Mdns {
         while (index < response.Length && response[index] != 0) {
             if ((response[index] & 0xC0) == 0xC0) { //pointer
                 int pointer = ((response[index] & 0x3F) << 8) | response[index + 1];
-                var pointerName = ExtractName(response, pointer);
+                string pointerName = ExtractName(response, pointer);
                 pointerName.AsSpan().CopyTo(name.Slice(nameIndex));
                 nameIndex += pointerName.Length;
                 break;

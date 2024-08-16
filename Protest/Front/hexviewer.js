@@ -440,11 +440,11 @@ class HexViewer extends Window {
 		this.lastIndentationElement = element;
 
 		element.onclick = ()=> {
+			const listElements = this.list.childNodes;
 			const hexElements  = hexContainer.childNodes;
 			const charElements = charContainer.childNodes;
-			const listElements = this.list.childNodes;
 
-			for (let i = 0; i < this.hexBox.childNodes.length; i++) {
+			for (let i=0; i<this.hexBox.childNodes.length; i++) {
 				if (this.hexBox.childNodes[i].className === "hexviewer-separator") continue;
 				for (let j = 0; j < this.hexBox.childNodes[i].childNodes.length; j++) {
 					this.hexBox.childNodes[i].childNodes[j].style.color = "";
@@ -454,17 +454,17 @@ class HexViewer extends Window {
 				}
 			}
 
-			for (let i = 0; i < hexElements.length; i++) {
+			for (let i=0; i<hexElements.length; i++) {
 				hexElements[i].style.color = charElements[i].style.color = "";
 				hexElements[i].style.backgroundColor = charElements[i].style.backgroundColor = "";
 			}
 
-			for (let i = 0; i < listElements.length; i++) {
+			for (let i=0; i<listElements.length; i++) {
 				listElements[i].style.color = "";
 				listElements[i].style.backgroundColor = "";
 			}
 
-			for (let i = offset; i < Math.min(offset + length, hexElements.length); i++) {
+			for (let i=offset; i<Math.min(offset + length, hexElements.length); i++) {
 				hexElements[i].style.color = charElements[i].style.color = "#000";
 				hexElements[i].style.backgroundColor = charElements[i].style.backgroundColor = "var(--clr-select)";
 
@@ -473,13 +473,28 @@ class HexViewer extends Window {
 			}
 
 			if (isDnsPointers) {
-				if (length === 2) {
-					const byteA = parseInt("0x"+hexElements[offset].textContent, 16);
-					const byteB = parseInt("0x"+hexElements[offset+1].textContent, 16);
-					if ((byteA & 0xC0) === 0xC0) {
-						let pointer = ((byteA & 0x3F) << 8) | byteB;
-						hexElements[pointer].style.color = "#000";
-						hexElements[pointer].style.backgroundColor  = "var(--clr-warning)";
+				if (true) {
+					let byteA = parseInt("0x"+hexElements[offset].textContent, 16);
+					let byteB = parseInt("0x"+hexElements[offset+1].textContent, 16);
+					let pIndex = ((byteA & 0x3F) << 8) | byteB;
+
+					while (pIndex < hexElements.length - 1) {
+						byteA = parseInt("0x"+hexElements[pIndex].textContent, 16);
+						if (byteA === 0) { break; }
+
+						if ((byteA & 0xC0) === 0xC0) {
+							byteB = parseInt("0x"+hexElements[pIndex+1].textContent, 16);
+							pIndex = ((byteA & 0x3F) << 8) | byteB;
+							continue;
+						}
+
+						hexElements[pIndex].style.color = "#000";
+						hexElements[pIndex].style.backgroundColor = "var(--clr-warning)";
+
+						charElements[pIndex].style.color = "#000";
+						charElements[pIndex].style.backgroundColor = "var(--clr-warning)";
+
+						pIndex++;
 					}
 				}
 			}

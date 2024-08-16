@@ -52,12 +52,12 @@ internal static class Configuration {
                 front_path = value.ToString();
                 break;
 
-            case "backdoor":
-                backdoor = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
-                break;
-
             case "http_prefix":
                 httpPrefixes.Add(value.ToString());
+                break;
+
+            case "backdoor":
+                backdoor = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
                 break;
 
             case "ip2location_api_key":
@@ -124,14 +124,14 @@ internal static class Configuration {
         builder.AppendLine($"#front_path = {front_path}");
         builder.AppendLine();
 #endif
-        
-        builder.AppendLine($"# When the backdoor is enabled, requests originating from the loopback address bypass authentication.");
-        builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
-        builder.AppendLine();
 
         builder.AppendLine("http_prefix = http://127.0.0.1:8080/");
         builder.AppendLine("http_prefix = http://[::1]:8080/");
         builder.AppendLine("#http_prefix = https://+:443/");
+        builder.AppendLine();
+
+        builder.AppendLine($"# When the backdoor is enabled, requests originating from the loopback address bypass authentication.");
+        builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
         builder.AppendLine();
 
         builder.AppendLine("#ip2location_api_key = PASTE-API-KEY-HERE");

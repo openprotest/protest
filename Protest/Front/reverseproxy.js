@@ -593,7 +593,7 @@ class ReverseProxy extends List {
 	}
 
 	EditDialog(entry=null, isRunning=false) {
-		const dialog = this.DialogBox("460px");
+		const dialog = this.DialogBox("480px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
