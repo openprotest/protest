@@ -141,6 +141,7 @@ class ReverseProxy extends List {
 		this.totalRxValue.style.fontFamily = "monospace";
 		this.totalRxValue.style.textAlign = "right";
 		this.totalRxValue.style.lineHeight = "20px";
+		this.totalRxValue.style.userSelect = "text";
 
 		this.totalTxValue = document.createElement("div");
 		this.totalTxValue.style.position = "absolute";
@@ -154,6 +155,7 @@ class ReverseProxy extends List {
 		this.totalTxValue.style.fontFamily = "monospace";
 		this.totalTxValue.style.textAlign = "right";
 		this.totalTxValue.style.lineHeight = "20px";
+		this.totalTxValue.style.userSelect = "text";
 
 		this.stats.append(this.totalRxLabel, this.totalTxLabel, this.totalRxValue, this.totalTxValue);
 
@@ -189,7 +191,8 @@ class ReverseProxy extends List {
 		this.rxRateValue.style.fontFamily = "monospace";
 		this.rxRateValue.style.textAlign = "right";
 		this.rxRateValue.style.lineHeight = "20px";
-		
+		this.rxRateValue.style.userSelect = "text";
+
 		this.txRateValue = document.createElement("div");
 		this.txRateValue.style.position = "absolute";
 		this.txRateValue.style.left = "350px";
@@ -202,6 +205,7 @@ class ReverseProxy extends List {
 		this.txRateValue.style.fontFamily = "monospace";
 		this.txRateValue.style.textAlign = "right";
 		this.txRateValue.style.lineHeight = "20px";
+		this.txRateValue.style.userSelect = "text";
 
 		this.stats.append(this.rxRateLabel, this.txRateLabel, this.rxRateValue, this.txRateValue);
 

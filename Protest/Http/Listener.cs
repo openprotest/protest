@@ -246,6 +246,11 @@ public sealed class Listener {
 
         string xRealIpHeader = ctx.Request?.Headers?.Get("X-Real-IP");
         if (xRealIpHeader is not null && IPAddress.TryParse(xRealIpHeader, out IPAddress realIp)) {
+            if (IPAddress.IsLoopback(realIp)) {
+                ctx.Response.StatusCode = 418; //I'm a teapot
+                ctx.Response.Close();
+                return;
+            }
             ctx.Request.RemoteEndPoint.Address = realIp;
         }
 

@@ -19,7 +19,7 @@ class DnsSD extends Console {
 		this.args = args ?? {
 			entries       : [],
 			type          : "ANY",
-			timeout       : 2000,
+			timeout       : 1000,
 			additionalRrs : false
 		};
 

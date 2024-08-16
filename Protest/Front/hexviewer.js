@@ -573,7 +573,7 @@ class HexViewer extends Window {
 			const first = this.PopulateLabel("Name", 1, hexContainer, charContainer, start, end - start - 1, true);
 			index = end;
 
-			let type = (stream[index] << 8) | stream[index+1];
+			const type = (stream[index] << 8) | stream[index+1];
 			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, index, 2);
 			index += 2;
 
@@ -582,9 +582,8 @@ class HexViewer extends Window {
 				this.PopulateLabel(`Cache-flush: true`, 1, hexContainer, charContainer, index, 2);
 			}
 
-			let class_ = stream[index+1];
+			const class_ = stream[index+1];
 			this.PopulateLabel(`Class: ${class_} ${HexViewer.DNS_CLASSES[class_] ? `(${HexViewer.DNS_CLASSES[class_]})` : ""}`, 1, hexContainer, charContainer, index, 2);
-
 			index += 2;
 
 			const element = this.PopulateLabel("Question:", 0, hexContainer, charContainer, start, index - start, true);
@@ -595,7 +594,7 @@ class HexViewer extends Window {
 
 		const totalRecords = qCount + anCount + auCount + adCount;
 		while (index < stream.length && count < totalRecords) { //records
-			let start = index;
+			const start = index;
 			let end = index;
 
 			if ((stream[index] & 0xC0) === 0xC0) { //pointer
@@ -618,8 +617,14 @@ class HexViewer extends Window {
 			index = end;
 
 			const type = (stream[index] << 8) | stream[index+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, index, 2);
+			const x = this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, index, 2);
 			index += 2;
+			
+			if (HexViewer.DNS_RECORD_TYPES[type]) {
+				const typeLabel = document.createElement("div");
+				typeLabel.textContent = HexViewer.DNS_RECORD_TYPES[type];
+				x.appendChild(typeLabel);
+			}
 
 			const cacheFlashFlag = stream[index] & 0x80;
 			if (cacheFlashFlag > 0) {

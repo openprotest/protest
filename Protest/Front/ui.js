@@ -632,16 +632,12 @@ const MENU = {
 
 			for (const file in LOADER.devices.data) {
 				const match = keywords.every(
-					keyword=> Object.values(LOADER.devices.data[file]).some(
-						attr=> attr.v.toLowerCase().includes(keyword)
-					)
+					keyword=> Object.values(LOADER.devices.data[file]).some(attr=> attr.v.toLowerCase().includes(keyword))
 				);
 				if (!match) continue;
 
 				const exactMatch = keywords.some(
-					keyword=> Object.values(LOADER.devices.data[file]).some(
-						attr=> attr.v.toLowerCase() === keyword
-					)
+					keyword=> Object.values(LOADER.devices.data[file]).some(attr=> attr.v.toLowerCase() === keyword)
 				);
 
 				let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : null;
@@ -706,9 +702,7 @@ const MENU = {
 				if (!match) continue;
 
 				const exactMatch = keywords.some(
-					keyword=> Object.values(LOADER.users.data[file]).some(
-						attr=> attr.v.toLowerCase() === keyword
-					)
+					keyword=> Object.values(LOADER.users.data[file]).some(attr=> attr.v.toLowerCase() === keyword)
 				);
 
 				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v.toLowerCase()  : null;
@@ -761,12 +755,12 @@ const MENU = {
 				if (++count > 32) break;
 			}
 
-			for (let i=exactMatchUsers.length-1; i >= 0; i--) {
+			for (let i=exactMatchUsers.length-1; i>=0; i--) {
 				MENU.list.unshift(exactMatchUsers[i]);
 				menulist.prepend(exactMatchUsers[i]);
 			}
 
-			for (let i=exactMatchDevices.length-1; i >= 0; i--) {
+			for (let i=exactMatchDevices.length-1; i>=0; i--) {
 				MENU.list.unshift(exactMatchDevices[i]);
 				menulist.prepend(exactMatchDevices[i]);
 			}

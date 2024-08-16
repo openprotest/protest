@@ -41,7 +41,7 @@ internal class Mdns {
         parameters.TryGetValue("additionalrrs", out string additionalString);
 
         if (!int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout)) {
-            timeout = 2000;
+            timeout = 1000;
         }
 
         timeout = Math.Max(timeout, 500);
@@ -65,7 +65,7 @@ internal class Mdns {
         return Resolve(query, timeout, type, includeAdditionalRrs);
     }
 
-    public static byte[] Resolve(string queryString, int timeout = 2000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
+    public static byte[] Resolve(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
         byte[] query = ConstructQuery(queryString, type);
         List<byte[]> receivedData = new List<byte[]>();
         List<IPAddress> sender = new List<IPAddress>();

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Lextm.SharpSnmpLib;
 
 using Protest.Http;
-using Protest.Protocols;
 using Protest.Tools;
 
 namespace Protest.Workers;
