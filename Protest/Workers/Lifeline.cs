@@ -82,9 +82,9 @@ internal static partial class Lifeline {
                         continue;
                     }
 
-                    string os = entry.attributes.TryGetValue("operating system", out Database.Attribute osAttr) ?
-                        osAttr.value.ToLower() :
-                        null;
+                    string os = entry.attributes.TryGetValue("operating system", out Database.Attribute osAttr)
+                        ? osAttr.value.ToLower()
+                        : null;
 
                     bool wmiOnce = true, snmpOnce = true;
 

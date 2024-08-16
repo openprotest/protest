@@ -1164,7 +1164,7 @@ class DeviceView extends View {
 			firstInstantDate = Number(new DataView(firstInstantBuffer).getBigInt64(0, true));
 		}
 
-		if (firstInstantDate > Date.now() - DeviceView.DAY_TICKS * 15) {
+		if (firstInstantDate > Date.now() - DeviceView.DAY_TICKS * 28) {
 			let oYear = new Date().getFullYear();
 			let oMonth = new Date().getMonth() - 1;
 
@@ -1702,7 +1702,7 @@ class DeviceView extends View {
 				data.push({d:date, v:usage});
 			}
 
-			GenerateGraph(data, "Disk usage", "percent", "mono/hdd.svg");
+			GenerateGraph(data, "Disk IO", "percent", "mono/hdd.svg");
 		}
 
 		if (printCounterArray.length > 0) {
