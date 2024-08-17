@@ -136,7 +136,7 @@ class Fetch extends Tabs {
 
 		this.snmp2Button = document.createElement("input");
 		this.snmp2Button.type = "button";
-		this.snmp2Button.style.width = this.snmp2Button.style.minWidth = "32px";
+		this.snmp2Button.style.width = this.snmp2Button.style.minWidth = "34px";
 		this.snmp2Button.style.gridArea = "6 / 5";
 		this.snmp2Button.style.backgroundImage = "url(mono/wrench.svg?light)";
 		this.snmp2Button.style.backgroundSize = "24px 24px";
@@ -147,7 +147,7 @@ class Fetch extends Tabs {
 
 		this.snmp3Button = document.createElement("input");
 		this.snmp3Button.type = "button";
-		this.snmp3Button.style.width = this.snmp3Button.style.minWidth = "32px";
+		this.snmp3Button.style.width = this.snmp3Button.style.minWidth = "34px";
 		this.snmp3Button.style.gridArea = "7 / 5";
 		this.snmp3Button.style.backgroundImage = "url(mono/wrench.svg?light)";
 		this.snmp3Button.style.backgroundSize = "24px 24px";

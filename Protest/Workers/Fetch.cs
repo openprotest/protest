@@ -47,6 +47,10 @@ internal static class Fetch {
     }
 
     public static byte[] SingleDeviceSerialize(Dictionary<string, string> parameters, bool asynchronous = false) {
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
         parameters.TryGetValue("target", out string target);
         parameters.TryGetValue("wmi", out string wmi);
         parameters.TryGetValue("kerberos", out string kerberos);
@@ -140,12 +144,8 @@ internal static class Fetch {
 
         Thread tWmi = null, tAd = null, tPortScan = null;
 
-        if (useWmi) {
+        if (useWmi && !OperatingSystem.IsWindows()) {
             tWmi = new Thread(() => {
-                if (!OperatingSystem.IsWindows()) {
-                    return;
-                }
-
                 wmi = Protocols.Wmi.WmiFetch(target);
 
                 if (wmi.TryGetValue("owner", out string owner)) {
@@ -169,14 +169,12 @@ internal static class Fetch {
             });
         }
 
-        if (useKerberos) {
+        if (useKerberos && !OperatingSystem.IsWindows()) {
             tAd = new Thread(() => {
-                if (!OperatingSystem.IsWindows()) return;
-
-                if (hostname is null) return;
+                if (hostname is null) { return; }
 
                 SearchResult result = Protocols.Kerberos.GetWorkstation(hostname);
-                if (result is null) return;
+                if (result is null) { return; }
 
                 if (result.Properties["description"].Count > 0) {
                     string value = result.Properties["description"][0].ToString();
@@ -214,8 +212,6 @@ internal static class Fetch {
 
         if (argPortScan is not null) {
             tPortScan = new Thread(() => {
-                if (argPortScan is null) return;
-
                 short[] portsPool = argPortScan == "full" ? PortScan.BASIC_PORTS : PortScan.BASIC_PORTS;
 
                 bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult();
@@ -455,6 +451,10 @@ internal static class Fetch {
     }
 
     public static byte[] SingleUserSerialize(Dictionary<string, string> parameters) {
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
         parameters.TryGetValue("target", out string target);
 
         if (target is null) {
@@ -893,6 +893,10 @@ internal static class Fetch {
     public static byte[] ApproveLastTask(Dictionary<string, string> parameters, string origin) {
         if (result is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
 
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
         parameters.TryGetValue("condition", out string targetAttribute);
         parameters.TryGetValue("action", out string action);
 
@@ -944,16 +948,24 @@ internal static class Fetch {
                 attributes.TryAdd(attr.Key, new Database.Attribute() {
                     value = attr.Value[0],
                     date = date,
-                    origin = origin,
+                    origin = origin
                 });
             }
 
-            if (pair.Value.TryGetValue(targetAttribute, out string[] targetValue)) {
+            if (pair.Value.TryGetValue(targetAttribute, out string[] targetValue)) { //existing
                 if (values.TryGetValue(targetValue[0], out string file)) {
+
+                    //keep old type if it exists
+                    if (database.dictionary.TryGetValue(file, out Database.Entry oldEntry)
+                        && oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType)
+                        && String.IsNullOrEmpty(oldType.value)) { 
+                        attributes.AddOrUpdate("type", oldType, (_, _) => oldType);
+                    }
+
                     database.Save(file, attributes, saveMethod, origin);
                 }
             }
-            else {
+            else { //new
                 database.Save(null, attributes, saveMethod, origin);
             }
         }
