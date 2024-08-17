@@ -144,8 +144,9 @@ internal static class Fetch {
 
         Thread tWmi = null, tAd = null, tPortScan = null;
 
-        if (useWmi && !OperatingSystem.IsWindows()) {
+        if (useWmi) {
             tWmi = new Thread(() => {
+                if (!OperatingSystem.IsWindows()) { return; }
                 wmi = Protocols.Wmi.WmiFetch(target);
 
                 if (wmi.TryGetValue("owner", out string owner)) {
@@ -169,8 +170,9 @@ internal static class Fetch {
             });
         }
 
-        if (useKerberos && !OperatingSystem.IsWindows()) {
+        if (useKerberos) {
             tAd = new Thread(() => {
+                if (!OperatingSystem.IsWindows()) { return; }
                 if (hostname is null) { return; }
 
                 SearchResult result = Protocols.Kerberos.GetWorkstation(hostname);
