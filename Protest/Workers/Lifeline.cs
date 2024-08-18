@@ -16,9 +16,6 @@ namespace Protest.Workers;
 internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
 
-    private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer"};
-    private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall"};
-
     private static ConcurrentDictionary<string, object> pingMutexes = new ConcurrentDictionary<string, object>();
     private static ConcurrentDictionary<string, object> wmiMutexes = new ConcurrentDictionary<string, object>();
 
@@ -154,7 +151,7 @@ internal static partial class Lifeline {
                         if (!DatabaseInstances.devices.dictionary.TryGetValue(data[0], out Database.Entry entry)) { continue; }
                         if (!entry.attributes.TryGetValue("type", out Database.Attribute typeAttr)) { continue; }
                         string type = typeAttr.value.ToLower();
-                        if (PRINTER_TYPES.Contains(type)) {
+                        if (Data.PRINTER_TYPES.Contains(type)) {
                             mutex.TryGetValue(data[0], out object obj);
                             try {
                                 lock (obj) {
@@ -165,7 +162,7 @@ internal static partial class Lifeline {
                             }
                             catch { }
                         }
-                        else if (SWITCH_TYPES.Contains(type)) {
+                        else if (Data.SWITCH_TYPES.Contains(type)) {
                             //mutex.TryGetValue(data[0], out object obj);
                             //TODO:
                         }

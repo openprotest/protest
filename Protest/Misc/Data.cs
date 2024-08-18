@@ -18,6 +18,10 @@ public static class Data {
     public const string DATETIME_FORMAT_LONG     = "dddd dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_FILE     = "yyyy-MM-dd HH:mm:ss";
 
+    public static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer"};
+    public static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall"};
+
+
     //pre-baked json responses:
     public static readonly ArraySegment<byte> CODE_OK  = new ArraySegment<byte>("{\"status\":\"ok\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_ACK = new ArraySegment<byte>("{\"status\":\"acknowledge\"}"u8.ToArray());

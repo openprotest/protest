@@ -10,6 +10,7 @@ using Lextm.SharpSnmpLib;
 
 using Protest.Http;
 using Protest.Tools;
+using static Protest.Tools.DebitNotes;
 
 namespace Protest.Workers;
 
@@ -105,7 +106,7 @@ internal static class Issues {
                 }
 
                 await WsWriteText(ws, "{\"test\":\"test\"}"u8.ToArray());
-                await Task.Delay(1000);
+                await Task.Delay(10_000);
             }
         }
         catch {
@@ -120,14 +121,40 @@ internal static class Issues {
     }
 
     private static void Scan() {
-        //
+        ScanUsers();
+        ScanDevices();
+    }
+
+    private static void ScanUsers() {
+        foreach (KeyValuePair<string, Database.Entry> user in DatabaseInstances.users.dictionary) {
+            user.Value.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
+
+        }
+    }
+
+    private static void ScanDevices() {
+        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+            device.Value.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
+            device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute);
+
+            if (Data.PRINTER_TYPES.Contains(typeAttribute.value)) {
+
+            }
+            else if (Data.SWITCH_TYPES.Contains(typeAttribute.value)) {
+
+            }
+        }
     }
 
     public static bool CheckPasswordStrength(Database.Entry entry, out Issue? issue) {
         if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
             string value = password.value;
             if (value.Length > 0 && PasswordStrength.Entropy(value) < WEAK_PASSWORD_ENTROPY_THRESHOLD) {
-                issue = new Issues.Issue { level = Issues.IssueLevel.critical, message = "Weak password", source = "Internal check" };
+                issue = new Issues.Issue {
+                    level = Issues.IssueLevel.critical,
+                    message = "Weak password",
+                    source = "Internal check"
+                };
                 return true;
             }
         }
@@ -138,17 +165,29 @@ internal static class Issues {
 
     public static bool CheckDiskCapacity(double percent, string diskCaption, out Issue? issue) {
         if (percent <= 1) {
-            issue = new Issues.Issue { level = IssueLevel.critical, message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}", source = "WMI" };
+            issue = new Issues.Issue {
+                level = IssueLevel.critical,
+                message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}",
+                source = "WMI"
+            };
             return true;
         }
         
         if (percent <= 5) {
-            issue = new Issues.Issue { level = IssueLevel.error, message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}", source = "WMI" };
+            issue = new Issues.Issue {
+                level = IssueLevel.error,
+                message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}",
+                source = "WMI"
+            };
             return true;
         }
         
         if (percent < 15) {
-            issue = new Issues.Issue { level = IssueLevel.warning, message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}", source = "WMI" };
+            issue = new Issues.Issue {
+                level = IssueLevel.warning,
+                message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}",
+                source = "WMI"
+            };
             return true;
         }
 
@@ -164,9 +203,9 @@ internal static class Issues {
         if (componentName is not null && componentCurrent is not null && componentMax is not null &&
             componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {
 
-            string[][] componentNameArray     = componentName.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-            string[][] componentMaxArray      = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
-            string[][] componentCurrentArray  = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+            string[][] componentNameArray    = componentName.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+            string[][] componentMaxArray     = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
+            string[][] componentCurrentArray = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
 
             Array.Sort(componentNameArray, (x, y) => string.Compare(x[0], y[0]));
             Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
@@ -185,10 +224,18 @@ internal static class Issues {
 
                 int used = 100 * current / max;
                 if (used < 5) {
-                    arrays.Add(new Issues.Issue { level = IssueLevel.error, message = $"{used}% {componentNameArray[i][1]}", source = "SNMP" });
+                    arrays.Add(new Issues.Issue {
+                        level = IssueLevel.error,
+                        message = $"{used}% {componentNameArray[i][1]}",
+                        source = "SNMP"
+                    });
                 }
                 else if (used < 15) {
-                    arrays.Add(new Issues.Issue { level = IssueLevel.warning, message = $"{used}% {componentNameArray[i][1]}", source = "SNMP" });
+                    arrays.Add(new Issues.Issue {
+                        level = IssueLevel.warning,
+                        message = $"{used}% {componentNameArray[i][1]}",
+                        source = "SNMP"
+                    });
                 }
             }
 
