@@ -13,6 +13,20 @@ class HexViewer extends Window {
 		255: "ANY",
 	};
 
+	static DNS_RECORD_COLORS = {
+		1 : "hsl(20,85%,50%)",
+		2 : "hsl(80,85%,50%)",
+		5 : "hsl(140,85%,50%)",
+		6 : "hsl(200,85%,55%)",
+		12: "hsl(230,95%,65%)",
+		15: "hsl(260,95%,65%)",
+		16: "hsl(290,85%,55%)",
+		28: "hsl(50,85%,50%)",
+		33: "hsl(320,85%,50%)",
+		47: "hsl(0,85%,50%)",
+		255: "hsl(0,85%,100%)"
+	};
+
 	static DNS_CLASSES = {
 		1: "Internet",
 		2: "CSNET",
@@ -574,8 +588,16 @@ class HexViewer extends Window {
 			index = end;
 
 			const type = (stream[index] << 8) | stream[index+1];
-			this.PopulateLabel(`Type: ${type} ${HexViewer.DNS_RECORD_TYPES[type] ? `(${HexViewer.DNS_RECORD_TYPES[type]})` : ""}`, 1, hexContainer, charContainer, index, 2);
+			const typeLabel = this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, index, 2);
 			index += 2;
+			
+			if (HexViewer.DNS_RECORD_TYPES[type]) {
+				const recordTypeLabel = document.createElement("div");
+				recordTypeLabel.className = "hexviewer-record-type-label";
+				recordTypeLabel.style.color = HexViewer.DNS_RECORD_COLORS[type];
+				recordTypeLabel.textContent = HexViewer.DNS_RECORD_TYPES[type];
+				typeLabel.firstChild.appendChild(recordTypeLabel);
+			}
 
 			const cacheFlashFlag = stream[index] & 0x80;
 			if (cacheFlashFlag > 0) {
@@ -617,13 +639,15 @@ class HexViewer extends Window {
 			index = end;
 
 			const type = (stream[index] << 8) | stream[index+1];
-			const x = this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, index, 2);
+			const typeLabel = this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, index, 2);
 			index += 2;
 			
 			if (HexViewer.DNS_RECORD_TYPES[type]) {
-				const typeLabel = document.createElement("div");
-				typeLabel.textContent = HexViewer.DNS_RECORD_TYPES[type];
-				x.appendChild(typeLabel);
+				const recordTypeLabel = document.createElement("div");
+				recordTypeLabel.className = "hexviewer-record-type-label";
+				recordTypeLabel.style.color = HexViewer.DNS_RECORD_COLORS[type];
+				recordTypeLabel.textContent = HexViewer.DNS_RECORD_TYPES[type];
+				typeLabel.firstChild.appendChild(recordTypeLabel);
 			}
 
 			const cacheFlashFlag = stream[index] & 0x80;
@@ -660,7 +684,7 @@ class HexViewer extends Window {
 						data += stream[index + j].toString(16).padStart(2, "0");
 						data += stream[index + j + 1].toString(16).padStart(2, "0");
 					}
-					this.PopulateLabel(data, 1, hexContainer, charContainer, index, len);
+					this.PopulateLabel(UI.CompressIPv6(data), 1, hexContainer, charContainer, index, len);
 				}
 				break;
 

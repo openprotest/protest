@@ -1,7 +1,10 @@
+using Lextm.SharpSnmpLib;
+using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Protest;
 
@@ -434,6 +437,20 @@ public static class Data {
                 //return;
             }
         }
+    }
+
+    public static string CompressIPv6(string ipv6) {
+        string removedExtraZeros = ipv6.Replace("0000","*");
+
+        string[] blocks = ipv6.Split(':');
+
+        Regex regex = new Regex(":0+");
+        removedExtraZeros = regex.Replace(removedExtraZeros, ":");
+
+        Regex regex2 = new Regex(":\\*:\\*(:\\*)+:");
+        removedExtraZeros = regex2.Replace(removedExtraZeros, "::");
+
+        return removedExtraZeros.Replace("*", "0");
     }
 
 }

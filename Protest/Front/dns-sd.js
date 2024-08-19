@@ -1,13 +1,13 @@
 class DnsSD extends Console {
 	static RECORD_TYPES = [
 		["A",     "IPv4 Address",       "hsl(20,85%,50%)",  1],
-		["AAAA",  "IPv6 Address",       "hsl(50,85%,50%)",  28],
 		["NS",    "Name Server",        "hsl(80,85%,50%)",  2],
 		["CNAME", "Canonical Name",     "hsl(140,85%,50%)", 5],
 		["SOA",   "Start Of Authority", "hsl(200,85%,55%)", 6] ,
 		["PTR",   "Pointer",            "hsl(230,95%,65%)", 12],
 		["MX",    "Mail Exchange",      "hsl(260,95%,65%)", 15],
 		["TXT",   "Text",               "hsl(290,85%,55%)", 16],
+		["AAAA",  "IPv6 Address",       "hsl(50,85%,50%)",  28],
 		["SRV",   "Service",            "hsl(320,85%,50%)", 33],
 		["NSEC",  "Next secure",        "hsl(0,85%,50%)",   47],
 		["ANY",   "All types known",    "hsl(0,85%,100%)",  255]

@@ -404,7 +404,7 @@ class About extends Tabs {
 			}
 
 			const formData = new FormData();
-			formData.append('file', file);
+			formData.append("file", file);
 
 			isBusy = true;
 			message.textContent = "Uploading file... This might take a minute.";

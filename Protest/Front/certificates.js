@@ -278,7 +278,7 @@ class Certificates extends List {
 			}
 
 			const formData = new FormData();
-			formData.append('file', file);
+			formData.append("file", file);
 
 			isBusy = true;
 			message.textContent = "Uploading file... This might take a second.";
@@ -322,7 +322,7 @@ class Certificates extends List {
 
 	Download() {
 		let link = document.createElement("a");
-		link.download = 'name';
+		link.download = "name";
 		link.href = `config/cert/download?name=${encodeURIComponent(this.args.select)}`;
 		link.click();
 		link.remove();

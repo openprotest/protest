@@ -124,7 +124,7 @@ class Encoder extends Window {
 			break;
 
 		case "HTML entity":
-			let div = document.createElement('div');
+			let div = document.createElement("div");
 			div.appendChild(document.createTextNode(this.txtA.textContent));
 			this.txtB.textContent = div.textContent;
 			break;
@@ -179,7 +179,7 @@ class Encoder extends Window {
 			break;
 
 		case "HTML entity":
-			let txt = document.createElement('textarea');
+			let txt = document.createElement("textarea");
 			txt.textContent = this.txtB.textContent;
 			this.txtA.textContent = txt.value;
 			break;

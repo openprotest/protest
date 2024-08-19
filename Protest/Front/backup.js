@@ -148,7 +148,7 @@ class Backup extends List {
 		if (this.args.select === null) return;
 
 		let link = document.createElement("a");
-		link.download = 'name';
+		link.download = "name";
 		link.href = `config/backup/download?name=${encodeURIComponent(this.args.select)}`;
 		link.click();
 		link.remove();

@@ -353,7 +353,7 @@ class MicTester extends Window {
 				ctx.fillStyle = "#c0c0c0";
 				ctx.font = "14px Consolas";
 				ctx.textAlign = "right";
-				ctx.textBaseline = 'middle';
+				ctx.textBaseline = "middle";
 
 				const step = this.canvas.height > 800 ? 32 : this.canvas.height > 400 ? 64 : 128;
 				for (let i=step; i<256; i+=step) {

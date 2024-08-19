@@ -289,7 +289,7 @@ class DeviceView extends View {
 		setTimeout(async ()=>{
 			if (this.isClosed) return;
 
-			const query = this.pingIndicators.map(indicator => indicator.target).join(';');
+			const query = this.pingIndicators.map(indicator => indicator.target).join(";");
 
 			try {
 				const response = await fetch(`tools/bulkping?query=${query}`);

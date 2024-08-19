@@ -369,7 +369,7 @@ internal static class Dns {
                 for (int j = 0; j < 16; j += 2) {
                     if (j > 0) builder.Append(':');
                     ushort word = (ushort)((deconstructed[i].name[j] << 8) | deconstructed[i].name[j + 1]);
-                    builder.Append(word.ToString("x4"));
+                    builder.Append(Data.CompressIPv6(word.ToString("x4")));
                 }
 
                 builder.Append("\",");

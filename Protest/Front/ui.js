@@ -18,7 +18,7 @@ const UI = {
 		}
 
 		//automatically disable animations if prefers-reduced-motion
-		if (window.matchMedia('(prefers-reduced-motion)').matches && localStorage.getItem("animations") === null) {
+		if (window.matchMedia("(prefers-reduced-motion)").matches && localStorage.getItem("animations") === null) {
 			localStorage.setItem("animations", "false");
 		}
 
@@ -294,6 +294,38 @@ const UI = {
 			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
 		}
 		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
+	},
+
+	CompressIPv6: ipv6 => {
+		let blocks = ipv6.split(":");
+		
+		blocks = blocks.map(block => block.replace(/^0+/, "") || "0");
+
+		let zeroSequence = blocks.reduce((longest, current, index) => {
+			if (current === "0") {
+				let length = longest.currentLength + 1;
+				if (length > longest.maxLength) {
+					longest.maxLength = length;
+					longest.maxStart = index - length + 1;
+				}
+				longest.currentLength = length;
+			}
+			else {
+				longest.currentLength = 0;
+			}
+			return longest;
+		}, { maxLength: 0, maxStart: -1, currentLength: 0 });
+	
+		if (zeroSequence.maxLength > 1) {
+			blocks.splice(zeroSequence.maxStart, zeroSequence.maxLength, "");
+		}
+	
+		let compressedAddress = blocks.join(":");
+		
+		if (compressedAddress.startsWith(":")) compressedAddress = ":" + compressedAddress;
+		if (compressedAddress.endsWith(":")) compressedAddress += ":";
+	
+		return compressedAddress.replace(":::", "::");
 	}
 };
 

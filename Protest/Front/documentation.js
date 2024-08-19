@@ -232,7 +232,7 @@ class Documentation extends Window {
 					sel.removeAllRanges();
 					sel.addRange(range);
 					document.execCommand("createLink", false, linkInput.value);
-					document.getSelection().anchorNode.parentElement.target = '_blank';
+					document.getSelection().anchorNode.parentElement.target = "_blank";
 					Ok_onclick();
 				}
 			};
