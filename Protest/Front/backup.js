@@ -195,5 +195,4 @@ class Backup extends List {
 			element.style.backgroundColor = "var(--clr-select)";
 		};
 	}
-
 }

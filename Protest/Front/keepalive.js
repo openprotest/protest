@@ -11,9 +11,7 @@ const KEEP = {
 	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
 
 	Initialize: ()=> {
-		let server = window.location.href;
-		server = server.replace("https://", "");
-		server = server.replace("http://", "");
+		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.endsWith("/")) server = server.substring(0, server.indexOf("/"));
 
 		KEEP.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/keepalive");

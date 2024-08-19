@@ -1,11 +1,47 @@
 class Issues extends List {
+
+	static SEVERITY_TEXT = {
+		1 : "Info",
+		2 : "Warning",
+		3 : "Error",
+		4 : "Critical",
+	};
+
+	static SEVERITY_ICON = {
+		1 : "url(mono/info.svg)",
+		2 : "url(mono/warning.svg)",
+		3 : "url(mono/error.svg)",
+		4 : "url(mono/critical.svg)",
+	};
+
+	static SEVERITY_COLOR = {
+		1 : "var(--clr-dark)",
+		2 : "var(--clr-warning)",
+		3 : "var(--clr-error)",
+		4 : "var(--clr-critical)",
+	};
+
 	constructor() {
 		super();
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["host", "category", "issue", "last update"];
+		const columns = ["issue", "target", "category", "severity", "source"];
 		this.SetupColumns(columns);
+
+		this.columnsElements[0].style.width = "40%";
+
+		this.columnsElements[1].style.left = "40%";
+		this.columnsElements[1].style.width = "15%";
+
+		this.columnsElements[2].style.left = "55%";
+		this.columnsElements[2].style.width = "15%";
+
+		this.columnsElements[3].style.left = "70%";
+		this.columnsElements[3].style.width = "15%";
+
+		this.columnsElements[4].style.left = "85%";
+		this.columnsElements[4].style.width = "15%";
 
 		this.columnsOptions.style.display = "none";
 
@@ -33,10 +69,19 @@ class Issues extends List {
 		super.UpdateAuthorization();
 	}
 
+	Close() { //overrides
+		super.Close();
+
+		if (this.ws != null) {
+			try {
+				this.ws.close();
+			}
+			catch (ex) {};
+		}
+	}
+
 	Connect() {
-		let server = window.location.href;
-		server = server.replace("https://", "");
-		server = server.replace("http://", "");
+		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
 		if (this.ws != null) {
@@ -48,26 +93,42 @@ class Issues extends List {
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
 
-		this.ws.onopen = ()=> {
-			if (this.args.interval) {
-				this.ws.send(`interval=${this.args.interval}`);
-			}
-
-			if (this.args.select) {
-				this.UpdateSelected();
-			}
-
-		};
+		this.ws.onopen = ()=> {};
 
 		this.ws.onmessage = event=> {
-
+			const json = JSON.parse(event.data);
+			for (let i=0; i<json.length; i++) {
+				this.AddIssue(json[i]);
+			}
 		};
 
 		this.ws.onclose = ()=> {
-
+			this.ws = null;
 		};
 
 		this.ws.onerror = error=> {};
+	}
+
+	AddIssue(issue) {
+		const key =  Date.now() + Math.random() * 1000;
+
+		const element =  document.createElement("div");
+		element.id = key;
+		element.className = "list-element";
+		this.list.appendChild(element);
+
+		this.link.data[key] = {
+			key: key,
+			severity: {v: issue.severity},
+			issue   : {v: issue.issue},
+			target  : {v: issue.target},
+			category: {v: issue.category},
+			source  : {v: issue.source},
+			isUser  : {v: issue.isUser},
+		};
+
+		this.InflateElement(element, this.link.data[key]);
+		this.link.length++;
 	}
 
 	ScanDialog(entry=null, isRunning=false) {
@@ -87,8 +148,77 @@ class Issues extends List {
 		innerBox.style.alignItems = "center";
 
 		okButton.onclick = async ()=> {
+			try {
+				const response = await fetch("issues/start");
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	
+				const json = await response.json();
+				if (json.error) throw(json.error);
+
+				if (this.ws === null) {
+					this.Connect();
+				}
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg")
+			}
 
 			dialog.Close();
+		};
+	}
+
+	InflateElement(element, entry) { //overrides
+		const icon = document.createElement("div");
+		icon.className = "list-element-icon";
+		icon.style.maskSize = "24px 24px";
+		icon.style.maskPosition = "center";
+		icon.style.maskRepeat = "no-repeat";
+		icon.style.maskImage = Issues.SEVERITY_ICON[entry.severity.v] ?? "url(mono/critical.svg)";
+		icon.style.backgroundColor = Issues.SEVERITY_COLOR[entry.severity.v] ?? "var(--clr-dark)";
+		icon.style.filter = "brightness(0.8)";
+		element.appendChild(icon);
+
+		for (let i = 0; i < this.columnsElements.length; i++) {
+			if (!(this.columnsElements[i].textContent in entry)) continue;
+			const propertyName = this.columnsElements[i].textContent;
+
+			let value;
+
+			if (propertyName === "severity") {
+				value = Issues.SEVERITY_TEXT[entry[this.columnsElements[i].textContent].v];
+				icon.style.left = this.columnsElements[i].style.left;
+			}
+			else {
+				value = entry[this.columnsElements[i].textContent].v
+			}
+
+			if (value.length === 0) continue;
+
+			const newAttr = document.createElement("div");
+			newAttr.textContent = value;
+			element.appendChild(newAttr);
+
+			if (propertyName === "severity") {
+				newAttr.style.left = `calc(28px + ${this.columnsElements[i].style.left})`;
+				newAttr.style.width = `calc(${this.columnsElements[i].style.width} - 28px)`;
+			}
+			else {
+				newAttr.style.left = this.columnsElements[i].style.left;
+				newAttr.style.width = this.columnsElements[i].style.width;
+			}
+		}
+
+		element.onclick = ()=> {
+			if (this.selected) this.selected.style.backgroundColor = "";
+
+			this.args.select = entry.key;
+
+			this.selected = element;
+			element.style.backgroundColor = "var(--clr-select)";
+		};
+
+		element.ondblclick = ()=> {
+
 		};
 	}
 }

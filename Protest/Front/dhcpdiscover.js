@@ -230,9 +230,7 @@ class DhcpDiscover extends Window {
 		this.hexRecord = [];
 		this.result.textContent = "";
 
-		let server = window.location.href;
-		server = server.replace("https://", "");
-		server = server.replace("http://", "");
+		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/dhcp");

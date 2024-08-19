@@ -89,7 +89,7 @@ internal static class LiveStats {
                 catch { }
             }
 
-            if (Issues.CheckPasswordStrength(entry, out Issues.Issue? weakPsIssue)) {
+            if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
                 WsWriteText(ws, weakPsIssue?.ToJsonBytes(), mutex);
             }
         }
@@ -133,14 +133,11 @@ internal static class LiveStats {
                 return;
             }
 
-            string[] pingArray = Array.Empty<string>();
-            string firstAlive = null;
-            PingReply firstReply = null;
-
             entry.attributes.TryGetValue("ip", out Database.Attribute _ip);
             entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname);
             entry.attributes.TryGetValue("operating system", out Database.Attribute _os);
 
+            string[] pingArray = Array.Empty<string>();
             if (_ip?.value?.Length > 0) {
                 pingArray = _ip.value.Split(';').Select(o => o.Trim()).ToArray();
             }
@@ -150,6 +147,8 @@ internal static class LiveStats {
 
             object mutex = new object();
 
+            string firstAlive = null;
+            PingReply firstReply = null;
             if (pingArray.Length > 0) {
                 List<Task> pingTasks = new List<Task>();
 
@@ -295,7 +294,7 @@ internal static class LiveStats {
                 }
             }
 
-            if (Issues.CheckPasswordStrength(entry, out Issues.Issue? weakPsIssue)) {
+            if (Issues.CheckPasswordStrength(entry, false, out Issues.Issue? weakPsIssue)) {
                 WsWriteText(ws, weakPsIssue?.ToJsonBytes(), mutex);
             }
         }
@@ -340,7 +339,7 @@ internal static class LiveStats {
 
                     WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
-                    if (Issues.CheckDiskCapacity(percent, caption, out Issues.Issue? diskIssue)) {
+                    if (Issues.CheckDiskCapacity(firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
                         WsWriteText(ws, diskIssue?.ToJsonBytes(), mutex);
                     }
                 }

@@ -239,9 +239,7 @@ class ReverseProxy extends List {
 	}
 
 	Connect() {
-		let server = window.location.href;
-		server = server.replace("https://", "");
-		server = server.replace("http://", "");
+		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
 		if (this.ws != null) {

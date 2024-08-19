@@ -593,7 +593,7 @@ class List extends Window {
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
-			let value = entry[this.columnsElements[i].textContent].v;
+			const value = entry[this.columnsElements[i].textContent].v;
 			if (value.length === 0) continue;
 
 			const newAttr = document.createElement("div");
