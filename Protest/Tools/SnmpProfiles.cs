@@ -93,7 +93,6 @@ internal static class SnmpProfiles {
         try {
             Profile[] profiles = Load();
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, snmpProfilesSerializerOptions);
-
             return json;
         }
         catch {
@@ -158,6 +157,32 @@ internal static class SnmpProfiles {
 
         return Data.CODE_OK.Array;
     }
+
+    public static bool FromGuid(string profileGuid, out Profile profile, SnmpProfiles.Profile[] snmpProfiles = null) {
+        if (Guid.TryParse(profileGuid, out Guid guid)) {
+            FromGuid(guid, out profile);
+            return true;
+        }
+
+        profile = null;
+        return false;
+    }
+
+    public static bool FromGuid(Guid profileGuid, out Profile profile, SnmpProfiles.Profile[] snmpProfiles = null) {
+        if (snmpProfiles is null) {
+            snmpProfiles = SnmpProfiles.Load();
+        }
+
+        for (int i = 0; i < snmpProfiles.Length; i++) {
+            if (snmpProfiles[i].guid != profileGuid) continue;
+            profile = snmpProfiles[i];
+            return true;
+        }
+
+        profile = null;
+        return false;
+    }
+
 }
 
 internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Profile[]> {

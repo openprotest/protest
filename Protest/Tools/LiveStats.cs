@@ -202,7 +202,7 @@ internal static class LiveStats {
                 && firstReply.Status == IPStatus.Success
                 && entry.attributes.TryGetValue("type", out Database.Attribute _type)
                 && entry.attributes.TryGetValue("snmp profile", out Database.Attribute _snmpProfile)) {
-                SnmpQuery(ws, mutex, firstAlive, _type?.value.ToLower(), _snmpProfile);
+                SnmpQuery(ws, mutex, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
             }
 
             if (OperatingSystem.IsWindows() && _hostname?.value?.Length > 0) {
@@ -380,15 +380,10 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, string type, Database.Attribute _snmpProfile) {
-        SnmpProfiles.Profile profile = null;
-        if (!String.IsNullOrEmpty(_snmpProfile.value) && Guid.TryParse(_snmpProfile.value, out Guid guid)) {
-            SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
-            for (int i = 0; i < profiles.Length; i++) {
-                if (profiles[i].guid != guid) continue;
-                profile = profiles[i];
-                break;
-            }
+    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, string type, string snmpProfileGuid) {
+        
+        if (!SnmpProfiles.FromGuid(snmpProfileGuid, out SnmpProfiles.Profile profile)) {
+            return;
         }
 
         if (profile is null) { return; }

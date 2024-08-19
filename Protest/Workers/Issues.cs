@@ -13,8 +13,6 @@ using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Security;
 using Protest.Http;
 using Protest.Tools;
-using static Protest.Tools.DebitNotes;
-using static Protest.Workers.Issues;
 
 namespace Protest.Workers;
 
@@ -136,9 +134,6 @@ internal static class Issues {
                 IEnumerable<Issue> filtered = issues.Where(o => o.timestamp > lastTimestamp);
 
                 if (filtered.Any()) {
-
-                    Console.WriteLine(filtered.Count());
-
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
                         severity = o.severity,
                         issue    = o.message,
@@ -224,7 +219,8 @@ internal static class Issues {
                     else {
                         target = entry.filename;
                     }
-                } else {
+                }
+                else {
                     if (entry.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) {
                         target = ipAttr.value;
                     }
@@ -297,6 +293,42 @@ internal static class Issues {
 
         issue = null;
         return false;
+    }
+
+    public static bool CheckPrinterComponent(Database.Entry entry, out Issue[] issuse) {
+
+        if (!entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpGuidAttribute)) {
+            issuse = null;
+            return false;
+        }
+
+        if (!SnmpProfiles.FromGuid(snmpGuidAttribute.value, out SnmpProfiles.Profile profile)) {
+            issuse = null;
+            return false;
+        }
+
+        entry.attributes.TryGetValue("ip", out Database.Attribute _ip);
+        entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname);
+
+        string[] targetsArray = Array.Empty<string>();
+        if (_ip?.value?.Length > 0) {
+            targetsArray = _ip.value.Split(';').Select(o => o.Trim()).ToArray();
+        }
+        else if (_hostname?.value?.Length > 0) {
+            targetsArray = _hostname.value.Split(';').Select(o => o.Trim()).ToArray();
+        }
+
+        if (targetsArray.Length == 0) {
+            issuse = null;
+            return false;
+        }
+
+        if (!IPAddress.TryParse(targetsArray[0], out IPAddress ipAddress)) {
+            issuse = null;
+            return false;
+        }
+
+        return CheckPrinterComponent(ipAddress, profile, out issuse);
     }
 
     public static bool CheckPrinterComponent(IPAddress ipAddress, SnmpProfiles.Profile profile, out Issue[] issues) {

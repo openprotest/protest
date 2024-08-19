@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
+using static Protest.Workers.Issues;
 
 namespace Protest.Workers;
 
@@ -381,16 +382,7 @@ internal static partial class Lifeline {
             catch { }
         }
 
-        SnmpProfiles.Profile profile = null;
-        if (!String.IsNullOrEmpty(_profile) && Guid.TryParse(_profile, out Guid guid)) {
-            for (int i = 0; i < snmpProfiles.Length; i++) {
-                if (snmpProfiles[i].guid != guid) { continue; }
-                profile = snmpProfiles[i];
-                break;
-            }
-        }
-
-        if (profile is null) {
+        if (!SnmpProfiles.FromGuid(_profile, out SnmpProfiles.Profile profile, snmpProfiles)) {
             return;
         }
 

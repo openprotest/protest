@@ -54,24 +54,17 @@ internal static class Fetch {
         parameters.TryGetValue("target", out string target);
         parameters.TryGetValue("wmi", out string wmi);
         parameters.TryGetValue("kerberos", out string kerberos);
-        parameters.TryGetValue("snmp", out string snmp);
+        parameters.TryGetValue("snmp", out string snmpProfileGuid);
         parameters.TryGetValue("portscan", out string portScan);
 
         if (target is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        SnmpProfiles.Profile snmpProfile = null;
-        if (snmp is not null && Guid.TryParse(snmp, out Guid guid)) {
-            SnmpProfiles.Profile[] profiles = SnmpProfiles.Load();
-            for (int i = 0; i < profiles.Length; i++) {
-                if (profiles[i].guid != guid) { continue; }
-                snmpProfile = profiles[i];
-                break;
-            }
+        SnmpProfiles.Profile[] snmpProfiles = null;
+        if (SnmpProfiles.FromGuid(snmpProfileGuid, out SnmpProfiles.Profile snmpProfile)) {
+            snmpProfiles = new SnmpProfiles.Profile[] { snmpProfile };
         }
-
-        SnmpProfiles.Profile[] snmpProfiles = snmpProfile is null ? null : new SnmpProfiles.Profile[] { snmpProfile };
 
         ConcurrentDictionary<string, string[]> data = SingleDevice(
             target,
