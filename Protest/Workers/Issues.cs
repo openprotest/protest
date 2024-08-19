@@ -197,7 +197,11 @@ internal static class Issues {
 
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value)) {
-
+            if (CheckPrinterComponent(device.Value, out Issue[] printerIssues) && issue.HasValue) {
+                for (int i = 0; i < printerIssues.Length; i++) {
+                    issues.Add(printerIssues[i]);
+                }
+            }
         }
         else if (Data.SWITCH_TYPES.Contains(typeAttribute?.value)) {
 
