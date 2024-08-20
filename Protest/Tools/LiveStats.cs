@@ -202,7 +202,7 @@ internal static class LiveStats {
                 && firstReply.Status == IPStatus.Success
                 && entry.attributes.TryGetValue("type", out Database.Attribute _type)
                 && entry.attributes.TryGetValue("snmp profile", out Database.Attribute _snmpProfile)) {
-                SnmpQuery(ws, mutex, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
+                SnmpQuery(ws, mutex, entry.filename, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
             }
 
             if (OperatingSystem.IsWindows() && _hostname?.value?.Length > 0) {
@@ -380,8 +380,7 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, string type, string snmpProfileGuid) {
-        
+    private static void SnmpQuery(WebSocket ws, object mutex, string file, string firstAlive, string type, string snmpProfileGuid) {
         if (!SnmpProfiles.FromGuid(snmpProfileGuid, out SnmpProfiles.Profile profile)) {
             return;
         }
@@ -424,7 +423,7 @@ internal static class LiveStats {
                 WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
             }
 
-            if (Issues.CheckPrinterComponent(ipAddress, profile, out Issues.Issue[] issues)) {
+            if (Issues.CheckPrinterComponent(file, ipAddress, profile, out Issues.Issue[] issues)) {
                 for (int i = 0; i < issues.Length; i++) {
                     WsWriteText(ws, issues[i].ToJsonBytes(), mutex);
                 }

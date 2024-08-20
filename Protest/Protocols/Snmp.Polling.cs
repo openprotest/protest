@@ -337,6 +337,10 @@ internal static class Polling {
     }
 
     public static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids, SnmpOperation operation) {
+        if (profile is null) {
+            return null;
+        }
+
         if (profile.version == 3) {
             try {
                 IList<Variable> result = result = Protocols.Snmp.Polling.SnmpRequestV3(

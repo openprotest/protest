@@ -16,9 +16,18 @@ class Issues extends List {
 
 	static SEVERITY_COLOR = {
 		1 : "var(--clr-dark)",
-		2 : "var(--clr-warning)",
+		2 : "rgb(240,140,8)",
 		3 : "var(--clr-error)",
 		4 : "var(--clr-critical)",
+	};
+
+	static CATEGORY_ICON = {
+		"Password"          : "url(mono/lock.svg)",
+		"Printer component" : "url(mono/printer.svg)",
+		"CPU usage"         : "url(mono/cpu.svg)",
+		"Ram usage"         : "url(mono/ram.svg)",
+		"Disk capacity"     : "url(mono/ssd.svg)",
+		"Disk IO"           : "url(mono/hdd.svg)",
 	};
 
 	constructor() {
@@ -26,13 +35,13 @@ class Issues extends List {
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["issue", "target", "category", "severity", "source"];
+		const columns = ["severity", "issue", "target", "category", "source"];
 		this.SetupColumns(columns);
 
-		this.columnsElements[0].style.width = "40%";
+		this.columnsElements[0].style.width = "10%";
 
-		this.columnsElements[1].style.left = "40%";
-		this.columnsElements[1].style.width = "15%";
+		this.columnsElements[1].style.left = "10%";
+		this.columnsElements[1].style.width = "45%";
 
 		this.columnsElements[2].style.left = "55%";
 		this.columnsElements[2].style.width = "15%";
@@ -129,6 +138,15 @@ class Issues extends List {
 
 		this.InflateElement(element, this.link.data[key]);
 		this.link.length++;
+
+		if (this.link) {
+			this.counter.textContent = this.list.childNodes.length === this.link.length
+				? this.link.length
+				: `${this.list.childNodes.length} / ${this.link.length}`;
+		}
+		else {
+			this.counter.textContent = "0";
+		}
 	}
 
 	ScanDialog(entry=null, isRunning=false) {
@@ -165,6 +183,8 @@ class Issues extends List {
 
 			dialog.Close();
 		};
+
+		setTimeout(()=> okButton.focus(), 200);
 	}
 
 	InflateElement(element, entry) { //overrides
@@ -175,7 +195,7 @@ class Issues extends List {
 		icon.style.maskRepeat = "no-repeat";
 		icon.style.maskImage = Issues.SEVERITY_ICON[entry.severity.v] ?? "url(mono/critical.svg)";
 		icon.style.backgroundColor = Issues.SEVERITY_COLOR[entry.severity.v] ?? "var(--clr-dark)";
-		icon.style.filter = "brightness(0.8)";
+		icon.style.filter = "brightness(0.85)";
 		element.appendChild(icon);
 
 		for (let i = 0; i < this.columnsElements.length; i++) {
@@ -183,7 +203,6 @@ class Issues extends List {
 			const propertyName = this.columnsElements[i].textContent;
 
 			let value;
-
 			if (propertyName === "severity") {
 				value = Issues.SEVERITY_TEXT[entry[this.columnsElements[i].textContent].v];
 				icon.style.left = this.columnsElements[i].style.left;
@@ -201,6 +220,16 @@ class Issues extends List {
 			if (propertyName === "severity") {
 				newAttr.style.left = `calc(28px + ${this.columnsElements[i].style.left})`;
 				newAttr.style.width = `calc(${this.columnsElements[i].style.width} - 28px)`;
+			}
+			else if (propertyName === "category") {
+				newAttr.style.left = this.columnsElements[i].style.left;
+				newAttr.style.width = this.columnsElements[i].style.width;
+
+				newAttr.style.paddingLeft = "24px";
+				newAttr.style.backgroundImage = Issues.CATEGORY_ICON[value] ?? "none";
+				newAttr.style.backgroundSize = "20px 20px";
+				newAttr.style.backgroundPosition = "0px 50%";
+				newAttr.style.backgroundRepeat = "no-repeat";
 			}
 			else {
 				newAttr.style.left = this.columnsElements[i].style.left;

@@ -580,9 +580,9 @@ class List extends Window {
 		}
 
 		if (this.link) {
-			this.counter.textContent = this.list.childNodes.length === this.link.length ?
-				this.link.length :
-				`${this.list.childNodes.length} / ${this.link.length}`;
+			this.counter.textContent = this.list.childNodes.length === this.link.length
+				? this.link.length
+				: `${this.list.childNodes.length} / ${this.link.length}`;
 		}
 		else {
 			this.counter.textContent = "0";

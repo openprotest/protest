@@ -32,8 +32,8 @@ internal static class Issues {
         public string target;
         public string category;
         public string source;
-        //public string file;
         public bool isUser;
+        public string file;
         public long timestamp;
     }
 
@@ -45,7 +45,7 @@ internal static class Issues {
         { "target",   issue.target },
         { "category", issue.category},
         { "source",   issue.source },
-        //{ "file",     issue.file},
+        { "file",     issue.file},
     });
 
     public static byte[] List() {
@@ -116,14 +116,14 @@ internal static class Issues {
         int lastIssuesCount = 0;
         long lastTimestamp = -1;
 
+        await Task.Delay(1_000);
+
         try {
             while (ws.State == WebSocketState.Open && task is not null) {
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/issues")) {
                     ctx.Response.Close();
                     return;
                 }
-
-                await Task.Delay(5_000);
 
                 if (lastIssuesCount == issues.Count) {
                     continue;
@@ -147,8 +147,9 @@ internal static class Issues {
 
                     lastTimestamp = filtered.Max(o => o.timestamp);
                 }
-            }
 
+                await Task.Delay(5_000);
+            }
         }
         catch { }
         finally {
@@ -163,7 +164,6 @@ internal static class Issues {
 
     private static void Scan() {
         ScanUsers();
-        Thread.Sleep(1000);
         ScanDevices();
     }
 
@@ -185,8 +185,8 @@ internal static class Issues {
 
     public static void ScanDevice(KeyValuePair<string, Database.Entry> device) {
         device.Value.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
-        device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute);
-        device.Value.attributes.TryGetValue("hostname", out Database.Attribute hostnameAttribute);
+        //device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute);
+        //device.Value.attributes.TryGetValue("hostname", out Database.Attribute hostnameAttribute);
         device.Value.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
 
         if (CheckPasswordStrength(device.Value, false, out Issue? issue) && issue.HasValue) {
@@ -196,14 +196,14 @@ internal static class Issues {
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
 
         }
-        else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value)) {
-            if (CheckPrinterComponent(device.Value, out Issue[] printerIssues) && issue.HasValue) {
+        else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
+            if (CheckPrinterComponent(device.Value, out Issue[] printerIssues) && printerIssues is not null) {
                 for (int i = 0; i < printerIssues.Length; i++) {
                     issues.Add(printerIssues[i]);
                 }
             }
         }
-        else if (Data.SWITCH_TYPES.Contains(typeAttribute?.value)) {
+        else if (Data.SWITCH_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
 
         }
     }
@@ -243,6 +243,7 @@ internal static class Issues {
                     category = "Password",
                     source   = "Internal check",
                     isUser   = isUser,
+                    file     = entry.filename,
                     timestamp     = DateTime.UtcNow.Ticks
                 };
                 return true;
@@ -254,43 +255,43 @@ internal static class Issues {
     }
 
     public static bool CheckDiskCapacity(string target, double percent, string diskCaption, out Issue? issue) {
-        string message = $"Free space is {percent}% on disk {Data.EscapeJsonText(diskCaption)}";
+        string message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}";
 
         if (percent <= 1) {
             issue = new Issue {
-                severity = SeverityLevel.critical,
-                target   = target,
-                message  = message,
-                category = "Disk drive",
-                source   = "WMI",
-                isUser   = false,
-                timestamp     = DateTime.UtcNow.Ticks,
+                severity  = SeverityLevel.critical,
+                target    = target,
+                message   = message,
+                category  = "Disk drive",
+                source    = "WMI",
+                isUser    = false,
+                timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
         }
 
         if (percent <= 5) {
             issue = new Issue {
-                severity = SeverityLevel.error,
-                target   = target,
-                message  = message,
-                category = "Disk drive",
-                source   = "WMI",
-                isUser = false,
-                timestamp     = DateTime.UtcNow.Ticks,
+                severity  = SeverityLevel.error,
+                target    = target,
+                message   = message,
+                category  = "Disk drive",
+                source    = "WMI",
+                isUser    = false,
+                timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
         }
 
         if (percent < 15) {
             issue = new Issue {
-                severity = SeverityLevel.warning,
-                target   = target,
-                message  = message,
-                category = "Disk drive",
-                source   = "WMI",
-                isUser = false,
-                timestamp     = DateTime.UtcNow.Ticks,
+                severity  = SeverityLevel.warning,
+                target    = target,
+                message   = message,
+                category  = "Disk drive",
+                source    = "WMI",
+                isUser    = false,
+                timestamp  = DateTime.UtcNow.Ticks,
             };
             return true;
         }
@@ -300,7 +301,6 @@ internal static class Issues {
     }
 
     public static bool CheckPrinterComponent(Database.Entry entry, out Issue[] issuse) {
-
         if (!entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpGuidAttribute)) {
             issuse = null;
             return false;
@@ -332,13 +332,15 @@ internal static class Issues {
             return false;
         }
 
-        return CheckPrinterComponent(ipAddress, profile, out issuse);
+        return CheckPrinterComponent(entry.filename, ipAddress, profile, out issuse);
     }
 
-    public static bool CheckPrinterComponent(IPAddress ipAddress, SnmpProfiles.Profile profile, out Issue[] issues) {
+    public static bool CheckPrinterComponent(string file, IPAddress ipAddress, SnmpProfiles.Profile profile, out Issue[] issues) {
         Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
         Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
         Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+
+        Console.WriteLine(profile?.name);
 
         if (componentName is not null && componentCurrent is not null && componentMax is not null &&
             componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {
@@ -363,26 +365,17 @@ internal static class Issues {
                 componentNameArray[i][1] = componentNameArray[i][1].TrimStart(' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~');
 
                 int used = 100 * current / max;
-                if (used < 5) {
+
+                if (used < 15) {
                     arrays.Add(new Issue {
-                        severity  = SeverityLevel.error,
+                        severity  = used < 5 ? SeverityLevel.error : SeverityLevel.warning,
                         message   = $"{used}% {componentNameArray[i][1]}",
                         target    = ipAddress.ToString(),
                         category  = "Printer component",
                         source    = "SNMP",
                         isUser    = false,
+                        file      = file,
                         timestamp = DateTime.UtcNow.Ticks
-                    });
-                }
-                else if (used < 15) {
-                    arrays.Add(new Issue {
-                        severity = SeverityLevel.warning,
-                        message  = $"{used}% {componentNameArray[i][1]}",
-                        target   = ipAddress.ToString(),
-                        category = "Printer component",
-                        source   = "SNMP",
-                        isUser   = false,
-                        timestamp     = DateTime.UtcNow.Ticks
                     });
                 }
             }
