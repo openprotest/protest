@@ -40,12 +40,10 @@ internal static class Issues {
     private static TaskWrapper task;
     private static ConcurrentBag<Issue> issues = new ConcurrentBag<Issue>();
 
-    public static byte[] ToJsonBytes(this Issue issue) => JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> {
+    public static byte[] ToLiveStatsJsonBytes(this Issue issue) => JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> {
         { issue.severity.ToString(), issue.message },
         { "target",   issue.target },
-        { "category", issue.category},
         { "source",   issue.source },
-        { "file",     issue.file},
     });
 
     public static byte[] List() {
@@ -254,7 +252,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskCapacity(string target, double percent, string diskCaption, out Issue? issue) {
+    public static bool CheckDiskCapacity(string file, string target, double percent, string diskCaption, out Issue? issue) {
         string message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}";
 
         if (percent <= 1) {
@@ -265,6 +263,7 @@ internal static class Issues {
                 category  = "Disk drive",
                 source    = "WMI",
                 isUser    = false,
+                file      = file,
                 timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
@@ -278,6 +277,7 @@ internal static class Issues {
                 category  = "Disk drive",
                 source    = "WMI",
                 isUser    = false,
+                file      = file,
                 timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
@@ -291,7 +291,8 @@ internal static class Issues {
                 category  = "Disk drive",
                 source    = "WMI",
                 isUser    = false,
-                timestamp  = DateTime.UtcNow.Ticks,
+                file      = file,
+                timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
         }
@@ -339,8 +340,6 @@ internal static class Issues {
         Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
         Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
         Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-
-        Console.WriteLine(profile?.name);
 
         if (componentName is not null && componentCurrent is not null && componentMax is not null &&
             componentName.Count == componentCurrent.Count && componentCurrent.Count == componentMax.Count) {

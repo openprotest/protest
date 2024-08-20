@@ -90,7 +90,7 @@ internal static class LiveStats {
             }
 
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
-                WsWriteText(ws, weakPsIssue?.ToJsonBytes(), mutex);
+                WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -195,7 +195,7 @@ internal static class LiveStats {
             if (OperatingSystem.IsWindows()
                 && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true
                 && firstAlive is not null && firstReply.Status == IPStatus.Success) {
-                WmiQuery(ws, mutex, firstAlive, ref wmiHostname);
+                WmiQuery(ws, mutex, entry.filename, firstAlive, ref wmiHostname);
             }
 
             if (firstAlive is not null
@@ -295,7 +295,7 @@ internal static class LiveStats {
             }
 
             if (Issues.CheckPasswordStrength(entry, false, out Issues.Issue? weakPsIssue)) {
-                WsWriteText(ws, weakPsIssue?.ToJsonBytes(), mutex);
+                WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -317,7 +317,7 @@ internal static class LiveStats {
     }
 
     [SupportedOSPlatform("windows")]
-    private static void WmiQuery(WebSocket ws, object mutex, string firstAlive, ref string wmiHostname) {
+    private static void WmiQuery(WebSocket ws, object mutex, string file, string firstAlive, ref string wmiHostname) {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive, 3_000);
             if (scope is not null && scope.IsConnected) {
@@ -339,19 +339,19 @@ internal static class LiveStats {
 
                     WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
-                    if (Issues.CheckDiskCapacity(firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
-                        WsWriteText(ws, diskIssue?.ToJsonBytes(), mutex);
+                    if (Issues.CheckDiskCapacity(file, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
+                        WsWriteText(ws, diskIssue?.ToLiveStatsJsonBytes(), mutex);
                     }
                 }
 
                 using ManagementObjectCollection currentTime = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_UTCTime")).Get();
                 foreach (ManagementObject o in currentTime.Cast<ManagementObject>()) {
-                    int year   = (int)(uint)o.GetPropertyValue("Year");
-                    int month  = (int)(uint)o.GetPropertyValue("Month");
-                    int day    = (int)(uint)o.GetPropertyValue("Day");
-                    int hour   = (int)(uint)o.GetPropertyValue("Hour");
-                    int minute = (int)(uint)o.GetPropertyValue("Minute");
-                    int second = (int)(uint)o.GetPropertyValue("Second");
+                    int year   = Convert.ToInt32(o.GetPropertyValue("Year"));
+                    int month  = Convert.ToInt32(o.GetPropertyValue("Month"));
+                    int day    = Convert.ToInt32(o.GetPropertyValue("Day"));
+                    int hour   = Convert.ToInt32(o.GetPropertyValue("Hour"));
+                    int minute = Convert.ToInt32(o.GetPropertyValue("Minute"));
+                    int second = Convert.ToInt32(o.GetPropertyValue("Second"));
 
                     DateTime current = new DateTime(year, month, day, hour, minute, second);
                     DateTime now = DateTime.UtcNow;
@@ -392,6 +392,10 @@ internal static class LiveStats {
         Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(result);
 
         if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
+            int dotIndex = snmpUptime.LastIndexOf('.');
+            if (dotIndex > -1) {
+                snmpUptime = snmpUptime.Substring(0, dotIndex);
+            }
             WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
         }
 
@@ -425,7 +429,7 @@ internal static class LiveStats {
 
             if (Issues.CheckPrinterComponent(file, ipAddress, profile, out Issues.Issue[] issues)) {
                 for (int i = 0; i < issues.Length; i++) {
-                    WsWriteText(ws, issues[i].ToJsonBytes(), mutex);
+                    WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
                 }
             }
 
