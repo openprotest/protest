@@ -32,9 +32,9 @@ internal static class Issues {
         public string target;
         public string category;
         public string source;
-        public bool isUser;
+        public bool   isUser;
         public string file;
-        public long timestamp;
+        public long   timestamp;
     }
 
     private static TaskWrapper task;
@@ -42,8 +42,8 @@ internal static class Issues {
 
     public static byte[] ToLiveStatsJsonBytes(this Issue issue) => JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> {
         { issue.severity.ToString(), issue.message },
-        { "target",   issue.target },
-        { "source",   issue.source },
+        { "target", issue.target },
+        { "source", issue.source },
     });
 
     public static byte[] List() {
@@ -301,14 +301,14 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckPrinterComponent(Database.Entry entry, out Issue[] issuse) {
+    public static bool CheckPrinterComponent(Database.Entry entry, out Issue[] issues) {
         if (!entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpGuidAttribute)) {
-            issuse = null;
+            issues = null;
             return false;
         }
 
         if (!SnmpProfiles.FromGuid(snmpGuidAttribute.value, out SnmpProfiles.Profile profile)) {
-            issuse = null;
+            issues = null;
             return false;
         }
 
@@ -324,16 +324,16 @@ internal static class Issues {
         }
 
         if (targetsArray.Length == 0) {
-            issuse = null;
+            issues = null;
             return false;
         }
 
         if (!IPAddress.TryParse(targetsArray[0], out IPAddress ipAddress)) {
-            issuse = null;
+            issues = null;
             return false;
         }
 
-        return CheckPrinterComponent(entry.filename, ipAddress, profile, out issuse);
+        return CheckPrinterComponent(entry.filename, ipAddress, profile, out issues);
     }
 
     public static bool CheckPrinterComponent(string file, IPAddress ipAddress, SnmpProfiles.Profile profile, out Issue[] issues) {
