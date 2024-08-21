@@ -56,38 +56,21 @@ internal static class LiveStats {
             }
 
             object mutex = new object();
+            try {
+                if (OperatingSystem.IsWindows()
+                    && entry.attributes.TryGetValue("username", out Database.Attribute username)
+                    && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, out long lockedTime)) {
 
-            if (OperatingSystem.IsWindows() && entry.attributes.TryGetValue("username", out Database.Attribute username)) {
-                try {
-                    SearchResult result = Kerberos.GetUser(username.value);
-                    if (result != null) {
-                        if (result.Properties["lastLogonTimestamp"].Count > 0) {
-                            if (Int64.TryParse(result.Properties["lastLogonTimestamp"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logon: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}", mutex);
-                            }
-                        }
+                    if (lockedTime > 0) {
+                        WsWriteText(ws, $"{{\"lockedOut\":\"{DateTime.FromFileTime(lockedTime)}\",\"source\":\"Kerberos\"}}", mutex);
+                    }
 
-                        if (result.Properties["lastLogoff"].Count > 0) {
-                            if (Int64.TryParse(result.Properties["lastLogoff"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}", mutex);
-                            }
-                        }
-
-                        if (result.Properties["badPasswordTime"].Count > 0) {
-                            if (Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Bad password time: {(DateTime.FromFileTime(time))}\",\"source\":\"Kerberos\"}}", mutex);
-                            }
-                        }
-
-                        if (result.Properties["lockoutTime"].Count > 0) {
-                            if (Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out long time) && time > 0) {
-                                WsWriteText(ws, $"{{\"lockedOut\":\"{DateTime.FromFileTime(time)}\",\"source\":\"Kerberos\"}}", mutex);
-                            }
-                        }
+                    for (int i = 0; i < issues.Length; i++) {
+                        WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
                     }
                 }
-                catch { }
             }
+            catch { }
 
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
                 WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
@@ -210,7 +193,7 @@ internal static class LiveStats {
                     string hostname = _hostname.value;
                     SearchResult result = Kerberos.GetWorkstation(hostname);
 
-                    if (result != null) {
+                    if (result is not null) {
                         if (result.Properties["lastLogonTimestamp"].Count > 0) {
                             string time = Kerberos.FileTimeString(result.Properties["lastLogonTimestamp"][0].ToString());
                             if (time.Length > 0) {

@@ -486,13 +486,14 @@ class List extends Window {
 			found = [];
 			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
 
-			for (let i = 0; i < filtered.length; i++) {
+			for (let i=0; i<filtered.length; i++) {
 				let matched = true;
 
-				for (let j = 0; j < keywords.length; j++) {
+				for (let j=0; j<keywords.length; j++) {
 					let wordIncluded = false;
 					for (const key in this.link.data[filtered[i]]) {
-						if (this.link.data[filtered[i]][key].v.toLowerCase().includes(keywords[j])) {
+						const value = this.link.data[filtered[i]][key].v;
+						if (typeof value === "string" && value.toLowerCase().includes(keywords[j])) {
 							wordIncluded = true;
 							break;
 						}

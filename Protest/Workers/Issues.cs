@@ -2,9 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.DirectoryServices;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -12,6 +14,7 @@ using System.Threading.Tasks;
 using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Security;
 using Protest.Http;
+using Protest.Protocols;
 using Protest.Tools;
 
 namespace Protest.Workers;
@@ -114,7 +117,7 @@ internal static class Issues {
         int lastIssuesCount = 0;
         long lastTimestamp = -1;
 
-        await Task.Delay(1_000);
+        await Task.Delay(200);
 
         try {
             while (ws.State == WebSocketState.Open && task is not null) {
@@ -139,6 +142,7 @@ internal static class Issues {
                         category = o.category,
                         source   = o.source,
                         isUser   = o.isUser,
+                        file     = o.file,
                     }));
 
                     await WsWriteText(ws, bytes);
@@ -167,27 +171,81 @@ internal static class Issues {
 
     private static void ScanUsers() {
         foreach (KeyValuePair<string, Database.Entry> user in DatabaseInstances.users.dictionary) {
-            user.Value.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
+            ScanUser(user.Value);
+        }
+    }
 
-            if (CheckPasswordStrength(user.Value, true, out Issue? issue) && issue.HasValue) {
-                issues.Add(issue.Value);
+    public static void ScanUser(Database.Entry user) {
+        user.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
+        user.attributes.TryGetValue("username", out Database.Attribute usernameAttribute);
+
+        if (CheckPasswordStrength(user, true, out Issue? issue) && issue.HasValue) {
+            issues.Add(issue.Value);
+        }
+
+        if (OperatingSystem.IsWindows() && typeAttribute?.value.ToLower() == "domain user") {
+            SearchResult result = Kerberos.GetUser(usernameAttribute.value);
+
+            if (result is null) {
+                issues.Add(new Issue {
+                    severity = SeverityLevel.warning,
+                    message = $"{usernameAttribute.value} is not a domain user",
+                    target = usernameAttribute.value,
+                    category = "Directory",
+                    source = "Kerberos",
+                    isUser = true,
+                    file = user.filename,
+                    timestamp = DateTime.UtcNow.Ticks
+                });
+            }
+            else {
+                if (result.Properties["lastLogoff"].Count > 0) {
+                    string time = Kerberos.FileTimeString(result.Properties["lastLogoff"][0].ToString());
+                    if (time.Length > 0) {
+                        issues.Add(new Issue {
+                            severity = SeverityLevel.info,
+                            message = $"User {usernameAttribute.value} is locked out",
+                            target = usernameAttribute.value,
+                            category = "Directory",
+                            source = "Kerberos",
+                            isUser = true,
+                            file = user.filename,
+                            timestamp = DateTime.UtcNow.Ticks
+                        });
+                    }
+                }
+
+                if (result.Properties["userAccountControl"].Count > 0) {
+                    if (Int32.TryParse(result.Properties["userAccountControl"][0].ToString(), out int userControl) && (userControl & 0x0002) != 0) {
+                        issues.Add(new Issue {
+                            severity = SeverityLevel.info,
+                            message = $"User {usernameAttribute.value} is disabled",
+                            target = usernameAttribute.value,
+                            category = "Directory",
+                            source = "Kerberos",
+                            isUser = true,
+                            file = user.filename,
+                            timestamp = DateTime.UtcNow.Ticks
+                        });
+                    }
+                }
             }
         }
     }
 
     private static void ScanDevices() {
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
-            ScanDevice(device);
+            ScanDevice(device.Value);
         }
     }
 
-    public static void ScanDevice(KeyValuePair<string, Database.Entry> device) {
-        device.Value.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
+    public static void ScanDevice(Database.Entry device) {
+        device.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
         //device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute);
         //device.Value.attributes.TryGetValue("hostname", out Database.Attribute hostnameAttribute);
-        device.Value.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
+        device.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
 
-        if (CheckPasswordStrength(device.Value, false, out Issue? issue) && issue.HasValue) {
+        if (CheckPasswordStrength(device, false, out Issue? issue) && issue.HasValue) {
             issues.Add(issue.Value);
         }
 
@@ -195,7 +253,7 @@ internal static class Issues {
 
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
-            if (CheckPrinterComponent(device.Value, out Issue[] printerIssues) && printerIssues is not null) {
+            if (CheckPrinterComponent(device, out Issue[] printerIssues) && printerIssues is not null) {
                 for (int i = 0; i < printerIssues.Length; i++) {
                     issues.Add(printerIssues[i]);
                 }
@@ -204,6 +262,129 @@ internal static class Issues {
         else if (Data.SWITCH_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
 
         }
+    }
+
+    [SupportedOSPlatform("windows")]
+    public static bool CheckDomainUser(Database.Entry user, out Issue[] issues, out long lockedTime, SearchResult result = null) {
+        if (!user.attributes.TryGetValue("username", out Database.Attribute username)) {
+            issues = null;
+            lockedTime = 0;
+            return false;
+        }
+
+        try {
+            result ??= Kerberos.GetUser(username.value);
+            List<Issue> list = new List<Issue>();
+            lockedTime = 0;
+
+            if (result is null) {
+                if (user.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
+                    && typeAttribute.value.ToLower() == "domain user") {
+
+                    list.Add(new Issue {
+                        severity = SeverityLevel.warning,
+                        message = $"{username.value} is not a domain user",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }
+            }
+            else {
+
+                if (result.Properties["userAccountControl"].Count > 0
+                    && Int32.TryParse(result.Properties["userAccountControl"][0].ToString(), out int userControl)
+                    && (userControl & 0x0002) != 0) {
+                    list.Add(new Issue {
+                        severity = SeverityLevel.info,
+                        message = $"User {username.value} is disabled",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }
+
+                if (result.Properties["lastLogonTimestamp"].Count > 0
+                    && Int64.TryParse(result.Properties["lastLogonTimestamp"][0].ToString(), out long lastLogonTimestamp)
+                    && lastLogonTimestamp > 0) {
+                    list.Add(new Issue {
+                        severity = SeverityLevel.info,
+                        message = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }
+
+                if (result.Properties["lastLogoff"].Count > 0
+                    && Int64.TryParse(result.Properties["lastLogoff"][0].ToString(), out long lastLogOffTime)
+                    && lastLogOffTime > 0) {
+                    list.Add(new Issue {
+                        severity = SeverityLevel.info,
+                        message = $"Last logoff: {DateTime.FromFileTime(lastLogOffTime)}",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }
+
+                /*if (result.Properties["badPasswordTime"].Count > 0
+                    && Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long badPasswordTime)
+                    && badPasswordTime > 0) {
+                    list.Add(new Issue {
+                        severity = SeverityLevel.info,
+                        message = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }*/
+
+                if (result.Properties["lockoutTime"].Count > 0
+                    && Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out lockedTime)
+                    && lockedTime > 0) {
+                    list.Add(new Issue {
+                        severity = SeverityLevel.warning,
+                        message = $"{username.value} is locked out",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }
+            }
+
+            if (list.Count > 0) {
+                issues = list.ToArray();
+                return true;
+            }
+            else {
+                issues = null;
+                return false;
+            }
+        }
+        catch { }
+
+        issues = null;
+        lockedTime = 0;
+        return false;
     }
 
     public static bool CheckPasswordStrength(Database.Entry entry, bool isUser, out Issue? issue) {
@@ -352,7 +533,7 @@ internal static class Issues {
             Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
             Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
 
-            List<Issue> arrays = new List<Issue>();
+            List<Issue> list = new List<Issue>();
 
             for (int i = 0; i < componentNameArray.Length; i++) {
                 if (!int.TryParse(componentMaxArray[i][1], out int max)) { continue; }
@@ -366,7 +547,7 @@ internal static class Issues {
                 int used = 100 * current / max;
 
                 if (used < 15) {
-                    arrays.Add(new Issue {
+                    list.Add(new Issue {
                         severity  = used < 5 ? SeverityLevel.error : SeverityLevel.warning,
                         message   = $"{used}% {componentNameArray[i][1]}",
                         target    = ipAddress.ToString(),
@@ -379,8 +560,8 @@ internal static class Issues {
                 }
             }
 
-            if (arrays.Count > 0) {
-                issues = arrays.ToArray();
+            if (list.Count > 0) {
+                issues = list.ToArray();
                 return true;
             }
         }

@@ -540,14 +540,14 @@ internal static class Fetch {
             }
         }
 
-        dns           ??= "false";
-        wmi           ??= "false";
-        kerberos      ??= "false";
-        snmp2         ??= "false";
-        snmp3         ??= "false";
-        portScan      ??= "false";
-        retriesStr    ??= "0";
-        intervalStr   ??= "-1";
+        dns         ??= "false";
+        wmi         ??= "false";
+        kerberos    ??= "false";
+        snmp2       ??= "false";
+        snmp3       ??= "false";
+        portScan    ??= "false";
+        retriesStr  ??= "0";
+        intervalStr ??= "-1";
 
         SnmpProfiles.Profile[] snmpProfiles = SnmpProfiles.Load();
 

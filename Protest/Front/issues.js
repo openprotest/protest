@@ -15,13 +15,14 @@ class Issues extends List {
 	};
 
 	static SEVERITY_COLOR = {
-		1 : "var(--clr-dark)",
+		1 : "rgb(8,96,240)",
 		2 : "rgb(240,140,8)",
 		3 : "var(--clr-error)",
 		4 : "var(--clr-critical)",
 	};
 
 	static CATEGORY_ICON = {
+		"Directory"         : "url(mono/directory.svg)",
 		"Password"          : "url(mono/lock.svg)",
 		"Printer component" : "url(mono/printer.svg)",
 		"CPU usage"         : "url(mono/cpu.svg)",
@@ -127,13 +128,14 @@ class Issues extends List {
 		this.list.appendChild(element);
 
 		this.link.data[key] = {
-			key: key,
+			key     : {v: key},
 			severity: {v: issue.severity},
 			issue   : {v: issue.issue},
 			target  : {v: issue.target},
 			category: {v: issue.category},
 			source  : {v: issue.source},
 			isUser  : {v: issue.isUser},
+			file    : {v: issue.file},
 		};
 
 		this.InflateElement(element, this.link.data[key]);
@@ -204,11 +206,11 @@ class Issues extends List {
 
 			let value;
 			if (propertyName === "severity") {
-				value = Issues.SEVERITY_TEXT[entry[this.columnsElements[i].textContent].v];
+				value = Issues.SEVERITY_TEXT[entry[propertyName].v];
 				icon.style.left = this.columnsElements[i].style.left;
 			}
 			else {
-				value = entry[this.columnsElements[i].textContent].v
+				value = entry[propertyName].v
 			}
 
 			if (value.length === 0) continue;
@@ -231,6 +233,16 @@ class Issues extends List {
 				newAttr.style.backgroundPosition = "0px 50%";
 				newAttr.style.backgroundRepeat = "no-repeat";
 			}
+			else if (propertyName === "target") {
+				newAttr.style.left = this.columnsElements[i].style.left;
+				newAttr.style.width = this.columnsElements[i].style.width;
+
+				newAttr.style.paddingLeft = "24px";
+				newAttr.style.backgroundImage = entry.isUser.v ? "url(mono/user.svg)" : "url(mono/gear.svg)";
+				newAttr.style.backgroundSize = "20px 20px";
+				newAttr.style.backgroundPosition = "0px 50%";
+				newAttr.style.backgroundRepeat = "no-repeat";
+			}
 			else {
 				newAttr.style.left = this.columnsElements[i].style.left;
 				newAttr.style.width = this.columnsElements[i].style.width;
@@ -239,15 +251,23 @@ class Issues extends List {
 
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
-
-			this.args.select = entry.key;
-
+			this.args.select = entry.key.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
 		};
 
-		element.ondblclick = ()=> {
-
+		element.ondblclick = event=> {
+			event.stopPropagation();
+			const file = element.getAttribute("id");
+			const entry = this.link.data[file];
+			if (entry) {
+				if (entry.isUser.v) {
+					LOADER.OpenUserByFile(entry.file.v);
+				}
+				else {
+					LOADER.OpenDeviceByFile(entry.file.v);
+				}
+			}
 		};
 	}
 }
