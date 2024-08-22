@@ -8,7 +8,8 @@ namespace Protest.Workers {
 
         private static ConcurrentDictionary<string, object> mutexes = new ConcurrentDictionary<string, object>();
 
-        public static void Seen(in string ip) {
+        public static void Seen(string ip) {
+            ip = ip.ToLower().Replace(':', '_');
             string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
             try {
                 object mutex = mutexes.GetOrAdd(ip, new object());
@@ -24,6 +25,8 @@ namespace Protest.Workers {
 
         public static string HasBeenSeen(string ip, bool recordOnly = false) {
             if (ip is null) return null;
+
+            ip = ip.ToLower().Replace(':', '_');
 
             if (!recordOnly) {
                 try {
