@@ -131,7 +131,7 @@ class Issues extends List {
 		this.critButton.style.backgroundColor  = this.args.critFilter ? "var(--clr-critical)" : "";
 		this.errorButton.style.backgroundColor = this.args.errorFilter ? "var(--clr-error)" : "";
 		this.warnButton.style.backgroundColor  = this.args.warnFilter ? "var(--clr-warning)" : "";
-		this.infoButton.style.backgroundColor  = this.args.infoFilter ? "rgb(16,128,224)" : "";
+		this.infoButton.style.backgroundColor  = this.args.infoFilter ? "rgb(32,148,240)" : "";
 	}
 
 	UpdateAuthorization() { //overrides

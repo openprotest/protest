@@ -5,7 +5,7 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	top: 25px;
+	top: 30px;
 	bottom: 28px;
 
 	overflow-x: hidden;
@@ -17,7 +17,7 @@
 	left: 0;
 	right: 0;
 	top: 0px;
-	height: 25px;
+	height: 30px;
 
 	border-radius: 4px 4px 0 0;
 	background: var(--grd-toolbar);
@@ -26,11 +26,12 @@
 .list-title > div:not(:last-child) {
 	position: absolute;
 	top: 1px;
+	height: 28px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	text-transform: capitalize;
-	line-height: 23px;
+	line-height: 28px;
 	border-radius: 4px;
 
 	box-sizing: border-box;
@@ -47,36 +48,30 @@
 	background-color: rgb(64,64,64);
 }
 
-.list-title > .list-sort-ascend::before,
-.list-title > .list-sort-descend::before {
+.list-title > .list-sort-ascend::after,
+.list-title > .list-sort-descend::after {
 	position: absolute;
-	left: calc(100% - 16px);
-	transform: translateY(8px);
+	/*left: calc(100% - 16px);*/
+	transform: translate(4px, 10px);
 	content: "";
 	border: solid;
 	border-radius: 2px;
 	border-color: #C0C0C0 transparent;
 	transition: .2s;
 }
-.list-title > .list-sort-ascend::before {
-	border-width: 7px 5px 0 5px;
+.list-title > .list-sort-ascend::after {
+	border-width: 0 6px 8px 6px;
 }
-.list-title > .list-sort-descend::before {
-	border-width: 0 5px 7px 5px;
-}
-
-/*make room for the options button*/
-.list-title:hover > .list-sort-ascend:nth-last-child(2)::before,
-.list-title:hover > .list-sort-descend:nth-last-child(2)::before {
-	left: calc(100% - 40px);
+.list-title > .list-sort-descend::after {
+	border-width: 8px 6px 0 6px;
 }
 
 .list-columns-options {
 	position: absolute;
 	right: 0;
 	top: 0;
-	width: 20px;
-	height: 20px;
+	width: 22px;
+	height: 24px;
 	border-radius: 2px;
 	padding: 2px;
 	opacity: 0;

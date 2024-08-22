@@ -10,7 +10,7 @@
 
 .issues-info > .list-element-icon {
 	mask-image: url(mono/info.svg);
-	background-color: rgb(16,128,224);
+	background-color: rgb(rgb(32,148,240));
 }
 
 .issues-warning > .list-element-icon {
