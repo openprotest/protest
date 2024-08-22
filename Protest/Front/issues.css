@@ -10,12 +10,12 @@
 
 .issues-info > .list-element-icon {
 	mask-image: url(mono/info.svg);
-	background-color: rgb(rgb(32,148,240));
+	background-color: rgb(32,148,240);
 }
 
 .issues-warning > .list-element-icon {
 	mask-image: url(mono/warning.svg);
-	background-color: rgb(240,152,8) /*var(--clr-warning)*/;
+	background-color: rgb(240,152,8); /*var(--clr-warning)*/
 }
 
 .issues-error > .list-element-icon {
