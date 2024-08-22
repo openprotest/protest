@@ -184,50 +184,10 @@ internal static class Issues {
         }
 
         if (OperatingSystem.IsWindows() && typeAttribute?.value.ToLower() == "domain user") {
-            SearchResult result = Kerberos.GetUser(usernameAttribute.value);
-
-            if (result is null) {
-                issues.Add(new Issue {
-                    severity = SeverityLevel.warning,
-                    message = $"{usernameAttribute.value} is not a domain user",
-                    target = usernameAttribute.value,
-                    category = "Directory",
-                    source = "Kerberos",
-                    isUser = true,
-                    file = user.filename,
-                    timestamp = DateTime.UtcNow.Ticks
-                });
-            }
-            else {
-                if (result.Properties["lastLogoff"].Count > 0) {
-                    string time = Kerberos.FileTimeString(result.Properties["lastLogoff"][0].ToString());
-                    if (time.Length > 0) {
-                        issues.Add(new Issue {
-                            severity = SeverityLevel.info,
-                            message = $"User {usernameAttribute.value} is locked out",
-                            target = usernameAttribute.value,
-                            category = "Directory",
-                            source = "Kerberos",
-                            isUser = true,
-                            file = user.filename,
-                            timestamp = DateTime.UtcNow.Ticks
-                        });
-                    }
-                }
-
-                if (result.Properties["userAccountControl"].Count > 0) {
-                    if (Int32.TryParse(result.Properties["userAccountControl"][0].ToString(), out int userControl) && (userControl & 0x0002) != 0) {
-                        issues.Add(new Issue {
-                            severity = SeverityLevel.info,
-                            message = $"User {usernameAttribute.value} is disabled",
-                            target = usernameAttribute.value,
-                            category = "Directory",
-                            source = "Kerberos",
-                            isUser = true,
-                            file = user.filename,
-                            timestamp = DateTime.UtcNow.Ticks
-                        });
-                    }
+            CheckDomainUser(user, out Issue[] domainIssue, SeverityLevel.warning);
+            if (domainIssue is not null) {
+                for (int i = 0; i < domainIssue.Length; i++) {
+                    issues.Add(domainIssue[i]);
                 }
             }
         }
@@ -265,37 +225,33 @@ internal static class Issues {
     }
 
     [SupportedOSPlatform("windows")]
-    public static bool CheckDomainUser(Database.Entry user, out Issue[] issues, out long lockedTime, SearchResult result = null) {
+    public static bool CheckDomainUser(Database.Entry user, out Issue[] issues, SeverityLevel severityThreshhold, SearchResult result = null) {
         if (!user.attributes.TryGetValue("username", out Database.Attribute username)) {
             issues = null;
-            lockedTime = 0;
             return false;
         }
 
         try {
             result ??= Kerberos.GetUser(username.value);
             List<Issue> list = new List<Issue>();
-            lockedTime = 0;
+            long lockedTime = 0;
 
-            if (result is null) {
-                if (user.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
-                    && typeAttribute.value.ToLower() == "domain user") {
-
-                    list.Add(new Issue {
-                        severity = SeverityLevel.warning,
-                        message = $"{username.value} is not a domain user",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
-                        timestamp = DateTime.UtcNow.Ticks
-                    });
-                }
+            if (result is null && severityThreshhold <= SeverityLevel.warning) {
+                list.Add(new Issue {
+                    severity = SeverityLevel.warning,
+                    message = $"{username.value} is not a domain user",
+                    target = username.value,
+                    category = "Directory",
+                    source = "Kerberos",
+                    isUser = true,
+                    file = user.filename,
+                    timestamp = DateTime.UtcNow.Ticks
+                });
             }
             else {
-
-                if (result.Properties["userAccountControl"].Count > 0
+                bool isDisabled = false;
+                if (severityThreshhold <= SeverityLevel.info
+                    && result.Properties["userAccountControl"].Count > 0
                     && Int32.TryParse(result.Properties["userAccountControl"][0].ToString(), out int userControl)
                     && (userControl & 0x0002) != 0) {
                     list.Add(new Issue {
@@ -308,9 +264,61 @@ internal static class Issues {
                         file = user.filename,
                         timestamp = DateTime.UtcNow.Ticks
                     });
+                    isDisabled = true;
                 }
 
-                if (result.Properties["lastLogonTimestamp"].Count > 0
+                if (!isDisabled && result.Properties["pwdLastSet"].Count > 0) {
+                    long pwdLastSet = Convert.ToInt64(result.Properties["pwdLastSet"][0]);
+                    DateTime lastPasswordChange = DateTime.FromFileTime(pwdLastSet);
+                    DateTime oneYearAgo = DateTime.UtcNow.AddYears(-1);
+                    DateTime sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
+
+                    if (severityThreshhold <= SeverityLevel.error && lastPasswordChange < oneYearAgo) {
+                        list.Add(new Issue {
+                            severity = SeverityLevel.error,
+                            message = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            target = username.value,
+                            category = "Password",
+                            source = "Kerberos",
+                            isUser = true,
+                            file = user.filename,
+                            timestamp = DateTime.UtcNow.Ticks
+                        });
+                    }
+                    else if (severityThreshhold <= SeverityLevel.warning && lastPasswordChange < sixMonthsAgo) {
+                        list.Add(new Issue {
+                            severity = SeverityLevel.warning,
+                            message = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            target = username.value,
+                            category = "Password",
+                            source = "Kerberos",
+                            isUser = true,
+                            file = user.filename,
+                            timestamp = DateTime.UtcNow.Ticks
+                        });
+                    }
+                }
+
+                if (severityThreshhold <= SeverityLevel.warning
+                    && result.Properties["lockoutTime"].Count > 0
+                    && Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out lockedTime)
+                    && lockedTime > 0
+                    && DateTime.UtcNow < DateTime.FromFileTime(lockedTime).AddHours(1)) {
+
+                    list.Add(new Issue {
+                        severity = SeverityLevel.warning,
+                        message = $"User {username.value} is locked out",
+                        target = username.value,
+                        category = "Directory",
+                        source = "Kerberos",
+                        isUser = true,
+                        file = user.filename,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
+                }
+
+                if (severityThreshhold <= SeverityLevel.info
+                    && result.Properties["lastLogonTimestamp"].Count > 0
                     && Int64.TryParse(result.Properties["lastLogonTimestamp"][0].ToString(), out long lastLogonTimestamp)
                     && lastLogonTimestamp > 0) {
                     list.Add(new Issue {
@@ -325,7 +333,7 @@ internal static class Issues {
                     });
                 }
 
-                if (result.Properties["lastLogoff"].Count > 0
+                /*if (result.Properties["lastLogoff"].Count > 0
                     && Int64.TryParse(result.Properties["lastLogoff"][0].ToString(), out long lastLogOffTime)
                     && lastLogOffTime > 0) {
                     list.Add(new Issue {
@@ -338,29 +346,16 @@ internal static class Issues {
                         file = user.filename,
                         timestamp = DateTime.UtcNow.Ticks
                     });
-                }
+                }*/
 
-                /*if (result.Properties["badPasswordTime"].Count > 0
+                if (severityThreshhold <= SeverityLevel.info
+                    && lockedTime > 0
+                    && result.Properties["badPasswordTime"].Count > 0
                     && Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long badPasswordTime)
                     && badPasswordTime > 0) {
                     list.Add(new Issue {
                         severity = SeverityLevel.info,
                         message = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
-                        timestamp = DateTime.UtcNow.Ticks
-                    });
-                }*/
-
-                if (result.Properties["lockoutTime"].Count > 0
-                    && Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out lockedTime)
-                    && lockedTime > 0) {
-                    list.Add(new Issue {
-                        severity = SeverityLevel.warning,
-                        message = $"{username.value} is locked out",
                         target = username.value,
                         category = "Directory",
                         source = "Kerberos",
@@ -383,7 +378,6 @@ internal static class Issues {
         catch { }
 
         issues = null;
-        lockedTime = 0;
         return false;
     }
 

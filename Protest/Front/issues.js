@@ -1,24 +1,9 @@
 class Issues extends List {
-
 	static SEVERITY_TEXT = {
 		1 : "Info",
 		2 : "Warning",
 		3 : "Error",
 		4 : "Critical",
-	};
-
-	static SEVERITY_ICON = {
-		1 : "url(mono/info.svg)",
-		2 : "url(mono/warning.svg)",
-		3 : "url(mono/error.svg)",
-		4 : "url(mono/critical.svg)",
-	};
-
-	static SEVERITY_COLOR = {
-		1 : "rgb(8,96,240)",
-		2 : "rgb(240,140,8)",
-		3 : "var(--clr-error)",
-		4 : "var(--clr-critical)",
 	};
 
 	static CATEGORY_ICON = {
@@ -31,10 +16,24 @@ class Issues extends List {
 		"Disk IO"           : "url(mono/hdd.svg)",
 	};
 
-	constructor() {
-		super();
+	constructor(args) {
+		super(args);
+
+		this.args = args ?? {
+			find: "",
+			filter: "",
+			sort: "",
+			critFilter: true,
+			errorFilter: true,
+			warnFilter: true,
+			infoFilter: false,
+		};
+
+		this.SetTitle("Issues");
+		this.SetIcon("mono/issues.svg");
 
 		this.AddCssDependencies("list.css");
+		this.AddCssDependencies("issues.css");
 
 		const columns = ["severity", "issue", "target", "category", "source"];
 		this.SetupColumns(columns);
@@ -55,22 +54,84 @@ class Issues extends List {
 
 		this.columnsOptions.style.display = "none";
 
-		this.SetTitle("Issues");
-		this.SetIcon("mono/issues.svg");
-
 		this.LinkData({data:[], length:0 });
 
 		this.SetupToolbar();
-		this.reloadButton = this.AddToolbarButton("Reload", "mono/restart.svg?light");
 		this.scanButton = this.AddToolbarButton("Scan network", "mono/scannet.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		const filterButton = this.SetupFilter();
 		this.SetupFind();
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+
+		
+		this.critButton = this.AddToolbarButton("Critical", "mono/critical.svg?light");
+		this.errorButton = this.AddToolbarButton("Error", "mono/error.svg?light");
+		this.warnButton = this.AddToolbarButton("Warning", "mono/warning.svg?light");
+		this.infoButton = this.AddToolbarButton("Info", "mono/info.svg?light");
+		
+		const toggleButtons = [this.critButton, this.errorButton, this.warnButton, this.infoButton];
+
+		for (let i=0; i<toggleButtons.length; i++) {
+			toggleButtons[i].style.backgroundSize = "22px 22px";
+			toggleButtons[i].style.maskImage = "url(mono/stop.svg)";
+			toggleButtons[i].style.maskSize = "34px 34px";
+			toggleButtons[i].style.maskPosition = "center";
+			toggleButtons[i].style.maskRepeat = "no-repeat";
+		}
 
 		this.scanButton.onclick = () => this.ScanDialog();
+
+		this.critButton.onclick  = () => this.CriticalFilterToggle();
+		this.errorButton.onclick = () => this.ErrorFilterToggle();
+		this.warnButton.onclick  = () => this.WarningFilterToggle();
+		this.infoButton.onclick  = () => this.InfoFilterToggle();
 	
+		if (this.args.find && this.args.find.length > 0) {
+			this.findInput.value = this.args.find;
+			this.findInput.parentElement.style.borderBottom = this.findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
+			this.findInput.parentElement.style.width = "200px";
+		}
+
+		this.UpdateFiltersUI();
+
 		this.UpdateAuthorization();
 		this.Connect();
+	}
+
+	CriticalFilterToggle() {
+		this.args.critFilter = !this.args.critFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	ErrorFilterToggle() {
+		this.args.errorFilter = !this.args.errorFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	WarningFilterToggle() {
+		this.args.warnFilter = !this.args.warnFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	InfoFilterToggle() {
+		this.args.infoFilter = !this.args.infoFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	UpdateFiltersUI() {
+		this.critButton.style.backgroundImage  = this.args.critFilter ? "url(mono/critical.svg)" : "url(mono/critical.svg?light)";
+		this.errorButton.style.backgroundImage = this.args.errorFilter ? "url(mono/error.svg)" : "url(mono/error.svg?light)";
+		this.warnButton.style.backgroundImage  = this.args.warnFilter ? "url(mono/warning.svg)" : "url(mono/warning.svg?light)";
+		this.infoButton.style.backgroundImage  = this.args.infoFilter ? "url(mono/info.svg)" : "url(mono/info.svg?light)";
+
+		this.critButton.style.backgroundColor  = this.args.critFilter ? "var(--clr-critical)" : "";
+		this.errorButton.style.backgroundColor = this.args.errorFilter ? "var(--clr-error)" : "";
+		this.warnButton.style.backgroundColor  = this.args.warnFilter ? "var(--clr-warning)" : "";
+		this.infoButton.style.backgroundColor  = this.args.infoFilter ? "rgb(16,128,224)" : "";
 	}
 
 	UpdateAuthorization() { //overrides
@@ -110,6 +171,15 @@ class Issues extends List {
 			for (let i=0; i<json.length; i++) {
 				this.AddIssue(json[i]);
 			}
+
+			if (this.link) {
+				this.counter.textContent = this.list.childNodes.length === this.link.length
+					? this.link.length
+					: `${this.list.childNodes.length} / ${this.link.length}`;
+			}
+			else {
+				this.counter.textContent = "0";
+			}
 		};
 
 		this.ws.onclose = ()=> {
@@ -119,15 +189,103 @@ class Issues extends List {
 		this.ws.onerror = error=> {};
 	}
 
+	RefreshList() { //overrides
+		this.list.textContent = "";
+
+		if (this.link === null || this.link.data === null) { return; }
+
+		let filtered = [];
+		if (this.args.filter.length === 0) {
+			for (const key in this.link.data) {
+				filtered.push(key);
+			}
+		}
+		else {
+			for (const key in this.link.data) {
+				if (!this.link.data[key].type) continue;
+				if (this.link.data[key].type.v.toLowerCase() !== this.args.filter.toLowerCase()) continue;
+				filtered.push(key);
+			}
+		}
+
+		let found;
+		if (this.args.find.length === 0) {
+			found = filtered;
+		}
+		else {
+			found = [];
+			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
+
+			for (let i=0; i<filtered.length; i++) {
+				let matched = true;
+
+				for (let j=0; j<keywords.length; j++) {
+					let wordIncluded = false;
+					for (const key in this.link.data[filtered[i]]) {
+						const value = this.link.data[filtered[i]][key].v;
+						if (typeof value === "string" && value.toLowerCase().includes(keywords[j])) {
+							wordIncluded = true;
+							break;
+						}
+					}
+
+					if (!wordIncluded) {
+						matched = false;
+						break;
+					}
+				}
+
+				if (matched) {
+					found.push(filtered[i]);
+				}
+			}
+		}
+
+		if (this.args.sort.length > 0) {
+			const attr = this.args.sort;
+
+			if (this.sortDescend) {
+				found = found.sort((a, b)=> {
+					if (this.link.data[a][attr] == undefined && this.link.data[b][attr] == undefined) return 0;
+					if (this.link.data[a][attr] == undefined) return -1;
+					if (this.link.data[b][attr] == undefined) return 1;
+					if (this.link.data[a][attr].v < this.link.data[b][attr].v) return 1;
+					if (this.link.data[a][attr].v > this.link.data[b][attr].v) return -1;
+					return 0;
+				});
+			}
+			else {
+				found = found.sort((a, b)=> {
+					if (this.link.data[a][attr] == undefined && this.link.data[b][attr] == undefined) return 0;
+					if (this.link.data[a][attr] == undefined) return 1;
+					if (this.link.data[b][attr] == undefined) return -1;
+					if (this.link.data[a][attr].v < this.link.data[b][attr].v) return -1;
+					if (this.link.data[a][attr].v > this.link.data[b][attr].v) return 1;
+					return 0;
+				});
+			}
+		}
+		
+		for (let i = 0; i < found.length; i++) {
+			this.AddIssueElement(this.link.data[found[i]], found[i]);
+		}
+
+		if (this.link) {
+			this.counter.textContent = this.list.childNodes.length === this.link.length
+				? this.link.length
+				: `${this.list.childNodes.length} / ${this.link.length}`;
+		}
+		else {
+			this.counter.textContent = "0";
+		}
+
+		this.OnUiReady();
+	}
+
 	AddIssue(issue) {
 		const key =  Date.now() + Math.random() * 1000;
 
-		const element =  document.createElement("div");
-		element.id = key;
-		element.className = "list-element";
-		this.list.appendChild(element);
-
-		this.link.data[key] = {
+		const entry = {
 			key     : {v: key},
 			severity: {v: issue.severity},
 			issue   : {v: issue.issue},
@@ -138,17 +296,29 @@ class Issues extends List {
 			file    : {v: issue.file},
 		};
 
-		this.InflateElement(element, this.link.data[key]);
+		this.link.data[key] = entry;
 		this.link.length++;
 
-		if (this.link) {
-			this.counter.textContent = this.list.childNodes.length === this.link.length
-				? this.link.length
-				: `${this.list.childNodes.length} / ${this.link.length}`;
+		this.AddIssueElement(entry, key);
+	}
+
+	AddIssueElement(entry, key) {
+		switch (entry.severity.v) {
+		case 1: if (!this.args.infoFilter)  { return; } break;
+		case 2: if (!this.args.warnFilter) { return; } break;
+		case 3: if (!this.args.errorFilter)  { return; } break;
+		case 4: if (!this.args.critFilter)  { return; } break;
 		}
-		else {
-			this.counter.textContent = "0";
+
+		if (!this.MatchFilters(entry)) {
+			return;
 		}
+	
+		const element =  document.createElement("div");
+		element.id = key;
+		element.className = "list-element";
+		this.list.appendChild(element);
+		this.InflateElement(element, this.link.data[key]);
 	}
 
 	ScanDialog(entry=null, isRunning=false) {
@@ -190,14 +360,11 @@ class Issues extends List {
 	}
 
 	InflateElement(element, entry) { //overrides
+
+		element.classList.add("issues-" + Issues.SEVERITY_TEXT[entry.severity.v].toLowerCase());
+
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
-		icon.style.maskSize = "24px 24px";
-		icon.style.maskPosition = "center";
-		icon.style.maskRepeat = "no-repeat";
-		icon.style.maskImage = Issues.SEVERITY_ICON[entry.severity.v] ?? "url(mono/critical.svg)";
-		icon.style.backgroundColor = Issues.SEVERITY_COLOR[entry.severity.v] ?? "var(--clr-dark)";
-		icon.style.filter = "brightness(0.85)";
 		element.appendChild(icon);
 
 		for (let i = 0; i < this.columnsElements.length; i++) {
@@ -210,7 +377,7 @@ class Issues extends List {
 				icon.style.left = this.columnsElements[i].style.left;
 			}
 			else {
-				value = entry[propertyName].v
+				value = entry[propertyName].v;
 			}
 
 			if (value.length === 0) continue;
@@ -250,10 +417,22 @@ class Issues extends List {
 		}
 
 		element.onclick = ()=> {
-			if (this.selected) this.selected.style.backgroundColor = "";
+			if (this.selected) {
+				this.selected.style.backgroundColor = "";
+				const lastIconElement = this.selected.querySelector(".list-element-icon");
+				if (lastIconElement) {
+					lastIconElement.style.backgroundColor = "";
+				}
+			}
+
 			this.args.select = entry.key.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
+
+			const iconElement = element.querySelector(".list-element-icon");
+			if (iconElement) {
+				iconElement.style.backgroundColor = "var(--clr-dark)";
+			}
 		};
 
 		element.ondblclick = event=> {

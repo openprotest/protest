@@ -15,6 +15,7 @@ using System.Timers;
 using Protest.Protocols;
 using Protest.Workers;
 using Lextm.SharpSnmpLib;
+using Lextm.SharpSnmpLib.Security;
 
 namespace Protest.Tools;
 
@@ -56,25 +57,26 @@ internal static class LiveStats {
             }
 
             object mutex = new object();
-            try {
-                if (OperatingSystem.IsWindows()
-                    && entry.attributes.TryGetValue("username", out Database.Attribute username)
-                    && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, out long lockedTime)) {
-
-                    if (lockedTime > 0) {
-                        WsWriteText(ws, $"{{\"lockedOut\":\"{DateTime.FromFileTime(lockedTime)}\",\"source\":\"Kerberos\"}}", mutex);
-                    }
-
-                    for (int i = 0; i < issues.Length; i++) {
-                        WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
-                    }
-                }
-            }
-            catch { }
 
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
                 WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
             }
+            
+            try {
+                if (OperatingSystem.IsWindows()
+                    && entry.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
+                    && typeAttribute.value.ToLower() == "domain user"
+                    && entry.attributes.TryGetValue("username", out Database.Attribute usernameAtrtribute)
+                    && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)) {
+
+                    if (issues is not null) {
+                        for (int i = 0; i < issues.Length; i++) {
+                            WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
+                        }
+                    }
+                }
+            }
+            catch { }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;

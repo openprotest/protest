@@ -137,7 +137,7 @@ div, svg {
 	:root {
 		--clr-control: rgb(128,128,128);
 		--clr-highlight: rgb(176,176,176);
-		--clr-pane: rgb(160,160,160);
+		--clr-pane: rgb(176,176,176);
 		--clr-contrast: rgb(224,224,224);
 	}
 

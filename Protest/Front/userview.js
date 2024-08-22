@@ -93,10 +93,7 @@ class UserView extends View {
 					const response = await fetch(`manage/user/unlock?file=${this.args.file}`);
 					const json = await response.json();
 					if (json.error) throw(json.error);
-
-					if (this.lockedUserWarning) {
-						this.lockedUserWarning.style.display = "none";
-					}
+					this.InitializeLiveStats();
 				}
 				catch (ex) { this.ConfirmBox(ex, true, "mono/lock.svg"); }
 				unlockButton.removeAttribute("busy");
@@ -162,9 +159,6 @@ class UserView extends View {
 			}
 			else if (json.critical) {
 				this.CreateCritical(json.critical, json.source);
-			}
-			else if (json.lockedOut) {
-				this.lockedUserWarning = this.CreateWarning(`User is locked out (${json.lockedOut})`, json.source);
 			}
 		};
 

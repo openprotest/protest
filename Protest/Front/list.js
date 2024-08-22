@@ -52,25 +52,44 @@ class List extends Window {
 			else if (event.code === "ArrowUp" && this.selected) {
 				const previousElement = this.selected.previousElementSibling;
 				if (previousElement) {
+					const selectedIcon = this.selected.querySelector(".list-element-icon");
+					if (selectedIcon) {
+						selectedIcon.style.backgroundColor = "";
+					}
+
 					this.selected.style.backgroundColor = "";
 					this.selected = previousElement;
 					this.selected.style.backgroundColor = "var(--clr-select)";
-					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+					this.selected.scrollIntoView({block:"nearest"});
 					
 					const id = this.selected.getAttribute("id");
 					if (id) this.args.select = id;
+
+					if (previousElement.onclick) {
+						requestAnimationFrame(()=>previousElement.onclick());
+					}
 				}
 			}
 			else if (event.code === "ArrowDown" && this.selected) {
 				const nextElement = this.selected.nextElementSibling;
 				if (nextElement) {
+					const selectedIcon = this.selected.querySelector(".list-element-icon");
+					if (selectedIcon) {
+						selectedIcon.style.backgroundColor = "";
+					}
+
 					this.selected.style.backgroundColor = "";
 					this.selected = nextElement;
 					this.selected.style.backgroundColor = "var(--clr-select)";
-					this.selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+					this.selected.scrollIntoView({block:"nearest"});
 
 					const id = this.selected.getAttribute("id");
 					if (id) this.args.select = id;
+
+					if (nextElement.onclick) {
+						requestAnimationFrame(()=>nextElement.onclick());
+					}
+
 				}
 			}
 			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
@@ -447,7 +466,7 @@ class List extends Window {
 
 				let flag = false;
 				for (const key in entry) {
-					if (entry[key].v.toLowerCase().includes(keywords[i])) {
+					if (typeof entry[key].v === "string" && entry[key].v.toLowerCase().includes(keywords[i])) {
 						flag = true;
 						break;
 					}

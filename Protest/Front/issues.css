@@ -1,0 +1,29 @@
+.issues-info > .list-element-icon,
+.issues-warning > .list-element-icon,
+.issues-error > .list-element-icon,
+.issues-critical > .list-element-icon {
+	mask-size: 24px 24px;
+	mask-position: center;
+	mask-repeat: no-repeat;
+	filter: brightness(.8);
+}
+
+.issues-info > .list-element-icon {
+	mask-image: url(mono/info.svg);
+	background-color: rgb(16,128,224);
+}
+
+.issues-warning > .list-element-icon {
+	mask-image: url(mono/warning.svg);
+	background-color: rgb(240,152,8) /*var(--clr-warning)*/;
+}
+
+.issues-error > .list-element-icon {
+	mask-image: url(mono/error.svg);
+	background-color: var(--clr-error);
+}
+
+.issues-critical > .list-element-icon {
+	mask-image: url(mono/critical.svg);
+	background-color: var(--clr-critical);
+}
