@@ -12,7 +12,6 @@ namespace Protest.Workers {
             string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
             try {
                 object mutex = mutexes.GetOrAdd(ip, new object());
-
                 lock (mutex) {
                     File.WriteAllText(filename, DateTime.Now.ToString(Data.DATETIME_FORMAT_LONG));
                     //File.WriteAllText(filename, DateTime.UtcNow.ToString());
@@ -21,17 +20,6 @@ namespace Protest.Workers {
             catch (Exception ex) {
                 Logger.Error(ex);
             }
-        }
-
-        public static string HasBeenSeen(in string[] para, bool recordOnly = false) {
-            string ip = null;
-            for (int i = 1; i < para.Length; i++) {
-                if (para[i].StartsWith("ip=")) {
-                    ip = para[i][3..];
-                }
-            }
-
-            return HasBeenSeen(ip, recordOnly);
         }
 
         public static string HasBeenSeen(string ip, bool recordOnly = false) {
@@ -53,7 +41,6 @@ namespace Protest.Workers {
             try {
                 if (File.Exists(filename)) {
                     object mutex = mutexes.GetOrAdd(ip, new object());
-
                     lock (mutex) {
                         return File.ReadAllText(filename);
                     }

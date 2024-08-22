@@ -180,14 +180,14 @@ internal static class LiveStats {
             if (OperatingSystem.IsWindows()
                 && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true
                 && firstAlive is not null && firstReply.Status == IPStatus.Success) {
-                WmiQuery(ws, mutex, entry.filename, firstAlive, ref wmiHostname);
+                WmiQuery(ws, mutex, firstAlive, ref wmiHostname);
             }
 
             if (firstAlive is not null
                 && firstReply.Status == IPStatus.Success
                 && entry.attributes.TryGetValue("type", out Database.Attribute _type)
                 && entry.attributes.TryGetValue("snmp profile", out Database.Attribute _snmpProfile)) {
-                SnmpQuery(ws, mutex, entry.filename, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
+                SnmpQuery(ws, mutex, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
             }
 
             if (OperatingSystem.IsWindows() && _hostname?.value?.Length > 0) {
@@ -302,7 +302,7 @@ internal static class LiveStats {
     }
 
     [SupportedOSPlatform("windows")]
-    private static void WmiQuery(WebSocket ws, object mutex, string file, string firstAlive, ref string wmiHostname) {
+    private static void WmiQuery(WebSocket ws, object mutex, string firstAlive, ref string wmiHostname) {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive, 3_000);
             if (scope is not null && scope.IsConnected) {
@@ -324,7 +324,7 @@ internal static class LiveStats {
 
                     WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
-                    if (Issues.CheckDiskCapacity(file, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
+                    if (Issues.CheckDiskCapacity(null, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
                         WsWriteText(ws, diskIssue?.ToLiveStatsJsonBytes(), mutex);
                     }
                 }
@@ -365,7 +365,7 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, object mutex, string file, string firstAlive, string type, string snmpProfileGuid) {
+    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, string type, string snmpProfileGuid) {
         if (!SnmpProfiles.FromGuid(snmpProfileGuid, out SnmpProfiles.Profile profile)) {
             return;
         }
@@ -412,7 +412,7 @@ internal static class LiveStats {
                 WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
             }
 
-            if (Issues.CheckPrinterComponent(file, ipAddress, profile, out Issues.Issue[] issues)) {
+            if (Issues.CheckPrinterComponent(null, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
                 for (int i = 0; i < issues.Length; i++) {
                     WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
                 }

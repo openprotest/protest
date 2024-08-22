@@ -20,7 +20,7 @@ using Protest.Tools;
 namespace Protest.Workers;
 
 internal static class Issues {
-    private const int WEAK_PASSWORD_ENTROPY_THRESHOLD = 28;
+    private const double WEAK_PASSWORD_ENTROPY_THRESHOLD = 36.0;
 
     public enum SeverityLevel {
         info     = 1,
@@ -35,13 +35,13 @@ internal static class Issues {
         public string target;
         public string category;
         public string source;
-        public bool   isUser;
         public string file;
+        public bool   isUser;
         public long   timestamp;
     }
 
     private static TaskWrapper task;
-    private static ConcurrentBag<Issue> issues = new ConcurrentBag<Issue>();
+    private static ConcurrentBag<Issue> issues;
 
     public static byte[] ToLiveStatsJsonBytes(this Issue issue) => JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> {
         { issue.severity.ToString(), issue.message },
@@ -56,6 +56,9 @@ internal static class Issues {
 
     public static byte[] Start(string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
+
+        issues?.Clear();
+        issues = new ConcurrentBag<Issue>();
 
         Thread thread = new Thread(() => Scan());
 
@@ -141,8 +144,8 @@ internal static class Issues {
                         target   = o.target,
                         category = o.category,
                         source   = o.source,
-                        isUser   = o.isUser,
                         file     = o.file,
+                        isUser   = o.isUser,
                     }));
 
                     await WsWriteText(ws, bytes);
@@ -194,15 +197,40 @@ internal static class Issues {
     }
 
     private static void ScanDevices() {
+        Dictionary<string, Database.Entry> ipAddresses = new Dictionary<string, Database.Entry>();
+
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+            if (device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute)) {
+
+                string[] ips = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
+                for (int i = 0; i < ips.Length; i++) {
+                    if (ipAddresses.ContainsKey(ips[i])) {
+                        issues.Add(new Issue {
+                            severity  = SeverityLevel.info,
+                            message   = "IP address is duplicated in various records",
+                            target    = ips[i],
+                            category  = "Database",
+                            source    = "Internal check",
+                            file      = device.Value.filename,
+                            isUser    = false,
+                            timestamp = DateTime.UtcNow.Ticks
+                        });
+
+                        continue;
+                    }
+
+                    ipAddresses.Add(ips[i], device.Value);
+                }
+            }
+
             ScanDevice(device.Value);
         }
+
+        ipAddresses.Clear();
     }
 
     public static void ScanDevice(Database.Entry device) {
         device.attributes.TryGetValue("type", out Database.Attribute typeAttribute);
-        //device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute);
-        //device.Value.attributes.TryGetValue("hostname", out Database.Attribute hostnameAttribute);
         device.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
 
         if (CheckPasswordStrength(device, false, out Issue? issue) && issue.HasValue) {
@@ -210,7 +238,7 @@ internal static class Issues {
         }
 
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
-
+            //TODO:
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
             if (CheckPrinterComponent(device, out Issue[] printerIssues) && printerIssues is not null) {
@@ -220,48 +248,53 @@ internal static class Issues {
             }
         }
         else if (Data.SWITCH_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
-
+            //TODO:
         }
     }
 
+    public static bool CheckLatency(Database.Entry entry, out Issue? issue) {
+        issue = null;
+        return false;
+    }
+
     [SupportedOSPlatform("windows")]
-    public static bool CheckDomainUser(Database.Entry user, out Issue[] issues, SeverityLevel severityThreshhold, SearchResult result = null) {
+    public static bool CheckDomainUser(Database.Entry user, out Issue[] issues, SeverityLevel severityThreshold) {
         if (!user.attributes.TryGetValue("username", out Database.Attribute username)) {
             issues = null;
             return false;
         }
 
         try {
-            result ??= Kerberos.GetUser(username.value);
+            SearchResult result = Kerberos.GetUser(username.value);
             List<Issue> list = new List<Issue>();
             long lockedTime = 0;
 
-            if (result is null && severityThreshhold <= SeverityLevel.warning) {
+            if (result is null && severityThreshold <= SeverityLevel.warning) {
                 list.Add(new Issue {
-                    severity = SeverityLevel.warning,
-                    message = $"{username.value} is not a domain user",
-                    target = username.value,
-                    category = "Directory",
-                    source = "Kerberos",
-                    isUser = true,
-                    file = user.filename,
+                    severity  = SeverityLevel.warning,
+                    message   = $"{username.value} is not a domain user",
+                    target    = username.value,
+                    category  = "Directory",
+                    source    = "Kerberos",
+                    file      = user.filename,
+                    isUser    = true,
                     timestamp = DateTime.UtcNow.Ticks
                 });
             }
             else {
                 bool isDisabled = false;
-                if (severityThreshhold <= SeverityLevel.info
+                if (severityThreshold <= SeverityLevel.info
                     && result.Properties["userAccountControl"].Count > 0
                     && Int32.TryParse(result.Properties["userAccountControl"][0].ToString(), out int userControl)
                     && (userControl & 0x0002) != 0) {
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message = $"User {username.value} is disabled",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
+                        severity  = SeverityLevel.info,
+                        message   = $"User {username.value} is disabled",
+                        target    = username.value,
+                        category  = "Directory",
+                        source    = "Kerberos",
+                        file      = user.filename,
+                        isUser    = true,
                         timestamp = DateTime.UtcNow.Ticks
                     });
                     isDisabled = true;
@@ -273,62 +306,62 @@ internal static class Issues {
                     DateTime oneYearAgo = DateTime.UtcNow.AddYears(-1);
                     DateTime sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
 
-                    if (severityThreshhold <= SeverityLevel.error && lastPasswordChange < oneYearAgo) {
+                    if (severityThreshold <= SeverityLevel.error && lastPasswordChange < oneYearAgo) {
                         list.Add(new Issue {
-                            severity = SeverityLevel.error,
-                            message = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
-                            target = username.value,
-                            category = "Password",
-                            source = "Kerberos",
-                            isUser = true,
-                            file = user.filename,
+                            severity  = SeverityLevel.error,
+                            message   = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            target    = username.value,
+                            category  = "Password",
+                            source    = "Kerberos",
+                            file      = user.filename,
+                            isUser    = true,
                             timestamp = DateTime.UtcNow.Ticks
                         });
                     }
-                    else if (severityThreshhold <= SeverityLevel.warning && lastPasswordChange < sixMonthsAgo) {
+                    else if (severityThreshold <= SeverityLevel.warning && lastPasswordChange < sixMonthsAgo) {
                         list.Add(new Issue {
-                            severity = SeverityLevel.warning,
-                            message = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
-                            target = username.value,
-                            category = "Password",
-                            source = "Kerberos",
-                            isUser = true,
-                            file = user.filename,
+                            severity  = SeverityLevel.warning,
+                            message   = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            target    = username.value,
+                            category  = "Password",
+                            source    = "Kerberos",
+                            file      = user.filename,
+                            isUser    = true,
                             timestamp = DateTime.UtcNow.Ticks
                         });
                     }
                 }
 
-                if (severityThreshhold <= SeverityLevel.warning
+                if (severityThreshold <= SeverityLevel.warning
                     && result.Properties["lockoutTime"].Count > 0
                     && Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out lockedTime)
                     && lockedTime > 0
                     && DateTime.UtcNow < DateTime.FromFileTime(lockedTime).AddHours(1)) {
 
                     list.Add(new Issue {
-                        severity = SeverityLevel.warning,
-                        message = $"User {username.value} is locked out",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
+                        severity  = SeverityLevel.warning,
+                        message   = $"User {username.value} is locked out",
+                        target    = username.value,
+                        category  = "Directory",
+                        source    = "Kerberos",
+                        file      = user.filename,
+                        isUser    = true,
                         timestamp = DateTime.UtcNow.Ticks
                     });
                 }
 
-                if (severityThreshhold <= SeverityLevel.info
+                if (severityThreshold <= SeverityLevel.info
                     && result.Properties["lastLogonTimestamp"].Count > 0
                     && Int64.TryParse(result.Properties["lastLogonTimestamp"][0].ToString(), out long lastLogonTimestamp)
                     && lastLogonTimestamp > 0) {
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
+                        severity  = SeverityLevel.info,
+                        message   = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
+                        target    = username.value,
+                        category  = "Directory",
+                        source    = "Kerberos",
+                        file      = user.filename,
+                        isUser    = true,
                         timestamp = DateTime.UtcNow.Ticks
                     });
                 }
@@ -337,30 +370,30 @@ internal static class Issues {
                     && Int64.TryParse(result.Properties["lastLogoff"][0].ToString(), out long lastLogOffTime)
                     && lastLogOffTime > 0) {
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message = $"Last logoff: {DateTime.FromFileTime(lastLogOffTime)}",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
+                        severity  = SeverityLevel.info,
+                        message   = $"Last logoff: {DateTime.FromFileTime(lastLogOffTime)}",
+                        target    = username.value,
+                        category  = "Directory",
+                        source    = "Kerberos",
+                        file      = user.filename,
+                        isUser    = true,
                         timestamp = DateTime.UtcNow.Ticks
                     });
                 }*/
 
-                if (severityThreshhold <= SeverityLevel.info
+                if (severityThreshold <= SeverityLevel.info
                     && lockedTime > 0
                     && result.Properties["badPasswordTime"].Count > 0
                     && Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long badPasswordTime)
                     && badPasswordTime > 0) {
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
-                        target = username.value,
-                        category = "Directory",
-                        source = "Kerberos",
-                        isUser = true,
-                        file = user.filename,
+                        severity  = SeverityLevel.info,
+                        message   = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
+                        target    = username.value,
+                        category  = "Directory",
+                        source    = "Kerberos",
+                        file      = user.filename,
+                        isUser    = true,
                         timestamp = DateTime.UtcNow.Ticks
                     });
                 }
@@ -384,7 +417,8 @@ internal static class Issues {
     public static bool CheckPasswordStrength(Database.Entry entry, bool isUser, out Issue? issue) {
         if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
             string value = password.value;
-            if (value.Length > 0 && PasswordStrength.Entropy(value) < WEAK_PASSWORD_ENTROPY_THRESHOLD) {
+            double entropy = PasswordStrength.Entropy(value);
+            if (value.Length > 0 && entropy < WEAK_PASSWORD_ENTROPY_THRESHOLD) {
                 string target;
                 if (isUser) {
                     if (entry.attributes.TryGetValue("username", out Database.Attribute usernameAttr)) {
@@ -410,14 +444,14 @@ internal static class Issues {
                 }
 
                 issue = new Issue {
-                    severity = Issues.SeverityLevel.critical,
-                    target   = target,
-                    message  = "Weak password",
-                    category = "Password",
-                    source   = "Internal check",
-                    isUser   = isUser,
-                    file     = entry.filename,
-                    timestamp     = DateTime.UtcNow.Ticks
+                    severity  = Issues.SeverityLevel.critical,
+                    target    = target,
+                    message   = $"Weak password with {Math.Round(entropy, 2)} bits of entropy",
+                    category  = "Password",
+                    source    = "Internal check",
+                    file      = entry.filename,
+                    isUser    = isUser,
+                    timestamp = DateTime.UtcNow.Ticks
                 };
                 return true;
             }
@@ -437,8 +471,8 @@ internal static class Issues {
                 message   = message,
                 category  = "Disk drive",
                 source    = "WMI",
-                isUser    = false,
                 file      = file,
+                isUser    = false,
                 timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
@@ -451,8 +485,8 @@ internal static class Issues {
                 message   = message,
                 category  = "Disk drive",
                 source    = "WMI",
-                isUser    = false,
                 file      = file,
+                isUser    = false,
                 timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
@@ -465,8 +499,8 @@ internal static class Issues {
                 message   = message,
                 category  = "Disk drive",
                 source    = "WMI",
-                isUser    = false,
                 file      = file,
+                isUser    = false,
                 timestamp = DateTime.UtcNow.Ticks,
             };
             return true;
@@ -547,8 +581,8 @@ internal static class Issues {
                         target    = ipAddress.ToString(),
                         category  = "Printer component",
                         source    = "SNMP",
-                        isUser    = false,
                         file      = file,
+                        isUser    = false,
                         timestamp = DateTime.UtcNow.Ticks
                     });
                 }
