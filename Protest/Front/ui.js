@@ -699,11 +699,13 @@ const MENU = {
 						info.style.lineHeight = "16px";
 						info.style.fontWeight = "400";
 						item.appendChild(info);
+		
+						if (title === null || title.length === 0) { 
+							info.style.paddingTop = "16px";
+						}
 					}
 
-					MENU.ItemEvent(item, ()=> {
-						LOADER.OpenDeviceByFile(file);
-					});
+					MENU.ItemEvent(item, ()=> LOADER.OpenDeviceByFile(file));
 
 					if (!isGrid) {
 						cache[file] = item;
@@ -764,11 +766,13 @@ const MENU = {
 						info.style.lineHeight = "16px";
 						info.style.fontWeight = "400";
 						item.appendChild(info);
+
+						if (title === null || title.length === 0) { 
+							info.style.paddingTop = "16px";
+						}
 					}
 
-					MENU.ItemEvent(item, ()=> {
-						LOADER.OpenUserByFile(file);
-					});
+					MENU.ItemEvent(item, ()=> LOADER.OpenUserByFile(file));
 
 					if (!isGrid) {
 						cache[file] = item;

@@ -46,7 +46,7 @@ internal static class NetBios {
 
     public static async Task<string> GetBiosNameAsync(string host, int timeout = 1000) {
         IPAddress ip = IPAddress.Parse(host);
-        if (!ip.IsIpAddressPrivate()) { return String.Empty; }
+        if (!ip.IsPrivate()) { return String.Empty; }
 
         using UdpClient client = new UdpClient();
         try {

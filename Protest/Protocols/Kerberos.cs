@@ -105,7 +105,7 @@ internal static class Kerberos {
                 try {
                     if (IPAddress.IsLoopback(ip.Address)) continue;
                     if (ip.Address.AddressFamily != AddressFamily.InterNetwork) continue;
-                    if (IsApipa(ip.Address)) continue;
+                    if (ip.Address.IsApipa()) continue;
 
                     IPAddress subnet = IpTools.GetNetworkAddress(ip.Address, ip.IPv4Mask);
                     IPAddress broadcast = IpTools.GetBroadcastAddress(ip.Address, ip.IPv4Mask);
@@ -137,15 +137,6 @@ internal static class Kerberos {
             }
 
         return null;
-    }
-
-    private static bool IsApipa(IPAddress address) {
-        if (address.AddressFamily != AddressFamily.InterNetwork) return false;
-        byte[] bytes = address.GetAddressBytes();
-
-        if (bytes[0] == 169 && bytes[1] == 254) { return true; }
-
-        return false;
     }
 
     [SupportedOSPlatform("windows")]

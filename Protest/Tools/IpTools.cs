@@ -6,10 +6,10 @@ using System.Net.NetworkInformation;
 namespace Protest;
 
 public static class IpTools {
-    public static bool IsIpAddressPrivate(this IPAddress host) {
-        if (host.AddressFamily != AddressFamily.InterNetwork) return false;
+    public static bool IsPrivate(this IPAddress address) {
+        if (address.AddressFamily != AddressFamily.InterNetwork) return false;
 
-        byte[] bytes = host.GetAddressBytes();
+        byte[] bytes = address.GetAddressBytes();
         switch (bytes[0]) {
         case 10:  return true;
         case 127: return true;
@@ -17,6 +17,16 @@ public static class IpTools {
         case 192: return bytes[1] == 168;
         default:  return false;
         }
+    }
+
+    public static bool IsApipa(this IPAddress address) {
+        if (address.AddressFamily != AddressFamily.InterNetwork)
+            return false;
+        byte[] bytes = address.GetAddressBytes();
+
+        if (bytes[0] == 169 && bytes[1] == 254) { return true; }
+
+        return false;
     }
 
     public static bool OnSameBroadcastDomain(this IPAddress host) {
