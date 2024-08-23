@@ -293,11 +293,10 @@ internal static class Issues {
             int rtt = (lifeline[i + 9] << 8) | lifeline[i + 8];
 
             bool closeValues = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 600_000;
-
+            if (closeValues) { continue; }
+ 
             lastTimestamp = timestamp;
             lastRtt = rtt;
-
-            if (closeValues) { continue; }
 
             if (rtt >= 32768) { continue; } //negative number
 
