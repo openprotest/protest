@@ -1115,7 +1115,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 
-		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskUsageArray, printCounterArray] = await Promise.all([
+		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskIoArray, printCounterArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
@@ -1141,7 +1141,7 @@ class DeviceView extends View {
 			})(),
 
 			(async ()=> {
-				const response = await fetch(`lifeline/diskusage/view?file=${this.args.file}`);
+				const response = await fetch(`lifeline/diskio/view?file=${this.args.file}`);
 				const buffer = await response.arrayBuffer();
 				return new Uint8Array(buffer);
 			})(),
@@ -1175,7 +1175,7 @@ class DeviceView extends View {
 
 			oMonth = (oMonth+1).toString().padStart(2,0);
 
-			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskUsageArray, oldPrintCounterArray] = await Promise.all([
+			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskIoArray, oldPrintCounterArray] = await Promise.all([
 				(async ()=> {
 					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
@@ -1201,7 +1201,7 @@ class DeviceView extends View {
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/diskusage/view?file=${this.args.file}&date=${oYear}${oMonth}`);
+					const response = await fetch(`lifeline/disk/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),
@@ -1222,7 +1222,7 @@ class DeviceView extends View {
 			if (oldCpuArray.length > 0) cpuArray = [...oldCpuArray, ...cpuArray];
 			if (oldMemoryArray.length > 0) memoryArray = [...oldMemoryArray, ...memoryArray];
 			if (oldDiskCapacityArray.length > 0) diskCapacityArray = [...oldDiskCapacityArray, ...diskCapacityArray];
-			if (oldDiskUsageArray.length > 0) diskUsageArray = [...oldDiskUsageArray, ...diskUsageArray];
+			if (oldDiskIoArray.length > 0) diskIoArray = [...oldDiskIoArray, ...diskIoArray];
 			if (oldPrintCounterArray.length > 0) printCounterArray = [...oldPrintCounterArray, ...printCounterArray];
 		}
 
@@ -1612,7 +1612,7 @@ class DeviceView extends View {
 			}
 		};
 
-		if (pingArray.length > 0 || cpuArray.length > 0 || memoryArray.length > 0 || diskCapacityArray.length > 0 || diskUsageArray.length > 0) {
+		if (pingArray.length > 0 || cpuArray.length > 0 || memoryArray.length > 0 || diskCapacityArray.length > 0 || diskIoArray.length > 0) {
 			GenerateTimeline();
 		}
 
@@ -1693,13 +1693,13 @@ class DeviceView extends View {
 			data.forEach ((value, key)=> GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg"));
 		}
 
-		if (diskUsageArray.length > 0) {
+		if (diskIoArray.length > 0) {
 			let data = [];
-			for (let i=0; i<diskUsageArray.length-8; i+=9) {
-				const dateBuffer = new Uint8Array(diskUsageArray.slice(i, i+8)).buffer;
+			for (let i=0; i<diskIoArray.length-8; i+=9) {
+				const dateBuffer = new Uint8Array(diskIoArray.slice(i, i+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
-				const usage = diskUsageArray[i+8];
-				data.push({d:date, v:usage});
+				const io = diskIoArray[i+8];
+				data.push({d:date, v:io});
 			}
 
 			GenerateGraph(data, "Disk IO", "percent", "mono/hdd.svg");

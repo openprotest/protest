@@ -258,7 +258,7 @@ internal static class Auth {
                 path.Add("/lifeline/cpu/view");
                 path.Add("/lifeline/memory/view");
                 path.Add("/lifeline/disk/view");
-                path.Add("/lifeline/diskusage/view");
+                path.Add("/lifeline/diskio/view");
                 path.Add("/lifeline/printcount/view");
                 path.Add("/ws/livestats/device");
                 path.Add("/ws/monitor");

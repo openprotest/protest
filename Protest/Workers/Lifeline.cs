@@ -239,7 +239,7 @@ internal static partial class Lifeline {
 
     [SupportedOSPlatform("windows")]
     private static void WmiQuery(string file, string host) {
-        byte cpuUsage = 255, diskUsage = 255;
+        byte cpuUsage = 255, diskIo = 255;
         ulong memoryFree = 0, memoryTotal = 0;
 
         List<byte> diskCaption = new List<byte>();
@@ -271,7 +271,7 @@ internal static partial class Lifeline {
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
                 ulong idle = (ulong)o.GetPropertyValue("PercentIdleTime");
-                diskUsage = (byte)idle;
+                diskIo = (byte)idle;
                 break;
             }
         }
@@ -326,15 +326,15 @@ internal static partial class Lifeline {
                 catch { }
             }
 
-            if (diskUsage != 255) {
-                string dirDiskUsage = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskusage{Data.DELIMITER}{file}";
-                if (!Directory.Exists(dirDiskUsage)) { Directory.CreateDirectory(dirDiskUsage); }
+            if (diskIo != 255) {
+                string dirDiskIo = $"{Data.DIR_LIFELINE}{Data.DELIMITER}diskio{Data.DELIMITER}{file}";
+                if (!Directory.Exists(dirDiskIo)) { Directory.CreateDirectory(dirDiskIo); }
 
                 try {
-                    using FileStream stream = new FileStream($"{dirDiskUsage}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                    using FileStream stream = new FileStream($"{dirDiskIo}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                    writer.Write((byte)(100 - diskUsage)); //1 byte
+                    writer.Write((byte)(100 - diskIo)); //1 byte
                 }
                 catch { }
             }

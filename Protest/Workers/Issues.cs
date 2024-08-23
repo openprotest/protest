@@ -1,33 +1,24 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics.Metrics;
 using System.DirectoryServices;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Lextm.SharpSnmpLib;
-using Lextm.SharpSnmpLib.Security;
 using Protest.Http;
 using Protest.Protocols;
 using Protest.Tools;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using static Protest.Tools.DebitNotes;
 
 namespace Protest.Workers;
 
 internal static class Issues {
+    private const int MIN_LIFELINE_ENTRIES = 12;
     private const double WEAK_PASSWORD_ENTROPY_THRESHOLD = 36.0;
     private const double RTT_STANDARD_DEVIATION_MULTIPLIER = 20.0;
-    private const double RTT_Z_SCORE_THRESHOLD = 3.0;
 
     public enum SeverityLevel {
         info     = 1,
@@ -46,9 +37,7 @@ internal static class Issues {
         public bool   isUser;
         
         public readonly long timestamp;
-        public Issue() {
-            timestamp = DateTime.UtcNow.Ticks;
-        }
+        public Issue() { timestamp = DateTime.UtcNow.Ticks; }
     }
 
     private static TaskWrapper task;
@@ -237,7 +226,7 @@ internal static class Issues {
         }
 
         foreach (KeyValuePair<string, Database.Entry> host in hosts) {
-            if (CheckRTT(host.Value, host.Key, out Issue? issue)) {
+            if (CheckRtt(host.Value, host.Key, out Issue? issue)) {
                 issues.Add(issue.Value);
             }
         }
@@ -258,7 +247,15 @@ internal static class Issues {
         }
 
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
-            //TODO:
+            string target = null;
+            if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
+                target = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
+            }
+
+            if (CheckCpu(device, target, out Issue ? cpuIssue))       { issues.Add(cpuIssue.Value); }
+            if (CheckMemory(device, target, out Issue? memoryIssue))  { issues.Add(memoryIssue.Value); }
+            if (CheckDiskSpace(device, target, out Issue? diskIssue)) { issues.Add(diskIssue.Value); }
+            if (CheckDiskIO(device, target, out Issue? diskIoIssue))  { issues.Add(diskIoIssue.Value); }
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
             if (CheckPrinterComponent(device, out Issue[] printerIssues) && printerIssues is not null) {
@@ -272,10 +269,10 @@ internal static class Issues {
         }
     }
 
-    public static bool CheckRTT(Database.Entry device, string host, out Issue? issue) {
-        byte[] lifeline = Lifeline.LoadFile(host, 14, "rtt");
+    public static bool CheckRtt(Database.Entry device, string host, out Issue? issue) {
+        byte[] lifeline = Lifeline.LoadFile(host, 7, "rtt");
 
-        if (lifeline is null || lifeline.Length < 10 * 8) {
+        if (lifeline is null || lifeline.Length < 10 * MIN_LIFELINE_ENTRIES) {
             issue = null;
             return false;
         }
@@ -285,14 +282,19 @@ internal static class Issues {
         long lastTimestamp = 0;
         int lastRtt = 0;
 
+        long targetDate = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
+
         for (int i = 0; i < lifeline.Length - 9; i += 10) {
             byte[] dateBuffer = new byte[8];
             Array.Copy(lifeline, i, dateBuffer, 0, 8);
             long timestamp = BitConverter.ToInt64(dateBuffer, 0);
+
+            if (timestamp < targetDate) { continue; }
+
             int rtt = (lifeline[i + 9] << 8) | lifeline[i + 8];
 
-            bool closeValues = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 600_000;
-            if (closeValues) { continue; }
+            bool isMinorVariation = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 600_000;
+            if (isMinorVariation) { continue; }
  
             lastTimestamp = timestamp;
             lastRtt = rtt;
@@ -302,7 +304,7 @@ internal static class Issues {
             rttValues.Add(rtt);
         }
 
-        if (rttValues.Count < 8) {
+        if (rttValues.Count < MIN_LIFELINE_ENTRIES) {
             issue = null;
             return false;
         }
@@ -315,7 +317,7 @@ internal static class Issues {
         bool hasSpike = rttValues.Any(rtt => {
             double abs = Math.Abs(rtt - mean);
             if (abs <= 1) return false;
-            if (abs <= standardDeviation * RTT_STANDARD_DEVIATION_MULTIPLIER) return false
+            if (abs <= standardDeviation * RTT_STANDARD_DEVIATION_MULTIPLIER) return false;
             spike = rtt;
             return true;
         });
@@ -333,16 +335,187 @@ internal static class Issues {
             return true;
         }
 
-        double zScore = (rttValues.Last() - mean) / standardDeviation;
-        bool isAnomalous = Math.Abs(zScore) > RTT_Z_SCORE_THRESHOLD;
+        issue = null;
+        return false;
+    }
 
-        if (isAnomalous) {
-            issue = new Issue() {
-                severity = SeverityLevel.warning,
-                message  = "RTT behavior anomaly detected",
-                target   = host,
+    public static bool CheckCpu(Database.Entry device, string target, out Issue? issue) {
+        byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "cpu");
+
+        if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
+            issue = null;
+            return false;
+        }
+
+        List<int> values = new List<int>();
+
+        long lastTimestamp = 0;
+        int lastValue = 0;
+
+        long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+
+        for (int i = 0; i < lifeline.Length - 8; i += 9) {
+            byte[] dateBuffer = new byte[8];
+            Array.Copy(lifeline, i, dateBuffer, 0, 8);
+            long timestamp = BitConverter.ToInt64(dateBuffer, 0);
+
+            if (timestamp < targetDate) { continue; }
+
+            byte value = lifeline[i + 8];
+
+            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
+            if (isMinorVariation) { continue; }
+
+            lastTimestamp = timestamp;
+            lastValue = value;
+
+            values.Add(value);
+        }
+
+        if (values.Count < MIN_LIFELINE_ENTRIES) {
+            issue = null;
+            return false;
+        }
+
+        double mean = Math.Round(values.Average(), 1);
+        if (mean > 80) {
+            issue = new Issue {
+                severity = SeverityLevel.error,
+                message  = $"CPU usage averaged {mean}% over the last 3 days",
+                target   = target,
                 category = "Lifeline analysis",
-                source   = "ICMP",
+                source   = "WMI",
+                file     = device.filename,
+                isUser   = false,
+            };
+            return true;
+        }
+
+        issue = null;
+        return false;
+    }
+    
+    public static bool CheckMemory(Database.Entry device, string target, out Issue? issue) {
+        byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "memory");
+
+        if (lifeline is null || lifeline.Length < 24 * MIN_LIFELINE_ENTRIES) {
+            issue = null;
+            return false;
+        }
+
+        List<int> values = new List<int>();
+
+        long lastTimestamp = 0;
+        int lastValue = 0;
+
+        long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+
+        for (int i = 0; i < lifeline.Length - 23; i += 24) {
+            byte[] buffer = new byte[8];
+
+            Array.Copy(lifeline, i, buffer, 0, 8);
+            long timestamp = BitConverter.ToInt64(buffer, 0);
+
+            if (timestamp < targetDate) { continue; }
+
+            Array.Copy(lifeline, i+8, buffer, 0, 8);
+            ulong used = BitConverter.ToUInt64(buffer, 0);
+
+            Array.Copy(lifeline, i + 16, buffer, 0, 8);
+            ulong total = BitConverter.ToUInt64(buffer, 0);
+
+            int value = (int)(100 * used / total);
+
+            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
+            if (isMinorVariation) { continue; }
+
+            lastTimestamp = timestamp;
+            lastValue = value;
+
+            values.Add(value);
+        }
+
+        if (values.Count < MIN_LIFELINE_ENTRIES) {
+            issue = null;
+            return false;
+        }
+
+        double mean = Math.Round(values.Average(), 1);
+        if (mean > 80) {
+            issue = new Issue {
+                severity = SeverityLevel.error,
+                message  = $"Memory usage averaged {mean}% over the last 3 days",
+                target   = target,
+                category = "Lifeline analysis",
+                source   = "WMI",
+                file     = device.filename,
+                isUser   = false,
+            };
+            return true;
+        }
+        
+        issue = null;
+        return false;
+    }
+
+    public static bool CheckDiskSpace(Database.Entry device, string target, out Issue? issue) {
+        byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
+
+        if (lifeline is null || lifeline.Length <= 12) {
+            issue = null;
+            return false;
+        }
+
+        issue = null;
+        return false;
+    }
+
+    public static bool CheckDiskIO(Database.Entry device, string target, out Issue? issue) {
+        byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "diskio");
+
+        if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
+            issue = null;
+            return false;
+        }
+
+        List<int> values = new List<int>();
+
+        long lastTimestamp = 0;
+        int lastValue = 0;
+
+        long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
+
+        for (int i = 0; i < lifeline.Length - 8; i += 9) {
+            byte[] dateBuffer = new byte[8];
+            Array.Copy(lifeline, i, dateBuffer, 0, 8);
+            long timestamp = BitConverter.ToInt64(dateBuffer, 0);
+
+            if (timestamp < targetDate) { continue; }
+
+            byte value = lifeline[i + 8];
+
+            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
+            if (isMinorVariation) { continue; }
+
+            lastTimestamp = timestamp;
+            lastValue = value;
+
+            values.Add(value);
+        }
+
+        if (values.Count < MIN_LIFELINE_ENTRIES) {
+            issue = null;
+            return false;
+        }
+
+        double mean = Math.Round(values.Average(), 1);
+        if (mean > 80) {
+            issue = new Issue {
+                severity = SeverityLevel.error,
+                message  = $"Disk IO averaged {mean}% over the last 3 days",
+                target   = target,
+                category = "Lifeline analysis",
+                source   = "WMI",
                 file     = device.filename,
                 isUser   = false,
             };
@@ -531,7 +704,7 @@ internal static class Issues {
                     }
                 }
 
-                double entropyRounded =  Math.Round(entropy, 2);
+                double entropyRounded = Math.Round(entropy, 2);
                 issue = new Issue {
                     severity = Issues.SeverityLevel.critical,
                     target   = target,

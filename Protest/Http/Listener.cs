@@ -94,7 +94,7 @@ public sealed class Listener {
         { "/lifeline/memory/view",     (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "memory") },
         { "/lifeline/cpu/view",        (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "cpu") },
         { "/lifeline/disk/view",       (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "disk") },
-        { "/lifeline/diskusage/view",  (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "diskusage") },
+        { "/lifeline/diskio/view",     (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "diskio") },
         { "/lifeline/printcount/view", (ctx, parameters, username) => Workers.Lifeline.ViewFile(parameters, "printcount") },
 
         { "/tools/bulkping",          (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters) },
