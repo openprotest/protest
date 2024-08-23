@@ -288,8 +288,7 @@ internal static class Issues {
         for (int i = 0; i < lifeline.Length - 9; i += 10) {
             byte[] dateBuffer = new byte[8];
             Array.Copy(lifeline, i, dateBuffer, 0, 8);
-            long unixMilliseconds = BitConverter.ToInt64(dateBuffer, 0);
-            long timestamp = DateTimeOffset.FromUnixTimeMilliseconds(unixMilliseconds).Ticks;
+            long timestamp = BitConverter.ToInt64(dateBuffer, 0);
             int rtt = (lifeline[i + 9] << 8) | lifeline[i + 8];
 
             bool closeValues = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 600_000;
@@ -314,8 +313,11 @@ internal static class Issues {
 
         int spike = 0;
         bool hasSpike = rttValues.Any(rtt => {
+            double abs = Math.Abs(rtt - mean);
+            if (abs <= 1) return false;
+            if (abs <= standardDeviation * RTT_STANDARD_DEVIATION_MULTIPLIER) return false
             spike = rtt;
-            return Math.Abs(rtt - mean) > RTT_STANDARD_DEVIATION_MULTIPLIER * standardDeviation;
+            return true;
         });
 
         if (hasSpike) {
@@ -529,10 +531,11 @@ internal static class Issues {
                     }
                 }
 
+                double entropyRounded =  Math.Round(entropy, 2);
                 issue = new Issue {
                     severity = Issues.SeverityLevel.critical,
                     target   = target,
-                    message  = $"Weak password with {Math.Round(entropy, 2)} bits of entropy",
+                    message  = $"Weak password with {entropyRounded} bit{(entropyRounded <= 1 ? "" : "s")} of entropy",
                     category = "Password",
                     source   = "Internal check",
                     file     = entry.filename,
