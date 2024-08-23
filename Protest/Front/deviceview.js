@@ -1159,12 +1159,12 @@ class DeviceView extends View {
 		]);
 
 		const firstInstantBuffer = new Uint8Array(pingArray.slice(0, 8)).buffer;
-		let  firstInstantDate = 0;
+		let firstDateInstant = 0;
 		if (firstInstantBuffer.byteLength >= 8) {
-			firstInstantDate = Number(new DataView(firstInstantBuffer).getBigInt64(0, true));
+			firstDateInstant = Number(new DataView(firstInstantBuffer).getBigInt64(0, true));
 		}
 
-		if (firstInstantDate > Date.now() - DeviceView.DAY_TICKS * 28) {
+		if (firstDateInstant > Date.now() - DeviceView.DAY_TICKS * 28) {
 			let oYear = new Date().getFullYear();
 			let oMonth = new Date().getMonth() - 1;
 

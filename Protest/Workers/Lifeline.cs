@@ -8,9 +8,10 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
-using static Protest.Workers.Issues;
+using System.Data;
 
 namespace Protest.Workers;
 
@@ -61,7 +62,7 @@ internal static partial class Lifeline {
 
         while (true) {
             long startTimeStamp = DateTime.UtcNow.Ticks;
-            
+
             if (lastVersion != DatabaseInstances.devices.version) {
                 mutex.Clear();
                 ping.Clear();
@@ -227,7 +228,7 @@ internal static partial class Lifeline {
 
             return rtt >= 0;
         }
-        catch (IOException ex){
+        catch (IOException ex) {
             Logger.Error(ex);
             return false;
         }
@@ -386,13 +387,13 @@ internal static partial class Lifeline {
             return;
         }
 
-/*
-        Dictionary<string, string> colorantEntity = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[]{ Protocols.Snmp.Oid.PRINTER_MARKER_COLORANT_ENTRY }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-        if (colorantEntity is null || colorantEntity.Count == 0) {
-            return;
-        }
-        bool isColor = colorantEntity.Count > 1;
-*/
+        /*
+                Dictionary<string, string> colorantEntity = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[]{ Protocols.Snmp.Oid.PRINTER_MARKER_COLORANT_ENTRY }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+                if (colorantEntity is null || colorantEntity.Count == 0) {
+                    return;
+                }
+                bool isColor = colorantEntity.Count > 1;
+        */
 
         Dictionary<string, string> printCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
         if (printCounters is null || printCounters.Count == 0) {
@@ -432,9 +433,13 @@ internal static partial class Lifeline {
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("file", out string file);
+        parameters.TryGetValue("date", out string date);
+
         if (String.IsNullOrEmpty(file)) { return null; }
 
-        parameters.TryGetValue("date", out string date);
+        return ViewFile(file, date, type);
+    }
+    public static byte[] ViewFile(string file, string date, string type) {
         if (String.IsNullOrEmpty(date)) {
             DateTime now = DateTime.Now;
             date = now.ToString("yyyyMM");
@@ -452,9 +457,13 @@ internal static partial class Lifeline {
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("host", out string host);
+        parameters.TryGetValue("date", out string date);
+
         if (String.IsNullOrEmpty(host)) { return null; }
 
-        parameters.TryGetValue("date", out string date);
+        return ViewPing(host, date);
+    }
+    public static byte[] ViewPing(string host, string date) {
         if (String.IsNullOrEmpty(date)) {
             DateTime now = DateTime.Now;
             date = now.ToString("yyyyMM");
@@ -466,5 +475,51 @@ internal static partial class Lifeline {
         catch {
             return null;
         }
+    }
+
+    public static byte[] LoadFile(string file, int upToDays, string type) {
+        DateTime now = DateTime.Now;
+        string date = now.ToString("yyyyMM");
+
+        byte[] latest;
+        try {
+            latest = File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}{type}{Data.DELIMITER}{file}{Data.DELIMITER}{date}");
+        }
+        catch {
+            latest = null;
+        }
+
+        long firstDateInstant = 0;
+
+        if (latest is not null && latest.Length >= 8) {
+            byte[] dateBuffer = new byte[8];
+            Array.Copy(latest, 0, dateBuffer, 0, 8);
+            long unixMilliseconds = BitConverter.ToInt64(dateBuffer, 0);
+            firstDateInstant = DateTimeOffset.FromUnixTimeMilliseconds(unixMilliseconds).Ticks;
+        }
+
+        long thresholdTime = DateTime.UtcNow.AddDays(-upToDays).Ticks;
+
+        if (firstDateInstant > thresholdTime) {
+            DateTime lastMonth = now.AddMonths(-1);
+            string previousDate = lastMonth.ToString("yyyyMM");
+
+            byte[] old;
+            try {
+                old = File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}{type}{Data.DELIMITER}{file}{Data.DELIMITER}{previousDate}");
+            }
+            catch {
+                old = null;
+            }
+
+            if (latest is null) {
+                return old;
+            }
+            else if (old is not null) {
+                return old.Concat(latest).ToArray();
+            }
+        }
+
+        return latest;
     }
 }

@@ -8,6 +8,7 @@ class Issues extends List {
 
 	static CATEGORY_ICON = {
 		"Database"          : "url(mono/database.svg)",
+		"Lifeline analysis" : "url(mono/lifeline.svg)",
 		"Directory"         : "url(mono/directory.svg)",
 		"Password"          : "url(mono/lock.svg)",
 		"Printer component" : "url(mono/printer.svg)",

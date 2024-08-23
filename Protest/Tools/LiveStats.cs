@@ -15,7 +15,6 @@ using System.Timers;
 using Protest.Protocols;
 using Protest.Workers;
 using Lextm.SharpSnmpLib;
-using Lextm.SharpSnmpLib.Security;
 
 namespace Protest.Tools;
 
