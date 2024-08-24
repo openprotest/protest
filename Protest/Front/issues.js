@@ -7,6 +7,7 @@ class Issues extends List {
 	};
 
 	static CATEGORY_ICON = {
+		"Network"           : "url(mono/earth.svg)",
 		"Database"          : "url(mono/database.svg)",
 		"Directory"         : "url(mono/directory.svg)",
 		"Password"          : "url(mono/lock.svg)",
@@ -37,7 +38,7 @@ class Issues extends List {
 		this.AddCssDependencies("list.css");
 		this.AddCssDependencies("issues.css");
 
-		const columns = ["severity", "issue", "target", "category", "source"];
+		const columns = ["severity", "issue", "entry", "category", "source"];
 		this.SetupColumns(columns);
 
 		this.columnsElements[0].style.width = "10%";
@@ -61,7 +62,9 @@ class Issues extends List {
 		this.SetupToolbar();
 		this.scanButton = this.AddToolbarButton("Scan network", "mono/scannet.svg?light");
 		this.AddToolbarSeparator();
+		this.filterButton = this.SetupFilter();
 		this.SetupFind();
+		this.AddToolbarSeparator();
 
 		this.critButton = this.AddToolbarButton("Critical", "mono/critical.svg?light");
 		this.errorButton = this.AddToolbarButton("Error", "mono/error.svg?light");
@@ -82,7 +85,7 @@ class Issues extends List {
 
 		this.critButton.onclick = ()=> this.CriticalFilterToggle();
 		this.errorButton.onclick = ()=> this.ErrorFilterToggle();
-		this.warnButton.onclick  = ()=> this.WarningFilterToggle();
+		this.warnButton.onclick = ()=> this.WarningFilterToggle();
 		this.infoButton.onclick = ()=> this.InfoFilterToggle();
 	
 		if (this.args.find && this.args.find.length > 0) {
@@ -95,42 +98,6 @@ class Issues extends List {
 
 		this.UpdateAuthorization();
 		this.Connect();
-	}
-
-	CriticalFilterToggle() {
-		this.args.critFilter = !this.args.critFilter;
-		this.UpdateFiltersUI();
-		this.RefreshList();
-	}
-
-	ErrorFilterToggle() {
-		this.args.errorFilter = !this.args.errorFilter;
-		this.UpdateFiltersUI();
-		this.RefreshList();
-	}
-
-	WarningFilterToggle() {
-		this.args.warnFilter = !this.args.warnFilter;
-		this.UpdateFiltersUI();
-		this.RefreshList();
-	}
-
-	InfoFilterToggle() {
-		this.args.infoFilter = !this.args.infoFilter;
-		this.UpdateFiltersUI();
-		this.RefreshList();
-	}
-
-	UpdateFiltersUI() {
-		this.critButton.style.backgroundImage  = this.args.critFilter ? "url(mono/critical.svg)" : "url(mono/critical.svg?light)";
-		this.errorButton.style.backgroundImage = this.args.errorFilter ? "url(mono/error.svg)" : "url(mono/error.svg?light)";
-		this.warnButton.style.backgroundImage  = this.args.warnFilter ? "url(mono/warning.svg)" : "url(mono/warning.svg?light)";
-		this.infoButton.style.backgroundImage  = this.args.infoFilter ? "url(mono/info.svg)" : "url(mono/info.svg?light)";
-
-		this.critButton.style.backgroundColor  = this.args.critFilter ? "var(--clr-critical)" : "";
-		this.errorButton.style.backgroundColor = this.args.errorFilter ? "var(--clr-error)" : "";
-		this.warnButton.style.backgroundColor  = this.args.warnFilter ? "var(--clr-warning)" : "";
-		this.infoButton.style.backgroundColor  = this.args.infoFilter ? "rgb(32,148,240)" : "";
 	}
 
 	UpdateAuthorization() { //overrides
@@ -148,51 +115,6 @@ class Issues extends List {
 			}
 			catch (ex) {};
 		}
-	}
-
-	Connect() {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
-
-		if (this.ws != null) {
-			try {
-				this.ws.close();
-			}
-			catch (ex) {};
-		}
-
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
-
-		this.ws.onopen = ()=> {
-			this.scanButton.disabled = true;
-			this.statusLabel.textContent = "Scanning...";
-			this.statusLabel.classList.add("issues-scanning");
-		};
-
-		this.ws.onmessage = event=> {
-			const json = JSON.parse(event.data);
-			for (let i=0; i<json.length; i++) {
-				this.AddIssue(json[i]);
-			}
-
-			if (this.link) {
-				this.counter.textContent = this.list.childNodes.length === this.link.length
-					? this.link.length
-					: `${this.list.childNodes.length} / ${this.link.length}`;
-			}
-			else {
-				this.counter.textContent = "0";
-			}
-		};
-
-		this.ws.onclose = ()=> {
-			this.scanButton.disabled = false;
-			this.statusLabel.textContent = "";
-			this.statusLabel.classList.remove("issues-scanning");
-			this.ws = null;
-		};
-
-		this.ws.onerror = error=> {};
 	}
 
 	RefreshList() { //overrides
@@ -279,35 +201,209 @@ class Issues extends List {
 		this.OnUiReady();
 	}
 
+	SetupFilter() { //overrides
+		if (!this.toolbar) return null;
+
+		const filterButton = this.AddToolbarButton(null, "mono/filter.svg?light");
+
+		const filterMenu = document.createElement("div");
+		filterMenu.className = "win-toolbar-submenu";
+		filterButton.appendChild(filterMenu);
+
+		const findFilter = document.createElement("input");
+		findFilter.type = "text";
+		findFilter.placeholder = "Find";
+		filterMenu.appendChild(findFilter);
+
+		const filtersList = document.createElement("div");
+		filtersList.className = "no-results-small";
+
+		filterMenu.appendChild(filtersList);
+
+		const ClearSelection = ()=> filtersList.childNodes.forEach(o=> o.style.backgroundColor = "");
+
+		const Refresh = ()=> {
+			let types =  Object.keys(Issues.CATEGORY_ICON);
+
+			filtersList.textContent = "";
+			filterMenu.style.height = `${32 + types.length * 34}px`;
+
+			for (let i = 0; i < types.length; i++) {
+				const newType = document.createElement("div");
+				newType.textContent = types[i];
+				filtersList.appendChild(newType);
+
+				newType.style.backgroundImage = Issues.CATEGORY_ICON[types[i]];
+
+				if (types[i] === this.args.filter) {
+					newType.style.backgroundColor = "var(--clr-select)";
+					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
+				}
+
+				newType.onclick = ()=> {
+					ClearSelection();
+
+					if (this.args.filter === types[i]) {
+						this.args.filter = "";
+						filterButton.style.borderBottom = "";
+					}
+					else {
+						this.args.filter = types[i];
+						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
+						newType.style.backgroundColor = "var(--clr-select)";
+					}
+
+					this.RefreshList();
+				};
+			}
+		};
+
+		findFilter.onchange = findFilter.oninput = ()=> Refresh();
+
+		findFilter.onkeydown = event=> {
+			if (event.key === "Escape") {
+				findFilter.value = "";
+				findFilter.onchange();
+			}
+		};
+
+		filterButton.ondblclick = ()=> {
+			this.args.filter = "";
+			filterButton.style.borderBottom = "";
+			ClearSelection();
+			this.RefreshList();
+
+		};
+
+		filterButton.onfocus = ()=> {
+			if (this.popOutWindow) {
+				filterButton.firstChild.style.maxHeight = this.content.clientHeight - 32 + "px";
+			}
+			else {
+				filterButton.firstChild.style.maxHeight = container.clientHeight - this.win.offsetTop - 96 + "px";
+			}
+		};
+
+		filterMenu.onclick = filterMenu.ondblclick = event=> {
+			event.stopPropagation();
+		};
+
+		Refresh();
+
+		return filterButton;
+	}
+
+	CriticalFilterToggle() {
+		this.args.critFilter = !this.args.critFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	ErrorFilterToggle() {
+		this.args.errorFilter = !this.args.errorFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	WarningFilterToggle() {
+		this.args.warnFilter = !this.args.warnFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	InfoFilterToggle() {
+		this.args.infoFilter = !this.args.infoFilter;
+		this.UpdateFiltersUI();
+		this.RefreshList();
+	}
+
+	UpdateFiltersUI() {
+		this.critButton.style.backgroundImage  = this.args.critFilter ? "url(mono/critical.svg)" : "url(mono/critical.svg?light)";
+		this.errorButton.style.backgroundImage = this.args.errorFilter ? "url(mono/error.svg)" : "url(mono/error.svg?light)";
+		this.warnButton.style.backgroundImage  = this.args.warnFilter ? "url(mono/warning.svg)" : "url(mono/warning.svg?light)";
+		this.infoButton.style.backgroundImage  = this.args.infoFilter ? "url(mono/info.svg)" : "url(mono/info.svg?light)";
+
+		this.critButton.style.backgroundColor  = this.args.critFilter ? "var(--clr-critical)" : "";
+		this.errorButton.style.backgroundColor = this.args.errorFilter ? "var(--clr-error)" : "";
+		this.warnButton.style.backgroundColor  = this.args.warnFilter ? "var(--clr-warning)" : "";
+		this.infoButton.style.backgroundColor  = this.args.infoFilter ? "rgb(32,148,240)" : "";
+	}
+
+	Connect() {
+		let server = window.location.href.replace("https://", "").replace("http://", "");
+		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+
+		if (this.ws != null) {
+			try {
+				this.ws.close();
+			}
+			catch (ex) {};
+		}
+
+		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
+
+		this.ws.onopen = ()=> {
+			this.scanButton.disabled = true;
+			this.statusLabel.textContent = "Scanning...";
+			this.statusLabel.classList.add("issues-scanning");
+		};
+
+		this.ws.onmessage = event=> {
+			const json = JSON.parse(event.data);
+			for (let i=0; i<json.length; i++) {
+				this.AddIssue(json[i]);
+			}
+
+			if (this.link) {
+				this.counter.textContent = this.list.childNodes.length === this.link.length
+					? this.link.length
+					: `${this.list.childNodes.length} / ${this.link.length}`;
+			}
+			else {
+				this.counter.textContent = "0";
+			}
+		};
+
+		this.ws.onclose = ()=> {
+			this.scanButton.disabled = false;
+			this.statusLabel.textContent = "";
+			this.statusLabel.classList.remove("issues-scanning");
+			this.ws = null;
+		};
+
+		this.ws.onerror = error=> {};
+	}
+
 	AddIssue(issue) {
 		const key =  Date.now() + Math.random() * 1000;
 
-		const entry = {
+		const newIssue = {
 			key     : {v: key},
 			severity: {v: issue.severity},
 			issue   : {v: issue.issue},
-			target  : {v: issue.target},
+			entry   : {v: issue.entry},
+			type    : {v: issue.category},
 			category: {v: issue.category},
 			source  : {v: issue.source},
 			isUser  : {v: issue.isUser},
 			file    : {v: issue.file},
 		};
 
-		this.link.data[key] = entry;
+		this.link.data[key] = newIssue;
 		this.link.length++;
 
-		this.AddIssueElement(entry, key);
+		this.AddIssueElement(newIssue, key);
 	}
 
-	AddIssueElement(entry, key) {
-		switch (entry.severity.v) {
+	AddIssueElement(issue, key) {
+		switch (issue.severity.v) {
 		case 1: if (!this.args.infoFilter)  { return; } break;
 		case 2: if (!this.args.warnFilter) { return; } break;
 		case 3: if (!this.args.errorFilter)  { return; } break;
 		case 4: if (!this.args.critFilter)  { return; } break;
 		}
 
-		if (!this.MatchFilters(entry)) {
+		if (!this.MatchFilters(issue)) {
 			return;
 		}
 	
@@ -330,6 +426,12 @@ class Issues extends List {
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
+				if (json.status === "started") {
+					this.list.textContent = "";
+					this.link.data = [];
+					this.link.length = 0;
+				}
+
 				if (this.ws === null) {
 					this.Connect();
 				}
@@ -340,24 +442,24 @@ class Issues extends List {
 		});
 	}
 
-	InflateElement(element, entry) { //overrides
-		element.classList.add("issues-" + Issues.SEVERITY_TEXT[entry.severity.v].toLowerCase());
+	InflateElement(element, issue) { //overrides
+		element.classList.add("issues-" + Issues.SEVERITY_TEXT[issue.severity.v].toLowerCase());
 
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
 		element.appendChild(icon);
 
 		for (let i = 0; i < this.columnsElements.length; i++) {
-			if (!(this.columnsElements[i].textContent in entry)) continue;
+			if (!(this.columnsElements[i].textContent in issue)) continue;
 			const propertyName = this.columnsElements[i].textContent;
 
 			let value;
 			if (propertyName === "severity") {
-				value = Issues.SEVERITY_TEXT[entry[propertyName].v];
+				value = Issues.SEVERITY_TEXT[issue[propertyName].v];
 				icon.style.left = this.columnsElements[i].style.left;
 			}
 			else {
-				value = entry[propertyName].v;
+				value = issue[propertyName].v;
 			}
 
 			if (value.length === 0) continue;
@@ -380,12 +482,12 @@ class Issues extends List {
 				newAttr.style.backgroundPosition = "0px 50%";
 				newAttr.style.backgroundRepeat = "no-repeat";
 			}
-			else if (propertyName === "target") {
+			else if (propertyName === "entry") {
 				newAttr.style.left = this.columnsElements[i].style.left;
 				newAttr.style.width = this.columnsElements[i].style.width;
 
 				newAttr.style.paddingLeft = "24px";
-				newAttr.style.backgroundImage = entry.isUser.v ? "url(mono/user.svg)" : "url(mono/gear.svg)";
+				newAttr.style.backgroundImage = issue.isUser.v ? "url(mono/user.svg)" : "url(mono/gear.svg)";
 				newAttr.style.backgroundSize = "20px 20px";
 				newAttr.style.backgroundPosition = "0px 50%";
 				newAttr.style.backgroundRepeat = "no-repeat";
@@ -405,7 +507,7 @@ class Issues extends List {
 				}
 			}
 
-			this.args.select = entry.key.v;
+			this.args.select = issue.key.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
 
@@ -418,13 +520,13 @@ class Issues extends List {
 		element.ondblclick = event=> {
 			event.stopPropagation();
 			const file = element.getAttribute("id");
-			const entry = this.link.data[file];
-			if (entry) {
-				if (entry.isUser.v) {
-					LOADER.OpenUserByFile(entry.file.v);
+			const selectedIssue = this.link.data[file];
+			if (selectedIssue) {
+				if (selectedIssue.isUser.v) {
+					LOADER.OpenUserByFile(selectedIssue.file.v);
 				}
 				else {
-					LOADER.OpenDeviceByFile(entry.file.v);
+					LOADER.OpenDeviceByFile(selectedIssue.file.v);
 				}
 			}
 		};

@@ -35,7 +35,7 @@ internal static class Issues {
     public struct Issue {
         public SeverityLevel severity;
         public string message;
-        public string target;
+        public string entry;
         public string category;
         public string source;
         public string file;
@@ -52,14 +52,12 @@ internal static class Issues {
 
     public static byte[] ToLiveStatsJsonBytes(this Issue issue) => JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> {
         { issue.severity.ToString(), issue.message },
-        { "target", issue.target },
         { "source", issue.source },
     });
 
     public static byte[] Start(string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
-        issues?.Clear();
         issues = new ConcurrentBag<Issue>();
 
         Thread thread = new Thread(() => Scan());
@@ -73,7 +71,7 @@ internal static class Issues {
 
         task.thread.Start();
 
-        return "{\"status\":\"running\"}"u8.ToArray(); ;
+        return "{\"status\":\"started\"}"u8.ToArray(); ;
     }
 
     public static byte[] Stop(string origin) {
@@ -116,17 +114,13 @@ internal static class Issues {
         await Task.Delay(200);
 
         try {
-            while (ws.State == WebSocketState.Open && task is not null) {
+            while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/issues")) {
                     ctx.Response.Close();
                     return;
                 }
 
-                if (lastIssuesCount == issues.Count) {
-                    continue;
-                }
-
-                lastIssuesCount = issues.Count;
+                lastIssuesCount = issues?.Count ?? 0;
 
                 IEnumerable<Issue> filtered = issues.Where(o => o.timestamp > lastTimestamp);
 
@@ -134,7 +128,7 @@ internal static class Issues {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
                         severity = o.severity,
                         issue    = o.message,
-                        target   = o.target,
+                        entry    = o.entry,
                         category = o.category,
                         source   = o.source,
                         file     = o.file,
@@ -144,6 +138,10 @@ internal static class Issues {
                     await WsWriteText(ws, bytes);
 
                     lastTimestamp = filtered.Max(o => o.timestamp);
+                }
+
+                if (task is null) {
+                    break;
                 }
 
                 await Task.Delay(5_000);
@@ -163,6 +161,8 @@ internal static class Issues {
     private static void Scan() {
         ScanUsers();
         ScanDevices();
+
+        task = null;
     }
 
     private static void ScanUsers() {
@@ -202,12 +202,12 @@ internal static class Issues {
                     if (hosts.ContainsKey(ips[i])) {
                         issues.Add(new Issue {
                             severity = SeverityLevel.info,
-                            message = "IP address is duplicated in various records",
-                            target = ips[i],
+                            message  = "IP address is duplicated in various records",
+                            entry    = ips[i],
                             category = "Database",
-                            source = "Internal check",
-                            file = device.Value.filename,
-                            isUser = false,
+                            source   = "Internal check",
+                            file     = device.Value.filename,
+                            isUser   = false,
                         });
 
                         continue;
@@ -240,26 +240,26 @@ internal static class Issues {
         }
 
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
-            string target = null;
+            string ipString = null;
             if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
-                target = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
+                ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
             }
 
-            if (CheckCpu(device, target, out Issue ? cpuIssue)) {
+            if (CheckCpu(device, ipString, out Issue ? cpuIssue)) {
                 issues.Add(cpuIssue.Value);
             }
 
-            if (CheckMemory(device, target, out Issue? memoryIssue)) {
+            if (CheckMemory(device, ipString, out Issue? memoryIssue)) {
                 issues.Add(memoryIssue.Value);
             }
 
-            if (CheckDiskSpace(device, target, out Issue[] diskIssues) && diskIssues is not null) {
+            if (CheckDiskSpace(device, ipString, out Issue[] diskIssues) && diskIssues is not null) {
                 for (int i = 0; i < diskIssues.Length; i++) {
                     issues.Add(diskIssues[i]);
                 }
             }
 
-            if (CheckDiskIO(device, target, out Issue? diskIoIssue))  {
+            if (CheckDiskIO(device, ipString, out Issue? diskIoIssue))  {
                 issues.Add(diskIoIssue.Value);
             }
         }
@@ -332,7 +332,7 @@ internal static class Issues {
             issue = new Issue() {
                 severity = SeverityLevel.info,
                 message  = $"RTT spike detected at {spike}ms",
-                target   = host,
+                entry    = host,
                 category = "Round-trip time",
                 source   = "ICMP",
                 file     = device.filename,
@@ -345,7 +345,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckCpu(Database.Entry device, string target, out Issue? issue) {
+    public static bool CheckCpu(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "cpu");
 
         if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
@@ -388,7 +388,7 @@ internal static class Issues {
             issue = new Issue {
                 severity = SeverityLevel.error,
                 message  = $"CPU utilization averaged {mean}% over the last 3 days",
-                target   = target,
+                entry    = host,
                 category = "CPU utilization",
                 source   = "WMI",
                 file     = device.filename,
@@ -401,7 +401,7 @@ internal static class Issues {
         return false;
     }
     
-    public static bool CheckMemory(Database.Entry device, string target, out Issue? issue) {
+    public static bool CheckMemory(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "memory");
 
         if (lifeline is null || lifeline.Length < 24 * MIN_LIFELINE_ENTRIES) {
@@ -451,7 +451,7 @@ internal static class Issues {
             issue = new Issue {
                 severity = SeverityLevel.error,
                 message  = $"Memory usage averaged {mean}% over the last 3 days",
-                target   = target,
+                entry    = host,
                 category = "Memory usage",
                 source   = "WMI",
                 file     = device.filename,
@@ -464,7 +464,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskSpace(Database.Entry device, string target, out Issue[] issues) {
+    public static bool CheckDiskSpace(Database.Entry device, string host, out Issue[] issues) {
         byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
 
         if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
@@ -517,7 +517,7 @@ internal static class Issues {
             List<(long timestamp, double percentUsed)> usageData = diskEntry.Value;
 
             if (usageData.Count == 0) { continue; }
-            if (CheckDiskSpace(device.filename, target, usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
+            if (CheckDiskSpace(device.filename, host, usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
                 issuesList.Add(diskIssue.Value);
                 continue;
             }
@@ -557,7 +557,7 @@ internal static class Issues {
                 issuesList.Add(new Issue {
                     severity = SeverityLevel.warning,
                     message  = $"Disk {diskEntry.Key} used space is predicted to exceed {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
-                    target   = target,
+                    entry    = host,
                     category = "Disk space",
                     source   = "WMI",
                     file     = device.filename,
@@ -575,7 +575,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskIO(Database.Entry device, string target, out Issue? issue) {
+    public static bool CheckDiskIO(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "diskio");
 
         if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
@@ -618,7 +618,7 @@ internal static class Issues {
             issue = new Issue {
                 severity = SeverityLevel.error,
                 message  = $"Disk I/O averaged {mean}% over the last 3 days",
-                target   = target,
+                entry    = host,
                 category = "Disk I/O",
                 source   = "WMI",
                 file     = device.filename,
@@ -647,7 +647,7 @@ internal static class Issues {
                 list.Add(new Issue {
                     severity = SeverityLevel.warning,
                     message  = $"{username.value} is not a domain user",
-                    target   = username.value,
+                    entry    = username.value,
                     category = "Directory",
                     source   = "Kerberos",
                     file     = user.filename,
@@ -663,7 +663,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = SeverityLevel.info,
                         message  = $"User {username.value} is disabled",
-                        target   = username.value,
+                        entry    = username.value,
                         category = "Directory",
                         source   = "Kerberos",
                         file     = user.filename,
@@ -682,7 +682,7 @@ internal static class Issues {
                         list.Add(new Issue {
                             severity = SeverityLevel.error,
                             message  = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
-                            target   = username.value,
+                            entry    = username.value,
                             category = "Password",
                             source   = "Kerberos",
                             file     = user.filename,
@@ -693,7 +693,7 @@ internal static class Issues {
                         list.Add(new Issue {
                             severity = SeverityLevel.warning,
                             message  = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
-                            target   = username.value,
+                            entry    = username.value,
                             category = "Password",
                             source   = "Kerberos",
                             file     = user.filename,
@@ -711,7 +711,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = SeverityLevel.warning,
                         message  = $"User {username.value} is locked out",
-                        target   = username.value,
+                        entry    = username.value,
                         category = "Directory",
                         source   = "Kerberos",
                         file     = user.filename,
@@ -726,7 +726,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = SeverityLevel.info,
                         message  = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
-                        target   = username.value,
+                        entry    = username.value,
                         category = "Directory",
                         source   = "Kerberos",
                         file     = user.filename,
@@ -740,7 +740,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = SeverityLevel.info,
                         message  = $"Last logoff: {DateTime.FromFileTime(lastLogOffTime)}",
-                        target   = username.value,
+                        entry    = username.value,
                         category = "Directory",
                         source   = "Kerberos",
                         file     = user.filename,
@@ -756,7 +756,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = SeverityLevel.info,
                         message  = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
-                        target   = username.value,
+                        entry    = username.value,
                         category = "Directory",
                         source   = "Kerberos",
                         file     = user.filename,
@@ -812,7 +812,7 @@ internal static class Issues {
                 double entropyRounded = Math.Round(entropy, 2);
                 issue = new Issue {
                     severity = Issues.SeverityLevel.critical,
-                    target   = target,
+                    entry    = target,
                     message  = $"Weak password with {entropyRounded} bit{(entropyRounded <= 1 ? "" : "s")} of entropy",
                     category = "Password",
                     source   = "Internal check",
@@ -833,7 +833,7 @@ internal static class Issues {
         if (percent <= 1) {
             issue = new Issue {
                 severity = SeverityLevel.critical,
-                target   = target,
+                entry    = target,
                 message  = message,
                 category = "Disk space",
                 source   = "WMI",
@@ -846,7 +846,7 @@ internal static class Issues {
         if (percent <= 5) {
             issue = new Issue {
                 severity = SeverityLevel.error,
-                target   = target,
+                entry    = target,
                 message  = message,
                 category = "Disk space",
                 source   = "WMI",
@@ -859,7 +859,7 @@ internal static class Issues {
         if (percent < 15) {
             issue = new Issue {
                 severity = SeverityLevel.warning,
-                target   = target,
+                entry    = target,
                 message  = message,
                 category = "Disk space",
                 source   = "WMI",
@@ -941,7 +941,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = used < 5 ? SeverityLevel.error : SeverityLevel.warning,
                         message  = $"{used}% {componentNameArray[i][1]}",
-                        target   = ipAddress.ToString(),
+                        entry    = ipAddress.ToString(),
                         category = "Printer component",
                         source   = "SNMP",
                         file     = file,
