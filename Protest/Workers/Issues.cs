@@ -523,13 +523,13 @@ internal static class Issues {
         foreach (KeyValuePair<string, List<(long timestamp, double percentUsed)>> diskEntry in diskData) {
             List<(long timestamp, double percentUsed)> usageData = diskEntry.Value;
 
-            if (usageData.Count == 0) continue;
+            if (usageData.Count == 0) { continue; }
             if (CheckDiskSpace(device.filename, target, usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
                 issuesList.Add(diskIssue.Value);
                 continue;
             }
 
-            if (usageData.Count < MIN_LIFELINE_ENTRIES) continue;
+            if (usageData.Count < MIN_LIFELINE_ENTRIES) { continue; }
 
             long firstTimestamp = usageData[0].timestamp;
             List<(double timestamp, double percentUsed)> normalizedData = usageData.Select(data => (
@@ -563,7 +563,7 @@ internal static class Issues {
 
                 issuesList.Add(new Issue {
                     severity = SeverityLevel.warning,
-                    message  = $"Disk {diskEntry.Key} usage is predicted to exceed {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    message  = $"Disk {diskEntry.Key} used space is predicted to exceed {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
                     target   = target,
                     category = "Disk space",
                     source   = "WMI",
@@ -624,9 +624,9 @@ internal static class Issues {
         if (mean > DISK_IO_THRESHOLD) {
             issue = new Issue {
                 severity = SeverityLevel.error,
-                message  = $"Disk IO averaged {mean}% over the last 3 days",
+                message  = $"Disk I/O averaged {mean}% over the last 3 days",
                 target   = target,
-                category = "Disk IO",
+                category = "Disk I/O",
                 source   = "WMI",
                 file     = device.filename,
                 isUser   = false,

@@ -1702,7 +1702,7 @@ class DeviceView extends View {
 				data.push({d:date, v:io});
 			}
 
-			GenerateGraph(data, "Disk IO", "percent", "mono/hdd.svg");
+			GenerateGraph(data, "Disk I/O", "percent", "mono/hdd.svg");
 		}
 
 		if (printCounterArray.length > 0) {
