@@ -16,9 +16,14 @@ using Protest.Tools;
 namespace Protest.Workers;
 
 internal static class Issues {
-    private const int MIN_LIFELINE_ENTRIES = 12;
+    private const int MIN_LIFELINE_ENTRIES = 10;
     private const double WEAK_PASSWORD_ENTROPY_THRESHOLD = 36.0;
     private const double RTT_STANDARD_DEVIATION_MULTIPLIER = 20.0;
+
+    private const int CPU_UTILIZATION_THRESHOLD = 80;
+    private const int MEMORY_USAGE_THRESHOLD = 85;
+    private const int DISK_USAGE_THRESHOLD = 85;
+    private const int DISK_IO_THRESHOLD = 80;
 
     public enum SeverityLevel {
         info     = 1,
@@ -252,10 +257,23 @@ internal static class Issues {
                 target = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
             }
 
-            if (CheckCpu(device, target, out Issue ? cpuIssue))       { issues.Add(cpuIssue.Value); }
-            if (CheckMemory(device, target, out Issue? memoryIssue))  { issues.Add(memoryIssue.Value); }
-            if (CheckDiskSpace(device, target, out Issue? diskIssue)) { issues.Add(diskIssue.Value); }
-            if (CheckDiskIO(device, target, out Issue? diskIoIssue))  { issues.Add(diskIoIssue.Value); }
+            if (CheckCpu(device, target, out Issue ? cpuIssue)) {
+                issues.Add(cpuIssue.Value);
+            }
+
+            if (CheckMemory(device, target, out Issue? memoryIssue)) {
+                issues.Add(memoryIssue.Value);
+            }
+
+            if (CheckDiskSpace(device, target, out Issue[] diskIssues) && diskIssues is not null) {
+                for (int i = 0; i < diskIssues.Length; i++) {
+                    issues.Add(diskIssues[i]);
+                }
+            }
+
+            if (CheckDiskIO(device, target, out Issue? diskIoIssue))  {
+                issues.Add(diskIoIssue.Value);
+            }
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
             if (CheckPrinterComponent(device, out Issue[] printerIssues) && printerIssues is not null) {
@@ -327,7 +345,7 @@ internal static class Issues {
                 severity = SeverityLevel.info,
                 message  = $"RTT spike detected at {spike}ms",
                 target   = host,
-                category = "Lifeline analysis",
+                category = "Round-trip time",
                 source   = "ICMP",
                 file     = device.filename,
                 isUser   = false,
@@ -378,12 +396,12 @@ internal static class Issues {
         }
 
         double mean = Math.Round(values.Average(), 1);
-        if (mean > 80) {
+        if (mean >= CPU_UTILIZATION_THRESHOLD) {
             issue = new Issue {
                 severity = SeverityLevel.error,
-                message  = $"CPU usage averaged {mean}% over the last 3 days",
+                message  = $"CPU utilization averaged {mean}% over the last 3 days",
                 target   = target,
-                category = "Lifeline analysis",
+                category = "CPU utilization",
                 source   = "WMI",
                 file     = device.filename,
                 isUser   = false,
@@ -441,12 +459,12 @@ internal static class Issues {
         }
 
         double mean = Math.Round(values.Average(), 1);
-        if (mean > 80) {
+        if (mean > MEMORY_USAGE_THRESHOLD) {
             issue = new Issue {
                 severity = SeverityLevel.error,
                 message  = $"Memory usage averaged {mean}% over the last 3 days",
                 target   = target,
-                category = "Lifeline analysis",
+                category = "Memory usage",
                 source   = "WMI",
                 file     = device.filename,
                 isUser   = false,
@@ -458,15 +476,109 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskSpace(Database.Entry device, string target, out Issue? issue) {
+    public static bool CheckDiskSpace(Database.Entry device, string target, out Issue[] issues) {
         byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
 
         if (lifeline is null || lifeline.Length <= 12) {
-            issue = null;
+            issues = null;
             return false;
         }
 
-        issue = null;
+        byte[] buffer8 = new byte[8];
+        Dictionary<string, List<(long timestamp, double percentUsed)>> diskData = new Dictionary<string, List<(long, double)>>();
+
+        int index = 0;
+        while (index < lifeline.Length) {
+            Array.Copy(lifeline, index, buffer8, 0, 8);
+            long timestamp = BitConverter.ToInt64(buffer8, 0);
+
+            Array.Copy(lifeline, index + 8, buffer8, 0, 4);
+            int count = BitConverter.ToInt32(buffer8, 0);
+
+            index += 12;
+
+            for (int i = 0; i < count; i++) {
+                char caption = (char)lifeline[index + i*17];
+
+                Array.Copy(lifeline, index + i*17 + 1, buffer8, 0, 8);
+                ulong used = BitConverter.ToUInt64(buffer8, 0);
+
+                Array.Copy(lifeline, index + i*17 + 9, buffer8, 0, 8);
+                ulong total = BitConverter.ToUInt64(buffer8, 0);
+
+                double percentUsed = (double)used / total * 100;
+
+                string diskKey = caption.ToString();
+                if (!diskData.ContainsKey(diskKey)) {
+                    diskData[diskKey] = new List<(long timestamp, double percentUsed)>();
+                }
+                diskData[diskKey].Add((timestamp, percentUsed));
+            }
+
+            index += 17 * count;
+        }
+
+        List<Issue> issuesList = new List<Issue>();
+
+        foreach (KeyValuePair<string, List<(long timestamp, double percentUsed)>> diskEntry in diskData) {
+            List<(long timestamp, double percentUsed)> usageData = diskEntry.Value;
+
+            if (usageData.Count == 0) continue;
+            if (CheckDiskSpace(device.filename, target, usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
+                issuesList.Add(diskIssue.Value);
+                continue;
+            }
+
+            if (usageData.Count < MIN_LIFELINE_ENTRIES) continue;
+
+            long firstTimestamp = usageData[0].timestamp;
+            List<(double timestamp, double percentUsed)> normalizedData = usageData.Select(data => (
+                timestamp: (double)(data.timestamp - firstTimestamp),
+                percentUsed: data.percentUsed
+            )).ToList();
+
+            //linear regression to find the trend line
+            double n     = normalizedData.Count;
+            double sumX  = normalizedData.Sum(data => data.timestamp);
+            double sumY  = normalizedData.Sum(data => data.percentUsed);
+            double sumXY = normalizedData.Sum(data => data.timestamp * data.percentUsed);
+            double sumX2 = normalizedData.Sum(data => data.timestamp * data.timestamp);
+
+            double slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            double intercept = (sumY - slope * sumX) / n;
+
+            if (slope == 0) { continue; }
+
+            //calculate the timestamp when disk usage will exceed 85%
+            double currentTime = (double)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - firstTimestamp);
+            double predictedTime = (DISK_USAGE_THRESHOLD - intercept) / slope;
+
+            if (predictedTime > currentTime) {
+                long predictedDateLong = (long)(predictedTime + firstTimestamp);
+                if (predictedDateLong < 0) { continue; }
+
+                DateTime predictedDate = DateTimeOffset.FromUnixTimeMilliseconds(predictedDateLong).DateTime;
+
+                if (predictedDate > DateTime.Now.Date.AddYears(1)) { continue; }
+
+                issuesList.Add(new Issue {
+                    severity = SeverityLevel.warning,
+                    message  = $"Disk {diskEntry.Key} usage is predicted to exceed {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    target   = target,
+                    category = "Disk space",
+                    source   = "WMI",
+                    file     = device.filename,
+                    isUser   = false,
+                });
+            }
+        }
+
+        if (issuesList.Count > 0) {
+            issues = issuesList.ToArray();
+            return true;
+        }
+
+        issues = null;
         return false;
     }
 
@@ -509,12 +621,12 @@ internal static class Issues {
         }
 
         double mean = Math.Round(values.Average(), 1);
-        if (mean > 80) {
+        if (mean > DISK_IO_THRESHOLD) {
             issue = new Issue {
                 severity = SeverityLevel.error,
                 message  = $"Disk IO averaged {mean}% over the last 3 days",
                 target   = target,
-                category = "Lifeline analysis",
+                category = "Disk IO",
                 source   = "WMI",
                 file     = device.filename,
                 isUser   = false,
@@ -722,7 +834,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskCapacity(string file, string target, double percent, string diskCaption, out Issue? issue) {
+    public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? issue) {
         string message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}";
 
         if (percent <= 1) {
@@ -730,7 +842,7 @@ internal static class Issues {
                 severity = SeverityLevel.critical,
                 target   = target,
                 message  = message,
-                category = "Disk drive",
+                category = "Disk space",
                 source   = "WMI",
                 file     = file,
                 isUser   = false,
@@ -743,7 +855,7 @@ internal static class Issues {
                 severity = SeverityLevel.error,
                 target   = target,
                 message  = message,
-                category = "Disk drive",
+                category = "Disk space",
                 source   = "WMI",
                 file     = file,
                 isUser   = false,
@@ -756,7 +868,7 @@ internal static class Issues {
                 severity = SeverityLevel.warning,
                 target   = target,
                 message  = message,
-                category = "Disk drive",
+                category = "Disk space",
                 source   = "WMI",
                 file     = file,
                 isUser   = false,

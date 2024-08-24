@@ -8,14 +8,14 @@ class Issues extends List {
 
 	static CATEGORY_ICON = {
 		"Database"          : "url(mono/database.svg)",
-		"Lifeline analysis" : "url(mono/lifeline.svg)",
 		"Directory"         : "url(mono/directory.svg)",
 		"Password"          : "url(mono/lock.svg)",
+		"Round-trip time"   : "url(mono/ping.svg)",
+		"CPU utilization"   : "url(mono/cpu.svg)",
+		"Memory usage"      : "url(mono/ram.svg)",
+		"Disk space"        : "url(mono/hdd.svg)",
+		"Disk IO"           : "url(mono/ssd.svg)",
 		"Printer component" : "url(mono/printer.svg)",
-		"CPU usage"         : "url(mono/cpu.svg)",
-		"Ram usage"         : "url(mono/ram.svg)",
-		"Disk capacity"     : "url(mono/ssd.svg)",
-		"Disk IO"           : "url(mono/hdd.svg)",
 	};
 
 	constructor(args) {

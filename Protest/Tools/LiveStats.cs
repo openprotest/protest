@@ -323,7 +323,7 @@ internal static class LiveStats {
 
                     WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
 
-                    if (Issues.CheckDiskCapacity(null, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
+                    if (Issues.CheckDiskSpace(null, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
                         WsWriteText(ws, diskIssue?.ToLiveStatsJsonBytes(), mutex);
                     }
                 }

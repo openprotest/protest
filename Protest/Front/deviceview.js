@@ -1115,7 +1115,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 
-		let [pingArray, cpuArray, memoryArray, diskCapacityArray, diskIoArray, printCounterArray] = await Promise.all([
+		let [pingArray, cpuArray, memoryArray, diskSpaceArray, diskIoArray, printCounterArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
@@ -1175,7 +1175,7 @@ class DeviceView extends View {
 
 			oMonth = (oMonth+1).toString().padStart(2,0);
 
-			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskCapacityArray, oldDiskIoArray, oldPrintCounterArray] = await Promise.all([
+			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskSpaceArray, oldDiskIoArray, oldPrintCounterArray] = await Promise.all([
 				(async ()=> {
 					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
@@ -1221,7 +1221,7 @@ class DeviceView extends View {
 			if (oldPingArray.length > 0) pingArray = [...oldPingArray, ...pingArray];
 			if (oldCpuArray.length > 0) cpuArray = [...oldCpuArray, ...cpuArray];
 			if (oldMemoryArray.length > 0) memoryArray = [...oldMemoryArray, ...memoryArray];
-			if (oldDiskCapacityArray.length > 0) diskCapacityArray = [...oldDiskCapacityArray, ...diskCapacityArray];
+			if (oldDiskSpaceArray.length > 0) diskSpaceArray = [...oldDiskSpaceArray, ...diskSpaceArray];
 			if (oldDiskIoArray.length > 0) diskIoArray = [...oldDiskIoArray, ...diskIoArray];
 			if (oldPrintCounterArray.length > 0) printCounterArray = [...oldPrintCounterArray, ...printCounterArray];
 		}
@@ -1612,7 +1612,7 @@ class DeviceView extends View {
 			}
 		};
 
-		if (pingArray.length > 0 || cpuArray.length > 0 || memoryArray.length > 0 || diskCapacityArray.length > 0 || diskIoArray.length > 0) {
+		if (pingArray.length > 0 || cpuArray.length > 0 || memoryArray.length > 0 || diskSpaceArray.length > 0 || diskIoArray.length > 0) {
 			GenerateTimeline();
 		}
 
@@ -1663,24 +1663,24 @@ class DeviceView extends View {
 			GenerateGraph(data, "Memory", "vol", "mono/ram.svg");
 		}
 
-		if (diskCapacityArray.length > 0) {
+		if (diskSpaceArray.length > 0) {
 			const data = new Map();
 			let index = 0;
-			while (index < diskCapacityArray.length) {
-				const dateBuffer = new Uint8Array(diskCapacityArray.slice(index,index+8)).buffer;
+			while (index < diskSpaceArray.length) {
+				const dateBuffer = new Uint8Array(diskSpaceArray.slice(index, index+8)).buffer;
 				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
 
-				const count = (diskCapacityArray[index+9] << 8) | diskCapacityArray[index+8]; // | (diskCapacityArray[index+11] << 24) | (diskCapacityArray[index+10] << 16)
+				const count = (diskSpaceArray[index+9] << 8) | diskSpaceArray[index+8]; // | (diskSpaceArray[index+11] << 24) | (diskSpaceArray[index+10] << 16)
 
 				index += 12;
 
 				for (let j=0; j<count; j++) {
-					const caption = String.fromCharCode(diskCapacityArray[index + j*17]);
+					const caption = String.fromCharCode(diskSpaceArray[index + j*17]);
 
-					const usedBuffer = new Uint8Array(diskCapacityArray.slice(index + j*17+1, index + j*17+9)).buffer;
+					const usedBuffer = new Uint8Array(diskSpaceArray.slice(index + j*17+1, index + j*17+9)).buffer;
 					const used = Number(new DataView(usedBuffer).getBigInt64(0, true));
 
-					const totalBuffer = new Uint8Array(diskCapacityArray.slice(index + j*17+9, index + j*17+17)).buffer;
+					const totalBuffer = new Uint8Array(diskSpaceArray.slice(index + j*17+9, index + j*17+17)).buffer;
 					const total = Number(new DataView(totalBuffer).getBigInt64(0, true));
 
 					if (!data.has(caption)) { data.set(caption, []); }
@@ -1690,7 +1690,7 @@ class DeviceView extends View {
 				index += 17 * count;
 			}
 
-			data.forEach ((value, key)=> GenerateGraph(value, `Disk capacity (${key})`, "vol", "mono/hdd.svg"));
+			data.forEach ((value, key)=> GenerateGraph(value, `Disk space (${key})`, "vol", "mono/hdd.svg"));
 		}
 
 		if (diskIoArray.length > 0) {
