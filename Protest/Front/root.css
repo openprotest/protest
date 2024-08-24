@@ -136,8 +136,8 @@ div, svg {
 @media (prefers-color-scheme: dark) {
 	:root {
 		--clr-control: rgb(144,144,144);
-		--clr-highlight: rgb(188,188,188);
-		--clr-pane: rgb(176,176,176);
+		--clr-highlight: rgb(184,184,184);
+		--clr-pane: rgb(168,168,168);
 		--clr-contrast: rgb(224,224,224);
 	}
 
