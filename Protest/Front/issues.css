@@ -27,3 +27,35 @@
 	mask-image: url(mono/critical.svg);
 	background-color: var(--clr-critical);
 }
+
+.issues-toggle-button {
+	background-size: 22px 22px !important;
+	mask-image: url(mono/stop.svg) !important;
+	mask-size: 34px 34px !important;
+	mask-position: center !important;
+	mask-repeat: no-repeat !important;
+}
+
+.issues-status-label {
+	position: absolute;
+	right: 8px;
+	bottom: 2px;
+	color: var(--clr-pane);
+	font-weight: 600;
+}
+
+.issues-scanning::before {
+	content: "";
+	display: inline-block;
+	margin-right: 8px;
+	margin-bottom: -4px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border-style: solid;
+	border-color: var(--clr-pane) var(--clr-pane) transparent transparent;
+	border-width: 2px 3px 3px 0px;
+	box-sizing: border-box;
+
+	animation: spin 1s linear infinite;
+}

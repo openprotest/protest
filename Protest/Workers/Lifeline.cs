@@ -478,7 +478,7 @@ internal static partial class Lifeline {
     }
 
     public static byte[] LoadFile(string file, int upToDays, string type) {
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.UtcNow;
         string date = now.ToString("yyyyMM");
 
         byte[] latest;
@@ -502,11 +502,11 @@ internal static partial class Lifeline {
 
         if (firstDateInstant > thresholdTime) {
             DateTime lastMonth = now.AddMonths(-1);
-            string previousDate = lastMonth.ToString("yyyyMM");
+            string previousMonthDate = lastMonth.ToString("yyyyMM");
 
             byte[] old;
             try {
-                old = File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}{type}{Data.DELIMITER}{file}{Data.DELIMITER}{previousDate}");
+                old = File.ReadAllBytes($"{Data.DIR_LIFELINE}{Data.DELIMITER}{type}{Data.DELIMITER}{file}{Data.DELIMITER}{previousMonthDate}");
             }
             catch {
                 old = null;

@@ -380,10 +380,7 @@ internal static class Auth {
 
             case "issues:write":
                 path.Add("/ws/issues");
-                path.Add("/issues/list");
                 path.Add("/issues/start");
-                path.Add("/issues/stop");
-                path.Add("/issues/status");
                 break;
 
             case "settings:write":

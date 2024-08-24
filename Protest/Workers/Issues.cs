@@ -16,14 +16,14 @@ using Protest.Tools;
 namespace Protest.Workers;
 
 internal static class Issues {
-    private const int MIN_LIFELINE_ENTRIES = 10;
-    private const double WEAK_PASSWORD_ENTROPY_THRESHOLD = 36.0;
+    private const int    MIN_LIFELINE_ENTRIES              = 10;
+    private const double WEAK_PASSWORD_ENTROPY_THRESHOLD   = 36.0;
     private const double RTT_STANDARD_DEVIATION_MULTIPLIER = 20.0;
 
     private const int CPU_UTILIZATION_THRESHOLD = 80;
-    private const int MEMORY_USAGE_THRESHOLD = 85;
-    private const int DISK_USAGE_THRESHOLD = 85;
-    private const int DISK_IO_THRESHOLD = 80;
+    private const int MEMORY_USAGE_THRESHOLD    = 85;
+    private const int DISK_USAGE_THRESHOLD      = 85;
+    private const int DISK_IO_THRESHOLD         = 80;
 
     public enum SeverityLevel {
         info     = 1,
@@ -40,9 +40,11 @@ internal static class Issues {
         public string source;
         public string file;
         public bool   isUser;
-        
+
         public readonly long timestamp;
-        public Issue() { timestamp = DateTime.UtcNow.Ticks; }
+        public Issue() {
+            timestamp = DateTime.UtcNow.Ticks;
+        }
     }
 
     private static TaskWrapper task;
@@ -53,11 +55,6 @@ internal static class Issues {
         { "target", issue.target },
         { "source", issue.source },
     });
-
-    public static byte[] List() {
-        //TODO:
-        return null;
-    }
 
     public static byte[] Start(string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
@@ -83,15 +80,6 @@ internal static class Issues {
         if (task is null) return "{\"error\":\"Scanning task is not running\"}"u8.ToArray();
         task.RequestCancel(origin);
         return "{\"status\":\"stopped\"}"u8.ToArray();
-    }
-
-    public static byte[] Status() {
-        if (task is null) {
-            return "{\"status\":\"running\"}"u8.ToArray();
-        }
-        else {
-            return "{\"status\":\"stopped\"}"u8.ToArray();
-        }
     }
 
     private static async Task WsWriteText(WebSocket ws, string data) {
@@ -173,7 +161,7 @@ internal static class Issues {
     }
 
     private static void Scan() {
-        //ScanUsers();
+        ScanUsers();
         ScanDevices();
     }
 
@@ -479,9 +467,14 @@ internal static class Issues {
     public static bool CheckDiskSpace(Database.Entry device, string target, out Issue[] issues) {
         byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
 
-        if (lifeline is null || lifeline.Length <= 12) {
-            issues = null;
-            return false;
+        if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
+            DateTime lastMonth = DateTime.UtcNow.AddMonths(-1);
+            lifeline = Lifeline.ViewFile(device.filename, lastMonth.ToString("yyyyMM"), "disk");
+
+            if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
+                issues = null;
+                return false;
+            }
         }
 
         byte[] buffer8 = new byte[8];

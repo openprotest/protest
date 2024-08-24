@@ -60,33 +60,30 @@ class Issues extends List {
 
 		this.SetupToolbar();
 		this.scanButton = this.AddToolbarButton("Scan network", "mono/scannet.svg?light");
-		this.toolbar.appendChild(this.AddToolbarSeparator());
-		const filterButton = this.SetupFilter();
+		this.AddToolbarSeparator();
 		this.SetupFind();
-		this.toolbar.appendChild(this.AddToolbarSeparator());
 
-		
 		this.critButton = this.AddToolbarButton("Critical", "mono/critical.svg?light");
 		this.errorButton = this.AddToolbarButton("Error", "mono/error.svg?light");
 		this.warnButton = this.AddToolbarButton("Warning", "mono/warning.svg?light");
 		this.infoButton = this.AddToolbarButton("Info", "mono/info.svg?light");
 		
 		const toggleButtons = [this.critButton, this.errorButton, this.warnButton, this.infoButton];
-
 		for (let i=0; i<toggleButtons.length; i++) {
-			toggleButtons[i].style.backgroundSize = "22px 22px";
-			toggleButtons[i].style.maskImage = "url(mono/stop.svg)";
-			toggleButtons[i].style.maskSize = "34px 34px";
-			toggleButtons[i].style.maskPosition = "center";
-			toggleButtons[i].style.maskRepeat = "no-repeat";
+			toggleButtons[i].classList.add("issues-toggle-button");
 		}
 
-		this.scanButton.onclick = () => this.ScanDialog();
+		this.statusLabel = document.createElement("div");
+		this.statusLabel.className = "issues-status-label";
+		this.statusLabel.textContent = "";
+		this.content.appendChild(this.statusLabel);
 
-		this.critButton.onclick  = () => this.CriticalFilterToggle();
-		this.errorButton.onclick = () => this.ErrorFilterToggle();
-		this.warnButton.onclick  = () => this.WarningFilterToggle();
-		this.infoButton.onclick  = () => this.InfoFilterToggle();
+		this.scanButton.onclick = ()=> this.ScanDialog();
+
+		this.critButton.onclick = ()=> this.CriticalFilterToggle();
+		this.errorButton.onclick = ()=> this.ErrorFilterToggle();
+		this.warnButton.onclick  = ()=> this.WarningFilterToggle();
+		this.infoButton.onclick = ()=> this.InfoFilterToggle();
 	
 		if (this.args.find && this.args.find.length > 0) {
 			this.findInput.value = this.args.find;
@@ -166,7 +163,11 @@ class Issues extends List {
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
 
-		this.ws.onopen = ()=> {};
+		this.ws.onopen = ()=> {
+			this.scanButton.disabled = true;
+			this.statusLabel.textContent = "Scanning...";
+			this.statusLabel.classList.add("issues-scanning");
+		};
 
 		this.ws.onmessage = event=> {
 			const json = JSON.parse(event.data);
@@ -185,6 +186,9 @@ class Issues extends List {
 		};
 
 		this.ws.onclose = ()=> {
+			this.scanButton.disabled = false;
+			this.statusLabel.textContent = "";
+			this.statusLabel.classList.remove("issues-scanning");
 			this.ws = null;
 		};
 
@@ -197,17 +201,8 @@ class Issues extends List {
 		if (this.link === null || this.link.data === null) { return; }
 
 		let filtered = [];
-		if (this.args.filter.length === 0) {
-			for (const key in this.link.data) {
-				filtered.push(key);
-			}
-		}
-		else {
-			for (const key in this.link.data) {
-				if (!this.link.data[key].type) continue;
-				if (this.link.data[key].type.v.toLowerCase() !== this.args.filter.toLowerCase()) continue;
-				filtered.push(key);
-			}
+		for (const key in this.link.data) {
+			filtered.push(key);
 		}
 
 		let found;
@@ -323,23 +318,11 @@ class Issues extends List {
 		this.InflateElement(element, this.link.data[key]);
 	}
 
-	ScanDialog(entry=null, isRunning=false) {
-		const dialog = this.DialogBox("460px");
-		if (dialog === null) return;
-
-		const {okButton, innerBox} = dialog;
-
+	ScanDialog() {
+		const okButton = this.ConfirmBox("Are you sure you want to start scanning for issues?", false, "mono/scannet.svg");
 		okButton.value = "Start";
 
-		innerBox.parentElement.style.maxWidth = "640px";
-
-		innerBox.style.padding = "16px 32px";
-		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 175px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(4, 38px) 16px repeat(2, 38px) 16px repeat(2, 38px) 40px";
-		innerBox.style.alignItems = "center";
-
-		okButton.onclick = async ()=> {
+		okButton.addEventListener("click", async ()=> {
 			try {
 				const response = await fetch("issues/start");
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -354,15 +337,10 @@ class Issues extends List {
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg")
 			}
-
-			dialog.Close();
-		};
-
-		setTimeout(()=> okButton.focus(), 200);
+		});
 	}
 
 	InflateElement(element, entry) { //overrides
-
 		element.classList.add("issues-" + Issues.SEVERITY_TEXT[entry.severity.v].toLowerCase());
 
 		const icon = document.createElement("div");
