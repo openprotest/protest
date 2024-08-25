@@ -7,7 +7,7 @@ class Issues extends List {
 	};
 
 	static CATEGORY_ICON = {
-		"Network"           : "url(mono/earth.svg)",
+		//"Network"           : "url(mono/earth.svg)",
 		"Database"          : "url(mono/database.svg)",
 		"Directory"         : "url(mono/directory.svg)",
 		"Password"          : "url(mono/lock.svg)",
