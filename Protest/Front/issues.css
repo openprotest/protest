@@ -14,17 +14,17 @@
 
 .issues-warning > .list-element-icon {
 	mask-image: url(mono/warning.svg);
-	background-color: rgb(192,112,0);
+	background-color: rgb(208,128,16);
 }
 
 .issues-error > .list-element-icon {
 	mask-image: url(mono/error.svg);
-	background-color: rgb(184,64,16);
+	background-color: var(--clr-error);
 }
 
 .issues-critical > .list-element-icon {
 	mask-image: url(mono/critical.svg);
-	background-color: rgb(200,28,32);
+	background-color: var(--clr-critical);
 }
 
 .issues-toggle-button {
@@ -57,4 +57,17 @@
 	box-sizing: border-box;
 
 	animation: spin 1s linear infinite;
+}
+
+
+@media (prefers-color-scheme: dark) {
+	.issues-warning > .list-element-icon {
+		background-color: rgb(192,112,0);
+	}
+	.issues-error > .list-element-icon {
+		background-color: rgb(208,64,12);
+	}
+	.issues-critical > .list-element-icon {
+		background-color: rgb(200,28,32);
+	}
 }
