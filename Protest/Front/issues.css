@@ -9,7 +9,7 @@
 
 .issues-info > .list-element-icon {
 	mask-image: url(mono/info.svg);
-	background-color: rgb(28,136,223);
+	background-color: rgb(16,112,192);
 }
 
 .issues-warning > .list-element-icon {
@@ -58,7 +58,6 @@
 
 	animation: spin 1s linear infinite;
 }
-
 
 @media (prefers-color-scheme: dark) {
 	.issues-warning > .list-element-icon {
