@@ -38,7 +38,7 @@
 .issues-status-label {
 	position: absolute;
 	right: 8px;
-	bottom: 2px;
+	bottom: 4px;
 	color: var(--clr-pane);
 	font-weight: 600;
 }

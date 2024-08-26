@@ -125,7 +125,7 @@
 .list-counter {
 	position: absolute;
 	left: 2px;
-	bottom: 2px;
+	bottom: 3px;
 	color: var(--clr-pane);
 	font-weight: 600;
 	padding: 0px 8px;

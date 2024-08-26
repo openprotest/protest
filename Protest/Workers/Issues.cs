@@ -517,7 +517,7 @@ internal static class Issues {
             List<(long timestamp, double percentUsed)> usageData = diskEntry.Value;
 
             if (usageData.Count == 0) { continue; }
-            if (CheckDiskSpace(device.filename, host, usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
+            if (CheckDiskSpace(device.filename, host, 100 - usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
                 issuesList.Add(diskIssue.Value);
                 continue;
             }
@@ -556,7 +556,7 @@ internal static class Issues {
 
                 issuesList.Add(new Issue {
                     severity = SeverityLevel.warning,
-                    message  = $"Disk {diskEntry.Key} used space is predicted to exceed {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    message  = $"Disk {diskEntry.Key} free space is predicted to drop below {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
                     entry    = host,
                     category = "Disk space",
                     source   = "WMI",
@@ -828,7 +828,7 @@ internal static class Issues {
     }
 
     public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? issue) {
-        string message = $"{percent}% free space on disk {Data.EscapeJsonText(diskCaption)}";
+        string message = $"{Math.Round(percent, 1)}% free space on disk {Data.EscapeJsonText(diskCaption)}";
 
         if (percent <= 1) {
             issue = new Issue {
@@ -959,4 +959,5 @@ internal static class Issues {
         issues = null;
         return false;
     }
+
 }
