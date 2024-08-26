@@ -1543,7 +1543,7 @@ class DeviceView extends View {
 				let closestIndex = 0;
 				for (let i=0; i<data.length; i++) {
 					let currentX = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
-					if (Math.abs(currentX - event.layerX) < Math.abs(closestX - event.layerX)) {
+					if (Math.abs(currentX - event.offsetX) < Math.abs(closestX - event.offsetX)) {
 						closestX = currentX;
 						closestIndex = i;
 					}

@@ -71,12 +71,17 @@ internal static class Issues {
 
         task.thread.Start();
 
+        Logger.Action(origin, "Issues scan started");
+
         return "{\"status\":\"started\"}"u8.ToArray(); ;
     }
 
     public static byte[] Stop(string origin) {
         if (task is null) return "{\"error\":\"Scanning task is not running\"}"u8.ToArray();
         task.RequestCancel(origin);
+
+        Logger.Action(origin, $"Issues scan stoped");
+
         return "{\"status\":\"stopped\"}"u8.ToArray();
     }
 
@@ -161,7 +166,6 @@ internal static class Issues {
     private static void Scan() {
         ScanUsers();
         ScanDevices();
-
         task = null;
     }
 
@@ -179,7 +183,10 @@ internal static class Issues {
             issues.Add(issue.Value);
         }
 
-        if (OperatingSystem.IsWindows() && typeAttribute?.value.ToLower() == "domain user") {
+        if (OperatingSystem.IsWindows()
+            && typeAttribute?.value.ToLower() == "domain user"
+            && usernameAttribute is not null
+            && !String.IsNullOrEmpty(usernameAttribute.value)) {
             CheckDomainUser(user, out Issue[] domainIssue, SeverityLevel.warning);
             if (domainIssue is not null) {
                 for (int i = 0; i < domainIssue.Length; i++) {
@@ -555,7 +562,7 @@ internal static class Issues {
 
                 issuesList.Add(new Issue {
                     severity = SeverityLevel.warning,
-                    message  = $"Disk {diskEntry.Key} free space is predicted to drop below {DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    message  = $"Disk {diskEntry.Key}: free space is predicted to drop below {DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
                     entry    = host,
                     category = "Disk space",
                     source   = "WMI",
@@ -827,7 +834,7 @@ internal static class Issues {
     }
 
     public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? issue) {
-        string message = $"{Math.Round(percent, 1)}% free space on disk {Data.EscapeJsonText(diskCaption)}";
+        string message = $"{Math.Round(percent, 1)}% free space on disk {Data.EscapeJsonText(diskCaption)}:";
 
         if (percent <= 1) {
             issue = new Issue {

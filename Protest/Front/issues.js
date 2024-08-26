@@ -230,6 +230,7 @@ class Issues extends List {
 
 			for (let i = 0; i < types.length; i++) {
 				const newType = document.createElement("div");
+				newType.style.textTransform = "none";
 				newType.textContent = types[i];
 				filtersList.appendChild(newType);
 
