@@ -64,10 +64,6 @@ class List extends Window {
 					
 					const id = this.selected.getAttribute("id");
 					if (id) this.args.select = id;
-
-					if (previousElement.onclick) {
-						requestAnimationFrame(()=>previousElement.onclick());
-					}
 				}
 			}
 			else if (event.code === "ArrowDown" && this.selected) {
@@ -85,11 +81,6 @@ class List extends Window {
 
 					const id = this.selected.getAttribute("id");
 					if (id) this.args.select = id;
-
-					if (nextElement.onclick) {
-						requestAnimationFrame(()=>nextElement.onclick());
-					}
-
 				}
 			}
 			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {

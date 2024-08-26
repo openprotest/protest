@@ -502,20 +502,11 @@ class Issues extends List {
 		element.onclick = ()=> {
 			if (this.selected) {
 				this.selected.style.backgroundColor = "";
-				const lastIconElement = this.selected.querySelector(".list-element-icon");
-				if (lastIconElement) {
-					lastIconElement.style.backgroundColor = "";
-				}
 			}
 
 			this.args.select = issue.key.v;
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";
-
-			const iconElement = element.querySelector(".list-element-icon");
-			if (iconElement) {
-				iconElement.style.backgroundColor = "var(--clr-dark)";
-			}
 		};
 
 		element.ondblclick = event=> {
