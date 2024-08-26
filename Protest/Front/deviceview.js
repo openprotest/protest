@@ -1201,7 +1201,7 @@ class DeviceView extends View {
 				})(),
 
 				(async ()=> {
-					const response = await fetch(`lifeline/disk/view?file=${this.args.file}&date=${oYear}${oMonth}`);
+					const response = await fetch(`lifeline/diskio/view?file=${this.args.file}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
 					return new Uint8Array(buffer);
 				})(),

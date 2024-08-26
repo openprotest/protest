@@ -433,9 +433,9 @@ internal static partial class Lifeline {
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("file", out string file);
-        parameters.TryGetValue("date", out string date);
-
         if (String.IsNullOrEmpty(file)) { return null; }
+
+        parameters.TryGetValue("date", out string date);
 
         return ViewFile(file, date, type);
     }
