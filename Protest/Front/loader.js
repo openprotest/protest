@@ -4,6 +4,8 @@ console.log("%c Don't copy-paste any code into this console. Unauthorized code e
 const LOADER = {
 	devices: {},
 	users: {},
+	
+	alwaysUppercase: ["ip", "ipv6", "bios", "fqdn", "guid"],
 
 	deviceIcons : {
 		"access point"        : "mono/accesspoint.svg",

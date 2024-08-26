@@ -114,7 +114,12 @@ class View extends Window {
 		nameBox.type = "text";
 		nameBox.value = name;
 		nameBox.setAttribute("aria-label", "Attribute name");
-		if (!editMode) nameBox.setAttribute("readonly", "true");
+		if (!editMode) {
+			nameBox.setAttribute("readonly", "true");
+			if (LOADER.alwaysUppercase.includes(name)) {
+				nameBox.style.textTransform = "uppercase";
+			}
+		}
 		newAttribute.appendChild(nameBox);
 
 		const valueContainer = document.createElement("div");
@@ -857,10 +862,14 @@ class View extends Window {
 
 		this.attributes.classList.remove("view-attributes-freeze");
 
-		for (let i = 0; i < this.attributes.childNodes.length; i++) {
+		for (let i=0; i<this.attributes.childNodes.length; i++) {
 			if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 			this.attributes.childNodes[i].childNodes[0].removeAttribute("readonly");
 			this.attributes.childNodes[i].childNodes[1].firstChild.removeAttribute("readonly");
+
+			if (this.attributes.childNodes[i].childNodes[0].style.textTransform === "uppercase") {
+				this.attributes.childNodes[i].childNodes[0].style.textTransform = "none";
+			};
 		}
 
 		addAttributeButton.onclick = ()=> {
@@ -883,7 +892,7 @@ class View extends Window {
 			this.bar.removeChild(cancelButton);
 			this.bar.removeChild(addAttributeButton);
 
-			for (let i = 0; i < this.bar.childNodes.length; i++) {
+			for (let i=0; i<this.bar.childNodes.length; i++) {
 				this.bar.childNodes[i].style.display = "initial";
 			}
 
@@ -898,7 +907,7 @@ class View extends Window {
 
 			this.attributes.classList.add("view-attributes-freeze");
 
-			for (let i = 0; i < this.attributes.childNodes.length; i++) {
+			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				this.attributes.childNodes[i].childNodes[0].setAttribute("readonly", "true");
 				this.attributes.childNodes[i].childNodes[1].firstChild.setAttribute("readonly", "true");
@@ -907,7 +916,7 @@ class View extends Window {
 
 		const Revert = editMode=> {
 			this.InitializeAttributesList(this.link, editMode);
-			for (let i = 0; i < this.attributes.childNodes.length; i++) {
+			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				this.attributes.childNodes[i].childNodes[0].removeAttribute("readonly");
 				this.attributes.childNodes[i].childNodes[1].firstChild.removeAttribute("readonly");

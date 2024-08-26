@@ -221,7 +221,7 @@ class List extends Window {
 			const newColumn = document.createElement("div");
 			newColumn.style.left = `${100 * i / columns.length}%`;
 			newColumn.style.width = `${100 / columns.length}%`;
-			newColumn.style.textTransform = columns[i] === "ip" ? "uppercase" : "capitalize";
+			newColumn.style.textTransform = LOADER.alwaysUppercase.includes(columns[i]) ? "uppercase" : "capitalize";
 
 			if (this.args.sort === columns[i]) {
 				newColumn.className = "list-sort-ascend";
@@ -766,9 +766,7 @@ class List extends Window {
 			this.UpdateViewport(true);
 		};
 
-		filterInput.onchange = ()=> {
-			Refresh();
-		};
+		filterInput.onchange = ()=> Refresh();
 
 		revertButton.onclick = ()=> {
 			checkList = {};
@@ -799,9 +797,7 @@ class List extends Window {
 			localStorage.setItem(`${this.constructor.name.toLowerCase()}_columns`, JSON.stringify(this.columnsElements.map(o=> o.textContent)));
 		});
 
-		okButton.addEventListener("click", ()=> {
-			Apply();
-		});
+		okButton.addEventListener("click", ()=>Apply());
 
 		Refresh();
 
