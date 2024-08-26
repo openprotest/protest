@@ -20,10 +20,10 @@ internal static class Issues {
     private const double WEAK_PASSWORD_ENTROPY_THRESHOLD   = 36.0;
     private const double RTT_STANDARD_DEVIATION_MULTIPLIER = 20.0;
 
-    private const int CPU_UTILIZATION_THRESHOLD = 80;
-    private const int MEMORY_USAGE_THRESHOLD    = 85;
-    private const int DISK_USAGE_THRESHOLD      = 85;
-    private const int DISK_IO_THRESHOLD         = 80;
+    private const int CPU_UTILIZATION_THRESHOLD = 60;
+    private const int MEMORY_USAGE_THRESHOLD    = 80;
+    private const int DISK_SPACE_THRESHOLD      = 85;
+    private const int DISK_IO_THRESHOLD         = 75;
 
     public enum SeverityLevel {
         info     = 1,
@@ -542,9 +542,8 @@ internal static class Issues {
 
             if (slope == 0) { continue; }
 
-            //calculate the timestamp when disk usage will exceed 85%
             double currentTime = (double)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - firstTimestamp);
-            double predictedTime = (DISK_USAGE_THRESHOLD - intercept) / slope;
+            double predictedTime = (DISK_SPACE_THRESHOLD - intercept) / slope;
 
             if (predictedTime > currentTime) {
                 long predictedDateLong = (long)(predictedTime + firstTimestamp);
@@ -556,7 +555,7 @@ internal static class Issues {
 
                 issuesList.Add(new Issue {
                     severity = SeverityLevel.warning,
-                    message  = $"Disk {diskEntry.Key} free space is predicted to drop below {DISK_USAGE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    message  = $"Disk {diskEntry.Key} free space is predicted to drop below {DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
                     entry    = host,
                     category = "Disk space",
                     source   = "WMI",

@@ -1554,7 +1554,6 @@ class DeviceView extends View {
 
 				dayHighlight.setAttribute("x", cx - cx % DAY_WIDTH);
 
-
 				if (type === "ping") {
 					valueLabel.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
 					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : 24 + Math.min((height - 24) * data[closestIndex].v / 1000, height - 10))
@@ -1601,11 +1600,17 @@ class DeviceView extends View {
 		};
 
 		this.liveD.onwheel = event=>{
-			event.preventDefault();
-
 			xOffset += event.deltaY > 0 ? DAY_WIDTH : -DAY_WIDTH;
-			xOffset = Math.max(xOffset, 0);
-			xOffset = Math.min(xOffset, GRAPH_WIDTH - 800);
+
+			if (xOffset < 0) {
+				xOffset = 0;
+			}
+			else if (xOffset > GRAPH_WIDTH - 800) {
+				xOffset = GRAPH_WIDTH - 800;
+			}
+			else {
+				event.preventDefault();
+			}
 
 			for (let i=0; i<graphSvgs.length; i++) {
 				graphSvgs[i].style.transform = `translateX(${xOffset}px)`;
