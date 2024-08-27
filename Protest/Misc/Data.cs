@@ -73,6 +73,7 @@ public static class Data {
     public static readonly string FILE_MAC          = $"{DIR_KNOWLADGE}\\mac.bin";
 
     public static readonly string FILE_ZONES          = $"{DIR_DATA}{DELIMITER}zones.json";
+    public static readonly string FILE_DHCP_RANGE     = $"{DIR_DATA}{DELIMITER}dhcprange.json";
     public static readonly string SMTP_PROFILES       = $"{DIR_DATA}{DELIMITER}smtpprofiles.json";
     public static readonly string SNMP_PROFILES       = $"{DIR_DATA}{DELIMITER}snmpprofiles.json";
     public static readonly string FILE_NOTIFICATIONS  = $"{DIR_DATA}{DELIMITER}notifications.json";

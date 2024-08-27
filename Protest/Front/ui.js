@@ -384,7 +384,8 @@ const MENU = {
 		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:args=> new KeyboardTester("gamepad"), k:"joystick" },
 
 		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:()=> new Settings(), },
-		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Settings("zones"), },
+		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Settings("zones") },
+		{ t:"DHCP range",    i:"mono/dhcp.svg?light",        g:"manage", h:true,  f:()=> new Settings("dhcp"), k:"ip addresses"},
 		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:()=> new Settings("smtp") },
 		{ t:"SNMP settings", i:"mono/snmp.svg?light",        g:"manage", h:true,  f:()=> new Settings("snmp") },
 

@@ -386,6 +386,8 @@ internal static class Auth {
             case "settings:write":
                 path.Add("/config/zones/list");
                 path.Add("/config/zones/save");
+                path.Add("/config/dhcprange/list");
+                path.Add("/config/dhcprange/save");
                 path.Add("/config/smtpprofiles/list");
                 path.Add("/config/smtpprofiles/save");
                 path.Add("/config/smtpprofiles/test");

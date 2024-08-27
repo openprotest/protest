@@ -4,16 +4,16 @@ using System.Text;
 using Protest.Http;
 
 namespace Protest.Tools;
-internal static class Zones {
+internal static class DhcpRange {
 
     private static readonly object mutex = new object();
 
-    public static byte[] ListZones() {
-        if (!File.Exists(Data.FILE_ZONES)) return "[]"u8.ToArray();
+    public static byte[] ListRange() {
+        if (!File.Exists(Data.FILE_DHCP_RANGE)) return "[]"u8.ToArray();
 
         try {
             lock (mutex) {
-                return File.ReadAllBytes(Data.FILE_ZONES);
+                return File.ReadAllBytes(Data.FILE_DHCP_RANGE);
             }
         }
         catch {
@@ -21,13 +21,13 @@ internal static class Zones {
         }
     }
 
-    public static string ListZonesString() {
-        if (!File.Exists(Data.FILE_ZONES))
+    public static string ListRangeString() {
+        if (!File.Exists(Data.FILE_DHCP_RANGE))
             return "[]";
 
         try {
             lock (mutex) {
-                return File.ReadAllText(Data.FILE_ZONES);
+                return File.ReadAllText(Data.FILE_DHCP_RANGE);
             }
         }
         catch {
@@ -35,15 +35,15 @@ internal static class Zones {
         }
     }
 
-    public static byte[] SaveZones(HttpListenerContext ctx) {
+    public static byte[] SaveRange(HttpListenerContext ctx) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
         lock (mutex) {
-            File.WriteAllText(Data.FILE_ZONES, payload);
+            File.WriteAllText(Data.FILE_DHCP_RANGE, payload);
         }
 
-        KeepAlive.Broadcast($"{{\"action\":\"zones\",\"list\":{payload}}}", "/config/zones/list");
+        KeepAlive.Broadcast($"{{\"action\":\"dhcp-range\",\"list\":{payload}}}", "/config/dhcprange/list");
 
         return Data.CODE_OK.Array;
     }

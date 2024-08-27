@@ -68,6 +68,9 @@ internal static class KeepAlive {
             ArraySegment<byte> zonesSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"zones\",\"list\":{Zones.ListZonesString()}}}"));
             await ws.SendAsync(zonesSegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
+            ArraySegment<byte> dhcpSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"dhcp-range\",\"list\":{DhcpRange.ListRangeString()}}}"));
+            await ws.SendAsync(dhcpSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+
             StringBuilder messageBuilder = new StringBuilder();
 
             while (ws.State == WebSocketState.Open) {

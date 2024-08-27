@@ -10,6 +10,7 @@ class Settings extends Tabs {
 		this.SetIcon("mono/wrench.svg");
 
 		this.zones = [];
+		this.dhcpRange = [];
 		this.smtpProfiles = [];
 		this.snmpProfiles = [];
 
@@ -17,12 +18,14 @@ class Settings extends Tabs {
 		this.tabsPanel.style.overflowY = "auto";
 
 		this.zonesTab = this.AddTab("Zones", "mono/router.svg", "Network zones");
+		this.dhcpTab  = this.AddTab("DHCP range", "mono/dhcp.svg", "DHCP range");
 		this.adTab    = this.AddTab("Active directory", "mono/directory.svg");
 		this.smtpTab  = this.AddTab("SMTP", "mono/email.svg");
 		this.snmpTab  = this.AddTab("SNMP", "mono/snmp.svg");
 		this.graphTab = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
 		this.zonesTab.onclick = ()=> this.ShowZones();
+		this.dhcpTab.onclick  = ()=> this.ShowDhcpRange();
 		this.adTab.onclick    = ()=> this.ShowActiveDirectory();
 		this.smtpTab.onclick  = ()=> this.ShowSmtp();
 		this.snmpTab.onclick  = ()=> this.ShowSnmp();
@@ -32,6 +35,11 @@ class Settings extends Tabs {
 		this.graphTab.style.display = "none";
 
 		switch (this.args) {
+		case "dhcp":
+			this.dhcpTab.className = "v-tab-selected";
+			this.ShowDhcpRange();
+			break;
+
 		case "ad":
 			this.adTab.className = "v-tab-selected";
 			this.ShowActiveDirectory();
@@ -162,9 +170,7 @@ class Settings extends Tabs {
 		this.zonesList.style.border = "rgb(82,82,82) solid 2px";
 		this.tabsPanel.appendChild(this.zonesList);
 
-		this.zonesNewButton.onclick = ()=>{
-			this.ZoneDialog(null);
-		};
+		this.zonesNewButton.onclick = ()=> this.ZoneDialog(null);
 
 		this.zonesRemoveButton.onclick = ()=> {
 			if (!this.selectedZone) return;
@@ -180,6 +186,100 @@ class Settings extends Tabs {
 		};
 
 		this.GetZones();
+		this.AfterResize();
+	}
+
+	ShowDhcpRange() {
+		this.args = "dhcp";
+		this.tabsPanel.textContent = "";
+
+		this.options = document.createElement("div");
+		this.options.className = "rbac-options";
+		this.options.style.position = "absolute";
+		this.options.style.left = "20px";
+		this.options.style.right = "8px";
+		this.options.style.top = "8px";
+		this.options.style.overflow = "hidden";
+		this.options.style.whiteSpace = "nowrap";
+		this.tabsPanel.appendChild(this.options);
+
+		this.dhcpNewButton = document.createElement("input");
+		this.dhcpNewButton.type = "button";
+		this.dhcpNewButton.value = "New";
+		this.dhcpNewButton.className = "with-icon";
+		this.dhcpNewButton.style.backgroundImage = "url(mono/add.svg?light)";
+
+		this.dhcpRemoveButton = document.createElement("input");
+		this.dhcpRemoveButton.type = "button";
+		this.dhcpRemoveButton.value = "Remove";
+		this.dhcpRemoveButton.className = "with-icon";
+		this.dhcpRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
+
+		this.options.append(this.dhcpNewButton, this.dhcpRemoveButton);
+
+		const titleBar = document.createElement("div");
+		titleBar.style.position = "absolute";
+		titleBar.style.left = "20px";
+		titleBar.style.right = "20px";
+		titleBar.style.top = "56px";
+		titleBar.style.height = "25px";
+		titleBar.style.borderRadius = "4px 4px 0 0";
+		titleBar.style.background = "var(--grd-toolbar)";
+		titleBar.style.color = "var(--clr-light)";
+		this.tabsPanel.appendChild(titleBar);
+
+		let labels = [];
+
+		const nameLabel = document.createElement("div");
+		nameLabel.textContent = "Name";
+		labels.push(nameLabel);
+
+		const networkLabel = document.createElement("div");
+		networkLabel.textContent = "IP range";
+		labels.push(networkLabel);
+
+		for (let i = 0; i < labels.length; i++) {
+			labels[i].style.display = "inline-block";
+			labels[i].style.textAlign = "left";
+			labels[i].style.width = "50%";
+			labels[i].style.lineHeight = "24px";
+			labels[i].style.whiteSpace = "nowrap";
+			labels[i].style.overflow = "hidden";
+			labels[i].style.textOverflow = "ellipsis";
+			labels[i].style.boxSizing = "border-box";
+			labels[i].style.paddingLeft = "4px";
+			labels[i].style.paddingTop = "1px";
+		}
+
+		titleBar.append(nameLabel, networkLabel);
+
+		this.dhcpList = document.createElement("div");
+		this.dhcpList.className = "no-results";
+		this.dhcpList.style.position = "absolute";
+		this.dhcpList.style.overflowY = "auto";
+		this.dhcpList.style.left = "20px";
+		this.dhcpList.style.right = "20px";
+		this.dhcpList.style.top = "80px";
+		this.dhcpList.style.bottom = "20px";
+		this.dhcpList.style.border = "rgb(82,82,82) solid 2px";
+		this.tabsPanel.appendChild(this.dhcpList);
+
+		this.dhcpNewButton.onclick = ()=> this.DhcpDialog(null);
+
+		this.dhcpRemoveButton.onclick = ()=> {
+			if (!this.selectedZone) return;
+
+			let index = this.dhcpRange.indexOf(this.selectedZone);
+			if (index === -1) return;
+
+			this.ConfirmBox("Are you sure you want to remove this ip range?", false, "mono/delete.svg").addEventListener("click", ()=>{
+				this.dhcpRange.splice(index, 1);
+				this.SaveDhcpRange();
+				this.dhcpList.removeChild(this.dhcpList.childNodes[index]);
+			});
+		};
+
+		this.GetDhcpRange();
 		this.AfterResize();
 	}
 
@@ -551,9 +651,64 @@ class Settings extends Tabs {
 					this.selectedZone = json[i];
 				};
 
-				element.ondblclick = ()=>{
-					this.ZoneDialog(json[i]);
+				element.ondblclick = ()=> this.ZoneDialog(json[i]);
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
+	async GetDhcpRange() {
+		try {
+			const response = await fetch("config/dhcprange/list");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.dhcpRange = json;
+			this.dhcpList.textContent = "";
+
+			for (let i = 0; i < json.length; i++) {
+				const element = document.createElement("div");
+				element.className = "list-element";
+				this.dhcpList.appendChild(element);
+
+				const nameLabel = document.createElement("div");
+				nameLabel.style.display = "inline-block";
+				nameLabel.style.top = "0";
+				nameLabel.style.left = "0";
+				nameLabel.style.width = "50%";
+				nameLabel.style.whiteSpace = "nowrap";
+				nameLabel.style.overflow = "hidden";
+				nameLabel.style.textOverflow = "ellipsis";
+				nameLabel.style.lineHeight = "32px";
+				nameLabel.style.paddingLeft = "4px";
+				nameLabel.textContent = json[i].name;
+
+				const networkLabel = document.createElement("div");
+				networkLabel.style.display = "inline-block";
+				networkLabel.style.top = "0";
+				networkLabel.style.left = "50%";
+				networkLabel.style.width = "50%";
+				networkLabel.style.whiteSpace = "nowrap";
+				networkLabel.style.overflow = "hidden";
+				networkLabel.style.lineHeight = "32px";
+				networkLabel.textContent = json[i].network;
+
+				element.append(nameLabel, networkLabel);
+
+				element.onclick = ()=>{
+					for (let i=0; i<this.dhcpList.childNodes.length; i++) {
+						this.dhcpList.childNodes[i].style.backgroundColor = "";
+					}
+					element.style.backgroundColor = "var(--clr-select)";
+					this.selectedZone = json[i];
 				};
+
+				element.ondblclick = ()=> this.DhcpDialog(json[i]);
 			}
 		}
 		catch (ex) {
@@ -616,9 +771,7 @@ class Settings extends Tabs {
 					this.selectedSmtpProfile = json[i];
 				};
 
-				element.ondblclick = ()=> {
-					this.SmtpProfileDialog(json[i]);
-				};
+				element.ondblclick = ()=> this.SmtpProfileDialog(json[i]);				
 			}
 		}
 		catch (ex) {
@@ -798,6 +951,87 @@ class Settings extends Tabs {
 			await this.SaveZones();
 			dialog.Close();
 			this.ShowZones();
+		};
+
+		setTimeout(()=>{ nameInput.focus() }, 200);
+	}
+
+	DhcpDialog(object=null) {
+		const dialog = this.DialogBox("160px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		okButton.value = "Save";
+
+		innerBox.style.padding = "16px 32px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
+		innerBox.style.gridTemplateRows = "repeat(2, 38px)";
+		innerBox.style.alignItems = "center";
+
+		const nameLabel = document.createElement("div");
+		nameLabel.style.gridArea = "1 / 2";
+		nameLabel.textContent = "Name:";
+		const nameInput = document.createElement("input");
+		nameInput.style.gridArea = "1 / 3";
+		nameInput.type = "text";
+		innerBox.append(nameLabel, nameInput);
+
+		const networkLabel = document.createElement("div");
+		networkLabel.style.gridArea = "2 / 2";
+		networkLabel.textContent = "Network zone:";
+		const networkInput = document.createElement("input");
+		networkInput.style.gridArea = "2 / 3";
+		networkInput.type = "text";
+		networkInput.placeholder = "10.0.0.1/24";
+		innerBox.append(networkLabel, networkInput);
+
+		if (object) {
+			nameInput.value    = object.name;
+			networkInput.value = object.network;
+		}
+
+		okButton.onclick = async()=> {
+			let isNew = object === null;
+			let index = this.dhcpRange.indexOf(object);
+
+			if (!isNew) {
+				if (index === -1) isNew = true;
+			}
+
+			let requiredFieldMissing = false;
+			let requiredFields = [nameInput, networkInput];
+
+			for (let i=0; i<requiredFields.length; i++) {
+				if (requiredFields[i].value.length === 0) {
+					if (!requiredFieldMissing) requiredFields[i].focus();
+					requiredFields[i].required = true;
+					requiredFieldMissing = true;
+					requiredFields[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredFields[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
+
+			const newObject = {
+				name     : nameInput.value,
+				network  : networkInput.value,
+			};
+
+			if (isNew) {
+				this.dhcpRange.push(newObject);
+			}
+			else {
+				this.dhcpRange[index] = newObject;
+			}
+
+			await this.SaveDhcpRange();
+			dialog.Close();
+			this.ShowDhcpRange();
 		};
 
 		setTimeout(()=>{ nameInput.focus() }, 200);
@@ -1215,7 +1449,23 @@ class Settings extends Tabs {
 
 			const json = await response.json();
 			if (json.error) throw(json.error);
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
 
+	async SaveDhcpRange() {
+		try {
+			const response = await fetch("config/dhcprange/save", {
+				method: "POST",
+				body: JSON.stringify(this.dhcpRange)
+			});
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");

@@ -7,6 +7,7 @@ using System.Net.WebSockets;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
@@ -70,6 +71,8 @@ internal static class Issues {
         };
 
         task.thread.Start();
+
+        KeepAlive.Broadcast("{\"action\":\"issues\",\"scan\":\"started\"}", "/issues/start");
 
         Logger.Action(origin, "Issues scan started");
 
@@ -197,45 +200,20 @@ internal static class Issues {
     }
 
     private static void ScanDevices() {
-        Dictionary<string, Database.Entry> hosts = new Dictionary<string, Database.Entry>();
-        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
-            if (device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute)) {
+        CheckIpAddresses(out Dictionary<string, Database.Entry> ipAddresses);
+        CheckMacAddresses();
 
-                string[] ips = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
-                for (int i = 0; i < ips.Length; i++) {
-                    if (string.IsNullOrEmpty(ips[i])) { continue; }
-                    if (ips[i].Contains("dhcp", StringComparison.OrdinalIgnoreCase)) { continue; }
-
-                    if (hosts.ContainsKey(ips[i])) {
-                        issues.Add(new Issue {
-                            severity = SeverityLevel.info,
-                            message  = "IP address is duplicated in various records",
-                            entry    = ips[i],
-                            category = "Database",
-                            source   = "Internal check",
-                            file     = device.Value.filename,
-                            isUser   = false,
-                        });
-
-                        continue;
-                    }
-
-                    hosts.Add(ips[i], device.Value);
-                }
-            }
-        }
-
-        foreach (KeyValuePair<string, Database.Entry> host in hosts) {
+        foreach (KeyValuePair<string, Database.Entry> host in ipAddresses) {
             if (CheckRtt(host.Value, host.Key, out Issue? issue)) {
                 issues.Add(issue.Value);
             }
         }
 
+        ipAddresses.Clear();
+
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
             ScanDevice(device.Value);
         }
-
-        hosts.Clear();
     }
 
     public static void ScanDevice(Database.Entry device) {
@@ -279,6 +257,70 @@ internal static class Issues {
         }
         else if (Data.SWITCH_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
             //TODO:
+        }
+    }
+
+    public static void CheckIpAddresses(out Dictionary<string, Database.Entry> ipAddresses) {
+        ipAddresses = new Dictionary<string, Database.Entry>();
+        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+            if (device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute)) {
+
+                string[] ips = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
+                for (int i = 0; i < ips.Length; i++) {
+                    if (string.IsNullOrEmpty(ips[i])) { continue; }
+                    if (ips[i].Contains("dhcp", StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                    if (ipAddresses.ContainsKey(ips[i])) {
+                        issues.Add(new Issue {
+                            severity = SeverityLevel.info,
+                            message = "IP address is duplicated in various records",
+                            entry = ips[i],
+                            category = "Database",
+                            source = "Internal check",
+                            file = device.Value.filename,
+                            isUser = false,
+                        });
+
+                        continue;
+                    }
+
+                    ipAddresses.Add(ips[i], device.Value);
+                }
+            }
+        }
+    }
+
+    public static void CheckMacAddresses() {
+        Dictionary<string, Database.Entry> macAddresses = new Dictionary<string, Database.Entry>();
+
+        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+            if (device.Value.attributes.TryGetValue("mac address", out Database.Attribute ipAttribute)) {
+
+                string[] macs = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
+                for (int i = 0; i < macs.Length; i++) {
+                    if (string.IsNullOrEmpty(macs[i])) { continue; }
+                    
+                    macs[i] = macs[i].Replace(":", "").Replace("-", "").ToUpper();
+                    
+                    if (string.IsNullOrEmpty(macs[i])) { continue; }
+
+                    if (macAddresses.ContainsKey(macs[i])) {
+                        issues.Add(new Issue {
+                            severity = SeverityLevel.info,
+                            message  = "MAC address is duplicated in various records",
+                            entry    = macs[i].Length == 12 ? Regex.Replace(macs[i], @"(\w{2})(?=\w)", "$1:") : macs[i],
+                            category = "Database",
+                            source   = "Internal check",
+                            file     = device.Value.filename,
+                            isUser   = false,
+                        });
+
+                        continue;
+                    }
+
+                    macAddresses.Add(macs[i], device.Value);
+                }
+            }
         }
     }
 

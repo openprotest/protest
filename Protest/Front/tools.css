@@ -59,6 +59,16 @@
 	-webkit-user-select: text; user-select: text;
 }
 
+.tool-element > .tool-dhcp::after {
+	content: "DHCP";
+	background-color: #222;
+	font-size: small;
+	font-weight: 600;
+	margin-left: 8px;
+	padding: 2px 4px;
+	border-radius: 4px;
+}
+
 .tool-element > .tool-button-expanded {
 	position: absolute;
 	width: 20px;

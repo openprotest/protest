@@ -138,6 +138,8 @@ public sealed class Listener {
 
         { "/config/zones/list",        (ctx, parameters, username) => Tools.Zones.ListZones() },
         { "/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx) },
+        { "/config/dhcprange/list",    (ctx, parameters, username) => Tools.DhcpRange.ListRange() },
+        { "/config/dhcprange/save",    (ctx, parameters, username) => Tools.DhcpRange.SaveRange(ctx) },
 
         { "/config/smtpprofiles/list", (ctx, parameters, username) => Tools.SmtpProfiles.List() },
         { "/config/smtpprofiles/save", (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx) },

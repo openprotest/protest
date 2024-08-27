@@ -645,11 +645,20 @@ class Ping extends Console {
 	Add(host) {
 		if (host.length === 0) return;
 
-		for (let key in this.hashtable)
+		for (let key in this.hashtable) {
 			if (this.hashtable[key].host === host) {
 				this.list.appendChild(this.hashtable[key].element);
 				return;
 			}
+		}
+
+		const octets = host.split(".").map(o=>parseInt(o));
+		const isIPv4 = octets.length == 4 && octets.every(o=> o>=0 && o<=255);
+		let isDhcp = false;
+		if (isIPv4) {
+			const int = octets[0] * 256*256*256 + octets[1] * 256*256 + octets[2] * 256 + octets[3];
+			isDhcp = KEEP.dhcpRange.some(o=> o.first<=int && o.last>=int);
+		}
 
 		const div = document.createElement("div");
 		div.className = "tool-element";
@@ -659,6 +668,10 @@ class Ping extends Console {
 		name.className = "tool-label";
 		name.textContent = host;
 		div.appendChild(name);
+
+		if (isDhcp) {
+			name.classList.add("tool-dhcp");
+		}
 
 		const graph = document.createElement("div");
 		graph.className = "tool-graph";
@@ -676,7 +689,7 @@ class Ping extends Console {
 
 		let ping = [];
 		let ping_e = [];
-		for (let i = 0; i < Ping.HISTORY_LIMIT; i++) {
+		for (let i=0; i<Ping.HISTORY_LIMIT; i++) {
 			let p = document.createElement("div");
 			p.style.right = 3.125 * (Ping.HISTORY_LIMIT-i-1) + "%";
 			graph.appendChild(p);

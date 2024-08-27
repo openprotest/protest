@@ -54,6 +54,67 @@ const KEEP = {
 		};
 	},
 
+	ParseRange: string=> {
+		const dashSplit = string.split("-");
+		const slashSplit = string.split("/");
+
+		if (dashSplit.length === 2) {
+			dashSplit.map(o=>o.trim());
+
+			let ipA = dashSplit[0].split(".").map(o=>parseInt(o));
+			let ipB = dashSplit[1].split(".").map(o=>parseInt(o));
+
+			const first = ipA[0] * 256*256*256 + ipA[1] * 256*256 + ipA[2] * 256 + ipA[3];
+			const last = ipB[0] * 256*256*256 + ipB[1] * 256*256 + ipB[2] * 256 + ipB[3];
+
+			return {
+				first: first,
+				last: last
+			}
+		}
+		else if (slashSplit.length === 2) {
+			slashSplit.map(o=>o.trim());
+			
+			let gw = slashSplit[0].split(".").map(o=>parseInt(o));
+
+			if (gw.length != 4 || gw.find(o=> o<0 || o>255)) {
+				return {};
+			}
+
+			let cidr = parseInt(slashSplit[1]);
+			let octet = Math.floor(cidr / 8);
+			let target = cidr % 8;
+
+			let mask = [0,0,0,0];
+			for (let i=0; i<octet; i++) { mask[i] = 255; }
+			for (let i=octet+1; i<4; i++) { mask[i] = 0; }
+			let v = 0;
+			for (let i=0; i<target; i++) { v += Math.pow(2, 7-i); }
+			mask[octet] = v;
+
+			const first =
+				(gw[0] & mask[0]) * 256*256*256 +
+				(gw[1] & mask[1]) * 256*256 +
+				(gw[2] & mask[2]) * 256 +
+				(gw[3] & mask[3]);
+
+			const last =
+				(gw[0] | (255 - mask[0])) * 256*256*256 +
+				(gw[1] | (255 - mask[1])) * 256*256 +
+				(gw[2] | (255 - mask[2])) * 256 +
+				(gw[3] | (255 - mask[3]));
+
+			return {
+				first: first,
+				last: last,
+				cidr: cidr
+			}
+		}
+		else {
+			return {};
+		}
+	},
+
 	MessageHandler: message=> {
 		switch (message.action) {
 		case "init":
@@ -83,40 +144,30 @@ const KEEP = {
 			KEEP.zones = message.list;
 
 			for (let i=0; i<KEEP.zones.length; i++) {
-				const split = KEEP.zones[i].network.split("/");
-				if (split.length !== 2) continue;
+				const range = KEEP.ParseRange(KEEP.zones[i].network);
+				if (range.first == null || range.last == null) continue;
 
-				let gw = split[0].split(".").map(o=>parseInt(o));
-				if (gw.length != 4) continue;
-				if (gw.find(o => o<0 || o>255)) continue;
-
-				let cidr = parseInt(split[1]);
-				let octet = Math.floor(cidr / 8);
-				let target = cidr % 8;
-
-				let mask = [0, 0, 0, 0];
-				for (let i=0; i<octet; i++) { mask[i] = 255; }
-				for (let i=octet+1; i<4; i++) { mask[i] = 0; }
-				let v = 0;
-				for (let i=0; i<target; i++) { v += Math.pow(2, 7-i); }
-				mask[octet] = v;
-
-				let first =
-					(gw[0] & mask[0]) * 256*256*256 +
-					(gw[1] & mask[1]) * 256*256 +
-					(gw[2] & mask[2]) * 256 +
-					(gw[3] & mask[3]);
-
-				let last =
-					(gw[0] | (255 - mask[0])) * 256*256*256 +
-					(gw[1] | (255 - mask[1])) * 256*256 +
-					(gw[2] | (255 - mask[2])) * 256 +
-					(gw[3] | (255 - mask[3]));
-
-				KEEP.zones[i].first = first;
-				KEEP.zones[i].last = last;
-				KEEP.zones[i].priority = cidr;
+				KEEP.zones[i].first = range.first;
+				KEEP.zones[i].last = range.last;
+				KEEP.zones[i].priority = range.cidr ? range.cidr : 0;
 			}
+
+			KEEP.zones = KEEP.zones.filter(o=>o.first && o.last);
+
+			break;
+
+		case "dhcp-range":
+			KEEP.dhcpRange = message.list;
+			for (let i=0; i<KEEP.dhcpRange.length; i++) {
+				const range = KEEP.ParseRange(KEEP.dhcpRange[i].network);
+				if (range.first == null || range.last == null) continue;
+
+				KEEP.dhcpRange[i].first = range.first;
+				KEEP.dhcpRange[i].last = range.last;
+			}
+
+			KEEP.dhcpRange = KEEP.dhcpRange.filter(o=>o.first && o.last);
+
 			break;
 
 		case "update":
@@ -189,7 +240,6 @@ const KEEP = {
 			}
 			break;
 
-
 		case "start-fetch":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
@@ -232,6 +282,15 @@ const KEEP = {
 				WIN.array[i].ShowDevices();
 				WIN.array[i].tabsList[0].className = "v-tab-selected";
 				WIN.array[i].taskTab.style.visibility = "hidden";
+			}
+			break;
+
+		case "issues":
+			for (let i = 0; i < WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof Issues)) continue;
+				if (WIN.array[i].ws === null) {
+					WIN.array[i].Connect();
+				}
 			}
 			break;
 
