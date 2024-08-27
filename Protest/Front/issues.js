@@ -210,10 +210,10 @@ class Issues extends List {
 		filterMenu.className = "win-toolbar-submenu";
 		filterButton.appendChild(filterMenu);
 
-		const findFilter = document.createElement("input");
-		findFilter.type = "text";
-		findFilter.placeholder = "Find";
-		filterMenu.appendChild(findFilter);
+		const filterInput = document.createElement("input");
+		filterInput.type = "text";
+		filterInput.placeholder = "Find";
+		filterMenu.appendChild(filterInput);
 
 		const filtersList = document.createElement("div");
 		filtersList.className = "no-results-small";
@@ -259,14 +259,16 @@ class Issues extends List {
 			}
 		};
 
-		findFilter.onchange = findFilter.oninput = ()=> Refresh();
+		filterInput.onchange = filterInput.oninput = ()=> Refresh();
 
-		findFilter.onkeydown = event=> {
+		filterInput.onkeydown = event=> {
 			if (event.key === "Escape") {
-				findFilter.value = "";
-				findFilter.onchange();
+				filterInput.value = "";
+				filterInput.onchange();
 			}
 		};
+
+		filterButton.onclick = ()=> setTimeout(filterInput.focus(), 200);
 
 		filterButton.ondblclick = ()=> {
 			this.args.filter = "";

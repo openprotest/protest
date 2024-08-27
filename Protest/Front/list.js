@@ -243,10 +243,10 @@ class List extends Window {
 		filterMenu.className = "win-toolbar-submenu";
 		filterButton.appendChild(filterMenu);
 
-		const findFilter = document.createElement("input");
-		findFilter.type = "text";
-		findFilter.placeholder = "Find";
-		filterMenu.appendChild(findFilter);
+		const filterInput = document.createElement("input");
+		filterInput.type = "text";
+		filterInput.placeholder = "Find";
+		filterMenu.appendChild(filterInput);
 
 		const filtersList = document.createElement("div");
 		filtersList.className = "no-results-small";
@@ -256,13 +256,13 @@ class List extends Window {
 		const ClearSelection = ()=> filtersList.childNodes.forEach(o=> o.style.backgroundColor = "");
 
 		const Refresh = ()=> {
-			findFilter.value = findFilter.value.toLowerCase();
+			filterInput.value = filterInput.value.toLowerCase();
 
 			let types = [];
 			for (const key in this.link.data) {
 				if (!this.link.data[key].type) continue;
 				if (types.includes(this.link.data[key].type.v.toLowerCase())) continue;
-				if (!this.link.data[key].type.v.toLowerCase().includes(findFilter.value)) continue;
+				if (!this.link.data[key].type.v.toLowerCase().includes(filterInput.value)) continue;
 				if (this.link.data[key].type.v.length === 0) continue;
 				types.push(this.link.data[key].type.v.toLowerCase());
 			}
@@ -305,23 +305,23 @@ class List extends Window {
 			}
 		};
 
-		filterMenu.onclick = ()=> findFilter.focus();
+		filterMenu.onclick = ()=> filterInput.focus();
 
-		findFilter.onchange = findFilter.oninput = ()=> Refresh();
+		filterInput.onchange = filterInput.oninput = ()=> Refresh();
 
-		findFilter.onkeydown = event=> {
+		filterInput.onkeydown = event=> {
 			if (event.key === "Escape") {
-				if (findFilter.value === "") {
+				if (filterInput.value === "") {
 					this.list.focus();
 				}
 				else {
-					findFilter.value = "";
-					findFilter.onchange();
+					filterInput.value = "";
+					filterInput.onchange();
 				}
 			}
 		};
 
-		filterButton.onclick = ()=> findFilter.focus();
+		filterButton.onclick = ()=> setTimeout(filterInput.focus(), 200);
 
 		filterButton.ondblclick = ()=> {
 			this.args.filter = "";
