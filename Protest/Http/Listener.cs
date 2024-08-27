@@ -447,8 +447,9 @@ public sealed class Listener {
         case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx);     return true;
         case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx);   return true;
         case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx);      return true;
-        case "/ws/issues":           Tasks.Issues.WebSocketHandler(ctx);      return true;
+        case "/ws/issues":           Tasks.Issues.WebSocketHandler(ctx);       return true;
         case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
+        case "/ws/ipscanner":        Tools.IpScanner.WebSocketHandler(ctx);    return true;
         case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);     return true;
         case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx);   return true;
         case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);    return true;

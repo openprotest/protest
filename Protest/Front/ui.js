@@ -348,12 +348,13 @@ const MENU = {
 		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:false, f:()=> new AddressBook(),   k:"phone email" },
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),          k:"messages" },
 
-		{ t:"Watchdog",        i:"mono/watchdog.svg?light",     g:"tools", h:false, f:()=> new Watchdog(), k:"" },
-		{ t:"Gandalf",         i:"mono/gandalf.svg?light",      g:"tools", h:false, f:()=> new Gandalf() },
+		{ t:"IP scanner", i:"mono/ipscanner.svg?light",   g:"tools", h:false, f:()=> new IpScanner() },
+		{ t:"Watchdog",        i:"mono/watchdog.svg?light",     g:"tools", h:false, f:()=> new Watchdog() },
 		{ t:"Reverse proxy",   i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args), k:"man in the middle" },
-		{ t:"Issues",          i:"mono/issues.svg?light",   g:"tools", h:false, f:()=> new Issues() },
-		//{ t:"Scripts",         i:"mono/scripts.svg?light",       g:"tools", h:false, f:args=> {} },
-		//{ t:"Script reports",  i:"mono/reportfile.svg?light",    g:"tools", h:true,  f:args=> {} },
+		{ t:"Issues",          i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
+		{ t:"Gandalf",         i:"mono/gandalf.svg?light",      g:"tools", h:true,  f:()=> new Gandalf() },
+		//{ t:"Scripts",         i:"mono/scripts.svg?light",     g:"tools", h:false, f:args=> {} },
+		//{ t:"Script reports",  i:"mono/reportfile.svg?light",  g:"tools", h:true,  f:args=> {} },
 		//{ t:"Ongoing scripts", i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:args=> {} },
 		
 		{ t:"Ping",               i:"mono/ping.svg?light",          g:"utilities", h:false, f:args=> new Ping(args),         k:"roundtrip rtt icmp echo reply" },
@@ -829,8 +830,6 @@ const MENU = {
 	},
 
 	Filter: index=> {
-		//if (index < -1) { index = 4; }
-
 		if (index === MENU.filterIndex || index < 0) {
 			menufilterdot.style.transform = "scale(0)";
 			menufilterdot.style.width = "8px";

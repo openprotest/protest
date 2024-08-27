@@ -35,8 +35,8 @@ class Issues extends List {
 		this.SetTitle("Issues");
 		this.SetIcon("mono/issues.svg");
 
-		this.AddCssDependencies("list.css");
 		this.AddCssDependencies("issues.css");
+		this.AddCssDependencies("list.css");
 
 		const columns = ["severity", "issue", "entry", "category", "source"];
 		this.SetupColumns(columns);
@@ -60,7 +60,7 @@ class Issues extends List {
 		this.LinkData({data:[], length:0 });
 
 		this.SetupToolbar();
-		this.scanButton = this.AddToolbarButton("Scan network", "mono/scannet.svg?light");
+		this.scanButton = this.AddToolbarButton("Scan network", "mono/play.svg?light");
 		this.AddToolbarSeparator();
 		this.filterButton = this.SetupFilter();
 		this.SetupFind();
@@ -113,7 +113,7 @@ class Issues extends List {
 			try {
 				this.ws.close();
 			}
-			catch (ex) {};
+			catch (ex) {}
 		}
 	}
 
@@ -340,7 +340,7 @@ class Issues extends List {
 			try {
 				this.ws.close();
 			}
-			catch (ex) {};
+			catch (ex) {}
 		}
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
@@ -418,7 +418,7 @@ class Issues extends List {
 	}
 
 	ScanDialog() {
-		const okButton = this.ConfirmBox("Are you sure you want to start scanning for issues?", false, "mono/scannet.svg");
+		const okButton = this.ConfirmBox("Are you sure you want to start scanning for issues?", false, "mono/issues.svg");
 		okButton.value = "Start";
 
 		okButton.addEventListener("click", async ()=> {

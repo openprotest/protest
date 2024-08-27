@@ -76,14 +76,14 @@ internal static class Issues {
 
         Logger.Action(origin, "Issues scan started");
 
-        return "{\"status\":\"started\"}"u8.ToArray(); ;
+        return "{\"status\":\"started\"}"u8.ToArray();
     }
 
     public static byte[] Stop(string origin) {
         if (task is null) return "{\"error\":\"Scanning task is not running\"}"u8.ToArray();
         task.RequestCancel(origin);
 
-        Logger.Action(origin, $"Issues scan stoped");
+        Logger.Action(origin, $"Issues scan stopped");
 
         return "{\"status\":\"stopped\"}"u8.ToArray();
     }

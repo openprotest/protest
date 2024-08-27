@@ -319,6 +319,7 @@ internal static class Auth {
                 path.Add("/ws/portscan");
                 path.Add("/ws/traceroute");
                 path.Add("/ws/sitecheck");
+                path.Add("/tools/ipscanner");
                 path.Add("/tools/bulkping");
                 path.Add("/tools/dnslookup");
                 path.Add("/tools/ntp");
