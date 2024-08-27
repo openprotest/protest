@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Protest.Workers;
+namespace Protest.Tasks;
 
 internal sealed class TaskWrapper : IDisposable {
 

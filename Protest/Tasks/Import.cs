@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Protest.Tools;
 
-namespace Protest.Workers;
+namespace Protest.Tasks;
 
 internal class Import {
     public static byte[] ImportTask(Dictionary<string, string> parameters, string origin) {

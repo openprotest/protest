@@ -14,7 +14,7 @@ using Protest.Http;
 using Protest.Protocols;
 using Protest.Tools;
 
-namespace Protest.Workers;
+namespace Protest.Tasks;
 
 internal static class Issues {
     private const int    MIN_LIFELINE_ENTRIES              = 10;

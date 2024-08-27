@@ -17,7 +17,7 @@ class Automation extends List {
 		this.list.style.overflowY = "auto";
 
 		this.SetupToolbar();
-		this.createButton = this.AddToolbarButton("Create worker", "mono/add.svg?light");
+		this.createButton = this.AddToolbarButton("Create task", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
@@ -34,7 +34,7 @@ class Automation extends List {
 		this.pauseButton.disabled = true;
 		this.stopButton.disabled = true;
 
-		this.ListWorkers();
+		this.ListTasks();
 	}
 
 	UpdateAuthorization() { //overrides
@@ -47,7 +47,7 @@ class Automation extends List {
 		super.UpdateAuthorization();
 	}
 
-	async ListWorkers() {
+	async ListTasks() {
 		try {
 			const response = await fetch("tasks/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);

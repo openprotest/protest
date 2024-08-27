@@ -16,7 +16,7 @@ using Protest.Tools;
 using Lextm.SharpSnmpLib;
 using Protest.Protocols.Snmp;
 
-namespace Protest.Workers;
+namespace Protest.Tasks;
 
 internal static class Fetch {
 

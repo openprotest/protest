@@ -56,7 +56,7 @@ internal class Program {
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "Done" : "Failed"));
 
         Console.Write("Starting workers");
-        Workers.Automation.Initialize();
+        Tasks.Automation.Initialize();
         Console.WriteLine("        Done");
 
         Console.WriteLine();

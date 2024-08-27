@@ -2,11 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Protest.Workers;
+namespace Protest.Tasks;
 internal static class Tasks {
     public static byte[] ListTasks() {
+
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new {
+            //TODO:
+        });
+
+
         StringBuilder builder = new StringBuilder();
 
         builder.Append('{');
