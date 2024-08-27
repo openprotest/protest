@@ -48,7 +48,7 @@ internal static class Issues {
         }
     }
 
-    private static TaskWrapper task;
+    public static TaskWrapper task;
     private static ConcurrentBag<Issue> issues;
 
     public static byte[] ToLiveStatsJsonBytes(this Issue issue) => JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, string> {

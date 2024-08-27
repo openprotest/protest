@@ -134,9 +134,12 @@ internal static class Watchdog {
         int nextSleep = FIVE_MINUTE_IN_MILLI;
         //align time to the next 5-min interval
         long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
+        task.status = TaskWrapper.TaskStatus.Idle;
         Thread.Sleep((int)gap);
 
         while (true) {
+            task.status = TaskWrapper.TaskStatus.Running;
+
             long loopStartTimeStamp = DateTime.UtcNow.Ticks;
 
             SmtpProfiles.Profile[] smtpProfiles = SmtpProfiles.Load();
@@ -156,9 +159,11 @@ internal static class Watchdog {
                 }
             }
 
+            task.status = TaskWrapper.TaskStatus.Idle;
             task.Sleep(Math.Max(nextSleep - (int)((DateTime.UtcNow.Ticks - loopStartTimeStamp) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
+                task.status = TaskWrapper.TaskStatus.Canceling;
                 task?.Dispose();
                 task = null;
                 return;
@@ -512,7 +517,7 @@ internal static class Watchdog {
                 File.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
             }
 
-            if (task?.status == TaskWrapper.TaskStatus.running) {
+            if (task?.status == TaskWrapper.TaskStatus.Running) {
                 StopTask(origin);
             }
 

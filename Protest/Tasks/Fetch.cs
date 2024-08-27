@@ -645,7 +645,7 @@ internal static class Fetch {
             const int WINDOW = 32;
             ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
-            task.status = TaskWrapper.TaskStatus.running;
+            task.status = TaskWrapper.TaskStatus.Running;
 
             List<string> queue = new List<string>(hosts);
             List<string> redo = new List<string>();
@@ -690,7 +690,7 @@ internal static class Fetch {
 
                 if (retries > totalRetries++ && queue.Count > 0) {
                     long wait0 = DateTime.UtcNow.Ticks;
-                    task.status = TaskWrapper.TaskStatus.idle;
+                    task.status = TaskWrapper.TaskStatus.Idle;
 
                     KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
 
@@ -699,7 +699,7 @@ internal static class Fetch {
                         break;
                     }
 
-                    task.status = TaskWrapper.TaskStatus.running;
+                    task.status = TaskWrapper.TaskStatus.Running;
 
                     KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
                 }
@@ -783,7 +783,7 @@ internal static class Fetch {
             long lastBroadcast = DateTime.UtcNow.Ticks;
             ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
-            task.status = TaskWrapper.TaskStatus.running;
+            task.status = TaskWrapper.TaskStatus.Running;
 
             for (int i = 0; i < users.Length; i++) {
                 ConcurrentDictionary<string, string[]> hash = SingleUser(users[i]);

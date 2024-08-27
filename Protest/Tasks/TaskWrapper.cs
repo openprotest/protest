@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Protest.Tasks;
@@ -6,11 +8,11 @@ namespace Protest.Tasks;
 internal sealed class TaskWrapper : IDisposable {
 
     public enum TaskStatus : byte {
-        initializing,
-        running,
-        idle,
-        canceling,
-        canceled
+        Initializing,
+        Running,
+        Idle,
+        Canceling,
+        Stopped
     }
 
     private readonly CancellationTokenSource cancellationTokenSource;
@@ -37,7 +39,7 @@ internal sealed class TaskWrapper : IDisposable {
     public int CompletedSteps { get; set; }
 
     public TaskWrapper(string name) {
-        status = TaskStatus.initializing;
+        status = TaskStatus.Initializing;
         cancellationTokenSource = new CancellationTokenSource();
         cancellationToken = cancellationTokenSource.Token;
         started = DateTime.UtcNow.Ticks;
@@ -68,8 +70,13 @@ internal sealed class TaskWrapper : IDisposable {
         }
     }
 
+    public string ProgressString() {
+        if (this.TotalSteps <= 0) { return "-/-"; }
+        return $"{this.CompletedSteps}/{this.TotalSteps}";
+    }
+
     public void RequestCancel(string origin) {
-        status = TaskStatus.canceling;
+        status = TaskStatus.Canceling;
         Logger.Action(origin, $"Canceling task: {name}");
         cancellationTokenSource.Cancel();
     }
@@ -107,7 +114,7 @@ internal sealed class TaskWrapper : IDisposable {
     }
 
     public void Dispose() {
-        status = TaskStatus.canceled;
+        status = TaskStatus.Stopped;
         cancellationTokenSource?.Dispose();
     }
 }

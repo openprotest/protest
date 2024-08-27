@@ -61,6 +61,8 @@ internal static partial class Lifeline {
         long lastVersion = 0;
 
         while (true) {
+            task.status = TaskWrapper.TaskStatus.Running;
+
             long startTimeStamp = DateTime.UtcNow.Ticks;
 
             if (lastVersion != DatabaseInstances.devices.version) {
@@ -180,9 +182,11 @@ internal static partial class Lifeline {
             wmiThread?.Join();
             snmpThread?.Join();
 
+            task.status = TaskWrapper.TaskStatus.Idle;
             task.Sleep(Math.Max((int)((FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
+                task.status = TaskWrapper.TaskStatus.Canceling;
                 task?.Dispose();
                 task = null;
                 return;

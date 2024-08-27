@@ -1,61 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 namespace Protest.Tasks;
 internal static class Tasks {
     public static byte[] ListTasks() {
 
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new {
-            //TODO:
+            data = new[] {
+                new {
+                    name     = new { v = "Lifeline" },
+                    status   = new { v = Lifeline.task?.status.ToString() ?? "Stopped" },
+                    progress = new { v = Lifeline.task?.ProgressString() ?? "-/-"}
+                },
+                new {
+                    name     = new { v = "Watchdog" },
+                    status   = new { v = Watchdog.task?.status.ToString() ?? "Stopped" },
+                    progress = new { v =Watchdog.task?.ProgressString() ?? "-/-" }
+                },
+                /*new {
+                    name     = new { v = "Lastseen" },
+                    status   = new { v = TaskWrapper.TaskStatus.Stopped.ToString() },
+                    progress = new { v = "-/-" }
+                },*/
+                new {
+                    name     = new { v = "Issues" },
+                    status   = new { v = Issues.task?.status.ToString() ?? "Stopped" },
+                    progress = new { v = Issues.task?.ProgressString() ?? "-/-" }
+                },
+                new {
+                    name     = new { v = "Fetch" },
+                    status   = new { v = Fetch.task?.status.ToString() ?? "Stopped" },
+                    progress = new { v = Fetch.task?.ProgressString() ?? "-/-" }
+                }
+            },
+
+            length = 4
         });
 
-
-        StringBuilder builder = new StringBuilder();
-
-        builder.Append('{');
-        builder.Append("\"data\":{");
-
-        builder.Append("\"lifeline\":{");
-        builder.Append($"\"name\":{{\"v\":\"Lifeline\"}},");
-        builder.Append($"\"status\":{{\"v\":\"Running\"}},");
-        builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
-        builder.Append("},");
-
-        builder.Append("\"watchdog\":{");
-        builder.Append($"\"name\":{{\"v\":\"Watchdog\"}},");
-        builder.Append($"\"status\":{{\"v\":\"Running\"}},");
-        builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
-        builder.Append("},");
-
-        //builder.Append("\"lastseen\":{");
-        //builder.Append($"\"name\":{{\"v\":\"Lastseen\"}},");
-        //builder.Append($"\"status\":{{\"v\":\"Running\"}},");
-        //builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
-        //builder.Append("},");
-
-        builder.Append("\"issues\":{");
-        builder.Append($"\"name\":{{\"v\":\"Issues\"}},");
-        builder.Append($"\"status\":{{\"v\":\"Stopped\"}},");
-        builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
-        builder.Append("},");
-
-        builder.Append("\"fetch\":{");
-        builder.Append($"\"name\":{{\"v\":\"Fetch\"}},");
-        builder.Append($"\"status\":{{\"v\":\"Stopped\"}},");
-        builder.Append($"\"progress\":{{\"v\":\"-/-\"}}");
-        builder.Append('}');
-
-
-        builder.Append("},");
-
-        builder.Append("\"length\":4");
-
-        builder.Append('}');
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
+        return bytes;
     }
 }
