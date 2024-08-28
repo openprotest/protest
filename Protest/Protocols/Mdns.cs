@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -13,12 +11,16 @@ using static Protest.Protocols.Dns;
 namespace Protest.Protocols;
 
 internal class Mdns {
-
     private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V4 = IPAddress.Parse("224.0.0.251");
     private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V6 = IPAddress.Parse("ff02::fb");
     private static readonly int MDNS_PORT = 5353;
 
-    private struct Answer {
+    public const string HTTP_ANY     = "_services._dns-sd._udp.local";
+    public const string HTTP_QUERY   = "_http._tcp.local";
+    public const string HTTP_PRINTER = "_ipp._tcp.local";
+    public const string HTTP_IPP     = "_printer._tcp.local";
+
+    public struct Answer {
         public RecordType type;
         public int ttl;
         public ushort length;
@@ -66,91 +68,118 @@ internal class Mdns {
     }
 
     public static byte[] Resolve(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
-        byte[] query = ConstructQuery(queryString, type);
+        byte[] request = ConstructQuery(queryString, type);
+
+        (List<byte[]> matchingData, List<Answer> answers) = ResolveInternal(queryString, request, timeout, type, includeAdditionalRrs);
+        return Serialize(request, matchingData, answers);
+    }
+
+    public static List<Answer> ResolveToArray(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
+        byte[] request = ConstructQuery(queryString, type);
+
+        (_, List<Answer> answers) = ResolveInternal(queryString, request, timeout, type, includeAdditionalRrs);
+        return answers;
+    }
+
+    private static (List<byte[]>, List<Answer>) ResolveInternal(string queryString, byte[] request, int timeout, RecordType type, bool includeAdditionalRrs) {
         List<byte[]> receivedData = new List<byte[]>();
-        List<IPAddress> sender = new List<IPAddress>();
+        List<IPAddress> senders = new List<IPAddress>();
 
         IPAddress[] nics = IpTools.GetIpAddresses();
         for (int i = 0; i < nics.Length && receivedData.Count == 0; i++) {
-            if (IPAddress.IsLoopback(nics[i])) { continue; }
+            if (IPAddress.IsLoopback(nics[i]))
+                continue;
 
-            IPAddress localAddress = nics[i];
-            IPEndPoint localEndPoint = new IPEndPoint(localAddress, MDNS_PORT);
+            Socket socket = CreateAndBindSocket(nics[i], timeout, out IPEndPoint remoteEndPoint);
+            if (socket == null)
+                continue;
 
-            IPEndPoint remoteEndPoint;
-            Socket socket = null;
             try {
-                if (localAddress.AddressFamily == AddressFamily.InterNetwork) {
-                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(MDNS_MULTICAST_ADDRESS_V4, localAddress));
-                    remoteEndPoint = new IPEndPoint(MDNS_MULTICAST_ADDRESS_V4, MDNS_PORT);
-                }
-                else if (localAddress.AddressFamily == AddressFamily.InterNetworkV6) {
-                    socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
-                    socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(MDNS_MULTICAST_ADDRESS_V6));
-                    remoteEndPoint = new IPEndPoint(MDNS_MULTICAST_ADDRESS_V6, MDNS_PORT);
-                }
-                else {
-                    continue;
-                }
-
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                socket.Bind(localEndPoint);
-
-                socket.ReceiveTimeout = timeout;
-
-                socket.SendTo(query, remoteEndPoint);
-
-                DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
-
-                while (DateTime.Now <= endTime) {
-                    byte[] reply = new byte[1024];
-
-                    try {
-                        EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                        int length = socket.ReceiveFrom(reply, ref remoteEP);
-
-                        if (length > 0) {
-                            byte[] actualReply = new byte[length];
-                            Array.Copy(reply, actualReply, length);
-
-                            receivedData.Add(actualReply);
-                            sender.Add(((IPEndPoint)remoteEP).Address);
-                        }
-                    }
-                    catch { }
-                }
+                socket.SendTo(request, remoteEndPoint);
+                ReceiveResponses(socket, timeout, receivedData, senders);
             }
             catch { }
             finally {
-                socket?.Dispose();
+                socket.Dispose();
             }
         }
 
         List<byte[]> matchingData = new List<byte[]>();
         List<Answer> answers = new List<Answer>();
 
-        try {
-            for (int i = 0; i < receivedData.Count; i++) {
-                byte[] response = receivedData[i];
-                ushort answerCount, authorityCount, additionalCount;
-                Answer[] answer = ParseAnswers(response, type, sender[i], out answerCount, out authorityCount, out additionalCount, includeAdditionalRrs);
+        for (int i = 0; i < receivedData.Count; i++) {
+            byte[] response = receivedData[i];
 
-                for (int j = 0; j < answer.Length; j++) {
-                    if (type != RecordType.ANY && answer[j].type != type) { continue; }
-                    if (!includeAdditionalRrs) {
-                        if (!answer[j].questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
-                    }
-                    answers.Add(answer[j]);
+            try {
+                Answer[] answer = ParseAnswers(response, type, senders[i], out _, out _, out _, includeAdditionalRrs);
+
+                foreach (Answer ans in answer) {
+                    if (type != RecordType.ANY && ans.type != type) { continue; }
+                    if (!includeAdditionalRrs && !ans.questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                    answers.Add(ans);
                     matchingData.Add(response);
                 }
             }
-        }
-        catch {
-            return "{\"error\":\"unknown error\",\"errorcode\":\"0\"}"u8.ToArray();
+            catch { }
         }
 
-        return Serialize(query, matchingData, answers);
+        return (matchingData, answers);
+    }
+
+    private static Socket CreateAndBindSocket(IPAddress localAddress, int timeout, out IPEndPoint remoteEndPoint) {
+        Socket socket = null;
+        remoteEndPoint = null;
+
+        try {
+            if (localAddress.AddressFamily == AddressFamily.InterNetwork) {
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(MDNS_MULTICAST_ADDRESS_V4, localAddress));
+                remoteEndPoint = new IPEndPoint(MDNS_MULTICAST_ADDRESS_V4, MDNS_PORT);
+            }
+            else if (localAddress.AddressFamily == AddressFamily.InterNetworkV6) {
+                socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+                socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(MDNS_MULTICAST_ADDRESS_V6));
+                remoteEndPoint = new IPEndPoint(MDNS_MULTICAST_ADDRESS_V6, MDNS_PORT);
+            }
+            else {
+                return null;
+            }
+
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.Bind(new IPEndPoint(localAddress, MDNS_PORT));
+            socket.ReceiveTimeout = timeout;
+
+            return socket;
+        }
+        catch {
+            socket?.Dispose();
+            return null;
+        }
+    }
+
+    private static void ReceiveResponses(Socket socket, int timeout, List<byte[]> receivedData, List<IPAddress> senders) {
+        DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
+
+        while (DateTime.Now <= endTime) {
+            byte[] reply = new byte[1024];
+
+            try {
+                EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                int length = socket.ReceiveFrom(reply, ref remoteEP);
+
+                if (length > 0) {
+                    byte[] actualReply = new byte[length];
+                    Array.Copy(reply, actualReply, length);
+
+                    receivedData.Add(actualReply);
+                    senders.Add(((IPEndPoint)remoteEP).Address);
+                }
+            }
+            catch {
+                // Handle individual receive errors if needed
+            }
+        }
     }
 
     private static byte[] ConstructQuery(string queryString, RecordType type) {
@@ -418,33 +447,33 @@ internal class Mdns {
         return new string(name.Slice(0, nameIndex));
     }
 
-    private static byte[] Serialize(byte[] query, List<byte[]> data, List<Answer> answers) {
+    private static byte[] Serialize(byte[] request, List<byte[]> data, List<Answer> answers) {
         StringBuilder builder = new StringBuilder();
 
         builder.Append('{');
 
         if (answers.Count > 0 && answers[0].error > 0) {
             string errorMessage = answers[0].error switch {
-                0 => "no error",
-                1 => "query format error",
-                2 => "server failure",
-                3 => "no such name",
-                4 => "function not implemented",
-                5 => "refused",
-                6 => "name should not exist",
-                7 => "RRset should not exist",
-                8 => "server not authoritative for the zone",
-                9 => "name not in zone",
+                0   => "no error",
+                1   => "query format error",
+                2   => "server failure",
+                3   => "no such name",
+                4   => "function not implemented",
+                5   => "refused",
+                6   => "name should not exist",
+                7   => "RRset should not exist",
+                8   => "server not authoritative for the zone",
+                9   => "name not in zone",
                 254 => "invalid response",
-                _ => "unknown error"
+                _   => "unknown error"
             };
             builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{answers[0].error}\",");
         }
 
         builder.Append("\"req\":[");
-        for (int i = 0; i < query.Length; i++) {
+        for (int i = 0; i < request.Length; i++) {
             if (i > 0) builder.Append(',');
-            builder.Append(query[i]);
+            builder.Append(request[i]);
         }
         builder.Append("],");
 

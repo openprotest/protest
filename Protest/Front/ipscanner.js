@@ -12,8 +12,9 @@ class IpScanner extends List {
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["ip", "mac address", "manufacturer", "protocols"];
+		const columns = ["hostname", "ip", "mac address", "manufacturer", "services"];
 		this.SetupColumns(columns);
+		this.columnsOptions.style.display = "none";
 
 		this.LinkData({data:[], length:0 });
 
@@ -23,13 +24,14 @@ class IpScanner extends List {
 		this.AddToolbarSeparator();
 		this.SetupFind();
 
+		this.stopButton.disabled = true;
+
 		this.startButton.onclick = ()=> this.Connect();
 		this.stopButton.onclick = ()=> this.Stop();
 
 		this.UpdateAuthorization();
 	}
 
-	
 	UpdateAuthorization() { //overrides
 		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("network utilities:write");
 		this.startButton.disabled = !this.canWrite;
