@@ -14,10 +14,17 @@ internal static class MacLookup {
     }
 
     public static byte[] Lookup(string mac) {
+        string name = LookupToString(mac);
+        if (name is null) return null;
+        return Encoding.UTF8.GetBytes(name);
+    }
+
+    public static string LookupToString(string mac) {
         mac = mac.Replace("-", String.Empty);
         mac = mac.Replace(":", String.Empty);
         mac = mac.Replace(" ", String.Empty);
-        if (mac.Length < 6) return null;
+        if (mac.Length < 6)
+            return null;
 
         byte[] t = new byte[4];
         try {
@@ -27,14 +34,15 @@ internal static class MacLookup {
             t[0] = byte.Parse(mac[4..6], System.Globalization.NumberStyles.HexNumber);
         }
         catch {
-            return "not found"u8.ToArray();
+            return "not found";
         }
 
         uint target = BitConverter.ToUInt32(t, 0);
 
         try {
             FileInfo file = new FileInfo(Data.FILE_MAC);
-            if (!file.Exists) return null;
+            if (!file.Exists)
+                return null;
 
             FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
 
@@ -86,14 +94,15 @@ internal static class MacLookup {
                 }
 
                 stream.Close();
-                return Encoding.UTF8.GetBytes(name);
+                return name;
             } //end found
 
             stream.Close();
-            return "not found"u8.ToArray();
+            return "not found";
         }
         catch {
             return null;
         }
     }
+
 }

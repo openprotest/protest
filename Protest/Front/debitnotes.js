@@ -249,7 +249,7 @@ class DebitNotes extends Window {
 				DebitNotes.TEMPLATES.push(json[i]);
 			}
 		}
-		catch (ex) {}
+		catch {}
 	}
 
 	async GetBanners() {
@@ -266,7 +266,7 @@ class DebitNotes extends Window {
 				DebitNotes.BANNERS.push(json[i]);
 			}
 		}
-		catch (ex) {}
+		catch {}
 	}
 
 	GenerateEquipAutoComplete(force = false) {

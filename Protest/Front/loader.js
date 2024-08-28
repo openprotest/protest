@@ -5,7 +5,7 @@ const LOADER = {
 	devices: {},
 	users: {},
 	
-	alwaysUppercase: ["ip", "ipv6", "bios", "fqdn", "guid"],
+	alwaysUppercase: ["ip", "ipv6", "mac", "bios", "fqdn", "guid"],
 
 	deviceIcons : {
 		"access point"        : "mono/accesspoint.svg",

@@ -601,7 +601,7 @@ class List extends Window {
 	}
 
 	InflateElement(element, entry, c_type) { //overridable
-		for (let i = 0; i < this.columnsElements.length; i++) {
+		for (let i=0; i<this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
 			const value = entry[this.columnsElements[i].textContent].v;
@@ -783,7 +783,6 @@ class List extends Window {
 
 		applyAllButton.addEventListener("click", ()=> {
 			Apply();
-
 			cancelButton.onclick();
 			localStorage.setItem(`${this.constructor.name.toLowerCase()}_columns`, JSON.stringify(this.columnsElements.map(o=> o.textContent)));
 		});

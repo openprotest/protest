@@ -246,7 +246,7 @@ class ReverseProxy extends List {
 			try {
 				this.ws.close();
 			}
-			catch (ex) {}
+			catch {}
 		}
 
 		this.reconnectSeparator.style.display = "none";

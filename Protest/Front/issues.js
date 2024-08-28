@@ -113,7 +113,7 @@ class Issues extends List {
 			try {
 				this.ws.close();
 			}
-			catch (ex) {}
+			catch {}
 		}
 	}
 
@@ -340,7 +340,7 @@ class Issues extends List {
 			try {
 				this.ws.close();
 			}
-			catch (ex) {}
+			catch {}
 		}
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
@@ -381,15 +381,15 @@ class Issues extends List {
 		const key =  Date.now() + Math.random() * 1000;
 
 		const newIssue = {
-			key     : {v: key},
-			severity: {v: issue.severity},
-			issue   : {v: issue.issue},
-			entry   : {v: issue.entry},
-			type    : {v: issue.category},
-			category: {v: issue.category},
-			source  : {v: issue.source},
-			isUser  : {v: issue.isUser},
-			file    : {v: issue.file},
+			key     : {v:key},
+			severity: {v:issue.severity},
+			issue   : {v:issue.issue},
+			entry   : {v:issue.entry},
+			type    : {v:issue.category},
+			category: {v:issue.category},
+			source  : {v:issue.source},
+			isUser  : {v:issue.isUser},
+			file    : {v:issue.file},
 		};
 
 		this.link.data[key] = newIssue;

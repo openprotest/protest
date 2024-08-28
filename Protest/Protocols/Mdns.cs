@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using static Protest.Protocols.Dns;
@@ -15,10 +17,10 @@ internal class Mdns {
     private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V6 = IPAddress.Parse("ff02::fb");
     private static readonly int MDNS_PORT = 5353;
 
-    public const string HTTP_ANY     = "_services._dns-sd._udp.local";
-    public const string HTTP_QUERY   = "_http._tcp.local";
-    public const string HTTP_PRINTER = "_ipp._tcp.local";
-    public const string HTTP_IPP     = "_printer._tcp.local";
+    public const string ANY_QUERY     = "_services._dns-sd._udp.local";
+    public const string HTTP_QUERY    = "_http._tcp.local";
+    public const string PRINTER_QUERY = "_ipp._tcp.local";
+    public const string IPP_QUERY     = "_printer._tcp.local";
 
     public struct Answer {
         public RecordType type;
@@ -74,11 +76,11 @@ internal class Mdns {
         return Serialize(request, matchingData, answers);
     }
 
-    public static List<Answer> ResolveToArray(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
+    public static Answer[] ResolveToArray(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
         byte[] request = ConstructQuery(queryString, type);
 
         (_, List<Answer> answers) = ResolveInternal(queryString, request, timeout, type, includeAdditionalRrs);
-        return answers;
+        return answers.ToArray();
     }
 
     private static (List<byte[]>, List<Answer>) ResolveInternal(string queryString, byte[] request, int timeout, RecordType type, bool includeAdditionalRrs) {
@@ -87,21 +89,34 @@ internal class Mdns {
 
         IPAddress[] nics = IpTools.GetIpAddresses();
         for (int i = 0; i < nics.Length && receivedData.Count == 0; i++) {
-            if (IPAddress.IsLoopback(nics[i]))
-                continue;
+            if (IPAddress.IsLoopback(nics[i])) continue;
 
-            Socket socket = CreateAndBindSocket(nics[i], timeout, out IPEndPoint remoteEndPoint);
-            if (socket == null)
-                continue;
+            using Socket socket = CreateAndBindSocket(nics[i], timeout, out IPEndPoint remoteEndPoint);
+            if (socket == null) continue;
 
             try {
                 socket.SendTo(request, remoteEndPoint);
-                ReceiveResponses(socket, timeout, receivedData, senders);
+
+                DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
+                while (DateTime.Now <= endTime) {
+                    byte[] reply = new byte[1024];
+
+                    try {
+                        EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                        int length = socket.ReceiveFrom(reply, ref remoteEP);
+
+                        if (length > 0) {
+                            byte[] actualReply = new byte[length];
+                            Array.Copy(reply, actualReply, length);
+
+                            receivedData.Add(actualReply);
+                            senders.Add(((IPEndPoint)remoteEP).Address);
+                        }
+                    }
+                    catch { }
+                }
             }
             catch { }
-            finally {
-                socket.Dispose();
-            }
         }
 
         List<byte[]> matchingData = new List<byte[]>();
@@ -114,8 +129,8 @@ internal class Mdns {
                 Answer[] answer = ParseAnswers(response, type, senders[i], out _, out _, out _, includeAdditionalRrs);
 
                 foreach (Answer ans in answer) {
-                    if (type != RecordType.ANY && ans.type != type) { continue; }
-                    if (!includeAdditionalRrs && !ans.questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (type != RecordType.ANY && ans.type != type) continue;
+                    if (!includeAdditionalRrs && !ans.questionString.Equals(queryString, StringComparison.OrdinalIgnoreCase)) continue;
 
                     answers.Add(ans);
                     matchingData.Add(response);
@@ -127,7 +142,7 @@ internal class Mdns {
         return (matchingData, answers);
     }
 
-    private static Socket CreateAndBindSocket(IPAddress localAddress, int timeout, out IPEndPoint remoteEndPoint) {
+    public static Socket CreateAndBindSocket(IPAddress localAddress, int timeout, out IPEndPoint remoteEndPoint) {
         Socket socket = null;
         remoteEndPoint = null;
 
@@ -158,31 +173,7 @@ internal class Mdns {
         }
     }
 
-    private static void ReceiveResponses(Socket socket, int timeout, List<byte[]> receivedData, List<IPAddress> senders) {
-        DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
-
-        while (DateTime.Now <= endTime) {
-            byte[] reply = new byte[1024];
-
-            try {
-                EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                int length = socket.ReceiveFrom(reply, ref remoteEP);
-
-                if (length > 0) {
-                    byte[] actualReply = new byte[length];
-                    Array.Copy(reply, actualReply, length);
-
-                    receivedData.Add(actualReply);
-                    senders.Add(((IPEndPoint)remoteEP).Address);
-                }
-            }
-            catch {
-                // Handle individual receive errors if needed
-            }
-        }
-    }
-
-    private static byte[] ConstructQuery(string queryString, RecordType type) {
+    public static byte[] ConstructQuery(string queryString, RecordType type) {
         int len = 12;
         string[] label = queryString.Split('.');
 
@@ -238,7 +229,7 @@ internal class Mdns {
         return query;
     }
 
-    private static Answer[] ParseAnswers(byte[] response, RecordType queryType, IPAddress remoteEndPoint, out ushort answerCount, out ushort authorityCount, out ushort additionalCount, bool additionalString) {
+    public static Answer[] ParseAnswers(byte[] response, RecordType queryType, IPAddress remoteEndPoint, out ushort answerCount, out ushort authorityCount, out ushort additionalCount, bool additionalString) {
         if (response.Length < 12) {
             answerCount = 0;
             authorityCount = 0;
@@ -282,7 +273,7 @@ internal class Mdns {
         }
 
         for (int i = 0; i < totalRecords; i++) {
-            if (index + 10 >= response.Length) { break; }
+            if (index + 10 >= response.Length) break;
 
             int nameStart = index;
             int nameEnd   = index;
@@ -498,7 +489,7 @@ internal class Mdns {
             //if (answers[i].isAuthoritative || answers[i].isAdditional) continue;
 
             string name = answers[i].answerString;
-            if (name is null) { continue; }
+            if (name is null) continue;
 
             if (answers[i].type == RecordType.TXT) {
                 int delimiter = name.IndexOf((char)65533);
@@ -515,8 +506,8 @@ internal class Mdns {
                 name = name.Replace(((char)j).ToString(), "");
             }
 
-            if (name.Length == 0) { continue; }
-            if (name.Length == 1 && name[0] == 0) { continue; }
+            if (name.Length == 0) continue;
+            if (name.Length == 1 && name[0] == 0) continue;
 
             if (count > 0) builder.Append(',');
 

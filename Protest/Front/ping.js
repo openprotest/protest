@@ -794,7 +794,7 @@ class Ping extends Console {
 			try {
 				this.ws.close();
 			}
-			catch (ex) { };
+			catch { };
 		}
 
 		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ping");
