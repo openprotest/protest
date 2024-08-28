@@ -28,7 +28,7 @@ class IpScanner extends List {
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["hostname", "ip", "mac", "manufacturer", "services"];
+		const columns = ["hostname", "ip", "ipv6", "mac", "manufacturer", "services"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
 
@@ -104,6 +104,7 @@ class IpScanner extends List {
 					key          : {v:key},
 					hostname     : {v:json.hostname},
 					ip           : {v:json.ip},
+					ipv6         : {v:json.ipv6},
 					mac          : {v:json.mac},
 					manufacturer : {v:json.manufacturer},
 					services     : {v:services}
@@ -151,7 +152,7 @@ class IpScanner extends List {
 			if (!(attribute in host)) continue;
 
 			const value = host[attribute].v;
-			if (value.length === 0) continue;
+			if (value === null || value.length === 0) continue;
 
 			const newAttr = document.createElement("div");
 
