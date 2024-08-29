@@ -1,17 +1,18 @@
 class IpDiscovery extends List {
 
-	static PORT_TO_ICON = {
-		22   : "mono/ssh.svg",
-		23   : "mono/telnet.svg",
-		53   : "mono/dns.svg",
-		67   : "mono/dhcp.svg",
-		80   : "mono/earth.svg",
-		443  : "mono/earth.svg",
-		445  : "mono/shared.svg",
-		3389 : "mono/rdp.svg",
-		5100 : "mono/uvnc.svg",
-		8080 : "mono/earth.svg",
-		9100 : "mono/printer.svg",
+	static PROTOCOL_TO_ICON = {
+		"SSH"      : "mono/ssh.svg",
+		"TELNET"   : "mono/telnet.svg",
+		"DNS"      : "mono/dns.svg",
+		"DHCP"     : "mono/dhcp.svg",
+		"HTTP"     : "mono/websitecheck.svg",
+		"HTTPS"    : "mono/websitecheck.svg",
+		"SMB"      : "mono/shared.svg",
+		"RDP"      : "mono/rdp.svg",
+		"uVNC"     : "mono/uvnc.svg",
+		"Alt-HTTP" : "mono/websitecheck.svg",
+		"Print service" : "mono/printer.svg",
+		"Scan service"  : "mono/scanner.svg",
 	};
 
 	constructor(args) {
@@ -238,6 +239,7 @@ class IpDiscovery extends List {
 			if (attribute === "services" && host.services.v.length > 0) {
 				newAttr.style.top = "2px";
 				newAttr.style.bottom = "2px";
+				newAttr.style.overflow = "visible";
 
 				host.services.v.sort();
 
@@ -245,16 +247,11 @@ class IpDiscovery extends List {
 					const service = host.services.v[j];
 					if (service.length === 0) continue;
 
-					const image = IpDiscovery.PORT_TO_ICON[service] ?? "mono/gear.svg";
+					const image = IpDiscovery.PROTOCOL_TO_ICON[service] ?? "mono/gear.svg";
 
 					const proto = document.createElement("div");
-					proto.style.position = "relative";
-					proto.style.display = "inline-block";
-					proto.style.width = "28px";
-					proto.style.height = "28px";
-					proto.style.backgroundSize = "24px 24px";
-					proto.style.backgroundPosition = "center";
-					proto.style.backgroundRepeat = "no-repeat";
+					proto.className = "list-inner-icon";
+					proto.setAttribute("tip", service);
 					proto.style.backgroundImage = `url(${image})`;
 					newAttr.appendChild(proto);
 				}

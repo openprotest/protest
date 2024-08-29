@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Protocols;
+
 using static Protest.Protocols.Dns;
 using static Protest.Protocols.Mdns;
 
@@ -359,27 +360,34 @@ internal static class IpDiscovery {
                     else if (answer[j].type == RecordType.PTR) {
                         if (answer[j].answerString.EndsWith("_ssh._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
-                            services.Append("22");
+                            services.Append("SSH");
                         }
                         else if (answer[j].answerString.EndsWith("_http._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
-                            services.Append("80");
+                            services.Append("HTTP");
                         }
                         else if (answer[j].answerString.EndsWith("_https._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
-                            services.Append("443");
+                            services.Append("HTTP");
                         }
                         else if (answer[j].answerString.EndsWith("_smb._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
-                            services.Append("445");
+                            services.Append("SMB");
                         }
                         else if (answer[j].answerString.EndsWith("_http-alt._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
-                            services.Append("8080");
+                            services.Append("Alt-HTTP");
                         }
-                        else if (answer[j].answerString.EndsWith("_printer._tcp.local")) {
+                        else if (answer[j].answerString.EndsWith("_printer._tcp.local") || answer[j].answerString.EndsWith("_ipp._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
-                            services.Append("9100");
+                            services.Append("Print service");
+                        }
+                        else if (answer[j].answerString.EndsWith("_scanner._tcp.local")) {
+                            if (services.Length > 0) services.Append(',');
+                            services.Append("Scan service");
+                        }
+                        else {
+                            Console.WriteLine(answer[j].answerString);
                         }
                     }
                 }

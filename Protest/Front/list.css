@@ -122,6 +122,39 @@
 	padding-left: 6px;
 }
 
+.list-inner-icon {
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+	width: 28px;
+	height: 28px;
+
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.list-inner-icon[tip]::before {
+	position: absolute;
+	transform: translateX(-8px) !important;
+	right: calc(100% + 8px) !important;
+	left: unset;
+	top: calc(50% - 12px) !important;
+}
+.list-inner-icon[tip]::after {
+	transform: translateX(-8px) !important;
+	right: calc(100% + 2px) !important;
+	left: unset;
+	top: calc(50% - 6px) !important;
+	border-width: 6px 0 6px 6px !important;
+	border-color: transparent rgb(52,52,52) !important;
+}
+.list-inner-icon[tip]:hover::before,
+.list-inner-icon[tip]:hover::after {
+	max-width: unset !important;
+	transform: none !important;
+}
+
 .list-counter {
 	position: absolute;
 	left: 2px;
