@@ -55,7 +55,7 @@ internal static partial class Arp {
 
             _ = SendARP(long_ip, 0, mac, ref len);
 
-            return BitConverter.ToString(mac, 0, (int)len).Replace("-", ":");
+            return BitConverter.ToString(mac, 0, len).Replace("-", ":");
         }
         catch {
             return String.Empty;
@@ -78,18 +78,18 @@ internal static partial class Arp {
             while (!reader.EndOfStream) {
                 string line = reader.ReadLine();
 
-                if (String.IsNullOrWhiteSpace(line))
-                    return null;
+                if (String.IsNullOrWhiteSpace(line)) {
+                    continue;
+                }
 
                 Match match = regex.Match(line);
-                if (!match.Success || match.Groups.Count != 3)
-                    return String.Empty;
-
-                string mac = match.Groups[2].Value.Replace("-", ":");
+                if (match.Success && match.Groups.Count == 3) {
+                    string mac = match.Groups[2].Value.Replace("-", ":");
+                    return mac;
+                }
             }
 
             return String.Empty;
-
         }
         catch (Exception ex) {
             Logger.Error(ex);

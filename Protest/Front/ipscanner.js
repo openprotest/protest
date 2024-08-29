@@ -28,7 +28,7 @@ class IpScanner extends List {
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["hostname", "ip", "ipv6", "mac", "manufacturer", "services"];
+		const columns = ["name", "ip", "mac", "manufacturer", "services"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
 
@@ -102,9 +102,8 @@ class IpScanner extends List {
 
 				const newHost = {
 					key          : {v:key},
-					hostname     : {v:json.hostname},
+					name         : {v:json.name},
 					ip           : {v:json.ip},
-					ipv6         : {v:json.ipv6},
 					mac          : {v:json.mac},
 					manufacturer : {v:json.manufacturer},
 					services     : {v:services}
@@ -141,8 +140,6 @@ class IpScanner extends List {
 	}
 
 	InflateElement(element, host) { //overrides
-		element.style.overflow = "visible";
-
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
 		element.appendChild(icon);
@@ -157,9 +154,10 @@ class IpScanner extends List {
 			const newAttr = document.createElement("div");
 
 			if (attribute === "services" && host.services.v.length > 0) {
-				newAttr.style.overflow = "visible";
 				newAttr.style.top = "2px";
 				newAttr.style.bottom = "2px";
+
+				host.services.v.sort();
 
 				for (let j=0; j<host.services.v.length; j++) {
 					const service = host.services.v[j];
@@ -178,7 +176,6 @@ class IpScanner extends List {
 					proto.style.backgroundImage = `url(${image})`;
 					newAttr.appendChild(proto);
 				}
-
 			}
 			else {
 				newAttr.textContent = value;

@@ -135,7 +135,6 @@ internal static class IpScanner {
                             Array.Copy(reply, actualReply, length);
 
                             string hostname = string.Empty;
-                            string ipv6     = string.Empty;
                             IPAddress ipAddress = ((IPEndPoint)remoteEP).Address;
                             string ipString = ipAddress.ToString();
                             string macAddress = Protocols.Arp.ArpRequest(ipString);
@@ -143,20 +142,10 @@ internal static class IpScanner {
 
                             Answer[] answer = ParseAnswers(actualReply, type, ipAddress, out _, out _, out _, true);
                             for (int j = 0; j < answer.Length; j++) {
-                                Console.WriteLine(ipString + "\t" + answer[j].type + "\t" + answer[j].answerString);
-
-                                if (answer[j].type == RecordType.AAAA) {
-                                    ipv6 = answer[j].answerString;
-                                }
                                 if (answer[j].type == RecordType.SRV) {
                                     string[] split = answer[j].answerString.Split(':');
                                     if (split.Length >= 2) {
-                                        if (split[0].EndsWith(".local")) {
-                                            hostname = split[0][..^6];
-                                        }
-                                        else {
-                                            hostname = split[0];
-                                        }
+                                        hostname = split[0].EndsWith(".local") ? hostname = split[0][..^6] : hostname = split[0];
 
                                         if (services.Length > 0) services.Append(',');
                                         services.Append(split[1]);
@@ -171,7 +160,7 @@ internal static class IpScanner {
                                         if (services.Length > 0) services.Append(',');
                                         services.Append("80");
                                     }
-                                    else if (answer[j].answerString.EndsWith("https._tcp.local")) {
+                                    else if (answer[j].answerString.EndsWith("_https._tcp.local")) {
                                         if (services.Length > 0) services.Append(',');
                                         services.Append("443");
                                     }
@@ -191,9 +180,8 @@ internal static class IpScanner {
                             }
 
                             WsWriteText(ws, JsonSerializer.Serialize(new {
-                                hostname     = hostname,
+                                name         = hostname,
                                 ip           = ipString,
-                                ipv6         = ipv6,
                                 mac          = macAddress,
                                 manufacturer = MacLookup.LookupToString(macAddress),
                                 services     = services.ToString(),
