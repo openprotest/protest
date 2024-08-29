@@ -915,19 +915,19 @@ class Terminal extends Window {
 		const todo   = {};
 		let x, y;
 
-		for (let key in this.screen) {
+		for (const key in this.screen) {
 			[x, y] = key.split(",");
-			if (y < top || y > bottom) continue;
+			if (y < top || y >= bottom) continue;
 			todo[key] = this.screen[key];
 		}
 
-		for (let key in todo) {
+		for (const key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
-			let y1 = y+1;
-			if (this.scrollRegionBottom && y1 > this.scrollRegionBottom) continue;
+			let y1 = parseInt(y) + 1;
+			if (this.scrollRegionBottom && y1 >= this.scrollRegionBottom) continue;
 			this.screen[`${x},${y1}`] = todo[key];
-			todo[key].style.top = `${(y1) * Terminal.CHAR_HEIGHT}px`;
+			todo[key].style.top = `${y1 * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
@@ -937,19 +937,19 @@ class Terminal extends Window {
 		const todo   = {};
 		let x, y;
 
-		for (let key in this.screen) {
+		for (const key in this.screen) {
 			[x, y] = key.split(",");
-			if (y < top || y > bottom) continue;
+			if (y < top || y >= bottom) continue;
 			todo[key] = this.screen[key];
 		}
 
-		for (let key in todo) {
+		for (const key in todo) {
 			[x, y] = key.split(",");
 			delete this.screen[key];
-			let y1 = y-1;
-			if (this.scrollRegionTop && y1 < this.scrollRegionTop) continue;
+			let y1 = parseInt(y) - 1;
+			if (this.scrollRegionTop && y1 <= this.scrollRegionTop) continue;
 			this.screen[`${x},${y1}`] = todo[key];
-			todo[key].style.top = `${(y1) * Terminal.CHAR_HEIGHT}px`;
+			todo[key].style.top = `${y1 * Terminal.CHAR_HEIGHT}px`;
 		}
 	}
 
