@@ -13,7 +13,7 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal static class Icmp {
-    private static readonly byte[] ICMP_PAYLOAD = "0123456789abcdef"u8.ToArray();
+    public static readonly byte[] ICMP_PAYLOAD = "----pro-test----"u8.ToArray();
 
     private enum Method {
         ICMP = 0,

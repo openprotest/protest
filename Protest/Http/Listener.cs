@@ -2,6 +2,7 @@
 //#define DEFLATE
 #define BROTLI
 #endif
+
 using Protest.Tasks;
 using System;
 using System.Collections.Generic;
@@ -103,6 +104,8 @@ public sealed class Listener {
         { "/tools/ntp",               (ctx, parameters, username) => Protocols.Ntp.Request(parameters) },
         { "/tools/locateip",          (ctx, parameters, username) => Tools.LocateIp.Locate(ctx) },
         { "/tools/maclookup",         (ctx, parameters, username) => Tools.MacLookup.Lookup(ctx) },
+        { "/tools/nics/list",         (ctx, parameters, username) => Tools.IpDiscovery.ListNics() },
+
         //{ "/tools/downstream",        (ctx, parameters, username) => Tools.SpeedTest.DownStream(ctx, parameters) },
         //{ "/tools/upstream",          (ctx, parameters, username) => Tools.SpeedTest.UpStream(ctx, parameters) },
         
@@ -449,7 +452,7 @@ public sealed class Listener {
         case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx);      return true;
         case "/ws/issues":           Tasks.Issues.WebSocketHandler(ctx);       return true;
         case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
-        case "/ws/ipscanner":        Tools.IpScanner.WebSocketHandler(ctx);    return true;
+        case "/ws/ipdiscovery":      Tools.IpDiscovery.WebSocketHandler(ctx);  return true;
         case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);     return true;
         case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx);   return true;
         case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);    return true;

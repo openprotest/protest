@@ -1,4 +1,4 @@
-class IpScanner extends List {
+class IpDiscovery extends List {
 
 	static PORT_TO_ICON = {
 		22   : "mono/ssh.svg",
@@ -23,12 +23,12 @@ class IpScanner extends List {
 			sort: ""
 		};
 
-		this.SetTitle("IP scanner");
-		this.SetIcon("mono/ipscanner.svg");
+		this.SetTitle("IP discovery");
+		this.SetIcon("mono/ipdiscovery.svg");
 
 		this.AddCssDependencies("list.css");
 
-		const columns = ["name", "ip", "mac", "manufacturer", "services"];
+		const columns = ["name", "ip", "ipv6", "mac", "manufacturer", "services"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
 
@@ -42,7 +42,7 @@ class IpScanner extends List {
 
 		this.stopButton.disabled = true;
 
-		this.startButton.onclick = ()=> this.Connect();
+		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
 
 		this.UpdateAuthorization();
@@ -65,7 +65,88 @@ class IpScanner extends List {
 		}
 	}
 
-	Connect() {
+	async StartDialog() {
+		const dialog = this.DialogBox("400px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		okButton.value = "Start";
+		okButton.disabled = true;
+		
+		innerBox.style.margin = "16px 32px";
+		innerBox.parentElement.style.maxWidth = "640px";
+		innerBox.style.border = "var(--clr-control) solid 1.5px";
+		innerBox.style.overflowY = "auto";
+
+		let selectedNic = null;
+
+		try {
+			const response = await fetch("/tools/nics/list");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw (json.error);
+
+			for (let i=0; i<json.length; i++) {
+				const newNic = document.createElement("div");
+				newNic.className = "list-element";
+				innerBox.appendChild(newNic);
+
+				const icon = document.createElement("div");
+				icon.style.left = "2px";
+				icon.style.top = "2px";
+				icon.style.width = "28px";
+				icon.style.height = "28px";
+				icon.style.backgroundImage = "url(mono/portscan.svg)";
+				icon.style.backgroundSize = "contain";
+				icon.style.backgroundPosition = "center";
+				icon.style.backgroundRepeat = "no-repeat";
+				newNic.append(icon);
+
+				const name = document.createElement("div");
+				name.style.left = "28px";
+				name.style.width = "calc(50% - 28px)";
+				name.style.overflow = "hidden";
+				name.style.whiteSpace = "nowrap";
+				name.style.textOverflow = "ellipses";
+				name.textContent = json[i].name;
+
+				const ip = document.createElement("div");
+				ip.style.left = "50%";
+				ip.style.width = "50%";
+				ip.style.overflow = "hidden";
+				ip.style.whiteSpace = "nowrap";
+				ip.style.textOverflow = "ellipses";
+				ip.textContent = `${json[i].ip}/${json[i].cidr}`;
+
+				newNic.append(icon, name, ip);
+
+				newNic.onclick = ()=> {
+					selectedNic = json[i].id;
+					okButton.disabled = false;
+					
+					for (let i=0; i<innerBox.children.length; i++) {
+						innerBox.children[i].style.backgroundColor = "";
+					}
+					newNic.style.backgroundColor = "var(--clr-select)";
+				};
+
+				newNic.ondblclick = ()=> okButton.onclick();
+			}
+		}
+		catch {}
+
+		okButton.onclick = ()=> {
+			this.Connect(selectedNic);
+			dialog.Close();
+		};
+	}
+
+	Connect(id) {
+		if (id === null) return;
+
 		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
@@ -76,9 +157,10 @@ class IpScanner extends List {
 			catch {}
 		}
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ipscanner");
+		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ipdiscovery");
 
 		this.ws.onopen = ()=> {
+			this.ws.send(id);
 			this.startButton.disabled = true;
 			this.stopButton.disabled = false;
 		};
@@ -163,7 +245,7 @@ class IpScanner extends List {
 					const service = host.services.v[j];
 					if (service.length === 0) continue;
 
-					const image = IpScanner.PORT_TO_ICON[service] ?? "mono/gear.svg";
+					const image = IpDiscovery.PORT_TO_ICON[service] ?? "mono/gear.svg";
 
 					const proto = document.createElement("div");
 					proto.style.position = "relative";

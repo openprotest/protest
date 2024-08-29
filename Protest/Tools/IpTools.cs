@@ -61,6 +61,25 @@ public static class IpTools {
         return GetNetworkAddress(ip, new IPAddress(maskBytes));
     }
 
+    public static int SubnetMaskToCidr(IPAddress subnetMask) {
+        byte[] bytes = subnetMask.GetAddressBytes();
+
+        int cidr = 0;
+        foreach (byte b in bytes) {
+            cidr += CountBits(b);
+        }
+
+        return cidr;
+    }
+    private static int CountBits(byte b) {
+        int count = 0;
+        while (b != 0) {
+            count += b & 1;
+            b >>= 1;
+        }
+        return count;
+    }
+
     public static IPAddress GetNetworkAddress(IPAddress ip, IPAddress mask) {
         byte[] bIp = ip.GetAddressBytes();
         byte[] bMask = mask.GetAddressBytes();
