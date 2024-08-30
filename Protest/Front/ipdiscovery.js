@@ -205,22 +205,22 @@ class IpDiscovery extends List {
 			if (entry) {
 				let changed = false;
 
-				if (json.name && entry.name.v.length === 0) {
+				if (json.name && (entry.name || entry.name.v.length === 0)) {
 					entry.name.v = json.name;
 					changed = true;
 				}
 				
-				if (json.ipv6 && entry.ipv6.v.length === 0) {
+				if (json.ipv6 && (entry.ipv6 || entry.ipv6.v.length === 0)) {
 					entry.ipv6.v = json.ipv6;
 					changed = true;
 				}
 				
-				if (json.mac && entry.mac.v.length === 0) {
+				if (json.mac && (entry.mac || entry.mac.v.length === 0)) {
 					entry.mac.v = json.mac;
 					changed = true;
 				}
 				
-				if (json.manufacturer && entry.manufacturer.v.length === 0) {
+				if (json.manufacturer && (entry.manufacturer || entry.manufacturer.v.length === 0)) {
 					entry.manufacturer.v = json.manufacturer;
 					changed = true;
 				}
@@ -236,9 +236,9 @@ class IpDiscovery extends List {
 				
 				if (changed
 					&& (entry.element.offsetTop - this.list.scrollTop >= -32 || entry.element.offsetTop - this.list.scrollTop <= this.list.clientHeight)) { //in viewport
+					entry.element.textContent = "";
 					this.InflateElement(entry.element, entry);
 				}
-
 			}
 			else {
 				let services = Array.from(new Set(json.services.split(",")));
