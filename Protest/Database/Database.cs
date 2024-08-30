@@ -15,11 +15,11 @@ namespace Protest;
 
 public sealed class Database {
     public enum SaveMethod : byte {
-        ignore = 0,
+        ignore    = 0,
         createnew = 1,
         overwrite = 2,
-        append = 3,
-        merge = 4
+        append    = 3,
+        merge     = 4
     }
 
     public record Attribute {

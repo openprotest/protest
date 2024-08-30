@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Metrics;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
@@ -20,6 +21,37 @@ using static Protest.Protocols.Mdns;
 namespace Protest.Tools;
 
 internal static class IpDiscovery {
+
+    private readonly static FrozenDictionary<ushort, string> PORTS_TO_PROTOCOL = new Dictionary<ushort, string>() {
+        { 22,   "SSH" },
+        { 23,   "Telnet" },
+        { 53,   "DNS" },
+        { 67,   "DHCP" },
+        { 80,   "HTTP" },
+        { 443,  "HTTPS" },
+        { 445,  "SMB" },
+        { 8080, "Alt-HTTP" },
+        { 8443, "Alt-HTTPS" },
+        { 9100, "Print service" },
+
+    }.ToFrozenDictionary();
+
+    internal struct HostEntry {
+        internal string description;
+        internal string name;
+        internal string ip;
+        internal string ipv6;
+        internal string mac;
+        internal string manufacturer;
+        internal string services;
+    }
+
+    private static readonly JsonSerializerOptions hostSerializerOptions;
+
+    static IpDiscovery() {
+        hostSerializerOptions = new JsonSerializerOptions();
+        hostSerializerOptions.Converters.Add(new HostJsonConverter());
+    }
 
     public static byte[] ListNics() {
         List<string[]> filtered = new List<string[]>();
@@ -108,17 +140,9 @@ internal static class IpDiscovery {
             return;
         }
 
-        Thread[] threads = new Thread[] {
-            new Thread(()=> DiscoverAdapter(nic, ws, mutex, tokenSource.Token)),
-            new Thread(()=> DiscoverIcmp(nic, ws, mutex, tokenSource.Token)),
-            new Thread(()=> DiscoverMdns(nic, ws, mutex, tokenSource.Token)),
-        };
+        ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
 
         try {
-            for (int i = 0; i < threads.Length; i++) {
-                threads[i].Start();
-            }
-
             await Task.Delay(50);
 
             while (ws.State == WebSocketState.Open) {
@@ -127,17 +151,11 @@ internal static class IpDiscovery {
                     break;
                 }
 
-                if (threads.All(o=> !o.IsAlive)) {
-                    break;
-                }
+                DiscoverAdapter(dic, nic, ws, mutex, tokenSource.Token);
+                DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token);
+                //DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token);
 
-                //keep socket connection open
-
-                await Task.Delay(2000);
-            }
-
-            if (threads.Any(o=>o.IsAlive)) {
-                tokenSource.Cancel();
+                await Task.Delay(30000);
             }
         }
         catch { }
@@ -151,7 +169,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void DiscoverAdapter(NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static void DiscoverAdapter(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
         UnicastIPAddressInformationCollection unicast = nic.GetIPProperties().UnicastAddresses;
         GatewayIPAddressInformationCollection gateway = nic.GetIPProperties().GatewayAddresses;
 
@@ -173,7 +191,7 @@ internal static class IpDiscovery {
             string hostname = NetBios.GetBiosName(ipv4String, 200);
             string mac = String.Join(":", nic.GetPhysicalAddress().GetAddressBytes().Select(b => b.ToString("X2")));
 
-            WsWriteText(ws, JsonSerializer.Serialize(new {
+            HostEntry host = new HostEntry() {
                 description  = String.Empty,
                 name         = hostname,
                 ip           = localIpV4?.ToString() ?? String.Empty,
@@ -181,7 +199,11 @@ internal static class IpDiscovery {
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,
-            }), mutex);
+            };
+
+            dic.AddOrUpdate(ipv4String, host, (key, value) => value);
+
+            WsWriteText(ws, JsonSerializer.Serialize<HostEntry>(host, hostSerializerOptions), mutex);
         }
 
         IPAddress gwIpV4 = null, gwIpV6 = null;
@@ -200,19 +222,23 @@ internal static class IpDiscovery {
             string hostname = NetBios.GetBiosName(ipv4String, 200);
             string mac = Arp.ArpRequest(ipv4String);
 
-            WsWriteText(ws, JsonSerializer.Serialize(new {
+            HostEntry gwHost = new HostEntry() {
                 description  = String.Empty,
                 name         = hostname,
-                ip           = ipv4String ?? String.Empty,
+                ip           = gwIpV4?.ToString() ?? String.Empty,
                 ipv6         = gwIpV6?.ToString() ?? String.Empty,
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,
-            }), mutex);
+            };
+
+            dic.AddOrUpdate(ipv4String, gwHost, (key, value) => value);
+
+            WsWriteText(ws, JsonSerializer.Serialize<HostEntry>(gwHost, hostSerializerOptions), mutex);
         }
     }
 
-    private static void DiscoverIcmp(NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static void DiscoverIcmp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
         List<IPAddress> hosts = new List<IPAddress>();
 
         UnicastIPAddressInformationCollection addresses = nic.GetIPProperties().UnicastAddresses;
@@ -294,12 +320,12 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void DiscoverMdns(NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
-        MdnsMulticast(nic, ws, mutex, token, ANY_QUERY, Protocols.Dns.RecordType.ANY, 1000);
-        MdnsMulticast(nic, ws, mutex, token, HTTP_QUERY, Protocols.Dns.RecordType.ANY, 1000);
+    private static void DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+        MdnsMulticast(dic, nic, ws, mutex, token, ANY_QUERY, Protocols.Dns.RecordType.ANY, 1000);
+        MdnsMulticast(dic, nic, ws, mutex, token, HTTP_QUERY, Protocols.Dns.RecordType.ANY, 1000);
     }
 
-    public static void MdnsMulticast(NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token, string queryString, RecordType type, int timeout) {
+    private static void MdnsMulticast(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token, string queryString, RecordType type, int timeout) {
         UnicastIPAddressInformationCollection addresses = nic.GetIPProperties().UnicastAddresses;
         if (addresses.Count == 0) return;
 
@@ -345,7 +371,7 @@ internal static class IpDiscovery {
 
                 Answer[] answer = ParseAnswers(actualReply, type, ipAddress, out _, out _, out _, true);
                 for (int j = 0; j < answer.Length; j++) {
-                    if (answer[j].type == RecordType.SRV) {
+                    if (answer[j].type == RecordType.AAAA) {
                         ipv6 = answer[j].answerString;
                     }
                     else if (answer[j].type == RecordType.SRV) {
@@ -353,8 +379,10 @@ internal static class IpDiscovery {
                         if (split.Length >= 2) {
                             hostname = split[0].EndsWith(".local") ? hostname = split[0][..^6] : hostname = split[0];
 
-                            if (services.Length > 0) services.Append(',');
-                            services.Append(split[1]);
+                            if (ushort.TryParse(split[1], out ushort port)) {
+                                if (services.Length > 0) services.Append(',');
+                                services.Append(PORTS_TO_PROTOCOL[port] ?? split[1]);
+                            }
                         }
                     }
                     else if (answer[j].type == RecordType.PTR) {
@@ -370,24 +398,34 @@ internal static class IpDiscovery {
                             if (services.Length > 0) services.Append(',');
                             services.Append("HTTP");
                         }
+                        else if (answer[j].answerString.EndsWith("_udisks-ssh._tcp.local")) {
+                            if (services.Length > 0) services.Append(',');
+                            services.Append("U-DISK");
+                        }
                         else if (answer[j].answerString.EndsWith("_smb._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
                             services.Append("SMB");
+                        }
+                        else if (answer[j].answerString.EndsWith("_sftp-ssh._tcp.local")) {
+                            if (services.Length > 0) services.Append(',');
+                            services.Append("SFTP");
                         }
                         else if (answer[j].answerString.EndsWith("_http-alt._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
                             services.Append("Alt-HTTP");
                         }
-                        else if (answer[j].answerString.EndsWith("_printer._tcp.local") || answer[j].answerString.EndsWith("_ipp._tcp.local")) {
+                        else if (answer[j].answerString.EndsWith("_printer._tcp.local")
+                            || answer[j].answerString.EndsWith("_ipp._tcp.local")
+                            || answer[j].answerString.EndsWith("_ipps._tcp.local")
+                            || answer[j].answerString.EndsWith("_print-caps._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
                             services.Append("Print service");
                         }
-                        else if (answer[j].answerString.EndsWith("_scanner._tcp.local")) {
+                        else if (answer[j].answerString.EndsWith("_scanner._tcp.local")
+                            || answer[j].answerString.EndsWith("_uscan._tcp.local")
+                            || answer[j].answerString.EndsWith("_uscans._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
                             services.Append("Scan service");
-                        }
-                        else {
-                            Console.WriteLine(answer[j].answerString);
                         }
                     }
                 }
@@ -404,5 +442,29 @@ internal static class IpDiscovery {
             }).Start();
         }
         catch { }
+    }
+}
+
+file sealed class HostJsonConverter : JsonConverter<IpDiscovery.HostEntry> {
+    public override IpDiscovery.HostEntry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, IpDiscovery.HostEntry value, JsonSerializerOptions options) {
+        ReadOnlySpan<byte> _name = "name"u8;
+        ReadOnlySpan<byte> _ip = "ip"u8;
+        ReadOnlySpan<byte> _ipv6 = "ipv6"u8;
+        ReadOnlySpan<byte> _mac = "mac"u8;
+        ReadOnlySpan<byte> _manufacturer = "manufacturer"u8;
+        ReadOnlySpan<byte> _services = "services"u8;
+
+        writer.WriteStartObject();
+        writer.WriteString(_name,         value.name);
+        writer.WriteString(_ip,           value.ip);
+        writer.WriteString(_ipv6,         value.ipv6);
+        writer.WriteString(_mac,          value.mac);
+        writer.WriteString(_manufacturer, value.manufacturer);
+        writer.WriteString(_services,     value.services);
+        writer.WriteEndObject();
     }
 }

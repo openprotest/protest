@@ -8,7 +8,9 @@ class IpDiscovery extends List {
 		"HTTP"     : "mono/websitecheck.svg",
 		"HTTPS"    : "mono/websitecheck.svg",
 		"SMB"      : "mono/shared.svg",
+		"SFTP"      : "mono/shared.svg",
 		"RDP"      : "mono/rdp.svg",
+		"U-DISK"   : "mono/hdd.scg",
 		"uVNC"     : "mono/uvnc.svg",
 		"Alt-HTTP" : "mono/websitecheck.svg",
 		"Print service" : "mono/printer.svg",
@@ -36,7 +38,7 @@ class IpDiscovery extends List {
 		this.LinkData({data:[], length:0 });
 
 		this.SetupToolbar();
-		this.startButton = this.AddToolbarButton("Start network scan", "mono/play.svg?light");
+		this.startButton = this.AddToolbarButton("Start discovery", "mono/play.svg?light");
 		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 		this.AddToolbarSeparator();
 		this.SetupFind();
@@ -187,6 +189,7 @@ class IpDiscovery extends List {
 					key          : {v:key},
 					name         : {v:json.name},
 					ip           : {v:json.ip},
+					ipv6         : {v:json.ipv6},
 					mac          : {v:json.mac},
 					manufacturer : {v:json.manufacturer},
 					services     : {v:services}

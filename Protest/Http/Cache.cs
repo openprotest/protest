@@ -37,7 +37,6 @@ internal sealed class Cache {
     //public const uint CACHE_CONTROL_MAX_AGE = 86_400; //24h
     public const uint CACHE_CONTROL_MAX_AGE = 15_768_000; //6m
 
-
     private readonly static FrozenDictionary<string, string> CONTENT_TYPE = new Dictionary<string, string>() {
         {"htm",  "text/html; charset=utf-8"},
         {"html", "text/html; charset=utf-8"},
