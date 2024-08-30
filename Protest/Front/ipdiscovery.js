@@ -8,9 +8,9 @@ class IpDiscovery extends List {
 		"HTTP"     : "mono/websitecheck.svg",
 		"HTTPS"    : "mono/websitecheck.svg",
 		"SMB"      : "mono/shared.svg",
-		"SFTP"      : "mono/shared.svg",
+		"SFTP"     : "mono/shared.svg",
 		"RDP"      : "mono/rdp.svg",
-		"U-DISK"   : "mono/hdd.scg",
+		"U-DISK"   : "mono/hdd.svg",
 		"uVNC"     : "mono/uvnc.svg",
 		"Alt-HTTP" : "mono/websitecheck.svg",
 		"Print service" : "mono/printer.svg",
@@ -172,10 +172,9 @@ class IpDiscovery extends List {
 			const json = JSON.parse(event.data);
 			const key = json.ip;
 			
-			if (key in this.link.data) {
-				let oldHost = this.link.data[key];
-
-				if (true) {}
+			const entry = this.link.data[key];
+			if (entry) {
+				//
 			}
 			else {
 				let services = Array.from(new Set(json.services.split(",")));

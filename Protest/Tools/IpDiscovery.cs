@@ -153,7 +153,7 @@ internal static class IpDiscovery {
 
                 DiscoverAdapter(dic, nic, ws, mutex, tokenSource.Token);
                 DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token);
-                //DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token);
+                DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token);
 
                 await Task.Delay(30000);
             }
@@ -278,15 +278,19 @@ internal static class IpDiscovery {
             string ipString = hosts[i].ToString();
             string mac = Arp.ArpRequest(ipString);
 
-            WsWriteText(ws, JsonSerializer.Serialize(new {
+            HostEntry gwHost = new HostEntry() {
                 description  = String.Empty,
                 name         = String.Empty,
-                ip           = ipString,
+                ip           = ipString ?? String.Empty,
                 ipv6         = String.Empty,
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,
-            }), mutex);
+            };
+
+            dic.AddOrUpdate(ipString, gwHost, (key, value) => value);
+
+            WsWriteText(ws, JsonSerializer.Serialize<HostEntry>(gwHost, hostSerializerOptions), mutex);
         }
     }
 
@@ -343,14 +347,14 @@ internal static class IpDiscovery {
                 DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
                 while (DateTime.Now <= endTime) {
                     if (token.IsCancellationRequested) break;
-                    MdnsResponse(ws, mutex, type, socket);
+                    MdnsResponse(dic, ws, mutex, type, socket);
                 }
             }
             catch { }
         }
     }
 
-    private static void MdnsResponse(WebSocket ws, object mutex, RecordType type, Socket socket) {
+    private static void MdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, object mutex, RecordType type, Socket socket) {
         byte[] reply = new byte[1024];
 
         try {
@@ -366,7 +370,7 @@ internal static class IpDiscovery {
                 IPAddress ipAddress = ((IPEndPoint)remoteEP).Address;
                 string ipString = ipAddress.ToString();
                 string ipv6 = String.Empty;
-                string macAddress = Protocols.Arp.ArpRequest(ipString);
+                string mac = Protocols.Arp.ArpRequest(ipString);
                 StringBuilder services = new StringBuilder();
 
                 Answer[] answer = ParseAnswers(actualReply, type, ipAddress, out _, out _, out _, true);
@@ -379,9 +383,14 @@ internal static class IpDiscovery {
                         if (split.Length >= 2) {
                             hostname = split[0].EndsWith(".local") ? hostname = split[0][..^6] : hostname = split[0];
 
-                            if (ushort.TryParse(split[1], out ushort port)) {
+                            if (ushort.TryParse(split[1], out ushort port) && port > 0) {
                                 if (services.Length > 0) services.Append(',');
-                                services.Append(PORTS_TO_PROTOCOL[port] ?? split[1]);
+                                if (PORTS_TO_PROTOCOL.TryGetValue(port, out string proto)) {
+                                    services.Append(proto);
+                                }
+                                else {
+                                    services.Append(split[1]);
+                                }
                             }
                         }
                     }
@@ -430,14 +439,19 @@ internal static class IpDiscovery {
                     }
                 }
 
-                WsWriteText(ws, JsonSerializer.Serialize(new {
+                HostEntry host = new HostEntry() {
+                    description  = String.Empty,
                     name         = hostname,
                     ip           = ipString,
                     ipv6         = ipv6,
-                    mac          = macAddress,
-                    manufacturer = MacLookup.LookupToString(macAddress),
+                    mac          = mac,
+                    manufacturer = MacLookup.LookupToString(mac),
                     services     = services.ToString(),
-                }), mutex);
+                };
+
+                dic.AddOrUpdate(ipString, host, (key, value) => value);
+
+                WsWriteText(ws, JsonSerializer.Serialize<HostEntry>(host, hostSerializerOptions), mutex);
 
             }).Start();
         }
