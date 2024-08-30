@@ -174,7 +174,42 @@ class IpDiscovery extends List {
 			
 			const entry = this.link.data[key];
 			if (entry) {
-				//
+				let changed = false;
+
+				if (json.name && entry.name.v.length === 0) {
+					entry.name.v = json.name;
+					changed = true;
+				}
+				
+				if (json.ipv6 && entry.ipv6.v.length === 0) {
+					entry.ipv6.v = json.ipv6;
+					changed = true;
+				}
+				
+				if (json.mac && entry.mac.v.length === 0) {
+					entry.mac.v = json.mac;
+					changed = true;
+				}
+				
+				if (json.manufacturer && entry.manufacturer.v.length === 0) {
+					entry.manufacturer.v = json.manufacturer;
+					changed = true;
+				}
+
+				if (json.services) {
+					const array = json.services.split(",");
+					for (let i=0; i<array.length; i++) {
+						if (entry.services.v.includes(array[i])) continue;
+						entry.services.v.push(array[i]);
+						changed = true;
+					}
+				}
+				
+				if (changed
+					&& (entry.element.offsetTop - this.list.scrollTop >= -32 || entry.element.offsetTop - this.list.scrollTop <= this.list.clientHeight)) { //in viewport
+					this.InflateElement(entry.element, entry);
+				}
+
 			}
 			else {
 				let services = Array.from(new Set(json.services.split(",")));
@@ -185,6 +220,7 @@ class IpDiscovery extends List {
 				this.list.appendChild(element);
 
 				const newHost = {
+					element      : element,
 					key          : {v:key},
 					name         : {v:json.name},
 					ip           : {v:json.ip},
@@ -196,6 +232,10 @@ class IpDiscovery extends List {
 
 				this.link.data[key] = newHost;
 				this.link.length++;
+
+				this.counter.textContent = this.list.childNodes.length === this.link.length
+				? this.link.length
+				: `${this.list.childNodes.length} / ${this.link.length}`;
 
 				this.InflateElement(element, this.link.data[key]);
 			}
