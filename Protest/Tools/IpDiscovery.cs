@@ -46,7 +46,6 @@ internal static class IpDiscovery {
         internal string mac;
         internal string manufacturer;
         internal string services;
-        internal string source;
     }
 
     private static readonly JsonSerializerOptions hostSerializerOptions;
@@ -170,7 +169,7 @@ internal static class IpDiscovery {
 
                     if (phase == 1) {
                         threads = new Thread[] {
-                            new Thread(()=> DiscoverHostname(dic, nic, ws, mutex, tokenSource.Token)),
+                            new Thread(async ()=> await DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token)),
                             new Thread(()=> DiscoverServices(dic, nic, ws, mutex, tokenSource.Token)),
                         };
 
@@ -233,7 +232,6 @@ internal static class IpDiscovery {
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,
-                source = "nic"
             };
 
             dic.AddOrUpdate(ipv4String, host, (key, value) => value);
@@ -265,7 +263,6 @@ internal static class IpDiscovery {
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,
-                source = "nic"
             };
 
             dic.AddOrUpdate(ipv4String, gwHost, (key, value) => value);
@@ -327,7 +324,6 @@ internal static class IpDiscovery {
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,
-                source = "icmp"
             };
 
             dic.AddOrUpdate(ipString, gwHost, (key, value) => value);
@@ -341,35 +337,63 @@ internal static class IpDiscovery {
         //MdnsMulticast(dic, nic, ws, mutex, token, HTTP_QUERY, Protocols.Dns.RecordType.ANY, 1000);
     }
 
-    private static void DiscoverHostname(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static async Task DiscoverHostnameAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+        List<Task> tasks = new List<Task>();
+
         foreach (KeyValuePair<string, HostEntry> pair in dic) {
             if (token.IsCancellationRequested) {
-                return;
+                break;
             }
 
-            HostEntry host = pair.Value;
-            string name = NetBios.GetBiosName(pair.Key, 200);
-            if (name is not null) {
-                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                    ip = pair.Key,
-                    name = name,
-                }), mutex);
-            }
-            else {
-                try {
-                    IPHostEntry hostEntry = System.Net.Dns.GetHostEntry(host.ip);
-                    if (!string.IsNullOrEmpty(hostEntry.HostName)) {
-                        WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                            ip = pair.Key,
-                            name = name,
-                        }), mutex);
-                    }
+            tasks.Add(Task.Run(async () => {
+                if (token.IsCancellationRequested) {
+                    return;
                 }
-                catch { }
-            }
+
+                HostEntry host = pair.Value;
+                string name = NetBios.GetBiosName(pair.Key, 200);
+
+                if (name is not null) {
+                    WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                        ip = pair.Key,
+                        name = name,
+                    }), mutex);
+                }
+                else {
+                    try {
+                        IPHostEntry hostEntry = await System.Net.Dns.GetHostEntryAsync(host.ip);
+                        name = hostEntry.HostName;
+
+                        if (!string.IsNullOrEmpty(name)) {
+                            Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, RecordType.AAAA, false);
+                            Mdns.Answer[] filtered = answer.Where(o=> o.type == RecordType.AAAA).ToArray();
+
+                            if (filtered.Length > 0 && !String.IsNullOrEmpty(filtered[0].answerString)) {
+                                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                                    ip   = pair.Key,
+                                    ipv6 = filtered[0].answerString,
+                                    name = name,
+                                }), mutex);
+                            }
+                            else {
+                                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                                    ip = pair.Key,
+                                    name = name,
+                                }), mutex);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }, token));
         }
+
+        try {
+            await Task.WhenAll(tasks);
+        }
+        catch { }
     }
-    
+
     private static void DiscoverServices(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
 
@@ -560,7 +584,6 @@ internal static class IpDiscovery {
                     mac          = mac,
                     manufacturer = MacLookup.LookupToString(mac),
                     services     = services.ToString(),
-                    source = "mdns"
                 };
 
                 dic.AddOrUpdate(ipString, host, (key, value) => value);
@@ -588,7 +611,6 @@ file sealed class HostJsonConverter : JsonConverter<IpDiscovery.HostEntry> {
         ReadOnlySpan<byte> _services = "services"u8;
 
         writer.WriteStartObject();
-        writer.WriteString("source",      value.source);
         writer.WriteString(_name,         value.name);
         writer.WriteString(_ip,           value.ip);
         writer.WriteString(_ipv6,         value.ipv6);

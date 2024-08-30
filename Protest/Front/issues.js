@@ -348,7 +348,7 @@ class Issues extends List {
 		this.ws.onopen = ()=> {
 			this.scanButton.disabled = true;
 			this.statusLabel.textContent = "Scanning...";
-			this.statusLabel.classList.add("issues-scanning");
+			this.statusLabel.classList.add("list-working-spinner");
 		};
 
 		this.ws.onmessage = event=> {
@@ -370,7 +370,7 @@ class Issues extends List {
 		this.ws.onclose = ()=> {
 			this.scanButton.disabled = false;
 			this.statusLabel.textContent = "";
-			this.statusLabel.classList.remove("issues-scanning");
+			this.statusLabel.classList.remove("list-working-spinner");
 			this.ws = null;
 		};
 

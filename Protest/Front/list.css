@@ -164,3 +164,19 @@
 	border: 1px solid var(--clr-pane);
 	border-radius: 2px;
 }
+
+.list-working-spinner::before {
+	content: "";
+	display: inline-block;
+	margin-right: 8px;
+	margin-bottom: -4px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border-style: solid;
+	border-color: var(--clr-pane) var(--clr-pane) transparent transparent;
+	border-width: 2px 3px 3px 0px;
+	box-sizing: border-box;
+
+	animation: spin 1s linear infinite;
+}

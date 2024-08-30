@@ -45,6 +45,16 @@ class IpDiscovery extends List {
 
 		this.stopButton.disabled = true;
 
+		this.statusLabel = document.createElement("div");
+		this.statusLabel.className = "issues-status-label";
+		this.statusLabel.textContent = "";
+		this.statusLabel.style.position = "absolute";
+		this.statusLabel.style.right = "8px";
+		this.statusLabel.style.bottom = "4px";
+		this.statusLabel.style.color = "var(--clr-pane)";
+		this.statusLabel.style.fontWeight = "600";
+		this.content.appendChild(this.statusLabel);
+
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
 
@@ -81,6 +91,21 @@ class IpDiscovery extends List {
 		innerBox.parentElement.style.maxWidth = "640px";
 		innerBox.style.border = "var(--clr-control) solid 1.5px";
 		innerBox.style.overflowY = "auto";
+		
+		const spinner = document.createElement("div");
+		spinner.className = "spinner";
+		spinner.style.textAlign = "left";
+		spinner.style.marginTop = "32px";
+		spinner.style.marginBottom = "16px";
+		spinner.appendChild(document.createElement("div"));
+		innerBox.appendChild(spinner);
+
+		const status = document.createElement("div");
+		status.textContent = "Retrieving network interfaces...";
+		status.style.textAlign = "center";
+		status.style.fontWeight = "bold";
+		status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+		innerBox.appendChild(status);
 
 		let selectedNic = null;
 
@@ -91,6 +116,8 @@ class IpDiscovery extends List {
 
 			const json = await response.json();
 			if (json.error) throw (json.error);
+
+			innerBox.textContent = "";
 
 			for (let i=0; i<json.length; i++) {
 				const newNic = document.createElement("div");
@@ -166,6 +193,8 @@ class IpDiscovery extends List {
 			this.ws.send(id);
 			this.startButton.disabled = true;
 			this.stopButton.disabled = false;
+			this.statusLabel.textContent = "Discovering...";
+			this.statusLabel.classList.add("list-working-spinner");
 		};
 
 		this.ws.onmessage = event=> {
@@ -244,6 +273,8 @@ class IpDiscovery extends List {
 		this.ws.onclose = ()=> {
 			this.startButton.disabled = false;
 			this.stopButton.disabled = true;
+			this.statusLabel.textContent = "";
+			this.statusLabel.classList.remove("list-working-spinner");
 			this.ws = null;
 		};
 
