@@ -391,7 +391,9 @@ internal static class IpDiscovery {
         try {
             await Task.WhenAll(tasks);
         }
-        catch { }
+        catch (Exception ex){
+            Logger.Error(ex);
+        }
     }
 
     private static void DiscoverServices(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
