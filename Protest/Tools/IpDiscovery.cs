@@ -185,6 +185,7 @@ internal static class IpDiscovery {
 
                 }
 
+                //keep socket connection open
                 await Task.Delay(3_000);
             }
         }
@@ -350,17 +351,17 @@ internal static class IpDiscovery {
                     return;
                 }
 
-                HostEntry host = pair.Value;
-                string name = NetBios.GetBiosName(pair.Key, 200);
+                try {
+                    HostEntry host = pair.Value;
+                    string name = NetBios.GetBiosName(pair.Key, 200);
 
-                if (name is not null) {
-                    WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                        ip = pair.Key,
-                        name = name,
-                    }), mutex);
-                }
-                else {
-                    try {
+                    if (name is not null) {
+                        WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                            ip = pair.Key,
+                            name = name,
+                        }), mutex);
+                    }
+                    else {
                         IPHostEntry hostEntry = await System.Net.Dns.GetHostEntryAsync(host.ip);
                         name = hostEntry.HostName;
 
@@ -383,15 +384,15 @@ internal static class IpDiscovery {
                             }
                         }
                     }
-                    catch { }
                 }
+                catch { }
             }, token));
         }
 
         try {
             await Task.WhenAll(tasks);
         }
-        catch (Exception ex){
+        catch (Exception ex) {
             Logger.Error(ex);
         }
     }

@@ -348,7 +348,7 @@ const MENU = {
 		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:false, f:()=> new AddressBook(),   k:"phone email" },
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),          k:"messages" },
 
-		{ t:"IP Discovery", i:"mono/ipdiscovery.svg?light",   g:"tools", h:false, f:()=> new IpDiscovery() },
+		{ t:"IP discovery", i:"mono/ipdiscovery.svg?light",   g:"tools", h:false, f:()=> new IpDiscovery() },
 		{ t:"Watchdog",        i:"mono/watchdog.svg?light",     g:"tools", h:false, f:()=> new Watchdog() },
 		{ t:"Reverse proxy",   i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args), k:"man in the middle" },
 		{ t:"Issues",          i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
