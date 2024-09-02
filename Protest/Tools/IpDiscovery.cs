@@ -126,9 +126,6 @@ internal static class IpDiscovery {
         }
 
         NetworkInterface nic = null;
-        using CancellationTokenSource tokenSource = new CancellationTokenSource();
-        object mutex = new object();
-
         try {
             byte[] buff = new byte[256];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -142,31 +139,32 @@ internal static class IpDiscovery {
             return;
         }
 
+        object mutex = new object();
         ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
 
-        try {
-            Task[] phase1Tasks = new Task[] {
-                Task.Run(() => DiscoverAdapter(dic, nic, ws, mutex)),
-                Task.Run(() => DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
-                Task.Run(() => DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token))
-            };
+        for (int i = 0; i < 2; i++) {
+            using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-            await Task.WhenAll(phase1Tasks);
+            try {
+                Task[] phase1Tasks = new Task[] {
+                    Task.Run(() => DiscoverAdapter(dic, nic, ws, mutex)),
+                    Task.Run(() => DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
+                    Task.Run(() => DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token))
+                };
+                await Task.WhenAll(phase1Tasks);
 
-            Task[] phase2Tasks = new Task[] {
-                DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token),
-                DiscoverServicesAsync(dic, nic, ws, mutex, tokenSource.Token)
-            };
-
-            await Task.WhenAll(phase2Tasks);
-
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
-        }
-        finally {
-            tokenSource.Cancel();
-            dic.Clear();
+                Task[] phase2Tasks = new Task[] {
+                    DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token),
+                    DiscoverServicesAsync(dic, nic, ws, mutex, tokenSource.Token)
+                };
+                await Task.WhenAll(phase2Tasks);
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+            finally {
+                tokenSource.Cancel();
+            }
         }
 
         if (ws?.State == WebSocketState.Open) {
@@ -175,6 +173,8 @@ internal static class IpDiscovery {
             }
             catch { }
         }
+
+        dic.Clear();
     }
 
     private static void DiscoverAdapter(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex) {
@@ -274,7 +274,11 @@ internal static class IpDiscovery {
 
             for (uint i = start + 1; i < end; i++) {
                 byte[] ipBytes = BitConverter.GetBytes(i).Reverse().ToArray();
-                hosts.Add(new IPAddress(ipBytes));
+                IPAddress ipaddr = new IPAddress(ipBytes);
+                if (dic.ContainsKey(ipaddr.ToString())) {
+                    continue;
+                }
+                hosts.Add(ipaddr);
             }
         }
 
@@ -379,7 +383,7 @@ internal static class IpDiscovery {
     private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
 
-        var tasks = dic.Select(async pair => {
+        Task[] tasks = dic.Select(async pair => {
             if (token.IsCancellationRequested) {
                 return;
             }
@@ -411,11 +415,11 @@ internal static class IpDiscovery {
                     services = services.ToString()
                 }), mutex);
             }
-        });
+        }).ToArray();
 
         await Task.WhenAll(tasks);
     }
-    
+
     private static async Task<bool[]> PingArrayAsync(List<IPAddress> host, int timeout) {
         List<Task<bool>> tasks = new List<Task<bool>>();
         for (int i = 0; i < host.Count; i++) tasks.Add(PingAsync(host[i], timeout));
