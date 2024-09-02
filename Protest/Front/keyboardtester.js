@@ -752,7 +752,7 @@ class KeyboardTester extends Window {
 				if (gamepad.buttons[i].pressed) {
 					anyButton = true;
 					elements[i].style.backgroundColor = "var(--clr-accent)";
-					elements[i].style.style.border = "1px solid var(--clr-accent)";
+					elements[i].style.border = "1px solid var(--clr-accent)";
 					elements[i].style.filter = "brightness(2.5)";
 					elements[i].style.boxShadow = "var(--clr-accent) 0 0 4px";
 				}
