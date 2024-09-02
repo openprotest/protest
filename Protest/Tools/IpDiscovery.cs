@@ -32,6 +32,7 @@ internal static class IpDiscovery {
         { 80,   "HTTP" },
         { 443,  "HTTPS" },
         { 445,  "SMB" },
+        { 3389, "RDP" },
         { 8080, "Alt-HTTP" },
         { 8443, "Alt-HTTPS" },
         { 9100, "Print service" },
@@ -124,10 +125,9 @@ internal static class IpDiscovery {
             return;
         }
 
-        object mutex = new object();
-        using CancellationTokenSource tokenSource = new CancellationTokenSource();
-
         NetworkInterface nic = null;
+        using CancellationTokenSource tokenSource = new CancellationTokenSource();
+        object mutex = new object();
 
         try {
             byte[] buff = new byte[256];
@@ -142,59 +142,31 @@ internal static class IpDiscovery {
             return;
         }
 
-        for (int c = 0; c < 3; c++) {
-            ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
+        ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
 
-            Thread[] threads = new Thread[] {
-            new Thread(()=> DiscoverAdapter(dic, nic, ws, mutex)),
-            new Thread(()=> DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
-            new Thread(()=> DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token)),
-        };
+        try {
+            Task[] phase1Tasks = new Task[] {
+                Task.Run(() => DiscoverAdapter(dic, nic, ws, mutex)),
+                Task.Run(() => DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
+                Task.Run(() => DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token))
+            };
 
-            byte phase = 1;
+            await Task.WhenAll(phase1Tasks);
 
-            try {
-                for (int i = 0; i < threads.Length; i++) {
-                    threads[i].Start();
-                }
+            Task[] phase2Tasks = new Task[] {
+                DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token),
+                DiscoverServicesAsync(dic, nic, ws, mutex, tokenSource.Token)
+            };
 
-                await Task.Delay(50);
+            await Task.WhenAll(phase2Tasks);
 
-                while (ws.State == WebSocketState.Open) {
-                    if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-                        ctx.Response.Close();
-                        break;
-                    }
-
-                    if (threads.All(o => o.ThreadState != ThreadState.Running)) {
-
-                        if (phase == 1) {
-                            threads = new Thread[] {
-                            new Thread(async ()=> await DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token)),
-                            new Thread(()=> DiscoverServices(dic, nic, ws, mutex, tokenSource.Token)),
-                        };
-
-                            for (int i = 0; i < threads.Length; i++) {
-                                threads[i].Start();
-                            }
-
-                            phase = 2;
-                        }
-                        else if (phase == 2) {
-                            break;
-                        }
-
-                    }
-
-                    //keep socket connection open
-                    await Task.Delay(3_000);
-                }
-            }
-            catch { }
-            finally {
-                tokenSource.Cancel();
-                dic.Clear();
-            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+        finally {
+            tokenSource.Cancel();
+            dic.Clear();
         }
 
         if (ws?.State == WebSocketState.Open) {
@@ -404,31 +376,33 @@ internal static class IpDiscovery {
         catch { }
     }
 
-    private static void DiscoverServices(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
 
-        foreach (KeyValuePair<string, HostEntry> pair in dic) {
+        var tasks = dic.Select(async pair => {
             if (token.IsCancellationRequested) {
                 return;
             }
 
             HostEntry host = pair.Value;
 
-            Task<bool[]> tasks = PortScan.PortsScanAsync(host.ip, ports, 400, false);
-            tasks.Wait();
+            bool[] result = await PortScan.PortsScanAsync(host.ip, ports, 500, false);
 
-            if (tasks.Result.Any(o=>o)) {
+            if (result.Any(o => o)) {
                 StringBuilder services = new StringBuilder();
-                for (int i = 0; i < tasks.Result.Length; i++) {
-                    if (!tasks.Result[i]) continue;
 
-                    if (services.Length > 0) services.Append(',');
+                for (int i = 0; i < result.Length; i++) {
+                    if (result[i]) {
+                        if (services.Length > 0) {
+                            services.Append(',');
+                        }
 
-                    if (PORTS_TO_PROTOCOL.TryGetValue((ushort)ports[i], out string proto)) {
-                        services.Append(proto);
-                    }
-                    else {
-                        services.Append(ports[i]);
+                        if (PORTS_TO_PROTOCOL.TryGetValue((ushort)ports[i], out string proto)) {
+                            services.Append(proto);
+                        }
+                        else {
+                            services.Append(ports[i]);
+                        }
                     }
                 }
 
@@ -437,7 +411,9 @@ internal static class IpDiscovery {
                     services = services.ToString()
                 }), mutex);
             }
-        }
+        });
+
+        await Task.WhenAll(tasks);
     }
     
     private static async Task<bool[]> PingArrayAsync(List<IPAddress> host, int timeout) {
@@ -493,7 +469,9 @@ internal static class IpDiscovery {
 
                 DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
                 while (DateTime.Now <= endTime) {
-                    if (token.IsCancellationRequested) break;
+                    if (token.IsCancellationRequested) {
+                        break;
+                    }
                     MdnsResponse(dic, ws, mutex, type, socket);
                 }
             }
