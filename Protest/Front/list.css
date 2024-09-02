@@ -142,7 +142,7 @@
 }
 .list-inner-icon[tip]::after {
 	transform: translateX(-8px) !important;
-	right: calc(100% + 2px) !important;
+	right: calc(100% + 3px) !important;
 	left: unset;
 	top: calc(50% - 6px) !important;
 	border-width: 6px 0 6px 6px !important;

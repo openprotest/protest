@@ -142,64 +142,66 @@ internal static class IpDiscovery {
             return;
         }
 
-        ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
+        for (int c = 0; c < 3; c++) {
+            ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
 
-        Thread[] threads = new Thread[] {
+            Thread[] threads = new Thread[] {
             new Thread(()=> DiscoverAdapter(dic, nic, ws, mutex)),
             new Thread(()=> DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
             new Thread(()=> DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token)),
         };
 
-        byte phase = 1;
+            byte phase = 1;
 
-        try {
-            for (int i = 0; i < threads.Length; i++) {
-                threads[i].Start();
-            }
-
-            await Task.Delay(50);
-
-            while (ws.State == WebSocketState.Open) {
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-                    ctx.Response.Close();
-                    break;
+            try {
+                for (int i = 0; i < threads.Length; i++) {
+                    threads[i].Start();
                 }
 
-                if (threads.All(o => o.ThreadState != ThreadState.Running)) {
+                await Task.Delay(50);
 
-                    if (phase == 1) {
-                        threads = new Thread[] {
+                while (ws.State == WebSocketState.Open) {
+                    if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+                        ctx.Response.Close();
+                        break;
+                    }
+
+                    if (threads.All(o => o.ThreadState != ThreadState.Running)) {
+
+                        if (phase == 1) {
+                            threads = new Thread[] {
                             new Thread(async ()=> await DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token)),
                             new Thread(()=> DiscoverServices(dic, nic, ws, mutex, tokenSource.Token)),
                         };
 
-                        for (int i = 0; i < threads.Length; i++) {
-                            threads[i].Start();
+                            for (int i = 0; i < threads.Length; i++) {
+                                threads[i].Start();
+                            }
+
+                            phase = 2;
+                        }
+                        else if (phase == 2) {
+                            break;
                         }
 
-                        phase = 2;
-                    }
-                    else if (phase == 2) {
-                        break;
                     }
 
+                    //keep socket connection open
+                    await Task.Delay(3_000);
                 }
-
-                //keep socket connection open
-                await Task.Delay(3_000);
+            }
+            catch { }
+            finally {
+                tokenSource.Cancel();
+                dic.Clear();
             }
         }
-        catch { }
-        finally {
-            tokenSource.Cancel();
-            dic.Clear();
 
-            if (ws?.State == WebSocketState.Open) {
-                try {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                }
-                catch { }
+        if (ws?.State == WebSocketState.Open) {
+            try {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
             }
+            catch { }
         }
     }
 
@@ -346,55 +348,60 @@ internal static class IpDiscovery {
                 break;
             }
 
+            HostEntry host = pair.Value;
+
+            if (!String.IsNullOrEmpty(host.name)
+                && String.IsNullOrEmpty(host.ipv6)) {
+                continue;
+            }
+
             tasks.Add(Task.Run(async () => {
                 if (token.IsCancellationRequested) {
                     return;
                 }
 
-                try {
-                    HostEntry host = pair.Value;
-                    string name = NetBios.GetBiosName(pair.Key, 200);
+                string name = NetBios.GetBiosName(pair.Key, 200);
 
-                    if (name is not null) {
-                        WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                            ip = pair.Key,
-                            name = name,
-                        }), mutex);
-                    }
-                    else {
-                        IPHostEntry hostEntry = await System.Net.Dns.GetHostEntryAsync(host.ip);
+                if (name is not null) {
+                    WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                        ip = pair.Key,
+                        name = name,
+                    }), mutex);
+                }
+                else {
+                    IPHostEntry hostEntry;
+                    try {
+                        hostEntry = await System.Net.Dns.GetHostEntryAsync(host.ip);
                         name = hostEntry.HostName;
+                    }
+                    catch { }
 
-                        if (!string.IsNullOrEmpty(name)) {
-                            Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, RecordType.AAAA, false);
-                            Mdns.Answer[] filtered = answer.Where(o=> o.type == RecordType.AAAA).ToArray();
+                    if (!string.IsNullOrEmpty(name)) {
+                        Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, RecordType.AAAA, false);
+                        Mdns.Answer[] filtered = answer.Where(o=> o.type == RecordType.AAAA).ToArray();
 
-                            if (filtered.Length > 0 && !String.IsNullOrEmpty(filtered[0].answerString)) {
-                                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                                    ip   = pair.Key,
-                                    ipv6 = filtered[0].answerString,
-                                    name = name,
-                                }), mutex);
-                            }
-                            else {
-                                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                                    ip = pair.Key,
-                                    name = name,
-                                }), mutex);
-                            }
+                        if (filtered.Length > 0 && !String.IsNullOrEmpty(filtered[0].answerString)) {
+                            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                                ip   = pair.Key,
+                                ipv6 = filtered[0].answerString,
+                                name = name,
+                            }), mutex);
+                        }
+                        else {
+                            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                                ip = pair.Key,
+                                name = name,
+                            }), mutex);
                         }
                     }
                 }
-                catch { }
             }, token));
         }
 
         try {
             await Task.WhenAll(tasks);
         }
-        catch (Exception ex) {
-            Logger.Error(ex);
-        }
+        catch { }
     }
 
     private static void DiscoverServices(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
