@@ -33,7 +33,8 @@ public static class Oid {
     public static string[] LIVESTATS_PRINTER_OID = new string[] {
         PRINTER_STATUS,
         PRINTER_DISPLAY_MESSAGE,
-        PRINTER_JOBS
+        PRINTER_JOBS,
+        PRINTER_MARKER_COUNTER_LIFE
     };
 
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";

@@ -391,24 +391,30 @@ internal static class LiveStats {
             IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
             Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(printerResult);
 
-            if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
-                string status = snmpPrinterStatus switch {
-                    "1" => "Other",
-                    "2" => "Processing",
-                    "3" => "Idle",
-                    "4" => "Printing",
-                    "5" => "Warmup",
-                    _   => snmpPrinterStatus
-                };
-                WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
-            }
+            if (printerFormatted is not null) {
+                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
+                    string status = snmpPrinterStatus switch {
+                        "1" => "Other",
+                        "2" => "Processing",
+                        "3" => "Idle",
+                        "4" => "Printing",
+                        "5" => "Warmup",
+                        _   => snmpPrinterStatus
+                    };
+                    WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
+                }
 
-            if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
-                WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
-            }
+                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MARKER_COUNTER_LIFE, out string snmpPageCounter)) {
+                    WsWriteText(ws, $"{{\"info\":\"Total pages counter: {Data.EscapeJsonText(snmpPageCounter)}\",\"source\":\"SNMP\"}}", mutex);
+                }
 
-            if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
-                WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
+                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
+                    WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
+                }
+
+                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
+                    WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
+                }
             }
 
             if (Issues.CheckPrinterComponent(null, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
@@ -416,7 +422,6 @@ internal static class LiveStats {
                     WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
                 }
             }
-
         }
         else if (SWITCH_TYPES.Contains(type)) {
             //TODO:

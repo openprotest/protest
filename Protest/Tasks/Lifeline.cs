@@ -392,11 +392,11 @@ internal static partial class Lifeline {
         }
 
         /*
-                Dictionary<string, string> colorantEntity = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[]{ Protocols.Snmp.Oid.PRINTER_MARKER_COLORANT_ENTRY }, Protocols.Snmp.Polling.SnmpOperation.Walk));
-                if (colorantEntity is null || colorantEntity.Count == 0) {
-                    return;
-                }
-                bool isColor = colorantEntity.Count > 1;
+        Dictionary<string, string> colorantEntity = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[]{ Protocols.Snmp.Oid.PRINTER_MARKER_COLORANT_ENTRY }, Protocols.Snmp.Polling.SnmpOperation.Walk));
+        if (colorantEntity is null || colorantEntity.Count == 0) {
+            return;
+        }
+        bool isColor = colorantEntity.Count > 1;
         */
 
         Dictionary<string, string> printCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
