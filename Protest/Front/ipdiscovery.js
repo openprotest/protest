@@ -2,7 +2,7 @@ class IpDiscovery extends List {
 
 	static PROTOCOL_TO_ICON = {
 		"SSH"      : "mono/ssh.svg",
-		"TELNET"   : "mono/telnet.svg",
+		"Telnet"   : "mono/telnet.svg",
 		"DNS"      : "mono/dns.svg",
 		"DHCP"     : "mono/dhcp.svg",
 		"HTTP"     : "mono/websitecheck.svg",
