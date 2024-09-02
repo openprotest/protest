@@ -18,33 +18,25 @@
 ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=222&style=for-the-badge)
 ![MacOS](https://shields.io/badge/Mac%20OS-ccc?logo=Apple&logoColor=222&style=for-the-badge)
 
-### This repository contains the source code for:
+### Components:
   * **Protest:** The front-end and back-end workings.
-  * **Protest Agent:** A tool to enable the browser talk to the client's computer using a local protocol (protest://).
+  * **Protest-CacheGenerator:** A source-generator that embeds the front-end web application within the binary executable.
+  * **Protest Agent:** A tool to enable the browser talk to the client's computer using a local protocol `protest://`.
 
 ### Overview:
-Pro-test offers a comprehensive solution for creating and managing an inventory database of your network environment.
-It employs data gathering techniques through communication with Active Directory or local network scanning.
+Pro-test is a robust solution for creating and managing an inventory database of your network environment.
+It leverages data collection techniques by interacting with Active Directory or performing local network scans.
 The suite automatically populates the database by targeting the domain controller or specified IP ranges.
 
 ### How to use:
-Pro-test is portable and self-contained. You can access its web interface via the loopback address.
-If you wish to interface from a remote host, tweak the http_ip and http_port parameters in the protest.cfg file. Requests from IPs other than loopback require authentication.
-If Pro-test fails to bind to the configured endpoint, it will attempt to bind to a fallback endpoint (127.0.0.1:8080).
+Pro-test is portable and self-contained, with a web interface accessible via the loopback address.
 
-Pro-test inherits the access level of the user who runs it.
-In order to utilizes protocols like WMI and Active Directory services, it is required to run as a Network Administrator.
+For remote access, you can set up a reverse proxy using the included `Reverse proxy` tool.
+Authentication is required for requests originating from IPs other than the loopback address.
+If you opt to use a different reverse proxy, ensure that the X-Real-IP header is forwarded.
+If Pro-test fails to bind to the configured endpoint, it will attempt to bind to a fallback endpoint `127.0.0.1:8080`.
 
-### Secure proxy server basic configuration:
-```
-netsh http add sslcert ipport=0.0.0.0:443 certhash=[thumbprint] appid=72f5bca3-7752-45e8-8027-2060ebbda456
-```
-
-*If you use a reverse proxy (like nginx), for the authentication to work properly, you need to pass the "X-Forwarded-For" header from your proxy to the back-end.*
-
-### Third-Party Components:
-* *This product includes IP2Location LITE data available from http://www.ip2location.com.*
-* *This product includes IP2Proxy LITE data available from https://www.ip2location.com/proxy-database.*
+Pro-test operates with the access level of the user executing it. To utilize protocols such as WMI and Active Directory services, it must be run as a Network Administrator.
 
 ### Sponsor:
 *[![Sponsor](https://img.shields.io/badge/Sponsor%20on%20GitHub-374046?style=for-the-badge&logo=github)](https://github.com/sponsors/veniware)*
