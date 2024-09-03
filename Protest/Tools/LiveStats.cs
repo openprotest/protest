@@ -307,7 +307,7 @@ internal static class LiveStats {
             if (scope is not null && scope.IsConnected) {
                 using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
                 foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
-                    string caption = o.GetPropertyValue("Caption").ToString();
+                    string caption = o.GetPropertyValue("Caption").ToString().Replace(":", String.Empty);
 
                     object size = o.GetPropertyValue("Size");
                     if (size is null) continue;
@@ -321,7 +321,7 @@ internal static class LiveStats {
                     if (nSize == 0) continue;
                     double percent = Math.Round(100.0 * nFree / nSize, 1);
 
-                    WsWriteText(ws, $"{{\"drive\":\"{caption}\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption.Replace(":", String.Empty)}$")}\",\"source\":\"WMI\"}}", mutex);
+                    WsWriteText(ws, $"{{\"drive\":\"{caption}:\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption}$")}\",\"source\":\"WMI\"}}", mutex);
 
                     if (Issues.CheckDiskSpace(null, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
                         WsWriteText(ws, diskIssue?.ToLiveStatsJsonBytes(), mutex);

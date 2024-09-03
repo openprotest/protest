@@ -141,6 +141,12 @@ class DeviceView extends View {
 		optionMacLookup.textContent = "MAC Lookup";
 		this.utilitiesDropDown.list.append(optionMacLookup);
 
+		this.refreshLiveStatsButton = this.AddToolbarButton("", "mono/restart.svg?light");
+		this.refreshLiveStatsButton.style.float = "right";
+		this.refreshLiveStatsButton.style.marginRight = "7px";
+		this.refreshLiveStatsButton.onclick = ()=> this.InitializeLiveStats();
+		this.bar.appendChild(this.refreshLiveStatsButton);
+
 		optionPing.onclick=()=> {
 			let target;
 			if ("ip" in this.link) {
@@ -900,6 +906,9 @@ class DeviceView extends View {
 		this.pingIndicators = [];
 
 		this.liveStatsWebSockets.onopen = ()=> {
+			this.refreshLiveStatsButton.disabled = true;
+			this.refreshLiveStatsButton.style.animation = "spin 2s linear infinite reverse";
+
 			dotPingCounter = 0;
 
 			this.AfterResize();
@@ -1058,6 +1067,9 @@ class DeviceView extends View {
 		};
 
 		this.liveStatsWebSockets.onclose = ()=> {
+			this.refreshLiveStatsButton.disabled = false;
+			this.refreshLiveStatsButton.style.animation = "none";
+
 			if (spinnerBox) {
 				spinnerBox.style.height = "0";
 				spinnerBox.style.opacity = "0";

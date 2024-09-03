@@ -69,6 +69,12 @@ class UserView extends View {
 			this.attributes.appendChild(this.CreateAttribute("office number", "", origin, date, true));
 			this.attributes.appendChild(this.CreateAttribute("mobile number", "", origin, date, true));
 		}
+
+		this.refreshLiveStatsButton = this.AddToolbarButton("", "mono/restart.svg?light");
+		this.refreshLiveStatsButton.style.float = "right";
+		this.refreshLiveStatsButton.style.marginRight = "7px";
+		this.refreshLiveStatsButton.onclick = ()=> this.InitializeLiveStats();
+		this.bar.appendChild(this.refreshLiveStatsButton);
 	}
 
 	InitializePreview() { //overrides
@@ -137,6 +143,9 @@ class UserView extends View {
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/user");
 
 		this.liveStatsWebSockets.onopen = ()=> {
+			this.refreshLiveStatsButton.disabled = true;
+			this.refreshLiveStatsButton.style.animation = "spin 2s linear infinite reverse";
+
 			this.AfterResize();
 			this.liveA.textContent = "";
 			this.liveB.textContent = "";
@@ -163,10 +172,11 @@ class UserView extends View {
 		};
 
 		this.liveStatsWebSockets.onclose = event=> {
+			this.refreshLiveStatsButton.disabled = false;
+			this.refreshLiveStatsButton.style.animation = "none";
+
 			this.liveStatsWebSockets = null;
 		};
-
-		//this.liveStatsWebSockets.onerror = error=> {};
 	}
 
 	Edit(isNew = false) { //overrides
