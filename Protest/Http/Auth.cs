@@ -358,9 +358,9 @@ internal static class Auth {
                 break;*/
 
             case "automation:write":
-                path.Add("/automation/list");
-                path.Add("/automation/start");
-                path.Add("/automation/stop");
+                path.Add("/tasks/list");
+                path.Add("/tasks/start");
+                path.Add("/tasks/stop");
                 break;
 
             case "rbac:write":

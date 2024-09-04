@@ -167,6 +167,8 @@ internal static class Issues {
     }
 
     private static void Scan() {
+        task.status = TaskWrapper.TaskStatus.Running;
+
         ScanUsers();
         ScanDevices();
         task = null;

@@ -907,7 +907,7 @@ class DeviceView extends View {
 
 		this.liveStatsWebSockets.onopen = ()=> {
 			this.refreshLiveStatsButton.disabled = true;
-			this.refreshLiveStatsButton.style.animation = "spin 2s linear infinite reverse";
+			this.refreshLiveStatsButton.style.animation = "spin 1.5s linear infinite reverse";
 
 			dotPingCounter = 0;
 
