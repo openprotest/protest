@@ -922,7 +922,7 @@ class DeviceView extends View {
 
 			this.liveA.textContent = "";
 			this.liveB.textContent = "";
-			this.liveD.textContent = "";
+			//this.liveD.textContent = "";
 
 			spinnerBox = document.createElement("div");
 			spinnerBox.style.height = "0";
