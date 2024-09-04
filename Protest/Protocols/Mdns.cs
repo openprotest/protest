@@ -492,7 +492,7 @@ internal class Mdns {
             if (answers[i].type == RecordType.TXT) {
                 int delimiter = name.IndexOf((char)65533);
                 if (delimiter > -1) {
-                    name = name.Substring(0, delimiter);
+                    name = name[..delimiter];
                 }
                 name = name.Trim();
             }

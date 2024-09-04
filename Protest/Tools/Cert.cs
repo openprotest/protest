@@ -158,7 +158,7 @@ public static class Cert {
 
                     int startIndex = part.IndexOf("\r\n\r\n") + 4;
 
-                    byte[] fileContent = encoding.GetBytes(part.Substring(startIndex).TrimEnd('\r', '\n', '-'));
+                    byte[] fileContent = encoding.GetBytes(part[startIndex..].TrimEnd('\r', '\n', '-'));
 
                     File.WriteAllBytes($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{newName}", fileContent);
 

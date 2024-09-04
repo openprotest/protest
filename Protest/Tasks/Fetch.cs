@@ -509,34 +509,34 @@ internal static class Fetch {
 
         for (int i = 0; i < payloadLines.Length; i++) {
             if (payloadLines[i].StartsWith("dns=")) {
-                dns = payloadLines[i].Substring(4).Trim();
+                dns = payloadLines[i][4..].Trim();
             }
             else if (payloadLines[i].StartsWith("wmi=")) {
-                wmi = payloadLines[i].Substring(4).Trim();
+                wmi = payloadLines[i][4..].Trim();
             }
             else if (payloadLines[i].StartsWith("kerberos=")) {
-                kerberos = payloadLines[i].Substring(9).Trim();
+                kerberos = payloadLines[i][9..].Trim();
             }
             else if (payloadLines[i].StartsWith("portscan=")) {
-                portScan = payloadLines[i].Substring(9).Trim();
+                portScan = payloadLines[i][9..].Trim();
             }
             else if (payloadLines[i].StartsWith("retries=")) {
-                retriesStr = payloadLines[i].Substring(8).Trim();
+                retriesStr = payloadLines[i][8..].Trim();
             }
             else if (payloadLines[i].StartsWith("interval=")) {
-                intervalStr = payloadLines[i].Substring(9).Trim();
+                intervalStr = payloadLines[i][9..].Trim();
             }
             else if (payloadLines[i].StartsWith("snmp2=")) {
-                snmp2 = payloadLines[i].Substring(6).Trim();
+                snmp2 = payloadLines[i][6..].Trim();
             }
             else if (payloadLines[i].StartsWith("snmp3=")) {
-                snmp3 = payloadLines[i].Substring(6).Trim();
+                snmp3 = payloadLines[i][6..].Trim();
             }
             else if (payloadLines[i].StartsWith("snmp2profiles=")) {
-                snmp2Profiles = payloadLines[i].Substring(14).Trim().Split(',');
+                snmp2Profiles = payloadLines[i][14..].Trim().Split(',');
             }
             else if (payloadLines[i].StartsWith("snmp3profiles=")) {
-                snmp3Profiles = payloadLines[i].Substring(14).Trim().Split(',');
+                snmp3Profiles = payloadLines[i][14..].Trim().Split(',');
             }
         }
 

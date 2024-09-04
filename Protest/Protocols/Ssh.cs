@@ -54,10 +54,10 @@ internal static class Ssh {
             string username = String.Empty;
             string password = String.Empty;
             for (int i = 0; i < lines.Length; i++) {
-                if (lines[i].StartsWith("target=")) target   = lines[i].Substring(7);
-                if (lines[i].StartsWith("file="))   file     = lines[i].Substring(5);
-                if (lines[i].StartsWith("un="))     username = lines[i].Substring(3);
-                if (lines[i].StartsWith("pw="))     password = lines[i].Substring(3);
+                if (lines[i].StartsWith("target=")) target   = lines[i][7..];
+                if (lines[i].StartsWith("file="))   file     = lines[i][5..];
+                if (lines[i].StartsWith("un="))     username = lines[i][3..];
+                if (lines[i].StartsWith("pw="))     password = lines[i][3..];
             }
 
             string[] split = target.Split(':');

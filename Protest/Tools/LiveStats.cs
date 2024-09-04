@@ -378,7 +378,7 @@ internal static class LiveStats {
         if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
             int dotIndex = snmpUptime.LastIndexOf('.');
             if (dotIndex > -1) {
-                snmpUptime = snmpUptime.Substring(0, dotIndex);
+                snmpUptime = snmpUptime[..dotIndex];
             }
             WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
         }

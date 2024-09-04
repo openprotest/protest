@@ -333,7 +333,7 @@ internal sealed class Cache {
 
             int commentIndex = trimmedLine.IndexOf("//");
             if (commentIndex >= 0 && !trimmedLine.Contains("://")) {
-                trimmedLine = trimmedLine.Substring(0, commentIndex).TrimEnd();
+                trimmedLine = trimmedLine[..commentIndex].TrimEnd();
             }
 
             trimmedLine = trimmedLine.Replace("\t", " ");
