@@ -844,7 +844,7 @@ internal static class Issues {
                         target = emailAttr.value;
                     }
                     else {
-                        target = entry.filename;
+                        target = String.Empty;
                     }
                 }
                 else {
@@ -855,7 +855,7 @@ internal static class Issues {
                         target = hostnameAttr.value;
                     }
                     else {
-                        target = entry.filename;
+                        target = String.Empty;
                     }
                 }
 
