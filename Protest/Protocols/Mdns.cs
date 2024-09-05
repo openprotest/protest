@@ -11,6 +11,7 @@ using static Protest.Protocols.Dns;
 namespace Protest.Protocols;
 
 internal class Mdns {
+    private const int DEFAULT_TIMEOUT = 1000;
     private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V4 = IPAddress.Parse("224.0.0.251");
     private static readonly IPAddress MDNS_MULTICAST_ADDRESS_V6 = IPAddress.Parse("ff02::fb");
     private static readonly int MDNS_PORT = 5353;
@@ -43,7 +44,7 @@ internal class Mdns {
         parameters.TryGetValue("additionalrrs", out string additionalString);
 
         if (!int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout)) {
-            timeout = 1000;
+            timeout = DEFAULT_TIMEOUT;
         }
 
         timeout = Math.Max(timeout, 500);
@@ -67,14 +68,14 @@ internal class Mdns {
         return Resolve(query, timeout, type, includeAdditionalRrs);
     }
 
-    public static byte[] Resolve(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
+    public static byte[] Resolve(string queryString, int timeout = DEFAULT_TIMEOUT, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
         byte[] request = ConstructQuery(queryString, type);
 
         (List<byte[]> matchingData, List<Answer> answers) = ResolveInternal(queryString, request, timeout, type, includeAdditionalRrs);
         return Serialize(request, matchingData, answers);
     }
 
-    public static Answer[] ResolveToArray(string queryString, int timeout = 1000, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
+    public static Answer[] ResolveToArray(string queryString, int timeout = DEFAULT_TIMEOUT, RecordType type = RecordType.A, bool includeAdditionalRrs = false) {
         byte[] request = ConstructQuery(queryString, type);
 
         (_, List<Answer> answers) = ResolveInternal(queryString, request, timeout, type, includeAdditionalRrs);

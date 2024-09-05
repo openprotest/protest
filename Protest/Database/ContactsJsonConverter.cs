@@ -9,12 +9,12 @@ internal sealed class ContactsJsonConverter : JsonConverter<Database> {
     }
 
     public override void Write(Utf8JsonWriter writer, Database value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _title = "title"u8;
-        ReadOnlySpan<byte> _name = "name"u8;
+        ReadOnlySpan<byte> _title      = "title"u8;
+        ReadOnlySpan<byte> _name       = "name"u8;
         ReadOnlySpan<byte> _department = "department"u8;
-        ReadOnlySpan<byte> _email = "email"u8;
-        ReadOnlySpan<byte> _telephone = "telephone"u8;
-        ReadOnlySpan<byte> _mobile = "mobile"u8;
+        ReadOnlySpan<byte> _email      = "email"u8;
+        ReadOnlySpan<byte> _telephone  = "telephone"u8;
+        ReadOnlySpan<byte> _mobile     = "mobile"u8;
 
         writer.WriteStartArray();
 
