@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Threading;
 
 namespace Protest.Protocols;
 
@@ -23,7 +24,7 @@ internal class Ssdp {
     public static readonly byte[] ALL_SERVICES_QUERY =
         "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: ssdp:all\r\n\r\n"u8.ToArray();
 
-    public record JsonDevice {
+    public record SsdpDevice {
         public string name = null;
         public string type = null;
         public string hostname = null;
@@ -37,14 +38,14 @@ internal class Ssdp {
 
         public bool ipv4Enabled = default;
         public string[] ipv4Address = null;
-        public JsonProtocol[] ipv4Protocols = null;
+        public SsdpService[] ipv4Protocols = null;
 
         public bool ipv6Enabled = default;
         public string[] ipv6Address = null;
-        public JsonProtocol[] ipv6Protocols = null;
+        public SsdpService[] ipv6Protocols = null;
     }
 
-    public record JsonProtocol {
+    public record SsdpService {
         public string protocol { get; set; }
         public int port { get; set; }
         public bool enabled { get; set; }
@@ -62,45 +63,56 @@ internal class Ssdp {
         };
 
         httpClient = new HttpClient(clientHandler) {
-            Timeout = TimeSpan.FromSeconds(1)
+            Timeout = TimeSpan.FromMilliseconds(1500)
         };
     }
 
-    public static void Discover() {
-        SendRequest(ALL_SERVICES_QUERY, DEFAULT_TIMEOUT);
-    }
+    public static SsdpDevice[] Discover(NetworkInterface nic, int timeout, CancellationToken token) {
+        IPAddress[] nics = IpTools.GetIpAddresses();
 
-    private static void SendRequest(byte[] requestBytes, int timeout) {
-        List<IPAddress> localAddresses = new List<IPAddress>();
-        foreach (NetworkInterface netInterface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()) {
-            foreach (UnicastIPAddressInformation unicastAddress in netInterface.GetIPProperties().UnicastAddresses) {
-                if (unicastAddress.Address.AddressFamily == AddressFamily.InterNetwork ||
-                    unicastAddress.Address.AddressFamily == AddressFamily.InterNetworkV6) {
-                    localAddresses.Add(unicastAddress.Address);
-                }
+        List<SsdpDevice> devices = new List<SsdpDevice>();
+
+        foreach (IPAddress localAddress in nics) {
+            if (token.IsCancellationRequested) {
+                break;
             }
-        }
 
-        foreach (IPAddress localAddress in localAddresses) {
-            using Socket socket = CreateAndBindSocket(localAddress, out IPEndPoint remoteEndPoint, timeout);
+            using Socket socket = CreateAndBindSocket(localAddress, timeout, out IPEndPoint remoteEndPoint);
             if (socket == null) continue;
 
-            socket.SendTo(requestBytes, remoteEndPoint);
+            socket.SendTo(ALL_SERVICES_QUERY, remoteEndPoint);
 
             byte[] buffer = new byte[1024];
             socket.ReceiveTimeout = timeout;
 
             try {
                 while (true) {
-                    int receivedLength = socket.Receive(buffer);
-                    ParseHttpResponse(buffer, 0, receivedLength);
+                    int receivedLength;
+                    IPAddress remoteIP;
+                    if (localAddress.AddressFamily == AddressFamily.InterNetwork) {
+                        EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                        receivedLength = socket.ReceiveFrom(buffer, ref remoteEP);
+
+                        remoteIP = ((IPEndPoint)remoteEP).Address;
+                    }
+                    else {
+                        receivedLength = socket.Receive(buffer);
+                        remoteIP = null;
+                    }
+
+                    List<SsdpDevice> list = ParseSsdpResponse(buffer, 0, receivedLength, remoteIP, token);
+                    if (list is not null && list.Count > 0) {
+                        devices.AddRange(list);
+                    }
                 }
             }
-            catch (SocketException) {}
+            catch (SocketException) { }
         }
+
+        return devices.ToArray();
     }
 
-    private static Socket CreateAndBindSocket(IPAddress localAddress, out IPEndPoint remoteEndPoint, int timeout) {
+    public static Socket CreateAndBindSocket(IPAddress localAddress, int timeout, out IPEndPoint remoteEndPoint) {
         Socket socket = null;
         remoteEndPoint = null;
 
@@ -131,51 +143,110 @@ internal class Ssdp {
         }
     }
 
-    private static void ParseHttpResponse(byte[] buffer, int index, int count) {
+    private static List<SsdpDevice> ParseSsdpResponse(byte[] buffer, int index, int count, IPAddress remoteIp, CancellationToken token) {
         string response = Encoding.UTF8.GetString(buffer, 0, count);
         string[] split = response.Split("\r\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+        List<SsdpDevice> devices = new List<SsdpDevice>();
+
         for (int i = 0; i < split.Length; i++) {
+            if (token.IsCancellationRequested) {
+                break;
+            }
+
             if (!split[i].StartsWith("LOCATION:", StringComparison.OrdinalIgnoreCase)) {
                 continue;
             }
 
             string url = split[i][9..].Trim();
+            string remoteIpString;
 
-            SendHttpRequest(url).GetAwaiter().GetResult();
+            if (remoteIp is not null) {
+                remoteIpString = remoteIp.ToString();
+            }
+            else if (url.Contains('[')) {
+                int start = url.IndexOf('[') + 1;
+                int stop = url.IndexOf(']');
+                remoteIpString = url[start..stop];
+            }
+            else {
+                int start = url.IndexOf("://") + 3;
+                int stop = Math.Min(url.IndexOf('/', start), url.IndexOf(':', start));
+                remoteIpString = url[start..stop];
+            }
 
-            //Task.Run(()=> SendHttpRequest(url)).Wait();
+            SsdpDevice[] list = SendHttpRequest(url, remoteIpString);
+
+            if (list is not null && list.Length > 0) {
+                devices.AddRange(list);
+            }
         }
+
+        return devices;
     }
 
-    private static async Task<bool> SendHttpRequest(string url) {
-        HttpResponseMessage response = await httpClient.GetAsync(url);
-        if (response.StatusCode != HttpStatusCode.OK) {
-            return false;
-        }
+    private static SsdpDevice[] SendHttpRequest(string url, string remoteIpString) {
+        string httpContent;
+        try {
+            HttpResponseMessage response = httpClient.GetAsync(url).GetAwaiter().GetResult();
+            if (response.StatusCode != HttpStatusCode.OK) {
+                return null;
+            }
 
-        string httpContent = await response.Content.ReadAsStringAsync();
+            httpContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        }
+        catch {
+            return null;
+        }
 
         if (url.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) {
-            JsonDevice[] device = ParseJsonResponse(httpContent);
+            SsdpDevice[] device = ParseJsonResponse(httpContent);
+            return device;
         }
         else if (url.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) {
-            DeviceXmlParser.XmlRoot device =  DeviceXmlParser.ParseResponse(httpContent);
+            DeviceXmlParser.XmlRoot root = DeviceXmlParser.ParseResponse(httpContent);
+
+            if (root is null) {
+                return null;
+            }
+
+            SsdpDevice device = new SsdpDevice() {
+                name         = root.Device.FriendlyName,
+                type         = root.Device.DeviceType,
+                hostname     = null,
+                manufacturer = root.Device.Manufacturer,
+                formFactor   = null,
+                uHeight      = null,
+                model        = root.Device.ModelName,
+                serialNumber = root.Device.SerialNumber,
+                mac          = null,
+                location     = null,
+
+                ipv4Enabled   = !String.IsNullOrEmpty(remoteIpString),
+                ipv4Address   = new string[] { remoteIpString },
+                ipv4Protocols = null,
+
+                ipv6Enabled   = default,
+                ipv6Address   = null,
+                ipv6Protocols = null,
+            };
+
+            return new SsdpDevice[] { device };
         }
 
-        return true;
+        return null;
     }
 
-    private static JsonDevice[] ParseJsonResponse(string httpContent) {
-        JsonDevice[] response = JsonSerializer.Deserialize<JsonDevice[]>(httpContent, deviceJsonSerializerOptions);
+    private static SsdpDevice[] ParseJsonResponse(string httpContent) {
+        SsdpDevice[] response = JsonSerializer.Deserialize<SsdpDevice[]>(httpContent, deviceJsonSerializerOptions);
         return response;
     }
 
 }
 
-file sealed class DeviceJsonConverter : JsonConverter<Ssdp.JsonDevice> {
-    public override Ssdp.JsonDevice Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-        Ssdp.JsonDevice device = new Ssdp.JsonDevice();
+file sealed class DeviceJsonConverter : JsonConverter<Ssdp.SsdpDevice> {
+    public override Ssdp.SsdpDevice Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        Ssdp.SsdpDevice device = new Ssdp.SsdpDevice();
 
         if (reader.TokenType != JsonTokenType.StartObject) {
             throw new JsonException("Expected start of object");
@@ -243,20 +314,20 @@ file sealed class DeviceJsonConverter : JsonConverter<Ssdp.JsonDevice> {
                     device.ipv4Address = JsonSerializer.Deserialize<string[]>(ref reader, options);
                     break;
 
-                case "ipv4protocols":
-                    device.ipv4Protocols = JsonSerializer.Deserialize<Ssdp.JsonProtocol[]>(ref reader, options);
-                    break;
-
                 case "ipv6enabled":
-                    device.ipv6Enabled= reader.GetBoolean();
+                    device.ipv6Enabled = reader.GetBoolean();
                     break;
 
                 case "ipv6address":
                     device.ipv6Address = JsonSerializer.Deserialize<string[]>(ref reader, options);
                     break;
 
+                case "ipv4protocols":
+                    device.ipv4Protocols = JsonSerializer.Deserialize<Ssdp.SsdpService[]>(ref reader, options);
+                    break;
+
                 case "ipv6protocols":
-                    device.ipv6Protocols = JsonSerializer.Deserialize<Ssdp.JsonProtocol[]>(ref reader, options);
+                    device.ipv6Protocols = JsonSerializer.Deserialize<Ssdp.SsdpService[]>(ref reader, options);
                     break;
 
                 default:
@@ -269,7 +340,7 @@ file sealed class DeviceJsonConverter : JsonConverter<Ssdp.JsonDevice> {
         return device;
     }
 
-    public override void Write(Utf8JsonWriter writer, Ssdp.JsonDevice value, JsonSerializerOptions options) {
+    public override void Write(Utf8JsonWriter writer, Ssdp.SsdpDevice value, JsonSerializerOptions options) {
         //not used
         throw new NotImplementedException();
     }

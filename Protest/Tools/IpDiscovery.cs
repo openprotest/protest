@@ -11,11 +11,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
+using System.Xml.Linq;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Protest.Protocols;
-
-using static Protest.Protocols.Dns;
-using static Protest.Protocols.Mdns;
 
 namespace Protest.Tools;
 
@@ -117,7 +116,7 @@ internal static class IpDiscovery {
             return;
         }
 
-        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+        if (!Http.Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
             return;
         }
@@ -146,6 +145,7 @@ internal static class IpDiscovery {
                 Task[] phase1Tasks = new Task[] {
                     Task.Run(() => DiscoverAdapter(dic, nic, ws, mutex)),
                     Task.Run(() => DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
+                    Task.Run(() => DiscoverSsdp(dic, nic, ws, mutex, tokenSource.Token)),
                     Task.Run(() => DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token))
                 };
                 await Task.WhenAll(phase1Tasks);
@@ -309,8 +309,83 @@ internal static class IpDiscovery {
     }
    
     private static void DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
-        MdnsMulticast(dic, nic, ws, mutex, token, ANY_QUERY, Protocols.Dns.RecordType.ANY, 1000);
-        //MdnsMulticast(dic, nic, ws, mutex, token, HTTP_QUERY, Protocols.Dns.RecordType.ANY, 1000);
+        const int timeout = 1000;
+        const Protocols.Dns.RecordType type = Protocols.Dns.RecordType.ANY;
+
+        UnicastIPAddressInformationCollection addresses = nic.GetIPProperties().UnicastAddresses;
+        if (addresses.Count == 0) return;
+
+        byte[] request = Mdns.ConstructQuery(Mdns.ANY_QUERY, type);
+
+        foreach (UnicastIPAddressInformation address in addresses) {
+            if (token.IsCancellationRequested) {
+                return;
+            }
+
+            if (IPAddress.IsLoopback(address.Address)) continue;
+
+            using Socket socket = Mdns.CreateAndBindSocket(address.Address, timeout, out IPEndPoint remoteEndPoint);
+            if (socket == null)
+                continue;
+
+            try {
+                socket.SendTo(request, remoteEndPoint);
+
+                DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
+                while (DateTime.Now <= endTime) {
+                    if (token.IsCancellationRequested) {
+                        break;
+                    }
+                    ParseMdnsResponse(dic, ws, mutex, type, socket);
+                }
+            }
+            catch { }
+        }
+    }
+
+    private static void DiscoverSsdp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+        const int timeout = 1000;
+
+        Ssdp.SsdpDevice[] devices = Ssdp.Discover(nic, timeout, token);
+
+        for (int i = 0; i < devices.Length; i++) {
+            if (!devices[i].ipv4Enabled) continue;
+            if (devices[i].ipv4Address is null || devices[i].ipv4Address.Length == 0) continue;
+
+            string ipv6 = null;
+            if (devices[i].ipv4Address.Length == 1 && devices[i].ipv6Address?.Length == 1) {
+                ipv6 = devices[i].ipv6Address[0];
+            }
+
+            StringBuilder services = new StringBuilder();
+            for (int j = 0; j < devices[i].ipv4Protocols?.Length; j++) {
+                if (!devices[i].ipv4Protocols[j].enabled) continue;
+
+                if (services.Length > 0) {
+                    services.Append(',');
+                }
+
+                if (PORTS_TO_PROTOCOL.TryGetValue((ushort)devices[i].ipv4Protocols[j].port, out string proto)) {
+                    services.Append(proto);
+                }
+                else {
+                    services.Append(devices[i].ipv4Protocols[j].port);
+                }
+            }
+
+
+            for (int j = 0; j < devices[j].ipv4Address.Length; j++) {
+                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                    name         = devices[i].hostname,
+                    ip           = devices[i].ipv4Address[j],
+                    ipv6         = ipv6,
+                    mac          = devices[i].mac,
+                    manufacturer = devices[i].manufacturer,
+                    services     = services.ToString()
+                }), mutex);
+            }
+
+        }
     }
 
     private static async Task DiscoverHostnameAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
@@ -323,8 +398,7 @@ internal static class IpDiscovery {
 
             HostEntry host = pair.Value;
 
-            if (!String.IsNullOrEmpty(host.name)
-                && String.IsNullOrEmpty(host.ipv6)) {
+            if (!String.IsNullOrEmpty(host.name) && String.IsNullOrEmpty(host.ipv6)) {
                 continue;
             }
 
@@ -347,11 +421,11 @@ internal static class IpDiscovery {
                         hostEntry = await System.Net.Dns.GetHostEntryAsync(host.ip);
                         name = hostEntry.HostName;
                     }
-                    catch { }
+                    catch {}
 
                     if (!string.IsNullOrEmpty(name)) {
-                        Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, RecordType.AAAA, false);
-                        Mdns.Answer[] filtered = answer.Where(o=> o.type == RecordType.AAAA).ToArray();
+                        Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, Protocols.Dns.RecordType.AAAA, false);
+                        Mdns.Answer[] filtered = answer.Where(o=> o.type == Protocols.Dns.RecordType.AAAA).ToArray();
 
                         if (filtered.Length > 0 && !String.IsNullOrEmpty(filtered[0].answerString)) {
                             WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
@@ -379,8 +453,9 @@ internal static class IpDiscovery {
 
     private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
-
-        Task[] tasks = dic.Select(async pair => {
+        Task[] tasks = dic
+        .Where(o=>o.Value.services is not null && o.Value.services.Length > 0)
+        .Select(async pair => {
             if (token.IsCancellationRequested) {
                 return;
             }
@@ -449,38 +524,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void MdnsMulticast(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token, string queryString, RecordType type, int timeout) {
-        UnicastIPAddressInformationCollection addresses = nic.GetIPProperties().UnicastAddresses;
-        if (addresses.Count == 0) return;
-
-        byte[] request = ConstructQuery(queryString, type);
-
-        foreach (UnicastIPAddressInformation address in addresses) {
-            if (token.IsCancellationRequested) {
-                return;
-            }
-
-            if (IPAddress.IsLoopback(address.Address)) continue;
-
-            using Socket socket = CreateAndBindSocket(address.Address, timeout, out IPEndPoint remoteEndPoint);
-            if (socket == null) continue;
-
-            try {
-                socket.SendTo(request, remoteEndPoint);
-
-                DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
-                while (DateTime.Now <= endTime) {
-                    if (token.IsCancellationRequested) {
-                        break;
-                    }
-                    MdnsResponse(dic, ws, mutex, type, socket);
-                }
-            }
-            catch { }
-        }
-    }
-
-    private static void MdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, object mutex, RecordType type, Socket socket) {
+    private static void ParseMdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, object mutex, Protocols.Dns.RecordType type, Socket socket) {
         byte[] reply = new byte[1024];
 
         try {
@@ -499,12 +543,12 @@ internal static class IpDiscovery {
                 string mac = Protocols.Arp.ArpRequest(ipString);
                 StringBuilder services = new StringBuilder();
 
-                Answer[] answer = ParseAnswers(actualReply, type, ipAddress, out _, out _, out _, true);
+                Mdns.Answer[] answer = Mdns.ParseAnswers(actualReply, type, ipAddress, out _, out _, out _, true);
                 for (int j = 0; j < answer.Length; j++) {
-                    if (answer[j].type == RecordType.AAAA) {
+                    if (answer[j].type == Protocols.Dns.RecordType.AAAA) {
                         ipv6 = answer[j].answerString;
                     }
-                    else if (answer[j].type == RecordType.SRV) {
+                    else if (answer[j].type == Protocols.Dns.RecordType.SRV) {
                         string[] split = answer[j].answerString.Split(':');
                         if (split.Length >= 2) {
                             hostname = split[0].EndsWith(".local") ? hostname = split[0][..^6] : hostname = split[0];
@@ -520,7 +564,7 @@ internal static class IpDiscovery {
                             }
                         }
                     }
-                    else if (answer[j].type == RecordType.PTR) {
+                    else if (answer[j].type == Protocols.Dns.RecordType.PTR) {
                         if (answer[j].answerString.EndsWith("_ssh._tcp.local")) {
                             if (services.Length > 0) services.Append(',');
                             services.Append("SSH");
