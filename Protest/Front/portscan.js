@@ -114,7 +114,7 @@ class PortScan extends Console {
 		5659: "UniFi AP-EDU broadcasting",
 		5800: "VNC	Virtual Network Computer",
 		5801: "VNC	Virtual Network Computer",
-		5900: "uVNC	Virtual Network Computer",
+		5900: "VNC	Virtual Network Computer",
 		5901: "uVNC	Virtual Network Computer",
 		5902: "uVNC	Virtual Network Computer",
 		5903: "uVNC	Virtual Network Computer",
