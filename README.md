@@ -18,7 +18,7 @@
 ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=222&style=for-the-badge)
 ![MacOS](https://shields.io/badge/Mac%20OS-ccc?logo=Apple&logoColor=222&style=for-the-badge)
 
-### Components:
+### Repo components:
   * **Protest:** The front-end and back-end workings.
   * **Protest-CacheGenerator:** A source-generator that embeds the front-end web application within the binary executable.
   * **Protest Agent:** A tool to enable the browser talk to the client's computer using a local protocol `protest://`.
