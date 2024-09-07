@@ -33,7 +33,6 @@ class Gandalf extends Window {
 		this.previousButton.onclick = ()=> this.Previous();
 		this.nextButton.onclick = ()=> this.Next();
 
-		
 		this.InitMenus();
 
 		setTimeout(async ()=>{

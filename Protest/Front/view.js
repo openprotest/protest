@@ -220,7 +220,7 @@ class View extends Window {
 
 			nameBox.oninput = ()=> {
 				const nameLowerCase = nameBox.value.toLowerCase();
-				
+
 				if (nameLowerCase === "type") {
 					valueBox.setAttribute("list", "user_type_autofill");
 				}
@@ -801,7 +801,7 @@ class View extends Window {
 				valueInput.style.paddingLeft = "32px";
 			}
 		};
-		
+
 		for (let i = 0; i < this.attributes.childNodes.length; i++) {
 			const attribute = this.attributes.childNodes[i];
 			attribute.style.display = "inherit";

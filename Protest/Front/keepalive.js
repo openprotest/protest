@@ -74,7 +74,7 @@ const KEEP = {
 		}
 		else if (slashSplit.length === 2) {
 			slashSplit.map(o=>o.trim());
-			
+
 			let gw = slashSplit[0].split(".").map(o=>parseInt(o));
 
 			if (gw.length != 4 || gw.find(o=> o<0 || o>255)) {

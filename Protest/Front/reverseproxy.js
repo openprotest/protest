@@ -118,7 +118,7 @@ class ReverseProxy extends List {
 		this.totalRxLabel.style.color = "rgb(122,212,43)";
 		this.totalRxLabel.style.textAlign = "right";
 		this.totalRxLabel.style.lineHeight = "20px";
-		
+
 		this.totalTxLabel = document.createElement("div");
 		this.totalTxLabel.textContent = "Transmitted:";
 		this.totalTxLabel.style.position = "absolute";
@@ -168,7 +168,7 @@ class ReverseProxy extends List {
 		this.rxRateLabel.style.color = "rgb(122,212,43)";
 		this.rxRateLabel.style.textAlign = "right";
 		this.rxRateLabel.style.lineHeight = "20px";
-		
+
 		this.txRateLabel = document.createElement("div");
 		this.txRateLabel.textContent = "Tx rate:";
 		this.txRateLabel.style.position = "absolute";
@@ -271,7 +271,7 @@ class ReverseProxy extends List {
 
 		this.ws.onmessage = event=> {
 			let json = JSON.parse(event.data);
-			
+
 			if (json.running) {
 				ReverseProxy.RUNNING = json.running;
 
@@ -281,7 +281,7 @@ class ReverseProxy extends List {
 					const isRunning = json.running.includes(nodes[i].id);
 					nodes[i].style.backgroundImage = isRunning ? "url(mono/play.svg)" : "url(mono/stop.svg)";
 				}
-				
+
 				if (this.selected) {
 					const isRunning = this.selected.style.backgroundImage.includes("play");
 					this.deleteButton.disabled = !this.canWrite;
@@ -312,7 +312,7 @@ class ReverseProxy extends List {
 			}
 			else if (json.hosts) {
 				for (let i=0; i<json.hosts.length; i++) {
-					
+
 					if (this.clients[json.hosts[i].ip]) {
 						const element = this.clients[json.hosts[i].ip];
 
@@ -442,7 +442,7 @@ class ReverseProxy extends List {
 			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - rxRate / this.maximum), 3, 0, 2*Math.PI, false);
 			this.ctx.closePath();
 			this.ctx.fill();
-	
+
 			this.ctx.fillStyle = "rgb(232,118,0)";
 			this.ctx.beginPath();
 			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - txRate / this.maximum), 3, 0, 2*Math.PI, false);
@@ -498,7 +498,7 @@ class ReverseProxy extends List {
 			this.clientsList.textContent = "";
 			this._tempSelect = guid;
 		}
-		
+
 		this.UpdateGraph();
 
 		if (this.isClosed || this.ws === null || this.ws.readyState !== 1) {
@@ -671,7 +671,7 @@ class ReverseProxy extends List {
 		const proxyAddressInput       = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
 		const proxyPostInput          = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
 		counter++; //separator
-		
+
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
 
 		counter++;
@@ -733,7 +733,7 @@ class ReverseProxy extends List {
 
 			dialog.okButton.disabled = true;
 			dialog.cancelButton.value = "Close";
-		
+
 			setTimeout(()=>dialog.cancelButton.focus(), 200);
 		}
 		else {
@@ -800,10 +800,10 @@ class ReverseProxy extends List {
 			try {
 				const response = await fetch(`/rproxy/delete?guid=${this.args.select}`);
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-	
+
 				this.args.select = null;
 				this.selected = null;
 				this.GetReverseProxies();

@@ -237,7 +237,7 @@ class Ping extends Console {
 				minimap_onmouseup();
 			}
 		};
-		
+
 		const minimap_onmouseup = ()=> {
 			isMoving = false;
 			this.minimap.style.transition = ".2s";
@@ -897,7 +897,7 @@ class Ping extends Console {
 		for (const key in this.hashtable) {
 			const nodes = this.hashtable[key].graph.childNodes;
 			const y = Ping.MAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
-			
+
 			for (let j = 0; j < nodes.length; j++) {
 				if (nodes[j].style.backgroundColor) {
 					if (nodes[j].style.backgroundColor === "transparent") {

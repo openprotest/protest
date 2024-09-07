@@ -128,13 +128,13 @@ class Backup extends List {
 			try {
 				const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.args.select)}`);
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-	
+
 				this.selected = null;
 				this.args.select = null;
-	
+
 				this.link = json;
 				this.ListBackup();
 			}
@@ -165,7 +165,7 @@ class Backup extends List {
 
 			const newAttr = document.createElement("div");
 			element.appendChild(newAttr);
-			
+
 			switch (this.columnsElements[i].textContent) {
 				case "name": newAttr.textContent = entry["name"].v; break;
 				case "date": newAttr.textContent = new Date(UI.TicksToUnixDate(entry["date"].v)).toLocaleDateString(regionalFormat);break;

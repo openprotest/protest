@@ -139,7 +139,7 @@ class Terminal extends Window {
 		}, args);
 
 		this.AddCssDependencies("terminal.css");
-		
+
 		this.InitializeComponents();
 		this.InitializeTerminalState();
 		this.ResetTextAttributes();
@@ -329,7 +329,7 @@ class Terminal extends Window {
 			}
 			ListKeys();
 		};
-		
+
 		alt.checkbox.onchange = ()=> {
 			if (alt.checkbox.checked) {
 				shift.checkbox.checked = false;
@@ -379,7 +379,7 @@ class Terminal extends Window {
 	Terminal_onkeydown(event) {
 		if (event.ctrlKey && event.shiftKey) return;
 		if (!this.ws || this.ws.readyState !== 1) return;
-		
+
 		event.preventDefault();
 
 		//TODO: if (this.keypadApplicationMode) {}

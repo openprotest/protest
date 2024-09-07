@@ -945,7 +945,7 @@ class DeviceView extends View {
 			status.style.animation = "delayed-fade-in 1s ease-in 1";
 
 			spinnerBox.append(spinner, status);
-	
+
 			this.liveStatsWebSockets.send(this.args.file);
 
 			setTimeout(()=> {
@@ -1311,7 +1311,7 @@ class DeviceView extends View {
 			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
 			svg.setAttribute("height", `${height + 28}px`);
 			graphBox.appendChild(svg);
-			
+
 			graphSvgs.push(svg);
 
 			const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -1328,7 +1328,7 @@ class DeviceView extends View {
 			const gradientStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
 			gradientStop1.setAttribute("stop-color", "rgba(192,192,192,0)");
 			gradientStop1.setAttribute("offset", "0%");
-			
+
 			const gradientStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
 			gradientStop2.setAttribute("stop-color", "rgba(192,192,192,.3)");
 			gradientStop2.setAttribute("offset", "100%");
@@ -1802,7 +1802,7 @@ class DeviceView extends View {
 		}
 
 		const saveButton = super.Edit(isNew);
-		
+
 		saveButton.addEventListener("click", async ()=> {
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
@@ -2961,7 +2961,7 @@ class DeviceView extends View {
 		const snmpToggle = this.CreateToggle("SNMP", false, grid);
 		snmpToggle.label.style.gridArea = "2 / 2";
 		snmpToggle.checkbox.disabled = true;
-		
+
 		const snmpInput = document.createElement("select");
 		snmpInput.style.marginLeft = "0";
 		snmpInput.style.width = "200px";
@@ -3002,9 +3002,9 @@ class DeviceView extends View {
 		setTimeout(async ()=>{
 			const snmpProfiles = await this.GetSnmpProfiles();
 			if (snmpProfiles === null || snmpProfiles.length === 0) return;
-			
+
 			snmpToggle.checkbox.disabled = false;
-	
+
 			for (let i = 0; i < snmpProfiles.length; i++) {
 				const option = document.createElement("option");
 				option.value = snmpProfiles[i].guid;

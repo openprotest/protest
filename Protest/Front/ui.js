@@ -298,7 +298,7 @@ const UI = {
 
 	CompressIPv6: ipv6 => {
 		let blocks = ipv6.split(":");
-		
+
 		blocks = blocks.map(block => block.replace(/^0+/, "") || "0");
 
 		let zeroSequence = blocks.reduce((longest, current, index) => {
@@ -315,16 +315,16 @@ const UI = {
 			}
 			return longest;
 		}, { maxLength: 0, maxStart: -1, currentLength: 0 });
-	
+
 		if (zeroSequence.maxLength > 1) {
 			blocks.splice(zeroSequence.maxStart, zeroSequence.maxLength, "");
 		}
-	
+
 		let compressedAddress = blocks.join(":");
-		
+
 		if (compressedAddress.startsWith(":")) compressedAddress = ":" + compressedAddress;
 		if (compressedAddress.endsWith(":")) compressedAddress += ":";
-	
+
 		return compressedAddress.replace(":::", "::");
 	}
 };
@@ -356,11 +356,11 @@ const MENU = {
 		//{ t:"Scripts",         i:"mono/scripts.svg?light",     g:"tools", h:false, f:args=> {} },
 		//{ t:"Script reports",  i:"mono/reportfile.svg?light",  g:"tools", h:true,  f:args=> {} },
 		//{ t:"Ongoing scripts", i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:args=> {} },
-		
+
 		{ t:"Ping",               i:"mono/ping.svg?light",          g:"utilities", h:false, f:args=> new Ping(args),         k:"roundtrip rtt icmp echo reply" },
 		{ t:"ARP ping",           i:"mono/ping.svg?light",          g:"utilities", h:true,  f:args=> new Ping({entries:[], timeout:500, method:"arp", interval:1000, moveToBottom:false, status:"play"}) },
 		{ t:"DNS lookup",         i:"mono/dns.svg?light",           g:"utilities", h:false, f:args=> new DnsLookup(args),    k:"resolve resolution" },
-		{ t:"DNS-SD",             i:"mono/dns.svg?light",           g:"utilities", h:true,  f:args=> new DnsSD(args),        k:"mdns service discovery multicast lookup resolve resolution" },
+		{ t:"mDNS discovery",     i:"mono/dns.svg?light",           g:"utilities", h:true,  f:args=> new Mdns(args),         k:"sd dns service multicast lookup resolve resolution" },
 		{ t:"Trace route",        i:"mono/traceroute.svg?light",    g:"utilities", h:false, f:args=> new TraceRoute(args),   k:"path" },
 		{ t:"TCP port scan",      i:"mono/portscan.svg?light",      g:"utilities", h:false, f:args=> new PortScan(args),     k:"portscan" },
 		{ t:"Locate IP",          i:"mono/locate.svg?light",        g:"utilities", h:false, f:args=> new LocateIp(args),     k:"location" },
@@ -403,7 +403,7 @@ const MENU = {
 		{ t:"Certificates",   i:"mono/certificate.svg?light", g:"manage", h:false, f:()=> new Certificates(), k: "ssl tls" },
 		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:()=> new Backup() },
 		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:()=> new Log() },
-		
+
 		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true,  f:()=> new About("update") },
 		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true,  f:()=> new About("updatemod") },
 		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:()=> new About("about") },
@@ -701,7 +701,7 @@ const MENU = {
 						info.style.lineHeight = "16px";
 						info.style.fontWeight = "400";
 						item.appendChild(info);
-		
+
 						if (title === null || title.length === 0) { 
 							info.style.paddingTop = "16px";
 						}

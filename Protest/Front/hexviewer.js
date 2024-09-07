@@ -590,7 +590,7 @@ class HexViewer extends Window {
 			const type = (stream[index] << 8) | stream[index+1];
 			const typeLabel = this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, index, 2);
 			index += 2;
-			
+
 			if (HexViewer.DNS_RECORD_TYPES[type]) {
 				const recordTypeLabel = document.createElement("div");
 				recordTypeLabel.className = "hexviewer-record-type-label";
@@ -641,7 +641,7 @@ class HexViewer extends Window {
 			const type = (stream[index] << 8) | stream[index+1];
 			const typeLabel = this.PopulateLabel(`Type: ${type}`, 1, hexContainer, charContainer, index, 2);
 			index += 2;
-			
+
 			if (HexViewer.DNS_RECORD_TYPES[type]) {
 				const recordTypeLabel = document.createElement("div");
 				recordTypeLabel.className = "hexviewer-record-type-label";
@@ -692,7 +692,7 @@ class HexViewer extends Window {
 				const priority = (stream[index] << 8) | stream[index + 1];
 				const weight = (stream[index + 2] << 8) | stream[index + 3];
 				const port = (stream[index + 4] << 8) | stream[index + 5];
-				
+
 				let targetOffset = index + 6;
 				if ((stream[targetOffset] & 0xC0) === 0xC0) { //pointer
 					targetOffset += 2;
@@ -701,7 +701,7 @@ class HexViewer extends Window {
 					while (targetOffset < stream.length && stream[targetOffset] !== 0 && (stream[targetOffset] & 0xC0) !== 0xC0) {
 						targetOffset++;
 					}
-	
+
 					if (stream[targetOffset] === 0) { //null termination
 						targetOffset++;
 					}
@@ -709,7 +709,7 @@ class HexViewer extends Window {
 						targetOffset += 2;
 					}
 				}
-				
+
 				this.PopulateLabel(`Priority: ${priority}`, 1, hexContainer, charContainer, index, 2);
 				this.PopulateLabel(`Weight: ${weight}`, 1, hexContainer, charContainer, index + 2, 2);
 				this.PopulateLabel(`Port: ${port}`, 1, hexContainer, charContainer, index + 4, 2);

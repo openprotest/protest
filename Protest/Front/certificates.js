@@ -203,13 +203,13 @@ class Certificates extends List {
 			try {
 				const response = await fetch(`config/cert/delete?name=${encodeURIComponent(this.args.select)}`);
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
-	
+
 				this.selected = null;
 				this.args.select = null;
-	
+
 				this.link = json;
 				this.ListCerts();
 			}
@@ -243,7 +243,7 @@ class Certificates extends List {
 		dropArea.append(message);
 
 		let isBusy = false;
-		
+
 		dropArea.ondragover = ()=> {
 			if (isBusy) return;
 			dropArea.style.backgroundColor = "var(--clr-control)";

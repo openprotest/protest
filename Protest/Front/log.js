@@ -71,7 +71,7 @@ class Log extends Window {
 		this.onTopBox.style.paddingBottom = "8px";
 		this.options.appendChild(this.onTopBox);
 		this.onTopCheckbox = this.CreateToggle("Always on top", this.args.onTop, this.onTopBox).checkbox;
-		
+
 		this.autoScrollCheckbox.onchange = ()=> { this.args.autoScroll = this.onTopBox.checked; };
 
 		this.opaqueCheckbox.onchange = ()=> {

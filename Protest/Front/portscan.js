@@ -186,7 +186,7 @@ class PortScan extends Console {
 		});
 
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
-		
+
 		this.copyButton.addEventListener("click", ()=> {
 			const argsCopy = structuredClone(this.args);
 			argsCopy.entries = [];
@@ -229,7 +229,7 @@ class PortScan extends Console {
 		const fromLabel = document.createElement("div");
 		fromLabel.textContent = "Port range:";
 		fromLabel.style.gridArea = "1 / 2";
-		
+
 		const fromInput = document.createElement("input");
 		fromInput.type = "number";
 		fromInput.min = 1;
@@ -265,7 +265,7 @@ class PortScan extends Console {
 		const remoteNetStatBox = document.createElement("div");
 		remoteNetStatBox.style.gridArea = "3 / 6 / 3 / 2";
 		innerBox.append(remoteNetStatBox);
-		
+
 		const remoteNetStaToggle = this.CreateToggle("Use remote netstat", this.args.useNetstat, remoteNetStatBox);
 
 		fromInput.onchange = ()=> {
@@ -497,7 +497,7 @@ class PortScan extends Console {
 			for (let i = 0; i < this.pending.length; i++) {
 				this.ws.send(`${this.pending[i]};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout};${this.args.useNetstat}`);
 			}
-			
+
 			for (let i = 0; i < this.list.childNodes.length; i++) { //remove warnings, if any
 				if (this.list.childNodes[i].id == "self_destruct")
 					this.list.removeChild(this.list.childNodes[i]);
@@ -531,7 +531,7 @@ class PortScan extends Console {
 			error_message.onclick = ()=> {
 				this.list.querySelectorAll("#self_destruct").forEach(o=> this.list.removeChild(o));
 				this.Connect();
-				
+
 				this.UpdateTaskSpinner();
 				for (const key in this.hashtable) {
 					if (this.pending.includes(key)) {

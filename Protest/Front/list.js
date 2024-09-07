@@ -41,7 +41,7 @@ class List extends Window {
 
 		this.win.addEventListener("mouseup", event=> { this.List_mouseup(event); });
 		this.win.addEventListener("mousemove", event=> { this.List_mousemove(event); });
-	
+
 		this.content.addEventListener("keydown", event=> {
 			if (event.code === "KeyF" && event.ctrlKey) {
 				if (this.findInput) {
@@ -61,7 +61,7 @@ class List extends Window {
 					this.selected = previousElement;
 					this.selected.style.backgroundColor = "var(--clr-select)";
 					this.selected.scrollIntoView({block:"nearest"});
-					
+
 					const id = this.selected.getAttribute("id");
 					if (id) this.args.select = id;
 				}

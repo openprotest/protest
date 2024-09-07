@@ -4,7 +4,7 @@ console.log("%c Don't copy-paste any code into this console. Unauthorized code e
 const LOADER = {
 	devices: {},
 	users: {},
-	
+
 	alwaysUppercase: ["ip", "ipv6", "mac", "bios", "fqdn", "guid"],
 
 	deviceIcons : {
@@ -101,7 +101,7 @@ const LOADER = {
 		"issues.js",
 		"ping.js",
 		"dnslookup.js",
-		"dns-sd.js",
+		"mdns.js",
 		"traceroute.js",
 		"portscan.js",
 		"locateip.js",
@@ -320,7 +320,7 @@ const LOADER = {
 
 		case "Ping"         : return new Ping(command.args);
 		case "DnsLookup"    : return new DnsLookup(command.args);
-		case "DnsSD"        : return new DnsSD(command.args);
+		case "Mdns"         : return new Mdns(command.args);
 		case "TraceRoute"   : return new TraceRoute(command.args);
 		case "SpeedTest"    : return new SpeedTest(command.args);
 		case "PortScan"     : return new PortScan(command.args);

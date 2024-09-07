@@ -70,7 +70,7 @@ class Issues extends List {
 		this.errorButton = this.AddToolbarButton("Error", "mono/error.svg?light");
 		this.warnButton = this.AddToolbarButton("Warning", "mono/warning.svg?light");
 		this.infoButton = this.AddToolbarButton("Info", "mono/info.svg?light");
-		
+
 		const toggleButtons = [this.critButton, this.errorButton, this.warnButton, this.infoButton];
 		for (let i=0; i<toggleButtons.length; i++) {
 			toggleButtons[i].classList.add("issues-toggle-button");
@@ -87,7 +87,7 @@ class Issues extends List {
 		this.errorButton.onclick = ()=> this.ErrorFilterToggle();
 		this.warnButton.onclick = ()=> this.WarningFilterToggle();
 		this.infoButton.onclick = ()=> this.InfoFilterToggle();
-	
+
 		if (this.args.find && this.args.find.length > 0) {
 			this.findInput.value = this.args.find;
 			this.findInput.parentElement.style.borderBottom = this.findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
@@ -184,7 +184,7 @@ class Issues extends List {
 				});
 			}
 		}
-		
+
 		for (let i = 0; i < found.length; i++) {
 			this.AddIssueElement(this.link.data[found[i]], found[i]);
 		}
@@ -409,7 +409,7 @@ class Issues extends List {
 		if (!this.MatchFilters(issue)) {
 			return;
 		}
-	
+
 		const element =  document.createElement("div");
 		element.id = key;
 		element.className = "list-element";
@@ -425,7 +425,7 @@ class Issues extends List {
 			try {
 				const response = await fetch("issues/start");
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-	
+
 				const json = await response.json();
 				if (json.error) throw(json.error);
 

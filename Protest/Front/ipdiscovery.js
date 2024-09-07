@@ -86,12 +86,12 @@ class IpDiscovery extends List {
 
 		okButton.value = "Start";
 		okButton.disabled = true;
-		
+
 		innerBox.style.margin = "16px 32px";
 		innerBox.parentElement.style.maxWidth = "640px";
 		innerBox.style.border = "var(--clr-control) solid 1.5px";
 		innerBox.style.overflowY = "auto";
-		
+
 		const spinner = document.createElement("div");
 		spinner.className = "spinner";
 		spinner.style.textAlign = "left";
@@ -156,7 +156,7 @@ class IpDiscovery extends List {
 				newNic.onclick = ()=> {
 					selectedNic = json[i].id;
 					okButton.disabled = false;
-					
+
 					for (let i=0; i<innerBox.children.length; i++) {
 						innerBox.children[i].style.backgroundColor = "";
 					}
@@ -200,7 +200,7 @@ class IpDiscovery extends List {
 		this.ws.onmessage = event=> {
 			const json = JSON.parse(event.data);
 			const key = json.ip;
-			
+
 			const entry = this.link.data[key];
 			if (entry) {
 				let changed = false;
@@ -209,17 +209,17 @@ class IpDiscovery extends List {
 					entry.name.v = json.name;
 					changed = true;
 				}
-				
+
 				if (json.ipv6 && (entry.ipv6 || entry.ipv6.v.length === 0)) {
 					entry.ipv6.v = json.ipv6;
 					changed = true;
 				}
-				
+
 				if (json.mac && (entry.mac || entry.mac.v.length === 0)) {
 					entry.mac.v = json.mac;
 					changed = true;
 				}
-				
+
 				if (json.manufacturer && (entry.manufacturer || entry.manufacturer.v.length === 0)) {
 					entry.manufacturer.v = json.manufacturer;
 					changed = true;
@@ -233,7 +233,7 @@ class IpDiscovery extends List {
 						changed = true;
 					}
 				}
-				
+
 				if (changed
 					&& (entry.element.offsetTop - this.list.scrollTop >= -32 || entry.element.offsetTop - this.list.scrollTop <= this.list.clientHeight)) { //in viewport
 					entry.element.textContent = "";

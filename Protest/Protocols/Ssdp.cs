@@ -25,23 +25,23 @@ internal class Ssdp {
         "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: ssdp:all\r\n\r\n"u8.ToArray();
 
     public record SsdpDevice {
-        public string name = null;
-        public string type = null;
-        public string hostname = null;
+        public string name         = null;
+        public string type         = null;
+        public string hostname     = null;
         public string manufacturer = null;
-        public string formFactor = null;
-        public string uHeight = null;
-        public string model = null;
+        public string formFactor   = null;
+        public string uHeight      = null;
+        public string model        = null;
         public string serialNumber = null;
-        public string mac = null;
-        public string location = null;
+        public string mac          = null;
+        public string location     = null;
 
-        public bool ipv4Enabled = default;
-        public string[] ipv4Address = null;
+        public bool ipv4Enabled            = default;
+        public string[] ipv4Address        = null;
         public SsdpService[] ipv4Protocols = null;
 
-        public bool ipv6Enabled = default;
-        public string[] ipv6Address = null;
+        public bool ipv6Enabled            = default;
+        public string[] ipv6Address        = null;
         public SsdpService[] ipv6Protocols = null;
     }
 
@@ -380,21 +380,8 @@ public static class DeviceXmlParser {
     public class XmlRoot {
         public XmlRoot() { }
 
-        [XmlElement("specVersion")]
-        public SpecVersion SpecVersion { get; set; }
-
         [XmlElement("device")]
         public Device Device { get; set; }
-    }
-
-    public class SpecVersion {
-        public SpecVersion() { }
-
-        [XmlElement("major")]
-        public int Major { get; set; }
-
-        [XmlElement("minor")]
-        public int Minor { get; set; }
     }
 
     public class Device {
@@ -468,5 +455,4 @@ public static class DeviceXmlParser {
         [XmlElement("eventSubURL")]
         public string EventSubURL { get; set; }
     }
-
 }

@@ -213,7 +213,7 @@ class Fetch extends Tabs {
 		this.retriesRange.type = "range";
 		this.retriesRange.min = 0;
 		this.retriesRange.max = 4;
-		this.retriesRange.value = 1;
+		this.retriesRange.value = 0;
 		this.retriesRange.style.gridArea = "12 / 5";
 		this.retriesRange.style.width = "180px";
 
@@ -231,7 +231,7 @@ class Fetch extends Tabs {
 		this.intervalRange.type = "range";
 		this.intervalRange.min = 0;
 		this.intervalRange.max = 8;
-		this.intervalRange.value = 1;
+		this.intervalRange.value = 2;
 		this.intervalRange.style.gridArea = "13 / 5";
 		this.intervalRange.style.width = "180px";
 
@@ -331,15 +331,15 @@ class Fetch extends Tabs {
 
 		this.intervalRange.oninput = ()=> {
 			this.intervalCommentLabel.textContent = {
-				"0" : "If unreachable, retry after half an hour",
-				"1" : "If unreachable, retry after an hour",
-				"2" : "If unreachable, retry after 2 hours",
-				"3" : "If unreachable, retry after 4 hours",
-				"4" : "If unreachable, retry after 6 hours",
-				"5" : "If unreachable, retry after 8 hours",
-				"6" : "If unreachable, retry after 12 hours",
-				"7" : "If unreachable, retry after 24 hours",
-				"8" : "If unreachable, retry after 48 hours"
+				0 : "If unreachable, retry after half an hour",
+				1 : "If unreachable, retry after an hour",
+				2 : "If unreachable, retry after 2 hours",
+				3 : "If unreachable, retry after 4 hours",
+				4 : "If unreachable, retry after 6 hours",
+				5 : "If unreachable, retry after 8 hours",
+				6 : "If unreachable, retry after 12 hours",
+				7 : "If unreachable, retry after 24 hours",
+				8 : "If unreachable, retry after 48 hours"
 			} [this.intervalRange.value];
 		};
 
@@ -500,9 +500,9 @@ class Fetch extends Tabs {
 	async GetSnmpProfiles() {
 		try {
 			const response = await fetch("config/snmpprofiles/list");
-			
+
 			if (response.status !== 200) return;
-			
+
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
@@ -796,7 +796,7 @@ class Fetch extends Tabs {
 		const usersBox = document.createElement("div");
 		usersBox.style.gridArea = "7 / 5";
 		this.tabsPanel.appendChild(usersBox);
-		
+
 		const usersToggle = this.CreateToggle(".", true, usersBox);
 		usersToggle.label.style="width:4px; min-width:4px; padding-left:8px;";
 
@@ -807,7 +807,7 @@ class Fetch extends Tabs {
 		const debitNotesBox = document.createElement("div");
 		debitNotesBox.style.gridArea = "8 / 5";
 		this.tabsPanel.appendChild(debitNotesBox);
-		
+
 		const debitNotesToggle = this.CreateToggle(".", false, debitNotesBox);
 		debitNotesToggle.label.style="width:4px; min-width:4px; padding-left:8px;";
 

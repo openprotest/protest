@@ -771,7 +771,7 @@ class Settings extends Tabs {
 					this.selectedSmtpProfile = json[i];
 				};
 
-				element.ondblclick = ()=> this.SmtpProfileDialog(json[i]);				
+				element.ondblclick = ()=> this.SmtpProfileDialog(json[i]);
 			}
 		}
 		catch (ex) {
@@ -1319,7 +1319,7 @@ class Settings extends Tabs {
 			const guidLabel = document.createElement("div");
 			guidLabel.style.gridArea = "13 / 2";
 			guidLabel.textContent = "GUID:";
-	
+
 			const guidValue = document.createElement("div");
 			guidValue.textContent = object.guid;
 			guidValue.style.gridArea = "13 / 3 / 13 / 5";
