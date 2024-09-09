@@ -598,7 +598,7 @@ internal static class Issues {
 
             if (predictedTime > currentTime) {
                 long predictedDateLong = (long)(predictedTime + firstTimestamp);
-                if (predictedDateLong < 0) { continue; }
+                if (predictedDateLong < 0 || predictedDateLong > 253402300799999) { continue; }
 
                 DateTime predictedDate = DateTimeOffset.FromUnixTimeMilliseconds(predictedDateLong).DateTime;
 
