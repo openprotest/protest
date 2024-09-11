@@ -166,7 +166,9 @@ class IpDiscovery extends List {
 				newNic.ondblclick = ()=> okButton.onclick();
 			}
 		}
-		catch {}
+		catch {
+			innerBox.textContent = "";
+		}
 
 		okButton.onclick = ()=> {
 			this.Connect(selectedNic);
