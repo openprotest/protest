@@ -30,13 +30,16 @@ internal class Program {
         Console.WriteLine(@"  |  __/ '__/ _ \___| __/ _ \/ __| __|");
         Console.WriteLine(@"  | |  | | | (_) |  | ||  __/\__ \ |_");
         Console.WriteLine(@"  \_|  |_|  \___/   \__ \___||___/\__|");
-        Console.WriteLine($"{Data.VersionToString(), 38}");
-        Console.WriteLine();
 
 #if DEBUG
-        Console.WriteLine(" - Debug mode");
+        Console.WriteLine($"  Debug mode {Data.VersionToString(), 25}");
+#else
+        Console.WriteLine($"{Data.VersionToString(), 38}");
 #endif
-        Console.WriteLine($" - Startup time: {DateTime.Now.ToString(Data.DATETIME_FORMAT)}");
+
+        Console.WriteLine();
+
+        Console.WriteLine($"Startup time: {DateTime.Now.ToString(Data.DATETIME_FORMAT)}");
         Console.WriteLine();
 
         Data.InitializeDirectories();
