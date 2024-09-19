@@ -1038,33 +1038,50 @@ class Settings extends Tabs {
 	}
 
 	async SmtpProfileDialog(object=null) {
-		const dialog = this.DialogBox("320px");
+		const dialog = this.DialogBox("350px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
 
 		okButton.value = "Save";
 
-		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
+		innerBox.style.padding = "16px 32px";
 		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(6, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(7, 38px)";
 		innerBox.style.alignItems = "center";
+		innerBox.parentElement.style.maxWidth = "640px";
+
+		const providerLabel = document.createElement("div");
+		providerLabel.style.gridArea = "1 / 2";
+		providerLabel.textContent = "Provider:";
+		const providerInput = document.createElement("select");
+		providerInput.style.gridArea = "1 / 3";
+		innerBox.append(providerLabel, providerInput);
+
+		//const providers = ["SMTP server", "Gmail", "Outlook"];
+		const providers = ["SMTP server"];
+		for (let i=0; i<providers.length; i++) {
+			const option = document.createElement("option");
+			option.value = providers[i];
+			option.textContent = providers[i];
+			providerInput.append(option);
+		}
 
 		const serverLabel = document.createElement("div");
-		serverLabel.style.gridArea = "1 / 2";
+		serverLabel.style.gridArea = "2 / 2";
 		serverLabel.textContent = "SMTP server:";
 		const serverInput = document.createElement("input");
-		serverInput.style.gridArea = "1 / 3";
+		serverInput.style.gridArea = "2 / 3";
 		serverInput.type = "text";
-		serverInput.placeholder = "smtp.gmail.com";
+		serverInput.placeholder = "smtp.example.com";
 		innerBox.append(serverLabel, serverInput);
 
 		const portLabel = document.createElement("div");
-		portLabel.style.gridArea = "2 / 2";
+		portLabel.style.gridArea = "3 / 2";
 		portLabel.textContent = "Port:";
 		const portInput = document.createElement("input");
-		portInput.style.gridArea = "2 / 3";
+		portInput.style.gridArea = "3 / 3";
 		portInput.type = "number";
 		portInput.min = 1;
 		portInput.max = 65535;
@@ -1072,33 +1089,83 @@ class Settings extends Tabs {
 		innerBox.append(portLabel, portInput);
 
 		const senderLabel = document.createElement("div");
-		senderLabel.style.gridArea = "3 / 2";
+		senderLabel.style.gridArea = "4 / 2";
 		senderLabel.textContent = "Sender:";
 		const senderInput = document.createElement("input");
-		senderInput.style.gridArea = "3 / 3";
+		senderInput.style.gridArea = "4 / 3";
 		senderInput.type = "text";
 		innerBox.append(senderLabel, senderInput);
 
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "4 / 2";
+		usernameLabel.style.gridArea = "5 / 2";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "4 / 3";
+		usernameInput.style.gridArea = "5 / 3";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 
 		const passwordLabel = document.createElement("div");
-		passwordLabel.style.gridArea = "5 / 2";
+		passwordLabel.style.gridArea = "6 / 2";
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
-		passwordInput.style.gridArea = "5 / 3";
+		passwordInput.style.gridArea = "6 / 3";
 		passwordInput.type = "password";
 		passwordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(passwordLabel, passwordInput);
 
 		const sslBox = document.createElement("div");
-		sslBox.style.gridArea = "6 / 2";
+		sslBox.style.gridArea = "7 / 2";
 		innerBox.appendChild(sslBox);
+
+		const oAuthButton = document.createElement("input");
+		oAuthButton.type = "button";
+		oAuthButton.value = "Sign in";
+		oAuthButton.style.height = "40px";
+		oAuthButton.style.margin = "0px 64px";
+		oAuthButton.style.gridArea = "3 / 3";
+
+		const GmailOAuth = ()=> {
+			
+		};
+
+		const OutlookOAuth = ()=> {
+			
+		};
+
+		providerInput.onchange = ()=> {
+			innerBox.parentElement.style.transition = ".2s";
+
+			innerBox.textContent = "";
+			innerBox.append(providerLabel, providerInput);
+			providerInput.focus();
+
+			switch (providerInput.value) {
+			case "Gmail":
+				innerBox.style.gridTemplateRows = "38px 10px 48px";
+				innerBox.parentElement.style.maxHeight = "200px";
+				innerBox.appendChild(oAuthButton);
+				oAuthButton.onclick = GmailOAuth;
+				break;
+
+			case "Outlook":
+				innerBox.style.gridTemplateRows = "38px 10px 48px";
+				innerBox.parentElement.style.maxHeight = "200px";
+				innerBox.appendChild(oAuthButton);
+				oAuthButton.onclick = OutlookOAuth;
+				break;
+
+			default:
+				innerBox.style.gridTemplateRows = "repeat(7, 38px)";
+				innerBox.parentElement.style.maxHeight = "350px";
+
+				innerBox.append(serverLabel, serverInput);
+				innerBox.append(portLabel, portInput);
+				innerBox.append(senderLabel, senderInput);
+				innerBox.append(usernameLabel, usernameInput);
+				innerBox.append(passwordLabel, passwordInput);
+				innerBox.appendChild(sslBox);
+			}
+		};
 
 		const sslToggle = this.CreateToggle("SSL", true, sslBox);
 
