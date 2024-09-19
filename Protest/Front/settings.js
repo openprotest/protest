@@ -1103,7 +1103,7 @@ class Settings extends Tabs {
 		const sslToggle = this.CreateToggle("SSL", true, sslBox);
 
 		if (object) {
-			serverInput.value = object.server
+			serverInput.value = object.server;
 			portInput.value = object.port;
 			senderInput.value = object.sender;
 			usernameInput.value = object.username;
