@@ -1115,8 +1115,8 @@ class Settings extends Tabs {
 			let isNew = object === null;
 			let index = this.smtpProfiles.indexOf(object);
 
-			if (!isNew) {
-				if (index === -1) isNew = true;
+			if (!isNew && index === -1) {
+				isNew = true;
 			}
 
 			let requiredFieldMissing = false;
