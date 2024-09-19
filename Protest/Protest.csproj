@@ -6,7 +6,7 @@
     <LangVersion>12</LangVersion>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
-    
+
     <Product>Pro-test</Product>
     <AssemblyName>protest</AssemblyName>
     <Company>veniware</Company>

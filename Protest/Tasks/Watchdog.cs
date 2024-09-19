@@ -598,28 +598,15 @@ internal static class Watchdog {
         body.Append("<tr><td style=\"height:40px;color:#202020;font-size:20px\"><b>");
 
         switch (status) {
-        case 0:
-            body.Append(greenDot);
-            break; //ok
-        case -4:
-            body.Append(blueDot);
-            break; //tls not yet valid
-        case -3:
-            body.Append(yellowDot);
-            break; //expiration warning
-        case -2:
-            body.Append(orangeDot);
-            break; //expired
-        case -1:
-            body.Append(redDot);
-            break; //unreachable
-        default:
-            body.Append(greenDot);
-            break;
+        case 0 : body.Append(greenDot);  break; //ok
+        case -4: body.Append(blueDot);   break; //tls not yet valid
+        case -3: body.Append(yellowDot); break; //expiration warning
+        case -2: body.Append(orangeDot); break; //expired
+        case -1: body.Append(redDot);    break; //unreachable
+        default: body.Append(greenDot);  break;
         }
 
-        string stringStatus = watcher.type switch
-        {
+        string stringStatus = watcher.type switch {
             WatcherType.icmp => status < 0 ? "Host is unreachable" : "Host is reachable",
             WatcherType.tcp => status < 0 ? "Connection failed" : "Connection succeeded",
             WatcherType.dns => status < 0 ? "Domain is not resolved" : "Domain is resolved",
@@ -628,12 +615,12 @@ internal static class Watchdog {
 
             WatcherType.tls => status switch
             {
-                0 => "Certificate is valid",
+                0  => "Certificate is valid",
                 -1 => "Host is unreachable",
                 -2 => "Certificate expired",
                 -3 => "Expiration warning",
                 -4 => "Certificate is not yet valid",
-                _ => "Certificate is valid",
+                _  => "Certificate is valid",
             },
 
             _ => string.Empty
@@ -710,22 +697,12 @@ internal static class Watchdog {
 
         case WatcherType.tls:
             switch (status) {
-            case 0:
-                body.Append($"Certificate for <b>{watcher.target}</b> is now valid.");
-                break;
-            case -1:
-                body.Append($"Host for <b>{watcher.target}</b> is unreachable.");
-                break;
-            case -2:
-                body.Append($"Certificate for <b>{watcher.target}</b> is expired.");
-                break;
-            case -3:
-                body.Append($"Certificate for <b>{watcher.target}</b> is close to it's expiration date.");
-                break;
-            case -4:
-                body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached.");
-                break;
-                //default: body.Append($""); break;
+            case 0 : body.Append($"Certificate for <b>{watcher.target}</b> is now valid."); break;
+            case -1: body.Append($"Host for <b>{watcher.target}</b> is unreachable."); break;
+            case -2: body.Append($"Certificate for <b>{watcher.target}</b> is expired."); break;
+            case -3: body.Append($"Certificate for <b>{watcher.target}</b> is close to it's expiration date."); break;
+            case -4: body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached."); break;
+            //default: body.Append($""); break;
             }
             break;
         }
@@ -754,8 +731,7 @@ internal static class Watchdog {
         try
 #endif
         {
-            using MailMessage mail = new MailMessage
-            {
+            using MailMessage mail = new MailMessage {
                 From = new MailAddress(profile.sender, "Pro-test"),
                 Subject = $"Watchdog notification - {target} - {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}",
                 IsBodyHtml = true
@@ -768,8 +744,7 @@ internal static class Watchdog {
                 mail.To.Add(notification.recipients[i]);
             }
 
-            using SmtpClient smtp = new SmtpClient(profile.server)
-            {
+            using SmtpClient smtp = new SmtpClient(profile.server) {
                 Port = profile.port,
                 EnableSsl = profile.ssl,
                 Credentials = new NetworkCredential(profile.username, profile.password)

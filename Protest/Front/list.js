@@ -575,25 +575,26 @@ class List extends Window {
 	}
 
 	UpdateViewport(force = false) {
-		for (let i = 0; i < this.list.childNodes.length; i++) {
-			if (force) this.list.childNodes[i].textContent = "";
+		const childNodes = this.list.childNodes;
 
-			if (this.list.childNodes[i].offsetTop - this.list.scrollTop < -32 ||
-				this.list.childNodes[i].offsetTop - this.list.scrollTop > this.list.clientHeight) {
-				this.list.childNodes[i].textContent = "";
-			}
-			else {
-				if (this.list.childNodes[i].childNodes.length > 0) continue;
-				const key = this.list.childNodes[i].getAttribute("id");
-				let type = this.link.data[key].type ? this.link.data[key].type.v.toLowerCase() : null;
-				this.InflateElement(this.list.childNodes[i], this.link.data[key], type);
+		for (let i=0; i<childNodes.length; i++) {
+			const node = childNodes[i];
+			const nodeOffsetTop = node.offsetTop - this.list.scrollTop;
+		
+			if (force || nodeOffsetTop < -32 || nodeOffsetTop > this.list.clientHeight) {
+				node.textContent = "";
+			} else if (node.childNodes.length === 0) {
+				const key = node.getAttribute("id");
+				const data = this.link.data[key];
+				const type = data.type?.v?.toLowerCase() || null;
+				this.InflateElement(node, data, type);
 			}
 		}
 
 		if (this.link) {
-			this.counter.textContent = this.list.childNodes.length === this.link.length
+			this.counter.textContent = childNodes.length === this.link.length
 				? this.link.length
-				: `${this.list.childNodes.length} / ${this.link.length}`;
+				: `${childNodes.length} / ${this.link.length}`;
 		}
 		else {
 			this.counter.textContent = "0";

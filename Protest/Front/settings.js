@@ -1120,7 +1120,10 @@ class Settings extends Tabs {
 			}
 
 			let requiredFieldMissing = false;
-			let requiredFields = [serverInput, portInput, senderInput, usernameInput, passwordInput];
+
+			const requiredFields = isNew
+				? [serverInput, portInput, senderInput, usernameInput, passwordInput]
+				: [serverInput, portInput, senderInput, usernameInput];
 
 			for (let i=0; i<requiredFields.length; i++) {
 				if (requiredFields[i].value.length === 0) {
@@ -1137,12 +1140,12 @@ class Settings extends Tabs {
 			if (requiredFieldMissing) return;
 
 			const newObject = {
-				server     : serverInput.value,
-				port       : parseInt(portInput.value),
-				sender     : senderInput.value,
-				username   : usernameInput.value,
-				password   : passwordInput.value,
-				ssl        : sslToggle.checkbox.checked,
+				server   : serverInput.value,
+				port     : parseInt(portInput.value),
+				sender   : senderInput.value,
+				username : usernameInput.value,
+				password : passwordInput.value,
+				ssl      : sslToggle.checkbox.checked,
 			};
 
 			if (object && object.guid) newObject.guid = object.guid;
