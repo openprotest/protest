@@ -579,15 +579,16 @@ class List extends Window {
 
 		for (let i=0; i<childNodes.length; i++) {
 			const node = childNodes[i];
+			if (force) node.textContent = "";
+
 			const nodeOffsetTop = node.offsetTop - this.list.scrollTop;
-		
-			if (force || nodeOffsetTop < -32 || nodeOffsetTop > this.list.clientHeight) {
+			if (nodeOffsetTop < -32 || nodeOffsetTop > this.list.clientHeight) {
 				node.textContent = "";
-			} else if (node.childNodes.length === 0) {
+			}
+			else if (node.childNodes.length === 0) {
 				const key = node.getAttribute("id");
-				const data = this.link.data[key];
-				const type = data.type?.v?.toLowerCase() || null;
-				this.InflateElement(node, data, type);
+				const type = this.link.data[key].type?.v?.toLowerCase() || null;
+				this.InflateElement(node, this.link.data[key], type);
 			}
 		}
 

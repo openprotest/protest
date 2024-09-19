@@ -60,7 +60,7 @@ internal class Program {
 
         Console.Write("Starting tasks");
         Tasks.Automation.Initialize();
-        Console.WriteLine("        Done");
+        Console.WriteLine("          Done");
 
         Console.WriteLine();
 
