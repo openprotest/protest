@@ -58,7 +58,7 @@ internal class Program {
         bool loadRbac = Http.Auth.LoadRbac();
         Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "Done" : "Failed"));
 
-        Console.Write("Starting workers");
+        Console.Write("Starting tasks");
         Tasks.Automation.Initialize();
         Console.WriteLine("        Done");
 
