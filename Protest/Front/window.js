@@ -969,7 +969,6 @@ class Window {
 		dim.appendChild(dialogBox);
 		if (height != undefined) {
 			dialogBox.style.maxHeight = height;
-			dialogBox.style.borderRadius = "0 0 8px 8px";
 		}
 		dim.appendChild(dialogBox);
 
