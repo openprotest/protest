@@ -1059,11 +1059,11 @@ class Settings extends Tabs {
 		providerInput.style.gridArea = "1 / 3";
 		innerBox.append(providerLabel, providerInput);
 
-		//const providers = ["SMTP server", "Gmail", "Outlook"];
+		//const providers = ["SMTP server", "Outlook", "Gmail"];
 		const providers = ["SMTP server"];
 		for (let i=0; i<providers.length; i++) {
 			const option = document.createElement("option");
-			option.value = providers[i];
+			option.value = i;
 			option.textContent = providers[i];
 			providerInput.append(option);
 		}
@@ -1139,21 +1139,21 @@ class Settings extends Tabs {
 			innerBox.append(providerLabel, providerInput);
 			providerInput.focus();
 
-			switch (providerInput.value) {
-			case "Gmail":
-				innerBox.style.gridTemplateRows = "38px 10px 48px";
-				innerBox.parentElement.style.maxHeight = "200px";
-				innerBox.appendChild(oAuthButton);
-				oAuthButton.onclick = GmailOAuth;
-				break;
-
-			case "Outlook":
+			switch (parseInt(providerInput.value)) {
+			case 1: //Outlook
 				innerBox.style.gridTemplateRows = "38px 10px 48px";
 				innerBox.parentElement.style.maxHeight = "200px";
 				innerBox.appendChild(oAuthButton);
 				oAuthButton.onclick = OutlookOAuth;
 				break;
 
+			case 2: //GMail
+			innerBox.style.gridTemplateRows = "38px 10px 48px";
+			innerBox.parentElement.style.maxHeight = "200px";
+			innerBox.appendChild(oAuthButton);
+			oAuthButton.onclick = GmailOAuth;
+			break;
+				
 			default:
 				innerBox.style.gridTemplateRows = "repeat(7, 38px)";
 				innerBox.parentElement.style.maxHeight = "350px";
@@ -1170,12 +1170,17 @@ class Settings extends Tabs {
 		const sslToggle = this.CreateToggle("SSL", true, sslBox);
 
 		if (object) {
-			serverInput.value = object.server;
-			portInput.value = object.port;
-			senderInput.value = object.sender;
-			usernameInput.value = object.username;
-			passwordInput.value = object.password;
+			providerInput.value        = object.provider;
+			serverInput.value          = object.server;
+			portInput.value            = object.port;
+			senderInput.value          = object.sender;
+			usernameInput.value        = object.username;
+			passwordInput.value        = object.password;
 			sslToggle.checkbox.checked = object.ssl;
+		}
+
+		if (!providerInput.value) {
+			providerInput.value = "0";
 		}
 
 		okButton.onclick = async ()=>{
@@ -1207,6 +1212,7 @@ class Settings extends Tabs {
 			if (requiredFieldMissing) return;
 
 			const newObject = {
+				provider : parseInt(serverInput.provider),
 				server   : serverInput.value,
 				port     : parseInt(portInput.value),
 				sender   : senderInput.value,
@@ -1228,6 +1234,8 @@ class Settings extends Tabs {
 			dialog.Close();
 			this.ShowSmtp();
 		};
+
+		providerInput.onchange();
 
 		setTimeout(()=>{ serverInput.focus() }, 200);
 	}

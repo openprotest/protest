@@ -6,7 +6,6 @@ using System.IO;
 using System.Net;
 using System.Runtime.Versioning;
 using System.Text;
-using Microsoft.VisualBasic.FileIO;
 using System.Text.RegularExpressions;
 
 namespace Protest.Tools;

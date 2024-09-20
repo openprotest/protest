@@ -12,7 +12,14 @@ internal static class SmtpProfiles {
     private static readonly JsonSerializerOptions smtpProfileSerializerOptions;
     private static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
+    public enum Provider : byte {
+        SnmpServer = 0,
+        Outlook    = 1,
+        Gmail      = 2,
+    }
+
     public record Profile {
+        public Provider provider;
         public Guid guid;
         public string server;
         public int port;
@@ -229,14 +236,14 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
                         reader.Read();
 
                         switch (propertyName) {
-                        case "server": profile.server = reader.GetString(); break;
-                        case "port": profile.port = reader.GetInt32(); break;
-                        case "sender": profile.sender = reader.GetString(); break;
-                        case "username": profile.username = reader.GetString(); break;
-                        case "password": profile.password = hidePasswords ? String.Empty : reader.GetString(); break;
-                        //case "recipients": profile.recipients = reader.GetString(); break;
-                        case "ssl": profile.ssl = reader.GetBoolean(); break;
-                        case "guid": profile.guid = reader.GetGuid(); break;
+                        case "provider"    : profile.provider   = (SmtpProfiles.Provider)reader.GetByte(); break;
+                        case "server"      : profile.server     = reader.GetString(); break;
+                        case "port"        : profile.port       = reader.GetInt32(); break;
+                        case "sender"      : profile.sender     = reader.GetString(); break;
+                        case "username"    : profile.username   = reader.GetString(); break;
+                        case "password"    : profile.password   = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "ssl"         : profile.ssl        = reader.GetBoolean(); break;
+                        case "guid"        : profile.guid       = reader.GetGuid(); break;
                         default: reader.Skip(); break;
                         }
                     }
@@ -250,25 +257,25 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
     }
 
     public override void Write(Utf8JsonWriter writer, SmtpProfiles.Profile[] value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _server = "server"u8;
-        ReadOnlySpan<byte> _port = "port"u8;
-        ReadOnlySpan<byte> _sender = "sender"u8;
-        ReadOnlySpan<byte> _username = "username"u8;
-        ReadOnlySpan<byte> _password = "password"u8;
-        //ReadOnlySpan<byte> _recipients = "recipients"u8;
-        ReadOnlySpan<byte> _ssl = "ssl"u8;
-        ReadOnlySpan<byte> _guid = "guid"u8;
+        ReadOnlySpan<byte> _provider   = "server"u8;
+        ReadOnlySpan<byte> _server     = "server"u8;
+        ReadOnlySpan<byte> _port       = "port"u8;
+        ReadOnlySpan<byte> _sender     = "sender"u8;
+        ReadOnlySpan<byte> _username   = "username"u8;
+        ReadOnlySpan<byte> _password   = "password"u8;
+        ReadOnlySpan<byte> _ssl        = "ssl"u8;
+        ReadOnlySpan<byte> _guid       = "guid"u8;
 
         writer.WriteStartArray();
 
         for (int i = 0; i < value.Length; i++) {
             writer.WriteStartObject();
+            writer.WriteNumber(_provider, (byte)value[i].provider);
             writer.WriteString(_server, value[i].server);
             writer.WriteNumber(_port, value[i].port);
             writer.WriteString(_sender, value[i].sender);
             writer.WriteString(_username, value[i].username);
             writer.WriteString(_password, hidePasswords ? String.Empty : value[i].password);
-            //writer.WriteString(_recipients, value[i].recipients);
             writer.WriteBoolean(_ssl, value[i].ssl);
             writer.WriteString(_guid, value[i].guid);
             writer.WriteEndObject();
