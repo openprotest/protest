@@ -299,6 +299,9 @@ internal static class Fetch {
                 data.TryAdd("hostname", new string[] { netBios, "NetBIOS", string.Empty });
             }
             else if (useDns && hostname is not null && hostname.Length > 0) { //use dns
+                if (hostname.Contains('.')) {
+                    hostname = hostname.Split('.')[0];
+                }
                 data.TryAdd("hostname", new string[] { hostname, "DNS", string.Empty });
             }
         }
@@ -950,11 +953,18 @@ internal static class Fetch {
             if (pair.Value.TryGetValue(targetAttribute, out string[] targetValue)) { //existing
                 if (values.TryGetValue(targetValue[0], out string file)) {
 
-                    //keep old type if it exists
-                    if (database.dictionary.TryGetValue(file, out Database.Entry oldEntry)
-                        && oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType)
-                        && String.IsNullOrEmpty(oldType.value)) { 
-                        attributes.AddOrUpdate("type", oldType, (_, _) => oldType);
+                    if (database.dictionary.TryGetValue(file, out Database.Entry oldEntry)) {
+                        //keep old name if it exists
+                        if (oldEntry.attributes.TryGetValue("name", out Database.Attribute oldName)
+                            && String.IsNullOrEmpty(oldName.value)) {
+                            attributes.AddOrUpdate("name", oldName, (_, _) => oldName);
+                        }
+
+                        //keep old type if it exists
+                        if (oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType)
+                            && String.IsNullOrEmpty(oldType.value)) {
+                            attributes.AddOrUpdate("type", oldType, (_, _) => oldType);
+                        }
                     }
 
                     database.Save(file, attributes, saveMethod, origin);

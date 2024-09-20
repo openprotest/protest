@@ -251,7 +251,7 @@ const KEEP = {
 		case "cancel-fetch":
 			for (let i = 0; i < WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
-				WIN.array[i].statusValueLabel.textContent = "canceling";
+				WIN.array[i].statusValueLabel.textContent = "Canceling";
 			}
 			break;
 

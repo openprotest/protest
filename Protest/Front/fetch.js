@@ -421,7 +421,7 @@ class Fetch extends Tabs {
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
-				if (json.status === "running" || json.status === "idle") {
+				if (json.status.toLowerCase() === "running" || json.status.toLowerCase() === "idle" || json.status.toLowerCase() === "canceling") {
 					this.taskTab.style.visibility = "visible";
 					this.taskTab.style.animation = "slide-in .4s 1";
 
@@ -478,11 +478,11 @@ class Fetch extends Tabs {
 			if (json.error) throw(json.error);
 			this.taskStatus = json;
 
-			if (json.status === "running" || json.status === "idle") {
+			if (json.status.toLowerCase() === "running" || json.status.toLowerCase() === "idle" || json.status.toLowerCase() === "canceling") {
 				this.taskTab.style.visibility = "visible";
 				this.taskTab.style.animation = "slide-in .4s 1";
 			}
-			else if (json.status === "pending") {
+			else if (json.status.toLowerCase() === "pending") {
 				this.taskTab.style.visibility = "visible";
 				this.taskTab.style.animation = "slide-in .4s 1";
 			}
@@ -969,10 +969,10 @@ class Fetch extends Tabs {
 			if (json.error) throw(json.error);
 			this.taskStatus = json;
 
-			if (json.status === "pending") {
+			if (json.status.toLowerCase() === "pending") {
 				this.ShowPending(json);
 			}
-			else if (json.status === "running" || json.status === "idle") {
+			else if (json.status.toLowerCase() === "running" || json.status.toLowerCase() === "idle" || json.status.toLowerCase() === "canceling") {
 				nameLabel.textContent = json.name;
 				let startedDate = new Date(UI.TicksToUnixDate(json.started));
 				dateValueLabel.textContent = `${startedDate.toLocaleDateString(UI.regionalFormat, {})} ${startedDate.toLocaleTimeString(UI.regionalFormat, {})}`;
@@ -987,6 +987,10 @@ class Fetch extends Tabs {
 				this.DeselectAllTabs();
 				this.tabsList[0].className = "v-tab-selected";
 				this.tabsList[0].onclick();
+			}
+
+			if (json.status.toLowerCase() === "canceling") {
+				abortButton.disabled = true;
 			}
 		}
 		catch {}
