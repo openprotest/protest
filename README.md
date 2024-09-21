@@ -28,6 +28,8 @@ Pro-test is a robust solution for creating and managing an inventory database of
 It leverages data collection techniques by interacting with Active Directory or performing local network scans.
 The suite automatically populates the database by targeting the domain controller or specified IP ranges.
 
+<p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/main/screenshot.png" /></p>
+
 ### How to use:
 Pro-test is portable and self-contained, with a web interface accessible via the loopback address.
 
