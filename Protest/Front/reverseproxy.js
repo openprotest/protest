@@ -331,6 +331,7 @@ class ReverseProxy extends List {
 						element.style.borderRadius = "2px";
 						element.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 						element.style.animation = "rise-in 0.2s ease-out 1";
+						element.style.userSelect = "text";
 						this.clientsList.appendChild(element);
 
 						const name = document.createElement("div");
