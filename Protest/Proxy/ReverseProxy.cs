@@ -369,8 +369,8 @@ internal static class ReverseProxy {
                 }
             }
         }
-        catch {
-            return Data.CODE_FAILED.ToArray();
+        catch (Exception ex){
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
         }
 
         running.TryAdd(obj.guid.ToString(), proxy);

@@ -21,6 +21,8 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     public HttpReverseProxy(Guid guid) : base(guid) {}
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
+        Exception returnStatus = null;
+
         try {
             hostBuilder = Host.CreateDefaultBuilder();
 
@@ -58,8 +60,9 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 try {
                     await this.host.RunAsync(cancellationToken);
                 }
-                catch (Exception) {
+                catch (Exception ex) {
                     Interlocked.Increment(ref this.errors);
+                    returnStatus = ex;
                 }
                 finally {
                     await Task.Delay(50);
@@ -69,11 +72,15 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             });
 
             this.thread.Start();
-
         }
         catch (Exception ex) {
             Logger.Error(ex);
             throw;
+        }
+
+        Thread.Sleep(500);
+        if (returnStatus is not null) {
+            throw returnStatus;
         }
 
         return base.Start(proxy, destination, certificate, password, origin);
@@ -125,6 +132,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             Logger.Error(ex);
             ReverseProxy.running.TryRemove(this.guid.ToString(), out _);
             Stop("system");
+            throw;
         }
     }
 
