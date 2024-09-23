@@ -386,7 +386,7 @@ class ReverseProxy extends List {
 		this.ws.onerror = error=> {};
 	}
 
-	UpdateGraph() {
+	UpdateGraph(isSelect=false) {
 		this.canvas.width = this.canvas.width; //clear canvas
 
 		if (!this.args.select || !this.history[this.args.select]) {
@@ -474,7 +474,7 @@ class ReverseProxy extends List {
 		this.ctx.stroke();
 		this.ctx.closePath();
 
-		if (this.ws !== null && this.ws.readyState === 1) {
+		if (this.ws !== null && this.ws.readyState === 1 && !isSelect) {
 			this.graphCount++;
 		}
 	}
@@ -499,7 +499,7 @@ class ReverseProxy extends List {
 			this._tempSelect = guid;
 		}
 
-		this.UpdateGraph();
+		this.UpdateGraph(true);
 
 		if (this.isClosed || this.ws === null || this.ws.readyState !== 1) {
 			return;
