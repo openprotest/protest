@@ -183,8 +183,8 @@ internal static class ReverseProxy {
         return JsonSerializer.SerializeToUtf8Bytes(new {
             traffic = running.Values.Select(proxy => new {
                 guid = proxy.guid,
-                tx = proxy.bytesTx.Values.Sum(),
-                rx = proxy.bytesRx.Values.Sum()
+                tx   = proxy.bytesTx.Values.Sum(),
+                rx   = proxy.bytesRx.Values.Sum()
             })
         });
     }
@@ -411,16 +411,16 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
     }
 
     public override ReverseProxy.ReverseProxyObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-        Guid guid = Guid.Empty;
-        string name = null;
+        Guid guid                           = Guid.Empty;
+        string name                         = null;
         ReverseProxy.ProxyProtocol protocol = ReverseProxy.ProxyProtocol.TCP;
-        string certificate = null;
-        string password = String.Empty;
-        string proxyaddr = null;
-        int proxyport = 0;
-        string destaddr = null;
-        int destport = 0;
-        bool autostart = false;
+        string certificate                  = null;
+        string password                     = String.Empty;
+        string proxyaddr                    = null;
+        int proxyport                       = 0;
+        string destaddr                     = null;
+        int destport                        = 0;
+        bool autostart                      = false;
 
         while (reader.Read()) {
             if (reader.TokenType == JsonTokenType.EndObject) {
@@ -452,16 +452,16 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         }
 
         return new ReverseProxy.ReverseProxyObject {
-            guid = guid,
-            name = name,
-            protocol = protocol,
+            guid        = guid,
+            name        = name,
+            protocol    = protocol,
             certificate = certificate,
-            password = password,
-            proxyaddr = proxyaddr,
-            proxyport = proxyport,
-            destaddr = destaddr,
-            destport = destport,
-            autostart = autostart
+            password    = password,
+            proxyaddr   = proxyaddr,
+            proxyport   = proxyport,
+            destaddr    = destaddr,
+            destport    = destport,
+            autostart   = autostart
         };
     }
 
