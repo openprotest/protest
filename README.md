@@ -19,24 +19,53 @@
 ![MacOS](https://shields.io/badge/Mac%20OS-ccc?logo=Apple&logoColor=222&style=for-the-badge)
 
 ### Repo components:
-  * **Protest:** The front-end and back-end workings.
-  * **Protest-CacheGenerator:** A source-generator that embeds the front-end web application within the binary executable.
-  * **Protest Agent:** A tool to enable the browser talk to the client's computer using a local protocol `protest://`.
+  - **Protest:** The front-end and back-end workings.
+  - **Protest-CacheGenerator:** A source-generator that embeds the front-end web application within the binary executable.
+  - **Protest Agent:** A tool to enable the browser talk to the client's computer using a local communication protocol (`protest://`).
 
 ### Overview:
 Pro-test is a robust solution for creating and managing an inventory database of your network environment.
 It leverages data collection techniques by interacting with Active Directory or performing local network scans.
 The suite automatically populates the database by targeting the domain controller or specified IP ranges.
 
+<p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/main/screenshot.png" /></p>
+
 ### How to use:
 Pro-test is portable and self-contained, with a web interface accessible via the loopback address.
-
-For remote access, you can set up a reverse proxy using the included `Reverse proxy` tool.
+If you need to run it remotely, the included `Reverse proxy` allows for external access.
 Authentication is required for requests originating from IPs other than the loopback address.
-If you opt to use a different reverse proxy, ensure that the X-Real-IP header is forwarded.
+If you opt to use a different reverse proxy, ensure that the `X-Real-IP` header is forwarded.
 If Pro-test fails to bind to the configured endpoint, it will attempt to bind to a fallback endpoint `127.0.0.1:8080`.
-
 Pro-test operates with the access level of the user executing it. To utilize protocols such as WMI and Active Directory services, it must be run as a Network Administrator.
+
+### Tools and utilities:
+Pro-test includes a wide range of tools and utilities designed for system administration and network management:
+
+#### **Network utilities**
+- Ping utility (ICMP and ARP)
+- DNS lookup
+- mDNS discovery
+- Trace route
+- Port scan
+- IP locator
+- MAC address lookup
+- DHCP client
+- NTP client
+- Website health check
+- SNMP and WMI polling
+- SSH and telnet client
+
+#### **Network monitoring**
+- IP discovery tool
+- Network watchdog
+- Reverse proxy
+- Issue detection
+
+#### **Documentation and communication**
+- Documentation
+- Debit notes
+- Address book
+- Integrated team chat
 
 ### Sponsor:
 *[![Sponsor](https://img.shields.io/badge/Sponsor%20on%20GitHub-374046?style=for-the-badge&logo=github)](https://github.com/sponsors/veniware)*
