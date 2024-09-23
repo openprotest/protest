@@ -332,11 +332,12 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP pooling",      "url(mono/snmp.svg)",         toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Automation",        "url(mono/automation.svg)",   toolsGroup, false, true, false));
-
+		
 		const manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Settings",     "url(mono/wrench.svg)",      manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RBAC",         "url(mono/rbac.svg)",        manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Automation",   "url(mono/automation.svg)",  manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("API links",    "url(mono/carabiner.svg)",   manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Log",          "url(mono/log.svg)",         manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Certificates", "url(mono/certificate.svg)", manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Backup",       "url(mono/backup.svg)",      manageGroup, false, true, false));

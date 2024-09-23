@@ -14,7 +14,7 @@ class Backup extends List {
 		this.columnsOptions.style.display = "none";
 
 		this.SetupToolbar();
-		this.createButton = this.AddToolbarButton("Create", "mono/add.svg?light");
+		this.createButton = this.AddToolbarButton("Create backup", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
 		this.downloadButton = this.AddToolbarButton("Download", "mono/download.svg?light");

@@ -161,6 +161,10 @@ public sealed class Listener {
         { "/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
         { "/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
 
+        { "/api/list",                 (ctx, parameters, username) => Api.List() },
+        { "/api/create",               (ctx, parameters, username) => Api.Create(parameters, username) },
+        { "/api/delete",               (ctx, parameters, username) => Api.Delete(parameters, username) },
+
         { "/log/list",                 (ctx, parameters, username) => Logger.List(parameters) },
     };
 

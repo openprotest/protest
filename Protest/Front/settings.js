@@ -1057,10 +1057,11 @@ class Settings extends Tabs {
 		providerLabel.textContent = "Provider:";
 		const providerInput = document.createElement("select");
 		providerInput.style.gridArea = "1 / 3";
+		providerInput.disabled = true;
 		innerBox.append(providerLabel, providerInput);
 
-		//const providers = ["SMTP server", "Outlook", "Gmail"];
-		const providers = ["SMTP server"];
+		const providers = ["SMTP server", "Outlook", "Gmail"];
+
 		for (let i=0; i<providers.length; i++) {
 			const option = document.createElement("option");
 			option.value = i;

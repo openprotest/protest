@@ -5,7 +5,7 @@ const LOADER = {
 	devices: {},
 	users: {},
 
-	alwaysUppercase: ["ip", "ipv6", "mac", "bios", "fqdn", "guid"],
+	alwaysUppercase: ["ip", "ipv6", "mac", "bios", "fqdn", "guid", "url"],
 
 	deviceIcons : {
 		"access point"        : "mono/accesspoint.svg",
@@ -126,6 +126,7 @@ const LOADER = {
 		"cameratester.js",
 		"screencapture.js",
 		"automation.js",
+		"api.js",
 		"certificates.js",
 		"backup.js",
 		"log.js"
@@ -349,6 +350,7 @@ const LOADER = {
 		case "Personalize"  : return new Personalize(command.args);
 		case "AccessControl": return new AccessControl(command.args);
 		case "Automation"   : return new Automation(command.args);
+		case "Api"          : return new Api(command.args);
 		case "Certificates" : return new Certificates(command.args);
 		case "Backup"       : return new Backup(command.args);
 		case "Log"          : return new Log(command.args);

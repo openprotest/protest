@@ -363,6 +363,12 @@ internal static class Auth {
                 path.Add("/tasks/stop");
                 break;
 
+            case "api:write":
+                path.Add("/api/list");
+                path.Add("/api/create");
+                path.Add("/api/delete");
+                break;
+
             case "rbac:write":
                 path.Add("/rbac/list");
                 path.Add("/rbac/create");
