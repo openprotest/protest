@@ -19,7 +19,7 @@ class Backup extends List {
 		this.AddToolbarSeparator();
 		this.downloadButton = this.AddToolbarButton("Download", "mono/download.svg?light");
 
-		this.createButton.onclick = ()=> this.Create();
+		this.createButton.onclick = ()=> this.CreateDialog();
 		this.deleteButton.onclick = ()=> this.Delete();
 		this.downloadButton.onclick = ()=> this.Download();
 
@@ -70,7 +70,7 @@ class Backup extends List {
 		}
 	}
 
-	Create() {
+	CreateDialog() {
 		const dialog = this.DialogBox("108px");
 		if (dialog === null) return;
 
