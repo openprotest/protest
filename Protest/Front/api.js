@@ -9,12 +9,12 @@ class Api extends List {
 		this.SetTitle("API links");
 		this.SetIcon("mono/carabiner.svg");
 
-		this.defaultColumns = ["name", "url"];
+		this.defaultColumns = ["name", "calls", "data"];
 		this.SetupColumns(this.defaultColumns);
 		this.columnsOptions.style.display = "none";
 
 		this.SetupToolbar();
-		this.createButton = this.AddToolbarButton("Create API", "mono/add.svg?light");
+		this.createButton = this.AddToolbarButton("Create API link", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 
 		this.createButton.onclick = ()=> this.Create();

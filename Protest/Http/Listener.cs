@@ -3,13 +3,14 @@
 #define BROTLI
 #endif
 
-using Protest.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Protest.Tasks;
+using Protest.Tools;
 
 namespace Protest.Http;
 
@@ -161,9 +162,9 @@ public sealed class Listener {
         { "/config/upload/macresolve", (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx) },
         { "/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
 
-        { "/api/list",                 (ctx, parameters, username) => Api.List() },
-        { "/api/create",               (ctx, parameters, username) => Api.Create(parameters, username) },
-        { "/api/delete",               (ctx, parameters, username) => Api.Delete(parameters, username) },
+        { "/api/list",                 (ctx, parameters, username) => Tools.Api.List() },
+        { "/api/create",               (ctx, parameters, username) => Tools.Api.Create(parameters, username) },
+        { "/api/delete",               (ctx, parameters, username) => Tools.Api.Delete(parameters, username) },
 
         { "/log/list",                 (ctx, parameters, username) => Logger.List(parameters) },
     };
@@ -277,6 +278,12 @@ public sealed class Listener {
             return;
         }
 
+        if (String.Equals(path, "/api", StringComparison.Ordinal)) {
+            Api.HandleApiCall(ctx);
+            ctx.Response.Close();
+            return;
+        }
+
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -319,7 +326,7 @@ public sealed class Listener {
 #endif
     }
 
-    private static Dictionary<string, string> ParseQuery(string queryString) {
+    public static Dictionary<string, string> ParseQuery(string queryString) {
         if (String.IsNullOrEmpty(queryString)) { return null; }
 
         Dictionary<string, string> parameters = new Dictionary<string, string>();
