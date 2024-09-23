@@ -107,6 +107,7 @@ class ReverseProxy extends List {
 		this.disconnectIcon.style.backgroundImage = "url(mono/disconnect.svg?light)";
 		this.disconnectIcon.style.backgroundSize = "32px 32px";
 		this.disconnectIcon.style.transition = ".2s";
+		this.disconnectIcon.style.mixBlendMode = "hard-light";
 		graph.appendChild(this.disconnectIcon);
 
 		this.totalRxLabel = document.createElement("div");
