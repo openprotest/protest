@@ -14,18 +14,6 @@ class ReverseProxy extends List {
 		this.SetTitle("Reverse proxy");
 		this.SetIcon("mono/reverseproxy.svg");
 
-		const columns = ["name", "protocol", "proxy", "destination"];
-		this.SetupColumns(columns);
-		this.columnsOptions.style.display = "none";
-
-		this.columnsElements[1].style.width = "15%";
-
-		this.columnsElements[2].style.left = "40%";
-		this.columnsElements[2].style.width = "30%";
-
-		this.columnsElements[3].style.left = "70%";
-		this.columnsElements[3].style.width = "30%";
-
 		this.ws = null;
 
 		this.graphCount = 0;
@@ -49,6 +37,18 @@ class ReverseProxy extends List {
 	}
 
 	InitializeComponents() {
+		const columns = ["name", "protocol", "proxy", "destination"];
+		this.SetupColumns(columns);
+		this.columnsOptions.style.display = "none";
+
+		this.columnsElements[1].style.width = "15%";
+
+		this.columnsElements[2].style.left = "40%";
+		this.columnsElements[2].style.width = "30%";
+
+		this.columnsElements[3].style.left = "70%";
+		this.columnsElements[3].style.width = "30%";
+		
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");

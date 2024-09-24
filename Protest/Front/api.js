@@ -1,7 +1,6 @@
 class Api extends List {
 	constructor(args) {
 		super();
-
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
 		this.AddCssDependencies("list.css");
@@ -9,17 +8,7 @@ class Api extends List {
 		this.SetTitle("API links");
 		this.SetIcon("mono/carabiner.svg");
 
-		this.defaultColumns = ["name", "calls", "data"];
-		this.SetupColumns(this.defaultColumns);
-		this.columnsOptions.style.display = "none";
-
-		this.SetupToolbar();
-		this.createButton = this.AddToolbarButton("Create API link", "mono/add.svg?light");
-		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
-
-		this.createButton.onclick = ()=> this.CreateDialog();
-		this.deleteButton.onclick = ()=> this.Delete();
-
+		this.InitializeComponents();
 		this.UpdateAuthorization();
 	}
 
@@ -30,8 +19,65 @@ class Api extends List {
 		super.UpdateAuthorization();
 	}
 
-	CreateDialog() {
-		const dialog = this.DialogBox("420px");
+	InitializeComponents() {
+		const columns = ["name", "calls", "data"];
+		this.SetupColumns(columns);
+		this.columnsOptions.style.display = "none";
+
+		this.SetupToolbar();
+		this.createButton = this.AddToolbarButton("Create API link", "mono/add.svg?light");
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+
+		this.createButton.onclick = ()=> this.EditDialog();
+		this.deleteButton.onclick = ()=> this.Delete();
+
+		this.list.style.right = "unset";
+		this.list.style.width = "min(50%, 640px)";
+		this.list.style.overflowY = "auto";
+
+		this.list.style.right = "unset";
+		this.list.style.width = "min(50%, 640px)";
+		this.list.style.overflowY = "auto";
+
+		this.listTitle.style.right = "unset";
+		this.listTitle.style.width = "min(50%, 640px)";
+
+		this.stats = document.createElement("div");
+		this.stats.style.position = "absolute";
+		this.stats.style.left = "calc(min(50%, 640px) + 8px)";
+		this.stats.style.right = "4px";
+		this.stats.style.top = "0";
+		this.stats.style.bottom = "28px";
+		this.stats.style.overflowY = "auto";
+		this.content.appendChild(this.stats);
+
+		const graph = document.createElement("div");
+		graph.style.position = "absolute";
+		graph.style.left = "0";
+		graph.style.right = "0";
+		graph.style.top = "0";
+		graph.style.maxWidth = `${ReverseProxy.CANVAS_W+4}px`;
+		graph.style.height = `${ReverseProxy.CANVAS_H+8}px`;
+		graph.style.borderRadius = "4px";
+		graph.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
+		this.stats.appendChild(graph);
+
+		this.canvas = document.createElement("canvas");
+		this.canvas.width = ReverseProxy.CANVAS_W;
+		this.canvas.height = ReverseProxy.CANVAS_H+4;
+		this.canvas.style.position = "absolute";
+		this.canvas.style.right = "2px";
+		this.canvas.style.top = "0";
+		this.canvas.style.width = `${ReverseProxy.CANVAS_W}px`;
+		this.canvas.style.height = `${ReverseProxy.CANVAS_H+4}px`;
+		graph.appendChild(this.canvas);
+
+		this.ctx = this.canvas.getContext("2d");
+
+	}
+
+	EditDialog(object=null) {
+		const dialog = this.DialogBox("400px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -42,8 +88,8 @@ class Api extends List {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 150px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(6, 38px) 72px";
+		innerBox.style.gridTemplateColumns = "auto 160px 275px 24px auto";
+		innerBox.style.gridTemplateRows = "repeat(3, 38px) 12px repeat(5, 32px)";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
@@ -52,24 +98,99 @@ class Api extends List {
 
 			const label = document.createElement("div");
 			label.style.gridArea = `${counter} / 2`;
-			label.textContent = `${name}:`;
+			label.textContent = name;
 
-			const input = document.createElement(tag);
-			input.style.gridArea = `${counter} / 3`;
-			if (type) {
-				input.type = type;
+			let input;
+
+			if (tag === "input" && type === "toggle") {
+				const box = document.createElement("div");
+				box.style.gridArea = `${counter} / 3 / ${counter+1} / 4`;
+
+				const toggle = this.CreateToggle(".", false, box);
+				toggle.label.style.color = "transparent";
+				input = toggle.checkbox;
+
+				innerBox.append(label, box);
+			}
+			else {
+				input = document.createElement(tag);
+				input.style.gridArea = `${counter} / 3`;
+				if (type) { input.type = type; }
+
+				innerBox.append(label, input);
 			}
 
 			for (let param in properties) {
 				input[param] = properties[param];
 			}
 
-			innerBox.append(label, input);
-
-			return input;
+			return [label, input];
 		};
 
-		const nameInput = AddParameter("Name", "input", "text");
+		const [nameLabel, nameInput] = AddParameter("Name:", "input", "text");
+
+		const [keyLabel, keyInput] = AddParameter("API key:", "input", "text");
+		keyInput.setAttribute("readonly", "true");
+
+		const copyButton = document.createElement("button");
+		copyButton.style.gridArea = " 2/ 4";
+		copyButton.style.minWidth = "32px";
+		copyButton.style.width = "32px";
+		copyButton.style.backgroundImage = "url(mono/copy.svg?light)";
+		copyButton.style.backgroundSize = "24px";
+		copyButton.style.backgroundPosition = "center";
+		copyButton.style.backgroundRepeat = "no-repeat";
+		innerBox.append(copyButton);
+		
+		const [readOnlyLabel, readOnlyInput] = AddParameter("Read-only:", "input", "toggle");
+		readOnlyInput.checked = true;
+		readOnlyInput.disabled = true;
+
+		counter++;
+
+		const labelPermissions = document.createElement("div");
+		labelPermissions.textContent = "Permissions:";
+		labelPermissions.style.gridArea = `${++counter} / 2`;
+		innerBox.append(labelPermissions);
+
+		const [devicesLabel, devicesInput] = AddParameter("Devices", "input", "toggle");
+		devicesLabel.style.paddingLeft = "24px";
+		devicesLabel.style.backgroundImage = "url(mono/devices.svg)";
+		devicesLabel.style.backgroundSize = "20px";
+		devicesLabel.style.backgroundRepeat = "no-repeat";
+
+		const [usersLabel, usersInput] = AddParameter("Users", "input", "toggle");
+		usersLabel.style.paddingLeft = "24px";
+		usersLabel.style.backgroundImage = "url(mono/users.svg)";
+		usersLabel.style.backgroundSize = "20px";
+		usersLabel.style.backgroundRepeat = "no-repeat";
+
+		const [issuesLabel, issuesInput] = AddParameter("Issues", "input", "toggle");
+		issuesLabel.style.paddingLeft = "24px";
+		issuesLabel.style.backgroundImage = "url(mono/issues.svg)";
+		issuesLabel.style.backgroundSize = "20px";
+		issuesLabel.style.backgroundRepeat = "no-repeat";
+
+		const [utilitiesLabel, utilitiesInput] = AddParameter("Network utilities", "input", "toggle");
+		utilitiesLabel.style.paddingLeft = "24px";
+		utilitiesLabel.style.backgroundImage = "url(mono/portscan.svg)";
+		utilitiesLabel.style.backgroundSize = "20px";
+		utilitiesLabel.style.backgroundRepeat = "no-repeat";
+
+		keyInput.value = "asd sdf";
+
+		if (object === null) {
+			devicesInput.checked = true;
+			usersInput.checked = true;
+		}
+		else {
+			nameInput.value = object.name;
+			keyInput.value = object.key;
+			devicesInput.checked = object.devices;
+			usersInput.checked = object.users;
+			utilitiesInput.checked = object.utilities;
+			issuesInput.checked = object.issues;
+		}
 
 		setTimeout(()=>nameInput.focus(), 200);
 

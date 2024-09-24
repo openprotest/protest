@@ -325,14 +325,14 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Watchdog",          "url(mono/watchdog.svg)",     toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Reverse proxy",     "url(mono/reverseproxy.svg)", toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Issues",            "url(mono/issues.svg)",       toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",      toolsGroup, false, true, false));
+		//this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",      toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",     toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",       toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Secure shell",      "url(mono/ssh.svg)",          toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP pooling",      "url(mono/snmp.svg)",         toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         toolsGroup, false, true, false));
-		
+		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         toolsGroup, false, true, false));
+
 		const manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Settings",     "url(mono/wrench.svg)",      manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RBAC",         "url(mono/rbac.svg)",        manageGroup, false, true, false));
