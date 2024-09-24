@@ -172,7 +172,12 @@ class PassGen extends Window {
 
 		const copyButton = document.createElement("input");
 		copyButton.type = "button";
-		copyButton.value = "Copy";
+		copyButton.style.minWidth = "56px";
+		copyButton.style.width  = "56px";
+		copyButton.style.backgroundImage = "url(mono/copy.svg?light)";
+		copyButton.style.backgroundSize = "28px 28px";
+		copyButton.style.backgroundPosition = "50% 50%";
+		copyButton.style.backgroundRepeat = "no-repeat";
 		buttonsBox.appendChild(copyButton);
 
 		const stampButton = document.createElement("input");
@@ -180,7 +185,6 @@ class PassGen extends Window {
 		stampButton.value = " ";
 		buttonsBox.appendChild(stampButton);
 
-		copyButton.style.width  = "72px";
 		generateButton.style.width = "96px";
 		generateButton.style.height = copyButton.style.height = stampButton.style.height = "40px";
 		generateButton.style.margin = copyButton.style.margin = stampButton.style.margin = "2px";
@@ -265,14 +269,23 @@ class PassGen extends Window {
 		generateButton.onclick = ()=> this.Generate();
 
 		copyButton.onclick = ()=> {
-			this.passwordInput.focus();
-			this.passwordInput.select();
-			document.execCommand("copy");
+			try {
+				navigator.clipboard.writeText(this.passwordInput.value);
+
+				copyButton.style.animation = "bg-roll-up .6s linear";
+				setTimeout(()=>copyButton.style.animation = "", 600);
+			}
+			catch {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
 		};
 
 		stampButton.onclick = ()=> {
 			if (this.passwordInput.value.length < 1) return;
 			UI.PromptAgent(this, "stamp", this.passwordInput.value);
+
+			stampButton.style.animation = "bg-stamp .6s linear";
+			setTimeout(()=>stampButton.style.animation = "", 600);
 		};
 
 		this.passwordInput.oninput = ()=> {

@@ -134,11 +134,11 @@ class Api extends List {
 
 		const copyButton = document.createElement("button");
 		copyButton.style.gridArea = " 2/ 4";
-		copyButton.style.minWidth = "32px";
-		copyButton.style.width = "32px";
+		copyButton.style.minWidth = copyButton.style.width = "36px";
+		copyButton.style.height = "34px";
 		copyButton.style.backgroundImage = "url(mono/copy.svg?light)";
-		copyButton.style.backgroundSize = "24px";
-		copyButton.style.backgroundPosition = "center";
+		copyButton.style.backgroundSize = "28px";
+		copyButton.style.backgroundPosition = "50% 50%";
 		copyButton.style.backgroundRepeat = "no-repeat";
 		innerBox.append(copyButton);
 		
@@ -177,8 +177,6 @@ class Api extends List {
 		utilitiesLabel.style.backgroundSize = "20px";
 		utilitiesLabel.style.backgroundRepeat = "no-repeat";
 
-		keyInput.value = "asd sdf";
-
 		if (object === null) {
 			devicesInput.checked = true;
 			usersInput.checked = true;
@@ -193,6 +191,18 @@ class Api extends List {
 		}
 
 		setTimeout(()=>nameInput.focus(), 200);
+
+		copyButton.onclick = async ()=> {
+			try {
+				navigator.clipboard.writeText(keyInput.value);
+
+				copyButton.style.animation = "bg-roll-up .6s linear";
+				setTimeout(()=>copyButton.style.animation = "", 600);
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+		};
 
 		okButton.onclick =  async ()=> {
 			let requiredFieldMissing = false;
