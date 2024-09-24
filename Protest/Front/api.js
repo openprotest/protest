@@ -84,11 +84,11 @@ class Api extends List {
 
 		okButton.value = "Create";
 
-		innerBox.parentElement.style.maxWidth = "640px";
+		innerBox.parentElement.style.maxWidth = "680px";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 160px 275px 24px auto";
+		innerBox.style.gridTemplateColumns = "auto 160px 275px 44px 72px auto";
 		innerBox.style.gridTemplateRows = "repeat(3, 38px) 12px repeat(5, 32px)";
 		innerBox.style.alignItems = "center";
 
@@ -107,6 +107,7 @@ class Api extends List {
 				box.style.gridArea = `${counter} / 3 / ${counter+1} / 4`;
 
 				const toggle = this.CreateToggle(".", false, box);
+				toggle.label.style.minWidth = "0px";
 				toggle.label.style.color = "transparent";
 				input = toggle.checkbox;
 
@@ -133,7 +134,7 @@ class Api extends List {
 		keyInput.setAttribute("readonly", "true");
 
 		const copyButton = document.createElement("button");
-		copyButton.style.gridArea = " 2/ 4";
+		copyButton.style.gridArea = "2 / 4";
 		copyButton.style.minWidth = copyButton.style.width = "36px";
 		copyButton.style.height = "34px";
 		copyButton.style.backgroundImage = "url(mono/copy.svg?light)";
@@ -141,7 +142,13 @@ class Api extends List {
 		copyButton.style.backgroundPosition = "50% 50%";
 		copyButton.style.backgroundRepeat = "no-repeat";
 		innerBox.append(copyButton);
-		
+
+		const renewButton = document.createElement("button");
+		renewButton.textContent = "Renew";
+		renewButton.style.minWidth = renewButton.style.width = "64px";
+		renewButton.style.gridArea = " 2 / 5";
+		innerBox.append(renewButton);
+
 		const [readOnlyLabel, readOnlyInput] = AddParameter("Read-only:", "input", "toggle");
 		readOnlyInput.checked = true;
 		readOnlyInput.disabled = true;
@@ -153,23 +160,23 @@ class Api extends List {
 		labelPermissions.style.gridArea = `${++counter} / 2`;
 		innerBox.append(labelPermissions);
 
-		const [devicesLabel, devicesInput] = AddParameter("Devices", "input", "toggle");
-		devicesLabel.style.paddingLeft = "24px";
-		devicesLabel.style.backgroundImage = "url(mono/devices.svg)";
-		devicesLabel.style.backgroundSize = "20px";
-		devicesLabel.style.backgroundRepeat = "no-repeat";
-
 		const [usersLabel, usersInput] = AddParameter("Users", "input", "toggle");
 		usersLabel.style.paddingLeft = "24px";
 		usersLabel.style.backgroundImage = "url(mono/users.svg)";
 		usersLabel.style.backgroundSize = "20px";
 		usersLabel.style.backgroundRepeat = "no-repeat";
 
-		const [issuesLabel, issuesInput] = AddParameter("Issues", "input", "toggle");
-		issuesLabel.style.paddingLeft = "24px";
-		issuesLabel.style.backgroundImage = "url(mono/issues.svg)";
-		issuesLabel.style.backgroundSize = "20px";
-		issuesLabel.style.backgroundRepeat = "no-repeat";
+		const [devicesLabel, devicesInput] = AddParameter("Devices", "input", "toggle");
+		devicesLabel.style.paddingLeft = "24px";
+		devicesLabel.style.backgroundImage = "url(mono/devices.svg)";
+		devicesLabel.style.backgroundSize = "20px";
+		devicesLabel.style.backgroundRepeat = "no-repeat";
+
+		const [lifelineLabel, lifelineInput] = AddParameter("Lifeline", "input", "toggle");
+		lifelineLabel.style.paddingLeft = "24px";
+		lifelineLabel.style.backgroundImage = "url(mono/lifeline.svg)";
+		lifelineLabel.style.backgroundSize = "20px";
+		lifelineLabel.style.backgroundRepeat = "no-repeat";
 
 		const [utilitiesLabel, utilitiesInput] = AddParameter("Network utilities", "input", "toggle");
 		utilitiesLabel.style.paddingLeft = "24px";
@@ -196,8 +203,10 @@ class Api extends List {
 			try {
 				navigator.clipboard.writeText(keyInput.value);
 
-				copyButton.style.animation = "bg-roll-up .6s linear";
-				setTimeout(()=>copyButton.style.animation = "", 600);
+				if (copyButton.style.animation === "") {
+					copyButton.style.animation = "bg-roll-up .6s linear";
+					setTimeout(()=>copyButton.style.animation = "", 600);
+				}
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");

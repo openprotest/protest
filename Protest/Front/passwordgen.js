@@ -272,8 +272,10 @@ class PassGen extends Window {
 			try {
 				navigator.clipboard.writeText(this.passwordInput.value);
 
-				copyButton.style.animation = "bg-roll-up .6s linear";
-				setTimeout(()=>copyButton.style.animation = "", 600);
+				if (copyButton.style.animation === "") {
+					copyButton.style.animation = "bg-roll-up .6s linear";
+					setTimeout(()=>copyButton.style.animation = "", 600);
+				}
 			}
 			catch {
 				this.ConfirmBox(ex, true, "mono/error.svg");
@@ -284,8 +286,10 @@ class PassGen extends Window {
 			if (this.passwordInput.value.length < 1) return;
 			UI.PromptAgent(this, "stamp", this.passwordInput.value);
 
-			stampButton.style.animation = "bg-stamp .6s linear";
-			setTimeout(()=>stampButton.style.animation = "", 600);
+			if (stampButton.style.animation === "") {
+				stampButton.style.animation = "bg-stamp .6s linear";
+				setTimeout(()=>stampButton.style.animation = "", 600);
+			}
 		};
 
 		this.passwordInput.oninput = ()=> {

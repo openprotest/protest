@@ -265,7 +265,7 @@ class View extends Window {
 			stampButton.style.minWidth = "40px";
 			stampButton.style.height = "32px";
 			stampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
-			stampButton.style.backgroundSize = "28px 28px";
+			stampButton.style.backgroundSize = "24px 24px";
 			stampButton.style.backgroundPosition = "center center";
 			stampButton.style.backgroundRepeat = "no-repeat";
 
@@ -300,6 +300,11 @@ class View extends Window {
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const password = await response.text();
 					UI.PromptAgent(this, "stamp", password);
+
+					if (stampButton.style.animation === "") {
+						stampButton.style.animation = "bg-stamp .6s linear";
+						setTimeout(()=>stampButton.style.animation = "", 600);
+					}
 				}
 				catch (ex) {
 					this.ConfirmBox(ex, true, "mono/error.svg");
