@@ -7,6 +7,7 @@ using System.Net;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 
 namespace Protest.Tools;
 
@@ -177,29 +178,17 @@ public static class Cert {
 
         FileInfo[] files = directory.GetFiles();
 
-        StringBuilder builder = new StringBuilder();
-        builder.Append("{\"data\":{");
-
-        bool first = true;
-        foreach (FileInfo file in files) {
-            if (!first) builder.Append(',');
-
-            builder.Append($"\"{Data.EscapeJsonText(file.Name)}\":{{");
-            builder.Append($"\"name\":{{\"v\":\"{Data.EscapeJsonText(file.Name)}\"}},");
-            builder.Append($"\"date\":{{\"v\":{file.CreationTimeUtc.Ticks}}},");
-            builder.Append($"\"size\":{{\"v\":{file.Length}}}");
-            builder.Append('}');
-
-            first = false;
-        }
-
-        builder.Append("},");
-
-        builder.Append($"\"length\":{files.Length}");
-
-        builder.Append('}');
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
+        return JsonSerializer.SerializeToUtf8Bytes(new {
+            data = files.ToDictionary(
+                file => Data.EscapeJsonText(file.Name),
+                file => new {
+                    name = new { v = Data.EscapeJsonText(file.Name) },
+                    date = new { v = file.CreationTimeUtc.Ticks },
+                    size = new { v = file.Length }
+                }
+            ),
+            length = files.Length
+        });
     }
 
     internal static byte[] Delete(Dictionary<string, string> parameters, string origin) {

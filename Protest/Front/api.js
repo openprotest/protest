@@ -8,8 +8,6 @@ class Api extends List {
 		this.SetTitle("API links");
 		this.SetIcon("mono/carabiner.svg");
 
-		this.apiLinks = [];
-
 		this.InitializeComponents();
 		this.UpdateAuthorization();
 
@@ -77,7 +75,6 @@ class Api extends List {
 		graph.appendChild(this.canvas);
 
 		this.ctx = this.canvas.getContext("2d");
-
 	}
 
 	ListLinks() {
@@ -118,10 +115,21 @@ class Api extends List {
 	}
 
 	async SaveLinks() {
+		const array = [];
+		for (let key in this.link.data) {
+			array.push({
+				guid:        this.link.data[key].guid.v,
+				name:        this.link.data[key].name.v,
+				key:         this.link.data[key].key.v,
+				readonly:    true,
+				permissions: this.link.data[key].permissions.v,
+			});
+		}
+		
 		try {
 			const response = await fetch("api/save", {
 				method: "POST",
-				body: JSON.stringify(this.apiLinks)
+				body: JSON.stringify(array)
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -273,11 +281,6 @@ class Api extends List {
 			keyInput.value = object.key.v;
 
 			const permissions = object.permissions.v & 0xff;
-
-			console.log(object.permissions.v);
-			console.log(permissions);
-			console.log(permissions & 0x01, permissions & 0x02, permissions & 0x04, permissions & 0x08);
-
 			usersInput.checked     = permissions & 0x01;
 			devicesInput.checked   = permissions & 0x02;
 			lifelineInput.checked  = permissions & 0x04;
@@ -302,57 +305,54 @@ class Api extends List {
 
 			if (requiredFieldMissing) return;
 
-			let index = this.apiLinks.findIndex(link => link.guid === this.args.select);
-
 			let permissions = 0;
 			if (usersInput.checked)     permissions |= 0x01;
 			if (devicesInput.checked)   permissions |= 0x02;
 			if (lifelineInput.checked)  permissions |= 0x04;
 			if (utilitiesInput.checked) permissions |= 0x80;
 
-			if (index < 0) {
-				this.apiLinks.push({
-					guid: "00000000-0000-0000-0000-000000000000",
-					name: nameInput.value,
-					key: keyInput.value,
-					readonly: true,
-					permissions: permissions
-				});
+
+			if (object === null) {
+				const guid = UI.GenerateUuid();
+				this.link.data[guid] ={
+					guid: {v:guid},
+					name: {v:nameInput.value},
+					key: {v:keyInput.value},
+					readonly: {v:true},
+					permissions: {v:permissions}
+				};
 			}
 			else {
-				this.apiLinks[index] = {
-					guid: "00000000-0000-0000-0000-000000000000",
-					name: nameInput.value,
-					key: keyInput.value,
-					readonly: true,
-					permissions: permissions
+				this.link.data[object.guid.v] = {
+					guid: {v:object.guid.v},
+					name: {v:nameInput.value},
+					key: {v:keyInput.value},
+					readonly: {v:true},
+					permissions: {v:permissions}
 				};
 			}
 
 			await this.SaveLinks();
 			dialog.Close();
+			this.ListLinks();
 		};
 	}
 
 	async Delete() {
 		if (this.args.select === null) return;
 
-		let index = this.apiLinks.findIndex(link => link.guid === this.args.select);
+		let index = this.link.findIndex(link => link.guid === this.args.select);
 		if (index < 0) return;
 
 		this.ConfirmBox("Are you sure you want delete this API link?").addEventListener("click", async()=> {
-			this.apiLinks.splice(index, 1);
+			this.link.splice(index, 1);
 			this.SaveLinks();
 			this.list.removeChild(this.list.childNodes[index]);
+			this.ListLinks();
 		});
 	}
 
 	InflateElement(element, entry) { //overrides
-		element.style.backgroundImage = "url(mono/carabiner.svg)";
-		element.style.backgroundSize = "24px 24px";
-		element.style.backgroundPosition = "4px 4px";
-		element.style.backgroundRepeat = "no-repeat";
-
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
@@ -362,8 +362,8 @@ class Api extends List {
 
 			if (i === 0) {
 				newAttr.style.top = "5px";
-				newAttr.style.left = "36px";
-				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
+				newAttr.style.left = "4px";
+				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 4px)`;
 				newAttr.style.whiteSpace = "nowrap";
 				newAttr.style.overflow = "hidden";
 				newAttr.style.textOverflow = "ellipsis";
@@ -377,7 +377,7 @@ class Api extends List {
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
 
-			this.args.select = entry.name.v;
+			this.args.select = entry.guid.v;
 
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";

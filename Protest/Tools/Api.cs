@@ -78,31 +78,21 @@ internal static class Api {
     internal static byte[] List() {
         Link[] links = Load();
 
-        StringBuilder builder = new StringBuilder();
-        builder.Append("{\"data\":{");
+        var data = new {
+            data = links.ToDictionary(
+                link => link.guid.ToString(),
+                link => new {
+                    guid        = new { v = link.guid },
+                    name        = new { v = Data.EscapeJsonText(link.name) },
+                    key         = new { v = Data.EscapeJsonText(link.apikey) },
+                    @readonly   = new { v = link.readOnly },
+                    permissions = new { v = link.permissions }
+                }
+            ),
+            length = links.Length
+        };
 
-        bool first = true;
-
-        for (int i = 0; i < links.Length; i++) {
-            if (!first) { builder.Append(','); }
-
-            builder.Append($"\"{Data.EscapeJsonText(links[i].guid.ToString())}\":{{");
-            builder.Append($"\"name\":{{\"v\":\"{Data.EscapeJsonText(links[i].name)}\"}},");
-            builder.Append($"\"key\":{{\"v\":\"{Data.EscapeJsonText(links[i].apikey)}\"}},");
-            builder.Append($"\"readonly\":{{\"v\":{links[i].readOnly.ToString().ToLower()}}},");
-            builder.Append($"\"permissions\":{{\"v\":{links[i].permissions}}}");
-            builder.Append('}');
-
-            first = false;
-        }
-
-        builder.Append("},");
-
-        builder.Append($"\"length\":{links.Length}");
-
-        builder.Append('}');
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
+        return JsonSerializer.SerializeToUtf8Bytes(data);
     }
 
     internal static byte[] Save(HttpListenerContext ctx, string origin) {
