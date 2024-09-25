@@ -8,8 +8,12 @@ class Api extends List {
 		this.SetTitle("API links");
 		this.SetIcon("mono/carabiner.svg");
 
+		this.apiLinks = [];
+
 		this.InitializeComponents();
 		this.UpdateAuthorization();
+
+		this.LoadLinks();
 	}
 
 	UpdateAuthorization() { //overrides
@@ -76,13 +80,67 @@ class Api extends List {
 
 	}
 
+	ListLinks() {
+		this.list.textContent = "";
+
+		for (let key in this.link.data) {
+			const element =  document.createElement("div");
+			element.id = key;
+			element.className = "list-element";
+			this.list.appendChild(element);
+
+			this.InflateElement(element, this.link.data[key]);
+
+			if (this.args.select && this.args.select === key) {
+				this.selected = element;
+				element.style.backgroundColor = "var(--clr-select)";
+			}
+		}
+	}
+
+	async LoadLinks() {
+		try {
+			const response = await fetch("api/list");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.link = json;
+			this.list.textContent = "";
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+
+		this.ListLinks();
+	}
+
+	async SaveLinks() {
+		try {
+			const response = await fetch("api/save", {
+				method: "POST",
+				body: JSON.stringify(this.apiLinks)
+			});
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
 	EditDialog(object=null) {
 		const dialog = this.DialogBox("400px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
 
-		okButton.value = "Create";
+		okButton.value = object === null ? "Create" : "Save";
 
 		innerBox.parentElement.style.maxWidth = "680px";
 
@@ -101,7 +159,6 @@ class Api extends List {
 			label.textContent = name;
 
 			let input;
-
 			if (tag === "input" && type === "toggle") {
 				const box = document.createElement("div");
 				box.style.gridArea = `${counter} / 3 / ${counter+1} / 4`;
@@ -184,22 +241,9 @@ class Api extends List {
 		utilitiesLabel.style.backgroundSize = "20px";
 		utilitiesLabel.style.backgroundRepeat = "no-repeat";
 
-		if (object === null) {
-			devicesInput.checked = true;
-			usersInput.checked = true;
-		}
-		else {
-			nameInput.value = object.name;
-			keyInput.value = object.key;
-			devicesInput.checked = object.devices;
-			usersInput.checked = object.users;
-			utilitiesInput.checked = object.utilities;
-			issuesInput.checked = object.issues;
-		}
-
 		setTimeout(()=>nameInput.focus(), 200);
 
-		copyButton.onclick = async ()=> {
+		copyButton.onclick = ()=> {
 			try {
 				navigator.clipboard.writeText(keyInput.value);
 
@@ -212,6 +256,33 @@ class Api extends List {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		};
+
+		renewButton.onclick = ()=> {
+			const array = new Uint8Array(48);
+			crypto.getRandomValues(array);
+			keyInput.value = Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("");
+		};
+
+		if (object === null) {
+			devicesInput.checked = true;
+			usersInput.checked = true;
+			renewButton.onclick();
+		}
+		else {
+			nameInput.value = object.name.v;
+			keyInput.value = object.key.v;
+
+			const permissions = object.permissions.v & 0xff;
+
+			console.log(object.permissions.v);
+			console.log(permissions);
+			console.log(permissions & 0x01, permissions & 0x02, permissions & 0x04, permissions & 0x08);
+
+			usersInput.checked     = permissions & 0x01;
+			devicesInput.checked   = permissions & 0x02;
+			lifelineInput.checked  = permissions & 0x04;
+			utilitiesInput.checked = permissions & 0x80;
+		}
 
 		okButton.onclick =  async ()=> {
 			let requiredFieldMissing = false;
@@ -231,27 +302,34 @@ class Api extends List {
 
 			if (requiredFieldMissing) return;
 
-			let body = `name=${nameInput.value}\n`;
-			body += `guid=00000000-0000-0000-0000-000000000000\n`;
+			let index = this.apiLinks.findIndex(link => link.guid === this.args.select);
 
-			try {
-				const response = await fetch("api/create", {
-					method: "POST",
-					body: body
+			let permissions = 0;
+			if (usersInput.checked)     permissions |= 0x01;
+			if (devicesInput.checked)   permissions |= 0x02;
+			if (lifelineInput.checked)  permissions |= 0x04;
+			if (utilitiesInput.checked) permissions |= 0x80;
+
+			if (index < 0) {
+				this.apiLinks.push({
+					guid: "00000000-0000-0000-0000-000000000000",
+					name: nameInput.value,
+					key: keyInput.value,
+					readonly: true,
+					permissions: permissions
 				});
-
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-				const json = await response.json();
-				if (json.error) throw (json.error);
-
-				this.link = json;
-				this.ListCerts();
 			}
-			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg");
+			else {
+				this.apiLinks[index] = {
+					guid: "00000000-0000-0000-0000-000000000000",
+					name: nameInput.value,
+					key: keyInput.value,
+					readonly: true,
+					permissions: permissions
+				};
 			}
 
+			await this.SaveLinks();
 			dialog.Close();
 		};
 	}
@@ -259,23 +337,54 @@ class Api extends List {
 	async Delete() {
 		if (this.args.select === null) return;
 
-		this.ConfirmBox("Are you sure you want delete this link?").addEventListener("click", async()=> {
-			try {
-				const response = await fetch(`api/delete?name=${encodeURIComponent(this.args.select)}`);
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+		let index = this.apiLinks.findIndex(link => link.guid === this.args.select);
+		if (index < 0) return;
 
-				const json = await response.json();
-				if (json.error) throw(json.error);
-
-				this.selected = null;
-				this.args.select = null;
-
-				this.link = json;
-				this.ListCerts();
-			}
-			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg")
-			}
+		this.ConfirmBox("Are you sure you want delete this API link?").addEventListener("click", async()=> {
+			this.apiLinks.splice(index, 1);
+			this.SaveLinks();
+			this.list.removeChild(this.list.childNodes[index]);
 		});
+	}
+
+	InflateElement(element, entry) { //overrides
+		element.style.backgroundImage = "url(mono/carabiner.svg)";
+		element.style.backgroundSize = "24px 24px";
+		element.style.backgroundPosition = "4px 4px";
+		element.style.backgroundRepeat = "no-repeat";
+
+		for (let i = 0; i < this.columnsElements.length; i++) {
+			if (!(this.columnsElements[i].textContent in entry)) continue;
+
+			const newAttr = document.createElement("div");
+			newAttr.textContent = entry[this.columnsElements[i].textContent].v
+			element.appendChild(newAttr);
+
+			if (i === 0) {
+				newAttr.style.top = "5px";
+				newAttr.style.left = "36px";
+				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
+				newAttr.style.whiteSpace = "nowrap";
+				newAttr.style.overflow = "hidden";
+				newAttr.style.textOverflow = "ellipsis";
+			}
+			else {
+				newAttr.style.left = this.columnsElements[i].style.left;
+				newAttr.style.width = this.columnsElements[i].style.width;
+			}
+		}
+
+		element.onclick = ()=> {
+			if (this.selected) this.selected.style.backgroundColor = "";
+
+			this.args.select = entry.name.v;
+
+			this.selected = element;
+			element.style.backgroundColor = "var(--clr-select)";
+		};
+
+		element.ondblclick = ()=> {
+			this.EditDialog(entry);
+		};
 	}
 }

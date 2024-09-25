@@ -40,14 +40,14 @@ internal static class SmtpProfiles {
     }
 
     public static Profile[] Load() {
-        if (!File.Exists(Data.SMTP_PROFILES)) {
+        if (!File.Exists(Data.FILE_SMTP_PROFILES)) {
             return Array.Empty<Profile>();
         }
 
         try {
             byte[] bytes;
             lock (mutex) {
-                bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
+                bytes = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
             }
 
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
@@ -70,7 +70,7 @@ internal static class SmtpProfiles {
         }
     }
 
-    public static byte[] Save(HttpListenerContext ctx) {
+    public static byte[] Save(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
@@ -78,7 +78,7 @@ internal static class SmtpProfiles {
         try {
             byte[] bytes;
             lock (mutex) {
-                bytes = File.ReadAllBytes(Data.SMTP_PROFILES);
+                bytes = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
             }
 
             oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, smtpProfileSerializerOptionsWithPasswords);
@@ -113,8 +113,10 @@ internal static class SmtpProfiles {
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, smtpProfileSerializerOptionsWithPasswords);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             lock (mutex) {
-                File.WriteAllBytes(Data.SMTP_PROFILES, cipher);
+                File.WriteAllBytes(Data.FILE_SMTP_PROFILES, cipher);
             }
+
+            Logger.Action(origin, $"Modify SMTP profiles");
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -215,7 +217,7 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
         List<SmtpProfiles.Profile> profiles = new List<SmtpProfiles.Profile>();
 
         if (reader.TokenType != JsonTokenType.StartArray) {
-            throw new JsonException("Expected start of an array.");
+            throw new JsonException();
         }
 
         while (reader.Read()) {
@@ -236,14 +238,14 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
                         reader.Read();
 
                         switch (propertyName) {
-                        case "provider"    : profile.provider   = (SmtpProfiles.Provider)reader.GetByte(); break;
-                        case "server"      : profile.server     = reader.GetString(); break;
-                        case "port"        : profile.port       = reader.GetInt32(); break;
-                        case "sender"      : profile.sender     = reader.GetString(); break;
-                        case "username"    : profile.username   = reader.GetString(); break;
-                        case "password"    : profile.password   = hidePasswords ? String.Empty : reader.GetString(); break;
-                        case "ssl"         : profile.ssl        = reader.GetBoolean(); break;
-                        case "guid"        : profile.guid       = reader.GetGuid(); break;
+                        case "provider" : profile.provider   = (SmtpProfiles.Provider)reader.GetByte(); break;
+                        case "server"   : profile.server     = reader.GetString(); break;
+                        case "port"     : profile.port       = reader.GetInt32(); break;
+                        case "sender"   : profile.sender     = reader.GetString(); break;
+                        case "username" : profile.username   = reader.GetString(); break;
+                        case "password" : profile.password   = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "ssl"      : profile.ssl        = reader.GetBoolean(); break;
+                        case "guid"     : profile.guid       = reader.GetGuid(); break;
                         default: reader.Skip(); break;
                         }
                     }
@@ -257,14 +259,14 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
     }
 
     public override void Write(Utf8JsonWriter writer, SmtpProfiles.Profile[] value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _provider   = "server"u8;
-        ReadOnlySpan<byte> _server     = "server"u8;
-        ReadOnlySpan<byte> _port       = "port"u8;
-        ReadOnlySpan<byte> _sender     = "sender"u8;
-        ReadOnlySpan<byte> _username   = "username"u8;
-        ReadOnlySpan<byte> _password   = "password"u8;
-        ReadOnlySpan<byte> _ssl        = "ssl"u8;
-        ReadOnlySpan<byte> _guid       = "guid"u8;
+        ReadOnlySpan<byte> _provider = "server"u8;
+        ReadOnlySpan<byte> _server   = "server"u8;
+        ReadOnlySpan<byte> _port     = "port"u8;
+        ReadOnlySpan<byte> _sender   = "sender"u8;
+        ReadOnlySpan<byte> _username = "username"u8;
+        ReadOnlySpan<byte> _password = "password"u8;
+        ReadOnlySpan<byte> _ssl      = "ssl"u8;
+        ReadOnlySpan<byte> _guid     = "guid"u8;
 
         writer.WriteStartArray();
 

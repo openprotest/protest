@@ -324,9 +324,9 @@ public static class PasswordStrength {
         string password = null;
         bool ssl = true;
 
-        if (!File.Exists(Data.SMTP_PROFILES)) return;
+        if (!File.Exists(Data.FILE_SMTP_PROFILES)) return;
         try {
-            byte[] json = File.ReadAllBytes(Data.SMTP_PROFILES);
+            byte[] json = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
 
             SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, emailProfilesSerializerOptions);
 

@@ -35,7 +35,7 @@ internal static class DhcpRange {
         }
     }
 
-    public static byte[] SaveRange(HttpListenerContext ctx) {
+    public static byte[] SaveRange(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
@@ -44,6 +44,8 @@ internal static class DhcpRange {
         }
 
         KeepAlive.Broadcast($"{{\"action\":\"dhcp-range\",\"list\":{payload}}}", "/config/dhcprange/list");
+
+        Logger.Action(origin, $"Modify DHCP range list");
 
         return Data.CODE_OK.Array;
     }

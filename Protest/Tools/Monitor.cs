@@ -450,7 +450,7 @@ file sealed class AnswerJsonConverter : JsonConverter<Monitor.Answer> {
         Monitor.Answer answer = new Monitor.Answer();
 
         if (reader.TokenType != JsonTokenType.StartObject) {
-            throw new JsonException("Expected start of object");
+            throw new JsonException();
         }
 
         reader.Read();

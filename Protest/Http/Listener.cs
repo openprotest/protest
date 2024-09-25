@@ -141,15 +141,15 @@ public sealed class Listener {
         { "/config/backup/download",   (ctx, parameters, username) => Backup.Download(ctx, parameters, username) },
 
         { "/config/zones/list",        (ctx, parameters, username) => Tools.Zones.ListZones() },
-        { "/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx) },
+        { "/config/zones/save",        (ctx, parameters, username) => Tools.Zones.SaveZones(ctx, username) },
         { "/config/dhcprange/list",    (ctx, parameters, username) => Tools.DhcpRange.ListRange() },
-        { "/config/dhcprange/save",    (ctx, parameters, username) => Tools.DhcpRange.SaveRange(ctx) },
+        { "/config/dhcprange/save",    (ctx, parameters, username) => Tools.DhcpRange.SaveRange(ctx, username) },
 
         { "/config/smtpprofiles/list", (ctx, parameters, username) => Tools.SmtpProfiles.List() },
-        { "/config/smtpprofiles/save", (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx) },
+        { "/config/smtpprofiles/save", (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx, username) },
         { "/config/smtpprofiles/test", (ctx, parameters, username) => Tools.SmtpProfiles.SendTest(parameters) },
         { "/config/snmpprofiles/list", (ctx, parameters, username) => Tools.SnmpProfiles.List() },
-        { "/config/snmpprofiles/save", (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx) },
+        { "/config/snmpprofiles/save", (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx, username) },
 
         { "/config/cert/list",         (ctx, parameters, username) => Tools.Cert.List() },
         { "/config/cert/upload",       (ctx, parameters, username) => Tools.Cert.Upload(ctx, username) },
@@ -163,8 +163,7 @@ public sealed class Listener {
         { "/config/upload/tor",        (ctx, parameters, username) => Update.TorFormDataHandler(ctx) },
 
         { "/api/list",                 (ctx, parameters, username) => Tools.Api.List() },
-        { "/api/create",               (ctx, parameters, username) => Tools.Api.Create(parameters, username) },
-        { "/api/delete",               (ctx, parameters, username) => Tools.Api.Delete(parameters, username) },
+        { "/api/save",                 (ctx, parameters, username) => Tools.Api.Save(ctx, username) },
 
         { "/log/list",                 (ctx, parameters, username) => Logger.List(parameters) },
     };

@@ -908,7 +908,7 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
 file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchdog.Notification>> {
     public override ConcurrentBag<Watchdog.Notification> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType != JsonTokenType.StartArray) {
-            throw new JsonException("Expected StartArray token");
+            throw new JsonException();
         }
 
         ConcurrentBag<Watchdog.Notification> bag = new ConcurrentBag<Watchdog.Notification>();
@@ -919,7 +919,7 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
             }
 
             if (reader.TokenType != JsonTokenType.StartObject) {
-                throw new JsonException($"Unexpected token type: {reader.TokenType}");
+                throw new JsonException();
             }
 
             Watchdog.Notification notification = ReadNotification(ref reader, options);
@@ -939,7 +939,7 @@ file sealed class NotificationJsonConverter : JsonConverter<ConcurrentBag<Watchd
             }
 
             if (reader.TokenType != JsonTokenType.PropertyName) {
-                throw new JsonException($"Unexpected token type: {reader.TokenType}");
+                throw new JsonException();
             }
 
             string propertyName = reader.GetString();

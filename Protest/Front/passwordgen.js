@@ -423,17 +423,16 @@ class PassGen extends Window {
 		}
 
 		let word = "";
-		for (let i = 0; i < this.lengthRange.value; i++) {
+		for (let i=0; i<this.lengthRange.value; i++) {
 			let dice = Math.round(Math.random() * (pool.length + 1));
 			if (dice < pool.length) {
 				word += pool[dice][Math.round(Math.random() * (pool[dice].length - 1))];
 				flag[dice] = true;
-
 			}
 			else {
 				let ok = false;
 
-				for (let j = 0; j < flag.length; j++)
+				for (let j=0; j<flag.length; j++)
 					if (!flag[j]) {
 						word += pool[j][Math.round(Math.random() * (pool[j].length - 1))];
 						flag[j] = true;
@@ -493,18 +492,18 @@ class PassGen extends Window {
 		let seconds = Math.round(ttc);
 
 		let etc = ""; //Estimated Time to Crack
-		if (eon != 0)     etc  = eon === 1     ? `1 eon, `    : `${eon} eons, `;
-		if (years != 0)   etc += years === 1   ? `1 year, `   : `${years} years, `;
-		if (days != 0)    etc += days === 1    ? `1 day, `    : `${days} days, `;
-		if (hours != 0)   etc += hours === 1   ? `1 hour, `   : `${hours} hours, `;
-		if (minutes != 0) etc += minutes === 1 ? `1 minute, ` : `${minutes} minutes, `;
+		if (eon != 0)     etc  = eon === 1     ? "1 eon, "    : `${eon} eons, `;
+		if (years != 0)   etc += years === 1   ? "1 year, "   : `${years} years, `;
+		if (days != 0)    etc += days === 1    ? "1 day, "    : `${days} days, `;
+		if (hours != 0)   etc += hours === 1   ? "1 hour, "   : `${hours} hours, `;
+		if (minutes != 0) etc += minutes === 1 ? "1 minute, " : `${minutes} minutes, `;
 
 		if (seconds != 0) {
 			if (etc.length === 0) {
-				etc += seconds === 1 ? `a second` : `${seconds} seconds`;
+				etc += seconds === 1 ? "a second" : `${seconds} seconds`;
 			}
 			else {
-				etc += seconds === 1 ? `and 1 second` : `and ${seconds} seconds`;
+				etc += seconds === 1 ? "and 1 second" : `and ${seconds} seconds`;
 			}
 		}
 

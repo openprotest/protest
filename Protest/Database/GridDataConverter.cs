@@ -14,7 +14,7 @@ internal sealed class GridDataConverter : JsonConverter<Dictionary<string, Concu
 
     public override Dictionary<string, ConcurrentDictionary<string, Database.Attribute>> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType != JsonTokenType.StartObject) {
-            throw new JsonException("Expected the start of an object.");
+            throw new JsonException();
         }
 
         Dictionary<string, ConcurrentDictionary<string, Database.Attribute>> mods = new Dictionary<string, ConcurrentDictionary<string, Database.Attribute>>();
@@ -25,7 +25,7 @@ internal sealed class GridDataConverter : JsonConverter<Dictionary<string, Concu
             }
 
             if (reader.TokenType != JsonTokenType.PropertyName) {
-                throw new JsonException("Expected a property name.");
+                throw new JsonException();
             }
 
             string file = reader.GetString();
@@ -38,7 +38,7 @@ internal sealed class GridDataConverter : JsonConverter<Dictionary<string, Concu
                 }
 
                 if (reader.TokenType != JsonTokenType.PropertyName) {
-                    throw new JsonException("Expected a property name.");
+                    throw new JsonException();
                 }
 
                 string key = reader.GetString();

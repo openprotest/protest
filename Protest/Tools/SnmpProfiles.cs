@@ -69,7 +69,7 @@ internal static class SnmpProfiles {
     }
 
     public static Profile[] Load() {
-        if (!File.Exists(Data.SNMP_PROFILES)) {
+        if (!File.Exists(Data.FILE_SNMP_PROFILES)) {
             Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(DEFAULT_PROFILE, snmpProfilesSerializerOptionsWithPasswords);
             return profiles;
         }
@@ -77,7 +77,7 @@ internal static class SnmpProfiles {
         try {
             byte[] bytes;
             lock (mutex) {
-                bytes = File.ReadAllBytes(Data.SNMP_PROFILES);
+                bytes = File.ReadAllBytes(Data.FILE_SNMP_PROFILES);
             }
 
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
@@ -100,7 +100,7 @@ internal static class SnmpProfiles {
         }
     }
 
-    public static byte[] Save(HttpListenerContext ctx) {
+    public static byte[] Save(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
@@ -108,7 +108,7 @@ internal static class SnmpProfiles {
         try {
             byte[] bytes;
             lock (mutex) {
-                bytes = File.ReadAllBytes(Data.SNMP_PROFILES);
+                bytes = File.ReadAllBytes(Data.FILE_SNMP_PROFILES);
             }
 
             oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, snmpProfilesSerializerOptionsWithPasswords);
@@ -145,8 +145,10 @@ internal static class SnmpProfiles {
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, snmpProfilesSerializerOptionsWithPasswords);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             lock (mutex) {
-                File.WriteAllBytes(Data.SNMP_PROFILES, cipher);
+                File.WriteAllBytes(Data.FILE_SNMP_PROFILES, cipher);
             }
+
+            Logger.Action(origin, $"Modify SNMP profiles");
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -195,7 +197,7 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
         List<SnmpProfiles.Profile> profiles = new List<SnmpProfiles.Profile>();
 
         if (reader.TokenType != JsonTokenType.StartArray) {
-            throw new JsonException("Expected start of an array.");
+            throw new JsonException();
         }
 
         while (reader.Read()) {

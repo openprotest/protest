@@ -249,7 +249,7 @@ file sealed class DeviceJsonConverter : JsonConverter<Ssdp.SsdpDevice> {
         Ssdp.SsdpDevice device = new Ssdp.SsdpDevice();
 
         if (reader.TokenType != JsonTokenType.StartObject) {
-            throw new JsonException("Expected start of object");
+            throw new JsonException();
         }
 
         while (reader.Read()) {

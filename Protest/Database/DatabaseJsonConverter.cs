@@ -24,7 +24,7 @@ public sealed class DatabaseJsonConverter : JsonConverter<Database> {
             }
 
             if (reader.TokenType != JsonTokenType.PropertyName) {
-                throw new JsonException("Expected property name");
+                throw new JsonException();
             }
 
             string propertyName = reader.GetString();

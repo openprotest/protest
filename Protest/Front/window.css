@@ -701,7 +701,7 @@
 	100% {
 		background: radial-gradient(circle, var(--clr-accent) 0%, transparent 100%);
 		background-repeat: no-repeat;
-		background-position-x: +400px;
+		background-position-x: 400px;
 	}
 }
 
