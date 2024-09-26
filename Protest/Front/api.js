@@ -22,7 +22,7 @@ class Api extends List {
 	}
 
 	InitializeComponents() {
-		const columns = ["name", "calls", "data"];
+		const columns = ["name", "key"];
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
 
@@ -268,7 +268,7 @@ class Api extends List {
 		renewButton.onclick = ()=> {
 			const array = new Uint8Array(48);
 			crypto.getRandomValues(array);
-			keyInput.value = Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("");
+			keyInput.value = Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
 		};
 
 		if (object === null) {
@@ -340,16 +340,20 @@ class Api extends List {
 
 	async Delete() {
 		if (this.args.select === null) return;
+		
+		if (this.args.select in this.link.data) {
+			this.ConfirmBox("Are you sure you want delete this API link?").addEventListener("click", async()=> {
+				delete this.link.data[this.args.select];
+				this.SaveLinks();
 
-		let index = this.link.findIndex(link => link.guid === this.args.select);
-		if (index < 0) return;
+				if (this.selected) {
+					this.list.removeChild(this.selected);
+				}
 
-		this.ConfirmBox("Are you sure you want delete this API link?").addEventListener("click", async()=> {
-			this.link.splice(index, 1);
-			this.SaveLinks();
-			this.list.removeChild(this.list.childNodes[index]);
-			this.ListLinks();
-		});
+				this.args.select = null;
+				this.selected = null;
+			});
+		}
 	}
 
 	InflateElement(element, entry) { //overrides
@@ -357,8 +361,18 @@ class Api extends List {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
 			const newAttr = document.createElement("div");
-			newAttr.textContent = entry[this.columnsElements[i].textContent].v
+			
 			element.appendChild(newAttr);
+
+			switch (this.columnsElements[i].textContent) {
+			case "key":
+				newAttr.textContent = entry["key"].v.substring(0, 6);
+				break;
+
+			default:
+				newAttr.textContent = entry[this.columnsElements[i].textContent].v;
+				break;
+			}
 
 			if (i === 0) {
 				newAttr.style.top = "5px";
