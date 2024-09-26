@@ -143,7 +143,7 @@ class Api extends List {
 	}
 
 	EditDialog(object=null) {
-		const dialog = this.DialogBox("400px");
+		const dialog = this.DialogBox("360px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -155,7 +155,7 @@ class Api extends List {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 160px 275px 44px 72px auto";
-		innerBox.style.gridTemplateRows = "repeat(3, 38px) 12px repeat(5, 32px)";
+		innerBox.style.gridTemplateRows = "repeat(3, 38px) 12px repeat(4, 32px)";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
@@ -242,12 +242,7 @@ class Api extends List {
 		lifelineLabel.style.backgroundImage = "url(mono/lifeline.svg)";
 		lifelineLabel.style.backgroundSize = "20px";
 		lifelineLabel.style.backgroundRepeat = "no-repeat";
-
-		const [utilitiesLabel, utilitiesInput] = AddParameter("Network utilities", "input", "toggle");
-		utilitiesLabel.style.paddingLeft = "24px";
-		utilitiesLabel.style.backgroundImage = "url(mono/portscan.svg)";
-		utilitiesLabel.style.backgroundSize = "20px";
-		utilitiesLabel.style.backgroundRepeat = "no-repeat";
+		lifelineInput.disabled = true;
 
 		setTimeout(()=>nameInput.focus(), 200);
 
@@ -284,7 +279,6 @@ class Api extends List {
 			usersInput.checked     = permissions & 0x01;
 			devicesInput.checked   = permissions & 0x02;
 			lifelineInput.checked  = permissions & 0x04;
-			utilitiesInput.checked = permissions & 0x80;
 		}
 
 		okButton.onclick =  async ()=> {
@@ -309,8 +303,6 @@ class Api extends List {
 			if (usersInput.checked)     permissions |= 0x01;
 			if (devicesInput.checked)   permissions |= 0x02;
 			if (lifelineInput.checked)  permissions |= 0x04;
-			if (utilitiesInput.checked) permissions |= 0x80;
-
 
 			if (object === null) {
 				const guid = UI.GenerateUuid();

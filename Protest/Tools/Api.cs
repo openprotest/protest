@@ -9,7 +9,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Protest.Http;
-using static Protest.Tools.Api;
 
 namespace Protest.Tools;
 internal static class Api {
@@ -23,8 +22,7 @@ internal static class Api {
     public enum Permissions : byte {
         Users        = 0x01,
         Devices      = 0x02,
-        Lifeline     = 0x04,
-        NetUtilities = 0x80
+        Lifeline     = 0x04
     }
 
     public record Link {
@@ -55,9 +53,72 @@ internal static class Api {
             return;
         }
 
+        if (!Api.links.TryGetValue(apiKey, out Link link)) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return;
+        }
+
+        if (!parameters.TryGetValue("call", out string call)) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            return;
+        }
+
+        byte[] buffer;
+
+        switch (call) {
+        case "devices"  : buffer = HandleDevicesCall(ctx, parameters, link);  break;
+        case "users"    : buffer = HandleUsersCall(ctx, parameters, link);    break;
+        case "lifeline" : buffer = HandleLifelineCall(ctx, parameters, link); break;
+        
+        default:
+            buffer = null;
+            ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            return;
+        }
+
+        if (buffer is not null) {
+            ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+    }
+
+    internal static byte[] HandleDevicesCall(HttpListenerContext ctx, Dictionary<string, string> parameters, Link link) {
+        if ((link.permissions & (byte)Permissions.Devices) == 0x00) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return null;
+        }
+
+        byte[] buffer = null;
         //TODO:
 
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+        return buffer;
+    }
+
+    internal static byte[] HandleUsersCall(HttpListenerContext ctx, Dictionary<string, string> parameters, Link link) {
+        if ((link.permissions & (byte)Permissions.Users) == 0x00) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return null;
+        }
+
+        byte[] buffer = null;
+        //TODO:
+
+        ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+        return buffer;
+    }
+
+    internal static byte[] HandleLifelineCall(HttpListenerContext ctx, Dictionary<string, string> parameters, Link link) {
+        if ((link.permissions & (byte)Permissions.Lifeline) == 0x00) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return null;
+        }
+
+        byte[] buffer = null;
+        //TODO:
+
+        ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+        return buffer;
     }
 
     internal static Link[] Load() {

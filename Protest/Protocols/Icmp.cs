@@ -26,14 +26,20 @@ internal static class Icmp {
         parameters.TryGetValue("query", out string query);
         if (String.IsNullOrEmpty(query)) { return null; }
 
+        if (!parameters.TryGetValue("timeout", out string timeoutString) || !Int32.TryParse(timeoutString, out int timeout)) {
+            timeout = 1000;
+        }
+
+        if (timeout < 50) { timeout = 50; }
+
         string[] queryArray = query.Split(';');
 
         List<Task<int>> tasks = new List<Task<int>>();
         foreach (string host in queryArray) {
-            tasks.Add(Task.Run(async () => {
+            tasks.Add(Task.Run(async ()=> {
                 using Ping p = new Ping();
                 try {
-                    PingReply reply = await p.SendPingAsync(host, 1000, ICMP_PAYLOAD);
+                    PingReply reply = await p.SendPingAsync(host, timeout, ICMP_PAYLOAD);
                     return reply.Status == IPStatus.Success ? (int)reply.RoundtripTime : -1;
                 }
                 catch {

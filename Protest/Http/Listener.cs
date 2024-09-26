@@ -276,8 +276,6 @@ public sealed class Listener {
             ctx.Response.Close();
             return;
         }
-           
-
 
         if (String.Equals(ctx.Request.Url?.LocalPath, "/api", StringComparison.Ordinal)) {
             Api.HandleApiCall(ctx);
@@ -377,6 +375,10 @@ public sealed class Listener {
         string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
         bool acceptGZip = acceptEncoding.Contains("gzip");
 
+#if DEFLATE
+        bool acceptDeflate = acceptEncoding.Contains("deflate");
+#endif
+
         byte[] buffer;
 #if BROTLI
         bool acceptBrotli = acceptEncoding.Contains("br");
@@ -387,7 +389,6 @@ public sealed class Listener {
         else
 #endif
 #if DEFLATE
-        bool acceptDeflate = acceptEncoding.Contains("deflate");
         if (acceptDeflate && entry.deflate is not null) { //deflate
             buffer = entry.deflate;
             ctx.Response.AddHeader("Content-Encoding", "deflate");
