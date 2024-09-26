@@ -276,8 +276,10 @@ public sealed class Listener {
             ctx.Response.Close();
             return;
         }
+           
 
-        if (String.Equals(path, "/api", StringComparison.Ordinal)) {
+
+        if (String.Equals(ctx.Request.Url?.LocalPath, "/api", StringComparison.Ordinal)) {
             Api.HandleApiCall(ctx);
             ctx.Response.Close();
             return;

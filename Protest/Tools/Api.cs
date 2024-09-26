@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -10,6 +9,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Protest.Http;
+using static Protest.Tools.Api;
 
 namespace Protest.Tools;
 internal static class Api {
@@ -17,6 +17,8 @@ internal static class Api {
     private static readonly ConcurrentDictionary<string, ulong> counter;
     private static readonly ConcurrentDictionary<string, ulong> traffic;
     private static readonly JsonSerializerOptions apiLinksSerializerOptions;
+
+    private static ConcurrentDictionary<string, Link> links;
 
     public enum Permissions : byte {
         Users        = 0x01,
@@ -40,12 +42,15 @@ internal static class Api {
 
         apiLinksSerializerOptions = new JsonSerializerOptions();
         apiLinksSerializerOptions.Converters.Add(new ApiJsonConverter());
+
+        Api.links = new ConcurrentDictionary<string, Link>(Load().ToDictionary(link => link.apikey));
     }
 
     internal static void HandleApiCall(HttpListenerContext ctx) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx.Request.Url.Query);
 
-        if (!parameters.TryGetValue("apikey", out string apiKey)) {
+        if (!parameters.TryGetValue("key", out string apiKey)
+            || !Api.links.ContainsKey(apiKey)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return;
         }
@@ -70,16 +75,15 @@ internal static class Api {
             Link[] profiles = JsonSerializer.Deserialize<Link[]>(plain, apiLinksSerializerOptions);
             return profiles;
         }
-        catch {
+        catch (Exception ex){
+            Logger.Error(ex);
             return Array.Empty<Link>();
         }
     }
 
     internal static byte[] List() {
-        Link[] links = Load();
-
-        var data = new {
-            data = links.ToDictionary(
+        return JsonSerializer.SerializeToUtf8Bytes(new {
+            data = Api.links.Values.ToDictionary(
                 link => link.guid.ToString(),
                 link => new {
                     guid        = new { v = link.guid },
@@ -89,26 +93,26 @@ internal static class Api {
                     permissions = new { v = link.permissions }
                 }
             ),
-            length = links.Length
-        };
-
-        return JsonSerializer.SerializeToUtf8Bytes(data);
+            length = Api.links.Count()
+        });
     }
 
     internal static byte[] Save(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
-        try {
-            Link[] links = JsonSerializer.Deserialize<Link[]>(payload, apiLinksSerializerOptions);
+        Api.links.Clear();
 
-            for (int i = 0; i < links.Length; i++) {
-                if (links[i].guid == default(Guid)) {
-                    links[i].guid = Guid.NewGuid();
+        try {
+            Link[] temp = JsonSerializer.Deserialize<Link[]>(payload, apiLinksSerializerOptions);
+            for (int i = 0; i < temp.Length; i++) {
+                if (temp[i].guid == default(Guid)) {
+                    temp[i].guid = Guid.NewGuid();
                 }
+                Api.links.TryAdd(temp[i].guid.ToString(), temp[i]);
             }
 
-            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(links, apiLinksSerializerOptions);
+            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(temp, apiLinksSerializerOptions);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             lock (mutex) {
                 File.WriteAllBytes(Data.FILE_API_LINKS, cipher);
@@ -116,10 +120,12 @@ internal static class Api {
 
             Logger.Action(origin, $"Modify API links");
         }
-        catch (JsonException) {
+        catch (JsonException ex) {
+            Logger.Error(ex);
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
-        catch (Exception) {
+        catch (Exception ex) {
+            Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
 
