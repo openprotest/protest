@@ -134,13 +134,14 @@ internal static class Issues {
 
                 if (filtered.Any()) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
-                        severity = o.severity,
-                        issue    = o.message,
-                        entry    = o.entry,
-                        category = o.category,
-                        source   = o.source,
-                        file     = o.file,
-                        isUser   = o.isUser,
+                        //timestamp = o.timestamp / 10000 - 62135596800000,
+                        severity  = o.severity,
+                        issue     = o.message,
+                        entry     = o.entry,
+                        category  = o.category,
+                        source    = o.source,
+                        file      = o.file,
+                        isUser    = o.isUser,
                     }));
 
                     await WsWriteText(ws, bytes);
