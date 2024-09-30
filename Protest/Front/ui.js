@@ -856,6 +856,7 @@ const MENU = {
 		let left;
 		if (MENU.isAttached) {
 			left = UI.taskbarPosition === "right" ? 91 : 0
+			attachedmenubutton.style.animation = MENU.isOpen ? "half-rotate-cw 0.4s" : "half-rotate-ccw 0.4s";
 		}
 		else {
 			left = menubutton.style.left ? parseInt(menubutton.style.left) : 0;

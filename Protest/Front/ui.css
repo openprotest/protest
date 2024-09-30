@@ -66,9 +66,9 @@
 	background-position: center;
 	background-repeat: no-repeat;
 	border-radius: 48%;
-
+	
 	transform: scaleY(0%);
-	transform-origin: 50% 0%;
+	transform-origin: 50% 50%;
 	transition: .2s;
 }
 
@@ -516,6 +516,18 @@
 	20.1%{ box-shadow: var(--clr-accent) 0 0 0 inset; }
 	95%  { box-shadow: var(--clr-accent) 64px 0 0 inset; }
 	100% { box-shadow: var(--clr-accent) 64px 0 0 inset; }
+}
+
+@keyframes half-rotate-cw {
+	0%   { transform-origin: 50% 50%; }
+	50%  { transform-origin: 50% 50%; transform: rotate(60deg); }
+	100% { transform-origin: 50% 50%; }
+}
+
+@keyframes half-rotate-ccw {
+	0%   { transform-origin: 50% 50%; }
+	50%  { transform-origin: 50% 50%; transform: rotate(-60deg); }
+	100% { transform-origin: 50% 50%; }
 }
 
 @media only screen and (max-width: 540px) {

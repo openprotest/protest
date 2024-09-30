@@ -20,9 +20,9 @@ internal static class Api {
     private static ConcurrentDictionary<string, Link> links;
 
     public enum Permissions : byte {
-        Users        = 0x01,
-        Devices      = 0x02,
-        Lifeline     = 0x04
+        Users    = 0x01,
+        Devices  = 0x02,
+        Lifeline = 0x04
     }
 
     public record Link {
