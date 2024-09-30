@@ -59,7 +59,7 @@ class Certificates extends List {
 		this.list.textContent = "";
 
 		for (let key in this.link.data) {
-			const element =  document.createElement("div");
+			const element = document.createElement("div");
 			element.id = key;
 			element.className = "list-element";
 			this.list.appendChild(element);
@@ -147,7 +147,7 @@ class Certificates extends List {
 
 		setTimeout(()=>nameInput.focus(), 200);
 
-		okButton.onclick =  async ()=> {
+		okButton.onclick = async ()=> {
 			let requiredFieldMissing = false;
 			let requiredFields = [nameInput, domainInput];
 
@@ -228,12 +228,12 @@ class Certificates extends List {
 		cancelButton.style.display = "none";
 
 		const dropArea = document.createElement("div");
-		dropArea.style.minHeight    = "20px";
-		dropArea.style.margin       = "16px";
-		dropArea.style.padding      = "32px 0";
-		dropArea.style.border       = "2px dashed var(--clr-dark)";
+		dropArea.style.minHeight = "20px";
+		dropArea.style.margin = "16px";
+		dropArea.style.padding = "32px 0";
+		dropArea.style.border = "2px dashed var(--clr-dark)";
 		dropArea.style.borderRadius = "8px";
-		dropArea.style.transition   = ".4s";
+		dropArea.style.transition = ".4s";
 
 		const message = document.createElement("div");
 		message.textContent = "Drop a certificate file here to upload it";

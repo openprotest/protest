@@ -173,7 +173,7 @@ class PassGen extends Window {
 		const copyButton = document.createElement("input");
 		copyButton.type = "button";
 		copyButton.style.minWidth = "56px";
-		copyButton.style.width  = "56px";
+		copyButton.style.width = "56px";
 		copyButton.style.backgroundImage = "url(mono/copy.svg?light)";
 		copyButton.style.backgroundSize = "28px 28px";
 		copyButton.style.backgroundPosition = "50% 50%";
@@ -196,8 +196,8 @@ class PassGen extends Window {
 		stampButton.style.backgroundRepeat = "no-repeat";
 
 		generateButton.style.borderRadius = "4px 0 0 4px";
-		copyButton.style.borderRadius     = "0 0 0 0";
-		stampButton.style.borderRadius    = "0 4px 4px 0";
+		copyButton.style.borderRadius = "0 0 0 0";
+		stampButton.style.borderRadius = "0 4px 4px 0";
 
 		this.ttcLabel = document.createElement("div");
 		this.ttcLabel.style.color = "var(--clr-light)";
@@ -463,9 +463,9 @@ class PassGen extends Window {
 		//same as     Math.log(Math.pow(pool, this.passwordInput.value.length), 2));
 
 		let strength = PassGen.StrengthBar(entropy);
-		let color    = strength[0];
-		let fill     = strength[1];
-		let comment  = strength[2];
+		let color = strength[0];
+		let fill = strength[1];
+		let comment = strength[2];
 
 		this.strengthBar.style.boxShadow = `${color} ${Math.round(fill)}px 0 0 inset`;
 		this.commentLabel.textContent = comment;

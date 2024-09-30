@@ -10,17 +10,17 @@ class Personalize extends Tabs {
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.guiTab     = this.AddTab("Appearance", "mono/tv.svg");
-		this.regionTab  = this.AddTab("Regional format", "mono/earth.svg" );
+		this.guiTab = this.AddTab("Appearance", "mono/tv.svg");
+		this.regionTab = this.AddTab("Regional format", "mono/earth.svg" );
 		this.sessionTab = this.AddTab("Session", "mono/hourglass.svg");
-		this.chatTab    = this.AddTab("Chat", "mono/chat.svg");
-		this.agentTab   = this.AddTab("Agent", "mono/agent.svg");
+		this.chatTab = this.AddTab("Chat", "mono/chat.svg");
+		this.agentTab = this.AddTab("Agent", "mono/agent.svg");
 
-		this.guiTab.onclick     = ()=> this.ShowGui();
-		this.regionTab.onclick  = ()=> this.ShowRegion();
+		this.guiTab.onclick = ()=> this.ShowGui();
+		this.regionTab.onclick = ()=> this.ShowRegion();
 		this.sessionTab.onclick = ()=> this.ShowSession();
-		this.chatTab.onclick    = ()=> this.ShowChat();
-		this.agentTab.onclick   = ()=> this.ShowAgent();
+		this.chatTab.onclick = ()=> this.ShowChat();
+		this.agentTab.onclick = ()=> this.ShowAgent();
 
 		switch (this.args) {
 		case "region":
@@ -157,15 +157,15 @@ class Personalize extends Tabs {
 		this.saturationValueLabel.style.display = "inline-block";
 		this.tabsPanel.appendChild(this.saturationValueLabel);
 
-		this.winMaxedCheckbox.checked      = localStorage.getItem("w_always_maxed") === "true";
-		this.popOutCheckbox.checked        = localStorage.getItem("w_popout") === "true";
-		this.taskTooltipCheckbox.checked   = localStorage.getItem("w_tasktooltip") !== "false";
+		this.winMaxedCheckbox.checked = localStorage.getItem("w_always_maxed") === "true";
+		this.popOutCheckbox.checked = localStorage.getItem("w_popout") === "true";
+		this.taskTooltipCheckbox.checked = localStorage.getItem("w_tasktooltip") !== "false";
 		this.windowShadowsCheckbox.checked = localStorage.getItem("w_dropshadow") !== "false";
-		this.dateTimeCheckbox.checked      = localStorage.getItem("desk_datetime") !== "false";
-		this.animationsCheckbox.checked    = localStorage.getItem("animations") !== "false";
-		this.glassCheckbox.checked         = localStorage.getItem("glass") === "true";
-		this.scrollBarInput.value          = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
-		this.taskbarPositionInput.value    = localStorage.getItem("taskbar_position") ? localStorage.getItem("taskbar_position") : "bottom";
+		this.dateTimeCheckbox.checked = localStorage.getItem("desk_datetime") !== "false";
+		this.animationsCheckbox.checked = localStorage.getItem("animations") !== "false";
+		this.glassCheckbox.checked = localStorage.getItem("glass") === "true";
+		this.scrollBarInput.value = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
+		this.taskbarPositionInput.value = localStorage.getItem("taskbar_position") ? localStorage.getItem("taskbar_position") : "bottom";
 
 		this.saturation.value = localStorage.getItem("accent_saturation") ? localStorage.getItem("accent_saturation") : 100;
 
@@ -241,13 +241,13 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(wallpaperLabel);
 
 		const wallpaperDropArea = document.createElement("div");
-		wallpaperDropArea.style.maxWidth     = "400px";
-		wallpaperDropArea.style.minHeight    = "20px";
-		wallpaperDropArea.style.margin       = "16px";
-		wallpaperDropArea.style.padding      = "20px";
-		wallpaperDropArea.style.border       = "2px dashed var(--clr-dark)";
+		wallpaperDropArea.style.maxWidth = "400px";
+		wallpaperDropArea.style.minHeight = "20px";
+		wallpaperDropArea.style.margin = "16px";
+		wallpaperDropArea.style.padding = "20px";
+		wallpaperDropArea.style.border = "2px dashed var(--clr-dark)";
 		wallpaperDropArea.style.borderRadius = "8px";
-		wallpaperDropArea.style.transition   = ".4s";
+		wallpaperDropArea.style.transition = ".4s";
 		this.tabsPanel.appendChild(wallpaperDropArea);
 
 		const wallpaperDropLabel = document.createElement("div");
@@ -319,15 +319,15 @@ class Personalize extends Tabs {
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "appearance") {
 					if (WIN.array[i] !== this) {
-						WIN.array[i].winMaxedCheckbox.checked      = this.winMaxedCheckbox.checked;
-						WIN.array[i].popOutCheckbox.checked        = this.popOutCheckbox.checked;
-						WIN.array[i].taskTooltipCheckbox.checked   = this.taskTooltipCheckbox.checked;
+						WIN.array[i].winMaxedCheckbox.checked = this.winMaxedCheckbox.checked;
+						WIN.array[i].popOutCheckbox.checked = this.popOutCheckbox.checked;
+						WIN.array[i].taskTooltipCheckbox.checked = this.taskTooltipCheckbox.checked;
 						WIN.array[i].windowShadowsCheckbox.checked = this.windowShadowsCheckbox.checked;
-						WIN.array[i].dateTimeCheckbox.checked      = this.dateTimeCheckbox.checked;
-						WIN.array[i].animationsCheckbox.checked    = this.animationsCheckbox.checked;
-						WIN.array[i].glassCheckbox.checked         = this.glassCheckbox.checked;
-						WIN.array[i].scrollBarInput.value          = this.scrollBarInput.value;
-						WIN.array[i].taskbarPositionInput.value    = this.taskbarPositionInput.value;
+						WIN.array[i].dateTimeCheckbox.checked = this.dateTimeCheckbox.checked;
+						WIN.array[i].animationsCheckbox.checked = this.animationsCheckbox.checked;
+						WIN.array[i].glassCheckbox.checked = this.glassCheckbox.checked;
+						WIN.array[i].scrollBarInput.value = this.scrollBarInput.value;
+						WIN.array[i].taskbarPositionInput.value = this.taskbarPositionInput.value;
 
 						WIN.array[i].saturation.value = this.saturation.value;
 						WIN.array[i].saturationValueLabel.textContent = `${this.saturation.value}%`;
@@ -364,16 +364,16 @@ class Personalize extends Tabs {
 			UI.SetAccentColor(accentColor, this.saturation.value / 100);
 		};
 
-		this.winMaxedCheckbox.onchange      = Apply;
-		this.popOutCheckbox.onchange        = Apply;
-		this.taskTooltipCheckbox.onchange   = Apply;
+		this.winMaxedCheckbox.onchange = Apply;
+		this.popOutCheckbox.onchange = Apply;
+		this.taskTooltipCheckbox.onchange = Apply;
 		this.windowShadowsCheckbox.onchange = Apply;
-		this.dateTimeCheckbox.onchange      = Apply;
-		this.animationsCheckbox.onchange    = Apply;
-		this.glassCheckbox.onchange         = Apply;
-		this.saturation.oninput             = Apply;
-		this.scrollBarInput.onchange        = Apply;
-		this.taskbarPositionInput.onchange  = Apply;
+		this.dateTimeCheckbox.onchange = Apply;
+		this.animationsCheckbox.onchange = Apply;
+		this.glassCheckbox.onchange = Apply;
+		this.saturation.oninput = Apply;
+		this.scrollBarInput.onchange = Apply;
+		this.taskbarPositionInput.onchange = Apply;
 
 		Apply();
 	}
@@ -595,9 +595,9 @@ class Personalize extends Tabs {
 			for (let i = 0; i < WIN.array.length; i++) //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "session") {
 					WIN.array[i].restoreSessionToggle.checkbox.checked = this.restoreSessionToggle.checkbox.checked;
-					WIN.array[i].aliveOnCloseToggle.checkbox.checked   = this.aliveOnCloseToggle.checkbox.checked;
-					WIN.array[i].sessionTimeout.value      = this.sessionTimeout.value;
-					WIN.array[i].cookieLife.value          = this.cookieLife.value;
+					WIN.array[i].aliveOnCloseToggle.checkbox.checked = this.aliveOnCloseToggle.checkbox.checked;
+					WIN.array[i].sessionTimeout.value = this.sessionTimeout.value;
+					WIN.array[i].cookieLife.value = this.cookieLife.value;
 
 					if (timeMapping[this.sessionTimeout.value] == Infinity) {
 						WIN.array[i].sessionTimeoutValueLabel.textContent = timeMapping[this.sessionTimeout.value];
@@ -722,7 +722,7 @@ class Personalize extends Tabs {
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "chat") {
 					WIN.array[i].openChatWindowOnMessageCheckbox.checked = this.openChatWindowOnMessageCheckbox.checked;
 					WIN.array[i].enableNotificationSoundCheckbox.checked = this.enableNotificationSoundCheckbox.checked;
-					WIN.array[i].notificationVolume.value           = this.notificationVolume.value;
+					WIN.array[i].notificationVolume.value = this.notificationVolume.value;
 
 					WIN.array[i].notificationVolume.disabled = !this.enableNotificationSoundCheckbox.checked;
 					WIN.array[i].notificationVolumeValue.textContent = `${this.notificationVolume.value}%`;

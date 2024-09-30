@@ -11,10 +11,10 @@ class AccessControl extends Tabs {
 
 		this.tabsPanel.style.padding = "20px";
 
-		this.rbacTab     = this.AddTab("RBAC", "mono/rbac.svg");
+		this.rbacTab = this.AddTab("RBAC", "mono/rbac.svg");
 		this.sessionsTab = this.AddTab("Open sessions", "mono/hourglass.svg");
 
-		this.rbacTab.onclick      = ()=> this.ShowRbac();
+		this.rbacTab.onclick = ()=> this.ShowRbac();
 		this.sessionsTab.onclick = ()=> this.ShowSessions();
 
 		switch (this.args) {
@@ -220,9 +220,9 @@ class AccessControl extends Tabs {
 
 		this.saveButton.onclick = async ()=> {
 			this.username.value = this.username.value.trim();
-			this.domain.value   = this.domain.value.trim();
+			this.domain.value = this.domain.value.trim();
 			this.password.value = this.password.value.trim();
-			this.alias.value    = this.alias.value.trim();
+			this.alias.value = this.alias.value.trim();
 
 			if (this.username.value.length === 0) {
 				this.ConfirmBox("Please enter username.", true).addEventListener("click", ()=>setTimeout(this.username.focus(), 150));

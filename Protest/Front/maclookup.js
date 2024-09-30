@@ -12,7 +12,7 @@ class MacLookup extends Console {
 		this.SetIcon("mono/maclookup.svg");
 
 		this.SetupToolbar();
-		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.AddSendToChatButton();
 
 		this.inputBox.placeholder = "mac address";

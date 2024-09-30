@@ -146,7 +146,7 @@ class Log extends Window {
 			}
 
 			if (split.length > 1 && split[0].length >= 10) {
-				let last =  split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
+				let last = split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
 				if (!isNaN(last)) {
 					this.last = last;
 				}
@@ -201,7 +201,7 @@ class Log extends Window {
 			}
 
 			if (split.length > 1 && split[0].length >= 10) {
-				let last =  split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
+				let last = split[0].substring(0, 4) + split[0].substring(5, 7) + split[0].substring(8, 10);
 				if (!isNaN(last)) {
 					this.last = last;
 				}

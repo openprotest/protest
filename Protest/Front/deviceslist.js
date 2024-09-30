@@ -15,8 +15,8 @@ class DevicesList extends List {
 		this.SetupToolbar();
 		this.LinkData(LOADER.devices);
 
-		this.addButton     = this.AddToolbarButton("Add", "mono/add.svg?light");
-		this.deleteButton  = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.addButton = this.AddToolbarButton("Add", "mono/add.svg?light");
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		const filterButton = this.SetupFilter();
 		this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());

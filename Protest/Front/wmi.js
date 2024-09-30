@@ -497,7 +497,7 @@ class Wmi extends Window {
 
 					/*default:
 						let methodButton = document.createElement("input");
-						methodButton.type  = "button";
+						methodButton.type = "button";
 						methodButton.value = "Method";
 						td.appendChild(methodButton);
 						methodButton.onclick = ()=> {

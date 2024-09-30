@@ -13,10 +13,10 @@ class Fetch extends Tabs {
 		this.tabsPanel.style.gridTemplateColumns = "auto 150px 150px 12px 200px 40px minmax(20px, 300px) auto";
 		this.tabsPanel.style.alignItems = "center";
 
-		const deviceTab  = this.AddTab("Devices",  "mono/gear.svg");
-		const usersTab   = this.AddTab("Users",    "mono/user.svg");
-		const protestTab = this.AddTab("Import",   "mono/logo.svg");
-		this.taskTab     = this.AddTab("Fetching", "mono/ball.svg");
+		const deviceTab = this.AddTab("Devices", "mono/gear.svg");
+		const usersTab = this.AddTab("Users", "mono/user.svg");
+		const protestTab = this.AddTab("Import", "mono/logo.svg");
+		this.taskTab = this.AddTab("Fetching", "mono/ball.svg");
 
 		this.taskTab.style.position = "absolute";
 		this.taskTab.style.left = "0";
@@ -24,9 +24,9 @@ class Fetch extends Tabs {
 		this.taskTab.style.top = "max(140px, 100% - 44px)";
 		this.taskTab.style.visibility = "hidden";
 
-		deviceTab.onclick    = ()=> this.ShowDevices();
-		usersTab.onclick     = ()=> this.ShowUsers();
-		protestTab.onclick   = ()=> this.ShowImport();
+		deviceTab.onclick = ()=> this.ShowDevices();
+		usersTab.onclick = ()=> this.ShowUsers();
+		protestTab.onclick = ()=> this.ShowImport();
 		this.taskTab.onclick = ()=> this.ShowFetching();
 
 		this.InitializeComponents();
@@ -458,8 +458,8 @@ class Fetch extends Tabs {
 			if (json.error) throw(json.error);
 
 			let firstAddress = json.firstIp ? json.firstIp.split(".") : [10,0,0,1];
-			let lastAddress  = json.lastIp  ? json.lastIp.split(".") : [10,0,0,254];
-			let domain       = json.domain  ? json.domain : "";
+			let lastAddress = json.lastIp  ? json.lastIp.split(".") : [10,0,0,254];
+			let domain = json.domain  ? json.domain : "";
 
 			this.ipFrom.SetIp(firstAddress[0], firstAddress[1], firstAddress[2], firstAddress[3]);
 			this.ipTo.SetIp(lastAddress[0], lastAddress[1], lastAddress[2], lastAddress[3]);

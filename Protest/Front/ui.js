@@ -27,7 +27,7 @@ const UI = {
 		document.body.className = localStorage.getItem("animations") !== "false" ? "" : "disable-animations";
 
 		analog_clock.style.visibility = date_calendar.style.visibility = localStorage.getItem("desk_datetime") !== "false" ? "visible" : "hidden";
-		analog_clock.style.opacity    = date_calendar.style.opacity    = localStorage.getItem("desk_datetime") !== "false" ? "1" : "0";
+		analog_clock.style.opacity = date_calendar.style.opacity = localStorage.getItem("desk_datetime") !== "false" ? "1" : "0";
 
 		container.className = "";
 		if (localStorage.getItem("w_popout") !== "true") container.classList.add("no-popout");
@@ -1293,30 +1293,30 @@ taskbar.onmouseup = event=> {
 
 	switch (UI.taskbarPosition) {
 	case "left":
-		contextmenu.style.left   = "8px";
-		contextmenu.style.right  = "unset";
-		contextmenu.style.top    = `${event.y}px`;
+		contextmenu.style.left = "8px";
+		contextmenu.style.right = "unset";
+		contextmenu.style.top = `${event.y}px`;
 		contextmenu.style.bottom = "unset";
 		break;
 
 	case "right":
-		contextmenu.style.left   = "unset";
-		contextmenu.style.right  = "8px";
-		contextmenu.style.top    = `${event.y}px`;
+		contextmenu.style.left = "unset";
+		contextmenu.style.right = "8px";
+		contextmenu.style.top = `${event.y}px`;
 		contextmenu.style.bottom = "unset";
 		break;
 
 	case "top":
-		contextmenu.style.left   = `${event.x}px`;
-		contextmenu.style.right  = "unset";
-		contextmenu.style.top    = "8px";
+		contextmenu.style.left = `${event.x}px`;
+		contextmenu.style.right = "unset";
+		contextmenu.style.top = "8px";
 		contextmenu.style.bottom = "unset";
 		break;
 
 	default: //bottom
-		contextmenu.style.left   = `${event.x}px`;
-		contextmenu.style.right  = "unset";
-		contextmenu.style.top    = "unset";
+		contextmenu.style.left = `${event.x}px`;
+		contextmenu.style.right = "unset";
+		contextmenu.style.top = "unset";
 		contextmenu.style.bottom = "8px";
 		break;
 	}

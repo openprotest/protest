@@ -36,11 +36,11 @@ class DnsLookup extends Console {
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
-		this.reloadButton  = this.AddToolbarButton("Reload", "mono/restart.svg?light");
-		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.copyButton   = this.AddToolbarButton("Copy", "mono/copy.svg?light");
+		this.reloadButton = this.AddToolbarButton("Reload", "mono/restart.svg?light");
+		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddToolbarSeparator();
-		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, DnsLookup.RECORD_TYPES.find(o=>o[0]===this.args.type)[2]));
+		this.recordType = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, DnsLookup.RECORD_TYPES.find(o=>o[0]===this.args.type)[2]));
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
@@ -245,15 +245,15 @@ class DnsLookup extends Console {
 		innerBox.appendChild(document.createElement("br"));
 
 		const Apply = ()=> {
-			this.args.server       = dnsServerInput.value;
-			this.args.type         = recordTypeInput.value;
-			this.args.timeout      = timeoutInput.value;
-			this.args.transport    = transportMethodInput.value;
-			this.args.isStandard   = standardToggle.checkbox.checked;
-			this.args.isInverse    = inverseToggle.checkbox.checked;
+			this.args.server = dnsServerInput.value;
+			this.args.type = recordTypeInput.value;
+			this.args.timeout = timeoutInput.value;
+			this.args.transport = transportMethodInput.value;
+			this.args.isStandard = standardToggle.checkbox.checked;
+			this.args.isInverse = inverseToggle.checkbox.checked;
 			this.args.serverStatus = serverStatusToggle.checkbox.checked;
-			this.args.isTruncated  = truncatedToggle.checkbox.checked;
-			this.args.isRecursive  = recursiveToggle.checkbox.checked;
+			this.args.isTruncated = truncatedToggle.checkbox.checked;
+			this.args.isRecursive = recursiveToggle.checkbox.checked;
 
 			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, DnsLookup.RECORD_TYPES.find(o=> o[0] === this.args.type)[2])}`;
 			this.SetTitle(this.args.server === "" ? "DNS lookup" : `DNS lookup: ${this.args.server}`);
@@ -273,20 +273,20 @@ class DnsLookup extends Console {
 
 		transportMethodInput.onchange = ()=> {
 			if (transportMethodInput.value === "HTTPS") {
-				timeoutInput.disabled      = true;
-				standardToggle.checkbox.disabled     = true;
-				inverseToggle.checkbox.disabled      = true;
+				timeoutInput.disabled = true;
+				standardToggle.checkbox.disabled = true;
+				inverseToggle.checkbox.disabled = true;
 				serverStatusToggle.checkbox.disabled = true;
-				truncatedToggle.checkbox.disabled    = true;
-				recursiveToggle.checkbox.disabled    = true;
+				truncatedToggle.checkbox.disabled = true;
+				recursiveToggle.checkbox.disabled = true;
 			}
 			else {
-				timeoutInput.disabled      = false;
-				standardToggle.checkbox.disabled     = false;
-				inverseToggle.checkbox.disabled      = false;
+				timeoutInput.disabled = false;
+				standardToggle.checkbox.disabled = false;
+				inverseToggle.checkbox.disabled = false;
 				serverStatusToggle.checkbox.disabled = false;
-				truncatedToggle.checkbox.disabled    = false;
-				recursiveToggle.checkbox.disabled    = false;
+				truncatedToggle.checkbox.disabled = false;
+				recursiveToggle.checkbox.disabled = false;
 			}
 		};
 

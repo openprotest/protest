@@ -15,12 +15,12 @@ class CameraTester extends Window {
 
 		this.SetupToolbar();
 		this.recordButton = this.AddToolbarButton("Record", "mono/record.svg?light");
-		this.startButton   = this.AddToolbarButton("Start", "mono/play.svg?light");
-		this.stopButton    = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
+		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 		this.AddToolbarSeparator();
 		this.settingsButton = this.AddToolbarButton("Settings", "mono/wrench.svg?light");
 		this.controlButton = this.AddToolbarButton("Picture controls", "mono/personalize.svg?light");
-		this.flipButton    = this.AddToolbarButton("Horizontal flip", "mono/horizontalflip.svg?light");
+		this.flipButton = this.AddToolbarButton("Horizontal flip", "mono/horizontalflip.svg?light");
 
 		this.stopButton.disabled = true;
 
@@ -57,7 +57,7 @@ class CameraTester extends Window {
 		let controlsToggle = false;
 		this.controlButton.onclick = ()=> {
 			controlsToggle = !controlsToggle;
-			this.controlsBox.style.opacity   = controlsToggle ? "1" : "0";
+			this.controlsBox.style.opacity = controlsToggle ? "1" : "0";
 			this.controlsBox.style.transform = controlsToggle ? "none" : "translateY(-150px)";
 			this.controlButton.style.borderBottom = controlsToggle ? "#c0c0c0 solid 3px" : "none";
 		};

@@ -12,7 +12,7 @@ class LocateIp extends Console {
 		this.SetIcon("mono/locate.svg");
 
 		this.SetupToolbar();
-		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.AddSendToChatButton();
 
 		if (this.args.entries) { //restore entries from previous session

@@ -223,7 +223,7 @@ class Issues extends List {
 		const ClearSelection = ()=> filtersList.childNodes.forEach(o=> o.style.backgroundColor = "");
 
 		const Refresh = ()=> {
-			let types =  Object.keys(Issues.CATEGORY_ICON);
+			let types = Object.keys(Issues.CATEGORY_ICON);
 
 			filtersList.textContent = "";
 			filterMenu.style.height = `${32 + types.length * 34}px`;
@@ -321,15 +321,15 @@ class Issues extends List {
 	}
 
 	UpdateFiltersUI() {
-		this.critButton.style.backgroundImage  = this.args.critFilter ? "url(mono/critical.svg)" : "url(mono/critical.svg?light)";
+		this.critButton.style.backgroundImage = this.args.critFilter ? "url(mono/critical.svg)" : "url(mono/critical.svg?light)";
 		this.errorButton.style.backgroundImage = this.args.errorFilter ? "url(mono/error.svg)" : "url(mono/error.svg?light)";
-		this.warnButton.style.backgroundImage  = this.args.warnFilter ? "url(mono/warning.svg)" : "url(mono/warning.svg?light)";
-		this.infoButton.style.backgroundImage  = this.args.infoFilter ? "url(mono/info.svg)" : "url(mono/info.svg?light)";
+		this.warnButton.style.backgroundImage = this.args.warnFilter ? "url(mono/warning.svg)" : "url(mono/warning.svg?light)";
+		this.infoButton.style.backgroundImage = this.args.infoFilter ? "url(mono/info.svg)" : "url(mono/info.svg?light)";
 
-		this.critButton.style.backgroundColor  = this.args.critFilter ? "var(--clr-critical)" : "";
+		this.critButton.style.backgroundColor = this.args.critFilter ? "var(--clr-critical)" : "";
 		this.errorButton.style.backgroundColor = this.args.errorFilter ? "var(--clr-error)" : "";
-		this.warnButton.style.backgroundColor  = this.args.warnFilter ? "var(--clr-warning)" : "";
-		this.infoButton.style.backgroundColor  = this.args.infoFilter ? "rgb(32,148,240)" : "";
+		this.warnButton.style.backgroundColor = this.args.warnFilter ? "var(--clr-warning)" : "";
+		this.infoButton.style.backgroundColor = this.args.infoFilter ? "rgb(32,148,240)" : "";
 	}
 
 	Connect() {
@@ -378,7 +378,7 @@ class Issues extends List {
 	}
 
 	AddIssue(issue) {
-		const key =  Date.now() + Math.random() * 1000;
+		const key = Date.now() + Math.random() * 1000;
 
 		const newIssue = {
 			key     : {v:key},
@@ -410,7 +410,7 @@ class Issues extends List {
 			return;
 		}
 
-		const element =  document.createElement("div");
+		const element = document.createElement("div");
 		element.id = key;
 		element.className = "list-element";
 		this.list.appendChild(element);

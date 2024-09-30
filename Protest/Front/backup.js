@@ -56,7 +56,7 @@ class Backup extends List {
 		this.list.textContent = "";
 
 		for (let key in this.link.data) {
-			const element =  document.createElement("div");
+			const element = document.createElement("div");
 			element.id = key;
 			element.className = "list-element";
 			this.list.appendChild(element);

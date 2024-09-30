@@ -455,7 +455,7 @@ class HexViewer extends Window {
 
 		element.onclick = ()=> {
 			const listElements = this.list.childNodes;
-			const hexElements  = hexContainer.childNodes;
+			const hexElements = hexContainer.childNodes;
 			const charElements = charContainer.childNodes;
 
 			for (let i=0; i<this.hexBox.childNodes.length; i++) {
@@ -527,11 +527,11 @@ class HexViewer extends Window {
 		const flags = stream[2].toString(16).padStart(2,"0") + stream[3].toString(16).padStart(2,"0");
 		this.PopulateLabel(`Flags: 0x${flags}`, 0, hexContainer, charContainer, 2, 2);
 
-		let isResponse    = (stream[2] & 0b10000000) > 0;
-		let options       = (stream[2] & 0b01111000) >> 3;
+		let isResponse = (stream[2] & 0b10000000) > 0;
+		let options = (stream[2] & 0b01111000) >> 3;
 		let isAuthoritative = (stream[2] & 0b00000100) > 0;
-		let isTruncated   = (stream[2] & 0b00000010) > 0;
-		let isRecursive   = (stream[2] & 0b00000001) > 0;
+		let isTruncated = (stream[2] & 0b00000010) > 0;
+		let isRecursive = (stream[2] & 0b00000001) > 0;
 		this.PopulateLabel(`Response: ${isResponse}`, 1, hexContainer, charContainer, 2, 1);
 		this.PopulateLabel(`Options: ${options}`, 1, hexContainer, charContainer, 2, 1);
 		this.PopulateLabel(`Authoritative: ${isAuthoritative}`, 1, hexContainer, charContainer, 2, 1);
@@ -539,10 +539,10 @@ class HexViewer extends Window {
 		this.PopulateLabel(`Recursive: ${isRecursive}`, 1, hexContainer, charContainer, 2, 1);
 
 		if (isResponse) {
-			let isRecursionAvailable  = (stream[3] & 0b10000000) > 0;
+			let isRecursionAvailable = (stream[3] & 0b10000000) > 0;
 			let isAnswerAuthenticated = (stream[3] & 0b00100000) > 0;
-			let nonAuthenticatedData  = (stream[3] & 0b00010000) > 0;
-			let replyCode             = stream[3] & 0b00001111;
+			let nonAuthenticatedData = (stream[3] & 0b00010000) > 0;
+			let replyCode = stream[3] & 0b00001111;
 			this.PopulateLabel(`Recursion is available: ${isRecursionAvailable}`, 1, hexContainer, charContainer, 3, 1);
 			this.PopulateLabel(`Answer is authenticated: ${isAnswerAuthenticated}`, 1, hexContainer, charContainer, 3, 1);
 			this.PopulateLabel(`Non authenticated data: ${nonAuthenticatedData}`, 1, hexContainer, charContainer, 3, 1);

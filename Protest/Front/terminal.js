@@ -154,16 +154,16 @@ class Terminal extends Window {
 		this.scrollRegionTop = null;
 		this.scrollRegionBottom = null;
 
-		this.savedCursorPos        = null;
-		this.savedLine             = null; //TODO:
-		this.savedScreen           = null;
-		this.savedTitle            = null;
+		this.savedCursorPos = null;
+		this.savedLine = null; //TODO:
+		this.savedScreen = null;
+		this.savedTitle = null;
 
-		this.lineWrappingMode      = false; //TODO:
-		this.insertMode            = false; //TODO:
-		this.localEchoMode         = false; //TODO:
+		this.lineWrappingMode = false; //TODO:
+		this.insertMode = false; //TODO:
+		this.localEchoMode = false; //TODO:
 		this.keypadApplicationMode = false; //TODO:
-		this.bracketedMode         = false;
+		this.bracketedMode = false;
 	}
 
 	InitializeComponents() {
@@ -195,20 +195,20 @@ class Terminal extends Window {
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host);
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
-		this.pasteButton.onclick   = ()=> this.TextFromClipboard();
+		this.pasteButton.onclick = ()=> this.TextFromClipboard();
 	}
 
 	ResetTextAttributes() {
-		this.foreColor     = null;
-		this.backColor     = null;
-		this.bold          = false;
-		this.faint         = false;
-		this.italic        = false;
-		this.underline     = false;
-		this.blinking      = false;
-		this.fastBlinking  = false;
-		this.inverse       = false;
-		this.hidden        = false;
+		this.foreColor = null;
+		this.backColor = null;
+		this.bold = false;
+		this.faint = false;
+		this.italic = false;
+		this.underline = false;
+		this.blinking = false;
+		this.fastBlinking = false;
+		this.inverse = false;
+		this.hidden = false;
 		this.strikethrough = false;
 	}
 
@@ -244,9 +244,9 @@ class Terminal extends Window {
 		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.args.smoothCursor, innerBox);
 
 		okButton.onclick = ()=> {
-			this.args.ansi         = ansiToggle.checkbox.checked;
-			this.args.bell         = bellToggle.checkbox.checked;
-			this.args.autoScroll   = autoScrollToggle.checkbox.checked;
+			this.args.ansi = ansiToggle.checkbox.checked;
+			this.args.bell = bellToggle.checkbox.checked;
+			this.args.autoScroll = autoScrollToggle.checkbox.checked;
 			this.args.smoothCursor = smoothCursorToggle.checkbox.checked;
 			dialog.Close();
 
@@ -282,8 +282,8 @@ class Terminal extends Window {
 		innerBox.appendChild(document.createElement("br"));
 
 		const shift = this.CreateToggle("Shift", false, innerBox);
-		const ctrl  = this.CreateToggle("Ctrl", false, innerBox);
-		const alt   = this.CreateToggle("Alt", false, innerBox);
+		const ctrl = this.CreateToggle("Ctrl", false, innerBox);
+		const alt = this.CreateToggle("Alt", false, innerBox);
 
 		shift.label.style.margin = "4px 1px";
 		ctrl.label.style.margin = "4px 1px";
@@ -471,14 +471,14 @@ class Terminal extends Window {
 
 			default:
 				if (!isNew) {
-					if (char.style.color)           char.style.color           = "unset";
+					if (char.style.color) char.style.color = "unset";
 					if (char.style.backgroundColor) char.style.backgroundColor = "unset";
-					if (char.style.fontWeight)      char.style.fontWeight      = "normal";
-					if (char.style.fontStyle)       char.style.fontStyle       = "none";
-					if (char.style.opacity)         char.style.opacity         = "1";
-					if (char.style.textDecoration)  char.style.textDecoration  = "none";
-					if (char.style.animation)       char.style.animation       = "none";
-					if (char.style.visibility)      char.style.visibility      = "visible";
+					if (char.style.fontWeight) char.style.fontWeight = "normal";
+					if (char.style.fontStyle) char.style.fontStyle = "none";
+					if (char.style.opacity) char.style.opacity = "1";
+					if (char.style.textDecoration) char.style.textDecoration = "none";
+					if (char.style.animation) char.style.animation = "none";
+					if (char.style.visibility) char.style.visibility = "visible";
 				}
 
 				if (data[i] === " ") {
@@ -577,9 +577,9 @@ class Terminal extends Window {
 		if (!match) return 2;
 
 		const fullSequence = match[0];
-		const prefix       = match[1] || ""; // ?, = or ""
+		const prefix = match[1] || ""; // ?, = or ""
 		const paramsString = match[2] || "";
-		const command      = match[4];
+		const command = match[4];
 
 		const params = paramsString.split(";").map(param => {
 			return param === "" ? 0 : parseInt(param, 10);
@@ -655,10 +655,10 @@ class Terminal extends Window {
 
 		case "h": //enable mode
 			switch (params[0]) {
-			case 1   : this.appCursorKeys    = true; break;
-			case 4   : this.insertMode       = true; break;
+			case 1   : this.appCursorKeys = true; break;
+			case 4   : this.insertMode = true; break;
 			case 7   : this.lineWrappingMode = true; break;
-			case 12  : this.localEchoMode    = true; break;
+			case 12  : this.localEchoMode = true; break;
 			case 25  : this.cursorElement.style.visibility = "visible"; break;
 			case 1049: this.EnableAlternateScreen(); break;
 			case 2004: this.bracketedMode = true; break;
@@ -668,10 +668,10 @@ class Terminal extends Window {
 
 		case "l": //disable mode
 			switch (params[0]) {
-			case 1   : this.appCursorKeys     = false; break;
-			case 4   : this.insertMode        = false; break;
-			case 7   : this.lineWrappingMode  = false; break;
-			case 12  : this.localEchoMode     = false; break;
+			case 1   : this.appCursorKeys = false; break;
+			case 4   : this.insertMode = false; break;
+			case 7   : this.lineWrappingMode = false; break;
+			case 12  : this.localEchoMode = false; break;
 			case 25  : this.cursorElement.style.visibility = "hidden"; break;
 			case 1049: this.DisableAlternateScreen(); break;
 			case 2004: this.bracketedMode = false; break;
@@ -822,24 +822,24 @@ class Terminal extends Window {
 				break;
 
 			//set graphics modes
-			case 1: this.bold          = true; break;
-			case 2: this.faint         = true; break;
-			case 3: this.italic        = true; break;
-			case 4: this.underline     = true; break;
-			case 5: this.blinking      = true; break;
-			case 6: this.fastBlinking  = true; break;
-			case 7: this.inverse       = true; break;
-			case 8: this.hidden        = true; break;
+			case 1: this.bold = true; break;
+			case 2: this.faint = true; break;
+			case 3: this.italic = true; break;
+			case 4: this.underline = true; break;
+			case 5: this.blinking = true; break;
+			case 6: this.fastBlinking = true; break;
+			case 7: this.inverse = true; break;
+			case 8: this.hidden = true; break;
 			case 9: this.strikethrough = true; break;
 
 			//reset graphics modes
 			case 22: this.bold = this.faint = false; break;
-			case 23: this.italic        = false; break;
-			case 24: this.underline     = false; break;
-			case 25: this.blinking      = false; break;
-			case 26: this.fastBlinking  = false; break;
-			case 27: this.inverse       = false; break;
-			case 28: this.hidden        = false; break;
+			case 23: this.italic = false; break;
+			case 24: this.underline = false; break;
+			case 25: this.blinking = false; break;
+			case 26: this.fastBlinking = false; break;
+			case 27: this.inverse = false; break;
+			case 28: this.hidden = false; break;
 			case 29: this.strikethrough = false; break;
 
 			//set foreground color
@@ -910,9 +910,9 @@ class Terminal extends Window {
 	}
 
 	ScrollUp() {
-		const top    = this.scrollRegionTop || 0;
+		const top = this.scrollRegionTop || 0;
 		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
-		const todo   = {};
+		const todo = {};
 		let x, y;
 
 		for (const key in this.screen) {
@@ -932,9 +932,9 @@ class Terminal extends Window {
 	}
 
 	ScrollDown() {
-		const top    = this.scrollRegionTop || 0;
+		const top = this.scrollRegionTop || 0;
 		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
-		const todo   = {};
+		const todo = {};
 		let x, y;
 
 		for (const key in this.screen) {

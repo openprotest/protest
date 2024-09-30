@@ -1,5 +1,5 @@
 class DeviceView extends View {
-	static DAY_TICKS  = 3_600_000 * 24;
+	static DAY_TICKS = 3_600_000 * 24;
 
 	static DEVICES_GROUP_SCHEMA = [
 		"type", "name",
@@ -1807,7 +1807,7 @@ class DeviceView extends View {
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
-				let name  = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
+				let name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
 				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
 				obj[name] = {v:value};
 			}
@@ -2791,7 +2791,7 @@ class DeviceView extends View {
 				let obj = {};
 				for (let i=0; i<this.attributes.childNodes.length; i++) {
 					if (this.attributes.childNodes[i].childNodes.length < 2) continue;
-					let name  = this.attributes.childNodes[i].childNodes[0].value;
+					let name = this.attributes.childNodes[i].childNodes[0].value;
 					let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
 					obj[name] = {v:value};
 				}

@@ -624,7 +624,7 @@ class DebitNotes extends Window {
 		if (dialog === null) return;
 
 		const createButton = dialog.okButton;
-		const innerBox  = dialog.innerBox;
+		const innerBox = dialog.innerBox;
 
 		this.GenerateEquipAutoComplete();
 
@@ -1024,15 +1024,15 @@ class DebitNotes extends Window {
 		});
 
 		return {
-			statusCheckbox  : statusToggle.checkbox,
-			firstNameInput  : firstNameInput,
-			lastNameInput   : lastNameInput,
-			titleInput      : titleInput,
-			depInput        : depInput,
-			issuerInput     : issuerInput,
-			templateInput   : templateInput,
-			lstEquip      : lstEquip,
-			AddEquip      : AddEquip
+			statusCheckbox : statusToggle.checkbox,
+			firstNameInput : firstNameInput,
+			lastNameInput  : lastNameInput,
+			titleInput     : titleInput,
+			depInput       : depInput,
+			issuerInput    : issuerInput,
+			templateInput  : templateInput,
+			lstEquip       : lstEquip,
+			AddEquip       : AddEquip
 		};
 	}
 
@@ -1044,14 +1044,14 @@ class DebitNotes extends Window {
 
 		const obj = this.New();
 		const firstNameInput = obj.firstNameInput;
-		const lastNameInput  = obj.lastNameInput;
-		const titleInput     = obj.titleInput;
-		const depInput       = obj.depInput;
-		const issuerInput    = obj.issuerInput;
-		const templateInput  = obj.templateInput;
+		const lastNameInput = obj.lastNameInput;
+		const titleInput = obj.titleInput;
+		const depInput = obj.depInput;
+		const issuerInput = obj.issuerInput;
+		const templateInput = obj.templateInput;
 		const statusCheckbox = obj.statusCheckbox;
-		const lstEquip     = obj.lstEquip;
-		const AddEquip     = obj.AddEquip;
+		const lstEquip = obj.lstEquip;
+		const AddEquip = obj.AddEquip;
 
 		firstNameInput.value = this.selectedDebit.firstname;
 		lastNameInput.value = this.selectedDebit.lastname;

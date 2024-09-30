@@ -245,7 +245,7 @@ class IpDiscovery extends List {
 			else {
 				let services = Array.from(new Set(json.services.split(",")));
 
-				const element =  document.createElement("div");
+				const element = document.createElement("div");
 				element.id = key;
 				element.className = "list-element";
 				this.list.appendChild(element);

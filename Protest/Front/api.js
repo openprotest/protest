@@ -38,7 +38,7 @@ class Api extends List {
 		this.list.textContent = "";
 
 		for (let key in this.link.data) {
-			const element =  document.createElement("div");
+			const element = document.createElement("div");
 			element.id = key;
 			element.className = "list-element";
 			this.list.appendChild(element);
@@ -236,12 +236,12 @@ class Api extends List {
 			keyInput.value = object.key.v;
 
 			const permissions = object.permissions.v & 0xff;
-			usersInput.checked    = permissions & 0x01;
-			devicesInput.checked  = permissions & 0x02;
+			usersInput.checked = permissions & 0x01;
+			devicesInput.checked = permissions & 0x02;
 			lifelineInput.checked = permissions & 0x04;
 		}
 
-		okButton.onclick =  async ()=> {
+		okButton.onclick = async ()=> {
 			let requiredFieldMissing = false;
 			let requiredFields = [nameInput];
 

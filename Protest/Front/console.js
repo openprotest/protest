@@ -17,12 +17,12 @@ class Console extends Window {
 		this.inputBox = document.createElement("input");
 		this.inputBox.type = "text";
 		this.inputBox.placeholder = "hostname or ip";
-		this.inputBox.style.position  = "absolute";
-		this.inputBox.style.left      = "40px";
-		this.inputBox.style.bottom    = "40px";
-		this.inputBox.style.width     = "calc(100% - 80px)";
-		this.inputBox.style.margin    = "0";
-		this.inputBox.style.border    = "0";
+		this.inputBox.style.position = "absolute";
+		this.inputBox.style.left = "40px";
+		this.inputBox.style.bottom = "40px";
+		this.inputBox.style.width = "calc(100% - 80px)";
+		this.inputBox.style.margin = "0";
+		this.inputBox.style.border = "0";
 		this.inputBox.style.boxSizing = "border-box";
 		this.content.appendChild(this.inputBox);
 

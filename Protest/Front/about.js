@@ -10,9 +10,9 @@ class About extends Tabs {
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.aboutTab     = this.AddTab("About", "mono/logo.svg");
-		this.legalTab     = this.AddTab("Legal", "mono/law.svg");
-		this.updateTab    = this.AddTab("Update", "mono/update.svg");
+		this.aboutTab = this.AddTab("About", "mono/logo.svg");
+		this.legalTab = this.AddTab("Legal", "mono/law.svg");
+		this.updateTab = this.AddTab("Update", "mono/update.svg");
 		this.updateModTab = this.AddTab("Update modules", "mono/department.svg");
 
 		this.aboutTab.onclick = ()=> this.ShowAbout();
@@ -311,10 +311,10 @@ class About extends Tabs {
 		this.args = "updatemod";
 		this.tabsPanel.textContent = "";
 
-		const location    = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["csv"]);
-		const proxy       = this.CreateDropArea("Drop a file here to update proxy servers knowledge base", "/config/upload/proxy", ["csv"]);
+		const location = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["csv"]);
+		const proxy = this.CreateDropArea("Drop a file here to update proxy servers knowledge base", "/config/upload/proxy", ["csv"]);
 		const macResolver = this.CreateDropArea("Drop a file here to update MAC address-vendors knowledge base", "/config/upload/macresolve", ["csv"]);
-		const macTor      = this.CreateDropArea("Drop a file here to update TOR servers knowledge base", "/config/upload/tor", ["txt"]);
+		const macTor = this.CreateDropArea("Drop a file here to update TOR servers knowledge base", "/config/upload/tor", ["txt"]);
 
 		this.tabsPanel.append(location, proxy, macResolver, macTor);
 
@@ -354,12 +354,12 @@ class About extends Tabs {
 
 	CreateDropArea(text, uploadUrl, filter) {
 		const dropArea = document.createElement("div");
-		dropArea.style.minHeight    = "20px";
-		dropArea.style.margin       = "16px";
-		dropArea.style.padding      = "20px";
-		dropArea.style.border       = "2px dashed var(--clr-dark)";
+		dropArea.style.minHeight = "20px";
+		dropArea.style.margin = "16px";
+		dropArea.style.padding = "20px";
+		dropArea.style.border = "2px dashed var(--clr-dark)";
 		dropArea.style.borderRadius = "8px";
-		dropArea.style.transition   = ".4s";
+		dropArea.style.transition = ".4s";
 
 		const message = document.createElement("div");
 		message.textContent = text;

@@ -138,9 +138,9 @@ class Chat extends Window {
 
 		this.input.onkeydown = event=> this.Input_onkeydown(event);
 
-		this.sendButton.onclick    = ()=> this.Send();
-		this.micButton.onclick     = ()=> this.Mic_onclick();
-		this.camButton.onclick     = ()=> this.Webcam_onclick();
+		this.sendButton.onclick = ()=> this.Send();
+		this.micButton.onclick = ()=> this.Mic_onclick();
+		this.camButton.onclick = ()=> this.Webcam_onclick();
 		this.displayButton.onclick = ()=> this.Display_onclick();
 
 		await this.GetHistory();
@@ -554,9 +554,9 @@ class Chat extends Window {
 	}
 
 	AdjustUI() {
-		const hasUserStream     = this.userStream !== null;
+		const hasUserStream = this.userStream !== null;
 		const hasDisplayStreams = this.displayStreams.length > 0;
-		const hasRemoteStreams  = this.remoteStreams.length > 0;
+		const hasRemoteStreams = this.remoteStreams.length > 0;
 
 		this.micButton.style.backgroundColor = this.isMicEnable ? "var(--clr-accent)" : "transparent";
 		this.micButton.style.backgroundImage = this.isMicEnable ? "url(mono/mic.svg)" : "url(mono/mic.svg?light)";

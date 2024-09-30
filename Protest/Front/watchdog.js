@@ -1,6 +1,6 @@
 class Watchdog extends Window {
 	static HOUR_TICKS = 3_600_000;
-	static DAY_TICKS  = 3_600_000 * 24;
+	static DAY_TICKS = 3_600_000 * 24;
 
 	constructor() {
 		super();
@@ -12,24 +12,24 @@ class Watchdog extends Window {
 		this.SetIcon("mono/watchdog.svg");
 
 		this.SetupToolbar();
-		this.newButton          = this.AddToolbarButton("Create watcher", "mono/add.svg?light");
-		this.editButton         = this.AddToolbarButton("Edit", "mono/edit.svg?light");
-		this.deleteButton       = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.newButton = this.AddToolbarButton("Create watcher", "mono/add.svg?light");
+		this.editButton = this.AddToolbarButton("Edit", "mono/edit.svg?light");
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.notificationButton = this.AddToolbarButton("Notifications", "mono/notifications.svg?light");
 		this.AddToolbarSeparator();
-		this.reloadButton       = this.AddToolbarButton("Reload", "mono/restart.svg?light");
-		this.gotoButton         = this.AddToolbarButton("Go to", "mono/skipback.svg?light");
-		this.zoomOutButton      = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
-		this.zoomInButton       = this.AddToolbarButton("Zoom in", "mono/zoomin.svg?light");
+		this.reloadButton = this.AddToolbarButton("Reload", "mono/restart.svg?light");
+		this.gotoButton = this.AddToolbarButton("Go to", "mono/skipback.svg?light");
+		this.zoomOutButton = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
+		this.zoomInButton = this.AddToolbarButton("Zoom in", "mono/zoomin.svg?light");
 
-		this.newButton.onclick          = ()=> this.WatcherDialog(true);
-		this.editButton.onclick         = ()=> this.EditWatcher();
-		this.deleteButton.onclick       = ()=> this.DeleteWatcher();
+		this.newButton.onclick = ()=> this.WatcherDialog(true);
+		this.editButton.onclick = ()=> this.EditWatcher();
+		this.deleteButton.onclick = ()=> this.DeleteWatcher();
 		this.notificationButton.onclick = ()=> this.NotificationsDialog();
-		this.reloadButton.onclick       = ()=> this.ListWatchers();
-		this.zoomOutButton.onclick      = ()=> this.ZoomOut();
-		this.zoomInButton.onclick       = ()=> this.ZoomIn();
-		this.gotoButton.onclick         = ()=> this.GoTo();
+		this.reloadButton.onclick = ()=> this.ListWatchers();
+		this.zoomOutButton.onclick = ()=> this.ZoomOut();
+		this.zoomInButton.onclick = ()=> this.ZoomIn();
+		this.gotoButton.onclick = ()=> this.GoTo();
 
 		this.timeline = document.createElement("div");
 		this.timeline.className = "watchdog-timeline";
@@ -388,16 +388,16 @@ class Watchdog extends Window {
 		}
 		else {
 			enableToggle.checkbox.checked = this.selected.enable;
-			typeInput.value     = this.selected.type;
-			nameInput.value     = this.selected.name;
-			targetInput.value   = this.selected.target;
-			portInput.value     = this.selected.port;
-			methodInput.value   = this.selected.method;
-			keywordInput.value  = this.selected.keyword;
-			queryInput.value    = this.selected.query;
-			rrTypeInput.value   = this.selected.rrtype;
+			typeInput.value = this.selected.type;
+			nameInput.value = this.selected.name;
+			targetInput.value = this.selected.target;
+			portInput.value = this.selected.port;
+			methodInput.value = this.selected.method;
+			keywordInput.value = this.selected.keyword;
+			queryInput.value = this.selected.query;
+			rrTypeInput.value = this.selected.rrtype;
 			intervalInput.value = this.selected.interval;
-			retriesInput.value  = this.selected.retries;
+			retriesInput.value = this.selected.retries;
 
 			for (let i=0; i<5; i++) {
 				statusCodes[i].checked = this.selected.httpstatus[i];
@@ -722,7 +722,7 @@ class Watchdog extends Window {
 			element.className = "list-element";
 			notificationsList.appendChild(element);
 
-			const label =  document.createElement("div");
+			const label = document.createElement("div");
 			label.textContent = name.length===0 ? "unnamed" : name;
 			label.style.color = name.length===0 ? "rgb(96,96,96)" : "var(--clr-dark)";
 			label.style.fontStyle = name.length===0 ? "oblique" : "normal";
@@ -771,10 +771,10 @@ class Watchdog extends Window {
 				element.style.backgroundColor = "var(--clr-select)";
 				removeButton.style.display = "initial";
 
-				nameInput.value       = notifications[id].name;
-				smtpInput.value       = notifications[id].smtpprofile;
+				nameInput.value = notifications[id].name;
+				smtpInput.value = notifications[id].smtpprofile;
 				recipientsInput.value = notifications[id].recipients.join("; ");
-				notifyInput.value     = notifications[id].notify;
+				notifyInput.value = notifications[id].notify;
 
 				for (let file in watchersCheckboxes) {
 					watchersCheckboxes[file].checked = false;

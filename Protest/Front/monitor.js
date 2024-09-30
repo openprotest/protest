@@ -633,11 +633,11 @@ class Monitor extends Window {
 				selectedElement = template;
 				template.style.backgroundColor = "var(--clr-select)";
 
-				nameInput.value   = name;
+				nameInput.value = name;
 				formatInput.value = options.format;
-				unitInput.value   = "unit"  in options ? options.unit  : "None";
-				valueInput.value  = "value" in options ? options.value : "";
-				maxInput.value    = "max"  in options ? options.max  : 100;
+				unitInput.value = "unit"  in options ? options.unit  : "None";
+				valueInput.value = "value" in options ? options.value : "";
+				maxInput.value = "max"  in options ? options.max  : 100;
 
 				showPeakInput.checked = options.showPeak;
 				complementingInput.checked = options.isComplement;

@@ -22,7 +22,7 @@ class Automation extends List {
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
 		this.pauseButton = this.AddToolbarButton("Pause", "mono/pause.svg?light");
-		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 
 		this.createButton.onclick = () => this.EditDialog();
 
@@ -58,7 +58,7 @@ class Automation extends List {
 			this.link = json;
 
 			for (let task in this.link.data) {
-				const element =  document.createElement("div");
+				const element = document.createElement("div");
 				element.id = task;
 				element.className = "list-element";
 				this.list.appendChild(element);

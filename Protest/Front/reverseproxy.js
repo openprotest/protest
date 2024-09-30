@@ -31,8 +31,8 @@ class ReverseProxy extends List {
 		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("reverse proxy:write");
 		this.createButton.disabled = !this.canWrite;
 		this.deleteButton.disabled = !this.canWrite || this.args.select === null;
-		this.startButton.disabled  = !this.canWrite || this.args.select === null;
-		this.stopButton.disabled   = !this.canWrite || this.args.select === null;
+		this.startButton.disabled = !this.canWrite || this.args.select === null;
+		this.stopButton.disabled = !this.canWrite || this.args.select === null;
 		super.UpdateAuthorization();
 	}
 
@@ -54,7 +54,7 @@ class ReverseProxy extends List {
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
 		this.startButton = this.AddToolbarButton("Start", "mono/play.svg?light");
-		this.stopButton  = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 		this.intervalButton = this.AddToolbarButton("Interval", "mono/metronome.svg?light");
 		this.reconnectSeparator = this.AddToolbarSeparator();
 		this.reconnectButton = this.AddToolbarButton("Reconnect", "mono/connect.svg?light");
@@ -581,7 +581,7 @@ class ReverseProxy extends List {
 		this.list.textContent = "";
 
 		for (let key in this.link.data) {
-			const element =  document.createElement("div");
+			const element = document.createElement("div");
 			element.id = key;
 			element.className = "list-element";
 			this.list.appendChild(element);
@@ -670,8 +670,8 @@ class ReverseProxy extends List {
 
 		counter++; //separator
 
-		const proxyAddressInput       = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
-		const proxyPostInput          = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
+		const proxyAddressInput = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
+		const proxyPostInput = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
 		counter++; //separator
 
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
@@ -699,13 +699,13 @@ class ReverseProxy extends List {
 		const autostartToggle = this.CreateToggle("Autostart", false, autostartBox);
 
 		if (entry) {
-			nameInput.value               = entry.name.v;
-			protocolInput.value           = entry.protocol.v;
-			passwordInput.value           = "";
-			proxyAddressInput.value       = entry.proxyaddr.v;
-			proxyPostInput.value          = entry.proxyport.v;
+			nameInput.value = entry.name.v;
+			protocolInput.value = entry.protocol.v;
+			passwordInput.value = "";
+			proxyAddressInput.value = entry.proxyaddr.v;
+			proxyPostInput.value = entry.proxyport.v;
 			destinationAddressInput.value = entry.destaddr.v;
-			destinationPortInput.value    = entry.destport.v;
+			destinationPortInput.value = entry.destport.v;
 			autostartToggle.checkbox.checked = entry.autostart.v;
 		}
 

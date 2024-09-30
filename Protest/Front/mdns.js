@@ -31,11 +31,11 @@ class Mdns extends Console {
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
-		this.reloadButton  = this.AddToolbarButton("Reload", "mono/restart.svg?light");
-		this.clearButton   = this.AddToolbarButton("Clear", "mono/wing.svg?light");
-		this.copyButton   = this.AddToolbarButton("Copy", "mono/copy.svg?light");
+		this.reloadButton = this.AddToolbarButton("Reload", "mono/restart.svg?light");
+		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddToolbarSeparator();
-		this.recordType    = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, Mdns.RECORD_TYPES.find(o=>o[0]===this.args.type)[2]));
+		this.recordType = this.AddToolbarDropdown(this.GetTypeIcon(this.args.type, Mdns.RECORD_TYPES.find(o=>o[0]===this.args.type)[2]));
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.AddSendToChatButton();
@@ -217,8 +217,8 @@ class Mdns extends Console {
 		const additionalRecordsToggle = this.CreateToggle("Additional records", this.args.additionalRrs, additionalRecordsBox);
 
 		const Apply = ()=> {
-			this.args.type          = recordTypeInput.value;
-			this.args.timeout       = timeoutInput.value;
+			this.args.type = recordTypeInput.value;
+			this.args.timeout = timeoutInput.value;
 			this.args.additionalRrs = additionalRecordsToggle.checkbox.checked;
 			this.recordType.button.style.backgroundImage = `url(${this.GetTypeIcon(this.args.type, Mdns.RECORD_TYPES.find(o=> o[0] === this.args.type)[2])}`;
 		};

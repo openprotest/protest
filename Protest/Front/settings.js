@@ -18,17 +18,17 @@ class Settings extends Tabs {
 		this.tabsPanel.style.overflowY = "auto";
 
 		this.zonesTab = this.AddTab("Zones", "mono/router.svg", "Network zones");
-		this.dhcpTab  = this.AddTab("DHCP range", "mono/dhcp.svg", "DHCP range");
-		this.adTab    = this.AddTab("Active directory", "mono/directory.svg");
-		this.smtpTab  = this.AddTab("SMTP", "mono/email.svg");
-		this.snmpTab  = this.AddTab("SNMP", "mono/snmp.svg");
+		this.dhcpTab = this.AddTab("DHCP range", "mono/dhcp.svg", "DHCP range");
+		this.adTab = this.AddTab("Active directory", "mono/directory.svg");
+		this.smtpTab = this.AddTab("SMTP", "mono/email.svg");
+		this.snmpTab = this.AddTab("SNMP", "mono/snmp.svg");
 		this.graphTab = this.AddTab("Microsoft Graph", "mono/graph.svg");
 
 		this.zonesTab.onclick = ()=> this.ShowZones();
-		this.dhcpTab.onclick  = ()=> this.ShowDhcpRange();
-		this.adTab.onclick    = ()=> this.ShowActiveDirectory();
-		this.smtpTab.onclick  = ()=> this.ShowSmtp();
-		this.snmpTab.onclick  = ()=> this.ShowSnmp();
+		this.dhcpTab.onclick = ()=> this.ShowDhcpRange();
+		this.adTab.onclick = ()=> this.ShowActiveDirectory();
+		this.smtpTab.onclick = ()=> this.ShowSmtp();
+		this.snmpTab.onclick = ()=> this.ShowSnmp();
 		this.graphTab.onclick = ()=> this.ShowGraph();
 
 		//TODO:
@@ -903,9 +903,9 @@ class Settings extends Tabs {
 		const trustedToggle = this.CreateToggle("Trusted zone", false, trustedBox);
 
 		if (object) {
-			nameInput.value    = object.name;
+			nameInput.value = object.name;
 			networkInput.value = object.network;
-			colorInput.value   = object.color;
+			colorInput.value = object.color;
 			trustedToggle.checkbox.checked = object.isTrusted;
 		}
 
@@ -988,7 +988,7 @@ class Settings extends Tabs {
 		innerBox.append(networkLabel, networkInput);
 
 		if (object) {
-			nameInput.value    = object.name;
+			nameInput.value = object.name;
 			networkInput.value = object.network;
 		}
 
@@ -1171,12 +1171,12 @@ class Settings extends Tabs {
 		const sslToggle = this.CreateToggle("SSL", true, sslBox);
 
 		if (object) {
-			providerInput.value        = object.provider;
-			serverInput.value          = object.server;
-			portInput.value            = object.port;
-			senderInput.value          = object.sender;
-			usernameInput.value        = object.username;
-			passwordInput.value        = object.password;
+			providerInput.value = object.provider;
+			serverInput.value = object.server;
+			portInput.value = object.port;
+			senderInput.value = object.sender;
+			usernameInput.value = object.username;
+			passwordInput.value = object.password;
 			sslToggle.checkbox.checked = object.ssl;
 		}
 
