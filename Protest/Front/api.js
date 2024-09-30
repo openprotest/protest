@@ -32,49 +32,6 @@ class Api extends List {
 
 		this.createButton.onclick = ()=> this.EditDialog();
 		this.deleteButton.onclick = ()=> this.Delete();
-
-		this.list.style.right = "unset";
-		this.list.style.width = "min(50%, 640px)";
-		this.list.style.overflowY = "auto";
-
-		this.list.style.right = "unset";
-		this.list.style.width = "min(50%, 640px)";
-		this.list.style.overflowY = "auto";
-
-		this.listTitle.style.right = "unset";
-		this.listTitle.style.width = "min(50%, 640px)";
-
-		this.stats = document.createElement("div");
-		this.stats.style.position = "absolute";
-		this.stats.style.left = "calc(min(50%, 640px) + 8px)";
-		this.stats.style.right = "4px";
-		this.stats.style.top = "0";
-		this.stats.style.bottom = "28px";
-		this.stats.style.overflowY = "auto";
-		this.content.appendChild(this.stats);
-
-		const graph = document.createElement("div");
-		graph.style.position = "absolute";
-		graph.style.left = "0";
-		graph.style.right = "0";
-		graph.style.top = "0";
-		graph.style.maxWidth = `${ReverseProxy.CANVAS_W+4}px`;
-		graph.style.height = `${ReverseProxy.CANVAS_H+8}px`;
-		graph.style.borderRadius = "4px";
-		graph.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
-		this.stats.appendChild(graph);
-
-		this.canvas = document.createElement("canvas");
-		this.canvas.width = ReverseProxy.CANVAS_W;
-		this.canvas.height = ReverseProxy.CANVAS_H+4;
-		this.canvas.style.position = "absolute";
-		this.canvas.style.right = "2px";
-		this.canvas.style.top = "0";
-		this.canvas.style.width = `${ReverseProxy.CANVAS_W}px`;
-		this.canvas.style.height = `${ReverseProxy.CANVAS_H+4}px`;
-		graph.appendChild(this.canvas);
-
-		this.ctx = this.canvas.getContext("2d");
 	}
 
 	ListLinks() {
