@@ -38,19 +38,16 @@ internal static class Update {
             HttpResponseMessage responseMessage = client.GetAsync(RELEASE_URL).GetAwaiter().GetResult();
             responseMessage.EnsureSuccessStatusCode();
 
-            string data = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            string data = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult().Trim();
             string[] split = data.Split('.');
 
             if (split.Length >= 4) {
                 return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
             }
-            else {
-                return Data.CODE_FAILED.Array;
-            }
         }
-        catch {
-            return Data.CODE_FAILED.Array;
-        }
+        catch {}
+
+        return Data.CODE_FAILED.Array;
     }
 
     public static byte[] LocationFormDataHandler(HttpListenerContext ctx) {
@@ -91,14 +88,14 @@ internal static class Update {
 
                 if (aBytes[0] == bBytes[0]) {
                     list[aBytes[0]].Add(new IpEntry {
-                        from = aBytes,
-                        to = bBytes,
-                        code = fields[2].Length < 2 ? "--" : fields[2],
+                        from    = aBytes,
+                        to      = bBytes,
+                        code    = fields[2].Length < 2 ? "--" : fields[2],
                         country = fields[3],
-                        region = fields[4],
-                        city = fields[5],
-                        lon = (Single)Double.Parse(fields[6]),
-                        lat = (Single)Double.Parse(fields[7])
+                        region  = fields[4],
+                        city    = fields[5],
+                        lon     = (Single)Double.Parse(fields[6]),
+                        lat     = (Single)Double.Parse(fields[7])
                     });
                 }
                 else {
@@ -120,14 +117,14 @@ internal static class Update {
 
                         list[j].Add(new IpEntry()
                         {
-                            from = from,
-                            to = to,
-                            code = fields[2].Length < 2 ? "--" : fields[2],
+                            from    = from,
+                            to      = to,
+                            code    = fields[2].Length < 2 ? "--" : fields[2],
                             country = fields[3],
-                            region = fields[4],
-                            city = fields[5],
-                            lon = (Single)Double.Parse(fields[6]),
-                            lat = (Single)Double.Parse(fields[7])
+                            region  = fields[4],
+                            city    = fields[5],
+                            lon     = (Single)Double.Parse(fields[6]),
+                            lat     = (Single)Double.Parse(fields[7])
                         });
                     }
                 }
@@ -136,82 +133,82 @@ internal static class Update {
         }
 
         list[10].Add(new IpEntry {
-            from = new byte[] { 10, 0, 0, 0 },
-            to = new byte[] { 10, 255, 255, 255 },
-            code = "--",
+            from    = new byte[] { 10, 0, 0, 0 },
+            to      = new byte[] { 10, 255, 255, 255 },
+            code    = "--",
             country = "Private domain",
-            region = String.Empty,
-            city = String.Empty,
-            lat = 0,
-            lon = 0
+            region  = String.Empty,
+            city    = String.Empty,
+            lat     = 0,
+            lon     = 0
         });
 
         list[127].Add(new IpEntry {
-            from = new byte[] { 127, 0, 0, 0 },
-            to = new byte[] { 127, 255, 255, 255 },
-            code = "--",
+            from    = new byte[] { 127, 0, 0, 0 },
+            to      = new byte[] { 127, 255, 255, 255 },
+            code    = "--",
             country = "Local domain",
-            region = String.Empty,
-            city = String.Empty,
-            lat = 0,
-            lon = 0
+            region  = String.Empty,
+            city    = String.Empty,
+            lat     = 0,
+            lon     = 0
         });
 
         list[172].Add(new IpEntry {
-            from = new byte[] { 172, 16, 0, 0 },
-            to = new byte[] { 172, 31, 255, 255 },
-            code = "--",
+            from    = new byte[] { 172, 16, 0, 0 },
+            to      = new byte[] { 172, 31, 255, 255 },
+            code    = "--",
             country = "Private domain",
-            region = String.Empty,
-            city = String.Empty,
-            lat = 0,
-            lon = 0
+            region  = String.Empty,
+            city    = String.Empty,
+            lat     = 0,
+            lon     = 0
         });
 
         list[169].Add(new IpEntry {
-            from = new byte[] { 169, 254, 0, 0 },
-            to = new byte[] { 169, 254, 255, 255 },
-            code = "--",
+            from    = new byte[] { 169, 254, 0, 0 },
+            to      = new byte[] { 169, 254, 255, 255 },
+            code    = "--",
             country = "Automatic Private IP Addressing",
-            region = String.Empty,
-            city = String.Empty,
-            lat = 0,
-            lon = 0
+            region  = String.Empty,
+            city    = String.Empty,
+            lat     = 0,
+            lon     = 0
         });
 
         list[192].Add(new IpEntry {
-            from = new byte[] { 192, 168, 0, 0 },
-            to = new byte[] { 192, 168, 255, 255 },
-            code = "--",
+            from    = new byte[] { 192, 168, 0, 0 },
+            to      = new byte[] { 192, 168, 255, 255 },
+            code    = "--",
             country = "Private domain",
-            region = String.Empty,
-            city = String.Empty,
-            lat = 0,
-            lon = 0
+            region  = String.Empty,
+            city    = String.Empty,
+            lat     = 0,
+            lon     = 0
         });
 
         for (byte i = 224; i < 240; i++) {
             list[i].Add(new IpEntry {
-                from = new byte[] { i, 0, 0, 0 },
-                to = new byte[] { i, 255, 255, 255 },
-                code = "--",
+                from    = new byte[] { i, 0, 0, 0 },
+                to      = new byte[] { i, 255, 255, 255 },
+                code    = "--",
                 country = "Multicast domain",
-                region = String.Empty,
-                city = String.Empty,
-                lat = 0,
-                lon = 0
+                region  = String.Empty,
+                city    = String.Empty,
+                lat     = 0,
+                lon     = 0
             });
         }
 
         list[255].Add(new IpEntry {
-            from = new byte[] { 255, 255, 255, 255 },
-            to = new byte[] { 255, 255, 255, 255 },
-            code = "--",
+            from    = new byte[] { 255, 255, 255, 255 },
+            to      = new byte[] { 255, 255, 255, 255 },
+            code    = "--",
             country = "Broadcast",
-            region = String.Empty,
-            city = String.Empty,
-            lat = 0,
-            lon = 0
+            region  = String.Empty,
+            city    = String.Empty,
+            lat     = 0,
+            lon     = 0
         });
 
         for (int i = 0; i < 256; i++) {
