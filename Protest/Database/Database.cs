@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Net;
 using Protest.Http;
+using Microsoft.Extensions.Options;
 
 namespace Protest;
 
@@ -479,6 +480,22 @@ public sealed class Database {
         }
 
         return entry.bytes;
+    }
+
+    public byte[] Serialize(HashSet<string> attributes) {
+        return JsonSerializer.SerializeToUtf8Bytes(
+            dictionary
+                .Where(pair => pair.Value.attributes.Any(attr => attributes.Contains(attr.Key)))
+                .ToDictionary(
+                    pair => pair.Value.filename,
+                    pair => pair.Value.attributes
+                        .Where(attr => attributes.Contains(attr.Key))
+                        .ToDictionary(
+                            attr => attr.Key,
+                            attr => attr.Value.value
+                        )
+                )
+        );
     }
 
     public byte[] SerializeContacts() {

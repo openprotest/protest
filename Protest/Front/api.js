@@ -118,9 +118,8 @@ class Api extends List {
 		const array = [];
 		for (let key in this.link.data) {
 			array.push({
-				guid:        this.link.data[key].guid.v,
-				name:        this.link.data[key].name.v,
 				key:         this.link.data[key].key.v,
+				name:        this.link.data[key].name.v,
 				readonly:    true,
 				permissions: this.link.data[key].permissions.v,
 			});
@@ -140,6 +139,12 @@ class Api extends List {
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
+	}
+
+	GenerateKey() {
+		const array = new Uint8Array(48);
+		crypto.getRandomValues(array);
+		return Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
 	}
 
 	EditDialog(object=null) {
@@ -261,9 +266,7 @@ class Api extends List {
 		};
 
 		renewButton.onclick = ()=> {
-			const array = new Uint8Array(48);
-			crypto.getRandomValues(array);
-			keyInput.value = Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
+			keyInput.value = this.GenerateKey();
 		};
 
 		if (object === null) {
@@ -276,9 +279,9 @@ class Api extends List {
 			keyInput.value = object.key.v;
 
 			const permissions = object.permissions.v & 0xff;
-			usersInput.checked     = permissions & 0x01;
-			devicesInput.checked   = permissions & 0x02;
-			lifelineInput.checked  = permissions & 0x04;
+			usersInput.checked    = permissions & 0x01;
+			devicesInput.checked  = permissions & 0x02;
+			lifelineInput.checked = permissions & 0x04;
 		}
 
 		okButton.onclick =  async ()=> {
@@ -300,23 +303,29 @@ class Api extends List {
 			if (requiredFieldMissing) return;
 
 			let permissions = 0;
-			if (usersInput.checked)     permissions |= 0x01;
-			if (devicesInput.checked)   permissions |= 0x02;
-			if (lifelineInput.checked)  permissions |= 0x04;
+			if (usersInput.checked)    permissions |= 0x01;
+			if (devicesInput.checked)  permissions |= 0x02;
+			if (lifelineInput.checked) permissions |= 0x04;
 
 			if (object === null) {
-				const guid = UI.GenerateUuid();
-				this.link.data[guid] ={
-					guid: {v:guid},
+				const newKey = this.GenerateKey();
+				this.link.data[newKey] ={
+					key: {v:newKey},
 					name: {v:nameInput.value},
-					key: {v:keyInput.value},
 					readonly: {v:true},
 					permissions: {v:permissions}
 				};
 			}
 			else {
-				this.link.data[object.guid.v] = {
-					guid: {v:object.guid.v},
+				const lastKey = object.key.v;
+
+				delete this.link.data[lastKey];
+
+				if (this.selected) {
+					this.list.removeChild(this.selected);
+				}
+
+				this.link.data[keyInput.value] = {
 					name: {v:nameInput.value},
 					key: {v:keyInput.value},
 					readonly: {v:true},
@@ -383,7 +392,7 @@ class Api extends List {
 		element.onclick = ()=> {
 			if (this.selected) this.selected.style.backgroundColor = "";
 
-			this.args.select = entry.guid.v;
+			this.args.select = entry.key.v;
 
 			this.selected = element;
 			element.style.backgroundColor = "var(--clr-select)";

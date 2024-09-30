@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -26,9 +27,8 @@ internal static class Api {
     }
 
     public record Link {
-        public Guid   guid;
+        public string key;
         public string name;
-        public string apikey;
         public bool   readOnly;
         public byte   permissions;
     }
@@ -41,11 +41,16 @@ internal static class Api {
         apiLinksSerializerOptions = new JsonSerializerOptions();
         apiLinksSerializerOptions.Converters.Add(new ApiJsonConverter());
 
-        Api.links = new ConcurrentDictionary<string, Link>(Load().ToDictionary(link => link.apikey));
+        Api.links = new ConcurrentDictionary<string, Link>(Load().ToDictionary(link => link.key));
     }
 
     internal static void HandleApiCall(HttpListenerContext ctx) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx.Request.Url.Query);
+
+        if (Api.links is null) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return;
+        }
 
         if (!parameters.TryGetValue("key", out string apiKey)
             || !Api.links.ContainsKey(apiKey)) {
@@ -69,7 +74,7 @@ internal static class Api {
         case "devices"  : buffer = HandleDevicesCall(ctx, parameters, link);  break;
         case "users"    : buffer = HandleUsersCall(ctx, parameters, link);    break;
         case "lifeline" : buffer = HandleLifelineCall(ctx, parameters, link); break;
-        
+
         default:
             buffer = null;
             ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -88,8 +93,19 @@ internal static class Api {
             return null;
         }
 
-        byte[] buffer = null;
-        //TODO:
+        if (!parameters.TryGetValue("attr", out string attrString)) {
+            return "{}"u8.ToArray();
+        }
+
+        string[] attributes = attrString.Split(';').Select(o=> Uri.UnescapeDataString(o.Trim()).ToLower()).ToArray();
+        HashSet<string> attributeSet = new HashSet<string>(attributes);
+
+        if (attributeSet.Any(o=> o.Contains("password", StringComparison.OrdinalIgnoreCase))) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            return null;
+        }
+
+        byte[] buffer = DatabaseInstances.devices.Serialize(attributeSet);
 
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         return buffer;
@@ -101,8 +117,19 @@ internal static class Api {
             return null;
         }
 
-        byte[] buffer = null;
-        //TODO:
+        if (!parameters.TryGetValue("attr", out string attrString)) {
+            return "{}"u8.ToArray();
+        }
+
+        string[] attributes = attrString.Split(';').Select(o=> Uri.UnescapeDataString(o.Trim()).ToLower()).ToArray();
+        HashSet<string> attributeSet = new HashSet<string>(attributes);
+
+        if (attributeSet.Any(o => o.Contains("password", StringComparison.OrdinalIgnoreCase))) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            return null;
+        }
+
+        byte[] buffer = DatabaseInstances.users.Serialize(attributeSet);
 
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         return buffer;
@@ -145,11 +172,10 @@ internal static class Api {
     internal static byte[] List() {
         return JsonSerializer.SerializeToUtf8Bytes(new {
             data = Api.links.Values.ToDictionary(
-                link => link.guid.ToString(),
+                link => link.key,
                 link => new {
-                    guid        = new { v = link.guid },
+                    key         = new { v = Data.EscapeJsonText(link.key) },
                     name        = new { v = Data.EscapeJsonText(link.name) },
-                    key         = new { v = Data.EscapeJsonText(link.apikey) },
                     @readonly   = new { v = link.readOnly },
                     permissions = new { v = link.permissions }
                 }
@@ -166,11 +192,12 @@ internal static class Api {
 
         try {
             Link[] temp = JsonSerializer.Deserialize<Link[]>(payload, apiLinksSerializerOptions);
+
             for (int i = 0; i < temp.Length; i++) {
-                if (temp[i].guid == default(Guid)) {
-                    temp[i].guid = Guid.NewGuid();
+                if (String.IsNullOrEmpty(temp[i].key)) {
+                    continue;
                 }
-                Api.links.TryAdd(temp[i].guid.ToString(), temp[i]);
+                Api.links.TryAdd(temp[i].key.ToString(), temp[i]);
             }
 
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(temp, apiLinksSerializerOptions);
@@ -230,9 +257,8 @@ file sealed class ApiJsonConverter : JsonConverter<Api.Link[]> {
                 reader.Read();
 
                 switch (propertyName) {
-                case "name"        : name        = reader.GetString();  break;
                 case "key"         : key         = reader.GetString();  break;
-                case "guid"        : guid        = reader.GetGuid();    break;
+                case "name"        : name        = reader.GetString();  break;
                 case "readonly"    : readOnly    = reader.GetBoolean(); break;
                 case "permissions" : permissions = reader.GetByte();    break;
                 }
@@ -240,8 +266,7 @@ file sealed class ApiJsonConverter : JsonConverter<Api.Link[]> {
 
             Api.Link link = new Api.Link {
                 name        = name,
-                apikey      = key,
-                guid        = guid,
+                key      = key,
                 readOnly    = readOnly,
                 permissions = permissions
             };
@@ -253,9 +278,8 @@ file sealed class ApiJsonConverter : JsonConverter<Api.Link[]> {
     }
 
     public override void Write(Utf8JsonWriter writer, Api.Link[] value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _name        = "name"u8;
         ReadOnlySpan<byte> _key         = "key"u8;
-        ReadOnlySpan<byte> _guid        = "guid"u8;
+        ReadOnlySpan<byte> _name        = "name"u8;
         ReadOnlySpan<byte> _readonly    = "readonly"u8;
         ReadOnlySpan<byte> _permissions = "permissions"u8;
         
@@ -264,8 +288,7 @@ file sealed class ApiJsonConverter : JsonConverter<Api.Link[]> {
         for (int i = 0; i < value.Length; i++) {
             writer.WriteStartObject();
             writer.WriteString(_name,        value[i].name);
-            writer.WriteString(_key,         value[i].apikey);
-            writer.WriteString(_guid,        value[i].guid);
+            writer.WriteString(_key,         value[i].key);
             writer.WriteBoolean(_readonly,   value[i].readOnly);
             writer.WriteNumber(_permissions, value[i].permissions);
             writer.WriteEndObject();
