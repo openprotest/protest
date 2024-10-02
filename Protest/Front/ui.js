@@ -341,6 +341,7 @@ const MENU = {
 		{ t:"Fetch devices",                i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("devices") },
 		{ t:"Fetch users",                  i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("users") },
 		{ t:"Import from another Pro-test", i:"mono/fetch.svg?light",       g:"inventory", h:true,  f:()=> new Fetch("protest") },
+		//{ t:"Dashboard",                    i:"mono/dashboard.svg?light",   g:"inventory", h:false, f:()=> new Dashboard() },
 		{ t:"Password strength",            i:"mono/strength.svg?light",    g:"inventory", h:false, f:()=> new PasswordStrength() },
 
 		{ t:"Documentation", i:"mono/documentation.svg?light", g:"documentation", h:false, f:()=> new Documentation(), k:"" },
@@ -396,7 +397,7 @@ const MENU = {
 		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Personalize("session") },
 		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:()=> new Personalize("agent") },
 
-		{ t:"RBAC",           i:"mono/rbac.svg?light",        g:"manage", h:false, f:()=> new AccessControl("rbac"),     k:"rbac acl role based users access control list permissions" },
+		{ t:"RBAC",           i:"mono/rbac.svg?light",        g:"manage", h:false, f:()=> new AccessControl("rbac"), k:"rbac acl role based users access control list permissions" },
 		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },
 
 		{ t:"Automation",     i:"mono/automation.svg?light",  g:"manage", h:false, f:()=> new Automation(), k:"" },
