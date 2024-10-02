@@ -15,7 +15,7 @@ class Api extends List {
 	}
 
 	UpdateAuthorization() { //overrides
-		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("api:write");
+		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("api links:write");
 		this.createButton.disabled = !this.canWrite;
 		this.deleteButton.disabled = !this.canWrite;
 		super.UpdateAuthorization();
