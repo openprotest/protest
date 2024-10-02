@@ -520,13 +520,13 @@
 
 @keyframes half-rotate-cw {
 	0%   { transform-origin: 50% 50%; }
-	50%  { transform-origin: 50% 50%; transform: rotate(60deg); }
+	50%  { transform-origin: 50% 50%; transform: rotate(45deg); }
 	100% { transform-origin: 50% 50%; }
 }
 
 @keyframes half-rotate-ccw {
 	0%   { transform-origin: 50% 50%; }
-	50%  { transform-origin: 50% 50%; transform: rotate(-60deg); }
+	50%  { transform-origin: 50% 50%; transform: rotate(-45deg); }
 	100% { transform-origin: 50% 50%; }
 }
 

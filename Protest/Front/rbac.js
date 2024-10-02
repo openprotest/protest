@@ -445,7 +445,7 @@ class AccessControl extends Tabs {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			for (let i = 0; i < json.length; i++) {
+			for (let i=0; i<json.length; i++) {
 				this.AddUser(json[i].username, json[i].domain, "", json[i].alias, json[i].color, json[i].isDomain, json[i].authorization);
 			}
 		}
