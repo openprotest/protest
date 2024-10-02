@@ -53,8 +53,8 @@
 				{"name":"UninstallProductKey", "args":[]},
 				{"name":"Activate", "args":[]},
 				{"name":"DepositOfflineConfirmationId", "args":["[in] string InstallationId", "[in] string ConfirmationId"]},
-				{"name":"GetPolicyInformationDWord", "args":["[in]  string PolicyName", "[out] uint32 PolicyValue"]},
-				{"name":"GetPolicyInformationString", "args":["[in]  string PolicyName", "[out] string PolicyValue"]},
+				{"name":"GetPolicyInformationDWord", "args":["[in] string PolicyName", "[out] uint32 PolicyValue"]},
+				{"name":"GetPolicyInformationString", "args":["[in] string PolicyName", "[out] string PolicyValue"]},
 				{"name":"SetKeyManagementServiceMachine", "args":["[in] string MachineName"]},
 				{"name":"ClearKeyManagementServiceMachine", "args":[]},
 				{"name":"SetKeyManagementServicePort", "args":["[in] uint32 PortNumber"]},
@@ -282,7 +282,7 @@
 				"TagId"
 			],
 			"methods":[
-				{"name":"Change", "args":["[in] string DisplayName", "[in] string  PathName", "[in] uint8 ServiceType", "[in] uint8 ErrorControl", "[in] string StartMode", "[in] boolean DesktopInteract", "[in] string StartName", "[in] string StartPassword", "[in] string LoadOrderGroup", "[in] string LoadOrderGroupDependencies[]", "[in] string  ServiceDependencies["]},
+				{"name":"Change", "args":["[in] string DisplayName", "[in] string PathName", "[in] uint8 ServiceType", "[in] uint8 ErrorControl", "[in] string StartMode", "[in] boolean DesktopInteract", "[in] string StartName", "[in] string StartPassword", "[in] string LoadOrderGroup", "[in] string LoadOrderGroupDependencies[]", "[in] string ServiceDependencies["]},
 				{"name":"ChangeStartMode", "args":["[in] string StartMode = Auto Start"]},
 				{"name":"Create", "args":["[in] string Name", "[in] string DisplayName", "[in] string PathName", "[in] uint8 ServiceType", "[in] uint8 ErrorControl", "[in] string StartMode", "[in] boolean DesktopInteract", "[in] string StartName", "[in] string StartPassword", "[in] string LoadOrderGroup", "[in] string LoadOrderGroupDependencies[]", "[in] string ServiceDependencies[]"]},
 				{"name":"Delete", "args":[]},
@@ -774,7 +774,7 @@
 				"UserName",
 				"WakeUpType",
 				"Workgroup"
-		  ],
+		],
 			"methods":[
 				{"name":"Rename", "args":["[in] string Name", "[in] string Password", "[in] string UserName"]},
 				{"name":"JoinDomainOrWorkgroup", "args":["[in] string Name", "[in] string Password", "[in] string UserName", "[in] string AccountOU", "[in] uint32 FJoinOptions"]},
@@ -2044,7 +2044,7 @@
 				{"name":"EnableIPFilterSec", "args":["[in] boolean IPFilterSecurityEnabled"]},
 				{"name":"EnableIPSec", "args":["[in] string IPSecPermitTCPPorts[]", "[in] string IPSecPermitUDPPorts[]", "[in] string IPSecPermitIPProtocols[]"]},
 				{"name":"EnableStatic", "args":["[in] string IPAddress[]", "[in] string SubnetMask[]"]},
-				{"name":"EnableWINS", "args":["[in] boolean DNSEnabledForWINSResolution", "[in] boolean WINSEnableLMHostsLookup", "[in, optional] string  WINSHostLookupFile", "[in, optional] string  WINSScopeID)"]},
+				{"name":"EnableWINS", "args":["[in] boolean DNSEnabledForWINSResolution", "[in] boolean WINSEnableLMHostsLookup", "[in, optional] string WINSHostLookupFile", "[in, optional] string WINSScopeID)"]},
 				{"name":"ReleaseDHCPLease", "args":[]},
 				{"name":"ReleaseDHCPLeaseAll", "args":[]},
 				{"name":"RenewDHCPLease", "args":[]},
@@ -2380,7 +2380,7 @@
 				{"name":"TakeOwnerShip", "args":[]},
 				{"name":"TakeOwnerShipEx", "args":["[out] string StopFileName", "[in, optional] string StartFileName", "[in, optional] boolean Recursive"]},
 				{"name":"Uncompress", "args":[]},
-				{"name":"UncompressEx", "args":["[out] string  StopFileName", "[in, optional] string StartFileName", "[in, optional] boolean Recursive"]}
+				{"name":"UncompressEx", "args":["[out] string StopFileName", "[in, optional] string StartFileName", "[in, optional] boolean Recursive"]}
 			]
 		},
 		{
@@ -4435,7 +4435,7 @@
 				"WaitHint"
 			],
 			"methods": [
-				{"name":"Change", "args":["[in] string DisplayName", "[in] string PathName", "[in] uint32 ServiceType", "[in] uint32 ErrorControl", "[in] string StartMode", "[in] boolean DesktopInteract", "[in] string  StartName", "[in] string StartPassword", "[in] string LoadOrderGroup", "[in] string LoadOrderGroupDependencies[]", "[in] string ServiceDependencies[]"]},
+				{"name":"Change", "args":["[in] string DisplayName", "[in] string PathName", "[in] uint32 ServiceType", "[in] uint32 ErrorControl", "[in] string StartMode", "[in] boolean DesktopInteract", "[in] string StartName", "[in] string StartPassword", "[in] string LoadOrderGroup", "[in] string LoadOrderGroupDependencies[]", "[in] string ServiceDependencies[]"]},
 				{"name":"ChangeStartMode", "args":["[in] string StartMode"]},
 				{"name":"Create", "args":["[in] string Name", "[in] string DisplayName", "[in] string PathName", "[in] uint8 ServiceType", "[in] uint8 ErrorControl", "[in] string StartMode", "[in] boolean DesktopInteract", "[in] string StartName", "[in] string StartPassword", "[in] string LoadOrderGroup", "[in] string LoadOrderGroupDependencies[]", "[in] string ServiceDependencies[]"]},
 				{"name":"Delete", "args":[]},

@@ -65,7 +65,7 @@ class PasswordStrength extends List {
 
 				newType.style.backgroundImage = {
 					"device":"url(mono/gear.svg)",
-					"user"  :"url(mono/user.svg)"
+					"user" :"url(mono/user.svg)"
 				}[types[i]];
 
 				if (types[i] === this.args.filter) {

@@ -64,7 +64,7 @@
 }
 
 .in:focus-within > .chat-timestamp,
-.out:focus-within  > .chat-timestamp {
+.out:focus-within > .chat-timestamp {
 	opacity: 1;
 	visibility: visible;
 }
@@ -126,7 +126,7 @@
 	background-size: 40px 40px;
 	background-position: 8px center;
 	background-repeat: no-repeat;
-	border-radius:  8px;
+	border-radius: 8px;
 	-webkit-user-select: none; user-select: none;
 }
 

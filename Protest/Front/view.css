@@ -767,7 +767,7 @@ button.view-live-button:active {
 }
 
 @keyframes attribute-in {
-	0%{   opacity:0; transform: scaleY(.8);}
+	0%  { opacity:0; transform: scaleY(.8);}
 	100%{ opacity:1; transform: scaleY(1);}
 }
 
@@ -777,11 +777,11 @@ button.view-live-button:active {
 }
 
 @keyframes previous-fall-in {
-	0%{   opacity:0; transform:translateY(-12px); }
+	0%  { opacity:0; transform:translateY(-12px); }
 	100%{ opacity:1; transform:translateY(0); }
 }
 
 @keyframes slide-right {
-	0% { opacity:0; transform:translateX(-150px); }
+	0%   { opacity:0; transform:translateX(-150px); }
 	100% { opacity:1; transform: none; }
 }

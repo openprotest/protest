@@ -1141,12 +1141,12 @@ class Window {
 		this.sendChatButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to send this to team chat?", false, "mono/send.svg").addEventListener("click", ()=> {
 					KEEP.socket.send(JSON.stringify({
-					type   : "chat-command",
-					command: this.constructor.name,
-					args : JSON.stringify(this.args),
-					icon   : this.iconPath,
-					title  : this.header.textContent,
-					id: `${KEEP.username}${Date.now()}`
+						type: "chat-command",
+						command: this.constructor.name,
+						args: JSON.stringify(this.args),
+						icon: this.iconPath,
+						title: this.header.textContent,
+						id: `${KEEP.username}${Date.now()}`
 				}));
 			});
 		};

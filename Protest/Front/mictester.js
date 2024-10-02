@@ -47,7 +47,7 @@ class MicTester extends Window {
 
 		this.recordButton.onclick = () => this.Record();
 
-		this.startButton.onclick = () =>  this.Start(
+		this.startButton.onclick = () => this.Start(
 			this.args.echoCancellation,
 			this.args.noiseSuppression,
 			this.args.sampleSize,
