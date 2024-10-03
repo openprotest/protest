@@ -80,6 +80,7 @@ const LOADER = {
 	],
 
 	tertiaryScripts: [
+		"dashboard.js",
 		"about.js",
 		"addressbook.js",
 		"chat.js",
@@ -297,6 +298,8 @@ const LOADER = {
 
 	Invoke: (command)=> {
 		switch (command.class) {
+		case "Dashboard" : return new Dashboard(command.args);
+
 		case "DeviceView": return LOADER.OpenDeviceByFile(command.args.file);
 		case "UserView"  : return LOADER.OpenUserByFile(command.args.file);
 
