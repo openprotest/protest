@@ -117,19 +117,17 @@ internal static class Auth {
 
         //TODO: check all users access
 
-        bool successful = access.isDomainUser && OperatingSystem.IsWindows() ?
-            Protocols.Kerberos.TryDirectoryAuthentication(username, password) :
-            Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.hash);
-
-        IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
+        bool successful = access.isDomainUser && OperatingSystem.IsWindows()
+            ? Protocols.Kerberos.TryDirectoryAuthentication(username, password)
+            : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.hash);
 
         if (successful) {
-            Logger.Action(username, $"Successfully logged in from {remoteIp}");
+            Logger.Action(username, $"Successfully logged in from {ctx.Request.RemoteEndPoint.Address}");
             sessionId = GrandAccess(ctx, username);
             return true;
         }
 
-        Logger.Action(username, $"Unsuccessful login attempt from {remoteIp}");
+        Logger.Action(username, $"Unsuccessful login attempt from {ctx.Request.RemoteEndPoint.Address}");
         sessionId = null;
         return false;
     }
