@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/openprotest/protest/master/Protest/protest.png" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/openprotest/protest/master/protest.png" /></p>
 <h1 align="center">Pro-test</h1>
 <h2 align="center">A management base for System Admins</h2>
 
