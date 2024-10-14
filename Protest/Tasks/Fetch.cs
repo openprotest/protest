@@ -322,7 +322,9 @@ internal static class Fetch {
         if (!data.ContainsKey("location")) {
             for (int i = 0; i < ipList.Length; i++) {
                 byte[] bytes = ipList[i].GetAddressBytes();
-                ulong ipNumber = ((ulong)bytes[0] << 24) + ((ulong)bytes[0] << 16) + ((ulong)bytes[0] << 8) + bytes[0];
+                if (bytes.Length != 4) continue;
+
+                ulong ipNumber = ((ulong)bytes[0] << 24) + ((ulong)bytes[1] << 16) + ((ulong)bytes[2] << 8) + bytes[3];
                 if (ipNumber >= 2130706432 && ipNumber <= 2147483647) continue; //127.0.0.0 <> 127.255.255.255
                 if (ipNumber >= 167772160 && ipNumber <= 184549375) continue; //10.0.0.0 <> 10.255.255.255
                 if (ipNumber >= 2886729728 && ipNumber <= 2887778303) continue; //172.16.0.0 <> 172.31.255.255

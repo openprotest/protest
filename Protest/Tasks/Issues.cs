@@ -988,7 +988,7 @@ internal static class Issues {
 
                 int used = 100 * current / max;
 
-                if (used < 15) {
+                if (used < 10) {
                     list.Add(new Issue {
                         severity = used < 5 ? SeverityLevel.error : SeverityLevel.warning,
                         message  = $"{used}% {componentNameArray[i][1]}",
