@@ -192,20 +192,20 @@ internal static class LiveStats {
             if (OperatingSystem.IsWindows() && _hostname?.value?.Length > 0) {
                 try {
                     string hostname = _hostname.value;
-                    SearchResult result = Kerberos.GetWorkstation(hostname);
+                    SearchResult result = Ldap.GetWorkstation(hostname);
 
                     if (result is not null) {
                         if (result.Properties["lastLogonTimestamp"].Count > 0) {
-                            string time = Kerberos.FileTimeString(result.Properties["lastLogonTimestamp"][0].ToString());
+                            string time = Ldap.FileTimeString(result.Properties["lastLogonTimestamp"][0].ToString());
                             if (time.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logon: {Data.EscapeJsonText(time)}\",\"source\":\"Kerberos\"}}", mutex);
+                                WsWriteText(ws, $"{{\"info\":\"Last logon: {Data.EscapeJsonText(time)}\",\"source\":\"LDAP\"}}", mutex);
                             }
                         }
 
                         if (result.Properties["lastLogoff"].Count > 0) {
-                            string time = Kerberos.FileTimeString(result.Properties["lastLogoff"][0].ToString());
+                            string time = Ldap.FileTimeString(result.Properties["lastLogoff"][0].ToString());
                             if (time.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {Data.EscapeJsonText(time)}\",\"source\":\"Kerberos\"}}", mutex);
+                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {Data.EscapeJsonText(time)}\",\"source\":\"LDAP\"}}", mutex);
                             }
                         }
 
@@ -238,7 +238,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(adHostname)) {
                         adHostname = adHostname?.Split('.')[0].ToUpper();
                         if (adHostname != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"Kerberos\"}}", mutex);
+                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"LDAP\"}}", mutex);
                             mismatch = true;
                         }
                     }

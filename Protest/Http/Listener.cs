@@ -53,7 +53,7 @@ public sealed class Listener {
         { "/db/getentropy",       (ctx, parameters, username) => Tools.PasswordStrength.GetEntropy() },
         { "/db/gandalf",          (ctx, parameters, username) => Tools.PasswordStrength.GandalfThreadWrapper(ctx, username) },
 
-        { "/fetch/networkinfo",   (ctx, parameters, username) => Protocols.Kerberos.NetworkInfo() },
+        { "/fetch/networkinfo",   (ctx, parameters, username) => Protocols.Ldap.NetworkInfo() },
         { "/fetch/singledevice",  (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true) },
         { "/fetch/singleuser",    (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters) },
         { "/fetch/status",        (ctx, parameters, username) => Tasks.Fetch.Status() },
@@ -70,9 +70,9 @@ public sealed class Listener {
         { "/manage/device/logoff",    (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 4) : null },
         { "/manage/device/printtest", (ctx, parameters, username) => Proprietary.Printers.Generic.PrintTestPage(parameters) },
 
-        { "/manage/user/unlock",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.UnlockUser(parameters) : null },
-        { "/manage/user/enable",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.EnableUser(parameters) : null },
-        { "/manage/user/disable",     (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Kerberos.DisableUser(parameters) : null },
+        { "/manage/user/unlock",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.UnlockUser(parameters) : null },
+        { "/manage/user/enable",      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.EnableUser(parameters) : null },
+        { "/manage/user/disable",     (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.DisableUser(parameters) : null },
 
         { "/docs/list",               (ctx, parameters, username) => Tools.Documentation.List(parameters) },
         { "/docs/create",             (ctx, parameters, username) => Tools.Documentation.Create(ctx, username) },

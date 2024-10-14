@@ -156,9 +156,9 @@ class Fetch extends Tabs {
 		this.snmp3Button.style.visibility = "hidden";
 		this.snmp3Button.style.opacity = "0";
 
-		this.kerberosCheckbox = document.createElement("input");
-		this.kerberosCheckbox.type = "checkbox";
-		this.kerberosCheckbox.checked = true;
+		this.ldapCheckbox = document.createElement("input");
+		this.ldapCheckbox.type = "checkbox";
+		this.ldapCheckbox.checked = true;
 
 		this.portScanCheckbox = document.createElement("input");
 		this.portScanCheckbox.type = "checkbox";
@@ -372,7 +372,7 @@ class Fetch extends Tabs {
 				if (this.snmp2Checkbox.checked)    body += `snmp2=${this.snmp2Checkbox.checked}\n`;
 				if (this.snmp3Checkbox.checked)    body += `snmp3=${this.snmp3Checkbox.checked}\n`;
 				if (this.wmiCheckbox.checked)      body += "wmi=true\n";
-				if (this.kerberosCheckbox.checked) body += "kerberos=true\n";
+				if (this.ldapCheckbox.checked)     body += "ldap=true\n";
 				if (this.portScanCheckbox.checked) body += `portscan=${this.portScanInput.value}\n`;
 
 				if (this.snmp2Checkbox.checked && this.snmp2Profiles) {
@@ -633,10 +633,10 @@ class Fetch extends Tabs {
 		const wmi = this.AddCheckBoxLabel(this.tabsPanel, this.wmiCheckbox, "WMI");
 		wmi.style.gridArea = "8 / 3";
 
-		this.tabsPanel.appendChild(this.kerberosCheckbox);
-		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.kerberosCheckbox, "Kerberos");
-		kerberos.style.gridArea = "9 / 3";
-		this.kerberosCheckbox.disabled = false;
+		this.tabsPanel.appendChild(this.ldapCheckbox);
+		const ldap = this.AddCheckBoxLabel(this.tabsPanel, this.ldapCheckbox, "LDAP");
+		ldap.style.gridArea = "9 / 3";
+		this.ldapCheckbox.disabled = false;
 
 		this.tabsPanel.appendChild(this.portScanInput);
 
@@ -689,11 +689,11 @@ class Fetch extends Tabs {
 		protocolsLabel.textContent = "Protocols:";
 		this.tabsPanel.appendChild(protocolsLabel);
 
-		this.tabsPanel.appendChild(this.kerberosCheckbox);
-		const kerberos = this.AddCheckBoxLabel(this.tabsPanel, this.kerberosCheckbox, "Kerberos");
-		kerberos.style.gridArea = "5 / 3";
-		this.kerberosCheckbox.checked = true;
-		this.kerberosCheckbox.disabled = true;
+		this.tabsPanel.appendChild(this.ldapCheckbox);
+		const ldap = this.AddCheckBoxLabel(this.tabsPanel, this.ldapCheckbox, "LDAP");
+		ldap.style.gridArea = "5 / 3";
+		this.ldapCheckbox.checked = true;
+		this.ldapCheckbox.disabled = true;
 
 		this.tabsPanel.appendChild(this.buttonsBox);
 		this.buttonsBox.style.gridArea = "7 / 2 / auto / 7";

@@ -8,7 +8,7 @@ using System.Runtime.Versioning;
 
 namespace Protest.Protocols;
 
-internal static class Kerberos {
+internal static class Ldap {
 
     [SupportedOSPlatform("windows")]
     public static string[] GetAllWorkstations(string domain) {

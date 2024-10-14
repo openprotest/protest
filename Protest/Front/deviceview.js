@@ -2972,8 +2972,8 @@ class DeviceView extends View {
 		const wmiToggle = this.CreateToggle("WMI", true, grid);
 		wmiToggle.label.style.gridArea = "3 / 2";
 
-		const kerberosToggle = this.CreateToggle("Kerberos", true, grid);
-		kerberosToggle.label.style.gridArea = "4 / 2";
+		const ldapToggle = this.CreateToggle("LDAP", true, grid);
+		ldapToggle.label.style.gridArea = "4 / 2";
 
 		const portScanToggle = this.CreateToggle("Port Scan", true, grid);
 		portScanToggle.label.style.gridArea = "5 / 2";
@@ -3064,7 +3064,7 @@ class DeviceView extends View {
 				let url = `fetch/singledevice?target=${target}`;
 				if (wmiToggle.checkbox.checked)      url += `&wmi=true`;
 				if (snmpToggle.checkbox.checked)     url += `&snmp=${snmpInput.value}`;
-				if (kerberosToggle.checkbox.checked) url += `&kerberos=true`;
+				if (ldapToggle.checkbox.checked)     url += `&ldap=true`;
 				if (portScanToggle.checkbox.checked) url += `&portscan=${portScanInput.value}`;
 
 				const response = await fetch(url);

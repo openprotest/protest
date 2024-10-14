@@ -118,7 +118,7 @@ internal static class Auth {
         //TODO: check all users access
 
         bool successful = access.isDomainUser && OperatingSystem.IsWindows()
-            ? Protocols.Kerberos.TryDirectoryAuthentication(username, password)
+            ? Protocols.Ldap.TryDirectoryAuthentication(username, password)
             : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.hash);
 
         if (successful) {

@@ -690,7 +690,7 @@ internal static class Issues {
         }
 
         try {
-            SearchResult result = Kerberos.GetUser(username.value);
+            SearchResult result = Ldap.GetUser(username.value);
             List<Issue> list = new List<Issue>();
             long lockedTime = 0;
 
@@ -700,7 +700,7 @@ internal static class Issues {
                     message  = $"{username.value} is not a domain user",
                     entry    = username.value,
                     category = "Directory",
-                    source   = "Kerberos",
+                    source   = "LDAP",
                     file     = user.filename,
                     isUser   = true,
                 });
@@ -716,7 +716,7 @@ internal static class Issues {
                         message  = $"User {username.value} is disabled",
                         entry    = username.value,
                         category = "Directory",
-                        source   = "Kerberos",
+                        source   = "LDAP",
                         file     = user.filename,
                         isUser   = true,
                     });
@@ -735,7 +735,7 @@ internal static class Issues {
                             message  = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
                             entry    = username.value,
                             category = "Password",
-                            source   = "Kerberos",
+                            source   = "LDAP",
                             file     = user.filename,
                             isUser   = true,
                         });
@@ -746,7 +746,7 @@ internal static class Issues {
                             message  = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
                             entry    = username.value,
                             category = "Password",
-                            source   = "Kerberos",
+                            source   = "LDAP",
                             file     = user.filename,
                             isUser   = true,
                         });
@@ -764,7 +764,7 @@ internal static class Issues {
                         message  = $"User {username.value} is locked out",
                         entry    = username.value,
                         category = "Directory",
-                        source   = "Kerberos",
+                        source   = "LDAP",
                         file     = user.filename,
                         isUser   = true,
                     });
@@ -779,7 +779,7 @@ internal static class Issues {
                         message  = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
                         entry    = username.value,
                         category = "Directory",
-                        source   = "Kerberos",
+                        source   = "LDAP",
                         file     = user.filename,
                         isUser   = true,
                     });
@@ -793,7 +793,7 @@ internal static class Issues {
                         message  = $"Last logoff: {DateTime.FromFileTime(lastLogOffTime)}",
                         entry    = username.value,
                         category = "Directory",
-                        source   = "Kerberos",
+                        source   = "LDAP",
                         file     = user.filename,
                         isUser   = true,
                     });
@@ -809,7 +809,7 @@ internal static class Issues {
                         message  = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
                         entry    = username.value,
                         category = "Directory",
-                        source   = "Kerberos",
+                        source   = "LDAP",
                         file     = user.filename,
                         isUser   = true,
                     });

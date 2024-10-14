@@ -53,7 +53,7 @@ internal static class Fetch {
 
         parameters.TryGetValue("target", out string target);
         parameters.TryGetValue("wmi", out string wmi);
-        parameters.TryGetValue("kerberos", out string kerberos);
+        parameters.TryGetValue("ldap", out string ldap);
         parameters.TryGetValue("snmp", out string snmpProfileGuid);
         parameters.TryGetValue("portscan", out string portScan);
 
@@ -70,7 +70,7 @@ internal static class Fetch {
             target,
             true,
             wmi?.Equals("true") ?? false,
-            kerberos?.Equals("true") ?? false,
+            ldap?.Equals("true") ?? false,
             snmpProfiles,
             portScan,
             asynchronous,
@@ -83,7 +83,7 @@ internal static class Fetch {
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
-    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useKerberos, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         PingReply reply = null;
         try {
             using Ping ping = new Ping();
@@ -95,13 +95,13 @@ internal static class Fetch {
         catch { }
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useKerberos, snmpProfiles , argPortScan, asynchronous, cancellationToken);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles , argPortScan, asynchronous, cancellationToken);
             return data;
         }
 
         return null;
     }
-    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useKerberos, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
@@ -146,7 +146,7 @@ internal static class Fetch {
                     if (owner.IndexOf('\\') > -1) {
                         owner = owner.Split('\\')[1];
                     }
-                    SearchResult user = Protocols.Kerberos.GetUser(owner);
+                    SearchResult user = Protocols.Ldap.GetUser(owner);
                     string fn = string.Empty, sn = string.Empty;
 
                     if (user is not null && user.Properties["givenName"].Count > 0)
@@ -163,12 +163,12 @@ internal static class Fetch {
             });
         }
 
-        if (useKerberos) {
+        if (useLdap) {
             tAd = new Thread(() => {
                 if (!OperatingSystem.IsWindows()) { return; }
                 if (hostname is null) { return; }
 
-                SearchResult result = Protocols.Kerberos.GetWorkstation(hostname);
+                SearchResult result = Protocols.Ldap.GetWorkstation(hostname);
                 if (result is null) { return; }
 
                 if (result.Properties["description"].Count > 0) {
@@ -262,11 +262,11 @@ internal static class Fetch {
             string key = o.Key;
             if (key == "operating system") { //os not found in ad, use wmi
                 if (!wmi.ContainsKey("operating system")) {
-                    data.TryAdd(key, new string[] { o.Value, "Kerberos", string.Empty });
+                    data.TryAdd(key, new string[] { o.Value, "LDAP", string.Empty });
                 }
             }
             else {
-                data.TryAdd(key, new string[] { o.Value, "Kerberos", string.Empty });
+                data.TryAdd(key, new string[] { o.Value, "LDAP", string.Empty });
             }
         }
 
@@ -314,7 +314,7 @@ internal static class Fetch {
             if (data.TryGetValue("operating system", out string[] value)) {
                 string os = value[0];
                 if (os.Contains("server", StringComparison.CurrentCultureIgnoreCase)) { //if os is windows server, set type as server
-                    data.TryAdd("type", new string[] { "Server", "Kerberos", string.Empty });
+                    data.TryAdd("type", new string[] { "Server", "LDAP", string.Empty });
                 }
             }
         }
@@ -471,7 +471,7 @@ internal static class Fetch {
         if (!OperatingSystem.IsWindows())
             return null;
 
-        Dictionary<string, string> fetch = Protocols.Kerberos.AdFetch(target);
+        Dictionary<string, string> fetch = Protocols.Ldap.AdFetch(target);
         if (fetch is null) {
             return null;
         }
@@ -479,7 +479,7 @@ internal static class Fetch {
         ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 
         foreach (KeyValuePair<string, string> o in fetch) {
-            data.TryAdd(o.Key, new string[] { o.Value.ToString(), "Kerberos", string.Empty });
+            data.TryAdd(o.Key, new string[] { o.Value.ToString(), "LDAP", string.Empty });
         }
 
         return data;
@@ -499,7 +499,7 @@ internal static class Fetch {
 
         string dns = null;
         string wmi = null;
-        string kerberos = null;
+        string ldap = null;
         string portScan = null;
         string retriesStr = null;
         string intervalStr = null;
@@ -517,8 +517,8 @@ internal static class Fetch {
             else if (payloadLines[i].StartsWith("wmi=")) {
                 wmi = payloadLines[i][4..].Trim();
             }
-            else if (payloadLines[i].StartsWith("kerberos=")) {
-                kerberos = payloadLines[i][9..].Trim();
+            else if (payloadLines[i].StartsWith("ldap=")) {
+                ldap = payloadLines[i][9..].Trim();
             }
             else if (payloadLines[i].StartsWith("portscan=")) {
                 portScan = payloadLines[i][9..].Trim();
@@ -545,7 +545,7 @@ internal static class Fetch {
 
         dns         ??= "false";
         wmi         ??= "false";
-        kerberos    ??= "false";
+        ldap        ??= "false";
         snmp2       ??= "false";
         snmp3       ??= "false";
         portScan    ??= "false";
@@ -602,7 +602,7 @@ internal static class Fetch {
             }
         }
         else if (!String.IsNullOrEmpty(domain)) {
-            hosts = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllWorkstations(domain) : Array.Empty<string>();
+            hosts = OperatingSystem.IsWindows() ? Protocols.Ldap.GetAllWorkstations(domain) : Array.Empty<string>();
             if (hosts is null) return Data.CODE_FAILED.Array;
         }
         else if (parameters.ContainsKey("update")) {
@@ -629,7 +629,7 @@ internal static class Fetch {
             hosts,
             dns?.Equals("true") ?? false,
             wmi?.Equals("true") ?? false,
-            kerberos?.Equals("true") ?? false,
+            ldap?.Equals("true") ?? false,
             null,
             portScan,
             retries,
@@ -637,7 +637,7 @@ internal static class Fetch {
             origin
         );
     }
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool kerberos, SnmpProfiles.Profile[] snmpProfiles, string portScan, int retries, float interval, string origin) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool ldap, SnmpProfiles.Profile[] snmpProfiles, string portScan, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -660,7 +660,7 @@ internal static class Fetch {
 
                     List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>();
                     for (int i = 0; i < size; i++) {
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, kerberos, snmpProfiles, portScan, false, task.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, ldap, snmpProfiles, portScan, false, task.cancellationToken));
                     }
 
                     ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
@@ -770,7 +770,7 @@ internal static class Fetch {
                 return Data.CODE_INVALID_ARGUMENT.ToArray();
             }
 
-            string[] users = OperatingSystem.IsWindows() ? Protocols.Kerberos.GetAllUsers(domain) : Array.Empty<string>();
+            string[] users = OperatingSystem.IsWindows() ? Protocols.Ldap.GetAllUsers(domain) : Array.Empty<string>();
             if (users is null) return Data.CODE_FAILED.Array;
 
             return UsersTask(users, origin);
