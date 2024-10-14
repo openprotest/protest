@@ -101,17 +101,25 @@ class Grid extends Window {
 
 		this.floating.append(this.sortOption, this.filterOption, this.hideNullOption, this.renameOption, this.editAllOption, this.removeAllOption, this.revertOption);
 
+		const defaultColumns = (this instanceof DevicesGrid) ?
+			["name", "type", "ip", "hostname", "mac address", "serial number"] :
+			["first name", "last name", "username", "e-mail"];
+
 		let attributes = new Set();
 		for (const key in data) {
 			for (const attr in data[key]) {
 				attributes.add(attr);
 			}
 		}
-		attributes = Array.from(attributes).sort();
 
-		const defaultColumns = (this instanceof DevicesGrid) ?
-			["name", "type", "ip", "hostname", "mac address", "serial number"] :
-			["first name", "last name", "username", "e-mail"];
+		attributes = Array.from(attributes).sort((a, b) => {
+			const includesA = defaultColumns.includes(a);
+			const includesB = defaultColumns.includes(b);
+			if (includesA === includesB) return a.localeCompare(b);
+			if (includesA) return -1;
+			return 1;
+		});
+
 
 		this.attributeElements = [];
 		for (let i=0; i < attributes.length; i++) {
@@ -154,6 +162,13 @@ class Grid extends Window {
 				else {
 					this.attributeElements[i].element.style.display = "none";
 				}
+			}
+		};
+
+		this.findAttributeInput.onkeydown = event=> {
+			if (event.key === "Escape") {
+				this.findAttributeInput.value = "";
+				this.findAttributeInput.oninput();
 			}
 		};
 
