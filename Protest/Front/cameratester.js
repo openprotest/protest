@@ -143,7 +143,7 @@ class CameraTester extends Window {
 		const contrast = CreateControl("Contrast", 0, 200, 100, "%");
 		this.controlsBox.appendChild(document.createElement("br"));
 
-		const hue = CreateControl("Hue", -180, 180, 0, "°");
+		const hue = CreateControl("Hue", -180, 180, 0, " deg");
 		this.controlsBox.appendChild(document.createElement("br"));
 
 		const saturate = CreateControl("Saturate", 0, 200, 100, "%");
