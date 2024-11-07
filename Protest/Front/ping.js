@@ -572,8 +572,6 @@ class Ping extends Console {
 	}
 
 	Filter(query) {
-		let size0 = this.list.childNodes.length;
-
 		if (query.includes(";")) {
 			let ips = query.split(";");
 			for (let i = 0; i < ips.length; i++) this.Filter(ips[i].trim());
