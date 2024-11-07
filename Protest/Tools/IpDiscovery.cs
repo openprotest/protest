@@ -12,8 +12,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
 using Protest.Protocols;
 
 namespace Protest.Tools;

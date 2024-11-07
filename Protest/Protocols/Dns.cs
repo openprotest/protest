@@ -256,7 +256,7 @@ internal static class Dns {
                 answerCount = 0;
                 authorityCount = 0;
                 additionalCount = 0;
-                return "{\"error\":\"Connection timed out\",\"errorcode\":\"0\"}"u8.ToArray();
+                return "{\"error\":\"connection timed out\",\"errorcode\":\"0\"}"u8.ToArray();
             }
             else {
                 answerCount = 0;
