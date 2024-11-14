@@ -42,7 +42,10 @@ internal class Import {
 
         Uri uri = new Uri($"{protocol}://{ip}:{port}");
 
-        ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => { return true; };
+        //TODO:
+#pragma warning disable SYSLIB0014
+        ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => true;
+#pragma warning restore SYSLIB0014
 
         try {
             using HttpClient versionClient = new HttpClient();

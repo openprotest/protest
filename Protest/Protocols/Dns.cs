@@ -198,12 +198,12 @@ internal static class Dns {
                 secureStream.Flush();
 
                 byte[] responseLengthBytes = new byte[2];
-                secureStream.Read(responseLengthBytes, 0, 2);
+                secureStream.ReadExactly(responseLengthBytes, 0, 2);
                 if (BitConverter.IsLittleEndian) Array.Reverse(responseLengthBytes);
 
                 short responseLength = BitConverter.ToInt16(responseLengthBytes, 0);
                 response = new byte[responseLength];
-                secureStream.Read(response, 0, responseLength);
+                secureStream.ReadExactly(response, 0, responseLength);
 
                 secureStream.Close();
                 socket.Close();
