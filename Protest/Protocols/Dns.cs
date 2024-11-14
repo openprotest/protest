@@ -140,7 +140,8 @@ internal static class Dns {
             if (transport == TransportMethod.https) {
                 if (type == RecordType.PTR) {
                     string[] split = domainNames[0].Split(".");
-                    if (split.Length == 4 && split.All(o => int.TryParse(o, out int n) && n >= 0 && n <= 255)) {
+                    bool isIpv4 = split.Length == 4 && split.All(o => int.TryParse(o, out int n) && n >= 0 && n <= 255);
+                    if (isIpv4) {
                         domainNames[0] = $"{String.Join(".", split.Reverse())}.in-addr.arpa";
                     }
                 }
@@ -273,13 +274,13 @@ internal static class Dns {
         }
     }
 
-    private static byte[] Serialize(byte[] query, string replaced, byte[] response, Answer[] deconstructed) {
+    private static byte[] Serialize(byte[] query, string replaced, byte[] response, Answer[] answer) {
         StringBuilder builder = new StringBuilder();
 
         builder.Append('{');
 
-        if (deconstructed.Length > 0 && deconstructed[0].error > 0) {
-            string errorMessage = deconstructed[0].error switch {
+        if (answer.Length > 0 && answer[0].error > 0) {
+            string errorMessage = answer[0].error switch {
                 0 => "no error",
                 1 => "query format error",
                 2 => "server failure",
@@ -293,7 +294,7 @@ internal static class Dns {
                 254 => "invalid response",
                 _ => "unknown error"
             };
-            builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{deconstructed[0].error}\",");
+            builder.Append($"\"error\":\"{errorMessage}\",\"errorcode\": \"{answer[0].error}\",");
         }
 
         builder.Append("\"req\":[");
@@ -316,51 +317,51 @@ internal static class Dns {
 
         builder.Append("\"answer\":[");
         int count = 0;
-        for (int i = 0; i < deconstructed.Length; i++) {
-            if (deconstructed[i].isAuthoritative || deconstructed[i].isAdditional) continue;
+        for (int i = 0; i < answer.Length; i++) {
+            if (answer[i].isAuthoritative || answer[i].isAdditional) continue;
 
             if (count > 0) builder.Append(',');
 
             builder.Append('{');
-            switch (deconstructed[i].type) {
+            switch (answer[i].type) {
             case RecordType.A:
                 builder.Append("\"type\":\"A\",");
-                builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
+                builder.Append($"\"name\":\"{String.Join(".", answer[i].name)}\",");
                 break;
 
             case RecordType.NS:
                 builder.Append("\"type\":\"NS\",");
-                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(answer[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.CNAME:
                 builder.Append("\"type\":\"CNAME\",");
-                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(answer[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.SOA:
                 builder.Append("\"type\":\"SOA\",");
-                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(answer[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.PTR:
                 builder.Append("\"type\":\"PTR\",");
-                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(answer[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.MX:
                 builder.Append("\"type\":\"MX\",");
-                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(answer[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.TXT:
                 builder.Append("\"type\":\"TXT\",");
-                builder.Append($"\"name\":\"{ExtractLabel(deconstructed[i].name, 0, response, out _)}\",");
+                builder.Append($"\"name\":\"{ExtractLabel(answer[i].name, 0, response, out _)}\",");
                 break;
 
             case RecordType.AAAA:
                 builder.Append("\"type\":\"AAAA\",");
-                if (deconstructed[i].name.Length != 16) {
+                if (answer[i].name.Length != 16) {
                     builder.Append($"\"name\":\"\"");
                     break;
                 }
@@ -368,7 +369,7 @@ internal static class Dns {
                 builder.Append($"\"name\":\"");
                 for (int j = 0; j < 16; j += 2) {
                     if (j > 0) builder.Append(':');
-                    ushort word = (ushort)((deconstructed[i].name[j] << 8) | deconstructed[i].name[j + 1]);
+                    ushort word = (ushort)((answer[i].name[j] << 8) | answer[i].name[j + 1]);
                     builder.Append(Data.CompressIPv6(word.ToString("x4")));
                 }
 
@@ -377,11 +378,11 @@ internal static class Dns {
 
             case RecordType.SRV:
                 builder.Append("\"type\":\"SRV\",");
-                builder.Append($"\"name\":\"{String.Join(".", deconstructed[i].name)}\",");
+                builder.Append($"\"name\":\"{String.Join(".", answer[i].name)}\",");
                 break;
             }
 
-            builder.Append($"\"ttl\":\"{deconstructed[i].ttl}\"");
+            builder.Append($"\"ttl\":\"{answer[i].ttl}\"");
 
             builder.Append('}');
 
@@ -398,11 +399,11 @@ internal static class Dns {
         string[] domainNames,
         RecordType type,
         out string replaced,
-        bool isStandard = false,     //1
-        bool isInverse = false,      //2
+        bool isStandard     = false, //1
+        bool isInverse      = false, //2
         bool isServerStatus = false, //3
-        bool isTruncated = false,    //6
-        bool isRecursive = true      //7
+        bool isTruncated    = false, //6
+        bool isRecursive    = true   //7
     ) {
 
         replaced = null;
