@@ -28,12 +28,12 @@ internal static class Fetch {
 
     struct Result {
         public string name;
-        public Type type;
-        public long started;
-        public long finished;
+        public Type   type;
+        public long   started;
+        public long   finished;
         public ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset;
-        public int successful;
-        public int unsuccessful;
+        public int    successful;
+        public int    unsuccessful;
     }
 
     private static readonly JsonSerializerOptions fetchSerializerOptions;

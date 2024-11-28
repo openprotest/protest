@@ -316,24 +316,18 @@ internal static class IpDiscovery {
         byte[] request = Mdns.ConstructQuery(Mdns.ANY_QUERY, type);
 
         foreach (UnicastIPAddressInformation address in addresses) {
-            if (token.IsCancellationRequested) {
-                return;
-            }
-
+            if (token.IsCancellationRequested) return;
             if (IPAddress.IsLoopback(address.Address)) continue;
 
             using Socket socket = Mdns.CreateAndBindSocket(address.Address, timeout, out IPEndPoint remoteEndPoint);
-            if (socket == null)
-                continue;
+            if (socket == null) continue;
 
             try {
                 socket.SendTo(request, remoteEndPoint);
 
                 DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
                 while (DateTime.Now <= endTime) {
-                    if (token.IsCancellationRequested) {
-                        break;
-                    }
+                    if (token.IsCancellationRequested) break;
                     ParseMdnsResponse(dic, ws, mutex, type, socket);
                 }
             }
