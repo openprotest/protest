@@ -489,7 +489,7 @@ class Issues extends List {
 				newAttr.style.backgroundPosition = "0px 50%";
 				newAttr.style.backgroundRepeat = "no-repeat";
 			}
-			else if (propertyName === "entry") {
+			else if (propertyName === "identifier") {
 				newAttr.style.left = this.columnsElements[i].style.left;
 				newAttr.style.width = this.columnsElements[i].style.width;
 

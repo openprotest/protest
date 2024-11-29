@@ -718,7 +718,6 @@ internal static class Issues {
             user.attributes.TryGetValue("title", out Database.Attribute titleAttribute);
 
             if (result is null && severityThreshold <= SeverityLevel.warning) {
-
                 list.Add(new Issue {
                     severity   = SeverityLevel.warning,
                     message    = $"{username.value} is not a domain user",
