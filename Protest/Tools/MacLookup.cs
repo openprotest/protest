@@ -23,8 +23,7 @@ internal static class MacLookup {
         mac = mac.Replace("-", String.Empty);
         mac = mac.Replace(":", String.Empty);
         mac = mac.Replace(" ", String.Empty);
-        if (mac.Length < 6)
-            return null;
+        if (mac.Length < 6) return null;
 
         byte[] t = new byte[4];
         try {
@@ -41,8 +40,7 @@ internal static class MacLookup {
 
         try {
             FileInfo file = new FileInfo(Data.FILE_MAC);
-            if (!file.Exists)
-                return null;
+            if (!file.Exists) return null;
 
             FileStream stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
 

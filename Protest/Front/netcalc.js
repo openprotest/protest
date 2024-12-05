@@ -54,6 +54,11 @@ class NetCalc extends Window {
 		this.ipMask.SetIp(255,255,255,0);
 		this.ipMask.Attach(maskBox);
 
+		this.ipMask.textBoxes[0].readOnly = true;
+		this.ipMask.textBoxes[1].readOnly = true;
+		this.ipMask.textBoxes[2].readOnly = true;
+		this.ipMask.textBoxes[3].readOnly = true;
+
 		let slashLabel = document.createElement("div");
 		slashLabel.textContent = "/";
 		slashLabel.style.display = "inline-block";
@@ -213,27 +218,6 @@ class NetCalc extends Window {
 		this.ipAddress.textBoxes[1].onkeyup = this.ipAddress.textBoxes[1].oninput =
 		this.ipAddress.textBoxes[2].onkeyup = this.ipAddress.textBoxes[2].oninput =
 		this.ipAddress.textBoxes[3].onkeyup = this.ipAddress.textBoxes[3].oninput = ()=> {
-			this.Calculate();
-		};
-
-		this.ipMask.textBoxes[0].onkeyup = this.ipMask.textBoxes[0].oninput =
-		this.ipMask.textBoxes[1].onkeyup = this.ipMask.textBoxes[1].oninput =
-		this.ipMask.textBoxes[2].onkeyup = this.ipMask.textBoxes[2].oninput =
-		this.ipMask.textBoxes[3].onkeyup = this.ipMask.textBoxes[3].oninput = ()=> {
-			let bits = parseInt(this.ipMask.textBoxes[0].value).toString(2) +
-				parseInt(this.ipMask.textBoxes[1].value).toString(2) +
-				parseInt(this.ipMask.textBoxes[2].value).toString(2) +
-				parseInt(this.ipMask.textBoxes[3].value).toString(2);
-
-			let bitCount = 0;
-			for (let i = 0; i < bits; i++) {
-				if (bits[i] == "0") break;
-				bitCount++;
-			}
-
-			this.cidrRange.value = bitCount;
-			this.cidrInput.value = bitCount;
-
 			this.Calculate();
 		};
 
