@@ -116,6 +116,21 @@ class NetCalc extends Window {
 		this.mapBox.style.textAlign = "center";
 		this.content.appendChild(this.mapBox);
 
+		this.maskError = document.createElement("div");
+		this.maskError.style.gridArea = "9 / 5 / 1 / 5";
+		this.maskError.style.width = "32px";
+		this.maskError.style.height = "32px";
+		this.maskError.style.margin = "4px 8px";
+		this.maskError.style.backgroundColor = "var(--clr-critical)";
+		this.maskError.style.maskImage = "url(mono/error.svg)";
+		this.maskError.style.maskSize = "24px 24px";
+		this.maskError.style.maskPosition = "0 50%";
+		this.maskError.style.maskRepeat = "no-repeat";
+		this.maskError.style.transition = ".2s";
+		this.maskError.style.opacity = "0";
+		this.content.appendChild(this.maskError);
+
+
 		this.subnetLabel = document.createElement("div");
 		this.subnetLabel.textContent = `Subnet:\n192.168.0.0`;
 		this.subnetLabel.style.gridArea = "11 / 2 / 1 / 2";
@@ -199,6 +214,7 @@ class NetCalc extends Window {
 			newBit.style.width = "12px";
 			newBit.style.height = "14px";
 			newBit.style.margin = "0 1px 0 0";
+			newBit.style.boxShadow = "rgb(16,16,16) 0 0 1px inset";
 			newBit.style.borderRadius = "1px";
 			newBit.style.transition = ".4s";
 			if (i % 8 == 0 && 1 > 0) newBit.style.margin = "0 1px 0 4px";
@@ -233,6 +249,7 @@ class NetCalc extends Window {
 
 		if (octet == 10) this.classLabel.textContent = "Private";
 		else if (octet > 0 && octet < 127) this.classLabel.textContent = "Class A";
+
 		else if (octet == 127) this.classLabel.textContent = "Local host";
 
 		else if (octet == 172 && octet2 > 15 && octet2 < 32) this.classLabel.textContent = "Private";
@@ -250,18 +267,31 @@ class NetCalc extends Window {
 			broadcast.push(ip[i] | (255 - mask[i]));
 		}
 
-		let static_bits = 0;
-		if (octet > 0 && octet <= 127) static_bits = 8;
-		else if (octet > 127 && octet <= 192) static_bits = 16;
-		else static_bits = 24;
+		let static_bits  = 0;
+		let default_cidr = 0;
+
+		if (octet > 0 && octet <= 127) {
+			default_cidr = 8;
+			static_bits = 8;
+		}
+		else if (octet > 127 && octet < 192) {
+			default_cidr = 12;
+			static_bits = 16;
+		}
+		else {
+			default_cidr = 16;
+			static_bits = 24;
+		}
 
 		for (let i = 0; i < 32; i++) {
-			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(232,96,0)" : "rgb(96,232,23)";
+			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(96,232,23)" : "rgb(52,169,228)";
 		}
 
-		for (let i = 0; i < static_bits; i++) {
-			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(232,0,0)" : "rgb(96,232,32)";
+		for (let i = 0; i < default_cidr; i++) {
+			this.mapBox.childNodes[i].style.backgroundColor = i < default_cidr ? "var(--clr-critical)" : "rgb(52,169,228)";
 		}
+
+		this.maskError.style.opacity = this.cidrRange.value < default_cidr ? "1" : "0";
 
 		this.subnetLabel.textContent = `Subnet:\n${net.join(".")}`;
 		this.broadcastLabel.textContent = `Broadcast:\n${broadcast.join(".")}`;
@@ -270,6 +300,8 @@ class NetCalc extends Window {
 
 		this.totalLabel.textContent = `Hosts:\n${(Math.pow(2, 32 - this.cidrRange.value) - 2)}`;
 
-		this.wildcardBox.textContent = `${255-mask[0]}.${255-mask[1]}.${255-mask[2]}.${255-mask[3]}`;
+		this.wildcardBox.textContent = `${255 - mask[0]}.${255 - mask[1]}.${255 - mask[2]}.${255 - mask[3]}`;
+
+
 	}
 }
