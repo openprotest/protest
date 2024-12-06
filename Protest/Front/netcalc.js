@@ -214,8 +214,8 @@ class NetCalc extends Window {
 			newBit.style.width = "12px";
 			newBit.style.height = "14px";
 			newBit.style.margin = "0 1px 0 0";
-			newBit.style.boxShadow = "rgb(16,16,16) 0 0 1px inset";
-			newBit.style.borderRadius = "1px";
+			newBit.style.boxShadow = "rgba(32,32,32,.5) 0 0 0 1px inset";
+			newBit.style.borderRadius = "2px";
 			newBit.style.transition = ".4s";
 			if (i % 8 == 0 && 1 > 0) newBit.style.margin = "0 1px 0 4px";
 			this.mapBox.appendChild(newBit);
@@ -284,11 +284,11 @@ class NetCalc extends Window {
 		}
 
 		for (let i = 0; i < 32; i++) {
-			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(96,232,23)" : "rgb(52,169,228)";
+			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(52,169,228)" : "rgb(96,232,23)";
 		}
 
 		for (let i = 0; i < default_cidr; i++) {
-			this.mapBox.childNodes[i].style.backgroundColor = i < default_cidr ? "var(--clr-critical)" : "rgb(52,169,228)";
+			this.mapBox.childNodes[i].style.backgroundColor = i < default_cidr ? "var(--clr-critical)" : "rgb(96,232,23)";
 		}
 
 		this.maskError.style.opacity = this.cidrRange.value < default_cidr ? "1" : "0";
