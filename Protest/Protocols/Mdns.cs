@@ -23,14 +23,14 @@ internal class Mdns {
 
     public struct Answer {
         public RecordType type;
-        public int ttl;
-        public ushort length;
-        public string questionString;
-        public string answerString;
-        public IPAddress remote;
-        public bool isAuthoritative;
-        public bool isAdditional;
-        public byte error;
+        public int        ttl;
+        public ushort     length;
+        public string     questionString;
+        public string     answerString;
+        public IPAddress  remote;
+        public bool       isAuthoritative;
+        public bool       isAdditional;
+        public byte       error;
     }
 
     public static byte[] Resolve(Dictionary<string, string> parameters) {

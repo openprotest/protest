@@ -1,12 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>13</LangVersion>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-
     <Product>Pro-test</Product>
     <AssemblyName>protest</AssemblyName>
     <Company>veniware</Company>
@@ -17,33 +11,36 @@
     <ApplicationIcon>protest.ico</ApplicationIcon>
     <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
+    <OutputType>Exe</OutputType>
+    <LangVersion>13</LangVersion>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <Platforms>x64</Platforms>
+
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <NoWarn>IDE0090, IDE0305</NoWarn>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
     <verYear>$([System.DateTime]::UtcNow.ToString(yyyy))</verYear>
     <verDoty>$([System.DateTime]::UtcNow.DayOfYear)</verDoty>
     <VersionPrefix>5.0.$(verYear).$(verDoty)</VersionPrefix>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <Version>$(VersionPrefix)</Version>
-    
-    <ServerGarbageCollection>true</ServerGarbageCollection>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-    <NoWarn>IDE0090</NoWarn>
-    <WarningLevel>9999</WarningLevel>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <PublishAot>false</PublishAot>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
-
-    <!--<SelfContained>true</SelfContained>-->
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-
-    <PublishAot>false</PublishAot>
-    <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
