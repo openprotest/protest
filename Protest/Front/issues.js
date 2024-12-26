@@ -38,22 +38,25 @@ class Issues extends List {
 		this.AddCssDependencies("issues.css");
 		this.AddCssDependencies("list.css");
 
-		const columns = ["severity", "issue", "entry", "category", "source"];
+		const columns = ["severity", "issue", "name", "identifier", "category", "source"];
 		this.SetupColumns(columns);
 
 		this.columnsElements[0].style.width = "10%";
 
 		this.columnsElements[1].style.left = "10%";
-		this.columnsElements[1].style.width = "45%";
+		this.columnsElements[1].style.width = "40%";
 
-		this.columnsElements[2].style.left = "55%";
-		this.columnsElements[2].style.width = "15%";
+		this.columnsElements[2].style.left = "50%";
+		this.columnsElements[2].style.width = "20%";
 
 		this.columnsElements[3].style.left = "70%";
-		this.columnsElements[3].style.width = "15%";
+		this.columnsElements[3].style.width = "10%";
 
-		this.columnsElements[4].style.left = "85%";
-		this.columnsElements[4].style.width = "15%";
+		this.columnsElements[4].style.left = "80%";
+		this.columnsElements[4].style.width = "10%";
+
+		this.columnsElements[5].style.left = "90%";
+		this.columnsElements[5].style.width = "10%";
 
 		this.columnsOptions.style.display = "none";
 
@@ -381,15 +384,16 @@ class Issues extends List {
 		const key = Date.now() + Math.random() * 1000;
 
 		const newIssue = {
-			key     : {v:key},
-			severity: {v:issue.severity},
-			issue   : {v:issue.issue},
-			entry   : {v:issue.entry},
-			type    : {v:issue.category},
-			category: {v:issue.category},
-			source  : {v:issue.source},
-			isUser  : {v:issue.isUser},
-			file    : {v:issue.file},
+			key       : {v:key},
+			severity  : {v:issue.severity},
+			issue     : {v:issue.issue},
+			name      : {v:issue.name},
+			identifier: {v:issue.identifier},
+			type      : {v:issue.category},
+			category  : {v:issue.category},
+			source    : {v:issue.source},
+			isUser    : {v:issue.isUser},
+			file      : {v:issue.file},
 		};
 
 		this.link.data[key] = newIssue;
@@ -452,7 +456,7 @@ class Issues extends List {
 		icon.className = "list-element-icon";
 		element.appendChild(icon);
 
-		for (let i = 0; i < this.columnsElements.length; i++) {
+		for (let i=0; i<this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in issue)) continue;
 			const propertyName = this.columnsElements[i].textContent;
 
@@ -485,7 +489,7 @@ class Issues extends List {
 				newAttr.style.backgroundPosition = "0px 50%";
 				newAttr.style.backgroundRepeat = "no-repeat";
 			}
-			else if (propertyName === "entry") {
+			else if (propertyName === "identifier") {
 				newAttr.style.left = this.columnsElements[i].style.left;
 				newAttr.style.width = this.columnsElements[i].style.width;
 

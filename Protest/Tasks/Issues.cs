@@ -36,7 +36,8 @@ internal static class Issues {
     public struct Issue {
         public SeverityLevel severity;
         public string message;
-        public string entry;
+        public string name;
+        public string identifier;
         public string category;
         public string source;
         public string file;
@@ -134,14 +135,15 @@ internal static class Issues {
 
                 if (filtered.Any()) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
-                        //timestamp = o.timestamp / 10000 - 62135596800000,
-                        severity  = o.severity,
-                        issue     = o.message,
-                        entry     = o.entry,
-                        category  = o.category,
-                        source    = o.source,
-                        file      = o.file,
-                        isUser    = o.isUser,
+                        timestamp  = o.timestamp / 10000 - 62135596800000,
+                        severity   = o.severity,
+                        issue      = o.message,
+                        name       = o.name,
+                        identifier = o.identifier,
+                        category   = o.category,
+                        source     = o.source,
+                        file       = o.file,
+                        isUser     = o.isUser,
                     }));
 
                     await WsWriteText(ws, bytes);
@@ -267,6 +269,7 @@ internal static class Issues {
         ipAddresses = new Dictionary<string, Database.Entry>();
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
             if (device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute)) {
+                device.Value.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
                 string[] ips = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
                 for (int i = 0; i < ips.Length; i++) {
@@ -275,13 +278,14 @@ internal static class Issues {
 
                     if (ipAddresses.ContainsKey(ips[i])) {
                         issues.Add(new Issue {
-                            severity = SeverityLevel.info,
-                            message = "IP address is duplicated in various records",
-                            entry = ips[i],
-                            category = "Database",
-                            source = "Internal check",
-                            file = device.Value.filename,
-                            isUser = false,
+                            severity   = SeverityLevel.info,
+                            message    = "IP address is duplicated in various records",
+                            name       = nameAttribute?.value ?? String.Empty,
+                            identifier = ips[i],
+                            category   = "Database",
+                            source     = "Internal check",
+                            file       = device.Value.filename,
+                            isUser     = false,
                         });
 
                         continue;
@@ -298,6 +302,7 @@ internal static class Issues {
 
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
             if (device.Value.attributes.TryGetValue("mac address", out Database.Attribute ipAttribute)) {
+                device.Value.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
                 string[] macs = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
                 for (int i = 0; i < macs.Length; i++) {
@@ -309,13 +314,14 @@ internal static class Issues {
 
                     if (macAddresses.ContainsKey(macs[i])) {
                         issues.Add(new Issue {
-                            severity = SeverityLevel.info,
-                            message  = "MAC address is duplicated in various records",
-                            entry    = macs[i].Length == 12 ? Regex.Replace(macs[i], @"(\w{2})(?=\w)", "$1:") : macs[i],
-                            category = "Database",
-                            source   = "Internal check",
-                            file     = device.Value.filename,
-                            isUser   = false,
+                            severity   = SeverityLevel.info,
+                            message    = "MAC address is duplicated in various records",
+                            name       = nameAttribute?.value ?? String.Empty,
+                            identifier = macs[i].Length == 12 ? Regex.Replace(macs[i], @"(\w{2})(?=\w)", "$1:") : macs[i],
+                            category   = "Database",
+                            source     = "Internal check",
+                            file       = device.Value.filename,
+                            isUser     = false,
                         });
 
                         continue;
@@ -381,14 +387,17 @@ internal static class Issues {
         });
 
         if (hasSpike) {
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue() {
-                severity = SeverityLevel.info,
-                message  = $"RTT spike detected at {spike}ms",
-                entry    = host,
-                category = "Round-trip time",
-                source   = "ICMP",
-                file     = device.filename,
-                isUser   = false,
+                severity   = SeverityLevel.info,
+                message    = $"RTT spike detected at {spike}ms",
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = host,
+                category   = "Round-trip time",
+                source     = "ICMP",
+                file       = device.filename,
+                isUser     = false,
             };
             return true;
         }
@@ -437,14 +446,17 @@ internal static class Issues {
 
         double mean = Math.Round(values.Average(), 1);
         if (mean >= CPU_UTILIZATION_THRESHOLD) {
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue {
-                severity = SeverityLevel.error,
-                message  = $"CPU utilization averaged {mean}% over the last 3 days",
-                entry    = host,
-                category = "CPU utilization",
-                source   = "WMI",
-                file     = device.filename,
-                isUser   = false,
+                severity   = SeverityLevel.error,
+                message    = $"CPU utilization averaged {mean}% over the last 3 days",
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = host,
+                category   = "CPU utilization",
+                source     = "WMI",
+                file       = device.filename,
+                isUser     = false,
             };
             return true;
         }
@@ -500,14 +512,17 @@ internal static class Issues {
 
         double mean = Math.Round(values.Average(), 1);
         if (mean > MEMORY_USAGE_THRESHOLD) {
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue {
-                severity = SeverityLevel.error,
-                message  = $"Memory usage averaged {mean}% over the last 3 days",
-                entry    = host,
-                category = "Memory usage",
-                source   = "WMI",
-                file     = device.filename,
-                isUser   = false,
+                severity   = SeverityLevel.error,
+                message    = $"Memory usage averaged {mean}% over the last 3 days",
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = host,
+                category   = "Memory usage",
+                source     = "WMI",
+                file       = device.filename,
+                isUser     = false,
             };
             return true;
         }
@@ -605,14 +620,17 @@ internal static class Issues {
 
                 if (predictedDate > DateTime.Now.Date.AddYears(1)) { continue; }
 
+                device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
                 issuesList.Add(new Issue {
-                    severity = SeverityLevel.warning,
-                    message  = $"Disk {diskEntry.Key}: free space is predicted to drop below {DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
-                    entry    = host,
-                    category = "Disk space",
-                    source   = "WMI",
-                    file     = device.filename,
-                    isUser   = false,
+                    severity   = SeverityLevel.warning,
+                    message    = $"Disk {diskEntry.Key}: free space is predicted to drop below {DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    name       = nameAttribute?.value ?? String.Empty,
+                    identifier = host,
+                    category   = "Disk space",
+                    source     = "WMI",
+                    file       = device.filename,
+                    isUser     = false,
                 });
             }
         }
@@ -666,14 +684,17 @@ internal static class Issues {
 
         double mean = Math.Round(values.Average(), 1);
         if (mean > DISK_IO_THRESHOLD) {
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue {
-                severity = SeverityLevel.error,
-                message  = $"Disk I/O averaged {mean}% over the last 3 days",
-                entry    = host,
-                category = "Disk I/O",
-                source   = "WMI",
-                file     = device.filename,
-                isUser   = false,
+                severity   = SeverityLevel.error,
+                message    = $"Disk I/O averaged {mean}% over the last 3 days",
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = host,
+                category   = "Disk I/O",
+                source     = "WMI",
+                file       = device.filename,
+                isUser     = false,
             };
             return true;
         }
@@ -694,15 +715,18 @@ internal static class Issues {
             List<Issue> list = new List<Issue>();
             long lockedTime = 0;
 
+            user.attributes.TryGetValue("title", out Database.Attribute titleAttribute);
+
             if (result is null && severityThreshold <= SeverityLevel.warning) {
                 list.Add(new Issue {
-                    severity = SeverityLevel.warning,
-                    message  = $"{username.value} is not a domain user",
-                    entry    = username.value,
-                    category = "Directory",
-                    source   = "LDAP",
-                    file     = user.filename,
-                    isUser   = true,
+                    severity   = SeverityLevel.warning,
+                    message    = $"{username.value} is not a domain user",
+                    name       = titleAttribute?.value ?? String.Empty,
+                    identifier = username.value,
+                    category   = "Directory",
+                    source     = "LDAP",
+                    file       = user.filename,
+                    isUser     = true,
                 });
             }
             else {
@@ -711,14 +735,16 @@ internal static class Issues {
                     && result.Properties["userAccountControl"].Count > 0
                     && Int32.TryParse(result.Properties["userAccountControl"][0].ToString(), out int userControl)
                     && (userControl & 0x0002) != 0) {
+
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message  = $"User {username.value} is disabled",
-                        entry    = username.value,
-                        category = "Directory",
-                        source   = "LDAP",
-                        file     = user.filename,
-                        isUser   = true,
+                        severity   = SeverityLevel.info,
+                        message    = $"User {username.value} is disabled",
+                        name       = titleAttribute?.value ?? String.Empty,
+                        identifier = username.value,
+                        category   = "Directory",
+                        source     = "LDAP",
+                        file       = user.filename,
+                        isUser     = true,
                     });
                     isDisabled = true;
                 }
@@ -731,24 +757,26 @@ internal static class Issues {
 
                     if (severityThreshold <= SeverityLevel.error && lastPasswordChange < oneYearAgo) {
                         list.Add(new Issue {
-                            severity = SeverityLevel.error,
-                            message  = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
-                            entry    = username.value,
-                            category = "Password",
-                            source   = "LDAP",
-                            file     = user.filename,
-                            isUser   = true,
+                            severity   = SeverityLevel.error,
+                            message    = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            name       = titleAttribute?.value ?? String.Empty,
+                            identifier = username.value,
+                            category   = "Password",
+                            source     = "LDAP",
+                            file       = user.filename,
+                            isUser     = true,
                         });
                     }
                     else if (severityThreshold <= SeverityLevel.warning && lastPasswordChange < sixMonthsAgo) {
                         list.Add(new Issue {
-                            severity = SeverityLevel.warning,
-                            message  = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
-                            entry    = username.value,
-                            category = "Password",
-                            source   = "LDAP",
-                            file     = user.filename,
-                            isUser   = true,
+                            severity   = SeverityLevel.warning,
+                            message    = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            name       = titleAttribute?.value ?? String.Empty,
+                            identifier = username.value,
+                            category   = "Password",
+                            source     = "LDAP",
+                            file       = user.filename,
+                            isUser     = true,
                         });
                     }
                 }
@@ -758,15 +786,15 @@ internal static class Issues {
                     && Int64.TryParse(result.Properties["lockoutTime"][0].ToString(), out lockedTime)
                     && lockedTime > 0
                     && DateTime.UtcNow < DateTime.FromFileTime(lockedTime).AddHours(1)) {
-
                     list.Add(new Issue {
-                        severity = SeverityLevel.warning,
-                        message  = $"User {username.value} is locked out",
-                        entry    = username.value,
-                        category = "Directory",
-                        source   = "LDAP",
-                        file     = user.filename,
-                        isUser   = true,
+                        severity   = SeverityLevel.warning,
+                        message    = $"User {username.value} is locked out",
+                        name       = titleAttribute?.value ?? String.Empty,
+                        identifier = username.value,
+                        category   = "Directory",
+                        source     = "LDAP",
+                        file       = user.filename,
+                        isUser     = true,
                     });
                 }
 
@@ -775,13 +803,14 @@ internal static class Issues {
                     && Int64.TryParse(result.Properties["lastLogonTimestamp"][0].ToString(), out long lastLogonTimestamp)
                     && lastLogonTimestamp > 0) {
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message  = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
-                        entry    = username.value,
-                        category = "Directory",
-                        source   = "LDAP",
-                        file     = user.filename,
-                        isUser   = true,
+                        severity   = SeverityLevel.info,
+                        message    = $"Last logon: {DateTime.FromFileTime(lastLogonTimestamp)}",
+                        name       = titleAttribute?.value ?? String.Empty,
+                        identifier = username.value,
+                        category   = "Directory",
+                        source     = "LDAP",
+                        file       = user.filename,
+                        isUser     = true,
                     });
                 }
 
@@ -791,6 +820,7 @@ internal static class Issues {
                     list.Add(new Issue {
                         severity = SeverityLevel.info,
                         message  = $"Last logoff: {DateTime.FromFileTime(lastLogOffTime)}",
+                        name     = titleAttribute?.value ?? String.Empty,
                         entry    = username.value,
                         category = "Directory",
                         source   = "LDAP",
@@ -805,13 +835,14 @@ internal static class Issues {
                     && Int64.TryParse(result.Properties["badPasswordTime"][0].ToString(), out long badPasswordTime)
                     && badPasswordTime > 0) {
                     list.Add(new Issue {
-                        severity = SeverityLevel.info,
-                        message  = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
-                        entry    = username.value,
-                        category = "Directory",
-                        source   = "LDAP",
-                        file     = user.filename,
-                        isUser   = true,
+                        severity   = SeverityLevel.info,
+                        message    = $"Bad password time: {(DateTime.FromFileTime(badPasswordTime))}",
+                        name       = titleAttribute?.value ?? String.Empty,
+                        identifier = username.value,
+                        category   = "Directory",
+                        source     = "LDAP",
+                        file       = user.filename,
+                        isUser     = true,
                     });
                 }
             }
@@ -861,14 +892,21 @@ internal static class Issues {
                 }
 
                 double entropyRounded = Math.Round(entropy, 2);
+                entry.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+                
+                if (nameAttribute is null) {
+                    entry.attributes.TryGetValue("title", out nameAttribute);
+                }
+
                 issue = new Issue {
-                    severity = Issues.SeverityLevel.critical,
-                    entry    = target,
-                    message  = $"Weak password with {entropyRounded} bit{(entropyRounded <= 1 ? "" : "s")} of entropy",
-                    category = "Password",
-                    source   = "Internal check",
-                    file     = entry.filename,
-                    isUser   = isUser,
+                    severity   = Issues.SeverityLevel.critical,
+                    message    = $"Weak password with {entropyRounded} bit{(entropyRounded <= 1 ? "" : "s")} of entropy",
+                    name       = nameAttribute?.value ?? String.Empty,
+                    identifier = target,
+                    category   = "Password",
+                    source     = "Internal check",
+                    file       = entry.filename,
+                    isUser     = isUser,
                 };
                 return true;
             }
@@ -882,40 +920,52 @@ internal static class Issues {
         string message = $"{Math.Round(percent, 1)}% free space on disk {Data.EscapeJsonText(diskCaption)}:";
 
         if (percent <= 1) {
+            Database.Entry device = DatabaseInstances.devices.GetEntry(file);
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue {
                 severity = SeverityLevel.critical,
-                entry    = target,
-                message  = message,
-                category = "Disk space",
-                source   = "WMI",
-                file     = file,
-                isUser   = false,
+                message    = message,
+                identifier = target,
+                name       = nameAttribute?.value ?? String.Empty,
+                category   = "Disk space",
+                source     = "WMI",
+                file       = file,
+                isUser     = false,
             };
             return true;
         }
 
         if (percent <= 5) {
+            Database.Entry device = DatabaseInstances.devices.GetEntry(file);
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue {
-                severity = SeverityLevel.error,
-                entry    = target,
-                message  = message,
-                category = "Disk space",
-                source   = "WMI",
-                file     = file,
-                isUser   = false,
+                severity   = SeverityLevel.error,
+                message    = message,
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = target,
+                category   = "Disk space",
+                source     = "WMI",
+                file       = file,
+                isUser     = false,
             };
             return true;
         }
 
         if (percent < 15) {
+            Database.Entry device = DatabaseInstances.devices.GetEntry(file);
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             issue = new Issue {
-                severity = SeverityLevel.warning,
-                entry    = target,
-                message  = message,
-                category = "Disk space",
-                source   = "WMI",
-                file     = file,
-                isUser   = false,
+                severity   = SeverityLevel.warning,
+                message    = message,
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = target,
+                category   = "Disk space",
+                source     = "WMI",
+                file       = file,
+                isUser     = false,
             };
             return true;
         }
@@ -975,6 +1025,9 @@ internal static class Issues {
             Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
             Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
 
+            Database.Entry device = DatabaseInstances.devices.GetEntry(file);
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
             List<Issue> list = new List<Issue>();
 
             for (int i = 0; i < componentNameArray.Length; i++) {
@@ -990,13 +1043,14 @@ internal static class Issues {
 
                 if (used < 10) {
                     list.Add(new Issue {
-                        severity = used < 5 ? SeverityLevel.error : SeverityLevel.warning,
-                        message  = $"{used}% {componentNameArray[i][1]}",
-                        entry    = ipAddress.ToString(),
-                        category = "Printer component",
-                        source   = "SNMP",
-                        file     = file,
-                        isUser   = false,
+                        severity   = used < 5 ? SeverityLevel.error : SeverityLevel.warning,
+                        message    = $"{used}% {componentNameArray[i][1]}",
+                        name       = nameAttribute?.value ?? String.Empty,
+                        identifier = ipAddress.ToString(),
+                        category   = "Printer component",
+                        source     = "SNMP",
+                        file       = file,
+                        isUser     = false,
                     });
                 }
             }

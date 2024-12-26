@@ -136,7 +136,7 @@ class IpBox {
 	}
 
 	SetEnabled(option) {
-		for (let i = 0; i < 4; i++) {
+		for (let i=0; i<4; i++) {
 			this.textBoxes[i].disabled = !option;
 		}
 	}
