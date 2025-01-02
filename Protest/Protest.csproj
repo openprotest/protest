@@ -13,7 +13,7 @@
 
     <OutputType>Exe</OutputType>
     <LangVersion>13</LangVersion>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <Platforms>x64</Platforms>
 
     <ServerGarbageCollection>true</ServerGarbageCollection>
