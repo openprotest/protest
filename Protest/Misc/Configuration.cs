@@ -130,7 +130,7 @@ internal static class Configuration {
         builder.AppendLine("#http_prefix = https://+:443/");
         builder.AppendLine();
 
-        builder.AppendLine($"# When the backdoor is enabled, requests originating from the loopback address bypass authentication.");
+        builder.AppendLine($"# When the backdoor flag set to true, requests originating from the loopback address bypass authentication");
         builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
         builder.AppendLine();
 

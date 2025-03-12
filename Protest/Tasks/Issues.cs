@@ -623,8 +623,8 @@ internal static class Issues {
                 device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
                 issuesList.Add(new Issue {
-                    severity   = SeverityLevel.warning,
-                    message    = $"Disk {diskEntry.Key}: free space is predicted to drop below {DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
+                    severity   = SeverityLevel.info,
+                    message    = $"Disk {diskEntry.Key}: free space is predicted to drop below {100 - DISK_SPACE_THRESHOLD}% on {predictedDate.ToString(Data.DATE_FORMAT_LONG)}",
                     name       = nameAttribute?.value ?? String.Empty,
                     identifier = host,
                     category   = "Disk space",
