@@ -348,6 +348,7 @@ class Mdns extends Console {
 				hexBox.style.top = "4px";
 				hexBox.style.backgroundSize = "contain";
 				hexBox.style.backgroundImage = "url(mono/hexviewer.svg?light)";
+				hexBox.style.backgroundRepeat = "no-repeat";
 				hexBox.style.cursor = "pointer";
 				element.appendChild(hexBox);
 
