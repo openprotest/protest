@@ -243,9 +243,9 @@ class AddressBook extends Window {
 					text: type==="vcard" ? value : `${type}:${value}`,
 					width: size,
 					height: size,
-					colorDark : "#202020",
-					colorLight : "transparent",
-					correctLevel : QRCode.CorrectLevel.L
+					colorDark: "#202020",
+					colorLight: "transparent",
+					correctLevel: QRCode.CorrectLevel.L
 				});
 
 				const qrText = document.createElement("div");
@@ -326,6 +326,12 @@ class AddressBook extends Window {
 
 			preview.style.transition = ".2s";
 			closeButton.style.opacity = "0";
+
+			const qrButton = preview.querySelector(".qr-icon");
+			if (qrButton) {
+				qrButton.style.transition = ".2s";
+				qrButton.style.opacity = "0";
+			}
 
 			if (this.args.view === "card") {
 				preview.style.width = `${element.clientWidth*2}px`;

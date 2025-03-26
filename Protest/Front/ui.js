@@ -87,7 +87,7 @@ const UI = {
 		}
 	},
 
-	PromptAgent: (parent, command, value)=>{
+	PromptAgent: (parent, command, value, password)=>{
 		let key = localStorage.getItem("agent_key");
 
 		if (!key) {
@@ -97,7 +97,10 @@ const UI = {
 			return;
 		}
 
-		let url = btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}`);
+		let url = password
+			? btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}${String.fromCharCode(127)}${password}`)
+			: btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}`);
+
 		const iframe = document.createElement("iframe");
 		iframe.src = `protest://${url}`;
 		iframe.style.border = "none";

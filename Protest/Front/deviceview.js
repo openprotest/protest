@@ -35,7 +35,7 @@ class DeviceView extends View {
 		"object guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
 
 		["mono/credential.svg", "credentials"],
-		"domain", "username", "password", "ssh username", "ssh password", "anydesk id", "anydesk password"
+		"domain", "username", "password", "ssh username", "ssh password", "uvnc password", "anydesk id", "anydesk password"
 	];
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
@@ -672,23 +672,37 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.uvnc) { //uvnc
 				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
-				actionButton.onclick = ()=> {
+				actionButton.onclick = async ()=> {
 					if (localStorage.getItem("prefer_rdp_file") === "true") {
 						this.DownloadVnc(host, overwriteProtocol.uvnc);
 					}
 					else {
-						UI.PromptAgent(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`);
+						let uvncPassword = null;
+						if ("uvnc password" in this.link) {
+							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=uvnc password`);
+							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+							uvncPassword = await response.text();
+							if (uvncPassword.length === 0) uvncPassword = null;
+						}
+						UI.PromptAgent(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`, uvncPassword);
 					}
 				}
 			}
 			else if (ports.includes(5900)) {
 				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
-				actionButton.onclick = ()=> {
+				actionButton.onclick = async ()=> {
 					if (localStorage.getItem("prefer_rdp_file") === "true") {
 						this.DownloadVnc(host, 5900);
 					}
 					else {
-						UI.PromptAgent(this, "uvnc", host);
+						let uvncPassword = null;
+						if ("uvnc password" in this.link) {
+							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=uvnc password`);
+							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+							uvncPassword = await response.text();
+							if (uvncPassword.length === 0) uvncPassword = null;
+						}
+						UI.PromptAgent(this, "uvnc", host, uvncPassword);
 					}
 				}
 			}

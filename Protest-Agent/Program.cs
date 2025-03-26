@@ -36,7 +36,12 @@ namespace ProtestAgent {
             string key = split[0];
             if (key != Configuration.presharedKey) return;
 
-            Mux(split[1], split[2]);
+            if (split.Length > 3) {
+                Mux(split[1], split[2], split[3]);
+            }
+            else {
+                Mux(split[1], split[2], String.Empty);
+            }
         }
 
         private static void ShowUI() {
@@ -45,7 +50,7 @@ namespace ProtestAgent {
             Application.Run(new Main());
         }
 
-        private static void Mux(string command, string value) {
+        private static void Mux(string command, string value, string password) {
             switch (command) {
             case "settings":
                 ShowUI();
@@ -95,7 +100,9 @@ namespace ProtestAgent {
                         File.Delete(filename);
                     }).Start();
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Exception");
+                }
                 break;
 
             case "smb":
@@ -108,7 +115,9 @@ namespace ProtestAgent {
                         p.Start();
                     }
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Exception");
+                }
                 break;
 
             case "rdp":
@@ -128,13 +137,18 @@ namespace ProtestAgent {
 
             case "uvnc":
                 if (!Configuration.uvnc.enabled) return;
+
+                string uvncPassword = String.IsNullOrEmpty(password) ? Configuration.uvnc.password : password;
+
                 try {
                     Process.Start(
                         Configuration.uvnc.path,
-                        Configuration.uvnc.arguments + " -password " + Configuration.uvnc.password + " " + value
+                        Configuration.uvnc.arguments + " -password " + uvncPassword + " " + value
                     );
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Exception");
+                }
                 break;
 
             case "anydesk":
@@ -145,7 +159,9 @@ namespace ProtestAgent {
                         Configuration.anydesk.arguments + " \"" + value + "\""
                     );
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Exception");
+                }
                 break;
 
             case "winbox":
@@ -156,7 +172,9 @@ namespace ProtestAgent {
                         value + " " + Configuration.winbox.arguments
                     );
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, "Exception"); }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Exception");
+                }
                 break;
             }
         }
