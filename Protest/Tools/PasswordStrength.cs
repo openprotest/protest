@@ -242,6 +242,10 @@ public static class PasswordStrength {
             BigInteger eons = stc / EON;
             stc -= eons * EON;
 
+            if (eons > 1) {
+                return "Eons";
+            }
+
             BigInteger millenniums = stc / MILLENNIUM;
             stc -= millenniums * MILLENNIUM;
 
@@ -259,19 +263,15 @@ public static class PasswordStrength {
 
             BigInteger seconds = stc;
 
+
+
             string ttc = String.Empty;
-            if (eons != 0)
-                ttc = eons == 1 ? $"1 eon, " : $"{eons} eons, ";
-            if (millenniums != 0)
-                ttc += millenniums == 1 ? $"1 millennium, " : $"{millenniums} millenniums, ";
-            if (years != 0)
-                ttc += years == 1 ? $"1 year, " : $"{years} years, ";
-            if (days != 0)
-                ttc += days == 1 ? $"1 day, " : $"{days} days, ";
-            if (hours != 0)
-                ttc += hours == 1 ? $"1 hour, " : $"{hours} hours, ";
-            if (minutes != 0)
-                ttc += minutes == 1 ? $"1 minute, " : $"{minutes} minutes, ";
+            if (eons != 0)        ttc = eons == 1 ? $"1 eon, " : $"{eons} eons, ";
+            if (millenniums != 0) ttc += millenniums == 1 ? $"1 millennium, " : $"{millenniums} millenniums, ";
+            if (years != 0)       ttc += years == 1 ? $"1 year, " : $"{years} years, ";
+            if (days != 0)        ttc += days == 1 ? $"1 day, " : $"{days} days, ";
+            if (hours != 0)       ttc += hours == 1 ? $"1 hour, " : $"{hours} hours, ";
+            if (minutes != 0)     ttc += minutes == 1 ? $"1 minute, " : $"{minutes} minutes, ";
 
             if (seconds != 0) {
                 if (ttc.Length == 0) {
