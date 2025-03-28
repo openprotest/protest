@@ -14,7 +14,6 @@ class SiteCheck extends Window {
 		this.targetInput = document.createElement("input");
 		this.targetInput.placeholder = "URI";
 		this.targetInput.type = "text";
-		this.targetInput.maxLength = "64";
 		this.targetInput.style.fontSize = "larger";
 		this.targetInput.style.width = "60%";
 		this.targetInput.style.maxWidth = "720px";
