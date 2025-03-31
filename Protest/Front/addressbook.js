@@ -342,11 +342,17 @@ class AddressBook extends Window {
 			}
 			else {
 				preview.style.transform = "scaleY(5%)";
+				preview.style.opacity = ".2";
 			}
 
 			setTimeout(()=>{
+				preview.style.opacity = "0";
 				element.style.opacity = "1";
-				dim.parentElement.removeChild(dim)
+
+			}, 100);
+
+			setTimeout(()=>{
+				dim.parentElement.removeChild(dim);
 			}, 200);
 		};
 
