@@ -533,11 +533,11 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.telnet) { //telnet
 				const telnetButton = this.CreateSideButton("mono/telnet.svg", "Telnet");
-				telnetButton.onclick = ()=> new Telnet(host + ":" + overwriteProtocol.telnet);
+				telnetButton.onclick = ()=> new Telnet({host: host + ":" + overwriteProtocol.telnet});
 			}
 			else if (ports.includes(23)) {
 				const telnetButton = this.CreateSideButton("mono/telnet.svg", "Telnet");
-				telnetButton.onclick = ()=> new Telnet(host);
+				telnetButton.onclick = ()=> new Telnet({host: host});
 			}
 
 			if (overwriteProtocol.ssh || ports.includes(22)) {

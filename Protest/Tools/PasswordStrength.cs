@@ -264,7 +264,6 @@ public static class PasswordStrength {
             BigInteger seconds = stc;
 
 
-
             string ttc = String.Empty;
             if (eons != 0)        ttc = eons == 1 ? $"1 eon, " : $"{eons} eons, ";
             if (millenniums != 0) ttc += millenniums == 1 ? $"1 millennium, " : $"{millenniums} millenniums, ";
@@ -282,11 +281,13 @@ public static class PasswordStrength {
                 }
             }
 
-            if (ttc.EndsWith(", "))
+            if (ttc.EndsWith(", ")) {
                 ttc = ttc[..^2];
+            }
 
-            if (ttc.Length == 0)
+            if (ttc.Length == 0) {
                 ttc = "less then a second";
+            }
 
             return ttc;
         }
