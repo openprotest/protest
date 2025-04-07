@@ -31,7 +31,7 @@ input[type="number"]:focus,
 input[type="date"]:focus,
 textarea:focus,
 select:focus {
-	animation: outline .3s ease-in;
+	animation: focus-outline .3s ease-in;
 	box-shadow: var(--clr-accent) 0 0 0 2px;
 }
 

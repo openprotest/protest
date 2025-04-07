@@ -159,6 +159,9 @@ class PassGen extends Window {
 		};
 
 		let buttonsBox = document.createElement("div");
+		buttonsBox.style.display = "grid";
+		buttonsBox.style.gridTemplateColumns = "auto 100px 64px 64px auto";
+		buttonsBox.style.gridTemplateRows = "1fr";
 		buttonsBox.style.width = "100%";
 		buttonsBox.style.textAlign = "center";
 		buttonsBox.style.paddingTop = "32px";
@@ -168,32 +171,32 @@ class PassGen extends Window {
 		const generateButton = document.createElement("input");
 		generateButton.type = "button";
 		generateButton.value = "Generate";
+		generateButton.style.gridArea = "1 / 2";
 		buttonsBox.appendChild(generateButton);
 
 		const copyButton = document.createElement("input");
 		copyButton.type = "button";
-		copyButton.style.minWidth = "56px";
-		copyButton.style.width = "56px";
 		copyButton.style.backgroundImage = "url(mono/copy.svg?light)";
 		copyButton.style.backgroundSize = "28px 28px";
 		copyButton.style.backgroundPosition = "50% 50%";
 		copyButton.style.backgroundRepeat = "no-repeat";
+		copyButton.style.minWidth = "56px";
+		copyButton.style.gridArea = "1 / 3";
 		buttonsBox.appendChild(copyButton);
 
 		const stampButton = document.createElement("input");
 		stampButton.type = "button";
 		stampButton.value = " ";
-		buttonsBox.appendChild(stampButton);
-
-		generateButton.style.width = "96px";
-		generateButton.style.height = copyButton.style.height = stampButton.style.height = "40px";
-		generateButton.style.margin = copyButton.style.margin = stampButton.style.margin = "2px";
-
-		stampButton.style.width = stampButton.style.minWidth = "56px";
 		stampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
 		stampButton.style.backgroundSize = "28px 28px";
 		stampButton.style.backgroundPosition = "50% 50%";
 		stampButton.style.backgroundRepeat = "no-repeat";
+		stampButton.style.minWidth = "56px";
+		stampButton.style.gridArea = "1 / 4";
+		buttonsBox.appendChild(stampButton);
+
+		generateButton.style.height = copyButton.style.height = stampButton.style.height = "40px";
+		generateButton.style.margin = copyButton.style.margin = stampButton.style.margin = "2px";
 
 		generateButton.style.borderRadius = "4px 0 0 4px";
 		copyButton.style.borderRadius = "0 0 0 0";

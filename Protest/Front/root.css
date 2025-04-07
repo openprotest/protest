@@ -78,7 +78,7 @@ a {
 }
 
 a:focus {
-	animation: outline .3s ease-in;
+	animation: focus-outline .3s ease-in;
 	box-shadow: var(--clr-accent) 0 0 0 2px;
 }
 
@@ -158,7 +158,7 @@ div, svg {
 	100%{ box-shadow: var(--clr-accent) 0 0 6px 1px }
 }
 
-@keyframes outline {
+@keyframes focus-outline {
 	0%   { box-shadow: var(--clr-accent) 0px 0px 0px 0px; }
 	30%  { box-shadow: var(--clr-accent) 0px 4px 0px 0px; }
 	100% { box-shadow: var(--clr-accent) 0px 0px 0px 3px; }

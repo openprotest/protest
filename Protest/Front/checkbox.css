@@ -40,7 +40,7 @@ input[type="checkbox"] + label::after {
 }
 
 input[type="checkbox"] + label:focus::before {
-	animation: outline .3s ease-in;
+	animation: focus-outline .3s ease-in;
 	box-shadow: var(--clr-accent) 0 0 0 3px;
 }
 
