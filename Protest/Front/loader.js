@@ -26,6 +26,7 @@ const LOADER = {
 		"multiprinter"        : "mono/multiprinter.svg",
 		"mobile phone"        : "mono/mobilephone.svg",
 		"telephone"           : "mono/phone.svg",
+		"pda"                 : "mono/pda.svg",
 		"printer"             : "mono/printer.svg",
 		"point of sale"       : "mono/pos.svg",
 		"pos"                 : "mono/pos.svg",
