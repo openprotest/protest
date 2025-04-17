@@ -6,14 +6,14 @@
     <Company>veniware</Company>
     <PublisherName>veniware</PublisherName>
     <Authors>andreas venizelou</Authors>
-    <Copyright>2024 veniware. Released into the public domain.</Copyright>
+    <Copyright>2025 veniware. Released into the public domain.</Copyright>
     <Description>A management base for System Admins</Description>
     <ApplicationIcon>protest.ico</ApplicationIcon>
     <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
     <OutputType>Exe</OutputType>
-    <LangVersion>12</LangVersion>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <LangVersion>13</LangVersion>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <Platforms>x64</Platforms>
 
     <ServerGarbageCollection>true</ServerGarbageCollection>
@@ -44,8 +44,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.DirectoryServices" Version="9.0.3" />
-    <PackageReference Include="System.Management" Version="9.0.3" />
+    <PackageReference Include="System.DirectoryServices" Version="9.0.4" />
+    <PackageReference Include="System.Management" Version="9.0.4" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
     <PackageReference Include="SSH.NET" Version="2024.2.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.5" />
