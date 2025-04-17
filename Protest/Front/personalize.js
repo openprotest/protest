@@ -94,7 +94,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const scrollBarOptions = ["Default", "Thin", "Hidden"];
+		const scrollBarOptions = ["Default", "Thick", "Thin", "Hidden"];
 		for (let i=0; i<scrollBarOptions.length; i++) {
 			const option = document.createElement("option");
 			option.value = scrollBarOptions[i].toLowerCase();
