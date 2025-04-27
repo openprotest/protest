@@ -11,7 +11,7 @@ class Chat extends Window {
 		"mono/handthumbsdown.svg"
 	];
 
-	static ICE_SERVERS = {
+	static STUN_SERVERS = {
 		iceServers: [
 			{
 				urls: ["stun:stun2.l.google.com:19302", "stun:stun4.l.google.com:19302"],
@@ -84,7 +84,7 @@ class Chat extends Window {
 		this.displayButton.type = "button";
 		this.displayButton.style.backgroundColor = "transparent";
 
-		//this.content.append(this.micButton, this.camButton, this.displayButton);
+		this.content.append(this.micButton, this.camButton, this.displayButton);
 
 		this.input = document.createElement("div");
 		this.input.setAttribute("contenteditable", true);
@@ -252,7 +252,7 @@ class Chat extends Window {
 		}));
 		console.log("send chat-stream:", uuid);
 
-		const localConnection = new RTCPeerConnection(Chat.ICE_SERVERS);
+		const localConnection = new RTCPeerConnection(Chat.STUN_SERVERS);
 		this.localConnections[uuid] = localConnection;
 
 		console.log("pushing into local connections:", uuid);
@@ -330,7 +330,7 @@ class Chat extends Window {
 
 		const offer = await localConnection.createOffer();
 
-		localConnection.setLocalDescription(offer);
+		await localConnection.setLocalDescription(offer);
 
 		this.AdjustUI();
 	}
@@ -398,7 +398,7 @@ class Chat extends Window {
 	async HandleOffer(message) {
 		console.log("receive chat-sdp-offer:", message.uuid);
 
-		const remoteConnection = new RTCPeerConnection(Chat.ICE_SERVERS);
+		const remoteConnection = new RTCPeerConnection(Chat.STUN_SERVERS);
 
 		this.remoteConnections[message.uuid] = remoteConnection;
 		console.log("pushing in remote connections:", message.uuid);
@@ -600,8 +600,13 @@ class Chat extends Window {
 	}
 
 	Send() {
-		if (this.input.textContent.length === 0) return;
+		//if (this.input.textContent.length === 0) return;
 		if (this.input.innerHTML.length === 0) return;
+
+		if (this.input.innerHTML.length === 4 && this.input.innerHTML == "<br>") {
+			this.ClearInput();
+			return;
+		}
 
 		const id = `${KEEP.username}${Date.now()}`;
 
@@ -646,8 +651,9 @@ class Chat extends Window {
 				await this.SetupLocalUserMediaStream();
 			}
 		}
-		catch {
+		catch (ex) {
 			this.isMicEnable = false;
+			console.log("mic error:", ex);
 		}
 
 		if (this.userStream) {
