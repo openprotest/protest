@@ -140,10 +140,9 @@ internal static partial class DeviceConfiguration {
             SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
-            string payload;
-            string firstLine;
+            string payload, firstLine;
 
-            payload = ssh.RunCommand("show running-config").Execute();
+            /*payload = ssh.RunCommand("show running-config").Execute();
             firstLine = payload.Split('\n')[0];
             if (firstLine.Trim() != "^" && !firstLine.Contains("bad command name", StringComparison.Ordinal)) { //cisco
                 byte[] plain = Encoding.UTF8.GetBytes(payload);
@@ -154,9 +153,9 @@ internal static partial class DeviceConfiguration {
                 Logger.Action(origin, $"Fetch device configuration for file: {host}");
 
                 return plain;
-            }
+            }*/
 
-            payload = ssh.RunCommand("display current-configuration").Execute();
+            payload = ssh.RunCommand("display current-configuration | no-more").Execute();
             firstLine = payload.Split('\n')[0];
             if (firstLine.Trim() != "^" && !firstLine.Contains("bad command name", StringComparison.Ordinal)) { //hpe
                 byte[] plain = Encoding.UTF8.GetBytes(payload);
@@ -231,7 +230,7 @@ internal static partial class DeviceConfiguration {
         int lastEther = 0, lastSfp = 0;
         bool isSubinterface = false;
         string currentInt = null;
-        string currentSpeed = "N/A";
+        string currentSpeed = "n/a";
         string currentVlan = String.Empty;
         string currentComment = String.Empty;
 
@@ -239,7 +238,8 @@ internal static partial class DeviceConfiguration {
             lines[i] = lines[i].Trim();
             lines[i] = lines[i].Replace("\x2002", " ");
 
-            if (lines[i].StartsWith("set [ find default-name=", StringComparison.OrdinalIgnoreCase)) { //mikrotik interface
+            //mikrotik interface
+            if (lines[i].StartsWith("set [ find default-name=", StringComparison.OrdinalIgnoreCase)) {
                 Match intMatch = DefaultNameRegex().Match(lines[i]);
                 string defname = intMatch.Value.Replace("default-name=", String.Empty);
                 if (!defname.Contains('"', StringComparison.Ordinal)) {
@@ -309,7 +309,7 @@ internal static partial class DeviceConfiguration {
                 });
             }
 
-            //cisco and hpe interface
+            //cisco/hpe/aruba/huawei interface
             if (lines[i].StartsWith("interface", StringComparison.OrdinalIgnoreCase)) {
 
                 if (!isSubinterface && currentInt != null) {
@@ -345,14 +345,17 @@ internal static partial class DeviceConfiguration {
                     currentInt = "Ethernet";
                 }
 
-                if (lines[i].IndexOf("gigabitethernet", StringComparison.OrdinalIgnoreCase) > -1) { //1000 Mbps
+                if (lines[i].IndexOf("gigabitethernet", StringComparison.OrdinalIgnoreCase) > -1 ||
+                    lines[i].IndexOf("10ge", StringComparison.OrdinalIgnoreCase) > -1) { //10 Gbps
+                    currentSpeed = "10 Gbps";
+                }
+                else if (lines[i].IndexOf("gigabitethernet", StringComparison.OrdinalIgnoreCase) > -1 ||
+                    lines[i].IndexOf("ge", StringComparison.OrdinalIgnoreCase) > -1) { //1000 Mbps
                     currentSpeed = "1 Gbps";
                 }
-                else if (lines[i].IndexOf("fastethernet", StringComparison.OrdinalIgnoreCase) > -1) { //100 Mbps
+                else if (lines[i].IndexOf("fastethernet", StringComparison.OrdinalIgnoreCase) > -1 ||
+                         lines[i].IndexOf("fe", StringComparison.OrdinalIgnoreCase) > -1) { //100 Mbps
                     currentSpeed = "100 Mbps";
-                }
-                else if (lines[i].IndexOf("ethernet", StringComparison.OrdinalIgnoreCase) > -1) { //10 Mbps
-                    currentSpeed = "10 Mbps";
                 }
                 /*else if (lines[i].IndexOf("aux", StringComparison.OrdinalIgnoreCase) > -1) {
                     currentSpeed = "N/A";
@@ -371,7 +374,16 @@ internal static partial class DeviceConfiguration {
                     currentVlan = vlan;
                 }
             }
+            else if (lines[i].StartsWith("port default vlan ", StringComparison.OrdinalIgnoreCase)) {
+                string vlan = lines[i][18..];
+                if (int.TryParse(vlan, out _)) {
+                    currentVlan = vlan;
+                }
+            }
             else if (lines[i].ToLower() == "switchport mode trunk") {
+                currentVlan = "TRUNK";
+            }
+            else if (lines[i].ToLower() == "port link-type trunk") {
                 currentVlan = "TRUNK";
             }
 
@@ -470,4 +482,5 @@ internal static partial class DeviceConfiguration {
             _ => "N/A"
         };
     }
+
 }

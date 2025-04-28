@@ -415,7 +415,7 @@ button.view-live-button:active {
 
 .view-interface-port:hover {
 	background-color: var(--clr-select);
-	box-shadow: 0 -3px 0px 3px var(--clr-select);
+	box-shadow: 0 -2px 0px 2px var(--clr-select);
 }
 
 .view-interface-port > div:nth-child(1) {
@@ -431,7 +431,7 @@ button.view-live-button:active {
 
 .view-interface-port > div:nth-child(2) {
 	position: relative;
-	top: calc(-100% - 8px);
+	top: calc(-90% - 8px);
 	text-align: center;
 	font-size: x-small;
 	font-weight: bold;
