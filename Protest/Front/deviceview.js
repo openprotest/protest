@@ -2245,14 +2245,14 @@ class DeviceView extends View {
 			numberingInput.appendChild(numberingOption);
 		}
 
-		const addBox = document.createElement("div");
-		addBox.style.marginTop = "8px";
-		addBox.style.whiteSpace = "nowrap";
-		innerBox.appendChild(addBox);
+		const bulkBox = document.createElement("div");
+		bulkBox.style.marginTop = "8px";
+		bulkBox.style.whiteSpace = "nowrap";
+		innerBox.appendChild(bulkBox);
 
 		const portInput = document.createElement("select");
 		portInput.style.minWidth = "120px";
-		addBox.appendChild(portInput);
+		bulkBox.appendChild(portInput);
 		let portsArray = ["Ethernet", "SFP", "QSFP", "USB", "Serial"];
 		for (let i=0; i<portsArray.length; i++) {
 			const portOption = document.createElement("option");
@@ -2263,7 +2263,7 @@ class DeviceView extends View {
 
 		const speedInput = document.createElement("select");
 		speedInput.style.minWidth = "120px";
-		addBox.appendChild(speedInput);
+		bulkBox.appendChild(speedInput);
 		let speedArray = [
 			"N/A",
 			"10 Mbps", "100 Mbps", "1 Gbps", "2.5 Gbps","5 Gbps", "10 Gbps",
@@ -2282,7 +2282,7 @@ class DeviceView extends View {
 		xLabel.style.display = "inline-block";
 		xLabel.style.marginLeft = "4px";
 		xLabel.style.marginRight = "4px";
-		addBox.appendChild(xLabel);
+		bulkBox.appendChild(xLabel);
 
 		const addBulkInput = document.createElement("input");
 		addBulkInput.type = "number";
@@ -2290,7 +2290,7 @@ class DeviceView extends View {
 		addBulkInput.max = 48;
 		addBulkInput.value = 1;
 		addBulkInput.style.width = "50px";
-		addBox.appendChild(addBulkInput);
+		bulkBox.appendChild(addBulkInput);
 
 		const titleBar = document.createElement("div");
 		titleBar.style.position = "absolute";
@@ -2376,7 +2376,7 @@ class DeviceView extends View {
 		addBulkOkButton.type = "button";
 		addBulkOkButton.value = "Add";
 
-		addBulkBox.appendChild(addBox);
+		addBulkBox.appendChild(bulkBox);
 		addBulkBox.appendChild(document.createElement("br"));
 		addBulkBox.appendChild(addBulkOkButton);
 		addBulkBox.appendChild(addBulkCancelButton);
@@ -2402,31 +2402,28 @@ class DeviceView extends View {
 			fetchToggle = !fetchToggle;
 		};
 
-		let addBulkToggle = false;
+		let bulkToggle = false;
 		const BulkToggle = ()=> {
 			dialog.innerBox.parentElement.style.transition = ".2s";
-			dialog.innerBox.parentElement.style.transform = addBulkToggle ? "none" : "translateY(-25%)";
-			dialog.innerBox.parentElement.style.filter = addBulkToggle ? "none" : "opacity(0)";
-			dialog.innerBox.parentElement.style.visibility = addBulkToggle ? "visible" : "hidden";
+			dialog.innerBox.parentElement.style.transform = bulkToggle ? "none" : "translateY(-25%)";
+			dialog.innerBox.parentElement.style.filter = bulkToggle ? "none" : "opacity(0)";
+			dialog.innerBox.parentElement.style.visibility = bulkToggle ? "visible" : "hidden";
 
 			addBulkBox.style.transition = ".2s";
-			addBulkBox.style.filter = addBulkToggle ? "opacity(0)" : "none";
-			addBulkBox.style.transform = addBulkToggle ? "translateY(-25%)" : "none";
-			addBulkBox.style.visibility = addBulkToggle ? "hidden" : "visible";
+			addBulkBox.style.filter = bulkToggle ? "opacity(0)" : "none";
+			addBulkBox.style.transform = bulkToggle ? "translateY(-25%)" : "none";
+			addBulkBox.style.visibility = bulkToggle ? "hidden" : "visible";
 
-			if (!addBulkToggle) {
+			if (!bulkToggle) {
 				setTimeout(()=> portInput.focus(), 200);
 			}
 
-			addBulkToggle = !addBulkToggle;
+			bulkToggle = !bulkToggle;
 		};
 
 		extractBox.onkeydown = event => {
 			if (event.key === "Escape") {
 				FetchToggle();
-			}
-			else if (event.key === "Enter") {
-				extractOkButton.onclick();
 			}
 		};
 		
@@ -2434,7 +2431,10 @@ class DeviceView extends View {
 			if (event.key === "Escape") {
 				BulkToggle();
 			}
-			else if (event.key === "Enter") {
+		};
+
+		portInput.onkeydown = speedInput.onkeydown = addBulkInput.onkeydown = event => {
+			if (event.key === "Enter") {
 				addBulkOkButton.onclick();
 			}
 		};
