@@ -405,6 +405,7 @@ button.view-live-button:active {
 	min-height: 40px;
 	border-radius: 4px;
 	box-sizing: border-box;
+	overflow-y: hidden;
 }
 
 .view-interface-port {
@@ -458,7 +459,7 @@ button.view-live-button:active {
 }
 .view-interfaces-edit-title > *:nth-child(1) {
 	margin-left : 20px;
-	width: 56px;
+	width: 64px;
 }
 .view-interfaces-edit-title > *:nth-child(2) {
 	width: 100px;
@@ -470,7 +471,7 @@ button.view-live-button:active {
 	width: 64px;
 }
 .view-interfaces-edit-title > *:nth-child(5) {
-	width: 188px;
+	width: 180px;
 }
 
 .view-interfaces-edit-list-element {
@@ -502,7 +503,7 @@ button.view-live-button:active {
 	background-color: var(--clr-control);
 }
 .view-interfaces-edit-list-element > *:nth-child(2) {
-	width: 56px;
+	width: 64px;
 }
 .view-interfaces-edit-list-element > *:nth-child(3) {
 	width: 100px;
@@ -514,7 +515,7 @@ button.view-live-button:active {
 	 width: 64px;
 }
 .view-interfaces-edit-list-element > *:nth-child(6) {
-	width: 188px;
+	width: 180px;
 	padding-left: 32px;
 	background-image: url(mono/gear.svg);
 	background-size: 20px 20px;
