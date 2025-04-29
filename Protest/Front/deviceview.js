@@ -2193,15 +2193,29 @@ class DeviceView extends View {
 		innerBox.style.padding = "20px";
 
 		buttonBox.style.maxHeight = "40px";
-		buttonBox.style.overflow = "hidden";
+		//buttonBox.style.overflow = "hidden";
+
+		const fetchDropdownButton = document.createElement("button");
+		fetchDropdownButton.className = "with-icon view-fetch-dropdown";
+		fetchDropdownButton.value = "Add interfaces";
+		buttonBox.insertBefore(fetchDropdownButton, buttonBox.firstChild);
+
+		const fetchDropdownButtonMenu = document.createElement("div");
+		fetchDropdownButton.appendChild(fetchDropdownButtonMenu);
+
+		const addBulkButton = document.createElement("input");
+		addBulkButton.type = "button";
+		addBulkButton.value = "Bulk";
+		addBulkButton.className = "with-icon";
+		addBulkButton.style.backgroundImage = "url(mono/add.svg?light)";
+		fetchDropdownButtonMenu.appendChild(addBulkButton);
 
 		const extractButton = document.createElement("input");
 		extractButton.type = "button";
-		extractButton.value = "Extract from configuration";
+		extractButton.value = "From configuration";
 		extractButton.className = "with-icon";
 		extractButton.style.backgroundImage = "url(mono/configfile.svg?light)";
-		extractButton.style.float = "left";
-		buttonBox.appendChild(extractButton);
+		fetchDropdownButtonMenu.appendChild(extractButton);
 
 		const frame = document.createElement("div");
 		frame.style.backgroundColor = "var(--clr-control)";
@@ -2210,14 +2224,14 @@ class DeviceView extends View {
 		innerBox.appendChild(frame);
 
 		const numberingBox = document.createElement("div");
-		numberingBox.style.marginTop = "24px";
+		numberingBox.style.marginTop = "8px";
 		numberingBox.style.whiteSpace = "nowrap";
 		innerBox.appendChild(numberingBox);
 
 		const numberingLabel = document.createElement("div");
 		numberingLabel.textContent = "Numbering: ";
 		numberingLabel.style.display = "inline-block";
-		numberingLabel.style.width = "120px";
+		numberingLabel.style.width = "108px";
 		numberingBox.appendChild(numberingLabel);
 
 		const numberingInput = document.createElement("select");
@@ -2235,12 +2249,6 @@ class DeviceView extends View {
 		addBox.style.marginTop = "8px";
 		addBox.style.whiteSpace = "nowrap";
 		innerBox.appendChild(addBox);
-
-		const addLabel = document.createElement("div");
-		addLabel.textContent = "Add interface: ";
-		addLabel.style.display = "inline-block";
-		addLabel.style.width = "120px";
-		addBox.appendChild(addLabel);
 
 		const portInput = document.createElement("select");
 		portInput.style.minWidth = "120px";
@@ -2272,7 +2280,8 @@ class DeviceView extends View {
 		const xLabel = document.createElement("div");
 		xLabel.textContent = " x ";
 		xLabel.style.display = "inline-block";
-		xLabel.style.marginLeft = "8px";
+		xLabel.style.marginLeft = "4px";
+		xLabel.style.marginRight = "4px";
 		addBox.appendChild(xLabel);
 
 		const addBulkInput = document.createElement("input");
@@ -2283,23 +2292,17 @@ class DeviceView extends View {
 		addBulkInput.style.width = "50px";
 		addBox.appendChild(addBulkInput);
 
-		const addBulkButton = document.createElement("input");
-		addBulkButton.type = "button";
-		addBulkButton.value = "Add";
-		addBox.appendChild(addBulkButton);
-
 		const titleBar = document.createElement("div");
 		titleBar.style.position = "absolute";
 		titleBar.style.whiteSpace = "nowrap";
 		titleBar.style.overflow = "hidden";
 		titleBar.style.left = "16px";
 		titleBar.style.right = "16px";
-		titleBar.style.top = "248px";
 		titleBar.style.height = "20px";
 		titleBar.className = "view-interfaces-edit-title";
 		innerBox.appendChild(titleBar);
 
-		let titleArray = ["Interface", "Speed", "VLAN", "Link"];
+		let titleArray = ["No.", "Type", "Speed", "VLAN", "Link"];
 		for (let i=0; i<titleArray.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.textContent = titleArray[i];
@@ -2310,8 +2313,7 @@ class DeviceView extends View {
 		listBox.style.position = "absolute";
 		listBox.style.left = "16px";
 		listBox.style.right = "0";
-		listBox.style.top = "278px";
-		listBox.style.bottom = "16px";
+		listBox.style.bottom = "4px";
 		listBox.style.overflowX = "hidden";
 		listBox.style.overflowY = "scroll";
 		innerBox.appendChild(listBox);
@@ -2326,7 +2328,7 @@ class DeviceView extends View {
 		extractBox.style.minWidth = "220px";
 		extractBox.style.borderRadius = "8px";
 		extractBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
-		extractBox.style.backgroundColor = "rgb(208,208,208)";
+		extractBox.style.backgroundColor = "var(--clr-pane)";
 		extractBox.style.padding = "16px 8px";
 		extractBox.style.overflow = "hidden";
 		extractBox.style.textAlign = "center";
@@ -2350,6 +2352,35 @@ class DeviceView extends View {
 		extractBox.appendChild(extractOkButton);
 		extractBox.appendChild(extractCancelButton);
 
+		const addBulkBox = document.createElement("div");
+		addBulkBox.style.position = "absolute";
+		addBulkBox.style.visibility = "hidden";
+		addBulkBox.style.left = "30%";
+		addBulkBox.style.top = "28px";
+		addBulkBox.style.width = "40%";
+		addBulkBox.style.maxWidth = "480px";
+		addBulkBox.style.minWidth = "220px";
+		addBulkBox.style.borderRadius = "8px";
+		addBulkBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		addBulkBox.style.backgroundColor = "var(--clr-pane)";
+		addBulkBox.style.padding = "16px 8px";
+		addBulkBox.style.overflow = "hidden";
+		addBulkBox.style.textAlign = "center";
+		dialog.innerBox.parentElement.parentElement.appendChild(addBulkBox);
+
+		const addBulkCancelButton = document.createElement("input");
+		addBulkCancelButton.type = "button";
+		addBulkCancelButton.value = "Cancel";
+
+		const addBulkOkButton = document.createElement("input");
+		addBulkOkButton.type = "button";
+		addBulkOkButton.value = "Add";
+
+		addBulkBox.appendChild(addBox);
+		addBulkBox.appendChild(document.createElement("br"));
+		addBulkBox.appendChild(addBulkOkButton);
+		addBulkBox.appendChild(addBulkCancelButton);
+
 		let list = [];
 
 		let fetchToggle = false;
@@ -2364,17 +2395,53 @@ class DeviceView extends View {
 			extractBox.style.transform = fetchToggle ? "translateY(-25%)" : "none";
 			extractBox.style.visibility = fetchToggle ? "hidden" : "visible";
 
+			if (!fetchToggle) {
+				setTimeout(()=>extractOkButton.focus(), 200);
+			}
+
 			fetchToggle = !fetchToggle;
+		};
+
+		let addBulkToggle = false;
+		const BulkToggle = ()=> {
+			dialog.innerBox.parentElement.style.transition = ".2s";
+			dialog.innerBox.parentElement.style.transform = addBulkToggle ? "none" : "translateY(-25%)";
+			dialog.innerBox.parentElement.style.filter = addBulkToggle ? "none" : "opacity(0)";
+			dialog.innerBox.parentElement.style.visibility = addBulkToggle ? "visible" : "hidden";
+
+			addBulkBox.style.transition = ".2s";
+			addBulkBox.style.filter = addBulkToggle ? "opacity(0)" : "none";
+			addBulkBox.style.transform = addBulkToggle ? "translateY(-25%)" : "none";
+			addBulkBox.style.visibility = addBulkToggle ? "hidden" : "visible";
+
+			if (!addBulkToggle) {
+				setTimeout(()=> portInput.focus(), 200);
+			}
+
+			addBulkToggle = !addBulkToggle;
+		};
+
+		extractBox.onkeydown = event => {
+			if (event.key === "Escape") {
+				FetchToggle();
+			}
+			else if (event.key === "Enter") {
+				extractOkButton.onclick();
+			}
+		};
+		
+		addBulkBox.onkeydown = event => {
+			if (event.key === "Escape") {
+				BulkToggle();
+			}
+			else if (event.key === "Enter") {
+				addBulkOkButton.onclick();
+			}
 		};
 
 		numberingInput.onchange = ()=> this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 
-		addBulkButton.onclick = ()=> {
-			if (list.length + parseInt(addBulkInput.value) > 52) return;
-			for (let i=0; i<addBulkInput.value; i++) {
-				AddInterface(portInput.value, speedInput.value, 1, null, "");
-			}
-		};
+		addBulkButton.onclick = ()=> BulkToggle();
 
 		let lastSelect = null;
 		let lastMouseY = 0;
@@ -2403,6 +2470,11 @@ class DeviceView extends View {
 
 			const dragAndDropElement = document.createElement("div");
 			listElement.appendChild(dragAndDropElement);
+
+			const txtI = document.createElement("input");
+			txtI.type = "text";
+			//txtI.value = number;
+			listElement.appendChild(txtI);
 
 			const txtP = document.createElement("select");
 			listElement.appendChild(txtP);
@@ -2526,7 +2598,7 @@ class DeviceView extends View {
 				switch (txtP.value) {
 				case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
 				case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
-				case "QSFP"     : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
+				case "QSFP"    : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
 				case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
 				case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
 				}
@@ -2686,6 +2758,9 @@ class DeviceView extends View {
 				list.splice(list.indexOf(obj), 1);
 				SortList();
 				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+
+				titleBar.style.top = `${frame.clientHeight + 72}px`;
+				listBox.style.top = `${frame.clientHeight + 96}px`;
 			};
 
 			txtP.value = port;
@@ -2693,7 +2768,9 @@ class DeviceView extends View {
 			txtP.onchange();
 
 			SortList();
-			this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+			this.InitInterfaceComponents(frame, numberingInput.value, list, true);			
+			titleBar.style.top = `${frame.clientHeight + 72}px`;
+			listBox.style.top = `${frame.clientHeight + 96}px`;
 		};
 
 		const SortList = ()=> {
@@ -2709,6 +2786,8 @@ class DeviceView extends View {
 		};
 
 		this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+		titleBar.style.top = `${frame.clientHeight + 72}px`;
+		listBox.style.top = `${frame.clientHeight + 96}px`;
 
 		extractButton.onclick = ()=> FetchToggle();
 
@@ -2758,6 +2837,9 @@ class DeviceView extends View {
 					SortList();
 					this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 
+					titleBar.style.top = `${frame.clientHeight + 72}px`;
+					listBox.style.top = `${frame.clientHeight + 96}px`;
+
 					fetchButton.onclick();
 				}
 			}
@@ -2775,64 +2857,67 @@ class DeviceView extends View {
 
 		extractCancelButton.onclick = ()=> FetchToggle();
 
+		addBulkCancelButton.onclick = ()=> BulkToggle();
+
+		addBulkOkButton.onclick = async ()=> {
+			for (let i=0; i<addBulkInput.value; i++)
+				AddInterface(portInput.value, speedInput.value, 1, null, "");
+			BulkToggle();
+		}
+
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
 				AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
 		}
 		else {
-			for (let i=0; i<4; i++) {
+			for (let i=0; i<4; i++)
 				AddInterface("Ethernet", "1 Gbps", 1, null, "");
-			}
 		}
 
 		okButton.addEventListener("click", async ()=> {
-				let interfaces = {
-					i: [],
-					n: numberingInput.value
-				};
+			let interfaces = { i: [], n: numberingInput.value };
 
-				for (let i=0; i<list.length; i++) {
-					interfaces.i.push({
-						i: list[i].portInput.value,
-						s: list[i].speedInput.value,
-						v: list[i].vlanInput.value,
-						c: list[i].commInput.value,
-						l: list[i].link
-					});
-				}
+			for (let i=0; i<list.length; i++) {
+				interfaces.i.push({
+					i: list[i].portInput.value,
+					s: list[i].speedInput.value,
+					v: list[i].vlanInput.value,
+					c: list[i].commInput.value,
+					l: list[i].link
+				});
+			}
 
-				let obj = {};
-				for (let i=0; i<this.attributes.childNodes.length; i++) {
-					if (this.attributes.childNodes[i].childNodes.length < 2) continue;
-					let name = this.attributes.childNodes[i].childNodes[0].value;
-					let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
-					obj[name] = {v:value};
-				}
+			let obj = {};
+			for (let i=0; i<this.attributes.childNodes.length; i++) {
+				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
+				let name = this.attributes.childNodes[i].childNodes[0].value;
+				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
+				obj[name] = {v:value};
+			}
 
-				obj[".interfaces"] = {v:JSON.stringify(interfaces)};
+			obj[".interfaces"] = {v:JSON.stringify(interfaces)};
 
-				try {
-					const response = await fetch(this.args.file ? `db/device/save?file=${this.args.file}` : "db/device/save", {
-						method: "POST",
-						body: JSON.stringify(obj)
-					});
+			try {
+				const response = await fetch(this.args.file ? `db/device/save?file=${this.args.file}` : "db/device/save", {
+					method: "POST",
+					body: JSON.stringify(obj)
+				});
 
-					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
-					const json = await response.json();
-					if (json.error) throw(json.error);
+				const json = await response.json();
+				if (json.error) throw(json.error);
 
-					this.args.file = json.filename;
-					LOADER.devices.data[json.filename] = obj;
+				this.args.file = json.filename;
+				LOADER.devices.data[json.filename] = obj;
 
-					this.InitializePreview();
-				}
-				catch (ex) {
-					setTimeout(()=>{this.ConfirmBox(ex, true, "mono/error.svg")}, 250);
-				}
+				this.InitializePreview();
+			}
+			catch (ex) {
+				setTimeout(()=>{this.ConfirmBox(ex, true, "mono/error.svg")}, 250);
+			}
 		});
-
 	}
 
 	InitInterfaceComponents(frame, numbering, list, editMode) {
@@ -2870,13 +2955,13 @@ class DeviceView extends View {
 
 		if (size === 50) {
 			for (let i=0; i<list.length; i++) {
-				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 7px auto 7px 8%";
+				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "15% 7px auto 7px 15%";
 				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 4px 16%";
 			}
 		}
 		else {
 			for (let i=0; i<list.length; i++) {
-				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "8% 5px auto 5px 8%";
+				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "15% 5px auto 5px 15%";
 				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 3px 24%";
 			}
 		}

@@ -58,7 +58,7 @@ internal static partial class DeviceConfiguration {
             return Data.CODE_FAILED.ToArray();
         }
 
-        Logger.Action(origin, $"Modify the device conficuration for file: {file}");
+        Logger.Action(origin, $"Modify the device configuration for file: {file}");
 
         return Data.CODE_OK.Array;
     }
@@ -107,9 +107,7 @@ internal static partial class DeviceConfiguration {
         int port = 22;
         for (int i = 0; i < overwriteProto?.Length; i++) {
             overwriteProto[i] = overwriteProto[i].Trim();
-            if (!overwriteProto[i].StartsWith("ssh:")) {
-                continue;
-            }
+            if (!overwriteProto[i].StartsWith("ssh:")) continue;
             Int32.TryParse(overwriteProto[i][4..], out port);
             break;
         }
@@ -281,7 +279,7 @@ internal static partial class DeviceConfiguration {
                 if (speed.StartsWith("\"") && speed.EndsWith("\"")) {
                     speed = speed[1..^1];
                 }
-                speed = FormarRouterOsSpeed(speed);
+                speed = FormatRouterOsSpeed(speed);
 
                 if (speedMatch.Value?.Length > 0) {
                     lines[i] = lines[i].Replace(speedMatch.Value, string.Empty);
@@ -447,7 +445,7 @@ internal static partial class DeviceConfiguration {
         return bulider.ToString();
     }
 
-    private static string FormarRouterOsSpeed(in string speed) {
+    private static string FormatRouterOsSpeed(in string speed) {
         return speed.ToLower() switch {
             "10mbps" => "10 Mbps",
             "100mbps" => "100 Mbps",
