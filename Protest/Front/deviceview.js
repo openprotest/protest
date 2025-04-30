@@ -2901,7 +2901,8 @@ class DeviceView extends View {
 				const json = await response.json();
 
 				if (json.error) {
-					//TODO:
+					dialog.Close();
+					setTimeout(()=>this.ConfirmBox(json.error, true, "mono/error.svg"), 250);
 				}
 				else if (json instanceof Array) {
 					listBox.textContent = "";
@@ -2966,7 +2967,8 @@ class DeviceView extends View {
 				const json = await response.json();
 
 				if (json.error) {
-					//TODO:
+					dialog.Close();
+					setTimeout(()=>this.ConfirmBox(json.error, true, "mono/error.svg"), 250);
 				}
 				else if (json instanceof Array) {
 					listBox.textContent = "";
