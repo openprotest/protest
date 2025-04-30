@@ -783,13 +783,14 @@ class DeviceView extends View {
 			switch (obj.i[i].i) {
 			case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
 			case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
+			case "SFP+"    : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
 			case "QSFP"    : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
 			case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
 			case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
 			}
 			frontElement.appendChild(icon);
 
-			if (obj.i[i].i === "Ethernet" || obj.i[i].i === "SFP") {
+			if (obj.i[i].i === "Ethernet" || obj.i[i].i === "SFP" || obj.i[i].i === "SFP+") {
 				icon.appendChild(document.createElement("div")); //led1
 				icon.appendChild(document.createElement("div")); //led2
 			}
@@ -2211,6 +2212,13 @@ class DeviceView extends View {
 		addBulkButton.style.backgroundImage = "url(mono/add.svg?light)";
 		fetchDropdownButtonMenu.appendChild(addBulkButton);
 
+		const snmpButton = document.createElement("input");
+		snmpButton.type = "button";
+		snmpButton.value = "From SNMP";
+		snmpButton.className = "with-icon";
+		snmpButton.style.backgroundImage = "url(mono/snmp.svg?light)";
+		fetchDropdownButtonMenu.appendChild(snmpButton);
+
 		const extractButton = document.createElement("input");
 		extractButton.type = "button";
 		extractButton.value = "From configuration";
@@ -2254,7 +2262,7 @@ class DeviceView extends View {
 		const portInput = document.createElement("select");
 		portInput.style.minWidth = "120px";
 		bulkBox.appendChild(portInput);
-		let portsArray = ["Ethernet", "SFP", "QSFP", "USB", "Serial"];
+		let portsArray = ["Ethernet", "SFP", "SFP+", "QSFP", "USB", "Serial"];
 		for (let i=0; i<portsArray.length; i++) {
 			const portOption = document.createElement("option");
 			portOption.value = portsArray[i];
@@ -2343,15 +2351,51 @@ class DeviceView extends View {
 		extractCancelButton.type = "button";
 		extractCancelButton.value = "Cancel";
 
-		const messageLabel = document.createElement("div");
-		messageLabel.style.display = "inline-block";
-		messageLabel.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
-		extractBox.appendChild(messageLabel);
+		const extractMessageLabel = document.createElement("div");
+		extractMessageLabel.style.display = "inline-block";
+		extractMessageLabel.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
+		extractBox.appendChild(extractMessageLabel);
 
 		extractBox.appendChild(document.createElement("br"));
 		extractBox.appendChild(document.createElement("br"));
 		extractBox.appendChild(extractOkButton);
 		extractBox.appendChild(extractCancelButton);
+
+
+		const snmpBox = document.createElement("div");
+		snmpBox.style.position = "absolute";
+		snmpBox.style.visibility = "hidden";
+		snmpBox.style.left = "30%";
+		snmpBox.style.top = "28px";
+		snmpBox.style.width = "40%";
+		snmpBox.style.maxWidth = "400px";
+		snmpBox.style.minWidth = "220px";
+		snmpBox.style.borderRadius = "8px";
+		snmpBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		snmpBox.style.backgroundColor = "var(--clr-pane)";
+		snmpBox.style.padding = "16px 8px";
+		snmpBox.style.overflow = "hidden";
+		snmpBox.style.textAlign = "center";
+		dialog.innerBox.parentElement.parentElement.appendChild(snmpBox);
+
+		const snmpOkButton = document.createElement("input");
+		snmpOkButton.type = "button";
+		snmpOkButton.value = "Fetch";
+
+		const snmpCancelButton = document.createElement("input");
+		snmpCancelButton.type = "button";
+		snmpCancelButton.value = "Cancel";
+
+		const snmpMessageLabel = document.createElement("div");
+		snmpMessageLabel.style.display = "inline-block";
+		snmpMessageLabel.textContent = "Are you sure you want to fetch the interfaces using SNMP?";
+		snmpBox.appendChild(snmpMessageLabel);
+
+		snmpBox.appendChild(document.createElement("br"));
+		snmpBox.appendChild(document.createElement("br"));
+		snmpBox.appendChild(snmpOkButton);
+		snmpBox.appendChild(snmpCancelButton);
+
 
 		const addBulkBox = document.createElement("div");
 		addBulkBox.style.position = "absolute";
@@ -2403,6 +2447,25 @@ class DeviceView extends View {
 			fetchToggle = !fetchToggle;
 		};
 
+		let snmpToggle = false;
+		const SnmpToggle = ()=> {
+			dialog.innerBox.parentElement.style.transition = ".2s";
+			dialog.innerBox.parentElement.style.transform = snmpToggle ? "none" : "translateY(-25%)";
+			dialog.innerBox.parentElement.style.filter = snmpToggle ? "none" : "opacity(0)";
+			dialog.innerBox.parentElement.style.visibility = snmpToggle ? "visible" : "hidden";
+
+			snmpBox.style.transition = ".2s";
+			snmpBox.style.filter = snmpToggle ? "opacity(0)" : "none";
+			snmpBox.style.transform = snmpToggle ? "translateY(-25%)" : "none";
+			snmpBox.style.visibility = snmpToggle ? "hidden" : "visible";
+			
+			if (!snmpToggle) {
+				setTimeout(()=>snmpOkButton.focus(), 200);
+			}
+
+			snmpToggle = !snmpToggle;
+		};
+
 		let bulkToggle = false;
 		const BulkToggle = ()=> {
 			dialog.innerBox.parentElement.style.transition = ".2s";
@@ -2425,6 +2488,12 @@ class DeviceView extends View {
 		extractBox.onkeydown = event => {
 			if (event.key === "Escape") {
 				FetchToggle();
+			}
+		};
+
+		snmpBox.onkeydown = event => {
+			if (event.key === "Escape") {
+				SnmpToggle();
 			}
 		};
 		
@@ -2474,7 +2543,7 @@ class DeviceView extends View {
 
 			const txtN = document.createElement("input");
 			txtN.type = "text";
-			txtN.value = number;
+			txtN.value = number ? number : "";
 			txtN.placeholder = frame.childNodes.length;
 			listElement.appendChild(txtN);
 
@@ -2600,12 +2669,14 @@ class DeviceView extends View {
 
 			txtN.onchange = ()=> {
 				numElement.textContent = txtN.value ? txtN.value : list.indexOf(obj) + 1;
+				obj.number = txtN.value;
 			};
 
 			txtP.onchange = ()=> {
 				switch (txtP.value) {
 				case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
 				case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
+				case "SFP+"    : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
 				case "QSFP"    : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
 				case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
 				case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
@@ -2830,10 +2901,7 @@ class DeviceView extends View {
 				const json = await response.json();
 
 				if (json.error) {
-					message.textContent = json.error;
-					fetchBox.removeChild(iconsContainer);
-					fetchBox.removeChild(fetchOkButton);
-					fetchCancelButton.value = "Close";
+					//TODO:
 				}
 				else if (json instanceof Array) {
 					listBox.textContent = "";
@@ -2841,7 +2909,7 @@ class DeviceView extends View {
 					list = [];
 
 					for (let i=0; i<json.length; i++) {
-						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
+						AddInterface(null, json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
 					}
 
 					SortList();
@@ -2866,6 +2934,69 @@ class DeviceView extends View {
 		};
 
 		extractCancelButton.onclick = ()=> FetchToggle();
+
+		snmpButton.onclick = ()=> SnmpToggle();
+
+		snmpOkButton.onclick = async ()=> {
+			snmpBox.style.filter = "opacity(0)";
+			snmpBox.style.transform = "translateY(-25%)";
+			snmpBox.style.visibility = "hidden";
+
+			const spinner = document.createElement("div");
+			spinner.className = "spinner";
+			spinner.style.textAlign = "left";
+			spinner.style.marginTop = "32px";
+			spinner.style.marginBottom = "16px";
+			spinner.appendChild(document.createElement("div"));
+			dialog.innerBox.parentElement.parentElement.appendChild(spinner);
+
+			const status = document.createElement("div");
+			status.textContent = "Fetching...";
+			status.style.color = "var(--clr-light)";
+			status.style.textAlign = "center";
+			status.style.fontWeight = "bold";
+			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
+			dialog.innerBox.parentElement.parentElement.appendChild(status);
+
+			try {
+				const response = await fetch(`snmp/switchinterface?file=${this.args.file}`);
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+
+				if (json.error) {
+					//TODO:
+				}
+				else if (json instanceof Array) {
+					listBox.textContent = "";
+					frame.textContent = "";
+					list = [];
+
+					for (let i=0; i<json.length; i++) {
+						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
+					}
+
+					SortList();
+					this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+
+					titleBar.style.top = `${frame.clientHeight + 72}px`;
+					listBox.style.top = `${frame.clientHeight + 96}px`;
+				}
+			}
+			catch {}
+			finally {
+				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
+				dialog.innerBox.parentElement.parentElement.removeChild(status);
+
+				dialog.innerBox.parentElement.style.transition = ".2s";
+				dialog.innerBox.parentElement.style.transform = "none";
+				dialog.innerBox.parentElement.style.filter = "none";
+				dialog.innerBox.parentElement.style.visibility = "visible";
+			}
+		};
+
+		snmpCancelButton.onclick = ()=> SnmpToggle();
 
 		addBulkCancelButton.onclick = ()=> BulkToggle();
 
@@ -2938,7 +3069,16 @@ class DeviceView extends View {
 
 		let rows = 1, columns = 4;
 		if (list.length > 0) {
-			if (list.length < 16 || list.length < 20 && isMixedInterface) {
+
+			if (list.length % 48 === 0) {
+				columns = 24;
+				rows = Math.ceil(list.length / columns);
+			}
+			else if (list.length % 52 === 0) {
+				columns = 26;
+				rows = Math.ceil(list.length / columns);
+			}
+			else if (list.length < 16 || list.length < 20 && isMixedInterface) {
 				rows = 1;
 				columns = list.length;
 			}
@@ -2947,7 +3087,7 @@ class DeviceView extends View {
 				columns = Math.ceil(list.length / 2);
 			}
 			else {
-				rows = Math.ceil(list.length / 24);
+				rows = Math.ceil(list.length / 26);
 				columns = Math.ceil(list.length / rows);
 			}
 		}
@@ -2962,6 +3102,7 @@ class DeviceView extends View {
 				list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
 			}
 		}
+
 		let size = columns <= 12 ? 50 : 40;
 
 		if (size === 50) {

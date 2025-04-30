@@ -14,7 +14,25 @@ public static class Oid {
     };
 
     public static string[] SWITCH_OID = new string[] {
-        INTERFACE_TOTAL
+        INTERFACE_TYPE,
+        INTERFACE_DESCRIPTOR,
+        INTERFACE_ALIAS,
+        INTERFACE_SPEED,
+        INTERFACE_1Q_VLAN,
+    };
+
+    public static string[] LIVEVIEW_SWITCH_OID = new string[] {
+        INTERFACE_TYPE,
+        INTERFACE_DESCRIPTOR,
+        INTERFACE_ALIAS,
+        INTERFACE_SPEED,
+        INTERFACE_1Q_VLAN,
+        INTERFACE_STATUS,
+        INTERFACE_ENABLE,
+        INTERFACE_TRAFFIC_IN,
+        INTERFACE_TRAFFIC_OUT,
+        INTERFACE_ERROR_IN,
+        INTERFACE_ERROR_OUT,
     };
 
     public static string[] LIFELINE_PRINTER_OID = new string[] {
@@ -46,19 +64,24 @@ public static class Oid {
     public const string SYSTEM_SERVICES   = "1.3.6.1.2.1.1.7.0";
 
     public const string INTERFACE_TOTAL       = "1.3.6.1.2.1.2.1.0";
-    public const string INTERFACE_DESCRIPTOR  = "1.3.6.1.2.1.2.2.1.2.i";
-    public const string INTERFACE_SPEED       = "1.3.6.1.2.1.2.2.1.5.i";
-    public const string INTERFACE_STATUS      = "1.3.6.1.2.1.2.2.1.8.i";
-    public const string INTERFACE_ERROR_IN    = "1.3.6.1.2.1.2.2.1.14.i";
-    public const string INTERFACE_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10.i";
-    public const string INTERFACE_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16.i";
-    public const string INTERFACE_ERROR_OUT   = "1.3.6.1.2.1.2.2.1.20.i";
+    public const string INTERFACE_DESCRIPTOR  = "1.3.6.1.2.1.2.2.1.2";
+    public const string INTERFACE_TYPE        = "1.3.6.1.2.1.2.2.1.3";
+    //public const string INTERFACE_SPEED       = "1.3.6.1.2.1.2.2.1.5";
+    public const string INTERFACE_SPEED       = "1.3.6.1.2.1.31.1.1.1.15";
+    public const string INTERFACE_ENABLE      = "1.3.6.1.2.1.2.2.1.7";
+    public const string INTERFACE_STATUS      = "1.3.6.1.2.1.2.2.1.8";
+    public const string INTERFACE_ERROR_IN    = "1.3.6.1.2.1.2.2.1.14";
+    public const string INTERFACE_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10";
+    public const string INTERFACE_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16";
+    public const string INTERFACE_ERROR_OUT   = "1.3.6.1.2.1.2.2.1.20";
+    public const string INTERFACE_1Q_VLAN     = "1.3.6.1.2.1.17.7.1.4.5.1.1";
+    public const string INTERFACE_ALIAS       = "1.3.6.1.2.1.31.1.1.1.18";
 
-    public const string INTERFACE_TRAFFIC_IN_64  = "1.3.6.1.2.1.31.1.1.1.6.i";
-    public const string INTERFACE_TRAFFIC_OUT_64 = "1.3.6.1.2.1.31.1.1.1.10.i";
+    public const string INTERFACE_TRAFFIC_IN_64  = "1.3.6.1.2.1.31.1.1.1.6";
+    public const string INTERFACE_TRAFFIC_OUT_64 = "1.3.6.1.2.1.31.1.1.1.10";
 
-    public const string INTERFACE_MAC = "1.3.6.1.2.1.2.2.1.6.i";
-    public const string INTERFACE_IP  = "1.3.6.1.2.1.4.20.1.1.i";
+    public const string INTERFACE_MAC = "1.3.6.1.2.1.2.2.1.6";
+    public const string INTERFACE_IP  = "1.3.6.1.2.1.4.20.1.1";
     public const string ROUTING_TABLE = "1.3.6.1.2.1.4.21";
     public const string ARP_TABLE     = "1.3.6.1.2.1.4.22.1";
 

@@ -119,6 +119,8 @@ public sealed class Listener {
         { "/snmp/set",                (ctx, parameters, username) => Protocols.Snmp.Polling.SetHandler(ctx, parameters) },
         { "/snmp/walk",               (ctx, parameters, username) => Protocols.Snmp.Polling.WalkHandler(ctx, parameters) },
 
+        { "/snmp/switchinterface",    (ctx, parameters, username) => Protocols.Snmp.Polling.SwitchInterface(ctx, parameters) },
+
         { "/wmi/query",               (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null },
         { "/wmi/killprocess",         (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(parameters) : null },
 

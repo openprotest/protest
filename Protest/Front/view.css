@@ -760,7 +760,7 @@ button.view-live-button:active {
 	bottom: 0px;
 	opacity: 0;
 	width: 188px;
-	height: 76px;
+	height: 114px;
 	background-color: rgb(96,96,96);
 	border-radius: 4px;
 	box-shadow: var(--clr-dark) 0 0 4px;

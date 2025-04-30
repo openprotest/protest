@@ -428,7 +428,7 @@ internal static class IpDiscovery {
                         }
                         else {
                             WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
-                                ip = pair.Key,
+                                ip   = pair.Key,
                                 name = name,
                             }), mutex);
                         }
