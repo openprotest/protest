@@ -432,9 +432,9 @@ button.view-live-button:active {
 
 .view-interface-port > div:nth-child(2) {
 	position: relative;
-	top: calc(-90% - 8px);
+	top: calc(-90% - 6px);
 	text-align: center;
-	font-size: x-small;
+	font-size: 8px;
 	font-weight: bold;
 	color: #202020;
 }

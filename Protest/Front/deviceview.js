@@ -741,7 +741,7 @@ class DeviceView extends View {
 			const type = this.link.type.v.toLowerCase();
 			if (type === "router" || type === "switch") {
 				const configButton = this.CreateSideButton("mono/configfile.svg", "Configuration");
-				configButton.onclick = () => this.DeviceConfiguration();
+				configButton.onclick = ()=> this.DeviceConfiguration();
 				configButton.style.marginTop = "16px";
 
 				const interfacesButton = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
@@ -775,9 +775,9 @@ class DeviceView extends View {
 		let list = [];
 
 		for (let i=0; i<obj.i.length; i++) {
-			const front = document.createElement("div");
-			front.className = "view-interface-port";
-			frame.appendChild(front);
+			const frontElement = document.createElement("div");
+			frontElement.className = "view-interface-port";
+			frame.appendChild(frontElement);
 
 			const icon = document.createElement("div");
 			switch (obj.i[i].i) {
@@ -787,20 +787,21 @@ class DeviceView extends View {
 			case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
 			case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
 			}
-			front.appendChild(icon);
+			frontElement.appendChild(icon);
 
 			if (obj.i[i].i === "Ethernet" || obj.i[i].i === "SFP") {
 				icon.appendChild(document.createElement("div")); //led1
 				icon.appendChild(document.createElement("div")); //led2
 			}
 
-			const num = document.createElement("div");
-			num.textContent = frame.childNodes.length;
-			front.appendChild(num);
+			const numElement = document.createElement("div");
+			numElement.textContent = obj.i[i].n ? obj.i[i].n : frame.childNodes.length;
+			frontElement.appendChild(numElement);
 
 			list.push({
-				frontElement: front,
-				number  : num,
+				frontElement  : frontElement,
+				numberElement : numElement,
+				number  : obj.i[i].n,
 				port    : obj.i[i].i,
 				speed   : obj.i[i].s,
 				vlan    : obj.i[i].v,
@@ -808,7 +809,7 @@ class DeviceView extends View {
 				link    : obj.i[i].l
 			});
 
-			front.onmouseenter = ()=> {
+			frontElement.onmouseenter = ()=> {
 				this.floating.textContent = "";
 
 				const speedColorBox = document.createElement("div");
@@ -883,18 +884,18 @@ class DeviceView extends View {
 					};
 				}
 
-				let x = front.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
+				let x = frontElement.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
 				if (x > this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8) {
 					x = this.content.getBoundingClientRect().width - this.floating.getBoundingClientRect().width - 8;
 				}
 
 				this.floating.style.left = `${x}px`;
-				this.floating.style.top = `${front.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
+				this.floating.style.top = `${frontElement.getBoundingClientRect().y - this.win.getBoundingClientRect().y + 20}px`;
 				this.floating.style.opacity = "1";
 				this.floating.style.visibility = "visible";
 			};
 
-			front.onmouseleave = ()=> {
+			frontElement.onmouseleave = ()=> {
 				this.floating.style.opacity = "0";
 				this.floating.style.visibility = "hidden";
 			};
@@ -2087,7 +2088,7 @@ class DeviceView extends View {
 
 		fetchButton.onclick = ()=> FetchToggle();
 
-		fetchOkButton.onclick = async () => {
+		fetchOkButton.onclick = async ()=> {
 			fetchBox.style.filter = "opacity(0)";
 			fetchBox.style.transform = "translateY(-25%)";
 			fetchBox.style.visibility = "hidden";
@@ -2135,7 +2136,7 @@ class DeviceView extends View {
 
 		};
 
-		fetchCancelButton.onclick = () =>  fetchButton.onclick();
+		fetchCancelButton.onclick = ()=>  fetchButton.onclick();
 
 		editButton.onclick = ()=> {
 			innerBox.contentEditable = true;
@@ -2447,18 +2448,18 @@ class DeviceView extends View {
 		let lastMouseY = 0;
 		let lastElementY = 0;
 
-		const AddInterface = (port, speed, vlan, link, comment) => {
-			const front = document.createElement("div");
-			front.className = "view-interface-port";
-			front.style.gridArea = `1 / ${frame.childNodes.length+1}`;
-			frame.appendChild(front);
+		const AddInterface = (number, port, speed, vlan, link, comment) => {
+			const frontElement = document.createElement("div");
+			frontElement.className = "view-interface-port";
+			frontElement.style.gridArea = `1 / ${frame.childNodes.length+1}`;
+			frame.appendChild(frontElement);
 
 			const icon = document.createElement("div");
-			front.appendChild(icon);
+			frontElement.appendChild(icon);
 
-			const num = document.createElement("div");
-			num.textContent = frame.childNodes.length;
-			front.appendChild(num);
+			const numElement = document.createElement("div");
+			numElement.textContent = number ? number : frame.childNodes.length;
+			frontElement.appendChild(numElement);
 
 			icon.appendChild(document.createElement("div")); //led1
 			icon.appendChild(document.createElement("div")); //led2
@@ -2471,10 +2472,11 @@ class DeviceView extends View {
 			const dragAndDropElement = document.createElement("div");
 			listElement.appendChild(dragAndDropElement);
 
-			const txtI = document.createElement("input");
-			txtI.type = "text";
-			//txtI.value = number;
-			listElement.appendChild(txtI);
+			const txtN = document.createElement("input");
+			txtN.type = "text";
+			txtN.value = number;
+			txtN.placeholder = frame.childNodes.length;
+			listElement.appendChild(txtN);
 
 			const txtP = document.createElement("select");
 			listElement.appendChild(txtP);
@@ -2538,20 +2540,22 @@ class DeviceView extends View {
 			listElement.appendChild(remove);
 
 			let obj = {
-				frontElement  : front,
+				number        : number,
+				frontElement  : frontElement,
 				listElement   : listElement,
-				numberElement : num,
-				portInput  : txtP,
-				speedInput : txtS,
-				vlanInput  : txtV,
-				commInput  : txtC,
+				numberElement : numElement,
+				numberInput : txtN,
+				portInput   : txtP,
+				speedInput  : txtS,
+				vlanInput   : txtV,
+				commInput   : txtC,
 				link: link
 			};
 			list.push(obj);
 
-			front.onclick = () => listElement.scrollIntoView({ behavior: "smooth", block: "center" });
-			front.onmouseover = () => dragAndDropElement.style.backgroundColor = "var(--clr-select)";
-			front.onmouseleave = () => dragAndDropElement.style.backgroundColor = "";
+			frontElement.onclick = ()=> listElement.scrollIntoView({ behavior: "smooth", block: "center" });
+			frontElement.onmouseover = ()=> dragAndDropElement.style.backgroundColor = "var(--clr-select)";
+			frontElement.onmouseleave = ()=> dragAndDropElement.style.backgroundColor = "";
 
 			dragAndDropElement.onmousedown = event => {
 				if (event.buttons !== 1) return;
@@ -2594,7 +2598,11 @@ class DeviceView extends View {
 				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
-			txtP.onchange = () => {
+			txtN.onchange = ()=> {
+				numElement.textContent = txtN.value ? txtN.value : list.indexOf(obj) + 1;
+			};
+
+			txtP.onchange = ()=> {
 				switch (txtP.value) {
 				case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
 				case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
@@ -2606,11 +2614,11 @@ class DeviceView extends View {
 			};
 
 			txtS.onchange =
-			txtV.onchange = () => {
+			txtV.onchange = ()=> {
 				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
 
-			txtL.ondblclick = () => {
+			txtL.ondblclick = ()=> {
 				if (obj.link.length > 0) {
 					obj.link = "";
 					txtL.value = "";
@@ -2618,7 +2626,7 @@ class DeviceView extends View {
 				}
 			};
 
-			txtL.onclick = () => {
+			txtL.onclick = ()=> {
 				if (obj.link !== null && obj.link.length > 0) return;
 
 				this.AddCssDependencies("list.css");
@@ -2666,13 +2674,13 @@ class DeviceView extends View {
 				closeLinkButton.style.bottom = "8px";
 				frame.appendChild(closeLinkButton);
 
-				closeLinkButton.onclick = () => {
-					closeLinkButton.onclick = () => { };
+				closeLinkButton.onclick = ()=> {
+					closeLinkButton.onclick = ()=> { };
 					dim.style.filter = "opacity(0)";
 					setTimeout(()=> innerBox.parentElement.removeChild(dim), 200);
 				};
 
-				findInput.onchange = findInput.oninput = () => {
+				findInput.onchange = findInput.oninput = ()=> {
 					devicesList.textContent = "";
 
 					let keywords = [];
@@ -2749,12 +2757,12 @@ class DeviceView extends View {
 
 				findInput.focus();
 
-				setTimeout(() => findInput.onchange(), 1);
+				setTimeout(()=> findInput.onchange(), 1);
 			};
 
-			remove.onclick = () => {
+			remove.onclick = ()=> {
 				listBox.removeChild(listElement);
-				frame.removeChild(front);
+				frame.removeChild(frontElement);
 				list.splice(list.indexOf(obj), 1);
 				SortList();
 				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
@@ -2768,7 +2776,7 @@ class DeviceView extends View {
 			txtP.onchange();
 
 			SortList();
-			this.InitInterfaceComponents(frame, numberingInput.value, list, true);			
+			this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			titleBar.style.top = `${frame.clientHeight + 72}px`;
 			listBox.style.top = `${frame.clientHeight + 96}px`;
 		};
@@ -2779,7 +2787,9 @@ class DeviceView extends View {
 			});
 
 			for (let i=0; i<list.length; i++) {
-				list[i].numberElement.textContent = i+1;
+				list[i].numberElement.textContent = list[i].number ? list[i].number : i + 1;
+				list[i].numberInput.placeholder = i + 1;
+
 				if (lastSelect === null || list[i].listElement !== lastSelect.listElement)
 					list[i].listElement.style.top = `${i * 36}px`;
 			}
@@ -2831,7 +2841,7 @@ class DeviceView extends View {
 					list = [];
 
 					for (let i=0; i<json.length; i++) {
-						AddInterface(json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
+						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].vlan, null, json[i].comment);
 					}
 
 					SortList();
@@ -2861,18 +2871,18 @@ class DeviceView extends View {
 
 		addBulkOkButton.onclick = async ()=> {
 			for (let i=0; i<addBulkInput.value; i++)
-				AddInterface(portInput.value, speedInput.value, 1, null, "");
+				AddInterface(null, portInput.value, speedInput.value, 1, null, "");
 			BulkToggle();
 		}
 
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
-				AddInterface(obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
+				AddInterface(obj.i[i].n, obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
 		}
 		else {
 			for (let i=0; i<4; i++)
-				AddInterface("Ethernet", "1 Gbps", 1, null, "");
+				AddInterface(null, "Ethernet", "1 Gbps", 1, null, "");
 		}
 
 		okButton.addEventListener("click", async ()=> {
@@ -2880,6 +2890,7 @@ class DeviceView extends View {
 
 			for (let i=0; i<list.length; i++) {
 				interfaces.i.push({
+					n: list[i].numberInput.value,
 					i: list[i].portInput.value,
 					s: list[i].speedInput.value,
 					v: list[i].vlanInput.value,
