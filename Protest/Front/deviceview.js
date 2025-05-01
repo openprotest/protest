@@ -790,10 +790,7 @@ class DeviceView extends View {
 			}
 			frontElement.appendChild(icon);
 
-			if (obj.i[i].i === "Ethernet" || obj.i[i].i === "SFP" || obj.i[i].i === "SFP+") {
-				icon.appendChild(document.createElement("div")); //led1
-				icon.appendChild(document.createElement("div")); //led2
-			}
+			icon.appendChild(document.createElement("div")); //led
 
 			const numElement = document.createElement("div");
 			numElement.textContent = obj.i[i].n ? obj.i[i].n : frame.childNodes.length;
@@ -2530,8 +2527,7 @@ class DeviceView extends View {
 			numElement.textContent = number ? number : frame.childNodes.length;
 			frontElement.appendChild(numElement);
 
-			icon.appendChild(document.createElement("div")); //led1
-			icon.appendChild(document.createElement("div")); //led2
+			icon.appendChild(document.createElement("div")); //led
 
 			const listElement = document.createElement("div");
 			listElement.className = "view-interfaces-edit-list-element";
@@ -3009,6 +3005,7 @@ class DeviceView extends View {
 		}
 
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
+			numberingInput.value = JSON.parse(this.link[".interfaces"].v).n;
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
 				AddInterface(obj.i[i].n, obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
@@ -3065,10 +3062,6 @@ class DeviceView extends View {
 	}
 
 	InitInterfaceComponents(frame, numbering, list, editMode) {
-		let isMixedInterface = editMode ?
-			!list.every(o => o.portInput.value === list[0].portInput.value) :
-			!list.every(o => o.port === list[0].port);
-
 		let rows = 1, columns = 4;
 		if (list.length > 0) {
 
@@ -3080,7 +3073,7 @@ class DeviceView extends View {
 				columns = 26;
 				rows = Math.ceil(list.length / columns);
 			}
-			else if (list.length < 16 || list.length < 20 && isMixedInterface) {
+			else if (list.length < 16) {
 				rows = 1;
 				columns = list.length;
 			}
@@ -3106,7 +3099,6 @@ class DeviceView extends View {
 		}
 
 		let size = columns <= 12 ? 50 : 40;
-
 		if (size === 50) {
 			for (let i=0; i<list.length; i++) {
 				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "15% 7px auto 7px 15%";
@@ -3120,14 +3112,21 @@ class DeviceView extends View {
 			}
 		}
 
-		let vlans = [];
+		//let vlans = [];
 		for (let i=0; i<list.length; i++) {
+			list[i].frontElement.style.width = `${size - 2}px`;
+
 			let v = editMode ? list[i].vlanInput.value : list[i].vlan;
-			if (v.length === 0) continue;
-			if (v === "TRUNK") continue;
-			if (!vlans.includes(v)) vlans.push(v);
+			//if (v.length === 0) continue;
+			//if (v === "TRUNK") continue;
+			//if (!vlans.includes(v)) vlans.push(v);
+
+			let led = list[i].frontElement.childNodes[0].childNodes[0];
+			led.style.backgroundColor = "#fafa40";
+			led.style.boxShadow = `0 0 4px #fafa40`;
 		}
 
+		/*
 		for (let i=0; i<list.length; i++) {
 			let led1 = list[i].frontElement.childNodes[0].childNodes[0];
 			let led2 = list[i].frontElement.childNodes[0].childNodes[1];
@@ -3146,6 +3145,7 @@ class DeviceView extends View {
 
 			list[i].frontElement.style.width = `${size - 2}px`;
 		}
+		*/
 
 		frame.style.width = `${columns * size + 28}px`;
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
@@ -3171,6 +3171,7 @@ class DeviceView extends View {
 	}
 
 	GetVlanColor(vlan, array) {
+		//TODO:
 		if (vlan === null || vlan.length === 0) return "transparent";
 		if (vlan === "TRUNK") return "#FFFFFF";
 		if (array.length < 2) return "transparent";

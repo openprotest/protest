@@ -376,10 +376,10 @@ internal static class LiveStats {
         Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(result);
 
         if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
-            int dotIndex = snmpUptime.LastIndexOf('.');
+            /*int dotIndex = snmpUptime.LastIndexOf('.');
             if (dotIndex > -1) {
                 snmpUptime = snmpUptime[..dotIndex];
-            }
+            }*/
             WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
         }
 
