@@ -140,6 +140,10 @@ class Settings extends Tabs {
 		networkLabel.textContent = "Network zone";
 		labels.push(networkLabel);
 
+		const vlanLabel = document.createElement("div");
+		vlanLabel.textContent = "VLAN ID";
+		labels.push(vlanLabel);
+
 		const colorLabel = document.createElement("div");
 		colorLabel.textContent = "Color";
 		labels.push(colorLabel);
@@ -147,7 +151,7 @@ class Settings extends Tabs {
 		for (let i = 0; i < labels.length; i++) {
 			labels[i].style.display = "inline-block";
 			labels[i].style.textAlign = "left";
-			labels[i].style.width = "33%";
+			labels[i].style.width = "25%";
 			labels[i].style.lineHeight = "24px";
 			labels[i].style.whiteSpace = "nowrap";
 			labels[i].style.overflow = "hidden";
@@ -157,7 +161,7 @@ class Settings extends Tabs {
 			labels[i].style.paddingTop = "1px";
 		}
 
-		titleBar.append(nameLabel, networkLabel, colorLabel);
+		titleBar.append(nameLabel, networkLabel, vlanLabel, colorLabel);
 
 		this.zonesList = document.createElement("div");
 		this.zonesList.className = "no-results";
@@ -612,7 +616,7 @@ class Settings extends Tabs {
 				nameLabel.style.display = "inline-block";
 				nameLabel.style.top = "0";
 				nameLabel.style.left = "0";
-				nameLabel.style.width = "33%";
+				nameLabel.style.width = "25%";
 				nameLabel.style.whiteSpace = "nowrap";
 				nameLabel.style.overflow = "hidden";
 				nameLabel.style.textOverflow = "ellipsis";
@@ -623,17 +627,27 @@ class Settings extends Tabs {
 				const networkLabel = document.createElement("div");
 				networkLabel.style.display = "inline-block";
 				networkLabel.style.top = "0";
-				networkLabel.style.left = "33%";
-				networkLabel.style.width = "33%";
+				networkLabel.style.left = "25%";
+				networkLabel.style.width = "25%";
 				networkLabel.style.whiteSpace = "nowrap";
 				networkLabel.style.overflow = "hidden";
 				networkLabel.style.lineHeight = "32px";
 				networkLabel.textContent = json[i].network;
 
+				const vlanLabel = document.createElement("div");
+				vlanLabel.style.display = "inline-block";
+				vlanLabel.style.top = "0";
+				vlanLabel.style.left = "50%";
+				vlanLabel.style.width = "25%";
+				vlanLabel.style.whiteSpace = "nowrap";
+				vlanLabel.style.overflow = "hidden";
+				vlanLabel.style.lineHeight = "32px";
+				vlanLabel.textContent = json[i].vlan;
+
 				const colorBox = document.createElement("div");
 				colorBox.style.display = "inline-block";
 				colorBox.style.top = "4px";
-				colorBox.style.left = "66%";
+				colorBox.style.left = "75%";
 				colorBox.style.width = "32px";
 				colorBox.style.height = "24px";
 				colorBox.style.marginLeft = "8px";
@@ -641,7 +655,7 @@ class Settings extends Tabs {
 				colorBox.style.backgroundColor = json[i].color;
 				colorBox.style.boxShadow = "var(--clr-dark) 0 0 0 1px inset";
 
-				element.append(nameLabel, networkLabel, colorBox);
+				element.append(nameLabel, networkLabel, vlanLabel, colorBox);
 
 				element.onclick = ()=>{
 					for (let i=0; i<this.zonesList.childNodes.length; i++) {
@@ -858,7 +872,7 @@ class Settings extends Tabs {
 	}
 
 	ZoneDialog(object=null) {
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("250px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -868,7 +882,7 @@ class Settings extends Tabs {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(3, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(3, 38px) 48px";
 		innerBox.style.alignItems = "center";
 
 		const nameLabel = document.createElement("div");
@@ -888,25 +902,27 @@ class Settings extends Tabs {
 		networkInput.placeholder = "10.0.0.1/24";
 		innerBox.append(networkLabel, networkInput);
 
+		const vlanLabel = document.createElement("div");
+		vlanLabel.style.gridArea = "3 / 2";
+		vlanLabel.textContent = "VLAN ID:";
+		const vlanInput = document.createElement("input");
+		vlanInput.style.gridArea = "3 / 3";
+		vlanInput.type = "text";
+		innerBox.append(vlanLabel, vlanInput);
+
 		const colorLabel = document.createElement("div");
-		colorLabel.style.gridArea = "3 / 2";
+		colorLabel.style.gridArea = "4 / 2";
 		colorLabel.textContent = "Color:";
 		const colorInput = document.createElement("input");
-		colorInput.style.gridArea = "3 / 3";
+		colorInput.style.gridArea = "4 / 3";
 		colorInput.type = "color";
 		innerBox.append(colorLabel, colorInput);
 
-		const trustedBox = document.createElement("div");
-		trustedBox.style.gridArea = "4 / 2 / 4 / 4";
-		innerBox.append(trustedBox);
-
-		const trustedToggle = this.CreateToggle("Trusted zone", false, trustedBox);
-
 		if (object) {
-			nameInput.value = object.name;
+			nameInput.value    = object.name;
 			networkInput.value = object.network;
-			colorInput.value = object.color;
-			trustedToggle.checkbox.checked = object.isTrusted;
+			vlanInput.value    = object.vlan;
+			colorInput.value   = object.color;
 		}
 
 		okButton.onclick = async()=> {
@@ -935,10 +951,10 @@ class Settings extends Tabs {
 			if (requiredFieldMissing) return;
 
 			const newObject = {
-				name     : nameInput.value,
-				network  : networkInput.value,
-				color    : colorInput.value,
-				isTrusted: trustedToggle.checkbox.checked
+				name      : nameInput.value,
+				network   : networkInput.value,
+				vlan      : vlanInput.value,
+				color     : colorInput.value,
 			};
 
 			if (isNew) {
