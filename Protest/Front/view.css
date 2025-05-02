@@ -409,14 +409,14 @@ button.view-live-button:active {
 }
 
 .view-interface-port {
-	width: 48px;
+	width: 40px;
 	height: 48px;
 	border-radius: 4px;
 }
 
 .view-interface-port:hover {
 	background-color: var(--clr-select);
-	box-shadow: 0 -4px 0px 2px var(--clr-select);
+	box-shadow: 0 0px 0px 2px var(--clr-select);
 }
 
 .view-interface-port > div:nth-child(1) {
@@ -424,31 +424,31 @@ button.view-live-button:active {
 	height: 100%;
 	background-image: url(res/ethernetport.svgz);
 	background-size: contain;
-	background-position: center;
+	background-position: center -6px;
 	background-repeat: no-repeat;
+
+	grid-template-columns: 15% 7px auto 7px 15%;
+	grid-template-rows: auto 4px 12%;
 
 	display: grid;
 }
 
 .view-interface-port > div:nth-child(2) {
 	position: relative;
-	top: calc(-90% - 6px);
 	text-align: center;
 	font-size: 8px;
 	font-weight: bold;
 	color: #202020;
 }
 
-.view-interface-port > div:nth-child(1) > div { /*led*/
-	border-radius: 30%;
-}
-
-.view-interface-port > div:nth-child(1) > div:nth-child(1) { /*led1*/
-	grid-area: 2 / 2;
-}
-
-.view-interface-port > div:nth-child(1) > div:nth-child(2) { /*led2*/
-	grid-area: 2 / 4;
+.view-interface-port > div:nth-child(3) { /*led*/
+	position: relative;
+	top: -37px;
+	left: 6px;
+	width: 5px;
+	height: 3px;
+	border-radius: 20%;
+	animation: led-blink .25s linear infinite;
 }
 
 .view-interfaces-edit-title > * {
@@ -489,6 +489,7 @@ button.view-live-button:active {
 
 .view-interfaces-edit-list-element > * {
 	float: left;
+	height: 28px;
 }
 
 
@@ -504,6 +505,7 @@ button.view-live-button:active {
 }
 .view-interfaces-edit-list-element > *:nth-child(2) {
 	width: 64px;
+	font-size: small;
 }
 .view-interfaces-edit-list-element > *:nth-child(3) {
 	width: 100px;
@@ -825,4 +827,12 @@ button.view-live-button:active {
 @keyframes slide-right {
 	0%   { opacity:0; transform:translateX(-150px); }
 	100% { opacity:1; transform: none; }
+}
+
+@keyframes led-blink {
+	0%   { background-color: #408020; box-shadow: 0 0 1px #408020;}
+	25%  { background-color: #408020; box-shadow: 0 0 1px #408020;}
+	50%  { background-color: #70f040; box-shadow: 0 0 4px #70f040;}
+	75%  { background-color: #70f040; box-shadow: 0 0 5px #70f040;}
+	100% { background-color: #408020; box-shadow: 0 0 1px #408020;}
 }

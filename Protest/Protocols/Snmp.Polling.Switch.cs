@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
-using System.Text.Json;
 
 namespace Protest.Protocols.Snmp;
 
@@ -101,11 +101,6 @@ internal static partial class Polling {
                 .Select(pair => new {
                     number  = descriptor.GetValueOrDefault(pair.Key, null),
                     port    = speed.GetValueOrDefault(pair.Key, "N/A") switch {
-                        "10"     => "Ethernet",
-                        "100"    => "Ethernet",
-                        "1000"   => "Ethernet",
-                        "2500"   => "Ethernet",
-                        "5000"   => "Ethernet",
                         "10000"  => "SFP+",
                         "25000"  => "SFP+",
                         "40000"  => "QSFP",
@@ -113,7 +108,7 @@ internal static partial class Polling {
                         "200000" => "QSFP",
                         "400000" => "QSFP",
                         "800000" => "QSFP",
-                        _ => "N/A"
+                        _        => "Ethernet"
                     },
                     speed   = speed.GetValueOrDefault(pair.Key, "N/A") switch {
                         "10"     => "10 Mbps",

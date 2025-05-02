@@ -769,8 +769,6 @@ class DeviceView extends View {
 		frame.className = "view-interfaces-frame";
 		this.liveC.appendChild(frame);
 
-		this.liveC.style.overflowX = "auto";
-
 		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
 
@@ -790,11 +788,11 @@ class DeviceView extends View {
 			}
 			frontElement.appendChild(icon);
 
-			icon.appendChild(document.createElement("div")); //led
-
 			const numElement = document.createElement("div");
 			numElement.textContent = obj.i[i].n ? obj.i[i].n : frame.childNodes.length;
 			frontElement.appendChild(numElement);
+
+			frontElement.appendChild(document.createElement("div")); //led
 
 			list.push({
 				frontElement  : frontElement,
@@ -2619,8 +2617,8 @@ class DeviceView extends View {
 			list.push(obj);
 
 			frontElement.onclick = ()=> listElement.scrollIntoView({ behavior: "smooth", block: "center" });
-			frontElement.onmouseover = ()=> dragAndDropElement.style.backgroundColor = "var(--clr-select)";
-			frontElement.onmouseleave = ()=> dragAndDropElement.style.backgroundColor = "";
+			frontElement.onmouseover = ()=> listElement.style.backgroundColor = "var(--clr-select)";
+			frontElement.onmouseleave = ()=> listElement.style.backgroundColor = "";
 
 			dragAndDropElement.onmousedown = event => {
 				if (event.buttons !== 1) return;
@@ -2633,7 +2631,7 @@ class DeviceView extends View {
 				lastSelect.listElement.style.transition = "transition .2s";
 				lastSelect.frontElement.style.backgroundColor = "var(--clr-select)";
 				lastSelect.frontElement.style.boxShadow = "0 -3px 0px 3px var(--clr-select)";
-				lastSelect.listElement.childNodes[0].style.backgroundColor = "var(--clr-select)";
+				lastSelect.listElement.style.backgroundColor = "var(--clr-select)";
 			};
 
 			innerBox.parentElement.onmouseup = event => {
@@ -2644,7 +2642,7 @@ class DeviceView extends View {
 				lastSelect.listElement.style.transition = ".2s";
 				lastSelect.frontElement.style.backgroundColor = "";
 				lastSelect.frontElement.style.boxShadow = "";
-				lastSelect.listElement.childNodes[0].style.backgroundColor = "";
+				lastSelect.listElement.style.backgroundColor = "";
 
 				lastSelect = null;
 				SortList();
@@ -3064,7 +3062,6 @@ class DeviceView extends View {
 	InitInterfaceComponents(frame, numbering, list, editMode) {
 		let rows = 1, columns = 4;
 		if (list.length > 0) {
-
 			if (list.length % 48 === 0) {
 				columns = 24;
 				rows = Math.ceil(list.length / columns);
@@ -3087,69 +3084,41 @@ class DeviceView extends View {
 			}
 		}
 
-		if (numbering === "vertical") {
-			for (let i=0; i<list.length; i++) {
-				list[i].frontElement.style.gridArea = `${i % rows + 1} / ${Math.floor(i / rows) + 1}`;
-			}
-		}
-		else {
-			for (let i=0; i<list.length; i++) {
-				list[i].frontElement.style.gridArea = `${Math.floor(i / columns) + 1} / ${(i % columns) + 1}`;
-			}
-		}
-
-		let size = columns <= 12 ? 50 : 40;
-		if (size === 50) {
-			for (let i=0; i<list.length; i++) {
-				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "15% 7px auto 7px 15%";
-				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 4px 16%";
-			}
-		}
-		else {
-			for (let i=0; i<list.length; i++) {
-				list[i].frontElement.childNodes[0].style.gridTemplateColumns = "15% 5px auto 5px 15%";
-				list[i].frontElement.childNodes[0].style.gridTemplateRows = "auto 3px 24%";
-			}
-		}
-
-		//let vlans = [];
 		for (let i=0; i<list.length; i++) {
-			list[i].frontElement.style.width = `${size - 2}px`;
-
-			let v = editMode ? list[i].vlanInput.value : list[i].vlan;
-			//if (v.length === 0) continue;
-			//if (v === "TRUNK") continue;
-			//if (!vlans.includes(v)) vlans.push(v);
-
-			let led = list[i].frontElement.childNodes[0].childNodes[0];
-			led.style.backgroundColor = "#fafa40";
-			led.style.boxShadow = `0 0 4px #fafa40`;
-		}
-
-		/*
-		for (let i=0; i<list.length; i++) {
-			let led1 = list[i].frontElement.childNodes[0].childNodes[0];
-			let led2 = list[i].frontElement.childNodes[0].childNodes[1];
-
-			if (led1) {
-				list[i].speedColor = this.GetSpeedColor(editMode ? list[i].speedInput.value : list[i].speed);
-				led1.style.backgroundColor = list[i].speedColor;
-				led1.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+			let row, column;
+			if (numbering === "vertical") {
+				if (rows > 2) {
+					const pairIndex = Math.floor(i / 2);
+					const stack = Math.floor(pairIndex / columns);
+					row = (i % 2 === 0 ? 1 : 2) + stack * 2;
+					column = pairIndex % columns + 1;
+					list[i].frontElement.style.gridArea = `${row} / ${column}`;
+				} else {
+					row = i % rows + 1;
+					column = Math.floor(i / rows) + 1;
+					list[i].frontElement.style.gridArea = `${row} / ${column}`;
+				}
+			}
+			else {
+				row =  Math.floor(i / columns) + 1;
+				column = i % columns + 1;
+				list[i].frontElement.style.gridArea = `${row} / ${column}`;
 			}
 
-			if (led2) {
-				list[i].vlanColor = this.GetVlanColor(editMode ? list[i].vlanInput.value : list[i].vlan, vlans);
-				led2.style.backgroundColor = list[i].vlanColor;
-				led2.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+			if (row % 2 === 1 && rows !== 1) {
+				list[i].frontElement.childNodes[0].style.transform = "rotateX(180deg)";
+				list[i].frontElement.childNodes[1].style.top = "-40px"
 			}
-
-			list[i].frontElement.style.width = `${size - 2}px`;
+			else {
+				list[i].frontElement.childNodes[0].style.transform = "none";
+				list[i].frontElement.childNodes[1].style.top = "-20px";
+			}
 		}
-		*/
 
-		frame.style.width = `${columns * size + 28}px`;
+		const size = 40;
+		frame.style.maxWidth = `${columns * size + 28}px`;
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
-		frame.style.gridTemplateRows = `repeat(${rows}, $50px)`;
+		frame.style.gridTemplateRows = `repeat(${rows}, 48px)`;
 	}
 
 	GetSpeedColor(speed) {
