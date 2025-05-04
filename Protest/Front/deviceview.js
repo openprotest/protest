@@ -794,10 +794,10 @@ class DeviceView extends View {
 			frontElement.appendChild(numElement);
 
 			const ledElement = document.createElement("div");
-			frontElement.appendChild(ledElement);
-			if (this.switchInfo && this.switchInfo[i].status == "2") {
+			if (this.switchInfo && this.switchInfo[i].status == 2) {
 				ledElement.style.animation = "led-blink .4s linear infinite";
 			}
+			frontElement.appendChild(ledElement);
 
 			list.push({
 				frontElement : frontElement,
@@ -953,18 +953,15 @@ class DeviceView extends View {
 
 				case "Traffic":
 					const maxTraffic = this.switchInfo.reduce((a, b)=> Math.max(a, b.data), 0);
-					console.log("max traffic:", maxTraffic);
 					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = `rgb(0,${255*this.switchInfo[i].data/maxTraffic},0)`;
+						list[i].iconElement.style.backgroundColor = `rgb(0,${32+223*this.switchInfo[i].data/maxTraffic},32)`;
 					}
 					break;
 
 				case "Errors":
 					const maxError = this.switchInfo.reduce((a, b)=> Math.max(a, b.error), 0);
-					console.log("max error:", maxError);
-
 					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = `rgb(${255*this.switchInfo[i].error/maxError},0,0)`;
+						list[i].iconElement.style.backgroundColor = `rgb(${32+223*this.switchInfo[i].error/maxError},32,32)`;
 					}
 					break;
 				}
