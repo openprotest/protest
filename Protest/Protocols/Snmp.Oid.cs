@@ -23,14 +23,12 @@ public static class Oid {
 
     public static string[] LIVEVIEW_SWITCH_OID = new string[] {
         INTERFACE_TYPE,
-        INTERFACE_DESCRIPTOR,
-        INTERFACE_ALIAS,
         INTERFACE_SPEED,
         INTERFACE_1Q_VLAN,
         INTERFACE_STATUS,
         INTERFACE_ENABLE,
-        INTERFACE_TRAFFIC_IN,
-        INTERFACE_TRAFFIC_OUT,
+        INTERFACE_TRAFFIC_IN_64,
+        INTERFACE_TRAFFIC_OUT_64,
         INTERFACE_ERROR_IN,
         INTERFACE_ERROR_OUT,
     };

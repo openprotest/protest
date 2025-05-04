@@ -398,7 +398,7 @@ button.view-live-button:active {
 .view-interfaces-frame {
 	display: grid;
 	background-color: var(--clr-pane);
-	grid-template-columns: repeat(8, 50px);
+	grid-template-columns: repeat(8, 48px);
 	grid-template-rows: 50px;
 	padding: 8px;
 	min-width: 228px;
@@ -406,31 +406,30 @@ button.view-live-button:active {
 	border-radius: 4px;
 	box-sizing: border-box;
 	overflow-y: hidden;
+
+	padding-left: 10px;
 }
 
 .view-interface-port {
-	width: 40px;
-	height: 48px;
+	width: 32px;
+	height: 40px;
 	border-radius: 4px;
 }
 
 .view-interface-port:hover {
 	background-color: var(--clr-select);
-	box-shadow: 0 0px 0px 2px var(--clr-select);
+	box-shadow: 0 0 0 2px var(--clr-select);
 }
 
 .view-interface-port > div:nth-child(1) {
 	width: 100%;
 	height: 100%;
-	background-image: url(res/ethernetport.svgz);
-	background-size: contain;
-	background-position: center -6px;
-	background-repeat: no-repeat;
-
-	grid-template-columns: 15% 7px auto 7px 15%;
-	grid-template-rows: auto 4px 12%;
-
-	display: grid;
+	background-color: var(--clr-dark);
+	mask-image: url(res/ethernetport.svgz);
+	mask-size: contain;
+	mask-position: center -5px;
+	mask-repeat: no-repeat;
+	transition: background .2s;
 }
 
 .view-interface-port > div:nth-child(2) {
@@ -443,12 +442,11 @@ button.view-live-button:active {
 
 .view-interface-port > div:nth-child(3) { /*led*/
 	position: relative;
-	top: -37px;
-	left: 6px;
-	width: 5px;
+	top: -33px;
+	left: 5px;
+	width: 4px;
 	height: 3px;
-	border-radius: 20%;
-	animation: led-blink .25s linear infinite;
+	border-radius: 2px;
 }
 
 .view-interfaces-edit-title > * {
@@ -539,6 +537,65 @@ button.view-live-button:active {
 	background-size: 24px 24px;
 	background-position: center;
 	background-repeat: no-repeat;
+}
+
+.view-interfaces-mode-box {
+	width: 56px;
+	height: 19px;
+	border-radius: 2px;
+	padding-left: 4px;
+}
+.view-interfaces-mode-box::after {
+	display: inline-block;
+	content: "MODE";
+	color: rgb(64,64,64);
+	font-size: x-small;
+	font-weight: 600;
+	text-align: center;
+	line-height: 16px;
+	padding-left: 4px;
+	transform: translateY(-3px);
+}
+
+.view-interfaces-mode-button {
+	display: inline-block;
+	background-color: rgb(96,96,96);
+	width: 12px;
+	height: 12px;
+	border-radius: 4px;
+	transition: .2s;
+	box-shadow:#222 0 -1px 1px,#eee 0 1px 1px,#222 0 -1px 1px inset,#ddd 0 1px 1px inset;
+}
+
+.view-interfaces-mode-menu {
+	position: absolute;
+	z-index: 2;
+	width: 150px;
+	height: auto;
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	box-shadow: var(--clr-dark) 0 0 4px;
+	visibility: hidden;
+	opacity: 0;
+	transform: translateY(-8px);
+	transition: .2s;
+}
+.view-interfaces-mode-box:focus-within > .view-interfaces-mode-menu {
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(4px);
+}
+
+.view-interfaces-mode-menu > div {
+	color: var(--clr-dark);
+	margin: 2px;
+	padding: 4px 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.view-interfaces-mode-menu > div:hover {
+	background-color: var(--clr-select);
 }
 
 .view-lifeline-graph {
@@ -804,9 +861,9 @@ button.view-live-button:active {
 }
 
 @keyframes zoom-in-background {
-	0%   { background-position: calc(100% - 12px) center; background-size: 0px 0px; }
-	80%  { background-position: calc(100% - 2px) center; background-size: 20px 20px; }
-	100% { background-position: calc(100% - 4px) center; background-size: 16px 16px; }
+	0%  { background-position: calc(100% - 12px) center; background-size: 0px 0px; }
+	80% { background-position: calc(100% - 2px) center; background-size: 20px 20px; }
+	100%{ background-position: calc(100% - 4px) center; background-size: 16px 16px; }
 }
 
 @keyframes attribute-in {
@@ -815,8 +872,8 @@ button.view-live-button:active {
 }
 
 @keyframes password-countdown {
-	0%   { background-size: 100% 4px; }
-	100% { background-size: 0% 4px; }
+	0%  { background-size: 100% 4px; }
+	100%{ background-size: 0% 4px; }
 }
 
 @keyframes previous-fall-in {
@@ -825,8 +882,8 @@ button.view-live-button:active {
 }
 
 @keyframes slide-right {
-	0%   { opacity:0; transform:translateX(-150px); }
-	100% { opacity:1; transform: none; }
+	0%  { opacity:0; transform:translateX(-150px); }
+	100%{ opacity:1; transform: none; }
 }
 
 @keyframes led-blink {

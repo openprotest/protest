@@ -72,7 +72,7 @@ internal static partial class Polling {
 
             Dictionary<int, string> descriptor = new Dictionary<int, string>();
             Dictionary<int, string> alias      = new Dictionary<int, string>();
-            Dictionary<int, string> type       = new Dictionary<int, string>();
+            Dictionary<int, string> type       = new Dictionary<int, string>(); 
             Dictionary<int, string> speed      = new Dictionary<int, string>();
             Dictionary<int, string> vlan       = new Dictionary<int, string>();
 

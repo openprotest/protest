@@ -63,6 +63,10 @@ class DeviceView extends View {
 		if (args.file) {
 			this.InitializePreview();
 			setTimeout(()=>this.InitializeSubnetEmblem(), 200);
+
+			if (this.link && this.link.ip) {
+				this.InitializeGraphs();
+			}
 		}
 		else if (args.copy) {
 			const origin = LOADER.devices.data[args.copy];
@@ -97,10 +101,6 @@ class DeviceView extends View {
 		this.AutoUpdateIndicators();
 
 		setTimeout(()=>this.AfterResize(), WIN.ANIME_DURATION);
-
-		if (this.link.ip) {
-			this.InitializeGraphs();
-		}
 	}
 
 	InitializeComponents() {
@@ -170,8 +170,7 @@ class DeviceView extends View {
 		};
 
 		optionDnsLookup.onclick=()=> {
-			let target;
-			let type;
+			let target, type;
 			if ("ip" in this.link) {
 				target = this.link.ip.v;
 				type = "PTR";
@@ -777,32 +776,39 @@ class DeviceView extends View {
 			frontElement.className = "view-interface-port";
 			frame.appendChild(frontElement);
 
-			const icon = document.createElement("div");
+			const iconElement = document.createElement("div");
+			iconElement.backgroundColor = "var(--clr-dark)";
+			iconElement.style.transitionDelay = `${i*.005}s`;
 			switch (obj.i[i].i) {
-			case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
-			case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
-			case "SFP+"    : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
-			case "QSFP"    : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
-			case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
-			case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
+			case "Ethernet": iconElement.style.maskImage = "url(mono/ethernetport.svg)"; break;
+			case "SFP"     : iconElement.style.maskImage = "url(mono/sfpport.svg)"; break;
+			case "SFP+"    : iconElement.style.maskImage = "url(mono/sfpport.svg)"; break;
+			case "QSFP"    : iconElement.style.maskImage = "url(mono/qsfpport.svg)"; break;
+			case "USB"     : iconElement.style.maskImage = "url(mono/usbport.svg)"; break;
+			case "Serial"  : iconElement.style.maskImage = "url(mono/serialport.svg)"; break;
 			}
-			frontElement.appendChild(icon);
+			frontElement.appendChild(iconElement);
 
 			const numElement = document.createElement("div");
 			numElement.textContent = obj.i[i].n ? obj.i[i].n : frame.childNodes.length;
 			frontElement.appendChild(numElement);
 
-			frontElement.appendChild(document.createElement("div")); //led
+			const ledElement = document.createElement("div");
+			frontElement.appendChild(ledElement);
+			if (this.switchInfo && this.switchInfo[i].status == "2") {
+				ledElement.style.animation = "led-blink .4s linear infinite";
+			}
 
 			list.push({
-				frontElement  : frontElement,
-				numberElement : numElement,
-				number  : obj.i[i].n,
-				port    : obj.i[i].i,
-				speed   : obj.i[i].s,
-				vlan    : obj.i[i].v,
-				comment : obj.i[i].c,
-				link    : obj.i[i].l
+				frontElement : frontElement,
+				iconElement  : iconElement,
+				numberElement: numElement,
+				number : obj.i[i].n,
+				port   : obj.i[i].i,
+				speed  : obj.i[i].s,
+				vlan   : obj.i[i].v,
+				comment: obj.i[i].c,
+				link   : obj.i[i].l
 			});
 
 			frontElement.onmouseenter = ()=> {
@@ -815,8 +821,7 @@ class DeviceView extends View {
 				speedColorBox.style.borderRadius = "2px";
 				speedColorBox.style.marginLeft = "4px";
 				speedColorBox.style.marginRight = "4px";
-				speedColorBox.style.backgroundColor = list[i].speedColor;
-				speedColorBox.style.boxShadow = `0 0 4px ${list[i].speedColor}`;
+				speedColorBox.style.backgroundColor = this.GetSpeedColor(list[i].speed);
 				this.floating.appendChild(speedColorBox);
 
 				if (obj.i[i].s !== "") {
@@ -835,8 +840,7 @@ class DeviceView extends View {
 				vlanColorBox.style.borderRadius = "2px";
 				vlanColorBox.style.marginLeft = "4px";
 				vlanColorBox.style.marginRight = "4px";
-				vlanColorBox.style.backgroundColor = list[i].vlanColor ? list[i].vlanColor : "transparent";
-				vlanColorBox.style.boxShadow = `0 0 4px ${list[i].vlanColor}`;
+				vlanColorBox.style.backgroundColor = this.GetVlanColor(list[i].vlan);
 				this.floating.appendChild(vlanColorBox);
 
 				if (obj.i[i].v && obj.i[i].v.toString().length) {
@@ -846,19 +850,30 @@ class DeviceView extends View {
 					this.floating.appendChild(vlanLabel);
 				}
 
+				if (this.switchInfo) {
+					const trafficLabel = document.createElement("div");
+					trafficLabel.style.display = "block";
+					trafficLabel.style.marginLeft = "18px";
+					trafficLabel.textContent = `Traffic: ${UI.SizeToString(this.switchInfo[i].data)}`;
+					this.floating.appendChild(trafficLabel);
+
+					const errorLabel = document.createElement("div");
+					errorLabel.style.display = "block";
+					errorLabel.style.marginLeft = "18px";
+					errorLabel.textContent = `Errors: ${this.switchInfo[i].error}`;
+					this.floating.appendChild(errorLabel);
+				}
+
 				if (list[i].link && list[i].link in LOADER.devices.data) {
 					let file = list[i].link;
 					let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : "";
 					const icon = LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg";
-
-					this.floating.appendChild(document.createElement("br"));
 
 					const linkIcon = document.createElement("div");
 					linkIcon.style.backgroundImage = `url(${icon})`;
 					linkIcon.style.backgroundRepeat = "no-repeat";
 					linkIcon.style.backgroundPosition = "0 center";
 					linkIcon.style.backgroundSize = "32px 32px";
-					linkIcon.style.width = "100%";
 					linkIcon.style.height = "40px";
 					linkIcon.style.lineHeight = "40px";
 					linkIcon.style.margin = "4px";
@@ -874,6 +889,8 @@ class DeviceView extends View {
 					else if (LOADER.devices.data[file].ip) {
 						linkIcon.textContent = LOADER.devices.data[file].ip.v;
 					}
+
+					this.floating.style.maxHeight = "150px";
 
 					list[i].frontElement.ondblclick = ()=> {
 						LOADER.OpenDeviceByFile(file);
@@ -900,7 +917,80 @@ class DeviceView extends View {
 			frame.onmouseleave = ()=> { this.floating.style.display = "none"; };
 		}
 
-		this.InitInterfaceComponents(frame, numbering, list, false);
+		const gridSize = this.InitInterfaceComponents(frame, numbering, list, false);
+
+		const modeBox = document.createElement("div");
+		modeBox.tabIndex = 0;
+		modeBox.className = "view-interfaces-mode-box";
+		modeBox.style.gridArea = `${gridSize.rows+1} / 1`;
+		frame.appendChild(modeBox);
+
+		const modeButton = document.createElement("div");
+		modeButton.className = "view-interfaces-mode-button";
+		modeBox.appendChild(modeButton);
+
+		const modeMenu = document.createElement("div");
+		modeMenu.className = "view-interfaces-mode-menu";
+		modeBox.appendChild(modeMenu);
+
+		const modesLocal = ["Speed", "VLAN"];
+		const modesLive = ["Speed", "VLAN", "Traffic", "Errors"];
+
+		const ModeToggle = event=> {
+			if (this.switchInfo) {
+				switch (event.target.textContent) {
+				case "Speed":
+					for (let i=0; i<list.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo[i].speed ?? null);
+					}
+					break;
+
+				case "VLAN":
+					for (let i=0; i<list.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo[i].vlan ?? null);
+					}
+					break;
+
+				case "Traffic":
+					const maxTraffic = this.switchInfo.reduce((a, b)=> Math.max(a, b.data), 0);
+					console.log("max traffic:", maxTraffic);
+					for (let i=0; i<list.length; i++) {
+						list[i].iconElement.style.backgroundColor = `rgb(0,${255*this.switchInfo[i].data/maxTraffic},0)`;
+					}
+					break;
+
+				case "Errors":
+					const maxError = this.switchInfo.reduce((a, b)=> Math.max(a, b.error), 0);
+					console.log("max error:", maxError);
+
+					for (let i=0; i<list.length; i++) {
+						list[i].iconElement.style.backgroundColor = `rgb(${255*this.switchInfo[i].error/maxError},0,0)`;
+					}
+					break;
+				}
+			}
+			else {
+				switch (event.target.textContent) {
+				case "Speed"  : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed)); break;
+				case "VLAN"   : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.vlan)); break;
+				}
+			}
+
+			//list.forEach(o=> o.frontElement.style.filter = "drop-shadow(0 0 1px black)");
+		};
+
+		modeBox.onclick = ()=> {
+			modeMenu.textContent = "";
+
+			const modes = this.switchInfo ? modesLive : modesLocal;
+			for (let i=0; i<modes.length; i++) {
+				const option = document.createElement("div");
+				option.textContent = modes[i];
+				option.onclick = ModeToggle;
+				modeMenu.appendChild(option);
+			}
+			modeButton.focus();
+		};
 	}
 
 	async InitializeLiveStats() {
@@ -1075,6 +1165,10 @@ class DeviceView extends View {
 					}
 				};
 			}
+			else if (json.switchInfo) {
+				this.switchInfo = json.switchInfo;
+				this.InitializeInterfaces();
+			}
 		};
 
 		this.liveStatsWebSockets.onclose = ()=> {
@@ -1084,7 +1178,7 @@ class DeviceView extends View {
 			if (spinnerBox) {
 				spinnerBox.style.height = "0";
 				spinnerBox.style.opacity = "0";
-				setTimeout(()=>this.liveB.removeChild(spinnerBox), 200);
+				this.liveB.removeChild(spinnerBox);
 			}
 
 			const loggedIn = liveButtons.find(o=> o.secondary.textContent === "Logged in");
@@ -2630,7 +2724,7 @@ class DeviceView extends View {
 				lastSelect.listElement.style.backgroundColor = "var(--clr-pane)";
 				lastSelect.listElement.style.transition = "transition .2s";
 				lastSelect.frontElement.style.backgroundColor = "var(--clr-select)";
-				lastSelect.frontElement.style.boxShadow = "0 -3px 0px 3px var(--clr-select)";
+				lastSelect.frontElement.style.boxShadow = "0 0 0 2px var(--clr-select)";
 				lastSelect.listElement.style.backgroundColor = "var(--clr-select)";
 			};
 
@@ -2668,12 +2762,12 @@ class DeviceView extends View {
 
 			txtP.onchange = ()=> {
 				switch (txtP.value) {
-				case "Ethernet": icon.style.backgroundImage = "url(mono/ethernetport.svg)"; break;
-				case "SFP"     : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
-				case "SFP+"    : icon.style.backgroundImage = "url(mono/sfpport.svg)"; break;
-				case "QSFP"    : icon.style.backgroundImage = "url(mono/qsfpport.svg)"; break;
-				case "USB"     : icon.style.backgroundImage = "url(mono/usbport.svg)"; break;
-				case "Serial"  : icon.style.backgroundImage = "url(mono/serialport.svg)"; break;
+				case "Ethernet": icon.style.maskImage = "url(mono/ethernetport.svg)"; break;
+				case "SFP"     : icon.style.maskImage = "url(mono/sfpport.svg)"; break;
+				case "SFP+"    : icon.style.maskImage = "url(mono/sfpport.svg)"; break;
+				case "QSFP"    : icon.style.maskImage = "url(mono/qsfpport.svg)"; break;
+				case "USB"     : icon.style.maskImage = "url(mono/usbport.svg)"; break;
+				case "Serial"  : icon.style.maskImage = "url(mono/serialport.svg)"; break;
 				}
 				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
 			};
@@ -3107,46 +3201,47 @@ class DeviceView extends View {
 
 			if (row % 2 === 1 && rows !== 1) {
 				list[i].frontElement.childNodes[0].style.transform = "rotateX(180deg)";
-				list[i].frontElement.childNodes[1].style.top = "-40px"
+				list[i].frontElement.childNodes[1].style.top = "-34px"
 			}
 			else {
 				list[i].frontElement.childNodes[0].style.transform = "none";
-				list[i].frontElement.childNodes[1].style.top = "-20px";
+				list[i].frontElement.childNodes[1].style.top = "-16px";
 			}
 		}
 
-		const size = 40;
-		frame.style.maxWidth = `${columns * size + 28}px`;
+		const size = 32;
+		frame.style.maxWidth = `${columns * size + 22}px`;
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
-		frame.style.gridTemplateRows = `repeat(${rows}, 48px)`;
+		frame.style.gridTemplateRows = `repeat(${rows}, 44px)`;
+
+		return {rows:rows, columns:columns};
 	}
 
 	GetSpeedColor(speed) {
 		switch (speed) {
-		case "10 Mbps" : return "hsl(20,95%,60%)";
-		case "100 Mbps": return "hsl(40,95%,60%)";
-		case "1 Gbps"  : return "hsl(60,95%,60%)";
-		case "2.5 Gbps": return "hsl(70,95%,60%)";
-		case "5 Gbps"  : return "hsl(80,95%,60%)";
-		case "10 Gbps" : return "hsl(130,95%,60%)";
-		case "25 Gbps" : return "hsl(150,95%,60%)";
-		case "40 Gbps" : return "hsl(170,95%,60%)";
-		case "100 Gbps": return "hsl(190,95%,60%)";
-		case "200 Gbps": return "hsl(210,95%,60%)";
-		case "400 Gbps": return "hsl(275,95%,60%)";
-		case "800 Gbps": return "hsl(295,95%,60%)";
-		default: return "transparent";
+		case "10 Mbps" : return "hsl(20,85%,50%)";
+		case "100 Mbps": return "hsl(40,85%,50%)";
+		case "1 Gbps"  : return "hsl(60,85%,50%)";
+		case "2.5 Gbps": return "hsl(70,85%,50%)";
+		case "5 Gbps"  : return "hsl(80,85%,50%)";
+		case "10 Gbps" : return "hsl(130,85%,50%)";
+		case "25 Gbps" : return "hsl(150,85%,50%)";
+		case "40 Gbps" : return "hsl(170,85%,50%)";
+		case "100 Gbps": return "hsl(190,85%,50%)";
+		case "200 Gbps": return "hsl(210,85%,50%)";
+		case "400 Gbps": return "hsl(275,85%,50%)";
+		case "800 Gbps": return "hsl(295,85%,50%)";
+		default: return null;
 		}
 	}
 
-	GetVlanColor(vlan, array) {
-		//TODO:
-		if (vlan === null || vlan.length === 0) return "transparent";
-		if (vlan === "TRUNK") return "#FFFFFF";
-		if (array.length < 2) return "transparent";
-		let index = array.indexOf(vlan);
-		if (index === -1) return "transparent";
-		return `hsl(${(240 + index * 1.61803398875 * 360) % 360},95%,60%)`;
+	GetVlanColor(vlan) {
+		for (let i=0; i<KEEP.zones.length; i++) {
+			if (KEEP.zones[i].vlan == vlan) {
+				return KEEP.zones[i].color;
+			}
+		}
+		return null;
 	}
 
 	Fetch(isNew=false, forceTarget=null) { //overrides

@@ -15,6 +15,7 @@ using System.Timers;
 using Protest.Protocols;
 using Protest.Tasks;
 using Lextm.SharpSnmpLib;
+using System.Text.Json;
 
 namespace Protest.Tools;
 
@@ -388,44 +389,127 @@ internal static class LiveStats {
         }
 
         if (PRINTER_TYPES.Contains(type)) {
-            IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
-            Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(printerResult);
-
-            if (printerFormatted is not null) {
-                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
-                    string status = snmpPrinterStatus switch {
-                        "1" => "Other",
-                        "2" => "Processing",
-                        "3" => "Idle",
-                        "4" => "Printing",
-                        "5" => "Warmup",
-                        _   => snmpPrinterStatus
-                    };
-                    WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
-                }
-
-                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MARKER_COUNTER_LIFE, out string snmpPageCounter)) {
-                    WsWriteText(ws, $"{{\"info\":\"Total pages counter: {Data.EscapeJsonText(snmpPageCounter)}\",\"source\":\"SNMP\"}}", mutex);
-                }
-
-                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
-                    WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
-                }
-
-                if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
-                    WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
-                }
-            }
-
-            if (Issues.CheckPrinterComponent(null, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
-                for (int i = 0; i < issues.Length; i++) {
-                    WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
-                }
-            }
+            SnmpQueryPrinter(ws, mutex, ipAddress, profile);
         }
         else if (SWITCH_TYPES.Contains(type)) {
-            //TODO:
+            SnmpQuerySwitch(ws, mutex, ipAddress, profile);
         }
+
+    }
+
+    private static void SnmpQueryPrinter(WebSocket ws, object mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
+        IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
+        Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(result);
+
+        if (printerFormatted is not null) {
+            if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
+                string status = snmpPrinterStatus switch
+                {
+                    "1" => "Other",
+                    "2" => "Processing",
+                    "3" => "Idle",
+                    "4" => "Printing",
+                    "5" => "Warmup",
+                    _   => snmpPrinterStatus
+                };
+                WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
+            }
+
+            if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MARKER_COUNTER_LIFE, out string snmpPageCounter)) {
+                WsWriteText(ws, $"{{\"info\":\"Total pages counter: {Data.EscapeJsonText(snmpPageCounter)}\",\"source\":\"SNMP\"}}", mutex);
+            }
+
+            if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
+                WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
+            }
+
+            if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
+                WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
+            }
+        }
+
+        if (Issues.CheckPrinterComponent(null, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
+            for (int i = 0; i < issues.Length; i++) {
+                WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
+            }
+        }
+    }
+
+    private static void SnmpQuerySwitch(WebSocket ws, object mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
+        IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVEVIEW_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk);
+
+        if (result is null) {
+            WsWriteText(ws, $"{{\"warning\":\"SNMP fetch failed. Currently displaying local data\",\"source\":\"SNMP\"}}", mutex);
+            return;
+        }
+
+        Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(result);
+
+        Dictionary<int, string> type     = new Dictionary<int, string>();
+        Dictionary<int, string> speed    = new Dictionary<int, string>();
+        Dictionary<int, string> vlan     = new Dictionary<int, string>();
+        Dictionary<int, string> status   = new Dictionary<int, string>();
+        Dictionary<int, long> trafficIn  = new Dictionary<int, long>();
+        Dictionary<int, long> trafficOut = new Dictionary<int, long>();
+        Dictionary<int, int> errorIn     = new Dictionary<int, int>();
+        Dictionary<int, int> errorOut    = new Dictionary<int, int>();
+
+        foreach (KeyValuePair<string, string> pair in parsedResult) {
+            int index = int.Parse(pair.Key.Split('.').Last());
+
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
+                type.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_SPEED)) {
+                speed.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN)) {
+                vlan.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_STATUS)) {
+                status.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_IN_64)) {
+                trafficIn.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_OUT_64)) {
+                trafficOut.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_IN)) {
+                errorIn.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_OUT)) {
+                errorOut.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+            }
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            switchInfo = type.Where(o => o.Value == "6")
+                .Select(pair => new {
+                    speed = speed.GetValueOrDefault(pair.Key, "N/A") switch {
+                        "10"     => "10 Mbps",
+                        "100"    => "100 Mbps",
+                        "1000"   => "1 Gbps",
+                        "2500"   => "2.5 Gbps",
+                        "5000"   => "5 Gbps",
+                        "10000"  => "10 Gbps",
+                        "25000"  => "25 Gbps",
+                        "40000"  => "40 Gbps",
+                        "100000" => "100 Gbps",
+                        "200000" => "200 Gbps",
+                        "400000" => "400 Gbps",
+                        "800000" => "800 Gbps",
+                        _        => "N/A"
+                    },
+                    vlan   = vlan.GetValueOrDefault(pair.Key, "1"),
+                    status = status.GetValueOrDefault(pair.Key, "0"),
+                    data   = trafficIn.GetValueOrDefault(pair.Key, 0) + trafficOut.GetValueOrDefault(pair.Key, 0),
+                    error  = errorIn.GetValueOrDefault(pair.Key, 0) + errorOut.GetValueOrDefault(pair.Key, 0)
+                })
+        });
+
+        WsWriteText(ws, payload, mutex);
+
     }
 
 }
