@@ -1338,7 +1338,7 @@ class Settings extends Tabs {
 		const authAlgorithms = ["MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512"];
 		for (let i=0; i<authAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = i+1;
+			option.value = i;
 			option.textContent = authAlgorithms[i];
 			authAlgorithmInput.appendChild(option);
 		}
@@ -1362,7 +1362,7 @@ class Settings extends Tabs {
 		const privacyAlgorithms = ["DES", "AES-128", "AES-192", "AES-256"];
 		for (let i=0; i<privacyAlgorithms.length; i++) {
 			const option = document.createElement("option");
-			option.value = i+1;
+			option.value = i;
 			option.textContent = privacyAlgorithms[i];
 			privacyAlgorithmInput.appendChild(option);
 		}
@@ -1441,13 +1441,13 @@ class Settings extends Tabs {
 		}
 
 		authAlgorithmInput.onchange = () => {
-			authObsoleteBox.style.opacity = (authAlgorithmInput.value == 1 || authAlgorithmInput.value == 2) ? "1" : "0";
-			authObsoleteBox.style.transform = (authAlgorithmInput.value == 1 || authAlgorithmInput.value == 2) ? "none" : "translateX(-8px)";
+			authObsoleteBox.style.opacity = (authAlgorithmInput.value < 2) ? "1" : "0";
+			authObsoleteBox.style.transform = (authAlgorithmInput.value < 2) ? "none" : "translateX(-8px)";
 		};
 
 		privacyAlgorithmInput.onchange = () => {
-			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 1) ? "1" : "0";
-			privacyObsoleteBox.style.transform = (privacyAlgorithmInput.value == 1) ? "none" : "translateX(-8px)";
+			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 0) ? "1" : "0";
+			privacyObsoleteBox.style.transform = (privacyAlgorithmInput.value == 0) ? "none" : "translateX(-8px)";
 		};
 
 		let isNew = object === null;
@@ -1481,9 +1481,19 @@ class Settings extends Tabs {
 			let isV3 = versionInput.value == 3;
 
 			let requiredFieldMissing = false;
-			let requiredFields = isV3
+
+			let requiredFields;
+
+			if (isNew) {
+				requiredFields = isV3
 				? [nameInput, priorityInput, usernameInput, authPasswordInput, privacyPasswordInput]
 				: [nameInput, priorityInput, communityInput];
+			}
+			else {
+				requiredFields = isV3
+				? [nameInput, priorityInput, usernameInput]
+				: [nameInput, priorityInput, communityInput];
+			}
 
 			for (let i=0; i<requiredFields.length; i++) {
 				if (requiredFields[i].value.length === 0) {

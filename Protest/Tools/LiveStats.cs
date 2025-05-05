@@ -439,7 +439,7 @@ internal static class LiveStats {
         IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVEVIEW_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk);
 
         if (result is null) {
-            WsWriteText(ws, $"{{\"warning\":\"SNMP fetch failed. Currently displaying local data\",\"source\":\"SNMP\"}}", mutex);
+            WsWriteText(ws, "{\"switchInfo\":[]}"u8.ToArray(), mutex);
             return;
         }
 

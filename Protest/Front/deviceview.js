@@ -771,6 +771,10 @@ class DeviceView extends View {
 		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
 
+		if (this.switchInfo && this.switchInfo.length === 0) {
+			this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
+		}
+
 		for (let i=0; i<obj.i.length; i++) {
 			const frontElement = document.createElement("div");
 			frontElement.className = "view-interface-port";
@@ -794,7 +798,7 @@ class DeviceView extends View {
 			frontElement.appendChild(numElement);
 
 			const ledElement = document.createElement("div");
-			if (this.switchInfo && this.switchInfo[i].status == 1) {
+			if (this.switchInfo && i < this.switchInfo.length && this.switchInfo[i].status == 1) {
 				ledElement.style.animation = "led-blink .4s linear infinite";
 			}
 			frontElement.appendChild(ledElement);
@@ -852,7 +856,7 @@ class DeviceView extends View {
 					this.floating.appendChild(vlanLabel);
 				}
 
-				if (this.switchInfo) {
+				if (this.switchInfo && i < this.switchInfo.length) {
 					const trafficLabel = document.createElement("div");
 					trafficLabel.style.display = "block";
 					trafficLabel.style.fontSize = "small";
@@ -941,7 +945,7 @@ class DeviceView extends View {
 		const modesLive = ["Speed", "VLAN", "Traffic", "Errors"];
 
 		const ModeToggle = event=> {
-			if (this.switchInfo) {
+			if (this.switchInfo && this.switchInfo.length > 0) {
 				switch (event.target.textContent) {
 				case "Speed":
 					for (let i=0; i<list.length; i++) {
@@ -983,7 +987,7 @@ class DeviceView extends View {
 		modeBox.onclick = ()=> {
 			modeMenu.textContent = "";
 
-			const modes = this.switchInfo ? modesLive : modesLocal;
+			const modes = this.switchInfo && this.switchInfo.length > 0 ? modesLive : modesLocal;
 			for (let i=0; i<modes.length; i++) {
 				const option = document.createElement("div");
 				option.textContent = modes[i];

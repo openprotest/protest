@@ -28,20 +28,18 @@ internal static class SnmpProfiles {
     """;
 
     public enum AuthenticationAlgorithm : byte {
-        Auto = 0,
-        MD5 = 1,
-        SHA1 = 2,
-        SHA256 = 3,
-        SHA384 = 4,
-        SHA512 = 5
+        MD5    = 0,
+        SHA1   = 1,
+        SHA256 = 2,
+        SHA384 = 3,
+        SHA512 = 4
     }
 
     public enum PrivacyAlgorithm : byte {
-        Auto = 0,
-        DES = 1,
-        AES128 = 2,
-        AES192 = 3,
-        AES256 = 4
+        DES    = 0,
+        AES128 = 1,
+        AES192 = 2,
+        AES256 = 3
     }
 
     public record Profile {
@@ -52,9 +50,9 @@ internal static class SnmpProfiles {
         public string community = String.Empty;
         public string context = String.Empty;
         public string username;
-        public AuthenticationAlgorithm authAlgorithm = AuthenticationAlgorithm.Auto;
+        public AuthenticationAlgorithm authAlgorithm = AuthenticationAlgorithm.SHA256;
         public string authPassword;
-        public PrivacyAlgorithm privacyAlgorithm = PrivacyAlgorithm.Auto;
+        public PrivacyAlgorithm privacyAlgorithm = PrivacyAlgorithm.AES128;
         public string privacyPassword;
     }
 
@@ -111,7 +109,9 @@ internal static class SnmpProfiles {
                 bytes = File.ReadAllBytes(Data.FILE_SNMP_PROFILES);
             }
 
-            oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, snmpProfilesSerializerOptionsWithPasswords);
+            byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+            oldProfiles = JsonSerializer.Deserialize<Profile[]>(plain, snmpProfilesSerializerOptionsWithPasswords);
         }
         catch {
             oldProfiles = Array.Empty<Profile>();
@@ -123,10 +123,13 @@ internal static class SnmpProfiles {
             for (int i = 0; i < newProfiles.Length; i++) {
                 if (newProfiles[i].guid == default(Guid)) {
                     newProfiles[i].guid = Guid.NewGuid();
+                    continue;
                 }
 
-                if (newProfiles[i].authPassword?.Length > 0) continue;
-                if (newProfiles[i].privacyPassword?.Length > 0) continue;
+                if (!String.IsNullOrEmpty(newProfiles[i].authPassword)
+                    && !String.IsNullOrEmpty(newProfiles[i].privacyPassword)) {
+                    continue;
+                }
 
                 Profile old = null;
                 for (int j = 0; j < oldProfiles.Length; j++) {
@@ -137,8 +140,12 @@ internal static class SnmpProfiles {
                 }
 
                 if (old is not null) {
-                    newProfiles[i].authPassword = old.authPassword;
-                    newProfiles[i].privacyPassword = old.privacyPassword;
+                    if (String.IsNullOrEmpty(newProfiles[i].authPassword)) {
+                        newProfiles[i].authPassword = old.authPassword;
+                    }
+                    if (String.IsNullOrEmpty(newProfiles[i].privacyPassword)) {
+                        newProfiles[i].privacyPassword = old.privacyPassword;
+                    }
                 }
             }
 
@@ -266,7 +273,7 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
             writer.WriteString(_username, value[i].username);
             writer.WriteNumber(_authAlgorithm, (byte)value[i].authAlgorithm);
             writer.WriteString(_authPassword, hidePasswords ? String.Empty : value[i].authPassword.ToString());
-            writer.WriteNumber(_privacyAlgorithm, (byte)value[i].authAlgorithm);
+            writer.WriteNumber(_privacyAlgorithm, (byte)value[i].privacyAlgorithm);
             writer.WriteString(_privacyPassword, hidePasswords ? String.Empty : value[i].privacyPassword.ToString());
             writer.WriteString(_guid, value[i].guid);
             writer.WriteEndObject();

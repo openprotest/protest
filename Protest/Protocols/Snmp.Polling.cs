@@ -153,12 +153,13 @@ internal static partial class Polling {
     }
 
     public static IList<Variable> SnmpRequestV3(IPEndPoint endpoint, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
-        OctetString username = new OctetString(profile.username);
-        OctetString context = new OctetString(profile.context);
+        OctetString username            = new OctetString(profile.username);
+        OctetString context             = new OctetString(profile.context);
         string authenticationPassphrase = profile.authPassword;
-        string privacyPassphrase = profile.authPassword;
+        string privacyPassphrase        = profile.privacyPassword;
 
 #pragma warning disable CS0618 //warn end user
+
         IAuthenticationProvider authenticationProvider = profile.authAlgorithm switch {
             Tools.SnmpProfiles.AuthenticationAlgorithm.MD5    => new MD5AuthenticationProvider(new OctetString(authenticationPassphrase)),
             Tools.SnmpProfiles.AuthenticationAlgorithm.SHA1   => new SHA1AuthenticationProvider(new OctetString(authenticationPassphrase)),
@@ -167,13 +168,15 @@ internal static partial class Polling {
             Tools.SnmpProfiles.AuthenticationAlgorithm.SHA512 => new SHA512AuthenticationProvider(new OctetString(authenticationPassphrase)),
             _ => new SHA256AuthenticationProvider(new OctetString(authenticationPassphrase)),
         };
+
         IPrivacyProvider privacyProvider = profile.privacyAlgorithm switch {
-            Tools.SnmpProfiles.PrivacyAlgorithm.DES    => new DESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-            Tools.SnmpProfiles.PrivacyAlgorithm.AES128 => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-            Tools.SnmpProfiles.PrivacyAlgorithm.AES192 => new AES192PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-            Tools.SnmpProfiles.PrivacyAlgorithm.AES256 => new AES256PrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
-            _ => new AESPrivacyProvider(new OctetString(authenticationPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.DES    => new DESPrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.AES128 => new AESPrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.AES192 => new AES192PrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider),
+            Tools.SnmpProfiles.PrivacyAlgorithm.AES256 => new AES256PrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider),
+            _ => new AESPrivacyProvider(new OctetString(privacyPassphrase), authenticationProvider),
         };
+
 #pragma warning restore CS0618
 
         Discovery discovery = Messenger.GetNextDiscovery(SnmpType.GetRequestPdu);
@@ -181,29 +184,29 @@ internal static partial class Polling {
 
         if (operation == SnmpOperation.Get) {
             GetRequestMessage request = new GetRequestMessage(
-                        VersionCode.V3,
-                        Messenger.NextMessageId,
-                        Messenger.NextRequestId,
-                        username,
-                        context,
-                        oidArray.Select(o=> new Variable(new ObjectIdentifier(o.Trim()))).ToList(),
-                        privacyProvider,
-                        Messenger.MaxMessageSize,
-                        report);
+                VersionCode.V3,
+                Messenger.NextMessageId,
+                Messenger.NextRequestId,
+                username,
+                context,
+                oidArray.Select(o=> new Variable(new ObjectIdentifier(o.Trim()))).ToList(),
+                privacyProvider,
+                Messenger.MaxMessageSize,
+                report);
 
             return request.Variables();
         }
         else if (operation == SnmpOperation.Set) {
             SetRequestMessage request = new SetRequestMessage(
-                        VersionCode.V3,
-                        Messenger.NextMessageId,
-                        Messenger.NextRequestId,
-                        username,
-                        context,
-                        oidArray.Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data)).ToList(),
-                        privacyProvider,
-                        Messenger.MaxMessageSize,
-                        report);
+                VersionCode.V3,
+                Messenger.NextMessageId,
+                Messenger.NextRequestId,
+                username,
+                context,
+                oidArray.Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data)).ToList(),
+                privacyProvider,
+                Messenger.MaxMessageSize,
+                report);
 
             return request.Variables();
         }
