@@ -794,7 +794,7 @@ class DeviceView extends View {
 			frontElement.appendChild(numElement);
 
 			const ledElement = document.createElement("div");
-			if (this.switchInfo && this.switchInfo[i].status == 2) {
+			if (this.switchInfo && this.switchInfo[i].status == 1) {
 				ledElement.style.animation = "led-blink .4s linear infinite";
 			}
 			frontElement.appendChild(ledElement);
@@ -2619,8 +2619,6 @@ class DeviceView extends View {
 			const numElement = document.createElement("div");
 			numElement.textContent = number ? number : frame.childNodes.length;
 			frontElement.appendChild(numElement);
-
-			icon.appendChild(document.createElement("div")); //led
 
 			const listElement = document.createElement("div");
 			listElement.className = "view-interfaces-edit-list-element";

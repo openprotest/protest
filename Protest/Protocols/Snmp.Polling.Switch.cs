@@ -20,7 +20,7 @@ internal static partial class Polling {
         linkAggregation = 209, //ieee802.3a
     }
 
-    enum InterfaceStatus : byte {
+    enum InterfaceOperationStatus : byte {
         up             = 1,
         down           = 2,
         testing        = 3,
