@@ -118,7 +118,6 @@ public sealed class Listener {
         { "/snmp/get",                (ctx, parameters, username) => Protocols.Snmp.Polling.GetHandler(ctx, parameters) },
         { "/snmp/set",                (ctx, parameters, username) => Protocols.Snmp.Polling.SetHandler(ctx, parameters) },
         { "/snmp/walk",               (ctx, parameters, username) => Protocols.Snmp.Polling.WalkHandler(ctx, parameters) },
-
         { "/snmp/switchinterface",    (ctx, parameters, username) => Protocols.Snmp.Polling.SwitchInterface(ctx, parameters) },
 
         { "/wmi/query",               (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null },

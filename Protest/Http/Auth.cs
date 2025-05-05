@@ -345,6 +345,7 @@ internal static class Auth {
                 path.Add("/snmp/get");
                 path.Add("/snmp/set");
                 path.Add("/snmp/walk");
+                path.Add("/snmp/switchinterface");
                 break;
 
             /*case "snmp traps:write":

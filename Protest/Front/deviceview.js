@@ -827,6 +827,7 @@ class DeviceView extends View {
 				if (obj.i[i].s !== "") {
 					const speedLabel = document.createElement("div");
 					speedLabel.style.display = "inline-block";
+					speedLabel.style.fontSize = "small";
 					speedLabel.textContent = `${obj.i[i].s} ${obj.i[i].i}`;
 					this.floating.appendChild(speedLabel);
 				}
@@ -846,6 +847,7 @@ class DeviceView extends View {
 				if (obj.i[i].v && obj.i[i].v.toString().length) {
 					const vlanLabel = document.createElement("div");
 					vlanLabel.style.display = "inline-block";
+					vlanLabel.style.fontSize = "small";
 					vlanLabel.textContent = `VLAN ${obj.i[i].v}`;
 					this.floating.appendChild(vlanLabel);
 				}
@@ -853,14 +855,16 @@ class DeviceView extends View {
 				if (this.switchInfo) {
 					const trafficLabel = document.createElement("div");
 					trafficLabel.style.display = "block";
+					trafficLabel.style.fontSize = "small";
 					trafficLabel.style.marginLeft = "18px";
-					trafficLabel.textContent = `Traffic: ${UI.SizeToString(this.switchInfo[i].data)}`;
+					trafficLabel.textContent = UI.SizeToString(this.switchInfo[i].data);
 					this.floating.appendChild(trafficLabel);
 
 					const errorLabel = document.createElement("div");
 					errorLabel.style.display = "block";
+					errorLabel.style.fontSize = "small";
 					errorLabel.style.marginLeft = "18px";
-					errorLabel.textContent = `Errors: ${this.switchInfo[i].error}`;
+					errorLabel.textContent = `${this.switchInfo[i].error} errors`;
 					this.floating.appendChild(errorLabel);
 				}
 
@@ -3091,7 +3095,7 @@ class DeviceView extends View {
 			for (let i=0; i<addBulkInput.value; i++)
 				AddInterface(null, portInput.value, speedInput.value, 1, null, "");
 			BulkToggle();
-		}
+		};
 
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
 			numberingInput.value = JSON.parse(this.link[".interfaces"].v).n;
