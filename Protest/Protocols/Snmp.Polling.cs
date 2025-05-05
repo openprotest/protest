@@ -194,7 +194,8 @@ internal static partial class Polling {
                 Messenger.MaxMessageSize,
                 report);
 
-            return request.Variables();
+            ISnmpMessage response = request.GetResponse(timeout, endpoint);
+            return response.Variables();
         }
         else if (operation == SnmpOperation.Set) {
             SetRequestMessage request = new SetRequestMessage(
@@ -208,7 +209,8 @@ internal static partial class Polling {
                 Messenger.MaxMessageSize,
                 report);
 
-            return request.Variables();
+            ISnmpMessage response = request.GetResponse(timeout, endpoint);
+            return response.Variables();
         }
         else if (operation == SnmpOperation.Walk) {
             throw new Exception("Operation not supported");
