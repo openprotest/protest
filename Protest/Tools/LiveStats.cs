@@ -9,13 +9,13 @@ using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Protest.Protocols;
 using Protest.Tasks;
 using Lextm.SharpSnmpLib;
-using System.Text.Json;
 
 namespace Protest.Tools;
 

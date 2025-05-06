@@ -73,7 +73,7 @@ class Snmp extends Window {
 		snmpInput.appendChild(oidLabel);
 
 		this.oidInput = document.createElement("textarea");
-		this.oidInput.placeholder = "1.3.6.1.2.1.1.5.0";
+		this.oidInput.placeholder = "1.3.6.1.2.1.1.1.0";
 		this.oidInput.style.gridArea = "3 / 2 / 5 / 4";
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";
@@ -123,7 +123,6 @@ class Snmp extends Window {
 
 		this.versionInput.onchange = ()=> {
 			this.args.version = this.versionInput.value;
-			this.walkButton.disabled = this.versionInput.value == 3;
 
 			if (this.versionInput.value == 3) {
 				authLabel.textContent = "Profile:";
@@ -193,7 +192,12 @@ class Snmp extends Window {
 	}
 
 	async GetQuery() {
-		if (this.targetInput.value.length == 0 || this.oidInput.value.length == 0) {
+		this.oidInput.placeholder = "1.3.6.1.2.1.1.1.0";
+
+		let oid = this.oidInput.value.trim();
+		if (oid.length === 0) oid = "1.3.6.1.2.1.1.1.0";
+
+		if (this.targetInput.value.length == 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
@@ -224,7 +228,7 @@ class Snmp extends Window {
 
 			const response = await fetch(url, {
 				method: "POST",
-				body: this.oidInput.value.trim()
+				body: oid
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -242,7 +246,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
-			this.walkButton.disabled = this.versionInput.value == 3;
+			this.walkButton.disabled = false;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
@@ -293,7 +297,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
-			this.walkButton.disabled = this.versionInput.value == 3;
+			this.walkButton.disabled = false;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}
@@ -337,7 +341,12 @@ class Snmp extends Window {
 	}
 
 	async WalkQuery() {
-		if (this.targetInput.value.length == 0 || this.oidInput.value.length == 0) {
+		this.oidInput.placeholder = "1.3.6.1.2.1.1";
+
+		let oid = this.oidInput.value.trim();
+		if (oid.length === 0) oid = "1.3.6.1.2.1.1";
+		
+		if (this.targetInput.value.length == 0 || oid.length == 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
@@ -350,7 +359,6 @@ class Snmp extends Window {
 		spinner.appendChild(document.createElement("div"));
 		this.content.appendChild(spinner);
 
-		this.targetInput.value = this.targetInput.value.trim();
 		this.getButton.disabled = true;
 		this.setButton.disabled = true;
 		this.walkButton.disabled = true;
@@ -368,7 +376,7 @@ class Snmp extends Window {
 
 			const response = await fetch(url, {
 				method: "POST",
-				body: this.oidInput.value.trim()
+				body: oid
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -386,7 +394,7 @@ class Snmp extends Window {
 		finally {
 			this.getButton.disabled = false;
 			this.setButton.disabled = false;
-			this.walkButton.disabled = this.versionInput.value == 3;
+			this.walkButton.disabled = false;
 			this.plotBox.style.display = "block";
 			this.content.removeChild(spinner);
 		}

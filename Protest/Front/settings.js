@@ -1436,8 +1436,8 @@ class Settings extends Tabs {
 		}
 		else {
 			priorityInput.value = 1;
-			authAlgorithmInput.value = 3;
-			privacyAlgorithmInput.value = 2;
+			authAlgorithmInput.value = 2;
+			privacyAlgorithmInput.value = 1;
 		}
 
 		authAlgorithmInput.onchange = () => {

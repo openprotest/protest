@@ -960,16 +960,16 @@ class DeviceView extends View {
 					break;
 
 				case "Traffic":
-					const maxTraffic = this.switchInfo.reduce((a, b)=> Math.max(a, b.data), 0);
+					const maxTraffic = this.switchInfo.reduce((a, b)=> Math.max(a, b.data), 1);
 					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = `rgb(0,${32+223*this.switchInfo[i].data/maxTraffic},32)`;
+						list[i].iconElement.style.backgroundColor = this.switchInfo[i].data === 0 ? "rgb(32,32,32)" : `rgb(32,${63+192*this.switchInfo[i].data/maxTraffic},32)`;
 					}
 					break;
 
 				case "Errors":
-					const maxError = this.switchInfo.reduce((a, b)=> Math.max(a, b.error), 0);
+					const maxError = this.switchInfo.reduce((a, b)=> Math.max(a, b.error), 1);
 					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = `rgb(${32+223*this.switchInfo[i].error/maxError},32,32)`;
+						list[i].iconElement.style.backgroundColor = this.switchInfo[i].error === 0 ? "rgb(32,32,32)" : `rgb(${63+192*this.switchInfo[i].error/maxError},32,32)`;
 					}
 					break;
 				}
@@ -980,8 +980,6 @@ class DeviceView extends View {
 				case "VLAN"   : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.vlan)); break;
 				}
 			}
-
-			//list.forEach(o=> o.frontElement.style.filter = "drop-shadow(0 0 1px black)");
 		};
 
 		modeBox.onclick = ()=> {
