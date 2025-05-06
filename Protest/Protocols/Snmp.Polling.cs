@@ -196,7 +196,6 @@ internal static partial class Polling {
 
             ISnmpMessage response = request.GetResponse(timeout, endpoint);
             return response.Variables();
-
         }
         else if (operation == SnmpOperation.Set) {
             SetRequestMessage request = new SetRequestMessage(
@@ -212,7 +211,6 @@ internal static partial class Polling {
 
             ISnmpMessage response = request.GetResponse(timeout, endpoint);
             return response.Variables();
-
         }
         else if (operation == SnmpOperation.Walk) {
             List<Variable> result = new List<Variable>();
@@ -223,21 +221,20 @@ internal static partial class Polling {
 
                 while (true) {
                     GetNextRequestMessage request = new GetNextRequestMessage(
-                VersionCode.V3,
-                Messenger.NextMessageId,
-                Messenger.NextRequestId,
-                username,
-                context,
-                new List<Variable> { new Variable(currentOid) },
-                privacyProvider,
-                Messenger.MaxMessageSize,
-                report);
+                        VersionCode.V3,
+                        Messenger.NextMessageId,
+                        Messenger.NextRequestId,
+                        username,
+                        context,
+                        new List<Variable> { new Variable(currentOid) },
+                        privacyProvider,
+                        Messenger.MaxMessageSize,
+                        report);
 
                     ISnmpMessage response = request.GetResponse(timeout, endpoint);
                     Variable nextVar = response.Variables().FirstOrDefault();
 
                     if (nextVar == null || !nextVar.Id.ToString().StartsWith(rootOid.ToString())) break;
-                    
 
                     result.Add(nextVar);
                     currentOid = nextVar.Id;
