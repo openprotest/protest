@@ -34,6 +34,7 @@
 }
 
 .snmp-plot {
+	color: var(--clr-dark);
 	background-color: var(--clr-pane);
 	border-radius: 2px;
 	overflow: auto;
@@ -44,6 +45,43 @@
 	bottom: 4px;
 	transition: .4s;
 }
+
+
+.snmp-plot > div {
+	position: relative;
+	height: 28px;
+	border-bottom: rgb(128,128,128) 1px solid;
+}
+
+.snmp-plot > div:hover {
+	background-color: var(--clr-highlight);
+}
+
+.snmp-plot > div > div {
+	display: inline-block;
+	box-sizing: border-box;
+	height: 28px;
+	line-height: 28px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.snmp-plot > div > div:nth-child(1) {
+	width: 30%;
+	max-width: 400px;
+	padding-left: 28px;
+}
+
+.snmp-plot > div > div:nth-child(2) {
+	width: 20%;
+	max-width: 150px;
+}
+
+.snmp-plot > div > div:nth-child(3) {
+	width: 50%;
+	max-width: 550px;
+}
+
 
 .snmp-table {
 	position: relative;

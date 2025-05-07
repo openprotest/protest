@@ -43,9 +43,9 @@ class DeviceView extends View {
 
 	constructor(args) {
 		super();
-		this.args = args ?? { file: null };
+		this.args = args ?? {file: null};
 
-		this.switchInfo = {success: false };
+		this.switchInfo = {success: false};
 
 		this.SetIcon("mono/gear.svg");
 
@@ -872,7 +872,7 @@ class DeviceView extends View {
 					errorLabel.style.display = "block";
 					errorLabel.style.fontSize = "small";
 					errorLabel.style.marginLeft = "18px";
-					errorLabel.textContent = `${this.switchInfo.error[i]} errors`;
+					errorLabel.textContent = this.switchInfo.error[i]==1 ? "1 error" : `${this.switchInfo.error[i]} errors`;
 					this.floating.appendChild(errorLabel);
 				}
 

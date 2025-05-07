@@ -237,7 +237,7 @@ class Snmp extends Window {
 			if (json.error) throw(json.error);
 
 			if (json instanceof Array) {
-				this.Plot(json);
+				this.PlotTree(json);
 			}
 		}
 		catch (ex) {
@@ -288,7 +288,7 @@ class Snmp extends Window {
 			if (json.error) throw(json.error);
 
 			if (json instanceof Array) {
-				this.Plot(json);
+				this.PlotTree(json);
 			}
 		}
 		catch (ex) {
@@ -385,7 +385,7 @@ class Snmp extends Window {
 			if (json.error) throw(json.error);
 
 			if (json instanceof Array) {
-				this.Plot(json);
+				this.PlotTree(json);
 			}
 		}
 		catch (ex) {
@@ -400,33 +400,80 @@ class Snmp extends Window {
 		}
 	}
 
-	Plot(array) {
-		if (array.length === 0) { return; }
-
-		const table = document.createElement("table");
-		table.className = "snmp-table";
-
-		const header = document.createElement("tr");
-		table.appendChild(header);
-
-		const headers = ["OID", "Type", "Value"];
-		for (let i=0; i<headers.length; i++) {
-			const th = document.createElement("th");
-			th.textContent = headers[i];
-			header.appendChild(th);
-		}
-
-		for (let i=0; i<array.length; i++) {
-			const tr = document.createElement("tr");
-			table.appendChild(tr);
-
-			for (let j=0; j<array[i].length; j++) {
-				const td = document.createElement("td");
-				td.textContent = array[i][j];
-				tr.appendChild(td);
+	ComputeCommonPrefix(parts) {
+		if (parts.length === 0) return '';
+		let prefix = [];
+		for (let i = 0; i < parts[0].length; i++) {
+			const token = parts[0][i];
+			if (parts.every(p => p[i] === token)) {
+				prefix.push(token);
+			} else {
+				break;
 			}
 		}
+	
+		return prefix.join('.');
+	}
 
-		this.plotBox.appendChild(table);
+	PlotTree(array) {
+		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
+		//const minDepth = parts.reduce((min, part)=> Math.min(min, part.length), 99);
+		//const maxDepth = parts.reduce((max, part)=> Math.max(max, part.length), 1);
+		const commonPrefix = this.ComputeCommonPrefix(parts);
+		const minDepth = commonPrefix.split(".").length;
+
+		const rootElement = this.CreateTreeElement(0, commonPrefix, "", "");
+		this.plotBox.appendChild(rootElement);
+
+		for (let i=0; i<array.length; i++) {
+			const [oid, type, value] = array[i];
+
+			let depth = parts[i].length - minDepth;
+
+			const element = this.CreateTreeElement(depth, oid, type, value);
+			this.plotBox.appendChild(element);
+		}
+	}
+
+	CreateTreeElement(depth, oid, type, value) {
+		const parent = document.createElement("div");
+		parent.onclick = event=> this.TreeElement_onclick(event);
+		parent.ondblclick = event=> this.TreeElement_ondblclick(event);
+
+		const oidBox = document.createElement("div");
+		oidBox.style.paddingLeft = `${24 + depth * 20}px`;
+		oidBox.textContent = oid;
+		parent.appendChild(oidBox);
+
+		const typeBox = document.createElement("div");
+		typeBox.textContent = type;
+		parent.appendChild(typeBox);
+
+		const valueBox = document.createElement("div");
+		valueBox.textContent = value;
+		parent.appendChild(valueBox);
+
+		const child = document.createElement("div");
+		parent.appendChild(child);
+
+		return parent;
+	}
+
+	TreeElement_onclick(event) {
+		if (this.selected) {
+			this.selected.style.backgroundColor = "inherit";
+		}
+
+		let target = event.target;
+		while (target.parentElement != this.plotBox) {
+			target = target.parentElement;
+		}
+
+		target.style.backgroundColor = "var(--clr-select)";
+		this.selected = target;
+	}
+
+	TreeElement_dblclick(event) {
+
 	}
 }
