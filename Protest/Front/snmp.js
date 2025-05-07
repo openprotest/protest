@@ -403,11 +403,12 @@ class Snmp extends Window {
 	ComputeCommonPrefix(parts) {
 		if (parts.length === 0) return '';
 		let prefix = [];
-		for (let i = 0; i < parts[0].length; i++) {
+		for (let i=0; i<parts[0].length; i++) {
 			const token = parts[0][i];
-			if (parts.every(p => p[i] === token)) {
+			if (parts.every(o=> o[i]===token)) {
 				prefix.push(token);
-			} else {
+			}
+			else {
 				break;
 			}
 		}
@@ -417,51 +418,41 @@ class Snmp extends Window {
 
 	PlotTree(array) {
 		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
-		//const minDepth = parts.reduce((min, part)=> Math.min(min, part.length), 99);
-		//const maxDepth = parts.reduce((max, part)=> Math.max(max, part.length), 1);
 		const commonPrefix = this.ComputeCommonPrefix(parts);
-		const minDepth = commonPrefix.split(".").length;
 
-		const rootElement = this.CreateTreeElement(0, commonPrefix, "", "");
-		this.plotBox.appendChild(rootElement);
+		const root = this.CreateTreeElement(commonPrefix, "", "");
+		this.plotBox.appendChild(root);
 
 		for (let i=0; i<array.length; i++) {
 			const [oid, type, value] = array[i];
-
-			let depth = parts[i].length - minDepth;
-
-			const element = this.CreateTreeElement(depth, oid, type, value);
-			this.plotBox.appendChild(element);
+			const node = this.CreateTreeElement(oid, type, value);
+			this.plotBox.appendChild(node);
 		}
 	}
 
-	CreateTreeElement(depth, oid, type, value) {
-		const parent = document.createElement("div");
-		parent.onclick = event=> this.TreeElement_onclick(event);
-		parent.ondblclick = event=> this.TreeElement_ondblclick(event);
+	CreateTreeElement(oid, type, value) {
+		const element = document.createElement("div");
+		element.onmousedown = event=> this.TreeElement_onclick(event);
 
 		const oidBox = document.createElement("div");
-		oidBox.style.paddingLeft = `${24 + depth * 20}px`;
+		oidBox.setAttribute("long", oid);
 		oidBox.textContent = oid;
-		parent.appendChild(oidBox);
+		element.appendChild(oidBox);
 
 		const typeBox = document.createElement("div");
 		typeBox.textContent = type;
-		parent.appendChild(typeBox);
+		element.appendChild(typeBox);
 
 		const valueBox = document.createElement("div");
 		valueBox.textContent = value;
-		parent.appendChild(valueBox);
+		element.appendChild(valueBox);
 
-		const child = document.createElement("div");
-		parent.appendChild(child);
-
-		return parent;
+		return element;
 	}
 
 	TreeElement_onclick(event) {
 		if (this.selected) {
-			this.selected.style.backgroundColor = "inherit";
+			this.selected.style.backgroundColor = "";
 		}
 
 		let target = event.target;
@@ -471,9 +462,5 @@ class Snmp extends Window {
 
 		target.style.backgroundColor = "var(--clr-select)";
 		this.selected = target;
-	}
-
-	TreeElement_dblclick(event) {
-
 	}
 }

@@ -46,11 +46,12 @@
 	transition: .4s;
 }
 
-
 .snmp-plot > div {
 	position: relative;
 	height: 28px;
 	border-bottom: rgb(128,128,128) 1px solid;
+	-webkit-user-select: text;
+	user-select: text;
 }
 
 .snmp-plot > div:hover {
@@ -67,54 +68,17 @@
 }
 
 .snmp-plot > div > div:nth-child(1) {
-	width: 30%;
-	max-width: 400px;
-	padding-left: 28px;
+	width: 40%;
+	max-width: 600px;
+	padding-left: 8px;
 }
 
 .snmp-plot > div > div:nth-child(2) {
-	width: 20%;
+	width: 15%;
 	max-width: 150px;
 }
 
 .snmp-plot > div > div:nth-child(3) {
-	width: 50%;
-	max-width: 550px;
-}
-
-
-.snmp-table {
-	position: relative;
-	color: var(--clr-dark);
-	border-collapse: collapse;
-	margin: 8px;
-	-webkit-user-select: text; user-select: text;
-}
-
-.snmp-table > tr > * {
-	padding: 4px 8px;
-	max-width: 500px;
-}
-
-.snmp-table > tr > th {
-	position: sticky;
-	z-index: 1;
-	top: -2px;
-	height: 28px;
-
-	color: white;
-	background-color: #444;
-	text-align: left;
-	font-weight: bold;
-	border: #444 2px solid;
-}
-
-.snmp-table > tr > td {
-	border: #444 2px solid;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.snmp-list > tr > * {
-	border: #444 2px solid;
+	width: 45%;
+	max-width: 600px;
 }
