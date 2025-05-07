@@ -23,6 +23,21 @@ internal static class LiveStats {
     private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer" };
     private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall" };
 
+    private static Dictionary<string, string> speedMap = new Dictionary<string, string> {
+        ["10"]     = "10 Mbps",
+        ["100"]    = "100 Mbps",
+        ["1000"]   = "1 Gbps",
+        ["2500"]   = "2.5 Gbps",
+        ["5000"]   = "5 Gbps",
+        ["10000"]  = "10 Gbps",
+        ["25000"]  = "25 Gbps",
+        ["40000"]  = "40 Gbps",
+        ["100000"] = "100 Gbps",
+        ["200000"] = "200 Gbps",
+        ["400000"] = "400 Gbps",
+        ["800000"] = "800 Gbps"
+    };
+
     private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, object mutex) {
         lock (mutex) {
             WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
@@ -439,77 +454,86 @@ internal static class LiveStats {
         IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVEVIEW_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk);
 
         if (result is null) {
-            WsWriteText(ws, "{\"switchInfo\":[]}"u8.ToArray(), mutex);
+            WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex);
             return;
         }
 
         Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(result);
 
-        Dictionary<int, string> type     = new Dictionary<int, string>();
-        Dictionary<int, string> speed    = new Dictionary<int, string>();
-        Dictionary<int, string> vlan     = new Dictionary<int, string>();
-        Dictionary<int, string> status   = new Dictionary<int, string>();
-        Dictionary<int, long> trafficIn  = new Dictionary<int, long>();
-        Dictionary<int, long> trafficOut = new Dictionary<int, long>();
-        Dictionary<int, int> errorIn     = new Dictionary<int, int>();
-        Dictionary<int, int> errorOut    = new Dictionary<int, int>();
+        Dictionary<int, string> typeDic     = new Dictionary<int, string>();
+        Dictionary<int, string> speedDic    = new Dictionary<int, string>();
+        Dictionary<int, string> vlanDic     = new Dictionary<int, string>();
+        Dictionary<int, string> statusDic   = new Dictionary<int, string>();
+        Dictionary<int, long> trafficInDic  = new Dictionary<int, long>();
+        Dictionary<int, long> trafficOutDic = new Dictionary<int, long>();
+        Dictionary<int, int> errorInDic     = new Dictionary<int, int>();
+        Dictionary<int, int> errorOutDic    = new Dictionary<int, int>();
 
         foreach (KeyValuePair<string, string> pair in parsedResult) {
-            int index = int.Parse(pair.Key.Split('.').Last());
+            if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
 
             if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
-                type.Add(index, pair.Value);
+                typeDic.Add(index, pair.Value);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_SPEED)) {
-                speed.Add(index, pair.Value);
+                speedDic.Add(index, pair.Value);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN)) {
-                vlan.Add(index, pair.Value);
+                vlanDic.Add(index, pair.Value);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_STATUS)) {
-                status.Add(index, pair.Value);
+                statusDic.Add(index, pair.Value);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_IN_64)) {
-                trafficIn.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+                trafficInDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_OUT_64)) {
-                trafficOut.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+                trafficOutDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_IN)) {
-                errorIn.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+                errorInDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_OUT)) {
-                errorOut.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+                errorOutDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
             }
         }
 
+        List<string> speedList  = new List<string>();
+        List<string> vlanList   = new List<string>();
+        List<string> statusList = new List<string>();
+        List<long>   dataList   = new List<long>();
+        List<int>    errorList  = new List<int>();
+
+        foreach (KeyValuePair<int, string> pair in typeDic) {
+            if (pair.Value != "6") continue; //physical ports only
+
+            string rawSpeed = speedDic.TryGetValue(pair.Key, out string s) ? s : "N/A";
+            speedList.Add(speedMap.TryGetValue(rawSpeed, out string readableSpeed) ? readableSpeed : "N/A");
+
+            vlanList.Add(vlanDic.TryGetValue(pair.Key, out string vlan) ? vlan : "1");
+            statusList.Add(statusDic.TryGetValue(pair.Key, out string status) ? status : "0");
+
+            long inTraffic = trafficInDic.TryGetValue(pair.Key, out long tin) ? tin : 0;
+            long outTraffic = trafficOutDic.TryGetValue(pair.Key, out long tout) ? tout : 0;
+            dataList.Add(inTraffic + outTraffic);
+
+            int inErrors = errorInDic.TryGetValue(pair.Key, out int ein) ? ein : 0;
+            int outErrors = errorOutDic.TryGetValue(pair.Key, out int eout) ? eout : 0;
+            errorList.Add(inErrors + outErrors);
+        }
+
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
-            switchInfo = type.Where(o => o.Value == "6")
-                .Select(pair => new {
-                    speed = speed.GetValueOrDefault(pair.Key, "N/A") switch {
-                        "10"     => "10 Mbps",
-                        "100"    => "100 Mbps",
-                        "1000"   => "1 Gbps",
-                        "2500"   => "2.5 Gbps",
-                        "5000"   => "5 Gbps",
-                        "10000"  => "10 Gbps",
-                        "25000"  => "25 Gbps",
-                        "40000"  => "40 Gbps",
-                        "100000" => "100 Gbps",
-                        "200000" => "200 Gbps",
-                        "400000" => "400 Gbps",
-                        "800000" => "800 Gbps",
-                        _        => "N/A"
-                    },
-                    vlan   = vlan.GetValueOrDefault(pair.Key, "1"),
-                    status = status.GetValueOrDefault(pair.Key, "0"),
-                    data   = trafficIn.GetValueOrDefault(pair.Key, 0) + trafficOut.GetValueOrDefault(pair.Key, 0),
-                    error  = errorIn.GetValueOrDefault(pair.Key, 0) + errorOut.GetValueOrDefault(pair.Key, 0)
-                })
+            switchInfo = new {
+                success = true,
+                speed   = speedList,
+                vlan    = vlanList,
+                status  = statusList,
+                data    = dataList,
+                error   = errorList
+            }
         });
 
         WsWriteText(ws, payload, mutex);
-
     }
 
 }

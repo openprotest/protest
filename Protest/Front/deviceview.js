@@ -45,6 +45,8 @@ class DeviceView extends View {
 		super();
 		this.args = args ?? { file: null };
 
+		this.switchInfo = {success: false };
+
 		this.SetIcon("mono/gear.svg");
 
 		this.liveStatsWebSockets = null;
@@ -771,7 +773,7 @@ class DeviceView extends View {
 		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
 
-		if (this.switchInfo && this.switchInfo.length === 0) {
+		if (!this.switchInfo.success) {
 			this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
 		}
 
@@ -798,7 +800,7 @@ class DeviceView extends View {
 			frontElement.appendChild(numElement);
 
 			const ledElement = document.createElement("div");
-			if (this.switchInfo && i < this.switchInfo.length && this.switchInfo[i].status == 1) {
+			if (this.switchInfo.success && i<this.switchInfo.status.length && this.switchInfo.status[i]==1) {
 				ledElement.style.animation = "led-blink .4s linear infinite";
 			}
 			frontElement.appendChild(ledElement);
@@ -856,19 +858,21 @@ class DeviceView extends View {
 					this.floating.appendChild(vlanLabel);
 				}
 
-				if (this.switchInfo && i < this.switchInfo.length) {
+				if (this.switchInfo.success && i < this.switchInfo.data.length) {
 					const trafficLabel = document.createElement("div");
 					trafficLabel.style.display = "block";
 					trafficLabel.style.fontSize = "small";
 					trafficLabel.style.marginLeft = "18px";
-					trafficLabel.textContent = UI.SizeToString(this.switchInfo[i].data);
+					trafficLabel.textContent = UI.SizeToString(this.switchInfo.data[i]);
 					this.floating.appendChild(trafficLabel);
+				}
 
+				if (this.switchInfo.success && i < this.switchInfo.error.length) {
 					const errorLabel = document.createElement("div");
 					errorLabel.style.display = "block";
 					errorLabel.style.fontSize = "small";
 					errorLabel.style.marginLeft = "18px";
-					errorLabel.textContent = `${this.switchInfo[i].error} errors`;
+					errorLabel.textContent = `${this.switchInfo.error[i]} errors`;
 					this.floating.appendChild(errorLabel);
 				}
 
@@ -945,31 +949,31 @@ class DeviceView extends View {
 		const modesLive = ["Speed", "VLAN", "Traffic", "Errors"];
 
 		const ModeToggle = event=> {
-			if (this.switchInfo && this.switchInfo.length > 0) {
+			if (this.switchInfo.success) {
 				switch (event.target.textContent) {
 				case "Speed":
-					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo[i].speed ?? null);
+					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
 					}
 					break;
 
 				case "VLAN":
-					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo[i].vlan ?? null);
+					for (let i=0; i<list.length && i<this.switchInfo.vlan.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo.vlan[i] ?? null);
 					}
 					break;
 
 				case "Traffic":
-					const maxTraffic = this.switchInfo.reduce((a, b)=> Math.max(a, b.data), 1);
-					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.switchInfo[i].data === 0 ? "rgb(32,32,32)" : `rgb(32,${63+192*this.switchInfo[i].data/maxTraffic},32)`;
+					const maxTraffic = this.switchInfo.data.reduce((a, b)=> Math.max(a, b), 1);
+					for (let i=0; i<list.length && i<this.switchInfo.data.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${63+192*this.switchInfo.data[i]/maxTraffic},32)`;
 					}
 					break;
 
 				case "Errors":
-					const maxError = this.switchInfo.reduce((a, b)=> Math.max(a, b.error), 1);
-					for (let i=0; i<list.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.switchInfo[i].error === 0 ? "rgb(32,32,32)" : `rgb(${63+192*this.switchInfo[i].error/maxError},32,32)`;
+					const maxError = this.switchInfo.error.reduce((a, b)=> Math.max(a, b), 1);
+					for (let i=0; i<list.length && i<this.switchInfo.error.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${63+192*this.switchInfo.error[i]/maxError},32,32)`;
 					}
 					break;
 				}
@@ -985,7 +989,7 @@ class DeviceView extends View {
 		modeBox.onclick = ()=> {
 			modeMenu.textContent = "";
 
-			const modes = this.switchInfo && this.switchInfo.length > 0 ? modesLive : modesLocal;
+			const modes = this.switchInfo.success ? modesLive : modesLocal;
 			for (let i=0; i<modes.length; i++) {
 				const option = document.createElement("div");
 				option.textContent = modes[i];
