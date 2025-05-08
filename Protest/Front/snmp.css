@@ -68,17 +68,35 @@
 }
 
 .snmp-plot > div > div:nth-child(1) {
-	width: 40%;
-	max-width: 600px;
+	width: 30%;
+	max-width: 500px;
 	padding-left: 8px;
+	font-style: italic;
 }
 
 .snmp-plot > div > div:nth-child(2) {
-	width: 15%;
-	max-width: 150px;
+	width: 30%;
+	max-width: 400px;
 }
 
 .snmp-plot > div > div:nth-child(3) {
-	width: 45%;
+	width: 10%;
+	max-width: 120px;
+}
+
+.snmp-plot > div > div:nth-child(4) {
+	width: 30%;
 	max-width: 600px;
+}
+
+.snmp-plot > div > div:nth-child(4) > div {
+	display: inline-block;
+	color: rgb(72,72,72);
+	border: rgb(72,72,72) 1px solid;
+	border-radius: 4px;
+	padding: 0px 2px;
+	margin-left: 8px;
+	height: 20px;
+	line-height: 20px;
+  
 }

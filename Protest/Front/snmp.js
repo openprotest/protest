@@ -9,6 +9,9 @@ class Snmp extends Window {
 		this.SetTitle("SNMP pooling");
 		this.SetIcon("mono/snmp.svg");
 
+		this.oids = {};
+		this.GetOIDs();
+
 		this.content.style.overflow = "hidden";
 
 		const snmpInput = document.createElement("div");
@@ -167,6 +170,21 @@ class Snmp extends Window {
 		this.GetSnmpProfiles();
 	}
 
+	async GetOIDs() {
+		try {
+			const response = await fetch("snmpoid.json");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.oids = json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+	
 	async GetSnmpProfiles() {
 		try {
 			const response = await fetch("config/snmpprofiles/list");
@@ -420,8 +438,9 @@ class Snmp extends Window {
 		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
 		const commonPrefix = this.ComputeCommonPrefix(parts);
 
-		const root = this.CreateTreeElement(commonPrefix, "", "");
-		this.plotBox.appendChild(root);
+		//const root = this.CreateTreeElement(commonPrefix, "", "");
+		//root.style.color = "rgb(88,88,88)";
+		//this.plotBox.appendChild(root);
 
 		for (let i=0; i<array.length; i++) {
 			const [oid, type, value] = array[i];
@@ -434,6 +453,9 @@ class Snmp extends Window {
 		const element = document.createElement("div");
 		element.onmousedown = event=> this.TreeElement_onclick(event);
 
+		const descBox = document.createElement("div");
+		element.appendChild(descBox);
+		
 		const oidBox = document.createElement("div");
 		oidBox.setAttribute("long", oid);
 		oidBox.textContent = oid;
@@ -446,6 +468,28 @@ class Snmp extends Window {
 		const valueBox = document.createElement("div");
 		valueBox.textContent = value;
 		element.appendChild(valueBox);
+
+		let pretty;
+		if (oid in this.oids) {
+			pretty = this.oids[oid];
+		}
+		else {
+			const split = oid.split(".");
+			const parentOid = split.slice(0, split.length - 1).join(".");
+			if (parentOid in this.oids) {
+				pretty = this.oids[parentOid];
+			}
+		}
+
+		if (pretty) {
+			descBox.textContent = pretty[1];
+
+			if (pretty.length > 2 && value in pretty[2]) {
+				const stringValue = document.createElement("div");
+				stringValue.textContent = pretty[2][value];
+				valueBox.appendChild(stringValue);
+			}
+		}
 
 		return element;
 	}

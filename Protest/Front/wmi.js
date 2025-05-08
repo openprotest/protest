@@ -107,7 +107,6 @@ class Wmi extends Window {
 	async GetWmiClasses() {
 		try {
 			const response = await fetch("wmiclasses.json");
-
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
