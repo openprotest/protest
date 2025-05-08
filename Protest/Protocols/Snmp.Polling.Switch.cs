@@ -7,36 +7,6 @@ using Lextm.SharpSnmpLib;
 namespace Protest.Protocols.Snmp;
 
 internal static partial class Polling {
-
-    enum InterfaceType : byte {
-        other           = 1,
-        physicalPort    = 6,
-        loopback        = 24,
-        virtualPort     = 53,
-        multiplexor     = 54,
-        gigabitEther    = 117,
-        tanel           = 131,
-        l2vlan          = 135,
-        wlan            = 161, //ieee802.11
-        linkAggregation = 209, //ieee802.3a
-    }
-
-    enum InterfaceOperationStatus : byte {
-        up             = 1,
-        down           = 2,
-        testing        = 3,
-        unknown        = 4,
-        dormant        = 5,
-        notPresent     = 6,
-        lowerLayerDown = 7,
-    }
-
-    enum InterfaceEnable : byte {
-        enabled  = 1,
-        disabled = 2,
-        testing  = 3,
-    }
-
     public static byte[] SwitchInterface(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
 

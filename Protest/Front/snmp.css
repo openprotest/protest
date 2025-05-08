@@ -93,13 +93,9 @@
 	line-height: 20px;
 }
 
-.snmp-container {
-
-}
-
 .snmp-expand {
 	position: absolute;
-	transform: translate(8px, 6px) rotate(0deg);
+	transform: translate(8px, 6px) rotate(-90deg);
 	z-index: 1;
 	width: 18px;
 	height: 18px;
@@ -147,4 +143,3 @@
 	height: 24px;
 	line-height: 24px;
 }
-

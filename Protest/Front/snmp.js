@@ -437,7 +437,7 @@ class Snmp extends Window {
 	PlotTree(array) {
 		this.containerMap = {};
 
-		//const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
+		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
 		//const commonPrefix = this.ComputeCommonPrefix(parts);
 
 		//const root = this.CreateContainer(commonPrefix);
@@ -448,11 +448,10 @@ class Snmp extends Window {
 			const [oid, type, value] = array[i];
 			const node = this.CreateListItem(oid, type, value);
 
-			let ancestor = oid;
 			let parent = null;
-			while (true) {
-				const split = ancestor.split(".");
-				ancestor = split.slice(0, split.length - 1).join(".");
+
+			for (let j=parts[i].length-1; j>5; j--) {
+				const ancestor = parts[i].slice(0, j).join(".");
 
 				if (ancestor in this.containerMap) {
 					parent = this.containerMap[ancestor];
@@ -466,8 +465,6 @@ class Snmp extends Window {
 					parent = container;
 					break;
 				}
-
-				if (split.length < 4) break;
 			}
 
 			if (parent) {
@@ -543,7 +540,7 @@ class Snmp extends Window {
 		}
 
 		const subbox = document.createElement("div");
-		container.className = "snmp-subbox";
+		subbox.style.display = "none";
 		container.appendChild(subbox);
 
 		expandButton.onclick = ()=> this.ToggleContainer(expandButton, subbox);
