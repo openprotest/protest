@@ -435,29 +435,57 @@ class Snmp extends Window {
 	}
 
 	PlotTree(array) {
-		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
-		const commonPrefix = this.ComputeCommonPrefix(parts);
+		this.containerMap = {};
 
-		//const root = this.CreateTreeElement(commonPrefix, "", "");
-		//root.style.color = "rgb(88,88,88)";
-		//this.plotBox.appendChild(root);
+		//const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
+		//const commonPrefix = this.ComputeCommonPrefix(parts);
+
+		//const root = this.CreateContainer(commonPrefix);
+		//this.plotBox.appendChild(root.container);
+		//this.containerMap[commonPrefix] = root;
 
 		for (let i=0; i<array.length; i++) {
 			const [oid, type, value] = array[i];
-			const node = this.CreateTreeElement(oid, type, value);
-			this.plotBox.appendChild(node);
+			const node = this.CreateListItem(oid, type, value);
+
+			let ancestor = oid;
+			let parent = null;
+			while (true) {
+				const split = ancestor.split(".");
+				ancestor = split.slice(0, split.length - 1).join(".");
+
+				if (ancestor in this.containerMap) {
+					parent = this.containerMap[ancestor];
+					break;
+				}
+
+				if (ancestor in this.oids) {
+					const container = this.CreateContainer(ancestor);
+					this.plotBox.appendChild(container.container);
+					this.containerMap[ancestor] = container;
+					parent = container;
+					break;
+				}
+
+				if (split.length < 4) break;
+			}
+
+			if (parent) {
+				parent.subbox.appendChild(node);
+			}
+			else {
+				this.plotBox.appendChild(node);
+			}
+
 		}
 	}
 
-	CreateTreeElement(oid, type, value) {
+	CreateListItem(oid, type, value) {
 		const element = document.createElement("div");
-		element.onmousedown = event=> this.TreeElement_onclick(event);
+		element.classList = "snmp-list-item";
+		element.onmousedown = event=> this.ListElement_onclick(event);
 
-		const descBox = document.createElement("div");
-		element.appendChild(descBox);
-		
 		const oidBox = document.createElement("div");
-		oidBox.setAttribute("long", oid);
 		oidBox.textContent = oid;
 		element.appendChild(oidBox);
 
@@ -482,8 +510,6 @@ class Snmp extends Window {
 		}
 
 		if (pretty) {
-			descBox.textContent = pretty[1];
-
 			if (pretty.length > 2 && value in pretty[2]) {
 				const stringValue = document.createElement("div");
 				stringValue.textContent = pretty[2][value];
@@ -494,17 +520,63 @@ class Snmp extends Window {
 		return element;
 	}
 
-	TreeElement_onclick(event) {
+	CreateContainer(oid) {
+		const container = document.createElement("div");
+		container.className = "snmp-container";
+
+		const expandButton = document.createElement("div");
+		expandButton.className = "snmp-expand";
+		container.appendChild(expandButton);
+
+		const item = document.createElement("div");
+		item.className = "snmp-container-item";
+		container.appendChild(item);
+
+		const oidBox = document.createElement("div")
+		oidBox.textContent = oid;
+		item.appendChild(oidBox);
+
+		if (oid in this.oids) {
+			const descBox = document.createElement("div")
+			descBox.textContent = this.oids[oid][1];
+			item.appendChild(descBox);
+		}
+
+		const subbox = document.createElement("div");
+		container.className = "snmp-subbox";
+		container.appendChild(subbox);
+
+		expandButton.onclick = ()=> this.ToggleContainer(expandButton, subbox);
+		item.ondblclick = ()=> this.ToggleContainer(expandButton, subbox);
+
+		return {
+			container: container,
+			subbox: subbox
+		};
+	}
+
+	ToggleContainer(expandButton, subbox) {
+		if (subbox.style.display === "none") {
+			expandButton.style.transform = "translate(8px, 6px) rotate(0deg)";
+			subbox.style.display = "block";
+		}
+		else {
+			expandButton.style.transform = "translate(8px, 6px) rotate(-90deg)";
+			subbox.style.display = "none";
+		}
+	}
+
+	ListElement_onclick(event) {
 		if (this.selected) {
 			this.selected.style.backgroundColor = "";
 		}
 
-		let target = event.target;
+		/*let target = event.target;
 		while (target.parentElement != this.plotBox) {
 			target = target.parentElement;
 		}
 
 		target.style.backgroundColor = "var(--clr-select)";
-		this.selected = target;
+		this.selected = target;*/
 	}
 }

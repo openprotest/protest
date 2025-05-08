@@ -15,6 +15,7 @@ internal static partial class Polling {
         virtualPort     = 53,
         multiplexor     = 54,
         gigabitEther    = 117,
+        tanel           = 131,
         l2vlan          = 135,
         wlan            = 161, //ieee802.11
         linkAggregation = 209, //ieee802.3a

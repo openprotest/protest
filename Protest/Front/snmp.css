@@ -46,19 +46,18 @@
 	transition: .4s;
 }
 
-.snmp-plot > div {
+.snmp-list-item {
 	position: relative;
 	height: 28px;
 	border-bottom: rgb(128,128,128) 1px solid;
 	-webkit-user-select: text;
 	user-select: text;
 }
-
-.snmp-plot > div:hover {
+.snmp-list-item:hover {
 	background-color: var(--clr-highlight);
 }
 
-.snmp-plot > div > div {
+.snmp-list-item > div {
 	display: inline-block;
 	box-sizing: border-box;
 	height: 28px;
@@ -67,29 +66,23 @@
 	text-overflow: ellipsis;
 }
 
-.snmp-plot > div > div:nth-child(1) {
-	width: 30%;
-	max-width: 500px;
-	padding-left: 8px;
-	font-style: italic;
-}
-
-.snmp-plot > div > div:nth-child(2) {
-	width: 30%;
+.snmp-list-item > div:nth-child(1) {
+	width: 35%;
 	max-width: 400px;
+	padding-left: 32px;
 }
 
-.snmp-plot > div > div:nth-child(3) {
-	width: 10%;
-	max-width: 120px;
+.snmp-list-item > div:nth-child(2) {
+	width: 15%;
+	max-width: 150px;
 }
 
-.snmp-plot > div > div:nth-child(4) {
-	width: 30%;
+.snmp-list-item > div:nth-child(3) {
+	width: 50%;
 	max-width: 600px;
 }
 
-.snmp-plot > div > div:nth-child(4) > div {
+.snmp-list-item > div:nth-child(3) > div {
 	display: inline-block;
 	color: rgb(72,72,72);
 	border: rgb(72,72,72) 1px solid;
@@ -98,5 +91,60 @@
 	margin-left: 8px;
 	height: 20px;
 	line-height: 20px;
-  
 }
+
+.snmp-container {
+
+}
+
+.snmp-expand {
+	position: absolute;
+	transform: translate(8px, 6px) rotate(0deg);
+	z-index: 1;
+	width: 18px;
+	height: 18px;
+	background-image: url(mono/guitarpick.svg);
+	background-size: contain;
+	background-position: center;
+	background-repeat: no-repeat;
+
+	transition: .2s;
+}
+
+.snmp-container-item {
+	position: relative;
+	height: 28px;
+	border-bottom: rgb(128,128,128) 1px solid;
+	-webkit-user-select: text;
+	user-select: text;
+}
+.snmp-container-item:hover {
+	background-color: var(--clr-highlight);
+}
+
+.snmp-container-item > div {
+	display: inline-block;
+	box-sizing: border-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.snmp-container-item > div:nth-child(1) {
+	font-weight: 700;
+	width: 35%;
+	max-width: 300px;
+	padding-left: 32px;
+	height: 28px;
+	line-height: 28px;
+}
+
+.snmp-container-item > div:nth-child(2) {
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
+	border-radius: 4px;
+	padding: 0 4px;
+	margin: 2px 0;
+	height: 24px;
+	line-height: 24px;
+}
+
