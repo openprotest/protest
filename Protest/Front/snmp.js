@@ -9,7 +9,7 @@ class Snmp extends Window {
 		this.SetTitle("SNMP pooling");
 		this.SetIcon("mono/snmp.svg");
 
-		this.oids = {};
+		this.knownOids = {};
 		this.GetOIDs();
 
 		this.content.style.overflow = "hidden";
@@ -178,7 +178,7 @@ class Snmp extends Window {
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.oids = json;
+			this.knownOids = json;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -439,6 +439,7 @@ class Snmp extends Window {
 
 		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
 		const commonPrefix = this.ComputeCommonPrefix(parts);
+		const commonPrefixDepth = commonPrefix.split(".").length;
 
 		const root = this.CreateContainer(commonPrefix);
 		root.hLine.style.display = "none";
@@ -449,48 +450,43 @@ class Snmp extends Window {
 
 		for (let i=0; i<array.length; i++) {
 			const [oid, type, value] = array[i];
-			const node = this.CreateListItem(oid, type, value);
 
-			let parentContainer = null;
-			for (let j=parts[i].length-1; j>5; j--) {
+			for (let j=commonPrefixDepth; j<parts[i].length; j++) {
 				const ancestor = parts[i].slice(0, j).join(".");
 
-				if (ancestor in this.containerMap) {
-					parentContainer = this.containerMap[ancestor];
-					break;
-				}
-
-				if (ancestor in this.oids) {
+				if (!(ancestor in this.containerMap) && ancestor in this.knownOids) {
 					const container = this.CreateContainer(ancestor);
 					this.containerMap[ancestor] = container;
-					parentContainer = container;
 
-					const splitOid = ancestor.split(".");
-					const parentOid = splitOid.slice(0, splitOid.length - 1).join(".");
+					const parentOid = parts[i].slice(0, j - 1).join(".");
+					const parentContainer = this.containerMap[parentOid] || root;
 
-					if (parentOid in this.containerMap) {
-						this.containerMap[parentOid].subbox.appendChild(container.container);
-						this.containerMap[parentOid].counter.textContent = this.containerMap[parentOid].subbox.childNodes.length;
-					}
-					else {
-						root.subbox.appendChild(container.container);
-					}
-
-					break;
+					parentContainer.subbox.appendChild(container.container);
+					parentContainer.counter.textContent = parentContainer.subbox.childNodes.length;
 				}
 			}
 
-			if (parentContainer) {
-				parentContainer.subbox.appendChild(node);
-				parentContainer.counter.textContent = parentContainer.subbox.childNodes.length;
+			for (let j=parts[i].length; j>commonPrefixDepth-1; j--) {
+				const ancestor = parts[i].slice(0, j).join(".");
+				if (ancestor in this.containerMap) {
+					const container = this.containerMap[ancestor];
+					const item = this.CreateListItem(oid, type, value, ancestor);
+					container.subbox.appendChild(item);
+					container.counter.textContent = container.subbox.childNodes.length;
+					break;
+				}
 			}
-			else {
-				root.subbox.appendChild(node);
+		}
+
+		for (const key in this.containerMap) {
+			const container = this.containerMap[key];
+			if (container.subbox.childNodes.length === 1) {
+				this.ToggleContainer(container);
 			}
 		}
 	}
 
-	CreateListItem(oid, type, value) {
+	CreateListItem(oid, type, value, nearestAncestor) {
 		const element = document.createElement("div");
 		element.className = "snmp-list-item";
 		element.onmousedown = event=> this.ListElement_onclick(event);
@@ -515,24 +511,10 @@ class Snmp extends Window {
 		dot.className = "snmp-tree-dot";
 		element.appendChild(dot);
 
-		let pretty;
-		if (oid in this.oids) {
-			pretty = this.oids[oid];
-		}
-		else {
-			const split = oid.split(".");
-			const parentOid = split.slice(0, split.length - 1).join(".");
-			if (parentOid in this.oids) {
-				pretty = this.oids[parentOid];
-			}
-		}
-
-		if (pretty) {
-			if (pretty.length > 2 && value in pretty[2]) {
-				const stringValue = document.createElement("div");
-				stringValue.textContent = pretty[2][value];
-				valueBox.appendChild(stringValue);
-			}
+		if (nearestAncestor in this.knownOids && this.knownOids[nearestAncestor].length > 2 && this.knownOids[nearestAncestor][2][value]) {
+			const stringValue = document.createElement("div");
+			stringValue.textContent = this.knownOids[nearestAncestor][2][value];
+			valueBox.appendChild(stringValue);
 		}
 
 		return element;
@@ -558,10 +540,10 @@ class Snmp extends Window {
 		counter.textContent = "0";
 		oidBox.appendChild(counter);
 
-		if (oid in this.oids) {
-			const descBox = document.createElement("div")
-			descBox.textContent = this.oids[oid][1];
-			item.appendChild(descBox);
+		if (oid in this.knownOids) {
+			const nameBox = document.createElement("div")
+			nameBox.textContent = this.knownOids[oid][0];
+			item.appendChild(nameBox);
 		}
 
 		const subbox = document.createElement("div");
