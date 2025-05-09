@@ -446,33 +446,34 @@ class Snmp extends Window {
 		this.plotBox.appendChild(root.container);
 		this.containerMap[commonPrefix] = root;
 
-		this.ToggleContainer(root);
-
 		for (let i=0; i<array.length; i++) {
 			const [oid, type, value] = array[i];
 
-			for (let j=commonPrefixDepth; j<parts[i].length; j++) {
+			for (let j=commonPrefixDepth; j<=parts[i].length; j++) {
 				const ancestor = parts[i].slice(0, j).join(".");
 
-				if (!(ancestor in this.containerMap) && ancestor in this.knownOids) {
+				if (ancestor in this.containerMap) continue;
+
+				if (ancestor in this.knownOids) {
 					const container = this.CreateContainer(ancestor);
 					this.containerMap[ancestor] = container;
 
 					const parentOid = parts[i].slice(0, j - 1).join(".");
 					const parentContainer = this.containerMap[parentOid] || root;
 
-					parentContainer.subbox.appendChild(container.container);
-					parentContainer.counter.textContent = parentContainer.subbox.childNodes.length;
+					parentContainer.supbox.appendChild(container.container);
+					parentContainer.counter.textContent = parentContainer.supbox.childNodes.length;
 				}
 			}
 
-			for (let j=parts[i].length; j>commonPrefixDepth-1; j--) {
+			for (let j=parts[i].length; j>=commonPrefixDepth; j--) {
 				const ancestor = parts[i].slice(0, j).join(".");
+
 				if (ancestor in this.containerMap) {
 					const container = this.containerMap[ancestor];
 					const item = this.CreateListItem(oid, type, value, ancestor);
-					container.subbox.appendChild(item);
-					container.counter.textContent = container.subbox.childNodes.length;
+					container.supbox.appendChild(item);
+					container.counter.textContent = container.supbox.childNodes.length;
 					break;
 				}
 			}
@@ -480,9 +481,13 @@ class Snmp extends Window {
 
 		for (const key in this.containerMap) {
 			const container = this.containerMap[key];
-			if (container.subbox.childNodes.length === 1) {
+			if (container.supbox.childNodes.length === 1) {
 				this.ToggleContainer(container);
 			}
+		}
+
+		if (root.supbox.style.display === "none") {
+			this.ToggleContainer(root);
 		}
 	}
 
@@ -546,10 +551,10 @@ class Snmp extends Window {
 			item.appendChild(nameBox);
 		}
 
-		const subbox = document.createElement("div");
-		subbox.className = "snmp-container-sub";
-		subbox.style.display = "none";
-		container.appendChild(subbox);
+		const supbox = document.createElement("div");
+		supbox.className = "snmp-container-sub";
+		supbox.style.display = "none";
+		container.appendChild(supbox);
 
 		const hLine = document.createElement("div");
 		hLine.className = "snmp-tree-hline";
@@ -561,7 +566,7 @@ class Snmp extends Window {
 
 		const object = {
 			container: container,
-			subbox: subbox,
+			supbox: supbox,
 			counter: counter,
 			hLine: hLine,
 			vLine: vLine,
@@ -574,13 +579,13 @@ class Snmp extends Window {
 	}
 
 	ToggleContainer(container) {
-		if (container.subbox.style.display === "none") {
+		if (container.supbox.style.display === "none") {
 			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(0deg)";
-			container.subbox.style.display = "block";
+			container.supbox.style.display = "block";
 		}
 		else {
 			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(-90deg)";
-			container.subbox.style.display = "none";
+			container.supbox.style.display = "none";
 		}
 	}
 
