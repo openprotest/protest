@@ -438,48 +438,61 @@ class Snmp extends Window {
 		this.containerMap = {};
 
 		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
-		//const commonPrefix = this.ComputeCommonPrefix(parts);
+		const commonPrefix = this.ComputeCommonPrefix(parts);
 
-		//const root = this.CreateContainer(commonPrefix);
-		//this.plotBox.appendChild(root.container);
-		//this.containerMap[commonPrefix] = root;
+		const root = this.CreateContainer(commonPrefix);
+		root.hLine.style.display = "none";
+		this.plotBox.appendChild(root.container);
+		this.containerMap[commonPrefix] = root;
+
+		this.ToggleContainer(root);
 
 		for (let i=0; i<array.length; i++) {
 			const [oid, type, value] = array[i];
 			const node = this.CreateListItem(oid, type, value);
 
-			let parent = null;
-
+			let parentContainer = null;
 			for (let j=parts[i].length-1; j>5; j--) {
 				const ancestor = parts[i].slice(0, j).join(".");
 
 				if (ancestor in this.containerMap) {
-					parent = this.containerMap[ancestor];
+					parentContainer = this.containerMap[ancestor];
 					break;
 				}
 
 				if (ancestor in this.oids) {
 					const container = this.CreateContainer(ancestor);
-					this.plotBox.appendChild(container.container);
 					this.containerMap[ancestor] = container;
-					parent = container;
+					parentContainer = container;
+
+					const splitOid = ancestor.split(".");
+					const parentOid = splitOid.slice(0, splitOid.length - 1).join(".");
+
+					if (parentOid in this.containerMap) {
+						this.containerMap[parentOid].subbox.appendChild(container.container);
+						this.containerMap[parentOid].counter.textContent = this.containerMap[parentOid].subbox.childNodes.length;
+					}
+					else {
+						root.subbox.appendChild(container.container);
+					}
+
 					break;
 				}
 			}
 
-			if (parent) {
-				parent.subbox.appendChild(node);
+			if (parentContainer) {
+				parentContainer.subbox.appendChild(node);
+				parentContainer.counter.textContent = parentContainer.subbox.childNodes.length;
 			}
 			else {
-				this.plotBox.appendChild(node);
+				root.subbox.appendChild(node);
 			}
-
 		}
 	}
 
 	CreateListItem(oid, type, value) {
 		const element = document.createElement("div");
-		element.classList = "snmp-list-item";
+		element.className = "snmp-list-item";
 		element.onmousedown = event=> this.ListElement_onclick(event);
 
 		const oidBox = document.createElement("div");
@@ -493,6 +506,14 @@ class Snmp extends Window {
 		const valueBox = document.createElement("div");
 		valueBox.textContent = value;
 		element.appendChild(valueBox);
+
+		const hLine = document.createElement("div");
+		hLine.className = "snmp-tree-hline";
+		element.appendChild(hLine);
+
+		const dot = document.createElement("div");
+		dot.className = "snmp-tree-dot";
+		element.appendChild(dot);
 
 		let pretty;
 		if (oid in this.oids) {
@@ -533,6 +554,10 @@ class Snmp extends Window {
 		oidBox.textContent = oid;
 		item.appendChild(oidBox);
 
+		const counter = document.createElement("div");
+		counter.textContent = "0";
+		oidBox.appendChild(counter);
+
 		if (oid in this.oids) {
 			const descBox = document.createElement("div")
 			descBox.textContent = this.oids[oid][1];
@@ -540,26 +565,40 @@ class Snmp extends Window {
 		}
 
 		const subbox = document.createElement("div");
+		subbox.className = "snmp-container-sub";
 		subbox.style.display = "none";
 		container.appendChild(subbox);
 
-		expandButton.onclick = ()=> this.ToggleContainer(expandButton, subbox);
-		item.ondblclick = ()=> this.ToggleContainer(expandButton, subbox);
+		const hLine = document.createElement("div");
+		hLine.className = "snmp-tree-hline";
+		container.appendChild(hLine);
 
-		return {
+		const vLine = document.createElement("div");
+		vLine.className = "snmp-tree-vline";
+		container.appendChild(vLine);
+
+		const object = {
 			container: container,
-			subbox: subbox
+			subbox: subbox,
+			counter: counter,
+			hLine: hLine,
+			vLine: vLine,
 		};
+
+		expandButton.onclick = ()=> this.ToggleContainer(object);
+		item.ondblclick = ()=> this.ToggleContainer(object);
+
+		return object;
 	}
 
-	ToggleContainer(expandButton, subbox) {
-		if (subbox.style.display === "none") {
-			expandButton.style.transform = "translate(8px, 6px) rotate(0deg)";
-			subbox.style.display = "block";
+	ToggleContainer(container) {
+		if (container.subbox.style.display === "none") {
+			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(0deg)";
+			container.subbox.style.display = "block";
 		}
 		else {
-			expandButton.style.transform = "translate(8px, 6px) rotate(-90deg)";
-			subbox.style.display = "none";
+			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(-90deg)";
+			container.subbox.style.display = "none";
 		}
 	}
 
