@@ -116,6 +116,7 @@ class Snmp extends Window {
 		this.content.appendChild(toggleButton);
 
 		this.plotBox = document.createElement("div");
+		this.plotBox.tabIndex = 0;
 		this.plotBox.className = "snmp-plot no-results";
 		this.content.appendChild(this.plotBox);
 
@@ -137,9 +138,9 @@ class Snmp extends Window {
 			}
 		};
 
-		this.getButton.onclick = ()=> { this.GetQuery() };
-		this.setButton.onclick = ()=> { this.SetQueryDialog() };
-		this.walkButton.onclick = ()=> { this.WalkQuery() };
+		this.getButton.onclick = ()=> this.GetQuery();
+		this.setButton.onclick = ()=> this.SetQueryDialog();
+		this.walkButton.onclick = ()=> this.WalkQuery();
 
 		toggleButton.onclick = ()=> {
 			if (snmpInput.style.visibility === "hidden") {
@@ -161,6 +162,8 @@ class Snmp extends Window {
 				this.args.hideInput = true;
 			}
 		};
+
+		this.plotBox.onkeydown = event=> this.PlotBox_onkeypress(event);
 
 		if (this.args.hideInput) {
 			toggleButton.onclick();
@@ -535,6 +538,7 @@ class Snmp extends Window {
 
 		const item = document.createElement("div");
 		item.className = "snmp-container-item";
+		item.onmousedown = event=> this.ListElement_onclick(event);
 		container.appendChild(item);
 
 		const oidBox = document.createElement("div")
@@ -552,7 +556,7 @@ class Snmp extends Window {
 		}
 
 		const supbox = document.createElement("div");
-		supbox.className = "snmp-container-sub";
+		supbox.className = "snmp-container-sup";
 		supbox.style.display = "none";
 		container.appendChild(supbox);
 
@@ -594,12 +598,28 @@ class Snmp extends Window {
 			this.selected.style.backgroundColor = "";
 		}
 
-		/*let target = event.target;
-		while (target.parentElement != this.plotBox) {
+		let target = event.target;
+		while (target.className !== "snmp-list-item" && target.className !== "snmp-container-item") {
 			target = target.parentElement;
 		}
 
 		target.style.backgroundColor = "var(--clr-select)";
-		this.selected = target;*/
+		this.selected = target;
+	}
+
+	PlotBox_onkeypress(event) {
+		switch (event.key) {
+			case "ArrowUp":
+				break;
+			
+			case "ArrowDown":
+				break;
+			
+			case "ArrowLeft":
+				break;
+
+			case "ArrowRight":
+				break;
+		}
 	}
 }

@@ -163,7 +163,7 @@
 	line-height: 24px;
 }
 
-.snmp-container-sub {
+.snmp-container-sup {
 	display: none;
 	padding-left: 16px;
 }
@@ -198,13 +198,13 @@
 	border-radius: 4px;
 }
 
-.snmp-container:last-child > .snmp-tree-vline::after {
+.snmp-container:last-child > .snmp-container-sup::after {
 	position: absolute;
 	content: " ";
 	background-color: var(--clr-pane);
 	width: 2px;
-	height: 100%;
+	height: calc(100% - 16px);
 	z-index: 1;
-	left: -16px;
-	bottom: -4px;
+	left: 0;
+	bottom: 0;
 }
