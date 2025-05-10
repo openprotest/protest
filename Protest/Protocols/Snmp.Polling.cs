@@ -33,9 +33,7 @@ internal static partial class Polling {
         parameters.TryGetValue("community", out string communityString);
         parameters.TryGetValue("timeout",   out string timeoutString);
 
-        IPAddress targetIp;
-
-        if (!IPAddress.TryParse(target, out targetIp)) {
+        if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
             try {
                 targetIp = System.Net.Dns.GetHostEntry(target).AddressList[0];
             }
