@@ -678,7 +678,6 @@ class Snmp extends Window {
 				}
 				this.selected.style.backgroundColor = "var(--clr-select)";
 				this.selected.scrollIntoView({block:"nearest"});
-
 			}
 		}
 	}
