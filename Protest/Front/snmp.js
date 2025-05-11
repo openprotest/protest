@@ -492,10 +492,16 @@ class Snmp extends Window {
 		if (root.supbox.style.display === "none") {
 			this.ToggleContainer(root);
 		}
+
+		const expandButton = root.container.firstChild;
+		expandButton.style.backgroundImage = "";
+		expandButton.style.backgroundColor = "var(--clr-dark)";
+		expandButton.style.borderRadius = "50%";
 	}
 
 	CreateListItem(oid, type, value, nearestAncestor) {
 		const element = document.createElement("div");
+		//element.setAttribute("oid", oid);
 		element.className = "snmp-list-item";
 		element.onmousedown = event=> this.ListElement_onclick(event);
 
@@ -537,6 +543,7 @@ class Snmp extends Window {
 		container.appendChild(expandButton);
 
 		const item = document.createElement("div");
+		item.setAttribute("oid", oid);
 		item.className = "snmp-container-item";
 		item.onmousedown = event=> this.ListElement_onclick(event);
 		container.appendChild(item);
@@ -583,6 +590,9 @@ class Snmp extends Window {
 	}
 
 	ToggleContainer(container) {
+		const expandButton = container.container.firstChild;
+		if (expandButton.style.backgroundColor === "var(--clr-dark)") return;
+
 		if (container.supbox.style.display === "none") {
 			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(0deg)";
 			container.supbox.style.display = "block";
@@ -608,18 +618,145 @@ class Snmp extends Window {
 	}
 
 	PlotBox_onkeypress(event) {
-		switch (event.key) {
-			case "ArrowUp":
-				break;
-			
-			case "ArrowDown":
-				break;
-			
-			case "ArrowLeft":
-				break;
+		if (!this.selected) return;
 
-			case "ArrowRight":
-				break;
+		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+			event.preventDefault();
+			this.selected.style.backgroundColor = "";
+			this.selected = this.GetNextSibling(this.selected, event.key);
+			this.selected.style.backgroundColor = "var(--clr-select)";
+			this.selected.scrollIntoView({block:"nearest"});
+		}
+		else if (event.key === "ArrowLeft") {
+			event.preventDefault();
+
+			if (this.selected.className === "snmp-list-item") {
+				this.selected.style.backgroundColor = "";
+
+				this.selected = this.selected.parentNode.parentNode.childNodes[1];
+				this.selected.style.backgroundColor = "var(--clr-select)";
+				this.selected.scrollIntoView({block:"nearest"});
+			}
+			else if (this.selected.className === "snmp-container-item") {
+				const oid = this.selected.getAttribute("oid");
+				const container = this.containerMap[oid];
+
+				const isCollapsed = this.selected.parentNode.children[2].style.display === "none";
+				if (isCollapsed) {
+					this.selected.style.backgroundColor = "";
+
+					const element = this.selected.parentNode.parentNode.parentNode.children[1];
+					this.selected = element;
+					this.selected.style.backgroundColor = "var(--clr-select)";
+					this.selected.scrollIntoView({block:"nearest"});
+				}
+				else {
+					this.ToggleContainer(container);
+				}
+			}
+		}
+		else if (event.key === "ArrowRight") {
+			event.preventDefault();
+			if (this.selected.className !== "snmp-container-item") return;
+
+			const oid = this.selected.getAttribute("oid");
+			const container = this.containerMap[oid];
+
+			const isCollapsed = this.selected.parentNode.children[2].style.display === "none";
+			if (isCollapsed) {
+				this.ToggleContainer(container);
+			}
+			else {
+				this.selected.style.backgroundColor = "";
+
+				const element = this.selected.parentNode.children[2].firstChild;
+				if (element.className === "snmp-list-item") {
+					this.selected = element;
+				}
+				else {
+					this.selected = element.children[1];
+				}
+				this.selected.style.backgroundColor = "var(--clr-select)";
+				this.selected.scrollIntoView({block:"nearest"});
+
+			}
 		}
 	}
+
+	GetNextSibling(current, key) {
+		const siblings = Array.from(this.selected.parentNode.children);
+		const index = siblings.indexOf(current);
+		
+		if (current.className === "snmp-list-item") {
+			const nextIndex = key === "ArrowUp" ? index - 1 : "ArrowDown" ? index + 1 : index;
+
+			if (nextIndex >= 0 && nextIndex < siblings.length) {
+				return siblings[nextIndex];
+			}
+			else {
+				const container = current.parentNode.parentNode;
+				switch (key) {
+				case "ArrowUp":
+					return container.childNodes[1];
+
+				case "ArrowDown":
+					const containerSiblings = Array.from(container.parentNode.children);
+					const containerIndex = containerSiblings.indexOf(container);
+					const nextContainerIndex = containerIndex + 1;
+					const element = containerSiblings[nextContainerIndex]?.childNodes[1];
+					if (element) return element;
+				}
+			}
+		}
+		else if (current.className === "snmp-container-item") {
+			const container = current.parentNode;
+			const containerSiblings = Array.from(container.parentNode.children);
+			const containerIndex = containerSiblings.indexOf(container);
+
+			switch (key) {
+			case "ArrowUp": {
+				const nextContainerIndex = containerIndex - 1;
+
+				if (nextContainerIndex < 0) {
+					const parentNode = container.parentNode;
+					if (parentNode === this.plotBox) return this.selected;
+					const element = parentNode?.parentNode?.children[1];
+					return element ? element : this.selected
+				}
+
+				const nextContainer = containerSiblings[nextContainerIndex];
+				const supbox = nextContainer.children[2];
+
+				if (supbox.style.display === "none") { //collapsed
+					return nextContainer.children[1];
+				}
+				else { //expand
+					return supbox.children[supbox.children.length-1];
+				}
+			}
+			case "ArrowDown": {
+				const supbox = container.children[2];
+
+				if (supbox.style.display === "none") { //collapsed
+					const nextContainerIndex = containerIndex + 1;
+					const nextContainer = containerSiblings[nextContainerIndex];
+					const element = nextContainer?.children[1];
+					if (element) return element;
+				}
+				else { //expand
+					const nextElement = supbox.firstChild;
+					if (nextElement.className === "snmp-list-item") {
+						return supbox.firstChild;
+					}
+					else if (nextElement.className === "snmp-container") {
+						return nextElement.children[1];
+					}
+				}
+			}
+			}
+		}
+
+		return this.selected;
+	}
+
 }
