@@ -464,8 +464,8 @@ class Snmp extends Window {
 					const parentOid = parts[i].slice(0, j - 1).join(".");
 					const parentContainer = this.containerMap[parentOid] || root;
 
-					parentContainer.supbox.appendChild(container.container);
-					parentContainer.counter.textContent = parentContainer.supbox.childNodes.length;
+					parentContainer.supBox.appendChild(container.container);
+					parentContainer.counter.textContent = parentContainer.supBox.childNodes.length;
 				}
 			}
 
@@ -475,8 +475,8 @@ class Snmp extends Window {
 				if (ancestor in this.containerMap) {
 					const container = this.containerMap[ancestor];
 					const item = this.CreateListItem(oid, type, value, ancestor);
-					container.supbox.appendChild(item);
-					container.counter.textContent = container.supbox.childNodes.length;
+					container.supBox.appendChild(item);
+					container.counter.textContent = container.supBox.childNodes.length;
 					break;
 				}
 			}
@@ -484,12 +484,12 @@ class Snmp extends Window {
 
 		for (const key in this.containerMap) {
 			const container = this.containerMap[key];
-			if (container.supbox.childNodes.length === 1) {
+			if (container.supBox.childNodes.length === 1) {
 				this.ToggleContainer(container);
 			}
 		}
 
-		if (root.supbox.style.display === "none") {
+		if (root.supBox.style.display === "none") {
 			this.ToggleContainer(root);
 		}
 
@@ -562,10 +562,10 @@ class Snmp extends Window {
 			item.appendChild(nameBox);
 		}
 
-		const supbox = document.createElement("div");
-		supbox.className = "snmp-container-sup";
-		supbox.style.display = "none";
-		container.appendChild(supbox);
+		const supBox = document.createElement("div");
+		supBox.className = "snmp-container-sup";
+		supBox.style.display = "none";
+		container.appendChild(supBox);
 
 		const hLine = document.createElement("div");
 		hLine.className = "snmp-tree-hline";
@@ -577,7 +577,7 @@ class Snmp extends Window {
 
 		const object = {
 			container: container,
-			supbox: supbox,
+			supBox: supBox,
 			counter: counter,
 			hLine: hLine,
 			vLine: vLine,
@@ -593,13 +593,13 @@ class Snmp extends Window {
 		const expandButton = container.container.firstChild;
 		if (expandButton.style.backgroundColor === "var(--clr-dark)") return;
 
-		if (container.supbox.style.display === "none") {
+		if (container.supBox.style.display === "none") {
 			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(0deg)";
-			container.supbox.style.display = "block";
+			container.supBox.style.display = "block";
 		}
 		else {
 			container.container.firstChild.style.transform = "translate(8px, 6px) rotate(-90deg)";
-			container.supbox.style.display = "none";
+			container.supBox.style.display = "none";
 		}
 	}
 
@@ -623,9 +623,41 @@ class Snmp extends Window {
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 			event.preventDefault();
 			this.selected.style.backgroundColor = "";
-			this.selected = this.GetNextSibling(this.selected, event.key);
+
+			let nextSibling = this.GetNextSibling(this.selected, event.key);
+			
+			if (nextSibling.className === "snmp-container") {
+				if (event.key === "ArrowUp") {
+
+					while (true) {
+						if (nextSibling.children[2].style.display === "none") {
+							break;
+						}
+
+						const current = nextSibling.childNodes[2].childNodes;
+						if (current[current.length - 1].className === "snmp-list-item") {
+							nextSibling = current[current.length - 1];
+							break;
+						}
+
+						nextSibling = current[current.length - 1];
+					}
+
+					if (nextSibling.className === "snmp-container") {
+						this.selected = nextSibling.children[1];
+					}
+					else {
+						this.selected = nextSibling;
+					}
+				}
+			}
+			else {
+				this.selected = nextSibling;
+			}
+
 			this.selected.style.backgroundColor = "var(--clr-select)";
 			this.selected.scrollIntoView({block:"nearest"});
+
 		}
 		else if (event.key === "ArrowLeft") {
 			event.preventDefault();
@@ -693,19 +725,25 @@ class Snmp extends Window {
 				return siblings[nextIndex];
 			}
 			else {
-				const container = current.parentNode.parentNode;
+				let container = current.parentNode.parentNode;
 				switch (key) {
 				case "ArrowUp":
 					return container.childNodes[1];
 
 				case "ArrowDown":
-					const containerSiblings = Array.from(container.parentNode.children);
-					const containerIndex = containerSiblings.indexOf(container);
-					const nextContainerIndex = containerIndex + 1;
-					const element = containerSiblings[nextContainerIndex]?.childNodes[1];
-					if (element) return element;
+					while (true) {
+						const containerSiblings = Array.from(container.parentNode.children);
+						const containerIndex = containerSiblings.indexOf(container);
+						const nextContainerIndex = containerIndex + 1;
+						const element = containerSiblings[nextContainerIndex]?.childNodes[1];
+						if (element) return element;
+						
+						container = container.parentNode.parentNode;
+						if (container.className !== "snmp-container") return null;
+					}
 				}
 			}
+
 		}
 		else if (current.className === "snmp-container-item") {
 			const container = current.parentNode;
@@ -724,28 +762,42 @@ class Snmp extends Window {
 				}
 
 				const nextContainer = containerSiblings[nextContainerIndex];
-				const supbox = nextContainer.children[2];
+				const supBox = nextContainer.children[2];
 
-				if (supbox.style.display === "none") { //collapsed
+				if (supBox.style.display === "none") { //collapsed
 					return nextContainer.children[1];
 				}
 				else { //expand
-					return supbox.children[supbox.children.length-1];
+					return supBox.children[supBox.children.length-1];
 				}
 			}
 			case "ArrowDown": {
-				const supbox = container.children[2];
+				const supBox = container.children[2];
 
-				if (supbox.style.display === "none") { //collapsed
+				if (supBox.style.display === "none") { //collapsed
 					const nextContainerIndex = containerIndex + 1;
 					const nextContainer = containerSiblings[nextContainerIndex];
 					const element = nextContainer?.children[1];
 					if (element) return element;
+
+					if (container.className === "snmp-container") {
+						const oid = container.children[1].getAttribute("oid");
+						let flag = false;
+						for (key in this.containerMap) {
+							if (!flag && key === oid) {
+								flag = true;
+							}
+							else if (flag && !key.startsWith(oid)) {
+								return this.containerMap[key].container.children[1];
+							}
+						}
+					}
+
 				}
 				else { //expand
-					const nextElement = supbox.firstChild;
+					const nextElement = supBox.firstChild;
 					if (nextElement.className === "snmp-list-item") {
-						return supbox.firstChild;
+						return supBox.firstChild;
 					}
 					else if (nextElement.className === "snmp-container") {
 						return nextElement.children[1];
@@ -754,7 +806,6 @@ class Snmp extends Window {
 			}
 			}
 		}
-
 		return this.selected;
 	}
 
