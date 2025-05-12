@@ -925,11 +925,11 @@ class DeviceView extends View {
 				this.floating.style.visibility = "hidden";
 			};
 
-			frame.onmouseenter = ()=> { this.floating.style.display = "initial"; };
-			frame.onmouseleave = ()=> { this.floating.style.display = "none"; };
+			frame.onmouseenter = ()=> {this.floating.style.display = "initial";};
+			frame.onmouseleave = ()=> {this.floating.style.display = "none";};
 		}
 
-		const gridSize = this.InitInterfaceComponents(frame, numbering, list, false);
+		const gridSize = this.InitInterfaceComponents(frame, numbering, list);
 
 		const modeBox = document.createElement("div");
 		modeBox.tabIndex = 0;
@@ -2605,7 +2605,7 @@ class DeviceView extends View {
 			}
 		};
 
-		numberingInput.onchange = ()=> this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+		numberingInput.onchange = ()=> this.InitInterfaceComponents(frame, numberingInput.value, list);
 
 		addBulkButton.onclick = ()=> BulkToggle();
 
@@ -2745,7 +2745,7 @@ class DeviceView extends View {
 
 				lastSelect = null;
 				SortList();
-				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list);
 			};
 
 			innerBox.parentElement.onmousemove = event => {
@@ -2757,7 +2757,7 @@ class DeviceView extends View {
 				lastSelect.listElement.style.boxShadow = "0 0 4px rgba(0,0,0,.5)";
 				lastSelect.listElement.style.top = `${pos}px`;
 				SortList();
-				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list);
 			};
 
 			txtN.onchange = ()=> {
@@ -2774,12 +2774,12 @@ class DeviceView extends View {
 				case "USB"     : icon.style.maskImage = "url(mono/usbport.svg)"; break;
 				case "Serial"  : icon.style.maskImage = "url(mono/serialport.svg)"; break;
 				}
-				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list);
 			};
 
 			txtS.onchange =
 			txtV.onchange = ()=> {
-				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list);
 			};
 
 			txtL.ondblclick = ()=> {
@@ -2929,7 +2929,7 @@ class DeviceView extends View {
 				frame.removeChild(frontElement);
 				list.splice(list.indexOf(obj), 1);
 				SortList();
-				this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+				this.InitInterfaceComponents(frame, numberingInput.value, list);
 
 				titleBar.style.top = `${frame.clientHeight + 72}px`;
 				listBox.style.top = `${frame.clientHeight + 96}px`;
@@ -2940,7 +2940,7 @@ class DeviceView extends View {
 			txtP.onchange();
 
 			SortList();
-			this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+			this.InitInterfaceComponents(frame, numberingInput.value, list);
 			titleBar.style.top = `${frame.clientHeight + 72}px`;
 			listBox.style.top = `${frame.clientHeight + 96}px`;
 		};
@@ -2959,7 +2959,7 @@ class DeviceView extends View {
 			}
 		};
 
-		this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+		this.InitInterfaceComponents(frame, numberingInput.value, list);
 		titleBar.style.top = `${frame.clientHeight + 72}px`;
 		listBox.style.top = `${frame.clientHeight + 96}px`;
 
@@ -3007,7 +3007,7 @@ class DeviceView extends View {
 					}
 
 					SortList();
-					this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+					this.InitInterfaceComponents(frame, numberingInput.value, list);
 
 					titleBar.style.top = `${frame.clientHeight + 72}px`;
 					listBox.style.top = `${frame.clientHeight + 96}px`;
@@ -3073,7 +3073,7 @@ class DeviceView extends View {
 					}
 
 					SortList();
-					this.InitInterfaceComponents(frame, numberingInput.value, list, true);
+					this.InitInterfaceComponents(frame, numberingInput.value, list);
 
 					titleBar.style.top = `${frame.clientHeight + 72}px`;
 					listBox.style.top = `${frame.clientHeight + 96}px`;
@@ -3158,7 +3158,7 @@ class DeviceView extends View {
 		});
 	}
 
-	InitInterfaceComponents(frame, numbering, list, editMode) {
+	InitInterfaceComponents(frame, numbering, list) {
 		let rows = 1, columns = 4;
 		if (list.length > 0) {
 			if (list.length % 48 === 0) {
