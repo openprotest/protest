@@ -1,0 +1,14 @@
+{
+"":["psampMIB"],
+".1":["psampObjects"],
+".2":["psampConformance"],
+".2.1":["psampCompliances"],
+".2.1.1":["psampCompliance"],
+".2.2":["psampGroups"],
+".2.2.1":["psampGroupSampCountBased"],
+".2.2.2":["psampGroupSampTimeBased"],
+".2.2.3":["psampGroupSampRandOutOfN"],
+".2.2.4":["psampGroupSampUniProb"],
+".2.2.5":["psampGroupFiltPropMatch"],
+".2.2.6":["psampGroupFiltHash"]
+}

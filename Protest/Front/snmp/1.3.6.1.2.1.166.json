@@ -1,0 +1,15 @@
+{
+"":["ifCapStackMIB"],
+".1":["ifCapStackObjects"],
+".1.1":["ifCapStackTable"],
+".1.1.1":["ifCapStackEntry"],
+".1.1.1.1":["ifCapStackStatus"],
+".1.2":["ifInvCapStackTable"],
+".1.2.1":["ifInvCapStackEntry"],
+".1.2.1.1":["ifInvCapStackStatus"],
+".2":["ifCapStackConformance"],
+".2.1":["ifCapStackGroups"],
+".2.1.1":["ifCapStackGroup"],
+".2.2":["ifCapStackCompliances"],
+".2.2.1":["ifCapStackCompliance"]
+}

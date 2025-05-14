@@ -1,0 +1,17 @@
+{
+"":["snmpTsmMIB"],
+".0":["snmpTsmNotifications"],
+".1":["snmpTsmMIBObjects"],
+".1.1":["snmpTsmStats"],
+".1.1.1":["snmpTsmInvalidCaches"],
+".1.1.2":["snmpTsmInadequateSecurityLevels"],
+".1.1.3":["snmpTsmUnknownPrefixes"],
+".1.1.4":["snmpTsmInvalidPrefixes"],
+".1.2":["snmpTsmConfiguration"],
+".1.2.1":["snmpTsmConfigurationUsePrefix"],
+".2":["snmpTsmConformance"],
+".2.1":["snmpTsmCompliances"],
+".2.1.1":["snmpTsmCompliance"],
+".2.2":["snmpTsmGroups"],
+".2.2.2":["snmpTsmGroup"]
+}

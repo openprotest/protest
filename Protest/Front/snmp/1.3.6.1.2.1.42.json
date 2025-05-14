@@ -1,0 +1,15 @@
+{
+"":["dot5SrMIB"],
+".1":["dot5SrMIBObjects"],
+".1.1":["dot5SrRouteTable"],
+".1.1.1":["dot5SrRouteEntry"],
+".1.1.1.2":["dot5SrRouteDestination"],
+".1.1.1.3":["dot5SrRouteControl"],
+".1.1.1.4":["dot5SrRouteDescr"],
+".1.1.1.5":["dot5SrRouteStatus"],
+".2":["dot5SrConformance"],
+".2.1":["dot5SrGroups"],
+".2.1.1":["dot5SrRouteGroup"],
+".2.2":["dot5SrCompliances"],
+".2.2.1":["dot5SrCompliance"]
+}

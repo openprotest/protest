@@ -1,0 +1,12 @@
+{
+"":["ifInvertedStackMIB"],
+".1":["ifInvMIBObjects"],
+".1.1":["ifInvStackTable"],
+".1.1.1":["ifInvStackEntry"],
+".1.1.1.1":["ifInvStackStatus"],
+".1.2":["ifInvConformance"],
+".1.2.1":["ifInvGroups"],
+".1.2.1.1":["ifInvStackGroup"],
+".1.2.2":["ifInvCompliances"],
+".1.2.2.1":["ifInvCompliance"]
+}

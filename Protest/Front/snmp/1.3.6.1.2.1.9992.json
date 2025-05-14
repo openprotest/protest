@@ -1,0 +1,18 @@
+{
+"":["sipTC, sipUAMIB"],
+".0":["sipUAMIBNotifs"],
+".1":["sipUAMIBObjects"],
+".1.1":["sipUACfgSipServer, sipUACfgServer"],
+".1.1.1":["sipUACfgServerTable, sipUACfgSipServerTable"],
+".1.1.1.1":["sipUACfgSipServerEntry, sipUACfgServerEntry"],
+".1.1.1.1.1":["sipUACfgSipServerAddrIndex, sipUACfgServerIndex"],
+".1.1.1.1.2":["sipUACfgSipServerAddrType, sipUACfgServerAddressType"],
+".1.1.1.1.3":["sipUACfgSipServerAddr, sipUACfgServerAddress"],
+".1.1.1.1.4":["sipUACfgServerRole, sipUACfgSipServerAddrStatus"],
+".1.2":["sipUAStats"],
+".2":["sipUAMIBConformance, sipUAMIBConform"],
+".2.1":["sipUAMIBCompliances"],
+".2.1.1":["sipUACompliance"],
+".2.2":["sipUAMIBGroups"],
+".2.2.1":["sipUAConfigGroup"]
+}

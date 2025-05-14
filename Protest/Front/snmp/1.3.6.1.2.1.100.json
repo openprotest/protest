@@ -1,0 +1,20 @@
+{
+"":["transportAddressMIB"],
+".1":["transportDomains"],
+".1.1":["transportDomainUdpIpv4"],
+".1.2":["transportDomainUdpIpv6"],
+".1.3":["transportDomainUdpIpv4z"],
+".1.4":["transportDomainUdpIpv6z"],
+".1.5":["transportDomainTcpIpv4"],
+".1.6":["transportDomainTcpIpv6"],
+".1.7":["transportDomainTcpIpv4z"],
+".1.8":["transportDomainTcpIpv6z"],
+".1.9":["transportDomainSctpIpv4"],
+".1.10":["transportDomainSctpIpv6, transportDomainClns"],
+".1.11":["transportDomainSctpIpv4z, transportDomainCons"],
+".1.12":["transportDomainSctpIpv6z, transportDomainDdp"],
+".1.13":["transportDomainLocal, transportDomainIpx"],
+".1.14":["transportDomainUdpDns"],
+".1.15":["transportDomainTcpDns"],
+".1.16":["transportDomainSctpDns"]
+}

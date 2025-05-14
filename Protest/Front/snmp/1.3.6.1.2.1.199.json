@@ -1,0 +1,15 @@
+{
+"":["vacmAaaMIB"],
+".1":["vacmAaaMIBObjects"],
+".1.1":["vacmAaaSecurityToGroupTable"],
+".1.1.1":["vacmAaaSecurityToGroupEntry"],
+".1.1.1.1":["vacmAaaSecurityModel"],
+".1.1.1.2":["vacmAaaSecurityName"],
+".1.1.1.3":["vacmAaaSessionID"],
+".1.1.1.4":["vacmAaaGroupName"],
+".2":["vacmAaaMIBConformance"],
+".2.1":["vacmAaaMIBCompliances"],
+".2.1.1":["vacmAaaMIBBasicCompliance"],
+".2.2":["vacmAaaMIBGroups"],
+".2.2.1":["vacmAaaGroup"]
+}

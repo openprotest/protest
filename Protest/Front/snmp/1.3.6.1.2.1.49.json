@@ -1,0 +1,13 @@
+{
+"":["tcpMIB"],
+".2":["tcpMIBConformance"],
+".2.1":["tcpMIBCompliances"],
+".2.1.1":["tcpMIBCompliance"],
+".2.1.2":["tcpMIBCompliance2"],
+".2.2":["tcpMIBGroups"],
+".2.2.1":["tcpGroup"],
+".2.2.2":["tcpBaseGroup"],
+".2.2.3":["tcpConnectionGroup"],
+".2.2.4":["tcpListenerGroup"],
+".2.2.5":["tcpHCGroup, tcpCountersGroup"]
+}

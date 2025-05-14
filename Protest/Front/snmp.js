@@ -1,4 +1,39 @@
 class Snmp extends Window {
+
+static OID_CACHE = {};
+static OID_MAP_1_3_6_1_2_1 = [
+"1","2","3","4","6","9",
+"10","11","12","13","14","15","16","17","18","19",
+"20","21","22","23","24","25","26","27","28","29",
+"30","31","32","33","34","35","36","37","38","39",
+"40","41","42","43","44","45","46","47","48","49",
+"50","51","52","53","54","55","56","57","58","59",
+"60","61","62","63","64","65","66","67","68","69",
+"70","71","72","73","74","75","76","77","78","79",
+"80","81","82","83","84","85","86","87","88","89",
+"90","91","92","93","94","95","96","97","98","99",
+"100","101","102","103","104","105","106","107","108","109",
+"110","111","112","113","114","115","116","117","118","119",
+"120","121","122","123","124","125","126","127","128","129",
+"130","131","132","133","134","135","136","137","138","139",
+"140","141","142","143","144","145","146","147","148","149",
+"158","159",
+"160","161","162","163","164","165","166","167","168","169",
+"170","171","172","173","174","175","176","177","178","179",
+"180","181","182","183","184","185","186","187","188","189",
+"190","191","192","193","194","195","196","197","198","199",
+"200","201","202","203","204","205","206","207","208","209",
+"210","211","212","213","214","215","216","217","218","219",
+"220","221","222","223","224","225","226","227","228","229",
+"230","231","232","233","234","235","777",
+"999",
+"8888","8889",
+"9990","9991","9992","9998","9999",
+"12345","12346",
+"67890",
+"22222222"
+];
+
 	constructor(args) {
 		super();
 
@@ -8,9 +43,6 @@ class Snmp extends Window {
 
 		this.SetTitle("SNMP pooling");
 		this.SetIcon("mono/snmp.svg");
-
-		this.knownOids = {};
-		this.GetOIDs();
 
 		this.content.style.overflow = "hidden";
 
@@ -173,19 +205,35 @@ class Snmp extends Window {
 		this.GetSnmpProfiles();
 	}
 
-	async GetOIDs() {
-		try {
-			const response = await fetch("snmpoid.json");
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+	async GetOid(oid) {
+		if (oid.startsWith(".")) oid = oid.substring(1);
+		if (oid.startsWith("1.3.6.1.2.1.")) {
+			const mib2 = oid.substring(12).split(".")[0];
+			
+			if (!(mib2 in Snmp.OID_MAP_1_3_6_1_2_1)) return null;
 
-			const json = await response.json();
-			if (json.error) throw(json.error);
+			const filename = `1.3.6.1.2.1.${mib2}`;
+			if (!(filename in Snmp.OID_CACHE)) {
+				try {
+					const response = await fetch(`snmp/1.3.6.1.2.1.${mib2}.json`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
-			this.knownOids = json;
+
+
+					const json = await response.json();
+					if (json.error) throw(json.error);
+
+					for (const key in json) {
+						Snmp.OID_CACHE[`${filename}${key}`] = json[key];
+					}
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg");
+				}
+			}
 		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg");
-		}
+
+		//return oid in Snmp.OID_CACHE ? Snmp.OID_CACHE[oid] : null;
 	}
 	
 	async GetSnmpProfiles() {
@@ -238,6 +286,8 @@ class Snmp extends Window {
 		this.plotBox.style.display = "none";
 		this.plotBox.textContent = "";
 
+		await this.GetOid(oid);
+
 		try {
 			let url;
 			if (this.versionInput.value==3) {
@@ -288,6 +338,8 @@ class Snmp extends Window {
 		this.walkButton.disabled = true;
 		this.plotBox.style.display = "none";
 		this.plotBox.textContent = "";
+
+		await this.GetOid(this.oidInput.value.trim());
 
 		try {
 			let url;
@@ -386,6 +438,8 @@ class Snmp extends Window {
 		this.plotBox.style.display = "none";
 		this.plotBox.textContent = "";
 
+		await this.GetOid(oid);
+
 		try {
 			let url;
 			if (this.versionInput.value==3) {
@@ -457,7 +511,7 @@ class Snmp extends Window {
 
 				if (ancestor in this.containerMap) continue;
 
-				if (ancestor in this.knownOids) {
+				if (ancestor in Snmp.OID_CACHE) {
 					const container = this.CreateContainer(ancestor);
 					this.containerMap[ancestor] = container;
 
@@ -525,9 +579,9 @@ class Snmp extends Window {
 		dot.className = "snmp-tree-dot";
 		element.appendChild(dot);
 
-		if (nearestAncestor in this.knownOids && this.knownOids[nearestAncestor].length > 2 && this.knownOids[nearestAncestor][2][value]) {
+		if (nearestAncestor in Snmp.OID_CACHE && Snmp.OID_CACHE[nearestAncestor].length > 1 && Snmp.OID_CACHE[nearestAncestor][1][value]) {
 			const stringValue = document.createElement("div");
-			stringValue.textContent = this.knownOids[nearestAncestor][2][value];
+			stringValue.textContent = Snmp.OID_CACHE[nearestAncestor][1][value];
 			valueBox.appendChild(stringValue);
 		}
 
@@ -556,9 +610,9 @@ class Snmp extends Window {
 		counter.textContent = "0";
 		oidBox.appendChild(counter);
 
-		if (oid in this.knownOids) {
+		if (oid in Snmp.OID_CACHE) {
 			const nameBox = document.createElement("div")
-			nameBox.textContent = this.knownOids[oid][0];
+			nameBox.textContent = Snmp.OID_CACHE[oid][0];
 			item.appendChild(nameBox);
 		}
 
@@ -622,10 +676,12 @@ class Snmp extends Window {
 
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 			event.preventDefault();
+			
+			const nextSibling = this.GetNextSibling(this.selected, event.key);
+			if (!nextSibling) return;
+			
 			this.selected.style.backgroundColor = "";
 
-			let nextSibling = this.GetNextSibling(this.selected, event.key);
-			
 			if (nextSibling.className === "snmp-container") {
 				if (event.key === "ArrowUp") {
 

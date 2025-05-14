@@ -1,0 +1,17 @@
+{
+"":["dot1dQosMib"],
+".1":["dot1dQosObjects"],
+".2":["dot1dQosTables"],
+".2.1":["dot1dQosUserPriTable"],
+".2.1.1":["dot1dQosUserPriEntry"],
+".2.1.1.1":["dot1dQosUserPri"],
+".2.2":["dot1dQosVlanClfrTable"],
+".2.2.1":["dot1dQosVlanClfrEntry"],
+".2.2.1.1":["dot1dQosVlanStatus"],
+".3":["dot1dQosMIBConformance"],
+".3.1":["dot1dQosMIBCompliances"],
+".3.1.1":["dot1dQosMIBCompliance"],
+".3.2":["dot1dQosMIBGroups"],
+".3.2.1":["dot1dQosMIBUserPriGroup"],
+".3.2.2":["dot1dQosMIBVlanGroup"]
+}

@@ -1,0 +1,15 @@
+{
+"":["rohcUncmprMIB"],
+".1":["rohcUncmprObjects"],
+".1.1":["rohcUncmprContextTable"],
+".1.1.1":["rohcUncmprContextEntry"],
+".1.1.1.3":["rohcUncmprContextState"],
+".1.1.1.4":["rohcUncmprContextMode"],
+".1.1.1.5":["rohcUncmprContextACKs"],
+".2":["rohcUncmprConformance"],
+".2.1":["rohcUncmprCompliances"],
+".2.1.1":["rohcUncmprCompliance"],
+".2.2":["rohcUncmprGroups"],
+".2.2.1":["rohcUncmprContextGroup"],
+".2.2.2":["rohcUncmprStatisticsGroup"]
+}

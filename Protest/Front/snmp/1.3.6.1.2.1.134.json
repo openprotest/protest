@@ -1,0 +1,11 @@
+{
+"":["rstpMIB"],
+".0":["rstpNotifications"],
+".1":["rstpObjects"],
+".2":["rstpConformance"],
+".2.1":["rstpGroups"],
+".2.1.1":["rstpBridgeGroup"],
+".2.1.2":["rstpPortGroup"],
+".2.2":["rstpCompliances"],
+".2.2.1":["rstpCompliance"]
+}
