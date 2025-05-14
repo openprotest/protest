@@ -460,6 +460,11 @@ internal static class LiveStats {
 
         Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(result);
 
+        if (parsedResult is null) {
+            WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex);
+            return;
+        }
+
         Dictionary<int, string> typeDic     = new Dictionary<int, string>();
         Dictionary<int, string> speedDic    = new Dictionary<int, string>();
         Dictionary<int, string> vlanDic     = new Dictionary<int, string>();
