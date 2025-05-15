@@ -39,7 +39,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		this.AddCssDependencies("snmp.css");
 
-		this.args = args ?? { target: "", community:"", oid: "" };
+		this.args = args ?? { target: "", community:"", oid:"" };
 
 		this.SetTitle("SNMP pooling");
 		this.SetIcon("mono/snmp.svg");
@@ -217,8 +217,6 @@ static OID_MAP_1_3_6_1_2_1 = [
 				try {
 					const response = await fetch(`snmp/1.3.6.1.2.1.${mib2}.json`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-
 
 					const json = await response.json();
 					if (json.error) throw(json.error);
@@ -555,7 +553,6 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 	CreateListItem(oid, type, value, nearestAncestor) {
 		const element = document.createElement("div");
-		//element.setAttribute("oid", oid);
 		element.className = "snmp-list-item";
 		element.onmousedown = event=> this.ListElement_onclick(event);
 
@@ -602,7 +599,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		item.onmousedown = event=> this.ListElement_onclick(event);
 		container.appendChild(item);
 
-		const oidBox = document.createElement("div")
+		const oidBox = document.createElement("div");
 		oidBox.textContent = oid;
 		item.appendChild(oidBox);
 
@@ -611,7 +608,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		oidBox.appendChild(counter);
 
 		if (oid in Snmp.OID_CACHE) {
-			const nameBox = document.createElement("div")
+			const nameBox = document.createElement("div");
 			nameBox.textContent = Snmp.OID_CACHE[oid][0];
 			item.appendChild(nameBox);
 		}
