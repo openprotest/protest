@@ -438,6 +438,7 @@ button.view-live-button:active {
 	font-size: 8px;
 	font-weight: bold;
 	color: #202020;
+	overflow: hidden;
 }
 
 .view-interface-port > div:nth-child(3) { /*led*/
