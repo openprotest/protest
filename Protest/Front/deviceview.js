@@ -1968,7 +1968,7 @@ class DeviceView extends View {
 	}
 
 	async DeviceConfiguration() {
-		const dialog = this.DialogBox("calc(100% - 34px)");
+		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, buttonBox, innerBox} = dialog;

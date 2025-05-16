@@ -115,6 +115,15 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.oidInput.value = this.args.oid ?? "";
 		snmpInput.appendChild(this.oidInput);
 
+		this.explorerButton = document.createElement("input");
+		this.explorerButton.type = "button";
+		this.explorerButton.value = "...";
+		this.explorerButton.style.minWidth = "40px";
+		this.explorerButton.style.height = "auto";
+		this.explorerButton.style.gridArea = "2 / 4";
+		this.explorerButton.style.padding = "0";
+		//snmpInput.appendChild(this.explorerButton);
+
 		this.getButton = document.createElement("input");
 		this.getButton.type = "button";
 		this.getButton.value = "Get";
@@ -170,6 +179,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 			}
 		};
 
+		this.explorerButton.onclick = ()=> this.OidExplorer();
 		this.getButton.onclick = ()=> this.GetQuery();
 		this.setButton.onclick = ()=> this.SetQueryDialog();
 		this.walkButton.onclick = ()=> this.WalkQuery();
@@ -256,6 +266,18 @@ static OID_MAP_1_3_6_1_2_1 = [
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
+	}
+
+	async OidExplorer() {
+		const dialog = this.DialogBox("640px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		okButton.addEventListener("click", ()=> {
+			this.oidInput.value = "";
+			this.args.oid = "";
+		});
 	}
 
 	async GetQuery() {
@@ -674,7 +696,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 			event.preventDefault();
 			
-			const nextSibling = this.GetNextSibling(this.selected, event.key);
+			let nextSibling = this.GetNextSibling(this.selected, event.key);
 			if (!nextSibling) return;
 			
 			this.selected.style.backgroundColor = "";

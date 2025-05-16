@@ -364,10 +364,12 @@ class Wmi extends Window {
 	}
 
 	async Query() {
-		if (this.targetInput.value.length == 0 || this.queryInput.value.length == 0) {
+		if (this.targetInput.value.length === 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
+		
+		const query = this.queryInput.value.length > 0 ? this.queryInput.value.trim().replaceAll("\n", " ") : "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
 
 		this.SetIcon("mono/wmi.svg");
 		this.SetTitle("WMI client");
@@ -388,7 +390,7 @@ class Wmi extends Window {
 		try {
 			const response = await fetch(`wmi/query?target=${encodeURIComponent(this.targetInput.value)}`, {
 				method: "POST",
-				body: this.queryInput.value.trim().replaceAll("\n", " ")
+				body: query
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
