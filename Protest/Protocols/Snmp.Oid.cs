@@ -19,6 +19,7 @@ public static class Oid {
         INTERFACE_ALIAS,
         INTERFACE_SPEED,
         INTERFACE_1Q_VLAN,
+        INTERFACE_1Q_VLAN_ENGRESS,
     };
 
     public static string[] LIVEVIEW_SWITCH_OID = new string[] {
@@ -72,9 +73,10 @@ public static class Oid {
     public const string INTERFACE_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16";
     public const string INTERFACE_ERROR_OUT   = "1.3.6.1.2.1.2.2.1.20";
 
-    public const string INTERFACE_Q_BRIDGE    = "1.3.6.1.2.1.17.7.1.4.3.1.2";
-    public const string INTERFACE_1Q_VLAN     = "1.3.6.1.2.1.17.7.1.4.5.1.1";
-    public const string INTERFACE_ALIAS       = "1.3.6.1.2.1.31.1.1.1.18";
+    public const string INTERFACE_1Q_VLAN_ENGRESS = "1.3.6.1.2.1.17.7.1.4.2.1.4";
+    public const string INTERFACE_Q_BRIDGE        = "1.3.6.1.2.1.17.7.1.4.3.1.2";
+    public const string INTERFACE_1Q_VLAN         = "1.3.6.1.2.1.17.7.1.4.5.1.1";
+    public const string INTERFACE_ALIAS           = "1.3.6.1.2.1.31.1.1.1.18";
 
     public const string INTERFACE_TRAFFIC_IN_64  = "1.3.6.1.2.1.31.1.1.1.6";
     public const string INTERFACE_TRAFFIC_OUT_64 = "1.3.6.1.2.1.31.1.1.1.10";

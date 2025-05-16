@@ -503,11 +503,11 @@ internal static class LiveStats {
             }
         }
 
-        List<string> speedList  = new List<string>();
-        List<string> vlanList   = new List<string>();
-        List<string> statusList = new List<string>();
-        List<long>   dataList   = new List<long>();
-        List<int>    errorList  = new List<int>();
+        List<string> speedList    = new List<string>();
+        List<string> untaggedList = new List<string>();
+        List<string> statusList   = new List<string>();
+        List<long>   dataList     = new List<long>();
+        List<int>    errorList    = new List<int>();
 
         foreach (KeyValuePair<int, string> pair in typeDic) {
             if (pair.Value != "6") continue; //physical ports only
@@ -515,7 +515,7 @@ internal static class LiveStats {
             string rawSpeed = speedDic.TryGetValue(pair.Key, out string s) ? s : "N/A";
             speedList.Add(speedMap.TryGetValue(rawSpeed, out string readableSpeed) ? readableSpeed : "N/A");
 
-            vlanList.Add(vlanDic.TryGetValue(pair.Key, out string vlan) ? vlan : "1");
+            untaggedList.Add(vlanDic.TryGetValue(pair.Key, out string vlan) ? vlan : "1");
             statusList.Add(statusDic.TryGetValue(pair.Key, out string status) ? status : "0");
 
             long inTraffic = trafficInDic.TryGetValue(pair.Key, out long tin) ? tin : 0;
@@ -529,12 +529,12 @@ internal static class LiveStats {
 
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
             switchInfo = new {
-                success = true,
-                speed   = speedList,
-                vlan    = vlanList,
-                status  = statusList,
-                data    = dataList,
-                error   = errorList
+                success  = true,
+                speed    = speedList,
+                untagged = untaggedList,
+                status   = statusList,
+                data     = dataList,
+                error    = errorList
             }
         });
 

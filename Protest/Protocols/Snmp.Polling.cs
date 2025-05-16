@@ -254,7 +254,6 @@ internal static partial class Polling {
         Dictionary<string, string> data = new Dictionary<string, string>();
 
         for (int i = 0; i < result.Count; i++) {
-
             string value;
             if (result[i].Data.TypeCode == SnmpType.Null ||
                 result[i].Data.TypeCode == SnmpType.NoSuchObject ||
@@ -339,11 +338,38 @@ internal static partial class Polling {
             }
             else if (result[i].Data.TypeCode == SnmpType.OctetString) {
                 byte[] bytes = result[i].Data.ToBytes();
-                for (int j = 0; j < bytes.Length; j++) {
-                    if (bytes[j] < 32) { bytes[j] = (byte)' '; }
-                    else if (bytes[j] > 126) { bytes[j] = (byte)' '; }
+                
+                int from = 0, to = bytes.Length;
+                if (bytes.Length > 2) {
+                    from = 2;
+                    to = Math.Min(bytes[1], bytes.Length);
                 }
-                builder.Append($"\"{Data.EscapeJsonText(Encoding.UTF8.GetString(bytes).Trim())}\"");
+
+                for (int j = to; j > from; j--) {
+                    if (bytes[j] > 0) break;
+                    to = j;
+                }
+
+                bool isPureString = true;
+                for (int j = from; j < to; j++) {
+                    if (bytes[j] < 32 || bytes[j] > 126) {
+                        isPureString = false;
+                        break;
+                    }
+                }
+
+                if (isPureString) {
+                    string s = Data.EscapeJsonText(Encoding.UTF8.GetString(bytes, from, to).Trim());
+                    builder.Append($"\"{s}\"");
+                }
+                else {
+                    builder.Append("\"0x");
+                    for (int j = from; j < to; j++) {
+                        if (bytes[j] == 0) break;
+                        builder.Append($"{bytes[j]:X2}");
+                    }
+                    builder.Append('\"');
+                }
             }
             else {
                 builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
