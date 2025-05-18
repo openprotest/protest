@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Protest.Http;
 
@@ -13,9 +14,11 @@ internal static class Auth {
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
 
     private static readonly JsonSerializerOptions serializerOptions;
+    private static Random rng = new Random();
     
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
+
 
     public record AccessControl {
         public string username;
@@ -115,7 +118,9 @@ internal static class Auth {
             return false;
         }
 
-        //TODO: check all users access
+#if !DEBUG
+        Thread.Sleep(rng.Next(250));
+#endif
 
         bool successful = access.isDomainUser && OperatingSystem.IsWindows()
             ? Protocols.Ldap.TryDirectoryAuthentication(username, password)
