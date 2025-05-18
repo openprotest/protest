@@ -2672,11 +2672,13 @@ class DeviceView extends View {
 			const txtV = document.createElement("input");
 			txtV.type = "text";
 			txtV.value = untagged;
+			txtV.placeholder = "--";
 			listElement.appendChild(txtV);
 
 			const txtT = document.createElement("input");
 			txtT.type = "text";
 			txtT.value = tagged;
+			txtT.placeholder = "--";
 			listElement.appendChild(txtT);
 
 			const txtL = document.createElement("input");

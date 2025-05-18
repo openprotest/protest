@@ -136,7 +136,7 @@ internal static partial class Polling {
                         "800000" => "800 Gbps",
                         _        => "N/A"
                     },
-                    untagged = untagged.GetValueOrDefault(pair.Key, "--"),
+                    untagged = untagged.GetValueOrDefault(pair.Key, ""),
                     tagged   = tagged.GetValueOrDefault(pair.Key, ""),
                     comment  = alias.GetValueOrDefault(pair.Key, String.Empty)
                 })
