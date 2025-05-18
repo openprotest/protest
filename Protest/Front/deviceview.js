@@ -956,7 +956,7 @@ class DeviceView extends View {
 		modeMenu.className = "view-interfaces-mode-menu";
 		modeBox.appendChild(modeMenu);
 
-		const modesLocal = ["Speed", "Untagged VLAN ID"];
+		const modesLocal = ["Speed", "VLAN ID"];
 		const modesLive = ["Speed", "VLAN ID", "Traffic", "Errors"];
 
 		const ModeToggle = event=> {
