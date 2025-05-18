@@ -3,8 +3,8 @@ using System.Net;
 using System.Text.Json;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
-using Yarp.ReverseProxy.Forwarder;
 using Renci.SshNet.Messages.Authentication;
+using System.Text;
 
 namespace Protest.Protocols.Snmp;
 
@@ -45,8 +45,8 @@ internal static partial class Polling {
             Dictionary<int, string> alias      = new Dictionary<int, string>();
             Dictionary<int, string> type       = new Dictionary<int, string>();
             Dictionary<int, string> speed      = new Dictionary<int, string>();
-            Dictionary<int, string> tagged     = new Dictionary<int, string>();
             Dictionary<int, string> untagged   = new Dictionary<int, string>();
+            Dictionary<int, string> tagged     = new Dictionary<int, string>();
 
             Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
 
@@ -71,6 +71,18 @@ internal static partial class Polling {
                         }
 
                         taggedMap[vlanId].Add(8 * (j - 4) + k + 1);
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<short, List<int>> kvp in taggedMap) {
+                short vlanId = kvp.Key;
+                foreach (int portIndex in kvp.Value) {
+                    if (tagged.ContainsKey(portIndex)) {
+                        tagged[portIndex] += $",{vlanId}";
+                    }
+                    else {
+                        tagged[portIndex] = vlanId.ToString();
                     }
                 }
             }
@@ -124,9 +136,9 @@ internal static partial class Polling {
                         "800000" => "800 Gbps",
                         _        => "N/A"
                     },
-                    untagged = untagged.GetValueOrDefault(pair.Key, "1"),
-                    //TODO: tagged   = tagged.GetValueOrDefault(pair.Key, ""),
-                    comment = alias.GetValueOrDefault(pair.Key, String.Empty)
+                    untagged = untagged.GetValueOrDefault(pair.Key, "--"),
+                    tagged   = tagged.GetValueOrDefault(pair.Key, ""),
+                    comment  = alias.GetValueOrDefault(pair.Key, String.Empty)
                 })
             );
         }

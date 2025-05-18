@@ -813,8 +813,9 @@ class DeviceView extends View {
 				port         : obj.i[i].i,
 				speed        : obj.i[i].s,
 				untagged     : obj.i[i].v,
-				comment      : obj.i[i].c,
-				link         : obj.i[i].l
+				tagged       : obj.i[i].t,
+				link         : obj.i[i].l,
+				comment      : obj.i[i].c
 			});
 
 			frontElement.onmouseenter = ()=> {
@@ -854,7 +855,17 @@ class DeviceView extends View {
 					const vlanLabel = document.createElement("div");
 					vlanLabel.style.display = "inline-block";
 					vlanLabel.style.fontSize = "small";
-					vlanLabel.textContent = `VLAN ${obj.i[i].v}`;
+					vlanLabel.textContent = `Untagged VLAN ${obj.i[i].v}`;
+					this.floating.appendChild(vlanLabel);
+				}
+
+				
+				if (obj.i[i].t && obj.i[i].t.toString().length) {
+					const vlanLabel = document.createElement("div");
+					vlanLabel.style.display = "inline-block";
+					vlanLabel.style.fontSize = "small";
+					vlanLabel.style.marginLeft = "18px";
+					vlanLabel.textContent = `Tagged VLAN ${obj.i[i].t}`;
 					this.floating.appendChild(vlanLabel);
 				}
 
@@ -946,7 +957,7 @@ class DeviceView extends View {
 		modeBox.appendChild(modeMenu);
 
 		const modesLocal = ["Speed", "Untagged VLAN ID"];
-		const modesLive = ["Speed", "Untagged VLAN ID", "Traffic", "Errors"];
+		const modesLive = ["Speed", "VLAN ID", "Traffic", "Errors"];
 
 		const ModeToggle = event=> {
 			if (this.switchInfo.success) {
@@ -957,7 +968,7 @@ class DeviceView extends View {
 					}
 					break;
 
-				case "Untagged VLAN ID":
+				case "VLAN ID":
 					for (let i=0; i<list.length && i<this.switchInfo.untagged.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo.untagged[i] ?? null);
 					}
@@ -981,7 +992,7 @@ class DeviceView extends View {
 			else {
 				switch (event.target.textContent) {
 				case "Speed"  : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed)); break;
-				case "Untagged VLAN ID"   : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged)); break;
+				case "VLAN ID"   : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged)); break;
 				}
 			}
 		};
@@ -2407,7 +2418,7 @@ class DeviceView extends View {
 		titleBar.className = "view-interfaces-edit-title";
 		innerBox.appendChild(titleBar);
 
-		let titleArray = ["No.", "Type", "Speed", "Untagged", "Link"];
+		let titleArray = ["No.", "Type", "Speed", "Untagged", "Tagged", "Link"];
 		for (let i=0; i<titleArray.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.textContent = titleArray[i];
@@ -2613,7 +2624,7 @@ class DeviceView extends View {
 		let lastMouseY = 0;
 		let lastElementY = 0;
 
-		const AddInterface = (number, port, speed, untagged, link, comment) => {
+		const AddInterface = (number, port, speed, untagged, tagged, link, comment) => {
 			const frontElement = document.createElement("div");
 			frontElement.className = "view-interface-port";
 			frontElement.style.gridArea = `1 / ${frame.childNodes.length+1}`;
@@ -2663,6 +2674,11 @@ class DeviceView extends View {
 			txtV.value = untagged;
 			listElement.appendChild(txtV);
 
+			const txtT = document.createElement("input");
+			txtT.type = "text";
+			txtT.value = tagged;
+			listElement.appendChild(txtT);
+
 			const txtL = document.createElement("input");
 			txtL.type = "text";
 			txtL.setAttribute("readonly", true);
@@ -2710,6 +2726,7 @@ class DeviceView extends View {
 				portInput     : txtP,
 				speedInput    : txtS,
 				untaggedInput : txtV,
+				taggedInput   : txtT,
 				commInput     : txtC,
 				link          : link
 			};
@@ -3003,7 +3020,7 @@ class DeviceView extends View {
 					list = [];
 
 					for (let i=0; i<json.length; i++) {
-						AddInterface(null, json[i].port, json[i].speed, json[i].untagged, null, json[i].comment);
+						AddInterface(null, json[i].port, json[i].speed, json[i].untagged, json.tagged, null, json[i].comment);
 					}
 
 					SortList();
@@ -3069,7 +3086,7 @@ class DeviceView extends View {
 					list = [];
 
 					for (let i=0; i<json.length; i++) {
-						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, null, json[i].comment);
+						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, null, json[i].comment);
 					}
 
 					SortList();
@@ -3097,7 +3114,7 @@ class DeviceView extends View {
 
 		addBulkOkButton.onclick = async ()=> {
 			for (let i=0; i<addBulkInput.value; i++)
-				AddInterface(null, portInput.value, speedInput.value, 1, null, "");
+				AddInterface(null, portInput.value, speedInput.value, 1, "", null, "");
 			BulkToggle();
 		};
 
@@ -3105,11 +3122,11 @@ class DeviceView extends View {
 			numberingInput.value = JSON.parse(this.link[".interfaces"].v).n;
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
-				AddInterface(obj.i[i].n, obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].l, obj.i[i].c);
+				AddInterface(obj.i[i].n, obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].t, obj.i[i].l, obj.i[i].c);
 		}
 		else {
 			for (let i=0; i<4; i++)
-				AddInterface(null, "Ethernet", "1 Gbps", 1, null, "");
+				AddInterface(null, "Ethernet", "1 Gbps", 1, "", null, "");
 		}
 
 		okButton.addEventListener("click", async ()=> {
@@ -3121,8 +3138,9 @@ class DeviceView extends View {
 					i: list[i].portInput.value,
 					s: list[i].speedInput.value,
 					v: list[i].untaggedInput.value,
-					c: list[i].commInput.value,
-					l: list[i].link
+					t: list[i].taggedInput.value,
+					l: list[i].link,
+					c: list[i].commInput.value
 				});
 			}
 

@@ -470,13 +470,16 @@ button.view-live-button:active {
 	width: 64px;
 }
 .view-interfaces-edit-title > *:nth-child(5) {
-	width: 180px;
+	width: 100px;
+}
+.view-interfaces-edit-title > *:nth-child(6) {
+	width: 150px;
 }
 
 .view-interfaces-edit-list-element {
 	position: absolute;
 	width: calc(100% - 8px);
-	max-width: 882px;
+	max-width: 1000px;
 	box-sizing: border-box;
 	height: 32px;
 	left: 8px;
@@ -516,7 +519,10 @@ button.view-live-button:active {
 	 width: 64px;
 }
 .view-interfaces-edit-list-element > *:nth-child(6) {
-	width: 180px;
+	 width: 100px;
+}
+.view-interfaces-edit-list-element > *:nth-child(7) {
+	width: 150px;
 	padding-left: 32px;
 	background-image: url(mono/gear.svg);
 	background-size: 20px 20px;
@@ -524,7 +530,7 @@ button.view-live-button:active {
 	background-repeat: no-repeat;
 	cursor: pointer;
 }
-.view-interfaces-edit-list-element > *:nth-child(7) {
+.view-interfaces-edit-list-element > *:nth-child(8) {
 	width: calc(100% - 600px);
 	min-width: 100px;
 	max-width: 308px;
