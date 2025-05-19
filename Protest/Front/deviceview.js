@@ -865,6 +865,9 @@ class DeviceView extends View {
 					vlanLabel.style.display = "inline-block";
 					vlanLabel.style.fontSize = "small";
 					vlanLabel.style.marginLeft = "18px";
+					vlanLabel.style.whiteSpace = "nowrap";
+					vlanLabel.style.overflow = "hidden";
+					vlanLabel.style.textOverflow = "ellipsis";
 					vlanLabel.textContent = `Tagged VLAN ${obj.i[i].t}`;
 					this.floating.appendChild(vlanLabel);
 				}

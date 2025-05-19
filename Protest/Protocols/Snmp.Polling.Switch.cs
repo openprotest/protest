@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
-using Renci.SshNet.Messages.Authentication;
-using System.Text;
 
 namespace Protest.Protocols.Snmp;
 
@@ -37,7 +36,7 @@ internal static partial class Polling {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        /*try*/ {
+        try {
             IList<Variable> snmpResult = Polling.SnmpQuery(_ipAddress, _snmpProfile, Oid.SWITCH_OID, Polling.SnmpOperation.Walk);
             Dictionary<string, string> interfaces = Polling.ParseResponse(snmpResult);
 
@@ -142,9 +141,9 @@ internal static partial class Polling {
                 })
             );
         }
-        /*catch (Exception ex) {
+        catch (Exception ex) {
             return JsonSerializer.SerializeToUtf8Bytes(new { error = ex.Message });
-        }*/
+        }
     }
 
 }
