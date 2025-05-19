@@ -848,7 +848,7 @@ class DeviceView extends View {
 				vlanColorBox.style.borderRadius = "2px";
 				vlanColorBox.style.marginLeft = "4px";
 				vlanColorBox.style.marginRight = "4px";
-				vlanColorBox.style.backgroundColor = this.GetVlanColor(list[i].vlan);
+				vlanColorBox.style.backgroundColor = this.GetVlanColor(list[i].untagged);
 				this.floating.appendChild(vlanColorBox);
 
 				if (obj.i[i].v && obj.i[i].v.toString().length) {
