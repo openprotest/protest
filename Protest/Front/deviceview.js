@@ -824,7 +824,7 @@ class DeviceView extends View {
 				speedColorBox.style.borderRadius = "2px";
 				speedColorBox.style.marginLeft = "4px";
 				speedColorBox.style.marginRight = "4px";
-				speedColorBox.style.backgroundColor = this.GetSpeedColor(list[i].speed);
+				speedColorBox.style.backgroundColor = this.GetSpeedColor(obj.i[i].s);
 				this.floating.appendChild(speedColorBox);
 
 				if (obj.i[i].s !== "") {
@@ -837,17 +837,17 @@ class DeviceView extends View {
 
 				this.floating.appendChild(document.createElement("br"));
 
-				const vlanColorBox = document.createElement("div");
-				vlanColorBox.style.display = "inline-block";
-				vlanColorBox.style.width = "8px";
-				vlanColorBox.style.height = "8px";
-				vlanColorBox.style.borderRadius = "2px";
-				vlanColorBox.style.marginLeft = "4px";
-				vlanColorBox.style.marginRight = "4px";
-				vlanColorBox.style.backgroundColor = this.GetVlanColor(list[i].untagged);
-				this.floating.appendChild(vlanColorBox);
-
 				if (obj.i[i].v && obj.i[i].v.toString().length) {
+					const vlanColorBox = document.createElement("div");
+					vlanColorBox.style.display = "inline-block";
+					vlanColorBox.style.width = "8px";
+					vlanColorBox.style.height = "8px";
+					vlanColorBox.style.borderRadius = "2px";
+					vlanColorBox.style.marginLeft = "4px";
+					vlanColorBox.style.marginRight = "4px";
+					vlanColorBox.style.backgroundColor = this.GetVlanColor(obj.i[i].v);
+					this.floating.appendChild(vlanColorBox);
+
 					const vlanLabel = document.createElement("div");
 					vlanLabel.style.display = "inline-block";
 					vlanLabel.style.fontSize = "small";
@@ -913,9 +913,7 @@ class DeviceView extends View {
 
 					this.floating.style.maxHeight = "150px";
 
-					list[i].frontElement.ondblclick = ()=> {
-						LOADER.OpenDeviceByFile(file);
-					};
+					list[i].frontElement.ondblclick = ()=> LOADER.OpenDeviceByFile(file);
 				}
 
 				let x = frontElement.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
@@ -955,11 +953,20 @@ class DeviceView extends View {
 		modeBox.appendChild(modeMenu);
 
 		const modesLocal = ["Speed", "VLAN ID"];
-		const modesLive = ["Speed", "VLAN ID", "Traffic", "Errors"];
+		const modesLive = ["Status", "Speed", "VLAN ID", "Traffic", "Errors"];
 
 		const ModeToggle = event=> {
 			if (this.switchInfo.success) {
 				switch (event.target.textContent) {
+				case "Status":
+					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
+						list[i].iconElement.style.backgroundColor = {
+							1:"rgb(32,240,32)",
+							3:"rgb(0,128,240)"
+						}[this.switchInfo.status[i]] ?? "rgb(32,32,32)";
+					}
+					break;
+
 				case "Speed":
 					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
@@ -990,7 +997,7 @@ class DeviceView extends View {
 			else {
 				switch (event.target.textContent) {
 				case "Speed"  : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed)); break;
-				case "VLAN ID"   : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged)); break;
+				case "VLAN ID": list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged)); break;
 				}
 			}
 		};
@@ -1237,7 +1244,7 @@ class DeviceView extends View {
 				}
 			}
 
-			if (this.switchInfo && !this.switchInfo.success) {
+			if (".interfaces" in this.link && this.switchInfo && !this.switchInfo.success) {
 				this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
 			}
 
