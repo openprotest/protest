@@ -773,10 +773,6 @@ class DeviceView extends View {
 		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
 
-		if (!this.switchInfo.success) {
-			this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
-		}
-
 		for (let i=0; i<obj.i.length; i++) {
 			const frontElement = document.createElement("div");
 			frontElement.className = "view-interface-port";
@@ -799,11 +795,11 @@ class DeviceView extends View {
 			numElement.textContent = obj.i[i].n ? obj.i[i].n : frame.childNodes.length;
 			frontElement.appendChild(numElement);
 
-			const ledElement = document.createElement("div");
 			if (this.switchInfo.success && i<this.switchInfo.status.length && this.switchInfo.status[i]==1) {
+				const ledElement = document.createElement("div");
 				ledElement.style.animation = "led-blink .4s linear infinite";
+				frontElement.appendChild(ledElement);
 			}
-			frontElement.appendChild(ledElement);
 
 			list.push({
 				frontElement : frontElement,
@@ -859,7 +855,6 @@ class DeviceView extends View {
 					this.floating.appendChild(vlanLabel);
 				}
 
-				
 				if (obj.i[i].t && obj.i[i].t.toString().length) {
 					const vlanLabel = document.createElement("div");
 					vlanLabel.style.display = "inline-block";
@@ -1015,6 +1010,8 @@ class DeviceView extends View {
 	}
 
 	async InitializeLiveStats() {
+		this.switchInfo = {success: false};
+
 		if (this.liveStatsWebSockets !== null) return;
 
 		let server = window.location.href.replace("https://", "").replace("http://", "");
@@ -1238,6 +1235,10 @@ class DeviceView extends View {
 						}
 					};
 				}
+			}
+
+			if (this.switchInfo && !this.switchInfo.success) {
+				this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
 			}
 
 			this.liveStatsWebSockets = null;
@@ -3247,18 +3248,18 @@ class DeviceView extends View {
 
 	GetSpeedColor(speed) {
 		switch (speed) {
-		case "10 Mbps" : return "hsl(20,85%,50%)";
-		case "100 Mbps": return "hsl(40,85%,50%)";
-		case "1 Gbps"  : return "hsl(60,85%,50%)";
-		case "2.5 Gbps": return "hsl(70,85%,50%)";
-		case "5 Gbps"  : return "hsl(80,85%,50%)";
-		case "10 Gbps" : return "hsl(130,85%,50%)";
-		case "25 Gbps" : return "hsl(150,85%,50%)";
-		case "40 Gbps" : return "hsl(170,85%,50%)";
-		case "100 Gbps": return "hsl(190,85%,50%)";
-		case "200 Gbps": return "hsl(210,85%,50%)";
-		case "400 Gbps": return "hsl(275,85%,50%)";
-		case "800 Gbps": return "hsl(295,85%,50%)";
+		case "10 Mbps" : return "hsl(30,100%,50%)";
+		case "100 Mbps": return "hsl(45,100%,50%)";
+		case "1 Gbps"  : return "hsl(65,100%,50%)";
+		case "2.5 Gbps": return "hsl(80,100%,50%)";
+		case "5 Gbps"  : return "hsl(100,100%,50%)";
+		case "10 Gbps" : return "hsl(140,100%,50%)";
+		case "25 Gbps" : return "hsl(170,100%,50%)";
+		case "40 Gbps" : return "hsl(190,100%,50%)";
+		case "100 Gbps": return "hsl(210,100%,50%)";
+		case "200 Gbps": return "hsl(230,100%,50%)";
+		case "400 Gbps": return "hsl(260,100%,50%)";
+		case "800 Gbps": return "hsl(270,100%,50%)";
 		default: return null;
 		}
 	}
