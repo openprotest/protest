@@ -58,31 +58,33 @@ internal static partial class Polling {
                 if (!short.TryParse(oid[(dotIndex + 1)..], out short vlanId)) continue;
 
                 byte[] raw = snmpResult[i].Data.ToBytes();
-                if (raw.Length < 5) continue;
 
-                for (int j = 4; j < Math.Min(raw[1], raw.Length); j++) {
-                    string binary = Convert.ToString(raw[j], 2).PadLeft(8, '0');
+                int startIndex = DetectPortBitmapStart(raw);
+                if (startIndex == -1) continue;
+
+                int maxIndex = Math.Min(raw.Length, startIndex + GetBitmapLength(raw, startIndex));
+
+                for (int j = startIndex; j < maxIndex; j++) {
+                    byte b = raw[j];
                     for (int k = 0; k < 8; k++) {
-                        if (binary[k] == '0') continue;
-
-                        if (!taggedMap.ContainsKey(vlanId)) {
-                            taggedMap.Add(vlanId, new List<int>());
+                        if ((b & (1 << (7 - k))) != 0) {
+                            int portIndex = 8 * (j - startIndex) + (k + 1);
+                            if (!taggedMap.TryGetValue(vlanId, out var ports)) {
+                                ports = new List<int>();
+                                taggedMap[vlanId] = ports;
+                            }
+                            if (!ports.Contains(portIndex)) {
+                                ports.Add(portIndex);
+                            }
                         }
-
-                        taggedMap[vlanId].Add(8 * (j - 4) + k + 1);
                     }
                 }
             }
 
-            foreach (KeyValuePair<short, List<int>> kvp in taggedMap) {
-                short vlanId = kvp.Key;
-                foreach (int portIndex in kvp.Value) {
-                    if (tagged.ContainsKey(portIndex)) {
-                        tagged[portIndex] += $",{vlanId}";
-                    }
-                    else {
-                        tagged[portIndex] = vlanId.ToString();
-                    }
+            foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
+                foreach (int port in pair.Value) {
+                    tagged.TryGetValue(port, out var existing);
+                    tagged[port] = string.IsNullOrEmpty(existing) ? pair.Key.ToString() : $"{existing},{pair.Key.ToString()}";
                 }
             }
 
@@ -144,6 +146,16 @@ internal static partial class Polling {
         catch (Exception ex) {
             return JsonSerializer.SerializeToUtf8Bytes(new { error = ex.Message });
         }
+    }
+
+    private static int DetectPortBitmapStart(byte[] raw) {
+        if (raw.Length > 4 && raw[0] == 0x04 && raw[2] == 0x02 && raw[3] == 0x02) return 4;
+        return raw.Length >= 3 ? 2 : 0;
+    }
+
+    private static int GetBitmapLength(byte[] raw, int startIndex) {
+        if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
+        return raw.Length - startIndex;
     }
 
 }

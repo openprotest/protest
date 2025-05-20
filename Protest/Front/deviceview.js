@@ -3098,6 +3098,14 @@ class DeviceView extends View {
 					frame.textContent = "";
 					list = [];
 
+					const unnecessaryBigPortNames = json.every(o=>o.number.length > 8);
+					if (unnecessaryBigPortNames) {
+						for (let i=0; i<json.length; i++) {
+							json[i].number = "";
+						}
+					}
+
+
 					for (let i=0; i<json.length; i++) {
 						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, null, json[i].comment);
 					}
