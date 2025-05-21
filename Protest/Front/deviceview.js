@@ -46,6 +46,7 @@ class DeviceView extends View {
 		this.args = args ?? {file: null};
 
 		this.switchInfo = {success: false};
+		this.switchMode = -1;
 
 		this.SetIcon("mono/gear.svg");
 
@@ -953,12 +954,27 @@ class DeviceView extends View {
 		modeBox.appendChild(modeMenu);
 
 		const modesLocal = ["Speed", "VLAN ID"];
-		const modesLive = ["Status", "Speed", "VLAN ID", "Traffic", "Errors"];
+		const modesLive = ["Speed", "VLAN ID", "Status", "Traffic", "Errors"];
 
 		const ModeToggle = event=> {
 			if (this.switchInfo.success) {
 				switch (event.target.textContent) {
+				case "Speed":
+					this.switchMode = 0;
+					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
+					}
+					break;
+
+				case "VLAN ID":
+					this.switchMode = 1;
+					for (let i=0; i<list.length && i<this.switchInfo.untagged.length; i++) {
+						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo.untagged[i] ?? null);
+					}
+					break;
+
 				case "Status":
+					this.switchMode = 2;
 					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
 						list[i].iconElement.style.backgroundColor = {
 							1:"rgb(32,240,32)",
@@ -967,19 +983,8 @@ class DeviceView extends View {
 					}
 					break;
 
-				case "Speed":
-					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
-					}
-					break;
-
-				case "VLAN ID":
-					for (let i=0; i<list.length && i<this.switchInfo.untagged.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo.untagged[i] ?? null);
-					}
-					break;
-
 				case "Traffic":
+					this.switchMode = 3;
 					const maxTraffic = this.switchInfo.data.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.data.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${63+192*this.switchInfo.data[i]/maxTraffic},32)`;
@@ -987,6 +992,7 @@ class DeviceView extends View {
 					break;
 
 				case "Errors":
+					this.switchMode = 4;
 					const maxError = this.switchInfo.error.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.error.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${63+192*this.switchInfo.error[i]/maxError},32,32)`;
@@ -996,23 +1002,51 @@ class DeviceView extends View {
 			}
 			else {
 				switch (event.target.textContent) {
-				case "Speed"  : list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed)); break;
-				case "VLAN ID": list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged)); break;
+				case "Speed":
+					this.switchMode = 0;
+					list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed));
+					break;
+
+				case "VLAN ID":
+					this.switchMode = 1;
+					list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged));
+					break;
 				}
 			}
 		};
 
-		modeBox.onclick = ()=> {
-			modeMenu.textContent = "";
+		ModeToggle({target:{textContent:(this.switchInfo.success ? modesLive : modesLocal)[this.switchMode]}});
 
+		let modeBoxFocused = false;
+		modeBox.onfocus = ()=> {
+			setTimeout(()=>{modeBoxFocused = true;}, 100);
+		};
+
+		modeBox.onblur = ()=> {
+			modeBoxFocused = false
+		};
+		
+		modeBox.onclick = ()=> {
 			const modes = this.switchInfo.success ? modesLive : modesLocal;
+			modeMenu.textContent = "";
 			for (let i=0; i<modes.length; i++) {
 				const option = document.createElement("div");
 				option.textContent = modes[i];
 				option.onclick = ModeToggle;
 				modeMenu.appendChild(option);
+
+				if (i === this.switchMode) {
+					option.style.backgroundColor = "var(--clr-select)";
+				}
 			}
-			modeButton.focus();
+		};
+
+		modeButton.onclick = ()=> {
+			const modes = this.switchInfo.success ? modesLive : modesLocal;
+			if (modeBoxFocused) {
+				this.switchMode = (this.switchMode + 1) % modes.length;
+				ModeToggle({target:{textContent:(this.switchInfo.success ? modesLive : modesLocal)[this.switchMode]}});
+			}
 		};
 	}
 
@@ -3104,7 +3138,6 @@ class DeviceView extends View {
 							json[i].number = "";
 						}
 					}
-
 
 					for (let i=0; i<json.length; i++) {
 						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, null, json[i].comment);

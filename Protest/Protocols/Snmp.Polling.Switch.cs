@@ -59,10 +59,10 @@ internal static partial class Polling {
 
                 byte[] raw = snmpResult[i].Data.ToBytes();
 
-                int startIndex = DetectPortBitmapStart(raw);
+                int startIndex = GetPortBitmapStart(raw);
                 if (startIndex == -1) continue;
 
-                int maxIndex = Math.Min(raw.Length, startIndex + GetBitmapLength(raw, startIndex));
+                int maxIndex = Math.Min(raw.Length, startIndex + GetPortBitmapLength(raw, startIndex));
 
                 for (int j = startIndex; j < maxIndex; j++) {
                     byte b = raw[j];
@@ -148,12 +148,17 @@ internal static partial class Polling {
         }
     }
 
-    private static int DetectPortBitmapStart(byte[] raw) {
-        if (raw.Length > 4 && raw[0] == 0x04 && raw[2] == 0x02 && raw[3] == 0x02) return 4;
+    private static int GetPortBitmapStart(byte[] raw) {
+        if (raw.Length > 4
+            && raw[0] == 0x04
+            && raw[2] == 0x02
+            && raw[3] == 0x02) {
+            return 4;
+        }
         return raw.Length >= 3 ? 2 : 0;
     }
 
-    private static int GetBitmapLength(byte[] raw, int startIndex) {
+    private static int GetPortBitmapLength(byte[] raw, int startIndex) {
         if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
         return raw.Length - startIndex;
     }

@@ -916,6 +916,7 @@ class Settings extends Tabs {
 		const colorInput = document.createElement("input");
 		colorInput.style.gridArea = "4 / 3";
 		colorInput.type = "color";
+		colorInput.value = "#202020";
 		innerBox.append(colorLabel, colorInput);
 
 		if (object) {

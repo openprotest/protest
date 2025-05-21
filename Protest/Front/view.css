@@ -571,7 +571,11 @@ button.view-live-button:active {
 	height: 12px;
 	border-radius: 4px;
 	transition: .2s;
-	box-shadow:#222 0 -1px 1px,#eee 0 1px 1px,#222 0 -1px 1px inset,#ddd 0 1px 1px inset;
+	box-shadow: #222 0 -1px 1px, #eee 0 1px 1px, #222 0 -1px 1px inset, #ddd 0 1px 1px inset;
+}
+
+.view-interfaces-mode-button:active {
+	box-shadow: #222 0 -1px 1px, #eee 0 1px 1px, #222 0 0 0 inset, #ddd 0 0 0 inset;
 }
 
 .view-interfaces-mode-menu {

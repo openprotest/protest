@@ -164,11 +164,18 @@ internal static partial class Lifeline {
                                     SnmpPrinterQuery(data[0], data[1], data[2], profiles);
                                 }
                             }
-                            catch { }
+                            catch {}
                         }
                         else if (Data.SWITCH_TYPES.Contains(type)) {
-                            //mutex.TryGetValue(data[0], out object obj);
-                            //TODO:
+                            try {
+                                mutex.TryGetValue(data[0], out object obj);
+                                lock (obj) {
+                                    bool p = IcmpQuery(data[1]);
+                                    if (!p) continue;
+                                    SnmpSwitchQuery(data[0], data[1], data[2], profiles);
+                                }
+                            }
+                            catch {}
                         }
                     }
                 });
@@ -431,6 +438,27 @@ internal static partial class Lifeline {
             }
             catch { }
         }
+    }
+
+    private static void SnmpSwitchQuery(string file, string host, string _profile, SnmpProfiles.Profile[] snmpProfiles) {
+        IPAddress ipAddress;
+        if (!IPAddress.TryParse(host, out ipAddress)) {
+            try {
+                ipAddress = System.Net.Dns.GetHostEntry(host).AddressList[0];
+            }
+            catch { }
+        }
+
+        if (!SnmpProfiles.FromGuid(_profile, out SnmpProfiles.Profile profile, snmpProfiles)) {
+            return;
+        }
+
+        Dictionary<string, string> switchCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
+        if (switchCounters is null || switchCounters.Count == 0) {
+            return;
+        }
+
+        //TODO:
     }
 
     public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {
