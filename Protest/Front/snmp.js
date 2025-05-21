@@ -267,18 +267,17 @@ static OID_MAP_1_3_6_1_2_1 = [
 				for (let i = 0; i < json.length; i++) {
 					if (json[i].guid != this.args.profile) continue;
 					
-					this.versionInput.value = json[i].version;
 					this.communityInput.value = json[i].community;
+					this.versionInput.value = json[i].version;
+					this.versionInput.onchange();
 
-					if (json[i].version === 3) {
+					if (json[i].version===3) {
 						this.credentialsProfileInput.value = json[i].guid;
 					}
 
 					break;
 				}
 			}
-
-
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
