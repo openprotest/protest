@@ -229,6 +229,7 @@
 .view-attributes-list > div > div:nth-child(4) > div {
 	display: inline-block;
 	color: var(--clr-light);
+	font-size: small;
 	background-color: var(--clr-dark);
 	border-radius: 4px;
 	padding: 0 4px;
@@ -438,7 +439,10 @@ button.view-live-button:active {
 	font-size: 8px;
 	font-weight: bold;
 	color: #202020;
+	padding: 0 2px;
+	direction: rtl;
 	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .view-interface-port > div:nth-child(3) { /*led*/
