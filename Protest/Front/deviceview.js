@@ -565,12 +565,17 @@ class DeviceView extends View {
 				}
 
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				sshButton.onclick = ()=> new Ssh({host:sshHost,  username:username, file:file});
+				sshButton.onclick = ()=> new Ssh({host:sshHost, username:username, file:file});
 			}
 
 			if (ports.includes(53)) {
 				const dnsButton = this.CreateSideButton("mono/dns.svg", "DNS lookup");
 				dnsButton.onclick = ()=> new DnsLookup({entries:[], server:host, type:"A", timeout:2000, transport:"Auto", isRecursive:true});
+			}
+
+			if ("snmp profile" in this.link) {
+				const dnsButton = this.CreateSideButton("mono/snmp.svg", "SNMP pool");
+				dnsButton.onclick = ()=> new Snmp({target:host, community:"", profile:this.link["snmp profile"].v});
 			}
 
 			if (overwriteProtocol.http) { //http
@@ -1018,13 +1023,9 @@ class DeviceView extends View {
 		ModeToggle({target:{textContent:(this.switchInfo.success ? modesLive : modesLocal)[this.switchMode]}});
 
 		let modeBoxFocused = false;
-		modeBox.onfocus = ()=> {
-			setTimeout(()=>{modeBoxFocused = true;}, 100);
-		};
+		modeBox.onfocus = ()=> setTimeout(()=>{modeBoxFocused = true;}, 100);
 
-		modeBox.onblur = ()=> {
-			modeBoxFocused = false
-		};
+		modeBox.onblur = ()=> { modeBoxFocused = false };
 		
 		modeBox.onclick = ()=> {
 			const modes = this.switchInfo.success ? modesLive : modesLocal;
@@ -2289,7 +2290,7 @@ class DeviceView extends View {
 
 		};
 
-		fetchCancelButton.onclick = ()=>  fetchButton.onclick();
+		fetchCancelButton.onclick = ()=> fetchButton.onclick();
 
 		editButton.onclick = ()=> {
 			innerBox.contentEditable = true;
@@ -3271,7 +3272,7 @@ class DeviceView extends View {
 				}
 			}
 			else {
-				row =  Math.floor(i / columns) + 1;
+				row = Math.floor(i / columns) + 1;
 				column = i % columns + 1;
 				list[i].frontElement.style.gridArea = `${row} / ${column}`;
 			}
