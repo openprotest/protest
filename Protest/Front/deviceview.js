@@ -787,6 +787,7 @@ class DeviceView extends View {
 			const iconElement = document.createElement("div");
 			iconElement.backgroundColor = "var(--clr-dark)";
 			iconElement.style.transitionDelay = `${i*.005}s`;
+
 			switch (obj.i[i].i) {
 			case "Ethernet": iconElement.style.maskImage = "url(mono/ethernetport.svg)"; break;
 			case "SFP"     : iconElement.style.maskImage = "url(mono/sfpport.svg)"; break;
@@ -823,6 +824,11 @@ class DeviceView extends View {
 			frontElement.onmouseenter = ()=> {
 				this.floating.textContent = "";
 
+				const port     = obj.i[i].i;
+				const speed    = this.switchInfo.success && i<(this.switchInfo.speed?.length    ?? 0) ? this.switchInfo.speed[i]    : obj.i[i].s;
+				const untagged = this.switchInfo.success && i<(this.switchInfo.untagged?.length ?? 0) ? this.switchInfo.untagged[i] : obj.i[i].v;
+				const tagged   = this.switchInfo.success && i<(this.switchInfo.tagged?.length   ?? 0) ? this.switchInfo.tagged[i]   : obj.i[i].t;
+
 				const speedColorBox = document.createElement("div");
 				speedColorBox.style.display = "inline-block";
 				speedColorBox.style.width = "8px";
@@ -830,20 +836,20 @@ class DeviceView extends View {
 				speedColorBox.style.borderRadius = "2px";
 				speedColorBox.style.marginLeft = "4px";
 				speedColorBox.style.marginRight = "4px";
-				speedColorBox.style.backgroundColor = this.GetSpeedColor(obj.i[i].s);
+				speedColorBox.style.backgroundColor = this.GetSpeedColor(speed);
 				this.floating.appendChild(speedColorBox);
 
-				if (obj.i[i].s !== "") {
+				if (speed !== "") {
 					const speedLabel = document.createElement("div");
 					speedLabel.style.display = "inline-block";
 					speedLabel.style.fontSize = "small";
-					speedLabel.textContent = `${obj.i[i].s} ${obj.i[i].i}`;
+					speedLabel.textContent = `${speed} ${port}`;
 					this.floating.appendChild(speedLabel);
 				}
 
 				this.floating.appendChild(document.createElement("br"));
 
-				if (obj.i[i].v && obj.i[i].v.toString().length) {
+				if (untagged && untagged.toString().length) {
 					const vlanColorBox = document.createElement("div");
 					vlanColorBox.style.display = "inline-block";
 					vlanColorBox.style.width = "8px";
@@ -851,17 +857,17 @@ class DeviceView extends View {
 					vlanColorBox.style.borderRadius = "2px";
 					vlanColorBox.style.marginLeft = "4px";
 					vlanColorBox.style.marginRight = "4px";
-					vlanColorBox.style.backgroundColor = this.GetVlanColor(obj.i[i].v);
+					vlanColorBox.style.backgroundColor = this.GetVlanColor(untagged);
 					this.floating.appendChild(vlanColorBox);
 
 					const vlanLabel = document.createElement("div");
 					vlanLabel.style.display = "inline-block";
 					vlanLabel.style.fontSize = "small";
-					vlanLabel.textContent = `Untagged VLAN ${obj.i[i].v}`;
+					vlanLabel.textContent = `Untagged VLAN ${untagged}`;
 					this.floating.appendChild(vlanLabel);
 				}
 
-				if (obj.i[i].t && obj.i[i].t.toString().length) {
+				if (tagged && tagged.length) {
 					const vlanLabel = document.createElement("div");
 					vlanLabel.style.display = "inline-block";
 					vlanLabel.style.fontSize = "small";
@@ -869,7 +875,7 @@ class DeviceView extends View {
 					vlanLabel.style.whiteSpace = "nowrap";
 					vlanLabel.style.overflow = "hidden";
 					vlanLabel.style.textOverflow = "ellipsis";
-					vlanLabel.textContent = `Tagged VLAN ${obj.i[i].t}`;
+					vlanLabel.textContent = `Tagged VLAN ${tagged}`;
 					this.floating.appendChild(vlanLabel);
 				}
 
