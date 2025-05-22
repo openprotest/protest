@@ -772,9 +772,25 @@ class DeviceView extends View {
 
 		if (obj === null) return;
 
+		const container = document.createElement("div");
+		container.style.display = "inline-block";
+		container.style.verticalAlign = "top";
+		this.liveC.appendChild(container);
+
 		const frame = document.createElement("div");
 		frame.className = "view-interfaces-frame";
-		this.liveC.appendChild(frame);
+		frame.style.marginRight = "8px";
+		frame.style.marginBottom = "8px";
+		container.appendChild(frame);
+
+		const legend = document.createElement("div");
+		legend.style.display = "none";
+		legend.style.verticalAlign = "top";
+		legend.style.backgroundColor = "var(--clr-pane)";
+		legend.style.width = "150px";
+		legend.style.borderRadius = "4px";
+		legend.style.overflowY = "auto";
+		this.liveC.appendChild(legend);
 
 		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
@@ -964,6 +980,8 @@ class DeviceView extends View {
 		modeMenu.className = "view-interfaces-mode-menu";
 		modeBox.appendChild(modeMenu);
 
+		setTimeout(()=> {legend.style.height = `${frame.clientHeight}px`;}, 100);
+
 		const modesLocal = ["Speed", "VLAN ID"];
 		const modesLive = ["Speed", "VLAN ID", "Status", "Traffic", "Errors"];
 
@@ -975,6 +993,7 @@ class DeviceView extends View {
 					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
 					}
+					this.BuildLegend(event.target.textContent, this.switchInfo.speed, legend);
 					break;
 
 				case "VLAN ID":
@@ -982,16 +1001,18 @@ class DeviceView extends View {
 					for (let i=0; i<list.length && i<this.switchInfo.untagged.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo.untagged[i] ?? null);
 					}
+					this.BuildLegend(event.target.textContent, this.switchInfo.untagged, legend);
 					break;
 
 				case "Status":
 					this.switchMode = 2;
-					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
+					for (let i=0; i<list.length && i<this.switchInfo.status.length; i++) {
 						list[i].iconElement.style.backgroundColor = {
 							1:"rgb(32,240,32)",
 							3:"rgb(0,128,240)"
 						}[this.switchInfo.status[i]] ?? "rgb(32,32,32)";
 					}
+					this.BuildLegend(event.target.textContent, this.switchInfo.status, legend);
 					break;
 
 				case "Traffic":
@@ -1000,6 +1021,7 @@ class DeviceView extends View {
 					for (let i=0; i<list.length && i<this.switchInfo.data.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${63+192*this.switchInfo.data[i]/maxTraffic},32)`;
 					}
+					this.BuildLegend(event.target.textContent, this.switchInfo.data, legend);
 					break;
 
 				case "Errors":
@@ -1008,6 +1030,7 @@ class DeviceView extends View {
 					for (let i=0; i<list.length && i<this.switchInfo.error.length; i++) {
 						list[i].iconElement.style.backgroundColor = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${63+192*this.switchInfo.error[i]/maxError},32,32)`;
 					}
+					this.BuildLegend(event.target.textContent, this.switchInfo.error, legend);
 					break;
 				}
 			}
@@ -1016,13 +1039,19 @@ class DeviceView extends View {
 				case "Speed":
 					this.switchMode = 0;
 					list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed));
+					this.BuildLegend(event.target.textContent, list.map(o=>o.speed), legend);
 					break;
 
 				case "VLAN ID":
 					this.switchMode = 1;
 					list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged));
+					this.BuildLegend(event.target.textContent, list.map(o=>o.untagged), legend);
 					break;
 				}
+			}
+
+			if (this.switchMode > -1) {
+				legend.style.display = "inline-block";
 			}
 		};
 
@@ -1055,6 +1084,61 @@ class DeviceView extends View {
 				ModeToggle({target:{textContent:(this.switchInfo.success ? modesLive : modesLocal)[this.switchMode]}});
 			}
 		};
+	}
+
+	BuildLegend(type, list, legend) {
+		legend.textContent = "";
+
+		for (let i=0; i<list.length; i++) {
+
+		}
+
+		switch (type) {
+		case "Speed":
+			break;
+
+		case "VLAN ID":
+			break;
+
+		case "Status":
+			legend.appendChild(this.CreateLegendElement("rgb(0,128,240)", "Testing"));
+			legend.appendChild(this.CreateLegendElement("rgb(32,240,32)", "Up"));
+			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "Down"));
+			break;
+
+		case "Traffic":
+			break;
+
+		case "Errors":
+			break;
+		}
+	}
+
+	CreateLegendElement(color, text) {
+		const element = document.createElement("div");
+		element.style.height = "20px";
+
+		const colorBox = document.createElement("div");
+		colorBox.style.display = "inline-block";
+		colorBox.style.margin = "2px 2px 2px 6px";
+		colorBox.style.width = "12px";
+		colorBox.style.height = "12px";
+		colorBox.style.borderRadius = "2px";
+		colorBox.style.backgroundColor = color;
+		element.appendChild(colorBox);
+
+		const textBox = document.createElement("div");
+		textBox.style.display = "inline-block";
+		textBox.style.color = "var(--clr-dark)";
+		textBox.style.fontSize = "small";
+		textBox.style.paddingLeft = "2px";
+		textBox.style.width = "120px";
+		textBox.style.overflow = "hidden";
+		textBox.style.textOverflow = "ellipses";
+		textBox.textContent = text;
+		element.appendChild(textBox);
+
+		return element;
 	}
 
 	async InitializeLiveStats() {
