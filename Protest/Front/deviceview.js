@@ -759,6 +759,7 @@ class DeviceView extends View {
 
 	InitializeInterfaces() {
 		this.liveC.textContent = "";
+		this.liveC.style.overflow = "auto";
 
 		if (!(".interfaces" in this.link)) return;
 		let obj;
@@ -787,7 +788,7 @@ class DeviceView extends View {
 		legend.style.display = "none";
 		legend.style.verticalAlign = "top";
 		legend.style.backgroundColor = "var(--clr-pane)";
-		legend.style.width = "150px";
+		legend.style.width = "168px";
 		legend.style.borderRadius = "4px";
 		legend.style.overflowY = "auto";
 		this.liveC.appendChild(legend);
@@ -980,7 +981,7 @@ class DeviceView extends View {
 		modeMenu.className = "view-interfaces-mode-menu";
 		modeBox.appendChild(modeMenu);
 
-		setTimeout(()=> {legend.style.height = `${frame.clientHeight}px`;}, 100);
+		setTimeout(()=> {legend.style.maxHeight = `${frame.clientHeight}px`;}, 100);
 
 		const modesLocal = ["Speed", "VLAN ID"];
 		const modesLive = ["Speed", "VLAN ID", "Status", "Traffic", "Errors"];
@@ -1089,33 +1090,92 @@ class DeviceView extends View {
 	BuildLegend(type, list, legend) {
 		legend.textContent = "";
 
+		let hashmap = {};
 		for (let i=0; i<list.length; i++) {
-
+			if (list[i] in hashmap) continue;
+			hashmap[list[i]] = true;
 		}
 
 		switch (type) {
-		case "Speed":
+		case "Speed": {
+			const values = ["10 Mbps", "100 Mbps", "1 Gbps", "2.5 Gbps", "5 Gbps", "10 Gbps", "25 Gbps", "40 Gbps","100 Gbps", "200 Gbps", "400 Gbps", "800 Gbps"];
+			for (let i=0; i<values.length; i++) {
+				if (values[i] in hashmap) {
+					legend.appendChild(this.CreateLegendElement(this.GetSpeedColor(values[i]), values[i]));
+				}
+			}
 			break;
-
-		case "VLAN ID":
+		}
+		case "VLAN ID": {
+			const values = Object.keys(hashmap).sort();
+			for (let i=0; i<values.length; i++) {
+				if (values[i] == "") continue;
+				if (values[i] in hashmap) {
+					legend.appendChild(this.CreateLegendElement(this.GetVlanColor(values[i]), values[i]));
+				}
+			}
 			break;
-
-		case "Status":
+		}
+		case "Status": {
 			legend.appendChild(this.CreateLegendElement("rgb(0,128,240)", "Testing"));
 			legend.appendChild(this.CreateLegendElement("rgb(32,240,32)", "Up"));
 			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "Down"));
 			break;
+		}
+		case "Traffic": {
+			const values = Object.keys(hashmap).filter(o=>o>0).sort();
+			
+			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "0 bytes"));
+			if (values.length === 0) break;
 
-		case "Traffic":
-			break;
+			const min = Math.min(...values.filter(o=>o>0));
+			if (values.length === 1) {
+				legend.appendChild(this.CreateLegendElement("rgb(32,255,32)", UI.SizeToString(min)));
+				break;
+			}
 
-		case "Errors":
+			const max = Math.max(...values);
+
+			legend.appendChild(this.CreateLegendElement("rgb(32,64,32)", UI.SizeToString(min)));
+
+			if (values.length > 2) {
+				const mid = values[Math.floor(values.length/2)];
+				legend.appendChild(this.CreateLegendElement(`rgb(32,${63+192*mid/max},32)`, UI.SizeToString(mid)));
+			}
+
+			legend.appendChild(this.CreateLegendElement("rgb(32,255,32)", UI.SizeToString(max)));
 			break;
+		}
+		case "Errors": {
+			const values = Object.keys(hashmap).filter(o=>o>0).sort();
+			
+			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "0 errors"));
+			if (values.length === 0) break;
+
+			const min = Math.min(...values);
+			if (values.length === 1) {
+				legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${min} errors`));
+				break;
+			}
+
+			const max = Math.max(...values);
+
+			legend.appendChild(this.CreateLegendElement("rgb(64,32,32)", `${min} errors`));
+
+			if (values.length > 2) {
+				const mid = values[Math.floor(values.length/2)];
+				legend.appendChild(this.CreateLegendElement(`rgb(${63+192*mid/max},32,32)`, `${mid} errors`));
+			}
+
+			legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${max} errors`));
+			break;
+		}
 		}
 	}
 
 	CreateLegendElement(color, text) {
 		const element = document.createElement("div");
+		element.style.overflow = "hidden";
 		element.style.height = "20px";
 
 		const colorBox = document.createElement("div");
