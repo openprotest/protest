@@ -1079,25 +1079,25 @@ class DeviceView extends View {
 				let luminance;
 				if (colorAttribute.startsWith("#")) {
 					let r, g, b;
-					if (colorAttribute.length == 4) {
-						r = Number(`0x${colorAttribute.substring(1,2)}`);
-						g = Number(`0x${colorAttribute.substring(2,3)}`);
-						b = Number(`0x${colorAttribute.substring(3,4)}`);
+					if (colorAttribute.length === 4) {
+						r = Number(`0x${colorAttribute.substring(1,2)}${colorAttribute.substring(1,2)}`);
+						g = Number(`0x${colorAttribute.substring(2,3)}${colorAttribute.substring(2,3)}`);
+						b = Number(`0x${colorAttribute.substring(3,4)}${colorAttribute.substring(3,4)}`);
 					}
-					else if (colorAttribute.length == 7) {
+					else if (colorAttribute.length === 7) {
 						r = Number(`0x${colorAttribute.substring(1,3)}`);
 						g = Number(`0x${colorAttribute.substring(3,5)}`);
 						b = Number(`0x${colorAttribute.substring(5,7)}`);
 					}
-					luminance = .2126 * r + .7152 * g + .0722 * b;
+					luminance = .212*r + .715*g + .073*b;
 				}
 				else if (colorAttribute.startsWith("rgb")) {
 					const rgb = colorAttribute.replace("rgba(").replace("rgb(","").replace(")","").split(",").map(o=>parseInt(o.trim()));
-					luminance = .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+					luminance = .212*rgb[0] + .715*rgb[1] + .073*rgb[2];
 				}
 				else if (colorAttribute.startsWith("hsl")) {
 					const hsl = colorAttribute.replace("hsl(","").replace(")","").replace("%","").split(",").map(o=>parseInt(o.trim()));
-					luminance = hsl[2] * 2.55;
+					luminance = hsl[2]*2.55;
 				}
 				
 				list[i].iconElement.parentElement.style.filter = luminance > 72
@@ -1115,7 +1115,7 @@ class DeviceView extends View {
 		let modeBoxFocused = false;
 		modeBox.onfocus = ()=> setTimeout(()=>{modeBoxFocused = true;}, 100);
 
-		modeBox.onblur = ()=> { modeBoxFocused = false };
+		modeBox.onblur = ()=> {modeBoxFocused = false;};
 		
 		modeBox.onclick = ()=> {
 			const modes = this.switchInfo.success ? modesLive : modesLocal;
@@ -1165,7 +1165,7 @@ class DeviceView extends View {
 			for (let i=0; i<values.length; i++) {
 				if (values[i] == "") continue;
 				if (values[i] in hashmap) {
-					legend.appendChild(this.CreateLegendElement(this.GetVlanColor(values[i]), values[i]));
+					legend.appendChild(this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`));
 				}
 			}
 			break;
@@ -3497,7 +3497,7 @@ class DeviceView extends View {
 			}
 		}
 
-		const size = 32;
+		const size = columns > 24 ? 28 : 32;
 		frame.style.maxWidth = `${columns * size + 22}px`;
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
 		frame.style.gridTemplateRows = `repeat(${rows}, 44px)`;
@@ -3524,6 +3524,8 @@ class DeviceView extends View {
 	}
 
 	GetVlanColor(vlan) {
+		if (!vlan || vlan === "") return null;
+
 		for (let i=0; i<KEEP.zones.length; i++) {
 			if (KEEP.zones[i].vlan == vlan) {
 				return KEEP.zones[i].color;
