@@ -1155,7 +1155,7 @@ class DeviceView extends View {
 
 			const min = Math.min(...values);
 			if (values.length === 1) {
-				legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${min} errors`));
+				legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${min} error${min==0 ?"":"s"}`));
 				break;
 			}
 
