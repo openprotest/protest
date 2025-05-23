@@ -1021,7 +1021,7 @@ class DeviceView extends View {
 					this.switchMode = 3;
 					const maxTraffic = this.switchInfo.data.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.data.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${63+192*this.switchInfo.data[i]/maxTraffic},32)`;
+						list[i].iconElement.style.backgroundColor = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${71+184*this.switchInfo.data[i]/maxTraffic},32)`;
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.data, legend);
 					break;
@@ -1030,7 +1030,7 @@ class DeviceView extends View {
 					this.switchMode = 4;
 					const maxError = this.switchInfo.error.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.error.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${63+192*this.switchInfo.error[i]/maxError},32,32)`;
+						list[i].iconElement.style.backgroundColor = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${71+184*this.switchInfo.error[i]/maxError},32,32)`;
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.error, legend);
 					break;
@@ -1137,11 +1137,11 @@ class DeviceView extends View {
 
 			const max = Math.max(...values);
 
-			legend.appendChild(this.CreateLegendElement("rgb(32,64,32)", UI.SizeToString(min)));
+			legend.appendChild(this.CreateLegendElement("rgb(32,72,32)", UI.SizeToString(min)));
 
 			if (values.length > 2) {
 				const mid = values[Math.floor(values.length/2)];
-				legend.appendChild(this.CreateLegendElement(`rgb(32,${63+192*mid/max},32)`, UI.SizeToString(mid)));
+				legend.appendChild(this.CreateLegendElement(`rgb(32,${71+184*mid/max},32)`, UI.SizeToString(mid)));
 			}
 
 			legend.appendChild(this.CreateLegendElement("rgb(32,255,32)", UI.SizeToString(max)));
@@ -1161,11 +1161,11 @@ class DeviceView extends View {
 
 			const max = Math.max(...values);
 
-			legend.appendChild(this.CreateLegendElement("rgb(64,32,32)", `${min} error${min==1 ?"":"s"}`));
+			legend.appendChild(this.CreateLegendElement("rgb(72,32,32)", `${min} error${min==1 ?"":"s"}`));
 
 			if (values.length > 2) {
 				const mid = values[Math.floor(values.length/2)];
-				legend.appendChild(this.CreateLegendElement(`rgb(${63+192*mid/max},32,32)`, `${mid} error${mid==1 ?"":"s"}`));
+				legend.appendChild(this.CreateLegendElement(`rgb(${71+184*mid/max},32,32)`, `${mid} error${mid==1 ?"":"s"}`));
 			}
 
 			legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${max} errors`));
