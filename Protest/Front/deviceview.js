@@ -1155,17 +1155,17 @@ class DeviceView extends View {
 
 			const min = Math.min(...values);
 			if (values.length === 1) {
-				legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${min} error${min==0 ?"":"s"}`));
+				legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${min} error${min==1 ?"":"s"}`));
 				break;
 			}
 
 			const max = Math.max(...values);
 
-			legend.appendChild(this.CreateLegendElement("rgb(64,32,32)", `${min} errors`));
+			legend.appendChild(this.CreateLegendElement("rgb(64,32,32)", `${min} error${min==1 ?"":"s"}`));
 
 			if (values.length > 2) {
 				const mid = values[Math.floor(values.length/2)];
-				legend.appendChild(this.CreateLegendElement(`rgb(${63+192*mid/max},32,32)`, `${mid} errors`));
+				legend.appendChild(this.CreateLegendElement(`rgb(${63+192*mid/max},32,32)`, `${mid} error${mid==1 ?"":"s"}`));
 			}
 
 			legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${max} errors`));
