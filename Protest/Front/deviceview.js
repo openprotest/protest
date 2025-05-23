@@ -788,9 +788,10 @@ class DeviceView extends View {
 		legend.style.display = "none";
 		legend.style.verticalAlign = "top";
 		legend.style.backgroundColor = "var(--clr-pane)";
-		legend.style.width = "168px";
+		legend.style.width = "150px";
 		legend.style.borderRadius = "4px";
 		legend.style.overflowY = "auto";
+		legend.style.padding = "2px 0";
 		this.liveC.appendChild(legend);
 
 		let numbering = obj.n ? obj.n : "vertical";
@@ -1174,6 +1175,8 @@ class DeviceView extends View {
 	}
 
 	CreateLegendElement(color, text) {
+		if (!color) color = "#202020";
+
 		const element = document.createElement("div");
 		element.style.overflow = "hidden";
 		element.style.height = "20px";
@@ -1181,8 +1184,9 @@ class DeviceView extends View {
 		const colorBox = document.createElement("div");
 		colorBox.style.display = "inline-block";
 		colorBox.style.margin = "2px 2px 2px 6px";
-		colorBox.style.width = "12px";
-		colorBox.style.height = "12px";
+		colorBox.style.width = "10px";
+		colorBox.style.height = "10px";
+		colorBox.style.border = "1px solid var(--clr-dark)";
 		colorBox.style.borderRadius = "2px";
 		colorBox.style.backgroundColor = color;
 		element.appendChild(colorBox);
@@ -1192,7 +1196,7 @@ class DeviceView extends View {
 		textBox.style.color = "var(--clr-dark)";
 		textBox.style.fontSize = "small";
 		textBox.style.paddingLeft = "2px";
-		textBox.style.width = "120px";
+		textBox.style.width = "100px";
 		textBox.style.overflow = "hidden";
 		textBox.style.textOverflow = "ellipses";
 		textBox.textContent = text;
