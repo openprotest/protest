@@ -1108,7 +1108,9 @@ class DeviceView extends View {
 			break;
 		}
 		case "VLAN ID": {
-			const values = Object.keys(hashmap).map(o=>parseInt(o)).sort();
+			const values = Object.keys(hashmap).map(o=>parseInt(o)).sort((a,b)=> a-b);
+			console.log(values);
+
 			for (let i=0; i<values.length; i++) {
 				if (values[i] == "") continue;
 				if (values[i] in hashmap) {
