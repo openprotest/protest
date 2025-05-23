@@ -1011,7 +1011,7 @@ class DeviceView extends View {
 					for (let i=0; i<list.length && i<this.switchInfo.status.length; i++) {
 						list[i].iconElement.style.backgroundColor = {
 							1:"rgb(32,240,32)",
-							3:"rgb(0,128,240)"
+							3:"rgb(32,128,240)"
 						}[this.switchInfo.status[i]] ?? "rgb(32,32,32)";
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.status, legend);
@@ -1108,7 +1108,7 @@ class DeviceView extends View {
 			break;
 		}
 		case "VLAN ID": {
-			const values = Object.keys(hashmap).sort();
+			const values = Object.keys(hashmap).map(o=>parseInt(o)).sort();
 			for (let i=0; i<values.length; i++) {
 				if (values[i] == "") continue;
 				if (values[i] in hashmap) {
@@ -1118,7 +1118,7 @@ class DeviceView extends View {
 			break;
 		}
 		case "Status": {
-			legend.appendChild(this.CreateLegendElement("rgb(0,128,240)", "Testing"));
+			legend.appendChild(this.CreateLegendElement("rgb(32,128,240)", "Testing"));
 			legend.appendChild(this.CreateLegendElement("rgb(32,240,32)", "Up"));
 			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "Down"));
 			break;

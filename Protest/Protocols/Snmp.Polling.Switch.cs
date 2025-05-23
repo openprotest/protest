@@ -88,6 +88,8 @@ internal static partial class Polling {
                 }
             }
 
+            if (interfaces is null) return "{\"error\":\"Failed to fetch interfaces\"}"u8.ToArray();
+
             foreach (KeyValuePair<string, string> pair in interfaces) {
                 int index = int.Parse(pair.Key.Split('.').Last());
 
