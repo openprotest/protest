@@ -32,7 +32,7 @@ internal static partial class Polling {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (!IPAddress.TryParse(_ip.value, out IPAddress _ipAddress)) { 
+        if (!IPAddress.TryParse(_ip.value, out IPAddress _ipAddress)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

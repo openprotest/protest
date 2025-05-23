@@ -802,10 +802,12 @@ class DeviceView extends View {
 			frontElement.className = "view-interface-port";
 			frame.appendChild(frontElement);
 
+			const iconContainerElement = document.createElement("div");
+			frontElement.appendChild(iconContainerElement);
+
 			const iconElement = document.createElement("div");
 			iconElement.backgroundColor = "var(--clr-dark)";
-			iconElement.style.transitionDelay = `${i*.005}s`;
-
+			iconElement.style.transitionDelay = `${i*.004}s`;
 			switch (obj.i[i].i) {
 			case "Ethernet": iconElement.style.maskImage = "url(mono/ethernetport.svg)"; break;
 			case "SFP"     : iconElement.style.maskImage = "url(mono/sfpport.svg)"; break;
@@ -814,7 +816,7 @@ class DeviceView extends View {
 			case "USB"     : iconElement.style.maskImage = "url(mono/usbport.svg)"; break;
 			case "Serial"  : iconElement.style.maskImage = "url(mono/serialport.svg)"; break;
 			}
-			frontElement.appendChild(iconElement);
+			iconContainerElement.appendChild(iconElement);
 
 			const numElement = document.createElement("div");
 			numElement.textContent = obj.i[i].n ? obj.i[i].n : frame.childNodes.length;
@@ -993,7 +995,9 @@ class DeviceView extends View {
 				case "Speed":
 					this.switchMode = 0;
 					for (let i=0; i<list.length && i<this.switchInfo.speed.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
+						const color = this.GetSpeedColor(this.switchInfo.speed[i] ?? null);
+						list[i].iconElement.style.backgroundColor = color;
+						list[i].iconElement.setAttribute("c", color);
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.speed, legend);
 					break;
@@ -1001,7 +1005,9 @@ class DeviceView extends View {
 				case "VLAN ID":
 					this.switchMode = 1;
 					for (let i=0; i<list.length && i<this.switchInfo.untagged.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.GetVlanColor(this.switchInfo.untagged[i] ?? null);
+						const color = this.GetVlanColor(this.switchInfo.untagged[i] ?? null);
+						list[i].iconElement.style.backgroundColor = color;
+						list[i].iconElement.setAttribute("c", color);
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.untagged, legend);
 					break;
@@ -1009,10 +1015,12 @@ class DeviceView extends View {
 				case "Status":
 					this.switchMode = 2;
 					for (let i=0; i<list.length && i<this.switchInfo.status.length; i++) {
-						list[i].iconElement.style.backgroundColor = {
+						const color = {
 							1:"rgb(32,240,32)",
 							3:"rgb(32,128,240)"
 						}[this.switchInfo.status[i]] ?? "rgb(32,32,32)";
+						list[i].iconElement.style.backgroundColor = color;
+						list[i].iconElement.setAttribute("c", color);
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.status, legend);
 					break;
@@ -1021,7 +1029,9 @@ class DeviceView extends View {
 					this.switchMode = 3;
 					const maxTraffic = this.switchInfo.data.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.data.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${71+184*this.switchInfo.data[i]/maxTraffic},32)`;
+						const color = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${71+184*this.switchInfo.data[i]/maxTraffic},32)`;
+						list[i].iconElement.style.backgroundColor = color;
+						list[i].iconElement.setAttribute("c", color);
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.data, legend);
 					break;
@@ -1030,7 +1040,9 @@ class DeviceView extends View {
 					this.switchMode = 4;
 					const maxError = this.switchInfo.error.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.error.length; i++) {
-						list[i].iconElement.style.backgroundColor = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${71+184*this.switchInfo.error[i]/maxError},32,32)`;
+						const color = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${71+184*this.switchInfo.error[i]/maxError},32,32)`;
+						list[i].iconElement.style.backgroundColor = color;
+						list[i].iconElement.setAttribute("c", color);
 					}
 					this.BuildLegend(event.target.textContent, this.switchInfo.error, legend);
 					break;
@@ -1040,16 +1052,57 @@ class DeviceView extends View {
 				switch (event.target.textContent) {
 				case "Speed":
 					this.switchMode = 0;
-					list.forEach(o=> o.iconElement.style.backgroundColor = this.GetSpeedColor(o.speed));
+					list.forEach(o=> {
+						const color = this.GetSpeedColor(o.speed);
+						o.iconElement.style.backgroundColor = color;
+						o.iconElement.setAttribute("c", color);
+					});
 					this.BuildLegend(event.target.textContent, list.map(o=>o.speed), legend);
 					break;
 
 				case "VLAN ID":
 					this.switchMode = 1;
-					list.forEach(o=> o.iconElement.style.backgroundColor = this.GetVlanColor(o.untagged));
+					list.forEach(o=> {
+						const color = this.GetVlanColor(o.untagged);
+						o.iconElement.style.backgroundColor = color;
+						o.iconElement.setAttribute("c", color);
+					});
 					this.BuildLegend(event.target.textContent, list.map(o=>o.untagged), legend);
 					break;
 				}
+			}
+			
+			for (let i=0; i<list.length; i++) {
+				const colorAttribute = list[i].iconElement.getAttribute("c");
+				if (!colorAttribute) continue;
+				
+				let luminance;
+				if (colorAttribute.startsWith("#")) {
+					let r, g, b;
+					if (colorAttribute.length == 4) {
+						r = Number(`0x${colorAttribute.substring(1,2)}`);
+						g = Number(`0x${colorAttribute.substring(2,3)}`);
+						b = Number(`0x${colorAttribute.substring(3,4)}`);
+					}
+					else if (colorAttribute.length == 7) {
+						r = Number(`0x${colorAttribute.substring(1,3)}`);
+						g = Number(`0x${colorAttribute.substring(3,5)}`);
+						b = Number(`0x${colorAttribute.substring(5,7)}`);
+					}
+					luminance = .2126 * r + .7152 * g + .0722 * b;
+				}
+				else if (colorAttribute.startsWith("rgb")) {
+					const rgb = colorAttribute.replace("rgba(").replace("rgb(","").replace(")","").split(",").map(o=>parseInt(o.trim()));
+					luminance = .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+				}
+				else if (colorAttribute.startsWith("hsl")) {
+					const hsl = colorAttribute.replace("hsl(","").replace(")","").replace("%","").split(",").map(o=>parseInt(o.trim()));
+					luminance = hsl[2] * 2.55;
+				}
+				
+				list[i].iconElement.parentElement.style.filter = luminance > 72
+					? "drop-shadow(var(--clr-dark) 1px 0 0) drop-shadow(var(--clr-dark) 0 1px 0) drop-shadow(var(--clr-dark) -1px 0 0) drop-shadow(var(--clr-dark) 0 -1px 0)"
+					: "none";
 			}
 
 			if (this.switchMode > -1) {
@@ -1109,8 +1162,6 @@ class DeviceView extends View {
 		}
 		case "VLAN ID": {
 			const values = Object.keys(hashmap).map(o=>parseInt(o)).sort((a,b)=> a-b);
-			console.log(values);
-
 			for (let i=0; i<values.length; i++) {
 				if (values[i] == "") continue;
 				if (values[i] in hashmap) {
@@ -2832,8 +2883,11 @@ class DeviceView extends View {
 			frontElement.style.gridArea = `1 / ${frame.childNodes.length+1}`;
 			frame.appendChild(frontElement);
 
+			const iconContainer = document.createElement("div");
+			frontElement.appendChild(iconContainer);
+
 			const icon = document.createElement("div");
-			frontElement.appendChild(icon);
+			iconContainer.appendChild(icon);
 
 			const numElement = document.createElement("div");
 			numElement.textContent = number ? number : frame.childNodes.length;

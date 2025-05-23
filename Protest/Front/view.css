@@ -425,6 +425,10 @@ button.view-live-button:active {
 .view-interface-port > div:nth-child(1) {
 	width: 100%;
 	height: 100%;
+}
+.view-interface-port > div > div:nth-child(1) {
+	width: 100%;
+	height: 100%;
 	background-color: var(--clr-dark);
 	mask-image: url(res/ethernetport.svgz);
 	mask-size: contain;
