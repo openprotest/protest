@@ -72,20 +72,20 @@ class LocateIp extends Console {
 		}
 		else if (ipaddr.indexOf("/", 0) > -1) {
 			let cidr = parseInt(ipaddr.split("/")[1].trim());
-			if (isNaN(cidr)) return;
+			if (isNaN(cidr) || cidr < 16 || cidr > 32) return;
 
 			let ip = ipaddr.split("/")[0].trim();
 			let ipBytes = ip.split(".");
 			if (ipBytes.length != 4) return;
 
 			ipBytes = ipBytes.map(o=> parseInt(o));
-			
-			let bits = "1".repeat(Math.min(32, Math.max(16, cidr))).padEnd(32, "0");
+
+			let bits = "1".repeat(cidr).padEnd(32, "0");
 			let mask = [];
-			mask.push(parseInt(bits.substr(0, 8), 2));
-			mask.push(parseInt(bits.substr(8, 8), 2));
-			mask.push(parseInt(bits.substr(16, 8), 2));
-			mask.push(parseInt(bits.substr(24, 8), 2));
+			mask.push(parseInt(bits.slice(0, 8), 2));
+			mask.push(parseInt(bits.slice(8, 16), 2));
+			mask.push(parseInt(bits.slice(16, 24), 2));
+			mask.push(parseInt(bits.slice(24, 32), 2));
 
 			let net = [], broadcast = [];
 			for (let i = 0; i < 4; i++) {

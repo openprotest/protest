@@ -89,7 +89,7 @@ class TraceRoute extends Console {
 		}
 		else if (hostname.indexOf("/", 0) > -1) {
 			let cidr = parseInt(hostname.split("/")[1].trim());
-			if (isNaN(cidr)) return;
+			if (isNaN(cidr) || cidr < 16 || cidr > 32) return;
 
 			let ip = hostname.split("/")[0].trim();
 			let ipBytes = ip.split(".");
@@ -97,7 +97,7 @@ class TraceRoute extends Console {
 
 			ipBytes = ipBytes.map(o=> parseInt(o));
 
-			let bits = "1".repeat(cidr).padEnd(Math.min(32, Math.max(16, cidr)), "0");
+			let bits = "1".repeat(cidr).padEnd(32, "0");
 			let mask = [];
 			mask.push(parseInt(bits.slice(0, 8), 2));
 			mask.push(parseInt(bits.slice(8, 8), 2));
