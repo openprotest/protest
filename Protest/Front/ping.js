@@ -15,6 +15,9 @@ class Ping extends Console {
 			status: "play"
 		};
 
+		if (this.args.interval < 1) this.args.interval = 1;
+		if (this.args.interval > 5000) this.args.interval = 5000;
+
 		this.AddCssDependencies("tools.css");
 
 		this.count = 0;
