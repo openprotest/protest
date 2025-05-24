@@ -345,10 +345,7 @@ class PortScan extends Console {
 
 			ipBytes = ipBytes.map(o=> parseInt(o));
 
-			if (cidr < 16) cidr = 16;
-			if (cidr > 32) cidr = 32;
-
-			let bits = "1".repeat(cidr).padEnd(32, "0");
+			let bits = "1".repeat(Math.min(32, Math.max(16, cidr))).padEnd(32, "0");
 			let mask = [];
 			mask.push(parseInt(bits.substr(0, 8), 2));
 			mask.push(parseInt(bits.substr(8, 8), 2));
@@ -369,6 +366,8 @@ class PortScan extends Console {
 	}
 
 	Add(hostname) {
+		if (hostname === "__proto__") return;
+
 		if (hostname in this.hashtable) {
 			this.list.appendChild(this.hashtable[hostname].element);
 			return;
@@ -443,6 +442,8 @@ class PortScan extends Console {
 	}
 
 	Remove(hostname) {
+		if (hostname === "__proto__") return;
+
 		if (!(hostname in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[hostname].element);
 		delete this.hashtable[hostname];

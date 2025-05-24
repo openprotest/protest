@@ -618,10 +618,7 @@ class Ping extends Console {
 
 			ipBytes = ipBytes.map(o=> parseInt(o));
 
-			if (cidr < 16) cidr = 16;
-			if (cidr > 32) cidr = 32;
-
-			let bits = "1".repeat(cidr).padEnd(32, "0");
+			let bits = "1".repeat(Math.min(32, Math.max(16, cidr))).padEnd(32, "0");
 			let mask = [];
 			mask.push(parseInt(bits.slice(0, 8), 2));
 			mask.push(parseInt(bits.slice(8, 16), 2));
