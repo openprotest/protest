@@ -1016,8 +1016,8 @@ class DeviceView extends View {
 					this.switchMode = 2;
 					for (let i=0; i<list.length && i<this.switchInfo.status.length; i++) {
 						const color = {
-							1:"rgb(32,240,32)",
-							3:"rgb(32,128,240)"
+							1:"rgb(96,192,32)",
+							3:"rgb(36,176,244)"
 						}[this.switchInfo.status[i]] ?? "rgb(32,32,32)";
 						list[i].iconElement.style.backgroundColor = color;
 						list[i].iconElement.setAttribute("c", color);
@@ -1171,8 +1171,8 @@ class DeviceView extends View {
 			break;
 		}
 		case "Status": {
-			legend.appendChild(this.CreateLegendElement("rgb(32,128,240)", "Testing"));
-			legend.appendChild(this.CreateLegendElement("rgb(32,240,32)", "Up"));
+			legend.appendChild(this.CreateLegendElement("rgb(36,176,244)", "Testing"));
+			legend.appendChild(this.CreateLegendElement("rgb(96,192,32)", "Up"));
 			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "Down"));
 			break;
 		}
