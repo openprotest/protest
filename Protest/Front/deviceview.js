@@ -1096,7 +1096,7 @@ class DeviceView extends View {
 					luminance = .212*rgb[0] + .715*rgb[1] + .073*rgb[2];
 				}
 				else if (colorAttribute.startsWith("hsl")) {
-					const hsl = colorAttribute.replace("hsl(","").replace(")","").replace("%","").split(",").map(o=>parseInt(o.trim()));
+					const hsl = colorAttribute.replace("hsl(","").replace(")","").replaceAll("%","").split(",").map(o=>parseInt(o.trim()));
 					luminance = hsl[2]*2.55;
 				}
 				

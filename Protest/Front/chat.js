@@ -623,7 +623,7 @@ class Chat extends Window {
 
 		let nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
 
-		const bubble = this.CreateTextBubble(this.input.innerHTML, "out", KEEP.username, "", KEEP.color, nowString, id);
+		const bubble = this.CreateTextBubble(this.input.textContent, "out", KEEP.username, "", KEEP.color, nowString, id);
 		bubble.style.color = "var(--clr-pane)";
 		bubble.style.backgroundColor = "transparent";
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
@@ -768,8 +768,10 @@ class Chat extends Window {
 	CreateTextBubble(text, direction, sender, alias, color, time, id=null) {
 		if (text.length === 0) return;
 
+		//TODO: sanitize text and handle links, images, etc
+
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
-		bubble.innerHTML = text;
+		bubble.textContent = text;
 
 		if (direction === "out") {
 			if (id && !(id in this.outdoing)) {
