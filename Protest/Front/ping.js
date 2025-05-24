@@ -618,6 +618,9 @@ class Ping extends Console {
 
 			ipBytes = ipBytes.map(o=> parseInt(o));
 
+			if (cidr < 16) cidr = 16;
+			if (cidr > 32) cidr = 32;
+
 			let bits = "1".repeat(cidr).padEnd(32, "0");
 			let mask = [];
 			mask.push(parseInt(bits.slice(0, 8), 2));
@@ -867,7 +870,7 @@ class Ping extends Console {
 				if (this.request.length > 0 && !this.isClosed && this.ws != null && this.ws.readyState === 1) {
 					this.ws.send("ping=*");
 				}
-			}, this.args.interval);
+			}, Math.min(this.args.interval, 5000));
 		};
 
 		this.ws.onerror = error=> {
