@@ -36,8 +36,8 @@ class List extends Window {
 		this.counter.className = "list-counter";
 		this.content.appendChild(this.counter);
 
-		this.content.tabIndex = 0;
-		this.defaultElement = this.content;
+		this.list.tabIndex = 0;
+		this.defaultElement = this.list;
 
 		this.win.addEventListener("mouseup", event=> { this.List_mouseup(event); });
 		this.win.addEventListener("mousemove", event=> { this.List_mousemove(event); });
@@ -66,15 +66,20 @@ class List extends Window {
 					if (id) this.args.select = id;
 				}
 			}
-			else if (event.code === "ArrowDown" && this.selected) {
-				const nextElement = this.selected.nextElementSibling;
+			else if (event.code === "ArrowDown") {
+				const nextElement = this.selected
+					? this.selected.nextElementSibling
+					: this.list.firstChild;
+
 				if (nextElement) {
-					const selectedIcon = this.selected.querySelector(".list-element-icon");
-					if (selectedIcon) {
-						selectedIcon.style.backgroundColor = "";
+					if (this.selected) {
+						const selectedIcon = this.selected.querySelector(".list-element-icon");
+						if (selectedIcon) {
+							selectedIcon.style.backgroundColor = "";
+						}
+						this.selected.style.backgroundColor = "";
 					}
 
-					this.selected.style.backgroundColor = "";
 					this.selected = nextElement;
 					this.selected.style.backgroundColor = "var(--clr-select)";
 					this.selected.scrollIntoView({block:"nearest"});
@@ -87,6 +92,8 @@ class List extends Window {
 				this.selected?.ondblclick(event);
 			}
 		});
+
+		requestAnimationFrame(()=> this.list.focus());
 	}
 
 	List_mouseup(event) {
