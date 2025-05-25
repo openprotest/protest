@@ -190,6 +190,8 @@ class DevicesList extends List {
 	}
 
 	Delete() {
+		if (!this.selected) return;
+
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			if (this.args.select === null) return;
 
@@ -217,6 +219,7 @@ class DevicesList extends List {
 					}
 				}
 
+				this.selected = null;
 				this.args.select = null;
 			}
 			catch (ex) {

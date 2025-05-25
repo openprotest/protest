@@ -114,6 +114,24 @@ class List extends Window {
 			this.selected.style.backgroundColor = "var(--clr-select)";
 			this.selected.scrollIntoView({block:"nearest"});
 		}
+
+		else if (event.code === "Home" && this.selected) {
+			const element = Array.from(this.list.childNodes)[0];
+
+			this.selected.style.backgroundColor = "";
+			this.selected = element;
+			this.selected.style.backgroundColor = "var(--clr-select)";
+			this.selected.scrollIntoView({block:"nearest"});
+		}
+		else if (event.code === "End" && this.selected) {
+			const elements = Array.from(this.list.childNodes);
+
+			this.selected.style.backgroundColor = "";
+			this.selected = elements[elements.length - 1];
+			this.selected.style.backgroundColor = "var(--clr-select)";
+			this.selected.scrollIntoView({block:"nearest"});
+		}
+
 		else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
 			this.selected?.ondblclick(event);
 		}
