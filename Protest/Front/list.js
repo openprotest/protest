@@ -39,61 +39,84 @@ class List extends Window {
 		this.list.tabIndex = 0;
 		this.defaultElement = this.list;
 
-		this.win.addEventListener("mouseup", event=> { this.List_mouseup(event); });
-		this.win.addEventListener("mousemove", event=> { this.List_mousemove(event); });
+		this.content.addEventListener("keydown", event=> this.List_keydown(event));
+		this.win.addEventListener("mouseup", event=> this.List_mouseup(event));
+		this.win.addEventListener("mousemove", event=> this.List_mousemove(event));
 
-		this.content.addEventListener("keydown", event=> {
-			if (event.code === "KeyF" && event.ctrlKey) {
-				if (this.findInput) {
-					event.preventDefault();
-					this.findInput.focus();
-				}
+		requestAnimationFrame(()=> this.list.focus());
+	}
+
+	List_keydown(event) {
+		if (event.code === "KeyF" && event.ctrlKey) {
+			if (this.findInput) {
+				event.preventDefault();
+				this.findInput.focus();
 			}
-			else if (event.code === "ArrowUp" && this.selected) {
-				const previousElement = this.selected.previousElementSibling;
-				if (previousElement) {
+		}
+		else if (event.code === "ArrowUp" && this.selected) {
+			const previousElement = this.selected.previousElementSibling;
+			if (previousElement) {
+				const selectedIcon = this.selected.querySelector(".list-element-icon");
+				if (selectedIcon) {
+					selectedIcon.style.backgroundColor = "";
+				}
+
+				this.selected.style.backgroundColor = "";
+				this.selected = previousElement;
+				this.selected.style.backgroundColor = "var(--clr-select)";
+				this.selected.scrollIntoView({block:"nearest"});
+
+				const id = this.selected.getAttribute("id");
+				if (id) this.args.select = id;
+			}
+		}
+		else if (event.code === "ArrowDown") {
+			const nextElement = this.selected
+				? this.selected.nextElementSibling
+				: this.list.firstChild;
+
+			if (nextElement) {
+				if (this.selected) {
 					const selectedIcon = this.selected.querySelector(".list-element-icon");
 					if (selectedIcon) {
 						selectedIcon.style.backgroundColor = "";
 					}
-
 					this.selected.style.backgroundColor = "";
-					this.selected = previousElement;
-					this.selected.style.backgroundColor = "var(--clr-select)";
-					this.selected.scrollIntoView({block:"nearest"});
-
-					const id = this.selected.getAttribute("id");
-					if (id) this.args.select = id;
 				}
+
+				this.selected = nextElement;
+				this.selected.style.backgroundColor = "var(--clr-select)";
+				this.selected.scrollIntoView({block:"nearest"});
+
+				const id = this.selected.getAttribute("id");
+				if (id) this.args.select = id;
 			}
-			else if (event.code === "ArrowDown") {
-				const nextElement = this.selected
-					? this.selected.nextElementSibling
-					: this.list.firstChild;
+		}
+		else if (event.code === "PageUp" && this.selected) {
+			const elements = Array.from(this.list.childNodes);
+			const index    = elements.indexOf(this.selected);
+			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
+			const previous = Math.max(index - jump, 0);
 
-				if (nextElement) {
-					if (this.selected) {
-						const selectedIcon = this.selected.querySelector(".list-element-icon");
-						if (selectedIcon) {
-							selectedIcon.style.backgroundColor = "";
-						}
-						this.selected.style.backgroundColor = "";
-					}
+			this.selected.style.backgroundColor = "";
+			this.selected = elements[previous];
+			this.selected.style.backgroundColor = "var(--clr-select)";
+			this.selected.scrollIntoView({block:"nearest"});
+		}
+		else if (event.code === "PageDown" && this.selected) {
+			const elements = Array.from(this.list.childNodes);
+			const index    = elements.indexOf(this.selected);
+			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
+			const next     = Math.min(index + jump, elements.length - 1);
 
-					this.selected = nextElement;
-					this.selected.style.backgroundColor = "var(--clr-select)";
-					this.selected.scrollIntoView({block:"nearest"});
-
-					const id = this.selected.getAttribute("id");
-					if (id) this.args.select = id;
-				}
-			}
-			else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
-				this.selected?.ondblclick(event);
-			}
-		});
-
-		requestAnimationFrame(()=> this.list.focus());
+			this.selected.style.backgroundColor = "";
+			this.selected = elements[next];
+			this.selected.style.backgroundColor = "var(--clr-select)";
+			this.selected.scrollIntoView({block:"nearest"});
+		}
+		else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
+			this.selected?.ondblclick(event);
+		}
 	}
 
 	List_mouseup(event) {
