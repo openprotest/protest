@@ -965,8 +965,8 @@ class DeviceView extends View {
 				this.floating.style.visibility = "hidden";
 			};
 
-			frame.onmouseenter = ()=> {this.floating.style.display = "initial";};
-			frame.onmouseleave = ()=> {this.floating.style.display = "none";};
+			frame.onmouseenter = ()=> {this.floating.style.display = "initial"};
+			frame.onmouseleave = ()=> {this.floating.style.display = "none"};
 		}
 
 		const gridSize = this.InitInterfaceComponents(frame, numbering, list);
@@ -984,6 +984,8 @@ class DeviceView extends View {
 		const modeMenu = document.createElement("div");
 		modeMenu.className = "view-interfaces-mode-menu";
 		modeBox.appendChild(modeMenu);
+
+		modeButton.style.backgroundColor = this.switchInfo.success ? "rgb(122, 212, 43)" : "";
 
 		const modesLocal = ["Speed", "Untagged VLAN", "Tagged VLAN"];
 		const modesLive = ["Speed", "Untagged VLAN", "Tagged VLAN", "Status", "Traffic", "Errors"];
@@ -1585,7 +1587,7 @@ class DeviceView extends View {
 				}
 			}
 
-			if (".interfaces" in this.link && this.switchInfo && !this.switchInfo.success) {
+			if (".interfaces" in this.link && !this.switchInfo.success) {
 				this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
 			}
 

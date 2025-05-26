@@ -561,6 +561,11 @@ button.view-live-button:active {
 	border-radius: 2px;
 	padding-left: 4px;
 }
+
+.view-interfaces-mode-box:hover {
+	background-color: var(--clr-control);
+}
+
 .view-interfaces-mode-box::after {
 	display: inline-block;
 	content: "MODE";
@@ -924,7 +929,7 @@ button.view-live-button:active {
 
 @keyframes port-pop {
 	0%   { filter: brightness(1) drop-shadow(#202020 1px 0 0) drop-shadow(#202020 0 1px 0) drop-shadow(#202020 -1px 0 0) drop-shadow(#202020 0 -1px 0); }
-	10%  { filter: brightness(2) drop-shadow(#fff 2px 0 0) drop-shadow(#fff 0 2px 0) drop-shadow(#fff -2px 0 0) drop-shadow(#fff 0 -2px 0); }
-	60%  { filter: brightness(1.5) drop-shadow(#fff 2px 0 0) drop-shadow(#fff 0 2px 0) drop-shadow(#fff -2px 0 0) drop-shadow(#fff 0 -2px 0); }
+	10%  { filter: brightness(2) drop-shadow(#fff 1px 0 0) drop-shadow(#fff 0 1px 0) drop-shadow(#fff -1px 0 0) drop-shadow(#fff 0 -1px 0); }
+	60%  { filter: brightness(1.5) drop-shadow(#fff 1px 0 0) drop-shadow(#fff 0 1px 0) drop-shadow(#fff -1px 0 0) drop-shadow(#fff 0 -1px 0); }
 	100% { filter: brightness(1) drop-shadow(#202020 1px 0 0) drop-shadow(#202020 0 1px 0) drop-shadow(#202020 -1px 0 0) drop-shadow(#202020 0 -1px 0); }
 }
