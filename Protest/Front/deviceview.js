@@ -3507,18 +3507,18 @@ class DeviceView extends View {
 
 	GetSpeedColor(speed) {
 		switch (speed) {
-		case "10 Mbps" : return "hsl(30,100%,50%)";
-		case "100 Mbps": return "hsl(45,100%,50%)";
-		case "1 Gbps"  : return "hsl(65,100%,50%)";
-		case "2.5 Gbps": return "hsl(80,100%,50%)";
-		case "5 Gbps"  : return "hsl(100,100%,50%)";
-		case "10 Gbps" : return "hsl(140,100%,50%)";
-		case "25 Gbps" : return "hsl(170,100%,50%)";
-		case "40 Gbps" : return "hsl(190,100%,50%)";
-		case "100 Gbps": return "hsl(210,100%,50%)";
-		case "200 Gbps": return "hsl(230,100%,50%)";
-		case "400 Gbps": return "hsl(260,100%,50%)";
-		case "800 Gbps": return "hsl(270,100%,50%)";
+		case "10 Mbps" : return "hsl(15,100%,50%)";
+		case "100 Mbps": return "hsl(30,100%,50%)";
+		case "1 Gbps"  : return "hsl(50,100%,50%)";
+		case "2.5 Gbps": return "hsl(70,100%,50%)";
+		case "5 Gbps"  : return "hsl(80,100%,50%)";
+		case "10 Gbps" : return "hsl(130,100%,50%)";
+		case "25 Gbps" : return "hsl(180,100%,50%)";
+		case "40 Gbps" : return "hsl(200,100%,53%)";
+		case "100 Gbps": return "hsl(230,100%,59%)";
+		case "200 Gbps": return "hsl(255,100%,59%)";
+		case "400 Gbps": return "hsl(275,100%,56%)";
+		case "800 Gbps": return "hsl(300,100%,56%)";
 		default: return null;
 		}
 	}
