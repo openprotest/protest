@@ -150,7 +150,7 @@ internal static partial class Polling {
         }
     }
 
-    private static int GetPortBitmapStart(byte[] raw) {
+    internal static int GetPortBitmapStart(byte[] raw) {
         if (raw.Length > 4
             && raw[0] == 0x04
             && raw[2] == 0x02
@@ -160,7 +160,7 @@ internal static partial class Polling {
         return raw.Length >= 3 ? 2 : 0;
     }
 
-    private static int GetPortBitmapLength(byte[] raw, int startIndex) {
+    internal static int GetPortBitmapLength(byte[] raw, int startIndex) {
         if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
         return raw.Length - startIndex;
     }

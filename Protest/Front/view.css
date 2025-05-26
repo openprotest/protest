@@ -434,6 +434,7 @@ button.view-live-button:active {
 	mask-size: contain;
 	mask-position: center -5px;
 	mask-repeat: no-repeat;
+	transform-origin: center;
 	transition: background .2s;
 }
 
@@ -614,6 +615,14 @@ button.view-live-button:active {
 }
 
 .view-interfaces-mode-menu > div:hover {
+	background-color: var(--clr-select);
+}
+
+.view-interface-legend-entry {
+	border-radius: 2px;
+}
+
+.view-interface-legend-entry:hover {
 	background-color: var(--clr-select);
 }
 
@@ -911,4 +920,11 @@ button.view-live-button:active {
 	50%  {background-color: #70f040;}
 	75%  {background-color: #70f040;}
 	100% {background-color: #408020;}
+}
+
+@keyframes port-pop {
+	0%   { filter: brightness(1) drop-shadow(#202020 1px 0 0) drop-shadow(#202020 0 1px 0) drop-shadow(#202020 -1px 0 0) drop-shadow(#202020 0 -1px 0); }
+	10%  { filter: brightness(2) drop-shadow(#fff 2px 0 0) drop-shadow(#fff 0 2px 0) drop-shadow(#fff -2px 0 0) drop-shadow(#fff 0 -2px 0); }
+	60%  { filter: brightness(1.5) drop-shadow(#fff 2px 0 0) drop-shadow(#fff 0 2px 0) drop-shadow(#fff -2px 0 0) drop-shadow(#fff 0 -2px 0); }
+	100% { filter: brightness(1) drop-shadow(#202020 1px 0 0) drop-shadow(#202020 0 1px 0) drop-shadow(#202020 -1px 0 0) drop-shadow(#202020 0 -1px 0); }
 }

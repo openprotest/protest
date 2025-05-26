@@ -1,4 +1,9 @@
-﻿using System;
+﻿using Lextm.SharpSnmpLib;
+using Org.BouncyCastle.Asn1.X509;
+using Protest.Protocols;
+using Protest.Protocols.Snmp;
+using Protest.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
@@ -13,9 +18,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
-using Protest.Protocols;
-using Protest.Tasks;
-using Lextm.SharpSnmpLib;
+using static Protest.Protocols.Snmp.Polling;
 
 namespace Protest.Tools;
 
@@ -467,12 +470,54 @@ internal static class LiveStats {
 
         Dictionary<int, string> typeDic     = new Dictionary<int, string>();
         Dictionary<int, string> speedDic    = new Dictionary<int, string>();
-        Dictionary<int, string> vlanDic     = new Dictionary<int, string>();
+        Dictionary<int, string> untaggedDic = new Dictionary<int, string>();
+        Dictionary<int, string> taggedDic   = new Dictionary<int, string>();
         Dictionary<int, string> statusDic   = new Dictionary<int, string>();
         Dictionary<int, long> trafficInDic  = new Dictionary<int, long>();
         Dictionary<int, long> trafficOutDic = new Dictionary<int, long>();
         Dictionary<int, int> errorInDic     = new Dictionary<int, int>();
         Dictionary<int, int> errorOutDic    = new Dictionary<int, int>();
+
+        Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
+
+        for (int i = 0; i < result.Count; i++) {
+            string oid = result[i].Id.ToString();
+            if (!oid.StartsWith(Oid.INTERFACE_1Q_VLAN_ENGRESS)) continue;
+
+            int dotIndex = oid.LastIndexOf('.');
+            if (dotIndex == -1) continue;
+            if (!short.TryParse(oid[(dotIndex + 1)..], out short vlanId)) continue;
+
+            byte[] raw = result[i].Data.ToBytes();
+
+            int startIndex = GetPortBitmapStart(raw);
+            if (startIndex == -1) continue;
+
+            int maxIndex = Math.Min(raw.Length, startIndex + GetPortBitmapLength(raw, startIndex));
+
+            for (int j = startIndex; j < maxIndex; j++) {
+                byte b = raw[j];
+                for (int k = 0; k < 8; k++) {
+                    if ((b & (1 << (7 - k))) != 0) {
+                        int portIndex = 8 * (j - startIndex) + (k + 1);
+                        if (!taggedMap.TryGetValue(vlanId, out var ports)) {
+                            ports = new List<int>();
+                            taggedMap[vlanId] = ports;
+                        }
+                        if (!ports.Contains(portIndex)) {
+                            ports.Add(portIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
+            foreach (int port in pair.Value) {
+                taggedDic.TryGetValue(port, out var existing);
+                taggedDic[port] = string.IsNullOrEmpty(existing) ? pair.Key.ToString() : $"{existing},{pair.Key.ToString()}";
+            }
+        }
 
         foreach (KeyValuePair<string, string> pair in parsedResult) {
             if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
@@ -484,7 +529,7 @@ internal static class LiveStats {
                 speedDic.Add(index, pair.Value);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN)) {
-                vlanDic.Add(index, pair.Value);
+                untaggedDic.Add(index, pair.Value);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_STATUS)) {
                 statusDic.Add(index, pair.Value);
@@ -505,6 +550,7 @@ internal static class LiveStats {
 
         List<string> speedList    = new List<string>();
         List<string> untaggedList = new List<string>();
+        List<string> taggedList   = new List<string>();
         List<string> statusList   = new List<string>();
         List<long>   dataList     = new List<long>();
         List<int>    errorList    = new List<int>();
@@ -515,7 +561,8 @@ internal static class LiveStats {
             string rawSpeed = speedDic.TryGetValue(pair.Key, out string s) ? s : "N/A";
             speedList.Add(speedMap.TryGetValue(rawSpeed, out string readableSpeed) ? readableSpeed : "N/A");
 
-            untaggedList.Add(vlanDic.TryGetValue(pair.Key, out string vlan) ? vlan : "1");
+            untaggedList.Add(untaggedDic.TryGetValue(pair.Key, out string untaggedVlan) ? untaggedVlan : "1");
+            taggedList.Add(taggedDic.TryGetValue(pair.Key, out string taggedVlan) ? taggedVlan : "1");
             statusList.Add(statusDic.TryGetValue(pair.Key, out string status) ? status : "0");
 
             long inTraffic = trafficInDic.TryGetValue(pair.Key, out long tin) ? tin : 0;
@@ -532,6 +579,7 @@ internal static class LiveStats {
                 success  = true,
                 speed    = speedList,
                 untagged = untaggedList,
+                tagged   = taggedList,
                 status   = statusList,
                 data     = dataList,
                 error    = errorList

@@ -26,6 +26,7 @@ public static class Oid {
         INTERFACE_TYPE,
         INTERFACE_SPEED,
         INTERFACE_1Q_VLAN,
+        INTERFACE_1Q_VLAN_ENGRESS,
         INTERFACE_STATUS,
         INTERFACE_TRAFFIC_IN_64,
         INTERFACE_TRAFFIC_OUT_64,
