@@ -1030,7 +1030,14 @@ class DeviceView extends View {
 							.map(o=> this.GetVlanColor(o))
 							.map(o=> o ? o : "var(--clr-dark)");
 
-						const gradient = `linear-gradient(135deg, ${colors.join(", ")})`;
+						let gradient = "linear-gradient(90deg,";
+						for (let i=0; i<colors.length; i++) {
+							if (i > 0) gradient += ", ";
+							gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
+							gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
+						}
+						gradient += ")";
+
 						o.iconElement.style.background = gradient;
 					});
 					this.BuildTaggedLegend(list.map(o=>o.tagged), legend, list);
@@ -1120,7 +1127,6 @@ class DeviceView extends View {
 							if (i > 0) gradient += ", ";
 							gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
 							gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
-
 						}
 						gradient += ")";
 
@@ -1308,7 +1314,7 @@ class DeviceView extends View {
 			if (values[i] == "") continue;
 			if (values[i] in hashmap) {
 				const element = this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`);
-				element.className = "view-interface-legend-entry"
+				element.className = "view-interface-legend-entry";
 				legend.appendChild(element);
 
 				element.onclick = ()=> {
