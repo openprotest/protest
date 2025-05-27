@@ -1030,15 +1030,22 @@ class DeviceView extends View {
 							.map(o=> this.GetVlanColor(o))
 							.map(o=> o ? o : "var(--clr-dark)");
 
-						let gradient = "linear-gradient(90deg,";
-						for (let i=0; i<colors.length; i++) {
-							if (i > 0) gradient += ", ";
-							gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
-							gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
+						if (colors.length === 1) {
+							o.iconElement.style.background = colors[0];
+							o.iconElement.setAttribute("c", colors[0]);
 						}
-						gradient += ")";
+						else {
+							let gradient = "linear-gradient(90deg,";
+							for (let i=0; i<colors.length; i++) {
+								if (i > 0) gradient += ", ";
+								gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
+								gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
+							}
+							gradient += ")";
 
-						o.iconElement.style.background = gradient;
+							o.iconElement.style.background = gradient;
+							o.iconElement.setAttribute("c", "#fff");
+						}
 					});
 					this.BuildTaggedLegend(list.map(o=>o.tagged), legend, list);
 					break;
@@ -1122,15 +1129,22 @@ class DeviceView extends View {
 							.map(o=> this.GetVlanColor(o))
 							.map(o=> o ? o : "var(--clr-dark)");
 
-						let gradient = "linear-gradient(90deg,";
-						for (let i=0; i<colors.length; i++) {
-							if (i > 0) gradient += ", ";
-							gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
-							gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
+						if (colors.length === 1) {
+							o.iconElement.style.background = colors[0];
+							o.iconElement.setAttribute("c", colors[0]);
 						}
-						gradient += ")";
+						else {
+							let gradient = "linear-gradient(90deg,";
+							for (let i=0; i<colors.length; i++) {
+								if (i > 0) gradient += ", ";
+								gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
+								gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
+							}
+							gradient += ")";
 
-						o.iconElement.style.background = gradient;
+							o.iconElement.style.background = gradient;
+							o.iconElement.setAttribute("c", "#fff");
+						}
 					});
 					this.BuildTaggedLegend(list.map(o=>o.tagged), legend, list);
 					break;
@@ -1164,7 +1178,7 @@ class DeviceView extends View {
 					const hsl = colorAttribute.replace("hsl(","").replace(")","").replaceAll("%","").split(",").map(o=>parseInt(o.trim()));
 					luminance = hsl[2]*2.55;
 				}
-				
+
 				list[i].iconElement.parentElement.style.filter = luminance > 72
 					? "drop-shadow(var(--clr-dark) 1px 0 0) drop-shadow(var(--clr-dark) 0 1px 0) drop-shadow(var(--clr-dark) -1px 0 0) drop-shadow(var(--clr-dark) 0 -1px 0)"
 					: "none";
