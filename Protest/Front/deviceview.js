@@ -791,7 +791,6 @@ class DeviceView extends View {
 		legend.style.width = "150px";
 		legend.style.borderRadius = "4px";
 		legend.style.overflowY = "auto";
-		legend.style.padding = "2px 0";
 		this.liveC.appendChild(legend);
 
 		let numbering = obj.n ? obj.n : "vertical";
@@ -1331,17 +1330,24 @@ class DeviceView extends View {
 				element.className = "view-interface-legend-entry";
 				legend.appendChild(element);
 
-				element.onclick = ()=> {
+				element.onmouseenter = ()=> {
 					for (let j=0; j<frameList.length; j++) {
 						let vlans = frameList[j].tagged.split(",").map(o=>o.trim()).map(o=>parseInt(o));
 						if (vlans.includes(parseInt(values[i]))) {
-							frameList[j].iconElement.parentElement.style.animation = "port-pop 1.5s ease-in-out";
-							setTimeout(()=> {
-								frameList[j].iconElement.parentElement.style.animation = "";
-							}, 1500);
+							frameList[j].iconElement.parentElement.style.animation = "port-pop 1.5s ease-in-out infinite";
 						}
 					}
 				};
+
+				element.onmouseleave = ()=> {
+					for (let j=0; j<frameList.length; j++) {
+						let vlans = frameList[j].tagged.split(",").map(o=>o.trim()).map(o=>parseInt(o));
+						if (vlans.includes(parseInt(values[i]))) {
+							frameList[j].iconElement.parentElement.style.animation = "";
+						}
+					}
+				};
+
 			}
 		}
 
