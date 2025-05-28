@@ -807,6 +807,7 @@ class DeviceView extends View {
 			const iconElement = document.createElement("div");
 			iconElement.backgroundColor = "var(--clr-dark)";
 			iconElement.style.transitionDelay = `${(i / (obj.i.length - 1)) * 0.2}s`;
+			iconElement.style.animationDelay = `${(i / (obj.i.length - 1)) * 0.2}s`;
 
 			switch (obj.i[i].i) {
 			case "Ethernet": iconElement.style.maskImage = "url(mono/ethernetport.svg)"; break;
@@ -1412,7 +1413,7 @@ class DeviceView extends View {
 		textBox.style.fontSize = "small";
 		textBox.style.paddingLeft = "2px";
 		textBox.style.width = "108px";
-		textBox.style.lineHeight = "15px";
+		textBox.style.lineHeight = "16px";
 		textBox.style.overflow = "hidden";
 		textBox.style.textOverflow = "ellipses";
 		textBox.textContent = text;
