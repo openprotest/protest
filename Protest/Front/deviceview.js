@@ -845,7 +845,7 @@ class DeviceView extends View {
 			frontElement.onmouseenter = ()=> {
 				this.floating.textContent = "";
 
-				const port     = obj.i[i].i;
+				const port = obj.i[i].i;
 				const speed    = this.switchInfo.success && i<(this.switchInfo.speed?.length    ?? 0) ? this.switchInfo.speed[i]    : obj.i[i].s;
 				const untagged = this.switchInfo.success && i<(this.switchInfo.untagged?.length ?? 0) ? this.switchInfo.untagged[i] : obj.i[i].v;
 				const tagged   = this.switchInfo.success && i<(this.switchInfo.tagged?.length   ?? 0) ? this.switchInfo.tagged[i]   : obj.i[i].t;
@@ -1069,7 +1069,8 @@ class DeviceView extends View {
 					const maxTraffic = this.switchInfo.data.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.data.length; i++) {
 						list[i].iconElement.style.background = "linear-gradient(0deg, rgb(32,32,32,0))";
-						const color = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(32,${71+184*this.switchInfo.data[i]/maxTraffic},32)`;
+						const v = this.switchInfo.data[i] / maxTraffic;
+						const color = this.switchInfo.data[i] === 0 ? "rgb(32,32,32)" : `rgb(${32+v*64},${72+v*152},32)`;
 						list[i].iconElement.style.backgroundColor = color;
 						list[i].iconElement.setAttribute("c", color);
 					}
@@ -1081,7 +1082,8 @@ class DeviceView extends View {
 					const maxError = this.switchInfo.error.reduce((a, b)=> Math.max(a, b), 1);
 					for (let i=0; i<list.length && i<this.switchInfo.error.length; i++) {
 						list[i].iconElement.style.background = "linear-gradient(0deg, rgb(32,32,32,0))";
-						const color = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${71+184*this.switchInfo.error[i]/maxError},32,32)`;
+						const v = this.switchInfo.error[i] / maxError;
+						const color = this.switchInfo.error[i] === 0 ? "rgb(32,32,32)" : `rgb(${72+v*183},${32+v*32},0)`;
 						list[i].iconElement.style.backgroundColor = color;
 						list[i].iconElement.setAttribute("c", color);
 					}
@@ -1266,7 +1268,7 @@ class DeviceView extends View {
 
 			const min = Math.min(...values.filter(o=>o>0));
 			if (values.length === 1) {
-				legend.appendChild(this.CreateLegendElement("rgb(32,255,32)", UI.SizeToString(min)));
+				legend.appendChild(this.CreateLegendElement("rgb(96,224,32)", UI.SizeToString(min)));
 				break;
 			}
 
@@ -1276,10 +1278,11 @@ class DeviceView extends View {
 
 			if (values.length > 2) {
 				const mid = values[Math.floor(values.length/2)];
-				legend.appendChild(this.CreateLegendElement(`rgb(32,${71+184*mid/max},32)`, UI.SizeToString(mid)));
+				const v = mid / max;
+				legend.appendChild(this.CreateLegendElement(`rgb(${32+v*64},${72+v*183},32)`, UI.SizeToString(mid)));
 			}
 
-			legend.appendChild(this.CreateLegendElement("rgb(32,255,32)", UI.SizeToString(max)));
+			legend.appendChild(this.CreateLegendElement("rgb(96,224,32)", UI.SizeToString(max)));
 			break;
 		}
 		case "Errors": {
@@ -1290,7 +1293,7 @@ class DeviceView extends View {
 
 			const min = Math.min(...values);
 			if (values.length === 1) {
-				legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${min} error${min==1 ?"":"s"}`));
+				legend.appendChild(this.CreateLegendElement("rgb(255,64,32)", `${min} error${min==1 ?"":"s"}`));
 				break;
 			}
 
@@ -1300,10 +1303,11 @@ class DeviceView extends View {
 
 			if (values.length > 2) {
 				const mid = values[Math.floor(values.length/2)];
-				legend.appendChild(this.CreateLegendElement(`rgb(${71+184*mid/max},32,32)`, `${mid} error${mid==1 ?"":"s"}`));
+				const v = mid / max;
+				legend.appendChild(this.CreateLegendElement(`rgb(${72+v*183},32,32)`, `${mid} error${mid==1 ?"":"s"}`));
 			}
 
-			legend.appendChild(this.CreateLegendElement("rgb(255,32,32)", `${max} errors`));
+			legend.appendChild(this.CreateLegendElement("rgb(255,64,32)", `${max} errors`));
 			break;
 		}
 		}
