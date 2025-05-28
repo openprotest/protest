@@ -1011,7 +1011,7 @@ class DeviceView extends View {
 						list[i].iconElement.style.backgroundColor = color;
 						list[i].iconElement.setAttribute("c", color);
 					}
-					this.BuildTaggedLegend(this.switchInfo.untagged, legend, list);
+					this.BuildUntaggedLegend(this.switchInfo.untagged, legend, list);
 					break;
 
 				case "Tagged VLAN":
@@ -1109,7 +1109,7 @@ class DeviceView extends View {
 						o.iconElement.style.backgroundColor = color;
 						o.iconElement.setAttribute("c", color);
 					});
-					this.BuildTaggedLegend(list.map(o=>o.untagged), legend, list);
+					this.BuildUntaggedLegend(list.map(o=>o.untagged), legend, list);
 					break;
 
 				case "Tagged VLAN":
@@ -1308,6 +1308,46 @@ class DeviceView extends View {
 		}
 	}
 
+	BuildUntaggedLegend(list, legend, frameList) {
+		legend.textContent = "";
+
+		let hashmap = {};
+		for (let i=0; i<list.length; i++) {
+			if (list[i] === "") continue;
+			const split = list[i].split(",").map(o=>o.trim()).map(o=>parseInt(o));
+			
+			for (let j=0; j<split.length; j++) {
+				if (split[j] in hashmap) continue;
+				hashmap[split[j]] = true;
+			}
+		}
+
+		const values = Object.keys(hashmap).sort((a,b)=> a-b);
+		for (let i=0; i<values.length; i++) {
+			if (values[i] == "") continue;
+			if (values[i] in hashmap) {
+				const element = this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`);
+				element.className = "view-interface-legend-entry";
+				legend.appendChild(element);
+
+				element.onmouseenter = ()=> {
+					for (let j=0; j<frameList.length; j++) {
+						if (frameList[j].untagged == values[i]) {
+							frameList[j].iconElement.parentElement.style.animation = "port-pop 1.5s ease-in-out infinite";
+						}
+					}
+				};
+
+				element.onmouseleave = ()=> {
+					for (let j=0; j<frameList.length; j++) {
+						frameList[j].iconElement.parentElement.style.animation = "";
+					}
+				};
+
+			}
+		}
+	}
+
 	BuildTaggedLegend(list, legend, frameList) {
 		legend.textContent = "";
 
@@ -1341,16 +1381,12 @@ class DeviceView extends View {
 
 				element.onmouseleave = ()=> {
 					for (let j=0; j<frameList.length; j++) {
-						let vlans = frameList[j].tagged.split(",").map(o=>o.trim()).map(o=>parseInt(o));
-						if (vlans.includes(parseInt(values[i]))) {
-							frameList[j].iconElement.parentElement.style.animation = "";
-						}
+						frameList[j].iconElement.parentElement.style.animation = "";
 					}
 				};
 
 			}
 		}
-
 	}
 
 	CreateLegendElement(color, text) {
