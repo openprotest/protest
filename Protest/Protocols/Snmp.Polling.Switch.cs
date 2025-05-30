@@ -40,6 +40,9 @@ internal static partial class Polling {
             IList<Variable> snmpResult = Polling.SnmpQuery(_ipAddress, _snmpProfile, Oid.SWITCH_OID, Polling.SnmpOperation.Walk);
             Dictionary<string, string> interfaces = Polling.ParseResponse(snmpResult);
 
+            if (interfaces is null) return "{\"error\":\"Failed to fetch interfaces\"}"u8.ToArray();
+
+
             Dictionary<int, string> descriptor = new Dictionary<int, string>();
             Dictionary<int, string> alias      = new Dictionary<int, string>();
             Dictionary<int, string> type       = new Dictionary<int, string>();
@@ -48,7 +51,6 @@ internal static partial class Polling {
             Dictionary<int, string> tagged     = new Dictionary<int, string>();
 
             Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
-
             for (int i = 0; i < snmpResult.Count; i++) {
                 string oid = snmpResult[i].Id.ToString();
                 if (!oid.StartsWith(Oid.INTERFACE_1Q_VLAN_ENGRESS)) continue;
@@ -80,7 +82,6 @@ internal static partial class Polling {
                     }
                 }
             }
-
             foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
                 foreach (int port in pair.Value) {
                     tagged.TryGetValue(port, out var existing);
@@ -88,7 +89,19 @@ internal static partial class Polling {
                 }
             }
 
-            if (interfaces is null) return "{\"error\":\"Failed to fetch interfaces\"}"u8.ToArray();
+            Dictionary<int, List<string>> macTable   = new Dictionary<int, List<string>>();
+            foreach (KeyValuePair<string, string> pair in interfaces) {
+                if (!pair.Key.StartsWith(Oid.INTERFACE_1D_TP_FDB)) continue;
+                if (!int.TryParse(pair.Value, out int port)) continue;
+                string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
+
+                if (macTable.ContainsKey(port)) {
+                    macTable[port].Add(mac);
+                }
+                else {
+                    macTable.Add(port, new List<string> { mac });
+                }
+            }
 
             foreach (KeyValuePair<string, string> pair in interfaces) {
                 int index = int.Parse(pair.Key.Split('.').Last());
@@ -109,6 +122,8 @@ internal static partial class Polling {
                     untagged.Add(index, pair.Value);
                 }
             }
+
+            KeyValuePair<int, List<string>>[] macTableFiltered = macTable.Where(p => p.Value.Count == 1).ToArray();
 
             return JsonSerializer.SerializeToUtf8Bytes(
                 type.Where(o=> o.Value == "6")
@@ -141,7 +156,8 @@ internal static partial class Polling {
                     },
                     untagged = untagged.GetValueOrDefault(pair.Key, ""),
                     tagged   = tagged.GetValueOrDefault(pair.Key, ""),
-                    comment  = alias.GetValueOrDefault(pair.Key, String.Empty)
+                    comment  = alias.GetValueOrDefault(pair.Key, String.Empty),
+                    link     = macTableFiltered.Where(p => p.Key == pair.Key)?.FirstOrDefault().Value?.First() ?? null
                 })
             );
         }

@@ -3519,7 +3519,20 @@ class DeviceView extends View {
 					}
 
 					for (let i=0; i<json.length; i++) {
-						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, null, json[i].comment);
+						if (json[i].link) {
+							let link = null;
+							for (const k in LOADER.devices.data) {
+								if (!("mac address" in LOADER.devices.data[k])) continue;
+								const mac = LOADER.devices.data[k]["mac address"].v.toLowerCase().replaceAll(":", "");
+								if (mac != json[i].link) continue;
+								link = k;
+								break;
+							}
+							AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, link, json[i].comment);
+						}
+						else {
+							AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, null, json[i].comment);
+						}
 					}
 
 					SortList();
