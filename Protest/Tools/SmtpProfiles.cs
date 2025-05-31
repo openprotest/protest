@@ -5,10 +5,11 @@ using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Protest.Tools;
 internal static class SmtpProfiles {
-    private static readonly object mutex;
+    private static readonly Lock mutex;
     private static readonly JsonSerializerOptions smtpProfileSerializerOptions;
     private static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
@@ -30,7 +31,7 @@ internal static class SmtpProfiles {
     }
 
     static SmtpProfiles() {
-        mutex = new object();
+        mutex = new Lock();
 
         smtpProfileSerializerOptions = new JsonSerializerOptions();
         smtpProfileSerializerOptionsWithPasswords = new JsonSerializerOptions();

@@ -91,12 +91,12 @@ internal static class IpDiscovery {
         return null;
     }
 
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, object mutex) {
+    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
         lock (mutex) {
             WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
         }
     }
-    private static void WsWriteText(WebSocket ws, byte[] bytes, object mutex) {
+    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
         lock (mutex) {
             ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -133,7 +133,7 @@ internal static class IpDiscovery {
             return;
         }
 
-        object mutex = new object();
+        Lock mutex = new Lock();
         ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
 
         for (int i = 0; i < 2; i++) {
@@ -172,7 +172,7 @@ internal static class IpDiscovery {
         dic.Clear();
     }
 
-    private static void DiscoverAdapter(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex) {
+    private static void DiscoverAdapter(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex) {
         UnicastIPAddressInformationCollection unicast = nic.GetIPProperties().UnicastAddresses;
         GatewayIPAddressInformationCollection gateway = nic.GetIPProperties().GatewayAddresses;
 
@@ -241,7 +241,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void DiscoverIcmp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static void DiscoverIcmp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         List<IPAddress> hosts = new List<IPAddress>();
 
         UnicastIPAddressInformationCollection addresses = nic.GetIPProperties().UnicastAddresses;
@@ -306,7 +306,7 @@ internal static class IpDiscovery {
         }
     }
    
-    private static void DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static void DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         const int timeout = 1000;
         const Protocols.Dns.RecordType type = Protocols.Dns.RecordType.ANY;
 
@@ -335,7 +335,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void DiscoverSsdp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static void DiscoverSsdp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         const int timeout = 1000;
 
         Ssdp.SsdpDevice[] devices = Ssdp.Discover(nic, timeout, token);
@@ -380,7 +380,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static async Task DiscoverHostnameAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static async Task DiscoverHostnameAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         List<Task> tasks = new List<Task>();
 
         foreach (KeyValuePair<string, HostEntry> pair in dic) {
@@ -443,7 +443,7 @@ internal static class IpDiscovery {
         catch { }
     }
 
-    private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, object mutex, CancellationToken token) {
+    private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
         Task[] tasks = dic
         .Where(o=>o.Value.services is not null && o.Value.services.Length > 0)
@@ -516,7 +516,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void ParseMdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, object mutex, Protocols.Dns.RecordType type, Socket socket) {
+    private static void ParseMdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, Lock mutex, Protocols.Dns.RecordType type, Socket socket) {
         byte[] reply = new byte[1024];
 
         try {

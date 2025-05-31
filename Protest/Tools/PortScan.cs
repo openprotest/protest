@@ -174,7 +174,7 @@ internal static class PortScan {
             return;
         }
 
-        object mutex = new object();
+        Lock mutex = new Lock();
 
         try {
             byte[] buff = new byte[2048];

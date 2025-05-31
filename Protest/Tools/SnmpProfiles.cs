@@ -4,11 +4,12 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Protest.Tools;
 
 internal static class SnmpProfiles {
-    private static readonly object mutex;
+    private static readonly Lock mutex;
     private static readonly JsonSerializerOptions snmpProfilesSerializerOptions;
     private static readonly JsonSerializerOptions snmpProfilesSerializerOptionsWithPasswords;
 
@@ -57,7 +58,7 @@ internal static class SnmpProfiles {
     }
 
     static SnmpProfiles() {
-        mutex = new object();
+        mutex = new Lock();
 
         snmpProfilesSerializerOptions = new JsonSerializerOptions();
         snmpProfilesSerializerOptionsWithPasswords = new JsonSerializerOptions();

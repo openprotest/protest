@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Protest.Http;
 
@@ -13,7 +14,7 @@ internal static class Chat {
     }
 
     private static readonly List<Message> history = new List<Message>();
-    private static readonly object mutex = new object();
+    private static readonly Lock mutex = new Lock();
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") { return; }

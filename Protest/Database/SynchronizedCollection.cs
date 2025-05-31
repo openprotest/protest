@@ -1,4 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿using System.Threading;
+
+namespace System.Collections.Generic;
 
 /// <summary>
 /// Thread-safe wrapper around the System.Collections.Generic.Dictionary class.
@@ -6,7 +8,7 @@
 
 public sealed class SynchronizedDictionary<TKey, TValue> : Dictionary<TKey, TValue> where TKey : notnull {
 
-    private readonly object mutex = new object();
+    private readonly Lock mutex = new Lock();
     public SynchronizedDictionary() { }
     public SynchronizedDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
     public SynchronizedDictionary(IEqualityComparer<TKey> comparer) : base(comparer) { }

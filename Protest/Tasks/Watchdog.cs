@@ -56,7 +56,7 @@ internal static class Watchdog {
         public long lastCheck;
         public short lastStatus = short.MinValue;
 
-        public object mutex;
+        public Lock mutex;
     }
 
     public record Notification {
@@ -848,7 +848,7 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
             }
         }
 
-        watcher.mutex = new object();
+        watcher.mutex = new Lock();
 
         return watcher;
     }

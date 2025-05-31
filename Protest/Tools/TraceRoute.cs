@@ -24,7 +24,7 @@ internal static class TraceRoute {
             return;
         }
 
-        object mutex = new object();
+        Lock mutex = new Lock();
 
         try {
             while (ws.State == WebSocketState.Open) {

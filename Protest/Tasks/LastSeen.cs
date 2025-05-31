@@ -6,13 +6,13 @@ using System.Threading;
 namespace Protest.Tasks {
     internal static class LastSeen {
 
-        private static ConcurrentDictionary<string, object> mutexes = new ConcurrentDictionary<string, object>();
+        private static ConcurrentDictionary<string, Lock> mutexes = new ConcurrentDictionary<string, Lock>();
 
         public static void Seen(string ip) {
             ip = ip.ToLower().Replace(':', '_');
             string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
             try {
-                object mutex = mutexes.GetOrAdd(ip, new object());
+                Lock mutex = mutexes.GetOrAdd(ip, new Lock());
                 lock (mutex) {
                     File.WriteAllText(filename, DateTime.Now.ToString(Data.DATETIME_FORMAT_LONG));
                     //File.WriteAllText(filename, DateTime.UtcNow.ToString());
@@ -43,7 +43,7 @@ namespace Protest.Tasks {
 
             try {
                 if (File.Exists(filename)) {
-                    object mutex = mutexes.GetOrAdd(ip, new object());
+                    Lock mutex = mutexes.GetOrAdd(ip, new Lock());
                     lock (mutex) {
                         return File.ReadAllText(filename);
                     }

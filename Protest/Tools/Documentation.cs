@@ -2,11 +2,12 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace Protest.Tools;
 
 internal static class Documentation {
-    private static readonly object mutex = new object();
+    private static readonly Lock mutex = new Lock();
 
     public static byte[] List(Dictionary<string, string> parameters) {
         string keywords = null;

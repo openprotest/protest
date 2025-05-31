@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 using Protest.Tools;
 
 namespace Protest.Http;
@@ -19,7 +20,7 @@ internal static class KeepAlive {
         public HttpListenerContext ctx;
         public string sessionId;
         public string username;
-        public object mutex;
+        public Lock mutex;
     }
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
@@ -53,7 +54,7 @@ internal static class KeepAlive {
             ctx = ctx,
             sessionId = sessionId,
             username = username,
-            mutex = new object()
+            mutex = new Lock()
         };
 
         connections.TryAdd(ws, keepAliveEntry);

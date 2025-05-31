@@ -39,12 +39,12 @@ internal static class LiveStats {
         ["800000"] = "800 Gbps"
     };
 
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, object mutex) {
+    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
         lock (mutex) {
             WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
         }
     }
-    private static void WsWriteText(WebSocket ws, byte[] bytes, object mutex) {
+    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
         lock (mutex) {
             ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -72,7 +72,7 @@ internal static class LiveStats {
                 return;
             }
 
-            object mutex = new object();
+            Lock mutex = new Lock();
 
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
                 WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
@@ -146,7 +146,7 @@ internal static class LiveStats {
                 pingArray = _hostname.value.Split(';').Select(o => o.Trim()).ToArray();
             }
 
-            object mutex = new object();
+            Lock mutex = new Lock();
 
             string firstAlive = null;
             PingReply firstReply = null;
@@ -318,7 +318,7 @@ internal static class LiveStats {
     }
 
     [SupportedOSPlatform("windows")]
-    private static void WmiQuery(WebSocket ws, object mutex, string firstAlive, ref string wmiHostname) {
+    private static void WmiQuery(WebSocket ws, Lock mutex, string firstAlive, ref string wmiHostname) {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive, 3_000);
             if (scope is not null && scope.IsConnected) {
@@ -381,7 +381,7 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, object mutex, string firstAlive, string type, string snmpProfileGuid) {
+    private static void SnmpQuery(WebSocket ws, Lock mutex, string firstAlive, string type, string snmpProfileGuid) {
         if (!SnmpProfiles.FromGuid(snmpProfileGuid, out SnmpProfiles.Profile profile)) {
             return;
         }
@@ -413,7 +413,7 @@ internal static class LiveStats {
 
     }
 
-    private static void SnmpQueryPrinter(WebSocket ws, object mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
+    private static void SnmpQueryPrinter(WebSocket ws, Lock mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
         IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
         Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(result);
 
@@ -451,7 +451,7 @@ internal static class LiveStats {
         }
     }
 
-    private static void SnmpQuerySwitch(WebSocket ws, object mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
+    private static void SnmpQuerySwitch(WebSocket ws, Lock mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
         IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVEVIEW_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk);
 
         if (result is null) {

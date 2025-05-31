@@ -11,9 +11,9 @@ using System.Threading;
 namespace Protest;
 internal static class Backup {
 
-    private static readonly object mutex;
+    private static readonly Lock mutex;
     static Backup() {
-        mutex = new object();
+        mutex = new Lock();
     }
 
     internal static byte[] Create(Dictionary<string, string> parameters, string origin) {

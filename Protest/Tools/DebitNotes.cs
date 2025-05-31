@@ -2,13 +2,14 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Protest.Tools;
 
 internal static class DebitNotes {
-    static private readonly object mutex = new object();
+    static private readonly Lock mutex = new Lock();
 
     static private readonly JsonSerializerOptions debitSerializerOptions;
 

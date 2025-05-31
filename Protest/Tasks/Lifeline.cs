@@ -18,8 +18,8 @@ namespace Protest.Tasks;
 internal static partial class Lifeline {
     private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
 
-    private static ConcurrentDictionary<string, object> pingMutexes = new ConcurrentDictionary<string, object>();
-    private static ConcurrentDictionary<string, object> wmiMutexes = new ConcurrentDictionary<string, object>();
+    private static ConcurrentDictionary<string, Lock> pingMutexes = new ConcurrentDictionary<string, Lock>();
+    private static ConcurrentDictionary<string, Lock> wmiMutexes = new ConcurrentDictionary<string, Lock>();
 
     [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
@@ -53,7 +53,7 @@ internal static partial class Lifeline {
 
     private static void LifelineLoop() {
         Regex regex = ValidHostnameRegex();
-        ConcurrentDictionary<string, object> mutex = new ConcurrentDictionary<string, object>();
+        ConcurrentDictionary<string, Lock> mutex = new ConcurrentDictionary<string, Lock>();
         HashSet<string> ping = new HashSet<string>();
         HashSet<string[]> wmi = new HashSet<string[]>();
         HashSet<string[]> snmp = new HashSet<string[]>();
@@ -94,18 +94,18 @@ internal static partial class Lifeline {
                         if (!regex.IsMatch(remoteHost[i])) continue;
 
                         ping.Add(remoteHost[i]);
-                        mutex.TryAdd(remoteHost[i], new Object());
+                        mutex.TryAdd(remoteHost[i], new Lock());
 
                         if (wmiOnce && os is not null && os.Contains("windows")) {
                             wmiOnce = false;
                             wmi.Add(new string[] { entry.filename, remoteHost[i] });
-                            mutex.TryAdd(entry.filename, new Object());
+                            mutex.TryAdd(entry.filename, new Lock());
                         }
 
                         if (snmpOnce && entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpProfile)) {
                             snmpOnce = false;
                             snmp.Add(new string[] { entry.filename, remoteHost[i], snmpProfile?.value });
-                            mutex.TryAdd(entry.filename, new Object());
+                            mutex.TryAdd(entry.filename, new Lock());
                         }
                     }
                 }
@@ -115,7 +115,7 @@ internal static partial class Lifeline {
 
             Thread pingThread = new Thread(() => { //icmp
                 foreach (string host in ping) {
-                    mutex.TryGetValue(host, out object obj);
+                    mutex.TryGetValue(host, out Lock obj);
                     try {
                         lock (obj) {
                             IcmpQuery(host);
@@ -134,7 +134,7 @@ internal static partial class Lifeline {
                     }
 
                     foreach (string[] data in wmi) {
-                        mutex.TryGetValue(data[0], out object obj);
+                        mutex.TryGetValue(data[0], out Lock obj);
                         try {
                             lock (obj) {
                                 bool p = IcmpQuery(data[1]);
@@ -156,7 +156,7 @@ internal static partial class Lifeline {
                         if (!entry.attributes.TryGetValue("type", out Database.Attribute typeAttr)) { continue; }
                         string type = typeAttr.value.ToLower();
                         if (Data.PRINTER_TYPES.Contains(type)) {
-                            mutex.TryGetValue(data[0], out object obj);
+                            mutex.TryGetValue(data[0], out Lock obj);
                             try {
                                 lock (obj) {
                                     bool p = IcmpQuery(data[1]);
@@ -168,7 +168,7 @@ internal static partial class Lifeline {
                         }
                         else if (Data.SWITCH_TYPES.Contains(type)) {
                             try {
-                                mutex.TryGetValue(data[0], out object obj);
+                                mutex.TryGetValue(data[0], out Lock obj);
                                 lock (obj) {
                                     bool p = IcmpQuery(data[1]);
                                     if (!p) continue;
@@ -228,7 +228,7 @@ internal static partial class Lifeline {
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
         try {
-            object mutex = pingMutexes.GetOrAdd(host, new object());
+            Lock mutex = pingMutexes.GetOrAdd(host, new Lock());
 
             lock (mutex) {
                 using FileStream stream = new FileStream($"{dir}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
@@ -321,7 +321,7 @@ internal static partial class Lifeline {
 
         DateTime now = DateTime.UtcNow;
 
-        object mutex = wmiMutexes.GetOrAdd(host, new object());
+        Lock mutex = wmiMutexes.GetOrAdd(host, new Lock());
 
         lock (mutex) {
             if (cpuUsage != 255) {
@@ -416,7 +416,7 @@ internal static partial class Lifeline {
             uint.TryParse(blackCountString, out blackCounter);
         }
 
-        object mutex = wmiMutexes.GetOrAdd(ipAddress.ToString(), new object());
+        Lock mutex = wmiMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
 
         lock (mutex) {
             string dirPrintCounter = $"{Data.DIR_LIFELINE}{Data.DELIMITER}printcount{Data.DELIMITER}{file}";

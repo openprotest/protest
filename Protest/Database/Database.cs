@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Net;
 using Protest.Http;
 using Microsoft.Extensions.Options;
+using System.Threading;
 
 namespace Protest;
 
@@ -32,7 +33,7 @@ public sealed class Database {
     public record Entry {
         public string filename;
         public ConcurrentDictionary<string, Attribute> attributes;
-        public object mutex;
+        public Lock mutex;
     }
 
     public readonly ConcurrentDictionary<string, Entry> dictionary;
@@ -101,7 +102,7 @@ public sealed class Database {
             return new Entry {
                 filename = file.Name,
                 attributes = attributes,
-                mutex = new object()
+                mutex = new Lock()
             };
         }
         catch (Exception ex) {
@@ -254,7 +255,7 @@ public sealed class Database {
         Entry newEntry = new Entry() {
             filename = dictionary.ContainsKey(file) ? GenerateFilename(1) : file,
             attributes = modifications,
-            mutex = new object()
+            mutex = new Lock()
         };
 
         Logger.Action(origin, $"Create new entry on {this.name} database: {file}");

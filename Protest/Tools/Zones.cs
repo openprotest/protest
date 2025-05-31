@@ -1,12 +1,13 @@
-﻿using System.IO;
+﻿using Protest.Http;
+using System.IO;
 using System.Net;
 using System.Text;
-using Protest.Http;
+using System.Threading;
 
 namespace Protest.Tools;
 internal static class Zones {
 
-    private static readonly object mutex = new object();
+    private static readonly Lock mutex = new Lock();
 
     public static byte[] ListZones() {
         if (!File.Exists(Data.FILE_ZONES)) return "[]"u8.ToArray();

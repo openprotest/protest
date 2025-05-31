@@ -7,13 +7,13 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
-
 using Protest.Http;
 
 namespace Protest.Tools;
 internal static class Api {
-    private static readonly object mutex;
+    private static readonly Lock mutex;
     private static readonly ConcurrentDictionary<string, ulong> counter;
     private static readonly ConcurrentDictionary<string, ulong> traffic;
     private static readonly JsonSerializerOptions apiLinksSerializerOptions;
@@ -34,7 +34,7 @@ internal static class Api {
     }
 
     static Api() {
-        mutex = new object();
+        mutex = new Lock();
         counter = new ConcurrentDictionary<string, ulong>();
         traffic = new ConcurrentDictionary<string, ulong>();
 

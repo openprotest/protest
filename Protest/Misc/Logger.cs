@@ -9,8 +9,8 @@ using System.Runtime.CompilerServices;
 namespace Protest;
 
 internal static class Logger {
-    private static readonly object errorMutex = new object();
-    private static readonly object actionMutex = new object();
+    private static readonly Lock errorMutex = new Lock();
+    private static readonly Lock actionMutex = new Lock();
 
 #if DEBUG
     public static void Error(Exception ex, [CallerLineNumber] int line = 0, [CallerMemberName] string caller = null, [CallerFilePath] string file = null) {

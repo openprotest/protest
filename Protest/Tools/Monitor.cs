@@ -41,7 +41,7 @@ internal static class Monitor {
         public Dictionary<string, List<string>> data;
     }
 
-    private static readonly object mutex;
+    private static readonly Lock mutex;
 
     private static JsonSerializerOptions actionSerializerOptions;
     private static JsonSerializerOptions answerSerializerOptions;
@@ -49,7 +49,7 @@ internal static class Monitor {
     private static SnmpProfiles.Profile[] snmpProfiles;
 
     static Monitor() {
-        mutex = new object();
+        mutex = new Lock();
 
         actionSerializerOptions = new JsonSerializerOptions();
         actionSerializerOptions.Converters.Add(new ActionJsonConverter());

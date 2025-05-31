@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Protest;
 
@@ -49,7 +50,7 @@ public sealed class DatabaseJsonConverter : JsonConverter<Database> {
                         Database.Entry entry = new Database.Entry {
                             filename   = entryKey,
                             attributes = this.converter.Read(ref reader, typeof(Database.Attribute), options),
-                            mutex      = new object()
+                            mutex      = new Lock()
                         };
 
                         database.dictionary.TryAdd(entryKey, entry);

@@ -69,7 +69,7 @@ internal static class Icmp {
         if (ws == null) { return; }
 
         Hashtable hostnames = new Hashtable();
-        object mutex = new object();
+        Lock mutex = new Lock();
         Method method = Method.ICMP;
         int timeout = 1000;
         int interval = 1000;

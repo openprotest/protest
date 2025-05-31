@@ -29,7 +29,7 @@ public class DatabaseTests {
 
         Database.Entry john = new Database.Entry {
             filename = Database.GenerateFilename(),
-            mutex = new object(),
+            mutex = new Lock(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
         john.attributes.TryAdd("firstname", new Database.Attribute() {
@@ -50,7 +50,7 @@ public class DatabaseTests {
 
         Database.Entry noah = new Database.Entry {
             filename = Database.GenerateFilename(),
-            mutex = new object(),
+            mutex = new Lock(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
         noah.attributes.TryAdd("firstname", new Database.Attribute() {
@@ -102,7 +102,7 @@ public class DatabaseTests {
 
         Database.Entry newCfo = new Database.Entry {
             filename = noahFilename,
-            mutex = new object(),
+            mutex = new Lock(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
         newCfo.attributes.TryAdd("firstname", new Database.Attribute() {
@@ -143,7 +143,7 @@ public class DatabaseTests {
 
         Database.Entry lilyWithEmail = new Database.Entry {
             filename = lilyFilename,
-            mutex = new object(),
+            mutex = new Lock(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
         lilyWithEmail.attributes.TryAdd("firstname", new Database.Attribute() {
@@ -186,7 +186,7 @@ public class DatabaseTests {
 
         Database.Entry liliGotMarried = new Database.Entry {
             filename = lilyFilename,
-            mutex = new object(),
+            mutex = new Lock(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
         liliGotMarried.attributes.TryAdd("lastname", new Database.Attribute() {
