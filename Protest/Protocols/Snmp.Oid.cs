@@ -35,14 +35,6 @@ public static class Oid {
         INTERFACE_ERROR_OUT,
     };
 
-    public static string[] LIFELINE_PRINTER_OID = new string[] {
-        PRINTER_MARKER_COUNTER_LIFE,
-        PRINTER_MARKER_COUNTER_PRINTS,
-        PRINTER_MARKER_COUNTER_MARKERS,
-        PRINTER_MARKER_COUNTER_MONO,
-        PRINTER_MARKER_COUNTER_COLOR,
-    };
-
     public static string[] LIVESTATS_OID = new string[] {
         SYSTEM_UPTIME,
         SYSTEM_TEMPERATURE
@@ -53,6 +45,22 @@ public static class Oid {
         PRINTER_DISPLAY_MESSAGE,
         PRINTER_JOBS,
         PRINTER_MARKER_COUNTER_LIFE
+    };
+
+    public static string[] LIFELINE_PRINTER_OID = new string[] {
+        PRINTER_MARKER_COUNTER_LIFE,
+        PRINTER_MARKER_COUNTER_PRINTS,
+        PRINTER_MARKER_COUNTER_MARKERS,
+        PRINTER_MARKER_COUNTER_MONO,
+        PRINTER_MARKER_COUNTER_COLOR,
+    };
+
+    public static string[] LIFELINE_SWITCH_OID = new string[] {
+        INTERFACE_TYPE,
+        INTERFACE_TRAFFIC_IN_64,
+        INTERFACE_TRAFFIC_OUT_64,
+        INTERFACE_ERROR_IN,
+        INTERFACE_ERROR_OUT,
     };
 
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";
@@ -70,9 +78,9 @@ public static class Oid {
     public const string INTERFACE_SPEED       = "1.3.6.1.2.1.31.1.1.1.15";
     public const string INTERFACE_ENABLE      = "1.3.6.1.2.1.2.2.1.7";
     public const string INTERFACE_STATUS      = "1.3.6.1.2.1.2.2.1.8";
-    public const string INTERFACE_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10";
+    //public const string INTERFACE_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10";
     public const string INTERFACE_ERROR_IN    = "1.3.6.1.2.1.2.2.1.14";
-    public const string INTERFACE_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16";
+    //public const string INTERFACE_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16";
     public const string INTERFACE_ERROR_OUT   = "1.3.6.1.2.1.2.2.1.20";
 
     public const string INTERFACE_1D_TP_FDB       = "1.3.6.1.2.1.17.4.3.1.2";

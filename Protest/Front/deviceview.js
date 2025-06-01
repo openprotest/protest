@@ -39,6 +39,7 @@ class DeviceView extends View {
 	];
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
+	static SWITCH_TYPES = ["switch", "router", "firewall"];
 	static IPv4_REGEX = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
 
 	constructor(args) {
@@ -1671,7 +1672,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 
-		let [pingArray, cpuArray, memoryArray, diskSpaceArray, diskIoArray, printCounterArray] = await Promise.all([
+		let [pingArray, cpuArray, memoryArray, diskSpaceArray, diskIoArray, printCounterArray, switchCounterArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
@@ -1711,7 +1712,20 @@ class DeviceView extends View {
 				else {
 					return new Uint8Array([]);
 				}
+			})(),
+
+			(async ()=> {
+				if (this.link.type && DeviceView.SWITCH_TYPES.includes(this.link.type.v.toLowerCase())) {
+					const response = await fetch(`lifeline/switchcount/view?file=${this.args.file}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				}
+				else {
+					return new Uint8Array([]);
+				}
 			})()
+
+
 		]);
 
 		const firstInstantBuffer = new Uint8Array(pingArray.slice(0, 8)).buffer;
@@ -1731,7 +1745,7 @@ class DeviceView extends View {
 
 			oMonth = (oMonth+1).toString().padStart(2,0);
 
-			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskSpaceArray, oldDiskIoArray, oldPrintCounterArray] = await Promise.all([
+			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskSpaceArray, oldDiskIoArray, oldPrintCounterArray, oldSwitchCounterArray] = await Promise.all([
 				(async ()=> {
 					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
@@ -1771,6 +1785,17 @@ class DeviceView extends View {
 					else {
 						return new Uint8Array([]);
 					}
+				})(),
+
+				(async ()=> {
+					if (this.link.type && DeviceView.SWITCH_TYPES.includes(this.link.type.v.toLowerCase())) {
+						const response = await fetch(`lifeline/switchcount/view?file=${this.args.file}&date=${oYear}${oMonth}`);
+						const buffer = await response.arrayBuffer();
+						return new Uint8Array(buffer);
+					}
+					else {
+						return new Uint8Array([]);
+					}
 				})()
 			]);
 
@@ -1780,6 +1805,7 @@ class DeviceView extends View {
 			if (oldDiskSpaceArray.length > 0) diskSpaceArray = [...oldDiskSpaceArray, ...diskSpaceArray];
 			if (oldDiskIoArray.length > 0) diskIoArray = [...oldDiskIoArray, ...diskIoArray];
 			if (oldPrintCounterArray.length > 0) printCounterArray = [...oldPrintCounterArray, ...printCounterArray];
+			if (oldSwitchCounterArray.length > 0) switchCounterArray = [...oldSwitchCounterArray, ...switchCounterArray];
 		}
 
 		const DAY_WIDTH = 64;
@@ -1914,7 +1940,6 @@ class DeviceView extends View {
 			svg.appendChild(path);
 
 			let d = `M ${GRAPH_WIDTH - (today.getTime() - data[0].d) / DeviceView.DAY_TICKS * DAY_WIDTH} ${height + 5} `;
-
 			let lastX = -8, lastY = -8;
 
 			if (type === "ping") {
@@ -1959,8 +1984,7 @@ class DeviceView extends View {
 				for (let i=0; i<data.length; i++) {
 					if (data[i].t === 0) continue;
 					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
-					let y = (height + 4) - Math.round(height * data[i].v / data[i].t);
-
+					let y = height + 4 - Math.round(height * data[i].v / data[i].t);
 					d += `L ${x} ${y} `;
 
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
@@ -1979,8 +2003,7 @@ class DeviceView extends View {
 			else if (type === "percent") {
 				for (let i=0; i<data.length; i++) {
 					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
-					let y = (height + 4) - Math.round(height * data[i].v / 100);
-
+					let y = height + 4 - Math.round(height * data[i].v / 100);
 					d += `L ${x} ${y} `;
 
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
@@ -1996,7 +2019,7 @@ class DeviceView extends View {
 					lastX = x, lastY = y;
 				}
 			}
-			else if (type === "delta") {
+			else if (type === "delta" || type === "traffic" || type === "errors") {
 				if (data.length > 0) {
 					data[0].delta = 0;
 				}
@@ -2010,8 +2033,7 @@ class DeviceView extends View {
 
 				for (let i=1; i<data.length; i++) {
 					let x = GRAPH_WIDTH - Math.round((today.getTime() - data[i].d) / DeviceView.DAY_TICKS * DAY_WIDTH);
-					let y = (height + 4) - Math.round(height * data[i].delta / max);
-
+					let y = height + 4 - Math.round(height * data[i].delta / max);
 					d += `L ${x} ${y} `;
 
 					if (x - lastX < 8 && Math.abs(lastY - y) <= 4) continue;
@@ -2020,7 +2042,7 @@ class DeviceView extends View {
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
 					dot.setAttribute("r", 3);
-					dot.setAttribute("fill", "hsl(92,66%,50%)");
+					dot.setAttribute("fill", type==="errors" ? "var(--clr-error)" : "hsl(92,66%,50%)");
 					svg.appendChild(dot);
 
 					if (x < -DAY_WIDTH) continue;
@@ -2127,7 +2149,12 @@ class DeviceView extends View {
 					valueLabel.textContent = `${data[closestIndex].v}%`;
 					cy = height + 4 - Math.round(height * data[closestIndex].v / 100);
 				}
-				else if (type === "delta") {
+				else if (type === "traffic") {
+					let max = Math.max(...data.map(d=>d.delta), 50);
+					valueLabel.textContent = UI.SizeToString(data[closestIndex].delta);
+					cy = height + 4 - Math.round(height * data[closestIndex].delta / max);
+				}
+				else if (type === "delta" || type === "errors") {
 					let max = Math.max(...data.map(d=>d.delta), 50);
 					valueLabel.textContent = data[closestIndex].delta;
 					cy = height + 4 - Math.round(height * data[closestIndex].delta / max);
@@ -2279,6 +2306,27 @@ class DeviceView extends View {
 
 			GenerateGraph(data, "Print counter", "delta", "mono/printer.svg");
 		}
+
+		if (switchCounterArray.length > 0) {
+			let trafficData = [], errorData = [];
+
+			for (let i=0; i<switchCounterArray.length-23; i+=24) {
+				const dateBuffer = new Uint8Array(switchCounterArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+
+				const trafficBuffer = new Uint8Array(switchCounterArray.slice(i+8, i+16)).buffer;
+				const traffic = Number(new DataView(trafficBuffer).getBigInt64(0, true));
+				trafficData.push({d:date, v:traffic});
+
+				const errorBuffer = new Uint8Array(switchCounterArray.slice(i+16, i+24)).buffer;
+				const error = Number(new DataView(errorBuffer).getBigInt64(0, true));
+				errorData.push({d:date, v:error});
+			}
+
+			GenerateGraph(trafficData, "Traffic", "traffic", "mono/traffic.svg");
+			GenerateGraph(errorData, "Errors", "errors", "mono/warning.svg");
+		}
+
 	}
 
 	RttToColor(rtt) {

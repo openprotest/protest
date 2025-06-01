@@ -16,10 +16,11 @@ using System.Data;
 namespace Protest.Tasks;
 
 internal static partial class Lifeline {
-    private const long FOUR_HOURS_IN_TICKS = 144_000_000_000L;
+    private const long TWO_HOURS_IN_TICKS = 72_000_000_000L;
 
     private static ConcurrentDictionary<string, Lock> pingMutexes = new ConcurrentDictionary<string, Lock>();
     private static ConcurrentDictionary<string, Lock> wmiMutexes = new ConcurrentDictionary<string, Lock>();
+    private static ConcurrentDictionary<string, Lock> snmpMutexes = new ConcurrentDictionary<string, Lock>();
 
     [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
@@ -190,7 +191,7 @@ internal static partial class Lifeline {
             snmpThread?.Join();
 
             task.status = TaskWrapper.TaskStatus.Idle;
-            task.Sleep(Math.Max((int)((FOUR_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
+            task.Sleep(Math.Max((int)((TWO_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
             if (task.cancellationToken.IsCancellationRequested) {
                 task.status = TaskWrapper.TaskStatus.Canceling;
@@ -416,7 +417,7 @@ internal static partial class Lifeline {
             uint.TryParse(blackCountString, out blackCounter);
         }
 
-        Lock mutex = wmiMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
+        Lock mutex = snmpMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
 
         lock (mutex) {
             string dirPrintCounter = $"{Data.DIR_LIFELINE}{Data.DELIMITER}printcount{Data.DELIMITER}{file}";
@@ -453,12 +454,59 @@ internal static partial class Lifeline {
             return;
         }
 
-        Dictionary<string, string> switchCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get));
+        Dictionary<string, string> switchCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk));
         if (switchCounters is null || switchCounters.Count == 0) {
             return;
         }
 
-        //TODO:
+        Lock mutex = snmpMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
+
+        lock (mutex) {
+            string dirPrintCounter = $"{Data.DIR_LIFELINE}{Data.DELIMITER}switchcount{Data.DELIMITER}{file}";
+            if (!Directory.Exists(dirPrintCounter)) {
+                Directory.CreateDirectory(dirPrintCounter);
+            }
+
+            DateTime now = DateTime.UtcNow;
+
+            Dictionary<int, int> typeMap = new Dictionary<int, int>();
+            foreach (KeyValuePair<string, string> pair in switchCounters) {
+                if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
+
+                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
+                    int type = int.TryParse(pair.Value, out int v) ? v : -1;
+                    typeMap.Add(index, type);
+                }
+            }
+
+            long traffic = 0, errors = 0;
+            foreach (KeyValuePair<string, string> pair in switchCounters) {
+                if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
+                if (!typeMap.ContainsKey(index) || typeMap[index] != 6) continue; //skip non-physical interfaces
+
+                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_IN_64)) {
+                    traffic += long.TryParse(pair.Value, out long v) ? v : 0;
+                }
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_OUT_64)) {
+                    traffic += long.TryParse(pair.Value, out long v) ? v : 0;
+                }
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_IN)) {
+                    errors += int.TryParse(pair.Value, out int v) ? v : 0;
+                }
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_OUT)) {
+                    errors += int.TryParse(pair.Value, out int v) ? v : 0;
+                }
+            }
+
+            try {
+                using FileStream stream = new FileStream($"{dirPrintCounter}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
+                using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                writer.Write(traffic); //8 bytes
+                writer.Write(errors); //8 bytes
+            }
+            catch { }
+        }
     }
 
     public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {
