@@ -850,6 +850,7 @@ class DeviceView extends View {
 				const speed    = this.switchInfo.success && i<(this.switchInfo.speed?.length    ?? 0) ? this.switchInfo.speed[i]    : obj.i[i].s;
 				const untagged = this.switchInfo.success && i<(this.switchInfo.untagged?.length ?? 0) ? this.switchInfo.untagged[i] : obj.i[i].v;
 				const tagged   = this.switchInfo.success && i<(this.switchInfo.tagged?.length   ?? 0) ? this.switchInfo.tagged[i]   : obj.i[i].t;
+				const link     = this.switchInfo.success && i<(this.switchInfo.link?.length     ?? 0) ? this.switchInfo.link[i]     : obj.i[i].l;
 
 				const speedColorBox = document.createElement("div");
 				speedColorBox.style.display = "inline-block";
@@ -919,9 +920,8 @@ class DeviceView extends View {
 					this.floating.appendChild(errorLabel);
 				}
 
-				if (list[i].link && list[i].link in LOADER.devices.data) {
-					let file = list[i].link;
-					let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : "";
+				if (link && link in LOADER.devices.data) {
+					let type = LOADER.devices.data[link].type ? LOADER.devices.data[link].type.v.toLowerCase() : "";
 					const icon = LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg";
 
 					const linkIcon = document.createElement("div");
@@ -935,19 +935,19 @@ class DeviceView extends View {
 					linkIcon.style.paddingLeft = "36px";
 					this.floating.appendChild(linkIcon);
 
-					if (LOADER.devices.data[file].name) {
-						linkIcon.textContent = LOADER.devices.data[file].name.v;
+					if (LOADER.devices.data[link].name) {
+						linkIcon.textContent = LOADER.devices.data[link].name.v;
 					}
-					else if (LOADER.devices.data[file].hostname) {
-						linkIcon.textContent = file.hostname.v;
+					else if (LOADER.devices.data[link].hostname) {
+						linkIcon.textContent = link.hostname.v;
 					}
-					else if (LOADER.devices.data[file].ip) {
-						linkIcon.textContent = LOADER.devices.data[file].ip.v;
+					else if (LOADER.devices.data[link].ip) {
+						linkIcon.textContent = LOADER.devices.data[link].ip.v;
 					}
 
 					this.floating.style.maxHeight = "150px";
 
-					list[i].frontElement.ondblclick = ()=> LOADER.OpenDeviceByFile(file);
+					list[i].frontElement.ondblclick = ()=> LOADER.OpenDeviceByFile(link);
 				}
 
 				let x = frontElement.getBoundingClientRect().x - this.win.getBoundingClientRect().x;
@@ -3567,20 +3567,7 @@ class DeviceView extends View {
 					}
 
 					for (let i=0; i<json.length; i++) {
-						if (json[i].link) {
-							let link = null;
-							for (const k in LOADER.devices.data) {
-								if (!("mac address" in LOADER.devices.data[k])) continue;
-								const mac = LOADER.devices.data[k]["mac address"].v.toLowerCase().replaceAll(":", "");
-								if (mac != json[i].link) continue;
-								link = k;
-								break;
-							}
-							AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, link, json[i].comment);
-						}
-						else {
-							AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, null, json[i].comment);
-						}
+						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, link, json[i].comment);
 					}
 
 					SortList();

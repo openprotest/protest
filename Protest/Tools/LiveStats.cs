@@ -517,6 +517,20 @@ internal static class LiveStats {
             }
         }
 
+        Dictionary<int, string> macTable = new Dictionary<int, string>();
+        foreach (KeyValuePair<string, string> pair in parsedResult) {
+            if (!pair.Key.StartsWith(Oid.INTERFACE_1D_TP_FDB)) continue;
+            if (!int.TryParse(pair.Value, out int port)) continue;
+            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
+
+            if (macTable.ContainsKey(port)) {
+                macTable[port] = null;
+            }
+            else {
+                macTable.Add(port,  mac);
+            }
+        }
+
         foreach (KeyValuePair<string, string> pair in parsedResult) {
             if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
 
@@ -552,6 +566,7 @@ internal static class LiveStats {
         List<string> statusList   = new List<string>();
         List<long>   dataList     = new List<long>();
         List<int>    errorList    = new List<int>();
+        List<string> linkList     = new List<string>();
 
         foreach (KeyValuePair<int, string> pair in typeDic) {
             if (pair.Value != "6") continue; //physical ports only
@@ -570,6 +585,9 @@ internal static class LiveStats {
             int inErrors = errorInDic.TryGetValue(pair.Key, out int ein) ? ein : 0;
             int outErrors = errorOutDic.TryGetValue(pair.Key, out int eout) ? eout : 0;
             errorList.Add(inErrors + outErrors);
+
+            string link = macTable.TryGetValue(pair.Key, out string mac) ? mac : null;
+            linkList.Add(DatabaseInstances.FindDeviceByMac(link));
         }
 
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
@@ -580,7 +598,8 @@ internal static class LiveStats {
                 tagged   = taggedList,
                 status   = statusList,
                 data     = dataList,
-                error    = errorList
+                error    = errorList,
+                link     = linkList
             }
         });
 

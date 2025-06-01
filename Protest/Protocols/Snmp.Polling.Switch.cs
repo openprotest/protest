@@ -89,17 +89,17 @@ internal static partial class Polling {
                 }
             }
 
-            Dictionary<int, List<string>> macTable   = new Dictionary<int, List<string>>();
+            Dictionary<int, string> macTable = new Dictionary<int, string>();
             foreach (KeyValuePair<string, string> pair in interfaces) {
                 if (!pair.Key.StartsWith(Oid.INTERFACE_1D_TP_FDB)) continue;
                 if (!int.TryParse(pair.Value, out int port)) continue;
                 string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
 
                 if (macTable.ContainsKey(port)) {
-                    macTable[port].Add(mac);
+                    macTable[port] = null;
                 }
                 else {
-                    macTable.Add(port, new List<string> { mac });
+                    macTable.Add(port, mac);
                 }
             }
 
@@ -122,8 +122,6 @@ internal static partial class Polling {
                     untagged.Add(index, pair.Value);
                 }
             }
-
-            KeyValuePair<int, List<string>>[] macTableFiltered = macTable.Where(p => p.Value.Count == 1).ToArray();
 
             return JsonSerializer.SerializeToUtf8Bytes(
                 type.Where(o=> o.Value == "6")
@@ -157,7 +155,7 @@ internal static partial class Polling {
                     untagged = untagged.GetValueOrDefault(pair.Key, ""),
                     tagged   = tagged.GetValueOrDefault(pair.Key, ""),
                     comment  = alias.GetValueOrDefault(pair.Key, String.Empty),
-                    link     = macTableFiltered.Where(p => p.Key == pair.Key)?.FirstOrDefault().Value?.First() ?? null
+                    link     = DatabaseInstances.FindDeviceByMac(macTable.GetValueOrDefault(pair.Key, null)),
                 })
             );
         }

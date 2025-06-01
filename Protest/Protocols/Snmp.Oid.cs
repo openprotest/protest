@@ -33,6 +33,7 @@ public static class Oid {
         INTERFACE_TRAFFIC_OUT_64,
         INTERFACE_ERROR_IN,
         INTERFACE_ERROR_OUT,
+        INTERFACE_1D_TP_FDB,
     };
 
     public static string[] LIVESTATS_OID = new string[] {
