@@ -275,6 +275,7 @@
 .view-attributes-freeze > div:hover > div:nth-child(4) {
 	visibility: visible;
 	opacity: 1;
+	padding-top: 1px;
 	right: 6px;
 	transition-delay: .8s;
 }

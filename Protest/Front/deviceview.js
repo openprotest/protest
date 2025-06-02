@@ -3567,7 +3567,7 @@ class DeviceView extends View {
 					}
 
 					for (let i=0; i<json.length; i++) {
-						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, link, json[i].comment);
+						AddInterface(json[i].number, json[i].port, json[i].speed, json[i].untagged, json[i].tagged, json[i].link, json[i].comment);
 					}
 
 					SortList();
@@ -3836,16 +3836,12 @@ class DeviceView extends View {
 				snmpInput.appendChild(option);
 			}
 
-			if (this.link && "snmp profile" in this.link) {
+			if (this.link && ("snmp profile" in this.link || ".snmp profile" in this.link)) {
 				wmiToggle.checkbox.checked = false;
+				ldapToggle.checkbox.checked = false;
 				snmpToggle.checkbox.checked = true;
 				snmpInput.disabled = false;
 				snmpInput.value = this.link["snmp profile"].v;
-			}
-			else if (this.link && ".snmp profile" in this.link) {
-				snmpToggle.checkbox.checked = true;
-				snmpInput.disabled = false;
-				snmpInput.value = this.link[".snmp profile"].v;
 			}
 		}, 0);
 
@@ -3880,9 +3876,7 @@ class DeviceView extends View {
 			dialog.innerBox.parentElement.style.height = "180px";
 
 			let isCanceled = false;
-			dialog.cancelButton.addEventListener("click", ()=>{
-				isCanceled = true;
-			});
+			dialog.cancelButton.addEventListener("click", ()=>{isCanceled = true;});
 
 			try {
 				let url = `fetch/singledevice?target=${target}`;
