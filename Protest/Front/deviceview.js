@@ -1972,7 +1972,7 @@ class DeviceView extends View {
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
-					dot.setAttribute("r", 3);
+					dot.setAttribute("r", data[i].v === 0 ? 1 : 3);
 					dot.setAttribute("fill", "var(--clr-dark)");
 					svg.appendChild(dot);
 
@@ -1992,7 +1992,7 @@ class DeviceView extends View {
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
-					dot.setAttribute("r", 3);
+					dot.setAttribute("r", data[i].v === 0 ? 1 : 3);
 					dot.setAttribute("fill", this.VolumeToColor(data[i].v, data[i].t));
 					svg.appendChild(dot);
 
@@ -2011,7 +2011,7 @@ class DeviceView extends View {
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
-					dot.setAttribute("r", 3);
+					dot.setAttribute("r", data[i].v === 0 ? 1 : 3);
 					dot.setAttribute("fill", this.PercentToColor(data[i].v, 100));
 					svg.appendChild(dot);
 
@@ -2041,7 +2041,7 @@ class DeviceView extends View {
 					const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 					dot.setAttribute("cx", x);
 					dot.setAttribute("cy", y);
-					dot.setAttribute("r", 3);
+					dot.setAttribute("r", data[i].delta === 0 ? 1 : 3);
 					dot.setAttribute("fill", type==="errors" ? "var(--clr-error)" : "hsl(92,66%,50%)");
 					svg.appendChild(dot);
 

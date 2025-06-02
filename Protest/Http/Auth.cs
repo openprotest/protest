@@ -263,6 +263,7 @@ internal static class Auth {
                 path.Add("/lifeline/disk/view");
                 path.Add("/lifeline/diskio/view");
                 path.Add("/lifeline/printcount/view");
+                path.Add("/lifeline/switchcount/view");
                 path.Add("/ws/livestats/device");
                 path.Add("/ws/monitor");
                 break;
