@@ -408,7 +408,6 @@ internal static class Auth {
                 path.Add("/config/checkupdate");
                 path.Add("/config/upload/iplocation");
                 path.Add("/config/upload/proxy");
-                path.Add("/config/upload/macresolve");
                 path.Add("/config/upload/tor");
                 break;
 

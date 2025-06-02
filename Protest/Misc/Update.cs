@@ -24,11 +24,6 @@ internal static class Update {
         public byte[] to;
     }
 
-    private struct MacEntry {
-        public string mac;
-        public string vendor;
-    }
-
     private static readonly string RELEASE_URL = "https://raw.githubusercontent.com/openprotest/protest/master/RELEASE";
 
     public static byte[] CheckLatestRelease() {
@@ -397,98 +392,6 @@ internal static class Update {
             writer.Flush();
             writer.Close();
             stream.Close();
-        }
-
-        return Data.CODE_OK.Array;
-    }
-
-    public static byte[] MacResolverFormDataHandler(HttpListenerContext ctx) {
-        HttpListenerRequest request = ctx.Request;
-
-        string boundary = request.ContentType.Split('=')[1]; //boundary value
-        Stream body = request.InputStream;
-        Encoding encoding = request.ContentEncoding;
-        using StreamReader reader = new StreamReader(body, encoding);
-
-        string formData = reader.ReadToEnd();
-
-        string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
-
-        List<MacEntry> list = new List<MacEntry>();
-
-        foreach (string part in parts) {
-            if (!part.Contains("Content-Disposition")) continue;
-            //string file = GetFieldName(part);
-            string value = GetFieldValue(part);
-
-            using TextFieldParser parser = new TextFieldParser(new StringReader(value));
-            parser.TextFieldType = FieldType.Delimited;
-            parser.SetDelimiters(",");
-
-            while (!parser.EndOfData) {
-                string[] fields = parser.ReadFields();
-
-                if (fields.Length >= 2) {
-                    string mac = fields[1];
-                    if (mac.Length != 6) continue;
-                    string vendor = fields[2].Trim();
-                    list.Add(new MacEntry { mac = mac, vendor = vendor });
-                }
-            }
-        }
-
-        list.Sort((MacEntry a, MacEntry b) => {
-            return String.Compare(a.mac, b.mac);
-        });
-
-        try {
-            if (!Directory.Exists(Data.DIR_KNOWLADGE)) { Directory.CreateDirectory(Data.DIR_KNOWLADGE); }
-
-            using FileStream stream = new FileStream(Data.FILE_MAC, FileMode.OpenOrCreate);
-            using BinaryWriter writer = new BinaryWriter(stream);
-
-            uint index = 0;
-            List<string> dictionary = new List<string>();
-            List<uint> position = new List<uint>();
-
-            uint dictStart = (uint)(4 + (3 + 4) * list.Count); //7
-
-            writer.Write(dictStart);
-
-            for (int i = 0; i < list.Count; i++) {
-                uint ptr;
-
-                if (dictionary.Contains(list[i].vendor)) {
-                    ptr = position[dictionary.IndexOf(list[i].vendor)];
-                }
-                else {
-                    ptr = index;
-                    dictionary.Add(list[i].vendor);
-                    position.Add(index);
-                    index += (uint)list[i].vendor.Length + 1;
-                }
-
-                writer.Write(byte.Parse(list[i].mac[..2], NumberStyles.HexNumber));
-                writer.Write(byte.Parse(list[i].mac[2..4], NumberStyles.HexNumber));
-                writer.Write(byte.Parse(list[i].mac[4..6], NumberStyles.HexNumber));
-                writer.Write(ptr);
-            }
-
-            for (int i = 0; i < dictionary.Count; i++) {
-                string v = dictionary[i];
-                for (int j = 0; j < v.Length; j++) {
-                    byte b = (byte)v[j];
-
-                    writer.Write(b);
-                }
-                writer.Write((byte)0); //null termination
-            }
-
-            writer.Flush();
-            writer.Close();
-        }
-        catch {
-            return Data.CODE_FAILED.Array;
         }
 
         return Data.CODE_OK.Array;

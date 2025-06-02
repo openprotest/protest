@@ -313,10 +313,9 @@ class About extends Tabs {
 
 		const location = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["csv"]);
 		const proxy = this.CreateDropArea("Drop a file here to update proxy servers knowledge base", "/config/upload/proxy", ["csv"]);
-		const macResolver = this.CreateDropArea("Drop a file here to update MAC address-vendors knowledge base", "/config/upload/macresolve", ["csv"]);
 		const macTor = this.CreateDropArea("Drop a file here to update TOR servers knowledge base", "/config/upload/tor", ["txt"]);
 
-		this.tabsPanel.append(location, proxy, macResolver, macTor);
+		this.tabsPanel.append(location, proxy, macTor);
 
 		const resources = document.createElement("div");
 		resources.style.paddingTop = "100px";
@@ -329,27 +328,19 @@ class About extends Tabs {
 		link1.style.display = "block";
 		link1.style.margin = "8px";
 		link1.target = "_blank";
-		link1.href = "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html";
-		link1.textContent = "IEEE - MAC address block";
+		link1.href = "https://lite.ip2location.com/database/db5-ip-country-region-city-latitude-longitude";
+		link1.textContent = "IP2Location - Location list";
 		resources.append(link1);
 
 		const link2 = document.createElement("a");
 		link2.style.display = "block";
 		link2.style.margin = "8px";
 		link2.target = "_blank";
-		link2.href = "https://lite.ip2location.com/database/db5-ip-country-region-city-latitude-longitude";
-		link2.textContent = "IP2Location - Location list";
+		link2.href = "https://lite.ip2location.com/database/px1-ip-country";
+		link2.textContent = "IP2Location - Proxy list";
 		resources.append(link2);
 
-		const link3 = document.createElement("a");
-		link3.style.display = "block";
-		link3.style.margin = "8px";
-		link3.target = "_blank";
-		link3.href = "https://lite.ip2location.com/database/px1-ip-country";
-		link3.textContent = "IP2Location - Proxy list";
-		resources.append(link3);
-
-		resources.append(resourcesText, link1, link2, link3);
+		resources.append(resourcesText, link1, link2);
 	}
 
 	CreateDropArea(text, uploadUrl, filter) {

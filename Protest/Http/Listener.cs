@@ -167,7 +167,6 @@ public sealed class Listener {
 
         ["/config/upload/iplocation"] = (ctx, parameters, username) => Update.LocationFormDataHandler(ctx),
         ["/config/upload/proxy"] =      (ctx, parameters, username) => Update.ProxyFormDataHandler(ctx),
-        ["/config/upload/macresolve"] = (ctx, parameters, username) => Update.MacResolverFormDataHandler(ctx),
         ["/config/upload/tor"] =        (ctx, parameters, username) => Update.TorFormDataHandler(ctx),
 
         ["/api/list"] =                 (ctx, parameters, username) => Tools.Api.List(),

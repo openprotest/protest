@@ -53,6 +53,7 @@
 
   <ItemGroup Condition="'$(Configuration)' == 'RELEASE'">
     <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\Protest-MacLookupGenerator\Protest-MacLookupGenerator.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 
 </Project>
