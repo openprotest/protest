@@ -1651,6 +1651,9 @@ class DeviceView extends View {
 							}
 							new UserView({file: found});
 						}
+						else {
+							this.ConfirmBox("User don't exist in users list", true, "mono/user.svg");
+						}
 					};
 				}
 			}
