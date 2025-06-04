@@ -5,7 +5,7 @@ using System.Net.NetworkInformation;
 
 namespace Protest;
 
-public static class IpTools {
+internal static class IpTools {
     public static bool IsPrivate(this IPAddress address) {
         if (address.AddressFamily != AddressFamily.InterNetwork) return false;
 

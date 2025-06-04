@@ -15,7 +15,7 @@ using System.Threading;
 
 namespace Protest;
 
-public sealed class Database {
+internal sealed class Database {
     public enum SaveMethod : byte {
         ignore    = 0,
         createnew = 1,

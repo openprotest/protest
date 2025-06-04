@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Protest;
 
-public sealed class DatabaseJsonConverter : JsonConverter<Database> {
+internal sealed class DatabaseJsonConverter : JsonConverter<Database> {
     private readonly string name;
     private readonly string location;
     private readonly AttributesJsonConverter converter;

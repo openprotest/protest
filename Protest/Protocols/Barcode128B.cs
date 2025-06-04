@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Protest.Protocols;
 
-public static class Barcode128B {
+internal static class Barcode128B {
     private static readonly short[] code128B = new short[107] {
         0b_11011001100, //0: space
         0b_11001101100, //1: !

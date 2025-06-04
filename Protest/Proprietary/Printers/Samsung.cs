@@ -1,3 +1,3 @@
 namespace Protest.Proprietary.Printers;
 
-public sealed class Samsung {}
+internal sealed class Samsung {}

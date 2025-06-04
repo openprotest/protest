@@ -43,17 +43,21 @@
     <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(Configuration)' == 'RELEASE'">
+    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\Protest-MacLookupGenerator\Protest-MacLookupGenerator.csproj" OutputItemType="Analyzer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Protest-Tests"/>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="System.DirectoryServices" Version="9.0.4" />
     <PackageReference Include="System.Management" Version="9.0.4" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
     <PackageReference Include="SSH.NET" Version="2025.0.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.6" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)' == 'RELEASE'">
-    <ProjectReference Include="..\Protest-CacheGenerator\Protest-CacheGenerator.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\Protest-MacLookupGenerator\Protest-MacLookupGenerator.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 
 </Project>

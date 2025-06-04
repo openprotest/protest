@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace Protest.Tools;
 
-public static class Cert {
+internal static class Cert {
     public static byte[] Create(HttpListenerContext ctx, string origin) {
 
         if (!OperatingSystem.IsWindows()) {

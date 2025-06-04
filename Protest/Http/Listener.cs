@@ -15,7 +15,7 @@ using Protest.Tools;
 
 namespace Protest.Http;
 
-public sealed class Listener {
+internal sealed class Listener {
     private readonly HttpListener listener;
     private readonly Cache cache;
 

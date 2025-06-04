@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace Protest;
 
-public static class Data {
+internal static class Data {
     public const string GUID = "72f5bca3-7752-45e8-8027-2060ebbda456"; //from Protest.csproj
     public static readonly char DELIMITER = Path.DirectorySeparatorChar;
 

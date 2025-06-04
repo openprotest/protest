@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace Protest.Tools;
 
-public static class PasswordStrength {
+internal static class PasswordStrength {
     static private readonly string[] COMMON = new string[] {
             "123456789",
             "12345678",

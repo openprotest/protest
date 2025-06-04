@@ -1,3 +1,3 @@
 namespace Protest.Proprietary.Printers;
 
-public sealed class HewlettPackard {}
+internal sealed class HewlettPackard {}

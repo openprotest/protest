@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Protest;
 
-public sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary<string, Database.Attribute>> {
+internal sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictionary<string, Database.Attribute>> {
     private readonly bool ignorePasswords = false;
 
     public AttributesJsonConverter(bool ignorePasswords) {

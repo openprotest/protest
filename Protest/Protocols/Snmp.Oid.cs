@@ -1,6 +1,6 @@
 ﻿namespace Protest.Protocols.Snmp;
 
-public static class Oid {
+internal static class Oid {
 
     public static string[] GENERIC_OID = new string[] {
         SYSTEM_DESCRIPTOR,
