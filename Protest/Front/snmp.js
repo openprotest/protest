@@ -1,6 +1,11 @@
 class Snmp extends Window {
 
 static OID_CACHE = {};
+
+static OID_MAP_1_0_8802 = [
+	"1", "16", "17"
+];
+
 static OID_MAP_1_3_6_1_2_1 = [
 "1","2","3","4","6","9",
 "10","11","12","13","14","15","16","17","18","19",
@@ -217,7 +222,35 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 	async GetOid(oid) {
 		if (oid.startsWith(".")) oid = oid.substring(1);
-		if (oid.startsWith("1.3.6.1.2.1.")) {
+
+		if (oid.startsWith("1.0.8802.")) {
+			const iso8802 = oid.substring(9).split(".")[0];
+
+			if (!(iso8802 in Snmp.OID_MAP_1_0_8802)) return null;
+
+			const filename = `1.0.8802.${iso8802}`;
+
+			console.log(filename);
+
+			if (!(filename in Snmp.OID_CACHE)) {
+				try {
+					const response = await fetch(`snmp/1.0.8802.${iso8802}.json`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+					const json = await response.json();
+					if (json.error) throw(json.error);
+
+					for (const key in json) {
+						Snmp.OID_CACHE[`${filename}${key}`] = json[key];
+					}
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg");
+				}
+			}
+
+		}
+		else if (oid.startsWith("1.3.6.1.2.1.")) {
 			const mib2 = oid.substring(12).split(".")[0];
 			
 			if (!(mib2 in Snmp.OID_MAP_1_3_6_1_2_1)) return null;
