@@ -340,8 +340,10 @@ internal static partial class Polling {
                 string s = result[i].Data.ToString();
                 bool isBinary = false;
 
+                //int start = s.Length > 3 && s[0] == 0x04 ? 3 : 0;
+
                 for (int j = 0; j < s.Length; j++) {
-                    if (s[j] < 32 || s[j] > 126) {
+                    if ((s[j] < 32 || s[j] > 126) && s[j] != 10 && s[j] != 13) {
                         isBinary = true;
                         break;
                     }
