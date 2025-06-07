@@ -49,7 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Protest-Tests"/>
+    <InternalsVisibleTo Include="Protest-Tests" />
   </ItemGroup>
 
   <ItemGroup>
