@@ -81,7 +81,7 @@ class Api extends List {
 				permissions: this.link.data[key].permissions.v,
 			});
 		}
-		
+
 		try {
 			const response = await fetch("api/save", {
 				method: "POST",
@@ -298,7 +298,7 @@ class Api extends List {
 
 	async Delete() {
 		if (this.args.select === null) return;
-		
+
 		if (this.args.select in this.link.data) {
 			this.ConfirmBox("Are you sure you want delete this API link?").addEventListener("click", async()=> {
 				delete this.link.data[this.args.select];
@@ -319,7 +319,6 @@ class Api extends List {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
 			const newAttr = document.createElement("div");
-			
 			element.appendChild(newAttr);
 
 			switch (this.columnsElements[i].textContent) {

@@ -252,7 +252,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		}
 		else if (oid.startsWith("1.3.6.1.2.1.")) {
 			const mib2 = oid.substring(12).split(".")[0];
-			
+
 			if (!(mib2 in Snmp.OID_MAP_1_3_6_1_2_1)) return null;
 
 			const filename = `1.3.6.1.2.1.${mib2}`;
@@ -276,7 +276,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		//return oid in Snmp.OID_CACHE ? Snmp.OID_CACHE[oid] : null;
 	}
-	
+
 	async GetSnmpProfiles() {
 		try {
 			const response = await fetch("config/snmpprofiles/list");
@@ -299,7 +299,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 			if (this.args.profile) {
 				for (let i = 0; i < json.length; i++) {
 					if (json[i].guid != this.args.profile) continue;
-					
+
 					this.communityInput.value = json[i].community;
 					this.versionInput.value = json[i].version;
 					this.versionInput.onchange();
@@ -487,7 +487,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		let oid = this.oidInput.value.trim();
 		if (oid.length === 0) oid = "1.3.6.1.2.1.1";
-		
+
 		if (this.targetInput.value.length == 0 || oid.length == 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
@@ -556,7 +556,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 				break;
 			}
 		}
-	
+
 		return prefix.join('.');
 	}
 
@@ -744,10 +744,10 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 			event.preventDefault();
-			
+
 			let nextSibling = this.GetNextSibling(this.selected, event.key);
 			if (!nextSibling) return;
-			
+
 			this.selected.style.backgroundColor = "";
 
 			if (nextSibling.className === "snmp-container") {
@@ -841,7 +841,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 	GetNextSibling(current, key) {
 		const siblings = Array.from(this.selected.parentNode.children);
 		const index = siblings.indexOf(current);
-		
+
 		if (current.className === "snmp-list-item") {
 			const nextIndex = key === "ArrowUp" ? index - 1 : "ArrowDown" ? index + 1 : index;
 
@@ -861,7 +861,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 						const nextContainerIndex = containerIndex + 1;
 						const element = containerSiblings[nextContainerIndex]?.childNodes[1];
 						if (element) return element;
-						
+
 						container = container.parentNode.parentNode;
 						if (container.className !== "snmp-container") return null;
 					}

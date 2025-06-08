@@ -1143,11 +1143,11 @@ class Settings extends Tabs {
 		oAuthButton.style.gridArea = "3 / 3";
 
 		const GmailOAuth = ()=> {
-			
+
 		};
 
 		const OutlookOAuth = ()=> {
-			
+
 		};
 
 		providerInput.onchange = ()=> {
@@ -1171,7 +1171,7 @@ class Settings extends Tabs {
 			innerBox.appendChild(oAuthButton);
 			oAuthButton.onclick = GmailOAuth;
 			break;
-				
+
 			default:
 				innerBox.style.gridTemplateRows = "repeat(7, 38px)";
 				innerBox.parentElement.style.maxHeight = "350px";

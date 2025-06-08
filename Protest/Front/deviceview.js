@@ -1153,11 +1153,11 @@ class DeviceView extends View {
 					break;
 				}
 			}
-			
+
 			for (let i=0; i<list.length; i++) {
 				const colorAttribute = list[i].iconElement.getAttribute("c");
 				if (!colorAttribute) continue;
-				
+
 				let luminance;
 				if (colorAttribute.startsWith("#")) {
 					let r, g, b;
@@ -1198,7 +1198,7 @@ class DeviceView extends View {
 		modeBox.onfocus = ()=> setTimeout(()=>{modeBoxFocused = true;}, 100);
 
 		modeBox.onblur = ()=> {modeBoxFocused = false;};
-		
+
 		modeBox.onclick = ()=> {
 			const modes = this.switchInfo.success ? modesLive : modesLocal;
 			modeMenu.textContent = "";
@@ -1263,7 +1263,7 @@ class DeviceView extends View {
 		}
 		case "Traffic": {
 			const values = Object.keys(hashmap).filter(o=>o>0).sort();
-			
+
 			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "0 bytes"));
 			if (values.length === 0) break;
 
@@ -1288,7 +1288,7 @@ class DeviceView extends View {
 		}
 		case "Errors": {
 			const values = Object.keys(hashmap).filter(o=>o>0).sort();
-			
+
 			legend.appendChild(this.CreateLegendElement("rgb(32,32,32)", "0 errors"));
 			if (values.length === 0) break;
 
@@ -1321,7 +1321,7 @@ class DeviceView extends View {
 		for (let i=0; i<list.length; i++) {
 			if (list[i] === "") continue;
 			const split = list[i].split(",").map(o=>o.trim()).map(o=>parseInt(o));
-			
+
 			for (let j=0; j<split.length; j++) {
 				if (split[j] in hashmap) continue;
 				hashmap[split[j]] = true;
@@ -1361,7 +1361,7 @@ class DeviceView extends View {
 		for (let i=0; i<list.length; i++) {
 			if (list[i] === "") continue;
 			const split = list[i].split(",").map(o=>o.trim()).map(o=>parseInt(o));
-			
+
 			for (let j=0; j<split.length; j++) {
 				if (split[j] in hashmap) continue;
 				hashmap[split[j]] = true;
@@ -3037,7 +3037,7 @@ class DeviceView extends View {
 			snmpBox.style.filter = snmpToggle ? "opacity(0)" : "none";
 			snmpBox.style.transform = snmpToggle ? "translateY(-25%)" : "none";
 			snmpBox.style.visibility = snmpToggle ? "hidden" : "visible";
-			
+
 			if (!snmpToggle) {
 				setTimeout(()=>snmpOkButton.focus(), 200);
 			}
@@ -3075,7 +3075,7 @@ class DeviceView extends View {
 				SnmpToggle();
 			}
 		};
-		
+
 		addBulkBox.onkeydown = event => {
 			if (event.key === "Escape") {
 				BulkToggle();

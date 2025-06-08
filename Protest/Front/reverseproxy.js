@@ -48,7 +48,7 @@ class ReverseProxy extends List {
 
 		this.columnsElements[3].style.left = "70%";
 		this.columnsElements[3].style.width = "30%";
-		
+
 		this.SetupToolbar();
 		this.createButton = this.AddToolbarButton("Create proxy", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");

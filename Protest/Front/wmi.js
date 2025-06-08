@@ -368,7 +368,7 @@ class Wmi extends Window {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
-		
+
 		const query = this.queryInput.value.length > 0 ? this.queryInput.value.trim().replaceAll("\n", " ") : "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
 
 		this.SetIcon("mono/wmi.svg");
