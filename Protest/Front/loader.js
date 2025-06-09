@@ -120,6 +120,7 @@ const LOADER = {
 		"reverseproxy.js",
 		"passwordgen.js",
 		"passwordstrength.js",
+		"topology.js",
 		"gandalf.js",
 		"encoder.js",
 		"netcalc.js",
@@ -309,6 +310,7 @@ const LOADER = {
 		case "DevicesGrid"      : return new DevicesGrid(command.args);
 		case "UsersGrid"        : return new UsersGrid(command.args);
 		case "PasswordStrength" : return new PasswordStrength(command.args);
+		case "Topology"         : return new Topology(command.args);
 		case "Gandalf"          : return new Gandalf(command.args);
 		case "Fetch"            : return new Fetch(command.args);
 		case "Monitor"          : return new Monitor(command.args);
