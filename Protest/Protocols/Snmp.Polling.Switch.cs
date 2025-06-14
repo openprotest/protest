@@ -5,12 +5,14 @@ using System.Text.Json;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
 
+using PortDir = System.Collections.Generic.Dictionary<int, string>;
+
 namespace Protest.Protocols.Snmp;
 
 internal static partial class Polling {
 
-    public static byte[] GetInterfaces(Dictionary<string, string> parameters) {
-        if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
+    internal static byte[] GetInterfaces(Dictionary<string, string> parameters) {
+        if (parameters is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
         parameters.TryGetValue("file", out string file);
         if (string.IsNullOrEmpty(file)) {
@@ -42,55 +44,52 @@ internal static partial class Polling {
             Dictionary<string, string> parsed = Polling.ParseResponse(list);
             if (parsed is null) return "{\"error\":\"Failed to fetch interfaces\"}"u8.ToArray();
 
-            Dictionary<int, string>[] dictionaries = ComputeInterface(list, parsed);
+            PortDir[] dirs = ComputeInterface(list, parsed);
 
-            return SwitchInterfaces_LiveStatFormat(
-                dictionaries[0],
-                dictionaries[1],
-                dictionaries[2],
-                dictionaries[3],
-                dictionaries[4],
-                dictionaries[5],
-                dictionaries[6]
-            );
+            return SwitchInterfaces_LiveStatFormat(dirs[0], dirs[1], dirs[2], dirs[3], dirs[4], dirs[5], dirs[6]);
         }
         catch (Exception ex) {
             return JsonSerializer.SerializeToUtf8Bytes(new { error = ex.Message });
         }
     }
 
-    public static string FetchInterfaces(System.Net.IPAddress target, SnmpProfiles.Profile snmpProfile) {
+    internal static string FetchInterfaces(System.Net.IPAddress target, SnmpProfiles.Profile snmpProfile) {
         try {
             IList<Variable> list = Polling.SnmpQuery(target, snmpProfile, Oid.SWITCH_OID, Polling.SnmpOperation.Walk);
             Dictionary<string, string> parsed = Polling.ParseResponse(list);
             if (parsed is null) return null;
 
-            Dictionary<int, string>[] dictionaries = ComputeInterface(list, parsed);
+            PortDir[] dirs = ComputeInterface(list, parsed);
 
-            return SwitchInterfaces_FetchFormat(
-                dictionaries[0],
-                dictionaries[1],
-                dictionaries[2],
-                dictionaries[3],
-                dictionaries[4],
-                dictionaries[5],
-                dictionaries[6]
-            );
+            return SwitchInterfaces_FetchFormat(dirs[0], dirs[1], dirs[2], dirs[3], dirs[4], dirs[5], dirs[6]);
         }
         catch {
             return null;
         }
     }
 
+    internal static int GetPortBitmapStart(byte[] raw) {
+        if (raw.Length > 4
+            && raw[0] == 0x04
+            && raw[2] == 0x02
+            && raw[3] == 0x02) {
+            return 4;
+        }
+        return raw.Length >= 3 ? 2 : 0;
+    }
 
+    internal static int GetPortBitmapLength(byte[] raw, int startIndex) {
+        if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
+        return raw.Length - startIndex;
+    }
 
-    private static Dictionary<int, string>[] ComputeInterface(IList<Variable> list, Dictionary<string, string> parsed) {
-        Dictionary<int, string> descriptor = new Dictionary<int, string>();
-        Dictionary<int, string> alias      = new Dictionary<int, string>();
-        Dictionary<int, string> type       = new Dictionary<int, string>();
-        Dictionary<int, string> speed      = new Dictionary<int, string>();
-        Dictionary<int, string> untagged   = new Dictionary<int, string>();
-        Dictionary<int, string> tagged     = new Dictionary<int, string>();
+    private static PortDir[] ComputeInterface(IList<Variable> list, Dictionary<string, string> parsed) {
+        PortDir descriptor = new PortDir();
+        PortDir alias      = new PortDir();
+        PortDir type       = new PortDir();
+        PortDir speed      = new PortDir();
+        PortDir untagged   = new PortDir();
+        PortDir tagged     = new PortDir();
 
         Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
         for (int i = 0; i < list.Count; i++) {
@@ -124,6 +123,7 @@ internal static partial class Polling {
                 }
             }
         }
+
         foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
                 tagged.TryGetValue(port, out var existing);
@@ -131,7 +131,7 @@ internal static partial class Polling {
             }
         }
 
-        Dictionary<int, string> macTable = new Dictionary<int, string>();
+        PortDir macTable = new PortDir();
         foreach (KeyValuePair<string, string> pair in parsed) {
             if (!pair.Key.StartsWith(Oid.INTERFACE_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
@@ -165,123 +165,65 @@ internal static partial class Polling {
             }
         }
 
-        return new Dictionary<int, string>[] {
-            type,
-            descriptor,
-            speed,
-            untagged,
-            tagged,
-            alias,
-            macTable
-        };
+        return new PortDir[] { type, descriptor, speed, untagged, tagged, alias, macTable };
     }
 
-    internal static int GetPortBitmapStart(byte[] raw) {
-        if (raw.Length > 4
-            && raw[0] == 0x04
-            && raw[2] == 0x02
-            && raw[3] == 0x02) {
-            return 4;
-        }
-        return raw.Length >= 3 ? 2 : 0;
-    }
-
-    internal static int GetPortBitmapLength(byte[] raw, int startIndex) {
-        if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
-        return raw.Length - startIndex;
-    }
-
-    private static byte[] SwitchInterfaces_LiveStatFormat(
-        Dictionary<int, string> type,
-        Dictionary<int, string> descriptor,
-        Dictionary<int, string> speed,
-        Dictionary<int, string> untagged,
-        Dictionary<int, string> tagged,
-        Dictionary<int, string> alias,
-        Dictionary<int, string> macTable) {
-        
-        return JsonSerializer.SerializeToUtf8Bytes(
+    private static byte[] SwitchInterfaces_LiveStatFormat(PortDir type, PortDir descriptor, PortDir speed, PortDir untagged, PortDir tagged, PortDir alias, PortDir macTable) =>
+        JsonSerializer.SerializeToUtf8Bytes(
             type.Where(o => o.Value == "6")
             .Select(pair => new {
-                number = descriptor.GetValueOrDefault(pair.Key, null),
-                port = speed.GetValueOrDefault(pair.Key, "N/A") switch {
-                    "10000"  => "SFP+",
-                    "25000"  => "SFP+",
-                    "40000"  => "QSFP",
-                    "100000" => "QSFP",
-                    "200000" => "QSFP",
-                    "400000" => "QSFP",
-                    "800000" => "QSFP",
-                    _ => "Ethernet"
-                },
-                speed = speed.GetValueOrDefault(pair.Key, "N/A") switch {
-                    "10"     => "10 Mbps",
-                    "100"    => "100 Mbps",
-                    "1000"   => "1 Gbps",
-                    "2500"   => "2.5 Gbps",
-                    "5000"   => "5 Gbps",
-                    "10000"  => "10 Gbps",
-                    "25000"  => "25 Gbps",
-                    "40000"  => "40 Gbps",
-                    "100000" => "100 Gbps",
-                    "200000" => "200 Gbps",
-                    "400000" => "400 Gbps",
-                    "800000" => "800 Gbps",
-                    _ => "N/A"
-                },
+                number   = descriptor.GetValueOrDefault(pair.Key, null),
+                port     = PortTypeToString(speed.GetValueOrDefault(pair.Key, "N/A")),
+                speed    = PortSpeedToString(speed.GetValueOrDefault(pair.Key, "N/A")),
                 untagged = untagged.GetValueOrDefault(pair.Key, ""),
                 tagged   = tagged.GetValueOrDefault(pair.Key, ""),
                 comment  = alias.GetValueOrDefault(pair.Key, String.Empty),
                 link     = DatabaseInstances.FindDeviceByMac(macTable.GetValueOrDefault(pair.Key, null)),
             })
         );
-    }
 
-    private static string SwitchInterfaces_FetchFormat(
-        Dictionary<int, string> type,
-        Dictionary<int, string> descriptor,
-        Dictionary<int, string> speed,
-        Dictionary<int, string> untagged,
-        Dictionary<int, string> tagged,
-        Dictionary<int, string> alias,
-        Dictionary<int, string> macTable) {
-        
-        return JsonSerializer.Serialize(new {
+    private static string SwitchInterfaces_FetchFormat(PortDir type, PortDir descriptor, PortDir speed, PortDir untagged, PortDir tagged, PortDir alias, PortDir macTable) =>
+        JsonSerializer.Serialize(new {
             i = type.Where(o => o.Value == "6")
             .Select(pair => new {
                 n = descriptor.GetValueOrDefault(pair.Key, null),
-                i = speed.GetValueOrDefault(pair.Key, "N/A") switch {
-                    "10000" => "SFP+",
-                    "25000" => "SFP+",
-                    "40000" => "QSFP",
-                    "100000" => "QSFP",
-                    "200000" => "QSFP",
-                    "400000" => "QSFP",
-                    "800000" => "QSFP",
-                    _ => "Ethernet"
-                },
-                s = speed.GetValueOrDefault(pair.Key, "N/A") switch {
-                    "10" => "10 Mbps",
-                    "100" => "100 Mbps",
-                    "1000" => "1 Gbps",
-                    "2500" => "2.5 Gbps",
-                    "5000" => "5 Gbps",
-                    "10000" => "10 Gbps",
-                    "25000" => "25 Gbps",
-                    "40000" => "40 Gbps",
-                    "100000" => "100 Gbps",
-                    "200000" => "200 Gbps",
-                    "400000" => "400 Gbps",
-                    "800000" => "800 Gbps",
-                    _ => "N/A"
-                },
+                i = PortTypeToString(speed.GetValueOrDefault(pair.Key, "N/A")),
+                s = PortSpeedToString(speed.GetValueOrDefault(pair.Key, "N/A")),
                 v = untagged.GetValueOrDefault(pair.Key, ""),
                 t = tagged.GetValueOrDefault(pair.Key, ""),
                 c = alias.GetValueOrDefault(pair.Key, String.Empty),
                 l = DatabaseInstances.FindDeviceByMac(macTable.GetValueOrDefault(pair.Key, null)),
             }),
-            n = "horizontal"
+            n = "vertical"
         });
-    }
+
+    private static string PortTypeToString(string value) =>
+        value switch {
+            "10000"  => "SFP+",
+            "25000"  => "SFP+",
+            "40000"  => "QSFP",
+            "100000" => "QSFP",
+            "200000" => "QSFP",
+            "400000" => "QSFP",
+            "800000" => "QSFP",
+            _ => "Ethernet"
+        };
+
+    private static string PortSpeedToString(string value) =>
+        value switch {
+            "10"     => "10 Mbps",
+            "100"    => "100 Mbps",
+            "1000"   => "1 Gbps",
+            "2500"   => "2.5 Gbps",
+            "5000"   => "5 Gbps",
+            "10000"  => "10 Gbps",
+            "25000"  => "25 Gbps",
+            "40000"  => "40 Gbps",
+            "100000" => "100 Gbps",
+            "200000" => "200 Gbps",
+            "400000" => "400 Gbps",
+            "800000" => "800 Gbps",
+            _ => "N/A"
+        };
 
 }
