@@ -436,7 +436,9 @@ internal static class Fetch {
                 case "firewall":
                 case "router":
                 case "switch":
-                    byte[] s = Protocols.Snmp.Polling.SwitchInterface(ipList.First(), profile);
+                    string interfaces = Protocols.Snmp.Polling.FetchInterfaces(ipList[0], profile);
+                    if (interfaces is  null) break;
+                    data.TryAdd(".interfaces", new string[] { Data.EscapeJsonText(interfaces), "SNMP", string.Empty });
                     break;
                 }
             }
