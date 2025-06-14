@@ -8,7 +8,7 @@ using Lextm.SharpSnmpLib;
 namespace Protest.Protocols.Snmp;
 
 internal static partial class Polling {
-    public static byte[] SwitchInterface(HttpListenerContext ctx, Dictionary<string, string> parameters) {
+    public static byte[] SwitchInterface(Dictionary<string, string> parameters) {
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         parameters.TryGetValue("file", out string file);
@@ -36,12 +36,15 @@ internal static partial class Polling {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
+        return SwitchInterface(_ipAddress, _snmpProfile);
+    }
+
+    public static byte[] SwitchInterface(IPAddress target, SnmpProfiles.Profile snmpProfile) {
         try {
-            IList<Variable> snmpResult = Polling.SnmpQuery(_ipAddress, _snmpProfile, Oid.SWITCH_OID, Polling.SnmpOperation.Walk);
+            IList<Variable> snmpResult = Polling.SnmpQuery(target, snmpProfile, Oid.SWITCH_OID, Polling.SnmpOperation.Walk);
             Dictionary<string, string> interfaces = Polling.ParseResponse(snmpResult);
 
             if (interfaces is null) return "{\"error\":\"Failed to fetch interfaces\"}"u8.ToArray();
-
 
             Dictionary<int, string> descriptor = new Dictionary<int, string>();
             Dictionary<int, string> alias      = new Dictionary<int, string>();
@@ -69,15 +72,15 @@ internal static partial class Polling {
                 for (int j = startIndex; j < maxIndex; j++) {
                     byte b = raw[j];
                     for (int k = 0; k < 8; k++) {
-                        if ((b & (1 << (7 - k))) != 0) {
-                            int portIndex = 8 * (j - startIndex) + (k + 1);
-                            if (!taggedMap.TryGetValue(vlanId, out var ports)) {
-                                ports = new List<int>();
-                                taggedMap[vlanId] = ports;
+                        if ((b & (1 << (7 - k))) == 0) continue;
+
+                        int portIndex = 8 * (j - startIndex) + (k + 1);
+                        if (!taggedMap.TryGetValue(vlanId, out var ports)) {
+                            ports = new List<int>();
+                        taggedMap[vlanId] = ports;
                             }
-                            if (!ports.Contains(portIndex)) {
-                                ports.Add(portIndex);
-                            }
+                        if (!ports.Contains(portIndex)) {
+                            ports.Add(portIndex);
                         }
                     }
                 }
@@ -124,10 +127,10 @@ internal static partial class Polling {
             }
 
             return JsonSerializer.SerializeToUtf8Bytes(
-                type.Where(o=> o.Value == "6")
+                type.Where(o => o.Value == "6")
                 .Select(pair => new {
-                    number   = descriptor.GetValueOrDefault(pair.Key, null),
-                    port     = speed.GetValueOrDefault(pair.Key, "N/A") switch {
+                    number = descriptor.GetValueOrDefault(pair.Key, null),
+                    port = speed.GetValueOrDefault(pair.Key, "N/A") switch {
                         "10000"  => "SFP+",
                         "25000"  => "SFP+",
                         "40000"  => "QSFP",
@@ -135,9 +138,9 @@ internal static partial class Polling {
                         "200000" => "QSFP",
                         "400000" => "QSFP",
                         "800000" => "QSFP",
-                        _        => "Ethernet"
+                        _ => "Ethernet"
                     },
-                    speed    = speed.GetValueOrDefault(pair.Key, "N/A") switch {
+                    speed = speed.GetValueOrDefault(pair.Key, "N/A") switch {
                         "10"     => "10 Mbps",
                         "100"    => "100 Mbps",
                         "1000"   => "1 Gbps",
@@ -150,12 +153,12 @@ internal static partial class Polling {
                         "200000" => "200 Gbps",
                         "400000" => "400 Gbps",
                         "800000" => "800 Gbps",
-                        _        => "N/A"
+                        _ => "N/A"
                     },
                     untagged = untagged.GetValueOrDefault(pair.Key, ""),
-                    tagged   = tagged.GetValueOrDefault(pair.Key, ""),
-                    comment  = alias.GetValueOrDefault(pair.Key, String.Empty),
-                    link     = DatabaseInstances.FindDeviceByMac(macTable.GetValueOrDefault(pair.Key, null)),
+                    tagged = tagged.GetValueOrDefault(pair.Key, ""),
+                    comment = alias.GetValueOrDefault(pair.Key, String.Empty),
+                    link = DatabaseInstances.FindDeviceByMac(macTable.GetValueOrDefault(pair.Key, null)),
                 })
             );
         }

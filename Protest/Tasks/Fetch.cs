@@ -410,6 +410,13 @@ internal static class Fetch {
                 data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", string.Empty });
             }
 
+            if (!data.ContainsKey("type")) {
+                IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Polling.SnmpOperation.Get);
+                if (dot1dBaseBridgeAddress.Count > 0) {
+                    data.TryAdd("type", new string[] { "Switch", "SNMP", string.Empty });
+                }
+            }
+
             if (data.TryGetValue("type", out string[] type) && profile is not null) {
                 switch (type[0].ToLower().Trim()) {
                 case "fax":
@@ -429,11 +436,7 @@ internal static class Fetch {
                 case "firewall":
                 case "router":
                 case "switch":
-                    IList<Variable> switchResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.SWITCH_OID, Polling.SnmpOperation.Get);
-                    Dictionary<string, string> switchFormatted = Protocols.Snmp.Polling.ParseResponse(switchResult);
-                    if (switchFormatted is not null && switchFormatted.TryGetValue(Protocols.Snmp.Oid.INTERFACE_TOTAL, out string snmpSwitchSerialNo)) {
-                        data.TryAdd("total interfaces", new string[] { snmpSwitchSerialNo, "SNMP", string.Empty });
-                    }
+                    byte[] s = Protocols.Snmp.Polling.SwitchInterface(ipList.First(), profile);
                     break;
                 }
             }

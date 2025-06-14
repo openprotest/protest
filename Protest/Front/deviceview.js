@@ -763,16 +763,15 @@ class DeviceView extends View {
 		this.liveC.style.overflow = "auto";
 
 		if (!(".interfaces" in this.link)) return;
-		let obj;
 
+		let obj;
 		try {
 			obj = JSON.parse(this.link[".interfaces"].v);
+			if (obj === null) return;
 		}
 		catch {
 			return;
 		}
-
-		if (obj === null) return;
 
 		const container = document.createElement("div");
 		container.style.display = "inline-block";
@@ -830,27 +829,27 @@ class DeviceView extends View {
 				frontElement.appendChild(ledElement);
 			}
 
+			const port = obj.i[i].i;
+			const speed    = this.switchInfo.success && i<(this.switchInfo.speed?.length    ?? 0) ? this.switchInfo.speed[i]    : obj.i[i].s;
+			const untagged = this.switchInfo.success && i<(this.switchInfo.untagged?.length ?? 0) ? this.switchInfo.untagged[i] : obj.i[i].v;
+			const tagged   = this.switchInfo.success && i<(this.switchInfo.tagged?.length   ?? 0) ? this.switchInfo.tagged[i]   : obj.i[i].t;
+			const link     = this.switchInfo.success && i<(this.switchInfo.link?.length     ?? 0) ? this.switchInfo.link[i]     : obj.i[i].l;
+
 			list.push({
 				frontElement : frontElement,
 				iconElement  : iconElement,
 				numberElement: numElement,
 				number       : obj.i[i].n,
 				port         : obj.i[i].i,
-				speed        : obj.i[i].s,
-				untagged     : obj.i[i].v,
-				tagged       : obj.i[i].t,
-				link         : obj.i[i].l,
+				speed        : speed,
+				untagged     : untagged,
+				tagged       : tagged,
+				link         : link,
 				comment      : obj.i[i].c
 			});
 
 			frontElement.onmouseenter = ()=> {
 				this.floating.textContent = "";
-
-				const port = obj.i[i].i;
-				const speed    = this.switchInfo.success && i<(this.switchInfo.speed?.length    ?? 0) ? this.switchInfo.speed[i]    : obj.i[i].s;
-				const untagged = this.switchInfo.success && i<(this.switchInfo.untagged?.length ?? 0) ? this.switchInfo.untagged[i] : obj.i[i].v;
-				const tagged   = this.switchInfo.success && i<(this.switchInfo.tagged?.length   ?? 0) ? this.switchInfo.tagged[i]   : obj.i[i].t;
-				const link     = this.switchInfo.success && i<(this.switchInfo.link?.length     ?? 0) ? this.switchInfo.link[i]     : obj.i[i].l;
 
 				const speedColorBox = document.createElement("div");
 				speedColorBox.style.display = "inline-block";
@@ -1658,7 +1657,7 @@ class DeviceView extends View {
 				}
 			}
 
-			if (".interfaces" in this.link && !this.switchInfo.success) {
+			if (".interfaces" in this.link && ("snmp profile" in this.link || ".snmp profile" in this.link) && !this.switchInfo.success) {
 				this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
 			}
 
