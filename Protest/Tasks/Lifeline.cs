@@ -471,7 +471,7 @@ internal static partial class Lifeline {
 
             Dictionary<int, int> typeMap = new Dictionary<int, int>();
             foreach (KeyValuePair<string, string> pair in switchCounters) {
-                if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
+                if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
                 if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
                     int type = int.TryParse(pair.Value, out int v) ? v : -1;
@@ -481,7 +481,7 @@ internal static partial class Lifeline {
 
             long traffic = 0, errors = 0;
             foreach (KeyValuePair<string, string> pair in switchCounters) {
-                if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
+                if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
                 if (!typeMap.ContainsKey(index) || typeMap[index] != 6) continue; //skip non-physical interfaces
 
                 if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_IN_64)) {

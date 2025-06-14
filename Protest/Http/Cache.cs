@@ -267,7 +267,7 @@ internal sealed class Cache {
     }
 
     private Entry ConstructEntry(string name, byte[] bytes, bool isGzipped, string extension = null) {
-        extension ??= name.Split('.').Last();
+        extension ??= name.Split('.')[^1];
 
         byte[] raw, gzip;
         if (isGzipped) {

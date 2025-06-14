@@ -584,7 +584,7 @@ internal static class Issues {
             List<(long timestamp, double percentUsed)> usageData = diskEntry.Value;
 
             if (usageData.Count == 0) { continue; }
-            if (CheckDiskSpace(device.filename, host, 100 - usageData.Last().percentUsed, diskEntry.Key, out Issue? diskIssue)) {
+            if (CheckDiskSpace(device.filename, host, 100 - usageData[^1].percentUsed, diskEntry.Key, out Issue? diskIssue)) {
                 issuesList.Add(diskIssue.Value);
                 continue;
             }

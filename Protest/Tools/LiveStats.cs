@@ -82,7 +82,7 @@ internal static class LiveStats {
                 if (OperatingSystem.IsWindows()
                     && entry.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
                     && typeAttribute.value.ToLower() == "domain user"
-                    && entry.attributes.TryGetValue("username", out Database.Attribute usernameAtrtribute)
+                    && entry.attributes.TryGetValue("username", out Database.Attribute usernameAttribute)
                     && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)) {
 
                     if (issues is not null) {
@@ -532,7 +532,7 @@ internal static class LiveStats {
         }
 
         foreach (KeyValuePair<string, string> pair in parsedResult) {
-            if (!int.TryParse(pair.Key.Split('.').Last(), out int index)) continue;
+            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
             if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
                 typeDic.Add(index, pair.Value);

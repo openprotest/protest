@@ -107,7 +107,7 @@ internal static partial class Polling {
             }
 
             foreach (KeyValuePair<string, string> pair in interfaces) {
-                int index = int.Parse(pair.Key.Split('.').Last());
+                int index = int.Parse(pair.Key.Split('.')[^1]);
 
                 if (pair.Key.StartsWith(Oid.INTERFACE_DESCRIPTOR)) {
                     descriptor.Add(index, pair.Value);
