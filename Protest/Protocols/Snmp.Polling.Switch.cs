@@ -14,8 +14,7 @@ internal static partial class Polling {
     internal static byte[] GetInterfaces(Dictionary<string, string> parameters) {
         if (parameters is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
-        parameters.TryGetValue("file", out string file);
-        if (string.IsNullOrEmpty(file)) {
+        if (!parameters.TryGetValue("file", out string file)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -113,7 +112,7 @@ internal static partial class Polling {
                     if ((b & (1 << (7 - k))) == 0) continue;
 
                     int portIndex = 8 * (j - startIndex) + (k + 1);
-                    if (!taggedMap.TryGetValue(vlanId, out var ports)) {
+                    if (!taggedMap.TryGetValue(vlanId, out List<int> ports)) {
                         ports = new List<int>();
                     taggedMap[vlanId] = ports;
                         }
@@ -126,7 +125,7 @@ internal static partial class Polling {
 
         foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
-                tagged.TryGetValue(port, out var existing);
+                tagged.TryGetValue(port, out string existing);
                 tagged[port] = string.IsNullOrEmpty(existing) ? pair.Key.ToString() : $"{existing},{pair.Key.ToString()}";
             }
         }
@@ -197,7 +196,7 @@ internal static partial class Polling {
             n = "vertical"
         });
 
-    private static string PortTypeToString(string value) =>
+    internal static string PortTypeToString(string value) =>
         value switch {
             "10000"  => "SFP+",
             "25000"  => "SFP+",
@@ -209,7 +208,7 @@ internal static partial class Polling {
             _ => "Ethernet"
         };
 
-    private static string PortSpeedToString(string value) =>
+    internal static string PortSpeedToString(string value) =>
         value switch {
             "10"     => "10 Mbps",
             "100"    => "100 Mbps",
@@ -225,5 +224,4 @@ internal static partial class Polling {
             "800000" => "800 Gbps",
             _ => "N/A"
         };
-
 }

@@ -24,21 +24,6 @@ internal static class LiveStats {
     private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer" };
     private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall" };
 
-    private static Dictionary<string, string> speedMap = new Dictionary<string, string> {
-        ["10"]     = "10 Mbps",
-        ["100"]    = "100 Mbps",
-        ["1000"]   = "1 Gbps",
-        ["2500"]   = "2.5 Gbps",
-        ["5000"]   = "5 Gbps",
-        ["10000"]  = "10 Gbps",
-        ["25000"]  = "25 Gbps",
-        ["40000"]  = "40 Gbps",
-        ["100000"] = "100 Gbps",
-        ["200000"] = "200 Gbps",
-        ["400000"] = "400 Gbps",
-        ["800000"] = "800 Gbps"
-    };
-
     private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
         lock (mutex) {
             WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
@@ -419,8 +404,7 @@ internal static class LiveStats {
 
         if (printerFormatted is not null) {
             if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_STATUS, out string snmpPrinterStatus)) {
-                string status = snmpPrinterStatus switch
-                {
+                string status = snmpPrinterStatus switch {
                     "1" => "Other",
                     "2" => "Processing",
                     "3" => "Idle",
@@ -460,7 +444,6 @@ internal static class LiveStats {
         }
 
         Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(result);
-
         if (parsedResult is null) {
             WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex);
             return;
@@ -498,7 +481,7 @@ internal static class LiveStats {
                 for (int k = 0; k < 8; k++) {
                     if ((b & (1 << (7 - k))) != 0) {
                         int portIndex = 8 * (j - startIndex) + (k + 1);
-                        if (!taggedMap.TryGetValue(vlanId, out var ports)) {
+                        if (!taggedMap.TryGetValue(vlanId, out List<int> ports)) {
                             ports = new List<int>();
                             taggedMap[vlanId] = ports;
                         }
@@ -512,7 +495,7 @@ internal static class LiveStats {
 
         foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
-                taggedDic.TryGetValue(port, out var existing);
+                taggedDic.TryGetValue(port, out string existing);
                 taggedDic[port] = string.IsNullOrEmpty(existing) ? pair.Key.ToString() : $"{existing},{pair.Key.ToString()}";
             }
         }
@@ -572,7 +555,7 @@ internal static class LiveStats {
             if (pair.Value != "6") continue; //physical ports only
 
             string rawSpeed = speedDic.TryGetValue(pair.Key, out string s) ? s : "N/A";
-            speedList.Add(speedMap.TryGetValue(rawSpeed, out string readableSpeed) ? readableSpeed : "N/A");
+            speedList.Add(PortSpeedToString(rawSpeed));
 
             untaggedList.Add(untaggedDic.TryGetValue(pair.Key, out string untaggedVlan) ? untaggedVlan : "1");
             taggedList.Add(taggedDic.TryGetValue(pair.Key, out string taggedVlan) ? taggedVlan : "1");
