@@ -438,7 +438,7 @@ internal static class Fetch {
                 case "switch":
                     string interfaces = Protocols.Snmp.Polling.FetchInterfaces(ipList[0], profile);
                     if (interfaces is  null) break;
-                    data.TryAdd(".interfaces", new string[] { Data.EscapeJsonText(interfaces), "SNMP", string.Empty });
+                    data.TryAdd(".interfaces", new string[] { interfaces, "SNMP", string.Empty });
                     break;
                 }
             }
