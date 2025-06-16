@@ -185,7 +185,6 @@ document.body.onresize = ()=> {
 
 document.body.onmousemove = event=> {
 	if (WIN.active === null) return;
-
 	if (event.buttons != 1) document.body.onmouseup(event);
 
 	document.getSelection().removeAllRanges(); //remove all selections

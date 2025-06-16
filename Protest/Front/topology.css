@@ -1,8 +1,29 @@
-.topology-container {
+.topology-device {
 	position: absolute;
-	top: 0;
-	right: 0;
-	left: 0;
-	bottom: 0;
-	overflow: auto;
+	border-radius: 4px;
+	color: var(--clr-light);
+	max-width: 72px;
+}
+
+.topology-selected {
+	background-color: var(--clr-select);
+	z-index: 1;
+}
+
+.topology-device-icon {
+	width: 72px;
+	height: 64px;
+	background-color: var(--clr-light);
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: 56px;
+}
+
+.topology-device-label {
+	color: var(--clr-light);
+	font-size: x-small;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	direction: rtl;
 }
