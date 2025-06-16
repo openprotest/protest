@@ -8,6 +8,9 @@ class Topology extends Window{
 		this.selected = null;
 		this.dragging = null;
 
+		this.devices = [];
+		this.links = [];
+
 		this.AddCssDependencies("topology.css");
 
 		this.SetTitle("Topology");
@@ -50,8 +53,6 @@ class Topology extends Window{
 
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
-
-		this.InitializeMap();
 	}
 
 	InitializeMap() {
@@ -116,7 +117,99 @@ class Topology extends Window{
 	}
 
 	StartDialog() {
+		const dialog = this.DialogBox("280px");
+		if (dialog === null) return;
 
+		const {okButton, innerBox} = dialog;
+		
+		innerBox.parentElement.style.maxWidth = "400px";
+
+		okButton.value = "Start";
+
+		innerBox.style.padding = "16px 32px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "auto 150px 50px auto auto";
+		innerBox.style.gridTemplateRows = "repeat(5, 34px)";
+		innerBox.style.alignItems = "center";
+
+		let counter = 0;
+		const AddParameter = (name, tag, type, properties) => {
+			counter++;
+
+			const label = document.createElement("div");
+			label.style.gridArea = `${counter} / 2`;
+			label.textContent = name;
+
+			let input;
+			if (tag === "input" && type === "toggle") {
+				const box = document.createElement("div");
+				box.style.gridArea = `${counter} / 3 / ${counter+1} / 4`;
+
+				const toggle = this.CreateToggle(".", false, box);
+				toggle.label.style.minWidth = "0px";
+				toggle.label.style.color = "transparent";
+				input = toggle.checkbox;
+
+				innerBox.append(label, box);
+			}
+			else {
+				input = document.createElement(tag);
+				input.style.gridArea = `${counter} / 3`;
+				if (type) { input.type = type; }
+
+				innerBox.append(label, input);
+			}
+
+			for (let param in properties) {
+				input[param] = properties[param];
+			}
+
+			return [label, input];
+		};
+
+		const labelInclude = document.createElement("div");
+		labelInclude.textContent = "Include:";
+		labelInclude.style.gridArea = `${++counter} / 2`;
+		innerBox.append(labelInclude);
+
+		const [switchLabel, switchInput] = AddParameter("Switches", "input", "toggle");
+		switchLabel.style.lineHeight = "24px";
+		switchLabel.style.paddingLeft = "28px";
+		switchLabel.style.backgroundImage = "url(mono/switch.svg)";
+		switchLabel.style.backgroundSize = "24px";
+		switchLabel.style.backgroundRepeat = "no-repeat";
+		switchInput.checked = true;
+
+		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
+		firewallLabel.style.lineHeight = "24px";
+		firewallLabel.style.paddingLeft = "28px";
+		firewallLabel.style.backgroundImage = "url(mono/firewall.svg)";
+		firewallLabel.style.backgroundSize = "24px";
+		firewallLabel.style.backgroundRepeat = "no-repeat";
+		firewallInput.checked = true;
+
+		const [routerLabel, routerInput] = AddParameter("Routers", "input", "toggle");
+		routerLabel.style.lineHeight = "24px";
+		routerLabel.style.paddingLeft = "28px";
+		routerLabel.style.backgroundImage = "url(mono/router.svg)";
+		routerLabel.style.backgroundSize = "24px";
+		routerLabel.style.backgroundRepeat = "no-repeat";
+		routerInput.checked = true;
+
+		const [endpointLabel, endpointInput] = AddParameter("Endpoints", "input", "toggle");
+		endpointLabel.style.lineHeight = "24px";
+		endpointLabel.style.paddingLeft = "28px";
+		endpointLabel.style.backgroundImage = "url(mono/gear.svg)";
+		endpointLabel.style.backgroundSize = "24px";
+		endpointLabel.style.backgroundRepeat = "no-repeat";
+		endpointInput.checked = false;
+
+		setTimeout(()=>okButton.focus(), 200);
+
+		okButton.onclick = async ()=> {
+			this.InitializeMap();
+			dialog.Close();
+		};
 	}
 
 	Stop() {
