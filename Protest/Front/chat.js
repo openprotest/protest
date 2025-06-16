@@ -603,7 +603,7 @@ class Chat extends Window {
 		//if (this.input.textContent.length === 0) return;
 		if (this.input.innerHTML.length === 0) return;
 
-		if (this.input.innerHTML.length === 4 && this.input.innerHTML == "<br>") {
+		if (this.input.innerHTML.length === 4 && this.input.innerHTML === "<br>") {
 			this.ClearInput();
 			return;
 		}

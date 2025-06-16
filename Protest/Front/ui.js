@@ -10,7 +10,7 @@ const UI = {
 	Initialize: ()=> {
 		for (let i=0; i<12; i++) { //clock dots
 			const newDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-			newDot.setAttribute("r", i % 3 == 0 ? 2.5 : 1.5);
+			newDot.setAttribute("r", i % 3 === 0 ? 2.5 : 1.5);
 			newDot.setAttribute("cx", 48 + Math.sin(i * 30 / 57.29577951) * 36);
 			newDot.setAttribute("cy", 48 - Math.cos(i * 30 / 57.29577951) * 36);
 			newDot.setAttribute("fill", "#000");
@@ -187,9 +187,9 @@ const UI = {
 
 		let h, s, l;
 
-		if (delta == 0) h = 0;
-		else if (max == r) h = ((g - b) / delta) % 6;
-		else if (max == g) h = (b - r) / delta + 2;
+		if (delta === 0) h = 0;
+		else if (max === r) h = ((g - b) / delta) % 6;
+		else if (max === g) h = (b - r) / delta + 2;
 		else h = (r - g) / delta + 4;
 
 		h = Math.round(h * 60);
@@ -197,7 +197,7 @@ const UI = {
 		if (h < 0) h += 360;
 
 		l = (max + min) / 2;
-		s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+		s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
 		s = +(s * 100).toFixed(1);
 		l = +(l * 100).toFixed(1);
 
@@ -873,7 +873,7 @@ const MENU = {
 			menubox.style.bottom = "20px";
 			menubox.style.transform = MENU.isOpen ? "none" : "translateX(calc(-100% - 24px))";
 		}
-		else if (menubutton.style.left == "calc(100% - 48px)" || left > 90) {
+		else if (menubutton.style.left === "calc(100% - 48px)" || left > 90) {
 			menubox.style.left = "calc(100% - var(--sidemenu-width) - 20px)";
 			menubox.style.top = "20px";
 			menubox.style.bottom = "20px";
@@ -882,7 +882,7 @@ const MENU = {
 		else {
 			menubox.style.left = `max(20px, min(calc(${left}% - var(--sidemenu-width) / 2) + 32px, calc(100% - var(--sidemenu-width) - 20px)))`;
 
-			if (menubutton.style.top == "0px") {
+			if (menubutton.style.top === "0px") {
 				menubox.style.top = "20px";
 				menubox.style.bottom = window.innerHeight > 640 ? "25%" : "20px";
 				menubox.style.transform = MENU.isOpen ? "none" : "translateY(-100%)";
@@ -1076,7 +1076,7 @@ document.body.addEventListener("mouseup", event=> {
 });
 
 document.body.addEventListener("keyup", event=> {
-	if (event.code == "AltLeft") {
+	if (event.code === "AltLeft") {
 		event.preventDefault();
 
 		if (Date.now() - MENU.lastAltPress < 250) {
@@ -1094,12 +1094,12 @@ document.body.addEventListener("keyup", event=> {
 
 menubutton.onclick = event=> {
 	if (MENU.isMoved) return;
-	if (event.button == 0) MENU.Toggle();
+	if (event.button === 0) MENU.Toggle();
 };
 
 attachedmenubutton.onclick = event=> {
 	if (MENU.isMoved) return;
-	if (event.button == 0) MENU.Toggle();
+	if (event.button === 0) MENU.Toggle();
 };
 
 menubutton.onmousedown = event=> {

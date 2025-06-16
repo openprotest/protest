@@ -6,7 +6,8 @@
 }
 
 .topology-selected {
-	background-color: var(--clr-select);
+	background-color: color-mix(in srgb, var(--clr-select) 50%, transparent 50%);
+	outline: 2px solid var(--clr-select);
 	z-index: 1;
 }
 

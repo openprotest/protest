@@ -54,7 +54,7 @@ class SiteCheck extends Window {
 		this.ws = null; //websocket
 
 		this.targetInput.onkeydown = event=> {
-			if (event.keyCode == 13) this.checkButton.onclick();
+			if (event.key === "Enter") this.checkButton.onclick();
 		};
 
 		this.targetInput.oninput = event=> {
@@ -62,14 +62,14 @@ class SiteCheck extends Window {
 		};
 
 		this.checkButton.onclick = ()=> {
-			if (this.targetInput.value.length == 0) {
+			if (this.targetInput.value.length === 0) {
 				this.ConfirmBox("No uri", true);
 				return;
 			}
 
 			this.targetInput.value = this.targetInput.value.trim();
 
-			if (this.targetInput.value.indexOf("://") == -1) this.targetInput.value = "http://" + this.targetInput.value;
+			if (this.targetInput.value.indexOf("://") === -1) this.targetInput.value = "http://" + this.targetInput.value;
 
 			this.targetInput.disabled = true;
 			this.checkButton.disabled = true;

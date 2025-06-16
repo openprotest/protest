@@ -217,7 +217,7 @@ class NetCalc extends Window {
 			newBit.style.boxShadow = "rgba(32,32,32,.5) 0 0 0 1px inset";
 			newBit.style.borderRadius = "2px";
 			newBit.style.transition = ".4s";
-			if (i % 8 == 0 && 1 > 0) newBit.style.margin = "0 1px 0 4px";
+			if (i % 8 === 0 && 1 > 0) newBit.style.margin = "0 1px 0 4px";
 			this.mapBox.appendChild(newBit);
 		}
 
@@ -247,15 +247,15 @@ class NetCalc extends Window {
 		let octet = parseInt(this.ipAddress.GetIpArray()[0]);
 		let octet2 = parseInt(this.ipAddress.GetIpArray()[1]);
 
-		if (octet == 10) this.classLabel.textContent = "Private";
+		if (octet === 10) this.classLabel.textContent = "Private";
 		else if (octet > 0 && octet < 127) this.classLabel.textContent = "Class A";
 
-		else if (octet == 127) this.classLabel.textContent = "Local host";
+		else if (octet === 127) this.classLabel.textContent = "Local host";
 
-		else if (octet == 172 && octet2 > 15 && octet2 < 32) this.classLabel.textContent = "Private";
+		else if (octet === 172 && octet2 > 15 && octet2 < 32) this.classLabel.textContent = "Private";
 		else if (octet > 127 && octet < 192) this.classLabel.textContent = "Class B";
 
-		else if (octet == 192) this.classLabel.textContent = "Private";
+		else if (octet === 192) this.classLabel.textContent = "Private";
 		else if (octet > 192 && octet < 224) this.classLabel.textContent = "Class C";
 
 		else if (octet >= 224 && octet < 240) this.classLabel.textContent = "Class D";

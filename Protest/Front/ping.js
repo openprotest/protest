@@ -654,7 +654,7 @@ class Ping extends Console {
 		}
 
 		const octets = host.split(".").map(o=>parseInt(o));
-		const isIPv4 = octets.length == 4 && octets.every(o=> o>=0 && o<=255);
+		const isIPv4 = octets.length === 4 && octets.every(o=> o>=0 && o<=255);
 		let isDhcp = false;
 		if (isIPv4) {
 			const int = octets[0] * 256*256*256 + octets[1] * 256*256 + octets[2] * 256 + octets[3];

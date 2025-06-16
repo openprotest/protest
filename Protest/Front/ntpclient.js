@@ -123,7 +123,7 @@ class NtpClient extends Window {
 				this.responseLabel.appendChild(table);
 
 				const response = [
-					["Server", this.serverInput.value.length == 0 ? "time.nist.gov" : this.serverInput.value],
+					["Server", this.serverInput.value.length === 0 ? "time.nist.gov" : this.serverInput.value],
 					["Roundtrip", json.roundtrip],
 					["Transmitted time", json.transmit],
 					["Local time", json.local],

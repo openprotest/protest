@@ -487,7 +487,7 @@ class Fetch extends Tabs {
 				this.taskTab.style.animation = "slide-in .4s 1";
 			}
 
-			if (this.taskTab.style.visibility == "visible" && this.args == "task") {
+			if (this.taskTab.style.visibility === "visible" && this.args === "task") {
 				this.ShowFetching();
 				this.DeselectAllTabs();
 				this.taskTab.className = "v-tab-selected";

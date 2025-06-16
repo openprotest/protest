@@ -275,11 +275,11 @@ class DebitNotes extends Window {
 		for (let file in LOADER.devices.data) {
 			if (!LOADER.devices.data[file].type) continue;
 			let type = LOADER.devices.data[file]["type"].v;
-			if (type.length == 0) continue;
+			if (type.length === 0) continue;
 
 			let manufacturer = LOADER.devices.data[file]["manufacturer"] ? LOADER.devices.data[file]["manufacturer"].v : "";
 			let model = LOADER.devices.data[file]["model"] ? LOADER.devices.data[file]["model"].v : "";
-			if (manufacturer.length == 0 && model.length == 0) continue;
+			if (manufacturer.length === 0 && model.length === 0) continue;
 
 			let description = (manufacturer + " " + type).trim();
 			let serial = LOADER.devices.data[file]["serial number"] ? LOADER.devices.data[file]["serial number"].v : "";
@@ -388,7 +388,7 @@ class DebitNotes extends Window {
 		barcode.style.textAlign = "right";
 		codeContainer.appendChild(barcode);
 
-		if (content.status == "returned") {
+		if (content.status === "returned") {
 			const stampContainer = document.createElement("div");
 			stampContainer.style.position = "absolute";
 			stampContainer.style.left = "128px";
@@ -797,7 +797,7 @@ class DebitNotes extends Window {
 			descriptionInput.onchange = descriptionInput.oninput = ()=> {
 				if (!(descriptionInput.value in DebitNotes.MODELS)) return;
 
-				if (DebitNotes.MODELS[descriptionInput.value].length == 1) {
+				if (DebitNotes.MODELS[descriptionInput.value].length === 1) {
 					modelInput.value = DebitNotes.MODELS[descriptionInput.value][0];
 					modelInput.onchange();
 				}
@@ -816,7 +816,7 @@ class DebitNotes extends Window {
 			modelInput.onchange = modelInput.oninput = ()=> {
 				if (!(modelInput.value in DebitNotes.SERIAL_NUMBERS)) return;
 
-				if (DebitNotes.SERIAL_NUMBERS[modelInput.value].length == 1) {
+				if (DebitNotes.SERIAL_NUMBERS[modelInput.value].length === 1) {
 					serialNoInput.value = DebitNotes.SERIAL_NUMBERS[modelInput.value][0];
 				}
 				else {
@@ -930,7 +930,7 @@ class DebitNotes extends Window {
 
 					let firstname = LOADER.users.data[file]["first name"]?.v ?? "";
 					let lastname = LOADER.users.data[file]["last name"]?.v ?? "";
-					if (firstname.length == 0 || lastname.length == 0) continue;
+					if (firstname.length=0 || lastname.length === 0) continue;
 
 					let title = LOADER.users.data[file]["title"]?.v ?? "";
 					let department = LOADER.users.data[file]["department"]?.v ?? "";

@@ -335,7 +335,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		let oid = this.oidInput.value.trim();
 		if (oid.length === 0) oid = "1.3.6.1.2.1.1.1.0";
 
-		if (this.targetInput.value.length == 0) {
+		if (this.targetInput.value.length === 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
@@ -446,7 +446,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 	}
 
 	async SetQueryDialog() {
-		if (this.targetInput.value.length == 0 || this.oidInput.value.length == 0) {
+		if (this.targetInput.value.length === 0 || this.oidInput.value.length === 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}
@@ -488,7 +488,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		let oid = this.oidInput.value.trim();
 		if (oid.length === 0) oid = "1.3.6.1.2.1.1";
 
-		if (this.targetInput.value.length == 0 || oid.length == 0) {
+		if (this.targetInput.value.length === 0 || oid.length === 0) {
 			this.ConfirmBox("Incomplete query.", true);
 			return;
 		}

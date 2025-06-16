@@ -329,7 +329,7 @@ class Documentation extends Window {
 		this.list.textContent = "";
 
 		for (let i = 0; i < array.length; i++) {
-			if (array[i].length == 0) continue;
+			if (array[i].length === 0) continue;
 			const entry = this.AddToList(array[i]);
 
 			if (this.selected && this.selected === array[i])
@@ -557,7 +557,7 @@ class Documentation extends Window {
 	}
 
 	async Save() {
-		if (this.titleInput.value.length == 0) {
+		if (this.titleInput.value.length === 0) {
 			this.ConfirmBox("Please enter a title", true).addEventListener("click", ()=> this.titleInput.focus());
 			return;
 		}

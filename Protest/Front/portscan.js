@@ -312,7 +312,7 @@ class PortScan extends Console {
 			let start = split[0].trim().split(".");
 			let end = split[1].trim().split(".");
 
-			if (start.length == 4 && end.length == 4 && start.every(o=> !isNaN(o)) && end.every(o=> !isNaN(o))) {
+			if (start.length === 4 && end.length === 4 && start.every(o=> !isNaN(o)) && end.every(o=> !isNaN(o))) {
 				let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
 				let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
 
@@ -503,7 +503,7 @@ class PortScan extends Console {
 			}
 
 			for (let i = 0; i < this.list.childNodes.length; i++) { //remove warnings, if any
-				if (this.list.childNodes[i].id == "self_destruct")
+				if (this.list.childNodes[i].id === "self_destruct")
 					this.list.removeChild(this.list.childNodes[i]);
 			}
 		};
@@ -574,7 +574,7 @@ class PortScan extends Console {
 			else {
 				if (name in this.hashtable)
 					for (let i = 1; i < split.length; i++) {
-						if (split[i].length == 0) continue;
+						if (split[i].length === 0) continue;
 
 						const port = document.createElement("div");
 						port.textContent = split[i];

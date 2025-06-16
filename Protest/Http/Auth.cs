@@ -348,6 +348,7 @@ internal static class Auth {
                 break;
 
             case "snmp pooling:write":
+                path.Add("/ws/topology"); 
                 path.Add("/snmp/get");
                 path.Add("/snmp/set");
                 path.Add("/snmp/walk");

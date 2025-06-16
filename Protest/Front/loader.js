@@ -278,7 +278,7 @@ const LOADER = {
 	RestoreSession: ()=> {
 		let session = localStorage.getItem("session") ? JSON.parse(localStorage.getItem("session")) : {};
 		if (localStorage.getItem("restore_session") != "true") return;
-		if (session == null || session.length == 0) return;
+		if (session == null || session.length === 0) return;
 
 		for (let i = 0; i < session.length; i++) {
 			let win = LOADER.Invoke(session[i]);

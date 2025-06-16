@@ -198,7 +198,7 @@ class Personalize extends Tabs {
 			gradientBox.style.border = `${step1} 1px solid`;
 			themeBox.appendChild(gradientBox);
 
-			let isSelected = selected_accent[0] == accentColors[i][0] && selected_accent[1] == accentColors[i][1] && selected_accent[2] == accentColors[i][2];
+			let isSelected = selected_accent[0] === accentColors[i][0] && selected_accent[1] === accentColors[i][1] && selected_accent[2] === accentColors[i][2];
 
 			const indicator = document.createElement("div");
 			indicator.style.width = isSelected ? "48px" : "8px";

@@ -64,7 +64,7 @@ class TraceRoute extends Console {
 			let start = split[0].trim().split(".");
 			let end = split[1].trim().split(".");
 
-			if (start.length == 4 && end.length == 4 && start.every(o=> !isNaN(o)) && end.every(o=> !isNaN(o))) {
+			if (start.length === 4 && end.length === 4 && start.every(o=> !isNaN(o)) && end.every(o=> !isNaN(o))) {
 				let istart = (parseInt(start[0]) << 24) + (parseInt(start[1]) << 16) + (parseInt(start[2]) << 8) + (parseInt(start[3]));
 				let iend = (parseInt(end[0]) << 24) + (parseInt(end[1]) << 16) + (parseInt(end[2]) << 8) + (parseInt(end[3]));
 
@@ -232,7 +232,7 @@ class TraceRoute extends Console {
 				this.ws.send(this.pending[i]);
 
 			for (let i = 0; i < this.list.childNodes.length; i++) //remove warnings, if exist
-				if (this.list.childNodes[i].id == "self_destruct")
+				if (this.list.childNodes[i].id="self_destruct")
 					this.list.removeChild(this.list.childNodes[i]);
 		};
 
@@ -266,7 +266,7 @@ class TraceRoute extends Console {
 			let split = event.data.split(String.fromCharCode(127));
 			let name = split[0];
 
-			if (name == "over" || name == "unreachable") {
+			if (name === "over" || name === "unreachable") {
 				name = split[1];
 				if (name in this.hashtable) {
 					this.hashtable[name].status.style.visibility = "hidden";
@@ -274,7 +274,7 @@ class TraceRoute extends Console {
 				}
 				this.UpdateTaskSpinner();
 			}
-			else if (name == "[hostnames]") {
+			else if (name === "[hostnames]") {
 				let target = split[1];
 				if (target in this.hashtable) {
 					for (let i = 2; i < split.length; i += 2)

@@ -334,7 +334,7 @@ class Window {
 	}
 
 	AddCssDependencies(filename) {
-		if (document.head.querySelectorAll(`link[href$='${filename}']`).length == 0) {
+		if (document.head.querySelectorAll(`link[href$='${filename}']`).length === 0) {
 			const cssLink = document.createElement("link");
 			cssLink.rel = "stylesheet";
 			cssLink.href = filename;

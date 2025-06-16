@@ -29,7 +29,7 @@ class Topology extends Window{
 
 		this.content.onmousemove = event => {
 			if (!this.dragging) return;
-			if (event.buttons != 1) {
+			if (event.buttons !== 1) {
 				this.dragging = null;
 				return;
 			}

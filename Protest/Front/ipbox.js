@@ -17,55 +17,55 @@ class IpBox {
 			this.textBoxes[i].setAttribute("i", i + 1);
 
 			this.textBoxes[i].onkeydown = event=> {
-				if (event.key == "ArrowLeft" ||
-					event.key == "ArrowRight" ||
-					event.key == "Tab" ||
-					event.key == "Shift") return;
+				if (event.key === "ArrowLeft" ||
+					event.key === "ArrowRight" ||
+					event.key === "Tab" ||
+					event.key === "Shift") return;
 
 				let ok = (
 					event.ctrlKey ||
-					event.key == "." || event.key == "0" ||
-					event.key == "1" || event.key == "2" || event.key == "3" ||
-					event.key == "4" || event.key == "5" || event.key == "6" ||
-					event.key == "7" || event.key == "8" || event.key == "9" ||
-					event.key == "F5" ||
-					event.key == "Backspace" || event.key == "Delete" ||
-					event.key == "End" || event.key == "Home" ||
-					event.key == "ArrowUp" || event.key == "ArrowDown"
+					event.key === "." || event.key === "0" ||
+					event.key === "1" || event.key === "2" || event.key == "3" ||
+					event.key === "4" || event.key === "5" || event.key === "6" ||
+					event.key === "7" || event.key === "8" || event.key === "9" ||
+					event.key === "F5" ||
+					event.key === "Backspace" || event.key === "Delete" ||
+					event.key === "End" || event.key === "Home" ||
+					event.key === "ArrowUp" || event.key === "ArrowDown"
 				);
 
 				if (!ok) event.preventDefault();
 
-				if (event.key == "ArrowUp" && !isNaN(event.target.value)) {
+				if (event.key === "ArrowUp" && !isNaN(event.target.value)) {
 					event.preventDefault();
 					let v = parseInt(event.target.value);
 					if (v < 255) event.target.value = v + 1;
 					return;
 				}
 
-				if (event.key == "ArrowDown" && !isNaN(event.target.value)) {
+				if (event.key === "ArrowDown" && !isNaN(event.target.value)) {
 					event.preventDefault();
 					let v = parseInt(event.target.value);
 					if (v > 0) event.target.value = v - 1;
 					return;
 				}
 
-				if (event.key == "Backspace")
-					if (event.target.value.length == 0) {
+				if (event.key === "Backspace")
+					if (event.target.value.length === 0) {
 						this.FocusPrevious(event.target);
 					}
 					else {
 						return; //continue with default behavior
 					}
 
-				if (event.key == ".") {
+				if (event.key === ".") {
 					event.preventDefault();
 					this.FocusNext(event.target);
 				}
 
 				if (event.target.selectionStart === 0 && event.target.selectionEnd === 4) {
 					let v = parseInt(event.target.value);
-					if (v == NaN) v = 0;
+					if (v === NaN) v = 0;
 					if (v > 255) event.target.value = 255;
 					if (!isNaN(event.key)) this.FocusNext(event.target);
 				}

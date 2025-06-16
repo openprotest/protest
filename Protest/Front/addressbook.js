@@ -532,7 +532,7 @@ class AddressBook extends Window {
 		pseudo.style.display = "none";
 		document.body.appendChild(pseudo);
 
-		let filename = (this.searchBox.value.length == 0) ?
+		let filename = (this.searchBox.value.length === 0) ?
 			"All contacts" :
 			"contacts_" + this.searchBox.value;
 

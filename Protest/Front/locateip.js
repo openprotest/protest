@@ -101,7 +101,7 @@ class LocateIp extends Console {
 	}
 
 	async Add(ipaddr) {
-		if (ipaddr.length == 0) return;
+		if (ipaddr.length === 0) return;
 		if (ipaddr.indexOf(" ") > -1) return;
 
 		if (ipaddr in this.hashtable) {
@@ -154,7 +154,7 @@ class LocateIp extends Console {
 
 			let split = responseText.split(";");
 
-			if (split.length == 1) {
+			if (split.length === 1) {
 				const label = document.createElement("div");
 				label.textContent = split[0];
 				result.appendChild(label);

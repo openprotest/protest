@@ -435,11 +435,11 @@ class Wmi extends Window {
 		let length = parseInt(split[0]);
 		let unique = -1; //unique id position
 		for (let i = 1; i < length + 1; i++)
-			if (className == "win32_process" && split[i] == "ProcessId") {
+			if (className === "win32_process" && split[i] === "ProcessId") {
 				unique = i - 1;
 				break;
 			}
-			/*else if (className == "win32_service" && split[i] == "Name") {
+			/*else if (className === "win32_service" && split[i] === "Name") {
 				unique = i - 1;
 				break;
 			}*/

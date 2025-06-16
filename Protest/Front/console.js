@@ -29,7 +29,7 @@ class Console extends Window {
 		let historyIndex = -1;
 		this.inputBox.onkeydown = event=> {
 			if (event.key === "Enter") {
-				if (this.inputBox.value.length == 0) return;
+				if (this.inputBox.value.length === 0) return;
 				this.Push(this.inputBox.value.trim().toLocaleLowerCase());
 				this.list.scrollTop = this.list.scrollHeight;
 				this.inputBox.value = "";
@@ -37,7 +37,7 @@ class Console extends Window {
 			}
 
 			if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-				if (this.history.length == 0) return;
+				if (this.history.length === 0) return;
 
 				if (event.key === "ArrowUp") historyIndex--;
 				if (event.key === "ArrowDown") historyIndex++;

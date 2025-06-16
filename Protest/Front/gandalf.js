@@ -471,7 +471,7 @@ class Gandalf extends Window {
 		payload += `${this.smtpGuid}${String.fromCharCode(127)}`;
 
 		for (let k in this.includeList)
-		if (this.includeList[k].checked == true)
+		if (this.includeList[k].checked)
 			payload += `${k}${String.fromCharCode(127)}`;
 
 		try {

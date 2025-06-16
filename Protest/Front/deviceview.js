@@ -499,7 +499,7 @@ class DeviceView extends View {
 				processesButton.onclick = ()=> {
 					const wmi = new Wmi({target:host, query:"SELECT CreationDate, ExecutablePath, Name, ProcessId \nFROM Win32_Process", hideInput:true});
 					wmi.SetIcon("mono/console.svg");
-					if (!this.link.name || this.link.name.v.length == 0) {
+					if (!this.link.name || this.link.name.v.length === 0) {
 						wmi.SetTitle("[untitled] - Processes");
 					}
 					else {
@@ -1018,7 +1018,7 @@ class DeviceView extends View {
 				case "Tagged VLAN":
 					this.switchMode = 2;
 					list.forEach(o=> {
-						if (o.tagged == "") {
+						if (o.tagged === "") {
 							o.iconElement.style.background = "var(--clr-dark)";
 							o.iconElement.setAttribute("c", "var(--clr-dark)");
 							return;
@@ -1120,7 +1120,7 @@ class DeviceView extends View {
 					list.forEach(o=> {
 						o.iconElement.setAttribute("c", "#fff");
 
-						if (o.tagged == "") {
+						if (o.tagged === "") {
 							o.iconElement.style.backgroundColor = "var(--clr-dark)";
 							return;
 						}
@@ -1247,7 +1247,7 @@ class DeviceView extends View {
 		case "Untagged VLAN": {
 			const values = Object.keys(hashmap).map(o=>parseInt(o)).sort((a,b)=> a-b);
 			for (let i=0; i<values.length; i++) {
-				if (values[i] == "") continue;
+				if (values[i] === "") continue;
 				if (values[i] in hashmap) {
 					legend.appendChild(this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`));
 				}
@@ -1329,7 +1329,7 @@ class DeviceView extends View {
 
 		const values = Object.keys(hashmap).sort((a,b)=> a-b);
 		for (let i=0; i<values.length; i++) {
-			if (values[i] == "") continue;
+			if (values[i] === "") continue;
 			if (values[i] in hashmap) {
 				const element = this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`);
 				element.className = "view-interface-legend-entry";
@@ -1337,7 +1337,7 @@ class DeviceView extends View {
 
 				element.onmouseenter = ()=> {
 					for (let j=0; j<frameList.length; j++) {
-						if (frameList[j].untagged == values[i]) {
+						if (frameList[j].untagged === values[i]) {
 							frameList[j].iconElement.parentElement.style.animation = "port-pop 1.5s ease-in-out infinite";
 						}
 					}
@@ -1369,7 +1369,7 @@ class DeviceView extends View {
 
 		const values = Object.keys(hashmap).sort((a,b)=> a-b);
 		for (let i=0; i<values.length; i++) {
-			if (values[i] == "") continue;
+			if (values[i] === "") continue;
 			if (values[i] in hashmap) {
 				const element = this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`);
 				element.className = "view-interface-legend-entry";
@@ -2597,7 +2597,7 @@ class DeviceView extends View {
 						else {
 							let p = 0;
 
-							/*if (j == 0) { //verb
+							/*if (j === 0) { //verb
 								while (line[0].substring(0, p).trim().length === 0 && p < line[0].length) {p++; }
 								p = line[0].indexOf(" ", p);
 
@@ -2616,12 +2616,12 @@ class DeviceView extends View {
 
 								if (p != sp) {
 									const spanA = document.createElement("span");
-									spanA.textContent = j == 0 ? line[j].substring(p, sp): line[j].substring(p, sp);
+									spanA.textContent = j === 0 ? line[j].substring(p, sp): line[j].substring(p, sp);
 									lineElement.appendChild(spanA);
 								}
 
 								const spanB = document.createElement("span");
-								spanB.textContent = j == 0 ? line[j].substring(sp, ep + 1) : line[j].substring(sp, ep + 1);
+								spanB.textContent = j === 0 ? line[j].substring(sp, ep + 1) : line[j].substring(sp, ep + 1);
 								spanB.style.color = "#5BE";
 								lineElement.appendChild(spanB);
 
@@ -2630,7 +2630,7 @@ class DeviceView extends View {
 
 							if (p < line[j].length) {
 								const spanC = document.createElement("span");
-								spanC.textContent = j == 0 ? line[j].substring(p): line[j].substring(p);
+								spanC.textContent = j === 0 ? line[j].substring(p): line[j].substring(p);
 								lineElement.appendChild(spanC);
 							}
 						}
@@ -3745,7 +3745,7 @@ class DeviceView extends View {
 		if (!vlan || vlan === "") return null;
 
 		for (let i=0; i<KEEP.zones.length; i++) {
-			if (KEEP.zones[i].vlan == vlan) {
+			if (KEEP.zones[i].vlan === vlan) {
 				return KEEP.zones[i].color;
 			}
 		}

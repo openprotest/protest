@@ -257,7 +257,7 @@ class PasswordStrength extends List {
 	InflateElement(element, entry, c_type) { //overrides
 		const icon = document.createElement("div");
 		icon.className = "lst-strength-ico";
-		icon.style.backgroundImage = entry.type == "user" ? "url(mono/user.svg)" : "url(mono/gear.svg)";
+		icon.style.backgroundImage = entry.type === "user" ? "url(mono/user.svg)" : "url(mono/gear.svg)";
 		element.appendChild(icon);
 
 		let columns = [];
