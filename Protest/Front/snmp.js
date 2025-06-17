@@ -230,8 +230,6 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 			const filename = `1.0.8802.${iso8802}`;
 
-			console.log(filename);
-
 			if (!(filename in Snmp.OID_CACHE)) {
 				try {
 					const response = await fetch(`snmp/1.0.8802.${iso8802}.json`);
@@ -741,6 +739,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 	PlotBox_onkeypress(event) {
 		if (!this.selected) return;
+		if (event.shiftKey) return;
 
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 			event.preventDefault();

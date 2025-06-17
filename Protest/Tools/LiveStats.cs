@@ -188,7 +188,7 @@ internal static class LiveStats {
                 && firstReply.Status == IPStatus.Success
                 && entry.attributes.TryGetValue("type", out Database.Attribute _type)
                 && entry.attributes.TryGetValue("snmp profile", out Database.Attribute _snmpProfile)) {
-                SnmpQuery(ws, mutex, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
+                SnmpQuery(ws, mutex, file, firstAlive, _type?.value.ToLower(), _snmpProfile.value);
             }
 
             if (OperatingSystem.IsWindows() && _hostname?.value?.Length > 0) {
@@ -366,7 +366,7 @@ internal static class LiveStats {
         catch { }
     }
 
-    private static void SnmpQuery(WebSocket ws, Lock mutex, string firstAlive, string type, string snmpProfileGuid) {
+    private static void SnmpQuery(WebSocket ws, Lock mutex, string file, string firstAlive, string type, string snmpProfileGuid) {
         if (!SnmpProfiles.FromGuid(snmpProfileGuid, out SnmpProfiles.Profile profile)) {
             return;
         }
@@ -390,7 +390,7 @@ internal static class LiveStats {
         }
 
         if (PRINTER_TYPES.Contains(type)) {
-            SnmpQueryPrinter(ws, mutex, ipAddress, profile);
+            SnmpQueryPrinter(ws, mutex, file, ipAddress, profile);
         }
         else if (SWITCH_TYPES.Contains(type)) {
             SnmpQuerySwitch(ws, mutex, ipAddress, profile);
@@ -398,7 +398,7 @@ internal static class LiveStats {
 
     }
 
-    private static void SnmpQueryPrinter(WebSocket ws, Lock mutex, IPAddress ipAddress, SnmpProfiles.Profile profile) {
+    private static void SnmpQueryPrinter(WebSocket ws, Lock mutex, string file, IPAddress ipAddress, SnmpProfiles.Profile profile) {
         IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVESTATS_PRINTER_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
         Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(result);
 
@@ -428,7 +428,7 @@ internal static class LiveStats {
             }
         }
 
-        if (Issues.CheckPrinterComponent(null, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
+        if (Issues.CheckPrinterComponent(file, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
             for (int i = 0; i < issues.Length; i++) {
                 WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
             }

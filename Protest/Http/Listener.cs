@@ -509,6 +509,7 @@ internal sealed class Listener {
         case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx);   return true;
         case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);    return true;
         case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);      return true;
+        case "/ws/topology":         Tools.Topology.WebSocketHandler(ctx);     return true;
         case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);         return true;
         case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx);           return true;
         }

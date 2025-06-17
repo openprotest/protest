@@ -8,6 +8,7 @@ class Topology extends Window{
 		this.selected = null;
 		this.dragging = null;
 
+		this.ws = null;
 		this.devices = [];
 		this.links = [];
 
@@ -24,13 +25,13 @@ class Topology extends Window{
 		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
 		this.AddToolbarSeparator();
 
-		this.content.onmousedown = event => {
+		this.content.onmousedown = ()=> {
 			if (this.selected) {
 				this.selected.classList.remove("topology-selected");
 			}
 		};
 
-		this.content.onmousemove = event => {
+		this.content.onmousemove = event=> {
 			if (!this.dragging) return;
 			if (event.buttons !== 1) {
 				this.dragging = null;
@@ -63,16 +64,16 @@ class Topology extends Window{
 			if (type !== "switch") continue;
 			
 			if (!LOADER.devices.data[device].ip) continue;
-			const ip = LOADER.devices.data[device].ip.v;
+			const ip = LOADER.devices.data[device].ip.v.split(";")[0].trim();
 
-			if (!LOADER.devices.data[device]["snmp profile"]) continue;
-			const profile = LOADER.devices.data[device]["snmp profile"].v;
+			//if (!LOADER.devices.data[device]["snmp profile"]) continue;
+			//const profile = LOADER.devices.data[device]["snmp profile"].v;
 
 			this.CreateDevice({
 				file: device,
 				name: ip,
-				left: 16 + count * 96,
-				top: 16
+				left: 16 + (count % 10) * 96,
+				top: 16 + Math.floor(count / 10) * 96
 			});
 
 			count++;
@@ -180,14 +181,6 @@ class Topology extends Window{
 		switchLabel.style.backgroundRepeat = "no-repeat";
 		switchInput.checked = true;
 
-		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
-		firewallLabel.style.lineHeight = "24px";
-		firewallLabel.style.paddingLeft = "28px";
-		firewallLabel.style.backgroundImage = "url(mono/firewall.svg)";
-		firewallLabel.style.backgroundSize = "24px";
-		firewallLabel.style.backgroundRepeat = "no-repeat";
-		firewallInput.checked = true;
-
 		const [routerLabel, routerInput] = AddParameter("Routers", "input", "toggle");
 		routerLabel.style.lineHeight = "24px";
 		routerLabel.style.paddingLeft = "28px";
@@ -196,7 +189,15 @@ class Topology extends Window{
 		routerLabel.style.backgroundRepeat = "no-repeat";
 		routerInput.checked = true;
 
-		const [endpointLabel, endpointInput] = AddParameter("Endpoints", "input", "toggle");
+		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
+		firewallLabel.style.lineHeight = "24px";
+		firewallLabel.style.paddingLeft = "28px";
+		firewallLabel.style.backgroundImage = "url(mono/firewall.svg)";
+		firewallLabel.style.backgroundSize = "24px";
+		firewallLabel.style.backgroundRepeat = "no-repeat";
+		firewallInput.checked = true;
+
+		const [endpointLabel, endpointInput] = AddParameter("End-point Host", "input", "toggle");
 		endpointLabel.style.lineHeight = "24px";
 		endpointLabel.style.paddingLeft = "28px";
 		endpointLabel.style.backgroundImage = "url(mono/gear.svg)";
@@ -209,10 +210,53 @@ class Topology extends Window{
 		okButton.onclick = async ()=> {
 			this.InitializeMap();
 			dialog.Close();
+
+			const devices = [];
+			if (switchInput.checked) devices.push("switch");
+			if (routerInput.checked) devices.push("router");
+			if (firewallInput.checked) devices.push("firewall");
+			if (endpointInput.checked) devices.push("endpoint");
+			this.Connect(devices);
+		};
+	}
+
+	Connect(devices) {
+		let server = window.location.href.replace("https://", "").replace("http://", "");
+		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+
+		if (this.ws != null) {
+			try {
+				this.ws.close();
+			}
+			catch {};
+		}
+
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss://" : "ws://"}${server}/ws/topology`);
+
+		this.ws.onopen = ()=> {
+			this.startButton.disabled = true;
+			this.stopButton.disabled = false;
+			this.ws.send(devices.join(";"));
+		};
+
+		this.ws.onclose = ()=> {
+			this.startButton.disabled = false;
+			this.stopButton.disabled = true;
+		};
+
+		this.ws.onmessage = event=> {
+			let payload = event.data;
+			console.log(payload);
+		};
+
+		this.ws.onerror = error=> {
+			this.startButton.disabled = false;
+			this.stopButton.disabled = true;
 		};
 	}
 
 	Stop() {
 
 	}
+
 }

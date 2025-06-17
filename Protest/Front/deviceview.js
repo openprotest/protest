@@ -575,7 +575,7 @@ class DeviceView extends View {
 			}
 
 			if ("snmp profile" in this.link) {
-				const dnsButton = this.CreateSideButton("mono/snmp.svg", "SNMP pool");
+				const dnsButton = this.CreateSideButton("mono/snmp.svg", "SNMP pooling");
 				dnsButton.onclick = ()=> new Snmp({target:host, community:"", profile:this.link["snmp profile"].v});
 			}
 
@@ -1657,7 +1657,7 @@ class DeviceView extends View {
 				}
 			}
 
-			if (".interfaces" in this.link && ("snmp profile" in this.link || ".snmp profile" in this.link) && !this.switchInfo.success) {
+			if (".interfaces" in this.link && "snmp profile" in this.link && !this.switchInfo.success) {
 				this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
 			}
 
@@ -3838,7 +3838,7 @@ class DeviceView extends View {
 				snmpInput.appendChild(option);
 			}
 
-			if (this.link && ("snmp profile" in this.link || ".snmp profile" in this.link)) {
+			if (this.link && "snmp profile" in this.link) {
 				wmiToggle.checkbox.checked = false;
 				ldapToggle.checkbox.checked = false;
 				snmpToggle.checkbox.checked = true;
