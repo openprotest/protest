@@ -19,11 +19,21 @@ class Topology extends Window{
 
 		this.SetupToolbar();
 
-		this.content.style.overflow = "auto";
-
 		this.startButton = this.AddToolbarButton("Start discovery", "mono/play.svg?light");
 		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
+		this.stopButton.disabled = true;
 		this.AddToolbarSeparator();
+
+		this.workspace = document.createElement("div");
+		this.workspace.className = "topology-workspace";
+		this.content.appendChild(this.workspace);
+
+		this.sideBar = document.createElement("div");
+		this.sideBar.className = "topology-sidebar";
+		this.content.appendChild(this.sideBar);
+
+		this.content.style.overflow = "auto";
+		this.content.style.overflow = "auto";
 
 		this.content.onmousedown = ()=> {
 			if (this.selected) {
@@ -72,8 +82,8 @@ class Topology extends Window{
 			this.CreateDevice({
 				file: device,
 				name: ip,
-				left: 16 + (count % 10) * 96,
-				top: 16 + Math.floor(count / 10) * 96
+				left: 16 + (count % 10) * 112,
+				top: 16 + Math.floor(count / 10) * 112
 			});
 
 			count++;
@@ -86,10 +96,10 @@ class Topology extends Window{
 		device.style.left = options.left + "px";
 		device.style.top = options.top + "px";
 		device.setAttribute("file", options.file);
-		this.content.appendChild(device);
+		this.workspace.appendChild(device);
 
 		const icon = document.createElement("div");
-		icon.className = "topology-device-icon";
+		icon.className = "topology-device-icon topology-pending";
 		icon.style.maskImage = "url(mono/switch.svg?light)";
 		device.appendChild(icon);
 
@@ -256,7 +266,8 @@ class Topology extends Window{
 	}
 
 	Stop() {
-
+		this.startButton.disabled = false;
+		this.stopButton.disabled = true;
 	}
 
 }

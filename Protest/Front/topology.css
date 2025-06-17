@@ -1,14 +1,27 @@
+.topology-workspace {
+	position: absolute;
+	width: calc(100% - 316px);
+	height: 100%;
+	background-color: var(--clr-bg);
+	overflow: auto;
+}
+
+.topology-sidebar {
+	position: absolute;
+	right: 8px;
+	width: 300px;
+	top: 8px;
+	bottom: 8px;
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	overflow-y: auto;
+}
+
 .topology-device {
 	position: absolute;
 	border-radius: 4px;
 	color: var(--clr-light);
 	max-width: 72px;
-}
-
-.topology-selected {
-	background-color: color-mix(in srgb, var(--clr-select) 50%, transparent 50%);
-	outline: 2px solid var(--clr-select);
-	z-index: 1;
 }
 
 .topology-device-icon {
@@ -27,4 +40,16 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	direction: rtl;
+}
+
+.topology-selected {
+	background-color: color-mix(in srgb, var(--clr-select) 50%, transparent 50%);
+	outline: 2px solid var(--clr-select);
+	z-index: 1;
+}
+
+.topology-pending {
+	background-size: 3px 3px;
+	background-image: radial-gradient(circle, transparent 1px, #c0c0c0 1px);
+	background-color: transparent;
 }
