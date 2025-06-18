@@ -24,7 +24,8 @@
 	display: grid;
 
 	grid-template-columns: 88px auto;
-	grid-template-rows: 16px 16px 16px 16px;
+	grid-template-rows: 12px 20px 20px 12px;
+	-webkit-user-select: text; user-select: text;
 }
 
 .topology-device {

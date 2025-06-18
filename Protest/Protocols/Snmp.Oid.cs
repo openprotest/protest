@@ -64,10 +64,6 @@ internal static class Oid {
         INTERFACE_ERROR_OUT,
     };
 
-    public static string[] TOPOLOGY_SWITCH_OID = new string[] {
-        LLDP_LOCAL_SYS_DATA,
-        LLDP_REMOTE_SYS_DATA,
-    };
 
     public const string LLDP_LOCAL_SYS_DATA  = "1.0.8802.1.1.2.1.3";
     public const string LLDP_REMOTE_SYS_DATA = "1.0.8802.1.1.2.1.4";

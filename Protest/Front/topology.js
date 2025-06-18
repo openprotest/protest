@@ -334,11 +334,8 @@ class Topology extends Window {
 
 		const ipLabel = document.createElement("div");
 		ipLabel.style.gridArea = "3 / 2";
-		ipLabel.style.fontWeight = "bold";
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
-
-
 	}
 
 }
