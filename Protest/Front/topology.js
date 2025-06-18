@@ -1,4 +1,10 @@
-class Topology extends Window{
+class Topology extends Window {
+	static deviceIcons = {
+		"switch": "mono/switch.svg",
+		"router": "mono/router.svg",
+		"firewall": "mono/firewall.svg",
+	};
+
 	constructor(args) {
 		super();
 		this.args = args ?? {};
@@ -9,7 +15,8 @@ class Topology extends Window{
 		this.dragging = null;
 
 		this.ws = null;
-		this.devices = [];
+
+		this.devices = {};
 		this.links = [];
 
 		this.AddCssDependencies("topology.css");
@@ -35,9 +42,15 @@ class Topology extends Window{
 		this.content.style.overflow = "auto";
 		this.content.style.overflow = "auto";
 
-		this.content.onmousedown = ()=> {
+		this.workspace.onmousedown = event=> {
+			event.stopPropagation();
+			this.BringToFront();
+
+			this.sideBar.textContent = "";
+			
 			if (this.selected) {
 				this.selected.classList.remove("topology-selected");
+				this.selected = null;
 			}
 		};
 
@@ -55,7 +68,7 @@ class Topology extends Window{
 			const x = this.offsetX - this.x0 + event.clientX;
 			const y = this.offsetY - this.y0 + event.clientY;
 			this.dragging.style.left = `${Math.max(x,0)}px`;
-			this.dragging.style.top =  `${Math.max(y,0)}px`;
+			this.dragging.style.top = `${Math.max(y,0)}px`;
 		};
 
 		this.content.onmouseup = ()=> {
@@ -64,67 +77,6 @@ class Topology extends Window{
 
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
-	}
-
-	InitializeMap() {
-		let count = 0;
-		for (const device in LOADER.devices.data) {
-			if (!LOADER.devices.data[device].type) continue;
-			const type = LOADER.devices.data[device].type.v.toLowerCase();
-			if (type !== "switch") continue;
-			
-			if (!LOADER.devices.data[device].ip) continue;
-			const ip = LOADER.devices.data[device].ip.v.split(";")[0].trim();
-
-			//if (!LOADER.devices.data[device]["snmp profile"]) continue;
-			//const profile = LOADER.devices.data[device]["snmp profile"].v;
-
-			this.CreateDevice({
-				file: device,
-				name: ip,
-				left: 16 + (count % 10) * 112,
-				top: 16 + Math.floor(count / 10) * 112
-			});
-
-			count++;
-		}
-	}
-
-	CreateDevice(options) {
-		const device = document.createElement("div");
-		device.className = "topology-device";
-		device.style.left = options.left + "px";
-		device.style.top = options.top + "px";
-		device.setAttribute("file", options.file);
-		this.workspace.appendChild(device);
-
-		const icon = document.createElement("div");
-		icon.className = "topology-device-icon topology-pending";
-		icon.style.maskImage = "url(mono/switch.svg?light)";
-		device.appendChild(icon);
-
-		const label = document.createElement("div");
-		label.className = "topology-device-label";
-		label.textContent = options.name;
-		device.appendChild(label);
-
-		device.onmousedown = event=> {
-			event.stopPropagation();
-
-			if (this.selected) {
-				this.selected.classList.remove("topology-selected");
-			}
-
-			device.classList.add("topology-selected");
-
-			this.selected = device;
-			this.dragging = device;
-
-			this.offsetX = device.offsetLeft;
-			this.offsetY = device.offsetTop;
-			this.x0 = event.clientX;
-			this.y0 = event.clientY;
-		};
 	}
 
 	StartDialog() {
@@ -218,7 +170,6 @@ class Topology extends Window{
 		setTimeout(()=>okButton.focus(), 200);
 
 		okButton.onclick = async ()=> {
-			this.InitializeMap();
 			dialog.Close();
 
 			const devices = [];
@@ -255,8 +206,51 @@ class Topology extends Window{
 		};
 
 		this.ws.onmessage = event=> {
-			let payload = event.data;
-			console.log(payload);
+			const payload = event.data;
+			const json = JSON.parse(payload);
+
+			if (json.initial) {
+				let count = 0;
+				for (let i=0; i<json.initial.length; i++) {
+					const element = this.CreateDevice({
+						file: json.initial[i].file,
+						type: json.initial[i].type,
+						name: json.initial[i].hostname,
+						left: 16 + (count % 10) * 112,
+						top: 16 + Math.floor(count / 10) * 112
+					});
+
+					element.icon.classList.add("topology-pending");
+
+					this.devices[json.initial[i].file] = {
+						element: element,
+						initial: json.initial[i]
+					};
+
+					count++;
+				}
+			}
+			else if (json.retrieve) {
+				const device = this.devices[json.retrieve];
+				if (device) {
+					device.element.icon.classList.add("topology-loading");
+				}
+			}
+			else if (json.nosnmp) {
+				const device = this.devices[json.nosnmp];
+				if (device) {
+					device.element.icon.classList.remove("topology-pending");
+					device.element.icon.classList.remove("topology-loading");
+					device.element.icon.style.backgroundColor = "var(--clr-error)";
+				}
+			}
+			else if (json.snmp) {
+				const device = this.devices[json.snmp];
+				if (device) {
+					device.element.icon.classList.remove("topology-pending");
+					device.element.icon.classList.remove("topology-loading");
+				}
+			}
 		};
 
 		this.ws.onerror = error=> {
@@ -268,6 +262,83 @@ class Topology extends Window{
 	Stop() {
 		this.startButton.disabled = false;
 		this.stopButton.disabled = true;
+	}
+
+	CreateDevice(options) {
+		const device = document.createElement("div");
+		device.className = "topology-device";
+		device.style.left = options.left + "px";
+		device.style.top = options.top + "px";
+		device.setAttribute("file", options.file);
+		this.workspace.appendChild(device);
+
+		const icon = document.createElement("div");
+		icon.className = "topology-device-icon";
+		icon.style.maskImage = `url(${Topology.deviceIcons[options.type.toLowerCase()]}?light)`;
+		device.appendChild(icon);
+
+		const label = document.createElement("div");
+		label.className = "topology-device-label";
+		label.textContent = options.name;
+		device.appendChild(label);
+
+		device.onmousedown = event=> {
+			event.stopPropagation();
+
+			this.offsetX = device.offsetLeft;
+			this.offsetY = device.offsetTop;
+			this.x0 = event.clientX;
+			this.y0 = event.clientY;
+
+			this.SelectDevice(device, options.file);
+		};
+
+		return {
+			root: device,
+			icon: icon,
+			label: label
+		};
+	}
+
+	SelectDevice(element, file) {
+		if (this.selected) {
+			this.selected.classList.remove("topology-selected");
+		}
+
+		element.classList.add("topology-selected");
+
+		this.selected = element;
+		this.dragging = element;
+
+		this.sideBar.textContent = "";
+
+		const initial = this.devices[file].initial;
+
+		const grid = document.createElement("div");
+		grid.className = "topology-sidebar-grid";
+		this.sideBar.appendChild(grid);
+
+		const icon = document.createElement("div");
+		icon.style.gridArea = "1 / 1 / 5 / 1";
+		icon.style.backgroundImage = `url(${Topology.deviceIcons[initial.type.toLowerCase()]})`;
+		icon.style.backgroundSize = "64px 64px";
+		icon.style.backgroundPosition = "50% 50%";
+		icon.style.backgroundRepeat = "no-repeat";
+		grid.appendChild(icon);
+
+		const hostnameLabel = document.createElement("div");
+		hostnameLabel.style.gridArea = "2 / 2";
+		hostnameLabel.style.fontWeight = "bold";
+		hostnameLabel.textContent = initial.hostname;
+		grid.appendChild(hostnameLabel);
+
+		const ipLabel = document.createElement("div");
+		ipLabel.style.gridArea = "3 / 2";
+		ipLabel.style.fontWeight = "bold";
+		ipLabel.textContent = initial.ip;
+		grid.appendChild(ipLabel);
+
+
 	}
 
 }

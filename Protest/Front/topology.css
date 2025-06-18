@@ -12,9 +12,19 @@
 	width: 300px;
 	top: 8px;
 	bottom: 8px;
+	color: var(--clr-dark);
 	background-color: var(--clr-pane);
 	border-radius: 4px;
+	padding: 8px;
+	box-sizing: border-box;
 	overflow-y: auto;
+}
+
+.topology-sidebar-grid {
+	display: grid;
+
+	grid-template-columns: 88px auto;
+	grid-template-rows: 16px 16px 16px 16px;
 }
 
 .topology-device {
@@ -31,6 +41,8 @@
 	mask-repeat: no-repeat;
 	mask-position: center;
 	mask-size: 56px;
+
+	transition: .8s;
 }
 
 .topology-device-label {
@@ -49,7 +61,17 @@
 }
 
 .topology-pending {
-	background-size: 3px 3px;
-	background-image: radial-gradient(circle, transparent 1px, #c0c0c0 1px);
-	background-color: transparent;
+	background-color: #c0c0c080;
+}
+
+.topology-loading {
+	background-size: 150px 150px;
+	background-color: #c0c0c080;
+	background-image: linear-gradient(45deg, transparent 40%, #c0c0c0 50%, transparent 60%);
+	animation: topology-pulse 2s infinite;
+}
+
+@keyframes topology-pulse {
+	0%   {background-position: -50% 50%;}
+	100% {background-position: 155% 50%;}
 }
